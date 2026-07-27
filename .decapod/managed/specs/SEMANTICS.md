@@ -7,7 +7,12 @@ stateDiagram-v2
   InProgress --> Blocked
   Blocked --> InProgress
   Verified --> [*]
-```
+```## Invariants
+| Invariant | Type | Validation |
+|---|---|---|
+| No promoted change without proof | System | validation gate |
+| Canonical source-of-truth per entity | Data | interface/spec review |
+| Mutation events are replayable | Data | deterministic replay |
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -49,13 +54,6 @@ stateDiagram-v2
 - Recovery test cadence MUST be selected for the project and recorded as a proof obligation
 <!-- decapod:capability-overlay:persistent-state:end -->
 
-## Invariants
-| Invariant | Type | Validation |
-|---|---|---|
-| No promoted change without proof | System | validation gate |
-| Canonical source-of-truth per entity | Data | interface/spec review |
-| Mutation events are replayable | Data | deterministic replay |
-
 ## Event Sourcing Schema
 | Field | Type | Description |
 |---|---|---|
@@ -93,7 +91,7 @@ stateDiagram-v2
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2e7a84ee1664195b1aeedb1da929a414a6900354dc792ea1180ece523b3a3fb9`
+- Repository signal fingerprint: `fef0b7fb9abca5392681c0fc27a8a2bd195f25d2410242f72315f840ce0310b7`
 - Significant implementation surfaces: `.github/` (7 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (97 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
