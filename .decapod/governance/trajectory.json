@@ -33,7 +33,8 @@
     }
   ],
   "evidence": [
-    "validation epoch ve_0368ea21a10fc3cf completed with zero failures"
+    "validation epoch ve_0368ea21a10fc3cf completed with zero failures",
+    "validation epoch ve_436623949a60e125 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -44,7 +45,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:9a777fb0b88e30f99e165f9b04a344851f9aca1752c983ab29c719935b8a2f61",
+  "artifact_hash": "sha256:cdfa91181e08f52a0751f852196791dc87bcf7e7c8a3120991e88d4d6c2bca8c",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -94,6 +95,13 @@
         "intent_id": "intent:validation_01KYJ6FZ2B16B9GH14Q0848YDA",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:validation_01KYJ6FZ2B16B9GH14Q0848YDA"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
+        "intent_id": "intent:validation_01KYJ6FZ2B16B9GH14Q0848YDA",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KYJ6FZ2B16B9GH14Q0848YDA"
       }
     ],
     "trajectories": {
@@ -139,12 +147,31 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_436623949a60e125 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:6"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 5
+    "next_sequence": 6
   }
 }
