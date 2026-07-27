@@ -5,8 +5,12 @@
   "task_id": "bugs_01kyh3rmg1c6z9xe",
   "original_intent": "Implement Decapod #1077 auto-login and #1040 command-time cloud activation",
   "derived_intent": "Add automatic cloud login/resume orchestration with offline proofs; keep Propodus auth provider-neutral and restore cloud config before publication",
+  "current_phase": "validation",
+  "next_transitions": [
+    "publish"
+  ],
   "blockers": [
-    "pre-existing entrypoint fingerprint drift; container workspace proof unavailable; generated validator self-heal changes remain outside PR scope"
+    "pre-existing entrypoint fingerprint drift; live protected production todo proof unavailable; watcher audit and risk-map artifacts are not present; stale workspaces remain preserved for explicit review"
   ],
   "active_boundaries": [
     "Decapod client orchestration only; no Propodus provider implementation; no secrets; no local-backend config in final PR"
@@ -15,6 +19,8 @@
     "src/decapod/core,src/decapod/cli.rs,src/decapod/lib.rs,tests"
   ],
   "inspected_files": [
+    ".decapod/governance/validation.json",
+    ".decapod/managed/specs/.manifest.json",
     "src/decapod/cli.rs",
     "src/decapod/core/auth.rs",
     "src/decapod/core/cloud_backend.rs",
@@ -26,6 +32,8 @@
     "tests/propodus_contract.rs"
   ],
   "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
     "src/decapod/cli.rs",
     "src/decapod/core/error.rs",
     "src/decapod/core/propodus.rs",
@@ -38,6 +46,7 @@
     "cargo clippy --all-targets --all-features -- -D warnings",
     "cargo fmt",
     "cargo test --all-targets --all-features",
+    "decapod validate",
     "target/debug/decapod validate --format json"
   ],
   "tool_calls": [],
@@ -47,8 +56,16 @@
       "status": "passed"
     },
     {
+      "name": "container_workspace",
+      "status": "passed"
+    },
+    {
+      "name": "decapod validate",
+      "status": "passed"
+    },
+    {
       "name": "decapod_validate",
-      "status": "failed"
+      "status": "passed"
     },
     {
       "name": "fmt",
@@ -69,10 +86,15 @@
     {
       "name": "plan",
       "status": "passed"
+    },
+    {
+      "name": "specs_refresh",
+      "status": "passed"
     }
   ],
   "evidence": [
-    "focused cloud auth tests passed; full test blocker is pre-existing entrypoint fingerprint drift; validate blockers are container proof and dirty-file threshold"
+    "focused cloud auth tests passed; full test blocker is pre-existing entrypoint fingerprint drift; container validation passed with governance warnings",
+    "validation epoch ve_3db58a258f96a601 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -83,7 +105,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:78fe9b103cc164cb01bc1bc21436872ab494a322a6d1c292e1034990147b12ab",
+  "artifact_hash": "sha256:bf5f25504524df0895fc30d730a7fc24b55afb53bde4e9df77ca2183423b947f",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -129,6 +151,27 @@
       {
         "sequence": 5,
         "event_id": "event:5",
+        "intent_id": "intent:run-1077-auto-login",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:run-1077-auto-login"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
+        "intent_id": "intent:run-1077-auto-login",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:run-1077-auto-login"
+      },
+      {
+        "sequence": 7,
+        "event_id": "event:7",
+        "intent_id": "intent:run-1077-auto-login",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:run-1077-auto-login"
+      },
+      {
+        "sequence": 8,
+        "event_id": "event:8",
         "intent_id": "intent:run-1077-auto-login",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:run-1077-auto-login"
@@ -190,12 +233,66 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src/decapod/core,src/decapod/cli.rs,src/decapod/lib.rs,tests"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_3db58a258f96a601 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:6"
+          },
+          {
+            "sequence": 7,
+            "action": "trajectory.record",
+            "scope": [
+              "src/decapod/core,src/decapod/cli.rs,src/decapod/lib.rs,tests"
+            ],
+            "observations": [
+              ".decapod/managed/specs/.manifest.json",
+              ".decapod/governance/validation.json"
+            ],
+            "proof_refs": [
+              "container_workspace",
+              "specs_refresh",
+              "decapod_validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:7"
+          },
+          {
+            "sequence": 8,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src/decapod/core,src/decapod/cli.rs,src/decapod/lib.rs,tests"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_3db58a258f96a601 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:8"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 5
+    "next_sequence": 8
   }
 }
