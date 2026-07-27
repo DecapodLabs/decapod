@@ -127,15 +127,24 @@ fn cloud_cli_preflight_does_not_initialize_local_sqlite() {
         .args(["todo", "list", "--format", "json"])
         .current_dir(&dir)
         .env_remove("DECAPOD_ACCESS_TOKEN")
+        .env("DECAPOD_PROPODUS_API_URL", "http://127.0.0.1:1")
         .env("XDG_DATA_HOME", data_home.path())
         .output()
         .expect("cloud list");
     assert!(!list_out.status.success());
     let error = String::from_utf8_lossy(&list_out.stderr);
+    let diagnostic: serde_json::Value =
+        serde_json::from_slice(&list_out.stdout).expect("stable cloud auth JSON");
+    assert_eq!(diagnostic["schema_version"], "decapod.cloud.auth.v1");
+    assert_eq!(diagnostic["status"], "offline");
     assert!(
-        error.contains("Propodus cloud preflight failed") && error.contains("DECAPOD_ACCESS_TOKEN"),
-        "unexpected credential preflight error: {error}"
+        diagnostic["next_action"]
+            .as_str()
+            .unwrap()
+            .contains("rerun")
     );
+    assert!(!error.contains("DECAPOD_ACCESS_TOKEN"));
+    assert!(!error.contains("Bearer"));
     assert!(
         !dir.join(".decapod/data/todo.db").exists(),
         "cloud credential preflight must not initialize local SQLite"
@@ -171,6 +180,7 @@ fn canonical_backend_selection_uses_cloud_without_local_fallback() {
         .args(["todo", "list", "--format", "json"])
         .current_dir(&dir)
         .env_remove("DECAPOD_ACCESS_TOKEN")
+        .env("DECAPOD_PROPODUS_API_URL", "http://127.0.0.1:1")
         .env("XDG_DATA_HOME", data_home.path())
         .output()
         .expect("cloud todo list");
@@ -179,10 +189,10 @@ fn canonical_backend_selection_uses_cloud_without_local_fallback() {
         !list_out.status.success(),
         "missing cloud session must fail closed"
     );
-    assert!(
-        String::from_utf8_lossy(&list_out.stderr).contains("credential")
-            || String::from_utf8_lossy(&list_out.stdout).contains("credential")
-    );
+    let diagnostic: serde_json::Value =
+        serde_json::from_slice(&list_out.stdout).expect("stable cloud auth JSON");
+    assert_eq!(diagnostic["schema_version"], "decapod.cloud.auth.v1");
+    assert_eq!(diagnostic["status"], "offline");
     assert!(
         !dir.join(".decapod/data/todo.db").exists(),
         "backend selection must not fall back to local SQLite"
@@ -205,4 +215,92 @@ fn cloud_login_requires_a_project_origin() {
         error.contains("origin Git remote"),
         "unexpected login error: {error}"
     );
+}
+
+#[test]
+fn cloud_session_acquire_preflights_machine_auth_before_local_agent_session() {
+    let tmp = TempDir::new().expect("project tempdir");
+    let data_home = TempDir::new().expect("credential data home");
+    let config_home = TempDir::new().expect("config home");
+    let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["init", "--backend", "cloud", "--force", "--proof"])
+        .current_dir(tmp.path())
+        .output()
+        .expect("cloud init");
+    assert!(init_out.status.success());
+    git(
+        tmp.path(),
+        &[
+            "remote",
+            "add",
+            "origin",
+            "git@github.com:DecapodLabs/decapod.git",
+        ],
+    );
+
+    let session_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["session", "acquire"])
+        .current_dir(tmp.path())
+        .env_remove("DECAPOD_ACCESS_TOKEN")
+        .env("DECAPOD_PROPODUS_API_URL", "http://127.0.0.1:1")
+        .env("XDG_DATA_HOME", data_home.path())
+        .env("XDG_CONFIG_HOME", config_home.path())
+        .output()
+        .expect("cloud session acquire");
+    assert!(!session_out.status.success());
+    let diagnostic: serde_json::Value =
+        serde_json::from_slice(&session_out.stdout).expect("stable cloud auth JSON");
+    assert_eq!(diagnostic["schema_version"], "decapod.cloud.auth.v1");
+    assert_eq!(diagnostic["status"], "offline");
+    assert!(!String::from_utf8_lossy(&session_out.stderr).contains("Bearer"));
+}
+
+#[test]
+fn cloud_session_acquire_uses_explicit_mock_onboarding_in_validation_harness() {
+    let tmp = TempDir::new().expect("project tempdir");
+    let data_home = TempDir::new().expect("credential data home");
+    let config_home = TempDir::new().expect("config home");
+    let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["init", "--backend", "cloud", "--force", "--proof"])
+        .current_dir(tmp.path())
+        .output()
+        .expect("cloud init");
+    assert!(init_out.status.success());
+    git(
+        tmp.path(),
+        &[
+            "remote",
+            "add",
+            "origin",
+            "git@github.com:DecapodLabs/decapod.git",
+        ],
+    );
+
+    let session_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["session", "acquire"])
+        .current_dir(tmp.path())
+        .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
+        .env("DECAPOD_CLOUD_AUTH_MODE", "mock")
+        .env("XDG_DATA_HOME", data_home.path())
+        .env("XDG_CONFIG_HOME", config_home.path())
+        .output()
+        .expect("mock cloud session acquire");
+    assert!(
+        session_out.status.success(),
+        "mock cloud session acquire failed: {}",
+        String::from_utf8_lossy(&session_out.stderr)
+    );
+    assert!(String::from_utf8_lossy(&session_out.stdout).contains("Password: "));
+    let output = format!(
+        "{}{}",
+        String::from_utf8_lossy(&session_out.stdout),
+        String::from_utf8_lossy(&session_out.stderr)
+    );
+    assert!(!output.contains("decapod-test-mock-access"));
+    assert!(!output.contains("decapod-test-mock-refresh"));
+    let machine_session = data_home.path().join("decapod/session_token.json");
+    let stored = std::fs::read_to_string(machine_session).expect("mock machine session");
+    assert!(stored.contains("decapod-test-mock-access"));
+    assert!(stored.contains("decapod-test-mock-refresh"));
+    assert!(!tmp.path().join(".decapod/data/todo.db").exists());
 }

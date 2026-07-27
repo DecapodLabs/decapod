@@ -11,6 +11,7 @@ use crate::core::cloud_backend::{
     CloudOnboardingState, CloudOnboardingStatusResponse, CloudSession, CloudSessionExchangeRequest,
     CloudSessionExchangeResponse, CloudSessionRefreshRequest,
 };
+use crate::core::error::{CloudAuthDiagnostic, CloudAuthStatus};
 use crate::core::repo_identity::RepositoryIdentity;
 use crate::core::storage::{Task as StorageTask, TodoStore};
 use async_trait::async_trait;
@@ -206,7 +207,7 @@ impl PropodusTransport for CurlTransport {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PropodusClientError {
     Configuration(String),
-    Authentication(String),
+    Authentication(CloudAuthDiagnostic),
     Transport(String),
     Decode(String),
     Validation(String),
@@ -223,7 +224,11 @@ impl fmt::Display for PropodusClientError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Configuration(message) => write!(f, "Propodus configuration error: {message}"),
-            Self::Authentication(message) => write!(f, "Propodus authentication error: {message}"),
+            Self::Authentication(diagnostic) => write!(
+                f,
+                "Propodus authentication error ({:?}): {}",
+                diagnostic.status, diagnostic.message
+            ),
             Self::Transport(message) => write!(f, "Propodus transport error: {message}"),
             Self::Decode(message) => write!(f, "Propodus response decode error: {message}"),
             Self::Validation(message) => write!(f, "Propodus validation error: {message}"),
@@ -242,6 +247,38 @@ impl fmt::Display for PropodusClientError {
 
 impl std::error::Error for PropodusClientError {}
 
+fn cloud_auth_error(
+    status: CloudAuthStatus,
+    message: impl Into<String>,
+    next_action: impl Into<String>,
+) -> PropodusClientError {
+    PropodusClientError::Authentication(CloudAuthDiagnostic::new(status, message, next_action))
+}
+
+fn map_auth_request_error(error: PropodusClientError) -> PropodusClientError {
+    match error {
+        PropodusClientError::Transport(_) => cloud_auth_error(
+            CloudAuthStatus::Offline,
+            "the cloud service could not be reached",
+            "restore network access, then rerun the original command",
+        ),
+        PropodusClientError::Service { status: 403, .. }
+        | PropodusClientError::Authentication(_) => cloud_auth_error(
+            CloudAuthStatus::Unauthorized,
+            "the cloud service rejected this repository session",
+            "run `decapod cloud login` to renew the machine session, then rerun the original command",
+        ),
+        other => other,
+    }
+}
+
+pub fn cloud_auth_diagnostic(error: &PropodusClientError) -> Option<&CloudAuthDiagnostic> {
+    match error {
+        PropodusClientError::Authentication(diagnostic) => Some(diagnostic),
+        _ => None,
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct PropodusClient<T = CurlTransport> {
     api_url: String,
@@ -253,7 +290,13 @@ pub struct PropodusClient<T = CurlTransport> {
 impl PropodusClient<CurlTransport> {
     pub fn from_cloud_config(config: &CloudRuntimeConfig) -> Result<Self, PropodusClientError> {
         let credential = auth::load_cloud_credential(None)
-            .map_err(|error| PropodusClientError::Authentication(error.to_string()))?;
+            .map_err(|_| {
+                cloud_auth_error(
+                    CloudAuthStatus::AuthRequired,
+                    "no cloud machine session is configured",
+                    "run `decapod cloud login`, complete the browser handoff, then rerun the original command",
+                )
+            })?;
         Self::with_transport(&config.into(), &credential.token, CurlTransport::default())
     }
 
@@ -283,36 +326,100 @@ pub fn ensure_cloud_session<T: PropodusTransport>(
     identity: &RepositoryIdentity,
     transport: T,
 ) -> Result<auth::CloudCredential, PropodusClientError> {
+    if mock_cloud_auth_enabled() {
+        return ensure_mock_cloud_session(identity);
+    }
+
+    let mut expired_machine_session = false;
     if let Ok(credential) = auth::load_cloud_credential(None) {
         if credential.source != auth::CredentialSource::MachineFile
             || !auth::cloud_session_is_expired(&credential)
         {
             return Ok(credential);
         }
+        expired_machine_session = true;
         if let (Some(session_id), Some(refresh_token)) = (
             credential.session_id.as_deref(),
             credential.refresh_token.as_deref(),
         ) {
             let session = refresh_cloud_session(config, session_id, refresh_token, &transport)?;
-            auth::store_machine_session(&session)
-                .map_err(|error| PropodusClientError::Authentication(error.to_string()))?;
+            auth::store_machine_session(&session).map_err(|_| {
+                cloud_auth_error(
+                    CloudAuthStatus::AuthRequired,
+                    "the refreshed cloud session could not be stored",
+                    "run `decapod cloud login` again after checking machine data-directory permissions",
+                )
+            })?;
             return auth::load_machine_session()
-                .map_err(|error| PropodusClientError::Authentication(error.to_string()))?
+                .map_err(|_| {
+                    cloud_auth_error(
+                        CloudAuthStatus::AuthRequired,
+                        "the refreshed cloud session could not be reloaded",
+                        "run `decapod cloud login` again",
+                    )
+                })?
                 .ok_or_else(|| {
-                    PropodusClientError::Authentication(
-                        "cloud session was not persisted".to_string(),
+                    cloud_auth_error(
+                        CloudAuthStatus::AuthRequired,
+                        "the refreshed cloud session was not persisted",
+                        "run `decapod cloud login` again",
                     )
                 });
         }
     }
 
-    complete_cloud_onboarding(config, identity, transport)
+    complete_cloud_onboarding(config, identity, transport, expired_machine_session)
+}
+
+/// CI and deterministic repository tests need the cloud control-plane path to
+/// exercise onboarding/session custody without asking a human or contacting a
+/// hosted provider. The validation gate is deliberately required alongside
+/// this explicit mode so production commands cannot silently use mock auth.
+fn mock_cloud_auth_enabled() -> bool {
+    std::env::var("DECAPOD_CLOUD_AUTH_MODE")
+        .ok()
+        .is_some_and(|mode| mode.eq_ignore_ascii_case("mock"))
+        && std::env::var("DECAPOD_VALIDATE_SKIP_GIT_GATES").as_deref() == Ok("1")
+}
+
+fn ensure_mock_cloud_session(
+    identity: &RepositoryIdentity,
+) -> Result<auth::CloudCredential, PropodusClientError> {
+    let session = CloudSession {
+        access_token: "decapod-test-mock-access".to_string(),
+        refresh_token: Some("decapod-test-mock-refresh".to_string()),
+        session_id: Some(format!("decapod-test-mock-{}", identity.canonical_name)),
+        expires_at: Some("2099-01-01T00:00:00Z".to_string()),
+    };
+    auth::store_machine_session(&session).map_err(|_| {
+        cloud_auth_error(
+            CloudAuthStatus::AuthRequired,
+            "the mock cloud session could not be stored",
+            "check machine data-directory permissions, then rerun the validation command",
+        )
+    })?;
+    auth::load_machine_session()
+        .map_err(|_| {
+            cloud_auth_error(
+                CloudAuthStatus::AuthRequired,
+                "the mock cloud session could not be reloaded",
+                "check machine data-directory permissions, then rerun the validation command",
+            )
+        })?
+        .ok_or_else(|| {
+            cloud_auth_error(
+                CloudAuthStatus::AuthRequired,
+                "the mock cloud session was not persisted",
+                "check machine data-directory permissions, then rerun the validation command",
+            )
+        })
 }
 
 fn complete_cloud_onboarding<T: PropodusTransport>(
     config: &PropodusConfig,
     identity: &RepositoryIdentity,
     transport: T,
+    expired_machine_session: bool,
 ) -> Result<auth::CloudCredential, PropodusClientError> {
     let endpoints = CloudOnboardingEndpoints::new(&config.api_url)
         .map_err(|error| PropodusClientError::Configuration(error.to_string()))?;
@@ -320,7 +427,13 @@ fn complete_cloud_onboarding<T: PropodusTransport>(
         && std::env::var_os("GITHUB_ACTIONS").is_none()
         && std::env::var_os("DECAPOD_HEADLESS").is_none();
     let pending = auth::load_pending_cloud_onboarding()
-        .map_err(|error| PropodusClientError::Authentication(error.to_string()))?
+        .map_err(|_| {
+            cloud_auth_error(
+                CloudAuthStatus::AuthRequired,
+                "cloud onboarding state could not be read",
+                "run `decapod cloud login` again",
+            )
+        })?
         .filter(|pending| {
             pending.api_url == config.api_url && pending.repo_id == identity.canonical_name
         });
@@ -328,17 +441,13 @@ fn complete_cloud_onboarding<T: PropodusTransport>(
     let (flow_id, url, expires_at) = if let Some(pending) = pending {
         (pending.flow_id, pending.url, pending.expires_at)
     } else {
-        if !interactive {
-            return Err(PropodusClientError::Authentication(
-                "no cloud credential is configured; run this command in an interactive terminal to start browser onboarding, then rerun it here".to_string(),
-            ));
-        }
         let request = OnboardingStartRequest {
             repo_id: identity.canonical_name.clone(),
         };
         let body = serde_json::to_vec(&request)
             .map_err(|error| PropodusClientError::Decode(error.to_string()))?;
-        let response = public_request(&transport, "POST", &endpoints.start(), Some(&body))?;
+        let response = public_request(&transport, "POST", &endpoints.start(), Some(&body))
+            .map_err(map_auth_request_error)?;
         let started: CloudOnboardingStartResponse = decode_json(&response.body)?;
         let (flow_id, handoff) = started
             .into_handoff()
@@ -350,16 +459,35 @@ fn complete_cloud_onboarding<T: PropodusTransport>(
             url: handoff.bootstrap_url.clone(),
             expires_at: handoff.expires_at.clone(),
         };
-        auth::store_pending_cloud_onboarding(&pending)
-            .map_err(|error| PropodusClientError::Authentication(error.to_string()))?;
+        auth::store_pending_cloud_onboarding(&pending).map_err(|_| {
+            cloud_auth_error(
+                CloudAuthStatus::AuthRequired,
+                "the cloud onboarding handoff could not be stored",
+                "run `decapod cloud login` again after checking machine data-directory permissions",
+            )
+        })?;
         (flow_id, handoff.bootstrap_url, handoff.expires_at)
     };
 
-    println!("Cloud onboarding URL: {url}");
-    println!(
+    eprintln!("Cloud onboarding URL: {url}");
+    eprintln!(
         "This one-time URL expires at {expires_at}; no credential is stored in the repository."
     );
-    try_open_browser(&url);
+    if interactive {
+        try_open_browser(&url);
+    }
+
+    if !interactive {
+        return Err(cloud_auth_error(
+            if expired_machine_session {
+                CloudAuthStatus::Expired
+            } else {
+                CloudAuthStatus::OnboardingPending
+            },
+            "browser onboarding is required before the cloud command can continue",
+            "complete the printed onboarding URL, then rerun the original command",
+        ));
+    }
 
     let deadline = Instant::now()
         + if interactive {
@@ -372,7 +500,8 @@ fn complete_cloud_onboarding<T: PropodusTransport>(
         let status_url = endpoints
             .status(&flow_id)
             .map_err(|error| PropodusClientError::Validation(error.to_string()))?;
-        let response = public_request(&transport, "GET", &status_url, None)?;
+        let response =
+            public_request(&transport, "GET", &status_url, None).map_err(map_auth_request_error)?;
         let status: CloudOnboardingStatusResponse = decode_json(&response.body)?;
         match status.state {
             CloudOnboardingState::Authorized => break,
@@ -380,15 +509,25 @@ fn complete_cloud_onboarding<T: PropodusTransport>(
             | CloudOnboardingState::Expired
             | CloudOnboardingState::Failed => {
                 let _ = auth::clear_pending_cloud_onboarding();
-                return Err(PropodusClientError::Authentication(format!(
-                    "cloud onboarding ended with status {:?}",
-                    status.state
-                )));
+                return Err(match status.state {
+                    CloudOnboardingState::Expired => cloud_auth_error(
+                        CloudAuthStatus::Expired,
+                        "the cloud onboarding handoff expired",
+                        "run `decapod cloud login` to start a new handoff",
+                    ),
+                    _ => cloud_auth_error(
+                        CloudAuthStatus::AuthRequired,
+                        "the cloud onboarding handoff was not completed",
+                        "run `decapod cloud login` to start a new handoff",
+                    ),
+                });
             }
             CloudOnboardingState::Pending | CloudOnboardingState::Uncertain => {
                 if !interactive || Instant::now() >= deadline {
-                    return Err(PropodusClientError::Authentication(
-                        "cloud onboarding is pending; finish the printed URL and rerun the command to resume".to_string(),
+                    return Err(cloud_auth_error(
+                        CloudAuthStatus::OnboardingPending,
+                        "browser onboarding is still pending",
+                        "complete the printed onboarding URL, then rerun the original command",
                     ));
                 }
                 if !first {
@@ -408,17 +547,25 @@ fn complete_cloud_onboarding<T: PropodusTransport>(
         "POST",
         &endpoints.exchange(),
         Some(&exchange_body),
-    )?;
+    )
+    .map_err(map_auth_request_error)?;
     let exchange: CloudOnboardingExchangeResponse = decode_json(&response.body)?;
     let code = exchange.code.trim();
     if code.is_empty() {
-        return Err(PropodusClientError::Authentication(
-            "cloud onboarding exchange returned no code".to_string(),
+        return Err(cloud_auth_error(
+            CloudAuthStatus::AuthRequired,
+            "cloud onboarding returned no exchange code",
+            "run `decapod cloud login` to start a new handoff",
         ));
     }
 
-    let request = CloudSessionExchangeRequest::new(code)
-        .map_err(|error| PropodusClientError::Authentication(error.to_string()))?;
+    let request = CloudSessionExchangeRequest::new(code).map_err(|_| {
+        cloud_auth_error(
+            CloudAuthStatus::AuthRequired,
+            "cloud onboarding returned an invalid exchange code",
+            "run `decapod cloud login` to start a new handoff",
+        )
+    })?;
     let body = serde_json::to_vec(&request)
         .map_err(|error| PropodusClientError::Decode(error.to_string()))?;
     let response = public_request(
@@ -426,20 +573,51 @@ fn complete_cloud_onboarding<T: PropodusTransport>(
         "POST",
         &endpoints.session_exchange(),
         Some(&body),
-    )?;
+    )
+    .map_err(map_auth_request_error)?;
     let session = CloudSessionExchangeResponse::into_session(decode_json(&response.body)?)
-        .map_err(|error| PropodusClientError::Authentication(error.to_string()))?;
-    session
-        .validate()
-        .map_err(|error| PropodusClientError::Authentication(error.to_string()))?;
-    auth::store_machine_session(&session)
-        .map_err(|error| PropodusClientError::Authentication(error.to_string()))?;
-    auth::clear_pending_cloud_onboarding()
-        .map_err(|error| PropodusClientError::Authentication(error.to_string()))?;
+        .map_err(|_| {
+            cloud_auth_error(
+                CloudAuthStatus::AuthRequired,
+                "cloud onboarding returned no usable session",
+                "run `decapod cloud login` to start a new handoff",
+            )
+        })?;
+    session.validate().map_err(|_| {
+        cloud_auth_error(
+            CloudAuthStatus::AuthRequired,
+            "cloud onboarding returned an invalid session",
+            "run `decapod cloud login` to start a new handoff",
+        )
+    })?;
+    auth::store_machine_session(&session).map_err(|_| {
+        cloud_auth_error(
+            CloudAuthStatus::AuthRequired,
+            "the cloud session could not be stored",
+            "run `decapod cloud login` again after checking machine data-directory permissions",
+        )
+    })?;
+    auth::clear_pending_cloud_onboarding().map_err(|_| {
+        cloud_auth_error(
+            CloudAuthStatus::AuthRequired,
+            "cloud onboarding state could not be cleared",
+            "run `decapod cloud login` again",
+        )
+    })?;
     auth::load_machine_session()
-        .map_err(|error| PropodusClientError::Authentication(error.to_string()))?
+        .map_err(|_| {
+            cloud_auth_error(
+                CloudAuthStatus::AuthRequired,
+                "the cloud session could not be reloaded",
+                "run `decapod cloud login` again",
+            )
+        })?
         .ok_or_else(|| {
-            PropodusClientError::Authentication("cloud session was not persisted".to_string())
+            cloud_auth_error(
+                CloudAuthStatus::AuthRequired,
+                "the cloud session was not persisted",
+                "run `decapod cloud login` again",
+            )
         })
 }
 
@@ -451,13 +629,24 @@ fn refresh_cloud_session<T: PropodusTransport>(
 ) -> Result<CloudSession, PropodusClientError> {
     let endpoints = CloudOnboardingEndpoints::new(&config.api_url)
         .map_err(|error| PropodusClientError::Configuration(error.to_string()))?;
-    let request = CloudSessionRefreshRequest::new(session_id, refresh_token)
-        .map_err(|error| PropodusClientError::Authentication(error.to_string()))?;
+    let request = CloudSessionRefreshRequest::new(session_id, refresh_token).map_err(|_| {
+        cloud_auth_error(
+            CloudAuthStatus::Expired,
+            "the machine session refresh credentials are invalid",
+            "run `decapod cloud login` to renew the machine session",
+        )
+    })?;
     let body = serde_json::to_vec(&request)
         .map_err(|error| PropodusClientError::Decode(error.to_string()))?;
-    let response = public_request(transport, "POST", &endpoints.refresh(), Some(&body))?;
-    CloudSessionExchangeResponse::into_session(decode_json(&response.body)?)
-        .map_err(|error| PropodusClientError::Authentication(error.to_string()))
+    let response = public_request(transport, "POST", &endpoints.refresh(), Some(&body))
+        .map_err(map_auth_request_error)?;
+    CloudSessionExchangeResponse::into_session(decode_json(&response.body)?).map_err(|_| {
+        cloud_auth_error(
+            CloudAuthStatus::Expired,
+            "the machine session could not be refreshed",
+            "run `decapod cloud login` to renew the machine session",
+        )
+    })
 }
 
 fn public_request<T: PropodusTransport>(
@@ -510,8 +699,10 @@ impl<T: PropodusTransport> PropodusClient<T> {
             ));
         }
         if credential.trim().is_empty() {
-            return Err(PropodusClientError::Authentication(
-                "a bearer credential is required".to_string(),
+            return Err(cloud_auth_error(
+                CloudAuthStatus::AuthRequired,
+                "a cloud machine session is required",
+                "run `decapod cloud login`, complete the browser handoff, then rerun the original command",
             ));
         }
         Ok(Self {
@@ -763,7 +954,11 @@ fn map_http_error(response: PropodusHttpResponse) -> PropodusClientError {
             )
         });
     match response.status {
-        401 => PropodusClientError::Authentication(message),
+        401 => cloud_auth_error(
+            CloudAuthStatus::Unauthorized,
+            "the cloud service rejected the machine session",
+            "run `decapod cloud login` to renew the machine session, then rerun the original command",
+        ),
         403 => PropodusClientError::Service {
             status: response.status,
             code,
@@ -790,4 +985,207 @@ fn percent_encode(value: &str) -> String {
         }
     }
     encoded
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::{Mutex, OnceLock};
+
+    #[derive(Clone)]
+    struct OnboardingStartTransport;
+
+    impl PropodusTransport for OnboardingStartTransport {
+        fn request(
+            &self,
+            method: &str,
+            url: &str,
+            _bearer: &str,
+            _body: Option<&[u8]>,
+        ) -> Result<PropodusHttpResponse, PropodusClientError> {
+            assert_eq!(method, "POST");
+            assert!(url.ends_with("/api/onboarding/start"));
+            Ok(PropodusHttpResponse {
+                status: 200,
+                body: br#"{"flow_id":"flow-opaque","bootstrap_url":"https://propodus.example.test/handoff?flow=opaque","expires_at":"2099-01-01T00:00:00Z","poll_after_seconds":2}"#.to_vec(),
+            })
+        }
+    }
+
+    #[derive(Clone)]
+    struct RefreshTransport;
+
+    impl PropodusTransport for RefreshTransport {
+        fn request(
+            &self,
+            method: &str,
+            url: &str,
+            _bearer: &str,
+            _body: Option<&[u8]>,
+        ) -> Result<PropodusHttpResponse, PropodusClientError> {
+            assert_eq!(method, "POST");
+            assert!(url.ends_with("/api/auth/session/refresh"));
+            let response = CloudSessionExchangeResponse {
+                credentials: Some(CloudSession {
+                    access_token: "refreshed-access".to_string(),
+                    refresh_token: Some("refreshed-refresh".to_string()),
+                    session_id: Some("refreshed-session".to_string()),
+                    expires_at: Some("2099-01-01T00:00:00Z".to_string()),
+                }),
+                session: None,
+            };
+            Ok(PropodusHttpResponse {
+                status: 200,
+                body: serde_json::to_vec(&response).unwrap(),
+            })
+        }
+    }
+
+    fn auth_env_lock() -> std::sync::MutexGuard<'static, ()> {
+        static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+        LOCK.get_or_init(|| Mutex::new(())).lock().unwrap()
+    }
+
+    #[test]
+    fn auth_diagnostic_schema_is_stable_and_secret_free() {
+        let diagnostic = CloudAuthDiagnostic::new(
+            CloudAuthStatus::Unauthorized,
+            "the cloud service rejected the machine session",
+            "run `decapod cloud login` to renew the machine session",
+        );
+        let value = serde_json::to_value(&diagnostic).expect("serialize diagnostic");
+        assert_eq!(
+            value,
+            serde_json::json!({
+                "schema_version": "decapod.cloud.auth.v1",
+                "status": "unauthorized",
+                "message": "the cloud service rejected the machine session",
+                "next_action": "run `decapod cloud login` to renew the machine session"
+            })
+        );
+        let rendered = serde_json::to_string(&value).unwrap();
+        for secret in ["access-token", "refresh-token", "Bearer", "flow-opaque"] {
+            assert!(!rendered.contains(secret), "diagnostic leaked {secret}");
+        }
+    }
+
+    #[test]
+    fn auth_request_failures_have_actionable_distinct_states() {
+        let offline = map_auth_request_error(PropodusClientError::Transport(
+            "connection refused".to_string(),
+        ));
+        assert_eq!(
+            cloud_auth_diagnostic(&offline).unwrap().status,
+            CloudAuthStatus::Offline
+        );
+
+        let unauthorized = map_auth_request_error(PropodusClientError::Service {
+            status: 403,
+            code: "repository_not_authorized".to_string(),
+            message: "provider message is intentionally discarded".to_string(),
+        });
+        assert_eq!(
+            cloud_auth_diagnostic(&unauthorized).unwrap().status,
+            CloudAuthStatus::Unauthorized
+        );
+        assert!(!unauthorized.to_string().contains("provider message"));
+    }
+
+    #[test]
+    fn noninteractive_first_use_persists_handoff_and_returns_pending() {
+        let _lock = auth_env_lock();
+        let data_home = tempfile::tempdir().expect("data home");
+        let old_data_home = std::env::var_os("XDG_DATA_HOME");
+        let old_token = std::env::var_os(auth::CLOUD_ACCESS_TOKEN_ENV);
+        let old_headless = std::env::var_os("DECAPOD_HEADLESS");
+        unsafe {
+            std::env::set_var("XDG_DATA_HOME", data_home.path());
+            std::env::remove_var(auth::CLOUD_ACCESS_TOKEN_ENV);
+            std::env::set_var("DECAPOD_HEADLESS", "1");
+        }
+
+        let identity = RepositoryIdentity {
+            canonical_name: "DecapodLabs/decapod".to_string(),
+            owner: "DecapodLabs".to_string(),
+            repository: "decapod".to_string(),
+            remote_url: "git@github.com:DecapodLabs/decapod.git".to_string(),
+        };
+        let config = PropodusConfig {
+            api_url: "https://propodus.example.test".to_string(),
+            repo_id: identity.canonical_name.clone(),
+        };
+        let error = ensure_cloud_session(&config, &identity, OnboardingStartTransport)
+            .expect_err("noninteractive onboarding must pause for the human handoff");
+        assert_eq!(
+            cloud_auth_diagnostic(&error).unwrap().status,
+            CloudAuthStatus::OnboardingPending
+        );
+        assert!(
+            data_home.path().join("decapod/onboarding.json").is_file(),
+            "handoff custody must be machine-local"
+        );
+        assert!(!error.to_string().contains("flow-opaque"));
+        assert!(!error.to_string().contains("Bearer"));
+
+        unsafe {
+            match old_data_home {
+                Some(value) => std::env::set_var("XDG_DATA_HOME", value),
+                None => std::env::remove_var("XDG_DATA_HOME"),
+            }
+            match old_token {
+                Some(value) => std::env::set_var(auth::CLOUD_ACCESS_TOKEN_ENV, value),
+                None => std::env::remove_var(auth::CLOUD_ACCESS_TOKEN_ENV),
+            }
+            match old_headless {
+                Some(value) => std::env::set_var("DECAPOD_HEADLESS", value),
+                None => std::env::remove_var("DECAPOD_HEADLESS"),
+            }
+        }
+    }
+
+    #[test]
+    fn expired_machine_session_refreshes_without_human_interaction() {
+        let _lock = auth_env_lock();
+        let data_home = tempfile::tempdir().expect("data home");
+        let old_data_home = std::env::var_os("XDG_DATA_HOME");
+        let old_token = std::env::var_os(auth::CLOUD_ACCESS_TOKEN_ENV);
+        unsafe {
+            std::env::set_var("XDG_DATA_HOME", data_home.path());
+            std::env::remove_var(auth::CLOUD_ACCESS_TOKEN_ENV);
+        }
+
+        auth::store_machine_session(&CloudSession {
+            access_token: "expired-access".to_string(),
+            refresh_token: Some("refresh-token".to_string()),
+            session_id: Some("session-id".to_string()),
+            expires_at: Some("2000-01-01T00:00:00Z".to_string()),
+        })
+        .expect("store expired machine session");
+        let identity = RepositoryIdentity {
+            canonical_name: "DecapodLabs/decapod".to_string(),
+            owner: "DecapodLabs".to_string(),
+            repository: "decapod".to_string(),
+            remote_url: "git@github.com:DecapodLabs/decapod.git".to_string(),
+        };
+        let config = PropodusConfig {
+            api_url: "https://propodus.example.test".to_string(),
+            repo_id: identity.canonical_name.clone(),
+        };
+        let credential = ensure_cloud_session(&config, &identity, RefreshTransport)
+            .expect("expired machine session should refresh");
+        assert_eq!(credential.token, "refreshed-access");
+        assert_eq!(credential.source, auth::CredentialSource::MachineFile);
+        assert_eq!(auth::load_pending_cloud_onboarding().unwrap(), None);
+
+        unsafe {
+            match old_data_home {
+                Some(value) => std::env::set_var("XDG_DATA_HOME", value),
+                None => std::env::remove_var("XDG_DATA_HOME"),
+            }
+            match old_token {
+                Some(value) => std::env::set_var(auth::CLOUD_ACCESS_TOKEN_ENV, value),
+                None => std::env::remove_var(auth::CLOUD_ACCESS_TOKEN_ENV),
+            }
+        }
+    }
 }

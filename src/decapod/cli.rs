@@ -678,13 +678,16 @@ pub(crate) struct SessionCli {
 
 #[derive(clap::Args, Debug)]
 pub(crate) struct CloudCli {
+    /// Output format: text or json.
+    #[clap(long, global = true, default_value = "text")]
+    pub format: String,
     #[clap(subcommand)]
     pub command: CloudCommand,
 }
 
 #[derive(Subcommand, Debug)]
 pub(crate) enum CloudCommand {
-    /// Run the interactive device authorization flow and save the token outside the repository.
+    /// Start or resume repository-bound GitHub authorization and save the machine session outside the repository.
     Login,
     /// Report whether a local or environment credential is available without printing it.
     Status,

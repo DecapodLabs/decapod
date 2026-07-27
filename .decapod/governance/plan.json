@@ -4,12 +4,14 @@
   "intent": "Cut Decapod over to the working Propodus cloud path: activate the cloud todo adapter, automate one-time onboarding and machine-local JWT session refresh, preserve canonical repository and fork identity separation, and prove protected list/add/claim/complete behavior against production without local fallback.",
   "state": "APPROVED",
   "todo_ids": [
-    "feat_01kyenj71ap51saz"
+    "bugs_01kyh3rmg1c6z9xe"
   ],
   "proof_hooks": [
     "cargo fmt --check",
+    "cargo clippy --all-targets --all-features -- -D warnings",
     "cargo test",
     "decapod validate",
+    "cloud auth focused tests",
     "protected production todo proof"
   ],
   "unknowns": [],
@@ -24,5 +26,5 @@
     "file_touch_budget": 40
   },
   "phases": [],
-  "updated_at": "1785051681Z"
+  "updated_at": "1785136682Z"
 }

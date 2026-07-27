@@ -2,7 +2,7 @@ use crate::cli::{CloudRuntimeConfig, DecapodProjectConfig};
 use crate::core::broker::DbBroker;
 use crate::core::error;
 use crate::core::external_action::{self, ExternalCapability};
-use crate::core::propodus::{PropodusClient, PropodusTodoStore};
+use crate::core::propodus::{PropodusClient, PropodusClientError, PropodusTodoStore};
 use crate::core::repo_identity::{RepositoryIdentity, resolve_repository_identity};
 use crate::core::schemas; // Import the new schemas module
 use crate::core::storage::{Task as StorageTask, TodoStore};
@@ -21,7 +21,7 @@ use serde_json::Value as JsonValue;
 use std::collections::HashSet;
 use std::env;
 use std::fs::{self, OpenOptions};
-use std::io::{BufRead, BufReader, Write};
+use std::io::{BufRead, BufReader, IsTerminal, Write};
 use std::path::{Path, PathBuf};
 
 const AGENT_EVICT_TIMEOUT_SECS: u64 = 30 * 60;
@@ -4816,11 +4816,16 @@ impl CloudTodoStoreFactory for PropodusCloudTodoStoreFactory {
         config: &CloudRuntimeConfig,
         identity: &RepositoryIdentity,
     ) -> Result<Box<dyn TodoStore>, error::DecapodError> {
-        let client = PropodusClient::from_dogfood_cloud_config(config, identity).map_err(|error| {
-            error::DecapodError::ValidationError(format!(
-                "Propodus cloud preflight failed: {error}. Complete the printed repository-bound onboarding URL or use DECAPOD_ACCESS_TOKEN only for a controlled proof."
-            ))
-        })?;
+        let client = PropodusClient::from_dogfood_cloud_config(config, identity).map_err(
+            |error| match error {
+                PropodusClientError::Authentication(diagnostic) => {
+                    error::DecapodError::CloudAuth(diagnostic)
+                }
+                other => error::DecapodError::ValidationError(format!(
+                    "Propodus cloud preflight failed: {other}. Cloud mode never falls back to local SQLite."
+                )),
+            },
+        )?;
         Ok(Box::new(PropodusTodoStore::new(client)))
     }
 }
@@ -5065,8 +5070,27 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
 ) -> Result<(), error::DecapodError> {
     let root = &store.root;
     if let Some((cloud, identity)) = cloud_runtime(root)? {
-        let out =
-            run_cloud_todo_command_with_factory(root, &cli.command, &cloud, &identity, factory)?;
+        let out = match run_cloud_todo_command_with_factory(
+            root,
+            &cli.command,
+            &cloud,
+            &identity,
+            factory,
+        ) {
+            Ok(out) => out,
+            Err(error @ error::DecapodError::CloudAuth(_)) => {
+                if (matches!(cli.format, OutputFormat::Json)
+                    || !std::io::stdin().is_terminal()
+                    || std::env::var_os("DECAPOD_HEADLESS").is_some()
+                    || std::env::var_os("GITHUB_ACTIONS").is_some())
+                    && let error::DecapodError::CloudAuth(diagnostic) = &error
+                {
+                    println!("{}", serde_json::to_string_pretty(diagnostic).unwrap());
+                }
+                return Err(error);
+            }
+            Err(error) => return Err(error),
+        };
         match cli.format {
             OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&out).unwrap()),
             OutputFormat::Text => {
