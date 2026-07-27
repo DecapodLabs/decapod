@@ -139,21 +139,60 @@ fn record_cloud_init_registration(
     Ok(())
 }
 
+fn map_cloud_preflight_error(error: core::propodus::PropodusClientError) -> error::DecapodError {
+    match error {
+        core::propodus::PropodusClientError::Authentication(diagnostic) => {
+            error::DecapodError::CloudAuth(diagnostic)
+        }
+        other => error::DecapodError::SessionError(other.to_string()),
+    }
+}
+
+fn ensure_project_cloud_session(
+    project_root: &Path,
+) -> Result<core::repo_identity::RepositoryIdentity, error::DecapodError> {
+    let identity = core::repo_identity::resolve_repository_identity(project_root)?;
+    let propodus = core::propodus::PropodusConfig::from(&crate::cli::CloudRuntimeConfig::default());
+    core::propodus::ensure_cloud_session(
+        &propodus,
+        &identity,
+        core::propodus::CurlTransport::default(),
+    )
+    .map_err(map_cloud_preflight_error)?;
+    Ok(identity)
+}
+
+fn print_cloud_auth_json_if_needed(
+    diagnostic: &core::error::CloudAuthDiagnostic,
+    format: Option<&str>,
+) {
+    if format == Some("json")
+        || !io::stdin().is_terminal()
+        || std::env::var_os("DECAPOD_HEADLESS").is_some()
+        || std::env::var_os("GITHUB_ACTIONS").is_some()
+    {
+        println!("{}", serde_json::to_string_pretty(diagnostic).unwrap());
+    }
+}
+
 fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
-    match cloud_cli.command {
+    let CloudCli { format, command } = cloud_cli;
+    match command {
         CloudCommand::Login => {
             let project_root = find_decapod_project_root(&std::env::current_dir()?)?;
-            let identity = core::repo_identity::resolve_repository_identity(&project_root)?;
-            let propodus =
-                core::propodus::PropodusConfig::from(&crate::cli::CloudRuntimeConfig::default());
-            core::propodus::ensure_cloud_session(
-                &propodus,
-                &identity,
-                core::propodus::CurlTransport::default(),
-            )
-            .map_err(|error| error::DecapodError::SessionError(error.to_string()))?;
-            println!("Cloud session ready for {}.", identity.canonical_name);
-            Ok(())
+            match ensure_project_cloud_session(&project_root) {
+                Ok(identity) => {
+                    println!("Cloud session ready for {}.", identity.canonical_name);
+                    Ok(())
+                }
+                Err(error @ error::DecapodError::CloudAuth(_)) => {
+                    if let error::DecapodError::CloudAuth(diagnostic) = &error {
+                        print_cloud_auth_json_if_needed(diagnostic, Some(&format));
+                    }
+                    Err(error)
+                }
+                Err(error) => Err(error),
+            }
         }
         CloudCommand::Status => match auth::load_cloud_credential(None) {
             Ok(credential) => {
@@ -2202,8 +2241,13 @@ pub fn run() -> Result<(), error::DecapodError> {
             write_project_config(&target_dir, &config, init_with.dry_run)?;
             record_cloud_init_registration(&target_dir, &config, init_with.dry_run)?;
             seed_init_generated_state(&target_dir, init_with.dry_run)?;
+            let cloud_bootstrap_allowed = io::stdin().is_terminal()
+                && std::env::var_os("GITHUB_ACTIONS").is_none()
+                && std::env::var_os("DECAPOD_HEADLESS").is_none()
+                && !init_with.proof;
             if !init_with.dry_run
                 && config.repo.effective_backend().is_cloud()
+                && cloud_bootstrap_allowed
                 && let Ok(identity) = core::repo_identity::resolve_repository_identity(&target_dir)
             {
                 let propodus = core::propodus::PropodusConfig::from(
@@ -2215,15 +2259,10 @@ pub fn run() -> Result<(), error::DecapodError> {
                     core::propodus::CurlTransport::default(),
                 );
                 if let Err(error) = onboarding {
-                    let message = error.to_string();
-                    if message.contains("interactive terminal") {
-                        println!(
-                            "Cloud backend selected for {}; run a cloud todo command in an interactive terminal to complete onboarding.",
-                            identity.canonical_name
-                        );
-                    } else {
-                        return Err(error::DecapodError::SessionError(message));
-                    }
+                    println!(
+                        "Cloud backend selected for {}; {}",
+                        identity.canonical_name, error
+                    );
                 }
             }
         }
@@ -3462,6 +3501,24 @@ fn run_session_command(session_cli: SessionCli) -> Result<(), error::DecapodErro
     let store_root = project_root.join(".decapod").join("data");
     fs::create_dir_all(&store_root).map_err(error::DecapodError::IoError)?;
     let _ = cleanup_expired_sessions(&project_root, &store_root)?;
+
+    if matches!(session_cli.command, SessionCommand::Acquire)
+        && cli::DecapodProjectConfig::load(&project_root)?
+            .repo
+            .effective_backend()
+            .is_cloud()
+    {
+        match ensure_project_cloud_session(&project_root) {
+            Ok(_) => {}
+            Err(error @ error::DecapodError::CloudAuth(_)) => {
+                if let error::DecapodError::CloudAuth(diagnostic) = &error {
+                    print_cloud_auth_json_if_needed(diagnostic, None);
+                }
+                return Err(error);
+            }
+            Err(error) => return Err(error),
+        }
+    }
 
     // Check and update version on session acquire
     if matches!(session_cli.command, SessionCommand::Acquire)
