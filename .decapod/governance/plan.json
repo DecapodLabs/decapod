@@ -3,10 +3,12 @@
   "title": "README uplift: sharpen Decapod's governance-kernel positioning per Issue #1050",
   "intent": "Update README.md to position Decapod as a repo-native governance kernel, per the acceptance criteria and implementation notes in Issue #1050.",
   "state": "APPROVED",
-  "todo_ids": [],
+  "todo_ids": [
+    "docs_01kyhdjsrw85dryg"
+  ],
   "proof_hooks": [
     "decapod validate",
-    "decapod capabilities --format json | jq ' .capabilities[] | select(.name==\"governance-kernel\")'",
+    "decapod capabilities --format json | jq \" .capabilities[] | select(.name==\\\\"governance-kernel\\\")\"",
     "wc -w README.md"
   ],
   "unknowns": [],
@@ -21,5 +23,5 @@
     "file_touch_budget": 40
   },
   "phases": [],
-  "updated_at": "1785175266Z"
+  "updated_at": "2026-07-27T19:36:20Z"
 }
