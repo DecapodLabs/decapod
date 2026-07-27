@@ -7,7 +7,7 @@
   "purpose": "Maintain explicit, measurable, and falsifiable claims about the governance kernel capabilities that Decapod is intended to provide.",
   "authority": {
     "owner": "Decapod project",
-    "source_issue": "https://github.com/DecapodLabs/decapod/issues/1050",
+    "source_issue": "https://github.com/DecapodLabs/decapod/issues/682",
     "status": "active",
     "created_at": "2026-07-22",
     "updated_at": "2026-07-27",
