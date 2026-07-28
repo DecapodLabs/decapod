@@ -5,7 +5,13 @@
   "task_id": "feat_01kym05w1mxdpyhw",
   "original_intent": "Solve the Hermes governance integrity and readiness substrate wave in Decapod and publish a focused PR.",
   "derived_intent": "Provide deterministic governance artifact integrity, semantic freshness, workspace-versus-target state, and dirty-file classification for Hermes readiness.",
-  "current_phase": "implementation",
+  "current_phase": "validation",
+  "blockers": [
+    "pre-existing done TODO bend_01kyktj9m6ftb44j has stale validation epoch and remains unverified",
+    "pre-existing release_artifact_policy failure for inline tests in cli.rs, cloud_backend.rs, propodus.rs, repo_identity.rs",
+    "pre-existing release_artifact_policy flags inline tests in cli.rs, cloud_backend.rs, propodus.rs, repo_identity.rs",
+    "prior cloud-session TODO bend_01kyktj9m6ftb44j has stale validation epoch and remains unverified"
+  ],
   "active_boundaries": [
     "Decapod repository only; preserve unrelated user changes; no Propodus changes; no protected-root mutation."
   ],
@@ -28,28 +34,57 @@
     "tests/hermes_governance_substrate.rs"
   ],
   "declared_commands": [
-    "cargo test --test hermes_governance_substrate --test governance_artifacts --test commit_often_gate"
+    "cargo clippy --all-targets --all-features -- -D warnings",
+    "cargo fmt --all -- --check",
+    "cargo test --all-targets -- --test-threads=1",
+    "cargo test --test hermes_governance_substrate --test governance_artifacts --test commit_often_gate",
+    "docker run ... target/debug/decapod validate --format json"
   ],
   "tool_calls": [],
   "checks": [
     {
+      "name": "all_targets",
+      "status": "partial"
+    },
+    {
+      "name": "cargo_fmt",
+      "status": "passed"
+    },
+    {
+      "name": "clippy",
+      "status": "passed"
+    },
+    {
+      "name": "container_validation",
+      "status": "partial"
+    },
+    {
       "name": "focused_tests",
+      "status": "passed"
+    },
+    {
+      "name": "inventory",
+      "status": "passed"
+    },
+    {
+      "name": "specs_refresh",
       "status": "passed"
     }
   ],
   "evidence": [
+    "214 unit tests and focused Hermes suite passed; serialized all-target run stopped only at pre-existing release_artifact_policy inline-test inventory; container validation passed all product gates and retained one unrelated prior cloud TODO proof-hook failure",
     "focused Hermes governance substrate tests passed"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
-  "proof_status": "passed",
+  "proof_status": "partial",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "supported"
+    "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:c5e62adc0926848f1bb4b11d9af8ead21fb42ca8c0167e1382772c9933ecf1c6",
+  "artifact_hash": "sha256:5eb57231ec3f1cd88ea7b9f906f32e7bb4655ee0dc5f61632d47f533888c87ed",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -91,6 +126,27 @@
         "intent_id": "intent:01KYM0HERMES",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:01KYM0HERMES"
+      },
+      {
+        "sequence": 5,
+        "event_id": "event:5",
+        "intent_id": "intent:01KYM0HERMES",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:01KYM0HERMES"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
+        "intent_id": "intent:01KYM0HERMES",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:01KYM0HERMES"
+      },
+      {
+        "sequence": 7,
+        "event_id": "event:7",
+        "intent_id": "intent:01KYM0HERMES",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:01KYM0HERMES"
       }
     ],
     "trajectories": {
@@ -125,12 +181,63 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
+          },
+          {
+            "sequence": 5,
+            "action": "validation",
+            "command": "cargo fmt --all -- --check",
+            "scope": [
+              "Issues #1094 #1096 #1059 #1065 #1055 #1072"
+            ],
+            "observations": [
+              "214 unit tests and focused Hermes suite passed; serialized all-target run stopped only at pre-existing release_artifact_policy inline-test inventory; container validation passed all product gates and retained one unrelated prior cloud TODO proof-hook failure"
+            ],
+            "proof_refs": [
+              "cargo_fmt",
+              "clippy",
+              "focused_tests",
+              "all_targets",
+              "container_validation"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "trajectory.record",
+            "scope": [
+              "Issues #1094 #1096 #1059 #1065 #1055 #1072"
+            ],
+            "observations": [],
+            "proof_refs": [
+              "specs_refresh",
+              "cargo_fmt",
+              "clippy",
+              "focused_tests",
+              "all_targets"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:6"
+          },
+          {
+            "sequence": 7,
+            "action": "trajectory.record",
+            "scope": [
+              "Issues #1094 #1096 #1059 #1065 #1055 #1072"
+            ],
+            "observations": [],
+            "proof_refs": [
+              "container_validation",
+              "inventory"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:7"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 4
+    "next_sequence": 7
   }
 }
