@@ -143,13 +143,13 @@ pub fn classify_path(path: &str, pre_existing: &[String]) -> DirtyFileClass {
     if path.starts_with(".decapod/managed/") || path.starts_with(".decapod/generated/") {
         return DirtyFileClass::DeterministicProjection;
     }
-    if path.starts_with(".decapod/data/sessions/")
-        || path.starts_with(".decapod/workspaces/")
-        || path.starts_with(".decapod/data/runtime/")
-    {
+    if path.starts_with(".decapod/data/") || path.starts_with(".decapod/workspaces/") {
         return DirtyFileClass::RuntimeEphemeral;
     }
     if path.starts_with(".decapod/") {
+        if path == ".decapod/config.toml" || path == ".decapod/OVERRIDE.md" {
+            return DirtyFileClass::UserAuthored;
+        }
         return DirtyFileClass::Unknown;
     }
     DirtyFileClass::UserAuthored
