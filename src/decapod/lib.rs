@@ -5943,7 +5943,7 @@ fn write_validation_receipt(
             "validation receipt serialization failed: {e}"
         ))
     })?;
-    fs::write(&path, bytes).map_err(error::DecapodError::IoError)?;
+    core::atomic::write_atomic(&path, &bytes).map_err(error::DecapodError::IoError)?;
     Ok(path)
 }
 
