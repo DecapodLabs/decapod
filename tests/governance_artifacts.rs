@@ -50,6 +50,26 @@ fn proof_init_creates_and_refresh_preserves_claims_ledger() {
 }
 
 #[test]
+fn claims_note_update_is_atomic_semantic_and_idempotent() {
+    let temp = TempDir::new().expect("tempdir");
+    let init = run_decapod(
+        temp.path(),
+        &["init", "--proof", "--no-container-workspaces"],
+    );
+    assert!(init.status.success(), "initialization failed");
+    let claims_path = temp.path().join(research_claims::CLAIMS_PATH);
+    let original = fs::read_to_string(&claims_path).expect("claims template");
+    let note = "Hermes governance substrate test note.";
+    assert!(research_claims::append_change_note(temp.path(), note).expect("append note"));
+    assert!(!research_claims::append_change_note(temp.path(), note).expect("idempotent note"));
+    let updated = fs::read_to_string(&claims_path).expect("updated claims");
+    assert!(updated.contains(note));
+    assert_eq!(updated.matches(note).count(), 1);
+    assert_eq!(updated.lines().count(), original.lines().count());
+    research_claims::load_and_validate(temp.path()).expect("updated claims remain valid");
+}
+
+#[test]
 fn inventory_distinguishes_health_claims_and_reports_pr_diff() {
     let temp = TempDir::new().expect("tempdir");
     let init = run_decapod(

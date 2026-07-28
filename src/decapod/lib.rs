@@ -6124,10 +6124,12 @@ fn run_govern_command(
             ArtifactsCommand::Inventory {
                 base_branch,
                 repair,
+                claims_note,
             } => core::governance_artifacts::run_inventory(
                 workspace_root,
                 base_branch.as_deref(),
                 repair,
+                claims_note.as_deref(),
             )?,
         },
         GovernCommand::Plan(plan_cli) => run_plan_command(plan_cli, project_store, workspace_root)?,

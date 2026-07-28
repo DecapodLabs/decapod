@@ -4,6 +4,7 @@
 //! Schema is the machine-readable public contract; these Rust types provide
 //! the executable semantic checks used by validation.
 
+use crate::core::atomic;
 use crate::core::error::DecapodError;
 use serde::Deserialize;
 use serde_json::Value;
@@ -400,6 +401,68 @@ pub fn ensure_template(repo_root: &Path, dry_run: bool) -> Result<bool, DecapodE
     load_and_validate(repo_root)?.ok_or_else(|| {
         DecapodError::ValidationError(format!(
             "claims template was written but could not be loaded: {}",
+            path.display()
+        ))
+    })?;
+    Ok(true)
+}
+
+/// Append an issue-scoped note to the claims ledger through the governed CLI.
+/// Existing claims remain byte-for-byte semantically intact and the write is
+/// atomic so publication can carry an explicit claims-artifact change.
+pub fn append_change_note(repo_root: &Path, note: &str) -> Result<bool, DecapodError> {
+    let note = note.trim();
+    if note.is_empty() {
+        return Err(DecapodError::ValidationError(
+            "claims note must not be empty".to_string(),
+        ));
+    }
+    let path = repo_root.join(CLAIMS_PATH);
+    let raw = fs::read_to_string(&path).map_err(DecapodError::IoError)?;
+    let ledger = load_and_validate(repo_root)?.ok_or_else(|| {
+        DecapodError::ValidationError(format!("claims ledger is missing: {}", path.display()))
+    })?;
+    if ledger.authority.change_policy.contains(note) {
+        return Ok(false);
+    }
+    let marker = "\"change_policy\":";
+    let marker_start = raw.find(marker).ok_or_else(|| {
+        DecapodError::ValidationError(
+            "research claims ledger authority.change_policy is missing".to_string(),
+        )
+    })?;
+    let line_end = raw[marker_start..]
+        .find('\n')
+        .map_or(raw.len(), |index| marker_start + index);
+    let colon = raw[marker_start..line_end]
+        .find(':')
+        .map_or(marker_start, |index| marker_start + index);
+    let value_start = raw[colon + 1..line_end]
+        .find('"')
+        .map_or(line_end, |index| colon + 1 + index);
+    let value_end = raw[..line_end].rfind('"').unwrap_or(value_start);
+    let encoded_note = serde_json::to_string(note).map_err(|error| {
+        DecapodError::ValidationError(format!("claims note serialization failed: {error}"))
+    })?;
+    let encoded_policy = serde_json::to_string(&format!(
+        "{} {}",
+        ledger.authority.change_policy,
+        encoded_note.trim_matches('"')
+    ))
+    .map_err(|error| {
+        DecapodError::ValidationError(format!("claims policy serialization failed: {error}"))
+    })?;
+    let updated = format!(
+        "{}{}{}{}",
+        &raw[..value_start],
+        encoded_policy,
+        &raw[value_end + 1..line_end],
+        &raw[line_end..]
+    );
+    atomic::write_atomic(&path, updated.as_bytes()).map_err(DecapodError::IoError)?;
+    load_and_validate(repo_root)?.ok_or_else(|| {
+        DecapodError::ValidationError(format!(
+            "claims ledger was updated but could not be loaded: {}",
             path.display()
         ))
     })?;
