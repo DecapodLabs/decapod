@@ -2,10 +2,10 @@
   "schema_version": "1.0.0",
   "kind": "validation_receipt",
   "decapod_release": "0.86.0",
-  "git_revision": "9c308ac9ebc27ab8ebea59ac62f7a538d81166eb",
+  "git_revision": "b0cd8418a8fcdf8e1c4660605647b4bc0e114045",
   "repo_signal_fingerprint": "29f7eb3082c832b4cdfbd0d3f3a7493b1f1d0a9ef92cc6b4a60c3b29b054935d",
   "trajectory_run_id": "validation_01KYJ6FZ2B16B9GH14Q0848YDA",
-  "trajectory_artifact_hash": "sha256:6eca42d62cda0c8ccae371bab216930a9657a205626c5a8f98b28abe1f167099",
+  "trajectory_artifact_hash": "sha256:e78aa3d064c87f33882f17bbb1970a5ed1c25d30c43c0fb773435ffbc8f80e8e",
   "validation_epoch": {
     "schema_version": "1.0.0",
     "epoch_id": "ve_436623949a60e125",
@@ -282,5 +282,5 @@
       "Use `decapod validate -v --format json` to inspect the affected gate output."
     ]
   },
-  "receipt_hash": "sha256:724c9fd56c26ea882be188da0760822116a446e45c9476f011187adfa3eb8a3f"
+  "receipt_hash": "sha256:a02314ce4d020cbf03f843a9b175a94d463ce0ff2340418244a63a1d049ec7c3"
 }
