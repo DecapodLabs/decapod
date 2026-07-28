@@ -1,145 +1,69 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "01KYKVSESSION1071",
-  "intent_id": "intent:01KYKVSESSION1071",
-  "task_id": "bend_01kyktj9m6ftb44j",
-  "original_intent": "Finish Decapod backend=cloud session lifecycle with seamless local custody and Propodus machine-session reuse",
-  "derived_intent": "Move local session acquisition ahead of cloud preflight, preserve distinct cloud session custody, and prove reuse/refresh/redaction without local SQLite fallback",
-  "current_phase": "publication",
-  "next_transitions": [
-    "commit and publish focused PR",
-    "complete validated todo and publish focused PR",
-    "inspect issue contracts and current auth/session tests",
-    "publish"
-  ],
+  "run_id": "01KYM0HERMES",
+  "intent_id": "intent:01KYM0HERMES",
+  "task_id": "feat_01kym05w1mxdpyhw",
+  "original_intent": "Solve the Hermes governance integrity and readiness substrate wave in Decapod and publish a focused PR.",
+  "derived_intent": "Provide deterministic governance artifact integrity, semantic freshness, workspace-versus-target state, and dirty-file classification for Hermes readiness.",
+  "current_phase": "implementation",
   "active_boundaries": [
-    "Work only in Decapod; do not modify Propodus; preserve root and unrelated dirty state"
+    "Decapod repository only; preserve unrelated user changes; no Propodus changes; no protected-root mutation."
   ],
   "repo_scope": [
-    "src/decapod auth/session/Propodus client and deterministic tests/specs"
+    "Issues #1094 #1096 #1059 #1065 #1055 #1072"
   ],
   "inspected_files": [
-    "src/decapod/core/auth.rs",
-    "src/decapod/core/entrypoint_integrity.rs",
-    "src/decapod/core/error.rs",
-    "src/decapod/core/propodus.rs",
-    "src/decapod/lib.rs",
-    "tests/cloud_backend_storage.rs",
-    "tests/propodus_contract.rs"
+    "src/decapod/core/governance_artifacts.rs",
+    "src/decapod/core/trajectory.rs",
+    "src/decapod/core/validate.rs",
+    "src/decapod/core/workspace.rs",
+    "tests/governance_artifacts.rs"
   ],
   "modified_files": [
-    ".decapod/governance/plan.json",
-    ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json",
-    ".decapod/managed/specs",
-    "src/decapod/core/auth.rs",
-    "src/decapod/core/entrypoint_integrity.rs",
-    "src/decapod/core/error.rs",
-    "src/decapod/core/propodus.rs",
-    "src/decapod/lib.rs",
-    "tests/cloud_backend_storage.rs"
+    "src/decapod/core/atomic.rs",
+    "src/decapod/core/dirty_classification.rs",
+    "src/decapod/core/governance_artifacts.rs",
+    "src/decapod/core/trajectory.rs",
+    "src/decapod/core/validate.rs",
+    "tests/hermes_governance_substrate.rs"
   ],
   "declared_commands": [
-    "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings",
-    "cargo fmt --all -- --check",
-    "cargo test --locked -- --test-threads=1",
-    "decapod qa check --all",
-    "decapod release check",
-    "decapod validate",
-    "decapod validate --projections --format json"
+    "cargo test --test hermes_governance_substrate --test governance_artifacts --test commit_often_gate"
   ],
   "tool_calls": [],
   "checks": [
     {
-      "name": "artifact_inventory",
-      "status": "passed"
-    },
-    {
-      "name": "claims_ledger",
-      "status": "passed"
-    },
-    {
-      "name": "clippy",
-      "status": "passed"
-    },
-    {
-      "name": "decapod validate",
-      "status": "passed"
-    },
-    {
-      "name": "decapod_validate",
-      "status": "passed"
-    },
-    {
-      "name": "default_full_tests",
-      "status": "partial"
-    },
-    {
       "name": "focused_tests",
-      "status": "passed"
-    },
-    {
-      "name": "format",
-      "status": "passed"
-    },
-    {
-      "name": "protected_propodus_proof",
-      "status": "unavailable"
-    },
-    {
-      "name": "qa_check",
-      "status": "passed"
-    },
-    {
-      "name": "release_check",
-      "status": "passed"
-    },
-    {
-      "name": "serialized_full_tests",
-      "status": "passed"
-    },
-    {
-      "name": "targeted_secret_scan",
       "status": "passed"
     }
   ],
   "evidence": [
-    "All deterministic cloud/session tests use synthetic credentials and fake transports; protected live proof reads deployment environment only and remains ignored by default.",
-    "All four required governance artifacts are present and staged; PR-diff inventory will be rechecked after commit.",
-    "Focused session/auth and cloud backend tests pass; serialized full suite passed all feature and governance tests except an existing release-source-tree test policy failure in pre-existing source modules during the default run.",
-    "Protected live Propodus proof was not run because deployment-provided secrets were unavailable.",
-    "decapod validate --projections reported status ok, 199 gates passed, zero failures, four existing hygiene warnings.",
-    "validation epoch ve_32f036e0a69734a3 completed with zero failures",
-    "validation epoch ve_4d1a663bbebccf3b completed with zero failures"
+    "focused Hermes governance substrate tests passed"
   ],
-  "shortcut_risk_signals": [
-    "Protected live provider proof unavailable locally; not claimed."
-  ],
-  "unresolved_assumptions": [
-    "No Propodus changes are in scope; provider contract is treated as existing and sufficient."
-  ],
-  "proof_status": "partial",
+  "shortcut_risk_signals": [],
+  "unresolved_assumptions": [],
+  "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
-    "shortcut_risk": "caution",
-    "completion_proof": "caution"
+    "shortcut_risk": "supported",
+    "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:8dfede0546786ba4492acb0c18dc6cfde4d10674a074df3fe99eb4ab1f052ce1",
+  "artifact_hash": "sha256:c5e62adc0926848f1bb4b11d9af8ead21fb42ca8c0167e1382772c9933ecf1c6",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:01KYKVSESSION1071": {
-        "id": "intent:01KYKVSESSION1071",
-        "raw_intent": "Finish Decapod backend=cloud session lifecycle with seamless local custody and Propodus machine-session reuse",
-        "refined_intent": "Move local session acquisition ahead of cloud preflight, preserve distinct cloud session custody, and prove reuse/refresh/redaction without local SQLite fallback",
+      "intent:01KYM0HERMES": {
+        "id": "intent:01KYM0HERMES",
+        "raw_intent": "Solve the Hermes governance integrity and readiness substrate wave in Decapod and publish a focused PR.",
+        "refined_intent": "Provide deterministic governance artifact integrity, semantic freshness, workspace-versus-target state, and dirty-file classification for Hermes readiness.",
         "acceptance_criteria": [],
         "constraints": [
-          "src/decapod auth/session/Propodus client and deterministic tests/specs"
+          "Issues #1094 #1096 #1059 #1065 #1055 #1072"
         ],
         "assumptions": [],
         "boundaries": [
-          "Work only in Decapod; do not modify Propodus; preserve root and unrelated dirty state"
+          "Decapod repository only; preserve unrelated user changes; no Propodus changes; no protected-root mutation."
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -152,155 +76,61 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:01KYKVSESSION1071",
+        "intent_id": "intent:01KYM0HERMES",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:01KYKVSESSION1071",
+        "intent_id": "intent:01KYM0HERMES",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:01KYKVSESSION1071",
+        "intent_id": "intent:01KYM0HERMES",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:01KYKVSESSION1071"
-      },
-      {
-        "sequence": 5,
-        "event_id": "event:5",
-        "intent_id": "intent:01KYKVSESSION1071",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:01KYKVSESSION1071"
-      },
-      {
-        "sequence": 6,
-        "event_id": "event:6",
-        "intent_id": "intent:01KYKVSESSION1071",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:01KYKVSESSION1071"
-      },
-      {
-        "sequence": 7,
-        "event_id": "event:7",
-        "intent_id": "intent:01KYKVSESSION1071",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:01KYKVSESSION1071"
+        "detail": "trajectory:01KYM0HERMES"
       }
     ],
     "trajectories": {
-      "01KYKVSESSION1071": {
-        "id": "01KYKVSESSION1071",
-        "intent_id": "intent:01KYKVSESSION1071",
+      "01KYM0HERMES": {
+        "id": "01KYM0HERMES",
+        "intent_id": "intent:01KYM0HERMES",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "validation",
-            "command": "decapod validate",
+            "action": "implementation",
+            "command": "cargo test --test hermes_governance_substrate --test governance_artifacts --test commit_often_gate",
             "scope": [
-              "src/decapod auth/session/Propodus client and deterministic tests/specs"
+              "Issues #1094 #1096 #1059 #1065 #1055 #1072"
             ],
             "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_4d1a663bbebccf3b completed with zero failures"
+              "src/decapod/core/governance_artifacts.rs",
+              "src/decapod/core/validate.rs",
+              "src/decapod/core/trajectory.rs",
+              "src/decapod/core/workspace.rs",
+              "tests/governance_artifacts.rs",
+              "src/decapod/core/atomic.rs",
+              "src/decapod/core/dirty_classification.rs",
+              "src/decapod/core/governance_artifacts.rs",
+              "src/decapod/core/trajectory.rs",
+              "src/decapod/core/validate.rs",
+              "tests/hermes_governance_substrate.rs",
+              "focused Hermes governance substrate tests passed"
             ],
             "proof_refs": [
-              "decapod validate"
+              "focused_tests"
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
-          },
-          {
-            "sequence": 5,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "src/decapod auth/session/Propodus client and deterministic tests/specs"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_32f036e0a69734a3 completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:5"
-          },
-          {
-            "sequence": 6,
-            "action": "verification",
-            "command": "cargo fmt --all -- --check",
-            "scope": [
-              "src/decapod auth/session/Propodus client and deterministic tests/specs"
-            ],
-            "observations": [
-              "src/decapod/lib.rs",
-              "src/decapod/core/auth.rs",
-              "src/decapod/core/error.rs",
-              "src/decapod/core/propodus.rs",
-              "src/decapod/core/entrypoint_integrity.rs",
-              "tests/cloud_backend_storage.rs",
-              "tests/propodus_contract.rs",
-              "src/decapod/lib.rs",
-              "src/decapod/core/auth.rs",
-              "src/decapod/core/error.rs",
-              "src/decapod/core/propodus.rs",
-              "src/decapod/core/entrypoint_integrity.rs",
-              "tests/cloud_backend_storage.rs",
-              ".decapod/managed/specs",
-              ".decapod/governance/plan.json",
-              ".decapod/governance/validation.json",
-              ".decapod/governance/trajectory.json",
-              "Focused session/auth and cloud backend tests pass; serialized full suite passed all feature and governance tests except an existing release-source-tree test policy failure in pre-existing source modules during the default run.",
-              "decapod validate --projections reported status ok, 199 gates passed, zero failures, four existing hygiene warnings.",
-              "Protected live Propodus proof was not run because deployment-provided secrets were unavailable."
-            ],
-            "proof_refs": [
-              "format",
-              "focused_tests",
-              "serialized_full_tests",
-              "default_full_tests",
-              "clippy",
-              "decapod_validate",
-              "qa_check",
-              "release_check",
-              "protected_propodus_proof"
-            ],
-            "validation_findings": [
-              "Protected live provider proof unavailable locally; not claimed.",
-              "No Propodus changes are in scope; provider contract is treated as existing and sufficient."
-            ],
-            "custody_event_id": "event:6"
-          },
-          {
-            "sequence": 7,
-            "action": "publication",
-            "scope": [
-              "src/decapod auth/session/Propodus client and deterministic tests/specs"
-            ],
-            "observations": [
-              "All deterministic cloud/session tests use synthetic credentials and fake transports; protected live proof reads deployment environment only and remains ignored by default.",
-              "All four required governance artifacts are present and staged; PR-diff inventory will be rechecked after commit."
-            ],
-            "proof_refs": [
-              "claims_ledger",
-              "artifact_inventory",
-              "targeted_secret_scan"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:7"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 7
+    "next_sequence": 4
   }
 }
