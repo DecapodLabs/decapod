@@ -15,10 +15,17 @@ use std::io;
 #[serde(rename_all = "snake_case")]
 pub enum CloudAuthStatus {
     AuthRequired,
+    Missing,
     OnboardingPending,
     Expired,
+    RefreshFailed,
     Unauthorized,
+    Revoked,
+    UnauthorizedIdentity,
+    RepositoryDenied,
     Offline,
+    ProviderUnavailable,
+    NonInteractive,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]

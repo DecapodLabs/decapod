@@ -15,6 +15,19 @@ fn git(dir: &std::path::Path, args: &[&str]) {
     );
 }
 
+fn machine_session_files(config_home: &std::path::Path) -> Vec<std::path::PathBuf> {
+    let sessions = config_home.join("decapod/sessions");
+    let Ok(scopes) = std::fs::read_dir(sessions) else {
+        return Vec::new();
+    };
+    scopes
+        .filter_map(Result::ok)
+        .flat_map(|scope| std::fs::read_dir(scope.path()).into_iter().flatten())
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .collect()
+}
+
 #[test]
 fn test_cloud_opt_in_fails_closed_without_verified_remote() {
     let tmp = TempDir::new().expect("tempdir");
@@ -218,7 +231,7 @@ fn cloud_login_requires_a_project_origin() {
 }
 
 #[test]
-fn cloud_session_acquire_preflights_machine_auth_before_local_agent_session() {
+fn cloud_session_acquire_keeps_local_custody_when_cloud_preflight_fails() {
     let tmp = TempDir::new().expect("project tempdir");
     let data_home = TempDir::new().expect("credential data home");
     let config_home = TempDir::new().expect("config home");
@@ -252,7 +265,19 @@ fn cloud_session_acquire_preflights_machine_auth_before_local_agent_session() {
         serde_json::from_slice(&session_out.stdout).expect("stable cloud auth JSON");
     assert_eq!(diagnostic["schema_version"], "decapod.cloud.auth.v1");
     assert_eq!(diagnostic["status"], "offline");
-    assert!(!String::from_utf8_lossy(&session_out.stderr).contains("Bearer"));
+    let stdout = String::from_utf8_lossy(&session_out.stdout);
+    let stderr = String::from_utf8_lossy(&session_out.stderr);
+    assert!(!stdout.contains("Token:") && !stdout.contains("Password:"));
+    assert!(!stdout.contains("session_token") && !stderr.contains("Bearer"));
+    assert_eq!(machine_session_files(config_home.path()).len(), 1);
+    assert!(
+        !tmp.path().join(".decapod/data/todo.db").exists(),
+        "cloud session acquisition must not initialize local todo SQLite"
+    );
+    assert!(
+        !tmp.path().join(".decapod/session_token.json").exists(),
+        "cloud session acquisition must not write repository credentials"
+    );
 }
 
 #[test]

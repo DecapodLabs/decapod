@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 pub const CLOUD_ACCESS_TOKEN_ENV: &str = "DECAPOD_ACCESS_TOKEN";
 
@@ -174,13 +175,31 @@ pub fn store_machine_session(session: &CloudSession) -> Result<(), DecapodError>
     let bytes = serde_json::to_vec_pretty(&record).map_err(|error| {
         DecapodError::SessionError(format!("failed to serialize cloud session: {error}"))
     })?;
-    fs::write(&path, bytes).map_err(DecapodError::IoError)?;
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        fs::set_permissions(&path, fs::Permissions::from_mode(0o600))
-            .map_err(DecapodError::IoError)?;
+    let parent = path.parent().ok_or_else(|| {
+        DecapodError::SessionError("cloud session path has no parent directory".to_string())
+    })?;
+    let nonce = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| duration.as_nanos())
+        .unwrap_or(0);
+    let temp_path = parent.join(format!(
+        ".session_token.json.tmp-{}-{nonce}",
+        std::process::id()
+    ));
+    let write_result = (|| {
+        fs::write(&temp_path, bytes).map_err(DecapodError::IoError)?;
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            fs::set_permissions(&temp_path, fs::Permissions::from_mode(0o600))
+                .map_err(DecapodError::IoError)?;
+        }
+        fs::rename(&temp_path, &path).map_err(DecapodError::IoError)
+    })();
+    if write_result.is_err() {
+        let _ = fs::remove_file(&temp_path);
     }
+    write_result?;
     Ok(())
 }
 

@@ -1,84 +1,145 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "validation_01KYJ6FZ2B16B9GH14Q0848YDA",
-  "intent_id": "intent:validation_01KYJ6FZ2B16B9GH14Q0848YDA",
-  "original_intent": "Produce proof artifacts for a repository validation completion.",
-  "derived_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
-  "current_phase": "validation",
+  "run_id": "01KYKVSESSION1071",
+  "intent_id": "intent:01KYKVSESSION1071",
+  "task_id": "bend_01kyktj9m6ftb44j",
+  "original_intent": "Finish Decapod backend=cloud session lifecycle with seamless local custody and Propodus machine-session reuse",
+  "derived_intent": "Move local session acquisition ahead of cloud preflight, preserve distinct cloud session custody, and prove reuse/refresh/redaction without local SQLite fallback",
+  "current_phase": "publication",
   "next_transitions": [
+    "commit and publish focused PR",
+    "complete validated todo and publish focused PR",
+    "inspect issue contracts and current auth/session tests",
     "publish"
   ],
   "active_boundaries": [
-    "Repository validation and tracked proof artifacts"
+    "Work only in Decapod; do not modify Propodus; preserve root and unrelated dirty state"
   ],
   "repo_scope": [
-    "decapod"
+    "src/decapod auth/session/Propodus client and deterministic tests/specs"
   ],
   "inspected_files": [
-    ".decapod/config.toml",
-    ".decapod/governance/claims.json",
+    "src/decapod/core/auth.rs",
+    "src/decapod/core/entrypoint_integrity.rs",
+    "src/decapod/core/error.rs",
+    "src/decapod/core/propodus.rs",
+    "src/decapod/lib.rs",
+    "tests/cloud_backend_storage.rs",
+    "tests/propodus_contract.rs"
+  ],
+  "modified_files": [
     ".decapod/governance/plan.json",
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
-    "src/decapod/cli.rs",
-    "src/decapod/lib.rs"
+    ".decapod/managed/specs",
+    "src/decapod/core/auth.rs",
+    "src/decapod/core/entrypoint_integrity.rs",
+    "src/decapod/core/error.rs",
+    "src/decapod/core/propodus.rs",
+    "src/decapod/lib.rs",
+    "tests/cloud_backend_storage.rs"
   ],
-  "modified_files": [],
-  "declared_commands": [],
+  "declared_commands": [
+    "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings",
+    "cargo fmt --all -- --check",
+    "cargo test --locked -- --test-threads=1",
+    "decapod qa check --all",
+    "decapod release check",
+    "decapod validate",
+    "decapod validate --projections --format json"
+  ],
   "tool_calls": [],
   "checks": [
     {
-      "name": "container_workspace",
-      "status": "failed"
+      "name": "artifact_inventory",
+      "status": "passed"
+    },
+    {
+      "name": "claims_ledger",
+      "status": "passed"
+    },
+    {
+      "name": "clippy",
+      "status": "passed"
     },
     {
       "name": "decapod validate",
-      "status": "failed"
-    },
-    {
-      "name": "governance_alignment",
       "status": "passed"
     },
     {
-      "name": "specs_freshness",
+      "name": "decapod_validate",
       "status": "passed"
     },
     {
-      "name": "trajectory_schema",
+      "name": "default_full_tests",
+      "status": "partial"
+    },
+    {
+      "name": "focused_tests",
       "status": "passed"
     },
     {
-      "name": "validation_schema",
+      "name": "format",
+      "status": "passed"
+    },
+    {
+      "name": "protected_propodus_proof",
+      "status": "unavailable"
+    },
+    {
+      "name": "qa_check",
+      "status": "passed"
+    },
+    {
+      "name": "release_check",
+      "status": "passed"
+    },
+    {
+      "name": "serialized_full_tests",
+      "status": "passed"
+    },
+    {
+      "name": "targeted_secret_scan",
       "status": "passed"
     }
   ],
   "evidence": [
-    "Ran decapod validate; container workspace not available in this environment; specs refreshed via decapod rpc --op specs.refresh; trajectory and validation schemas verified"
+    "All deterministic cloud/session tests use synthetic credentials and fake transports; protected live proof reads deployment environment only and remains ignored by default.",
+    "All four required governance artifacts are present and staged; PR-diff inventory will be rechecked after commit.",
+    "Focused session/auth and cloud backend tests pass; serialized full suite passed all feature and governance tests except an existing release-source-tree test policy failure in pre-existing source modules during the default run.",
+    "Protected live Propodus proof was not run because deployment-provided secrets were unavailable.",
+    "decapod validate --projections reported status ok, 199 gates passed, zero failures, four existing hygiene warnings.",
+    "validation epoch ve_32f036e0a69734a3 completed with zero failures",
+    "validation epoch ve_4d1a663bbebccf3b completed with zero failures"
   ],
-  "shortcut_risk_signals": [],
-  "unresolved_assumptions": [],
-  "proof_status": "failed",
+  "shortcut_risk_signals": [
+    "Protected live provider proof unavailable locally; not claimed."
+  ],
+  "unresolved_assumptions": [
+    "No Propodus changes are in scope; provider contract is treated as existing and sufficient."
+  ],
+  "proof_status": "partial",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
-    "shortcut_risk": "supported",
-    "completion_proof": "unsupported"
+    "shortcut_risk": "caution",
+    "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:90708ac75ec867c9233f3394235d1234c582dac6d50b180a9346630f85be6914",
+  "artifact_hash": "sha256:8dfede0546786ba4492acb0c18dc6cfde4d10674a074df3fe99eb4ab1f052ce1",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:validation_01KYJ6FZ2B16B9GH14Q0848YDA": {
-        "id": "intent:validation_01KYJ6FZ2B16B9GH14Q0848YDA",
-        "raw_intent": "Produce proof artifacts for a repository validation completion.",
-        "refined_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
+      "intent:01KYKVSESSION1071": {
+        "id": "intent:01KYKVSESSION1071",
+        "raw_intent": "Finish Decapod backend=cloud session lifecycle with seamless local custody and Propodus machine-session reuse",
+        "refined_intent": "Move local session acquisition ahead of cloud preflight, preserve distinct cloud session custody, and prove reuse/refresh/redaction without local SQLite fallback",
         "acceptance_criteria": [],
         "constraints": [
-          "decapod"
+          "src/decapod auth/session/Propodus client and deterministic tests/specs"
         ],
         "assumptions": [],
         "boundaries": [
-          "Repository validation and tracked proof artifacts"
+          "Work only in Decapod; do not modify Propodus; preserve root and unrelated dirty state"
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -91,61 +152,155 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:validation_01KYJ6FZ2B16B9GH14Q0848YDA",
+        "intent_id": "intent:01KYKVSESSION1071",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:validation_01KYJ6FZ2B16B9GH14Q0848YDA",
+        "intent_id": "intent:01KYKVSESSION1071",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:validation_01KYJ6FZ2B16B9GH14Q0848YDA",
+        "intent_id": "intent:01KYKVSESSION1071",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KYJ6FZ2B16B9GH14Q0848YDA"
+        "detail": "trajectory:01KYKVSESSION1071"
+      },
+      {
+        "sequence": 5,
+        "event_id": "event:5",
+        "intent_id": "intent:01KYKVSESSION1071",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:01KYKVSESSION1071"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
+        "intent_id": "intent:01KYKVSESSION1071",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:01KYKVSESSION1071"
+      },
+      {
+        "sequence": 7,
+        "event_id": "event:7",
+        "intent_id": "intent:01KYKVSESSION1071",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:01KYKVSESSION1071"
       }
     ],
     "trajectories": {
-      "validation_01KYJ6FZ2B16B9GH14Q0848YDA": {
-        "id": "validation_01KYJ6FZ2B16B9GH14Q0848YDA",
-        "intent_id": "intent:validation_01KYJ6FZ2B16B9GH14Q0848YDA",
+      "01KYKVSESSION1071": {
+        "id": "01KYKVSESSION1071",
+        "intent_id": "intent:01KYKVSESSION1071",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "trajectory.record",
+            "action": "validation",
+            "command": "decapod validate",
             "scope": [
-              "decapod"
+              "src/decapod auth/session/Propodus client and deterministic tests/specs"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              ".decapod/governance/claims.json",
-              ".decapod/governance/plan.json",
-              "src/decapod/cli.rs",
-              "src/decapod/lib.rs",
-              ".decapod/config.toml",
-              "Ran decapod validate; container workspace not available in this environment; specs refreshed via decapod rpc --op specs.refresh; trajectory and validation schemas verified"
+              "validation epoch ve_4d1a663bbebccf3b completed with zero failures"
             ],
             "proof_refs": [
-              "decapod validate",
-              "container_workspace",
-              "specs_freshness",
-              "trajectory_schema",
-              "validation_schema",
-              "governance_alignment"
+              "decapod validate"
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
+          },
+          {
+            "sequence": 5,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src/decapod auth/session/Propodus client and deterministic tests/specs"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_32f036e0a69734a3 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "verification",
+            "command": "cargo fmt --all -- --check",
+            "scope": [
+              "src/decapod auth/session/Propodus client and deterministic tests/specs"
+            ],
+            "observations": [
+              "src/decapod/lib.rs",
+              "src/decapod/core/auth.rs",
+              "src/decapod/core/error.rs",
+              "src/decapod/core/propodus.rs",
+              "src/decapod/core/entrypoint_integrity.rs",
+              "tests/cloud_backend_storage.rs",
+              "tests/propodus_contract.rs",
+              "src/decapod/lib.rs",
+              "src/decapod/core/auth.rs",
+              "src/decapod/core/error.rs",
+              "src/decapod/core/propodus.rs",
+              "src/decapod/core/entrypoint_integrity.rs",
+              "tests/cloud_backend_storage.rs",
+              ".decapod/managed/specs",
+              ".decapod/governance/plan.json",
+              ".decapod/governance/validation.json",
+              ".decapod/governance/trajectory.json",
+              "Focused session/auth and cloud backend tests pass; serialized full suite passed all feature and governance tests except an existing release-source-tree test policy failure in pre-existing source modules during the default run.",
+              "decapod validate --projections reported status ok, 199 gates passed, zero failures, four existing hygiene warnings.",
+              "Protected live Propodus proof was not run because deployment-provided secrets were unavailable."
+            ],
+            "proof_refs": [
+              "format",
+              "focused_tests",
+              "serialized_full_tests",
+              "default_full_tests",
+              "clippy",
+              "decapod_validate",
+              "qa_check",
+              "release_check",
+              "protected_propodus_proof"
+            ],
+            "validation_findings": [
+              "Protected live provider proof unavailable locally; not claimed.",
+              "No Propodus changes are in scope; provider contract is treated as existing and sufficient."
+            ],
+            "custody_event_id": "event:6"
+          },
+          {
+            "sequence": 7,
+            "action": "publication",
+            "scope": [
+              "src/decapod auth/session/Propodus client and deterministic tests/specs"
+            ],
+            "observations": [
+              "All deterministic cloud/session tests use synthetic credentials and fake transports; protected live proof reads deployment environment only and remains ignored by default.",
+              "All four required governance artifacts are present and staged; PR-diff inventory will be rechecked after commit."
+            ],
+            "proof_refs": [
+              "claims_ledger",
+              "artifact_inventory",
+              "targeted_secret_scan"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:7"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 4
+    "next_sequence": 7
   }
 }

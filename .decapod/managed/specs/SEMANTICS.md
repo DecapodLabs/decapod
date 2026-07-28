@@ -19,7 +19,11 @@ stateDiagram-v2
 | aggregate_id | string | entity/workflow id |
 | event_type | string | semantic transition |
 | payload | object | transition data |
-| recorded_at | timestamp | append time |
+| recorded_at | timestamp | append time |## Replay Semantics
+- Replay order:
+- Conflict resolution:
+- Snapshot cadence:
+- Determinism proof strategy:
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -61,12 +65,6 @@ stateDiagram-v2
 - Recovery test cadence MUST be selected for the project and recorded as a proof obligation
 <!-- decapod:capability-overlay:persistent-state:end -->
 
-## Replay Semantics
-- Replay order:
-- Conflict resolution:
-- Snapshot cadence:
-- Determinism proof strategy:
-
 ## Error Code Semantics
 - Namespace:
 - Stable compatibility window:
@@ -89,7 +87,7 @@ stateDiagram-v2
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `29f7eb3082c832b4cdfbd0d3f3a7493b1f1d0a9ef92cc6b4a60c3b29b054935d`
+- Repository signal fingerprint: `2922f42f59ddf6cd3ce5e4e3970c58caa8900a555733ec86f7a2c3d81f87a75b`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (97 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
