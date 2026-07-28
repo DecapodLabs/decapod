@@ -70,6 +70,12 @@ pub struct GovernanceArtifactInventory {
     pub repair_command: String,
 }
 
+struct ArtifactValidity {
+    valid: bool,
+    semantic_freshness: SemanticFreshness,
+    schema_error: Option<String>,
+}
+
 pub fn inventory(
     repo_root: &Path,
     base_branch: Option<&str>,
@@ -114,9 +120,11 @@ pub fn inventory(
             repo_root,
             plan_governance::PLAN_PATH,
             "governed intent and phase plan",
-            plan.is_some(),
-            subject_freshness,
-            plan_result.as_ref().err().map(ToString::to_string),
+            ArtifactValidity {
+                valid: plan.is_some(),
+                semantic_freshness: subject_freshness,
+                schema_error: plan_result.as_ref().err().map(ToString::to_string),
+            },
             &staged_paths,
             &pr_paths,
         ),
@@ -124,13 +132,15 @@ pub fn inventory(
             repo_root,
             research_claims::CLAIMS_PATH,
             "repository research claims ledger; distinct from Health Engine claims in health.db",
-            claims.is_some(),
-            if claims.is_some() {
-                SemanticFreshness::Current
-            } else {
-                SemanticFreshness::Invalid
+            ArtifactValidity {
+                valid: claims.is_some(),
+                semantic_freshness: if claims.is_some() {
+                    SemanticFreshness::Current
+                } else {
+                    SemanticFreshness::Invalid
+                },
+                schema_error: claims_result.as_ref().err().map(ToString::to_string),
             },
-            claims_result.as_ref().err().map(ToString::to_string),
             &staged_paths,
             &pr_paths,
         ),
@@ -138,9 +148,11 @@ pub fn inventory(
             repo_root,
             trajectory::TRAJECTORY_PATH,
             "agent-run trajectory cookie and proof evidence",
-            trajectory.is_some(),
-            subject_freshness,
-            trajectory_result.as_ref().err().map(ToString::to_string),
+            ArtifactValidity {
+                valid: trajectory.is_some(),
+                semantic_freshness: subject_freshness,
+                schema_error: trajectory_result.as_ref().err().map(ToString::to_string),
+            },
             &staged_paths,
             &pr_paths,
         ),
@@ -148,9 +160,11 @@ pub fn inventory(
             repo_root,
             validate::VALIDATION_RECEIPT_PATH,
             "successful Decapod validation receipt bound to the current trajectory",
-            receipt_chain_valid,
-            receipt_freshness,
-            receipt_result.as_ref().err().map(ToString::to_string),
+            ArtifactValidity {
+                valid: receipt_chain_valid,
+                semantic_freshness: receipt_freshness,
+                schema_error: receipt_result.as_ref().err().map(ToString::to_string),
+            },
             &staged_paths,
             &pr_paths,
         ),
@@ -213,9 +227,7 @@ fn entry(
     repo_root: &Path,
     path: &str,
     role: &str,
-    valid: bool,
-    semantic_freshness: SemanticFreshness,
-    schema_error: Option<String>,
+    validity: ArtifactValidity,
     staged_paths: &BTreeSet<String>,
     pr_paths: &BTreeSet<String>,
 ) -> GovernanceArtifactEntry {
@@ -230,7 +242,7 @@ fn entry(
         (None, None) => WorkspaceTargetState::Missing,
     };
     let mut freshness_reasons = Vec::new();
-    if !valid {
+    if !validity.valid {
         freshness_reasons.push("schema_or_integrity_invalid".to_string());
     }
     if !staged_paths.contains(path) {
@@ -249,7 +261,7 @@ fn entry(
         path: path.to_string(),
         role: role.to_string(),
         present,
-        valid: present && valid,
+        valid: present && validity.valid,
         staged: staged_paths.contains(path),
         in_pr_diff: pr_paths.contains(path),
         workspace_sha,
@@ -258,10 +270,10 @@ fn entry(
         semantic_freshness: if !present {
             SemanticFreshness::Unknown
         } else {
-            semantic_freshness
+            validity.semantic_freshness
         },
         freshness_reasons,
-        schema_error,
+        schema_error: validity.schema_error,
         remediation: if path == research_claims::CLAIMS_PATH {
             format!("Run `{INVENTORY_COMMAND} --repair`; existing claims content is preserved.")
         } else {
