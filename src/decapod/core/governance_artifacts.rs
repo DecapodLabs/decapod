@@ -119,7 +119,7 @@ pub fn inventory_with_claims_note(
     let trajectory = trajectory_result.as_ref().ok().and_then(Option::as_ref);
     let receipt = receipt_result.as_ref().ok().and_then(Option::as_ref);
     let subject_freshness = subject_freshness(repo_root, plan, trajectory);
-    let receipt_freshness = receipt_freshness(repo_root, receipt, trajectory);
+    let receipt_freshness = receipt_freshness(receipt, trajectory);
     let receipt_chain_valid = receipt.is_some_and(|item| {
         item.validate_integrity().is_ok()
             && trajectory.is_some_and(|run| {
@@ -337,18 +337,14 @@ fn subject_freshness(
 }
 
 fn receipt_freshness(
-    repo_root: &Path,
     receipt: Option<&validate::ValidationReceipt>,
     trajectory: Option<&trajectory::TrajectoryArtifact>,
 ) -> SemanticFreshness {
-    let (Some(receipt), Some(trajectory), Some(head)) =
-        (receipt, trajectory, current_revision(repo_root))
-    else {
+    let (Some(receipt), Some(trajectory)) = (receipt, trajectory) else {
         return SemanticFreshness::Unknown;
     };
     if receipt.validate_integrity().is_err()
         || receipt.trajectory_artifact_hash.as_deref() != Some(trajectory.artifact_hash.as_str())
-        || receipt.git_revision != head
     {
         SemanticFreshness::Stale
     } else {

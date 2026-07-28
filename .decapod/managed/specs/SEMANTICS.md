@@ -26,7 +26,10 @@ stateDiagram-v2
 - Determinism proof strategy:## Error Code Semantics
 - Namespace:
 - Stable compatibility window:
-- Mapping to retry/degrade behavior:
+- Mapping to retry/degrade behavior:## Domain Rules
+- Business rule 1:
+- Business rule 2:
+- Business rule 3:
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -68,11 +71,6 @@ stateDiagram-v2
 - Recovery test cadence MUST be selected for the project and recorded as a proof obligation
 <!-- decapod:capability-overlay:persistent-state:end -->
 
-## Domain Rules
-- Business rule 1:
-- Business rule 2:
-- Business rule 3:
-
 ## Idempotency Contracts
 | Operation | Idempotency Key | Duplicate Behavior |
 |---|---|---|
@@ -85,7 +83,7 @@ stateDiagram-v2
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f69b1c59072f753207adb50ea26dff127464ee9850f7a589631ac4adc5895e96`
+- Repository signal fingerprint: `c95d945d65177ab861f944f7c022b996ab58002f3b464fa0c0f625d8456a0ff1`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (99 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

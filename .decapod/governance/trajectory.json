@@ -102,7 +102,8 @@
     "Governed claims-note update preserves ledger layout and is idempotent; focused Hermes and governance tests pass.",
     "focused Hermes governance substrate tests passed",
     "validation epoch ve_251274fa8eeb6d3f completed with zero failures",
-    "validation epoch ve_7e353d28f3232cb5 completed with zero failures"
+    "validation epoch ve_7e353d28f3232cb5 completed with zero failures",
+    "validation epoch ve_89ad123716a27170 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -113,7 +114,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:1e47a3ecb7474526391082df1364b0aaadeb20d623de60c856440aa4096abcc8",
+  "artifact_hash": "sha256:6f01aa0d8ff082f595709805251a17801c9ccec16a7d8ab6c62aec4e1a833ec1",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -208,6 +209,13 @@
       {
         "sequence": 12,
         "event_id": "event:12",
+        "intent_id": "intent:01KYM0HERMES",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:01KYM0HERMES"
+      },
+      {
+        "sequence": 13,
+        "event_id": "event:13",
         "intent_id": "intent:01KYM0HERMES",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:01KYM0HERMES"
@@ -393,12 +401,30 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:12"
+          },
+          {
+            "sequence": 13,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "Issues #1094 #1096 #1059 #1065 #1055 #1072"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_89ad123716a27170 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:13"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 12
+    "next_sequence": 13
   }
 }
