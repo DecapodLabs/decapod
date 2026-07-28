@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.88.0](https://github.com/DecapodLabs/decapod/compare/v0.87.0...v0.88.0) - 2026-07-28
+
+### Added
+
+- govern claims artifact updates
+- add Hermes governance readiness substrate
+
+### Fixed
+
+- align dirty classes with Decapod runtime state
+- keep artifact inventory lint clean
+
+### Other
+
+- record Hermes validation evidence
+- refresh governance projections for Hermes substrate
+- using local for necessary work
+
 ## [0.87.0](https://github.com/DecapodLabs/decapod/compare/v0.86.2...v0.87.0) - 2026-07-28
 
 ### Fixed
