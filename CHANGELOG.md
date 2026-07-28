@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.86.1](https://github.com/DecapodLabs/decapod/compare/v0.86.0...v0.86.1) - 2026-07-28
+
+### Other
+
+- Fix governance artifacts: trajectory hash, validation receipt hash, sync with origin/master schema
+- Fix trajectory and validation artifact hashes for CI
+- Remove destination field from trajectory.json and update validation artifact hashes
+- Update governance files for Issue #1050: fix trajectory and validation artifacts
+- Update plan.json
+- Update governance files for Issue #1050: claims, plan, trajectory, validation
+- Update plan.json
+- Update governance artifacts per Issue #1050 and PR #1081: plan.json title, intent, todo_ids, proof_hooks updated; claims.json authority.updated_at set to today
+- Update governance artifacts with substantive changes: claims.json purpose now references 'governance kernel'; plan.json updated_at set to proper ISO timestamp
+- Update plan.json
+- Update governance files to reflect governance kernel positioning per Issue #1050 and PR #1081 (fix updated_at to string)
+- Update governance files to reflect governance kernel positioning per Issue #1050 and PR #1081
+- Ensure plan.json ends with newline
+- Ensure claims.json ends with newline
+- regenerate governance artifacts and spec files for PR #1081
+- refresh specs and agent entrypoints from workspace unknown-todo-01kyj6-agent-unknown-code_01kyj63vg7abpjva
+- refresh governance artifacts: claims, plan, trajectory, validation
+- Update README.md
+- final fixes for PR #1051
+- final review fixes
+- fix review blockers for PR #1051
+- beautify Mermaid diagram with subgraphs and horizontal layout
+- rename Governance Kernel node to Decapod in Mermaid diagram
+- remove AI slop patterns from README
+- complete README uplift per Issue #1050
+- update install command to cargo binstall per Issue #1050
+
 ## [0.86.0](https://github.com/DecapodLabs/decapod/compare/v0.85.0...v0.86.0) - 2026-07-27
 
 ### Added
