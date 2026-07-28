@@ -800,6 +800,9 @@ pub(crate) enum ArtifactsCommand {
         /// Create the claims ledger template when claims.json is absent
         #[clap(long)]
         repair: bool,
+        /// Append an issue-scoped note to the claims change policy atomically
+        #[clap(long)]
+        claims_note: Option<String>,
     },
 }
 

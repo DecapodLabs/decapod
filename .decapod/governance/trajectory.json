@@ -6,6 +6,9 @@
   "original_intent": "Solve the Hermes governance integrity and readiness substrate wave in Decapod and publish a focused PR.",
   "derived_intent": "Provide deterministic governance artifact integrity, semantic freshness, workspace-versus-target state, and dirty-file classification for Hermes readiness.",
   "current_phase": "validation",
+  "next_transitions": [
+    "publish"
+  ],
   "blockers": [
     "pre-existing done TODO bend_01kyktj9m6ftb44j has stale validation epoch and remains unverified",
     "pre-existing release_artifact_policy failure for inline tests in cli.rs, cloud_backend.rs, propodus.rs, repo_identity.rs",
@@ -26,11 +29,17 @@
     "tests/governance_artifacts.rs"
   ],
   "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
+    "src/decapod/cli.rs",
     "src/decapod/core/atomic.rs",
     "src/decapod/core/dirty_classification.rs",
     "src/decapod/core/governance_artifacts.rs",
+    "src/decapod/core/research_claims.rs",
     "src/decapod/core/trajectory.rs",
     "src/decapod/core/validate.rs",
+    "src/decapod/lib.rs",
+    "tests/governance_artifacts.rs",
     "tests/hermes_governance_substrate.rs"
   ],
   "declared_commands": [
@@ -38,6 +47,7 @@
     "cargo fmt --all -- --check",
     "cargo test --all-targets -- --test-threads=1",
     "cargo test --test hermes_governance_substrate --test governance_artifacts --test commit_often_gate",
+    "decapod validate",
     "docker run ... target/debug/decapod validate --format json"
   ],
   "tool_calls": [],
@@ -51,12 +61,28 @@
       "status": "passed"
     },
     {
+      "name": "claims_note",
+      "status": "passed"
+    },
+    {
+      "name": "claims_note_test",
+      "status": "passed"
+    },
+    {
       "name": "clippy",
       "status": "passed"
     },
     {
       "name": "container_validation",
       "status": "partial"
+    },
+    {
+      "name": "decapod validate",
+      "status": "passed"
+    },
+    {
+      "name": "fmt",
+      "status": "passed"
     },
     {
       "name": "focused_tests",
@@ -73,7 +99,10 @@
   ],
   "evidence": [
     "214 unit tests and focused Hermes suite passed; serialized all-target run stopped only at pre-existing release_artifact_policy inline-test inventory; container validation passed all product gates and retained one unrelated prior cloud TODO proof-hook failure",
-    "focused Hermes governance substrate tests passed"
+    "Governed claims-note update preserves ledger layout and is idempotent; focused Hermes and governance tests pass.",
+    "focused Hermes governance substrate tests passed",
+    "validation epoch ve_251274fa8eeb6d3f completed with zero failures",
+    "validation epoch ve_7e353d28f3232cb5 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -84,7 +113,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:5eb57231ec3f1cd88ea7b9f906f32e7bb4655ee0dc5f61632d47f533888c87ed",
+  "artifact_hash": "sha256:5531f06632304bd539712ccbee2edc2f88845346d0a46f44d2d131543a993d3e",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -144,6 +173,34 @@
       {
         "sequence": 7,
         "event_id": "event:7",
+        "intent_id": "intent:01KYM0HERMES",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:01KYM0HERMES"
+      },
+      {
+        "sequence": 8,
+        "event_id": "event:8",
+        "intent_id": "intent:01KYM0HERMES",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:01KYM0HERMES"
+      },
+      {
+        "sequence": 9,
+        "event_id": "event:9",
+        "intent_id": "intent:01KYM0HERMES",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:01KYM0HERMES"
+      },
+      {
+        "sequence": 10,
+        "event_id": "event:10",
+        "intent_id": "intent:01KYM0HERMES",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:01KYM0HERMES"
+      },
+      {
+        "sequence": 11,
+        "event_id": "event:11",
         "intent_id": "intent:01KYM0HERMES",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:01KYM0HERMES"
@@ -232,12 +289,91 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:7"
+          },
+          {
+            "sequence": 8,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "Issues #1094 #1096 #1059 #1065 #1055 #1072"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_251274fa8eeb6d3f completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:8"
+          },
+          {
+            "sequence": 9,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "Issues #1094 #1096 #1059 #1065 #1055 #1072"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_7e353d28f3232cb5 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:9"
+          },
+          {
+            "sequence": 10,
+            "action": "trajectory.record",
+            "scope": [
+              "Issues #1094 #1096 #1059 #1065 #1055 #1072"
+            ],
+            "observations": [
+              "src/decapod/core/research_claims.rs",
+              "src/decapod/core/governance_artifacts.rs",
+              "src/decapod/cli.rs",
+              "src/decapod/lib.rs",
+              "tests/governance_artifacts.rs",
+              "Governed claims-note update preserves ledger layout and is idempotent; focused Hermes and governance tests pass."
+            ],
+            "proof_refs": [
+              "claims_note",
+              "claims_note_test",
+              "specs_refresh",
+              "focused_tests",
+              "clippy",
+              "fmt"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:10"
+          },
+          {
+            "sequence": 11,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "Issues #1094 #1096 #1059 #1065 #1055 #1072"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_7e353d28f3232cb5 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:11"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 7
+    "next_sequence": 11
   }
 }

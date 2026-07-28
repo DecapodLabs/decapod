@@ -81,8 +81,20 @@ pub fn inventory(
     base_branch: Option<&str>,
     repair: bool,
 ) -> Result<GovernanceArtifactInventory, crate::core::error::DecapodError> {
+    inventory_with_claims_note(repo_root, base_branch, repair, None)
+}
+
+pub fn inventory_with_claims_note(
+    repo_root: &Path,
+    base_branch: Option<&str>,
+    repair: bool,
+    claims_note: Option<&str>,
+) -> Result<GovernanceArtifactInventory, crate::core::error::DecapodError> {
     if repair {
         let _ = research_claims::ensure_template(repo_root, false)?;
+    }
+    if let Some(note) = claims_note {
+        let _ = research_claims::append_change_note(repo_root, note)?;
     }
 
     let base_ref = resolve_base_ref(repo_root, base_branch);
@@ -201,8 +213,9 @@ pub fn run_inventory(
     repo_root: &Path,
     base_branch: Option<&str>,
     repair: bool,
+    claims_note: Option<&str>,
 ) -> Result<(), crate::core::error::DecapodError> {
-    let report = inventory(repo_root, base_branch, repair)?;
+    let report = inventory_with_claims_note(repo_root, base_branch, repair, claims_note)?;
     println!(
         "{}",
         serde_json::to_string_pretty(&report).map_err(|error| {

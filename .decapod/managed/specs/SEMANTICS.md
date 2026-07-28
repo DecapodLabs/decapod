@@ -23,7 +23,10 @@ stateDiagram-v2
 - Replay order:
 - Conflict resolution:
 - Snapshot cadence:
-- Determinism proof strategy:
+- Determinism proof strategy:## Error Code Semantics
+- Namespace:
+- Stable compatibility window:
+- Mapping to retry/degrade behavior:
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -65,11 +68,6 @@ stateDiagram-v2
 - Recovery test cadence MUST be selected for the project and recorded as a proof obligation
 <!-- decapod:capability-overlay:persistent-state:end -->
 
-## Error Code Semantics
-- Namespace:
-- Stable compatibility window:
-- Mapping to retry/degrade behavior:
-
 ## Domain Rules
 - Business rule 1:
 - Business rule 2:
@@ -87,7 +85,7 @@ stateDiagram-v2
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2996ab0a6e54b91133f63c0ebe14c8b6802d488e88adc149b9cc6e8c64350c2f`
+- Repository signal fingerprint: `f69b1c59072f753207adb50ea26dff127464ee9850f7a589631ac4adc5895e96`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (99 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
