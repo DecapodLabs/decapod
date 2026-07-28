@@ -1,19 +1,25 @@
 {
   "schema_version": "1.0.0",
-  "title": "README uplift: sharpen Decapod's governance-kernel positioning per Issue #1050",
-  "intent": "Update README.md to position Decapod as a repo-native governance kernel, per the acceptance criteria and implementation notes in Issue #1050.",
-  "state": "APPROVED",
-  "todo_ids": [],
+  "title": "Finish backend=cloud session lifecycle (#1100/#1101/#1102)",
+  "intent": "Make decapod session acquire establish local custody first, then reuse or refresh the machine-local Propodus session and complete one-time onboarding without repository credentials or local SQLite fallback.",
+  "state": "DONE",
+  "todo_ids": [
+    "bend_01kyktj9m6ftb44j"
+  ],
   "proof_hooks": [
-    "decapod validate",
-    "decapod capabilities --format json | jq ' .capabilities[] | select(.name==\"governance-kernel\")'",
-    "wc -w README.md"
+    "cargo test --lib propodus",
+    "cargo test --test cloud_backend_storage",
+    "cargo fmt --all -- --check",
+    "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings",
+    "decapod validate --refresh-specs --projections"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [],
   "unresolved_contradictions": [],
-  "deferred_questions": [],
+  "deferred_questions": [
+    "Run the existing ignored propodus_live proof through the protected GitHub environment with deployment-provided secrets; local implementation and redaction proof are complete."
+  ],
   "constraints": {
     "forbidden_paths": [
       ".decapod/data"
@@ -21,5 +27,5 @@
     "file_touch_budget": 40
   },
   "phases": [],
-  "updated_at": "1785175266Z"
+  "updated_at": "1785227881Z"
 }

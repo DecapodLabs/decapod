@@ -2805,7 +2805,7 @@ fn requires_session_token(command: &Command) -> bool {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 struct AgentSessionRecord {
     agent_id: String,
     token: String,
@@ -3184,7 +3184,7 @@ fn mark_core_constitution_ingested(
 
 fn cleanup_expired_sessions(
     project_root: &Path,
-    store_root: &Path,
+    store_root: Option<&Path>,
 ) -> Result<Vec<String>, error::DecapodError> {
     let now = now_epoch_secs();
     let mut expired_agents = Vec::new();
@@ -3224,7 +3224,9 @@ fn cleanup_expired_sessions(
     }
 
     if !expired_agents.is_empty() {
-        todo::cleanup_stale_agent_assignments(store_root, &expired_agents, "session.expired")?;
+        if let Some(store_root) = store_root {
+            todo::cleanup_stale_agent_assignments(store_root, &expired_agents, "session.expired")?;
+        }
         for agent_id in &expired_agents {
             let _ = clear_agent_awareness(project_root, agent_id);
         }
@@ -3238,7 +3240,7 @@ fn ensure_session_valid() -> Result<(), error::DecapodError> {
     let project_root = find_decapod_project_root(&current_dir)?;
     let store_root = project_root.join(".decapod").join("data");
     fs::create_dir_all(&store_root).map_err(error::DecapodError::IoError)?;
-    let _ = cleanup_expired_sessions(&project_root, &store_root)?;
+    let _ = cleanup_expired_sessions(&project_root, Some(&store_root))?;
 
     let agent_id = current_agent_id();
     let session = read_agent_session(&project_root, &agent_id)?;
@@ -3498,27 +3500,18 @@ fn install_decapod() -> Result<(), error::DecapodError> {
 fn run_session_command(session_cli: SessionCli) -> Result<(), error::DecapodError> {
     let current_dir = std::env::current_dir()?;
     let project_root = find_decapod_project_root(&current_dir)?;
+    let cloud_backend = cli::DecapodProjectConfig::load(&project_root)?
+        .repo
+        .effective_backend()
+        .is_cloud();
     let store_root = project_root.join(".decapod").join("data");
-    fs::create_dir_all(&store_root).map_err(error::DecapodError::IoError)?;
-    let _ = cleanup_expired_sessions(&project_root, &store_root)?;
-
-    if matches!(session_cli.command, SessionCommand::Acquire)
-        && cli::DecapodProjectConfig::load(&project_root)?
-            .repo
-            .effective_backend()
-            .is_cloud()
-    {
-        match ensure_project_cloud_session(&project_root) {
-            Ok(_) => {}
-            Err(error @ error::DecapodError::CloudAuth(_)) => {
-                if let error::DecapodError::CloudAuth(diagnostic) = &error {
-                    print_cloud_auth_json_if_needed(diagnostic, None);
-                }
-                return Err(error);
-            }
-            Err(error) => return Err(error),
-        }
+    if !cloud_backend {
+        fs::create_dir_all(&store_root).map_err(error::DecapodError::IoError)?;
     }
+    let _ = cleanup_expired_sessions(
+        &project_root,
+        (!cloud_backend).then_some(store_root.as_path()),
+    )?;
 
     // Check and update version on session acquire
     if matches!(session_cli.command, SessionCommand::Acquire)
@@ -3533,39 +3526,65 @@ fn run_session_command(session_cli: SessionCli) -> Result<(), error::DecapodErro
     match session_cli.command {
         SessionCommand::Acquire => {
             let agent_id = current_agent_id();
-            if let Some(existing) = read_agent_session(&project_root, &agent_id)?
+            let newly_acquired = if let Some(existing) =
+                read_agent_session(&project_root, &agent_id)?
                 && existing.expires_at_epoch_secs > now_epoch_secs()
             {
-                println!(
-                    "Session already active for agent '{agent_id}'. Use 'decapod session status' for details."
-                );
-                return Ok(());
+                Some(None)
+            } else {
+                let issued = now_epoch_secs();
+                let expires = issued.saturating_add(session_ttl_secs());
+                let token = crate::core::ulid::new_ulid();
+                let temp_p = generate_ephemeral_password()?;
+                let rec = AgentSessionRecord {
+                    agent_id: agent_id.clone(),
+                    token: token.clone(),
+                    password_hash: hash_password(&temp_p, &token),
+                    issued_at_epoch_secs: issued,
+                    expires_at_epoch_secs: expires,
+                };
+                write_agent_session(&project_root, &rec)?;
+                clear_agent_awareness(&project_root, &agent_id)?;
+                Some(Some((rec, temp_p)))
+            };
+
+            // Local Decapod custody is established before any cloud request.
+            // A cloud failure is returned independently, leaving the local
+            // session available for governance and workspace operations.
+            if cloud_backend {
+                match ensure_project_cloud_session(&project_root) {
+                    Ok(_) => {}
+                    Err(error @ error::DecapodError::CloudAuth(_)) => {
+                        if let error::DecapodError::CloudAuth(diagnostic) = &error {
+                            print_cloud_auth_json_if_needed(diagnostic, None);
+                        }
+                        return Err(error);
+                    }
+                    Err(error) => return Err(error),
+                }
             }
 
-            let issued = now_epoch_secs();
-            let expires = issued.saturating_add(session_ttl_secs());
-            let token = crate::core::ulid::new_ulid();
-            let temp_p = generate_ephemeral_password()?;
-            let rec = AgentSessionRecord {
-                agent_id: agent_id.clone(),
-                token: token.clone(),
-                password_hash: hash_password(&temp_p, &token),
-                issued_at_epoch_secs: issued,
-                expires_at_epoch_secs: expires,
-            };
-            write_agent_session(&project_root, &rec)?;
-            clear_agent_awareness(&project_root, &agent_id)?;
-
-            println!("Session acquired successfully.");
-            println!("Agent: {agent_id}");
-            println!("Token: {token}");
-            println!("Password: {temp_p}");
-            println!("ExpiresAtEpoch: {expires}");
-            println!(
-                "Export before running other commands: DECAPOD_AGENT_ID='{}' and DECAPOD_SESSION_PASSWORD='<token>'",
-                rec.agent_id
-            );
-            println!("\nYou may now use other decapod commands.");
+            match newly_acquired {
+                Some(Some((rec, password))) => {
+                    println!("Session acquired successfully.");
+                    println!("Agent: {}", rec.agent_id);
+                    println!("Token: {}", rec.token);
+                    // The local session password is intentionally printed only
+                    // after cloud preflight succeeds; cloud diagnostics remain
+                    // stable JSON without mixing in custody secrets.
+                    println!("Password: {password}");
+                    println!("ExpiresAtEpoch: {}", rec.expires_at_epoch_secs);
+                    println!(
+                        "Export before running other commands: DECAPOD_AGENT_ID='{}' and DECAPOD_SESSION_PASSWORD='<token>'",
+                        rec.agent_id
+                    );
+                    println!("\nYou may now use other decapod commands.");
+                }
+                Some(None) => println!(
+                    "Session already active for agent '{agent_id}'. Use 'decapod session status' for details."
+                ),
+                None => {}
+            }
             Ok(())
         }
         SessionCommand::Status => {
@@ -3586,11 +3605,13 @@ fn run_session_command(session_cli: SessionCli) -> Result<(), error::DecapodErro
             let agent_id = current_agent_id();
             if remove_agent_session_files(&project_root, &agent_id)? {
                 clear_agent_awareness(&project_root, &agent_id)?;
-                let _ = todo::cleanup_stale_agent_assignments(
-                    &store_root,
-                    std::slice::from_ref(&agent_id),
-                    "session.release",
-                );
+                if !cloud_backend {
+                    let _ = todo::cleanup_stale_agent_assignments(
+                        &store_root,
+                        std::slice::from_ref(&agent_id),
+                        "session.release",
+                    );
+                }
                 println!("Session released");
             } else {
                 println!("No active session to release");
