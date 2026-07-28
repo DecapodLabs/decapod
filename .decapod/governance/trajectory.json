@@ -64,7 +64,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:e78aa3d064c87f33882f17bbb1970a5ed1c25d30c43c0fb773435ffbc8f80e8e",
+  "artifact_hash": "sha256:90708ac75ec867c9233f3394235d1234c582dac6d50b180a9346630f85be6914",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
