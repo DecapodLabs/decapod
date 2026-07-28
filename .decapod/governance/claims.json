@@ -4,13 +4,13 @@
   "kind": "research_claims_ledger",
   "ledger_id": "decapod-core-research-claims",
   "title": "Decapod Falsifiable Research Claims",
-  "purpose": "Maintain explicit, measurable, and falsifiable claims about the governance capabilities that Decapod is intended to provide.",
+  "purpose": "Maintain explicit, measurable, and falsifiable claims about the governance kernel capabilities that Decapod is intended to provide.",
   "authority": {
     "owner": "Decapod project",
     "source_issue": "https://github.com/DecapodLabs/decapod/issues/682",
     "status": "active",
     "created_at": "2026-07-22",
-    "updated_at": "2026-07-26",
+    "updated_at": "2026-07-27",
     "change_policy": "Claims are changed only through an issue-scoped review that preserves the baseline, Decapod condition, failure modes, measurements, proof gate, open questions, and evidence status. Governance artifact generation and publication inventory are tracked under issue #1025; the v0.85.0 cloud auto-login work for #1077 remains bounded to Decapod-owned backend composition, machine-local session reuse/refresh, repository identity, and CI surfaces while Propodus retains hosted authorization and persistence policy. One-time human GitHub approval, live protected todo behavior, and cross-system acceptance remain explicitly unproven follow-ups."
   },
   "scope": {
