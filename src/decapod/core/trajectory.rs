@@ -496,7 +496,7 @@ pub fn write_trajectory(
             "failed to serialize trajectory artifact: {e}"
         ))
     })?;
-    fs::write(&path, bytes).map_err(error::DecapodError::IoError)?;
+    crate::core::atomic::write_atomic(&path, &bytes).map_err(error::DecapodError::IoError)?;
     Ok(canonical)
 }
 

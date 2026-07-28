@@ -4267,27 +4267,57 @@ fn validate_commit_often_gate(
         return Ok(());
     }
 
-    let dirty_count = String::from_utf8_lossy(&status_output.stdout)
-        .lines()
-        .filter(|line| !line.trim().is_empty())
-        .count();
-
-    if dirty_count == 0 {
+    let classification =
+        match crate::core::dirty_classification::classify(repo_root, max_dirty_files) {
+            Ok(report) => report,
+            Err(error) => {
+                warn(
+                    &format!("Commit-often gate skipped: unable to classify git status: {error}"),
+                    ctx,
+                );
+                return Ok(());
+            }
+        };
+    if classification.files.is_empty() {
         pass("Commit-often gate: working tree is clean", ctx);
         return Ok(());
     }
 
-    if dirty_count > max_dirty_files {
-        fail(
-            &format!(
-                "Commit-often mandate violation: {dirty_count} dirty file(s) exceed limit {max_dirty_files}. Commit incremental changes before continuing."
-            ),
-            ctx,
-        );
+    let user_count = classification
+        .groups
+        .iter()
+        .find(|group| {
+            group.class == crate::core::dirty_classification::DirtyFileClass::UserAuthored
+        })
+        .map(|group| group.count)
+        .unwrap_or(0);
+    if classification.blocked {
+        let unknown = classification
+            .groups
+            .iter()
+            .find(|group| group.class == crate::core::dirty_classification::DirtyFileClass::Unknown)
+            .map(|group| group.count)
+            .unwrap_or(0);
+        if unknown > 0 {
+            fail(
+                &format!(
+                    "Commit-often gate blocked: {unknown} unclassified Decapod file(s); classify or remove them before continuing."
+                ),
+                ctx,
+            );
+        } else {
+            fail(
+                &format!(
+                    "Commit-often mandate violation: {user_count} user-authored dirty file(s) exceed limit {max_dirty_files}. Commit incremental changes before continuing."
+                ),
+                ctx,
+            );
+        }
     } else {
+        let ignored = classification.files.len().saturating_sub(user_count);
         pass(
             &format!(
-                "Commit-often gate: {dirty_count} dirty file(s) within limit {max_dirty_files}"
+                "Commit-often gate: {user_count} user-authored dirty file(s) within limit {max_dirty_files}; {ignored} governed/ephemeral file(s) classified"
             ),
             ctx,
         );
