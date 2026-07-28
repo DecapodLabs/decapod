@@ -28,7 +28,7 @@ detected_surfaces = [
 ]
 external_tracker = false
 container_workspaces = true
-backend = "cloud"
+backend = "local"
 declared_capabilities = [
     "agent-helper",
     "authentication",
