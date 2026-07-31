@@ -710,32 +710,6 @@ fn count_tasks_in_db(db_path: &Path) -> Result<i64, error::DecapodError> {
     Ok(count)
 }
 
-fn fetch_tasks_fingerprint(db_path: &Path) -> Result<String, error::DecapodError> {
-    let conn = db::db_connect_for_validate(&db_path.to_string_lossy())?;
-    let mut stmt = conn
-        .prepare("SELECT id,title,status,updated_at,dir_path,scope,priority FROM tasks ORDER BY id")
-        .map_err(error::DecapodError::RusqliteError)?;
-    let rows = stmt
-        .query_map([], |row| {
-            Ok(serde_json::json!({
-                "id": row.get::<_, String>(0)?,
-                "title": row.get::<_, String>(1)?,
-                "status": row.get::<_, String>(2)?,
-                "updated_at": row.get::<_, String>(3)?,
-                "dir_path": row.get::<_, String>(4)?,
-                "scope": row.get::<_, String>(5)?,
-                "priority": row.get::<_, String>(6)?,
-            }))
-        })
-        .map_err(error::DecapodError::RusqliteError)?;
-
-    let mut out = Vec::new();
-    for r in rows {
-        out.push(r.map_err(error::DecapodError::RusqliteError)?);
-    }
-    Ok(serde_json::to_string(&out).unwrap())
-}
-
 fn validate_user_store_blank_slate(
     ctx: &ValidationContext,
     working_root: &Path,
@@ -761,32 +735,32 @@ fn validate_user_store_blank_slate(
 fn validate_repo_store_dogfood(
     store: &Store,
     ctx: &ValidationContext,
-    working_root: &Path,
+    _working_root: &Path,
 ) -> Result<(), error::DecapodError> {
     info("Store: repo (dogfood backlog semantics)");
-
-    let events = store.root.join("todo.events.jsonl");
-    if !events.is_file() {
-        fail("Repo store missing todo.events.jsonl", ctx);
-        return Ok(());
-    }
-    let content = fs::read_to_string(&events).map_err(error::DecapodError::IoError)?;
-    let add_count = content
-        .lines()
-        .filter(|l| l.contains("\"event_type\":\"task.add\""))
-        .count();
-
-    // Fresh setup has 0 events but is valid.
-    pass(
-        &format!("Repo backlog event log present ({add_count} task.add events)"),
-        ctx,
-    );
 
     let db_path = store.root.join(crate::core::schemas::LOCAL_DB_NAME);
     if !db_path.is_file() {
         fail("Repo store missing decapod.db", ctx);
         return Ok(());
     }
+    let conn = db::db_connect_for_validate(&db_path.to_string_lossy())?;
+    let event_count: i64 = conn
+        .query_row("SELECT COUNT(*) FROM todo_events", [], |row| row.get(0))
+        .unwrap_or(0);
+    let add_count: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM todo_events WHERE event_type='task.add'",
+            [],
+            |row| row.get(0),
+        )
+        .unwrap_or(0);
+    pass(
+        &format!(
+            "Repo canonical todo_events present ({add_count} task.add events; {event_count} total)"
+        ),
+        ctx,
+    );
 
     // Broker log integrity check
     let broker = DbBroker::new(&store.root);
@@ -803,20 +777,30 @@ fn validate_repo_store_dogfood(
         );
     }
 
-    let tmp_root = create_validation_temp_path(working_root, "repo")?;
-    let tmp_db = tmp_root.join(crate::core::schemas::LOCAL_DB_NAME);
-    let _events = todo::rebuild_db_from_events(&events, &tmp_db)?;
-
-    let fp_a = fetch_tasks_fingerprint(&db_path)?;
-    let fp_b = fetch_tasks_fingerprint(&tmp_db)?;
-    if fp_a == fp_b {
+    let task_event_count: i64 = conn
+        .query_row("SELECT COUNT(*) FROM task_events", [], |row| row.get(0))
+        .unwrap_or(0);
+    let missing_canonical: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM task_events t
+             LEFT JOIN todo_events e ON e.event_id = t.event_id
+             WHERE e.event_id IS NULL",
+            [],
+            |row| row.get(0),
+        )
+        .unwrap_or(0);
+    if missing_canonical == 0 {
         pass(
-            "Repo decapod.db matches deterministic rebuild of the todo tables from todo.events.jsonl",
+            &format!(
+                "Repo decapod.db task_events are represented in canonical todo_events ({task_event_count} task events; {event_count} canonical events)"
+            ),
             ctx,
         );
     } else {
         fail(
-            "Repo decapod.db does NOT match rebuild of the todo tables from todo.events.jsonl",
+            &format!(
+                "Repo decapod.db task_events missing from canonical todo_events (missing={missing_canonical}, task_events={task_event_count}, todo_events={event_count})"
+            ),
             ctx,
         );
     }

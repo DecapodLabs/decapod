@@ -1,17 +1,17 @@
 {
   "schema_version": "1.0.0",
-  "title": "Consolidate local Decapod state into one SQLite datastore",
-  "intent": "When backend=local, store all Decapod state in one canonical .decapod/data/decapod.db with multiple tables and preserve the same relational architecture used by Propodus Cloud; migrate legacy per-subsystem SQLite files safely, retain JSONL compatibility where required, and publish the governed implementation with refreshed specifications and proof artifacts.",
+  "title": "Complete SQLite consolidation and event-table migration for #1118",
+  "intent": "Complete Issue #1118 within PR #1119: backend=local must use one canonical .decapod/data/decapod.db with all subsystem tables and append-only event tables; migrate legacy SQLite files and JSONL logs idempotently; stop new JSONL writes; and keep explicit dactyl integration out of this PR under dedicated issue #1120.",
   "state": "APPROVED",
   "todo_ids": [
-    "bend_01kyvg96hmhjykdg"
+    "bugs_01kyvkq975ekff0p"
   ],
   "proof_hooks": [
     "cargo fmt --all -- --check",
     "cargo check --all-targets",
     "cargo test --all-targets",
     "decapod validate",
-    "decapod rpc --op specs.refresh"
+    "cargo test --test single_datastore"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -20,8 +20,8 @@
   "deferred_questions": [],
   "constraints": {
     "forbidden_paths": [],
-    "file_touch_budget": 60
+    "file_touch_budget": 100
   },
   "phases": [],
-  "updated_at": "1785484712Z"
+  "updated_at": "1785485784Z"
 }

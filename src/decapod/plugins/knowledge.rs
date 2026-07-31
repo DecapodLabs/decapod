@@ -1,10 +1,10 @@
 use crate::core::broker::DbBroker;
 use crate::core::error;
+use crate::core::events;
 use crate::core::store::Store;
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
-use std::fs::{self, OpenOptions};
-use std::io::Write;
+use std::fs;
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -441,19 +441,14 @@ pub fn log_retrieval_feedback(
         "source": source,
     });
 
-    let events_path = store.root.join("knowledge.retrieval.events.jsonl");
-    let mut file = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(&events_path)
-        .map_err(error::DecapodError::IoError)?;
-    let line = serde_json::to_string(&event)
-        .map_err(|e| error::DecapodError::ValidationError(format!("JSON error: {e}")))?;
-    writeln!(file, "{line}").map_err(error::DecapodError::IoError)?;
+    events::append(&store.root, events::KNOWLEDGE, &event)?;
 
     Ok(RetrievalFeedbackResult {
         event_id,
-        file: events_path.to_string_lossy().to_string(),
+        file: format!(
+            "decapod.db:{}",
+            events::table_for_stream(events::KNOWLEDGE).unwrap()
+        ),
     })
 }
 
@@ -515,15 +510,7 @@ pub fn decay_knowledge(
         "stale_ids": stale_ids,
     });
 
-    let events_path = store.root.join("knowledge.decay.events.jsonl");
-    let mut file = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(&events_path)
-        .map_err(error::DecapodError::IoError)?;
-    let line = serde_json::to_string(&event)
-        .map_err(|e| error::DecapodError::ValidationError(format!("JSON error: {e}")))?;
-    writeln!(file, "{line}").map_err(error::DecapodError::IoError)?;
+    events::append(&store.root, events::KNOWLEDGE, &event)?;
 
     Ok(DecayResult {
         as_of: as_of.to_string(),
@@ -589,15 +576,12 @@ pub fn record_promotion_event(
         reason: input.reason.trim().to_string(),
     };
 
-    let ledger_path = store.root.join("knowledge.promotions.jsonl");
-    let mut file = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(&ledger_path)
-        .map_err(error::DecapodError::IoError)?;
-    let line = serde_json::to_string(&event)
-        .map_err(|e| error::DecapodError::ValidationError(format!("JSON error: {e}")))?;
-    writeln!(file, "{line}").map_err(error::DecapodError::IoError)?;
+    events::append(
+        &store.root,
+        events::KNOWLEDGE,
+        &serde_json::to_value(&event)
+            .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
+    )?;
 
     Ok(event)
 }
@@ -709,9 +693,7 @@ pub fn schema() -> serde_json::Value {
         ],
         "storage": [
             "decapod.db",
-            "knowledge.retrieval.events.jsonl",
-            "knowledge.decay.events.jsonl",
-            "knowledge.promotions.jsonl"
+            "decapod.db:knowledge_events"
         ]
     })
 }

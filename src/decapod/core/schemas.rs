@@ -8,6 +8,18 @@
 /// as migration source names; runtime paths must use this file.
 pub const LOCAL_DB_NAME: &str = "decapod.db";
 
+/// Shared append-only event-table DDL. `{table}` is replaced only with a
+/// name from `core::events::STREAMS`; this keeps SQLite and the cloud schema
+/// aligned without duplicating column definitions in each adapter.
+pub const CANONICAL_EVENT_TABLE_SCHEMA: &str = "CREATE TABLE IF NOT EXISTS {table} (
+    event_id TEXT PRIMARY KEY,
+    ts TEXT NOT NULL,
+    seq INTEGER NOT NULL,
+    event_type TEXT NOT NULL DEFAULT '',
+    payload TEXT NOT NULL,
+    actor TEXT NOT NULL DEFAULT 'decapod'
+); CREATE INDEX IF NOT EXISTS idx_{table}_seq ON {table}(seq);";
+
 // --- 1. Governance Bin ---
 pub const GOVERNANCE_DB_NAME: &str = "governance.db";
 

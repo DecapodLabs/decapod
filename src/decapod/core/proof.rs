@@ -1,4 +1,5 @@
 use crate::ProofCommandCli;
+use crate::core::events;
 use crate::core::external_action::{self, ExternalCapability};
 use crate::core::store::Store;
 use crate::error::DecapodError;
@@ -264,24 +265,11 @@ fn sync_proof_claims_to_health(store: &Store, config: &ProofConfig) -> Result<()
 
 /// Append proof event to store
 fn append_proof_event(store: &Store, event: &ProofEvent) -> Result<(), DecapodError> {
-    use std::io::Write;
-
-    let events_path = store.root.join("proof.events.jsonl");
-    let event_json = serde_json::to_string(event).map_err(|e| {
-        DecapodError::IoError(std::io::Error::new(std::io::ErrorKind::InvalidData, e))
-    })?;
-    let event_line = format!("{event_json}\n");
-
-    // Append to file instead of overwriting
-    let mut file = std::fs::OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(&events_path)
-        .map_err(DecapodError::IoError)?;
-
-    file.write_all(event_line.as_bytes())
-        .map_err(DecapodError::IoError)?;
-
+    events::append(
+        &store.root,
+        events::VERIFICATION,
+        &serde_json::to_value(event).map_err(|e| DecapodError::ValidationError(e.to_string()))?,
+    )?;
     Ok(())
 }
 
@@ -364,7 +352,7 @@ pub fn schema() -> serde_json::Value {
             }]
         },
         "events": ["proof.run"],
-        "storage": ["proof.events.jsonl"]
+        "storage": ["decapod.db:verification_events"]
     })
 }
 #[cfg(test)]

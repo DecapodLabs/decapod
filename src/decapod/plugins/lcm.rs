@@ -7,6 +7,7 @@
 
 use crate::core::broker::DbBroker;
 use crate::core::error;
+use crate::core::events;
 use crate::core::schemas;
 use crate::core::store::Store;
 use crate::core::todo;
@@ -14,8 +15,7 @@ use clap::Subcommand;
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::fs::{self, OpenOptions};
-use std::io::{BufRead, BufReader, Write};
+use std::fs;
 use std::path::{Path, PathBuf};
 
 // ---------------------------------------------------------------------------
@@ -26,6 +26,7 @@ fn lcm_db_path(root: &Path) -> PathBuf {
     root.join(schemas::LOCAL_DB_NAME)
 }
 
+#[cfg(test)]
 fn lcm_events_path(root: &Path) -> PathBuf {
     root.join(schemas::LCM_EVENTS_NAME)
 }
@@ -110,34 +111,30 @@ fn sha256_hex(data: &[u8]) -> String {
     format!("{:x}", hasher.finalize())
 }
 
-fn append_jsonl(path: &Path, value: &serde_json::Value) -> Result<(), error::DecapodError> {
-    let mut f = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(path)
-        .map_err(error::DecapodError::IoError)?;
-    writeln!(f, "{}", serde_json::to_string(value).unwrap())
-        .map_err(error::DecapodError::IoError)?;
+fn append_event(root: &Path, value: &serde_json::Value) -> Result<(), error::DecapodError> {
+    events::append(root, events::LCM, value)?;
     Ok(())
 }
 
 fn read_all_events(root: &Path) -> Result<Vec<LcmEvent>, error::DecapodError> {
-    let path = lcm_events_path(root);
-    if !path.exists() {
+    let db_path = events::canonical_db_path(root);
+    if !db_path.exists() {
         return Ok(Vec::new());
     }
-    let file = fs::File::open(&path).map_err(error::DecapodError::IoError)?;
-    let reader = BufReader::new(file);
+    let conn = crate::core::db::db_connect_for_validate(&db_path.to_string_lossy())?;
+    let mut stmt = conn
+        .prepare("SELECT payload FROM lcm_events ORDER BY seq ASC")
+        .map_err(error::DecapodError::RusqliteError)?;
+    let rows = stmt
+        .query_map([], |row| row.get::<_, String>(0))
+        .map_err(error::DecapodError::RusqliteError)?;
     let mut events = Vec::new();
-    for line in reader.lines() {
-        let line = line.map_err(error::DecapodError::IoError)?;
-        let trimmed = line.trim();
-        if trimmed.is_empty() {
-            continue;
-        }
-        let event: LcmEvent = serde_json::from_str(trimmed)
-            .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
-        events.push(event);
+    for row in rows {
+        let payload = row.map_err(error::DecapodError::RusqliteError)?;
+        events.push(
+            serde_json::from_str(&payload)
+                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
+        );
     }
     Ok(events)
 }
@@ -199,7 +196,7 @@ pub fn ingest(
     });
 
     // 1. Append to immutable ledger
-    append_jsonl(&lcm_events_path(&store.root), &event)?;
+    append_event(&store.root, &event)?;
 
     // 2. Update derived index
     let broker = DbBroker::new(&store.root);
@@ -368,16 +365,13 @@ pub fn rebuild_index(
     store: &Store,
     validate: bool,
 ) -> Result<serde_json::Value, error::DecapodError> {
-    let events_path = lcm_events_path(&store.root);
-    if !events_path.exists() {
+    let events = read_all_events(&store.root)?;
+    if events.is_empty() {
         return Ok(serde_json::json!({
             "status": "skipped",
             "reason": "No events ledger found",
         }));
     }
-
-    let file = fs::File::open(&events_path).map_err(error::DecapodError::IoError)?;
-    let reader = BufReader::new(file);
 
     let broker = DbBroker::new(&store.root);
     let db_path = lcm_db_path(&store.root);
@@ -391,16 +385,7 @@ pub fn rebuild_index(
         Ok(())
     })?;
 
-    for line in reader.lines() {
-        let line = line.map_err(error::DecapodError::IoError)?;
-        if line.trim().is_empty() {
-            continue;
-        }
-
-        let event: LcmEvent = serde_json::from_str(&line).map_err(|e| {
-            error::DecapodError::ValidationError(format!("Failed to parse event: {e}"))
-        })?;
-
+    for event in events {
         if validate {
             let computed_hash = sha256_hex(event.content.as_bytes());
             if computed_hash != event.content_hash {
@@ -701,12 +686,12 @@ pub fn schema() -> serde_json::Value {
             { "name": "rebuild", "description": "Rebuild LCM index from events ledger (validates integrity)" },
             { "name": "schema", "description": "Emit subsystem schema JSON" },
         ],
-        "storage": [schemas::LCM_DB_NAME, schemas::LCM_EVENTS_NAME],
-        "invariants": [
-            "Originals are NEVER mutated or deleted (append-only JSONL)",
+        "storage": [schemas::LOCAL_DB_NAME, "decapod.db:lcm_events"],
+            "invariants": [
+            "Originals are NEVER mutated or deleted (append-only lcm_events table)",
             "Content hash is SHA256 of raw content bytes — deterministic",
             "Summaries are deterministic: same originals → same summary hash",
-            "lcm.db is always rebuildable from lcm.events.jsonl",
+            "The LCM index is always rebuildable from decapod.db:lcm_events",
         ],
     })
 }

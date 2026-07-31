@@ -1,6 +1,7 @@
 use crate::core::broker::DbBroker;
 use crate::core::completion_evidence;
 use crate::core::error;
+use crate::core::events;
 use crate::core::external_action::{self, ExternalCapability};
 use crate::core::state_commit;
 use crate::core::store::Store;
@@ -13,8 +14,7 @@ use fancy_regex::Regex;
 use rusqlite::OptionalExtension;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::fs::{self, OpenOptions};
-use std::io::Write;
+use std::fs;
 use std::path::{Path, PathBuf};
 
 #[derive(Parser, Debug)]
@@ -359,13 +359,8 @@ fn run_validate_and_hash(
     Ok((output.status.success(), sha256_hex(normalized.as_bytes())))
 }
 
-fn verification_events_path(store: &Store) -> PathBuf {
-    store.root.join("verification_events.jsonl")
-}
-
-fn append_jsonl(path: &Path, value: &serde_json::Value) -> Result<(), error::DecapodError> {
-    let mut f = OpenOptions::new().create(true).append(true).open(path)?;
-    writeln!(f, "{}", serde_json::to_string(value).unwrap())?;
+fn append_event(store: &Store, value: &serde_json::Value) -> Result<(), error::DecapodError> {
+    events::append(&store.root, events::VERIFICATION, value)?;
     Ok(())
 }
 
@@ -1474,8 +1469,8 @@ pub fn run_verify_cli(
             &result.notes.join("; "),
         )?;
 
-        append_jsonl(
-            &verification_events_path(store),
+        append_event(
+            store,
             &serde_json::json!({
                 "event_type": "verification.todo_result",
                 "ts": now,
@@ -1499,8 +1494,8 @@ pub fn run_verify_cli(
         stale: targets.iter().filter(|t| is_stale(t, now_secs)).count(),
     };
 
-    append_jsonl(
-        &verification_events_path(store),
+    append_event(
+        store,
         &serde_json::json!({
             "event_type": "verification.run",
             "ts": now,
