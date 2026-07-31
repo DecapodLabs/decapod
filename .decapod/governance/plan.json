@@ -14,9 +14,7 @@
   ],
   "unknowns": [],
   "human_questions": [],
-  "stop_conditions": [
-    "Do not reintroduce the Propodus Rust crate, add live credentials, or mutate .decapod state directly."
-  ],
+  "stop_conditions": [],
   "unresolved_contradictions": [],
   "deferred_questions": [],
   "constraints": {
@@ -26,5 +24,5 @@
     "file_touch_budget": 40
   },
   "phases": [],
-  "updated_at": "1785480226Z"
+  "updated_at": "1785481142Z"
 }
