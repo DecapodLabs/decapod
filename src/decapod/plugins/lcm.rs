@@ -9,6 +9,7 @@ use crate::core::broker::DbBroker;
 use crate::core::error;
 use crate::core::schemas;
 use crate::core::store::Store;
+use crate::core::todo;
 use clap::Subcommand;
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
@@ -22,7 +23,7 @@ use std::path::{Path, PathBuf};
 // ---------------------------------------------------------------------------
 
 fn lcm_db_path(root: &Path) -> PathBuf {
-    root.join(schemas::LCM_DB_NAME)
+    root.join(schemas::LOCAL_DB_NAME)
 }
 
 fn lcm_events_path(root: &Path) -> PathBuf {
@@ -35,6 +36,10 @@ fn lcm_events_path(root: &Path) -> PathBuf {
 
 pub fn initialize_lcm_db(root: &Path) -> Result<(), error::DecapodError> {
     fs::create_dir_all(root).map_err(error::DecapodError::IoError)?;
+    // LCM shares the local datastore with the control plane. Initialize the
+    // transactional foundation first because broker policy checks use its
+    // risk_zones table before the LCM schema closure runs.
+    todo::initialize_todo_db(root)?;
     let broker = DbBroker::new(root);
     let db_path = lcm_db_path(root);
     broker.with_conn(&db_path, "decapod", None, "lcm.init", |conn| {

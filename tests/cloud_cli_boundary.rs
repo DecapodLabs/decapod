@@ -161,7 +161,7 @@ fn cloud_project() -> TempDir {
 fn production_cli_dispatch_uses_remote_store_and_never_local_sqlite() {
     let project = cloud_project();
     let data_root = project.path().join(".decapod/data");
-    let todo_db = data_root.join("todo.db");
+    let todo_db = data_root.join("decapod.db");
     assert!(!todo_db.exists(), "test starts without local todo SQLite");
     let store = MockPropodusStore::default();
     let factory = MockFactory {

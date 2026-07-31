@@ -525,7 +525,7 @@ fn reconcile_commit_to_agent_branch(
 }
 
 pub fn todo_db_path(root: &Path) -> PathBuf {
-    root.join(schemas::TODO_DB_NAME)
+    root.join(schemas::LOCAL_DB_NAME)
 }
 
 fn events_path(root: &Path) -> PathBuf {
@@ -542,8 +542,8 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
 
     let current: Option<String> = conn
         .query_row(
-            "SELECT value FROM meta WHERE key = 'schema_version'",
-            [],
+            "SELECT value FROM meta WHERE namespace = ?1 AND key = 'schema_version'",
+            [schemas::TODO_META_NAMESPACE],
             |row| row.get(0),
         )
         .optional()
@@ -669,9 +669,12 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
         conn.execute(schemas::TODO_DB_SCHEMA_INDEX_HASH, [])?;
     }
     conn.execute(
-        "INSERT INTO meta(key, value) VALUES('schema_version', ?1)
-         ON CONFLICT(key) DO UPDATE SET value=excluded.value",
-        [schemas::TODO_SCHEMA_VERSION.to_string()],
+        "INSERT INTO meta(namespace, key, value) VALUES(?1, 'schema_version', ?2)
+         ON CONFLICT(namespace, key) DO UPDATE SET value=excluded.value",
+        rusqlite::params![
+            schemas::TODO_META_NAMESPACE,
+            schemas::TODO_SCHEMA_VERSION.to_string()
+        ],
     )?;
 
     Ok(())

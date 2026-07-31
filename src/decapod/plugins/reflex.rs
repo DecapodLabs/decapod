@@ -12,7 +12,7 @@ use std::env;
 use std::path::{Path, PathBuf};
 
 fn reflex_db_path(root: &Path) -> PathBuf {
-    root.join(schemas::AUTOMATION_DB_NAME)
+    root.join(schemas::LOCAL_DB_NAME)
 }
 
 pub fn initialize_reflex_db(root: &Path) -> Result<(), error::DecapodError> {
@@ -306,7 +306,7 @@ pub fn schema() -> serde_json::Value {
                 ]
             }
         ],
-        "storage": ["reflex.db"]
+        "storage": ["decapod.db"]
     })
 }
 

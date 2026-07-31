@@ -154,7 +154,7 @@ pub struct RiskMap {
 }
 
 pub fn policy_db_path(root: &Path) -> PathBuf {
-    root.join(schemas::GOVERNANCE_DB_NAME)
+    root.join(schemas::LOCAL_DB_NAME)
 }
 
 pub fn initialize_policy_db(root: &Path) -> Result<(), error::DecapodError> {
@@ -565,7 +565,7 @@ fn zone_policy_from_todo(
     root: &Path,
     zone_name: &str,
 ) -> Result<Option<(String, bool)>, error::DecapodError> {
-    let todo_db = root.join(schemas::TODO_DB_NAME);
+    let todo_db = root.join(schemas::LOCAL_DB_NAME);
     if !todo_db.exists() {
         return Ok(None);
     }
@@ -591,7 +591,7 @@ fn actor_trust_level_raw(root: &Path, actor: &str) -> Result<String, error::Deca
     if actor == "decapod" || actor == "cli" || actor == "operator" {
         return Ok("core".to_string());
     }
-    let todo_db = root.join(schemas::TODO_DB_NAME);
+    let todo_db = root.join(schemas::LOCAL_DB_NAME);
     if !todo_db.exists() {
         return Ok("basic".to_string());
     }
@@ -751,6 +751,6 @@ pub fn schema() -> serde_json::Value {
             { "name": "eval", "parameters": ["command", "path"] },
             { "name": "approve", "parameters": ["action_id", "actor", "scope"] }
         ],
-        "storage": ["policy.db", "RISKMAP.json"]
+        "storage": ["decapod.db", "RISKMAP.json"]
     })
 }

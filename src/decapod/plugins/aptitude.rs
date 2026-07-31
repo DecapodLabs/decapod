@@ -195,7 +195,7 @@ pub struct SimilarityGroup {
 // ============================================================================
 
 pub fn aptitude_db_path(root: &Path) -> PathBuf {
-    root.join(crate::core::schemas::MEMORY_DB_NAME)
+    root.join(crate::core::schemas::LOCAL_DB_NAME)
 }
 
 fn now_iso() -> String {
@@ -913,7 +913,7 @@ pub fn schema() -> serde_json::Value {
             { "name": "prompt", "description": "Get contextual prompts for agents", "parameters": ["--context", "--format"] },
             { "name": "remind", "description": "Generate contextual reminders", "parameters": ["--context"] }
         ],
-        "storage": ["aptitude.db"],
+        "storage": ["decapod.db"],
         "categories": [
             "git", "style", "workflow", "communication", "tooling"
         ],

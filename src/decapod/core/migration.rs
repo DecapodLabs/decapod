@@ -90,6 +90,17 @@ pub fn all_migrations() -> Vec<Migration> {
             description: "Add one_shot column to tasks table for 1-shot task tracking",
             up: migrate_todo_one_shot_column,
         },
+        Migration {
+            id: "db.consolidate.single_datastore.v001",
+            sequence: 500,
+            scope: "global",
+            kind: "rust",
+            script_path: None,
+            min_version: "0.89.1",
+            target_version: "0.89.1",
+            description: "Consolidate every local SQLite store into decapod.db",
+            up: migrate_consolidate_single_datastore,
+        },
     ]
 }
 
@@ -201,14 +212,33 @@ where
 }
 
 fn schema_upgrade_pending(data_root: &Path) -> Result<bool, error::DecapodError> {
-    let todo_db = data_root.join(schemas::TODO_DB_NAME);
+    if [
+        schemas::GOVERNANCE_DB_NAME,
+        schemas::MEMORY_DB_NAME,
+        schemas::AUTOMATION_DB_NAME,
+        schemas::TODO_DB_NAME,
+        schemas::LCM_DB_NAME,
+        schemas::KNOWLEDGE_DB_NAME,
+        schemas::FEDERATION_DB_NAME,
+        schemas::DECIDE_DB_NAME,
+        schemas::APTITUDE_DB_NAME,
+        schemas::CRON_DB_NAME,
+        schemas::REFLEX_DB_NAME,
+        "broker_dedupe.db",
+    ]
+    .iter()
+    .any(|name| data_root.join(name).exists())
+    {
+        return Ok(true);
+    }
+    let todo_db = data_root.join(schemas::LOCAL_DB_NAME);
     if !todo_db.exists() {
-        return Ok(false);
+        return Ok(true);
     }
     let conn = db::db_connect(&todo_db.to_string_lossy())?;
     let version_res: Result<String, _> = conn.query_row(
-        "SELECT value FROM meta WHERE key = 'schema_version'",
-        [],
+        "SELECT value FROM meta WHERE namespace = ?1 AND key = 'schema_version'",
+        [schemas::TODO_META_NAMESPACE],
         |row| row.get(0),
     );
     let current_version = version_res
@@ -244,6 +274,16 @@ fn create_data_backup(data_root: &Path) -> Result<Option<std::path::PathBuf>, er
 }
 
 fn restore_data_backup(data_root: &Path, backup_dir: &Path) -> Result<(), error::DecapodError> {
+    let canonical = data_root.join(schemas::LOCAL_DB_NAME);
+    if canonical.exists() {
+        fs::remove_file(&canonical).map_err(error::DecapodError::IoError)?;
+    }
+    for suffix in ["-wal", "-shm"] {
+        let sidecar = data_root.join(format!("{}{}", schemas::LOCAL_DB_NAME, suffix));
+        if sidecar.exists() {
+            fs::remove_file(sidecar).map_err(error::DecapodError::IoError)?;
+        }
+    }
     for entry in fs::read_dir(backup_dir).map_err(error::DecapodError::IoError)? {
         let entry = entry.map_err(error::DecapodError::IoError)?;
         let backup_file = entry.path();
@@ -296,7 +336,7 @@ fn run_migrations(decapod_root: &Path) -> Result<(), error::DecapodError> {
 pub fn check_versioned_db_schema_expectations(
     data_root: &Path,
 ) -> Result<Vec<DbSchemaVersionCheck>, error::DecapodError> {
-    let expectations = vec![(schemas::TODO_DB_NAME, schemas::TODO_SCHEMA_VERSION)];
+    let expectations = vec![(schemas::LOCAL_DB_NAME, schemas::TODO_SCHEMA_VERSION)];
     let mut checks = Vec::with_capacity(expectations.len());
     for (db_name, expected) in expectations {
         let db_path = data_root.join(db_name);
@@ -312,8 +352,8 @@ pub fn check_versioned_db_schema_expectations(
         let conn = db::db_connect(&db_path.to_string_lossy())?;
         let raw: Option<String> = conn
             .query_row(
-                "SELECT value FROM meta WHERE key = 'schema_version'",
-                [],
+                "SELECT value FROM meta WHERE namespace = ?1 AND key = 'schema_version'",
+                [schemas::TODO_META_NAMESPACE],
                 |row| row.get(0),
             )
             .optional()
@@ -671,6 +711,286 @@ fn migrate_consolidate_databases(decapod_root: &Path) -> Result<(), error::Decap
     Ok(())
 }
 
+/// Move the four historical bins and the remaining legacy SQLite stores into
+/// one local datastore. This migration deliberately copies into a fully
+/// initialized target first, then removes source files only after every copy
+/// succeeds. It is safe to rerun because all inserts are idempotent.
+fn migrate_consolidate_single_datastore(decapod_root: &Path) -> Result<(), error::DecapodError> {
+    let data_root = decapod_root.join("data");
+    if !data_root.exists() {
+        return Ok(());
+    }
+
+    let target_path = data_root.join(schemas::LOCAL_DB_NAME);
+    let target = db::db_connect(&target_path.to_string_lossy())?;
+    initialize_single_datastore_schema(&target)?;
+
+    let sources = [
+        (
+            schemas::GOVERNANCE_DB_NAME,
+            &[
+                "claims",
+                "proof_events",
+                "health_cache",
+                "approvals",
+                "feedback",
+                "archives",
+                "obligations",
+                "obligation_edges",
+            ][..],
+        ),
+        (
+            schemas::MEMORY_DB_NAME,
+            &[
+                "nodes",
+                "sources",
+                "edges",
+                "federation_events",
+                "knowledge",
+                "sessions",
+                "decisions",
+                "preferences",
+                "patterns",
+                "observations",
+                "consolidations",
+                "agent_prompts",
+            ][..],
+        ),
+        (schemas::AUTOMATION_DB_NAME, &["cron_jobs", "reflexes"][..]),
+        (
+            schemas::TODO_DB_NAME,
+            &[
+                "tasks",
+                "task_events",
+                "task_verification",
+                "categories",
+                "agent_category_claims",
+                "agent_presence",
+                "agent_trust",
+                "risk_zones",
+                "task_owners",
+                "task_dependencies",
+                "agent_expertise",
+            ][..],
+        ),
+        (schemas::LCM_DB_NAME, &["originals_index", "summaries"][..]),
+        ("knowledge.db", &["knowledge"][..]),
+        (
+            schemas::FEDERATION_DB_NAME,
+            &["nodes", "sources", "edges", "federation_events"][..],
+        ),
+        (schemas::DECIDE_DB_NAME, &["sessions", "decisions"][..]),
+        (
+            schemas::APTITUDE_DB_NAME,
+            &[
+                "preferences",
+                "patterns",
+                "observations",
+                "consolidations",
+                "agent_prompts",
+            ][..],
+        ),
+        (schemas::CRON_DB_NAME, &["cron_jobs"][..]),
+        (schemas::REFLEX_DB_NAME, &["reflexes"][..]),
+        ("broker_dedupe.db", &["request_dedupe"][..]),
+    ];
+
+    for (source_name, tables) in sources {
+        if source_name == schemas::LOCAL_DB_NAME {
+            continue;
+        }
+        let source_path = data_root.join(source_name);
+        if !source_path.exists() {
+            continue;
+        }
+        for table in tables {
+            migrate_table(&data_root, source_name, &target, table)?;
+        }
+        migrate_legacy_meta(&data_root, source_name, &target)?;
+    }
+
+    let legacy = [
+        schemas::GOVERNANCE_DB_NAME,
+        schemas::MEMORY_DB_NAME,
+        schemas::AUTOMATION_DB_NAME,
+        schemas::TODO_DB_NAME,
+        schemas::LCM_DB_NAME,
+        schemas::KNOWLEDGE_DB_NAME,
+        schemas::FEDERATION_DB_NAME,
+        schemas::DECIDE_DB_NAME,
+        schemas::APTITUDE_DB_NAME,
+        schemas::CRON_DB_NAME,
+        schemas::REFLEX_DB_NAME,
+        "broker_dedupe.db",
+    ];
+    for name in legacy {
+        let path = data_root.join(name);
+        if path.exists() {
+            fs::remove_file(&path).map_err(error::DecapodError::IoError)?;
+        }
+        for suffix in ["-wal", "-shm"] {
+            let sidecar = data_root.join(format!("{name}{suffix}"));
+            if sidecar.exists() {
+                fs::remove_file(sidecar).map_err(error::DecapodError::IoError)?;
+            }
+        }
+    }
+    Ok(())
+}
+
+fn initialize_single_datastore_schema(conn: &Connection) -> Result<(), error::DecapodError> {
+    for schema in [
+        schemas::HEALTH_DB_SCHEMA_CLAIMS,
+        schemas::HEALTH_DB_SCHEMA_PROOF_EVENTS,
+        schemas::HEALTH_DB_SCHEMA_HEALTH_CACHE,
+        schemas::POLICY_DB_SCHEMA_APPROVALS,
+        schemas::FEEDBACK_DB_SCHEMA,
+        schemas::ARCHIVE_DB_SCHEMA,
+        schemas::GOVERNANCE_DB_SCHEMA_OBLIGATIONS,
+        schemas::GOVERNANCE_DB_SCHEMA_OBLIGATION_EDGES,
+        schemas::MEMORY_DB_SCHEMA_META,
+        schemas::MEMORY_DB_SCHEMA_NODES,
+        schemas::MEMORY_DB_SCHEMA_SOURCES,
+        schemas::MEMORY_DB_SCHEMA_EDGES,
+        schemas::MEMORY_DB_SCHEMA_EVENTS,
+        schemas::KNOWLEDGE_DB_SCHEMA,
+        schemas::DECIDE_DB_SCHEMA_SESSIONS,
+        schemas::DECIDE_DB_SCHEMA_DECISIONS,
+        schemas::CRON_DB_SCHEMA,
+        schemas::REFLEX_DB_SCHEMA,
+        schemas::TODO_DB_SCHEMA_META,
+        schemas::TODO_DB_SCHEMA_TASKS,
+        schemas::TODO_DB_SCHEMA_TASK_EVENTS,
+        schemas::TODO_DB_SCHEMA_TASK_VERIFICATION,
+        schemas::TODO_DB_SCHEMA_CATEGORIES,
+        schemas::TODO_DB_SCHEMA_AGENT_CATEGORY_CLAIMS,
+        schemas::TODO_DB_SCHEMA_AGENT_PRESENCE,
+        schemas::TODO_DB_SCHEMA_AGENT_TRUST,
+        schemas::TODO_DB_SCHEMA_RISK_ZONES,
+        schemas::TODO_DB_SCHEMA_TASK_OWNERS,
+        schemas::TODO_DB_SCHEMA_TASK_DEPENDENCIES,
+        schemas::TODO_DB_SCHEMA_AGENT_EXPERTISE,
+        schemas::APTITUDE_DB_SCHEMA_PREFERENCES,
+        schemas::APTITUDE_DB_SCHEMA_PATTERNS,
+        schemas::APTITUDE_DB_SCHEMA_OBSERVATIONS,
+        schemas::APTITUDE_DB_SCHEMA_CONSOLIDATIONS,
+        schemas::APTITUDE_DB_SCHEMA_AGENT_PROMPTS,
+        schemas::LCM_DB_SCHEMA_ORIGINALS_INDEX,
+        schemas::LCM_DB_SCHEMA_SUMMARIES,
+    ] {
+        conn.execute_batch(schema)?;
+    }
+    for index in [
+        schemas::POLICY_DB_SCHEMA_INDEX,
+        schemas::MEMORY_DB_INDEX_NODES_TYPE,
+        schemas::MEMORY_DB_INDEX_NODES_STATUS,
+        schemas::MEMORY_DB_INDEX_NODES_SCOPE,
+        schemas::MEMORY_DB_INDEX_NODES_PRIORITY,
+        schemas::MEMORY_DB_INDEX_NODES_UPDATED,
+        schemas::MEMORY_DB_INDEX_SOURCES_NODE,
+        schemas::MEMORY_DB_INDEX_EDGES_SOURCE,
+        schemas::MEMORY_DB_INDEX_EDGES_TARGET,
+        schemas::MEMORY_DB_INDEX_EDGES_TYPE,
+        schemas::MEMORY_DB_INDEX_EVENTS_NODE,
+        schemas::KNOWLEDGE_DB_INDEX_STATUS,
+        schemas::KNOWLEDGE_DB_INDEX_CREATED,
+        schemas::KNOWLEDGE_DB_INDEX_MERGE_KEY,
+        schemas::KNOWLEDGE_DB_INDEX_ACTIVE_MERGE_SCOPE,
+        schemas::DECIDE_DB_INDEX_DECISIONS_SESSION,
+        schemas::DECIDE_DB_INDEX_DECISIONS_TREE,
+        schemas::DECIDE_DB_INDEX_SESSIONS_TREE,
+        schemas::DECIDE_DB_INDEX_SESSIONS_STATUS,
+        schemas::TODO_DB_SCHEMA_INDEX_STATUS,
+        schemas::TODO_DB_SCHEMA_INDEX_SCOPE,
+        schemas::TODO_DB_SCHEMA_INDEX_DIR,
+        schemas::TODO_DB_SCHEMA_INDEX_HASH,
+        schemas::TODO_DB_SCHEMA_INDEX_EVENTS_TASK,
+        schemas::TODO_DB_SCHEMA_INDEX_VERIFICATION_STATUS,
+        schemas::TODO_DB_SCHEMA_INDEX_CATEGORY_NAME,
+        schemas::TODO_DB_SCHEMA_INDEX_AGENT_CATEGORY_AGENT,
+        schemas::TODO_DB_SCHEMA_INDEX_AGENT_PRESENCE_LAST_SEEN,
+        schemas::TODO_DB_SCHEMA_INDEX_AGENT_TRUST_LEVEL,
+        schemas::TODO_DB_SCHEMA_INDEX_RISK_ZONES_NAME,
+        schemas::TODO_DB_SCHEMA_INDEX_TASK_OWNERS_TASK,
+        schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_TASK,
+        schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_DEPENDS_ON,
+        schemas::TODO_DB_SCHEMA_INDEX_AGENT_EXPERTISE_AGENT,
+        schemas::APTITUDE_DB_SCHEMA_INDEX_PREF_CATEGORY,
+        schemas::APTITUDE_DB_SCHEMA_INDEX_PREF_KEY,
+        schemas::APTITUDE_DB_SCHEMA_INDEX_PREF_ACCESS,
+        schemas::APTITUDE_DB_SCHEMA_INDEX_PATTERN_CATEGORY,
+        schemas::APTITUDE_DB_SCHEMA_INDEX_OBS_PROCESSED,
+        schemas::APTITUDE_DB_SCHEMA_INDEX_PROMPT_CONTEXT,
+        schemas::LCM_DB_INDEX_ORIGINALS_KIND,
+        schemas::LCM_DB_INDEX_ORIGINALS_TS,
+        schemas::LCM_DB_INDEX_SUMMARIES_SCOPE,
+    ] {
+        conn.execute_batch(index)?;
+    }
+    conn.execute_batch(
+        "CREATE TABLE IF NOT EXISTS request_dedupe (
+            request_id TEXT PRIMARY KEY,
+            payload_hash TEXT NOT NULL,
+            status TEXT NOT NULL,
+            commit_marker TEXT,
+            result_envelope TEXT NOT NULL,
+            retry_after_ms_hint INTEGER,
+            created_at TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_request_dedupe_created_at ON request_dedupe(created_at);",
+    )?;
+    Ok(())
+}
+
+fn migrate_legacy_meta(
+    data_root: &Path,
+    source_name: &str,
+    target: &Connection,
+) -> Result<(), error::DecapodError> {
+    let source_path = data_root.join(source_name);
+    let source = db::db_connect(&source_path.to_string_lossy())?;
+    if !table_exists(&source, "meta")? {
+        return Ok(());
+    }
+    let namespace = match source_name {
+        schemas::TODO_DB_NAME => schemas::TODO_META_NAMESPACE,
+        schemas::LCM_DB_NAME => schemas::LCM_META_NAMESPACE,
+        schemas::FEDERATION_DB_NAME => schemas::FEDERATION_META_NAMESPACE,
+        _ => schemas::MEMORY_META_NAMESPACE,
+    };
+    let has_namespace = table_has_column(&source, "meta", "namespace")?;
+    if has_namespace {
+        let mut stmt = source.prepare("SELECT namespace, key, value FROM meta")?;
+        let rows = stmt.query_map([], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+            ))
+        })?;
+        for row in rows {
+            let (row_namespace, key, value) = row?;
+            target.execute(
+                "INSERT OR IGNORE INTO meta(namespace, key, value) VALUES(?1, ?2, ?3)",
+                rusqlite::params![row_namespace, key, value],
+            )?;
+        }
+    } else {
+        let mut stmt = source.prepare("SELECT key, value FROM meta")?;
+        let rows = stmt.query_map([], |row| {
+            Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+        })?;
+        for row in rows {
+            let (key, value) = row?;
+            target.execute(
+                "INSERT OR IGNORE INTO meta(namespace, key, value) VALUES(?1, ?2, ?3)",
+                rusqlite::params![namespace, key, value],
+            )?;
+        }
+    }
+    Ok(())
+}
+
 fn is_typed_todo_id(id: &str) -> bool {
     let mut parts = id.split('_');
     let Some(prefix) = parts.next() else {
@@ -813,7 +1133,7 @@ fn table_exists(conn: &Connection, table: &str) -> Result<bool, error::DecapodEr
 
 fn migrate_todo_ids_to_typed_format(decapod_root: &Path) -> Result<(), error::DecapodError> {
     let data_root = decapod_root.join("data");
-    let todo_db = data_root.join(schemas::TODO_DB_NAME);
+    let todo_db = data_root.join(schemas::LOCAL_DB_NAME);
     if !todo_db.exists() {
         return Ok(());
     }
@@ -1150,7 +1470,7 @@ fn migrate_todo_ids_to_typed_format(decapod_root: &Path) -> Result<(), error::De
 
 fn migrate_todo_one_shot_column(decapod_root: &Path) -> Result<(), error::DecapodError> {
     let data_root = decapod_root.join("data");
-    let todo_db = data_root.join(schemas::TODO_DB_NAME);
+    let todo_db = data_root.join(schemas::LOCAL_DB_NAME);
     if !todo_db.exists() {
         return Ok(());
     }
@@ -1194,18 +1514,28 @@ fn migrate_table(
 
     target_conn
         .execute(
-            &format!(
-                "ATTACH DATABASE '{}' AS source",
-                source_path.to_string_lossy()
-            ),
-            [],
+            "ATTACH DATABASE ?1 AS source",
+            [source_path.to_string_lossy().as_ref()],
         )
         .map_err(error::DecapodError::RusqliteError)?;
 
-    let res = target_conn.execute(
-        &format!("INSERT OR IGNORE INTO main.{table} SELECT * FROM source.{table}"),
-        [],
-    );
+    let source_has_table = target_conn
+        .query_row(
+            "SELECT 1 FROM source.sqlite_master WHERE type='table' AND name=?1",
+            [table],
+            |_| Ok(true),
+        )
+        .optional()
+        .map_err(error::DecapodError::RusqliteError)?
+        .unwrap_or(false);
+    let res = if source_has_table {
+        target_conn.execute(
+            &format!("INSERT OR IGNORE INTO main.{table} SELECT * FROM source.{table}"),
+            [],
+        )
+    } else {
+        Ok(0)
+    };
 
     target_conn
         .execute("DETACH DATABASE source", [])

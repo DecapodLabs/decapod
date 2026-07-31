@@ -400,7 +400,7 @@ fn list_memory_nodes_by_types(
     root: &Path,
     types: &[&str],
 ) -> Result<Vec<MemoryNode>, error::DecapodError> {
-    let db_path = root.join(schemas::FEDERATION_DB_NAME);
+    let db_path = root.join(schemas::LOCAL_DB_NAME);
     if !db_path.exists() {
         return Ok(Vec::new());
     }
@@ -445,7 +445,7 @@ fn list_memory_nodes_by_types(
 }
 
 fn memory_node_exists(root: &Path, id: &str, node_type: &str) -> Result<bool, error::DecapodError> {
-    let db_path = root.join(schemas::FEDERATION_DB_NAME);
+    let db_path = root.join(schemas::LOCAL_DB_NAME);
     if !db_path.exists() {
         return Ok(false);
     }

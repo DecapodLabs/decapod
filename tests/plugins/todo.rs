@@ -343,7 +343,7 @@ fn test_claim_modes_and_owner_consolidation() {
         ],
     );
 
-    let db = Connection::open(repo.join(".decapod/data/todo.db")).unwrap();
+    let db = Connection::open(repo.join(".decapod/data/decapod.db")).unwrap();
     let ts = "1771202800Z";
     db.execute(
         "INSERT INTO agent_trust(agent_id, trust_level, granted_at, updated_at, granted_by)
@@ -446,7 +446,7 @@ fn test_risk_zones_and_trust_tiers_enforced() {
     assert!(String::from_utf8_lossy(&shared_fail.stderr).contains("Policy gate denied"));
 
     // Grant verified trust to agent-b and retry shared claim.
-    let db = Connection::open(repo.join(".decapod/data/todo.db")).unwrap();
+    let db = Connection::open(repo.join(".decapod/data/decapod.db")).unwrap();
     let ts = "1771203000Z";
     db.execute(
         "INSERT INTO agent_trust(agent_id, trust_level, granted_at, updated_at, granted_by)
@@ -609,7 +609,7 @@ fn test_ownership_rebuild_replay_parity() {
     let task_id = added["id"].as_str().unwrap().to_string();
 
     // Prepare trust gates for shared claim.
-    let db = Connection::open(repo.join(".decapod/data/todo.db")).unwrap();
+    let db = Connection::open(repo.join(".decapod/data/decapod.db")).unwrap();
     let ts = "1771203600Z";
     db.execute(
         "INSERT INTO agent_trust(agent_id, trust_level, granted_at, updated_at, granted_by)

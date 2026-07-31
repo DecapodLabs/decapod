@@ -744,7 +744,7 @@ fn validate_user_store_blank_slate(
     let tmp_root = create_validation_temp_path(working_root, "user")?;
 
     todo::initialize_todo_db(&tmp_root)?;
-    let db_path = tmp_root.join("todo.db");
+    let db_path = tmp_root.join(crate::core::schemas::LOCAL_DB_NAME);
     let n = count_tasks_in_db(&db_path)?;
 
     if n == 0 {
@@ -782,9 +782,9 @@ fn validate_repo_store_dogfood(
         ctx,
     );
 
-    let db_path = store.root.join("todo.db");
+    let db_path = store.root.join(crate::core::schemas::LOCAL_DB_NAME);
     if !db_path.is_file() {
-        fail("Repo store missing todo.db", ctx);
+        fail("Repo store missing decapod.db", ctx);
         return Ok(());
     }
 
@@ -804,19 +804,19 @@ fn validate_repo_store_dogfood(
     }
 
     let tmp_root = create_validation_temp_path(working_root, "repo")?;
-    let tmp_db = tmp_root.join("todo.db");
+    let tmp_db = tmp_root.join(crate::core::schemas::LOCAL_DB_NAME);
     let _events = todo::rebuild_db_from_events(&events, &tmp_db)?;
 
     let fp_a = fetch_tasks_fingerprint(&db_path)?;
     let fp_b = fetch_tasks_fingerprint(&tmp_db)?;
     if fp_a == fp_b {
         pass(
-            "Repo todo.db matches deterministic rebuild from todo.events.jsonl",
+            "Repo decapod.db matches deterministic rebuild of the todo tables from todo.events.jsonl",
             ctx,
         );
     } else {
         fail(
-            "Repo todo.db does NOT match rebuild from todo.events.jsonl",
+            "Repo decapod.db does NOT match rebuild of the todo tables from todo.events.jsonl",
             ctx,
         );
     }
@@ -3051,9 +3051,9 @@ fn validate_health_cache_integrity(
     ctx: &ValidationContext,
 ) -> Result<(), error::DecapodError> {
     info("Health Cache Non-Authoritative Gate");
-    let db_path = store.root.join("health.db");
+    let db_path = store.root.join(crate::core::schemas::LOCAL_DB_NAME);
     if !db_path.exists() {
-        skip("health.db not found; skipping health integrity check", ctx);
+        skip("decapod.db not found; skipping health integrity check", ctx);
         return Ok(());
     }
 
@@ -3133,9 +3133,9 @@ fn validate_policy_integrity(
     pre_read_broker: Option<&str>,
 ) -> Result<(), error::DecapodError> {
     info("Policy Integrity Gates");
-    let db_path = store.root.join("policy.db");
+    let db_path = store.root.join(crate::core::schemas::LOCAL_DB_NAME);
     if !db_path.exists() {
-        skip("policy.db not found; skipping policy check", ctx);
+        skip("decapod.db not found; skipping policy check", ctx);
         return Ok(());
     }
 
@@ -3411,10 +3411,10 @@ fn validate_knowledge_integrity(
     pre_read_broker: Option<&str>,
 ) -> Result<(), error::DecapodError> {
     info("Knowledge Integrity Gate");
-    let db_path = store.root.join("knowledge.db");
+    let db_path = store.root.join(crate::core::schemas::LOCAL_DB_NAME);
     if !db_path.exists() {
         skip(
-            "knowledge.db not found; skipping knowledge integrity check",
+            "decapod.db not found; skipping knowledge integrity check",
             ctx,
         );
         return Ok(());
@@ -3575,8 +3575,8 @@ fn validate_lineage_hard_gate(
 ) -> Result<(), error::DecapodError> {
     info("Lineage Hard Gate");
     let todo_events = store.root.join("todo.events.jsonl");
-    let federation_db = store.root.join("federation.db");
-    let todo_db = store.root.join("todo.db");
+    let federation_db = store.root.join(crate::core::schemas::LOCAL_DB_NAME);
+    let todo_db = store.root.join(crate::core::schemas::LOCAL_DB_NAME);
 
     // Fast path: if any required file is missing, skip entirely
     if !todo_events.exists() || !federation_db.exists() || !todo_db.exists() {
@@ -3801,9 +3801,9 @@ fn validate_archive_integrity(
     ctx: &ValidationContext,
 ) -> Result<(), error::DecapodError> {
     info("Archive Integrity Gate");
-    let db_path = store.root.join("archive.db");
+    let db_path = store.root.join(crate::core::schemas::LOCAL_DB_NAME);
     if !db_path.exists() {
-        skip("archive.db not found; skipping archive check", ctx);
+        skip("decapod.db not found; skipping archive check", ctx);
         return Ok(());
     }
 
@@ -3843,20 +3843,38 @@ fn validate_control_plane_contract(
     }
 
     // Check that critical databases have corresponding broker events
-    let todo_db = data_dir.join("todo.db");
-    if todo_db.exists() {
-        let todo_events = data_dir.join("todo.events.jsonl");
-        if !todo_events.exists() {
-            violations.push("todo.db exists but todo.events.jsonl is missing".to_string());
+    let local_db = data_dir.join(crate::core::schemas::LOCAL_DB_NAME);
+    if local_db.exists() {
+        let conn = db::db_connect_for_validate(&local_db.to_string_lossy())?;
+        let has_tasks: bool = conn
+            .query_row(
+                "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name='tasks')",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap_or(false);
+        if has_tasks {
+            let todo_events = data_dir.join("todo.events.jsonl");
+            if !todo_events.exists() {
+                violations
+                    .push("decapod.db has tasks but todo.events.jsonl is missing".to_string());
+            }
         }
-    }
-
-    let federation_db = data_dir.join("federation.db");
-    if federation_db.exists() {
-        let federation_events = data_dir.join("federation.events.jsonl");
-        if !federation_events.exists() {
-            violations
-                .push("federation.db exists but federation.events.jsonl is missing".to_string());
+        let has_nodes: bool = conn
+            .query_row(
+                "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name='nodes')",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap_or(false);
+        if has_nodes {
+            let federation_events = data_dir.join("federation.events.jsonl");
+            if !federation_events.exists() {
+                violations.push(
+                    "decapod.db has federation nodes but federation.events.jsonl is missing"
+                        .to_string(),
+                );
+            }
         }
     }
 
@@ -4445,7 +4463,10 @@ fn validate_projection_consistency(
     let config_path = main_root.join(".decapod").join("config.toml");
     let specs_dir = main_root.join(".decapod").join("managed").join("specs");
     let manifest_path = specs_dir.join(".manifest.json");
-    let todo_db = main_root.join(".decapod").join("data").join("todo.db");
+    let todo_db = main_root
+        .join(".decapod")
+        .join("data")
+        .join(crate::core::schemas::LOCAL_DB_NAME);
     let todo_events = main_root
         .join(".decapod")
         .join("data")

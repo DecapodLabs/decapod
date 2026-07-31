@@ -423,7 +423,7 @@ fn migration_reconstructs_legacy_events_from_fixture() {
             .join("tests/fixtures/migration/legacy_tasks.sql"),
     )
     .expect("read sql fixture");
-    let conn = rusqlite::Connection::open(data_dir.join("todo.db")).expect("open db");
+    let conn = rusqlite::Connection::open(data_dir.join("decapod.db")).expect("open db");
     conn.execute_batch(&fixture_sql)
         .expect("apply fixture schema");
 
@@ -458,7 +458,7 @@ fn migration_preserves_existing_event_log() {
     fs::create_dir_all(&data_dir).expect("data dir");
 
     // Legacy DB exists but events file is already populated: migration should no-op.
-    let conn = rusqlite::Connection::open(data_dir.join("todo.db")).expect("open db");
+    let conn = rusqlite::Connection::open(data_dir.join("decapod.db")).expect("open db");
     conn.execute_batch(
         "CREATE TABLE tasks (id TEXT PRIMARY KEY, title TEXT, status TEXT, created_at TEXT);",
     )
@@ -484,11 +484,11 @@ fn migration_rewrites_legacy_todo_ids_and_references() {
     let data_dir = decapod_root.join("data");
     fs::create_dir_all(&data_dir).expect("data dir");
 
-    let conn = rusqlite::Connection::open(data_dir.join("todo.db")).expect("open db");
+    let conn = rusqlite::Connection::open(data_dir.join("decapod.db")).expect("open db");
     conn.execute_batch(
         r#"
         CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
-        INSERT INTO meta(key, value) VALUES ('schema_version', '14');
+        INSERT INTO meta(namespace, key, value) VALUES ('todo', 'schema_version', '14');
         CREATE TABLE tasks (
             id TEXT PRIMARY KEY,
             hash TEXT NOT NULL DEFAULT '',
@@ -551,7 +551,7 @@ fn migration_rewrites_legacy_todo_ids_and_references() {
 
     migration::check_and_migrate(decapod_root).expect("migration");
 
-    let conn = rusqlite::Connection::open(data_dir.join("todo.db")).expect("reopen db");
+    let conn = rusqlite::Connection::open(data_dir.join("decapod.db")).expect("reopen db");
     let ids: Vec<String> = {
         let mut stmt = conn
             .prepare("SELECT id FROM tasks ORDER BY created_at")
@@ -783,18 +783,18 @@ fn scaffold_store_and_docs_cli_behaviors() {
     // reports exact paths because adding .gitignore rules cannot untrack them.
     init_git_repo(&live_target);
     fs::create_dir_all(live_target.join(".decapod/data")).expect("create runtime data");
-    fs::write(live_target.join(".decapod/data/todo.db"), "runtime\n")
+    fs::write(live_target.join(".decapod/data/decapod.db"), "runtime\n")
         .expect("write tracked runtime data");
     let add_runtime = Command::new("git")
         .current_dir(&live_target)
-        .args(["add", "-f", ".decapod/data/todo.db"])
+        .args(["add", "-f", ".decapod/data/decapod.db"])
         .output()
         .expect("git add runtime data");
     assert!(add_runtime.status.success());
     let tracked_runtime = scaffold_project_entrypoints(&live_opts)
         .expect("refresh scaffold with tracked runtime data")
         .tracked_runtime_paths;
-    assert_eq!(tracked_runtime, vec![".decapod/data/todo.db"]);
+    assert_eq!(tracked_runtime, vec![".decapod/data/decapod.db"]);
     fs::write(live_target.join(".decapod/data/untracked.db"), "runtime\n")
         .expect("write untracked runtime data");
     let ignored = Command::new("git")
@@ -951,8 +951,7 @@ fn scaffold_store_and_docs_cli_behaviors() {
 
 #[test]
 fn schemas_errors_and_validate_entrypoint_are_exercised() {
-    assert_eq!(schemas::KNOWLEDGE_DB_NAME, "knowledge.db");
-    assert_eq!(schemas::TODO_DB_NAME, "todo.db");
+    assert_eq!(schemas::LOCAL_DB_NAME, "decapod.db");
     assert_eq!(schemas::TODO_EVENTS_NAME, "todo.events.jsonl");
     assert!(!schemas::TODO_DB_SCHEMA_META.trim().is_empty());
     assert!(!schemas::TODO_DB_SCHEMA_TASKS.trim().is_empty());

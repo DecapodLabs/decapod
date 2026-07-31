@@ -11,7 +11,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 fn cron_db_path(root: &Path) -> PathBuf {
-    root.join(schemas::AUTOMATION_DB_NAME)
+    root.join(schemas::LOCAL_DB_NAME)
 }
 
 pub fn initialize_cron_db(root: &Path) -> Result<(), error::DecapodError> {
@@ -575,6 +575,6 @@ pub fn schema() -> serde_json::Value {
             { "name": "delete", "parameters": ["id"] },
             { "name": "suggest", "parameters": ["limit"] }
         ],
-        "storage": ["cron.db"]
+        "storage": ["decapod.db"]
     })
 }

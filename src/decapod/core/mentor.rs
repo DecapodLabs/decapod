@@ -427,7 +427,7 @@ impl MentorEngine {
             .repo_root
             .join(".decapod")
             .join("data")
-            .join("federation.db");
+            .join(crate::core::schemas::LOCAL_DB_NAME);
 
         if !db_path.exists() {
             return Ok(candidates);
@@ -476,7 +476,11 @@ impl MentorEngine {
         let mut candidates = vec![];
 
         // Query todo database for active tasks
-        let db_path = self.repo_root.join(".decapod").join("data").join("todo.db");
+        let db_path = self
+            .repo_root
+            .join(".decapod")
+            .join("data")
+            .join(crate::core::schemas::LOCAL_DB_NAME);
 
         if !db_path.exists() {
             return Ok(candidates);
@@ -521,7 +525,7 @@ impl MentorEngine {
             .repo_root
             .join(".decapod")
             .join("data")
-            .join("aptitude.db");
+            .join(crate::core::schemas::LOCAL_DB_NAME);
 
         if !db_path.exists() {
             return Ok(candidates);
@@ -556,7 +560,7 @@ impl MentorEngine {
             .repo_root
             .join(".decapod")
             .join("data")
-            .join("federation.db");
+            .join(crate::core::schemas::LOCAL_DB_NAME);
 
         if !db_path.exists() {
             return Ok(candidates);

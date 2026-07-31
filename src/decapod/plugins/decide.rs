@@ -844,7 +844,7 @@ fn now_ts() -> String {
 }
 
 fn decide_db_path(root: &Path) -> PathBuf {
-    root.join(schemas::MEMORY_DB_NAME)
+    root.join(schemas::LOCAL_DB_NAME)
 }
 
 pub fn initialize_decide_db(root: &Path) -> Result<(), error::DecapodError> {

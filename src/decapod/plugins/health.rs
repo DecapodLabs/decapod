@@ -10,7 +10,7 @@ use std::fmt;
 use std::path::{Path, PathBuf};
 
 pub fn health_db_path(root: &Path) -> PathBuf {
-    root.join(schemas::GOVERNANCE_DB_NAME)
+    root.join(schemas::LOCAL_DB_NAME)
 }
 
 pub fn initialize_health_db(root: &Path) -> Result<(), error::DecapodError> {
@@ -510,7 +510,7 @@ pub fn claim_schema() -> serde_json::Value {
         "commands": [
             { "name": "add", "parameters": ["id", "subject", "kind", "provenance"] }
         ],
-        "storage": ["health.db"]
+        "storage": ["decapod.db"]
     })
 }
 
@@ -522,7 +522,7 @@ pub fn proof_schema() -> serde_json::Value {
         "commands": [
             { "name": "record", "parameters": ["claim_id", "surface", "result", "sla"] }
         ],
-        "storage": ["health.db"]
+        "storage": ["decapod.db"]
     })
 }
 
@@ -538,7 +538,7 @@ pub fn health_schema() -> serde_json::Value {
             { "name": "summary", "description": "System health overview (formerly heartbeat)" },
             { "name": "autonomy", "parameters": ["id"], "description": "Agent autonomy tier (formerly trust)" }
         ],
-        "storage": ["health.db"],
+        "storage": ["decapod.db"],
         "notes": "Summary consolidates heartbeat; Autonomy consolidates trust"
     })
 }

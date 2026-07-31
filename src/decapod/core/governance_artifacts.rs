@@ -143,7 +143,7 @@ pub fn inventory_with_claims_note(
         entry(
             repo_root,
             research_claims::CLAIMS_PATH,
-            "repository research claims ledger; distinct from Health Engine claims in health.db",
+            "repository research claims ledger; distinct from Health Engine claims in decapod.db",
             ArtifactValidity {
                 valid: claims.is_some(),
                 semantic_freshness: if claims.is_some() {
@@ -204,7 +204,7 @@ pub fn inventory_with_claims_note(
         workspace_sha: current_revision(repo_root),
         dirty: dirty_classification::classify(repo_root, commit_often_limit())
             .map_err(crate::core::error::DecapodError::IoError)?,
-        claims_source: ".decapod/governance/claims.json; Health Engine claims remain in .decapod/data/health.db".to_string(),
+        claims_source: ".decapod/governance/claims.json; Health Engine claims remain in .decapod/data/decapod.db".to_string(),
         repair_command: format!("{INVENTORY_COMMAND} --repair"),
     })
 }

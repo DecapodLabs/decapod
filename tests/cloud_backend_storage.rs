@@ -204,7 +204,7 @@ fn cloud_cli_preflight_does_not_initialize_local_sqlite() {
     assert!(!error.contains("DECAPOD_ACCESS_TOKEN"));
     assert!(!error.contains("Bearer"));
     assert!(
-        !dir.join(".decapod/data/todo.db").exists(),
+        !dir.join(".decapod/data/decapod.db").exists(),
         "cloud credential preflight must not initialize local SQLite"
     );
 }
@@ -252,7 +252,7 @@ fn canonical_backend_selection_uses_cloud_without_local_fallback() {
     assert_eq!(diagnostic["schema_version"], "decapod.cloud.auth.v1");
     assert_eq!(diagnostic["status"], "offline");
     assert!(
-        !dir.join(".decapod/data/todo.db").exists(),
+        !dir.join(".decapod/data/decapod.db").exists(),
         "backend selection must not fall back to local SQLite"
     );
 }
@@ -322,7 +322,7 @@ fn cloud_session_acquire_keeps_local_custody_when_cloud_preflight_fails() {
     assert!(!stdout.contains("session_token") && !stderr.contains("Bearer"));
     assert_eq!(machine_session_files(config_home.path()).len(), 1);
     assert!(
-        !tmp.path().join(".decapod/data/todo.db").exists(),
+        !tmp.path().join(".decapod/data/decapod.db").exists(),
         "cloud session acquisition must not initialize local todo SQLite"
     );
     assert!(
@@ -378,5 +378,5 @@ fn cloud_session_acquire_uses_explicit_mock_onboarding_in_validation_harness() {
     let stored = std::fs::read_to_string(machine_session).expect("mock machine session");
     assert!(stored.contains("decapod-test-mock-access"));
     assert!(stored.contains("decapod-test-mock-refresh"));
-    assert!(!tmp.path().join(".decapod/data/todo.db").exists());
+    assert!(!tmp.path().join(".decapod/data/decapod.db").exists());
 }

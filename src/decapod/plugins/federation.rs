@@ -261,7 +261,7 @@ fn now_ts() -> String {
 }
 
 pub fn federation_db_path(root: &Path) -> PathBuf {
-    root.join(schemas::MEMORY_DB_NAME)
+    root.join(schemas::LOCAL_DB_NAME)
 }
 
 fn federation_events_path(root: &Path) -> PathBuf {
@@ -515,8 +515,12 @@ pub fn initialize_federation_db(root: &Path) -> Result<(), error::DecapodError> 
 
         // Version tracking
         conn.execute(
-            "INSERT OR IGNORE INTO meta(key, value) VALUES('schema_version', ?1)",
-            params![schemas::MEMORY_SCHEMA_VERSION.to_string()],
+            "INSERT INTO meta(namespace, key, value) VALUES(?1, 'schema_version', ?2)
+             ON CONFLICT(namespace, key) DO UPDATE SET value=excluded.value",
+            params![
+                schemas::FEDERATION_META_NAMESPACE,
+                schemas::MEMORY_SCHEMA_VERSION.to_string()
+            ],
         )?;
         Ok(())
     })?;
@@ -1497,8 +1501,12 @@ pub fn rebuild_from_events(root: &Path) -> Result<usize, error::DecapodError> {
     conn.execute_batch(schemas::FEDERATION_DB_INDEX_EVENTS_NODE)?;
 
     conn.execute(
-        "INSERT OR IGNORE INTO meta(key, value) VALUES('schema_version', ?1)",
-        params![schemas::FEDERATION_SCHEMA_VERSION.to_string()],
+        "INSERT INTO meta(namespace, key, value) VALUES(?1, 'schema_version', ?2)
+         ON CONFLICT(namespace, key) DO UPDATE SET value=excluded.value",
+        params![
+            schemas::FEDERATION_META_NAMESPACE,
+            schemas::FEDERATION_SCHEMA_VERSION.to_string()
+        ],
     )?;
 
     let file = fs::File::open(&events_path).map_err(error::DecapodError::IoError)?;

@@ -184,7 +184,7 @@ fn test_db_path() {
     let tmp = tempdir().unwrap();
     let root = tmp.path().to_path_buf();
     let db_path = aptitude_db_path(&root);
-    assert!(db_path.to_string_lossy().ends_with("memory.db"));
+    assert!(db_path.to_string_lossy().ends_with("decapod.db"));
 }
 
 #[test]
