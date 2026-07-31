@@ -1,9 +1,11 @@
+use decapod::CloudRuntimeConfig;
 use decapod::core::auth::{CredentialSource, resolve_cloud_credential};
 use decapod::core::propodus::{
     PROPODUS_CONTRACT_ID, PROPODUS_CONTRACT_VERSION, PropodusClient, PropodusClientError,
     PropodusConfig, PropodusError, PropodusHttpResponse, PropodusListResponse,
     PropodusMutationResponse, PropodusTodo, PropodusTransport,
 };
+use decapod::core::repo_identity::RepositoryIdentity;
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
 
@@ -132,6 +134,25 @@ fn credential_precedence_is_explicit_environment_then_machine_file() {
 
     let machine = resolve_cloud_credential(None, None, Some("machine-token")).unwrap();
     assert_eq!(machine.source, CredentialSource::MachineFile);
+}
+
+#[test]
+fn cloud_config_binds_client_to_verified_repository_identity() {
+    let identity = RepositoryIdentity {
+        canonical_name: "DecapodLabs/decapod".to_string(),
+        owner: "DecapodLabs".to_string(),
+        repository: "decapod".to_string(),
+        remote_url: "git@github.com:DecapodLabs/decapod.git".to_string(),
+    };
+    let runtime = CloudRuntimeConfig {
+        provider: "vercel".to_string(),
+        api_url: "https://propodus.example.test".to_string(),
+    };
+
+    let config = PropodusConfig::for_repository(&runtime, &identity);
+
+    assert_eq!(config.api_url, runtime.api_url);
+    assert_eq!(config.repo_id, identity.canonical_name);
 }
 
 #[test]

@@ -1,29 +1,30 @@
 {
   "schema_version": "1.0.0",
-  "title": "Hermes governance integrity and readiness substrate (#1094 #1096 #1059 #1065 #1055 #1072)",
-  "intent": "Provide authoritative, deterministic governance artifact integrity, semantic freshness, workspace-versus-target delta state, and dirty-file classification for Hermes readiness and later effective-state diagnostics.",
+  "title": "Implement Decapod client path for Propodus Vercel todo API (#766)",
+  "intent": "Add the smallest optional cloud client boundary for Propodus's current Go/Vercel todo API, with typed request/response/error models, local fake-server proof, unchanged offline SQLite defaults, and no provider-specific auth or Rust Propodus dependency.",
   "state": "APPROVED",
   "todo_ids": [
-    "feat_01kym05w1mxdpyhw"
+    "feat_01kytndnnbwj4nf8"
   ],
   "proof_hooks": [
-    "cargo test --test governance_artifacts",
-    "cargo test --test hermes_governance_substrate",
     "cargo fmt --all -- --check",
-    "cargo clippy --all-targets --all-features -- -D warnings",
-    "decapod validate --projections"
+    "cargo check --all-targets",
+    "cargo test --all-targets",
+    "decapod validate"
   ],
   "unknowns": [],
   "human_questions": [],
-  "stop_conditions": [],
+  "stop_conditions": [
+    "Do not reintroduce the Propodus Rust crate, add live credentials, or mutate .decapod state directly."
+  ],
   "unresolved_contradictions": [],
   "deferred_questions": [],
   "constraints": {
     "forbidden_paths": [
-      ".decapod/data"
+      ".decapod/"
     ],
     "file_touch_budget": 40
   },
   "phases": [],
-  "updated_at": "1785231514Z"
+  "updated_at": "1785456686Z"
 }

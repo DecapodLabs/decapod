@@ -152,7 +152,10 @@ fn ensure_project_cloud_session(
     project_root: &Path,
 ) -> Result<core::repo_identity::RepositoryIdentity, error::DecapodError> {
     let identity = core::repo_identity::resolve_repository_identity(project_root)?;
-    let propodus = core::propodus::PropodusConfig::from(&crate::cli::CloudRuntimeConfig::default());
+    let propodus = core::propodus::PropodusConfig::for_repository(
+        &crate::cli::CloudRuntimeConfig::default(),
+        &identity,
+    );
     core::propodus::ensure_cloud_session(
         &propodus,
         &identity,
@@ -2250,8 +2253,9 @@ pub fn run() -> Result<(), error::DecapodError> {
                 && cloud_bootstrap_allowed
                 && let Ok(identity) = core::repo_identity::resolve_repository_identity(&target_dir)
             {
-                let propodus = core::propodus::PropodusConfig::from(
+                let propodus = core::propodus::PropodusConfig::for_repository(
                     &crate::cli::CloudRuntimeConfig::default(),
+                    &identity,
                 );
                 let onboarding = core::propodus::ensure_cloud_session(
                     &propodus,

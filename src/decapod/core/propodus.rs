@@ -36,11 +36,11 @@ pub struct PropodusConfig {
     pub repo_id: String,
 }
 
-impl From<&CloudRuntimeConfig> for PropodusConfig {
-    fn from(config: &CloudRuntimeConfig) -> Self {
+impl PropodusConfig {
+    pub fn for_repository(config: &CloudRuntimeConfig, identity: &RepositoryIdentity) -> Self {
         Self {
             api_url: config.api_url.clone(),
-            repo_id: String::new(),
+            repo_id: identity.canonical_name.clone(),
         }
     }
 }
@@ -306,7 +306,10 @@ pub struct PropodusClient<T = CurlTransport> {
 }
 
 impl PropodusClient<CurlTransport> {
-    pub fn from_cloud_config(config: &CloudRuntimeConfig) -> Result<Self, PropodusClientError> {
+    pub fn from_cloud_config(
+        config: &CloudRuntimeConfig,
+        identity: &RepositoryIdentity,
+    ) -> Result<Self, PropodusClientError> {
         let credential = auth::load_cloud_credential(None)
             .map_err(|_| {
                 cloud_auth_error(
@@ -315,17 +318,15 @@ impl PropodusClient<CurlTransport> {
                     "run `decapod cloud login`, complete the browser handoff, then rerun the original command",
                 )
             })?;
-        Self::with_transport(&config.into(), &credential.token, CurlTransport::default())
+        let config = PropodusConfig::for_repository(config, identity);
+        Self::with_transport(&config, &credential.token, CurlTransport::default())
     }
 
     pub fn from_dogfood_cloud_config(
         config: &CloudRuntimeConfig,
         identity: &RepositoryIdentity,
     ) -> Result<Self, PropodusClientError> {
-        let config = PropodusConfig {
-            api_url: config.api_url.clone(),
-            repo_id: identity.canonical_name.clone(),
-        };
+        let config = PropodusConfig::for_repository(config, identity);
         let credential = ensure_cloud_session(&config, identity, CurlTransport::default())?;
         Self::with_transport(&config, &credential.token, CurlTransport::default())
     }
