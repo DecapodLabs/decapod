@@ -92,6 +92,12 @@ fn legacy_databases_are_copied_into_the_canonical_database() {
     let decapod_root = temp.path().join(".decapod");
     let data = decapod_root.join("data");
     std::fs::create_dir_all(&data).unwrap();
+    std::fs::create_dir_all(data.join("operator-notes")).unwrap();
+    std::fs::write(
+        data.join("operator-notes").join("retention.txt"),
+        "preserve this artifact",
+    )
+    .unwrap();
 
     let legacy_todo = data.join(schemas::TODO_DB_NAME);
     let conn = Connection::open(&legacy_todo).unwrap();
@@ -134,6 +140,10 @@ fn legacy_databases_are_copied_into_the_canonical_database() {
     let local = data.join(schemas::LOCAL_DB_NAME);
     assert!(local.is_file());
     assert!(!legacy_todo.exists());
+    assert_eq!(
+        std::fs::read_to_string(data.join("operator-notes").join("retention.txt")).unwrap(),
+        "preserve this artifact"
+    );
     let conn = db::db_connect(&local.to_string_lossy()).unwrap();
     let title: String = conn
         .query_row(
@@ -165,4 +175,24 @@ fn legacy_databases_are_copied_into_the_canonical_database() {
         )
         .unwrap();
     assert_eq!(namespace, schemas::TODO_META_NAMESPACE);
+}
+
+#[test]
+fn stale_legacy_sqlite_sidecars_are_migrated_without_touching_unknown_files() {
+    let temp = tempdir().unwrap();
+    let decapod_root = temp.path().join(".decapod");
+    let data = decapod_root.join("data");
+
+    todo::initialize_todo_db(&data).unwrap();
+    std::fs::write(data.join("todo.db-wal"), "stale sidecar").unwrap();
+    std::fs::write(data.join("operator-note.txt"), "keep").unwrap();
+
+    migration::check_and_migrate_with_backup(&decapod_root, |_| Ok(())).unwrap();
+
+    assert!(!data.join("todo.db-wal").exists());
+    assert_eq!(
+        std::fs::read_to_string(data.join("operator-note.txt")).unwrap(),
+        "keep"
+    );
+    assert!(data.join(schemas::LOCAL_DB_NAME).is_file());
 }

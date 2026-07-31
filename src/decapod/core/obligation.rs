@@ -99,6 +99,12 @@ pub fn initialize_obligation_db(root: &Path) -> Result<(), error::DecapodError> 
     broker.with_conn(&db_path, "decapod", None, "obligation.init", |conn| {
         conn.execute(schemas::GOVERNANCE_DB_SCHEMA_OBLIGATIONS, [])?;
         conn.execute(schemas::GOVERNANCE_DB_SCHEMA_OBLIGATION_EDGES, [])?;
+        // Obligation writes pass through the shared broker policy gate, which
+        // reads risk_zones from the canonical datastore. Keep this table
+        // available even when obligation initialization is the first local
+        // subsystem touched in a fresh repository.
+        conn.execute(schemas::TODO_DB_SCHEMA_RISK_ZONES, [])?;
+        conn.execute(schemas::TODO_DB_SCHEMA_INDEX_RISK_ZONES_NAME, [])?;
         Ok(())
     })
 }

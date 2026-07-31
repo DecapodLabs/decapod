@@ -21,6 +21,21 @@ const GENERATED_VERSION_COUNTER: &str = "managed/version_counter.json";
 const GENERATED_APPLIED_MIGRATIONS: &str = "managed/migrations/applied.json";
 const GENERATED_MIGRATION_CATALOG: &str = "managed/migrations/catalog.json";
 
+const LEGACY_LOCAL_DATABASES: &[&str] = &[
+    schemas::GOVERNANCE_DB_NAME,
+    schemas::MEMORY_DB_NAME,
+    schemas::AUTOMATION_DB_NAME,
+    schemas::TODO_DB_NAME,
+    schemas::LCM_DB_NAME,
+    schemas::KNOWLEDGE_DB_NAME,
+    schemas::FEDERATION_DB_NAME,
+    schemas::DECIDE_DB_NAME,
+    schemas::APTITUDE_DB_NAME,
+    schemas::CRON_DB_NAME,
+    schemas::REFLEX_DB_NAME,
+    "broker_dedupe.db",
+];
+
 /// Migration definition
 pub struct Migration {
     /// Stable migration identifier for durable applied-ledger tracking.
@@ -186,6 +201,7 @@ where
         return Ok(());
     }
 
+    checkpoint_legacy_databases(&data_root)?;
     let Some(backup_dir) = create_data_backup(&data_root)? else {
         run_migrations(decapod_root)?;
         verify(&data_root)?;
@@ -213,22 +229,9 @@ where
 }
 
 fn schema_upgrade_pending(data_root: &Path) -> Result<bool, error::DecapodError> {
-    if [
-        schemas::GOVERNANCE_DB_NAME,
-        schemas::MEMORY_DB_NAME,
-        schemas::AUTOMATION_DB_NAME,
-        schemas::TODO_DB_NAME,
-        schemas::LCM_DB_NAME,
-        schemas::KNOWLEDGE_DB_NAME,
-        schemas::FEDERATION_DB_NAME,
-        schemas::DECIDE_DB_NAME,
-        schemas::APTITUDE_DB_NAME,
-        schemas::CRON_DB_NAME,
-        schemas::REFLEX_DB_NAME,
-        "broker_dedupe.db",
-    ]
-    .iter()
-    .any(|name| data_root.join(name).exists())
+    if LEGACY_LOCAL_DATABASES
+        .iter()
+        .any(|name| legacy_database_artifact_exists(data_root, name))
     {
         return Ok(true);
     }
@@ -249,6 +252,29 @@ fn schema_upgrade_pending(data_root: &Path) -> Result<bool, error::DecapodError>
     Ok(current_version < schemas::TODO_SCHEMA_VERSION)
 }
 
+fn legacy_database_artifact_exists(data_root: &Path, name: &str) -> bool {
+    data_root.join(name).exists()
+        || data_root.join(format!("{name}-wal")).exists()
+        || data_root.join(format!("{name}-shm")).exists()
+}
+
+fn checkpoint_legacy_databases(data_root: &Path) -> Result<(), error::DecapodError> {
+    for name in LEGACY_LOCAL_DATABASES
+        .iter()
+        .copied()
+        .chain(std::iter::once(schemas::LOCAL_DB_NAME))
+    {
+        let path = data_root.join(name);
+        if !path.is_file() {
+            continue;
+        }
+        let conn = Connection::open(&path)?;
+        conn.busy_timeout(std::time::Duration::from_secs(5))?;
+        conn.query_row("PRAGMA wal_checkpoint(TRUNCATE)", [], |_| Ok(()))?;
+    }
+    Ok(())
+}
+
 fn create_data_backup(data_root: &Path) -> Result<Option<std::path::PathBuf>, error::DecapodError> {
     if !data_root.exists() {
         return Ok(None);
@@ -260,39 +286,75 @@ fn create_data_backup(data_root: &Path) -> Result<Option<std::path::PathBuf>, er
     ));
     fs::create_dir_all(&backup_dir).map_err(error::DecapodError::IoError)?;
 
-    for entry in fs::read_dir(data_root).map_err(error::DecapodError::IoError)? {
-        let entry = entry.map_err(error::DecapodError::IoError)?;
-        let path = entry.path();
-        if !path.is_file() {
-            continue;
+    let copy_result = (|| -> Result<(), error::DecapodError> {
+        for entry in fs::read_dir(data_root).map_err(error::DecapodError::IoError)? {
+            let entry = entry.map_err(error::DecapodError::IoError)?;
+            let path = entry.path();
+            if path == backup_dir {
+                continue;
+            }
+            let name = entry.file_name().to_string_lossy().to_string();
+            copy_data_entry(&path, &backup_dir.join(name))?;
         }
-        let name = entry.file_name().to_string_lossy().to_string();
-        if name.ends_with(".db") || name.ends_with(".jsonl") {
-            fs::copy(&path, backup_dir.join(&name)).map_err(error::DecapodError::IoError)?;
-        }
+        Ok(())
+    })();
+    if let Err(err) = copy_result {
+        let _ = fs::remove_dir_all(&backup_dir);
+        return Err(err);
     }
     Ok(Some(backup_dir))
 }
 
 fn restore_data_backup(data_root: &Path, backup_dir: &Path) -> Result<(), error::DecapodError> {
-    let canonical = data_root.join(schemas::LOCAL_DB_NAME);
-    if canonical.exists() {
-        fs::remove_file(&canonical).map_err(error::DecapodError::IoError)?;
-    }
-    for suffix in ["-wal", "-shm"] {
-        let sidecar = data_root.join(format!("{}{}", schemas::LOCAL_DB_NAME, suffix));
-        if sidecar.exists() {
-            fs::remove_file(sidecar).map_err(error::DecapodError::IoError)?;
+    for entry in fs::read_dir(data_root).map_err(error::DecapodError::IoError)? {
+        let entry = entry.map_err(error::DecapodError::IoError)?;
+        if entry.path() == backup_dir {
+            continue;
         }
+        remove_data_entry(&entry.path())?;
     }
     for entry in fs::read_dir(backup_dir).map_err(error::DecapodError::IoError)? {
         let entry = entry.map_err(error::DecapodError::IoError)?;
-        let backup_file = entry.path();
-        if !backup_file.is_file() {
-            continue;
-        }
         let name = entry.file_name();
-        fs::copy(&backup_file, data_root.join(name)).map_err(error::DecapodError::IoError)?;
+        copy_data_entry(&entry.path(), &data_root.join(name))?;
+    }
+    Ok(())
+}
+
+fn copy_data_entry(source: &Path, target: &Path) -> Result<(), error::DecapodError> {
+    let metadata = fs::symlink_metadata(source).map_err(error::DecapodError::IoError)?;
+    if metadata.file_type().is_symlink() || !metadata.is_dir() && !metadata.is_file() {
+        // Runtime sockets and other special entries are process-local state,
+        // not migration data. Preserve them in place without following or
+        // copying them into the backup tree.
+        return Ok(());
+    }
+    if metadata.is_dir() {
+        fs::create_dir_all(target).map_err(error::DecapodError::IoError)?;
+        for entry in fs::read_dir(source).map_err(error::DecapodError::IoError)? {
+            let entry = entry.map_err(error::DecapodError::IoError)?;
+            copy_data_entry(&entry.path(), &target.join(entry.file_name()))?;
+        }
+    } else if metadata.is_file() {
+        fs::copy(source, target).map_err(error::DecapodError::IoError)?;
+    } else {
+        return Err(error::DecapodError::ValidationError(format!(
+            "Cannot migrate unsupported data artifact: {}",
+            source.display()
+        )));
+    }
+    Ok(())
+}
+
+fn remove_data_entry(path: &Path) -> Result<(), error::DecapodError> {
+    let metadata = fs::symlink_metadata(path).map_err(error::DecapodError::IoError)?;
+    if metadata.file_type().is_symlink() || !metadata.is_dir() && !metadata.is_file() {
+        return Ok(());
+    }
+    if metadata.is_dir() {
+        fs::remove_dir_all(path).map_err(error::DecapodError::IoError)?;
+    } else {
+        fs::remove_file(path).map_err(error::DecapodError::IoError)?;
     }
     Ok(())
 }
@@ -816,21 +878,7 @@ fn migrate_consolidate_single_datastore(decapod_root: &Path) -> Result<(), error
     }
     migrate_task_events_to_canonical_stream(&target)?;
 
-    let legacy = [
-        schemas::GOVERNANCE_DB_NAME,
-        schemas::MEMORY_DB_NAME,
-        schemas::AUTOMATION_DB_NAME,
-        schemas::TODO_DB_NAME,
-        schemas::LCM_DB_NAME,
-        schemas::KNOWLEDGE_DB_NAME,
-        schemas::FEDERATION_DB_NAME,
-        schemas::DECIDE_DB_NAME,
-        schemas::APTITUDE_DB_NAME,
-        schemas::CRON_DB_NAME,
-        schemas::REFLEX_DB_NAME,
-        "broker_dedupe.db",
-    ];
-    for name in legacy {
+    for name in LEGACY_LOCAL_DATABASES {
         let path = data_root.join(name);
         if path.exists() {
             fs::remove_file(&path).map_err(error::DecapodError::IoError)?;

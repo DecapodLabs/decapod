@@ -561,6 +561,8 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     conn.execute(schemas::TODO_DB_SCHEMA_INDEX_AGENT_TRUST_LEVEL, [])?;
     conn.execute(schemas::TODO_DB_SCHEMA_RISK_ZONES, [])?;
     conn.execute(schemas::TODO_DB_SCHEMA_INDEX_RISK_ZONES_NAME, [])?;
+    conn.execute(schemas::POLICY_DB_SCHEMA_APPROVALS, [])?;
+    conn.execute(schemas::POLICY_DB_SCHEMA_INDEX, [])?;
     seed_default_risk_zones(conn)?;
 
     if current_version >= schemas::TODO_SCHEMA_VERSION {
@@ -1902,7 +1904,6 @@ fn enforce_operation_policy(
         if !policy::human_in_loop_required(&store, zone_name, level, true) {
             return Ok(());
         }
-        policy::initialize_policy_db(root)?;
         if !policy::check_approval(&store, zone_name, None, "global")? {
             return Err(error::DecapodError::ValidationError(format!(
                 "Policy gate denied for {zone_name}: missing approval"

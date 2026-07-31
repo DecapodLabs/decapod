@@ -1,4 +1,5 @@
 use std::process::Command;
+use std::sync::{Mutex, OnceLock};
 
 #[derive(serde::Deserialize, Debug)]
 #[allow(dead_code)]
@@ -43,12 +44,22 @@ fn resolve_decapod_bin() -> std::path::PathBuf {
 }
 
 fn load_constitution_claims() -> Vec<ConstitutionTable> {
+    static CONSTITUTION_CLAIMS_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+    let _guard = CONSTITUTION_CLAIMS_LOCK
+        .get_or_init(|| Mutex::new(()))
+        .lock()
+        .expect("constitution claims test lock");
     let exe = resolve_decapod_bin();
-    let output = Command::new(exe)
+    let output = Command::new(&exe)
         .args(["constitution", "get", "interfaces/CLAIMS"])
         .output()
         .expect("run decapod constitution get");
-    assert!(output.status.success(), "constitution get failed");
+    assert!(
+        output.status.success(),
+        "constitution get failed using {}: {}",
+        exe.display(),
+        String::from_utf8_lossy(&output.stderr)
+    );
     let response: serde_json::Value =
         serde_json::from_slice(&output.stdout).expect("parse constitution get response");
 
