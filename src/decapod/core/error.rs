@@ -8,7 +8,7 @@ use std::env;
 use std::fmt;
 use std::io;
 
-/// Machine-readable outcomes for the provider-neutral cloud login handoff.
+/// Machine-readable outcomes for the provider-neutral cloud onboarding handoff.
 /// These values are part of the CLI contract; credential material is never
 /// represented here.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]

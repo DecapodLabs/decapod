@@ -687,7 +687,7 @@ pub(crate) struct CloudCli {
 
 #[derive(Subcommand, Debug)]
 pub(crate) enum CloudCommand {
-    /// Start or resume repository-bound GitHub authorization and save the machine session outside the repository.
+    /// Deprecated compatibility alias; use `decapod init --backend cloud` for human setup.
     Login,
     /// Report whether a local or environment credential is available without printing it.
     Status,

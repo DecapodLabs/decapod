@@ -12,10 +12,20 @@ cargo install decapod
 
 ## 2. Initialization
 
-Initialize your repository. This creates the `.decapod/` directory and scaffolds the initial agent entrypoints (`AGENTS.md`, etc.). `.decapod/` is the repo-native substrate where governed agent work records intent, context, custody, boundaries, validation evidence, and completion state. Agents will routinely run this during validation stages with the `--proof` flag for non-interactive agent-driven autonomous upgrades (see [Configuration](configuration.md) and [Constitution](concepts/constitution.md)).
+Initialize your repository. This is the only human-facing setup command: use
+`--backend cloud` when the repository should use the Propodus todo service.
+Initialization creates the `.decapod/` directory and scaffolds the initial
+agent entrypoints (`AGENTS.md`, etc.). `.decapod/` is the repo-native substrate
+where governed agent work records intent, context, custody, boundaries,
+validation evidence, and completion state. Agents will routinely run this
+during validation stages with the `--proof` flag for non-interactive
+agent-driven autonomous upgrades (see [Configuration](configuration.md) and
+[Constitution](concepts/constitution.md)).
 
 ```bash
 decapod init
+# For Propodus-backed todos:
+decapod init --backend cloud
 ```
 
 ## 3. Orientation
@@ -28,7 +38,7 @@ decapod validate
 
 ## 4. The Agent Handshake
 
-Before performing governed work, an agent must acquire a session. This establishes the agent's identity and permissions for the current work period so later task, workspace, and proof records are attributable (see [CLI Reference](reference/cli.md#decapod-session)). Human users should never call this.
+Before performing governed work, an agent must acquire a session. This establishes the agent's identity and permissions for the current work period so later task, workspace, and proof records are attributable (see [CLI Reference](reference/cli.md#decapod-session)). For cloud repositories, session acquisition first establishes local custody and then reuses or refreshes the machine-local Propodus session. Human users should never call this.
 
 ```bash
 decapod session acquire

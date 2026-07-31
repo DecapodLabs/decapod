@@ -29,6 +29,11 @@ pub const PROPODUS_HEALTH_ROUTE: &str = "/api/health";
 pub const PROPODUS_TODOS_ROUTE: &str = "/api/todos";
 pub const PROPODUS_STATUS_IN_PROGRESS: &str = "in_progress";
 pub const PROPODUS_STATUS_COMPLETED: &str = "completed";
+pub const CLOUD_INIT_COMMAND: &str = "decapod init --backend cloud";
+
+fn cloud_init_action(detail: &str) -> String {
+    format!("run `{CLOUD_INIT_COMMAND}` {detail}")
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PropodusConfig {
@@ -310,14 +315,15 @@ impl PropodusClient<CurlTransport> {
         config: &CloudRuntimeConfig,
         identity: &RepositoryIdentity,
     ) -> Result<Self, PropodusClientError> {
-        let credential = auth::load_cloud_credential(None)
-            .map_err(|_| {
-                cloud_auth_error(
-                    CloudAuthStatus::Missing,
-                    "no cloud machine session is configured",
-                    "run `decapod cloud login`, complete the browser handoff, then rerun the original command",
-                )
-            })?;
+        let credential = auth::load_cloud_credential(None).map_err(|_| {
+            cloud_auth_error(
+                CloudAuthStatus::Missing,
+                "no cloud machine session is configured",
+                cloud_init_action(
+                    "to complete the browser handoff, then rerun the original command",
+                ),
+            )
+        })?;
         let config = PropodusConfig::for_repository(config, identity);
         Self::with_transport(&config, &credential.token, CurlTransport::default())
     }
@@ -366,7 +372,7 @@ pub fn ensure_cloud_session<T: PropodusTransport>(
                 cloud_auth_error(
                     CloudAuthStatus::AuthRequired,
                     "the refreshed cloud session could not be stored",
-                    "run `decapod cloud login` again after checking machine data-directory permissions",
+                    cloud_init_action("again after checking machine data-directory permissions"),
                 )
             })?;
             return auth::load_machine_session()
@@ -374,14 +380,14 @@ pub fn ensure_cloud_session<T: PropodusTransport>(
                     cloud_auth_error(
                         CloudAuthStatus::AuthRequired,
                         "the refreshed cloud session could not be reloaded",
-                        "run `decapod cloud login` again",
+                        cloud_init_action("again"),
                     )
                 })?
                 .ok_or_else(|| {
                     cloud_auth_error(
                         CloudAuthStatus::AuthRequired,
                         "the refreshed cloud session was not persisted",
-                        "run `decapod cloud login` again",
+                        cloud_init_action("again"),
                     )
                 });
         }
@@ -466,7 +472,7 @@ fn complete_cloud_onboarding_with_mode<T: PropodusTransport>(
             cloud_auth_error(
                 CloudAuthStatus::AuthRequired,
                 "cloud onboarding state could not be read",
-                "run `decapod cloud login` again",
+                cloud_init_action("again"),
             )
         })?
         .filter(|pending| {
@@ -499,7 +505,7 @@ fn complete_cloud_onboarding_with_mode<T: PropodusTransport>(
             cloud_auth_error(
                 CloudAuthStatus::AuthRequired,
                 "the cloud onboarding handoff could not be stored",
-                "run `decapod cloud login` again after checking machine data-directory permissions",
+                cloud_init_action("again after checking machine data-directory permissions"),
             )
         })?;
         (flow_id, handoff.bootstrap_url, handoff.expires_at)
@@ -555,12 +561,12 @@ fn complete_cloud_onboarding_with_mode<T: PropodusTransport>(
                     CloudOnboardingState::Expired => cloud_auth_error(
                         CloudAuthStatus::Expired,
                         "the cloud onboarding handoff expired",
-                        "run `decapod cloud login` to start a new handoff",
+                        cloud_init_action("to start a new handoff"),
                     ),
                     _ => cloud_auth_error(
                         CloudAuthStatus::AuthRequired,
                         "the cloud onboarding handoff was not completed",
-                        "run `decapod cloud login` to start a new handoff",
+                        cloud_init_action("to start a new handoff"),
                     ),
                 });
             }
@@ -597,7 +603,7 @@ fn complete_cloud_onboarding_with_mode<T: PropodusTransport>(
         return Err(cloud_auth_error(
             CloudAuthStatus::AuthRequired,
             "cloud onboarding returned no exchange code",
-            "run `decapod cloud login` to start a new handoff",
+            cloud_init_action("to start a new handoff"),
         ));
     }
 
@@ -605,7 +611,7 @@ fn complete_cloud_onboarding_with_mode<T: PropodusTransport>(
         cloud_auth_error(
             CloudAuthStatus::AuthRequired,
             "cloud onboarding returned an invalid exchange code",
-            "run `decapod cloud login` to start a new handoff",
+            cloud_init_action("to start a new handoff"),
         )
     })?;
     let body = serde_json::to_vec(&request)
@@ -622,28 +628,28 @@ fn complete_cloud_onboarding_with_mode<T: PropodusTransport>(
             cloud_auth_error(
                 CloudAuthStatus::AuthRequired,
                 "cloud onboarding returned no usable session",
-                "run `decapod cloud login` to start a new handoff",
+                cloud_init_action("to start a new handoff"),
             )
         })?;
     session.validate().map_err(|_| {
         cloud_auth_error(
             CloudAuthStatus::AuthRequired,
             "cloud onboarding returned an invalid session",
-            "run `decapod cloud login` to start a new handoff",
+            cloud_init_action("to start a new handoff"),
         )
     })?;
     auth::store_machine_session(&session).map_err(|_| {
         cloud_auth_error(
             CloudAuthStatus::AuthRequired,
             "the cloud session could not be stored",
-            "run `decapod cloud login` again after checking machine data-directory permissions",
+            cloud_init_action("again after checking machine data-directory permissions"),
         )
     })?;
     auth::clear_pending_cloud_onboarding().map_err(|_| {
         cloud_auth_error(
             CloudAuthStatus::AuthRequired,
             "cloud onboarding state could not be cleared",
-            "run `decapod cloud login` again",
+            cloud_init_action("again"),
         )
     })?;
     auth::load_machine_session()
@@ -651,14 +657,14 @@ fn complete_cloud_onboarding_with_mode<T: PropodusTransport>(
             cloud_auth_error(
                 CloudAuthStatus::AuthRequired,
                 "the cloud session could not be reloaded",
-                "run `decapod cloud login` again",
+                cloud_init_action("again"),
             )
         })?
         .ok_or_else(|| {
             cloud_auth_error(
                 CloudAuthStatus::AuthRequired,
                 "the cloud session was not persisted",
-                "run `decapod cloud login` again",
+                cloud_init_action("again"),
             )
         })
 }
@@ -675,7 +681,7 @@ fn refresh_cloud_session<T: PropodusTransport>(
         cloud_auth_error(
             CloudAuthStatus::RefreshFailed,
             "the machine session refresh credentials are invalid",
-            "run `decapod cloud login` to renew the machine session",
+            cloud_init_action("to renew the machine session"),
         )
     })?;
     let body = serde_json::to_vec(&request)
@@ -686,7 +692,7 @@ fn refresh_cloud_session<T: PropodusTransport>(
         cloud_auth_error(
             CloudAuthStatus::RefreshFailed,
             "the machine session could not be refreshed",
-            "run `decapod cloud login` to renew the machine session",
+            cloud_init_action("to renew the machine session"),
         )
     })
 }
@@ -744,7 +750,9 @@ impl<T: PropodusTransport> PropodusClient<T> {
             return Err(cloud_auth_error(
                 CloudAuthStatus::AuthRequired,
                 "a cloud machine session is required",
-                "run `decapod cloud login`, complete the browser handoff, then rerun the original command",
+                cloud_init_action(
+                    "to complete the browser handoff, then rerun the original command",
+                ),
             ));
         }
         Ok(Self {
@@ -1008,7 +1016,7 @@ fn map_http_error(response: PropodusHttpResponse) -> PropodusClientError {
             cloud_auth_error(
                 status,
                 "the cloud service rejected the machine session",
-                "run `decapod cloud login` to renew the machine session, then rerun the original command",
+                cloud_init_action("to renew the machine session, then rerun the original command"),
             )
         }
         403 => PropodusClientError::Service {
@@ -1181,7 +1189,7 @@ mod tests {
         let diagnostic = CloudAuthDiagnostic::new(
             CloudAuthStatus::Unauthorized,
             "the cloud service rejected the machine session",
-            "run `decapod cloud login` to renew the machine session",
+            cloud_init_action("to renew the machine session"),
         );
         let value = serde_json::to_value(&diagnostic).expect("serialize diagnostic");
         assert_eq!(
@@ -1190,7 +1198,7 @@ mod tests {
                 "schema_version": "decapod.cloud.auth.v1",
                 "status": "unauthorized",
                 "message": "the cloud service rejected the machine session",
-                "next_action": "run `decapod cloud login` to renew the machine session"
+                "next_action": "run `decapod init --backend cloud` to renew the machine session"
             })
         );
         let rendered = serde_json::to_string(&value).unwrap();

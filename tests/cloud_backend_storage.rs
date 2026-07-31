@@ -116,6 +116,51 @@ fn test_cloud_init_records_opt_in_without_auth_or_repo_credentials() {
 }
 
 #[test]
+fn cloud_init_starts_machine_session_when_identity_and_mock_auth_are_available() {
+    let tmp = TempDir::new().expect("tempdir");
+    let data_home = TempDir::new().expect("credential data home");
+    git(tmp.path(), &["init", "-q"]);
+    git(
+        tmp.path(),
+        &[
+            "remote",
+            "add",
+            "origin",
+            "git@github.com:DecapodLabs/decapod.git",
+        ],
+    );
+
+    let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["init", "--backend", "cloud", "--force", "--proof"])
+        .current_dir(tmp.path())
+        .env("DECAPOD_CLOUD_AUTH_MODE", "mock")
+        .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
+        .env("XDG_DATA_HOME", data_home.path())
+        .output()
+        .expect("cloud init");
+    assert!(
+        init_out.status.success(),
+        "cloud init should complete setup: {}",
+        String::from_utf8_lossy(&init_out.stderr)
+    );
+    assert!(
+        data_home.path().join("decapod/session_token.json").exists(),
+        "canonical init should establish machine-local cloud custody"
+    );
+    let output = format!(
+        "{}{}",
+        String::from_utf8_lossy(&init_out.stdout),
+        String::from_utf8_lossy(&init_out.stderr)
+    );
+    assert!(
+        output.contains("Cloud setup ready"),
+        "unexpected init output: {output}"
+    );
+    assert!(!output.contains("decapod-test-mock-access"));
+    assert!(!output.contains("decapod-test-mock-refresh"));
+}
+
+#[test]
 fn cloud_cli_preflight_does_not_initialize_local_sqlite() {
     let tmp = TempDir::new().expect("tempdir");
     let dir = tmp.path().to_path_buf();
@@ -228,6 +273,12 @@ fn cloud_login_requires_a_project_origin() {
         error.contains("origin Git remote"),
         "unexpected login error: {error}"
     );
+    let output = format!(
+        "{}{}",
+        String::from_utf8_lossy(&login_out.stdout),
+        String::from_utf8_lossy(&login_out.stderr)
+    );
+    assert!(output.contains("decapod init --backend cloud"));
 }
 
 #[test]

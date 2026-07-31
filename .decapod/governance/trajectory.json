@@ -17,7 +17,14 @@
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json"
   ],
-  "inspected_files": [],
+  "inspected_files": [
+    "docs/book/src/quickstart.md",
+    "docs/book/src/reference/propodus.md",
+    "src/decapod/core/auth.rs",
+    "src/decapod/core/propodus.rs",
+    "src/decapod/lib.rs",
+    "tests/cloud_backend_storage.rs"
+  ],
   "modified_files": [
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
@@ -58,7 +65,19 @@
       "status": "passed"
     },
     {
+      "name": "docs-refresh",
+      "status": "passed"
+    },
+    {
       "name": "entrypoint_correctness_serial",
+      "status": "passed"
+    },
+    {
+      "name": "focused-cloud-tests",
+      "status": "passed"
+    },
+    {
+      "name": "propodus-unit-tests",
       "status": "passed"
     },
     {
@@ -81,7 +100,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:49c12a86874c5a7b3edaa0d74259bcc1dc797ebd1fda0419fb6c177dab667fdb",
+  "artifact_hash": "sha256:f0923d0791c66e26e152f552dab07f90d2cfd101815555b93a0ab8bf22960b8c",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -135,6 +154,13 @@
       {
         "sequence": 6,
         "event_id": "event:6",
+        "intent_id": "intent:validation_01KYTT3CGS8D1T9REKNN53DQM5",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KYTT3CGS8D1T9REKNN53DQM5"
+      },
+      {
+        "sequence": 7,
+        "event_id": "event:7",
         "intent_id": "intent:validation_01KYTT3CGS8D1T9REKNN53DQM5",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:validation_01KYTT3CGS8D1T9REKNN53DQM5"
@@ -211,12 +237,35 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:6"
+          },
+          {
+            "sequence": 7,
+            "action": "trajectory.record",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              "src/decapod/lib.rs",
+              "src/decapod/core/propodus.rs",
+              "src/decapod/core/auth.rs",
+              "docs/book/src/reference/propodus.md",
+              "docs/book/src/quickstart.md",
+              "tests/cloud_backend_storage.rs"
+            ],
+            "proof_refs": [
+              "focused-cloud-tests",
+              "propodus-unit-tests",
+              "docs-refresh"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:7"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 6
+    "next_sequence": 7
   }
 }

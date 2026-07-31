@@ -165,6 +165,28 @@ fn ensure_project_cloud_session(
     Ok(identity)
 }
 
+fn bootstrap_cloud_session(project_root: &Path) -> Result<(), error::DecapodError> {
+    match ensure_project_cloud_session(project_root) {
+        Ok(identity) => {
+            println!(
+                "Cloud setup ready for {}; the machine-local Propodus session is available.",
+                identity.canonical_name
+            );
+            Ok(())
+        }
+        Err(error @ error::DecapodError::CloudAuth(_)) => {
+            if let error::DecapodError::CloudAuth(diagnostic) = &error {
+                println!(
+                    "Cloud setup requires attention: {}; next action: {}",
+                    diagnostic.message, diagnostic.next_action
+                );
+            }
+            Err(error)
+        }
+        Err(error) => Err(error),
+    }
+}
+
 fn print_cloud_auth_json_if_needed(
     diagnostic: &core::error::CloudAuthDiagnostic,
     format: Option<&str>,
@@ -183,11 +205,11 @@ fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
     match command {
         CloudCommand::Login => {
             let project_root = find_decapod_project_root(&std::env::current_dir()?)?;
-            match ensure_project_cloud_session(&project_root) {
-                Ok(identity) => {
-                    println!("Cloud session ready for {}.", identity.canonical_name);
-                    Ok(())
-                }
+            eprintln!(
+                "Deprecated compatibility command; use `decapod init --backend cloud` for human setup."
+            );
+            match bootstrap_cloud_session(&project_root) {
+                Ok(()) => Ok(()),
                 Err(error @ error::DecapodError::CloudAuth(_)) => {
                     if let error::DecapodError::CloudAuth(diagnostic) = &error {
                         print_cloud_auth_json_if_needed(diagnostic, Some(&format));
@@ -2244,30 +2266,11 @@ pub fn run() -> Result<(), error::DecapodError> {
             write_project_config(&target_dir, &config, init_with.dry_run)?;
             record_cloud_init_registration(&target_dir, &config, init_with.dry_run)?;
             seed_init_generated_state(&target_dir, init_with.dry_run)?;
-            let cloud_bootstrap_allowed = io::stdin().is_terminal()
-                && std::env::var_os("GITHUB_ACTIONS").is_none()
-                && std::env::var_os("DECAPOD_HEADLESS").is_none()
-                && !init_with.proof;
             if !init_with.dry_run
                 && config.repo.effective_backend().is_cloud()
-                && cloud_bootstrap_allowed
-                && let Ok(identity) = core::repo_identity::resolve_repository_identity(&target_dir)
+                && let Err(error) = bootstrap_cloud_session(&target_dir)
             {
-                let propodus = core::propodus::PropodusConfig::for_repository(
-                    &crate::cli::CloudRuntimeConfig::default(),
-                    &identity,
-                );
-                let onboarding = core::propodus::ensure_cloud_session(
-                    &propodus,
-                    &identity,
-                    core::propodus::CurlTransport::default(),
-                );
-                if let Err(error) = onboarding {
-                    println!(
-                        "Cloud backend selected for {}; {}",
-                        identity.canonical_name, error
-                    );
-                }
+                println!("Cloud setup is pending: {error}");
             }
         }
         Command::Session(session_cli) => {
