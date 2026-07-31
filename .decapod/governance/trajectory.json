@@ -1,8 +1,8 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "validation_01KYTS0EKR2BVF6ANV0PEP0QP7",
-  "intent_id": "intent:validation_01KYTS0EKR2BVF6ANV0PEP0QP7",
-  "task_id": "feat_01kytndnnbwj4nf8",
+  "run_id": "validation_01KYTT3CGS8D1T9REKNN53DQM5",
+  "intent_id": "intent:validation_01KYTT3CGS8D1T9REKNN53DQM5",
+  "task_id": "code_01kytrt9yrvjvrs8",
   "original_intent": "Produce proof artifacts for a repository validation completion.",
   "derived_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
   "destination": "validation completion",
@@ -17,15 +17,10 @@
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json"
   ],
-  "inspected_files": [
-    "src/decapod/core/propodus.rs",
-    "src/decapod/lib.rs"
-  ],
+  "inspected_files": [],
   "modified_files": [
     ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json",
-    "src/decapod/core/propodus.rs",
-    "src/decapod/lib.rs"
+    ".decapod/governance/validation.json"
   ],
   "declared_commands": [
     "decapod validate"
@@ -33,29 +28,15 @@
   "tool_calls": [],
   "checks": [
     {
-      "name": "cargo check",
-      "status": "passed"
-    },
-    {
-      "name": "cargo clippy",
-      "status": "passed"
-    },
-    {
-      "name": "cargo fmt",
-      "status": "passed"
-    },
-    {
       "name": "decapod validate",
       "status": "passed"
     }
   ],
   "evidence": [
-    "Container validation passed: 204 gates passed, 0 failed, 4 warnings.",
-    "validation epoch ve_459d0e0bf901702c completed with zero failures"
+    "validation epoch ve_efb719b7441b04ee completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
-  "completion_claim": "The #766 verified-identity client-binding slice is implemented and proof-backed; live Propodus deployment proof remains opt-in.",
   "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
@@ -63,12 +44,12 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:d8f33e9325ba521a75bec3c258d79f5c6173e949d917593dcd36194c48e062eb",
+  "artifact_hash": "sha256:9bbb0bc2eae88f75a980760a7e30966bffe9dbbe43de58d9866adf0d5716ca86",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:validation_01KYTS0EKR2BVF6ANV0PEP0QP7": {
-        "id": "intent:validation_01KYTS0EKR2BVF6ANV0PEP0QP7",
+      "intent:validation_01KYTT3CGS8D1T9REKNN53DQM5": {
+        "id": "intent:validation_01KYTT3CGS8D1T9REKNN53DQM5",
         "raw_intent": "Produce proof artifacts for a repository validation completion.",
         "refined_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
         "acceptance_criteria": [],
@@ -91,34 +72,27 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:validation_01KYTS0EKR2BVF6ANV0PEP0QP7",
+        "intent_id": "intent:validation_01KYTT3CGS8D1T9REKNN53DQM5",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:validation_01KYTS0EKR2BVF6ANV0PEP0QP7",
+        "intent_id": "intent:validation_01KYTT3CGS8D1T9REKNN53DQM5",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:validation_01KYTS0EKR2BVF6ANV0PEP0QP7",
+        "intent_id": "intent:validation_01KYTT3CGS8D1T9REKNN53DQM5",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KYTS0EKR2BVF6ANV0PEP0QP7"
-      },
-      {
-        "sequence": 5,
-        "event_id": "event:5",
-        "intent_id": "intent:validation_01KYTS0EKR2BVF6ANV0PEP0QP7",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KYTS0EKR2BVF6ANV0PEP0QP7"
+        "detail": "trajectory:validation_01KYTT3CGS8D1T9REKNN53DQM5"
       }
     ],
     "trajectories": {
-      "validation_01KYTS0EKR2BVF6ANV0PEP0QP7": {
-        "id": "validation_01KYTS0EKR2BVF6ANV0PEP0QP7",
-        "intent_id": "intent:validation_01KYTS0EKR2BVF6ANV0PEP0QP7",
+      "validation_01KYTT3CGS8D1T9REKNN53DQM5": {
+        "id": "validation_01KYTT3CGS8D1T9REKNN53DQM5",
+        "intent_id": "intent:validation_01KYTT3CGS8D1T9REKNN53DQM5",
         "evidence_only": true,
         "steps": [
           {
@@ -132,42 +106,19 @@
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_459d0e0bf901702c completed with zero failures"
+              "validation epoch ve_efb719b7441b04ee completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
-          },
-          {
-            "sequence": 5,
-            "action": "trajectory.record",
-            "scope": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json"
-            ],
-            "observations": [
-              "src/decapod/core/propodus.rs",
-              "src/decapod/lib.rs",
-              "src/decapod/core/propodus.rs",
-              "src/decapod/lib.rs",
-              "Container validation passed: 204 gates passed, 0 failed, 4 warnings."
-            ],
-            "proof_refs": [
-              "decapod validate",
-              "cargo check",
-              "cargo clippy",
-              "cargo fmt"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:5"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 5
+    "next_sequence": 4
   }
 }
