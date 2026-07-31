@@ -2,7 +2,7 @@
   "schema_version": "1.1.0",
   "run_id": "validation_01KYVNVYKC1JR6ATWMPV703GF5",
   "intent_id": "intent:validation_01KYVNVYKC1JR6ATWMPV703GF5",
-  "task_id": "bend_01kyvg96hmhjykdg",
+  "task_id": "bugs_01kyvkq975ekff0p",
   "original_intent": "Produce proof artifacts for a repository validation completion.",
   "derived_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
   "destination": "validation completion",
@@ -20,19 +20,37 @@
   "inspected_files": [],
   "modified_files": [
     ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json"
+    ".decapod/governance/validation.json",
+    "src/decapod/core/migration.rs"
   ],
   "declared_commands": [
-    "decapod validate"
+    "cargo clippy --all-targets -- -D warnings",
+    "cargo test --test single_datastore",
+    "decapod validate",
+    "decapod validate --format json"
   ],
   "tool_calls": [],
   "checks": [
     {
+      "name": "cargo_clippy",
+      "status": "passed"
+    },
+    {
       "name": "decapod validate",
+      "status": "passed"
+    },
+    {
+      "name": "decapod_validate",
+      "status": "passed"
+    },
+    {
+      "name": "legacy_schema_width_migration",
       "status": "passed"
     }
   ],
   "evidence": [
+    "ci_failure=legacy federation_events target width mismatch;fix=intersection-column migration copy;validation_epoch=ve_5741a813a4d73036",
+    "validation epoch ve_5741a813a4d73036 completed with zero failures",
     "validation epoch ve_8ec2ce3415249bba completed with zero failures"
   ],
   "shortcut_risk_signals": [],
@@ -44,7 +62,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:2e0482c633c3bdfde8dc17e304754456824b62da801c4a5d70308ab46dc3d90d",
+  "artifact_hash": "sha256:a2e70d777a969b91139720fb251b1e4d3e8d44fd0a7f2d7dc71c34b0d8c5e3a9",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -87,6 +105,27 @@
         "intent_id": "intent:validation_01KYVNVYKC1JR6ATWMPV703GF5",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:validation_01KYVNVYKC1JR6ATWMPV703GF5"
+      },
+      {
+        "sequence": 5,
+        "event_id": "event:5",
+        "intent_id": "intent:validation_01KYVNVYKC1JR6ATWMPV703GF5",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KYVNVYKC1JR6ATWMPV703GF5"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
+        "intent_id": "intent:validation_01KYVNVYKC1JR6ATWMPV703GF5",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KYVNVYKC1JR6ATWMPV703GF5"
+      },
+      {
+        "sequence": 7,
+        "event_id": "event:7",
+        "intent_id": "intent:validation_01KYVNVYKC1JR6ATWMPV703GF5",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KYVNVYKC1JR6ATWMPV703GF5"
       }
     ],
     "trajectories": {
@@ -113,12 +152,70 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
+          },
+          {
+            "sequence": 5,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_5741a813a4d73036 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_5741a813a4d73036 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:6"
+          },
+          {
+            "sequence": 7,
+            "action": "validation",
+            "command": "cargo clippy --all-targets -- -D warnings",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              "src/decapod/core/migration.rs",
+              "ci_failure=legacy federation_events target width mismatch;fix=intersection-column migration copy;validation_epoch=ve_5741a813a4d73036"
+            ],
+            "proof_refs": [
+              "legacy_schema_width_migration",
+              "cargo_clippy",
+              "decapod_validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:7"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 4
+    "next_sequence": 7
   }
 }

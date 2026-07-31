@@ -1176,6 +1176,21 @@ fn table_exists(conn: &Connection, table: &str) -> Result<bool, error::DecapodEr
     .map(|v| v.unwrap_or(false))
 }
 
+fn table_columns(
+    conn: &Connection,
+    schema: &str,
+    table: &str,
+) -> Result<Vec<String>, error::DecapodError> {
+    let pragma = format!("PRAGMA {schema}.table_info({table})");
+    let mut stmt = conn.prepare(&pragma)?;
+    let rows = stmt.query_map([], |row| row.get::<_, String>(1))?;
+    let mut columns = Vec::new();
+    for row in rows {
+        columns.push(row?);
+    }
+    Ok(columns)
+}
+
 fn migrate_todo_ids_to_typed_format(decapod_root: &Path) -> Result<(), error::DecapodError> {
     let data_root = decapod_root.join("data");
     let todo_db = data_root.join(schemas::LOCAL_DB_NAME);
@@ -1576,10 +1591,27 @@ fn migrate_table(
         .map_err(error::DecapodError::RusqliteError)?
         .unwrap_or(false);
     let res = if source_has_table {
-        target_conn.execute(
-            &format!("INSERT OR IGNORE INTO main.{table} SELECT * FROM source.{table}"),
-            [],
-        )
+        let source_columns = table_columns(target_conn, "source", table)?;
+        let target_columns = table_columns(target_conn, "main", table)?;
+        let columns: Vec<String> = target_columns
+            .into_iter()
+            .filter(|column| source_columns.iter().any(|source| source == column))
+            .collect();
+        if columns.is_empty() {
+            Ok(0)
+        } else {
+            let quoted = columns
+                .iter()
+                .map(|column| format!("\"{column}\""))
+                .collect::<Vec<_>>()
+                .join(", ");
+            target_conn.execute(
+                &format!(
+                    "INSERT OR IGNORE INTO main.{table} ({quoted}) SELECT {quoted} FROM source.{table}"
+                ),
+                [],
+            )
+        }
     } else {
         Ok(0)
     };
