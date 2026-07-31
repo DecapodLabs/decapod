@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.89.3](https://github.com/DecapodLabs/decapod/compare/v0.89.2...v0.89.3) - 2026-07-31
+
+### Fixed
+
+- catch up receipt freshness on v0.89.2
+
+### Other
+
+- record PR #1109 claims custody
+
 ## [0.89.2](https://github.com/DecapodLabs/decapod/compare/v0.89.1...v0.89.2) - 2026-07-31
 
 ### Added
