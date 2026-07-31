@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.89.4](https://github.com/DecapodLabs/decapod/compare/v0.89.3...v0.89.4) - 2026-07-31
+
+### Fixed
+
+- harden single datastore migration and recovery
+
+### Other
+
+- refresh governance proof artifacts
+
 ## [0.89.3](https://github.com/DecapodLabs/decapod/compare/v0.89.2...v0.89.3) - 2026-07-31
 
 ### Fixed
