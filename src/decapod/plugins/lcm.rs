@@ -26,11 +26,6 @@ fn lcm_db_path(root: &Path) -> PathBuf {
     root.join(schemas::LOCAL_DB_NAME)
 }
 
-#[cfg(test)]
-fn lcm_events_path(root: &Path) -> PathBuf {
-    root.join(schemas::LCM_EVENTS_NAME)
-}
-
 // ---------------------------------------------------------------------------
 // Initialization
 // ---------------------------------------------------------------------------

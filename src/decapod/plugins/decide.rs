@@ -2,6 +2,7 @@ use crate::core::broker::DbBroker;
 use crate::core::error;
 use crate::core::schemas;
 use crate::core::store::Store;
+use crate::core::todo;
 use crate::plugins::federation;
 use clap::{Parser, Subcommand};
 use rusqlite::params;
@@ -848,6 +849,7 @@ fn decide_db_path(root: &Path) -> PathBuf {
 }
 
 pub fn initialize_decide_db(root: &Path) -> Result<(), error::DecapodError> {
+    todo::initialize_todo_db(root)?;
     let db_path = decide_db_path(root);
     let broker = DbBroker::new(root);
     broker.with_conn(&db_path, "decapod", None, "decide.init", |conn| {

@@ -24,25 +24,25 @@ pub struct EntrypointExpectation {
     pub fingerprint: &'static str,
 }
 
-// These values are the v0.88.0 release manifest. Keep them immutable for the
+// These values are the v0.89.2 release manifest. Keep them immutable for the
 // lifetime of that release; a later release must update them deliberately and
 // regenerate the four root entrypoints through Decapod.
 pub const EXPECTED_ENTRYPOINTS: [EntrypointExpectation; 4] = [
     EntrypointExpectation {
         surface: "AGENTS.md",
-        fingerprint: "846eb547626a4b19779938fd48e5f33d1ad94c43948e0f2550f28dfcc5685a3a",
+        fingerprint: "e7efb554d763f5e15e453e72b339b158791df3815abb462d29b2b9cf9efc6b70",
     },
     EntrypointExpectation {
         surface: "CLAUDE.md",
-        fingerprint: "d6219f4ccdb8405da90075c432b3f950ee22987850b9e612407b7664cc01832a",
+        fingerprint: "c134c6db6ba7f4d57db1d5ee037419b35ac8f0baabc5b8cda036dba796e4ec9a",
     },
     EntrypointExpectation {
         surface: "GEMINI.md",
-        fingerprint: "41e28545adc90afce6ccf9cb00f37aff06e90f4d35bf6116ddb8299f1e4135f3",
+        fingerprint: "3c1a04cb389e23a0e829ffce8b871d8b14f13bed48d7c7cada19acba99495531",
     },
     EntrypointExpectation {
         surface: "CODEX.md",
-        fingerprint: "6bfa2a81ce848a7597052e13af747f96e0c514628418963851f7f7056307dd84",
+        fingerprint: "90f8f372fd962eb6ef19bad1a8836eddafbfa017a619917f9977d757742c551d",
     },
 ];
 

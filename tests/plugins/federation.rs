@@ -52,7 +52,7 @@ fn test_add_and_list_node() {
         "ops",
         "repo",
         None,
-        "test-agent",
+        "decapod",
     )
     .unwrap();
 
@@ -61,7 +61,7 @@ fn test_add_and_list_node() {
     assert_eq!(node.status, "active");
     assert_eq!(node.priority, "notable");
     assert_eq!(node.title, "Test lesson");
-    assert_eq!(node.actor, "test-agent");
+    assert_eq!(node.actor, "decapod");
 }
 
 #[test]
@@ -80,7 +80,7 @@ fn test_provenance_required_for_critical() {
         "",
         "repo",
         None,
-        "test",
+        "decapod",
     );
     assert!(result.is_err());
     let err = result.unwrap_err().to_string();
@@ -98,7 +98,7 @@ fn test_provenance_required_for_critical() {
         "",
         "repo",
         None,
-        "test",
+        "decapod",
     );
     assert!(result.is_err());
 
@@ -114,7 +114,7 @@ fn test_provenance_required_for_critical() {
         "",
         "repo",
         None,
-        "test",
+        "decapod",
     )
     .unwrap();
     assert_eq!(node.node_type, "decision");
@@ -136,7 +136,7 @@ fn test_invalid_provenance_rejected() {
         "",
         "repo",
         None,
-        "test",
+        "decapod",
     );
     assert!(result.is_err());
     assert!(
@@ -162,7 +162,7 @@ fn test_edit_non_critical_node() {
         "",
         "repo",
         None,
-        "test",
+        "decapod",
     )
     .unwrap();
 
@@ -185,7 +185,7 @@ fn test_edit_critical_node_rejected() {
         "",
         "repo",
         None,
-        "test",
+        "decapod",
     )
     .unwrap();
 
@@ -215,7 +215,7 @@ fn test_supersede_lifecycle() {
         "",
         "repo",
         None,
-        "test",
+        "decapod",
     )
     .unwrap();
 
@@ -230,7 +230,7 @@ fn test_supersede_lifecycle() {
         "",
         "repo",
         None,
-        "test",
+        "decapod",
     )
     .unwrap();
 
@@ -259,7 +259,7 @@ fn test_status_transition_only_from_active() {
         "",
         "repo",
         None,
-        "test",
+        "decapod",
     )
     .unwrap();
 
@@ -292,7 +292,7 @@ fn test_edge_operations() {
         "",
         "repo",
         None,
-        "test",
+        "decapod",
     )
     .unwrap();
 
@@ -307,7 +307,7 @@ fn test_edge_operations() {
         "",
         "repo",
         None,
-        "test",
+        "decapod",
     )
     .unwrap();
 
@@ -330,7 +330,7 @@ fn test_invalid_edge_type_rejected() {
         "",
         "repo",
         None,
-        "test",
+        "decapod",
     )
     .unwrap();
 
@@ -345,7 +345,7 @@ fn test_invalid_edge_type_rejected() {
         "",
         "repo",
         None,
-        "test",
+        "decapod",
     )
     .unwrap();
 
@@ -375,7 +375,7 @@ fn test_rebuild_determinism() {
         "tag1",
         "repo",
         None,
-        "test",
+        "decapod",
     )
     .unwrap();
 
@@ -390,7 +390,7 @@ fn test_rebuild_determinism() {
         "",
         "repo",
         None,
-        "test",
+        "decapod",
     )
     .unwrap();
 
@@ -427,7 +427,7 @@ fn test_add_source_to_node() {
         "",
         "repo",
         None,
-        "test",
+        "decapod",
     )
     .unwrap();
 
@@ -469,7 +469,7 @@ fn test_add_source_survives_rebuild() {
         "",
         "repo",
         None,
-        "test",
+        "decapod",
     )
     .unwrap();
 
@@ -514,7 +514,7 @@ fn test_init_idempotent() {
         "",
         "repo",
         None,
-        "test",
+        "decapod",
     )
     .unwrap();
     assert!(node.id.starts_with("F_"));
@@ -536,7 +536,7 @@ fn test_rebuild_determinism_gate_passes() {
         "arch",
         "repo",
         None,
-        "test",
+        "decapod",
     )
     .unwrap();
 
@@ -551,7 +551,7 @@ fn test_rebuild_determinism_gate_passes() {
         "",
         "repo",
         None,
-        "test",
+        "decapod",
     )
     .unwrap();
 
@@ -588,7 +588,7 @@ fn test_derived_artifacts_build_and_validate() {
         "",
         "repo",
         None,
-        "test",
+        "decapod",
     )
     .unwrap();
     let b = add_node(
@@ -602,7 +602,7 @@ fn test_derived_artifacts_build_and_validate() {
         "",
         "repo",
         None,
-        "test",
+        "decapod",
     )
     .unwrap();
     add_edge(&store, &a.id, &b.id, "relates_to").unwrap();
@@ -647,7 +647,7 @@ fn test_derived_freshness_detects_drift_after_write() {
         "",
         "repo",
         None,
-        "test",
+        "decapod",
     )
     .unwrap();
 
@@ -665,7 +665,7 @@ fn test_derived_freshness_detects_drift_after_write() {
         "",
         "repo",
         None,
-        "test",
+        "decapod",
     )
     .unwrap();
 

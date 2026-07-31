@@ -6,7 +6,7 @@ use decapod::plugins::lcm::{
     show_summary, summarize, validate_ledger_integrity,
 };
 use decapod::plugins::map_ops::{map_agentic, map_llm, read_map_events};
-use std::fs;
+use rusqlite::Connection;
 use tempfile::tempdir;
 
 fn test_store() -> (tempfile::TempDir, Store) {
@@ -44,16 +44,23 @@ fn test_lcm_ingest_is_append_only() {
     let (_tmp, store) = test_store();
 
     ingest(&store, "first", "message", "agent", None, None).unwrap();
-    let ledger_path = store.root.join("lcm.events.jsonl");
-    let len1 = fs::read_to_string(&ledger_path).unwrap().lines().count();
+    let db_path = store.root.join("decapod.db");
+    let conn = Connection::open(&db_path).unwrap();
+    let event_count = |conn: &Connection| {
+        conn.query_row("SELECT COUNT(*) FROM lcm_events", [], |row| {
+            row.get::<_, i64>(0)
+        })
+        .unwrap()
+    };
+    let len1 = event_count(&conn);
     assert_eq!(len1, 1);
 
     ingest(&store, "second", "event", "agent", None, None).unwrap();
-    let len2 = fs::read_to_string(&ledger_path).unwrap().lines().count();
+    let len2 = event_count(&conn);
     assert_eq!(len2, 2);
 
     ingest(&store, "third", "artifact", "agent", None, None).unwrap();
-    let len3 = fs::read_to_string(&ledger_path).unwrap().lines().count();
+    let len3 = event_count(&conn);
     assert_eq!(len3, 3);
 
     // Verify ledger only grows
@@ -91,14 +98,13 @@ fn test_lcm_index_rebuildable_from_ledger() {
     let original_list = list_originals(&store, None, None).unwrap();
     assert_eq!(original_list.len(), 3);
 
-    // Delete the DB and rebuild from ledger
+    // Clear the derived index and rebuild from the canonical event table
     let db_path = store.root.join("decapod.db");
-    fs::remove_file(&db_path).unwrap();
+    let conn = Connection::open(&db_path).unwrap();
+    conn.execute("DELETE FROM originals_index", []).unwrap();
+    drop(conn);
 
-    // Reinitialize DB (creates empty tables)
-    initialize_lcm_db(&store.root).unwrap();
-
-    // Rebuild from ledger
+    // Rebuild from the canonical lcm_events stream
     let count = rebuild_index_from_ledger(&store).unwrap();
     assert_eq!(count, 3);
 
@@ -229,11 +235,16 @@ fn test_lcm_immutability_gate_catches_tampered_hash() {
     ingest(&store, "authentic content", "message", "agent", None, None).unwrap();
     ingest(&store, "more content", "event", "agent", None, None).unwrap();
 
-    // Tamper with a content hash in the ledger
-    let ledger_path = store.root.join("lcm.events.jsonl");
-    let contents = fs::read_to_string(&ledger_path).unwrap();
-    let tampered = contents.replacen("authentic content", "tampered content", 1);
-    fs::write(&ledger_path, &tampered).unwrap();
+    // Tamper with the event payload while leaving its content hash unchanged.
+    let db_path = store.root.join("decapod.db");
+    let conn = Connection::open(db_path).unwrap();
+    conn.execute(
+        "UPDATE lcm_events
+         SET payload = replace(payload, 'authentic content', 'tampered content')
+         WHERE payload LIKE '%authentic content%'",
+        [],
+    )
+    .unwrap();
 
     let failures = validate_ledger_integrity(&store.root).unwrap();
     assert!(!failures.is_empty(), "Should detect tampered content hash");

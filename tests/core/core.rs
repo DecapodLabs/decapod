@@ -150,12 +150,16 @@ fn db_and_broker_round_trip_and_audit() {
         });
     assert!(result.is_err());
 
-    let audit_path = root.join("broker.events.jsonl");
-    assert!(audit_path.exists());
-    let events: Vec<BrokerEvent> = fs::read_to_string(&audit_path)
-        .expect("read audit")
-        .lines()
-        .map(|line| serde_json::from_str(line).expect("valid broker event json"))
+    let audit_conn = db::db_connect(&db_path.to_string_lossy()).expect("connect audit db");
+    let mut audit_stmt = audit_conn
+        .prepare("SELECT payload FROM broker_events ORDER BY seq")
+        .expect("prepare audit query");
+    let events: Vec<BrokerEvent> = audit_stmt
+        .query_map([], |row| row.get::<_, String>(0))
+        .expect("read audit rows")
+        .map(|row| {
+            serde_json::from_str(&row.expect("audit payload")).expect("valid broker event json")
+        })
         .collect();
     assert!(events.iter().any(|ev| ev.status == "success"));
     assert!(events.iter().any(|ev| ev.status == "error"));

@@ -12,6 +12,7 @@ use crate::core::broker::DbBroker;
 use crate::core::error;
 use crate::core::schemas;
 use crate::core::store::Store;
+use crate::core::todo;
 use fancy_regex::Regex;
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
@@ -207,6 +208,9 @@ fn now_iso() -> String {
 // ============================================================================
 
 pub fn initialize_aptitude_db(root: &Path) -> Result<(), error::DecapodError> {
+    // Broker policy is stored in the shared todo schema; initialize that
+    // foundation before opening aptitude's tables in an isolated test/store.
+    todo::initialize_todo_db(root)?;
     let broker = DbBroker::new(root);
     let db_path = aptitude_db_path(root);
 

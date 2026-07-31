@@ -56,11 +56,13 @@ fn test_validate_catches_tamper() {
     let (_tmp, store) = test_store();
     ingest(&store, "good content", "message", "agent", None, None).unwrap();
 
-    // Tamper with the ledger
-    let path = lcm_events_path(&store.root);
-    let mut contents = fs::read_to_string(&path).unwrap();
-    contents = contents.replace("good content", "bad content");
-    fs::write(&path, &contents).unwrap();
+    // Tamper with the canonical append-only event table.
+    let conn = rusqlite::Connection::open(lcm_db_path(&store.root)).unwrap();
+    conn.execute(
+        "UPDATE lcm_events SET payload = replace(payload, ?1, ?2)",
+        ["good content", "bad content"],
+    )
+    .unwrap();
 
     let failures = validate_ledger_integrity(&store.root).unwrap();
     assert!(!failures.is_empty());

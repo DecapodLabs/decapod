@@ -3527,23 +3527,24 @@ fn validate_knowledge_integrity(
 fn load_knowledge_promotion_event_ids(
     store_root: &Path,
 ) -> Result<HashSet<String>, error::DecapodError> {
-    let ledger = store_root.join("knowledge.promotions.jsonl");
-    if !ledger.exists() {
+    let db_path = store_root.join(crate::core::schemas::LOCAL_DB_NAME);
+    if !db_path.exists() {
         return Ok(HashSet::new());
     }
 
-    let raw = fs::read_to_string(&ledger).map_err(error::DecapodError::IoError)?;
+    let conn = db::db_connect_for_validate(&db_path.to_string_lossy())?;
+    let mut stmt = conn
+        .prepare("SELECT payload FROM knowledge_events")
+        .map_err(error::DecapodError::RusqliteError)?;
+    let rows = stmt
+        .query_map([], |row| row.get::<_, String>(0))
+        .map_err(error::DecapodError::RusqliteError)?;
     let mut ids = HashSet::new();
-    for (idx, line) in raw.lines().enumerate() {
-        if line.trim().is_empty() {
-            continue;
-        }
-        let v: serde_json::Value = serde_json::from_str(line).map_err(|e| {
+    for row in rows {
+        let raw = row.map_err(error::DecapodError::RusqliteError)?;
+        let v: serde_json::Value = serde_json::from_str(&raw).map_err(|e| {
             error::DecapodError::ValidationError(format!(
-                "invalid promotion ledger line {} in {}: {}",
-                idx + 1,
-                ledger.display(),
-                e
+                "invalid knowledge promotion event in decapod.db:knowledge_events: {e}"
             ))
         })?;
         if let Some(id) = v.get("event_id").and_then(|x| x.as_str()) {
