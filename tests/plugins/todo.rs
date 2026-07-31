@@ -2,12 +2,11 @@ use decapod::core::store::Store;
 use decapod::core::store::StoreKind;
 use decapod::core::todo::{
     ClaimMode, TodoCommand, add_task, check_trust_level, claim_task, get_task, initialize_todo_db,
-    list_tasks, rebuild_from_events, todo_db_path, update_status,
+    list_tasks, rebuild_from_events, update_status,
 };
 use decapod::plugins::policy;
 use rusqlite::Connection;
 use serde_json::Value;
-use std::fs;
 use std::path::Path;
 use std::process::Command;
 use tempfile::tempdir;
@@ -220,12 +219,12 @@ fn test_todo_rebuild() {
         add_task(&root, &add_args).unwrap();
     }
 
-    // Corrupt/Delete DB
-    let db_path = todo_db_path(&root);
-    fs::remove_file(&db_path).unwrap();
-
-    // Rebuild
-    rebuild_from_events(&root).unwrap();
+    // Rebuild is now a canonical-datastore projection check. The event
+    // stream lives in decapod.db; deleting that single source would delete
+    // the source of truth rather than exercise a supported recovery path.
+    let rebuild = rebuild_from_events(&root).unwrap();
+    assert_eq!(rebuild["source"], "todo_events");
+    assert_eq!(rebuild["events"], 3);
 
     // Verify
     let tasks = list_tasks(&root, None, None, None, None, None).unwrap();
@@ -269,6 +268,7 @@ fn run_cmd(repo_root: &Path, args: &[&str]) -> Value {
     let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .current_dir(repo_root)
         .args(args)
+        .stdin(std::process::Stdio::null())
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
         .output()
         .expect("run decapod");
@@ -287,6 +287,7 @@ fn run_raw(repo_root: &Path, args: &[&str]) -> std::process::Output {
     Command::new(env!("CARGO_BIN_EXE_decapod"))
         .current_dir(repo_root)
         .args(args)
+        .stdin(std::process::Stdio::null())
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
         .output()
         .expect("run decapod")
@@ -455,6 +456,7 @@ fn test_risk_zones_and_trust_tiers_enforced() {
         rusqlite::params!["agent-b", ts],
     )
     .unwrap();
+    drop(db);
     let shared_ok = run_cmd(
         repo,
         &[
@@ -466,6 +468,7 @@ fn test_risk_zones_and_trust_tiers_enforced() {
     assert_eq!(shared_ok["result"]["mode"], "shared");
 
     // Handoff requires verified trust and explicit approval.
+    let db = Connection::open(repo.join(".decapod/data/decapod.db")).unwrap();
     db.execute(
         "INSERT INTO agent_trust(agent_id, trust_level, granted_at, updated_at, granted_by)
          VALUES(?1, 'verified', ?2, ?2, 'test')

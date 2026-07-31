@@ -164,6 +164,12 @@ pub fn initialize_policy_db(root: &Path) -> Result<(), error::DecapodError> {
     broker.with_conn(&db_path, "decapod", None, "policy.init", |conn| {
         conn.execute(schemas::POLICY_DB_SCHEMA_APPROVALS, [])?;
         conn.execute(schemas::POLICY_DB_SCHEMA_INDEX, [])?;
+        // Policy is a shared broker boundary in the canonical local
+        // datastore. Its checks read the TODO-owned trust and risk tables,
+        // so bootstrap those tables when policy is initialized first.
+        conn.execute(schemas::TODO_DB_SCHEMA_AGENT_TRUST, [])?;
+        conn.execute(schemas::TODO_DB_SCHEMA_RISK_ZONES, [])?;
+        conn.execute(schemas::TODO_DB_SCHEMA_INDEX_RISK_ZONES_NAME, [])?;
         Ok(())
     })
 }

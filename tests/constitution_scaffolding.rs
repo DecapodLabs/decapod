@@ -1,4 +1,5 @@
 use std::process::Command;
+use std::sync::{Mutex, OnceLock};
 
 const RUNTIME_NODES: &[&str] = &[
     "architecture/RUST",
@@ -399,6 +400,18 @@ fn resolve_decapod_bin() -> std::path::PathBuf {
         return p;
     }
     std::path::PathBuf::from(cargo_bin)
+}
+
+fn run_constitution(args: &[&str]) -> std::process::Output {
+    static CONSTITUTION_COMMAND_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+    let _guard = CONSTITUTION_COMMAND_LOCK
+        .get_or_init(|| Mutex::new(()))
+        .lock()
+        .expect("constitution command lock");
+    Command::new(resolve_decapod_bin())
+        .args(args)
+        .output()
+        .expect("run decapod constitution command")
 }
 
 fn assert_non_empty_array(value: &serde_json::Value, path: &str) {
@@ -1767,10 +1780,7 @@ fn lookup_routes_init_and_major_runtime_terms() {
 #[test]
 fn embedded_constitution_search_surfaces_strategy_decision_methodology() {
     for (query, node_id) in STRATEGY_SEARCH_QUERIES {
-        let output = Command::new(resolve_decapod_bin())
-            .args(["constitution", "search", "--query", query])
-            .output()
-            .expect("run decapod constitution search");
+        let output = run_constitution(&["constitution", "search", "--query", query]);
         assert!(
             output.status.success(),
             "constitution search failed for {query}: {}",
@@ -1787,10 +1797,7 @@ fn embedded_constitution_search_surfaces_strategy_decision_methodology() {
 
 #[test]
 fn embedded_constitution_preserves_architect_grade_fields() {
-    let output = Command::new(resolve_decapod_bin())
-        .args(["constitution", "get", "core/SCAFFOLDING"])
-        .output()
-        .expect("run decapod constitution get");
+    let output = run_constitution(&["constitution", "get", "core/SCAFFOLDING"]);
     assert!(
         output.status.success(),
         "constitution get failed: {}",
@@ -1805,10 +1812,7 @@ fn embedded_constitution_preserves_architect_grade_fields() {
 #[test]
 fn embedded_constitution_preserves_core_architect_grade_fields() {
     for node_id in ["core/DECAPOD", "core/GAPS", "core/EMERGENCY_PROTOCOL"] {
-        let output = Command::new(resolve_decapod_bin())
-            .args(["constitution", "get", node_id])
-            .output()
-            .expect("run decapod constitution get");
+        let output = run_constitution(&["constitution", "get", node_id]);
         assert!(
             output.status.success(),
             "constitution get {node_id} failed: {}",
@@ -1832,10 +1836,7 @@ fn embedded_constitution_preserves_architecture_architect_grade_fields() {
         "architecture/MEMORY",
         "architecture/SECURITY",
     ] {
-        let output = Command::new(resolve_decapod_bin())
-            .args(["constitution", "get", node_id])
-            .output()
-            .expect("run decapod constitution get");
+        let output = run_constitution(&["constitution", "get", node_id]);
         assert!(
             output.status.success(),
             "constitution get {node_id} failed: {}",
@@ -1861,10 +1862,7 @@ fn embedded_constitution_preserves_architecture_architect_grade_fields() {
 #[test]
 fn embedded_constitution_preserves_interface_contract_doctrine() {
     for node_id in INTERFACE_NODES {
-        let output = Command::new(resolve_decapod_bin())
-            .args(["constitution", "get", node_id])
-            .output()
-            .expect("run decapod constitution get");
+        let output = run_constitution(&["constitution", "get", node_id]);
         assert!(
             output.status.success(),
             "constitution get {node_id} failed: {}",
@@ -1880,10 +1878,7 @@ fn embedded_constitution_preserves_interface_contract_doctrine() {
 #[test]
 fn embedded_constitution_preserves_data_doctrine() {
     for node_id in DATA_NODES {
-        let output = Command::new(resolve_decapod_bin())
-            .args(["constitution", "get", node_id])
-            .output()
-            .expect("run decapod constitution get");
+        let output = run_constitution(&["constitution", "get", node_id]);
         assert!(
             output.status.success(),
             "constitution get {node_id} failed: {}",
@@ -1905,10 +1900,7 @@ fn embedded_constitution_preserves_data_doctrine() {
 #[test]
 fn embedded_constitution_preserves_metadata_doctrine() {
     for node_id in METADATA_NODES {
-        let output = Command::new(resolve_decapod_bin())
-            .args(["constitution", "get", node_id])
-            .output()
-            .expect("run decapod constitution get");
+        let output = run_constitution(&["constitution", "get", node_id]);
         assert!(
             output.status.success(),
             "constitution get {node_id} failed: {}",
@@ -1930,10 +1922,7 @@ fn embedded_constitution_preserves_metadata_doctrine() {
 #[test]
 fn embedded_constitution_preserves_plugin_doctrine() {
     for node_id in PLUGIN_NODES {
-        let output = Command::new(resolve_decapod_bin())
-            .args(["constitution", "get", node_id])
-            .output()
-            .expect("run decapod constitution get");
+        let output = run_constitution(&["constitution", "get", node_id]);
         assert!(
             output.status.success(),
             "constitution get {node_id} failed: {}",
@@ -1957,10 +1946,7 @@ fn embedded_constitution_preserves_plugin_doctrine() {
 #[test]
 fn embedded_constitution_preserves_spec_doctrine() {
     for node_id in SPEC_NODES {
-        let output = Command::new(resolve_decapod_bin())
-            .args(["constitution", "get", node_id])
-            .output()
-            .expect("run decapod constitution get");
+        let output = run_constitution(&["constitution", "get", node_id]);
         assert!(
             output.status.success(),
             "constitution get {node_id} failed: {}",
@@ -1989,10 +1975,7 @@ fn embedded_constitution_preserves_methodology_delivery_doctrine() {
         "methodology/QA",
         "methodology/STRATEGIC_DECISION",
     ] {
-        let output = Command::new(resolve_decapod_bin())
-            .args(["constitution", "get", node_id])
-            .output()
-            .expect("run decapod constitution get");
+        let output = run_constitution(&["constitution", "get", node_id]);
         assert!(
             output.status.success(),
             "constitution get {node_id} failed: {}",

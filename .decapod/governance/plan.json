@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0.0",
-  "title": "Catch up PR #1109 receipt freshness on v0.89.2",
-  "intent": "Rebase the receipt-freshness fix from PR #1109 onto current v0.89.2 master, preserve receipt integrity and trajectory binding, remove the impossible pre-commit receipt git SHA equality requirement, add focused regression proof, refresh governed artifacts through Decapod, and push the updated PR #1109 branch.",
+  "title": "Finish #1118 single local datastore migration footprint",
+  "intent": "Complete the Decapod-side #1118 migration and retirement slice: ensure local runtime state uses one canonical decapod.db, make legacy import/cleanup explicit and idempotent, preserve audit/governance artifacts and rollback safety, and document/test the dactyl and Propodus compatibility boundary.",
   "state": "APPROVED",
   "todo_ids": [
-    "bugs_01kyvqgd6wepcpe8"
+    "data_01kywps2y146s54g"
   ],
   "proof_hooks": [
     "cargo fmt --all -- --check",
@@ -12,7 +12,7 @@
     "cargo clippy --all-targets -- -D warnings",
     "cargo test --all-targets",
     "decapod validate",
-    "focused governance artifact tests"
+    "focused migration and single-datastore tests"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -20,9 +20,11 @@
   "unresolved_contradictions": [],
   "deferred_questions": [],
   "constraints": {
-    "forbidden_paths": [],
-    "file_touch_budget": 50
+    "forbidden_paths": [
+      ".decapod/"
+    ],
+    "file_touch_budget": 40
   },
   "phases": [],
-  "updated_at": "1785489612Z"
+  "updated_at": "1785522422Z"
 }

@@ -1,43 +1,43 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "run_01kyvqgd6wepcpe8",
-  "intent_id": "intent:run_01kyvqgd6wepcpe8",
-  "task_id": "bugs_01kyvqgd6wepcpe8",
-  "original_intent": "Catch up PR #1109 receipt freshness on Decapod v0.89.2",
-  "derived_intent": "Publish a focused receipt-freshness fix based on current master, with integrity, trajectory binding, regression proof, and passing governance validation",
-  "destination": "PR #1109",
-  "current_phase": "validation",
-  "next_transitions": [
-    "publish"
-  ],
+  "run_id": "data_01kywps2y146s54g",
+  "intent_id": "intent:data_01kywps2y146s54g",
+  "original_intent": "Reduce backend=local storage to one canonical decapod.db while preserving user data and cross-repo storage contracts.",
+  "derived_intent": "Complete the Decapod #1118 migration/retirement slice in the isolated workspace, with explicit legacy-artifact safety and proof.",
   "active_boundaries": [
-    "Do not broaden into unrelated governance or dactyl work",
-    "Do not modify protected master directly"
+    "Decapod codebase only; no Propodus or dactyl implementation changes; no destructive wildcard deletion."
   ],
   "repo_scope": [
-    "governed artifacts via Decapod CLI",
-    "src/decapod/core/governance_artifacts.rs",
-    "tests"
+    "migration, canonical SQLite datastore, legacy JSONL compatibility, validation and tests"
   ],
-  "inspected_files": [],
-  "modified_files": [
-    ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json"
+  "inspected_files": [
+    "src/decapod/core/migration.rs",
+    "src/decapod/core/todo.rs",
+    "src/decapod/plugins/policy.rs",
+    "tests/single_datastore.rs"
   ],
-  "declared_commands": [
-    "decapod validate"
-  ],
+  "modified_files": [],
+  "declared_commands": [],
   "tool_calls": [],
   "checks": [
     {
-      "name": "decapod validate",
+      "name": "cargo_clippy_all_targets",
+      "status": "passed"
+    },
+    {
+      "name": "cargo_fmt",
+      "status": "passed"
+    },
+    {
+      "name": "cargo_test_all_targets_scoped",
+      "status": "passed"
+    },
+    {
+      "name": "single_datastore",
       "status": "passed"
     }
   ],
-  "evidence": [
-    "validation epoch ve_6f9c8095ab51dfe9 completed with zero failures",
-    "validation epoch ve_c0ba84da3cdcbf87 completed with zero failures"
-  ],
+  "evidence": [],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
   "proof_status": "passed",
@@ -47,24 +47,21 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:717a17ab6b0c9cee60a778320bfa2a789626c7e228eaaf7f49c12da48375f45f",
+  "artifact_hash": "sha256:714e9211474af2a0e1ae6cd57c5947ddef2b6371aa0cbdd413bc5d361e4726f8",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:run_01kyvqgd6wepcpe8": {
-        "id": "intent:run_01kyvqgd6wepcpe8",
-        "raw_intent": "Catch up PR #1109 receipt freshness on Decapod v0.89.2",
-        "refined_intent": "Publish a focused receipt-freshness fix based on current master, with integrity, trajectory binding, regression proof, and passing governance validation",
+      "intent:data_01kywps2y146s54g": {
+        "id": "intent:data_01kywps2y146s54g",
+        "raw_intent": "Reduce backend=local storage to one canonical decapod.db while preserving user data and cross-repo storage contracts.",
+        "refined_intent": "Complete the Decapod #1118 migration/retirement slice in the isolated workspace, with explicit legacy-artifact safety and proof.",
         "acceptance_criteria": [],
         "constraints": [
-          "src/decapod/core/governance_artifacts.rs",
-          "tests",
-          "governed artifacts via Decapod CLI"
+          "migration, canonical SQLite datastore, legacy JSONL compatibility, validation and tests"
         ],
         "assumptions": [],
         "boundaries": [
-          "Do not modify protected master directly",
-          "Do not broaden into unrelated governance or dactyl work"
+          "Decapod codebase only; no Propodus or dactyl implementation changes; no destructive wildcard deletion."
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -77,81 +74,115 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:run_01kyvqgd6wepcpe8",
+        "intent_id": "intent:data_01kywps2y146s54g",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:run_01kyvqgd6wepcpe8",
+        "intent_id": "intent:data_01kywps2y146s54g",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:run_01kyvqgd6wepcpe8",
+        "intent_id": "intent:data_01kywps2y146s54g",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run_01kyvqgd6wepcpe8"
+        "detail": "trajectory:data_01kywps2y146s54g"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:run_01kyvqgd6wepcpe8",
+        "intent_id": "intent:data_01kywps2y146s54g",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run_01kyvqgd6wepcpe8"
+        "detail": "trajectory:data_01kywps2y146s54g"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
+        "intent_id": "intent:data_01kywps2y146s54g",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:data_01kywps2y146s54g"
+      },
+      {
+        "sequence": 7,
+        "event_id": "event:7",
+        "intent_id": "intent:data_01kywps2y146s54g",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:data_01kywps2y146s54g"
       }
     ],
     "trajectories": {
-      "run_01kyvqgd6wepcpe8": {
-        "id": "run_01kyvqgd6wepcpe8",
-        "intent_id": "intent:run_01kyvqgd6wepcpe8",
+      "data_01kywps2y146s54g": {
+        "id": "data_01kywps2y146s54g",
+        "intent_id": "intent:data_01kywps2y146s54g",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "validation",
-            "command": "decapod validate",
+            "action": "trajectory.record",
             "scope": [
-              "governed artifacts via Decapod CLI",
-              "src/decapod/core/governance_artifacts.rs",
-              "tests"
+              "migration, canonical SQLite datastore, legacy JSONL compatibility, validation and tests"
             ],
             "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_6f9c8095ab51dfe9 completed with zero failures"
+              "src/decapod/core/migration.rs"
             ],
             "proof_refs": [
-              "decapod validate"
+              "cargo_fmt"
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
           },
           {
             "sequence": 5,
-            "action": "validation",
-            "command": "decapod validate",
+            "action": "trajectory.record",
             "scope": [
-              "governed artifacts via Decapod CLI",
-              "src/decapod/core/governance_artifacts.rs",
-              "tests"
+              "migration, canonical SQLite datastore, legacy JSONL compatibility, validation and tests"
             ],
             "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_c0ba84da3cdcbf87 completed with zero failures"
+              "src/decapod/core/todo.rs"
             ],
             "proof_refs": [
-              "decapod validate"
+              "cargo_test_all_targets_scoped"
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "trajectory.record",
+            "scope": [
+              "migration, canonical SQLite datastore, legacy JSONL compatibility, validation and tests"
+            ],
+            "observations": [
+              "src/decapod/plugins/policy.rs"
+            ],
+            "proof_refs": [
+              "cargo_clippy_all_targets"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:6"
+          },
+          {
+            "sequence": 7,
+            "action": "trajectory.record",
+            "scope": [
+              "migration, canonical SQLite datastore, legacy JSONL compatibility, validation and tests"
+            ],
+            "observations": [
+              "tests/single_datastore.rs"
+            ],
+            "proof_refs": [
+              "single_datastore"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:7"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 5
+    "next_sequence": 7
   }
 }
