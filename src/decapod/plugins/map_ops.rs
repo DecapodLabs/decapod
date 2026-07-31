@@ -8,13 +8,13 @@
 //! Actual LLM/subagent dispatch is pluggable.
 
 use crate::core::error;
+use crate::core::events;
 use crate::core::schemas;
 use crate::core::store::Store;
 use clap::Subcommand;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::fs::{self, OpenOptions};
-use std::io::Write;
+use std::fs;
 use std::path::{Path, PathBuf};
 
 // ---------------------------------------------------------------------------
@@ -65,14 +65,8 @@ fn sha256_hex(data: &[u8]) -> String {
     format!("{:x}", hasher.finalize())
 }
 
-fn append_jsonl(path: &Path, value: &serde_json::Value) -> Result<(), error::DecapodError> {
-    let mut f = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(path)
-        .map_err(error::DecapodError::IoError)?;
-    writeln!(f, "{}", serde_json::to_string(value).unwrap())
-        .map_err(error::DecapodError::IoError)?;
+fn append_event(root: &Path, value: &serde_json::Value) -> Result<(), error::DecapodError> {
+    events::append(root, events::MAP, value)?;
     Ok(())
 }
 
@@ -152,7 +146,7 @@ pub fn map_llm(
         "result_hash": result_hash,
     });
 
-    append_jsonl(&map_events_path(&store.root), &event)?;
+    append_event(&store.root, &event)?;
 
     Ok(serde_json::json!({
         "event_id": event_id,
@@ -219,7 +213,7 @@ pub fn map_agentic(
         "result_hash": result_hash,
     });
 
-    append_jsonl(&map_events_path(&store.root), &event)?;
+    append_event(&store.root, &event)?;
 
     Ok(serde_json::json!({
         "event_id": event_id,
@@ -232,8 +226,27 @@ pub fn map_agentic(
     }))
 }
 
-/// Read all map events from the JSONL audit trail.
+/// Read all map events from the canonical event table, with legacy fallback.
 pub fn read_map_events(root: &Path) -> Result<Vec<MapEvent>, error::DecapodError> {
+    let db_path = events::canonical_db_path(root);
+    if db_path.exists() {
+        let conn = crate::core::db::db_connect_for_validate(&db_path.to_string_lossy())?;
+        let mut stmt = conn
+            .prepare("SELECT payload FROM map_events ORDER BY seq ASC")
+            .map_err(error::DecapodError::RusqliteError)?;
+        let rows = stmt
+            .query_map([], |row| row.get::<_, String>(0))
+            .map_err(error::DecapodError::RusqliteError)?;
+        let mut out = Vec::new();
+        for row in rows {
+            let value = row.map_err(error::DecapodError::RusqliteError)?;
+            out.push(
+                serde_json::from_str(&value)
+                    .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
+            );
+        }
+        return Ok(out);
+    }
     let path = map_events_path(root);
     if !path.exists() {
         return Ok(Vec::new());
@@ -338,7 +351,7 @@ pub fn schema() -> serde_json::Value {
         "storage": [schemas::MAP_EVENTS_NAME],
         "invariants": [
             "map agentic requires --retain (scope-reduction invariant)",
-            "All operations are logged to append-only map.events.jsonl",
+            "All operations are logged to the append-only decapod.db:map_events table",
             "Deterministic: same items + same prompt + same schema → same result_hash",
         ],
     })

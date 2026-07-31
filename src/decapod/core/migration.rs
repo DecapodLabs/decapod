@@ -5,6 +5,7 @@
 
 use crate::core::db;
 use crate::core::error;
+use crate::core::events;
 use crate::core::schemas;
 use rusqlite::{Connection, OptionalExtension};
 use serde::{Deserialize, Serialize};
@@ -330,6 +331,23 @@ fn run_migrations(decapod_root: &Path) -> Result<(), error::DecapodError> {
         applied_ids.insert(migration.id.to_string());
         store_applied_migrations(decapod_root, &applied)?;
     }
+    reconcile_canonical_event_tables(decapod_root)?;
+    Ok(())
+}
+
+/// Keep the canonical event streams complete even when an older migration
+/// ledger predates the unified event tables. This is intentionally idempotent
+/// and never rewrites or deletes the legacy JSONL archives.
+fn reconcile_canonical_event_tables(decapod_root: &Path) -> Result<(), error::DecapodError> {
+    let data_root = decapod_root.join("data");
+    let db_path = data_root.join(schemas::LOCAL_DB_NAME);
+    if !db_path.exists() {
+        return Ok(());
+    }
+    let conn = db::db_connect(&db_path.to_string_lossy())?;
+    events::ensure_tables(&conn)?;
+    events::import_legacy_jsonl(&data_root, &conn)?;
+    migrate_task_events_to_canonical_stream(&conn)?;
     Ok(())
 }
 
@@ -521,35 +539,24 @@ fn touch_generated_migration_catalog(
 
 // Migration functions:
 
-/// Reconstruct todo.events.jsonl from current todo.db state (for legacy migrations)
+/// Reconstruct the canonical todo event table from current todo.db state.
+/// JSONL is a read-only migration input; this migration never creates it.
 fn migrate_reconstruct_todo_events(decapod_root: &Path) -> Result<(), error::DecapodError> {
     use serde_json::json;
-    use std::io::Write;
 
     let db_path = decapod_root.join("data/todo.db");
-    let events_path = decapod_root.join("data/todo.events.jsonl");
 
     if !db_path.exists() {
         return Ok(()); // Nothing to migrate
     }
 
-    // Check if events file is empty or missing
-    let needs_migration = if events_path.exists() {
-        fs::metadata(&events_path)
-            .map(|m| m.len() == 0)
-            .unwrap_or(true)
-    } else {
-        true
-    };
-
-    if !needs_migration {
-        return Ok(()); // Already has events
-    }
-
-    let conn = db::db_connect(&db_path.to_string_lossy())?;
+    let source = db::db_connect(&db_path.to_string_lossy())?;
+    let target_path = decapod_root.join("data").join(schemas::LOCAL_DB_NAME);
+    let target = db::db_connect(&target_path.to_string_lossy())?;
+    events::ensure_tables(&target)?;
 
     // Read all tasks from database
-    let mut stmt = conn
+    let mut stmt = source
         .prepare("SELECT id, title, status, created_at FROM tasks ORDER BY created_at")
         .map_err(error::DecapodError::RusqliteError)?;
 
@@ -564,10 +571,6 @@ fn migrate_reconstruct_todo_events(decapod_root: &Path) -> Result<(), error::Dec
         })
         .map_err(error::DecapodError::RusqliteError)?;
 
-    // Create events file
-    let mut file = fs::File::create(&events_path).map_err(error::DecapodError::IoError)?;
-
-    // Write task.add event for each task
     for task in tasks {
         let (id, title, status, created_at) = task.map_err(error::DecapodError::RusqliteError)?;
 
@@ -582,7 +585,7 @@ fn migrate_reconstruct_todo_events(decapod_root: &Path) -> Result<(), error::Dec
             "actor": "migration",
         });
 
-        writeln!(file, "{event}").map_err(error::DecapodError::IoError)?;
+        events::append_on_conn(&target, events::TODO, &event)?;
 
         // If task is done, add task.done event
         if status == "done" {
@@ -595,7 +598,7 @@ fn migrate_reconstruct_todo_events(decapod_root: &Path) -> Result<(), error::Dec
                 "actor": "migration",
             });
 
-            writeln!(file, "{complete_event}").map_err(error::DecapodError::IoError)?;
+            events::append_on_conn(&target, events::TODO, &complete_event)?;
         }
     }
 
@@ -724,6 +727,9 @@ fn migrate_consolidate_single_datastore(decapod_root: &Path) -> Result<(), error
     let target_path = data_root.join(schemas::LOCAL_DB_NAME);
     let target = db::db_connect(&target_path.to_string_lossy())?;
     initialize_single_datastore_schema(&target)?;
+    // Import legacy append-only logs before removing legacy SQLite stores.
+    // The source JSONL files remain untouched as an operator-visible archive.
+    events::import_legacy_jsonl(&data_root, &target)?;
 
     let sources = [
         (
@@ -808,6 +814,7 @@ fn migrate_consolidate_single_datastore(decapod_root: &Path) -> Result<(), error
         }
         migrate_legacy_meta(&data_root, source_name, &target)?;
     }
+    migrate_task_events_to_canonical_stream(&target)?;
 
     let legacy = [
         schemas::GOVERNANCE_DB_NAME,
@@ -834,6 +841,43 @@ fn migrate_consolidate_single_datastore(decapod_root: &Path) -> Result<(), error
                 fs::remove_file(sidecar).map_err(error::DecapodError::IoError)?;
             }
         }
+    }
+    Ok(())
+}
+
+fn migrate_task_events_to_canonical_stream(target: &Connection) -> Result<(), error::DecapodError> {
+    if !table_exists(target, "task_events")? || !table_exists(target, "todo_events")? {
+        return Ok(());
+    }
+    let mut stmt = target.prepare(
+        "SELECT event_id, ts, event_type, task_id, payload, actor
+         FROM task_events ORDER BY seq ASC, ts ASC, event_id ASC",
+    )?;
+    let rows = stmt.query_map([], |row| {
+        Ok((
+            row.get::<_, String>(0)?,
+            row.get::<_, String>(1)?,
+            row.get::<_, String>(2)?,
+            row.get::<_, Option<String>>(3)?,
+            row.get::<_, String>(4)?,
+            row.get::<_, String>(5)?,
+        ))
+    })?;
+    let mut events_to_copy = Vec::new();
+    for row in rows {
+        let (event_id, ts, event_type, task_id, payload, actor) = row?;
+        events_to_copy.push(serde_json::json!({
+            "event_id": event_id,
+            "ts": ts,
+            "event_type": event_type,
+            "task_id": task_id,
+            "payload": serde_json::from_str::<Value>(&payload).unwrap_or(Value::String(payload)),
+            "actor": actor,
+        }));
+    }
+    drop(stmt);
+    for event in events_to_copy {
+        events::append_on_conn(target, events::TODO, &event)?;
     }
     Ok(())
 }
@@ -927,6 +971,7 @@ fn initialize_single_datastore_schema(conn: &Connection) -> Result<(), error::De
     ] {
         conn.execute_batch(index)?;
     }
+    events::ensure_tables(conn)?;
     conn.execute_batch(
         "CREATE TABLE IF NOT EXISTS request_dedupe (
             request_id TEXT PRIMARY KEY,
@@ -1435,33 +1480,35 @@ fn migrate_todo_ids_to_typed_format(decapod_root: &Path) -> Result<(), error::De
     conn.execute_batch("PRAGMA foreign_keys=ON;")
         .map_err(error::DecapodError::RusqliteError)?;
 
-    let events_path = data_root.join(schemas::TODO_EVENTS_NAME);
-    if events_path.exists() {
-        let content = fs::read_to_string(&events_path).map_err(error::DecapodError::IoError)?;
-        let mut rewritten = Vec::new();
-        let mut changed = false;
-        for line in content.lines() {
-            if line.trim().is_empty() {
-                continue;
-            }
-            let mut value: Value = match serde_json::from_str(line) {
-                Ok(v) => v,
-                Err(_) => {
-                    rewritten.push(line.to_string());
-                    continue;
+    // Legacy JSONL is an immutable migration input. The consolidated event
+    // table is the rewrite target; never rewrite the archive in place.
+    if table_exists(&conn, "todo_events")? {
+        let mut stmt = conn
+            .prepare("SELECT event_id, payload FROM todo_events")
+            .map_err(error::DecapodError::RusqliteError)?;
+        let rows = stmt
+            .query_map([], |row| {
+                Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+            })
+            .map_err(error::DecapodError::RusqliteError)?;
+        let mut updates = Vec::new();
+        for row in rows {
+            let (event_id, raw) = row.map_err(error::DecapodError::RusqliteError)?;
+            if let Ok(mut value) = serde_json::from_str::<Value>(&raw) {
+                rewrite_json_task_ids(&mut value, &id_map);
+                let next = serde_json::to_string(&value)
+                    .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
+                if next != raw {
+                    updates.push((event_id, next));
                 }
-            };
-            rewrite_json_task_ids(&mut value, &id_map);
-            let next = serde_json::to_string(&value)
-                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
-            if next != line {
-                changed = true;
             }
-            rewritten.push(next);
         }
-        if changed {
-            fs::write(events_path, rewritten.join("\n") + "\n")
-                .map_err(error::DecapodError::IoError)?;
+        drop(stmt);
+        for (event_id, payload) in updates {
+            conn.execute(
+                "UPDATE todo_events SET payload = ?1 WHERE event_id = ?2",
+                rusqlite::params![payload, event_id],
+            )?;
         }
     }
 

@@ -1,4 +1,5 @@
 use crate::core::error::DecapodError;
+use crate::core::events;
 use crate::core::trace::TraceEvent;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
@@ -19,8 +20,30 @@ pub fn resolve_snapshot(
     project_root: &Path,
     agent_id: &str,
 ) -> Result<CoPlayerSnapshot, DecapodError> {
-    let trace_path = project_root.join(".decapod/data/traces.jsonl");
-    if !trace_path.exists() {
+    let data_root = project_root.join(".decapod/data");
+    let db_path = events::canonical_db_path(&data_root);
+    let content = if db_path.exists() {
+        let conn = crate::core::db::db_connect_for_validate(&db_path.to_string_lossy())?;
+        let mut stmt = conn
+            .prepare("SELECT payload FROM traces_events ORDER BY seq ASC")
+            .map_err(DecapodError::RusqliteError)?;
+        let rows = stmt
+            .query_map([], |row| row.get::<_, String>(0))
+            .map_err(DecapodError::RusqliteError)?;
+        let mut lines = Vec::new();
+        for row in rows {
+            lines.push(row.map_err(DecapodError::RusqliteError)?);
+        }
+        lines.join("\n")
+    } else {
+        let trace_path = data_root.join("traces.jsonl");
+        if trace_path.exists() {
+            std::fs::read_to_string(trace_path).map_err(DecapodError::IoError)?
+        } else {
+            String::new()
+        }
+    };
+    if content.is_empty() {
         return Ok(CoPlayerSnapshot {
             agent_id: agent_id.to_string(),
             reliability_score: 0.0,
@@ -33,7 +56,6 @@ pub fn resolve_snapshot(
         });
     }
 
-    let content = std::fs::read_to_string(trace_path).map_err(DecapodError::IoError)?;
     let mut total = 0;
     let mut success = 0;
     let mut fail = 0;

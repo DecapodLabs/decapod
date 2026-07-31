@@ -5,6 +5,7 @@
 //! serialization, auditability, and deterministic replay.
 
 use crate::core::error;
+use crate::core::events;
 use crate::core::pool;
 use crate::core::store::find_decapod_project_root;
 use crate::core::time;
@@ -36,7 +37,7 @@ struct CacheEntry {
 /// Audit event for a brokered database operation.
 ///
 /// Every call to `DbBroker::with_conn` generates a `BrokerEvent` that is
-/// appended to `broker.events.jsonl` for full mutation audit trail.
+/// appended to the canonical `broker_events` table for full mutation audit trail.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BrokerEvent {
     /// Envelope schema version for machine consumers.
@@ -101,12 +102,11 @@ impl DbBroker {
         sql: &str,
         params: &[(&str, i64)],
     ) -> Result<u64, error::DecapodError> {
-        let audit_path = self.audit_log_path.clone();
         let sql = sql.to_string();
         let params: Vec<i64> = params.iter().map(|(_, v)| *v).collect();
         let db_path_owned = db_path.to_path_buf();
 
-        pool::global_pool().with_write(db_path, |conn| {
+        let rowid = pool::global_pool().with_write(db_path, |conn| {
             let mut stmt = conn.prepare(&sql)?;
             let param_vec: Vec<Box<dyn rusqlite::ToSql>> = params
                 .iter()
@@ -118,10 +118,10 @@ impl DbBroker {
 
             let rowid = conn.last_insert_rowid();
 
-            log_write_event(&audit_path, "queued_write", &db_path_owned)?;
-
             Ok(rowid as u64)
-        })
+        })?;
+        log_write_event(&self.root, "queued_write", &db_path_owned)?;
+        Ok(rowid)
     }
 
     /// Execute a closure with a serialized connection to the specified DB.
@@ -195,8 +195,6 @@ impl DbBroker {
         db_id: &str,
         status: &str,
     ) -> Result<(), error::DecapodError> {
-        use std::fs::OpenOptions;
-        use std::io::Write;
         let ts = time::now_epoch_z();
         let request_id = time::new_event_id();
         let event_id = time::new_event_id();
@@ -229,16 +227,12 @@ impl DbBroker {
             .lock()
             .map_err(|_| error::DecapodError::ValidationError("Audit lock poisoned".into()))?;
 
-        let mut f = OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(&self.audit_log_path)
-            .map_err(error::DecapodError::IoError)?;
-
-        let mut line = serde_json::to_string(&ev).unwrap();
-        line.push('\n');
-        f.write_all(line.as_bytes())
-            .map_err(error::DecapodError::IoError)?;
+        events::append(
+            &self.root,
+            events::BROKER,
+            &serde_json::to_value(ev)
+                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
+        )?;
         Ok(())
     }
 
@@ -306,24 +300,57 @@ impl DbBroker {
     /// between the two-phase commit boundaries.
     pub fn verify_replay(&self) -> Result<ReplayReport, error::DecapodError> {
         use std::io::BufRead;
-        if !self.audit_log_path.exists() {
-            return Ok(ReplayReport {
-                ts: time::now_epoch_z(),
-                divergences: vec![],
-                total_events: 0,
-            });
-        }
-
-        let f = std::fs::File::open(&self.audit_log_path).map_err(error::DecapodError::IoError)?;
-        let reader = std::io::BufReader::new(f);
         let mut pending_map = HashMap::new();
         let mut total_events = 0usize;
 
-        for line in reader.lines() {
-            let line = line.map_err(error::DecapodError::IoError)?;
-            let ev: BrokerEvent = serde_json::from_str(&line).map_err(|e| {
-                error::DecapodError::ValidationError(format!("Invalid audit log entry: {e}"))
-            })?;
+        let canonical = events::canonical_db_path(&self.root);
+        let canonical_events = if canonical.exists() {
+            let conn = crate::core::db::db_connect_for_validate(&canonical.to_string_lossy())?;
+            let has_table: bool = conn
+                .query_row(
+                    "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name='broker_events')",
+                    [],
+                    |row| row.get(0),
+                )
+                .unwrap_or(false);
+            if has_table {
+                let mut stmt =
+                    conn.prepare("SELECT payload FROM broker_events ORDER BY seq ASC")?;
+                let rows = stmt.query_map([], |row| row.get::<_, String>(0))?;
+                let mut parsed = Vec::new();
+                for row in rows {
+                    let payload = row?;
+                    parsed.push(serde_json::from_str::<BrokerEvent>(&payload).map_err(|e| {
+                        error::DecapodError::ValidationError(format!("Invalid broker event: {e}"))
+                    })?);
+                }
+                Some(parsed)
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+
+        let events = if let Some(events) = canonical_events {
+            events
+        } else if self.audit_log_path.exists() {
+            let f =
+                std::fs::File::open(&self.audit_log_path).map_err(error::DecapodError::IoError)?;
+            let reader = std::io::BufReader::new(f);
+            let mut parsed = Vec::new();
+            for line in reader.lines() {
+                let line = line.map_err(error::DecapodError::IoError)?;
+                parsed.push(serde_json::from_str::<BrokerEvent>(&line).map_err(|e| {
+                    error::DecapodError::ValidationError(format!("Invalid audit log entry: {e}"))
+                })?);
+            }
+            parsed
+        } else {
+            Vec::new()
+        };
+
+        for ev in events {
             total_events += 1;
 
             match ev.status.as_str() {
@@ -373,24 +400,14 @@ pub struct ReplayReport {
     pub total_events: usize,
 }
 
-fn log_write_event(audit_path: &Path, op: &str, db_path: &Path) -> Result<(), error::DecapodError> {
-    use std::fs::OpenOptions;
-    use std::io::Write;
-
+fn log_write_event(root: &Path, op: &str, db_path: &Path) -> Result<(), error::DecapodError> {
     let event = serde_json::json!({
         "op": op,
         "db": db_path.file_name().map(|s| s.to_string_lossy().to_string()),
         "ts": time::now_epoch_z(),
     });
 
-    if let Ok(mut file) = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(audit_path)
-    {
-        let _ = writeln!(file, "{event}");
-    }
-
+    let _ = events::append(root, events::BROKER, &event)?;
     Ok(())
 }
 
@@ -441,7 +458,7 @@ pub fn schema() -> serde_json::Value {
                 "status"
             ]
         },
-        "storage": ["broker.events.jsonl"]
+            "storage": ["decapod.db:broker_events"]
     })
 }
 

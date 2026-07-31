@@ -49,7 +49,17 @@ flowchart LR
 | Architecture + interface drift check | `decapod validate` | Gate output |
 | Tests pass | project test command | CI + local logs |
 | Docs + changelog current | repo docs checks | PR diff |
-| Security critical checks pass | security scanner suite | scanner reports |
+| Security critical checks pass | security scanner suite | scanner reports |## Warning Gates
+| Gate | Trigger | Follow-up SLA |
+|---|---|---|
+| Coverage regression warning | Coverage drops below target | 48h |
+| Non-blocking perf drift | P95 regression below hard threshold | 72h |## Evidence Artifacts
+| Artifact | Path | Required For |
+|---|---|---|
+| Validation report | `.decapod/managed/artifacts/provenance/*` | Current-run diagnostics; not a tracked promotion record |
+| Test logs | CI artifact store | Promotion |
+| Architecture diagram snapshot | `ARCHITECTURE.md` | Promotion |
+| Changelog entry | `CHANGELOG.md` | Promotion |
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -91,20 +101,6 @@ flowchart LR
 - Data integrity validation after recovery
 <!-- decapod:capability-overlay:persistent-state:end -->
 
-## Warning Gates
-| Gate | Trigger | Follow-up SLA |
-|---|---|---|
-| Coverage regression warning | Coverage drops below target | 48h |
-| Non-blocking perf drift | P95 regression below hard threshold | 72h |
-
-## Evidence Artifacts
-| Artifact | Path | Required For |
-|---|---|---|
-| Validation report | `.decapod/managed/artifacts/provenance/*` | Current-run diagnostics; not a tracked promotion record |
-| Test logs | CI artifact store | Promotion |
-| Architecture diagram snapshot | `ARCHITECTURE.md` | Promotion |
-| Changelog entry | `CHANGELOG.md` | Promotion |
-
 ## Regression Guardrails
 - Baseline references:
 - Statistical thresholds (if non-deterministic):
@@ -126,7 +122,7 @@ flowchart LR
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9a147a126463b97ac36b65d4cd8368a0a19a097da8feb92e0570d3a90b2d2007`
-- Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (99 files), `tests/` (4 files)
+- Repository signal fingerprint: `8bd5bdb5eb8da3aaced6c1772378bc7364bfeb2fa926f35dbb33d9d4f6c47c03`
+- Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (100 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

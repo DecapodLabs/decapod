@@ -1,5 +1,5 @@
-use crate::core::broker::DbBroker;
 use crate::core::error;
+use crate::core::events;
 use crate::core::external_action::{self, ExternalCapability};
 use crate::core::store::Store;
 use crate::health;
@@ -184,29 +184,12 @@ fn default_watchlist() -> Watchlist {
 }
 
 fn log_watcher_event(store: &Store, report: &WatcherReport) -> Result<(), error::DecapodError> {
-    use std::fs::OpenOptions;
-    use std::io::Write;
-    let path = watcher_events_path(&store.root);
-    let mut f = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(&path)
-        .map_err(error::DecapodError::IoError)?;
-
     let event = serde_json::json!({
         "ts": report.ts,
-        "type": "watcher.run",
+        "event_type": "watcher.run",
         "report": report
     });
-
-    writeln!(f, "{}", serde_json::to_string(&event).unwrap())
-        .map_err(error::DecapodError::IoError)?;
-
-    // Also audit via broker
-    let _broker = DbBroker::new(&store.root);
-    // Broker doesn't currently support arbitrary log but we can use with_conn on a dummy or just log directly
-    // For Epoch 4, we rely on the watcher.events.jsonl as the primary audit trail for this subsystem.
-
+    events::append(&store.root, events::WATCHER, &event)?;
     Ok(())
 }
 
@@ -222,6 +205,6 @@ pub fn schema() -> serde_json::Value {
         "commands": [
             { "name": "run", "description": "Execute read-only watchlist checks" }
         ],
-        "storage": ["WATCHLIST.json", "watcher.events.jsonl"]
+        "storage": ["WATCHLIST.json", "decapod.db:watcher_events"]
     })
 }

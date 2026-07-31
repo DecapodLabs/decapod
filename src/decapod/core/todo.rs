@@ -21,7 +21,7 @@ use serde_json::Value as JsonValue;
 use std::collections::HashSet;
 use std::env;
 use std::fs::{self, OpenOptions};
-use std::io::{BufRead, BufReader, IsTerminal, Write};
+use std::io::{BufRead, BufReader, IsTerminal};
 use std::path::{Path, PathBuf};
 
 const AGENT_EVICT_TIMEOUT_SECS: u64 = 30 * 60;
@@ -539,6 +539,7 @@ fn connect_todo(root: &Path) -> Result<Connection, error::DecapodError> {
 
 fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     conn.execute(schemas::TODO_DB_SCHEMA_META, [])?;
+    crate::core::events::ensure_tables(conn)?;
 
     let current: Option<String> = conn
         .query_row(
@@ -1381,7 +1382,7 @@ fn record_heartbeat(root: &Path, agent_id: &str) -> Result<serde_json::Value, er
             payload: serde_json::json!({ "agent_id": agent_id }),
             actor: agent_id.to_string(),
         };
-        append_event(root, &ev)?;
+        append_event(conn, &ev)?;
         insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
         Ok(())
     })?;
@@ -1469,7 +1470,7 @@ pub fn cleanup_stale_agent_assignments(
                         }),
                         actor: "decapod".to_string(),
                     };
-                    append_event(root, &ev)?;
+                    append_event(conn, &ev)?;
                     insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
                 }
             }
@@ -1504,7 +1505,7 @@ pub fn cleanup_stale_agent_assignments(
                 }),
                 actor: "decapod".to_string(),
             };
-            append_event(root, &ev)?;
+            append_event(conn, &ev)?;
             insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
         }
 
@@ -2071,17 +2072,13 @@ fn validate_priority(s: &str) -> Result<String, String> {
     }
 }
 
-fn append_event(root: &Path, ev: &TodoEvent) -> Result<(), error::DecapodError> {
-    let path = events_path(root);
-    let mut f = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(&path)
-        .map_err(error::DecapodError::IoError)?;
-    let mut line = serde_json::to_string(ev).unwrap();
-    line.push('\n');
-    f.write_all(line.as_bytes())
-        .map_err(error::DecapodError::IoError)?;
+fn append_event(conn: &Connection, ev: &TodoEvent) -> Result<(), error::DecapodError> {
+    crate::core::events::append_on_conn(
+        conn,
+        crate::core::events::TODO,
+        &serde_json::to_value(ev)
+            .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
+    )?;
     Ok(())
 }
 
@@ -2121,7 +2118,7 @@ pub fn record_task_event(
             payload,
             actor: "decapod".to_string(),
         };
-        append_event(root, &ev)?;
+        append_event(conn, &ev)?;
         insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
         Ok(())
     })
@@ -2367,7 +2364,7 @@ struct OwnershipClaimRecord<'a> {
 }
 
 fn write_ownership_claim_event(
-    root: &Path,
+    _root: &Path,
     conn: &Connection,
     claim: &OwnershipClaimRecord<'_>,
 ) -> Result<(), error::DecapodError> {
@@ -2384,7 +2381,7 @@ fn write_ownership_claim_event(
         }),
         actor: claim.actor.to_string(),
     };
-    append_event(root, &ev)?;
+    append_event(conn, &ev)?;
     insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
     Ok(())
 }
@@ -2473,7 +2470,7 @@ fn fetch_task_comments(
 }
 
 fn write_task_comment_event(
-    root: &Path,
+    _root: &Path,
     conn: &Connection,
     task_id: &str,
     actor: &str,
@@ -2499,7 +2496,7 @@ fn write_task_comment_event(
         payload,
         actor: actor.to_string(),
     };
-    append_event(root, &ev)?;
+    append_event(conn, &ev)?;
     insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
     Ok(())
 }
@@ -2533,7 +2530,7 @@ fn set_task_owners(
             }),
             actor: actor.to_string(),
         };
-        append_event(root, &ev)?;
+        append_event(conn, &ev)?;
         insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
     }
 
@@ -2768,7 +2765,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
             payload,
             actor: "decapod".to_string(),
         };
-        append_event(root, &ev)?;
+        append_event(conn, &ev)?;
         insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
 
         for (idx, owner_agent) in owner_list.iter().enumerate() {
@@ -2894,7 +2891,7 @@ pub fn update_status(
             payload: payload.clone(),
             actor: "decapod".to_string(),
         };
-        append_event(root, &ev)?;
+        append_event(conn, &ev)?;
         insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
         Ok(changed)
     })?;
@@ -3100,7 +3097,7 @@ fn edit_task(
             payload: serde_json::Value::Object(payload),
             actor: "decapod".to_string(),
         };
-        append_event(root, &ev)?;
+        append_event(conn, &ev)?;
         insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
 
         if let Some(o) = owner {
@@ -3424,7 +3421,7 @@ pub fn claim_task(
             }),
             actor: agent_id.to_string(),
         };
-        append_event(root, &ev)?;
+        append_event(conn, &ev)?;
         insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
 
         Ok(serde_json::json!({
@@ -3544,7 +3541,7 @@ fn handoff_task(
             }),
             actor: "decapod".to_string(),
         };
-        append_event(root, &ev)?;
+        append_event(conn, &ev)?;
         insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
 
         Ok((serde_json::json!({
@@ -3722,7 +3719,7 @@ fn remove_task_owner(
             }),
             actor: "decapod".to_string(),
         };
-        append_event(root, &ev)?;
+        append_event(conn, &ev)?;
         insert_event(conn, &ev)?;
         sync_legacy_owner_column(conn, task_id)?;
 
@@ -3796,7 +3793,7 @@ fn register_agent_expertise(
             }),
             actor: "decapod".to_string(),
         };
-        append_event(root, &ev)?;
+        append_event(conn, &ev)?;
         insert_event(conn, &ev)?;
 
         Ok(serde_json::json!({
@@ -3945,7 +3942,7 @@ fn release_task(root: &Path, id: &str) -> Result<serde_json::Value, error::Decap
             payload: serde_json::json!({}),
             actor: "decapod".to_string(),
         };
-        append_event(root, &ev)?;
+        append_event(conn, &ev)?;
         insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
 
         Ok(serde_json::json!({
@@ -4175,6 +4172,25 @@ pub fn list_tasks(
 }
 
 pub fn rebuild_from_events(root: &Path) -> Result<serde_json::Value, error::DecapodError> {
+    let db_path = todo_db_path(root);
+    if db_path.exists() {
+        let conn = crate::core::db::db_connect(&db_path.to_string_lossy())?;
+        ensure_schema(&conn)?;
+        let count: i64 =
+            conn.query_row("SELECT COUNT(*) FROM todo_events", [], |row| row.get(0))?;
+        if count > 0 {
+            return Ok(serde_json::json!({
+                "ts": now_iso(),
+                "cmd": "todo.rebuild",
+                "status": "ok",
+                "root": root.to_string_lossy(),
+                "events": count,
+                "source": "todo_events",
+                "note": "canonical event table is already part of the shared datastore"
+            }));
+        }
+    }
+
     let ev_path = events_path(root);
     if !ev_path.is_file() {
         // Empty store is valid; create empty DB with schema.
@@ -4724,9 +4740,9 @@ pub fn schema() -> serde_json::Value {
         "dependency_tables": [
             "task_dependencies(task_id, depends_on_task_id, created_at)"
         ],
-        "storage": ["todo.db", "todo.events.jsonl"],
+        "storage": ["decapod.db:tasks", "decapod.db:todo_events"],
         "work_claim_projection": {
-            "source_of_truth": ["todo.db", "todo.events.jsonl"],
+            "source_of_truth": ["decapod.db:tasks", "decapod.db:todo_events"],
             "claim_id": "todo:<todo_id>",
             "intent_id": "intent:todo:<todo_id>",
             "attempt": "1 until a trajectory binds a retry",

@@ -7,8 +7,8 @@ use rusqlite::{Connection, OptionalExtension, params};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use sha2::{Digest, Sha256};
-use std::fs::{self, OpenOptions};
-use std::io::{BufRead, BufReader, Write};
+use std::fs;
+use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 
 // --- Constants ---
@@ -357,14 +357,10 @@ fn is_critical(node_type: &str, priority: &str) -> bool {
     CRITICAL_NODE_TYPES.contains(&node_type) || priority == "critical"
 }
 
-fn append_event(events_path: &Path, event: &FederationEvent) -> Result<(), error::DecapodError> {
-    let mut f = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(events_path)
-        .map_err(error::DecapodError::IoError)?;
-    writeln!(f, "{}", serde_json::to_string(event).unwrap())
-        .map_err(error::DecapodError::IoError)?;
+fn append_event(_events_path: &Path, _event: &FederationEvent) -> Result<(), error::DecapodError> {
+    // Federation events are persisted in the canonical federation_events
+    // table by the surrounding transaction. The JSONL path is retained only
+    // for replaying legacy archives.
     Ok(())
 }
 
@@ -500,6 +496,7 @@ pub fn initialize_federation_db(root: &Path) -> Result<(), error::DecapodError> 
         conn.execute_batch(schemas::MEMORY_DB_SCHEMA_SOURCES)?;
         conn.execute_batch(schemas::MEMORY_DB_SCHEMA_EDGES)?;
         conn.execute_batch(schemas::MEMORY_DB_SCHEMA_EVENTS)?;
+        crate::core::events::ensure_tables(conn)?;
 
         // Indexes
         conn.execute_batch(schemas::MEMORY_DB_INDEX_NODES_TYPE)?;
@@ -524,12 +521,6 @@ pub fn initialize_federation_db(root: &Path) -> Result<(), error::DecapodError> 
         )?;
         Ok(())
     })?;
-
-    // Create events file if missing
-    let events_path = federation_events_path(root);
-    if !events_path.exists() {
-        fs::write(&events_path, "").map_err(error::DecapodError::IoError)?;
-    }
 
     Ok(())
 }

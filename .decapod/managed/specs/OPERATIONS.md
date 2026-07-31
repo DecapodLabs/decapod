@@ -45,46 +45,7 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 | DAST/pentest | scheduled | external/internal |## Compliance and Audit
 - Regulatory scope:
 - Audit evidence location:
-- Exception process:
-
-<!-- decapod:capability-overlay:background-processing:start -->
-
-## Background Processing Operations Overlay
-
-### Queue Visibility
-- Queue depth, processing rate, and latency MUST be monitored
-- Dead letter queue MUST be visible and alerted
-- Worker health and processing rate metrics required
-
-### Shutdown Behavior
-- Graceful shutdown: stop accepting new work, finish current job
-- Drain behavior and timeout MUST be selected for the deployment
-- Termination and requeue behavior MUST be selected and proven for the deployment
-
-### Worker Health
-- Worker liveness and readiness probes
-- Queue depth alerts for backpressure detection
-- Processing latency percentiles (p50, p95, p99)
-<!-- decapod:capability-overlay:background-processing:end -->
-
-<!-- decapod:capability-overlay:persistent-state:start -->
-
-## Persistent State Operations Overlay
-
-### Backup & Recovery
-- Backup scope, schedule, retention, and restore evidence MUST be selected for the project
-- Recovery point objectives MUST be explicit project decisions, not assumed values
-- Recovery time objectives MUST be explicit project decisions, not assumed values
-- Restore verification cadence MUST be recorded with the operational proof plan
-
-### Migration Operations
-- All schema changes via migration files
-- Migration rollback procedures documented
-- Zero-downtime migration strategy for production
-- Migration health checks and rollback triggers
-<!-- decapod:capability-overlay:persistent-state:end -->
-
-## Pre-Promotion Security Checklist
+- Exception process:## Pre-Promotion Security Checklist
 - [ ] Threat model updated for changed surfaces.
 - [ ] Auth/authz tests pass.
 - [ ] Dependency vulnerability scan reviewed.
@@ -93,7 +54,7 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9a147a126463b97ac36b65d4cd8368a0a19a097da8feb92e0570d3a90b2d2007`
-- Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (99 files), `tests/` (4 files)
+- Repository signal fingerprint: `8bd5bdb5eb8da3aaced6c1772378bc7364bfeb2fa926f35dbb33d9d4f6c47c03`
+- Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (100 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

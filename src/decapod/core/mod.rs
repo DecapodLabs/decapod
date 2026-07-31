@@ -27,6 +27,7 @@ pub mod docs;
 pub mod docs_cli;
 pub mod entrypoint_integrity;
 pub mod error;
+pub mod events;
 pub mod external_action;
 pub mod flight_recorder;
 pub mod gatekeeper;

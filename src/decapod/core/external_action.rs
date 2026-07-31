@@ -1,10 +1,9 @@
 use crate::core::error;
+use crate::core::events;
 use crate::core::store::{Store, StoreKind};
 use crate::plugins::policy;
 use serde::{Deserialize, Serialize};
-use std::fs::OpenOptions;
-use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::{Command, Output};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -158,18 +157,14 @@ fn require_external_approval(
     Ok(())
 }
 
-fn external_events_path(store_root: &Path) -> PathBuf {
-    store_root.join("external_actions.events.jsonl")
-}
-
 fn log_event(store_root: &Path, event: &ExternalActionEvent) -> Result<(), error::DecapodError> {
-    let path = external_events_path(store_root);
-    let mut f = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(path)
-        .map_err(error::DecapodError::IoError)?;
-    writeln!(f, "{}", serde_json::to_string(event).unwrap()).map_err(error::DecapodError::IoError)
+    events::append(
+        store_root,
+        events::EXTERNAL_ACTIONS,
+        &serde_json::to_value(event)
+            .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
+    )?;
+    Ok(())
 }
 
 pub fn execute(
@@ -234,6 +229,6 @@ pub fn schema() -> serde_json::Value {
             "system_inspect"
         ],
         "config": ".decapod/EXTERNAL_ACTIONS.json",
-        "storage": ["external_actions.events.jsonl"]
+        "storage": ["decapod.db:external_actions_events"]
     })
 }

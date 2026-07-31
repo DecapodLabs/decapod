@@ -207,6 +207,6 @@ pub fn schema() -> serde_json::Value {
             { "name": "run", "parameters": ["agent", "title", "priority", "tags", "max_tasks", "lesson", "autoclose"] },
             { "name": "discover", "parameters": ["limit"] }
         ],
-        "storage": ["decapod.db", "todo.events.jsonl", "knowledge.retrieval.events.jsonl"]
+        "storage": ["decapod.db", "decapod.db:todo_events", "decapod.db:knowledge_events"]
     })
 }
