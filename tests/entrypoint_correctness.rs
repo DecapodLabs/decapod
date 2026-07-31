@@ -320,7 +320,7 @@ fn test_expired_session_releases_assigned_tasks() {
         "unknown session acquire should succeed: {out_unknown_acquire}"
     );
 
-    let todo_db = temp_path.join(".decapod").join("data").join("todo.db");
+    let todo_db = temp_path.join(".decapod").join("data").join("decapod.db");
     let conn = rusqlite::Connection::open(todo_db).expect("open todo db");
     let assigned_to: String = conn
         .query_row(

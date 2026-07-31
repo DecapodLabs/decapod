@@ -139,7 +139,7 @@ fn validate_terminates_with_typed_error_under_db_contention() {
     let (_tmp, dir, password) = setup_repo();
     let task_id = format!("test_validation_cleanup_{}", std::process::id());
     let temp_before = validation_temp_dirs();
-    let db_path = dir.join(".decapod").join("data").join("todo.db");
+    let db_path = dir.join(".decapod").join("data").join("decapod.db");
     assert!(db_path.exists(), "todo db should exist before lock test");
 
     let conn = Connection::open(&db_path).expect("open todo db");
@@ -211,7 +211,7 @@ fn validate_terminates_with_typed_error_under_db_contention() {
 #[test]
 fn validate_terminates_with_typed_error_under_immediate_lock_contention() {
     let (_tmp, dir, password) = setup_repo();
-    let db_path = dir.join(".decapod").join("data").join("todo.db");
+    let db_path = dir.join(".decapod").join("data").join("decapod.db");
     assert!(db_path.exists(), "todo db should exist before lock test");
 
     let conn = Connection::open(&db_path).expect("open todo db");
@@ -251,7 +251,7 @@ fn validate_terminates_with_typed_error_under_immediate_lock_contention() {
 #[test]
 fn validate_timeout_does_not_strand_db_for_followup_commands() {
     let (_tmp, dir, password) = setup_repo();
-    let db_path = dir.join(".decapod").join("data").join("todo.db");
+    let db_path = dir.join(".decapod").join("data").join("decapod.db");
     assert!(db_path.exists(), "todo db should exist before lock test");
 
     let conn = Connection::open(&db_path).expect("open todo db");
@@ -600,7 +600,7 @@ fn validate_clears_stale_container_override_when_runtime_is_available() {
 #[test]
 fn validate_parallel_contention_emits_typed_reasoned_diagnostics() {
     let (_tmp, dir, password) = setup_repo();
-    let db_path = dir.join(".decapod").join("data").join("todo.db");
+    let db_path = dir.join(".decapod").join("data").join("decapod.db");
     assert!(db_path.exists(), "todo db should exist before lock test");
 
     let conn = Connection::open(&db_path).expect("open todo db");
@@ -686,7 +686,7 @@ fn validate_parallel_contention_emits_typed_reasoned_diagnostics() {
 #[test]
 fn validate_diagnostics_disabled_does_not_write_artifacts() {
     let (_tmp, dir, password) = setup_repo();
-    let db_path = dir.join(".decapod").join("data").join("todo.db");
+    let db_path = dir.join(".decapod").join("data").join("decapod.db");
     assert!(db_path.exists(), "todo db should exist before lock test");
 
     let conn = Connection::open(&db_path).expect("open todo db");
@@ -747,7 +747,7 @@ fn validate_diagnostics_disabled_does_not_write_artifacts() {
 #[test]
 fn validate_diagnostics_payload_is_sanitized() {
     let (_tmp, dir, password) = setup_repo();
-    let db_path = dir.join(".decapod").join("data").join("todo.db");
+    let db_path = dir.join(".decapod").join("data").join("decapod.db");
     assert!(db_path.exists(), "todo db should exist before lock test");
 
     let conn = Connection::open(&db_path).expect("open todo db");

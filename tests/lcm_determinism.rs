@@ -92,7 +92,7 @@ fn test_lcm_index_rebuildable_from_ledger() {
     assert_eq!(original_list.len(), 3);
 
     // Delete the DB and rebuild from ledger
-    let db_path = store.root.join("lcm.db");
+    let db_path = store.root.join("decapod.db");
     fs::remove_file(&db_path).unwrap();
 
     // Reinitialize DB (creates empty tables)

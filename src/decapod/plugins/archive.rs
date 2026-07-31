@@ -18,7 +18,7 @@ pub struct ArchiveEntry {
 }
 
 pub fn archive_db_path(root: &Path) -> PathBuf {
-    root.join(schemas::GOVERNANCE_DB_NAME)
+    root.join(schemas::LOCAL_DB_NAME)
 }
 
 pub fn initialize_archive_db(root: &Path) -> Result<(), error::DecapodError> {
@@ -131,6 +131,6 @@ pub fn schema() -> serde_json::Value {
             { "name": "list", "description": "List all registered archives" },
             { "name": "verify", "description": "Run integrity scan on all archives" }
         ],
-        "storage": ["archive.db"]
+        "storage": ["decapod.db"]
     })
 }

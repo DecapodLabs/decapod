@@ -271,7 +271,7 @@ fn broker_dedupe_returns_exactly_once_per_request_id() {
         String::from_utf8_lossy(&second.stderr)
     );
 
-    let db_path = dir.join(".decapod").join("data").join("todo.db");
+    let db_path = dir.join(".decapod").join("data").join("decapod.db");
     let conn = rusqlite::Connection::open(db_path).expect("open todo db");
     let count_res: Result<i64, rusqlite::Error> = conn.query_row(
         "SELECT COUNT(*) FROM tasks WHERE title = 'dedupe-task'",
@@ -453,7 +453,7 @@ fn broker_crash_injection_phases_retry_to_exactly_once() {
         );
     }
 
-    let dedupe = dir.join(".decapod").join("data").join("broker_dedupe.db");
+    let dedupe = dir.join(".decapod").join("data").join("decapod.db");
     let conn = rusqlite::Connection::open(dedupe).expect("open dedupe db");
     for phase in ["queued", "pre_exec", "post_exec_pre_ack"] {
         let req_id = format!("CRASH_PHASE_{phase}");

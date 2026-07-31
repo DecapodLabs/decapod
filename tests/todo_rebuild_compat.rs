@@ -36,7 +36,7 @@ fn todo_rebuild_accepts_task_proof_claimed_events() {
 
     std::fs::write(&events_path, format!("{add_event}\n{proof_claimed}\n")).expect("write events");
 
-    let out_db = root.join("todo.db");
+    let out_db = root.join("decapod.db");
     let count =
         todo::rebuild_db_from_events(&events_path, &out_db).expect("rebuild should succeed");
     assert_eq!(count, 2, "expected both events to replay");

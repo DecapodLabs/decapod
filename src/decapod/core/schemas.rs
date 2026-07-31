@@ -1,10 +1,12 @@
-//! Centralized database schema definitions for all Decapod consolidated bins.
+//! Centralized database schema definitions for Decapod's local datastore.
 //!
-//! Decapod uses 4 consolidated SQLite databases ("bins") to manage state:
-//! 1. governance.db: Rules, policies, health, feedback, and archives.
-//! 2. memory.db: Governed knowledge graph, decisions, and aptitude preferences.
-//! 3. automation.db: Scheduled tasks (cron) and event triggers (reflex).
-//! 4. todo.db: Transactional task tracking with event-sourcing.
+//! A local Decapod project has one SQLite database. Subsystems remain isolated
+//! by table ownership (and by the namespace used in the shared metadata table)
+//! so the same logical model can be used by a cloud adapter later.
+
+/// Canonical local datastore filename. The older names below are retained only
+/// as migration source names; runtime paths must use this file.
+pub const LOCAL_DB_NAME: &str = "decapod.db";
 
 // --- 1. Governance Bin ---
 pub const GOVERNANCE_DB_NAME: &str = "governance.db";
@@ -103,11 +105,17 @@ pub const GOVERNANCE_DB_SCHEMA_OBLIGATION_EDGES: &str = "
 pub const MEMORY_DB_NAME: &str = "memory.db";
 pub const MEMORY_EVENTS_NAME: &str = "memory.events.jsonl";
 pub const MEMORY_SCHEMA_VERSION: u32 = 1;
+pub const MEMORY_META_NAMESPACE: &str = "memory";
+pub const FEDERATION_META_NAMESPACE: &str = "federation";
+pub const TODO_META_NAMESPACE: &str = "todo";
+pub const LCM_META_NAMESPACE: &str = "lcm";
 
 pub const MEMORY_DB_SCHEMA_META: &str = "
     CREATE TABLE IF NOT EXISTS meta (
-        key TEXT PRIMARY KEY,
-        value TEXT NOT NULL
+        namespace TEXT NOT NULL,
+        key TEXT NOT NULL,
+        value TEXT NOT NULL,
+        PRIMARY KEY(namespace, key)
     )
 ";
 
@@ -333,8 +341,10 @@ pub const TODO_SCHEMA_VERSION: u32 = 15;
 
 pub const TODO_DB_SCHEMA_META: &str = "
     CREATE TABLE IF NOT EXISTS meta (
-        key TEXT PRIMARY KEY,
-        value TEXT NOT NULL
+        namespace TEXT NOT NULL,
+        key TEXT NOT NULL,
+        value TEXT NOT NULL,
+        PRIMARY KEY(namespace, key)
     )
 ";
 
@@ -636,8 +646,10 @@ pub const LCM_DB_SCHEMA_SUMMARIES: &str = "
 
 pub const LCM_DB_SCHEMA_META: &str = "
     CREATE TABLE IF NOT EXISTS meta (
-        key TEXT PRIMARY KEY,
-        value TEXT NOT NULL
+        namespace TEXT NOT NULL,
+        key TEXT NOT NULL,
+        value TEXT NOT NULL,
+        PRIMARY KEY(namespace, key)
     )
 ";
 

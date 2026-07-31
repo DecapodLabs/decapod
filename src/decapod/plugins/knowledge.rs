@@ -107,7 +107,7 @@ pub fn parse_conflict_policy(value: &str) -> Result<KnowledgeConflictPolicy, err
 }
 
 pub fn knowledge_db_path(root: &Path) -> PathBuf {
-    root.join("knowledge.db")
+    root.join(crate::core::schemas::LOCAL_DB_NAME)
 }
 
 pub fn add_knowledge(
@@ -708,7 +708,7 @@ pub fn schema() -> serde_json::Value {
             }
         ],
         "storage": [
-            "knowledge.db",
+            "decapod.db",
             "knowledge.retrieval.events.jsonl",
             "knowledge.decay.events.jsonl",
             "knowledge.promotions.jsonl"

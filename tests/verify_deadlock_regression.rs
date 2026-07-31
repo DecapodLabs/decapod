@@ -187,7 +187,7 @@ fn test_verify_deadlock_prevention() {
     std::fs::write(plan_dir_main.join("plan.json"), &plan_str).unwrap();
 
     // Manually force both tasks to have failed verification status in the SQLite DB
-    let db_path = main_repo.join(".decapod/data/todo.db");
+    let db_path = main_repo.join(".decapod/data/decapod.db");
     let conn = Connection::open(&db_path).unwrap();
     conn.execute(
         "INSERT INTO task_verification(todo_id, proof_plan, verification_artifacts, last_verified_at, last_verified_status, last_verified_notes, verification_policy_days, updated_at)

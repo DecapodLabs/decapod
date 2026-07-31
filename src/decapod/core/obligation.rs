@@ -89,7 +89,7 @@ pub struct ObligationEdge {
 }
 
 pub fn obligation_db_path(root: &Path) -> PathBuf {
-    root.join(schemas::GOVERNANCE_DB_NAME)
+    root.join(schemas::LOCAL_DB_NAME)
 }
 
 pub fn initialize_obligation_db(root: &Path) -> Result<(), error::DecapodError> {
@@ -516,7 +516,7 @@ pub fn get_dependencies(
 
 fn check_proof_satisfied(store: &Store, proof_label: &str) -> Result<bool, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
-    let health_db = store.root.join(schemas::GOVERNANCE_DB_NAME);
+    let health_db = store.root.join(schemas::LOCAL_DB_NAME);
 
     broker.with_conn(
         &health_db,

@@ -437,7 +437,7 @@ fn detect_fs_type(path: &Path) -> Option<String> {
 }
 
 pub fn knowledge_db_path(root: &Path) -> PathBuf {
-    root.join(schemas::KNOWLEDGE_DB_NAME)
+    root.join(schemas::LOCAL_DB_NAME)
 }
 
 pub fn initialize_knowledge_db(root: &Path) -> Result<(), error::DecapodError> {
@@ -489,7 +489,7 @@ fn ensure_knowledge_columns(conn: &rusqlite::Connection) -> Result<(), rusqlite:
 }
 
 pub fn decide_db_path(root: &Path) -> PathBuf {
-    root.join(schemas::MEMORY_DB_NAME)
+    root.join(schemas::LOCAL_DB_NAME)
 }
 
 pub fn initialize_decide_db(root: &Path) -> Result<(), error::DecapodError> {

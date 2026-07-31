@@ -109,7 +109,7 @@ fn verify_mvp_pass_fail_unknown_flow() {
         "todo done --validated failed: {}",
         String::from_utf8_lossy(&done_validated.stderr)
     );
-    let db = Connection::open(repo.join(".decapod/data/todo.db")).unwrap();
+    let db = Connection::open(repo.join(".decapod/data/decapod.db")).unwrap();
     let artifacts_json: String = db
         .query_row(
             "SELECT verification_artifacts FROM task_verification WHERE todo_id = ?1",
@@ -196,7 +196,7 @@ fn verify_mvp_pass_fail_unknown_flow() {
         String::from_utf8_lossy(&done_plain.stderr)
     );
 
-    let db = Connection::open(repo.join(".decapod/data/todo.db")).unwrap();
+    let db = Connection::open(repo.join(".decapod/data/decapod.db")).unwrap();
     let (status, notes, artifacts_json): (String, String, String) = db
         .query_row(
             "SELECT last_verified_status, last_verified_notes, verification_artifacts

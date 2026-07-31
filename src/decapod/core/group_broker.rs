@@ -448,7 +448,7 @@ fn broker_socket_path(broker_root: &Path) -> PathBuf {
 }
 
 fn dedupe_db_path(broker_root: &Path) -> PathBuf {
-    broker_root.join("broker_dedupe.db")
+    broker_root.join(crate::core::schemas::LOCAL_DB_NAME)
 }
 
 fn dedupe_lookup(

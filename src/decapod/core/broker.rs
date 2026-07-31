@@ -70,7 +70,7 @@ pub struct BrokerEvent {
     pub intent_ref: Option<String>,
     /// Operation name (e.g., "todo.add", "health.record")
     pub op: String,
-    /// Database identifier (file name, e.g., "todo.db")
+    /// Logical datastore identifier (the local adapter uses decapod.db).
     pub db_id: String,
     /// Operation status ("success" or "error")
     pub status: String,

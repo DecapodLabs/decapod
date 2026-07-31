@@ -241,12 +241,7 @@ fn check_decapod_dir(project_root: &Path) -> CheckResult {
 }
 
 fn check_databases(data_root: &Path) -> Vec<CheckResult> {
-    let expected_dbs = [
-        ("todo.db", true),
-        ("governance.db", true),
-        ("memory.db", false),
-        ("automation.db", false),
-    ];
+    let expected_dbs = [("decapod.db", true)];
 
     expected_dbs
         .iter()
