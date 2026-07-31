@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.89.2](https://github.com/DecapodLabs/decapod/compare/v0.89.1...v0.89.2) - 2026-07-31
+
+### Added
+
+- consolidate local event streams into decapod.db
+- consolidate local state into one SQLite datastore
+
+### Fixed
+
+- migrate legacy event tables by shared columns
+
+### Other
+
+- refresh governed artifacts for datastore PR
+
 ## [0.89.1](https://github.com/DecapodLabs/decapod/compare/v0.89.0...v0.89.1) - 2026-07-31
 
 ### Added
