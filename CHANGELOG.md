@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.89.1](https://github.com/DecapodLabs/decapod/compare/v0.89.0...v0.89.1) - 2026-07-31
+
+### Added
+
+- make Propodus init the canonical cloud setup
+
+### Other
+
+- finalize Propodus governance evidence
+- record Propodus lifecycle claim
+- record Propodus lifecycle validation
+
 ## [0.89.0](https://github.com/DecapodLabs/decapod/compare/v0.88.0...v0.89.0) - 2026-07-31
 
 ### Fixed
