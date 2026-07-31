@@ -1,8 +1,8 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "validation_01KYTT3CGS8D1T9REKNN53DQM5",
-  "intent_id": "intent:validation_01KYTT3CGS8D1T9REKNN53DQM5",
-  "task_id": "feat_01kytndnnbwj4nf8",
+  "run_id": "validation_01KYVFBHBWDWBSDX7764JQJZ8K",
+  "intent_id": "intent:validation_01KYVFBHBWDWBSDX7764JQJZ8K",
+  "task_id": "feat_01kyvefdhhy948ts",
   "original_intent": "Produce proof artifacts for a repository validation completion.",
   "derived_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
   "destination": "validation completion",
@@ -17,95 +17,39 @@
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json"
   ],
-  "inspected_files": [
-    "docs/book/src/quickstart.md",
-    "docs/book/src/reference/propodus.md",
-    "src/decapod/core/auth.rs",
-    "src/decapod/core/propodus.rs",
-    "src/decapod/lib.rs",
-    "tests/cloud_backend_storage.rs"
-  ],
+  "inspected_files": [],
   "modified_files": [
     ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json",
-    "src/decapod/core/entrypoint_integrity.rs",
-    "src/decapod/core/propodus.rs",
-    "src/decapod/lib.rs",
-    "tests/propodus_contract.rs"
+    ".decapod/governance/validation.json"
   ],
   "declared_commands": [
-    "cargo check --all-targets",
-    "cargo clippy --all-targets --all-features -- -D warnings",
-    "cargo fmt --all -- --check",
-    "cargo test --all-targets -- --test-threads=1",
-    "cargo test --test entrypoint_correctness -- --test-threads=1",
-    "cargo test --test propodus_contract -- --test-threads=1",
     "decapod validate"
   ],
   "tool_calls": [],
   "checks": [
     {
-      "name": "cargo_check_all_targets",
-      "status": "passed"
-    },
-    {
-      "name": "cargo_clippy_all_targets",
-      "status": "passed"
-    },
-    {
-      "name": "cargo_fmt",
-      "status": "passed"
-    },
-    {
-      "name": "cargo_test_all_targets_serial",
-      "status": "partial"
-    },
-    {
       "name": "decapod validate",
-      "status": "passed"
-    },
-    {
-      "name": "docs-refresh",
-      "status": "passed"
-    },
-    {
-      "name": "entrypoint_correctness_serial",
-      "status": "passed"
-    },
-    {
-      "name": "focused-cloud-tests",
-      "status": "passed"
-    },
-    {
-      "name": "propodus-unit-tests",
-      "status": "passed"
-    },
-    {
-      "name": "propodus_contract",
       "status": "passed"
     }
   ],
   "evidence": [
-    "decapod validate in isolated container: 204 passed, 0 failed, 4 warnings",
-    "full serial suite reached release_artifact_policy::release_source_tree_contains_no_test_code failure from pre-existing inline test modules in cli.rs, cloud_backend.rs, and repo_identity.rs",
-    "isolated entrypoint correctness suite: 23 passed, 4 ignored",
-    "validation epoch ve_efb719b7441b04ee completed with zero failures"
+    "validation epoch ve_4db77331ab7799b8 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
-  "proof_status": "partial",
+  "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "caution"
+    "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:f0923d0791c66e26e152f552dab07f90d2cfd101815555b93a0ab8bf22960b8c",
+  "artifact_hash": "sha256:47f08d5750366b854100a7a7aedb61e2e953cbb965854cffb8ccd226dc624514",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:validation_01KYTT3CGS8D1T9REKNN53DQM5": {
-        "id": "intent:validation_01KYTT3CGS8D1T9REKNN53DQM5",
+      "intent:validation_01KYVFBHBWDWBSDX7764JQJZ8K": {
+        "id": "intent:validation_01KYVFBHBWDWBSDX7764JQJZ8K",
         "raw_intent": "Produce proof artifacts for a repository validation completion.",
         "refined_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
         "acceptance_criteria": [],
@@ -128,48 +72,27 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:validation_01KYTT3CGS8D1T9REKNN53DQM5",
+        "intent_id": "intent:validation_01KYVFBHBWDWBSDX7764JQJZ8K",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:validation_01KYTT3CGS8D1T9REKNN53DQM5",
+        "intent_id": "intent:validation_01KYVFBHBWDWBSDX7764JQJZ8K",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:validation_01KYTT3CGS8D1T9REKNN53DQM5",
+        "intent_id": "intent:validation_01KYVFBHBWDWBSDX7764JQJZ8K",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KYTT3CGS8D1T9REKNN53DQM5"
-      },
-      {
-        "sequence": 5,
-        "event_id": "event:5",
-        "intent_id": "intent:validation_01KYTT3CGS8D1T9REKNN53DQM5",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KYTT3CGS8D1T9REKNN53DQM5"
-      },
-      {
-        "sequence": 6,
-        "event_id": "event:6",
-        "intent_id": "intent:validation_01KYTT3CGS8D1T9REKNN53DQM5",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KYTT3CGS8D1T9REKNN53DQM5"
-      },
-      {
-        "sequence": 7,
-        "event_id": "event:7",
-        "intent_id": "intent:validation_01KYTT3CGS8D1T9REKNN53DQM5",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KYTT3CGS8D1T9REKNN53DQM5"
+        "detail": "trajectory:validation_01KYVFBHBWDWBSDX7764JQJZ8K"
       }
     ],
     "trajectories": {
-      "validation_01KYTT3CGS8D1T9REKNN53DQM5": {
-        "id": "validation_01KYTT3CGS8D1T9REKNN53DQM5",
-        "intent_id": "intent:validation_01KYTT3CGS8D1T9REKNN53DQM5",
+      "validation_01KYVFBHBWDWBSDX7764JQJZ8K": {
+        "id": "validation_01KYVFBHBWDWBSDX7764JQJZ8K",
+        "intent_id": "intent:validation_01KYVFBHBWDWBSDX7764JQJZ8K",
         "evidence_only": true,
         "steps": [
           {
@@ -183,89 +106,19 @@
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_efb719b7441b04ee completed with zero failures"
+              "validation epoch ve_4db77331ab7799b8 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
-          },
-          {
-            "sequence": 5,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_efb719b7441b04ee completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:5"
-          },
-          {
-            "sequence": 6,
-            "action": "validation",
-            "command": "cargo fmt --all -- --check",
-            "scope": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json"
-            ],
-            "observations": [
-              "src/decapod/core/propodus.rs",
-              "src/decapod/lib.rs",
-              "src/decapod/core/entrypoint_integrity.rs",
-              "tests/propodus_contract.rs",
-              "decapod validate in isolated container: 204 passed, 0 failed, 4 warnings",
-              "full serial suite reached release_artifact_policy::release_source_tree_contains_no_test_code failure from pre-existing inline test modules in cli.rs, cloud_backend.rs, and repo_identity.rs",
-              "isolated entrypoint correctness suite: 23 passed, 4 ignored"
-            ],
-            "proof_refs": [
-              "cargo_fmt",
-              "cargo_check_all_targets",
-              "cargo_clippy_all_targets",
-              "propodus_contract",
-              "entrypoint_correctness_serial",
-              "cargo_test_all_targets_serial"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:6"
-          },
-          {
-            "sequence": 7,
-            "action": "trajectory.record",
-            "scope": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json"
-            ],
-            "observations": [
-              "src/decapod/lib.rs",
-              "src/decapod/core/propodus.rs",
-              "src/decapod/core/auth.rs",
-              "docs/book/src/reference/propodus.md",
-              "docs/book/src/quickstart.md",
-              "tests/cloud_backend_storage.rs"
-            ],
-            "proof_refs": [
-              "focused-cloud-tests",
-              "propodus-unit-tests",
-              "docs-refresh"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:7"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 7
+    "next_sequence": 4
   }
 }
