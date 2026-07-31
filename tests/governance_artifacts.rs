@@ -98,7 +98,8 @@ fn inventory_distinguishes_health_claims_and_reports_pr_diff() {
     assert!(claims.present);
     assert!(claims.valid);
     assert!(!claims.in_pr_diff);
-    assert!(inventory.claims_source.contains("health.db"));
+    assert!(inventory.claims_source.contains("decapod.db"));
+    assert!(!inventory.claims_source.contains("health.db"));
     assert!(!inventory.all_in_pr_diff);
 }
 

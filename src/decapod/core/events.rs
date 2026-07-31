@@ -230,6 +230,7 @@ pub fn import_legacy_jsonl(
         (schemas::LCM_EVENTS_NAME, LCM),
         ("knowledge.retrieval.events.jsonl", KNOWLEDGE),
         ("knowledge.decay.events.jsonl", KNOWLEDGE),
+        ("knowledge.promotions.jsonl", KNOWLEDGE),
         ("knowledge.promotions.events.jsonl", KNOWLEDGE),
     ];
     let mut imported = 0;

@@ -1,5 +1,4 @@
 use serde_json::Value;
-use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use tempfile::TempDir;
@@ -53,7 +52,7 @@ fn setup_repo() -> (TempDir, PathBuf, String) {
 }
 
 #[test]
-fn knowledge_promote_writes_append_only_ledger_event() {
+fn knowledge_promote_writes_append_only_database_event() {
     let (_tmp, dir, password) = setup_repo();
 
     let out = run_decapod(
@@ -90,18 +89,16 @@ fn knowledge_promote_writes_append_only_ledger_event() {
     assert_eq!(payload["target_class"], "procedural");
     assert_eq!(payload["approved_by"], "human/reviewer-1");
 
-    let ledger_path = dir
-        .join(".decapod")
-        .join("data")
-        .join("knowledge.promotions.jsonl");
-    assert!(ledger_path.exists(), "ledger should exist");
-
-    let lines = fs::read_to_string(&ledger_path).expect("read ledger");
-    let last = lines
-        .lines()
-        .rfind(|l| !l.trim().is_empty())
-        .expect("ledger last line");
-    let event: Value = serde_json::from_str(last).expect("valid jsonl line");
+    let db_path = dir.join(".decapod").join("data").join("decapod.db");
+    let conn = rusqlite::Connection::open(db_path).expect("open canonical datastore");
+    let raw: String = conn
+        .query_row(
+            "SELECT payload FROM knowledge_events WHERE event_id = ?1",
+            [payload["event_id"].as_str().expect("event id")],
+            |row| row.get(0),
+        )
+        .expect("promotion event in canonical datastore");
+    let event: Value = serde_json::from_str(&raw).expect("valid event payload");
     assert_eq!(event["source_entry_id"], "K_001");
     assert_eq!(event["target_class"], "procedural");
 }

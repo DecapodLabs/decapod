@@ -2,13 +2,13 @@ use crate::core::broker::DbBroker;
 use crate::core::error;
 use crate::core::schemas;
 use crate::core::store::Store;
+use crate::core::todo;
 use clap::{Parser, Subcommand, ValueEnum};
 use rusqlite::{Connection, OptionalExtension, params};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use sha2::{Digest, Sha256};
 use std::fs;
-use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 
 // --- Constants ---
@@ -488,6 +488,7 @@ fn read_node_full(conn: &Connection, id: &str) -> Result<FederationNode, error::
 // --- Initialization ---
 
 pub fn initialize_federation_db(root: &Path) -> Result<(), error::DecapodError> {
+    todo::initialize_todo_db(root)?;
     let db_path = federation_db_path(root);
     let broker = DbBroker::new(root);
     broker.with_conn(&db_path, "decapod", None, "federation.init", |conn| {
@@ -1459,78 +1460,74 @@ fn export_graph_file(store: &Store) -> Result<(usize, usize), error::DecapodErro
 // --- Rebuild ---
 
 pub fn rebuild_from_events(root: &Path) -> Result<usize, error::DecapodError> {
-    let events_path = federation_events_path(root);
-    if !events_path.exists() {
-        // No events file — initialize empty DB
-        initialize_federation_db(root)?;
-        return Ok(0);
-    }
-
-    // Create temp DB, replay events, swap
-    let tmp_db = root.join(".federation.db.tmp");
-    if tmp_db.exists() {
-        fs::remove_file(&tmp_db).map_err(error::DecapodError::IoError)?;
-    }
-
-    let conn = crate::core::db::db_connect(&tmp_db.to_string_lossy())?;
-
-    // Initialize schema
-    conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_META)?;
-    conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_NODES)?;
-    conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_SOURCES)?;
-    conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_EDGES)?;
-    conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_EVENTS)?;
-    conn.execute_batch(schemas::FEDERATION_DB_INDEX_NODES_TYPE)?;
-    conn.execute_batch(schemas::FEDERATION_DB_INDEX_NODES_STATUS)?;
-    conn.execute_batch(schemas::FEDERATION_DB_INDEX_NODES_SCOPE)?;
-    conn.execute_batch(schemas::FEDERATION_DB_INDEX_NODES_PRIORITY)?;
-    conn.execute_batch(schemas::FEDERATION_DB_INDEX_NODES_UPDATED)?;
-    conn.execute_batch(schemas::FEDERATION_DB_INDEX_SOURCES_NODE)?;
-    conn.execute_batch(schemas::FEDERATION_DB_INDEX_EDGES_SOURCE)?;
-    conn.execute_batch(schemas::FEDERATION_DB_INDEX_EDGES_TARGET)?;
-    conn.execute_batch(schemas::FEDERATION_DB_INDEX_EDGES_TYPE)?;
-    conn.execute_batch(schemas::FEDERATION_DB_INDEX_EVENTS_NODE)?;
-
-    conn.execute(
-        "INSERT INTO meta(namespace, key, value) VALUES(?1, 'schema_version', ?2)
-         ON CONFLICT(namespace, key) DO UPDATE SET value=excluded.value",
-        params![
-            schemas::FEDERATION_META_NAMESPACE,
-            schemas::FEDERATION_SCHEMA_VERSION.to_string()
-        ],
-    )?;
-
-    let file = fs::File::open(&events_path).map_err(error::DecapodError::IoError)?;
-    let reader = BufReader::new(file);
-    let mut count = 0;
-
-    for line in reader.lines() {
-        let line = line.map_err(error::DecapodError::IoError)?;
-        let line = line.trim();
-        if line.is_empty() {
-            continue;
-        }
-
-        let event: FederationEvent = serde_json::from_str(line).map_err(|e| {
-            error::DecapodError::ValidationError(format!("Invalid event JSON: {e}"))
-        })?;
-
-        // Skip incomplete pending events (crash recovery)
-        if event.status == "pending" {
-            continue;
-        }
-
-        replay_event(&conn, &event)?;
-        count += 1;
-    }
-
-    // Close connection before rename
-    drop(conn);
-
+    initialize_federation_db(root)?;
     let db_path = federation_db_path(root);
-    fs::rename(&tmp_db, &db_path).map_err(error::DecapodError::IoError)?;
+    let broker = DbBroker::new(root);
 
-    Ok(count)
+    broker.with_conn(&db_path, "decapod", None, "federation.rebuild", |conn| {
+        let events = load_federation_events(conn)?;
+
+        // Rebuild only federation tables. The canonical database also owns
+        // todo, policy, and every other subsystem table, so swapping a
+        // federation-only temporary database would destroy unrelated state.
+        conn.execute_batch("BEGIN IMMEDIATE")?;
+        let result = (|| {
+            conn.execute("DELETE FROM edges", [])?;
+            conn.execute("DELETE FROM sources", [])?;
+            conn.execute("DELETE FROM nodes", [])?;
+            conn.execute("DELETE FROM federation_events", [])?;
+
+            let mut count = 0;
+            for event in &events {
+                if event.status == "pending" {
+                    continue;
+                }
+                replay_event(conn, event)?;
+                count += 1;
+            }
+            Ok::<usize, error::DecapodError>(count)
+        })();
+
+        match result {
+            Ok(count) => {
+                conn.execute_batch("COMMIT")?;
+                Ok(count)
+            }
+            Err(err) => {
+                let _ = conn.execute_batch("ROLLBACK");
+                Err(err)
+            }
+        }
+    })
+}
+
+fn load_federation_events(conn: &Connection) -> Result<Vec<FederationEvent>, error::DecapodError> {
+    let mut stmt = conn.prepare(
+        "SELECT event_id, ts, event_type, node_id, payload, actor
+         FROM federation_events ORDER BY rowid",
+    )?;
+    let events = stmt
+        .query_map([], |row| {
+            let payload: String = row.get(4)?;
+            let payload = serde_json::from_str(&payload).map_err(|err| {
+                rusqlite::Error::FromSqlConversionFailure(
+                    4,
+                    rusqlite::types::Type::Text,
+                    Box::new(err),
+                )
+            })?;
+            Ok(FederationEvent {
+                event_id: row.get(0)?,
+                ts: row.get(1)?,
+                event_type: row.get(2)?,
+                status: default_federation_event_status(),
+                node_id: row.get(3)?,
+                payload,
+                actor: row.get(5)?,
+            })
+        })?
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(events)
 }
 
 fn replay_event(conn: &Connection, event: &FederationEvent) -> Result<(), error::DecapodError> {
@@ -1897,8 +1894,8 @@ pub fn validate_federation(
 
     // Gate 5: Rebuild determinism — rebuild to temp DB, compare canonical hashes
     {
-        let events_path = federation_events_path(store_root);
-        if events_path.exists() {
+        let events = load_federation_events(&conn)?;
+        if !events.is_empty() {
             // Hash current DB
             let current_hash = canonical_state_hash(&conn)?;
             let (cur_nodes, cur_sources, cur_edges) = db_counts(&conn)?;
@@ -2001,17 +1998,9 @@ pub fn validate_federation(
                 return Ok(results);
             }
 
-            let file = fs::File::open(&events_path).map_err(error::DecapodError::IoError)?;
-            let reader = BufReader::new(file);
-
-            for line in reader.lines() {
-                let line = line.map_err(error::DecapodError::IoError)?;
-                let line = line.trim();
-                if line.is_empty() {
-                    continue;
-                }
-                if let Ok(event) = serde_json::from_str::<FederationEvent>(line) {
-                    let _ = replay_event(&tmp_conn, &event);
+            for event in &events {
+                if event.status != "pending" {
+                    let _ = replay_event(&tmp_conn, event);
                 }
             }
 
@@ -2046,7 +2035,7 @@ pub fn validate_federation(
             results.push((
                 "federation.rebuild_determinism".to_string(),
                 true,
-                "No events file found (clean state)".to_string(),
+                "No federation events found (clean state)".to_string(),
             ));
         }
     }

@@ -445,6 +445,10 @@ pub fn initialize_knowledge_db(root: &Path) -> Result<(), error::DecapodError> {
     let parent_dir = db_path.parent().unwrap();
     fs::create_dir_all(parent_dir).map_err(error::DecapodError::IoError)?;
 
+    // The canonical datastore also owns the todo policy tables used by the
+    // broker before it opens any subsystem connection.
+    crate::core::todo::initialize_todo_db(root)?;
+
     let broker = DbBroker::new(root);
     broker.with_conn(&db_path, "decapod", None, "knowledge.init", |conn| {
         conn.execute(schemas::KNOWLEDGE_DB_SCHEMA, [])?;

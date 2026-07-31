@@ -63,7 +63,7 @@ fn test_session_lifecycle() {
     let (_tmp, store) = test_store();
 
     // Start session
-    let session = start_session(&store, "web-app", "Test App", "Testing", "test-agent").unwrap();
+    let session = start_session(&store, "web-app", "Test App", "Testing", "decapod").unwrap();
     assert!(session.id.starts_with("DS_"));
     assert_eq!(session.tree_id, "web-app");
     assert_eq!(session.status, "active");
@@ -95,7 +95,7 @@ fn test_session_lifecycle() {
 fn test_record_decision() {
     let (_tmp, store) = test_store();
 
-    let session = start_session(&store, "cli-tool", "Test CLI", "", "test-agent").unwrap();
+    let session = start_session(&store, "cli-tool", "Test CLI", "", "decapod").unwrap();
 
     let decision = record_decision(
         &store,
@@ -103,7 +103,7 @@ fn test_record_decision() {
         "language",
         "rust",
         "Love Rust",
-        "test-agent",
+        "decapod",
     )
     .unwrap();
 
@@ -120,12 +120,12 @@ fn test_record_decision() {
 fn test_duplicate_answer_rejected() {
     let (_tmp, store) = test_store();
 
-    let session = start_session(&store, "cli-tool", "Test CLI", "", "test-agent").unwrap();
+    let session = start_session(&store, "cli-tool", "Test CLI", "", "decapod").unwrap();
 
-    record_decision(&store, &session.id, "language", "rust", "", "test-agent").unwrap();
+    record_decision(&store, &session.id, "language", "rust", "", "decapod").unwrap();
 
     // Duplicate should fail
-    let result = record_decision(&store, &session.id, "language", "go", "", "test-agent");
+    let result = record_decision(&store, &session.id, "language", "go", "", "decapod");
     assert!(result.is_err());
     let err_msg = format!("{}", result.unwrap_err());
     assert!(err_msg.contains("already answered"));
@@ -135,7 +135,7 @@ fn test_duplicate_answer_rejected() {
 fn test_invalid_tree_rejected() {
     let (_tmp, store) = test_store();
 
-    let result = start_session(&store, "nonexistent-tree", "Bad", "", "test-agent");
+    let result = start_session(&store, "nonexistent-tree", "Bad", "", "decapod");
     assert!(result.is_err());
     let err_msg = format!("{}", result.unwrap_err());
     assert!(err_msg.contains("Unknown tree"));
@@ -145,9 +145,9 @@ fn test_invalid_tree_rejected() {
 fn test_invalid_option_rejected() {
     let (_tmp, store) = test_store();
 
-    let session = start_session(&store, "cli-tool", "Test CLI", "", "test-agent").unwrap();
+    let session = start_session(&store, "cli-tool", "Test CLI", "", "decapod").unwrap();
 
-    let result = record_decision(&store, &session.id, "language", "cobol", "", "test-agent");
+    let result = record_decision(&store, &session.id, "language", "cobol", "", "decapod");
     assert!(result.is_err());
     let err_msg = format!("{}", result.unwrap_err());
     assert!(err_msg.contains("Invalid value"));
@@ -157,10 +157,10 @@ fn test_invalid_option_rejected() {
 fn test_record_on_completed_session_fails() {
     let (_tmp, store) = test_store();
 
-    let session = start_session(&store, "cli-tool", "Test CLI", "", "test-agent").unwrap();
+    let session = start_session(&store, "cli-tool", "Test CLI", "", "decapod").unwrap();
     complete_session(&store, &session.id).unwrap();
 
-    let result = record_decision(&store, &session.id, "language", "rust", "", "test-agent");
+    let result = record_decision(&store, &session.id, "language", "rust", "", "decapod");
     assert!(result.is_err());
     let err_msg = format!("{}", result.unwrap_err());
     assert!(err_msg.contains("not 'active'"));
@@ -170,7 +170,7 @@ fn test_record_on_completed_session_fails() {
 fn test_next_question_conditional() {
     let (_tmp, store) = test_store();
 
-    let session = start_session(&store, "web-app", "Test Web", "", "test-agent").unwrap();
+    let session = start_session(&store, "web-app", "Test Web", "", "decapod").unwrap();
 
     // First question should be "runtime"
     let next = next_question(&store, &session.id).unwrap();
@@ -179,15 +179,7 @@ fn test_next_question_conditional() {
     assert_eq!(q["id"], "runtime");
 
     // Answer runtime = typescript
-    record_decision(
-        &store,
-        &session.id,
-        "runtime",
-        "typescript",
-        "",
-        "test-agent",
-    )
-    .unwrap();
+    record_decision(&store, &session.id, "runtime", "typescript", "", "decapod").unwrap();
 
     // Next should be "framework" (typescript conditional), not "framework_wasm"
     let next = next_question(&store, &session.id).unwrap();
@@ -200,10 +192,10 @@ fn test_next_question_conditional() {
 fn test_next_question_wasm_conditional() {
     let (_tmp, store) = test_store();
 
-    let session = start_session(&store, "web-app", "Test WASM", "", "test-agent").unwrap();
+    let session = start_session(&store, "web-app", "Test WASM", "", "decapod").unwrap();
 
     // Answer runtime = wasm
-    record_decision(&store, &session.id, "runtime", "wasm", "", "test-agent").unwrap();
+    record_decision(&store, &session.id, "runtime", "wasm", "", "decapod").unwrap();
 
     // Next should be "framework_wasm", not "framework"
     let next = next_question(&store, &session.id).unwrap();
@@ -216,35 +208,19 @@ fn test_next_question_wasm_conditional() {
 fn test_next_question_complete() {
     let (_tmp, store) = test_store();
 
-    let session = start_session(&store, "cli-tool", "Test CLI", "", "test-agent").unwrap();
+    let session = start_session(&store, "cli-tool", "Test CLI", "", "decapod").unwrap();
 
     // Answer all 4 questions
-    record_decision(&store, &session.id, "language", "rust", "", "test-agent").unwrap();
-    record_decision(
-        &store,
-        &session.id,
-        "distribution",
-        "binary",
-        "",
-        "test-agent",
-    )
-    .unwrap();
-    record_decision(
-        &store,
-        &session.id,
-        "config_format",
-        "toml",
-        "",
-        "test-agent",
-    )
-    .unwrap();
+    record_decision(&store, &session.id, "language", "rust", "", "decapod").unwrap();
+    record_decision(&store, &session.id, "distribution", "binary", "", "decapod").unwrap();
+    record_decision(&store, &session.id, "config_format", "toml", "", "decapod").unwrap();
     record_decision(
         &store,
         &session.id,
         "output_format",
         "text_json",
         "",
-        "test-agent",
+        "decapod",
     )
     .unwrap();
 
@@ -258,17 +234,9 @@ fn test_next_question_complete() {
 fn test_get_session_with_decisions() {
     let (_tmp, store) = test_store();
 
-    let session = start_session(&store, "cli-tool", "Test CLI", "", "test-agent").unwrap();
-    record_decision(&store, &session.id, "language", "rust", "", "test-agent").unwrap();
-    record_decision(
-        &store,
-        &session.id,
-        "distribution",
-        "binary",
-        "",
-        "test-agent",
-    )
-    .unwrap();
+    let session = start_session(&store, "cli-tool", "Test CLI", "", "decapod").unwrap();
+    record_decision(&store, &session.id, "language", "rust", "", "decapod").unwrap();
+    record_decision(&store, &session.id, "distribution", "binary", "", "decapod").unwrap();
 
     let full_session = get_session(&store, &session.id).unwrap();
     let decisions = full_session.decisions.unwrap();
@@ -281,8 +249,8 @@ fn test_get_session_with_decisions() {
 fn test_list_and_get_decisions() {
     let (_tmp, store) = test_store();
 
-    let session = start_session(&store, "cli-tool", "Test CLI", "", "test-agent").unwrap();
-    let d1 = record_decision(&store, &session.id, "language", "rust", "", "test-agent").unwrap();
+    let session = start_session(&store, "cli-tool", "Test CLI", "", "decapod").unwrap();
+    let d1 = record_decision(&store, &session.id, "language", "rust", "", "decapod").unwrap();
 
     // List by session
     let decisions = list_decisions(&store, Some(&session.id), None).unwrap();

@@ -2,9 +2,8 @@ use crate::core::broker::DbBroker;
 use crate::core::error;
 use crate::core::events;
 use crate::core::store::Store;
-use rusqlite::params;
+use rusqlite::{OptionalExtension, params};
 use serde::{Deserialize, Serialize};
-use std::fs;
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -157,7 +156,7 @@ pub fn add_knowledge(
         })?;
         let event = lookup_promotion_event(store, event_id)?.ok_or_else(|| {
             error::DecapodError::ValidationError(format!(
-                "missing promotion firewall event '{event_id}' in knowledge.promotions.jsonl"
+                "missing promotion firewall event '{event_id}' in decapod.db:knowledge_events"
             ))
         })?;
         if event.target_class != "procedural" {
@@ -594,28 +593,29 @@ fn lookup_promotion_event(
     store: &Store,
     event_id: &str,
 ) -> Result<Option<KnowledgePromotionEvent>, error::DecapodError> {
-    let ledger_path = store.root.join("knowledge.promotions.jsonl");
-    if !ledger_path.exists() {
+    let db_path = events::canonical_db_path(&store.root);
+    if !db_path.exists() {
         return Ok(None);
     }
-    let raw = fs::read_to_string(&ledger_path).map_err(error::DecapodError::IoError)?;
-    for (idx, line) in raw.lines().enumerate() {
-        if line.trim().is_empty() {
-            continue;
-        }
-        let event: KnowledgePromotionEvent = serde_json::from_str(line).map_err(|e| {
-            error::DecapodError::ValidationError(format!(
-                "invalid knowledge promotion ledger line {} in {}: {}",
-                idx + 1,
-                ledger_path.display(),
-                e
-            ))
-        })?;
-        if event.event_id == event_id {
-            return Ok(Some(event));
-        }
-    }
-    Ok(None)
+    let broker = DbBroker::new(&store.root);
+    let payload = broker.with_conn(&db_path, "decapod", None, "knowledge.get", |conn| {
+        conn.query_row(
+            "SELECT payload FROM knowledge_events WHERE event_id = ?1",
+            [event_id],
+            |row| row.get::<_, String>(0),
+        )
+        .optional()
+        .map_err(error::DecapodError::RusqliteError)
+    })?;
+    payload
+        .map(|raw| {
+            serde_json::from_str(&raw).map_err(|e| {
+                error::DecapodError::ValidationError(format!(
+                    "invalid knowledge promotion event in decapod.db:knowledge_events: {e}"
+                ))
+            })
+        })
+        .transpose()
 }
 
 fn parse_epoch_z(ts: &str) -> Result<u64, error::DecapodError> {

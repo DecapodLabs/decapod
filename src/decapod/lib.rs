@@ -5471,6 +5471,10 @@ fn run_validate_command(
         "user" => {
             // User store uses a temp directory for blank-slate validation
             let tmp_root = validate::create_validation_temp_path(workspace_root, "user")?;
+            // Validation gates run against this temporary Store root. Build
+            // the complete schema there without seeding user data so the
+            // consolidated local datastore is exercised consistently.
+            subsystems::initialize_all_dbs(&tmp_root)?;
             Store {
                 kind: StoreKind::User,
                 root: tmp_root,
