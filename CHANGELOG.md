@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.89.0](https://github.com/DecapodLabs/decapod/compare/v0.88.0...v0.89.0) - 2026-07-31
+
+### Fixed
+
+- fix Propodus client repository binding
+
+### Other
+
+- record Propodus integration governance note
+- record Propodus verification evidence
+- record successful Decapod validation
+- refresh governed validation artifacts
+
 ## [0.88.0](https://github.com/DecapodLabs/decapod/compare/v0.87.0...v0.88.0) - 2026-07-28
 
 ### Added
