@@ -37,7 +37,15 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 | Secret | Source | Rotation | Consumer |
 |---|---|---|---|
 | External service auth material | managed runtime configuration | periodic | runtime services |
-| Artifact signing material | managed signing service/local secure store | periodic | release pipeline |
+| Artifact signing material | managed signing service/local secure store | periodic | release pipeline |## Security Testing
+| Test Type | Cadence | Tooling |
+|---|---|---|
+| SAST | each PR | language linters/scanners |
+| Dependency scan | each PR + weekly | supply-chain tools |
+| DAST/pentest | scheduled | external/internal |## Compliance and Audit
+- Regulatory scope:
+- Audit evidence location:
+- Exception process:
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -76,18 +84,6 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 - Migration health checks and rollback triggers
 <!-- decapod:capability-overlay:persistent-state:end -->
 
-## Security Testing
-| Test Type | Cadence | Tooling |
-|---|---|---|
-| SAST | each PR | language linters/scanners |
-| Dependency scan | each PR + weekly | supply-chain tools |
-| DAST/pentest | scheduled | external/internal |
-
-## Compliance and Audit
-- Regulatory scope:
-- Audit evidence location:
-- Exception process:
-
 ## Pre-Promotion Security Checklist
 - [ ] Threat model updated for changed surfaces.
 - [ ] Auth/authz tests pass.
@@ -97,7 +93,7 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `37ccedd68681c1d4fa797d4d95a8a79aac3cd7d3865965bfd529ccde329eca70`
+- Repository signal fingerprint: `9a147a126463b97ac36b65d4cd8368a0a19a097da8feb92e0570d3a90b2d2007`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (99 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

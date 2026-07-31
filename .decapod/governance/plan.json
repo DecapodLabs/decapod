@@ -1,16 +1,17 @@
 {
   "schema_version": "1.0.0",
-  "title": "Make decapod init the only human-facing Propodus setup step (#1105)",
-  "intent": "Align cloud setup and agent startup around one canonical decapod init and session acquire lifecycle: hide or delegate cloud login, preserve local custody first, reuse or refresh machine-local Propodus sessions, and expose deterministic redacted recovery guidance.",
+  "title": "Consolidate local Decapod state into one SQLite datastore",
+  "intent": "When backend=local, store all Decapod state in one canonical .decapod/data/decapod.db with multiple tables and preserve the same relational architecture used by Propodus Cloud; migrate legacy per-subsystem SQLite files safely, retain JSONL compatibility where required, and publish the governed implementation with refreshed specifications and proof artifacts.",
   "state": "APPROVED",
   "todo_ids": [
-    "feat_01kyvefdhhy948ts"
+    "bend_01kyvg96hmhjykdg"
   ],
   "proof_hooks": [
     "cargo fmt --all -- --check",
     "cargo check --all-targets",
     "cargo test --all-targets",
-    "decapod validate"
+    "decapod validate",
+    "decapod rpc --op specs.refresh"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -18,11 +19,9 @@
   "unresolved_contradictions": [],
   "deferred_questions": [],
   "constraints": {
-    "forbidden_paths": [
-      ".decapod/"
-    ],
-    "file_touch_budget": 40
+    "forbidden_paths": [],
+    "file_touch_budget": 60
   },
   "phases": [],
-  "updated_at": "1785481142Z"
+  "updated_at": "1785484712Z"
 }

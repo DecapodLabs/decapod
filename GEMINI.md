@@ -1,5 +1,5 @@
-<!-- decapod-release: 0.89.0 -->
-<!-- decapod-fingerprint: 30728a220e611180f4479fff8bc4f15b57bd1f10ced619ac24b13a357ea6a847 -->
+<!-- decapod-release: 0.89.1 -->
+<!-- decapod-fingerprint: 3060d4b449b4fd9b9814f66eea232b5835096569a771b8a0f08eb3170df5a007 -->
 # GEMINI.md - Agent Entrypoint
 
 You are working in a Decapod-managed repository.
