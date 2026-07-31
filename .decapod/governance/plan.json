@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0.0",
-  "title": "Implement Decapod client path for Propodus Vercel todo API (#766)",
-  "intent": "Add the smallest optional cloud client boundary for Propodus's current Go/Vercel todo API, with typed request/response/error models, local fake-server proof, unchanged offline SQLite defaults, and no provider-specific auth or Rust Propodus dependency.",
+  "title": "Make decapod init the only human-facing Propodus setup step (#1105)",
+  "intent": "Align cloud setup and agent startup around one canonical decapod init and session acquire lifecycle: hide or delegate cloud login, preserve local custody first, reuse or refresh machine-local Propodus sessions, and expose deterministic redacted recovery guidance.",
   "state": "APPROVED",
   "todo_ids": [
-    "feat_01kytndnnbwj4nf8"
+    "feat_01kyvefdhhy948ts"
   ],
   "proof_hooks": [
     "cargo fmt --all -- --check",
@@ -26,5 +26,5 @@
     "file_touch_budget": 40
   },
   "phases": [],
-  "updated_at": "1785456686Z"
+  "updated_at": "1785480226Z"
 }

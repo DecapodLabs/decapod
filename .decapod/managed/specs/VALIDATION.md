@@ -39,7 +39,11 @@ flowchart LR
   C --> D[Validate]
   D --> E[Assemble Evidence]
   E --> F[Promote]
-```
+```## Proof Surfaces
+- `decapod validate`
+- Required test commands:
+- `cargo test`
+- Required integration/e2e commands:
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -80,12 +84,6 @@ flowchart LR
 - Concurrency conflict tests
 - Data integrity validation after recovery
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Proof Surfaces
-- `decapod validate`
-- Required test commands:
-- `cargo test`
-- Required integration/e2e commands:
 
 ## Promotion Gates
 
@@ -132,7 +130,7 @@ flowchart LR
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `41179e96640a6e7988f4e6b3f4b29c66ef4f587aa79013774a864583005068db`
+- Repository signal fingerprint: `37ccedd68681c1d4fa797d4d95a8a79aac3cd7d3865965bfd529ccde329eca70`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (99 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

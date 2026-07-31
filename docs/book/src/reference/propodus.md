@@ -75,9 +75,14 @@ Credentials are never read from `.decapod/config.toml`. Lookup precedence is:
 2. `DECAPOD_ACCESS_TOKEN` for controlled development and CI use;
 3. the machine-local `~/.local/share/decapod/session_token.json`.
 
-Use `decapod cloud status` to check whether a bearer is configured without
-printing the token. `decapod cloud login` and the first cloud todo command use
-Decapod's baked-in Propodus endpoint to start or resume onboarding.
+Run `decapod init --backend cloud` as the only human-facing cloud setup step.
+It starts or resumes the repository-bound browser handoff through Decapod's
+baked-in Propodus endpoint. Agents acquire custody with `decapod session
+acquire`, which reuses or refreshes the machine-local session without asking
+for another human action. Use `decapod cloud status` only to check whether a
+bearer is configured without printing the token. The deprecated `cloud login`
+compatibility alias remains for existing scripts and is not part of the setup
+flow.
 Interactive terminals open the URL when a browser launcher is available and
 always print it as a fallback; headless callers receive a bounded resume
 instruction. A completed exchange is stored machine-locally with restrictive
@@ -97,8 +102,9 @@ From a fresh checkout of the canonical repository:
    canonical owner/name from it and sends that binding to the provider; the
    provider decides whether the authenticated session may use the repository.
 3. Run `decapod todo list`, `add`, `get`, `show`, `claim`, or `done`. If no
-   machine session exists, Decapod starts the one-time browser handoff and
-   resumes it on the next invocation. A controlled `DECAPOD_ACCESS_TOKEN`
+   machine session exists, first complete `decapod init --backend cloud`; the
+   initialized machine state then resumes the one-time browser handoff on the
+   next invocation. A controlled `DECAPOD_ACCESS_TOKEN`
    remains available for protected proofs.
 4. Cloud todo commands use the same `TodoStore` command boundary as local
    todo commands, but compose the Propodus adapter and JWT instead of local

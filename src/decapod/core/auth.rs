@@ -108,7 +108,7 @@ pub fn resolve_cloud_credential(
     }
 
     Err(DecapodError::SessionError(
-        "no cloud session is configured; run the cloud todo command in an interactive terminal to start browser onboarding".to_string(),
+        "no cloud session is configured; complete setup with `decapod init --backend cloud`, then retry".to_string(),
     ))
 }
 
@@ -136,14 +136,14 @@ pub fn load_cloud_credential(explicit: Option<&str>) -> Result<CloudCredential, 
     }
     load_machine_session()?.ok_or_else(|| {
         DecapodError::SessionError(
-            "no cloud session is configured; run the cloud todo command in an interactive terminal to start browser onboarding".to_string(),
+            "no cloud session is configured; complete setup with `decapod init --backend cloud`, then retry".to_string(),
         )
     })
 }
 
 pub fn perform_cloud_auth(_target_dir: &Path) -> Result<(), DecapodError> {
     Err(DecapodError::SessionError(
-        "cloud login requires the configured project cloud endpoint; run a cloud todo command to start repository-bound onboarding".to_string(),
+        "cloud setup requires the configured project cloud endpoint; complete setup with `decapod init --backend cloud`, then retry".to_string(),
     ))
 }
 
