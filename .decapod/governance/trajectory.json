@@ -2,7 +2,7 @@
   "schema_version": "1.1.0",
   "run_id": "validation_01KYTT3CGS8D1T9REKNN53DQM5",
   "intent_id": "intent:validation_01KYTT3CGS8D1T9REKNN53DQM5",
-  "task_id": "code_01kytrt9yrvjvrs8",
+  "task_id": "feat_01kytndnnbwj4nf8",
   "original_intent": "Produce proof artifacts for a repository validation completion.",
   "derived_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
   "destination": "validation completion",
@@ -20,31 +20,68 @@
   "inspected_files": [],
   "modified_files": [
     ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json"
+    ".decapod/governance/validation.json",
+    "src/decapod/core/entrypoint_integrity.rs",
+    "src/decapod/core/propodus.rs",
+    "src/decapod/lib.rs",
+    "tests/propodus_contract.rs"
   ],
   "declared_commands": [
+    "cargo check --all-targets",
+    "cargo clippy --all-targets --all-features -- -D warnings",
+    "cargo fmt --all -- --check",
+    "cargo test --all-targets -- --test-threads=1",
+    "cargo test --test entrypoint_correctness -- --test-threads=1",
+    "cargo test --test propodus_contract -- --test-threads=1",
     "decapod validate"
   ],
   "tool_calls": [],
   "checks": [
     {
+      "name": "cargo_check_all_targets",
+      "status": "passed"
+    },
+    {
+      "name": "cargo_clippy_all_targets",
+      "status": "passed"
+    },
+    {
+      "name": "cargo_fmt",
+      "status": "passed"
+    },
+    {
+      "name": "cargo_test_all_targets_serial",
+      "status": "partial"
+    },
+    {
       "name": "decapod validate",
+      "status": "passed"
+    },
+    {
+      "name": "entrypoint_correctness_serial",
+      "status": "passed"
+    },
+    {
+      "name": "propodus_contract",
       "status": "passed"
     }
   ],
   "evidence": [
+    "decapod validate in isolated container: 204 passed, 0 failed, 4 warnings",
+    "full serial suite reached release_artifact_policy::release_source_tree_contains_no_test_code failure from pre-existing inline test modules in cli.rs, cloud_backend.rs, and repo_identity.rs",
+    "isolated entrypoint correctness suite: 23 passed, 4 ignored",
     "validation epoch ve_efb719b7441b04ee completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
-  "proof_status": "passed",
+  "proof_status": "partial",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "supported"
+    "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:a69a268af41b05fe796e7e52a077ec1e1f5981a390061571166f59e7c2ba367e",
+  "artifact_hash": "sha256:49c12a86874c5a7b3edaa0d74259bcc1dc797ebd1fda0419fb6c177dab667fdb",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -94,6 +131,13 @@
         "intent_id": "intent:validation_01KYTT3CGS8D1T9REKNN53DQM5",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:validation_01KYTT3CGS8D1T9REKNN53DQM5"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
+        "intent_id": "intent:validation_01KYTT3CGS8D1T9REKNN53DQM5",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KYTT3CGS8D1T9REKNN53DQM5"
       }
     ],
     "trajectories": {
@@ -139,12 +183,40 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "validation",
+            "command": "cargo fmt --all -- --check",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              "src/decapod/core/propodus.rs",
+              "src/decapod/lib.rs",
+              "src/decapod/core/entrypoint_integrity.rs",
+              "tests/propodus_contract.rs",
+              "decapod validate in isolated container: 204 passed, 0 failed, 4 warnings",
+              "full serial suite reached release_artifact_policy::release_source_tree_contains_no_test_code failure from pre-existing inline test modules in cli.rs, cloud_backend.rs, and repo_identity.rs",
+              "isolated entrypoint correctness suite: 23 passed, 4 ignored"
+            ],
+            "proof_refs": [
+              "cargo_fmt",
+              "cargo_check_all_targets",
+              "cargo_clippy_all_targets",
+              "propodus_contract",
+              "entrypoint_correctness_serial",
+              "cargo_test_all_targets_serial"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:6"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 5
+    "next_sequence": 6
   }
 }
