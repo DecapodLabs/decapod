@@ -2,6 +2,9 @@ use crate::cli::{CloudRuntimeConfig, DecapodProjectConfig};
 use crate::core::broker::DbBroker;
 use crate::core::error;
 use crate::core::external_action::{self, ExternalCapability};
+use crate::core::fleet_coord::{
+    self, ActiveClaimView, DEFAULT_CLAIM_LEASE_SECS, MAX_CLAIM_LEASE_SECS,
+};
 use crate::core::propodus::{PropodusClient, PropodusClientError, PropodusTodoStore};
 use crate::core::repo_identity::{RepositoryIdentity, resolve_repository_identity};
 use crate::core::schemas; // Import the new schemas module
@@ -24,7 +27,7 @@ use std::fs::{self, OpenOptions};
 use std::io::{BufRead, BufReader, IsTerminal};
 use std::path::{Path, PathBuf};
 
-const AGENT_EVICT_TIMEOUT_SECS: u64 = 30 * 60;
+const AGENT_EVICT_TIMEOUT_SECS: u64 = DEFAULT_CLAIM_LEASE_SECS;
 const CLAIM_STATUS_CACHE_SCOPE: &str = "todo.claim.status";
 const CLAIM_STATUS_CACHE_TTL_SECS: u64 = 15;
 
@@ -170,6 +173,9 @@ pub enum TodoCommand {
         /// Claim mode: exclusive takes assignment; shared joins as secondary owner.
         #[clap(long, value_enum, default_value = "exclusive")]
         mode: ClaimMode,
+        /// Exclusive claim lease duration in seconds (default 1800, max 86400).
+        #[clap(long)]
+        lease_seconds: Option<u64>,
     },
     /// Read claim status for a task (cache-first).
     ClaimStatus {
@@ -180,6 +186,23 @@ pub enum TodoCommand {
     WorkClaim {
         #[clap(long)]
         id: String,
+    },
+    /// Renew an exclusive claim lease held by the current agent.
+    Renew {
+        #[clap(long)]
+        id: String,
+        /// Agent identifier (defaults to environment or 'unknown').
+        #[clap(long)]
+        agent: Option<String>,
+        /// Lease duration in seconds from now (default 1800, max 86400).
+        #[clap(long)]
+        lease_seconds: Option<u64>,
+    },
+    /// Bounded fleet health projection: active leases, expired claims, path/scope overlaps.
+    Fleet {
+        /// Filter by agent id.
+        #[clap(long)]
+        agent: Option<String>,
     },
     /// Release a claimed task (makes it available for others).
     Release {
@@ -564,6 +587,8 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     conn.execute(schemas::POLICY_DB_SCHEMA_APPROVALS, [])?;
     conn.execute(schemas::POLICY_DB_SCHEMA_INDEX, [])?;
     seed_default_risk_zones(conn)?;
+    // Houseboat 2 lease column must exist even if meta was advanced without the ALTER.
+    let _ = conn.execute("ALTER TABLE tasks ADD COLUMN lease_expires_at TEXT", []);
 
     if current_version >= schemas::TODO_SCHEMA_VERSION {
         return Ok(());
@@ -670,6 +695,11 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
             [],
         )?;
         conn.execute(schemas::TODO_DB_SCHEMA_INDEX_HASH, [])?;
+    }
+
+    if current_version < 16 {
+        // Houseboat 2: exclusive claim leases for fleet coordination.
+        let _ = conn.execute("ALTER TABLE tasks ADD COLUMN lease_expires_at TEXT", []);
     }
     conn.execute(
         "INSERT INTO meta(namespace, key, value) VALUES(?1, 'schema_version', ?2)
@@ -3221,34 +3251,28 @@ pub fn claim_task(
     agent_id: &str,
     mode: ClaimMode,
 ) -> Result<serde_json::Value, error::DecapodError> {
+    claim_task_with_lease(root, id, agent_id, mode, None)
+}
+
+/// Exclusive claim with an explicit lease duration (Houseboat 2).
+pub fn claim_task_with_lease(
+    root: &Path,
+    id: &str,
+    agent_id: &str,
+    mode: ClaimMode,
+    lease_seconds: Option<u64>,
+) -> Result<serde_json::Value, error::DecapodError> {
     let ts = now_iso();
+    let now_secs = parse_epoch_z(&ts).unwrap_or_else(now_unix_secs);
+    let lease_secs = lease_seconds
+        .unwrap_or(DEFAULT_CLAIM_LEASE_SECS)
+        .clamp(1, MAX_CLAIM_LEASE_SECS);
+    let lease_exp = fleet_coord::lease_expires_at(now_secs, lease_secs);
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
 
-    if mode == ClaimMode::Exclusive
-        && let Some((status, assigned_to, updated_at)) = cache_get_claim_status(&db_path, id)
-        && status != "done"
-        && status != "archived"
-        && !assigned_to.is_empty()
-        && assigned_to != agent_id
-    {
-        return Ok(serde_json::json!({
-            "ts": ts,
-            "cmd": "todo.claim",
-            "status": "conflict",
-            "root": root.to_string_lossy(),
-            "id": id,
-            "result": {
-                "status": "conflict",
-                "mode": "exclusive",
-                "resolution": "none",
-                "assigned_to": assigned_to,
-                "message": format!("Task {} is already claimed by {} (cache)", id, assigned_to),
-                "cached": true,
-                "updated_at": updated_at
-            }
-        }));
-    }
+    // Do not short-circuit exclusive conflicts from cache: lease expiry must hit the DB
+    // so another agent can reclaim an expired ownership lease.
 
     let result = broker.with_conn(&db_path, "decapod", None, "todo.claim", |conn| {
         ensure_schema(conn)?;
@@ -3260,15 +3284,27 @@ pub fn claim_task(
         };
         enforce_operation_policy(root, conn, claim_zone, agent_id)?;
 
-        // Check if task exists and is not already claimed
-        let current: Option<(String, String, String)> = conn
+        // status, assigned_to, category, scope, dir_path, lease_expires_at
+        let current: Option<(String, String, String, String, String, Option<String>)> = conn
             .query_row(
-                "SELECT status, assigned_to, category FROM tasks WHERE id = ?",
+                "SELECT status, assigned_to, category, scope, dir_path, lease_expires_at
+                 FROM tasks WHERE id = ?",
                 [id],
-                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+                |row| {
+                    Ok((
+                        row.get(0)?,
+                        row.get(1)?,
+                        row.get(2)?,
+                        row.get(3)?,
+                        row.get(4)?,
+                        row.get(5)?,
+                    ))
+                },
             )
             .optional()
             .map_err(error::DecapodError::RusqliteError)?;
+
+        let mut reclaimed_from: Option<String> = None;
 
         match current {
             None => {
@@ -3277,7 +3313,7 @@ pub fn claim_task(
                     "message": format!("Task {} not found", id)
                 }));
             }
-            Some((status, assigned_to, category)) => {
+            Some((status, assigned_to, category, scope, dir_path, existing_lease)) => {
                 if status == "done" || status == "archived" {
                     return Ok(serde_json::json!({
                         "status": "error",
@@ -3308,13 +3344,63 @@ pub fn claim_task(
                             "claim_id": claim_id
                         }));
                     }
-                    return Ok(serde_json::json!({
-                        "status": "conflict",
-                        "mode": "exclusive",
-                        "message": format!("Task {} is already claimed by {}", id, assigned_to),
-                        "resolution": "none",
-                        "assigned_to": assigned_to
-                    }));
+
+                    let lease_expired =
+                        fleet_coord::lease_allows_reclaim(existing_lease.as_deref(), &ts);
+                    let agent_stale =
+                        is_agent_stale(conn, &assigned_to, &ts, AGENT_EVICT_TIMEOUT_SECS)?;
+                    if lease_expired || agent_stale {
+                        force_release_assignment(
+                            conn,
+                            id,
+                            &assigned_to,
+                            agent_id,
+                            &ts,
+                            if lease_expired {
+                                "lease_expired"
+                            } else {
+                                "agent_stale"
+                            },
+                        )?;
+                        reclaimed_from = Some(assigned_to);
+                    } else {
+                        return Ok(serde_json::json!({
+                            "status": "conflict",
+                            "mode": "exclusive",
+                            "message": format!("Task {} is already claimed by {}", id, assigned_to),
+                            "resolution": "none",
+                            "assigned_to": assigned_to,
+                            "lease_expires_at": existing_lease,
+                            "lease_state": "active"
+                        }));
+                    }
+                }
+
+                if mode == ClaimMode::Exclusive {
+                    let active = list_active_exclusive_claims(conn, &ts)?;
+                    let overlaps = fleet_coord::detect_overlaps(
+                        id,
+                        agent_id,
+                        &scope,
+                        &category,
+                        &dir_path,
+                        &active,
+                        &ts,
+                    );
+                    if !overlaps.is_empty() {
+                        return Ok(serde_json::json!({
+                            "status": "conflict",
+                            "mode": "exclusive",
+                            "resolution": "serialize_or_handoff",
+                            "message": format!(
+                                "Task {} overlaps {} active exclusive claim(s); serialize or hand off before claiming",
+                                id,
+                                overlaps.len()
+                            ),
+                            "overlap": true,
+                            "overlaps": overlaps
+                        }));
+                    }
                 }
 
                 if !category.is_empty() && mode == ClaimMode::Exclusive {
@@ -3350,11 +3436,11 @@ pub fn claim_task(
             let changed = conn
                 .execute(
                     "UPDATE tasks
-                     SET assigned_to = ?1, assigned_at = ?2, updated_at = ?2
-                     WHERE id = ?3
+                     SET assigned_to = ?1, assigned_at = ?2, updated_at = ?2, lease_expires_at = ?3
+                     WHERE id = ?4
                        AND status NOT IN ('done', 'archived')
                        AND (assigned_to = '' OR assigned_to = ?1)",
-                    rusqlite::params![agent_id, ts, id],
+                    rusqlite::params![agent_id, ts, lease_exp, id],
                 )
                 .map_err(error::DecapodError::RusqliteError)?;
             if changed == 0 {
@@ -3410,27 +3496,46 @@ pub fn claim_task(
         sync_legacy_owner_column(conn, id)?;
 
         // Create claim event
+        let mut payload = serde_json::json!({
+            "assigned_to": agent_id,
+            "mode": format!("{mode:?}").to_lowercase(),
+        });
+        if mode == ClaimMode::Exclusive {
+            payload["lease_expires_at"] = serde_json::json!(lease_exp);
+            payload["lease_seconds"] = serde_json::json!(lease_secs);
+        }
+        if let Some(prev) = reclaimed_from.as_ref() {
+            payload["reclaimed_from"] = serde_json::json!(prev);
+        }
         let ev = TodoEvent {
             ts: ts.clone(),
             event_id: crate::core::ulid::new_ulid(),
             event_type: "task.claim".to_string(),
             status: "success".to_string(),
             task_id: Some(id.to_string()),
-            payload: serde_json::json!({
-                "assigned_to": agent_id,
-                "mode": format!("{mode:?}").to_lowercase(),
-            }),
+            payload,
             actor: agent_id.to_string(),
         };
         append_event(conn, &ev)?;
         insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
 
-        Ok(serde_json::json!({
+        let mut ok = serde_json::json!({
             "status": "ok",
             "mode": format!("{mode:?}").to_lowercase(),
             "message": format!("Task {} claimed by {}", id, agent_id),
-            "claim_id": claim_id
-        }))
+            "claim_id": claim_id,
+            "assigned_to": agent_id
+        });
+        if mode == ClaimMode::Exclusive {
+            ok["lease_expires_at"] = serde_json::json!(lease_exp);
+            ok["lease_seconds"] = serde_json::json!(lease_secs);
+            ok["lease_state"] = serde_json::json!("active");
+        }
+        if let Some(prev) = reclaimed_from {
+            ok["reclaimed_from"] = serde_json::json!(prev);
+            ok["resolution"] = serde_json::json!("reclaimed");
+        }
+        Ok(ok)
     })?;
 
     if result.get("status").and_then(|v| v.as_str()) == Some("ok") {
@@ -3444,7 +3549,9 @@ pub fn claim_task(
             .get("assigned_to")
             .and_then(|v| v.as_str())
             .unwrap_or_default();
-        cache_put_claim_status(&db_path, id, "open", assigned_to, &ts);
+        if !assigned_to.is_empty() {
+            cache_put_claim_status(&db_path, id, "open", assigned_to, &ts);
+        }
     }
 
     Ok(serde_json::json!({
@@ -3454,6 +3561,210 @@ pub fn claim_task(
         "root": root.to_string_lossy(),
         "id": id,
         "result": result,
+    }))
+}
+
+fn force_release_assignment(
+    conn: &Connection,
+    task_id: &str,
+    previous_agent: &str,
+    actor: &str,
+    ts: &str,
+    reason: &str,
+) -> Result<(), error::DecapodError> {
+    conn.execute(
+        "UPDATE tasks
+         SET assigned_to = '', assigned_at = NULL, lease_expires_at = NULL, updated_at = ?
+         WHERE id = ?",
+        rusqlite::params![ts, task_id],
+    )
+    .map_err(error::DecapodError::RusqliteError)?;
+    conn.execute(
+        "DELETE FROM task_owners WHERE task_id = ?1 AND agent_id = ?2",
+        rusqlite::params![task_id, previous_agent],
+    )
+    .map_err(error::DecapodError::RusqliteError)?;
+    let ev = TodoEvent {
+        ts: ts.to_string(),
+        event_id: crate::core::ulid::new_ulid(),
+        event_type: "task.release".to_string(),
+        status: "success".to_string(),
+        task_id: Some(task_id.to_string()),
+        payload: serde_json::json!({
+            "previous_assignee": previous_agent,
+            "reason": reason,
+            "auto": true
+        }),
+        actor: actor.to_string(),
+    };
+    append_event(conn, &ev)?;
+    insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
+    Ok(())
+}
+
+fn list_active_exclusive_claims(
+    conn: &Connection,
+    now_ts: &str,
+) -> Result<Vec<ActiveClaimView>, error::DecapodError> {
+    let mut stmt = conn
+        .prepare(
+            "SELECT id, assigned_to, scope, category, dir_path, lease_expires_at, assigned_at
+             FROM tasks
+             WHERE status NOT IN ('done', 'archived')
+               AND assigned_to IS NOT NULL
+               AND assigned_to != ''",
+        )
+        .map_err(error::DecapodError::RusqliteError)?;
+    let rows = stmt
+        .query_map([], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, String>(3)?,
+                row.get::<_, String>(4)?,
+                row.get::<_, Option<String>>(5)?,
+                row.get::<_, Option<String>>(6)?,
+            ))
+        })
+        .map_err(error::DecapodError::RusqliteError)?;
+
+    let mut out = Vec::new();
+    for row in rows {
+        let (task_id, agent_id, scope, category, dir_path, lease_expires_at, assigned_at) =
+            row.map_err(error::DecapodError::RusqliteError)?;
+        let lease_state = fleet_coord::lease_state(lease_expires_at.as_deref(), now_ts);
+        out.push(ActiveClaimView {
+            task_id,
+            agent_id,
+            scope,
+            category,
+            dir_path,
+            lease_expires_at,
+            lease_state,
+            assigned_at,
+        });
+    }
+    Ok(out)
+}
+
+pub fn renew_claim_lease(
+    root: &Path,
+    id: &str,
+    agent_id: &str,
+    lease_seconds: Option<u64>,
+) -> Result<serde_json::Value, error::DecapodError> {
+    let ts = now_iso();
+    let now_secs = parse_epoch_z(&ts).unwrap_or_else(now_unix_secs);
+    let lease_secs = lease_seconds
+        .unwrap_or(DEFAULT_CLAIM_LEASE_SECS)
+        .clamp(1, MAX_CLAIM_LEASE_SECS);
+    let lease_exp = fleet_coord::lease_expires_at(now_secs, lease_secs);
+    let broker = DbBroker::new(root);
+    let db_path = todo_db_path(root);
+
+    let result = broker.with_conn(&db_path, "decapod", None, "todo.renew", |conn| {
+        ensure_schema(conn)?;
+        touch_agent_presence(conn, agent_id, &ts)?;
+        enforce_operation_policy(root, conn, "todo.claim.exclusive", agent_id)?;
+
+        let current: Option<(String, String, Option<String>)> = conn
+            .query_row(
+                "SELECT status, assigned_to, lease_expires_at FROM tasks WHERE id = ?",
+                [id],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .optional()
+            .map_err(error::DecapodError::RusqliteError)?;
+
+        match current {
+            None => Ok(serde_json::json!({
+                "status": "not_found",
+                "message": format!("Task {} not found", id)
+            })),
+            Some((status, assigned_to, prev_lease)) => {
+                if status == "done" || status == "archived" {
+                    return Ok(serde_json::json!({
+                        "status": "error",
+                        "message": format!("Task {} is already {}", id, status)
+                    }));
+                }
+                if assigned_to != agent_id {
+                    return Ok(serde_json::json!({
+                        "status": "conflict",
+                        "message": format!(
+                            "Task {} is claimed by '{}'; only the primary assignee may renew",
+                            id, assigned_to
+                        ),
+                        "assigned_to": assigned_to,
+                        "lease_expires_at": prev_lease
+                    }));
+                }
+                conn.execute(
+                    "UPDATE tasks SET lease_expires_at = ?1, updated_at = ?2 WHERE id = ?3",
+                    rusqlite::params![lease_exp, ts, id],
+                )
+                .map_err(error::DecapodError::RusqliteError)?;
+                let ev = TodoEvent {
+                    ts: ts.clone(),
+                    event_id: crate::core::ulid::new_ulid(),
+                    event_type: "task.lease_renew".to_string(),
+                    status: "success".to_string(),
+                    task_id: Some(id.to_string()),
+                    payload: serde_json::json!({
+                        "lease_expires_at": lease_exp,
+                        "lease_seconds": lease_secs,
+                        "previous_lease_expires_at": prev_lease
+                    }),
+                    actor: agent_id.to_string(),
+                };
+                append_event(conn, &ev)?;
+                insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
+                Ok(serde_json::json!({
+                    "status": "ok",
+                    "message": format!("Lease for task {} renewed by {}", id, agent_id),
+                    "lease_expires_at": lease_exp,
+                    "lease_seconds": lease_secs,
+                    "lease_state": "active",
+                    "assigned_to": agent_id
+                }))
+            }
+        }
+    })?;
+
+    Ok(serde_json::json!({
+        "ts": ts,
+        "cmd": "todo.renew",
+        "status": result.get("status").and_then(|v| v.as_str()).unwrap_or("error"),
+        "root": root.to_string_lossy(),
+        "id": id,
+        "result": result,
+    }))
+}
+
+pub fn fleet_health(
+    root: &Path,
+    agent_filter: Option<&str>,
+) -> Result<serde_json::Value, error::DecapodError> {
+    let ts = now_iso();
+    let broker = DbBroker::new(root);
+    let db_path = todo_db_path(root);
+
+    let projection = broker.with_conn(&db_path, "decapod", None, "todo.fleet", |conn| {
+        ensure_schema(conn)?;
+        let mut claims = list_active_exclusive_claims(conn, &ts)?;
+        if let Some(agent) = agent_filter {
+            claims.retain(|c| c.agent_id == agent);
+        }
+        Ok(fleet_coord::project_fleet_health(claims, &ts))
+    })?;
+
+    Ok(serde_json::json!({
+        "ts": ts,
+        "cmd": "todo.fleet",
+        "status": "ok",
+        "root": root.to_string_lossy(),
+        "fleet": projection,
     }))
 }
 
@@ -3926,9 +4237,11 @@ fn release_task(root: &Path, id: &str) -> Result<serde_json::Value, error::Decap
             }));
         }
 
-        // Release the task
+        // Release the task and clear its exclusive lease.
         conn.execute(
-            "UPDATE tasks SET assigned_to = '', assigned_at = NULL, updated_at = ? WHERE id = ?",
+            "UPDATE tasks
+             SET assigned_to = '', assigned_at = NULL, lease_expires_at = NULL, updated_at = ?
+             WHERE id = ?",
             [&ts, id],
         )
         .map_err(error::DecapodError::RusqliteError)?;
@@ -4069,11 +4382,34 @@ pub fn get_work_claim(
         .and_then(|trajectory| {
             (trajectory.task_id.as_deref() == Some(id)).then_some(trajectory.run_id)
         });
-    Ok(Some(work_claim::from_todo(
+    let ts = now_iso();
+    let lease_expires_at = get_task_lease_expires_at(root, id)?;
+    Ok(Some(work_claim::from_todo_with_lease(
         &task,
         &verification,
         trajectory_id,
+        lease_expires_at,
+        Some(&ts),
     )))
+}
+
+fn get_task_lease_expires_at(root: &Path, id: &str) -> Result<Option<String>, error::DecapodError> {
+    let broker = DbBroker::new(root);
+    if broker.is_cloud() {
+        return Ok(None);
+    }
+    let db_path = todo_db_path(root);
+    broker.with_conn(&db_path, "decapod", None, "todo.lease", |conn| {
+        ensure_schema(conn)?;
+        conn.query_row(
+            "SELECT lease_expires_at FROM tasks WHERE id = ?",
+            [id],
+            |row| row.get::<_, Option<String>>(0),
+        )
+        .optional()
+        .map(|opt| opt.flatten())
+        .map_err(error::DecapodError::RusqliteError)
+    })
 }
 
 pub fn list_tasks(
@@ -4712,9 +5048,11 @@ pub fn schema() -> serde_json::Value {
             { "name": "archive", "parameters": ["id"] },
             { "name": "comment", "parameters": ["id", "comment"] },
             { "name": "edit", "parameters": ["id", "title", "description", "owner", "category"] },
-            { "name": "claim", "parameters": ["id", "agent", "mode"] },
+            { "name": "claim", "parameters": ["id", "agent", "mode", "lease_seconds"] },
             { "name": "claim-status", "parameters": ["id"] },
             { "name": "work-claim", "parameters": ["id"] },
+            { "name": "renew", "parameters": ["id", "agent", "lease_seconds"] },
+            { "name": "fleet", "parameters": ["agent"] },
             { "name": "release", "parameters": ["id"] },
             { "name": "categories", "parameters": [] },
             { "name": "register-agent", "parameters": ["agent", "category"] },
@@ -4733,7 +5071,8 @@ pub fn schema() -> serde_json::Value {
         ],
         "task_columns": [
             "id", "hash", "title", "description", "tags", "owner", "status", "created_at", "updated_at",
-            "priority", "depends_on", "blocks", "category", "assigned_to", "parent_task_id", "one_shot"
+            "priority", "depends_on", "blocks", "category", "assigned_to", "parent_task_id", "one_shot",
+            "lease_expires_at"
         ],
         "id_format": "<type4>_<16-alnum>",
         "hash_format": "first 6 chars after '<type4>_'",
@@ -5259,11 +5598,16 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
             owner.as_deref(),
             category.as_deref(),
         )?,
-        TodoCommand::Claim { id, agent, mode } => {
+        TodoCommand::Claim {
+            id,
+            agent,
+            mode,
+            lease_seconds,
+        } => {
             let default_agent =
                 env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
             let agent_id = agent.as_deref().unwrap_or(&default_agent);
-            let mut out = claim_task(root, id, agent_id, *mode)?;
+            let mut out = claim_task_with_lease(root, id, agent_id, *mode, *lease_seconds)?;
             let status = out
                 .get("status")
                 .and_then(|v| v.as_str())
@@ -5313,6 +5657,17 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
                 "item": claim,
             })
         }
+        TodoCommand::Renew {
+            id,
+            agent,
+            lease_seconds,
+        } => {
+            let default_agent =
+                env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
+            let agent_id = agent.as_deref().unwrap_or(&default_agent);
+            renew_claim_lease(root, id, agent_id, *lease_seconds)?
+        }
+        TodoCommand::Fleet { agent } => fleet_health(root, agent.as_deref())?,
         TodoCommand::Release { id } => release_task(root, id)?,
         TodoCommand::Rebuild => rebuild_from_events(root)?,
         TodoCommand::Categories => {
