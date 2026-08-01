@@ -58,6 +58,10 @@ pub enum TrajectoryMotionState {
     Blocked,
     Waiting,
     Completed,
+    /// Evidence shows repeated failed verification/agent loops without progress.
+    Stalled,
+    /// Completion was claimed but proof failed, or blockers mark abandonment.
+    Abandoned,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -276,16 +280,78 @@ impl TrajectoryArtifact {
 }
 
 pub fn motion_state(artifact: &TrajectoryArtifact) -> TrajectoryMotionState {
+    if artifact
+        .blockers
+        .iter()
+        .any(|b| b.to_ascii_lowercase().contains("abandon"))
+    {
+        return TrajectoryMotionState::Abandoned;
+    }
     if !artifact.blockers.is_empty() {
         return TrajectoryMotionState::Blocked;
     }
     if artifact.completion_claim.is_some() {
         return match artifact.proof_status {
             TrajectoryProofStatus::Passed => TrajectoryMotionState::Completed,
+            TrajectoryProofStatus::Failed => TrajectoryMotionState::Abandoned,
             _ => TrajectoryMotionState::Waiting,
         };
     }
+    if trajectory_is_stalled(artifact) {
+        return TrajectoryMotionState::Stalled;
+    }
     TrajectoryMotionState::Active
+}
+
+/// Stalled when verification or agent loops show contiguous failed attempts
+/// without a later pass, or when proof_status is failed with no completion claim.
+fn trajectory_is_stalled(artifact: &TrajectoryArtifact) -> bool {
+    if matches!(artifact.proof_status, TrajectoryProofStatus::Failed) {
+        return true;
+    }
+    // Group by loop_id and look for max attempt >= 2 with failed status and no pass.
+    use std::collections::BTreeMap;
+    let mut by_loop: BTreeMap<&str, Vec<&TrajectoryLoop>> = BTreeMap::new();
+    for loop_rec in &artifact.loops {
+        by_loop
+            .entry(loop_rec.loop_id.as_str())
+            .or_default()
+            .push(loop_rec);
+    }
+    for attempts in by_loop.values() {
+        let mut max_attempt = 0u32;
+        let mut saw_pass = false;
+        let mut saw_fail = false;
+        for rec in attempts {
+            max_attempt = max_attempt.max(rec.attempt);
+            match rec.status {
+                TrajectoryLoopStatus::Passed => saw_pass = true,
+                TrajectoryLoopStatus::Failed | TrajectoryLoopStatus::Blocked => saw_fail = true,
+                _ => {}
+            }
+            if matches!(rec.grader_result, TrajectoryGraderResult::Fail) {
+                saw_fail = true;
+            }
+            if matches!(rec.grader_result, TrajectoryGraderResult::Pass) {
+                saw_pass = true;
+            }
+        }
+        if max_attempt >= 2 && saw_fail && !saw_pass {
+            return true;
+        }
+    }
+    // Failed checks with no passed checks also signal stall.
+    let failed_checks = artifact
+        .checks
+        .iter()
+        .filter(|c| matches!(c.status, TrajectoryCheckStatus::Failed))
+        .count();
+    let passed_checks = artifact
+        .checks
+        .iter()
+        .filter(|c| matches!(c.status, TrajectoryCheckStatus::Passed))
+        .count();
+    failed_checks >= 2 && passed_checks == 0
 }
 
 pub fn trajectory_path(project_root: &Path, run_id: &str) -> Result<PathBuf, error::DecapodError> {
