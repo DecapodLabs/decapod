@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.92.0](https://github.com/DecapodLabs/decapod/compare/v0.91.0...v0.92.0) - 2026-08-01
+
+### Added
+
+- gate Houseboat leases on proof-ready dependencies (#852/#857/#860)
+
+### Other
+
+- complete Houseboat governance bundle
+- record Houseboat validation receipt
+
 ## [0.91.0](https://github.com/DecapodLabs/decapod/compare/v0.90.0...v0.91.0) - 2026-08-01
 
 ### Added
