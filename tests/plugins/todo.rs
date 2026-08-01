@@ -3,8 +3,8 @@ use decapod::core::store::Store;
 use decapod::core::store::StoreKind;
 use decapod::core::todo::{
     ClaimMode, TodoCommand, add_task, check_trust_level, claim_task, claim_task_with_lease,
-    fleet_health, get_task, initialize_todo_db, list_tasks, rebuild_from_events, renew_claim_lease,
-    update_status, yield_claim_lease,
+    fleet_health, get_task, get_work_claim, initialize_todo_db, list_tasks, rebuild_from_events,
+    renew_claim_lease, update_status, yield_claim_lease,
 };
 use decapod::plugins::policy;
 use rusqlite::Connection;
@@ -725,6 +725,16 @@ fn test_ownership_rebuild_replay_parity() {
 }
 
 fn add_scoped_task(root: &Path, title: &str, scope: &str, dir: &str) -> String {
+    add_scoped_task_with_dependencies(root, title, scope, dir, "")
+}
+
+fn add_scoped_task_with_dependencies(
+    root: &Path,
+    title: &str,
+    scope: &str,
+    dir: &str,
+    depends_on: &str,
+) -> String {
     let args = TodoCommand::Add {
         title: title.to_string(),
         description: format!("houseboat lease test: {title}"),
@@ -735,7 +745,7 @@ fn add_scoped_task(root: &Path, title: &str, scope: &str, dir: &str) -> String {
         scope: scope.to_string(),
         dir: Some(dir.to_string()),
         priority: "medium".to_string(),
-        depends_on: "".to_string(),
+        depends_on: depends_on.to_string(),
         blocks: "".to_string(),
         parent: None,
         one_shot: 0,
@@ -963,4 +973,127 @@ fn exclusive_lease_blocks_unproven_done() {
     };
     let done = update_status(&store, &task_id, "done", "task.done", serde_json::json!({})).unwrap();
     assert_eq!(done["status"], "ok", "yielded task may complete: {done}");
+}
+
+#[test]
+fn dependency_readiness_gates_claim_and_feeds_work_claim_and_fleet() {
+    let tmp = tempdir().unwrap();
+    let root = tmp.path().to_path_buf();
+    initialize_todo_db(&root).unwrap();
+    let dep_dir = tmp.path().join("src").join("dependency");
+    let target_dir = tmp.path().join("src").join("target");
+    std::fs::create_dir_all(&dep_dir).unwrap();
+    std::fs::create_dir_all(&target_dir).unwrap();
+
+    let dependency_id = add_scoped_task(
+        &root,
+        "Houseboat dependency prerequisite unique",
+        "dependency",
+        dep_dir.to_str().unwrap(),
+    );
+    let target_id = add_scoped_task_with_dependencies(
+        &root,
+        "Houseboat dependency target unique",
+        "target",
+        target_dir.to_str().unwrap(),
+        &dependency_id,
+    );
+
+    let waiting = claim_task(&root, &target_id, "agent-target", ClaimMode::Exclusive).unwrap();
+    assert_eq!(waiting["status"], "conflict", "waiting claim: {waiting}");
+    assert_eq!(
+        waiting["result"]["dependency_readiness"]["state"],
+        "waiting"
+    );
+    assert_eq!(
+        waiting["result"]["dependency_readiness"]["blockers"][0]["reason"],
+        "dependency_not_complete"
+    );
+
+    let db = root.join(schemas::LOCAL_DB_NAME);
+    let conn = Connection::open(&db).unwrap();
+    conn.execute(
+        "UPDATE tasks SET status = 'done' WHERE id = ?1",
+        [&dependency_id],
+    )
+    .unwrap();
+    conn.execute(
+        "INSERT INTO task_verification(
+            todo_id, proof_plan, verification_artifacts, last_verified_at,
+            last_verified_status, last_verified_notes, verification_policy_days, updated_at
+         ) VALUES(?1, '[\"validate_passes\"]', ?2, '100Z', 'passed', '', 90, '100Z')",
+        rusqlite::params![
+            dependency_id,
+            r#"{"proof_plan_results":[{"proof_gate":"validate_passes","output_hash":"sha256:dep-proof"}]}"#
+        ],
+    )
+    .unwrap();
+
+    let claimed = claim_task(&root, &target_id, "agent-target", ClaimMode::Exclusive).unwrap();
+    assert_eq!(claimed["status"], "ok", "ready claim: {claimed}");
+    assert_eq!(claimed["result"]["dependency_readiness"]["state"], "ready");
+    assert_eq!(
+        claimed["result"]["dependency_readiness"]["proof_refs"][0],
+        format!("proof:{dependency_id}:validate_passes:sha256:dep-proof")
+    );
+    let work_claim = get_work_claim(&root, &target_id).unwrap().unwrap();
+    assert!(work_claim.dependency_readiness.is_ready());
+
+    conn.execute(
+        "UPDATE task_verification SET last_verified_status = 'failed' WHERE todo_id = ?1",
+        [&dependency_id],
+    )
+    .unwrap();
+    let fleet = fleet_health(&root, Some("agent-target")).unwrap();
+    assert_eq!(fleet["fleet"]["dependency_blocked_count"], 1);
+    assert_eq!(fleet["fleet"]["proof_blocked_count"], 1);
+    assert_eq!(
+        fleet["fleet"]["dependency_blocked_claims"][0]["dependency_readiness"]["state"],
+        "proof_blocked"
+    );
+}
+
+#[test]
+fn dependency_cycle_fails_closed_before_claim() {
+    let tmp = tempdir().unwrap();
+    let root = tmp.path().to_path_buf();
+    initialize_todo_db(&root).unwrap();
+    let first_dir = tmp.path().join("src").join("cycle-a");
+    let second_dir = tmp.path().join("src").join("cycle-b");
+    std::fs::create_dir_all(&first_dir).unwrap();
+    std::fs::create_dir_all(&second_dir).unwrap();
+    let first_id = add_scoped_task(
+        &root,
+        "Houseboat cycle first unique",
+        "cycle-a",
+        first_dir.to_str().unwrap(),
+    );
+    let second_id = add_scoped_task(
+        &root,
+        "Houseboat cycle second unique",
+        "cycle-b",
+        second_dir.to_str().unwrap(),
+    );
+
+    let db = root.join(schemas::LOCAL_DB_NAME);
+    let conn = Connection::open(&db).unwrap();
+    conn.execute(
+        "UPDATE tasks SET depends_on = ?1 WHERE id = ?2",
+        rusqlite::params![second_id, first_id],
+    )
+    .unwrap();
+    conn.execute(
+        "UPDATE tasks SET depends_on = ?1 WHERE id = ?2",
+        rusqlite::params![first_id, second_id],
+    )
+    .unwrap();
+
+    let result = claim_task(&root, &first_id, "agent-cycle", ClaimMode::Exclusive).unwrap();
+    assert_eq!(result["status"], "conflict", "cycle claim: {result}");
+    assert_eq!(result["result"]["resolution"], "repair_dependency_graph");
+    assert_eq!(result["result"]["dependency_readiness"]["state"], "cycle");
+    assert_eq!(
+        result["result"]["dependency_readiness"]["cycle"],
+        serde_json::json!([first_id, second_id, first_id])
+    );
 }

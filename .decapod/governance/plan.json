@@ -1,15 +1,16 @@
 {
   "schema_version": "1.0.0",
-  "title": "Houseboat wave 2: lease-graph stratum",
-  "intent": "Advance #852/#857/#860 with lease generations, intent anchors, yield, proof-gated done, richer fleet projection, and stalled/abandoned trajectory motion.",
+  "title": "Houseboat wave 3: dependency-aware lease graph",
+  "intent": "Extend the existing todo/workunit/trajectory substrate with typed dependency readiness and proof-compatible integration gates for #852, feeding trajectory status #857 and fleet projection #860 without a parallel scheduler or telemetry store.",
   "state": "APPROVED",
   "todo_ids": [
-    "code_01kyy89c6xecgt98"
+    "test_01kyzfanf2d6jd9y"
   ],
   "proof_hooks": [
     "cargo test --lib fleet_coord",
     "cargo test --lib trajectory",
-    "cargo test --test plugins_todo_tests exclusive_claim"
+    "cargo test --test plugins_todo_tests dependency",
+    "cargo clippy --all-targets --all-features -- -D warnings"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -23,5 +24,5 @@
     "file_touch_budget": 40
   },
   "phases": [],
-  "updated_at": "1785575091Z"
+  "updated_at": "1785615266Z"
 }

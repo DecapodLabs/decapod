@@ -114,3 +114,31 @@ fn work_claim_projects_lease_fields() {
     );
     assert_eq!(expired.lease_state.as_deref(), Some("expired"));
 }
+
+#[test]
+fn dependency_readiness_blocks_active_work_claims() {
+    let mut claim = from_todo(
+        &task("open", "agent-a"),
+        &WorkClaimVerification::default(),
+        Some("run-1".to_string()),
+    );
+    apply_dependency_readiness(
+        &mut claim,
+        crate::core::fleet_coord::DependencyReadiness {
+            state: crate::core::fleet_coord::DependencyReadinessState::ProofBlocked,
+            blockers: vec![crate::core::fleet_coord::DependencyBlocker {
+                task_id: "feat_01dependency01".to_string(),
+                reason: "dependency_proof_not_passed".to_string(),
+                status: "done".to_string(),
+                validation_status: Some("claimed".to_string()),
+            }],
+            ..crate::core::fleet_coord::DependencyReadiness::ready()
+        },
+    );
+
+    assert_eq!(claim.status, WorkClaimStatus::Blocked);
+    assert_eq!(
+        claim.dependency_readiness.state,
+        crate::core::fleet_coord::DependencyReadinessState::ProofBlocked
+    );
+}

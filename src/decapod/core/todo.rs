@@ -3,7 +3,8 @@ use crate::core::broker::DbBroker;
 use crate::core::error;
 use crate::core::external_action::{self, ExternalCapability};
 use crate::core::fleet_coord::{
-    self, ActiveClaimView, DEFAULT_CLAIM_LEASE_SECS, LeaseLifecycle, MAX_CLAIM_LEASE_SECS,
+    self, ActiveClaimView, DEFAULT_CLAIM_LEASE_SECS, DependencyNodeView, DependencyReadiness,
+    LeaseLifecycle, MAX_CLAIM_LEASE_SECS,
 };
 use crate::core::propodus::{PropodusClient, PropodusClientError, PropodusTodoStore};
 use crate::core::repo_identity::{RepositoryIdentity, resolve_repository_identity};
@@ -2332,6 +2333,82 @@ fn parse_dependency_ids(depends_on: &str) -> Vec<String> {
     out
 }
 
+fn load_dependency_readiness(
+    conn: &Connection,
+    task_id: &str,
+) -> Result<DependencyReadiness, error::DecapodError> {
+    let depends_on: Option<String> = conn
+        .query_row(
+            "SELECT depends_on FROM tasks WHERE id = ?1",
+            [task_id],
+            |row| row.get(0),
+        )
+        .optional()
+        .map_err(error::DecapodError::RusqliteError)?;
+    let Some(depends_on) = depends_on else {
+        return Ok(DependencyReadiness::ready());
+    };
+
+    let dependency_ids = parse_dependency_ids(&depends_on);
+    let mut dependencies = Vec::with_capacity(dependency_ids.len());
+    for dependency_id in dependency_ids {
+        let row: Option<(String, Option<String>, Option<String>)> = conn
+            .query_row(
+                "SELECT t.status, v.last_verified_status, v.verification_artifacts
+                 FROM tasks t
+                 LEFT JOIN task_verification v ON v.todo_id = t.id
+                 WHERE t.id = ?1",
+                [&dependency_id],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .optional()
+            .map_err(error::DecapodError::RusqliteError)?;
+        let node = match row {
+            Some((status, validation_status, artifacts_raw)) => {
+                let artifacts = artifacts_raw
+                    .as_deref()
+                    .filter(|raw| !raw.trim().is_empty())
+                    .and_then(|raw| serde_json::from_str::<JsonValue>(raw).ok());
+                DependencyNodeView {
+                    task_id: dependency_id.clone(),
+                    status,
+                    validation_status,
+                    proof_refs: work_claim::proof_refs(&dependency_id, artifacts.as_ref()),
+                }
+            }
+            None => DependencyNodeView {
+                task_id: dependency_id,
+                status: "missing".to_string(),
+                validation_status: None,
+                proof_refs: Vec::new(),
+            },
+        };
+        dependencies.push(node);
+    }
+
+    let mut stmt = conn
+        .prepare("SELECT id, depends_on FROM tasks ORDER BY id")
+        .map_err(error::DecapodError::RusqliteError)?;
+    let rows = stmt
+        .query_map([], |row| {
+            Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+        })
+        .map_err(error::DecapodError::RusqliteError)?;
+    let mut edges = Vec::new();
+    for row in rows {
+        let (source_id, raw_dependencies) = row.map_err(error::DecapodError::RusqliteError)?;
+        for dependency_id in parse_dependency_ids(&raw_dependencies) {
+            edges.push((source_id.clone(), dependency_id));
+        }
+    }
+
+    Ok(fleet_coord::evaluate_dependency_readiness(
+        task_id,
+        dependencies,
+        &edges,
+    ))
+}
+
 fn env_bool(name: &str, default_value: bool) -> bool {
     match env::var(name) {
         Ok(v) => matches!(v.to_ascii_lowercase().as_str(), "1" | "true" | "yes" | "on"),
@@ -3363,6 +3440,7 @@ pub fn claim_task_with_lease(
             .map_err(error::DecapodError::RusqliteError)?;
 
         let mut reclaimed_from: Option<String> = None;
+        let dependency_readiness;
         let prior_generation = current
             .as_ref()
             .map(|row| row.lease_generation)
@@ -3391,6 +3469,25 @@ pub fn claim_task_with_lease(
                         "message": format!("Task {} is already {}", id, status)
                     }));
                 }
+                dependency_readiness = load_dependency_readiness(conn, id)?;
+                if !dependency_readiness.is_ready() {
+                    let resolution = if dependency_readiness.state
+                        == fleet_coord::DependencyReadinessState::Cycle
+                    {
+                        "repair_dependency_graph"
+                    } else {
+                        "satisfy_dependencies"
+                    };
+                    return Ok(serde_json::json!({
+                        "status": "conflict",
+                        "mode": format!("{mode:?}").to_lowercase(),
+                        "resolution": resolution,
+                        "message": format!(
+                            "Task {id} dependencies are not proof-ready; resolve the typed blockers before claiming"
+                        ),
+                        "dependency_readiness": dependency_readiness
+                    }));
+                }
                 if !assigned_to.is_empty() && assigned_to != agent_id {
                     if mode == ClaimMode::Shared {
                         let claim_id = upsert_task_owner(conn, id, agent_id, "secondary", &ts)?;
@@ -3412,7 +3509,8 @@ pub fn claim_task_with_lease(
                             "mode": "shared",
                             "message": format!("Task {} is assigned to {}; added {} as secondary owner", id, assigned_to, agent_id),
                             "assigned_to": assigned_to,
-                            "claim_id": claim_id
+                            "claim_id": claim_id,
+                            "dependency_readiness": dependency_readiness
                         }));
                     }
 
@@ -3594,6 +3692,7 @@ pub fn claim_task_with_lease(
             payload["lease_lifecycle"] = serde_json::json!(lifecycle.as_str());
             payload["intent_anchor"] = serde_json::json!(resolved_intent);
         }
+        payload["dependency_readiness"] = serde_json::json!(dependency_readiness.clone());
         if let Some(prev) = reclaimed_from.as_ref() {
             payload["reclaimed_from"] = serde_json::json!(prev);
         }
@@ -3614,7 +3713,8 @@ pub fn claim_task_with_lease(
             "mode": format!("{mode:?}").to_lowercase(),
             "message": format!("Task {} claimed by {}", id, agent_id),
             "claim_id": claim_id,
-            "assigned_to": agent_id
+            "assigned_to": agent_id,
+            "dependency_readiness": dependency_readiness
         });
         if mode == ClaimMode::Exclusive {
             ok["lease_expires_at"] = serde_json::json!(lease_exp);
@@ -3772,6 +3872,7 @@ fn list_active_exclusive_claims(
         ) = row.map_err(error::DecapodError::RusqliteError)?;
         let lease_state = fleet_coord::lease_state(lease_expires_at.as_deref(), now_ts);
         let lease_lifecycle = LeaseLifecycle::parse(Some(&lifecycle_raw));
+        let dependency_readiness = load_dependency_readiness(conn, &task_id)?;
         out.push(ActiveClaimView {
             task_id,
             agent_id,
@@ -3785,6 +3886,7 @@ fn list_active_exclusive_claims(
             lease_lifecycle,
             intent_anchor,
             capacity_units: 1,
+            dependency_readiness,
         });
     }
     Ok(out)
@@ -4116,6 +4218,52 @@ fn exclusive_lease_proof_gate(
             }
         })))
     })
+}
+
+fn dependency_completion_gate(
+    root: &Path,
+    task_id: &str,
+) -> Result<Option<serde_json::Value>, error::DecapodError> {
+    let broker = DbBroker::new(root);
+    if broker.is_cloud() {
+        return Ok(None);
+    }
+    let db_path = todo_db_path(root);
+    broker.with_conn(
+        &db_path,
+        "decapod",
+        None,
+        "todo.done.dependency_gate",
+        |conn| {
+            ensure_schema(conn)?;
+            let readiness = load_dependency_readiness(conn, task_id)?;
+            if readiness.is_ready() {
+                return Ok(None);
+            }
+            let resolution = if readiness.state
+                == fleet_coord::DependencyReadinessState::Cycle
+            {
+                "repair_dependency_graph"
+            } else {
+                "satisfy_dependencies"
+            };
+            Ok(Some(serde_json::json!({
+                "ts": now_iso(),
+                "cmd": "todo.done",
+                "status": "conflict",
+                "root": root.to_string_lossy(),
+                "id": task_id,
+                "result": {
+                    "status": "conflict",
+                    "resolution": resolution,
+                    "message": format!(
+                        "Task {task_id} cannot complete until every dependency is complete with passing proof"
+                    ),
+                    "dependency_readiness": readiness
+                }
+            })))
+        },
+    )
 }
 
 pub fn fleet_health(
@@ -4761,13 +4909,27 @@ pub fn get_work_claim(
         });
     let ts = now_iso();
     let lease_expires_at = get_task_lease_expires_at(root, id)?;
-    Ok(Some(work_claim::from_todo_with_lease(
+    let mut claim = work_claim::from_todo_with_lease(
         &task,
         &verification,
         trajectory_id,
         lease_expires_at,
         Some(&ts),
-    )))
+    );
+    let broker = DbBroker::new(root);
+    let db_path = todo_db_path(root);
+    let dependency_readiness = broker.with_conn(
+        &db_path,
+        "decapod",
+        None,
+        "todo.work-claim.dependencies",
+        |conn| {
+            ensure_schema(conn)?;
+            load_dependency_readiness(conn, id)
+        },
+    )?;
+    work_claim::apply_dependency_readiness(&mut claim, dependency_readiness);
+    Ok(Some(claim))
 }
 
 fn get_task_lease_expires_at(root: &Path, id: &str) -> Result<Option<String>, error::DecapodError> {
@@ -5475,6 +5637,13 @@ pub fn schema() -> serde_json::Value {
                 "passed_done": "complete",
                 "failed_done": "blocked"
             },
+            "dependencies": {
+                "source_of_truth": ["decapod.db:tasks.depends_on", "decapod.db:task_dependencies", "decapod.db:task_verification"],
+                "states": ["ready", "waiting", "missing", "proof_blocked", "cycle"],
+                "claim_gate": "all dependencies must be complete with passing proof",
+                "completion_gate": "dependency readiness is re-evaluated before done",
+                "projection": "the same typed readiness drives work-claim and fleet output"
+            },
             "cloud_boundary": "sync the projection only after local todo and trajectory authority are established"
         }
     })
@@ -5938,8 +6107,12 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
                     },
                 )?;
             }
+            // Houseboat wave 3: dependency/proof readiness cannot be bypassed by
+            // claiming completion, including with --validated.
+            if let Some(gate) = dependency_completion_gate(root, &task_id)? {
+                gate
             // Houseboat wave 2: exclusive leases require proof before unmarked done.
-            if !*validated && let Some(gate) = exclusive_lease_proof_gate(root, &task_id)? {
+            } else if !*validated && let Some(gate) = exclusive_lease_proof_gate(root, &task_id)? {
                 gate
             } else {
                 let out =
