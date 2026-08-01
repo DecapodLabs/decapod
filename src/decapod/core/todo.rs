@@ -3332,22 +3332,31 @@ pub fn claim_task_with_lease(
         enforce_operation_policy(root, conn, claim_zone, agent_id)?;
 
         // status, assigned_to, category, scope, dir_path, lease_expires_at, lease_generation
-        let current: Option<(String, String, String, String, String, Option<String>, u32)> = conn
+        struct ClaimLeaseRow {
+            status: String,
+            assigned_to: String,
+            category: String,
+            scope: String,
+            dir_path: String,
+            existing_lease: Option<String>,
+            lease_generation: u32,
+        }
+        let current: Option<ClaimLeaseRow> = conn
             .query_row(
                 "SELECT status, assigned_to, category, scope, dir_path, lease_expires_at,
                         COALESCE(lease_generation, 0)
                  FROM tasks WHERE id = ?",
                 [id],
                 |row| {
-                    Ok((
-                        row.get(0)?,
-                        row.get(1)?,
-                        row.get(2)?,
-                        row.get(3)?,
-                        row.get(4)?,
-                        row.get(5)?,
-                        row.get::<_, i64>(6).unwrap_or(0) as u32,
-                    ))
+                    Ok(ClaimLeaseRow {
+                        status: row.get(0)?,
+                        assigned_to: row.get(1)?,
+                        category: row.get(2)?,
+                        scope: row.get(3)?,
+                        dir_path: row.get(4)?,
+                        existing_lease: row.get(5)?,
+                        lease_generation: row.get::<_, i64>(6).unwrap_or(0) as u32,
+                    })
                 },
             )
             .optional()
@@ -3356,7 +3365,7 @@ pub fn claim_task_with_lease(
         let mut reclaimed_from: Option<String> = None;
         let prior_generation = current
             .as_ref()
-            .map(|row| row.6)
+            .map(|row| row.lease_generation)
             .unwrap_or(0);
 
         match current {
@@ -3366,7 +3375,16 @@ pub fn claim_task_with_lease(
                     "message": format!("Task {} not found", id)
                 }));
             }
-            Some((status, assigned_to, category, scope, dir_path, existing_lease, _lease_gen)) => {
+            Some(row) => {
+                let ClaimLeaseRow {
+                    status,
+                    assigned_to,
+                    category,
+                    scope,
+                    dir_path,
+                    existing_lease,
+                    lease_generation: _,
+                } = row;
                 if status == "done" || status == "archived" {
                     return Ok(serde_json::json!({
                         "status": "error",
@@ -3696,10 +3714,10 @@ fn resolve_default_intent_anchor(root: &Path, task_id: &str) -> Option<String> {
     let trajectory = crate::core::trajectory::load_trajectory_cookie(&project_root)
         .ok()
         .flatten()?;
-    if trajectory.task_id.as_deref() == Some(task_id) {
-        if let Some(intent) = trajectory.intent_id.filter(|s| !s.is_empty()) {
-            return Some(intent);
-        }
+    if trajectory.task_id.as_deref() == Some(task_id)
+        && let Some(intent) = trajectory.intent_id.filter(|s| !s.is_empty())
+    {
+        return Some(intent);
     }
     None
 }
