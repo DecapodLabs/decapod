@@ -1,18 +1,17 @@
 {
   "schema_version": "1.0.0",
-  "title": "Finish #1118 single local datastore migration footprint",
-  "intent": "Complete the Decapod-side #1118 migration and retirement slice: ensure local runtime state uses one canonical decapod.db, make legacy import/cleanup explicit and idempotent, preserve audit/governance artifacts and rollback safety, and document/test the dactyl and Propodus compatibility boundary.",
+  "title": "Houseboat 2: lease-aware multi-agent fleet coordination",
+  "intent": "Advance #852 with exclusive claim leases, reclaim on expiry/staleness, path/scope/category overlap conflicts, todo renew, and todo fleet health projection without a standalone fleet service.",
   "state": "APPROVED",
   "todo_ids": [
-    "data_01kywps2y146s54g"
+    "code_01kyy59m3c1d00xn"
   ],
   "proof_hooks": [
-    "cargo fmt --all -- --check",
-    "cargo check --all-targets",
-    "cargo clippy --all-targets -- -D warnings",
-    "cargo test --all-targets",
-    "decapod validate",
-    "focused migration and single-datastore tests"
+    "cargo test --lib fleet_coord",
+    "cargo test --lib work_claim",
+    "cargo test --test plugins_todo_tests exclusive_claim",
+    "cargo test --test cloud_command_path",
+    "cargo clippy --all-targets -- -D warnings"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -26,5 +25,5 @@
     "file_touch_budget": 40
   },
   "phases": [],
-  "updated_at": "1785522422Z"
+  "updated_at": "1785572724Z"
 }
