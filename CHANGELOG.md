@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- scaffold each repository override subsection as a fenced documentation body, preserve legacy body bytes during upgrade, fail closed on ambiguous non-empty authority, and expose derived authority provenance in resolved context
+- remove unconditional spec-drift warnings so healthy repositories can report `warn=0`
+- migrate validation, health, heartbeat, co-player policy, broker replay, and flight-recorder event reads to canonical SQLite with autonomous idempotent legacy import
+- use durable consolidation proof to retire imported JSONL and copy forward then remove legacy SQLite stores recreated by older binaries, avoiding an unbounded backup/import loop
+
 ## [0.92.0](https://github.com/DecapodLabs/decapod/compare/v0.91.0...v0.92.0) - 2026-08-01
 
 ### Added

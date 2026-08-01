@@ -214,28 +214,16 @@ impl MentorEngine {
 
         let mut has_high_risk_coplayer = false;
 
-        // Get all actors from traces
-        let trace_path = self.repo_root.join(".decapod/data/traces.jsonl");
-        if trace_path.exists() {
-            let mut actors = std::collections::HashSet::new();
-            if let Ok(content) = std::fs::read_to_string(&trace_path) {
-                for line in content.lines() {
-                    if let Ok(ev) = serde_json::from_str::<crate::core::trace::TraceEvent>(line) {
-                        actors.insert(ev.actor);
-                    }
+        // Get all actors through the canonical event boundary.
+        let data_root = self.repo_root.join(".decapod/data");
+        for actor in crate::core::events::actors(&data_root, crate::core::events::TRACES)? {
+            if actor != agent_id
+                && let Ok(snap) = crate::core::coplayer::resolve_snapshot(&self.repo_root, &actor)
+            {
+                if snap.risk_profile == "high" {
+                    has_high_risk_coplayer = true;
                 }
-            }
-
-            for actor in actors {
-                if actor != agent_id
-                    && let Ok(snap) =
-                        crate::core::coplayer::resolve_snapshot(&self.repo_root, &actor)
-                {
-                    if snap.risk_profile == "high" {
-                        has_high_risk_coplayer = true;
-                    }
-                    coplayer_snapshots.push(snap);
-                }
+                coplayer_snapshots.push(snap);
             }
         }
 
@@ -243,7 +231,7 @@ impl MentorEngine {
         if has_high_risk_coplayer {
             must.insert(0, Obligation {
                 kind: ObligationKind::Gate,
-                ref_path: ".decapod/data/traces.jsonl".to_string(),
+                ref_path: ".decapod/data/decapod.db#traces".to_string(),
                 title: "ADAPTIVE: High-Risk Co-player Detected".to_string(),
                 why_short: "A co-player has a high risk profile. Require granular state-commits and full validation for every change.".to_string(),
                 evidence: Evidence {

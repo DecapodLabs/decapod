@@ -1,10 +1,13 @@
 // Moved from src/decapod/core/validate.rs
 use super::{
     SurfaceKind, ValidationContext, is_allowed_non_code_path, is_decapod_isolated_worktree,
-    is_non_code_path, predict_ci_outcome, strip_git_quotes, validate_git_workspace_context,
-    validate_root_dockerfile_seed_detection,
+    is_non_code_path, predict_ci_outcome, strip_git_quotes, validate_control_plane_contract,
+    validate_git_workspace_context, validate_root_dockerfile_seed_detection, validate_spec_drift,
+    validate_watcher_audit,
 };
 use super::{is_protected_git_branch, parse_ahead_behind_counts};
+use crate::core::events;
+use crate::core::store::{Store, StoreKind};
 use std::fs;
 use std::sync::atomic::Ordering;
 use tempfile::tempdir;
@@ -39,6 +42,91 @@ fn git_commit(dir: &std::path::Path, msg: &str) {
         .current_dir(dir)
         .output()
         .expect("git commit");
+}
+
+#[test]
+fn watcher_audit_gate_observes_canonical_sqlite_event() {
+    let dir = tempdir().expect("tempdir");
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: dir.path().to_path_buf(),
+    };
+    events::append(
+        &store.root,
+        events::WATCHER,
+        &serde_json::json!({
+            "event_id": "watcher-validation",
+            "ts": "1785620000Z",
+            "event_type": "watcher.run",
+            "actor": "watcher"
+        }),
+    )
+    .expect("append canonical watcher event");
+    let ctx = ValidationContext::new();
+    validate_watcher_audit(&store, &ctx).expect("watcher audit gate");
+    assert_eq!(ctx.warn_count.load(Ordering::Relaxed), 0);
+    assert_eq!(ctx.pass_count.load(Ordering::Relaxed), 1);
+    assert!(!dir.path().join("watcher.events.jsonl").exists());
+}
+
+#[test]
+fn healthy_spec_drift_gate_emits_no_warning() {
+    let dir = tempdir().expect("tempdir");
+    let specs = dir.path().join(".decapod/managed/specs");
+    fs::create_dir_all(&specs).expect("create specs");
+    for (name, body) in [
+        (
+            "INTERFACES.md",
+            "# Interfaces\n## Inbound Contracts\n## Data Ownership\n",
+        ),
+        (
+            "SEMANTICS.md",
+            "# Semantics\n## State Machines\n## Invariants\n",
+        ),
+        (
+            "OPERATIONS.md",
+            "# Operations\n## Service Level Objectives\n## Monitoring\n## Incident Response\n",
+        ),
+        (
+            "SECURITY.md",
+            "# Security\n## Threat Model\n## Authentication\n## Authorization\n## Data Classification\n",
+        ),
+    ] {
+        fs::write(specs.join(name), body).expect("write healthy spec");
+    }
+
+    let ctx = ValidationContext::new();
+    validate_spec_drift(&ctx, dir.path()).expect("spec drift gate");
+    assert_eq!(ctx.warn_count.load(Ordering::Relaxed), 0);
+    assert_eq!(ctx.fail_count.load(Ordering::Relaxed), 0);
+}
+
+#[test]
+fn empty_task_projection_does_not_claim_missing_canonical_evidence() {
+    let dir = tempdir().expect("tempdir");
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: dir.path().to_path_buf(),
+    };
+    events::append(
+        &store.root,
+        events::BROKER,
+        &serde_json::json!({
+            "event_id": "broker-validation",
+            "ts": "1785620000Z",
+            "event_type": "broker.request",
+            "actor": "test"
+        }),
+    )
+    .expect("append canonical broker event");
+    let db_path = store.root.join(crate::core::schemas::LOCAL_DB_NAME);
+    let conn = crate::core::db::db_connect(&db_path.to_string_lossy()).expect("open store");
+    conn.execute_batch("CREATE TABLE IF NOT EXISTS tasks (id TEXT PRIMARY KEY)")
+        .expect("create empty task projection");
+
+    let ctx = ValidationContext::new();
+    validate_control_plane_contract(&store, &ctx).expect("control plane gate");
+    assert_eq!(ctx.fail_count.load(Ordering::Relaxed), 0);
 }
 
 #[test]

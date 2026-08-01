@@ -187,6 +187,7 @@ fn local_record_replays_and_detects_artifact_change() {
         workunit_id: None,
         sources: Vec::new(),
         snippets: Vec::new(),
+        resolved_authority: Vec::new(),
         capabilities: Vec::new(),
         policy: CapsulePolicyBinding {
             risk_tier: "low".to_string(),

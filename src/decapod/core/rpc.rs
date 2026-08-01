@@ -161,6 +161,7 @@ pub struct ContextResolveResult {
     pub fragments: Vec<DocFragment>,
     pub scoped_fragments: Vec<DocFragment>,
     pub local_project_specs: LocalProjectSpecs,
+    pub resolved_authority: Vec<crate::core::assets::ResolvedOverrideEvidence>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -477,6 +478,8 @@ pub struct ContextCapsule {
     /// Relevant fragments from the constitution/authority docs
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub fragments: Vec<DocFragment>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub resolved_authority: Vec<crate::core::assets::ResolvedOverrideEvidence>,
     /// Relevant spec slices
     #[serde(skip_serializing_if = "Option::is_none")]
     pub spec: Option<String>,

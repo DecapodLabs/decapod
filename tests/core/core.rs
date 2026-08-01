@@ -7,7 +7,8 @@ use decapod::core::external_action::{self, ExternalCapability};
 use decapod::core::migration;
 use decapod::core::repomap;
 use decapod::core::scaffold::{
-    DiagramStyle, ScaffoldOptions, SpecsSeed, refresh_project_specs, scaffold_project_entrypoints,
+    DiagramStyle, ScaffoldOptions, SpecsSeed, blend_overrides, refresh_project_specs,
+    scaffold_project_entrypoints,
 };
 use decapod::core::schemas;
 use decapod::core::store::{Store, StoreKind};
@@ -1050,11 +1051,11 @@ fn override_md_extraction_and_merging() {
 
 This is a test override for core/DECAPOD
 
-### core/CONTROL_PLANE
+### core/INTERFACES
 
 ## Custom Control Plane
 
-This is a test override for core/CONTROL_PLANE
+This is a test override for core/INTERFACES
 
 ---
 
@@ -1076,7 +1077,7 @@ This is a test override for core/CONTROL_PLANE
     assert!(decapod_override.is_some());
     assert!(decapod_override.unwrap().contains("Custom Navigation"));
 
-    let control_plane_override = assets::get_override_doc(root, "core/CONTROL_PLANE");
+    let control_plane_override = assets::get_override_doc(root, "core/INTERFACES");
     assert!(control_plane_override.is_some());
     assert!(
         control_plane_override
@@ -1103,7 +1104,7 @@ This is a test override for core/CONTROL_PLANE
     let override_sections = assets::list_override_sections(root);
     assert_eq!(
         override_sections,
-        vec!["core/DECAPOD", "core/CONTROL_PLANE", "plugins/TODO"]
+        vec!["core/DECAPOD", "core/INTERFACES", "plugins/TODO"]
     );
 }
 
@@ -1219,7 +1220,7 @@ fn override_md_empty_sections_return_none() {
 
 ### core/DECAPOD
 
-### core/CONTROL_PLANE
+### core/INTERFACES
 
 Some content here
 
@@ -1233,7 +1234,7 @@ Some content here
     assert!(empty_override.is_none());
 
     // Non-empty section should return Some
-    let non_empty_override = assets::get_override_doc(root, "core/CONTROL_PLANE");
+    let non_empty_override = assets::get_override_doc(root, "core/INTERFACES");
     assert!(non_empty_override.is_some());
     assert!(non_empty_override.unwrap().contains("Some content here"));
 
@@ -1279,4 +1280,187 @@ This is the ACTUAL override content
     let content = override_doc.unwrap();
     assert!(content.contains("ACTUAL override content"));
     assert!(!content.contains("just an example"));
+}
+
+#[test]
+fn override_md_preserves_nested_h3_and_reports_resolved_authority() {
+    let tmp = tempdir().expect("tempdir");
+    let root = tmp.path();
+    fs::create_dir_all(root.join(".decapod")).expect("mkdir .decapod");
+    fs::write(
+        root.join(".decapod/OVERRIDE.md"),
+        r#"# OVERRIDE.md
+<!-- CHANGES ARE NOT PERMITTED ABOVE THIS LINE -->
+### core/DEMANDS
+
+### Permission Model
+
+Agents may never create notes without approval.
+
+## CORE Overrides
+
+This category-looking heading is authored policy, not template chrome.
+"#,
+    )
+    .expect("write override");
+
+    let resolved = assets::get_override_doc(root, "core/DEMANDS").expect("resolved override");
+    assert!(resolved.contains("### Permission Model"));
+    assert!(resolved.contains("Agents may never create notes without approval."));
+    assert!(resolved.contains("## CORE Overrides"));
+    assert!(resolved.contains("category-looking heading is authored policy"));
+
+    let evidence = assets::resolved_override_evidence(root).expect("override evidence");
+    assert_eq!(evidence.len(), 1);
+    assert_eq!(evidence[0].directive_id, "core/DEMANDS");
+    assert_eq!(evidence[0].source, ".decapod/OVERRIDE.md");
+    assert_eq!(evidence[0].byte_count, resolved.len());
+    assert_eq!(evidence[0].source_hash.len(), 64);
+    assert_eq!(evidence[0].body_hash.len(), 64);
+    assert_eq!(evidence[0].precedence, "repository_project_override");
+}
+
+#[test]
+fn override_md_duplicate_and_malformed_directives_fail_closed() {
+    let tmp = tempdir().expect("tempdir");
+    let root = tmp.path();
+    fs::create_dir_all(root.join(".decapod")).expect("mkdir .decapod");
+
+    fs::write(
+        root.join(".decapod/OVERRIDE.md"),
+        "<!-- CHANGES ARE NOT PERMITTED ABOVE THIS LINE -->\n### core/DEMANDS\none\n### core/DEMANDS\ntwo\n",
+    )
+    .expect("write duplicate override");
+    let duplicate = assets::resolved_override_evidence(root).expect_err("duplicate must fail");
+    assert!(
+        duplicate
+            .to_string()
+            .contains("OVERRIDE_DUPLICATE_DIRECTIVE")
+    );
+    assert!(assets::get_override_doc(root, "core/DEMANDS").is_none());
+
+    fs::write(
+        root.join(".decapod/OVERRIDE.md"),
+        "<!-- CHANGES ARE NOT PERMITTED ABOVE THIS LINE -->\n### core/NOT_A_DIRECTIVE\ncontent\n",
+    )
+    .expect("write malformed override");
+    let malformed = assets::resolved_override_evidence(root).expect_err("malformed must fail");
+    assert!(
+        malformed
+            .to_string()
+            .contains("OVERRIDE_MALFORMED_DIRECTIVE")
+    );
+    assert!(assets::get_override_doc(root, "core/DEMANDS").is_none());
+}
+
+#[test]
+fn override_template_gives_each_directive_an_inert_markdown_body_cue() {
+    let template = assets::get_template("OVERRIDE.md").expect("override template");
+    let lines = template.lines().collect::<Vec<_>>();
+    for (index, line) in lines.iter().enumerate() {
+        if line.starts_with("### ") {
+            assert_eq!(lines.get(index + 1).copied(), Some("````markdown"));
+            assert_eq!(
+                lines.get(index + 2).copied(),
+                Some(
+                    "Replace this line with this directive's override. Use Markdown or any documentation style you prefer."
+                )
+            );
+            assert_eq!(lines.get(index + 3).copied(), Some("````"));
+        }
+    }
+
+    let tmp = tempdir().expect("tempdir");
+    fs::create_dir_all(tmp.path().join(".decapod")).expect("mkdir .decapod");
+    fs::write(tmp.path().join(".decapod/OVERRIDE.md"), template).expect("write template");
+    assert!(
+        assets::resolved_override_evidence(tmp.path())
+            .expect("empty generated template is valid")
+            .is_empty()
+    );
+}
+
+#[test]
+fn override_blend_adds_markdown_body_cues_without_changing_authored_body() {
+    let tmp = tempdir().expect("tempdir");
+    fs::create_dir_all(tmp.path().join(".decapod")).expect("mkdir .decapod");
+    fs::write(
+        tmp.path().join(".decapod/OVERRIDE.md"),
+        "<!-- CHANGES ARE NOT PERMITTED ABOVE THIS LINE -->\n### core/DEMANDS\n### Permission Model\nKeep this exact Markdown body.\n",
+    )
+    .expect("write existing override");
+
+    blend_overrides(tmp.path()).expect("blend override template");
+    let updated =
+        fs::read_to_string(tmp.path().join(".decapod/OVERRIDE.md")).expect("read blended override");
+    assert!(updated.contains(
+        "### core/DEMANDS\n````markdown\n### Permission Model\nKeep this exact Markdown body.\n````"
+    ));
+    assets::resolved_override_evidence(tmp.path())
+        .expect("upgraded scaffold is structurally valid");
+    let resolved = assets::get_override_doc(tmp.path(), "core/DEMANDS")
+        .expect("authored body remains binding");
+    assert_eq!(
+        resolved,
+        "### Permission Model\nKeep this exact Markdown body."
+    );
+}
+
+#[test]
+fn fenced_override_body_extracts_markdown_without_rendering_it_as_structure() {
+    let tmp = tempdir().expect("tempdir");
+    fs::create_dir_all(tmp.path().join(".decapod")).expect("mkdir .decapod");
+    fs::write(
+        tmp.path().join(".decapod/OVERRIDE.md"),
+        r#"<!-- CHANGES ARE NOT PERMITTED ABOVE THIS LINE -->
+### core/DEMANDS
+````markdown
+### Permission Model
+Use this binding rule.
+```rust
+fn nested_fence_is_safe() {}
+```
+### core/PLUGINS
+````
+"#,
+    )
+    .expect("write fenced override");
+
+    let resolved =
+        assets::get_override_doc(tmp.path(), "core/DEMANDS").expect("fenced body resolves");
+    assert!(resolved.contains("### Permission Model"));
+    assert!(resolved.contains("```rust"));
+    assert!(resolved.contains("### core/PLUGINS"));
+    assert!(!resolved.contains("````markdown"));
+}
+
+#[test]
+fn override_upgrade_uses_a_longer_fence_than_authored_examples() {
+    let legacy = "<!-- CHANGES ARE NOT PERMITTED ABOVE THIS LINE -->\n### core/DEMANDS\n````text\nexample\n````\n";
+    let upgraded = assets::render_fenced_override_upgrade(legacy).expect("render upgrade");
+    assert!(upgraded.contains("### core/DEMANDS\n`````markdown\n````text\nexample\n````\n`````"));
+
+    let tmp = tempdir().expect("tempdir");
+    fs::create_dir_all(tmp.path().join(".decapod")).expect("mkdir .decapod");
+    fs::write(tmp.path().join(".decapod/OVERRIDE.md"), upgraded).expect("write upgrade");
+    assert_eq!(
+        assets::get_override_doc(tmp.path(), "core/DEMANDS").unwrap(),
+        "````text\nexample\n````"
+    );
+}
+
+#[test]
+fn legacy_empty_spec_alias_sections_do_not_create_duplicate_authority() {
+    let tmp = tempdir().expect("tempdir");
+    fs::create_dir_all(tmp.path().join(".decapod")).expect("mkdir .decapod");
+    fs::write(
+        tmp.path().join(".decapod/OVERRIDE.md"),
+        "<!-- CHANGES ARE NOT PERMITTED ABOVE THIS LINE -->\n### specs/INTENT\n\n### specs/INTENT.md\n\n### docs/book/src/RETIRED.md\n\n---\n",
+    )
+    .expect("write legacy generated aliases");
+    assert!(
+        assets::resolved_override_evidence(tmp.path())
+            .expect("empty legacy aliases are compatible")
+            .is_empty()
+    );
 }

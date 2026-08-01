@@ -10,6 +10,17 @@ Install the Decapod binary using Cargo:
 cargo install decapod
 ```
 
+For an existing Decapod repository, installation is followed by an autonomous,
+idempotent upgrade on the next normal command. `decapod init`, `decapod validate`,
+and other governed commands reconcile unproven legacy event JSONL into the
+canonical SQLite event store before runtime consumers read it. A prior successful
+single-datastore migration retires its JSONL inputs, while any legacy SQLite
+stores recreated by an older binary are copied forward and removed. Legacy files
+are never treated as a second runtime authority. Existing
+override body bytes are preserved while sections are rendered into fenced
+documentation source areas with visible authoring instructions; unsafe or
+ambiguous authority fails closed.
+
 ## 2. Initialization
 
 Initialize your repository. This is the only human-facing setup command: use

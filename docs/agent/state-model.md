@@ -30,8 +30,15 @@ Authentication and identity verification tokens.
 The static/override rules of the repository.
 - **Authority:** Immutable (Global) | Mutable (Local `OVERRIDE.md`).
 - **Access:** Read-only via `rpc` or `docs`.
+- **Authoring:** Each exact current generated directive subsection owns a four-backtick source block. Humans replace the visible instruction inside it with Markdown or any documentation style they prefer. The content does not render as outer `OVERRIDE.md` structure. Decapod derives structure, hashes, byte counts, source, and precedence.
+- **Resolution:** Decapod extracts the wrapper-free body. Duplicate exact registered directives, unclosed wrappers, or non-empty unknown IDs in Decapod namespaces invalidate the complete repository overlay. Empty retired generated sections are ignored for upgrade compatibility. Nested headings and triple-backtick examples remain body content.
 
-## 5. Knowledge (Memory)
+## 5. Event Evidence
+Append-only operational evidence.
+- **Authority:** Canonical tables in `.decapod/data/decapod.db`, accessed through `core::events`.
+- **Migration:** Unproven legacy JSONL is imported idempotently during startup. A successful single-datastore migration durably retires its inputs, and later runtime validation, health, heartbeat, and flight-recorder reads do not consult them. Recreated legacy SQLite stores are copied forward and removed.
+
+## 6. Knowledge (Memory)
 The persistent, shared understanding of the project.
 - **Class:** Advisory (Aptitude) | Procedural (Federated Knowledge).
 - **Persistence:** Surmounts individual sessions and agents.

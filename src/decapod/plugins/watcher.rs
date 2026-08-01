@@ -5,7 +5,6 @@ use crate::core::store::Store;
 use crate::health;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::{Path, PathBuf};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Watchlist {
@@ -30,10 +29,6 @@ pub struct ProtectedBranchViolation {
     pub violation_type: String,
     pub commit_hash: Option<String>,
     pub message: String,
-}
-
-pub fn watcher_events_path(root: &Path) -> PathBuf {
-    root.join("watcher.events.jsonl")
 }
 
 pub fn run_watcher(store: &Store) -> Result<WatcherReport, error::DecapodError> {

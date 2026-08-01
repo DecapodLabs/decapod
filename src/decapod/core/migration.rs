@@ -183,6 +183,7 @@ pub struct DbSchemaVersionCheck {
 
 /// Run any pending migrations (idempotent — safe to call every startup)
 pub fn check_and_migrate(decapod_root: &Path) -> Result<(), error::DecapodError> {
+    reconcile_post_consolidation_artifacts(decapod_root)?;
     run_migrations(decapod_root)?;
     Ok(())
 }
@@ -195,6 +196,7 @@ where
     F: FnOnce(&Path) -> Result<(), error::DecapodError>,
 {
     let data_root = decapod_root.join("data");
+    reconcile_post_consolidation_artifacts(decapod_root)?;
     if !schema_upgrade_pending(&data_root)? {
         run_migrations(decapod_root)?;
         verify(&data_root)?;
@@ -226,6 +228,44 @@ where
 
     fs::remove_dir_all(&backup_dir).map_err(error::DecapodError::IoError)?;
     Ok(())
+}
+
+fn reconcile_post_consolidation_artifacts(decapod_root: &Path) -> Result<(), error::DecapodError> {
+    let applied = load_applied_migrations(decapod_root)?;
+    if !applied
+        .entries
+        .iter()
+        .any(|entry| entry.id == "db.consolidate.single_datastore.v001")
+    {
+        return Ok(());
+    }
+    let data_root = decapod_root.join("data");
+    if !LEGACY_LOCAL_DATABASES
+        .iter()
+        .any(|name| legacy_database_artifact_exists(&data_root, name))
+    {
+        return Ok(());
+    }
+
+    let target_path = data_root.join(schemas::LOCAL_DB_NAME);
+    if !target_path.is_file() {
+        return Err(error::DecapodError::ValidationError(
+            "CONSOLIDATED_STORE_MISSING: migration ledger proves single-datastore consolidation but decapod.db is absent"
+                .to_string(),
+        ));
+    }
+    let target = db::db_connect(&target_path.to_string_lossy())?;
+    events::mark_previously_consolidated_legacy_inputs(
+        &data_root,
+        &target,
+        "db.consolidate.single_datastore.v001",
+    )?;
+    drop(target);
+
+    // Older binaries may recreate a retired per-subsystem database after the
+    // original consolidation. Re-run the existing idempotent copier so newer
+    // rows reach decapod.db before the retired files are removed.
+    migrate_consolidate_single_datastore(decapod_root)
 }
 
 fn schema_upgrade_pending(data_root: &Path) -> Result<bool, error::DecapodError> {
@@ -368,6 +408,8 @@ fn run_migrations(decapod_root: &Path) -> Result<(), error::DecapodError> {
     touch_generated_migration_catalog(decapod_root, &migrations)?;
     let mut applied = load_applied_migrations(decapod_root)?;
     let mut applied_ids: HashSet<String> = applied.entries.iter().map(|e| e.id.clone()).collect();
+    let single_datastore_was_previously_consolidated =
+        applied_ids.contains("db.consolidate.single_datastore.v001");
     for migration in migrations {
         if !version_gte(DECAPOD_VERSION, migration.min_version) {
             continue;
@@ -393,14 +435,16 @@ fn run_migrations(decapod_root: &Path) -> Result<(), error::DecapodError> {
         applied_ids.insert(migration.id.to_string());
         store_applied_migrations(decapod_root, &applied)?;
     }
-    reconcile_canonical_event_tables(decapod_root)?;
+    reconcile_canonical_event_tables(decapod_root, single_datastore_was_previously_consolidated)?;
     Ok(())
 }
 
-/// Keep the canonical event streams complete even when an older migration
-/// ledger predates the unified event tables. This is intentionally idempotent
-/// and never rewrites or deletes the legacy JSONL archives.
-fn reconcile_canonical_event_tables(decapod_root: &Path) -> Result<(), error::DecapodError> {
+/// Keep canonical SQLite event tables complete. JSONL import is sealed inside
+/// the historical single-datastore migration and never runs on this steady-state path.
+fn reconcile_canonical_event_tables(
+    decapod_root: &Path,
+    single_datastore_was_previously_consolidated: bool,
+) -> Result<(), error::DecapodError> {
     let data_root = decapod_root.join("data");
     let db_path = data_root.join(schemas::LOCAL_DB_NAME);
     if !db_path.exists() {
@@ -408,7 +452,13 @@ fn reconcile_canonical_event_tables(decapod_root: &Path) -> Result<(), error::De
     }
     let conn = db::db_connect(&db_path.to_string_lossy())?;
     events::ensure_tables(&conn)?;
-    events::import_legacy_jsonl(&data_root, &conn)?;
+    if single_datastore_was_previously_consolidated {
+        events::mark_previously_consolidated_legacy_inputs(
+            &data_root,
+            &conn,
+            "db.consolidate.single_datastore.v001",
+        )?;
+    }
     migrate_task_events_to_canonical_stream(&conn)?;
     Ok(())
 }
@@ -1670,4 +1720,57 @@ fn migrate_table(
 
     res.map_err(error::DecapodError::RusqliteError)?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::tempdir;
+
+    #[test]
+    fn proven_consolidation_copies_forward_and_retires_recreated_databases() {
+        let root = tempdir().unwrap();
+        let data_root = root.path().join("data");
+        fs::create_dir_all(&data_root).unwrap();
+        let target = Connection::open(data_root.join(schemas::LOCAL_DB_NAME)).unwrap();
+        initialize_single_datastore_schema(&target).unwrap();
+        drop(target);
+        Connection::open(data_root.join(schemas::GOVERNANCE_DB_NAME)).unwrap();
+        fs::write(
+            data_root.join("watcher.events.jsonl"),
+            "{\"event_id\":\"already-imported\",\"event_type\":\"watcher.run\"}\n",
+        )
+        .unwrap();
+        store_applied_migrations(
+            root.path(),
+            &AppliedMigrationLedger {
+                schema_version: "1.0.0".to_string(),
+                entries: vec![AppliedMigrationEntry {
+                    id: "db.consolidate.single_datastore.v001".to_string(),
+                    sequence: 500,
+                    scope: "global".to_string(),
+                    kind: "rust".to_string(),
+                    script_path: None,
+                    min_version: "0.89.1".to_string(),
+                    target_version: "0.89.1".to_string(),
+                    applied_at: "2026-08-01T00:00:00Z".to_string(),
+                    applied_by_version: "0.92.0".to_string(),
+                }],
+            },
+        )
+        .unwrap();
+
+        reconcile_post_consolidation_artifacts(root.path()).unwrap();
+
+        assert!(!data_root.join(schemas::GOVERNANCE_DB_NAME).exists());
+        let target = Connection::open(data_root.join(schemas::LOCAL_DB_NAME)).unwrap();
+        let receipt: String = target
+            .query_row(
+                "SELECT content_hash FROM legacy_event_imports WHERE filename = 'watcher.events.jsonl'",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(receipt, "proven-by:db.consolidate.single_datastore.v001");
+    }
 }

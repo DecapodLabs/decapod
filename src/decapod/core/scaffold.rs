@@ -1600,49 +1600,9 @@ pub fn blend_overrides(target_dir: &Path) -> Result<FileAction, error::DecapodEr
 
     let existing_content =
         fs::read_to_string(&override_path).map_err(error::DecapodError::IoError)?;
-    let template = assets::get_template("OVERRIDE.md").expect("Missing template: OVERRIDE.md");
-
-    // Extract H3 headers from existing content
-    let existing_headers: std::collections::HashSet<String> = existing_content
-        .lines()
-        .filter(|line| line.starts_with("### "))
-        .map(|line| line.trim().to_string())
-        .collect();
-
-    // Find missing sections in template
-    let mut missing_lines = Vec::new();
-    let mut current_cat = String::new();
-    let mut cat_emitted = std::collections::HashSet::new();
-
-    for line in template.lines() {
-        if line.starts_with("## ") {
-            current_cat = line.to_string();
-        } else if line.starts_with("### ") {
-            let trimmed = line.trim();
-            if !existing_headers.contains(trimmed) {
-                if !cat_emitted.contains(&current_cat) && !current_cat.is_empty() {
-                    // Check if category already exists in file
-                    if !existing_content.contains(&current_cat) {
-                        missing_lines.push(format!("\n{current_cat}"));
-                    }
-                    cat_emitted.insert(current_cat.clone());
-                }
-                missing_lines.push(line.to_string());
-            }
-        }
-    }
-
-    if missing_lines.is_empty() {
+    let updated_content = assets::render_fenced_override_upgrade(&existing_content)?;
+    if updated_content == existing_content {
         return Ok(FileAction::Unchanged);
-    }
-
-    let mut updated_content = existing_content;
-    if !updated_content.ends_with('\n') {
-        updated_content.push('\n');
-    }
-    for line in missing_lines {
-        updated_content.push_str(&line);
-        updated_content.push('\n');
     }
 
     fs::write(&override_path, updated_content).map_err(error::DecapodError::IoError)?;

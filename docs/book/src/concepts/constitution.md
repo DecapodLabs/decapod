@@ -20,6 +20,10 @@ decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'
 
 This high-signal, low-noise approach ensures that agents remain oriented without being overwhelmed by irrelevant documentation.
 
+Resolved context and capsules include derived proof for each applied project
+override. The human contract is documentation authored inside each generated fenced source block; Decapod owns exact-ID
+boundary recognition, fail-closed ambiguity handling, hashing, and precedence.
+
 ## Enforcement
 
 The constitution is not merely "guidance"—it is enforced. `decapod validate` checks the repository state against the normative claims made in the constitution. If a change violates a constitutional rule, it cannot be promoted to `main` (see [Proof & Validation](proof.md)).

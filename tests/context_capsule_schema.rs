@@ -1,6 +1,9 @@
 use decapod::core::context_capsule::{
     ContextCapsuleSnippet, ContextCapsuleSource, DeterministicContextCapsule,
+    query_embedded_capsule,
 };
+use std::fs;
+use tempfile::tempdir;
 
 #[test]
 fn context_capsule_canonical_serialization_is_deterministic() {
@@ -34,6 +37,7 @@ fn context_capsule_canonical_serialization_is_deterministic() {
                 text: "Control-plane operations MUST remain daemonless".to_string(),
             },
         ],
+        resolved_authority: vec![],
         capabilities: vec!["public-api".to_string()],
         policy: Default::default(),
         capsule_hash: String::new(),
@@ -67,6 +71,7 @@ fn context_capsule_with_recomputed_hash_is_stable() {
             source_path: "interfaces/KNOWLEDGE_STORE".to_string(),
             text: "episodic -> procedural requires explicit promotion event".to_string(),
         }],
+        resolved_authority: vec![],
         capabilities: vec![],
         policy: Default::default(),
         capsule_hash: "wrong".to_string(),
@@ -78,4 +83,95 @@ fn context_capsule_with_recomputed_hash_is_stable() {
     let normalized1 = base.with_recomputed_hash().expect("normalize #1");
     let normalized2 = base.with_recomputed_hash().expect("normalize #2");
     assert_eq!(normalized1.capsule_hash, normalized2.capsule_hash);
+}
+
+#[test]
+fn context_capsule_proves_nested_h3_override_authority() {
+    let repo = tempdir().expect("tempdir");
+    fs::create_dir_all(repo.path().join(".decapod")).expect("mkdir .decapod");
+    let adversarial_fixture = r#"# OVERRIDE.md
+<!-- CHANGES ARE NOT PERMITTED ABOVE THIS LINE -->
+### core/DEMANDS
+````markdown
+### Permission Model
+lunar-notebook-authority requires explicit human approval.
+#### Nested Detail
+### Input/Output
+```markdown
+### core/PLUGINS
+```
+Directive-like prose: ### core/NOT_A_DIRECTIVE
+````
+"#;
+    fs::write(
+        repo.path().join(".decapod/OVERRIDE.md"),
+        adversarial_fixture,
+    )
+    .expect("write override");
+
+    let capsule = query_embedded_capsule(
+        repo.path(),
+        "lunar-notebook-authority",
+        "core",
+        None,
+        None,
+        5,
+    )
+    .expect("resolve capsule");
+    assert!(
+        capsule
+            .snippets
+            .iter()
+            .any(|snippet| snippet.text.contains("lunar-notebook-authority"))
+    );
+    let resolved_text = capsule
+        .snippets
+        .iter()
+        .map(|snippet| snippet.text.as_str())
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(resolved_text.contains("### Input/Output"));
+    assert!(resolved_text.contains("### core/PLUGINS"));
+    assert!(resolved_text.contains("#### Nested Detail"));
+    assert_eq!(capsule.resolved_authority.len(), 1);
+    assert_eq!(capsule.resolved_authority[0].directive_id, "core/DEMANDS");
+    assert_eq!(capsule.resolved_authority[0].source_hash.len(), 64);
+    assert_eq!(capsule.resolved_authority[0].body_hash.len(), 64);
+    assert!(capsule.resolved_authority[0].byte_count > 0);
+
+    fs::write(
+        repo.path().join(".decapod/OVERRIDE.md"),
+        format!("{adversarial_fixture}\n### core/NOT_A_DIRECTIVE\nambiguous\n"),
+    )
+    .expect("write fake directive variant");
+    let fake = query_embedded_capsule(
+        repo.path(),
+        "lunar-notebook-authority",
+        "core",
+        None,
+        None,
+        5,
+    )
+    .expect_err("unknown Decapod directive must fail the resolved context");
+    assert!(fake.to_string().contains("OVERRIDE_MALFORMED_DIRECTIVE"));
+
+    fs::write(
+        repo.path().join(".decapod/OVERRIDE.md"),
+        format!("{adversarial_fixture}\n### core/DEMANDS\nduplicate\n"),
+    )
+    .expect("write duplicate directive variant");
+    let duplicate = query_embedded_capsule(
+        repo.path(),
+        "lunar-notebook-authority",
+        "core",
+        None,
+        None,
+        5,
+    )
+    .expect_err("duplicate directive must fail the resolved context");
+    assert!(
+        duplicate
+            .to_string()
+            .contains("OVERRIDE_DUPLICATE_DIRECTIVE")
+    );
 }

@@ -31,6 +31,8 @@ pub struct DeterministicContextCapsule {
     pub sources: Vec<ContextCapsuleSource>,
     pub snippets: Vec<ContextCapsuleSnippet>,
     #[serde(default)]
+    pub resolved_authority: Vec<assets::ResolvedOverrideEvidence>,
+    #[serde(default)]
     pub capabilities: Vec<String>,
     #[serde(default)]
     pub policy: CapsulePolicyBinding,
@@ -65,6 +67,7 @@ impl DeterministicContextCapsule {
             workunit_id: self.workunit_id.clone(),
             sources,
             snippets,
+            resolved_authority: self.resolved_authority.clone(),
             capabilities,
             policy: self.policy.clone(),
             config_input_hash: self.config_input_hash.clone(),
@@ -100,6 +103,8 @@ struct CanonicalCapsule {
     sources: Vec<ContextCapsuleSource>,
     snippets: Vec<ContextCapsuleSnippet>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
+    resolved_authority: Vec<assets::ResolvedOverrideEvidence>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     capabilities: Vec<String>,
     policy: CapsulePolicyBinding,
     #[serde(skip_serializing_if = "String::is_empty")]
@@ -109,7 +114,7 @@ struct CanonicalCapsule {
 }
 
 fn capsule_schema_version_default() -> String {
-    "1.1.0".to_string()
+    "1.2.0".to_string()
 }
 
 pub fn query_embedded_capsule(
@@ -148,6 +153,7 @@ pub fn query_embedded_capsule_governed(
     }
     let max = limit.max(1);
     let scope_prefix = format!("{scope}/");
+    let resolved_authority = assets::resolved_override_evidence(repo_root)?;
 
     let mut fragments = docs::resolve_scoped_fragments(
         repo_root,
@@ -203,6 +209,7 @@ pub fn query_embedded_capsule_governed(
         workunit_id: workunit_id.map(str::to_string),
         sources,
         snippets,
+        resolved_authority,
         capabilities: declared_capabilities(repo_root),
         policy,
         capsule_hash: String::new(),
