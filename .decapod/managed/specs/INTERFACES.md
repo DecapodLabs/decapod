@@ -73,7 +73,7 @@ pub enum ApiError {
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `331487f328d9cf19d96ea6274cde81bdac93b9576e5ad899681485a96c3c2dcb`
+- Repository signal fingerprint: `29d629c362cd5a5478037e0a54c1e10b84d592d0733d2f6cd4c39b907e726f20`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

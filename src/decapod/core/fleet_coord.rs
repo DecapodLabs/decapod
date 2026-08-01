@@ -6,6 +6,7 @@
 //! It does not introduce a standalone fleet service.
 
 use serde::{Deserialize, Serialize};
+use std::collections::{BTreeMap, BTreeSet};
 
 /// Default exclusive-claim lease duration (30 minutes).
 /// Aligns with agent presence eviction so lease expiry and stale presence agree.
@@ -100,6 +101,9 @@ pub struct ActiveClaimView {
     /// Reserved capacity units (1 = one exclusive workunit slot).
     #[serde(default = "default_capacity_units")]
     pub capacity_units: u32,
+    /// Current prerequisite/proof readiness for this workunit.
+    #[serde(default)]
+    pub dependency_readiness: DependencyReadiness,
 }
 
 fn default_capacity_units() -> u32 {
@@ -140,6 +144,7 @@ pub struct FleetHealthProjection {
     pub expired_leases: Vec<ActiveClaimView>,
     pub yielded_claims: Vec<ActiveClaimView>,
     pub expiry_risk: Vec<ActiveClaimView>,
+    pub dependency_blocked_claims: Vec<ActiveClaimView>,
     pub overlaps: Vec<ClaimOverlap>,
     pub intent_anchors: Vec<String>,
     pub capacity: FleetCapacityView,
@@ -149,6 +154,206 @@ pub struct FleetHealthProjection {
     pub overlap_count: usize,
     pub yielded_count: usize,
     pub expiry_risk_count: usize,
+    pub dependency_blocked_count: usize,
+    pub proof_blocked_count: usize,
+}
+
+/// Deterministic dependency gate state for a todo/workunit.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum DependencyReadinessState {
+    #[default]
+    Ready,
+    Waiting,
+    Missing,
+    ProofBlocked,
+    Cycle,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DependencyNodeView {
+    pub task_id: String,
+    pub status: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub validation_status: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub proof_refs: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DependencyBlocker {
+    pub task_id: String,
+    pub reason: String,
+    pub status: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub validation_status: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DependencyReadiness {
+    #[serde(default)]
+    pub state: DependencyReadinessState,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub dependencies: Vec<DependencyNodeView>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub blockers: Vec<DependencyBlocker>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub cycle: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub proof_refs: Vec<String>,
+}
+
+impl DependencyReadiness {
+    pub fn ready() -> Self {
+        Self::default()
+    }
+
+    pub fn is_ready(&self) -> bool {
+        self.state == DependencyReadinessState::Ready
+    }
+}
+
+fn verification_passed(status: Option<&str>) -> bool {
+    status
+        .map(|value| {
+            matches!(
+                value.trim().to_ascii_lowercase().as_str(),
+                "pass" | "passed" | "verified"
+            )
+        })
+        .unwrap_or(false)
+}
+
+/// Evaluate direct prerequisite state and any cycle reachable from `task_id`.
+///
+/// `edges` contains the full reachable graph as `(task, prerequisite)` pairs;
+/// `dependencies` contains the resolved direct prerequisite records. Both are
+/// canonicalized here so database row order cannot affect the projection.
+pub fn evaluate_dependency_readiness(
+    task_id: &str,
+    mut dependencies: Vec<DependencyNodeView>,
+    edges: &[(String, String)],
+) -> DependencyReadiness {
+    dependencies.sort_by(|left, right| left.task_id.cmp(&right.task_id));
+    dependencies.dedup_by(|left, right| left.task_id == right.task_id);
+
+    let cycle = find_reachable_dependency_cycle(task_id, edges);
+    let mut blockers = Vec::new();
+    let mut proof_refs = Vec::new();
+    for dependency in &mut dependencies {
+        dependency.proof_refs.sort();
+        dependency.proof_refs.dedup();
+        proof_refs.extend(dependency.proof_refs.iter().cloned());
+        let (reason, blocked) = if dependency.status == "missing" {
+            ("dependency_missing", true)
+        } else if dependency.status != "done" {
+            ("dependency_not_complete", true)
+        } else if !verification_passed(dependency.validation_status.as_deref()) {
+            ("dependency_proof_not_passed", true)
+        } else {
+            ("", false)
+        };
+        if blocked {
+            blockers.push(DependencyBlocker {
+                task_id: dependency.task_id.clone(),
+                reason: reason.to_string(),
+                status: dependency.status.clone(),
+                validation_status: dependency.validation_status.clone(),
+            });
+        }
+    }
+    blockers.sort_by(|left, right| {
+        left.task_id
+            .cmp(&right.task_id)
+            .then(left.reason.cmp(&right.reason))
+    });
+    proof_refs.sort();
+    proof_refs.dedup();
+
+    let state = if !cycle.is_empty() {
+        DependencyReadinessState::Cycle
+    } else if blockers
+        .iter()
+        .any(|blocker| blocker.reason == "dependency_missing")
+    {
+        DependencyReadinessState::Missing
+    } else if blockers
+        .iter()
+        .any(|blocker| blocker.reason == "dependency_not_complete")
+    {
+        DependencyReadinessState::Waiting
+    } else if blockers
+        .iter()
+        .any(|blocker| blocker.reason == "dependency_proof_not_passed")
+    {
+        DependencyReadinessState::ProofBlocked
+    } else {
+        DependencyReadinessState::Ready
+    };
+
+    DependencyReadiness {
+        state,
+        dependencies,
+        blockers,
+        cycle,
+        proof_refs,
+    }
+}
+
+fn find_reachable_dependency_cycle(task_id: &str, edges: &[(String, String)]) -> Vec<String> {
+    let mut graph: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
+    for (task, dependency) in edges {
+        graph
+            .entry(task.as_str())
+            .or_default()
+            .push(dependency.as_str());
+    }
+    for dependencies in graph.values_mut() {
+        dependencies.sort_unstable();
+        dependencies.dedup();
+    }
+
+    fn visit<'a>(
+        node: &'a str,
+        graph: &BTreeMap<&'a str, Vec<&'a str>>,
+        visited: &mut BTreeSet<&'a str>,
+        stack: &mut Vec<&'a str>,
+        active: &mut BTreeSet<&'a str>,
+    ) -> Option<Vec<String>> {
+        if active.contains(node) {
+            let start = stack.iter().position(|entry| *entry == node).unwrap_or(0);
+            let mut cycle: Vec<String> = stack[start..]
+                .iter()
+                .map(|entry| (*entry).to_string())
+                .collect();
+            cycle.push(node.to_string());
+            return Some(cycle);
+        }
+        if !visited.insert(node) {
+            return None;
+        }
+        active.insert(node);
+        stack.push(node);
+        if let Some(dependencies) = graph.get(node) {
+            for dependency in dependencies {
+                if let Some(cycle) = visit(dependency, graph, visited, stack, active) {
+                    return Some(cycle);
+                }
+            }
+        }
+        stack.pop();
+        active.remove(node);
+        None
+    }
+
+    visit(
+        task_id,
+        &graph,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+    )
+    .unwrap_or_default()
 }
 
 /// Parse Decapod epoch-Z timestamps (`{unix_secs}Z`).
@@ -481,6 +686,15 @@ pub fn project_fleet_health_with_capacity(
         })
         .cloned()
         .collect();
+    let dependency_blocked_claims: Vec<ActiveClaimView> = active_claims
+        .iter()
+        .filter(|claim| !claim.dependency_readiness.is_ready())
+        .cloned()
+        .collect();
+    let proof_blocked_count = dependency_blocked_claims
+        .iter()
+        .filter(|claim| claim.dependency_readiness.state == DependencyReadinessState::ProofBlocked)
+        .count();
     let overlaps = detect_fleet_overlaps(&active_claims, now_ts);
 
     let reserved_units: u32 = active_claims
@@ -523,11 +737,14 @@ pub fn project_fleet_health_with_capacity(
         overlap_count: overlaps.len(),
         yielded_count: yielded_claims.len(),
         expiry_risk_count: expiry_risk.len(),
+        dependency_blocked_count: dependency_blocked_claims.len(),
+        proof_blocked_count,
         agent_count,
         active_claims,
         expired_leases,
         yielded_claims,
         expiry_risk,
+        dependency_blocked_claims,
         overlaps,
         intent_anchors,
         capacity,

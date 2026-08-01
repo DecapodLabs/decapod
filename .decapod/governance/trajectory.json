@@ -1,41 +1,82 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "code_01kyy89c6xecgt98",
-  "intent_id": "intent:code_01kyy89c6xecgt98",
-  "original_intent": "Houseboat wave 2: complete next lease-graph stratum for #852 and feed #857/#860",
-  "derived_intent": "Add lease generations, intent anchors, yield, proof-gated done, richer fleet projection, stalled trajectory motion",
+  "run_id": "validation_01KYZGJE20RY73X1PBPGTWMY23",
+  "intent_id": "intent:validation_01KYZGJE20RY73X1PBPGTWMY23",
+  "task_id": "test_01kyzfanf2d6jd9y",
+  "original_intent": "Produce proof artifacts for a repository validation completion.",
+  "derived_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
+  "destination": "publish dependency-ready lease admission and canonical projection",
+  "current_phase": "validation",
+  "next_transitions": [
+    "publish"
+  ],
   "active_boundaries": [
-    "extend existing todo/trajectory/work_claim; no fleet service"
+    "Houseboat dependency/proof admission only; trajectory merge, journal, budgets, and semantic overlap remain out of scope",
+    "Repository validation and tracked proof artifacts"
   ],
   "repo_scope": [
-    "src/decapod/core/{fleet_coord,todo,trajectory,work_claim,schemas,rpc,mod}.rs tests"
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
+    "src/decapod/core/fleet_coord.rs, src/decapod/core/todo.rs, src/decapod/core/work_claim.rs, focused tests, generated 0.91.0 governance artifacts"
   ],
   "inspected_files": [],
   "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
+    "src/decapod/core/entrypoint_integrity.rs",
     "src/decapod/core/fleet_coord.rs",
-    "src/decapod/core/schemas.rs",
     "src/decapod/core/todo.rs",
-    "src/decapod/core/trajectory.rs"
+    "src/decapod/core/work_claim.rs",
+    "tests/plugins/todo.rs",
+    "tests/unit/core/fleet_coord_tests.rs",
+    "tests/unit/core/todo_tests.rs",
+    "tests/unit/core/work_claim_tests.rs"
   ],
-  "declared_commands": [],
+  "declared_commands": [
+    "cargo clippy --all-targets --all-features -- -D warnings",
+    "cargo test --lib fleet_coord",
+    "cargo test --lib trajectory",
+    "cargo test --test plugins_todo_tests",
+    "decapod validate"
+  ],
   "tool_calls": [],
   "checks": [
+    {
+      "name": "clippy_all_targets",
+      "status": "passed"
+    },
+    {
+      "name": "decapod validate",
+      "status": "passed"
+    },
+    {
+      "name": "decapod_validate_projections",
+      "status": "passed"
+    },
     {
       "name": "fleet_coord_unit",
       "status": "passed"
     },
     {
-      "name": "plugins_todo_lease",
+      "name": "todo_plugin_suite",
       "status": "passed"
     },
     {
-      "name": "trajectory_motion",
+      "name": "trajectory_unit",
       "status": "passed"
     }
   ],
-  "evidence": [],
+  "evidence": [
+    "dependency admission rejects waiting, missing, proof-blocked, and cyclic prerequisites deterministically",
+    "validation epoch ve_a3e818f5e757e18f completed with zero failures",
+    "validation epoch ve_eec50459f2d6e329 completed with zero failures",
+    "work-claim and fleet projections derive typed dependency/proof blockers from authoritative TODO verification records"
+  ],
   "shortcut_risk_signals": [],
-  "unresolved_assumptions": [],
+  "unresolved_assumptions": [
+    "workspace-wide release_artifact_policy remains failing on six untouched origin/master source files; excluded from this slice"
+  ],
+  "completion_claim": "Houseboat dependency/proof admission stratum implemented and required proof hooks pass",
   "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
@@ -43,21 +84,22 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:181e76818263580b3a2debd562536c63cd2edbeaf7e5e1e15fb0784906e9347e",
+  "artifact_hash": "sha256:257db092354c86055e3842274fb6e831869c75c498f897c8eaf26016de237bf0",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:code_01kyy89c6xecgt98": {
-        "id": "intent:code_01kyy89c6xecgt98",
-        "raw_intent": "Houseboat wave 2: complete next lease-graph stratum for #852 and feed #857/#860",
-        "refined_intent": "Add lease generations, intent anchors, yield, proof-gated done, richer fleet projection, stalled trajectory motion",
+      "intent:validation_01KYZGJE20RY73X1PBPGTWMY23": {
+        "id": "intent:validation_01KYZGJE20RY73X1PBPGTWMY23",
+        "raw_intent": "Produce proof artifacts for a repository validation completion.",
+        "refined_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
         "acceptance_criteria": [],
         "constraints": [
-          "src/decapod/core/{fleet_coord,todo,trajectory,work_claim,schemas,rpc,mod}.rs tests"
+          ".decapod/governance/trajectory.json",
+          ".decapod/governance/validation.json"
         ],
         "assumptions": [],
         "boundaries": [
-          "extend existing todo/trajectory/work_claim; no fleet service"
+          "Repository validation and tracked proof artifacts"
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -70,54 +112,119 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:code_01kyy89c6xecgt98",
+        "intent_id": "intent:validation_01KYZGJE20RY73X1PBPGTWMY23",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:code_01kyy89c6xecgt98",
+        "intent_id": "intent:validation_01KYZGJE20RY73X1PBPGTWMY23",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:code_01kyy89c6xecgt98",
+        "intent_id": "intent:validation_01KYZGJE20RY73X1PBPGTWMY23",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:code_01kyy89c6xecgt98"
+        "detail": "trajectory:validation_01KYZGJE20RY73X1PBPGTWMY23"
+      },
+      {
+        "sequence": 5,
+        "event_id": "event:5",
+        "intent_id": "intent:validation_01KYZGJE20RY73X1PBPGTWMY23",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KYZGJE20RY73X1PBPGTWMY23"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
+        "intent_id": "intent:validation_01KYZGJE20RY73X1PBPGTWMY23",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KYZGJE20RY73X1PBPGTWMY23"
       }
     ],
     "trajectories": {
-      "code_01kyy89c6xecgt98": {
-        "id": "code_01kyy89c6xecgt98",
-        "intent_id": "intent:code_01kyy89c6xecgt98",
+      "validation_01KYZGJE20RY73X1PBPGTWMY23": {
+        "id": "validation_01KYZGJE20RY73X1PBPGTWMY23",
+        "intent_id": "intent:validation_01KYZGJE20RY73X1PBPGTWMY23",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "trajectory.record",
+            "action": "validation",
+            "command": "decapod validate",
             "scope": [
-              "src/decapod/core/{fleet_coord,todo,trajectory,work_claim,schemas,rpc,mod}.rs tests"
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_a3e818f5e757e18f completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:4"
+          },
+          {
+            "sequence": 5,
+            "action": "verification",
+            "command": "cargo test --lib fleet_coord",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
             ],
             "observations": [
               "src/decapod/core/fleet_coord.rs",
               "src/decapod/core/todo.rs",
-              "src/decapod/core/trajectory.rs",
-              "src/decapod/core/schemas.rs"
+              "src/decapod/core/work_claim.rs",
+              "src/decapod/core/entrypoint_integrity.rs",
+              "tests/plugins/todo.rs",
+              "tests/unit/core/fleet_coord_tests.rs",
+              "tests/unit/core/todo_tests.rs",
+              "tests/unit/core/work_claim_tests.rs",
+              "dependency admission rejects waiting, missing, proof-blocked, and cyclic prerequisites deterministically",
+              "work-claim and fleet projections derive typed dependency/proof blockers from authoritative TODO verification records"
             ],
             "proof_refs": [
               "fleet_coord_unit",
-              "trajectory_motion",
-              "plugins_todo_lease"
+              "trajectory_unit",
+              "todo_plugin_suite",
+              "clippy_all_targets",
+              "decapod_validate_projections"
+            ],
+            "validation_findings": [
+              "workspace-wide release_artifact_policy remains failing on six untouched origin/master source files; excluded from this slice"
+            ],
+            "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "src/decapod/core/fleet_coord.rs, src/decapod/core/todo.rs, src/decapod/core/work_claim.rs, focused tests, generated 0.91.0 governance artifacts"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_eec50459f2d6e329 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
             ],
             "validation_findings": [],
-            "custody_event_id": "event:4"
+            "custody_event_id": "event:6"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 4
+    "next_sequence": 6
   }
 }

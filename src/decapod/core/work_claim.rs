@@ -6,6 +6,7 @@
 //! a second store.  Trajectory and workspace ownership stay optional until
 //! the corresponding run/branch binding is available.
 
+use crate::core::fleet_coord::DependencyReadiness;
 use crate::core::todo::{Task, WorkClaimVerification};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -57,6 +58,9 @@ pub struct WorkClaim {
     /// References are proof outputs, not proof-plan names.
     pub proof_refs: Vec<String>,
     pub validation_status: WorkClaimValidationStatus,
+    /// Typed prerequisite and proof compatibility gate from the TODO graph.
+    #[serde(default)]
+    pub dependency_readiness: DependencyReadiness,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub external_ref: Option<String>,
     /// Exclusive-claim lease expiry (epoch-Z). Absent on legacy assignments.
@@ -135,12 +139,23 @@ pub fn from_todo_with_lease(
         status,
         proof_refs: proof_refs(&task.id, verification.verification_artifacts.as_ref()),
         validation_status,
+        dependency_readiness: DependencyReadiness::ready(),
         external_ref: (!task.r#ref.is_empty()).then(|| task.r#ref.clone()),
         lease_expires_at,
         lease_state,
         created_at: task.created_at.clone(),
         updated_at: task.updated_at.clone(),
     }
+}
+
+pub fn apply_dependency_readiness(
+    claim: &mut WorkClaim,
+    dependency_readiness: DependencyReadiness,
+) {
+    if !dependency_readiness.is_ready() && claim.status != WorkClaimStatus::Abandoned {
+        claim.status = WorkClaimStatus::Blocked;
+    }
+    claim.dependency_readiness = dependency_readiness;
 }
 
 fn validation_status(status: Option<&str>) -> WorkClaimValidationStatus {
@@ -153,7 +168,7 @@ fn validation_status(status: Option<&str>) -> WorkClaimValidationStatus {
     }
 }
 
-fn proof_refs(todo_id: &str, artifacts: Option<&Value>) -> Vec<String> {
+pub(crate) fn proof_refs(todo_id: &str, artifacts: Option<&Value>) -> Vec<String> {
     let Some(object) = artifacts.and_then(Value::as_object) else {
         return Vec::new();
     };

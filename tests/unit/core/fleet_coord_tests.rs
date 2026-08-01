@@ -22,6 +22,7 @@ fn claim(
         lease_lifecycle: LeaseLifecycle::Claimed,
         intent_anchor: format!("intent:todo:{task_id}"),
         capacity_units: 1,
+        dependency_readiness: DependencyReadiness::ready(),
     }
 }
 
@@ -192,4 +193,99 @@ fn fleet_health_projection_counts_capacity_and_risk() {
     assert!(health.capacity.reserved_units >= 1);
     assert!(!health.intent_anchors.is_empty());
     assert_eq!(health.expired_leases[0].task_id, "t1");
+}
+
+#[test]
+fn dependency_readiness_requires_completion_and_passing_proof() {
+    let readiness = evaluate_dependency_readiness(
+        "task-main",
+        vec![
+            DependencyNodeView {
+                task_id: "dep-b".to_string(),
+                status: "done".to_string(),
+                validation_status: Some("passed".to_string()),
+                proof_refs: vec!["proof:dep-b:validate:sha256:b".to_string()],
+            },
+            DependencyNodeView {
+                task_id: "dep-a".to_string(),
+                status: "open".to_string(),
+                validation_status: None,
+                proof_refs: Vec::new(),
+            },
+        ],
+        &[("task-main".to_string(), "dep-a".to_string())],
+    );
+    assert_eq!(readiness.state, DependencyReadinessState::Waiting);
+    assert_eq!(readiness.dependencies[0].task_id, "dep-a");
+    assert_eq!(readiness.blockers[0].reason, "dependency_not_complete");
+    assert_eq!(readiness.proof_refs, vec!["proof:dep-b:validate:sha256:b"]);
+
+    let proof_blocked = evaluate_dependency_readiness(
+        "task-main",
+        vec![DependencyNodeView {
+            task_id: "dep-a".to_string(),
+            status: "done".to_string(),
+            validation_status: Some("claimed".to_string()),
+            proof_refs: Vec::new(),
+        }],
+        &[],
+    );
+    assert_eq!(proof_blocked.state, DependencyReadinessState::ProofBlocked);
+    assert_eq!(
+        proof_blocked.blockers[0].reason,
+        "dependency_proof_not_passed"
+    );
+}
+
+#[test]
+fn dependency_readiness_detects_missing_nodes_and_reachable_cycles() {
+    let missing = evaluate_dependency_readiness(
+        "task-main",
+        vec![DependencyNodeView {
+            task_id: "dep-missing".to_string(),
+            status: "missing".to_string(),
+            validation_status: None,
+            proof_refs: Vec::new(),
+        }],
+        &[("task-main".to_string(), "dep-missing".to_string())],
+    );
+    assert_eq!(missing.state, DependencyReadinessState::Missing);
+
+    let cycle = evaluate_dependency_readiness(
+        "task-main",
+        Vec::new(),
+        &[
+            ("task-main".to_string(), "dep-a".to_string()),
+            ("dep-a".to_string(), "dep-b".to_string()),
+            ("dep-b".to_string(), "dep-a".to_string()),
+        ],
+    );
+    assert_eq!(cycle.state, DependencyReadinessState::Cycle);
+    assert_eq!(cycle.cycle, vec!["dep-a", "dep-b", "dep-a"]);
+}
+
+#[test]
+fn fleet_projection_surfaces_dependency_and_proof_blockers() {
+    let mut blocked = claim(
+        "task-blocked",
+        "agent-a",
+        "architecture",
+        "feature",
+        "src/core",
+        Some("500Z"),
+    );
+    blocked.dependency_readiness = DependencyReadiness {
+        state: DependencyReadinessState::ProofBlocked,
+        blockers: vec![DependencyBlocker {
+            task_id: "dep-a".to_string(),
+            reason: "dependency_proof_not_passed".to_string(),
+            status: "done".to_string(),
+            validation_status: Some("claimed".to_string()),
+        }],
+        ..DependencyReadiness::ready()
+    };
+    let health = project_fleet_health(vec![blocked], "100Z");
+    assert_eq!(health.dependency_blocked_count, 1);
+    assert_eq!(health.proof_blocked_count, 1);
+    assert_eq!(health.dependency_blocked_claims[0].task_id, "task-blocked");
 }
