@@ -7,11 +7,7 @@
     "code_01kyy59m3c1d00xn"
   ],
   "proof_hooks": [
-    "cargo test --lib fleet_coord",
-    "cargo test --lib work_claim",
-    "cargo test --test plugins_todo_tests exclusive_claim",
-    "cargo test --test cloud_command_path",
-    "cargo clippy --all-targets -- -D warnings"
+    "decapod rpc --op specs.refresh"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -25,5 +21,5 @@
     "file_touch_budget": 40
   },
   "phases": [],
-  "updated_at": "1785572724Z"
+  "updated_at": "1785573339Z"
 }

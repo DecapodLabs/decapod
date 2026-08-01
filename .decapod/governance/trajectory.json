@@ -16,6 +16,11 @@
     "src/decapod/core/work_claim.rs"
   ],
   "modified_files": [
+    ".decapod/managed/specs/.manifest.json",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "CODEX.md",
+    "GEMINI.md",
     "src/decapod/core/fleet_coord.rs",
     "src/decapod/core/mod.rs",
     "src/decapod/core/schemas.rs",
@@ -29,11 +34,19 @@
   "tool_calls": [],
   "checks": [
     {
+      "name": "entrypoint_fingerprints",
+      "status": "passed"
+    },
+    {
       "name": "fleet_coord_unit",
       "status": "passed"
     },
     {
       "name": "plugins_todo_lease",
+      "status": "passed"
+    },
+    {
+      "name": "specs_refresh",
       "status": "passed"
     },
     {
@@ -51,7 +64,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:b65f1371c68d56f7986c8eb0311dc6b5bb0029c2012909b556d4823c1b2b0f84",
+  "artifact_hash": "sha256:187854aae4041c522ce50f25fc7a75f23607e8557ca8d2019e96e775e0c1ec6d",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -93,6 +106,13 @@
         "intent_id": "intent:code_01kyy59m3c1d00xn",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:code_01kyy59m3c1d00xn"
+      },
+      {
+        "sequence": 5,
+        "event_id": "event:5",
+        "intent_id": "intent:code_01kyy59m3c1d00xn",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:code_01kyy59m3c1d00xn"
       }
     ],
     "trajectories": {
@@ -127,12 +147,32 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
+          },
+          {
+            "sequence": 5,
+            "action": "trajectory.record",
+            "scope": [
+              "src/decapod/core/{fleet_coord,todo,work_claim,schemas,mod}.rs tests"
+            ],
+            "observations": [
+              "AGENTS.md",
+              "CLAUDE.md",
+              "CODEX.md",
+              "GEMINI.md",
+              ".decapod/managed/specs/.manifest.json"
+            ],
+            "proof_refs": [
+              "entrypoint_fingerprints",
+              "specs_refresh"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:5"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 4
+    "next_sequence": 5
   }
 }

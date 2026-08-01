@@ -1,11 +1,11 @@
 {
   "schema_version": "1.0.0",
   "kind": "validation_receipt",
-  "decapod_release": "0.89.3",
-  "git_revision": "12e44c0c8e601eb25b40744c2893df0d7a036a5f",
-  "repo_signal_fingerprint": "327f91a7991d54f7924bc6a5b4f63dbbc1837f12d777db88aa7950e21b4ebac8",
+  "decapod_release": "0.89.4",
+  "git_revision": "7b04b1e8ded754c238404038c4a2a0b24bcc7358",
+  "repo_signal_fingerprint": "c261996a2c2a94866df34d62168671ee1cce3909b741b7d543cfaba285c356da",
   "trajectory_run_id": "code_01kyy59m3c1d00xn",
-  "trajectory_artifact_hash": "sha256:b65f1371c68d56f7986c8eb0311dc6b5bb0029c2012909b556d4823c1b2b0f84",
+  "trajectory_artifact_hash": "sha256:187854aae4041c522ce50f25fc7a75f23607e8557ca8d2019e96e775e0c1ec6d",
   "validation_epoch": {
     "schema_version": "1.0.0",
     "epoch_id": "ve_adff2f75658a3ab4",
@@ -18,7 +18,7 @@
     "proof_rubric": "decapod-validate/current-proof-v1",
     "proof_rubric_hash": "sha256:99e8ef25629da391e9b479db9fff52b82f340224f7a69d8a88d2992ae8e90466",
     "generated_specs_manifest_hash": "sha256:70e58f973b0924b36e5ea1512a3bb2ee5c0114df5a93d5f5a7071816d41fde86",
-    "generated_specs_fingerprint": "327f91a7991d54f7924bc6a5b4f63dbbc1837f12d777db88aa7950e21b4ebac8",
+    "generated_specs_fingerprint": "c261996a2c2a94866df34d62168671ee1cce3909b741b7d543cfaba285c356da",
     "material_hashes": {
       "constitution:core/DECAPOD": "sha256:98557bffa20b56f69cd80919403338903a3b2bf410b80591ccbff0492c96f0b7",
       "generated_spec:.decapod/managed/specs/ARCHITECTURE.md": "sha256:8cb1dc358135582d819532e4b51aab48a5d8e6192c8b4c2af0b45d4dd2cfbf40",
@@ -29,7 +29,7 @@
       "generated_spec:.decapod/managed/specs/SECURITY.md": "sha256:5ee137e7208829f771e4b23ca6a104fc246c4e08ca4fbdeb26a2b11635c869d7",
       "generated_spec:.decapod/managed/specs/SEMANTICS.md": "sha256:93e1f092349d2ee766d224a3df4aaa2acd031c13ac1f1d74974cfa9ad200691b",
       "generated_spec:.decapod/managed/specs/VALIDATION.md": "sha256:17b162adb02a58cc635b35ba63151b61c1c9f678c966a394f27cf1546e290c41",
-      "generated_specs_fingerprint": "327f91a7991d54f7924bc6a5b4f63dbbc1837f12d777db88aa7950e21b4ebac8",
+      "generated_specs_fingerprint": "c261996a2c2a94866df34d62168671ee1cce3909b741b7d543cfaba285c356da",
       "generated_specs_manifest": "sha256:70e58f973b0924b36e5ea1512a3bb2ee5c0114df5a93d5f5a7071816d41fde86",
       "proof_rubric": "sha256:99e8ef25629da391e9b479db9fff52b82f340224f7a69d8a88d2992ae8e90466",
       "validation_profile": "sha256:37a8eec1ce19687d132fe29051dca629d164e2c4958ba141d5f4133a33f0688f"
@@ -276,5 +276,5 @@
       "Use `decapod validate -v --format json` to inspect the affected gate output."
     ]
   },
-  "receipt_hash": "sha256:75b84cbd264ad29981b9d3da169a8758dc2cc5db132283ffa4005431026c0c61"
+  "receipt_hash": "sha256:3e29491b85c4b0aeb94c317960725e2a9e04a6c6f19c93b0bda53f06df20ddd4"
 }
