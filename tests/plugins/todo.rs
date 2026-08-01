@@ -1,8 +1,10 @@
+use decapod::core::schemas;
 use decapod::core::store::Store;
 use decapod::core::store::StoreKind;
 use decapod::core::todo::{
-    ClaimMode, TodoCommand, add_task, check_trust_level, claim_task, get_task, initialize_todo_db,
-    list_tasks, rebuild_from_events, update_status,
+    ClaimMode, TodoCommand, add_task, check_trust_level, claim_task, claim_task_with_lease,
+    fleet_health, get_task, initialize_todo_db, list_tasks, rebuild_from_events, renew_claim_lease,
+    update_status,
 };
 use decapod::plugins::policy;
 use rusqlite::Connection;
@@ -719,5 +721,151 @@ fn test_ownership_rebuild_replay_parity() {
     assert_eq!(
         before_owners, after_owners,
         "ownership claim/release replay should be deterministic"
+    );
+}
+
+fn add_scoped_task(root: &Path, title: &str, scope: &str, dir: &str) -> String {
+    let args = TodoCommand::Add {
+        title: title.to_string(),
+        description: format!("houseboat lease test: {title}"),
+        tags: "houseboat,fleet".to_string(),
+        owner: "".to_string(),
+        due: None,
+        r#ref: "".to_string(),
+        scope: scope.to_string(),
+        dir: Some(dir.to_string()),
+        priority: "medium".to_string(),
+        depends_on: "".to_string(),
+        blocks: "".to_string(),
+        parent: None,
+        one_shot: 0,
+    };
+    let res = add_task(root, &args).unwrap();
+    res["id"].as_str().unwrap().to_string()
+}
+
+#[test]
+fn exclusive_claim_sets_lease_and_renew_extends_it() {
+    let tmp = tempdir().unwrap();
+    let root = tmp.path().to_path_buf();
+    initialize_todo_db(&root).unwrap();
+    let dir = tmp.path().join("src").join("core");
+    std::fs::create_dir_all(&dir).unwrap();
+
+    let task_id = add_scoped_task(
+        &root,
+        "Lease renewal target alpha",
+        "architecture",
+        dir.to_str().unwrap(),
+    );
+    let claim = claim_task_with_lease(
+        &root,
+        &task_id,
+        "agent-lease",
+        ClaimMode::Exclusive,
+        Some(120),
+    )
+    .unwrap();
+    assert_eq!(claim["status"], "ok");
+    assert_eq!(claim["result"]["lease_seconds"], 120);
+    let first_lease = claim["result"]["lease_expires_at"]
+        .as_str()
+        .expect("lease_expires_at")
+        .to_string();
+    assert!(!first_lease.is_empty());
+
+    let renew = renew_claim_lease(&root, &task_id, "agent-lease", Some(600)).unwrap();
+    assert_eq!(renew["status"], "ok", "renew should succeed: {renew}");
+    assert_eq!(renew["result"]["lease_seconds"], 600);
+    let second_lease = renew["result"]["lease_expires_at"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    assert_ne!(second_lease, first_lease);
+
+    let fleet = fleet_health(&root, Some("agent-lease")).unwrap();
+    assert_eq!(fleet["status"], "ok");
+    assert!(fleet["fleet"]["claim_count"].as_u64().unwrap() >= 1);
+}
+
+#[test]
+fn expired_lease_is_reclaimable_by_another_agent() {
+    let tmp = tempdir().unwrap();
+    let root = tmp.path().to_path_buf();
+    initialize_todo_db(&root).unwrap();
+    let dir = tmp.path().join("src").join("workspace");
+    std::fs::create_dir_all(&dir).unwrap();
+
+    let task_id = add_scoped_task(
+        &root,
+        "Reclaimable expired lease task",
+        "documentation",
+        dir.to_str().unwrap(),
+    );
+    let first = claim_task(&root, &task_id, "agent-old", ClaimMode::Exclusive).unwrap();
+    assert_eq!(first["status"], "ok");
+
+    let db = root.join(schemas::LOCAL_DB_NAME);
+    let conn = Connection::open(&db).unwrap();
+    conn.execute(
+        "UPDATE tasks SET lease_expires_at = '1Z' WHERE id = ?1",
+        [&task_id],
+    )
+    .unwrap();
+    // Presence must also be stale, or only lease expiry is enough for reclaim.
+    conn.execute(
+        "UPDATE agent_presence SET last_seen = '1Z', updated_at = '1Z' WHERE agent_id = 'agent-old'",
+        [],
+    )
+    .ok();
+
+    let reclaim = claim_task(&root, &task_id, "agent-new", ClaimMode::Exclusive).unwrap();
+    assert_eq!(reclaim["status"], "ok", "reclaim should succeed: {reclaim}");
+    assert_eq!(reclaim["result"]["reclaimed_from"], "agent-old");
+    assert_eq!(reclaim["result"]["assigned_to"], "agent-new");
+
+    let task = get_task(&root, &task_id).unwrap().unwrap();
+    assert_eq!(task.assigned_to, "agent-new");
+}
+
+#[test]
+fn overlapping_exclusive_claims_are_rejected() {
+    let tmp = tempdir().unwrap();
+    let root = tmp.path().to_path_buf();
+    initialize_todo_db(&root).unwrap();
+    let shared = tmp.path().join("src").join("shared-module");
+    std::fs::create_dir_all(&shared).unwrap();
+    let nested = shared.join("impl");
+    std::fs::create_dir_all(&nested).unwrap();
+
+    let first_id = add_scoped_task(
+        &root,
+        "Fleet overlap first task unique title alpha",
+        "architecture",
+        shared.to_str().unwrap(),
+    );
+    let second_id = add_scoped_task(
+        &root,
+        "Fleet overlap second task unique title omega",
+        "architecture",
+        nested.to_str().unwrap(),
+    );
+    assert_ne!(first_id, second_id);
+
+    let first = claim_task(&root, &first_id, "agent-a", ClaimMode::Exclusive).unwrap();
+    assert_eq!(first["status"], "ok", "first claim: {first}");
+
+    let second = claim_task(&root, &second_id, "agent-b", ClaimMode::Exclusive).unwrap();
+    assert_eq!(
+        second["status"], "conflict",
+        "overlapping exclusive claim must conflict: {second}"
+    );
+    assert_eq!(second["result"]["overlap"], true);
+    let overlaps = second["result"]["overlaps"].as_array().unwrap();
+    assert!(
+        overlaps
+            .iter()
+            .any(|o| o["reason"] == "path_overlap" || o["reason"] == "scope_overlap"),
+        "expected path or scope overlap, got {overlaps:?}"
     );
 }

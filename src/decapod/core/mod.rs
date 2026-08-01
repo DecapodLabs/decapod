@@ -29,6 +29,7 @@ pub mod entrypoint_integrity;
 pub mod error;
 pub mod events;
 pub mod external_action;
+pub mod fleet_coord;
 pub mod flight_recorder;
 pub mod gatekeeper;
 pub mod governance_artifacts;

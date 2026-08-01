@@ -59,6 +59,12 @@ pub struct WorkClaim {
     pub validation_status: WorkClaimValidationStatus,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub external_ref: Option<String>,
+    /// Exclusive-claim lease expiry (epoch-Z). Absent on legacy assignments.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lease_expires_at: Option<String>,
+    /// Derived lease classification for fleet coordination consumers.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lease_state: Option<String>,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -72,6 +78,17 @@ pub fn from_todo(
     task: &Task,
     verification: &WorkClaimVerification,
     trajectory_id: Option<String>,
+) -> WorkClaim {
+    from_todo_with_lease(task, verification, trajectory_id, None, None)
+}
+
+/// Like [`from_todo`], with optional lease fields for fleet coordination.
+pub fn from_todo_with_lease(
+    task: &Task,
+    verification: &WorkClaimVerification,
+    trajectory_id: Option<String>,
+    lease_expires_at: Option<String>,
+    now_ts: Option<&str>,
 ) -> WorkClaim {
     let validation_status = validation_status(verification.last_verified_status.as_deref());
     let status = match task.status.as_str() {
@@ -90,6 +107,14 @@ pub fn from_todo(
     if !task.dir_path.trim().is_empty() {
         paths.push(task.dir_path.clone());
     }
+
+    let lease_state = now_ts.map(|now| {
+        match crate::core::fleet_coord::lease_state(lease_expires_at.as_deref(), now) {
+            crate::core::fleet_coord::LeaseState::Active => "active".to_string(),
+            crate::core::fleet_coord::LeaseState::Expired => "expired".to_string(),
+            crate::core::fleet_coord::LeaseState::Unspecified => "unspecified".to_string(),
+        }
+    });
 
     WorkClaim {
         claim_id: format!("todo:{}", task.id),
@@ -111,6 +136,8 @@ pub fn from_todo(
         proof_refs: proof_refs(&task.id, verification.verification_artifacts.as_ref()),
         validation_status,
         external_ref: (!task.r#ref.is_empty()).then(|| task.r#ref.clone()),
+        lease_expires_at,
+        lease_state,
         created_at: task.created_at.clone(),
         updated_at: task.updated_at.clone(),
     }

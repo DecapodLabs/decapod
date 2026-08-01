@@ -92,3 +92,25 @@ fn passed_validation_completes_done_claim_and_archive_abandons() {
         WorkClaimStatus::Abandoned
     );
 }
+
+#[test]
+fn work_claim_projects_lease_fields() {
+    let claim = from_todo_with_lease(
+        &task("open", "agent-a"),
+        &WorkClaimVerification::default(),
+        None,
+        Some("250Z".to_string()),
+        Some("200Z"),
+    );
+    assert_eq!(claim.lease_expires_at.as_deref(), Some("250Z"));
+    assert_eq!(claim.lease_state.as_deref(), Some("active"));
+
+    let expired = from_todo_with_lease(
+        &task("open", "agent-a"),
+        &WorkClaimVerification::default(),
+        None,
+        Some("150Z".to_string()),
+        Some("200Z"),
+    );
+    assert_eq!(expired.lease_state.as_deref(), Some("expired"));
+}
