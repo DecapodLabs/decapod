@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.90.0](https://github.com/DecapodLabs/decapod/compare/v0.89.4...v0.90.0) - 2026-08-01
+
+### Added
+
+- add lease-aware multi-agent fleet coordination
+
+### Fixed
+
+- resolve PR #1133 clippy and governance artifact gates
+
+### Other
+
+- regenerate entrypoint fingerprints and specs for 0.89.4
+- refresh validation receipt for houseboat fleet PR
+
 ## [0.89.4](https://github.com/DecapodLabs/decapod/compare/v0.89.3...v0.89.4) - 2026-07-31
 
 ### Fixed
