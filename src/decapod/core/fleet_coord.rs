@@ -1,9 +1,9 @@
 //! Lease-aware multi-agent fleet coordination helpers (Houseboat 2).
 //!
 //! Decapod already owns todos, claims, agent presence, handoffs, and workspaces.
-//! This module adds pure lease/overlap projections so concurrent agents can
-//! detect expired ownership, reclaim safely, and surface domain/path conflicts
-//! without introducing a standalone fleet service.
+//! This module is the pure lease-graph stratum: generations, intent anchors,
+//! lifecycle transitions, overlap detection, and fleet health projections.
+//! It does not introduce a standalone fleet service.
 
 use serde::{Deserialize, Serialize};
 
@@ -14,6 +14,12 @@ pub const DEFAULT_CLAIM_LEASE_SECS: u64 = 30 * 60;
 /// Maximum lease duration an agent may request or renew (24 hours).
 pub const MAX_CLAIM_LEASE_SECS: u64 = 24 * 60 * 60;
 
+/// Soft capacity for concurrent exclusive leases before fleet pressure rises.
+pub const DEFAULT_FLEET_SLOT_CAPACITY: u32 = 8;
+
+/// Leases expiring within this many seconds are reported as expiry risk.
+pub const EXPIRY_RISK_WINDOW_SECS: u64 = 5 * 60;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum LeaseState {
@@ -23,6 +29,53 @@ pub enum LeaseState {
     Active,
     /// Lease timestamp is in the past; reclaim is allowed.
     Expired,
+}
+
+/// Explicit lease lifecycle for the Houseboat lease graph.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum LeaseLifecycle {
+    /// No lifecycle recorded (legacy).
+    #[default]
+    Unspecified,
+    Claimed,
+    Extended,
+    Yielded,
+    Expired,
+    Released,
+    Reclaimed,
+}
+
+impl LeaseLifecycle {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Unspecified => "unspecified",
+            Self::Claimed => "claimed",
+            Self::Extended => "extended",
+            Self::Yielded => "yielded",
+            Self::Expired => "expired",
+            Self::Released => "released",
+            Self::Reclaimed => "reclaimed",
+        }
+    }
+
+    pub fn parse(raw: Option<&str>) -> Self {
+        match raw.map(str::trim).unwrap_or("") {
+            "" | "unspecified" => Self::Unspecified,
+            "claimed" => Self::Claimed,
+            "extended" => Self::Extended,
+            "yielded" => Self::Yielded,
+            "expired" => Self::Expired,
+            "released" => Self::Released,
+            "reclaimed" => Self::Reclaimed,
+            _ => Self::Unspecified,
+        }
+    }
+
+    /// Active exclusive custody that must not publish/complete without proof.
+    pub fn holds_exclusive_custody(self) -> bool {
+        matches!(self, Self::Claimed | Self::Extended | Self::Reclaimed)
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -36,6 +89,21 @@ pub struct ActiveClaimView {
     pub lease_expires_at: Option<String>,
     pub lease_state: LeaseState,
     pub assigned_at: Option<String>,
+    /// Monotonic lease generation; reclaim/issue increments.
+    #[serde(default)]
+    pub lease_generation: u32,
+    #[serde(default)]
+    pub lease_lifecycle: LeaseLifecycle,
+    /// Citable intent anchor (trajectory intent, managed-spec ref, or todo intent).
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub intent_anchor: String,
+    /// Reserved capacity units (1 = one exclusive workunit slot).
+    #[serde(default = "default_capacity_units")]
+    pub capacity_units: u32,
+}
+
+fn default_capacity_units() -> u32 {
+    1
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -49,14 +117,38 @@ pub struct ClaimOverlap {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CapacityPressure {
+    None,
+    Low,
+    Medium,
+    High,
+    Critical,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FleetCapacityView {
+    pub claimed_slots: u32,
+    pub max_slots: u32,
+    pub pressure: CapacityPressure,
+    pub reserved_units: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct FleetHealthProjection {
     pub active_claims: Vec<ActiveClaimView>,
     pub expired_leases: Vec<ActiveClaimView>,
+    pub yielded_claims: Vec<ActiveClaimView>,
+    pub expiry_risk: Vec<ActiveClaimView>,
     pub overlaps: Vec<ClaimOverlap>,
+    pub intent_anchors: Vec<String>,
+    pub capacity: FleetCapacityView,
     pub agent_count: usize,
     pub claim_count: usize,
     pub expired_count: usize,
     pub overlap_count: usize,
+    pub yielded_count: usize,
+    pub expiry_risk_count: usize,
 }
 
 /// Parse Decapod epoch-Z timestamps (`{unix_secs}Z`).
@@ -101,13 +193,34 @@ pub fn lease_allows_reclaim(lease_expires_at: Option<&str>, now_ts: &str) -> boo
     matches!(lease_state(lease_expires_at, now_ts), LeaseState::Expired)
 }
 
+/// Issue a new exclusive lease generation (claim or post-reclaim).
+pub fn next_lease_generation(previous: u32, reclaimed: bool) -> u32 {
+    if previous == 0 {
+        1
+    } else if reclaimed {
+        previous.saturating_add(1)
+    } else {
+        // Same-agent re-claim keeps generation until an explicit extend.
+        previous.max(1)
+    }
+}
+
+/// Extend increments generation and marks lifecycle extended.
+pub fn extended_generation(current: u32) -> u32 {
+    current.max(1).saturating_add(1)
+}
+
+/// Default intent anchor when none is supplied by the caller.
+pub fn default_intent_anchor(task_id: &str) -> String {
+    format!("intent:todo:{task_id}")
+}
+
 /// Normalize a repository-relative or absolute path for prefix comparison.
 pub fn normalize_path(path: &str) -> String {
     let trimmed = path.trim().trim_end_matches('/');
     if trimmed.is_empty() {
         return String::new();
     }
-    // Collapse duplicate slashes without requiring a real filesystem.
     let mut out = String::with_capacity(trimmed.len());
     let mut prev_slash = false;
     for ch in trimmed.chars() {
@@ -125,8 +238,6 @@ pub fn normalize_path(path: &str) -> String {
 }
 
 /// True when two paths share a hierarchical prefix (file/module claim conflict).
-///
-/// Empty paths never overlap. Identical paths always overlap.
 pub fn paths_overlap(a: &str, b: &str) -> bool {
     let a = normalize_path(a);
     let b = normalize_path(b);
@@ -136,7 +247,6 @@ pub fn paths_overlap(a: &str, b: &str) -> bool {
     if a == b {
         return true;
     }
-    // Require boundary-aware prefix so `src/foo` does not match `src/foobar`.
     let a_prefix = format!("{a}/");
     let b_prefix = format!("{b}/");
     b.starts_with(&a_prefix) || a.starts_with(&b_prefix)
@@ -166,9 +276,6 @@ pub fn categories_overlap(a: &str, b: &str) -> bool {
 }
 
 /// Detect overlaps between a candidate claim and currently active exclusive claims.
-///
-/// Skips the candidate's own task id and claims held by the same agent. Skips
-/// expired leases so reclaimers are not blocked by abandoned ownership.
 pub fn detect_overlaps(
     candidate_task_id: &str,
     candidate_agent: &str,
@@ -184,6 +291,13 @@ pub fn detect_overlaps(
             continue;
         }
         if claim.agent_id == candidate_agent {
+            continue;
+        }
+        // Yielded and expired leases do not block new exclusive claims.
+        if matches!(
+            claim.lease_lifecycle,
+            LeaseLifecycle::Yielded | LeaseLifecycle::Released | LeaseLifecycle::Expired
+        ) {
             continue;
         }
         if matches!(
@@ -239,12 +353,15 @@ pub fn detect_overlaps(
     out
 }
 
-/// Pairwise overlaps among active (non-expired) claims held by different agents.
+/// Pairwise overlaps among active (non-expired, non-yielded) claims.
 pub fn detect_fleet_overlaps(active: &[ActiveClaimView], now_ts: &str) -> Vec<ClaimOverlap> {
     let live: Vec<&ActiveClaimView> = active
         .iter()
         .filter(|c| {
             !matches!(
+                c.lease_lifecycle,
+                LeaseLifecycle::Yielded | LeaseLifecycle::Released | LeaseLifecycle::Expired
+            ) && !matches!(
                 lease_state(c.lease_expires_at.as_deref(), now_ts),
                 LeaseState::Expired
             )
@@ -298,20 +415,97 @@ pub fn detect_fleet_overlaps(active: &[ActiveClaimView], now_ts: &str) -> Vec<Cl
     out
 }
 
-/// Build a deterministic fleet health projection from active exclusive claims.
+fn capacity_pressure(claimed: u32, max_slots: u32) -> CapacityPressure {
+    if max_slots == 0 {
+        return CapacityPressure::Critical;
+    }
+    let pct = (claimed as u64 * 100) / max_slots as u64;
+    match pct {
+        0 => CapacityPressure::None,
+        1..=49 => CapacityPressure::Low,
+        50..=74 => CapacityPressure::Medium,
+        75..=99 => CapacityPressure::High,
+        _ => CapacityPressure::Critical,
+    }
+}
+
+fn within_expiry_risk(lease_expires_at: Option<&str>, now_ts: &str) -> bool {
+    let Some(exp) = lease_expires_at.and_then(parse_epoch_z) else {
+        return false;
+    };
+    let Some(now) = parse_epoch_z(now_ts) else {
+        return false;
+    };
+    if exp <= now {
+        return false;
+    }
+    exp - now <= EXPIRY_RISK_WINDOW_SECS
+}
+
+/// Build a deterministic fleet health projection from exclusive claim records.
 pub fn project_fleet_health(claims: Vec<ActiveClaimView>, now_ts: &str) -> FleetHealthProjection {
+    project_fleet_health_with_capacity(claims, now_ts, DEFAULT_FLEET_SLOT_CAPACITY)
+}
+
+pub fn project_fleet_health_with_capacity(
+    claims: Vec<ActiveClaimView>,
+    now_ts: &str,
+    max_slots: u32,
+) -> FleetHealthProjection {
     let mut active_claims = claims;
     for claim in &mut active_claims {
         claim.lease_state = lease_state(claim.lease_expires_at.as_deref(), now_ts);
+        if claim.capacity_units == 0 {
+            claim.capacity_units = 1;
+        }
     }
     active_claims.sort_by(|a, b| a.task_id.cmp(&b.task_id));
 
     let expired_leases: Vec<ActiveClaimView> = active_claims
         .iter()
-        .filter(|c| c.lease_state == LeaseState::Expired)
+        .filter(|c| {
+            c.lease_state == LeaseState::Expired || c.lease_lifecycle == LeaseLifecycle::Expired
+        })
+        .cloned()
+        .collect();
+    let yielded_claims: Vec<ActiveClaimView> = active_claims
+        .iter()
+        .filter(|c| c.lease_lifecycle == LeaseLifecycle::Yielded)
+        .cloned()
+        .collect();
+    let expiry_risk: Vec<ActiveClaimView> = active_claims
+        .iter()
+        .filter(|c| {
+            c.lease_lifecycle.holds_exclusive_custody()
+                && within_expiry_risk(c.lease_expires_at.as_deref(), now_ts)
+        })
         .cloned()
         .collect();
     let overlaps = detect_fleet_overlaps(&active_claims, now_ts);
+
+    let reserved_units: u32 = active_claims
+        .iter()
+        .filter(|c| {
+            c.lease_lifecycle.holds_exclusive_custody() && c.lease_state != LeaseState::Expired
+        })
+        .map(|c| c.capacity_units.max(1))
+        .sum();
+    let claimed_slots = reserved_units;
+    let capacity = FleetCapacityView {
+        claimed_slots,
+        max_slots,
+        pressure: capacity_pressure(claimed_slots, max_slots),
+        reserved_units,
+    };
+
+    let mut intent_anchors: Vec<String> = active_claims
+        .iter()
+        .map(|c| c.intent_anchor.clone())
+        .filter(|a| !a.is_empty())
+        .collect();
+    intent_anchors.sort();
+    intent_anchors.dedup();
+
     let agent_count = {
         let mut agents: Vec<&str> = active_claims
             .iter()
@@ -327,11 +521,22 @@ pub fn project_fleet_health(claims: Vec<ActiveClaimView>, now_ts: &str) -> Fleet
         claim_count: active_claims.len(),
         expired_count: expired_leases.len(),
         overlap_count: overlaps.len(),
+        yielded_count: yielded_claims.len(),
+        expiry_risk_count: expiry_risk.len(),
         agent_count,
         active_claims,
         expired_leases,
+        yielded_claims,
+        expiry_risk,
         overlaps,
+        intent_anchors,
+        capacity,
     }
+}
+
+/// Proof is required before exclusive-lease completion.
+pub fn exclusive_lease_requires_proof(lifecycle: LeaseLifecycle, assigned: bool) -> bool {
+    assigned && lifecycle.holds_exclusive_custody()
 }
 
 #[cfg(test)]

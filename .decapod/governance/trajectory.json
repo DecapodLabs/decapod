@@ -1,42 +1,25 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "code_01kyy59m3c1d00xn",
-  "intent_id": "intent:code_01kyy59m3c1d00xn",
-  "original_intent": "Houseboat 2 lease-aware multi-agent fleet coordination",
-  "derived_intent": "Add exclusive claim leases, path/scope overlap detection, renew, and fleet health projection",
+  "run_id": "code_01kyy89c6xecgt98",
+  "intent_id": "intent:code_01kyy89c6xecgt98",
+  "original_intent": "Houseboat wave 2: complete next lease-graph stratum for #852 and feed #857/#860",
+  "derived_intent": "Add lease generations, intent anchors, yield, proof-gated done, richer fleet projection, stalled trajectory motion",
   "active_boundaries": [
-    "compose with existing todo claims; no standalone fleet service"
+    "extend existing todo/trajectory/work_claim; no fleet service"
   ],
   "repo_scope": [
-    "src/decapod/core/{fleet_coord,todo,work_claim,schemas,mod}.rs tests"
+    "src/decapod/core/{fleet_coord,todo,trajectory,work_claim,schemas,rpc,mod}.rs tests"
   ],
-  "inspected_files": [
-    "src/decapod/core/schemas.rs",
-    "src/decapod/core/todo.rs",
-    "src/decapod/core/work_claim.rs"
-  ],
+  "inspected_files": [],
   "modified_files": [
-    ".decapod/managed/specs/.manifest.json",
-    "AGENTS.md",
-    "CLAUDE.md",
-    "CODEX.md",
-    "GEMINI.md",
     "src/decapod/core/fleet_coord.rs",
-    "src/decapod/core/mod.rs",
     "src/decapod/core/schemas.rs",
     "src/decapod/core/todo.rs",
-    "src/decapod/core/work_claim.rs",
-    "tests/plugins/todo.rs",
-    "tests/unit/core/fleet_coord_tests.rs",
-    "tests/unit/core/work_claim_tests.rs"
+    "src/decapod/core/trajectory.rs"
   ],
   "declared_commands": [],
   "tool_calls": [],
   "checks": [
-    {
-      "name": "entrypoint_fingerprints",
-      "status": "passed"
-    },
     {
       "name": "fleet_coord_unit",
       "status": "passed"
@@ -46,11 +29,7 @@
       "status": "passed"
     },
     {
-      "name": "specs_refresh",
-      "status": "passed"
-    },
-    {
-      "name": "work_claim_unit",
+      "name": "trajectory_motion",
       "status": "passed"
     }
   ],
@@ -64,21 +43,21 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:187854aae4041c522ce50f25fc7a75f23607e8557ca8d2019e96e775e0c1ec6d",
+  "artifact_hash": "sha256:181e76818263580b3a2debd562536c63cd2edbeaf7e5e1e15fb0784906e9347e",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:code_01kyy59m3c1d00xn": {
-        "id": "intent:code_01kyy59m3c1d00xn",
-        "raw_intent": "Houseboat 2 lease-aware multi-agent fleet coordination",
-        "refined_intent": "Add exclusive claim leases, path/scope overlap detection, renew, and fleet health projection",
+      "intent:code_01kyy89c6xecgt98": {
+        "id": "intent:code_01kyy89c6xecgt98",
+        "raw_intent": "Houseboat wave 2: complete next lease-graph stratum for #852 and feed #857/#860",
+        "refined_intent": "Add lease generations, intent anchors, yield, proof-gated done, richer fleet projection, stalled trajectory motion",
         "acceptance_criteria": [],
         "constraints": [
-          "src/decapod/core/{fleet_coord,todo,work_claim,schemas,mod}.rs tests"
+          "src/decapod/core/{fleet_coord,todo,trajectory,work_claim,schemas,rpc,mod}.rs tests"
         ],
         "assumptions": [],
         "boundaries": [
-          "compose with existing todo claims; no standalone fleet service"
+          "extend existing todo/trajectory/work_claim; no fleet service"
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -91,88 +70,54 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:code_01kyy59m3c1d00xn",
+        "intent_id": "intent:code_01kyy89c6xecgt98",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:code_01kyy59m3c1d00xn",
+        "intent_id": "intent:code_01kyy89c6xecgt98",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:code_01kyy59m3c1d00xn",
+        "intent_id": "intent:code_01kyy89c6xecgt98",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:code_01kyy59m3c1d00xn"
-      },
-      {
-        "sequence": 5,
-        "event_id": "event:5",
-        "intent_id": "intent:code_01kyy59m3c1d00xn",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:code_01kyy59m3c1d00xn"
+        "detail": "trajectory:code_01kyy89c6xecgt98"
       }
     ],
     "trajectories": {
-      "code_01kyy59m3c1d00xn": {
-        "id": "code_01kyy59m3c1d00xn",
-        "intent_id": "intent:code_01kyy59m3c1d00xn",
+      "code_01kyy89c6xecgt98": {
+        "id": "code_01kyy89c6xecgt98",
+        "intent_id": "intent:code_01kyy89c6xecgt98",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
             "action": "trajectory.record",
             "scope": [
-              "src/decapod/core/{fleet_coord,todo,work_claim,schemas,mod}.rs tests"
+              "src/decapod/core/{fleet_coord,todo,trajectory,work_claim,schemas,rpc,mod}.rs tests"
             ],
             "observations": [
-              "src/decapod/core/todo.rs",
-              "src/decapod/core/work_claim.rs",
-              "src/decapod/core/schemas.rs",
               "src/decapod/core/fleet_coord.rs",
               "src/decapod/core/todo.rs",
-              "src/decapod/core/work_claim.rs",
-              "src/decapod/core/schemas.rs",
-              "src/decapod/core/mod.rs",
-              "tests/unit/core/fleet_coord_tests.rs",
-              "tests/unit/core/work_claim_tests.rs",
-              "tests/plugins/todo.rs"
+              "src/decapod/core/trajectory.rs",
+              "src/decapod/core/schemas.rs"
             ],
             "proof_refs": [
               "fleet_coord_unit",
-              "work_claim_unit",
+              "trajectory_motion",
               "plugins_todo_lease"
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
-          },
-          {
-            "sequence": 5,
-            "action": "trajectory.record",
-            "scope": [
-              "src/decapod/core/{fleet_coord,todo,work_claim,schemas,mod}.rs tests"
-            ],
-            "observations": [
-              "AGENTS.md",
-              "CLAUDE.md",
-              "CODEX.md",
-              "GEMINI.md",
-              ".decapod/managed/specs/.manifest.json"
-            ],
-            "proof_refs": [
-              "entrypoint_fingerprints",
-              "specs_refresh"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:5"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 5
+    "next_sequence": 4
   }
 }

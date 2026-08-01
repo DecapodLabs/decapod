@@ -209,6 +209,105 @@ fn motion_context_is_recorded_and_state_stays_proof_backed() {
     assert_eq!(completed.next_transitions, vec!["publish", "validate"]);
 }
 
+#[test]
+fn motion_state_detects_stalled_and_abandoned() {
+    let temp = tempdir().unwrap();
+    init_trajectory(
+        temp.path(),
+        TrajectoryInit {
+            run_id: "run_stall".to_string(),
+            task_id: None,
+            intent_id: None,
+            original_intent: "original".to_string(),
+            derived_intent: "derived".to_string(),
+            active_boundaries: vec!["src/**".to_string()],
+            repo_scope: vec!["src/decapod/lib.rs".to_string()],
+            destination: Some("published PR".to_string()),
+            current_phase: Some("implementation".to_string()),
+            next_transitions: vec!["validate".to_string()],
+            blockers: vec![],
+        },
+    )
+    .unwrap();
+
+    let stalled = record_trajectory(
+        temp.path(),
+        "run_stall",
+        TrajectoryUpdate {
+            loops: vec![
+                loop_record(
+                    "run_stall",
+                    "intent:run_stall",
+                    "verify-loop",
+                    TrajectoryLoopType::Verification,
+                    1,
+                    TrajectoryGraderResult::Fail,
+                    "first fail",
+                    vec![],
+                    TrajectoryMutationProposal::None,
+                    TrajectoryLoopStatus::Failed,
+                ),
+                loop_record(
+                    "run_stall",
+                    "intent:run_stall",
+                    "verify-loop",
+                    TrajectoryLoopType::Verification,
+                    2,
+                    TrajectoryGraderResult::Fail,
+                    "second fail",
+                    vec![],
+                    TrajectoryMutationProposal::None,
+                    TrajectoryLoopStatus::Failed,
+                ),
+            ],
+            checks: vec![
+                TrajectoryCheck {
+                    name: "gate-a".to_string(),
+                    status: TrajectoryCheckStatus::Failed,
+                },
+                TrajectoryCheck {
+                    name: "gate-b".to_string(),
+                    status: TrajectoryCheckStatus::Failed,
+                },
+            ],
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    assert_eq!(motion_state(&stalled), TrajectoryMotionState::Stalled);
+
+    let abandoned = record_trajectory(
+        temp.path(),
+        "run_stall",
+        TrajectoryUpdate {
+            completion_claim: Some("done".to_string()),
+            checks: vec![TrajectoryCheck {
+                name: "validate".to_string(),
+                status: TrajectoryCheckStatus::Failed,
+            }],
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    assert_eq!(motion_state(&abandoned), TrajectoryMotionState::Abandoned);
+
+    let abandoned_blocker = record_trajectory(
+        temp.path(),
+        "run_stall",
+        TrajectoryUpdate {
+            clear_blockers: true,
+            blockers: vec!["abandoned by agent timeout".to_string()],
+            completion_claim: None,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    assert_eq!(
+        motion_state(&abandoned_blocker),
+        TrajectoryMotionState::Abandoned
+    );
+}
+
 #[allow(clippy::too_many_arguments)]
 fn loop_record(
     run_id: &str,

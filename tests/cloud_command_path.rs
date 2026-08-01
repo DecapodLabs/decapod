@@ -96,6 +96,7 @@ fn active_cloud_commands_use_the_storage_adapter_without_local_fallback() {
             agent: Some("agent-two".into()),
             mode: ClaimMode::Shared,
             lease_seconds: None,
+            intent_anchor: None,
         },
         &store,
     )

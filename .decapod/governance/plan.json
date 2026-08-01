@@ -1,13 +1,15 @@
 {
   "schema_version": "1.0.0",
-  "title": "Houseboat 2: lease-aware multi-agent fleet coordination",
-  "intent": "Advance #852 with exclusive claim leases, reclaim on expiry/staleness, path/scope/category overlap conflicts, todo renew, and todo fleet health projection without a standalone fleet service.",
+  "title": "Houseboat wave 2: lease-graph stratum",
+  "intent": "Advance #852/#857/#860 with lease generations, intent anchors, yield, proof-gated done, richer fleet projection, and stalled/abandoned trajectory motion.",
   "state": "APPROVED",
   "todo_ids": [
-    "code_01kyy59m3c1d00xn"
+    "code_01kyy89c6xecgt98"
   ],
   "proof_hooks": [
-    "decapod rpc --op specs.refresh"
+    "cargo test --lib fleet_coord",
+    "cargo test --lib trajectory",
+    "cargo test --test plugins_todo_tests exclusive_claim"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -21,5 +23,5 @@
     "file_touch_budget": 40
   },
   "phases": [],
-  "updated_at": "1785573339Z"
+  "updated_at": "1785575091Z"
 }
