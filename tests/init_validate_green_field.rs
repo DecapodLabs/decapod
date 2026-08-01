@@ -1,3 +1,4 @@
+use rusqlite::Connection;
 use std::fs;
 use std::path::Path;
 use std::process::Command;
@@ -114,6 +115,76 @@ fn fresh_init_validate_comes_back_green() {
         !stderr.contains("fail=") || stderr.contains("fail=0"),
         "expected no failures in validation output: {stderr}"
     );
+}
+
+#[test]
+fn existing_project_init_migrates_watcher_before_runtime_reads() {
+    let tmp = TempDir::new().expect("tmpdir");
+    let dir = tmp.path();
+    let password = setup_initialized_repo(&tmp);
+    let data = dir.join(".decapod/data");
+    let legacy = data.join("watcher.events.jsonl");
+    fs::write(
+        &legacy,
+        "{\"event_id\":\"upgrade-watcher-1\",\"ts\":\"1785620000Z\",\"event_type\":\"watcher.run\",\"actor\":\"watcher\"}\n",
+    )
+    .expect("write legacy watcher event");
+
+    let init = run_decapod(dir, &["init"], &[]);
+    assert!(
+        init.status.success(),
+        "existing-project init failed: {}{}",
+        String::from_utf8_lossy(&init.stdout),
+        String::from_utf8_lossy(&init.stderr)
+    );
+    let conn = Connection::open(data.join("decapod.db")).expect("open canonical db");
+    let count: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM watcher_events WHERE event_id = 'upgrade-watcher-1'",
+            [],
+            |row| row.get(0),
+        )
+        .expect("query migrated watcher event");
+    assert_eq!(count, 1);
+    drop(conn);
+
+    fs::remove_file(&legacy).expect("remove legacy input after migration");
+    let validate = run_decapod_with_password(
+        dir,
+        &["validate"],
+        &password,
+        &[("DECAPOD_VALIDATE_TIMEOUT_SECS", "120")],
+    );
+    let validate_output = format!(
+        "{}{}",
+        String::from_utf8_lossy(&validate.stdout),
+        String::from_utf8_lossy(&validate.stderr)
+    );
+    assert!(validate.status.success(), "{validate_output}");
+    assert!(!validate_output.contains("Watcher audit trail missing"));
+
+    let health = run_decapod_with_password(dir, &["govern", "health", "summary"], &password, &[]);
+    let health_output = String::from_utf8_lossy(&health.stdout);
+    assert!(
+        health.status.success(),
+        "{}",
+        String::from_utf8_lossy(&health.stderr)
+    );
+    assert!(health_output.contains("upgrade-watcher-1") || health_output.contains("1785620000Z"));
+
+    let recorder = run_decapod_with_password(
+        dir,
+        &["trace", "flight-recorder", "timeline", "--format", "json"],
+        &password,
+        &[],
+    );
+    let recorder_output = String::from_utf8_lossy(&recorder.stdout);
+    assert!(
+        recorder.status.success(),
+        "{}",
+        String::from_utf8_lossy(&recorder.stderr)
+    );
+    assert!(recorder_output.contains("upgrade-watcher-1"));
 }
 
 #[test]

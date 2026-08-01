@@ -3,6 +3,10 @@
 //! This module provides compile-time embedded access to Decapod's methodology documents.
 //! All constitution files are baked into the binary via `assets/constitution.json`.
 
+use crate::core::error;
+use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
+use std::collections::{BTreeMap, HashSet};
 use std::path::Path;
 
 // Include the auto-generated compressed constitution
@@ -78,7 +82,112 @@ pub fn get_override_doc(repo_root: &Path, id: &str) -> Option<String> {
     }
 
     let override_content = std::fs::read_to_string(&override_path).ok()?;
-    extract_component_override(&override_content, id)
+    parse_override_sections(&override_content)
+        .ok()?
+        .remove(&canonical_override_id(id)?)
+        .and_then(|resolved| (!resolved.content.is_empty()).then_some(resolved.content))
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ResolvedOverrideEvidence {
+    pub directive_id: String,
+    pub source: String,
+    pub source_hash: String,
+    pub body_hash: String,
+    pub byte_count: usize,
+    pub precedence: String,
+}
+
+#[derive(Debug, Clone)]
+struct ParsedOverride {
+    source_heading: String,
+    content: String,
+    evidence: ResolvedOverrideEvidence,
+}
+
+pub const OVERRIDE_BODY_PLACEHOLDER: &str = "Replace this line with this directive's override. Use Markdown or any documentation style you prefer.";
+const LEGACY_OVERRIDE_BODY_PLACEHOLDER: &str =
+    "<!-- Add this directive's Markdown body here; no escaping required. -->";
+pub const OVERRIDE_BODY_FENCE_OPEN: &str = "````markdown";
+pub const OVERRIDE_BODY_FENCE_CLOSE: &str = "````";
+
+/// Resolve the complete repository-local authority overlay and return the
+/// provenance of every non-empty directive. Invalid structure fails closed.
+pub fn resolved_override_evidence(
+    repo_root: &Path,
+) -> Result<Vec<ResolvedOverrideEvidence>, error::DecapodError> {
+    let override_path = repo_root.join(".decapod").join("OVERRIDE.md");
+    if !override_path.exists() {
+        return Ok(Vec::new());
+    }
+    let content = std::fs::read_to_string(&override_path).map_err(error::DecapodError::IoError)?;
+    Ok(parse_override_sections(&content)?
+        .into_values()
+        .filter(|resolved| resolved.evidence.byte_count > 0)
+        .map(|resolved| resolved.evidence)
+        .collect())
+}
+
+pub fn validate_override_structure(repo_root: &Path) -> Result<(), error::DecapodError> {
+    resolved_override_evidence(repo_root).map(|_| ())
+}
+
+/// Render the current scaffold contract while preserving every resolved body.
+/// Legacy unfenced sections are upgraded into non-rendering fenced source
+/// areas; their extracted bytes remain unchanged.
+pub fn render_fenced_override_upgrade(
+    override_content: &str,
+) -> Result<String, error::DecapodError> {
+    let sections = parse_override_sections(override_content)?;
+    let template = template_override();
+    let mut current_id: Option<String> = None;
+    let mut current_fence = OVERRIDE_BODY_FENCE_CLOSE.to_string();
+    let mut rendered = String::new();
+
+    for line in template.lines() {
+        if let Some(heading) = line.strip_prefix("### ").map(str::trim) {
+            current_id = canonical_override_id(heading);
+            let body = current_id
+                .as_ref()
+                .and_then(|id| sections.get(id))
+                .map(|section| section.content.as_str())
+                .unwrap_or("");
+            let longest_run = body
+                .lines()
+                .map(|line| line.trim_start().chars().take_while(|c| *c == '`').count())
+                .max()
+                .unwrap_or(0);
+            current_fence = "`".repeat(longest_run.max(3) + 1);
+        }
+
+        if line == OVERRIDE_BODY_FENCE_OPEN {
+            rendered.push_str(&current_fence);
+            rendered.push_str("markdown\n");
+            continue;
+        }
+        if line == OVERRIDE_BODY_FENCE_CLOSE {
+            rendered.push_str(&current_fence);
+            rendered.push('\n');
+            continue;
+        }
+        if line == OVERRIDE_BODY_PLACEHOLDER {
+            let body = current_id
+                .as_ref()
+                .and_then(|id| sections.get(id))
+                .map(|section| section.content.as_str())
+                .unwrap_or("");
+            if body.is_empty() {
+                rendered.push_str(OVERRIDE_BODY_PLACEHOLDER);
+            } else {
+                rendered.push_str(body);
+            }
+            rendered.push('\n');
+            continue;
+        }
+        rendered.push_str(line);
+        rendered.push('\n');
+    }
+    Ok(rendered)
 }
 
 /// List component override section headings from .decapod/OVERRIDE.md.
@@ -92,55 +201,266 @@ pub fn list_override_sections(repo_root: &Path) -> Vec<String> {
 }
 
 fn extract_override_section_names(override_content: &str) -> Vec<String> {
-    let Some(override_start) = override_content.find("CHANGES ARE NOT PERMITTED ABOVE THIS LINE")
-    else {
-        return Vec::new();
-    };
-    let searchable_content = &override_content[override_start..];
-
-    searchable_content
-        .lines()
-        .filter_map(|line| line.strip_prefix("### "))
-        .map(str::trim)
-        .filter(|section| !section.is_empty())
-        .map(ToString::to_string)
-        .collect()
+    parse_override_sections(override_content)
+        .map(|sections| sections.into_keys().collect())
+        .unwrap_or_default()
 }
 
-/// Extract a specific component's override content from OVERRIDE.md
-fn extract_component_override(override_content: &str, id: &str) -> Option<String> {
-    // Only look after the "CHANGES ARE NOT PERMITTED ABOVE THIS LINE" marker
-    let override_start = override_content
-        .find("CHANGES ARE NOT PERMITTED ABOVE THIS LINE")
-        .unwrap_or(0);
-    let searchable_content = &override_content[override_start..];
-
-    let candidates = doc_id_candidates(id);
-    let mut best_extracted = None;
-
-    let lines: Vec<&str> = searchable_content.lines().collect();
-    let mut i = 0;
-    while i < lines.len() {
-        let line = lines[i].trim();
-        let is_target = candidates.iter().any(|c| line == format!("### {c}"));
-
-        if is_target {
-            let mut extracted_lines = Vec::new();
-            i += 1;
-            while i < lines.len() && !lines[i].trim().starts_with("### ") {
-                extracted_lines.push(lines[i]);
-                i += 1;
-            }
-            let extracted = extracted_lines.join("\n").trim().to_string();
-            if !extracted.is_empty() {
-                best_extracted = Some(extracted);
-            }
-            continue; // i is already at the next possible header or end
+fn known_override_ids() -> Vec<String> {
+    let mut ids = list_docs();
+    for spec in [
+        "specs/README.md",
+        "specs/INTENT.md",
+        "specs/ARCHITECTURE.md",
+        "specs/INTERFACES.md",
+        "specs/VALIDATION.md",
+        "specs/SEMANTICS.md",
+        "specs/OPERATIONS.md",
+        "specs/SECURITY.md",
+    ] {
+        if !ids.iter().any(|id| {
+            doc_id_candidates(id)
+                .into_iter()
+                .any(|candidate| candidate == spec)
+        }) {
+            ids.push(spec.to_string());
         }
-        i += 1;
     }
+    ids.sort();
+    ids.dedup();
+    ids
+}
 
-    best_extracted
+fn canonical_override_id(id: &str) -> Option<String> {
+    known_override_ids().into_iter().find(|known| {
+        doc_id_candidates(known)
+            .into_iter()
+            .any(|candidate| candidate == id)
+    })
+}
+
+fn looks_like_directive_id(value: &str, known_namespaces: &HashSet<&str>) -> bool {
+    let Some((namespace, _)) = value.split_once('/') else {
+        return false;
+    };
+    known_namespaces.contains(namespace)
+        && !value.chars().any(char::is_whitespace)
+        && value
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || matches!(c, '/' | '_' | '-' | '.'))
+}
+
+fn parse_override_sections(
+    override_content: &str,
+) -> Result<BTreeMap<String, ParsedOverride>, error::DecapodError> {
+    let Some(override_start) = override_content.find("CHANGES ARE NOT PERMITTED ABOVE THIS LINE")
+    else {
+        return Ok(BTreeMap::new());
+    };
+    let lines: Vec<&str> = override_content[override_start..].lines().collect();
+    let source_hash = format!("{:x}", Sha256::digest(override_content.as_bytes()));
+    let known_ids = known_override_ids();
+    let known_namespaces = known_ids
+        .iter()
+        .filter_map(|id| id.split_once('/').map(|(namespace, _)| namespace))
+        .collect::<HashSet<_>>();
+    let canonical_headings = known_ids
+        .iter()
+        .flat_map(|id| {
+            doc_id_candidates(id)
+                .into_iter()
+                .map(move |candidate| (candidate, id.clone()))
+        })
+        .collect::<BTreeMap<_, _>>();
+    let mut sections = BTreeMap::new();
+    let mut current: Option<(Option<String>, String, Vec<&str>)> = None;
+    let mut fence: Option<(char, usize)> = None;
+
+    let finish = |sections: &mut BTreeMap<String, ParsedOverride>,
+                  current: Option<(Option<String>, String, Vec<&str>)>|
+     -> Result<(), error::DecapodError> {
+        let Some((directive_id, source_heading, body)) = current else {
+            return Ok(());
+        };
+        let mut meaningful = body;
+        while meaningful
+            .first()
+            .is_some_and(|line| line.trim().is_empty())
+        {
+            meaningful.remove(0);
+        }
+        while meaningful.last().is_some_and(|line| line.trim().is_empty()) {
+            meaningful.pop();
+        }
+        if meaningful.last().is_some_and(|line| line.trim() == "---") {
+            meaningful.pop();
+            while meaningful.last().is_some_and(|line| line.trim().is_empty()) {
+                meaningful.pop();
+            }
+        }
+        if let Some(fence_length) = meaningful
+            .first()
+            .and_then(|line| override_body_fence_length(line.trim()))
+        {
+            if !meaningful.last().is_some_and(|line| {
+                line.trim().chars().all(|c| c == '`') && line.trim().len() >= fence_length
+            }) {
+                return Err(error::DecapodError::ValidationError(format!(
+                    "OVERRIDE_UNCLOSED_BODY_FENCE: '{source_heading}' must close its four-backtick body fence"
+                )));
+            }
+            meaningful.remove(0);
+            meaningful.pop();
+        }
+        meaningful.retain(|line| {
+            !matches!(
+                line.trim(),
+                OVERRIDE_BODY_PLACEHOLDER | LEGACY_OVERRIDE_BODY_PLACEHOLDER
+            )
+        });
+        while meaningful
+            .first()
+            .is_some_and(|line| line.trim().is_empty())
+        {
+            meaningful.remove(0);
+        }
+        while meaningful.last().is_some_and(|line| line.trim().is_empty()) {
+            meaningful.pop();
+        }
+        if meaningful.len() == 1 && meaningful[0].trim() == "---" {
+            meaningful.clear();
+        }
+        let content = meaningful.join("\n");
+        let Some(directive_id) = directive_id else {
+            if content.is_empty() {
+                return Ok(());
+            }
+            return Err(error::DecapodError::ValidationError(format!(
+                "OVERRIDE_MALFORMED_DIRECTIVE: '{source_heading}' is not a recognized constitution directive ID"
+            )));
+        };
+        let body_hash = format!("{:x}", Sha256::digest(content.as_bytes()));
+        let evidence = ResolvedOverrideEvidence {
+            directive_id: directive_id.clone(),
+            source: ".decapod/OVERRIDE.md".to_string(),
+            source_hash: source_hash.clone(),
+            body_hash,
+            byte_count: content.len(),
+            precedence: "repository_project_override".to_string(),
+        };
+        let parsed = ParsedOverride {
+            source_heading: source_heading.clone(),
+            content,
+            evidence,
+        };
+        if let Some(existing) = sections.get_mut(&directive_id) {
+            let same_exact_heading = existing.source_heading == source_heading;
+            let both_empty = existing.evidence.byte_count == 0 && parsed.evidence.byte_count == 0;
+            if !same_exact_heading && both_empty {
+                return Ok(());
+            }
+            if !same_exact_heading && existing.evidence.byte_count == 0 {
+                *existing = parsed;
+                return Ok(());
+            }
+            if !same_exact_heading && parsed.evidence.byte_count == 0 {
+                return Ok(());
+            }
+            return Err(error::DecapodError::ValidationError(format!(
+                "OVERRIDE_DUPLICATE_DIRECTIVE: repository override defines '{directive_id}' more than once"
+            )));
+        }
+        sections.insert(directive_id, parsed);
+        Ok(())
+    };
+
+    for (line_index, line) in lines.iter().copied().enumerate() {
+        let trimmed = line.trim_start();
+        let fence_marker = ['`', '~'].into_iter().find_map(|marker| {
+            let length = trimmed.chars().take_while(|c| *c == marker).count();
+            (length >= 3).then_some((marker, length))
+        });
+        let heading = if fence.is_none() {
+            line.strip_prefix("### ").map(str::trim)
+        } else {
+            None
+        };
+        match heading.and_then(|candidate| canonical_headings.get(candidate).cloned()) {
+            Some(directive_id) => {
+                finish(&mut sections, current.take())?;
+                current = Some((Some(directive_id), heading.unwrap().to_string(), Vec::new()));
+            }
+            None if heading
+                .is_some_and(|candidate| looks_like_directive_id(candidate, &known_namespaces)) =>
+            {
+                finish(&mut sections, current.take())?;
+                current = Some((None, heading.unwrap().to_string(), Vec::new()));
+            }
+            None => {
+                let generated_category_boundary = fence.is_none()
+                    && is_generated_override_category(line)
+                    && (current.as_ref().is_none_or(|(_, _, body)| {
+                        body.iter()
+                            .rev()
+                            .find(|line| !line.trim().is_empty())
+                            .is_some_and(|line| line.trim() == "---")
+                    }) || lines[line_index + 1..]
+                        .iter()
+                        .find(|candidate| !candidate.trim().is_empty())
+                        .and_then(|candidate| candidate.strip_prefix("### "))
+                        .map(str::trim)
+                        .is_some_and(|candidate| canonical_headings.contains_key(candidate)));
+                if generated_category_boundary {
+                    if let Some((_, _, body)) = current.as_mut() {
+                        while body.last().is_some_and(|line| line.trim().is_empty()) {
+                            body.pop();
+                        }
+                        if body.last().is_some_and(|line| line.trim() == "---") {
+                            body.pop();
+                        }
+                    }
+                    finish(&mut sections, current.take())?;
+                } else if let Some((_, _, body)) = current.as_mut() {
+                    body.push(line);
+                }
+            }
+        }
+        if let Some((marker, length)) = fence_marker {
+            fence = match fence {
+                Some((open, open_length)) if open == marker && length >= open_length => None,
+                None => Some((marker, length)),
+                other => other,
+            };
+        }
+    }
+    finish(&mut sections, current)?;
+    Ok(sections)
+}
+
+fn is_generated_override_category(line: &str) -> bool {
+    let Some(category) = line
+        .strip_prefix("## ")
+        .and_then(|line| line.strip_suffix(" Overrides"))
+    else {
+        return false;
+    };
+    matches!(
+        category,
+        "CORE"
+            | "SPECS"
+            | "INTERFACES"
+            | "METHODOLOGY"
+            | "ARCHITECTURE"
+            | "DATA"
+            | "PLUGINS"
+            | "DOCS"
+            | "METADATA"
+    )
+}
+
+fn override_body_fence_length(line: &str) -> Option<usize> {
+    let ticks = line.strip_suffix("markdown")?.trim_end();
+    (ticks.len() >= 4 && ticks.chars().all(|c| c == '`')).then_some(ticks.len())
 }
 
 /// Get merged document (embedded base + optional project override from OVERRIDE.md)
@@ -548,9 +868,12 @@ fn template_override() -> String {
 <!-- ⚠️  CHANGES ARE NOT PERMITTED ABOVE THIS LINE                           -->
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
 
-Use this file to override specific constitution directives. Decapod indexes these sections
-using the H3 headers below (e.g., `### core/DECAPOD`). Overrides in this file take precedence
-over the embedded JSON constitution.
+Use this file to override specific constitution directives. Each recognized directive-ID H3
+below (e.g., `### core/DECAPOD`) owns the fenced body beneath it. Replace the instructional
+line inside that four-backtick block with Markdown or any documentation style you prefer.
+The fence keeps authored policy from rendering as document structure while Decapod extracts
+its contents as binding authority. Duplicate or malformed directive-ID headings fail validation.
+Overrides in this file take precedence over the embedded JSON constitution.
 "#
     .to_string();
 
@@ -578,7 +901,13 @@ over the embedded JSON constitution.
         "specs/SECURITY.md",
     ];
     for spec in &specs {
-        categories.entry("specs").or_default().push(spec);
+        if !ids.iter().any(|id| {
+            doc_id_candidates(id)
+                .into_iter()
+                .any(|candidate| candidate == *spec)
+        }) {
+            categories.entry("specs").or_default().push(spec);
+        }
     }
 
     let cat_order = [
@@ -598,6 +927,12 @@ over the embedded JSON constitution.
             s.push_str(&format!("\n## {} Overrides\n", cat.to_uppercase()));
             for id in nodes {
                 s.push_str(&format!("\n### {id}\n"));
+                s.push_str(OVERRIDE_BODY_FENCE_OPEN);
+                s.push('\n');
+                s.push_str(OVERRIDE_BODY_PLACEHOLDER);
+                s.push('\n');
+                s.push_str(OVERRIDE_BODY_FENCE_CLOSE);
+                s.push('\n');
             }
             s.push_str("\n---\n");
         }

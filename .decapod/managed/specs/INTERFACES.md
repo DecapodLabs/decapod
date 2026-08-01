@@ -38,6 +38,14 @@ Generated interface specs should include:
 - Cross-boundary read models:
 - Consistency expectations:
 
+## Epistemic Integrity Contracts
+| Interface | Input | Output | Failure semantics |
+|---|---|---|---|
+| `OVERRIDE.md` resolution | Markdown or another documentation style inside each generated subsection's four-backtick source block | Extracted body without wrapper plus derived authority evidence | Unclosed wrappers, duplicate exact IDs, or non-empty unknown Decapod-namespaced IDs reject the complete overlay |
+| `context.resolve` / capsule query | Repository root and context request | Applied directive ID, source, source/body hashes, bytes, precedence | No partial authority result on structural ambiguity |
+| `core::events::{query,latest,exists,actors}` | Semantic stream and bounded filter/limit | Canonical SQLite event observations | Unknown stream or malformed canonical payload is typed failure |
+| startup reconciliation | Unproven legacy JSONL or post-consolidation legacy SQLite stores | Idempotently imported canonical rows plus durable retirement receipts | Fresh malformed input or same-ID/different-event conflict stops migration; previously proven inputs are never reinterpreted as live authority |
+
 ## Error Taxonomy Example (service_or_library)
 ```rust
 #[derive(Debug, thiserror::Error)]
@@ -73,7 +81,7 @@ pub enum ApiError {
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `29d629c362cd5a5478037e0a54c1e10b84d592d0733d2f6cd4c39b907e726f20`
+- Repository signal fingerprint: `0f50628f8f397cb9d745a75e26c658151acef11e1939070599ffa53cfa3d94f7`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

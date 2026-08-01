@@ -24,4 +24,4 @@ Defines project-specific policy and metadata.
 
 ## Project Overrides
 
-For deep behavioral changes, use `.decapod/OVERRIDE.md` (see [Config Overrides](concepts/overrides.md)). This allows you to override specific directives in the embedded Decapod constitution (see [Repository Constitution](concepts/constitution.md)) without modifying the Decapod binary itself.
+For deep behavioral changes, use `.decapod/OVERRIDE.md` (see [Config Overrides](concepts/overrides.md)). Find the generated directive section and replace the instruction inside its four-backtick source block with Markdown or any documentation style you prefer. Decapod extracts the block contents as authority while the outer file renders them as code. Duplicate or Decapod-namespaced unknown directive headings outside a body block fail closed instead of applying partial authority.

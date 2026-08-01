@@ -41,9 +41,60 @@ flowchart LR
   E --> F[Promote]
 ```## Proof Surfaces
 - `decapod validate`
-- Required test commands:
-- `cargo test`
-- Required integration/e2e commands:## Promotion Gates## Blocking Gates
+- Required test command: `cargo test`
+- Required integration/e2e commands: `cargo test --test context_capsule_schema`, `cargo test --test init_validate_green_field`
+
+<!-- decapod:capability-overlay:background-processing:start -->
+
+## Background Processing Validation Overlay
+
+### Duplicate Delivery Tests
+- Same message delivered multiple times MUST produce same result
+- Idempotency key verification
+- Verify the declared delivery guarantee; do not claim exactly-once behavior without proof
+
+### Retry Tests
+- Configured retry/backoff policy verified
+- Configured retry bound or unbounded policy verified
+- Poison-work handling verified when the project declares it
+
+### Shutdown Tests
+- Graceful drain on signal
+- In-flight job completion or safe requeue
+- No data loss on forced termination
+<!-- decapod:capability-overlay:background-processing:end -->
+
+<!-- decapod:capability-overlay:persistent-state:start -->
+
+## Persistent State Validation Overlay
+
+### Migration Proof Command
+- Configure `repo.migration_validation.command` and its arguments as the executable migration proof; file presence is not proof
+- The configured command MUST define its working directory, timeout, expected exit code, and evidence output
+
+### Migration Tests
+- All migrations MUST have integration tests
+- Rollback procedures MUST be tested
+- Data integrity checks post-migration
+
+### Persistence Integration Tests
+- Repository abstraction tested against real database
+- Transaction boundary tests
+- Concurrency conflict tests
+- Data integrity validation after recovery
+<!-- decapod:capability-overlay:persistent-state:end -->
+
+## Epistemic Integrity Regression Proof
+- Nested H3/H4 headings, slash prose, fenced directive examples, and arbitrary Markdown survive through final resolved context.
+- Duplicate exact directive IDs and non-empty unknown Decapod-namespaced IDs fail closed; empty retired generated sections remain upgrade-compatible.
+- A structurally healthy spec-drift fixture increments neither warning nor failure counts.
+- A watcher record imported by existing-project init is observed by validation, health, heartbeat, and flight recorder after the source JSONL is removed.
+- Re-running event reconciliation imports zero additional rows; malformed or conflicting fresh records return visible errors, and a proven consolidation receipt prevents retired archives from being reinterpreted.
+- A legacy SQLite store recreated after consolidation is copied into `decapod.db`, removed, and does not trigger the full-backup loop on the following command.
+
+## Promotion Gates
+
+## Blocking Gates
 | Gate | Command | Evidence |
 |---|---|---|
 | Architecture + interface drift check | `decapod validate` | Gate output |
@@ -76,7 +127,7 @@ flowchart LR
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `29d629c362cd5a5478037e0a54c1e10b84d592d0733d2f6cd4c39b907e726f20`
+- Repository signal fingerprint: `0f50628f8f397cb9d745a75e26c658151acef11e1939070599ffa53cfa3d94f7`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

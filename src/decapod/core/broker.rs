@@ -299,56 +299,18 @@ impl DbBroker {
     /// terminal `success` or `error` event, which indicates a process crash
     /// between the two-phase commit boundaries.
     pub fn verify_replay(&self) -> Result<ReplayReport, error::DecapodError> {
-        use std::io::BufRead;
         let mut pending_map = HashMap::new();
         let mut total_events = 0usize;
 
-        let canonical = events::canonical_db_path(&self.root);
-        let canonical_events = if canonical.exists() {
-            let conn = crate::core::db::db_connect_for_validate(&canonical.to_string_lossy())?;
-            let has_table: bool = conn
-                .query_row(
-                    "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name='broker_events')",
-                    [],
-                    |row| row.get(0),
-                )
-                .unwrap_or(false);
-            if has_table {
-                let mut stmt =
-                    conn.prepare("SELECT payload FROM broker_events ORDER BY seq ASC")?;
-                let rows = stmt.query_map([], |row| row.get::<_, String>(0))?;
-                let mut parsed = Vec::new();
-                for row in rows {
-                    let payload = row?;
-                    parsed.push(serde_json::from_str::<BrokerEvent>(&payload).map_err(|e| {
-                        error::DecapodError::ValidationError(format!("Invalid broker event: {e}"))
-                    })?);
-                }
-                Some(parsed)
-            } else {
-                None
-            }
-        } else {
-            None
-        };
-
-        let events = if let Some(events) = canonical_events {
-            events
-        } else if self.audit_log_path.exists() {
-            let f =
-                std::fs::File::open(&self.audit_log_path).map_err(error::DecapodError::IoError)?;
-            let reader = std::io::BufReader::new(f);
-            let mut parsed = Vec::new();
-            for line in reader.lines() {
-                let line = line.map_err(error::DecapodError::IoError)?;
-                parsed.push(serde_json::from_str::<BrokerEvent>(&line).map_err(|e| {
-                    error::DecapodError::ValidationError(format!("Invalid audit log entry: {e}"))
-                })?);
-            }
-            parsed
-        } else {
-            Vec::new()
-        };
+        let events = events::query(&self.root, events::BROKER, usize::MAX)?
+            .into_iter()
+            .rev()
+            .map(|event| {
+                serde_json::from_value::<BrokerEvent>(event.payload).map_err(|e| {
+                    error::DecapodError::ValidationError(format!("Invalid broker event: {e}"))
+                })
+            })
+            .collect::<Result<Vec<_>, _>>()?;
 
         for ev in events {
             total_events += 1;

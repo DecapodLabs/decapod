@@ -374,15 +374,22 @@ fn get_best_fragment_for_terms(path: &str, content: &str, terms: &[String]) -> O
     let mut current_title: Option<String> = None;
     let mut current_lines: Vec<String> = Vec::new();
     let mut sections: Vec<(String, String)> = Vec::new();
+    let mut in_project_override = false;
 
     for line in content.lines() {
-        if line.starts_with('#') {
+        if line == "## Project Overrides" {
             if let Some(title) = current_title.take() {
                 sections.push((title, current_lines.join("\n")));
                 current_lines.clear();
             }
-            let heading = line.trim_start_matches('#').trim().to_string();
-            current_title = Some(heading);
+            current_title = Some("Project Overrides".to_string());
+            in_project_override = true;
+        } else if !in_project_override && line.starts_with('#') {
+            if let Some(title) = current_title.take() {
+                sections.push((title, current_lines.join("\n")));
+                current_lines.clear();
+            }
+            current_title = Some(line.trim_start_matches('#').trim().to_string());
         }
         if current_title.is_some() {
             current_lines.push(line.to_string());

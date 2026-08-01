@@ -5,12 +5,10 @@
 //! claim -> workspace -> edits -> proofs -> publish.
 
 use crate::core::error::DecapodError;
+use crate::core::events;
 use crate::core::store::Store;
 use clap::{Parser, Subcommand};
 use serde::{Deserialize, Serialize};
-use std::fs::File;
-use std::io::{BufRead, BufReader};
-use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
 #[clap(
@@ -76,40 +74,7 @@ pub struct Timeline {
 }
 
 fn render_timeline(store: &Store, format: &str, limit: usize) -> Result<(), DecapodError> {
-    let mut all_events = Vec::new();
-    let mut sources = Vec::new();
-    let mut gaps = Vec::new();
-
-    let event_files = vec![
-        ("broker", store.root.join("broker.events.jsonl")),
-        ("todo", store.root.join("todo.events.jsonl")),
-        ("federation", store.root.join("federation.events.jsonl")),
-        ("proof", store.root.join("proof.events.jsonl")),
-        ("watcher", store.root.join("watcher.events.jsonl")),
-        ("map", store.root.join("map.events.jsonl")),
-        ("lcm", store.root.join("lcm.events.jsonl")),
-    ];
-
-    for (name, path) in &event_files {
-        if path.exists() {
-            sources.push(name.to_string());
-            match read_events(path, limit) {
-                Ok(events) => {
-                    for mut ev in events {
-                        ev.source = name.to_string();
-                        all_events.push(ev);
-                    }
-                }
-                Err(e) => {
-                    gaps.push(format!("{name}: read error - {e}"));
-                }
-            }
-        } else {
-            gaps.push(format!("{name}: file not found"));
-        }
-    }
-
-    all_events.sort_by(|a, b| a.ts.cmp(&b.ts));
+    let (all_events, sources, gaps) = read_timeline_events(store, limit);
 
     if format == "json" {
         let timeline = Timeline {
@@ -169,6 +134,28 @@ fn render_timeline(store: &Store, format: &str, limit: usize) -> Result<(), Deca
     Ok(())
 }
 
+fn read_timeline_events(
+    store: &Store,
+    limit: usize,
+) -> (Vec<TimelineEvent>, Vec<String>, Vec<String>) {
+    let mut all_events = Vec::new();
+    let mut sources = Vec::new();
+    let mut gaps = Vec::new();
+    for (name, _) in events::STREAMS {
+        match events::query(&store.root, name, limit) {
+            Ok(records) => {
+                if !records.is_empty() {
+                    sources.push(name.to_string());
+                }
+                all_events.extend(records.into_iter().map(timeline_event));
+            }
+            Err(e) => gaps.push(format!("{name}: canonical read error - {e}")),
+        }
+    }
+    all_events.sort_by(|a, b| a.ts.cmp(&b.ts));
+    (all_events, sources, gaps)
+}
+
 fn truncate(s: &str, max: usize) -> String {
     if s.len() > max {
         format!("{}...", &s[..max - 3])
@@ -177,63 +164,36 @@ fn truncate(s: &str, max: usize) -> String {
     }
 }
 
-fn read_events(path: &PathBuf, limit: usize) -> Result<Vec<TimelineEvent>, DecapodError> {
-    let file = File::open(path).map_err(DecapodError::IoError)?;
-    let reader = BufReader::new(file);
-    let mut events = Vec::new();
-
-    for line in reader.lines() {
-        let line = line.map_err(DecapodError::IoError)?;
-        if line.trim().is_empty() {
-            continue;
-        }
-
-        match serde_json::from_str::<serde_json::Value>(&line) {
-            Ok(json) => {
-                let ev = TimelineEvent {
-                    source: "unknown".to_string(),
-                    ts: json
-                        .get("ts")
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("unknown")
-                        .to_string(),
-                    event_id: json
-                        .get("event_id")
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("unknown")
-                        .to_string(),
-                    op: json
-                        .get("op")
-                        .or_else(|| json.get("event_type"))
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("unknown")
-                        .to_string(),
-                    actor: json.get("actor").and_then(|v| v.as_str()).map(String::from),
-                    session_id: json
-                        .get("session_id")
-                        .and_then(|v| v.as_str())
-                        .map(String::from),
-                    correlation_id: json
-                        .get("correlation_id")
-                        .and_then(|v| v.as_str())
-                        .map(String::from),
-                    status: json
-                        .get("status")
-                        .and_then(|v| v.as_str())
-                        .map(String::from),
-                    details: json,
-                };
-                events.push(ev);
-            }
-            Err(_) => continue,
-        }
-
-        if events.len() >= limit {
-            break;
-        }
+fn timeline_event(record: events::StoredEvent) -> TimelineEvent {
+    TimelineEvent {
+        source: record.stream,
+        ts: record.ts,
+        event_id: record.event_id,
+        op: record
+            .payload
+            .get("op")
+            .or_else(|| record.payload.get("event_type"))
+            .and_then(|value| value.as_str())
+            .unwrap_or(&record.event_type)
+            .to_string(),
+        actor: Some(record.actor),
+        session_id: record
+            .payload
+            .get("session_id")
+            .and_then(|value| value.as_str())
+            .map(String::from),
+        correlation_id: record
+            .payload
+            .get("correlation_id")
+            .and_then(|value| value.as_str())
+            .map(String::from),
+        status: record
+            .payload
+            .get("status")
+            .and_then(|value| value.as_str())
+            .map(String::from),
+        details: record.payload,
     }
-
-    Ok(events)
 }
 
 fn render_transcript(
@@ -243,28 +203,15 @@ fn render_transcript(
 ) -> Result<(), DecapodError> {
     let mut all_events = Vec::new();
 
-    let event_files = vec![
-        ("broker", store.root.join("broker.events.jsonl")),
-        ("todo", store.root.join("todo.events.jsonl")),
-        ("federation", store.root.join("federation.events.jsonl")),
-        ("proof", store.root.join("proof.events.jsonl")),
-        ("map", store.root.join("map.events.jsonl")),
-        ("lcm", store.root.join("lcm.events.jsonl")),
-    ];
-
-    for (name, path) in &event_files {
-        if path.exists()
-            && let Ok(events) = read_events(path, 10000)
-        {
-            for mut ev in events {
-                if let Some(filter) = actor_filter
-                    && ev.actor.as_deref() != Some(filter)
-                {
-                    continue;
-                }
-                ev.source = name.to_string();
-                all_events.push(ev);
+    for (name, _) in events::STREAMS {
+        for ev in events::query(&store.root, name, 10000)? {
+            let ev = timeline_event(ev);
+            if let Some(filter) = actor_filter
+                && ev.actor.as_deref() != Some(filter)
+            {
+                continue;
             }
+            all_events.push(ev);
         }
     }
 
@@ -325,7 +272,44 @@ pub fn schema() -> serde_json::Value {
             { "name": "timeline", "description": "Render governance timeline from event logs", "parameters": ["format", "limit"] },
             { "name": "transcript", "description": "Export transcript as markdown", "parameters": ["output", "actor"] }
         ],
-        "storage": ["read-only over existing event logs"],
+        "storage": ["read-only over canonical SQLite event streams"],
         "notes": "Read-only rendering; never fabricates missing structure"
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::store::StoreKind;
+    use tempfile::tempdir;
+
+    #[test]
+    fn timeline_observes_watcher_event_from_canonical_store_only() {
+        let dir = tempdir().unwrap();
+        let store = Store {
+            kind: StoreKind::Repo,
+            root: dir.path().to_path_buf(),
+        };
+        events::append(
+            &store.root,
+            events::WATCHER,
+            &serde_json::json!({
+                "event_id": "watcher-canonical",
+                "ts": "1785620000Z",
+                "event_type": "watcher.run",
+                "actor": "watcher"
+            }),
+        )
+        .unwrap();
+
+        let (timeline, sources, gaps) = read_timeline_events(&store, 10);
+        assert!(gaps.is_empty(), "unexpected canonical read gaps: {gaps:?}");
+        assert!(sources.contains(&"watcher".to_string()));
+        assert!(
+            timeline
+                .iter()
+                .any(|event| event.event_id == "watcher-canonical")
+        );
+        assert!(!dir.path().join("watcher.events.jsonl").exists());
+    }
 }

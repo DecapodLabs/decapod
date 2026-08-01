@@ -74,6 +74,7 @@ fn setup_release_fixture(changelog_unreleased: &str) -> (TempDir, PathBuf) {
             source_path: "interfaces/CONTROL_PLANE".to_string(),
             text: "fixture snippet".to_string(),
         }],
+        resolved_authority: vec![],
         capabilities: vec![],
         policy: CapsulePolicyBinding::default(),
         capsule_hash: String::new(),

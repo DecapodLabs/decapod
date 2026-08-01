@@ -68,6 +68,9 @@ flowchart LR
 - [ ] `cargo test` passes for unit/integration coverage
 - [ ] `cargo clippy -- -D warnings` passes with no denied lints
 - [ ] `cargo fmt --check` passes on the repo
+- [ ] Resolved context proves every applied repository override by directive ID, source, hashes, bytes, and precedence.
+- [ ] A healthy spec-drift gate emits no warning; every remaining warning names an observed condition.
+- [ ] Runtime governance consumers observe canonical SQLite events after legacy JSONL removal.
 
 ## Epistemic Custody Fields
 
@@ -132,7 +135,7 @@ flowchart LR
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `29d629c362cd5a5478037e0a54c1e10b84d592d0733d2f6cd4c39b907e726f20`
+- Repository signal fingerprint: `0f50628f8f397cb9d745a75e26c658151acef11e1939070599ffa53cfa3d94f7`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

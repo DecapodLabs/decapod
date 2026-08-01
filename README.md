@@ -145,7 +145,7 @@ Decapod preserves what agent workbenches lose: governed project state that survi
   governance/      # Living evidence (trajectory, proof rubrics, validation receipts, research claims) — tracked
   workspaces/      # Isolated git worktrees (container workspaces require explicit opt-in) — created on demand
   config.toml      # Project shape and agent-facing configuration — tracked
-  OVERRIDE.md      # Local rules that override embedded defaults — tracked
+  OVERRIDE.md      # Plain-Markdown local authority; Decapod derives resolution proof — tracked
 ```
 
 The substrate turns the important parts of agent work into durable repo state:
@@ -158,6 +158,17 @@ The substrate turns the important parts of agent work into durable repo state:
 - **Completion** becomes a verified state transition instead of "looks done".
 
 Every governed run leaves operational evidence. The generated files are the human-visible proof surface: inspect them locally, review them in PRs, and use them to re-establish state across different agents like Cursor, Codex, Gemini, and Kilo.
+
+After `cargo install decapod`, the next normal Decapod invocation autonomously
+reconciles unproven event JSONL into canonical SQLite before runtime reads. A
+durable single-datastore migration receipt retires already-imported JSONL and
+repairs any legacy SQLite stores recreated by an older binary without rereading
+the archives as live authority. Existing
+override bodies are rendered into a fenced source area under each exact current
+directive subsection. Humans replace the visible instruction inside that block
+with Markdown or any documentation style they prefer; Decapod extracts the body
+without rendering it as document structure. Existing body bytes are preserved,
+and ambiguous binding authority fails closed with derived source/body hashes and byte counts.
 
 Decapod does not make agents smarter by giving them longer conversations. It makes agent work shippable by turning intent, context, boundaries, custody, validation, and completion into governed repo state.
 

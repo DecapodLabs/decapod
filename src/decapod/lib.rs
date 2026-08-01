@@ -1809,6 +1809,13 @@ fn run_init_apply(
         }
         // Sync override checksums
         let _ = docs_cli::sync_override_checksum(&target_dir, false)?;
+        // Existing projects upgrade autonomously on the same path as normal
+        // governed commands. Legacy event files remain recovery inputs while
+        // every runtime reader observes the reconciled canonical datastore.
+        core::assets::validate_override_structure(&target_dir)?;
+        migration::check_and_migrate_with_backup(&setup_decapod_root, |data_root| {
+            subsystems::initialize_all_dbs(data_root)
+        })?;
     }
 
     use sha2::{Digest, Sha256};
@@ -6913,9 +6920,9 @@ fn run_data_command(
         },
         DataCommand::Broker(broker_cli) => match broker_cli.command {
             BrokerCommand::Audit => {
-                let audit_log = store_root.join("broker.events.jsonl");
-                if audit_log.exists() {
-                    let content = std::fs::read_to_string(audit_log)?;
+                let content =
+                    core::events::query_serialized_lines(store_root, core::events::BROKER)?;
+                if !content.is_empty() {
                     println!("{content}");
                 } else {
                     println!("No audit log found.");
@@ -7731,6 +7738,7 @@ mod rpc_handlers {
         let context_capsule = if workspace_status.can_work {
             Some(ContextCapsule {
                 fragments: vec![],
+                resolved_authority: core::assets::resolved_override_evidence(ctx.project_root)?,
                 spec: Some("Agent initialized successfully".to_string()),
                 architecture: None,
                 security: None,
@@ -7889,6 +7897,7 @@ mod rpc_handlers {
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
         let limit = params.limit.unwrap_or(5);
+        let resolved_authority = core::assets::resolved_override_evidence(ctx.project_root)?;
 
         let mut fragments = Vec::new();
         let bindings = docs::get_bindings(ctx.project_root);
@@ -7965,6 +7974,7 @@ mod rpc_handlers {
                 validation: local_specs.validation.clone(),
                 update_guidance: Some(local_specs.update_guidance.clone()),
             },
+            resolved_authority: resolved_authority.clone(),
         };
         mark_constitution_context_resolved(ctx.project_root)?;
 
@@ -7976,6 +7986,7 @@ mod rpc_handlers {
             vec![],
             Some(ContextCapsule {
                 fragments,
+                resolved_authority,
                 spec: local_specs.intent.clone(),
                 architecture: local_specs.architecture.clone(),
                 security: None,
@@ -8065,6 +8076,7 @@ mod rpc_handlers {
             touched,
             Some(ContextCapsule {
                 fragments: vec![],
+                resolved_authority: capsule.resolved_authority.clone(),
                 spec: Some("Deterministic context capsule query completed".to_string()),
                 architecture: None,
                 security: None,
@@ -8807,6 +8819,7 @@ mod rpc_handlers {
 
         let context_capsule = ContextCapsule {
             fragments: vec![],
+            resolved_authority: core::assets::resolved_override_evidence(ctx.project_root)?,
             spec: None,
             architecture: None,
             security: None,
@@ -8848,6 +8861,7 @@ mod rpc_handlers {
 
         let context_capsule = ContextCapsule {
             fragments: vec![],
+            resolved_authority: core::assets::resolved_override_evidence(ctx.project_root)?,
             spec: None,
             architecture: None,
             security: None,

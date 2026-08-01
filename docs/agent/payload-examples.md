@@ -26,6 +26,16 @@ decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'
 decapod rpc --op context.scope --params '{"query":"how to handle sqlite migrations","limit":8}'
 ```
 
+### Prove Resolved Repository Authority
+```bash
+decapod rpc --op context.resolve
+```
+
+The result includes a `resolved_authority` entry for each applied override. Treat
+`directive_id`, `source`, `source_hash`, `body_hash`, `byte_count`, and
+`precedence` as runtime evidence of the authority Decapod actually loaded; do
+not substitute an agent's self-report.
+
 ### Orientation Packet
 ```bash
 decapod rpc --op infer.orientation --params '{"intent":"implement authentication logic","task_id":"code_01H2..."}'

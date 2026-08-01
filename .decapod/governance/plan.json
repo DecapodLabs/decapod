@@ -1,16 +1,19 @@
 {
   "schema_version": "1.0.0",
-  "title": "Houseboat wave 3: dependency-aware lease graph",
-  "intent": "Extend the existing todo/workunit/trajectory substrate with typed dependency readiness and proof-compatible integration gates for #852, feeding trajectory status #857 and fleet projection #860 without a parallel scheduler or telemetry store.",
+  "title": "Epistemic integrity repair release",
+  "intent": "Ship an idempotent upgrade repair so the first normal command after cargo install loads repository overrides safely, migrates legacy event JSONL into canonical SQLite, and validation observes only canonical authority and evidence.",
   "state": "APPROVED",
   "todo_ids": [
-    "test_01kyzfanf2d6jd9y"
+    "secu_01kyzm1cjqfztpya"
   ],
   "proof_hooks": [
-    "cargo test --lib fleet_coord",
-    "cargo test --lib trajectory",
-    "cargo test --test plugins_todo_tests dependency",
-    "cargo clippy --all-targets --all-features -- -D warnings"
+    "cargo fmt --all -- --check",
+    "cargo clippy --all-targets -- -D warnings",
+    "cargo test",
+    "cargo test --test context_capsule_schema",
+    "cargo test --test init_validate_green_field",
+    "decapod validate",
+    "git diff --check"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -18,11 +21,9 @@
   "unresolved_contradictions": [],
   "deferred_questions": [],
   "constraints": {
-    "forbidden_paths": [
-      ".decapod/"
-    ],
-    "file_touch_budget": 40
+    "forbidden_paths": [],
+    "file_touch_budget": 60
   },
   "phases": [],
-  "updated_at": "1785615266Z"
+  "updated_at": "1785623494Z"
 }

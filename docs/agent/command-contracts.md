@@ -10,6 +10,7 @@ This document defines the normative operational contracts for the Decapod CLI.
 
 ## `decapod init`
 - **Intent:** Bootstrap system and manage lifecycle
+- **Upgrade contract:** Existing projects validate repository override structure and run idempotent legacy-event-to-canonical-SQLite reconciliation before regenerated consumers execute. Durable consolidation proof retires prior inputs; legacy SQLite stores recreated by older binaries are copied forward and removed.
 
 ## `decapod setup`
 - **Intent:** Configure repository (hooks, settings)
@@ -39,6 +40,7 @@ This document defines the normative operational contracts for the Decapod CLI.
 - **Intent:** Validate methodology compliance
 - **Intent:** Verify methodology compliance.
 - **Outcome:** Exit code 0 on success, 1 on failure.
+- **Integrity contract:** A successful clean repository can report `warn=0`; methodology descriptions are not findings. Validation resolves project override authority fail-closed and reads event evidence through `core::events`, never directly from legacy JSONL.
 
 ## `decapod govern`
 - **Intent:** Governance: policy, health, proofs, audits
@@ -88,7 +90,9 @@ This document defines the normative operational contracts for the Decapod CLI.
 ### Operation: `WorkspaceEnsure`
 ### Operation: `WorkspacePublish`
 ### Operation: `ContextResolve`
+- Returns `resolved_authority` evidence for every applied repository directive: directive ID, source path, source hash, body hash, byte count, and precedence.
 ### Operation: `ContextCapsuleQuery`
+- Context capsule schema `1.2.0` incorporates the same `resolved_authority` evidence into the capsule hash.
 ### Operation: `ContextBundleExport`
 ### Operation: `ContextBundleImport`
 ### Operation: `ContextBindings`

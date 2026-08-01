@@ -119,6 +119,12 @@ sequenceDiagram
 - Data ownership boundaries:
 - Schema evolution + migration policy:
 
+## Governance Authority and Evidence Boundaries
+- Each exact registered directive H3 in `.decapod/OVERRIDE.md` owns a fenced human-authored documentation body. The scaffold uses a four-backtick Markdown source block so headings and nested triple-backtick examples do not render as outer document structure. `core::assets` extracts the wrapper-free body, preserves legacy body bytes during upgrade, and fails the whole overlay on unclosed wrappers, duplicate exact IDs, or non-empty unknown Decapod-namespaced IDs.
+- Context resolution and context capsules carry derived authority evidence: directive ID, source path, source hash, body hash, byte count, and precedence.
+- `core::events` is the semantic read/write boundary for append-only runtime evidence. Callers do not bind to per-stream tables, a future consolidated table, or legacy JSONL.
+- Startup migration reconciles unproven legacy JSONL into canonical `.decapod/data/decapod.db` idempotently before governed consumers run. A successful single-datastore migration is durable proof that its JSONL inputs are retired. If an older binary recreates legacy SQLite stores, startup copies their newer rows forward and removes them before consumers run. Fresh conflicts fail visibly.
+
 ## ADR Register
 | ADR | Title | Status | Rationale | Date |
 |---|---|---|---|---|
@@ -138,7 +144,7 @@ sequenceDiagram
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `29d629c362cd5a5478037e0a54c1e10b84d592d0733d2f6cd4c39b907e726f20`
+- Repository signal fingerprint: `0f50628f8f397cb9d745a75e26c658151acef11e1939070599ffa53cfa3d94f7`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

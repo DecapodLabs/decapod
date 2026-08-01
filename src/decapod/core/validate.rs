@@ -8,6 +8,7 @@ use crate::core::broker::DbBroker;
 use crate::core::capsule_policy::{self, POLICY_SCHEMA_VERSION};
 use crate::core::context_capsule::DeterministicContextCapsule;
 use crate::core::error;
+use crate::core::events;
 use crate::core::migration;
 use crate::core::output;
 use crate::core::project_specs::{
@@ -2297,11 +2298,6 @@ fn validate_spec_drift(
 
     let interfaces = fs::read_to_string(&interfaces_path).map_err(error::DecapodError::IoError)?;
 
-    warn(
-        "Spec markdown drift checks are hygiene-only. Use validate_machine_contract for authoritative governance.",
-        ctx,
-    );
-
     let key_sections = ["# Interfaces", "## Inbound Contracts", "## Data Ownership"];
 
     let mut missing_sections = Vec::new();
@@ -2371,6 +2367,26 @@ fn validate_spec_drift(
         }
     }
 
+    Ok(())
+}
+
+fn validate_override_authority(
+    ctx: &ValidationContext,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Repository Override Authority Gate");
+    match assets::resolved_override_evidence(repo_root) {
+        Ok(resolved) => {
+            pass(
+                &format!(
+                    "Repository override authority resolved with {} applied directive(s)",
+                    resolved.len()
+                ),
+                ctx,
+            );
+        }
+        Err(err) => fail(&err.to_string(), ctx),
+    }
     Ok(())
 }
 
@@ -3075,26 +3091,14 @@ fn validate_risk_map(store: &Store, ctx: &ValidationContext) -> Result<(), error
 }
 
 fn validate_risk_map_violations(
-    store: &Store,
+    _store: &Store,
     ctx: &ValidationContext,
-    pre_read_broker: Option<&str>,
+    broker_content: &str,
 ) -> Result<(), error::DecapodError> {
     info("Zone Violation Gate");
-    let fallback;
-    let content = match pre_read_broker {
-        Some(c) => c,
-        None => {
-            let audit_log = store.root.join("broker.events.jsonl");
-            if !audit_log.exists() {
-                return Ok(());
-            }
-            fallback = fs::read_to_string(audit_log)?;
-            &fallback
-        }
-    };
     {
         let mut offenders = Vec::new();
-        for line in content.lines() {
+        for line in broker_content.lines() {
             if line.contains("\".decapod/\"") && line.contains("\"op\":\"todo.add\"") {
                 offenders.push(line.to_string());
             }
@@ -3114,7 +3118,7 @@ fn validate_risk_map_violations(
 fn validate_policy_integrity(
     store: &Store,
     ctx: &ValidationContext,
-    pre_read_broker: Option<&str>,
+    broker_content: &str,
 ) -> Result<(), error::DecapodError> {
     info("Policy Integrity Gates");
     let db_path = store.root.join(crate::core::schemas::LOCAL_DB_NAME);
@@ -3125,22 +3129,9 @@ fn validate_policy_integrity(
 
     let _conn = db::db_connect_for_validate(&db_path.to_string_lossy())?;
 
-    let fallback;
-    let content_opt = match pre_read_broker {
-        Some(c) => Some(c),
-        None => {
-            let audit_log = store.root.join("broker.events.jsonl");
-            if audit_log.exists() {
-                fallback = fs::read_to_string(audit_log)?;
-                Some(fallback.as_str())
-            } else {
-                None
-            }
-        }
-    };
-    if let Some(content) = content_opt {
+    {
         let mut offenders = Vec::new();
-        for line in content.lines() {
+        for line in broker_content.lines() {
             if line.contains("\"op\":\"policy.approve\"")
                 && line.contains("\"db_id\":\"health.db\"")
             {
@@ -3392,7 +3383,7 @@ fn validate_recursive_improvement_passes_if_present(
 fn validate_knowledge_integrity(
     store: &Store,
     ctx: &ValidationContext,
-    pre_read_broker: Option<&str>,
+    broker_content: &str,
 ) -> Result<(), error::DecapodError> {
     info("Knowledge Integrity Gate");
     let db_path = store.root.join(crate::core::schemas::LOCAL_DB_NAME);
@@ -3490,22 +3481,9 @@ fn validate_knowledge_integrity(
         );
     }
 
-    let fallback;
-    let content_opt = match pre_read_broker {
-        Some(c) => Some(c),
-        None => {
-            let audit_log = store.root.join("broker.events.jsonl");
-            if audit_log.exists() {
-                fallback = fs::read_to_string(audit_log)?;
-                Some(fallback.as_str())
-            } else {
-                None
-            }
-        }
-    };
-    if let Some(content) = content_opt {
+    {
         let mut offenders = Vec::new();
-        for line in content.lines() {
+        for line in broker_content.lines() {
             if line.contains("\"op\":\"knowledge.add\"") && line.contains("\"db_id\":\"health.db\"")
             {
                 offenders.push(line.to_string());
@@ -3559,31 +3537,15 @@ fn validate_lineage_hard_gate(
     ctx: &ValidationContext,
 ) -> Result<(), error::DecapodError> {
     info("Lineage Hard Gate");
-    let todo_events = store.root.join("todo.events.jsonl");
     let federation_db = store.root.join(crate::core::schemas::LOCAL_DB_NAME);
     let todo_db = store.root.join(crate::core::schemas::LOCAL_DB_NAME);
 
-    // Fast path: if any required file is missing, skip entirely
-    if !todo_events.exists() || !federation_db.exists() || !todo_db.exists() {
+    // Fast path: if the canonical datastore is missing, skip entirely.
+    if !federation_db.exists() || !todo_db.exists() {
         skip("lineage inputs missing; skipping", ctx);
         return Ok(());
     }
-
-    // Quick check: if todo events is empty or very small, skip
-    if let Ok(metadata) = fs::metadata(&todo_events)
-        && metadata.len() < 100
-    {
-        skip("todo.events.jsonl too small; skipping", ctx);
-        return Ok(());
-    }
-
-    let content = match fs::read_to_string(&todo_events) {
-        Ok(c) => c,
-        Err(_) => {
-            skip("cannot read todo.events.jsonl; skipping", ctx);
-            return Ok(());
-        }
-    };
+    let content = events::query_serialized_lines(&store.root, events::TODO)?;
 
     // Fast path: if no intent: prefix events, skip the expensive part
     if !content.contains("intent:") {
@@ -3731,8 +3693,7 @@ fn validate_watcher_audit(
     ctx: &ValidationContext,
 ) -> Result<(), error::DecapodError> {
     info("Watcher Audit Gate");
-    let audit_log = store.root.join("watcher.events.jsonl");
-    if audit_log.exists() {
+    if events::exists(&store.root, events::WATCHER)? {
         pass("Watcher audit trail present", ctx);
     } else {
         warn(
@@ -3744,27 +3705,14 @@ fn validate_watcher_audit(
 }
 
 fn validate_watcher_purity(
-    store: &Store,
+    _store: &Store,
     ctx: &ValidationContext,
-    pre_read_broker: Option<&str>,
+    broker_content: &str,
 ) -> Result<(), error::DecapodError> {
     info("Watcher Purity Gate");
-    let fallback;
-    let content_opt = match pre_read_broker {
-        Some(c) => Some(c),
-        None => {
-            let audit_log = store.root.join("broker.events.jsonl");
-            if audit_log.exists() {
-                fallback = fs::read_to_string(audit_log)?;
-                Some(fallback.as_str())
-            } else {
-                None
-            }
-        }
-    };
-    if let Some(content) = content_opt {
+    {
         let mut offenders = Vec::new();
-        for line in content.lines() {
+        for line in broker_content.lines() {
             if line.contains("\"actor\":\"watcher\"") {
                 offenders.push(line.to_string());
             }
@@ -3819,9 +3767,8 @@ fn validate_control_plane_contract(
     let data_dir = &store.root;
     let mut violations = Vec::new();
 
-    // Check for broker audit trail presence
-    let broker_log = data_dir.join("broker.events.jsonl");
-    if !broker_log.exists() {
+    // Check for canonical broker audit trail presence.
+    if !events::exists(data_dir, events::BROKER)? {
         // First run - no broker log yet, this is OK
         pass("No broker events yet (first run)", ctx);
         return Ok(());
@@ -3831,35 +3778,37 @@ fn validate_control_plane_contract(
     let local_db = data_dir.join(crate::core::schemas::LOCAL_DB_NAME);
     if local_db.exists() {
         let conn = db::db_connect_for_validate(&local_db.to_string_lossy())?;
-        let has_tasks: bool = conn
+        let has_tasks_table: bool = conn
             .query_row(
                 "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name='tasks')",
                 [],
                 |row| row.get(0),
             )
             .unwrap_or(false);
-        if has_tasks {
-            let todo_events = data_dir.join("todo.events.jsonl");
-            if !todo_events.exists() {
-                violations
-                    .push("decapod.db has tasks but todo.events.jsonl is missing".to_string());
-            }
+        let has_tasks = has_tasks_table
+            && conn
+                .query_row("SELECT EXISTS(SELECT 1 FROM tasks)", [], |row| row.get(0))
+                .unwrap_or(false);
+        if has_tasks && !events::exists(data_dir, events::TODO)? {
+            violations
+                .push("decapod.db has tasks but canonical todo events are missing".to_string());
         }
-        let has_nodes: bool = conn
+        let has_nodes_table: bool = conn
             .query_row(
                 "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name='nodes')",
                 [],
                 |row| row.get(0),
             )
             .unwrap_or(false);
-        if has_nodes {
-            let federation_events = data_dir.join("federation.events.jsonl");
-            if !federation_events.exists() {
-                violations.push(
-                    "decapod.db has federation nodes but federation.events.jsonl is missing"
-                        .to_string(),
-                );
-            }
+        let has_nodes = has_nodes_table
+            && conn
+                .query_row("SELECT EXISTS(SELECT 1 FROM nodes)", [], |row| row.get(0))
+                .unwrap_or(false);
+        if has_nodes && !events::exists(data_dir, events::FEDERATION)? {
+            violations.push(
+                "decapod.db has federation nodes but canonical federation events are missing"
+                    .to_string(),
+            );
         }
     }
 
@@ -3898,27 +3847,14 @@ fn validate_control_plane_contract(
 }
 
 fn validate_canon_mutation(
-    store: &Store,
+    _store: &Store,
     ctx: &ValidationContext,
-    pre_read_broker: Option<&str>,
+    broker_content: &str,
 ) -> Result<(), error::DecapodError> {
     info("Canon Mutation Gate");
-    let fallback;
-    let content_opt = match pre_read_broker {
-        Some(c) => Some(c),
-        None => {
-            let audit_log = store.root.join("broker.events.jsonl");
-            if audit_log.exists() {
-                fallback = fs::read_to_string(audit_log)?;
-                Some(fallback.as_str())
-            } else {
-                None
-            }
-        }
-    };
-    if let Some(content) = content_opt {
+    {
         let mut offenders = Vec::new();
-        for line in content.lines() {
+        for line in broker_content.lines() {
             if line.contains("\"op\":\"write\"")
                 && (line.contains(".md\"") || line.contains(".json\""))
                 && !line.contains("\"actor\":\"decapod\"")
@@ -4452,10 +4388,7 @@ fn validate_projection_consistency(
         .join(".decapod")
         .join("data")
         .join(crate::core::schemas::LOCAL_DB_NAME);
-    let todo_events = main_root
-        .join(".decapod")
-        .join("data")
-        .join("todo.events.jsonl");
+    let data_root = main_root.join(".decapod").join("data");
     let context_dir = main_root.join(".decapod").join("managed").join("context");
     let workunit_dir = main_root
         .join(".decapod")
@@ -4682,7 +4615,7 @@ fn validate_projection_consistency(
         });
     }
 
-    if todo_db.exists() && todo_events.exists() {
+    if todo_db.exists() && events::exists(&data_root, events::TODO)? {
         let conn = db::db_connect_for_validate(&todo_db.to_string_lossy())?;
         let done_count: i64 = conn
             .query_row(
@@ -6164,13 +6097,8 @@ pub fn run_validation(
 
     let ctx = ValidationContext::new();
 
-    // Pre-read broker.events.jsonl once for gates that need it
-    let broker_events_path = store.root.join("broker.events.jsonl");
-    let broker_content: Option<String> = if broker_events_path.exists() {
-        fs::read_to_string(&broker_events_path).ok()
-    } else {
-        None
-    };
+    // Read broker evidence once through the canonical event boundary.
+    let broker_content = events::query_serialized_lines(&store.root, events::BROKER)?;
 
     // Store validations — run sequentially since they set up state
     match store.kind {
@@ -6195,7 +6123,7 @@ pub fn run_validation(
     std::thread::scope(|s| {
         let ctx = &ctx;
         let timings = &timings;
-        let broker = broker_content.as_deref();
+        let broker = broker_content.as_str();
 
         gate!(
             s,
@@ -6266,6 +6194,13 @@ pub fn run_validation(
             ctx,
             "validate_project_config_toml",
             validate_project_config_toml(ctx, working_root)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_override_authority",
+            validate_override_authority(ctx, working_root)
         );
         gate!(
             s,

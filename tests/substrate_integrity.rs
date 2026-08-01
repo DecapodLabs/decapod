@@ -191,9 +191,17 @@ fn test_override_md_changes_flow_to_specs() {
     // 1. Add override for INTENT in OVERRIDE.md
     let override_path = dir.join(".decapod").join("OVERRIDE.md");
     let mut override_content = fs::read_to_string(&override_path).unwrap();
-    override_content = override_content.replace(
-        "### specs/INTENT.md",
-        "### specs/INTENT.md\n\nThis intent comes from OVERRIDE.md",
+    let heading_index = override_content
+        .find("### specs/INTENT")
+        .expect("INTENT override section");
+    let placeholder = "Replace this line with this directive's override. Use Markdown or any documentation style you prefer.";
+    let relative_body_index = override_content[heading_index..]
+        .find(placeholder)
+        .expect("INTENT override body placeholder");
+    let body_index = heading_index + relative_body_index;
+    override_content.replace_range(
+        body_index..body_index + placeholder.len(),
+        "This intent comes from OVERRIDE.md",
     );
     fs::write(&override_path, &override_content).unwrap();
 

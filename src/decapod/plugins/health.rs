@@ -1,8 +1,8 @@
 use crate::core::broker::DbBroker;
-use crate::core::error;
 use crate::core::schemas;
 use crate::core::store::Store;
-use crate::plugins::{policy, watcher};
+use crate::core::{error, events};
+use crate::plugins::policy;
 use clap::{Parser, Subcommand};
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
@@ -378,33 +378,16 @@ pub fn get_summary(store: &Store) -> Result<SummaryStatus, error::DecapodError> 
     let approvals = policy::list_approvals(store).unwrap_or_default();
     let pending_approvals = approvals.len();
 
-    let watcher_events = watcher::watcher_events_path(&store.root);
-    let (last_run, watcher_stale) = if watcher_events.exists() {
-        let content = std::fs::read_to_string(watcher_events).unwrap_or_default();
-        let last_line = content.lines().last();
-        let last_ts = last_line.and_then(|l| {
-            let v: serde_json::Value = serde_json::from_str(l).ok()?;
-            v.get("ts").and_then(|t| t.as_str()).map(|s| s.to_string())
-        });
-
-        // Check if watcher is stale (> 10 minutes since last run)
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
-        let is_stale = match &last_ts {
-            None => true,
-            Some(ts) => ts
-                .trim_end_matches('Z')
-                .parse::<u64>()
-                .map(|last_run_secs| now.saturating_sub(last_run_secs) > 600)
-                .unwrap_or(true),
-        };
-
-        (last_ts, is_stale)
-    } else {
-        (None, true)
-    };
+    let last_run = events::latest(&store.root, events::WATCHER)?.map(|event| event.ts);
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    let watcher_stale = last_run
+        .as_deref()
+        .and_then(|ts| ts.trim_end_matches('Z').parse::<u64>().ok())
+        .map(|last_run_secs| now.saturating_sub(last_run_secs) > 600)
+        .unwrap_or(true);
 
     // Build alerts
     let mut alerts = Vec::new();
@@ -442,18 +425,10 @@ pub fn get_autonomy(store: &Store, actor_id: &str) -> Result<AutonomyStatus, err
     initialize_health_db(&store.root)?;
 
     // Validate actor_id exists in audit history to prevent spoofing
-    let audit_log = store.root.join("broker.events.jsonl");
     let mut known_actors = std::collections::HashSet::new();
     known_actors.insert("decapod".to_string());
-    if audit_log.exists() {
-        let content = std::fs::read_to_string(audit_log).unwrap_or_default();
-        for line in content.lines() {
-            if let Ok(v) = serde_json::from_str::<serde_json::Value>(line)
-                && let Some(a) = v.get("actor").and_then(|x| x.as_str())
-            {
-                known_actors.insert(a.to_string());
-            }
-        }
+    for actor in events::actors(&store.root, events::BROKER)? {
+        known_actors.insert(actor);
     }
 
     if !known_actors.contains(actor_id) {
@@ -541,4 +516,37 @@ pub fn health_schema() -> serde_json::Value {
         "storage": ["decapod.db"],
         "notes": "Summary consolidates heartbeat; Autonomy consolidates trust"
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::store::StoreKind;
+    use tempfile::tempdir;
+
+    #[test]
+    fn summary_observes_canonical_watcher_event_without_jsonl() {
+        let dir = tempdir().unwrap();
+        let store = Store {
+            kind: StoreKind::Repo,
+            root: dir.path().to_path_buf(),
+        };
+        let ts = crate::core::time::now_epoch_z();
+        events::append(
+            &store.root,
+            events::WATCHER,
+            &serde_json::json!({
+                "event_id": "watcher-health",
+                "ts": ts,
+                "event_type": "watcher.run",
+                "actor": "watcher"
+            }),
+        )
+        .unwrap();
+
+        let summary = get_summary(&store).unwrap();
+        assert_eq!(summary.watcher_last_run.as_deref(), Some(ts.as_str()));
+        assert!(!summary.watcher_stale);
+        assert!(!dir.path().join("watcher.events.jsonl").exists());
+    }
 }
