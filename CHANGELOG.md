@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.91.0](https://github.com/DecapodLabs/decapod/compare/v0.90.0...v0.91.0) - 2026-08-01
+
+### Added
+
+- houseboat wave 2 lease-graph stratum (#852/#857/#860) ([#1136](https://github.com/DecapodLabs/decapod/pull/1136))
+
 ## [0.90.0](https://github.com/DecapodLabs/decapod/compare/v0.89.4...v0.90.0) - 2026-08-01
 
 ### Added
