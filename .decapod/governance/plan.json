@@ -12,7 +12,9 @@
     "cargo test --test single_datastore",
     "cargo test --test plugins_federation_tests",
     "cargo test --test plugins_aptitude_tests",
-    "cargo test --test plugins_todo_tests reclaimable"
+    "cargo test --test plugins_todo_tests reclaimable",
+    "cargo clippy -D warnings",
+    "cargo test --test agent_rpc_suite test_rpc_trace_and_redaction"
   ],
   "unknowns": [],
   "human_questions": [],

@@ -232,7 +232,7 @@ pub fn read_map_events(root: &Path) -> Result<Vec<MapEvent>, error::DecapodError
     if db_path.exists() {
         let conn = crate::core::db::db_connect_for_validate(&db_path.to_string_lossy())?;
         let mut stmt = conn
-            .prepare("SELECT payload FROM map_events ORDER BY seq ASC")
+            .prepare("SELECT payload FROM events WHERE stream = 'map' ORDER BY seq ASC")
             .map_err(error::DecapodError::RusqliteError)?;
         let rows = stmt
             .query_map([], |row| row.get::<_, String>(0))

@@ -19,7 +19,12 @@
     "src/decapod/plugins/aptitude.rs",
     "src/decapod/plugins/federation.rs"
   ],
-  "modified_files": [],
+  "modified_files": [
+    "src/decapod/core/todo.rs",
+    "src/decapod/core/trace.rs",
+    "src/decapod/plugins/lcm.rs",
+    "src/decapod/plugins/map_ops.rs"
+  ],
   "declared_commands": [],
   "tool_calls": [],
   "checks": [
@@ -32,11 +37,19 @@
       "status": "passed"
     },
     {
+      "name": "clippy",
+      "status": "passed"
+    },
+    {
       "name": "events_tests",
       "status": "passed"
     },
     {
       "name": "federation_tests",
+      "status": "passed"
+    },
+    {
+      "name": "rpc_trace_redaction",
       "status": "passed"
     },
     {
@@ -58,7 +71,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:2bfc6cf250126d31916fb824db556ec803c18a4fc2d518f3324354c2fe795ecd",
+  "artifact_hash": "sha256:836022ca76762f74f428691b715e957f1644bc55837fa475fc40bd4cee4e2400",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -100,6 +113,13 @@
         "intent_id": "intent:schema-fold-1126-1131",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:schema-fold-1126-1131"
+      },
+      {
+        "sequence": 5,
+        "event_id": "event:5",
+        "intent_id": "intent:schema-fold-1126-1131",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:schema-fold-1126-1131"
       }
     ],
     "trajectories": {
@@ -133,12 +153,31 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
+          },
+          {
+            "sequence": 5,
+            "action": "trajectory.record",
+            "scope": [
+              "src/decapod/core,src/decapod/plugins,tests,README.md"
+            ],
+            "observations": [
+              "src/decapod/core/trace.rs",
+              "src/decapod/core/todo.rs",
+              "src/decapod/plugins/map_ops.rs",
+              "src/decapod/plugins/lcm.rs"
+            ],
+            "proof_refs": [
+              "clippy",
+              "rpc_trace_redaction"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:5"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 4
+    "next_sequence": 5
   }
 }

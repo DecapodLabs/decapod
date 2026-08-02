@@ -137,7 +137,7 @@ pub fn get_last_traces(project_root: &Path, n: usize) -> Result<Vec<String>, Dec
     }
     let conn = crate::core::db::db_connect_for_validate(&path.to_string_lossy())?;
     let mut stmt = conn
-        .prepare("SELECT payload FROM traces_events ORDER BY seq DESC LIMIT ?1")
+        .prepare("SELECT payload FROM events WHERE stream = 'traces' ORDER BY seq DESC LIMIT ?1")
         .map_err(DecapodError::RusqliteError)?;
     let rows = stmt
         .query_map([n as i64], |row| row.get::<_, String>(0))

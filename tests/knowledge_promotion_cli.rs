@@ -93,7 +93,7 @@ fn knowledge_promote_writes_append_only_database_event() {
     let conn = rusqlite::Connection::open(db_path).expect("open canonical datastore");
     let raw: String = conn
         .query_row(
-            "SELECT payload FROM knowledge_events WHERE event_id = ?1",
+            "SELECT payload FROM events WHERE stream = 'knowledge' AND event_id = ?1",
             [payload["event_id"].as_str().expect("event id")],
             |row| row.get(0),
         )

@@ -118,7 +118,7 @@ fn read_all_events(root: &Path) -> Result<Vec<LcmEvent>, error::DecapodError> {
     }
     let conn = crate::core::db::db_connect_for_validate(&db_path.to_string_lossy())?;
     let mut stmt = conn
-        .prepare("SELECT payload FROM lcm_events ORDER BY seq ASC")
+        .prepare("SELECT payload FROM events WHERE stream = 'lcm' ORDER BY seq ASC")
         .map_err(error::DecapodError::RusqliteError)?;
     let rows = stmt
         .query_map([], |row| row.get::<_, String>(0))
