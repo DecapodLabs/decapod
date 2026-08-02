@@ -1360,10 +1360,11 @@ fn list_category_ownerships(
         for agent_id in agent_ids {
             let claims = load_agent_category_claims(conn, &agent_id)?;
             for claim in claims {
-                if let Some(ref c) = category_filter {
-                    if claim.category != *c {
-                        continue;
-                    }
+                if category_filter
+                    .as_ref()
+                    .is_some_and(|c| claim.category != *c)
+                {
+                    continue;
                 }
                 out.push(CategoryOwnership {
                     id: claim.id,
@@ -4878,10 +4879,8 @@ fn list_agent_expertise(
         for agent_id in agent_ids {
             let entries = load_agent_expertise_entries(conn, &agent_id)?;
             for entry in entries {
-                if let Some(cat) = category_filter {
-                    if entry.category != cat {
-                        continue;
-                    }
+                if category_filter.is_some_and(|cat| entry.category != cat) {
+                    continue;
                 }
                 expertise.push(serde_json::json!({
                     "agent_id": agent_id,

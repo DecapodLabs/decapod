@@ -47,9 +47,11 @@ fn test_lcm_ingest_is_append_only() {
     let db_path = store.root.join("decapod.db");
     let conn = Connection::open(&db_path).unwrap();
     let event_count = |conn: &Connection| {
-        conn.query_row("SELECT COUNT(*) FROM lcm_events", [], |row| {
-            row.get::<_, i64>(0)
-        })
+        conn.query_row(
+            "SELECT COUNT(*) FROM events WHERE stream = 'lcm'",
+            [],
+            |row| row.get::<_, i64>(0),
+        )
         .unwrap()
     };
     let len1 = event_count(&conn);
