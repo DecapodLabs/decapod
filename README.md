@@ -102,17 +102,18 @@ flowchart LR
     AgentNode ==>|verified result| UserOut
     AgentNode -.->|clarify| UserIn
 
-    style UserIn fill:#ff6b9d,stroke:#c44569,color:#fff
-    style UserOut fill:#ff6b9d,stroke:#c44569,color:#fff
-    style HarnessNode fill:#3b82f6,stroke:#2563eb,color:#fff
-    style AgentNode fill:#a855f7,stroke:#7c3aed,color:#fff
-    style ModelNode fill:#06b6d4,stroke:#0891b2,color:#fff
-    style DecapodNode fill:#fbbf24,stroke:#f59e0b,color:#000
-    style HumanGroup fill:#f3f4f6,stroke:#d1d5db,color:#000
-    style HarnessGroup fill:#eff6ff,stroke:#bfdbfe,color:#000
-    style IntelligenceGroup fill:#ecfdf5,stroke:#a7f3d0,color:#000
-    style GovernanceGroup fill:#fef9c3,stroke:#fde047,color:#000
-    style AgentGroup fill:#faf5ff,stroke:#d8b4fe,color:#000
+    style UserIn fill:#9f1239,stroke:#4c0519,color:#ffffff
+    style UserOut fill:#9f1239,stroke:#4c0519,color:#ffffff
+    style HarnessNode fill:#1e40af,stroke:#172554,color:#ffffff
+    style AgentNode fill:#6b21a8,stroke:#3b0764,color:#ffffff
+    style ModelNode fill:#155e75,stroke:#083344,color:#ffffff
+    style DecapodNode fill:#111827,stroke:#f59e0b,color:#fbbf24,stroke-width:3px
+    style HumanGroup fill:#fff1f2,stroke:#9f1239,color:#4c0519,stroke-width:2px
+    style HarnessGroup fill:#dbeafe,stroke:#1e40af,color:#172554,stroke-width:2px
+    style IntelligenceGroup fill:#cffafe,stroke:#155e75,color:#083344,stroke-width:2px
+    style GovernanceGroup fill:#fef3c7,stroke:#b45309,color:#78350f,stroke-width:2px
+    style AgentGroup fill:#f3e8ff,stroke:#6b21a8,color:#3b0764,stroke-width:2px
+    linkStyle default stroke:#334155,stroke-width:1.5px
 ```
 
 The model stays fixed. The corridor around it changes:
