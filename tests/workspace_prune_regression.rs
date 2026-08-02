@@ -545,14 +545,23 @@ fn test_validate_stale_workspaces_cleanup() {
         "unmerged completed worktree must be preserved without --force"
     );
     assert!(
-        unmerged.pruned.iter().all(|p| p.path != wt_path.to_string_lossy()),
+        unmerged
+            .pruned
+            .iter()
+            .all(|p| p.path != wt_path.to_string_lossy()),
         "unmerged workspace must not appear in pruned list"
     );
 
     // Make the tip reachable from the protected default branch so cleanup is eligible.
     let default_branch = {
         let out = std::process::Command::new("git")
-            .args(["-C", main_root.to_str().unwrap(), "symbolic-ref", "--short", "HEAD"])
+            .args([
+                "-C",
+                main_root.to_str().unwrap(),
+                "symbolic-ref",
+                "--short",
+                "HEAD",
+            ])
             .output()
             .expect("default branch");
         // HEAD may be on worktree; resolve main_repo default via master/main show-ref
@@ -560,7 +569,13 @@ fn test_validate_stale_workspaces_cleanup() {
         let mut found = String::new();
         for c in candidates {
             let o = std::process::Command::new("git")
-                .args(["-C", main_root.to_str().unwrap(), "show-ref", "--verify", &format!("refs/heads/{c}")])
+                .args([
+                    "-C",
+                    main_root.to_str().unwrap(),
+                    "show-ref",
+                    "--verify",
+                    &format!("refs/heads/{c}"),
+                ])
                 .output()
                 .expect("show-ref");
             if o.status.success() {
@@ -593,4 +608,3 @@ fn test_validate_stale_workspaces_cleanup() {
         "eligible clean stale workspace must be removed from disk"
     );
 }
-

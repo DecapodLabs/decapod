@@ -1,8 +1,8 @@
 // Moved from src/decapod/core/cloud_backend.rs
 use super::{
     CloudOnboardingEndpoints, CloudOnboardingHandoff, CloudOnboardingStartRequest,
-    CloudOnboardingStartResponse, CloudOnboardingState, CloudSession,
-    CloudSessionExchangeRequest, CloudSessionRefreshRequest,
+    CloudOnboardingStartResponse, CloudOnboardingState, CloudSession, CloudSessionExchangeRequest,
+    CloudSessionRefreshRequest,
 };
 use crate::core::repo_identity::resolve_repository_identity_from_remote;
 
@@ -23,11 +23,8 @@ fn onboarding_handoff_is_provider_neutral_and_headless_safe() {
 #[test]
 fn onboarding_handoff_rejects_untrusted_or_unbounded_values() {
     assert!(
-        CloudOnboardingHandoff::new(
-            "http://cloud.example.test/onboard",
-            "2030-01-01T00:00:00Z",
-        )
-        .is_err()
+        CloudOnboardingHandoff::new("http://cloud.example.test/onboard", "2030-01-01T00:00:00Z",)
+            .is_err()
     );
     assert!(
         CloudOnboardingHandoff::new(

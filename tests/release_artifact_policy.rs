@@ -87,7 +87,8 @@ fn release_source_tree_contains_no_test_code() {
                 let mut cursor = index + 1;
                 while cursor < lines.len()
                     && (lines[cursor].is_empty()
-                        || (lines[cursor].starts_with("#[") && !lines[cursor].starts_with("#[path")))
+                        || (lines[cursor].starts_with("#[")
+                            && !lines[cursor].starts_with("#[path")))
                 {
                     cursor += 1;
                 }

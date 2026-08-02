@@ -42,7 +42,13 @@ flowchart LR
 ```## Proof Surfaces
 - `decapod validate`
 - Required test command: `cargo test`
-- Required integration/e2e commands: `cargo test --test context_capsule_schema`, `cargo test --test init_validate_green_field`
+- Required integration/e2e commands: `cargo test --test context_capsule_schema`, `cargo test --test init_validate_green_field`## Epistemic Integrity Regression Proof
+- Nested H3/H4 headings, slash prose, fenced directive examples, and arbitrary Markdown survive through final resolved context.
+- Duplicate exact directive IDs and non-empty unknown Decapod-namespaced IDs fail closed; empty retired generated sections remain upgrade-compatible.
+- A structurally healthy spec-drift fixture increments neither warning nor failure counts.
+- A watcher record imported by existing-project init is observed by validation, health, heartbeat, and flight recorder after the source JSONL is removed.
+- Re-running event reconciliation imports zero additional rows; malformed or conflicting fresh records return visible errors, and a proven consolidation receipt prevents retired archives from being reinterpreted.
+- A legacy SQLite store recreated after consolidation is copied into `decapod.db`, removed, and does not trigger the full-backup loop on the following command.
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -84,14 +90,6 @@ flowchart LR
 - Data integrity validation after recovery
 <!-- decapod:capability-overlay:persistent-state:end -->
 
-## Epistemic Integrity Regression Proof
-- Nested H3/H4 headings, slash prose, fenced directive examples, and arbitrary Markdown survive through final resolved context.
-- Duplicate exact directive IDs and non-empty unknown Decapod-namespaced IDs fail closed; empty retired generated sections remain upgrade-compatible.
-- A structurally healthy spec-drift fixture increments neither warning nor failure counts.
-- A watcher record imported by existing-project init is observed by validation, health, heartbeat, and flight recorder after the source JSONL is removed.
-- Re-running event reconciliation imports zero additional rows; malformed or conflicting fresh records return visible errors, and a proven consolidation receipt prevents retired archives from being reinterpreted.
-- A legacy SQLite store recreated after consolidation is copied into `decapod.db`, removed, and does not trigger the full-backup loop on the following command.
-
 ## Promotion Gates
 
 ## Blocking Gates
@@ -127,7 +125,7 @@ flowchart LR
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b6cef4e1c1419c118169b47310768bbfc998be281e69a66a87e5da58cde46fd4`
+- Repository signal fingerprint: `e8b6a416af328330d9efbc6ea3ecc1e442a9cc7760edc74fe5b17db2c6c2284b`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
