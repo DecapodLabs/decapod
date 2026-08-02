@@ -167,7 +167,7 @@ pub fn initialize_policy_db(root: &Path) -> Result<(), error::DecapodError> {
         // Policy is a shared broker boundary in the canonical local
         // datastore. Its checks read the TODO-owned trust and risk tables,
         // so bootstrap those tables when policy is initialized first.
-        conn.execute(schemas::TODO_DB_SCHEMA_AGENT_TRUST, [])?;
+        conn.execute_batch(schemas::AGENTS_TABLE_SCHEMA)?;
         conn.execute(schemas::TODO_DB_SCHEMA_RISK_ZONES, [])?;
         conn.execute(schemas::TODO_DB_SCHEMA_INDEX_RISK_ZONES_NAME, [])?;
         Ok(())
@@ -605,7 +605,7 @@ fn actor_trust_level_raw(root: &Path, actor: &str) -> Result<String, error::Deca
     broker.with_conn(&todo_db, "policy", None, "policy.trust.get", |conn| {
         let level: Option<String> = conn
             .query_row(
-                "SELECT trust_level FROM agent_trust WHERE agent_id = ?1",
+                "SELECT trust_level FROM agents WHERE agent_id = ?1",
                 params![actor],
                 |row| row.get(0),
             )

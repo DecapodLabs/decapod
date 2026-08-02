@@ -8,17 +8,61 @@
 /// as migration source names; runtime paths must use this file.
 pub const LOCAL_DB_NAME: &str = "decapod.db";
 
-/// Shared append-only event-table DDL. `{table}` is replaced only with a
-/// name from `core::events::STREAMS`; this keeps SQLite and the cloud schema
-/// aligned without duplicating column definitions in each adapter.
-pub const CANONICAL_EVENT_TABLE_SCHEMA: &str = "CREATE TABLE IF NOT EXISTS {table} (
+/// Unified append-only events table for every stream.
+/// Stream identity is a column; optional subject_kind/subject_id replace
+/// bespoke task_events / federation_events secondary keys (#1127).
+pub const EVENTS_TABLE_SCHEMA: &str = "CREATE TABLE IF NOT EXISTS events (
     event_id TEXT PRIMARY KEY,
     ts TEXT NOT NULL,
     seq INTEGER NOT NULL,
+    stream TEXT NOT NULL,
+    subject_kind TEXT,
+    subject_id TEXT,
     event_type TEXT NOT NULL DEFAULT '',
     payload TEXT NOT NULL,
     actor TEXT NOT NULL DEFAULT 'decapod'
-); CREATE INDEX IF NOT EXISTS idx_{table}_seq ON {table}(seq);";
+); CREATE INDEX IF NOT EXISTS idx_events_stream_seq ON events(stream, seq);
+CREATE INDEX IF NOT EXISTS idx_events_subject ON events(subject_kind, subject_id);";
+
+/// Back-compat alias: historical per-stream DDL is no longer used for new tables.
+#[deprecated(note = "use EVENTS_TABLE_SCHEMA; streams share one events table")]
+pub const CANONICAL_EVENT_TABLE_SCHEMA: &str = EVENTS_TABLE_SCHEMA;
+
+/// Consolidated agent surface (#1129). Replaces agent_presence, agent_trust,
+/// agent_expertise, and agent_category_claims.
+pub const AGENTS_TABLE_SCHEMA: &str = "CREATE TABLE IF NOT EXISTS agents (
+    agent_id TEXT PRIMARY KEY,
+    trust_level TEXT NOT NULL DEFAULT 'basic',
+    trust_granted_at TEXT,
+    trust_granted_by TEXT NOT NULL DEFAULT 'system',
+    last_seen TEXT,
+    status TEXT NOT NULL DEFAULT 'active',
+    expertise_json TEXT NOT NULL DEFAULT '[]',
+    category_claims_json TEXT NOT NULL DEFAULT '[]',
+    updated_at TEXT NOT NULL
+); CREATE INDEX IF NOT EXISTS idx_agents_last_seen ON agents(last_seen);
+CREATE INDEX IF NOT EXISTS idx_agents_status ON agents(status);";
+
+/// Task tags junction (#1130).
+pub const TODO_DB_SCHEMA_TASK_TAGS: &str = "CREATE TABLE IF NOT EXISTS task_tags (
+    task_id TEXT NOT NULL,
+    tag TEXT NOT NULL,
+    PRIMARY KEY(task_id, tag),
+    FOREIGN KEY(task_id) REFERENCES tasks(id) ON DELETE CASCADE
+); CREATE INDEX IF NOT EXISTS idx_task_tags_tag ON task_tags(tag);";
+
+/// Knowledge edges with optional metadata (#1128). Prefer node_edges over edges.
+pub const MEMORY_DB_SCHEMA_NODE_EDGES: &str = "CREATE TABLE IF NOT EXISTS node_edges (
+    id TEXT PRIMARY KEY,
+    source_id TEXT NOT NULL,
+    target_id TEXT NOT NULL,
+    edge_type TEXT NOT NULL,
+    metadata TEXT NOT NULL DEFAULT '{}',
+    created_at TEXT NOT NULL,
+    actor TEXT NOT NULL DEFAULT 'decapod'
+); CREATE INDEX IF NOT EXISTS idx_node_edges_source ON node_edges(source_id);
+CREATE INDEX IF NOT EXISTS idx_node_edges_target ON node_edges(target_id);
+CREATE INDEX IF NOT EXISTS idx_node_edges_type ON node_edges(edge_type);";
 
 // --- 1. Governance Bin ---
 pub const GOVERNANCE_DB_NAME: &str = "governance.db";
@@ -151,6 +195,7 @@ pub const MEMORY_DB_SCHEMA_NODES: &str = "
     )
 ";
 
+#[deprecated(note = "sources fold into node_edges with edge_type='source' (#1128)")]
 pub const MEMORY_DB_SCHEMA_SOURCES: &str = "
     CREATE TABLE IF NOT EXISTS sources (
         id TEXT PRIMARY KEY,
@@ -161,6 +206,7 @@ pub const MEMORY_DB_SCHEMA_SOURCES: &str = "
     )
 ";
 
+#[deprecated(note = "use MEMORY_DB_SCHEMA_NODE_EDGES (#1128)")]
 pub const MEMORY_DB_SCHEMA_EDGES: &str = "
     CREATE TABLE IF NOT EXISTS edges (
         id TEXT PRIMARY KEY,
@@ -174,6 +220,7 @@ pub const MEMORY_DB_SCHEMA_EDGES: &str = "
     )
 ";
 
+#[deprecated(note = "use EVENTS_TABLE_SCHEMA with stream='federation' (#1127)")]
 pub const MEMORY_DB_SCHEMA_EVENTS: &str = "
     CREATE TABLE IF NOT EXISTS federation_events (
         event_id TEXT PRIMARY KEY,
@@ -279,8 +326,11 @@ pub const FEDERATION_EVENTS_NAME: &str = "federation.events.jsonl";
 pub const FEDERATION_SCHEMA_VERSION: u32 = 1;
 pub const FEDERATION_DB_SCHEMA_META: &str = MEMORY_DB_SCHEMA_META;
 pub const FEDERATION_DB_SCHEMA_NODES: &str = MEMORY_DB_SCHEMA_NODES;
+#[allow(deprecated)]
 pub const FEDERATION_DB_SCHEMA_SOURCES: &str = MEMORY_DB_SCHEMA_SOURCES;
+#[allow(deprecated)]
 pub const FEDERATION_DB_SCHEMA_EDGES: &str = MEMORY_DB_SCHEMA_EDGES;
+#[allow(deprecated)]
 pub const FEDERATION_DB_SCHEMA_EVENTS: &str = MEMORY_DB_SCHEMA_EVENTS;
 pub const FEDERATION_DB_INDEX_NODES_TYPE: &str = MEMORY_DB_INDEX_NODES_TYPE;
 pub const FEDERATION_DB_INDEX_NODES_STATUS: &str = MEMORY_DB_INDEX_NODES_STATUS;
@@ -393,6 +443,7 @@ pub const TODO_DB_SCHEMA_TASKS: &str = "
     )
 ";
 
+#[deprecated(note = "use EVENTS_TABLE_SCHEMA with stream='todo' (#1127)")]
 pub const TODO_DB_SCHEMA_TASK_EVENTS: &str = "
     CREATE TABLE IF NOT EXISTS task_events (
         event_id TEXT PRIMARY KEY,
@@ -447,6 +498,7 @@ pub const TODO_DB_SCHEMA_CATEGORIES: &str = "
 pub const TODO_DB_SCHEMA_INDEX_CATEGORY_NAME: &str =
     "CREATE INDEX IF NOT EXISTS idx_categories_name ON categories(name)";
 
+#[deprecated(note = "use AGENTS_TABLE_SCHEMA category_claims_json (#1129)")]
 pub const TODO_DB_SCHEMA_AGENT_CATEGORY_CLAIMS: &str = "
     CREATE TABLE IF NOT EXISTS agent_category_claims (
         id TEXT PRIMARY KEY,
@@ -460,6 +512,7 @@ pub const TODO_DB_SCHEMA_AGENT_CATEGORY_CLAIMS: &str = "
 pub const TODO_DB_SCHEMA_INDEX_AGENT_CATEGORY_AGENT: &str =
     "CREATE INDEX IF NOT EXISTS idx_agent_category_agent ON agent_category_claims(agent_id)";
 
+#[deprecated(note = "use AGENTS_TABLE_SCHEMA (#1129)")]
 pub const TODO_DB_SCHEMA_AGENT_PRESENCE: &str = "
     CREATE TABLE IF NOT EXISTS agent_presence (
         agent_id TEXT PRIMARY KEY,
@@ -472,6 +525,7 @@ pub const TODO_DB_SCHEMA_AGENT_PRESENCE: &str = "
 pub const TODO_DB_SCHEMA_INDEX_AGENT_PRESENCE_LAST_SEEN: &str =
     "CREATE INDEX IF NOT EXISTS idx_agent_presence_last_seen ON agent_presence(last_seen)";
 
+#[deprecated(note = "use AGENTS_TABLE_SCHEMA trust_level (#1129)")]
 pub const TODO_DB_SCHEMA_AGENT_TRUST: &str = "
     CREATE TABLE IF NOT EXISTS agent_trust (
         agent_id TEXT PRIMARY KEY,
@@ -529,6 +583,7 @@ pub const TODO_DB_SCHEMA_INDEX_TASK_DEPS_TASK: &str =
     "CREATE INDEX IF NOT EXISTS idx_task_dependencies_task ON task_dependencies(task_id)";
 pub const TODO_DB_SCHEMA_INDEX_TASK_DEPS_DEPENDS_ON: &str = "CREATE INDEX IF NOT EXISTS idx_task_dependencies_depends_on ON task_dependencies(depends_on_task_id)";
 
+#[deprecated(note = "use AGENTS_TABLE_SCHEMA expertise_json (#1129)")]
 pub const TODO_DB_SCHEMA_AGENT_EXPERTISE: &str = "
     CREATE TABLE IF NOT EXISTS agent_expertise (
         id TEXT PRIMARY KEY,
@@ -569,6 +624,7 @@ pub const APTITUDE_DB_SCHEMA_PREFERENCES: &str = "
     )
 ";
 
+#[deprecated(note = "patterns live in meta namespace aptitude (#1131)")]
 pub const APTITUDE_DB_SCHEMA_PATTERNS: &str = "
     CREATE TABLE IF NOT EXISTS patterns (
         id TEXT PRIMARY KEY,

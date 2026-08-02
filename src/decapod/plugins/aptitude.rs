@@ -195,12 +195,23 @@ pub struct SimilarityGroup {
 // UTILITY FUNCTIONS
 // ============================================================================
 
+/// Shared meta namespace for aptitude key/value entries (patterns, observations).
+const APTITUDE_META_NS: &str = "aptitude";
+
 pub fn aptitude_db_path(root: &Path) -> PathBuf {
     root.join(crate::core::schemas::LOCAL_DB_NAME)
 }
 
 fn now_iso() -> String {
     crate::core::time::now_epoch_z()
+}
+
+fn pattern_meta_key(name: &str) -> String {
+    format!("pattern:{name}")
+}
+
+fn observation_meta_key(id: &str) -> String {
+    format!("observation:{id}")
 }
 
 // ============================================================================
@@ -215,11 +226,11 @@ pub fn initialize_aptitude_db(root: &Path) -> Result<(), error::DecapodError> {
     let db_path = aptitude_db_path(root);
 
     broker.with_conn(&db_path, "decapod", None, "aptitude.init", |conn| {
-        // Create tables (if not exists)
+        // Shared meta table (namespace, key, value) holds patterns as JSON (#1131).
+        conn.execute(schemas::TODO_DB_SCHEMA_META, [])?;
+        // Keep preferences + agent_prompts as real tables (CLI still uses them).
+        // patterns / observations / consolidations tables are no longer created.
         conn.execute(schemas::APTITUDE_DB_SCHEMA_PREFERENCES, [])?;
-        conn.execute(schemas::APTITUDE_DB_SCHEMA_PATTERNS, [])?;
-        conn.execute(schemas::APTITUDE_DB_SCHEMA_OBSERVATIONS, [])?;
-        conn.execute(schemas::APTITUDE_DB_SCHEMA_CONSOLIDATIONS, [])?;
         conn.execute(schemas::APTITUDE_DB_SCHEMA_AGENT_PROMPTS, [])?;
 
         // Schema migrations: add columns if they don't exist
@@ -232,26 +243,27 @@ pub fn initialize_aptitude_db(root: &Path) -> Result<(), error::DecapodError> {
         conn.execute(schemas::APTITUDE_DB_SCHEMA_INDEX_PREF_CATEGORY, [])?;
         conn.execute(schemas::APTITUDE_DB_SCHEMA_INDEX_PREF_KEY, [])?;
         conn.execute(schemas::APTITUDE_DB_SCHEMA_INDEX_PREF_ACCESS, [])?;
-        conn.execute(schemas::APTITUDE_DB_SCHEMA_INDEX_PATTERN_CATEGORY, [])?;
-        conn.execute(schemas::APTITUDE_DB_SCHEMA_INDEX_OBS_PROCESSED, [])?;
         conn.execute(schemas::APTITUDE_DB_SCHEMA_INDEX_PROMPT_CONTEXT, [])?;
 
-        // Insert default patterns
+        // Seed default patterns into meta (namespace=aptitude, key=pattern:{name})
         let now = now_iso();
-        for (name, category, pattern, pref_cat, pref_key, desc) in DEFAULT_PATTERNS {
+        for (name, category, regex_pattern, pref_cat, pref_key, desc) in DEFAULT_PATTERNS {
+            let pattern = Pattern {
+                id: crate::core::ulid::new_ulid(),
+                name: (*name).to_string(),
+                category: (*category).to_string(),
+                regex_pattern: (*regex_pattern).to_string(),
+                preference_category: pref_cat.map(|s| s.to_string()),
+                preference_key: pref_key.map(|s| s.to_string()),
+                description: Some((*desc).to_string()),
+                created_at: now.clone(),
+            };
+            let value = serde_json::to_string(&pattern).map_err(|e| {
+                error::DecapodError::ValidationError(format!("serialize pattern: {e}"))
+            })?;
             conn.execute(
-                "INSERT OR IGNORE INTO patterns(id, name, category, regex_pattern, preference_category, preference_key, description, created_at)
-                 VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
-                params![
-                    crate::core::ulid::new_ulid(),
-                    name,
-                    category,
-                    pattern,
-                    pref_cat,
-                    pref_key,
-                    desc,
-                    now
-                ],
+                "INSERT OR IGNORE INTO meta(namespace, key, value) VALUES(?1, ?2, ?3)",
+                params![APTITUDE_META_NS, pattern_meta_key(name), value],
             )?;
         }
 
@@ -485,7 +497,6 @@ pub fn get_preferences_by_category(
 pub fn add_pattern(store: &Store, input: PatternInput) -> Result<String, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = aptitude_db_path(&store.root);
-    let id = crate::core::ulid::new_ulid();
     let now = now_iso();
 
     // Validate regex pattern
@@ -495,28 +506,42 @@ pub fn add_pattern(store: &Store, input: PatternInput) -> Result<String, error::
         ));
     }
 
-    broker.with_conn(&db_path, "decapod", None, "aptitude.pattern.add", |conn| {
+    let id = broker.with_conn(&db_path, "decapod", None, "aptitude.pattern.add", |conn| {
+        let key = pattern_meta_key(&input.name);
+        // Preserve id + created_at on upsert (mirrors old ON CONFLICT(name) DO UPDATE).
+        let existing = conn
+            .query_row(
+                "SELECT value FROM meta WHERE namespace = ?1 AND key = ?2",
+                params![APTITUDE_META_NS, key],
+                |row| row.get::<_, String>(0),
+            )
+            .ok()
+            .and_then(|v| serde_json::from_str::<Pattern>(&v).ok());
+        let id = existing
+            .as_ref()
+            .map(|p| p.id.clone())
+            .unwrap_or_else(crate::core::ulid::new_ulid);
+        let created_at = existing
+            .as_ref()
+            .map(|p| p.created_at.clone())
+            .unwrap_or_else(|| now.clone());
+        let pattern = Pattern {
+            id: id.clone(),
+            name: input.name.clone(),
+            category: input.category.clone(),
+            regex_pattern: input.regex_pattern.clone(),
+            preference_category: input.preference_category.clone(),
+            preference_key: input.preference_key.clone(),
+            description: input.description.clone(),
+            created_at,
+        };
+        let value = serde_json::to_string(&pattern)
+            .map_err(|e| error::DecapodError::ValidationError(format!("serialize pattern: {e}")))?;
         conn.execute(
-            "INSERT INTO patterns(id, name, category, regex_pattern, preference_category, preference_key, description, created_at)
-             VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
-             ON CONFLICT(name) DO UPDATE SET
-                category = excluded.category,
-                regex_pattern = excluded.regex_pattern,
-                preference_category = excluded.preference_category,
-                preference_key = excluded.preference_key,
-                description = excluded.description",
-            params![
-                id,
-                input.name,
-                input.category,
-                input.regex_pattern,
-                input.preference_category,
-                input.preference_key,
-                input.description,
-                now
-            ],
+            "INSERT OR REPLACE INTO meta(namespace, key, value) VALUES(?1, ?2, ?3)",
+            params![APTITUDE_META_NS, key, value],
         )?;
-        Ok(())
+        Ok(id)
     })?;
 
     Ok(id)
@@ -526,30 +551,32 @@ pub fn list_patterns(store: &Store) -> Result<Vec<Pattern>, error::DecapodError>
     let broker = DbBroker::new(&store.root);
     let db_path = aptitude_db_path(&store.root);
 
-    let patterns = broker.with_conn(&db_path, "decapod", None, "aptitude.pattern.list", |conn| {
-        let mut stmt = conn.prepare(
-            "SELECT id, name, category, regex_pattern, preference_category, preference_key, description, created_at
-             FROM patterns ORDER BY category, name",
-        )?;
-        let rows = stmt.query_map([], |row| {
-            Ok(Pattern {
-                id: row.get(0)?,
-                name: row.get(1)?,
-                category: row.get(2)?,
-                regex_pattern: row.get(3)?,
-                preference_category: row.get(4)?,
-                preference_key: row.get(5)?,
-                description: row.get(6)?,
-                created_at: row.get(7)?,
-            })
-        })?;
+    let patterns =
+        broker.with_conn(&db_path, "decapod", None, "aptitude.pattern.list", |conn| {
+            let mut stmt = conn
+                .prepare("SELECT value FROM meta WHERE namespace = ?1 AND key LIKE 'pattern:%'")?;
+            let rows = stmt.query_map(params![APTITUDE_META_NS], |row| {
+                let value: String = row.get(0)?;
+                serde_json::from_str::<Pattern>(&value).map_err(|e| {
+                    rusqlite::Error::FromSqlConversionFailure(
+                        0,
+                        rusqlite::types::Type::Text,
+                        Box::new(e),
+                    )
+                })
+            })?;
 
-        let mut out = Vec::new();
-        for r in rows {
-            out.push(r?);
-        }
-        Ok(out)
-    })?;
+            let mut out = Vec::new();
+            for r in rows {
+                out.push(r?);
+            }
+            out.sort_by(|a, b| {
+                a.category
+                    .cmp(&b.category)
+                    .then_with(|| a.name.cmp(&b.name))
+            });
+            Ok(out)
+        })?;
 
     Ok(patterns)
 }
@@ -595,11 +622,22 @@ pub fn record_observation(
     let patterns = match_patterns(store, content)?;
     let matched_pattern_id = patterns.first().map(|(p, _)| p.id.clone());
 
+    let observation = Observation {
+        id: id.clone(),
+        content: content.to_string(),
+        category: category.map(|s| s.to_string()),
+        matched_pattern_id,
+        processed: false,
+        created_at: now,
+    };
+    let value = serde_json::to_string(&observation)
+        .map_err(|e| error::DecapodError::ValidationError(format!("serialize observation: {e}")))?;
+
     broker.with_conn(&db_path, "decapod", None, "aptitude.observe", |conn| {
+        // observations table folded away (#1131); store as meta JSON when needed for pending/CLI.
         conn.execute(
-            "INSERT INTO observations(id, content, category, matched_pattern_id, processed, created_at)
-             VALUES(?1, ?2, ?3, ?4, 0, ?5)",
-            params![id, content, category, matched_pattern_id, now],
+            "INSERT OR REPLACE INTO meta(namespace, key, value) VALUES(?1, ?2, ?3)",
+            params![APTITUDE_META_NS, observation_meta_key(&id), value],
         )?;
         Ok(())
     })?;
@@ -613,29 +651,31 @@ pub fn list_pending_observations(
 ) -> Result<Vec<Observation>, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = aptitude_db_path(&store.root);
+    let limit = limit.unwrap_or(100);
 
     let observations = broker.with_conn(&db_path, "decapod", None, "aptitude.pending", |conn| {
-        let query = format!(
-            "SELECT id, content, category, matched_pattern_id, processed, created_at
-             FROM observations WHERE processed = 0 ORDER BY created_at DESC LIMIT {}",
-            limit.unwrap_or(100)
-        );
-        let mut stmt = conn.prepare(&query)?;
-        let rows = stmt.query_map([], |row| {
-            Ok(Observation {
-                id: row.get(0)?,
-                content: row.get(1)?,
-                category: row.get(2)?,
-                matched_pattern_id: row.get(3)?,
-                processed: row.get::<_, i64>(4)? != 0,
-                created_at: row.get(5)?,
+        let mut stmt = conn
+            .prepare("SELECT value FROM meta WHERE namespace = ?1 AND key LIKE 'observation:%'")?;
+        let rows = stmt.query_map(params![APTITUDE_META_NS], |row| {
+            let value: String = row.get(0)?;
+            serde_json::from_str::<Observation>(&value).map_err(|e| {
+                rusqlite::Error::FromSqlConversionFailure(
+                    0,
+                    rusqlite::types::Type::Text,
+                    Box::new(e),
+                )
             })
         })?;
 
         let mut out = Vec::new();
         for r in rows {
-            out.push(r?);
+            let obs = r?;
+            if !obs.processed {
+                out.push(obs);
+            }
         }
+        out.sort_by(|a, b| b.created_at.cmp(&a.created_at));
+        out.truncate(limit);
         Ok(out)
     })?;
 
@@ -652,11 +692,31 @@ pub fn mark_observation_processed(store: &Store, id: &str) -> Result<bool, error
         None,
         "aptitude.observe.process",
         |conn| {
-            let rows = conn.execute(
-                "UPDATE observations SET processed = 1 WHERE id = ?1",
-                params![id],
+            let key = observation_meta_key(id);
+            let value: String = match conn.query_row(
+                "SELECT value FROM meta WHERE namespace = ?1 AND key = ?2",
+                params![APTITUDE_META_NS, key],
+                |row| row.get(0),
+            ) {
+                Ok(v) => v,
+                Err(rusqlite::Error::QueryReturnedNoRows) => return Ok(false),
+                Err(e) => return Err(e.into()),
+            };
+            let mut obs: Observation = serde_json::from_str(&value).map_err(|e| {
+                error::DecapodError::ValidationError(format!("parse observation: {e}"))
+            })?;
+            if obs.processed {
+                return Ok(false);
+            }
+            obs.processed = true;
+            let new_value = serde_json::to_string(&obs).map_err(|e| {
+                error::DecapodError::ValidationError(format!("serialize observation: {e}"))
+            })?;
+            conn.execute(
+                "INSERT OR REPLACE INTO meta(namespace, key, value) VALUES(?1, ?2, ?3)",
+                params![APTITUDE_META_NS, key, new_value],
             )?;
-            Ok(rows > 0)
+            Ok(true)
         },
     )?;
 
@@ -668,28 +728,16 @@ pub fn mark_observation_processed(store: &Store, id: &str) -> Result<bool, error
 // ============================================================================
 
 pub fn record_consolidation(
-    store: &Store,
-    source_type: &str,
-    source_id: &str,
-    target_type: &str,
-    target_id: &str,
-    reason: Option<&str>,
+    _store: &Store,
+    _source_type: &str,
+    _source_id: &str,
+    _target_type: &str,
+    _target_id: &str,
+    _reason: Option<&str>,
 ) -> Result<String, error::DecapodError> {
-    let broker = DbBroker::new(&store.root);
-    let db_path = aptitude_db_path(&store.root);
-    let id = crate::core::ulid::new_ulid();
-    let now = now_iso();
-
-    broker.with_conn(&db_path, "decapod", None, "aptitude.consolidate.record", |conn| {
-        conn.execute(
-            "INSERT INTO consolidations(id, source_type, source_id, target_type, target_id, reason, created_at)
-             VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7)",
-            params![id, source_type, source_id, target_type, target_id, reason, now],
-        )?;
-        Ok(())
-    })?;
-
-    Ok(id)
+    // consolidations table folded away (#1131); nothing reads the audit log.
+    // Keep the public API and return a fresh id without persistent storage.
+    Ok(crate::core::ulid::new_ulid())
 }
 
 pub fn analyze_similarity(store: &Store) -> Result<Vec<SimilarityGroup>, error::DecapodError> {
@@ -731,29 +779,9 @@ pub fn execute_consolidation(
     group: &SimilarityGroup,
     target_id: &str,
 ) -> Result<bool, error::DecapodError> {
-    // Mark all preferences in the group as consolidated into the target
-    let broker = DbBroker::new(&store.root);
-    let db_path = aptitude_db_path(&store.root);
-
-    broker.with_conn(&db_path, "decapod", None, "aptitude.consolidate.execute", |conn| {
-        for pref in &group.preferences {
-            if pref.id != target_id {
-                conn.execute(
-                    "INSERT INTO consolidations(id, source_type, source_id, target_type, target_id, reason, created_at)
-                     VALUES(?1, 'preference', ?2, 'preference', ?3, ?4, ?5)",
-                    params![
-                        crate::core::ulid::new_ulid(),
-                        pref.id,
-                        target_id,
-                        format!("Consolidated: {}", group.similarity_reason),
-                        now_iso()
-                    ],
-                )?;
-            }
-        }
-        Ok(())
-    })?;
-
+    // consolidations table folded away (#1131); retain preference-side analysis only.
+    // Previously this only wrote audit rows (no preference mutation).
+    let _ = (store, group, target_id);
     Ok(true)
 }
 

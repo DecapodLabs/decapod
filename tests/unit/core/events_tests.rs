@@ -15,7 +15,7 @@ fn legacy_import_is_idempotent_and_preserves_json() {
     assert_eq!(import_legacy_jsonl(dir.path(), &conn).unwrap(), 0);
     let payload: String = conn
         .query_row(
-            "SELECT payload FROM broker_events WHERE event_id = 'e1'",
+            "SELECT payload FROM events WHERE stream = 'broker' AND event_id = 'e1'",
             [],
             |r| r.get(0),
         )
@@ -91,13 +91,15 @@ fn legacy_import_accepts_equivalent_split_envelope_storage() {
     let dir = tempdir().unwrap();
     let conn = Connection::open(dir.path().join("decapod.db")).unwrap();
     ensure_tables(&conn).unwrap();
+    // Pre-seed unified events with an equivalent payload shape (split envelope style).
     conn.execute(
-        "INSERT INTO federation_events(event_id, ts, event_type, node_id, payload, actor) VALUES(?1, ?2, ?3, ?4, ?5, ?6)",
+        "INSERT INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
+         VALUES(?1, ?2, 1, 'federation', 'node', ?3, ?4, ?5, ?6)",
         params![
             "federation-equivalent",
             "2026-08-01T00:00:00Z",
-            "node.create",
             "node-1",
+            "node.create",
             "{\"title\":\"Equivalent\"}",
             "agent"
         ],
@@ -144,9 +146,12 @@ fn proven_consolidation_retires_legacy_files_as_runtime_inputs() {
     fs::write(&legacy_path, "not live evidence anymore\n").unwrap();
     assert_eq!(import_legacy_jsonl(dir.path(), &conn).unwrap(), 0);
     assert_eq!(
-        conn.query_row("SELECT COUNT(*) FROM watcher_events", [], |row| row
-            .get::<_, i64>(0))
-            .unwrap(),
+        conn.query_row(
+            "SELECT COUNT(*) FROM events WHERE stream = 'watcher'",
+            [],
+            |row| row.get::<_, i64>(0)
+        )
+        .unwrap(),
         1
     );
 }

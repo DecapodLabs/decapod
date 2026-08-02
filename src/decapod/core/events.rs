@@ -31,7 +31,25 @@ pub const MAP: &str = "map";
 pub const LCM: &str = "lcm";
 pub const KNOWLEDGE: &str = "knowledge";
 
-pub const STREAMS: &[(&str, &str)] = &[
+/// Known event stream names. All streams share the single `events` table (#1127).
+pub const STREAMS: &[&str] = &[
+    BROKER,
+    TODO,
+    FEDERATION,
+    EXTERNAL_ACTIONS,
+    TRACES,
+    VERIFICATION,
+    WATCHER,
+    MAP,
+    LCM,
+    KNOWLEDGE,
+];
+
+/// Physical table name for every stream after consolidation.
+pub const EVENTS_TABLE: &str = "events";
+
+/// Historical physical table names used only by migration into `events`.
+const LEGACY_STREAM_TABLES: &[(&str, &str)] = &[
     (BROKER, "broker_events"),
     (TODO, "todo_events"),
     (FEDERATION, "federation_events"),
@@ -62,9 +80,37 @@ const LEGACY_FILES: &[(&str, &str)] = &[
 ];
 
 pub fn table_for_stream(stream: &str) -> Option<&'static str> {
-    STREAMS
-        .iter()
-        .find_map(|(name, table)| (*name == stream).then_some(*table))
+    if STREAMS.contains(&stream) {
+        Some(EVENTS_TABLE)
+    } else {
+        None
+    }
+}
+
+pub fn is_known_stream(stream: &str) -> bool {
+    STREAMS.contains(&stream)
+}
+
+fn subject_for_stream(stream: &str, event: &Value) -> (Option<String>, Option<String>) {
+    match stream {
+        TODO => {
+            let id = event
+                .get("task_id")
+                .or_else(|| event.pointer("/payload/task_id"))
+                .and_then(Value::as_str)
+                .map(str::to_string);
+            (Some("task".into()), id)
+        }
+        FEDERATION => {
+            let id = event
+                .get("node_id")
+                .or_else(|| event.pointer("/payload/node_id"))
+                .and_then(Value::as_str)
+                .map(str::to_string);
+            (Some("node".into()), id)
+        }
+        _ => (None, None),
+    }
 }
 
 pub fn canonical_db_path(root: &Path) -> PathBuf {
@@ -88,27 +134,31 @@ pub fn query(
     stream: &str,
     limit: usize,
 ) -> Result<Vec<StoredEvent>, error::DecapodError> {
-    let table = table_for_stream(stream).ok_or_else(|| {
-        error::DecapodError::ValidationError(format!("unknown event stream: {stream}"))
-    })?;
+    if !is_known_stream(stream) {
+        return Err(error::DecapodError::ValidationError(format!(
+            "unknown event stream: {stream}"
+        )));
+    }
     let path = canonical_db_path(root);
     if !path.exists() {
         return Ok(Vec::new());
     }
     let conn = db::db_connect_for_validate(&path.to_string_lossy())?;
     let table_exists: bool = conn.query_row(
-        "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?1)",
-        [table],
+        "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'events')",
+        [],
         |row| row.get(0),
     )?;
     if !table_exists {
         return Ok(Vec::new());
     }
     let sql_limit = i64::try_from(limit.max(1)).unwrap_or(i64::MAX);
-    let mut stmt = conn.prepare(&format!(
-        "SELECT event_id, ts, seq, event_type, payload, actor FROM {table} ORDER BY seq DESC, event_id DESC LIMIT ?1"
-    ))?;
-    let rows = stmt.query_map([sql_limit], |row| {
+    let mut stmt = conn.prepare(
+        "SELECT event_id, ts, seq, event_type, payload, actor FROM events
+         WHERE stream = ?1
+         ORDER BY seq DESC, event_id DESC LIMIT ?2",
+    )?;
+    let rows = stmt.query_map(params![stream, sql_limit], |row| {
         let payload: String = row.get(4)?;
         Ok((
             row.get::<_, String>(0)?,
@@ -124,7 +174,7 @@ pub fn query(
         let (event_id, ts, seq, event_type, payload, actor) = row?;
         let payload = serde_json::from_str(&payload).map_err(|err| {
             error::DecapodError::ValidationError(format!(
-                "invalid canonical event payload in {table} for {event_id}: {err}"
+                "invalid canonical event payload in events for {event_id}: {err}"
             ))
         })?;
         events.push(StoredEvent {
@@ -176,110 +226,125 @@ pub fn query_serialized_lines(root: &Path, stream: &str) -> Result<String, error
     Ok(out)
 }
 
-/// Ensure every canonical event stream exists in the shared datastore.
+/// Ensure the unified events table exists and fold historical stream tables when present.
 pub fn ensure_tables(conn: &Connection) -> Result<(), error::DecapodError> {
-    for (_, table) in STREAMS {
-        if *table != "federation_events" {
-            let ddl = schemas::CANONICAL_EVENT_TABLE_SCHEMA.replace("{table}", table);
-            conn.execute_batch(&ddl)?;
-        }
-    }
-
+    conn.execute_batch(schemas::EVENTS_TABLE_SCHEMA)?;
     conn.execute_batch(
-        "CREATE TABLE IF NOT EXISTS federation_events (
-             event_id TEXT PRIMARY KEY,
-             ts TEXT NOT NULL,
-             event_type TEXT NOT NULL,
-             node_id TEXT,
-             payload TEXT NOT NULL,
-             actor TEXT NOT NULL,
-             seq INTEGER NOT NULL DEFAULT 0
-         );
-         CREATE TABLE IF NOT EXISTS task_events (
-             event_id TEXT PRIMARY KEY,
-             ts TEXT NOT NULL,
-             event_type TEXT NOT NULL,
-             task_id TEXT,
-             payload TEXT NOT NULL,
-             actor TEXT NOT NULL,
-             seq INTEGER NOT NULL DEFAULT 0
-         );
-         CREATE TABLE IF NOT EXISTS legacy_event_imports (
+        "CREATE TABLE IF NOT EXISTS legacy_event_imports (
              filename TEXT PRIMARY KEY,
              content_hash TEXT NOT NULL,
              record_count INTEGER NOT NULL,
              imported_at TEXT NOT NULL
          );",
     )?;
-
-    ensure_column(
-        conn,
-        "federation_events",
-        "seq",
-        "INTEGER NOT NULL DEFAULT 0",
-    )?;
-    ensure_column(conn, "task_events", "seq", "INTEGER NOT NULL DEFAULT 0")?;
-    conn.execute_batch(
-        "CREATE INDEX IF NOT EXISTS idx_federation_events_seq ON federation_events(seq);
-         CREATE INDEX IF NOT EXISTS idx_task_events_seq ON task_events(seq);
-         CREATE TRIGGER IF NOT EXISTS federation_events_assign_seq
-         AFTER INSERT ON federation_events
-         WHEN NEW.seq = 0
-         BEGIN
-           UPDATE federation_events
-           SET seq = (SELECT COALESCE(MAX(seq), 0) + 1 FROM federation_events WHERE event_id <> NEW.event_id)
-           WHERE event_id = NEW.event_id;
-         END;
-         CREATE TRIGGER IF NOT EXISTS task_events_assign_seq
-         AFTER INSERT ON task_events
-         WHEN NEW.seq = 0
-         BEGIN
-           UPDATE task_events
-           SET seq = (SELECT COALESCE(MAX(seq), 0) + 1 FROM task_events WHERE event_id <> NEW.event_id)
-           WHERE event_id = NEW.event_id;
-         END;",
-    )?;
-    backfill_sequence(conn, "federation_events")?;
-    backfill_sequence(conn, "task_events")?;
+    migrate_legacy_stream_tables_into_events(conn)?;
     Ok(())
 }
 
-fn ensure_column(
+fn table_exists_local(conn: &Connection, name: &str) -> Result<bool, error::DecapodError> {
+    let exists: bool = conn.query_row(
+        "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?1)",
+        [name],
+        |row| row.get(0),
+    )?;
+    Ok(exists)
+}
+
+fn column_exists(
     conn: &Connection,
     table: &str,
     column: &str,
-    definition: &str,
-) -> Result<(), error::DecapodError> {
-    let exists: Option<String> = conn
-        .query_row(
-            &format!("SELECT name FROM pragma_table_info('{table}') WHERE name = ?1"),
-            [column],
-            |row| row.get(0),
-        )
-        .optional()
-        .map_err(error::DecapodError::RusqliteError)?;
-    if exists.is_none() {
-        conn.execute(
-            &format!("ALTER TABLE {table} ADD COLUMN {column} {definition}"),
-            [],
-        )?;
+) -> Result<bool, error::DecapodError> {
+    let exists: bool = conn.query_row(
+        &format!("SELECT EXISTS(SELECT 1 FROM pragma_table_info('{table}') WHERE name = ?1)"),
+        [column],
+        |row| row.get(0),
+    )?;
+    Ok(exists)
+}
+
+fn migrate_legacy_stream_tables_into_events(conn: &Connection) -> Result<(), error::DecapodError> {
+    for &(stream, table) in LEGACY_STREAM_TABLES {
+        if !table_exists_local(conn, table)? {
+            continue;
+        }
+        if table == "federation_events" {
+            let has_node = column_exists(conn, table, "node_id")?;
+            if has_node {
+                conn.execute(
+                    "INSERT OR IGNORE INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
+                     SELECT event_id, ts, COALESCE(seq, 0), ?1, 'node', node_id, event_type, payload, actor
+                     FROM federation_events",
+                    [stream],
+                )?;
+            } else {
+                conn.execute(
+                    "INSERT OR IGNORE INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
+                     SELECT event_id, ts, COALESCE(seq, 0), ?1, NULL, NULL, event_type, payload, actor
+                     FROM federation_events",
+                    [stream],
+                )?;
+            }
+        } else {
+            let has_seq = column_exists(conn, table, "seq")?;
+            if has_seq {
+                conn.execute(
+                    &format!(
+                        "INSERT OR IGNORE INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
+                         SELECT event_id, ts, seq, ?1, NULL, NULL, event_type, payload, actor FROM {table}"
+                    ),
+                    [stream],
+                )?;
+            } else {
+                conn.execute(
+                    &format!(
+                        "INSERT OR IGNORE INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
+                         SELECT event_id, ts, 0, ?1, NULL, NULL, event_type, payload, actor FROM {table}"
+                    ),
+                    [stream],
+                )?;
+            }
+        }
+        conn.execute(&format!("DROP TABLE IF EXISTS {table}"), [])?;
+    }
+
+    if table_exists_local(conn, "task_events")? {
+        let has_seq = column_exists(conn, "task_events", "seq")?;
+        if has_seq {
+            conn.execute(
+                "INSERT OR IGNORE INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
+                 SELECT event_id, ts, COALESCE(seq, 0), 'todo', 'task', task_id, event_type, payload, actor
+                 FROM task_events",
+                [],
+            )?;
+        } else {
+            conn.execute(
+                "INSERT OR IGNORE INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
+                 SELECT event_id, ts, 0, 'todo', 'task', task_id, event_type, payload, actor
+                 FROM task_events",
+                [],
+            )?;
+        }
+        conn.execute("DROP TABLE IF EXISTS task_events", [])?;
+    }
+
+    for stream in STREAMS {
+        backfill_stream_sequence(conn, stream)?;
     }
     Ok(())
 }
 
-fn backfill_sequence(conn: &Connection, table: &str) -> Result<(), error::DecapodError> {
+fn backfill_stream_sequence(conn: &Connection, stream: &str) -> Result<(), error::DecapodError> {
     conn.execute(
-        &format!(
-            "WITH ordered AS (
-                 SELECT event_id, ROW_NUMBER() OVER (ORDER BY ts, event_id) AS next_seq
-                 FROM {table}
-                 WHERE seq = 0
-             )
-             UPDATE {table}
-             SET seq = (SELECT next_seq FROM ordered WHERE ordered.event_id = {table}.event_id)
-             WHERE event_id IN (SELECT event_id FROM ordered)"
-        ),
-        [],
+        "WITH ordered AS (
+             SELECT event_id, ROW_NUMBER() OVER (ORDER BY ts, event_id) AS next_seq
+             FROM events
+             WHERE stream = ?1 AND (seq IS NULL OR seq = 0)
+         )
+         UPDATE events
+         SET seq = (SELECT next_seq FROM ordered WHERE ordered.event_id = events.event_id)
+         WHERE event_id IN (SELECT event_id FROM ordered)",
+        [stream],
     )?;
     Ok(())
 }
@@ -296,9 +361,11 @@ pub fn append_on_conn(
     stream: &str,
     event: &Value,
 ) -> Result<u64, error::DecapodError> {
-    let table = table_for_stream(stream).ok_or_else(|| {
-        error::DecapodError::ValidationError(format!("unknown event stream: {stream}"))
-    })?;
+    if !is_known_stream(stream) {
+        return Err(error::DecapodError::ValidationError(format!(
+            "unknown event stream: {stream}"
+        )));
+    }
     let event_id = event_id(event);
     let ts = event
         .get("ts")
@@ -315,20 +382,22 @@ pub fn append_on_conn(
         .or_else(|| event.get("actor_id"))
         .and_then(Value::as_str)
         .unwrap_or("decapod");
+    let (subject_kind, subject_id) = subject_for_stream(stream, event);
     let seq: u64 = conn.query_row(
-        &format!("SELECT COALESCE(MAX(seq), 0) + 1 FROM {table}"),
-        [],
+        "SELECT COALESCE(MAX(seq), 0) + 1 FROM events WHERE stream = ?1",
+        [stream],
         |row| row.get(0),
     )?;
     conn.execute(
-        &format!(
-            "INSERT OR IGNORE INTO {table}(event_id, ts, seq, event_type, payload, actor)
-             VALUES(?1, ?2, ?3, ?4, ?5, ?6)"
-        ),
+        "INSERT OR IGNORE INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
+         VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
         params![
             event_id,
             ts,
             seq,
+            stream,
+            subject_kind,
+            subject_id,
             event_type,
             serde_json::to_string(event).unwrap(),
             actor
@@ -493,18 +562,11 @@ fn load_canonical_event_shape(
     stream: &str,
     event_id: &str,
 ) -> Result<Option<CanonicalEventShape>, error::DecapodError> {
-    let table = table_for_stream(stream).unwrap();
-    let node_column = if stream == FEDERATION {
-        "node_id"
-    } else {
-        "NULL"
-    };
     let existing = conn
         .query_row(
-            &format!(
-                "SELECT ts, event_type, payload, actor, {node_column} FROM {table} WHERE event_id = ?1"
-            ),
-            [event_id],
+            "SELECT ts, event_type, payload, actor, subject_id
+             FROM events WHERE stream = ?1 AND event_id = ?2",
+            params![stream, event_id],
             |row| {
                 Ok((
                     row.get::<_, String>(0)?,
