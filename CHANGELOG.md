@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.94.1](https://github.com/DecapodLabs/decapod/compare/v0.94.0...v0.94.1) - 2026-08-02
+
+### Fixed
+
+- avoid deprecated schema constants in core tests
+- resolve PR #1152 CI failures for schema fold
+- restore valid claims ledger shape for CI validate
+
+### Other
+
+- raise mermaid diagram contrast in README
+- polish README badges and opening sections
+- bind governance artifacts for schema consolidation PR
+- consolidate SQLite schema (#1126–#1131)
+
 ## [0.94.0](https://github.com/DecapodLabs/decapod/compare/v0.93.0...v0.94.0) - 2026-08-02
 
 ### Fixed
