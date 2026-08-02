@@ -47,6 +47,8 @@ fn lease_generation_and_lifecycle_helpers() {
     assert_eq!(next_lease_generation(3, false), 3);
     assert_eq!(next_lease_generation(3, true), 4);
     assert_eq!(extended_generation(1), 2);
+    assert_eq!(handoff_lease_generation(0), 1);
+    assert_eq!(handoff_lease_generation(3), 4);
     assert_eq!(
         default_intent_anchor("feat_01abc"),
         "intent:todo:feat_01abc"
@@ -62,6 +64,31 @@ fn lease_generation_and_lifecycle_helpers() {
         LeaseLifecycle::Yielded,
         true
     ));
+}
+
+#[test]
+fn handoff_lease_transfer_advances_generation_and_reissues_lease() {
+    let transfer = plan_handoff_lease_transfer(
+        "agent-a",
+        "agent-b",
+        2,
+        LeaseLifecycle::Extended,
+        "intent:houseboat:wave4",
+        1_000,
+        DEFAULT_CLAIM_LEASE_SECS,
+    );
+    assert_eq!(transfer.previous_agent, "agent-a");
+    assert_eq!(transfer.next_agent, "agent-b");
+    assert_eq!(transfer.prior_generation, 2);
+    assert_eq!(transfer.next_generation, 3);
+    assert_eq!(transfer.prior_lifecycle, LeaseLifecycle::Extended);
+    assert_eq!(transfer.next_lifecycle, LeaseLifecycle::Claimed);
+    assert_eq!(transfer.intent_anchor, "intent:houseboat:wave4");
+    assert_eq!(
+        transfer.lease_expires_at,
+        lease_expires_at(1_000, DEFAULT_CLAIM_LEASE_SECS)
+    );
+    assert_eq!(transfer.lease_seconds, DEFAULT_CLAIM_LEASE_SECS);
 }
 
 #[test]
