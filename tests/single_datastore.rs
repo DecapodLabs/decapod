@@ -31,21 +31,20 @@ fn fresh_subsystems_share_one_local_database() {
     }
 
     let conn = Connection::open(local).unwrap();
+    // Consolidated surface (#1126–#1131): unified events, agents, node_edges.
     for table in [
         "meta",
         "tasks",
+        "task_tags",
+        "agents",
         "claims",
         "nodes",
+        "node_edges",
         "cron_jobs",
         "reflexes",
-        "originals_index",
         "preferences",
-        "broker_events",
-        "todo_events",
-        "federation_events",
-        "external_actions_events",
-        "traces_events",
-        "verification_events",
+        "events",
+        "originals_index", // LCM still owns this surface
     ] {
         let exists: bool = conn
             .query_row(
@@ -55,6 +54,29 @@ fn fresh_subsystems_share_one_local_database() {
             )
             .unwrap();
         assert!(exists, "missing table {table}");
+    }
+    // Per-stream event tables and folded graph/agent satellites must not bootstrap.
+    for table in [
+        "broker_events",
+        "todo_events",
+        "federation_events",
+        "task_events",
+        "edges",
+        "sources",
+        "patterns",
+        "agent_presence",
+        "agent_trust",
+        "agent_expertise",
+        "agent_category_claims",
+    ] {
+        let exists: bool = conn
+            .query_row(
+                "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name=?1)",
+                [table],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert!(!exists, "unexpected deprecated table {table}");
     }
 }
 
@@ -74,7 +96,7 @@ fn legacy_jsonl_is_imported_idempotently_without_new_jsonl_writes() {
     let conn = db::db_connect(&data.join(schemas::LOCAL_DB_NAME).to_string_lossy()).unwrap();
     let (count, seq, payload): (i64, i64, String) = conn
         .query_row(
-            "SELECT COUNT(*), MAX(seq), MAX(payload) FROM todo_events WHERE event_id='legacy-todo-1'",
+            "SELECT COUNT(*), MAX(seq), MAX(payload) FROM events WHERE stream='todo' AND event_id='legacy-todo-1'",
             [],
             |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
         )

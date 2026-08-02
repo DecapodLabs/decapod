@@ -140,7 +140,7 @@ fn existing_project_init_migrates_watcher_before_runtime_reads() {
     let conn = Connection::open(data.join("decapod.db")).expect("open canonical db");
     let count: i64 = conn
         .query_row(
-            "SELECT COUNT(*) FROM watcher_events WHERE event_id = 'upgrade-watcher-1'",
+            "SELECT COUNT(*) FROM events WHERE stream = 'watcher' AND event_id = 'upgrade-watcher-1'",
             [],
             |row| row.get(0),
         )

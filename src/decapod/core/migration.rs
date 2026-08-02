@@ -117,6 +117,17 @@ pub fn all_migrations() -> Vec<Migration> {
             description: "Consolidate every local SQLite store into decapod.db",
             up: migrate_consolidate_single_datastore,
         },
+        Migration {
+            id: "db.consolidate.schema_fold.v001",
+            sequence: 600,
+            scope: "global",
+            kind: "rust",
+            script_path: None,
+            min_version: "0.94.0",
+            target_version: "0.94.0",
+            description: "Fold events, agents, node_edges, task_tags, patterns→meta; drop empty tables (#1126–#1131)",
+            up: migrate_schema_fold_v001,
+        },
     ]
 }
 
@@ -746,9 +757,13 @@ fn migrate_consolidate_databases(decapod_root: &Path) -> Result<(), error::Decap
     let mem_conn = db::db_connect(&mem_path.to_string_lossy())?;
     mem_conn.execute_batch(schemas::MEMORY_DB_SCHEMA_META)?;
     mem_conn.execute_batch(schemas::MEMORY_DB_SCHEMA_NODES)?;
-    mem_conn.execute_batch(schemas::MEMORY_DB_SCHEMA_SOURCES)?;
-    mem_conn.execute_batch(schemas::MEMORY_DB_SCHEMA_EDGES)?;
-    mem_conn.execute_batch(schemas::MEMORY_DB_SCHEMA_EVENTS)?;
+    // Intermediate multi-bin shape; schema_fold later migrates to node_edges + events.
+    #[allow(deprecated)]
+    {
+        mem_conn.execute_batch(schemas::MEMORY_DB_SCHEMA_SOURCES)?;
+        mem_conn.execute_batch(schemas::MEMORY_DB_SCHEMA_EDGES)?;
+        mem_conn.execute_batch(schemas::MEMORY_DB_SCHEMA_EVENTS)?;
+    }
 
     migrate_table(&data_root, "federation.db", &mem_conn, "nodes")?;
     migrate_table(&data_root, "federation.db", &mem_conn, "sources")?;
@@ -981,10 +996,11 @@ fn migrate_task_events_to_canonical_stream(target: &Connection) -> Result<(), er
 }
 
 fn initialize_single_datastore_schema(conn: &Connection) -> Result<(), error::DecapodError> {
+    // Consolidated surface (#1126–#1131): one events table, agents row, node_edges,
+    // task_tags; empty tables no longer bootstrapped by default.
     for schema in [
         schemas::HEALTH_DB_SCHEMA_CLAIMS,
         schemas::HEALTH_DB_SCHEMA_PROOF_EVENTS,
-        schemas::HEALTH_DB_SCHEMA_HEALTH_CACHE,
         schemas::POLICY_DB_SCHEMA_APPROVALS,
         schemas::FEEDBACK_DB_SCHEMA,
         schemas::ARCHIVE_DB_SCHEMA,
@@ -992,33 +1008,21 @@ fn initialize_single_datastore_schema(conn: &Connection) -> Result<(), error::De
         schemas::GOVERNANCE_DB_SCHEMA_OBLIGATION_EDGES,
         schemas::MEMORY_DB_SCHEMA_META,
         schemas::MEMORY_DB_SCHEMA_NODES,
-        schemas::MEMORY_DB_SCHEMA_SOURCES,
-        schemas::MEMORY_DB_SCHEMA_EDGES,
-        schemas::MEMORY_DB_SCHEMA_EVENTS,
-        schemas::KNOWLEDGE_DB_SCHEMA,
+        schemas::MEMORY_DB_SCHEMA_NODE_EDGES,
         schemas::DECIDE_DB_SCHEMA_SESSIONS,
         schemas::DECIDE_DB_SCHEMA_DECISIONS,
-        schemas::CRON_DB_SCHEMA,
-        schemas::REFLEX_DB_SCHEMA,
         schemas::TODO_DB_SCHEMA_META,
         schemas::TODO_DB_SCHEMA_TASKS,
-        schemas::TODO_DB_SCHEMA_TASK_EVENTS,
         schemas::TODO_DB_SCHEMA_TASK_VERIFICATION,
+        schemas::TODO_DB_SCHEMA_TASK_TAGS,
         schemas::TODO_DB_SCHEMA_CATEGORIES,
-        schemas::TODO_DB_SCHEMA_AGENT_CATEGORY_CLAIMS,
-        schemas::TODO_DB_SCHEMA_AGENT_PRESENCE,
-        schemas::TODO_DB_SCHEMA_AGENT_TRUST,
         schemas::TODO_DB_SCHEMA_RISK_ZONES,
         schemas::TODO_DB_SCHEMA_TASK_OWNERS,
         schemas::TODO_DB_SCHEMA_TASK_DEPENDENCIES,
-        schemas::TODO_DB_SCHEMA_AGENT_EXPERTISE,
+        schemas::AGENTS_TABLE_SCHEMA,
+        schemas::KNOWLEDGE_DB_SCHEMA,
         schemas::APTITUDE_DB_SCHEMA_PREFERENCES,
-        schemas::APTITUDE_DB_SCHEMA_PATTERNS,
-        schemas::APTITUDE_DB_SCHEMA_OBSERVATIONS,
-        schemas::APTITUDE_DB_SCHEMA_CONSOLIDATIONS,
         schemas::APTITUDE_DB_SCHEMA_AGENT_PROMPTS,
-        schemas::LCM_DB_SCHEMA_ORIGINALS_INDEX,
-        schemas::LCM_DB_SCHEMA_SUMMARIES,
     ] {
         conn.execute_batch(schema)?;
     }
@@ -1029,15 +1033,6 @@ fn initialize_single_datastore_schema(conn: &Connection) -> Result<(), error::De
         schemas::MEMORY_DB_INDEX_NODES_SCOPE,
         schemas::MEMORY_DB_INDEX_NODES_PRIORITY,
         schemas::MEMORY_DB_INDEX_NODES_UPDATED,
-        schemas::MEMORY_DB_INDEX_SOURCES_NODE,
-        schemas::MEMORY_DB_INDEX_EDGES_SOURCE,
-        schemas::MEMORY_DB_INDEX_EDGES_TARGET,
-        schemas::MEMORY_DB_INDEX_EDGES_TYPE,
-        schemas::MEMORY_DB_INDEX_EVENTS_NODE,
-        schemas::KNOWLEDGE_DB_INDEX_STATUS,
-        schemas::KNOWLEDGE_DB_INDEX_CREATED,
-        schemas::KNOWLEDGE_DB_INDEX_MERGE_KEY,
-        schemas::KNOWLEDGE_DB_INDEX_ACTIVE_MERGE_SCOPE,
         schemas::DECIDE_DB_INDEX_DECISIONS_SESSION,
         schemas::DECIDE_DB_INDEX_DECISIONS_TREE,
         schemas::DECIDE_DB_INDEX_SESSIONS_TREE,
@@ -1046,26 +1041,16 @@ fn initialize_single_datastore_schema(conn: &Connection) -> Result<(), error::De
         schemas::TODO_DB_SCHEMA_INDEX_SCOPE,
         schemas::TODO_DB_SCHEMA_INDEX_DIR,
         schemas::TODO_DB_SCHEMA_INDEX_HASH,
-        schemas::TODO_DB_SCHEMA_INDEX_EVENTS_TASK,
         schemas::TODO_DB_SCHEMA_INDEX_VERIFICATION_STATUS,
         schemas::TODO_DB_SCHEMA_INDEX_CATEGORY_NAME,
-        schemas::TODO_DB_SCHEMA_INDEX_AGENT_CATEGORY_AGENT,
-        schemas::TODO_DB_SCHEMA_INDEX_AGENT_PRESENCE_LAST_SEEN,
-        schemas::TODO_DB_SCHEMA_INDEX_AGENT_TRUST_LEVEL,
         schemas::TODO_DB_SCHEMA_INDEX_RISK_ZONES_NAME,
         schemas::TODO_DB_SCHEMA_INDEX_TASK_OWNERS_TASK,
         schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_TASK,
         schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_DEPENDS_ON,
-        schemas::TODO_DB_SCHEMA_INDEX_AGENT_EXPERTISE_AGENT,
         schemas::APTITUDE_DB_SCHEMA_INDEX_PREF_CATEGORY,
         schemas::APTITUDE_DB_SCHEMA_INDEX_PREF_KEY,
         schemas::APTITUDE_DB_SCHEMA_INDEX_PREF_ACCESS,
-        schemas::APTITUDE_DB_SCHEMA_INDEX_PATTERN_CATEGORY,
-        schemas::APTITUDE_DB_SCHEMA_INDEX_OBS_PROCESSED,
         schemas::APTITUDE_DB_SCHEMA_INDEX_PROMPT_CONTEXT,
-        schemas::LCM_DB_INDEX_ORIGINALS_KIND,
-        schemas::LCM_DB_INDEX_ORIGINALS_TS,
-        schemas::LCM_DB_INDEX_SUMMARIES_SCOPE,
     ] {
         conn.execute_batch(index)?;
     }
@@ -1082,6 +1067,247 @@ fn initialize_single_datastore_schema(conn: &Connection) -> Result<(), error::De
         );
         CREATE INDEX IF NOT EXISTS idx_request_dedupe_created_at ON request_dedupe(created_at);",
     )?;
+    Ok(())
+}
+
+/// Schema fold for #1126–#1131: unified events, agents, node_edges, task_tags, patterns in meta.
+fn migrate_schema_fold_v001(decapod_root: &Path) -> Result<(), error::DecapodError> {
+    let data_root = decapod_root.join("data");
+    let db_path = data_root.join(schemas::LOCAL_DB_NAME);
+    if !db_path.exists() {
+        return Ok(());
+    }
+    let conn = db::db_connect(&db_path.to_string_lossy())?;
+    // Events unification + historical stream table drop.
+    events::ensure_tables(&conn)?;
+
+    // Agents table (#1129)
+    conn.execute_batch(schemas::AGENTS_TABLE_SCHEMA)?;
+    if table_exists(&conn, "agent_presence")? {
+        conn.execute(
+            "INSERT OR IGNORE INTO agents(agent_id, last_seen, status, updated_at, trust_level, expertise_json, category_claims_json)
+             SELECT agent_id, last_seen, status, updated_at, 'basic', '[]', '[]' FROM agent_presence",
+            [],
+        )?;
+    }
+    if table_exists(&conn, "agent_trust")? {
+        conn.execute(
+            "UPDATE agents SET
+               trust_level = COALESCE((SELECT trust_level FROM agent_trust t WHERE t.agent_id = agents.agent_id), trust_level),
+               trust_granted_at = (SELECT granted_at FROM agent_trust t WHERE t.agent_id = agents.agent_id),
+               trust_granted_by = COALESCE((SELECT granted_by FROM agent_trust t WHERE t.agent_id = agents.agent_id), trust_granted_by)
+             WHERE EXISTS (SELECT 1 FROM agent_trust t WHERE t.agent_id = agents.agent_id)",
+            [],
+        )?;
+        conn.execute(
+            "INSERT OR IGNORE INTO agents(agent_id, trust_level, trust_granted_at, trust_granted_by, last_seen, status, expertise_json, category_claims_json, updated_at)
+             SELECT agent_id, trust_level, granted_at, granted_by, NULL, 'active', '[]', '[]', COALESCE(granted_at, '')
+             FROM agent_trust",
+            [],
+        )?;
+    }
+    if table_exists(&conn, "agent_expertise")? {
+        let mut stmt = conn.prepare(
+            "SELECT agent_id, id, category, expertise_level, claimed_at, updated_at FROM agent_expertise ORDER BY agent_id",
+        )?;
+        let rows = stmt.query_map([], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, String>(3)?,
+                row.get::<_, Option<String>>(4)?,
+                row.get::<_, Option<String>>(5)?,
+            ))
+        })?;
+        let mut by_agent: std::collections::BTreeMap<String, Vec<serde_json::Value>> =
+            std::collections::BTreeMap::new();
+        for row in rows {
+            let (agent_id, id, category, level, claimed_at, updated_at) = row?;
+            by_agent
+                .entry(agent_id)
+                .or_default()
+                .push(serde_json::json!({
+                    "id": id,
+                    "category": category,
+                    "level": level,
+                    "claimed_at": claimed_at,
+                    "updated_at": updated_at,
+                }));
+        }
+        for (agent_id, entries) in by_agent {
+            let json = serde_json::to_string(&entries).unwrap_or_else(|_| "[]".into());
+            conn.execute(
+                "INSERT INTO agents(agent_id, trust_level, expertise_json, category_claims_json, updated_at, status)
+                 VALUES(?1, 'basic', ?2, '[]', '', 'active')
+                 ON CONFLICT(agent_id) DO UPDATE SET expertise_json = excluded.expertise_json",
+                rusqlite::params![agent_id, json],
+            )?;
+        }
+    }
+    if table_exists(&conn, "agent_category_claims")? {
+        let mut stmt = conn.prepare(
+            "SELECT agent_id, id, category, claimed_at, updated_at FROM agent_category_claims ORDER BY agent_id",
+        )?;
+        let rows = stmt.query_map([], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, Option<String>>(3)?,
+                row.get::<_, Option<String>>(4)?,
+            ))
+        })?;
+        let mut by_agent: std::collections::BTreeMap<String, Vec<serde_json::Value>> =
+            std::collections::BTreeMap::new();
+        for row in rows {
+            let (agent_id, id, category, claimed_at, updated_at) = row?;
+            by_agent
+                .entry(agent_id)
+                .or_default()
+                .push(serde_json::json!({
+                    "id": id,
+                    "category": category,
+                    "claimed_at": claimed_at,
+                    "updated_at": updated_at,
+                }));
+        }
+        for (agent_id, entries) in by_agent {
+            let json = serde_json::to_string(&entries).unwrap_or_else(|_| "[]".into());
+            conn.execute(
+                "INSERT INTO agents(agent_id, trust_level, expertise_json, category_claims_json, updated_at, status)
+                 VALUES(?1, 'basic', '[]', ?2, '', 'active')
+                 ON CONFLICT(agent_id) DO UPDATE SET category_claims_json = excluded.category_claims_json",
+                rusqlite::params![agent_id, json],
+            )?;
+        }
+    }
+    for table in [
+        "agent_presence",
+        "agent_trust",
+        "agent_expertise",
+        "agent_category_claims",
+    ] {
+        if table_exists(&conn, table)? {
+            conn.execute(&format!("DROP TABLE IF EXISTS {table}"), [])?;
+        }
+    }
+
+    // Knowledge graph: edges → node_edges; sources → node_edges edge_type='source' (#1128)
+    conn.execute_batch(schemas::MEMORY_DB_SCHEMA_NODE_EDGES)?;
+    if table_exists(&conn, "edges")? {
+        conn.execute(
+            "INSERT OR IGNORE INTO node_edges(id, source_id, target_id, edge_type, metadata, created_at, actor)
+             SELECT id, source_id, target_id, edge_type, '{}', created_at, COALESCE(actor, 'decapod') FROM edges",
+            [],
+        )?;
+        conn.execute("DROP TABLE IF EXISTS edges", [])?;
+    }
+    if table_exists(&conn, "sources")? {
+        conn.execute(
+            "INSERT OR IGNORE INTO node_edges(id, source_id, target_id, edge_type, metadata, created_at, actor)
+             SELECT id, node_id, node_id, 'source',
+                    json_object('source', source),
+                    created_at, 'decapod'
+             FROM sources",
+            [],
+        )?;
+        conn.execute("DROP TABLE IF EXISTS sources", [])?;
+    }
+    // Empty graph satellites superseded by nodes + node_edges (keep originals_index for LCM)
+    if table_exists(&conn, "summaries")? {
+        conn.execute("DROP TABLE IF EXISTS summaries", [])?;
+    }
+
+    // Task tags (#1130) — dual-write path; denormalized columns remain for one release
+    conn.execute_batch(schemas::TODO_DB_SCHEMA_TASK_TAGS)?;
+    if table_exists(&conn, "tasks")? && table_has_column(&conn, "tasks", "tags")? {
+        let mut stmt =
+            conn.prepare("SELECT id, tags FROM tasks WHERE tags IS NOT NULL AND tags != ''")?;
+        let rows = stmt.query_map([], |row| {
+            Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+        })?;
+        for row in rows {
+            let (id, tags) = row?;
+            for tag in tags.split([',', ' ']) {
+                let tag = tag.trim();
+                if tag.is_empty() {
+                    continue;
+                }
+                conn.execute(
+                    "INSERT OR IGNORE INTO task_tags(task_id, tag) VALUES(?1, ?2)",
+                    rusqlite::params![id, tag],
+                )?;
+            }
+        }
+    }
+
+    // Patterns → meta (#1131)
+    if table_exists(&conn, "patterns")? {
+        let mut stmt = conn.prepare(
+            "SELECT id, name, category, regex_pattern, preference_category, preference_key, description, created_at FROM patterns",
+        )?;
+        let rows = stmt.query_map([], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, String>(3)?,
+                row.get::<_, Option<String>>(4)?,
+                row.get::<_, Option<String>>(5)?,
+                row.get::<_, Option<String>>(6)?,
+                row.get::<_, String>(7)?,
+            ))
+        })?;
+        for row in rows {
+            let (id, name, category, regex, pref_cat, pref_key, desc, created) = row?;
+            let value = serde_json::json!({
+                "id": id,
+                "name": name,
+                "category": category,
+                "regex_pattern": regex,
+                "preference_category": pref_cat,
+                "preference_key": pref_key,
+                "description": desc,
+                "created_at": created,
+            });
+            conn.execute(
+                "INSERT OR REPLACE INTO meta(namespace, key, value) VALUES('aptitude', ?1, ?2)",
+                rusqlite::params![format!("pattern:{name}"), value.to_string()],
+            )?;
+        }
+        conn.execute("DROP TABLE IF EXISTS patterns", [])?;
+    }
+
+    // Drop empty / consolidated-away tables (#1126). Plugins that still expose
+    // CLI surfaces recreate their tables lazily on first use.
+    for table in [
+        // consolidated event streams
+        "task_events",
+        "federation_events",
+        "broker_events",
+        "todo_events",
+        "external_actions_events",
+        "traces_events",
+        "verification_events",
+        // note: do not drop health `proof_events` (claim proofs); it is not a stream table
+        "knowledge_events",
+        "lcm_events",
+        "map_events",
+        "watcher_events",
+        // empty aptitude satellites (patterns already folded)
+        "consolidations",
+        "observations",
+        // empty cache / graph satellites (originals_index stays for LCM)
+        "summaries",
+        "health_cache",
+        // `knowledge` stays: plugin surface still writes entries; graph is nodes+node_edges.
+    ] {
+        let _ = conn.execute(&format!("DROP TABLE IF EXISTS {table}"), []);
+    }
+
+    // Ensure consolidated schema present for new code paths.
+    initialize_single_datastore_schema(&conn)?;
     Ok(())
 }
 

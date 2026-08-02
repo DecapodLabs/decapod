@@ -801,18 +801,22 @@ fn validate_repo_store_dogfood(
     }
     let conn = db::db_connect_for_validate(&db_path.to_string_lossy())?;
     let event_count: i64 = conn
-        .query_row("SELECT COUNT(*) FROM todo_events", [], |row| row.get(0))
+        .query_row(
+            "SELECT COUNT(*) FROM events WHERE stream = 'todo'",
+            [],
+            |row| row.get(0),
+        )
         .unwrap_or(0);
     let add_count: i64 = conn
         .query_row(
-            "SELECT COUNT(*) FROM todo_events WHERE event_type='task.add'",
+            "SELECT COUNT(*) FROM events WHERE stream = 'todo' AND event_type='task.add'",
             [],
             |row| row.get(0),
         )
         .unwrap_or(0);
     pass(
         &format!(
-            "Repo canonical todo_events present ({add_count} task.add events; {event_count} total)"
+            "Repo canonical todo events present ({add_count} task.add events; {event_count} total)"
         ),
         ctx,
     );
@@ -832,33 +836,19 @@ fn validate_repo_store_dogfood(
         );
     }
 
-    let task_event_count: i64 = conn
-        .query_row("SELECT COUNT(*) FROM task_events", [], |row| row.get(0))
-        .unwrap_or(0);
-    let missing_canonical: i64 = conn
+    let subject_task_count: i64 = conn
         .query_row(
-            "SELECT COUNT(*) FROM task_events t
-             LEFT JOIN todo_events e ON e.event_id = t.event_id
-             WHERE e.event_id IS NULL",
+            "SELECT COUNT(*) FROM events WHERE stream = 'todo' AND subject_kind = 'task'",
             [],
             |row| row.get(0),
         )
         .unwrap_or(0);
-    if missing_canonical == 0 {
-        pass(
-            &format!(
-                "Repo decapod.db task_events are represented in canonical todo_events ({task_event_count} task events; {event_count} canonical events)"
-            ),
-            ctx,
-        );
-    } else {
-        fail(
-            &format!(
-                "Repo decapod.db task_events missing from canonical todo_events (missing={missing_canonical}, task_events={task_event_count}, todo_events={event_count})"
-            ),
-            ctx,
-        );
-    }
+    pass(
+        &format!(
+            "Repo unified events table present (todo stream={event_count}; task-subject={subject_task_count})"
+        ),
+        ctx,
+    );
 
     Ok(())
 }
@@ -3567,7 +3557,7 @@ fn load_knowledge_promotion_event_ids(
 
     let conn = db::db_connect_for_validate(&db_path.to_string_lossy())?;
     let mut stmt = conn
-        .prepare("SELECT payload FROM knowledge_events")
+        .prepare("SELECT payload FROM events WHERE stream = 'knowledge'")
         .map_err(error::DecapodError::RusqliteError)?;
     let rows = stmt
         .query_map([], |row| row.get::<_, String>(0))
@@ -3577,7 +3567,7 @@ fn load_knowledge_promotion_event_ids(
         let raw = row.map_err(error::DecapodError::RusqliteError)?;
         let v: serde_json::Value = serde_json::from_str(&raw).map_err(|e| {
             error::DecapodError::ValidationError(format!(
-                "invalid knowledge promotion event in decapod.db:knowledge_events: {e}"
+                "invalid knowledge promotion event in decapod.db:events (stream=knowledge): {e}"
             ))
         })?;
         if let Some(id) = v.get("event_id").and_then(|x| x.as_str()) {
@@ -3659,7 +3649,7 @@ fn validate_lineage_hard_gate(
         let source = format!("event:{task_id}");
         let commitment_count: i64 = conn
             .query_row(
-                "SELECT COUNT(*) FROM nodes n JOIN sources s ON s.node_id = n.id WHERE s.source = ?1 AND n.node_type = 'commitment'",
+                "SELECT COUNT(*) FROM nodes n JOIN node_edges e ON e.source_id = n.id WHERE e.edge_type = 'source' AND json_extract(e.metadata, '$.source') = ?1 AND n.node_type = 'commitment'",
                 rusqlite::params![source],
                 |row| row.get(0),
             )
@@ -3685,14 +3675,14 @@ fn validate_lineage_hard_gate(
         let source = format!("event:{task_id}");
         let commitment_count: i64 = conn
             .query_row(
-                "SELECT COUNT(*) FROM nodes n JOIN sources s ON s.node_id = n.id WHERE s.source = ?1 AND n.node_type = 'commitment'",
+                "SELECT COUNT(*) FROM nodes n JOIN node_edges e ON e.source_id = n.id WHERE e.edge_type = 'source' AND json_extract(e.metadata, '$.source') = ?1 AND n.node_type = 'commitment'",
                 rusqlite::params![source.clone()],
                 |row| row.get(0),
             )
             .map_err(error::DecapodError::RusqliteError)?;
         let decision_count: i64 = conn
             .query_row(
-                "SELECT COUNT(*) FROM nodes n JOIN sources s ON s.node_id = n.id WHERE s.source = ?1 AND n.node_type = 'decision'",
+                "SELECT COUNT(*) FROM nodes n JOIN node_edges e ON e.source_id = n.id WHERE e.edge_type = 'source' AND json_extract(e.metadata, '$.source') = ?1 AND n.node_type = 'decision'",
                 rusqlite::params![source],
                 |row| row.get(0),
             )
@@ -5008,7 +4998,7 @@ fn collect_active_todo_handoff_comments(
         .prepare(
             "SELECT t.id, t.assigned_to, e.payload
              FROM tasks t
-             JOIN task_events e ON e.task_id = t.id
+             JOIN events e ON e.subject_id = t.id AND e.stream = 'todo' AND e.subject_kind = 'task'
              WHERE t.status NOT IN ('done', 'archived')
                AND t.assigned_to != ''
                AND e.event_type = 'task.comment'
@@ -5028,8 +5018,16 @@ fn collect_active_todo_handoff_comments(
     let mut comments = Vec::new();
     for row in rows {
         let (todo_id, assigned_to, payload) = row.map_err(error::DecapodError::RusqliteError)?;
-        let payload: serde_json::Value =
+        let raw: serde_json::Value =
             serde_json::from_str(&payload).unwrap_or(serde_json::Value::Null);
+        // New writers store full TodoEvent; migrated task_events used inner payload only.
+        let payload = if raw.get("kind").is_some() || raw.get("comment").is_some() {
+            raw
+        } else if let Some(inner) = raw.get("payload") {
+            inner.clone()
+        } else {
+            raw
+        };
         if payload.get("kind").and_then(|v| v.as_str()) != Some("fuzzy-consolidation") {
             continue;
         }

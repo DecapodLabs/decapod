@@ -153,7 +153,7 @@ fn db_and_broker_round_trip_and_audit() {
 
     let audit_conn = db::db_connect(&db_path.to_string_lossy()).expect("connect audit db");
     let mut audit_stmt = audit_conn
-        .prepare("SELECT payload FROM broker_events ORDER BY seq")
+        .prepare("SELECT payload FROM events WHERE stream = 'broker' ORDER BY seq")
         .expect("prepare audit query");
     let events: Vec<BrokerEvent> = audit_stmt
         .query_map([], |row| row.get::<_, String>(0))
@@ -504,13 +504,16 @@ fn migration_rewrites_legacy_todo_ids_and_references() {
             blocks TEXT DEFAULT '',
             created_at TEXT NOT NULL
         );
-        CREATE TABLE task_events (
+        CREATE TABLE events (
             event_id TEXT PRIMARY KEY,
             ts TEXT NOT NULL,
-            event_type TEXT NOT NULL,
-            task_id TEXT,
+            seq INTEGER NOT NULL DEFAULT 0,
+            stream TEXT NOT NULL,
+            subject_kind TEXT,
+            subject_id TEXT,
+            event_type TEXT NOT NULL DEFAULT '',
             payload TEXT NOT NULL,
-            actor TEXT NOT NULL
+            actor TEXT NOT NULL DEFAULT 'decapod'
         );
         CREATE TABLE task_dependencies (
             id TEXT PRIMARY KEY,
@@ -540,10 +543,10 @@ fn migration_rewrites_legacy_todo_ids_and_references() {
         VALUES ('R_LEGACY_B', '[]', '2026-02-25T00:03:00Z');
         INSERT INTO task_owners(id, task_id, agent_id, claimed_at, claim_type)
         VALUES ('owner1', 'R_LEGACY_B', 'agent-x', '2026-02-25T00:04:00Z', 'primary');
-        INSERT INTO task_events(event_id, ts, event_type, task_id, payload, actor)
+        INSERT INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
         VALUES
-            ('evt1', '2026-02-25T00:00:00Z', 'task.add', 'R_LEGACY_A', '{"title":"Fix race in broker"}', 'tester'),
-            ('evt2', '2026-02-25T00:01:00Z', 'task.add', 'R_LEGACY_B', '{"title":"Add docs","depends_on":"R_LEGACY_A","parent_task_id":"R_LEGACY_A"}', 'tester');
+            ('evt1', '2026-02-25T00:00:00Z', 1, 'todo', 'task', 'R_LEGACY_A', 'task.add', '{"title":"Fix race in broker"}', 'tester'),
+            ('evt2', '2026-02-25T00:01:00Z', 2, 'todo', 'task', 'R_LEGACY_B', 'task.add', '{"title":"Add docs","depends_on":"R_LEGACY_A","parent_task_id":"R_LEGACY_A"}', 'tester');
         "#,
     )
     .expect("seed schema");

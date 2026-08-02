@@ -141,7 +141,7 @@ fn read_timeline_events(
     let mut all_events = Vec::new();
     let mut sources = Vec::new();
     let mut gaps = Vec::new();
-    for (name, _) in events::STREAMS {
+    for name in events::STREAMS {
         match events::query(&store.root, name, limit) {
             Ok(records) => {
                 if !records.is_empty() {
@@ -203,7 +203,7 @@ fn render_transcript(
 ) -> Result<(), DecapodError> {
     let mut all_events = Vec::new();
 
-    for (name, _) in events::STREAMS {
+    for name in events::STREAMS {
         for ev in events::query(&store.root, name, 10000)? {
             let ev = timeline_event(ev);
             if let Some(filter) = actor_filter

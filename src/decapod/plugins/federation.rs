@@ -353,14 +353,30 @@ fn validate_provenance(source: &str) -> Result<(), error::DecapodError> {
     Ok(())
 }
 
+const SOURCE_EDGE_TYPE: &str = "source";
+
+fn source_metadata_json(source: &str) -> String {
+    serde_json::json!({ "source": source }).to_string()
+}
+
+fn source_string_from_metadata(metadata: &str) -> Option<String> {
+    serde_json::from_str::<JsonValue>(metadata)
+        .ok()
+        .and_then(|v| {
+            v.get("source")
+                .and_then(|s| s.as_str())
+                .map(|s| s.to_string())
+        })
+}
+
 fn is_critical(node_type: &str, priority: &str) -> bool {
     CRITICAL_NODE_TYPES.contains(&node_type) || priority == "critical"
 }
 
 fn append_event(_events_path: &Path, _event: &FederationEvent) -> Result<(), error::DecapodError> {
-    // Federation events are persisted in the canonical federation_events
-    // table by the surrounding transaction. The JSONL path is retained only
-    // for replaying legacy archives.
+    // Federation events are persisted in the unified `events` table
+    // (stream = 'federation') by the surrounding transaction. The JSONL path
+    // is retained only for replaying legacy archives.
     Ok(())
 }
 
@@ -389,8 +405,9 @@ pub fn find_node_by_source(
             let node_id: Option<String> = conn
                 .query_row(
                     "SELECT n.id FROM nodes n
-             JOIN sources s ON n.id = s.node_id
-             WHERE s.source = ?1
+             JOIN node_edges e ON n.id = e.source_id
+             WHERE e.edge_type = 'source'
+               AND json_extract(e.metadata, '$.source') = ?1
              LIMIT 1",
                     params![source_pattern],
                     |row| row.get(0),
@@ -452,17 +469,23 @@ fn read_node_full(conn: &Connection, id: &str) -> Result<FederationNode, error::
         )
         .map_err(|_| error::DecapodError::NotFound(format!("Node '{id}' not found")))?;
 
-    // Fetch sources
-    let mut stmt = conn.prepare("SELECT source FROM sources WHERE node_id = ?1")?;
+    // Fetch sources (stored as node_edges with edge_type = 'source')
+    let mut stmt = conn.prepare(
+        "SELECT metadata FROM node_edges
+         WHERE source_id = ?1 AND edge_type = 'source'
+         ORDER BY json_extract(metadata, '$.source')",
+    )?;
     let sources: Vec<String> = stmt
-        .query_map(params![id], |row| row.get(0))?
+        .query_map(params![id], |row| row.get::<_, String>(0))?
         .filter_map(|r| r.ok())
+        .filter_map(|meta| source_string_from_metadata(&meta))
         .collect();
 
-    // Fetch edges (both directions)
+    // Fetch relationship edges (both directions); exclude provenance self-edges
     let mut edge_stmt = conn.prepare(
         "SELECT id, source_id, target_id, edge_type, created_at, actor
-             FROM edges WHERE source_id = ?1 OR target_id = ?1",
+             FROM node_edges
+             WHERE (source_id = ?1 OR target_id = ?1) AND edge_type != 'source'",
     )?;
     let edges: Vec<FederationEdge> = edge_stmt
         .query_map(params![id], |row| {
@@ -494,22 +517,15 @@ pub fn initialize_federation_db(root: &Path) -> Result<(), error::DecapodError> 
     broker.with_conn(&db_path, "decapod", None, "federation.init", |conn| {
         conn.execute_batch(schemas::MEMORY_DB_SCHEMA_META)?;
         conn.execute_batch(schemas::MEMORY_DB_SCHEMA_NODES)?;
-        conn.execute_batch(schemas::MEMORY_DB_SCHEMA_SOURCES)?;
-        conn.execute_batch(schemas::MEMORY_DB_SCHEMA_EDGES)?;
-        conn.execute_batch(schemas::MEMORY_DB_SCHEMA_EVENTS)?;
+        conn.execute_batch(schemas::MEMORY_DB_SCHEMA_NODE_EDGES)?;
         crate::core::events::ensure_tables(conn)?;
 
-        // Indexes
+        // Indexes (node_edges indexes are part of MEMORY_DB_SCHEMA_NODE_EDGES)
         conn.execute_batch(schemas::MEMORY_DB_INDEX_NODES_TYPE)?;
         conn.execute_batch(schemas::MEMORY_DB_INDEX_NODES_STATUS)?;
         conn.execute_batch(schemas::MEMORY_DB_INDEX_NODES_SCOPE)?;
         conn.execute_batch(schemas::MEMORY_DB_INDEX_NODES_PRIORITY)?;
         conn.execute_batch(schemas::MEMORY_DB_INDEX_NODES_UPDATED)?;
-        conn.execute_batch(schemas::MEMORY_DB_INDEX_SOURCES_NODE)?;
-        conn.execute_batch(schemas::MEMORY_DB_INDEX_EDGES_SOURCE)?;
-        conn.execute_batch(schemas::MEMORY_DB_INDEX_EDGES_TARGET)?;
-        conn.execute_batch(schemas::MEMORY_DB_INDEX_EDGES_TYPE)?;
-        conn.execute_batch(schemas::MEMORY_DB_INDEX_EVENTS_NODE)?;
 
         // Version tracking
         conn.execute(
@@ -598,24 +614,30 @@ pub fn add_node(
             ],
         )?;
 
-        // Insert sources
+        // Insert sources as node_edges (edge_type = 'source', metadata = {"source":...})
         for src in &sources {
             let src_id = format!("FS_{}", crate::core::ulid::new_ulid());
+            let meta = source_metadata_json(src);
             conn.execute(
-                "INSERT INTO sources(id, node_id, source, created_at) VALUES(?1, ?2, ?3, ?4)",
-                params![src_id, node_id, src, now],
+                "INSERT INTO node_edges(id, source_id, target_id, edge_type, metadata, created_at, actor)
+                 VALUES(?1, ?2, ?2, ?3, ?4, ?5, 'decapod')",
+                params![src_id, node_id, SOURCE_EDGE_TYPE, meta, now],
             )?;
         }
 
         // Insert event record
         conn.execute(
-            "INSERT INTO federation_events(event_id, ts, event_type, node_id, payload, actor)
-             VALUES(?1, ?2, ?3, ?4, ?5, ?6)",
+            "INSERT INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
+             VALUES(
+               ?1, ?2,
+               (SELECT COALESCE(MAX(seq), 0) + 1 FROM events WHERE stream = 'federation'),
+               'federation', 'node', ?3, ?4, ?5, ?6
+             )",
             params![
                 event_id,
                 now,
-                "node.create",
                 node_id,
+                "node.create",
                 serde_json::to_string(&payload_json).unwrap(),
                 actor,
             ],
@@ -740,13 +762,17 @@ pub fn edit_node(
             "priority": priority,
         });
         conn.execute(
-            "INSERT INTO federation_events(event_id, ts, event_type, node_id, payload, actor)
-             VALUES(?1, ?2, ?3, ?4, ?5, ?6)",
+            "INSERT INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
+             VALUES(
+               ?1, ?2,
+               (SELECT COALESCE(MAX(seq), 0) + 1 FROM events WHERE stream = 'federation'),
+               'federation', 'node', ?3, ?4, ?5, ?6
+             )",
             params![
                 event_id,
                 now,
-                "node.edit",
                 id,
+                "node.edit",
                 serde_json::to_string(&payload_json).unwrap(),
                 "decapod",
             ],
@@ -812,7 +838,7 @@ pub fn supersede_node(
         // Create supersedes edge
         let edge_id = format!("FE_{}", crate::core::ulid::new_ulid());
         conn.execute(
-            "INSERT INTO edges(id, source_id, target_id, edge_type, created_at, actor)
+            "INSERT INTO node_edges(id, source_id, target_id, edge_type, created_at, actor)
              VALUES(?1, ?2, ?3, 'supersedes', ?4, 'decapod')",
             params![edge_id, new_id, old_id, now],
         )?;
@@ -826,13 +852,17 @@ pub fn supersede_node(
             "edge_id": edge_id,
         });
         conn.execute(
-            "INSERT INTO federation_events(event_id, ts, event_type, node_id, payload, actor)
-             VALUES(?1, ?2, ?3, ?4, ?5, ?6)",
+            "INSERT INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
+             VALUES(
+               ?1, ?2,
+               (SELECT COALESCE(MAX(seq), 0) + 1 FROM events WHERE stream = 'federation'),
+               'federation', 'node', ?3, ?4, ?5, ?6
+             )",
             params![
                 event_id,
                 now,
-                "node.supersede",
                 old_id,
+                "node.supersede",
                 serde_json::to_string(&payload_json).unwrap(),
                 "decapod",
             ],
@@ -890,13 +920,17 @@ pub fn transition_node_status(
             "reason": reason,
         });
         conn.execute(
-            "INSERT INTO federation_events(event_id, ts, event_type, node_id, payload, actor)
-             VALUES(?1, ?2, ?3, ?4, ?5, ?6)",
+            "INSERT INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
+             VALUES(
+               ?1, ?2,
+               (SELECT COALESCE(MAX(seq), 0) + 1 FROM events WHERE stream = 'federation'),
+               'federation', 'node', ?3, ?4, ?5, ?6
+             )",
             params![
                 event_id,
                 now,
-                event_type,
                 id,
+                event_type,
                 serde_json::to_string(&payload_json).unwrap(),
                 "decapod",
             ],
@@ -948,7 +982,7 @@ pub fn add_edge(
         }
 
         conn.execute(
-            "INSERT INTO edges(id, source_id, target_id, edge_type, created_at, actor)
+            "INSERT INTO node_edges(id, source_id, target_id, edge_type, created_at, actor)
              VALUES(?1, ?2, ?3, ?4, ?5, 'decapod')",
             params![edge_id, source_id, target_id, edge_type, now],
         )?;
@@ -961,13 +995,17 @@ pub fn add_edge(
             "edge_type": edge_type,
         });
         conn.execute(
-            "INSERT INTO federation_events(event_id, ts, event_type, node_id, payload, actor)
-             VALUES(?1, ?2, ?3, ?4, ?5, ?6)",
+            "INSERT INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
+             VALUES(
+               ?1, ?2,
+               (SELECT COALESCE(MAX(seq), 0) + 1 FROM events WHERE stream = 'federation'),
+               'federation', 'node', ?3, ?4, ?5, ?6
+             )",
             params![
                 event_id,
                 now,
-                "edge.add",
                 source_id,
+                "edge.add",
                 serde_json::to_string(&payload_json).unwrap(),
                 "decapod",
             ],
@@ -999,7 +1037,7 @@ fn remove_edge(store: &Store, edge_id: &str) -> Result<(), error::DecapodError> 
     let now = now_ts();
 
     broker.with_conn(&db_path, "decapod", None, "federation.unlink", |conn| {
-        let changes = conn.execute("DELETE FROM edges WHERE id = ?1", params![edge_id])?;
+        let changes = conn.execute("DELETE FROM node_edges WHERE id = ?1", params![edge_id])?;
 
         if changes == 0 {
             return Err(error::DecapodError::NotFound(format!(
@@ -1010,8 +1048,12 @@ fn remove_edge(store: &Store, edge_id: &str) -> Result<(), error::DecapodError> 
         let event_id = crate::core::ulid::new_ulid();
         let payload_json = serde_json::json!({ "edge_id": edge_id });
         conn.execute(
-            "INSERT INTO federation_events(event_id, ts, event_type, node_id, payload, actor)
-             VALUES(?1, ?2, ?3, NULL, ?4, ?5)",
+            "INSERT INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
+             VALUES(
+               ?1, ?2,
+               (SELECT COALESCE(MAX(seq), 0) + 1 FROM events WHERE stream = 'federation'),
+               'federation', 'node', NULL, ?3, ?4, ?5
+             )",
             params![
                 event_id,
                 now,
@@ -1065,9 +1107,11 @@ pub fn add_source_to_node(
                 )));
             }
 
+            let meta = source_metadata_json(source);
             conn.execute(
-                "INSERT INTO sources(id, node_id, source, created_at) VALUES(?1, ?2, ?3, ?4)",
-                params![src_id, node_id, source, now],
+                "INSERT INTO node_edges(id, source_id, target_id, edge_type, metadata, created_at, actor)
+                 VALUES(?1, ?2, ?2, ?3, ?4, ?5, 'decapod')",
+                params![src_id, node_id, SOURCE_EDGE_TYPE, meta, now],
             )?;
 
             // Update node timestamp
@@ -1082,16 +1126,20 @@ pub fn add_source_to_node(
                 "source": source,
             });
             conn.execute(
-                "INSERT INTO federation_events(event_id, ts, event_type, node_id, payload, actor)
-             VALUES(?1, ?2, ?3, ?4, ?5, ?6)",
-                params![
-                    event_id,
-                    now,
-                    "source.add",
-                    node_id,
-                    serde_json::to_string(&payload_json).unwrap(),
-                    "decapod",
-                ],
+                "INSERT INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
+             VALUES(
+               ?1, ?2,
+               (SELECT COALESCE(MAX(seq), 0) + 1 FROM events WHERE stream = 'federation'),
+               'federation', 'node', ?3, ?4, ?5, ?6
+             )",
+            params![
+                event_id,
+                now,
+                node_id,
+                "source.add",
+                serde_json::to_string(&payload_json).unwrap(),
+                "decapod",
+            ],
             )?;
 
             append_event(
@@ -1254,7 +1302,9 @@ fn build_graph_json(conn: &Connection) -> Result<JsonValue, error::DecapodError>
     {
         let mut stmt = conn.prepare(
             "SELECT id, source_id, target_id, edge_type
-             FROM edges ORDER BY source_id, edge_type, target_id, id",
+             FROM node_edges
+             WHERE edge_type != 'source'
+             ORDER BY source_id, edge_type, target_id, id",
         )?;
         let mut rows = stmt.query([])?;
         while let Some(row) = rows.next()? {
@@ -1280,128 +1330,150 @@ fn export_vault_notes(store: &Store) -> Result<usize, error::DecapodError> {
     let vault_dir = federation_vault_dir(&store.root);
     fs::create_dir_all(&vault_dir).map_err(error::DecapodError::IoError)?;
 
-    broker.with_conn(&db_path, "decapod", None, "federation.vault.export", |conn| {
-        let mut stmt = conn.prepare(
-            "SELECT id, node_type, status, priority, confidence, title, body, scope, tags,
+    broker.with_conn(
+        &db_path,
+        "decapod",
+        None,
+        "federation.vault.export",
+        |conn| {
+            let mut stmt = conn.prepare(
+                "SELECT id, node_type, status, priority, confidence, title, body, scope, tags,
                     created_at, updated_at, effective_from, effective_to, actor
              FROM nodes ORDER BY id",
-        )?;
-        let rows = stmt.query_map([], |row| {
-            Ok(FederationNode {
-                id: row.get(0)?,
-                node_type: row.get(1)?,
-                status: row.get(2)?,
-                priority: row.get(3)?,
-                confidence: row.get(4)?,
-                title: row.get(5)?,
-                body: row.get(6)?,
-                scope: row.get(7)?,
-                tags: row.get(8)?,
-                created_at: row.get(9)?,
-                updated_at: row.get(10)?,
-                effective_from: row.get(11)?,
-                effective_to: row.get(12)?,
-                actor: row.get(13)?,
-                sources: None,
-                edges: None,
-            })
-        })?;
-
-        let mut count = 0usize;
-        for row in rows {
-            let mut node = row?;
-
-            let mut src_stmt =
-                conn.prepare("SELECT source FROM sources WHERE node_id = ?1 ORDER BY source")?;
-            let sources = src_stmt
-                .query_map(params![node.id.clone()], |r| r.get(0))?
-                .collect::<Result<Vec<String>, _>>()?;
-            node.sources = Some(sources);
-
-            let mut edge_stmt = conn.prepare(
-                "SELECT edge_type, target_id FROM edges WHERE source_id = ?1 ORDER BY edge_type, target_id",
             )?;
-            let outgoing = edge_stmt
-                .query_map(params![node.id.clone()], |r| {
-                    Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?))
-                })?
-                .collect::<Result<Vec<(String, String)>, _>>()?;
+            let rows = stmt.query_map([], |row| {
+                Ok(FederationNode {
+                    id: row.get(0)?,
+                    node_type: row.get(1)?,
+                    status: row.get(2)?,
+                    priority: row.get(3)?,
+                    confidence: row.get(4)?,
+                    title: row.get(5)?,
+                    body: row.get(6)?,
+                    scope: row.get(7)?,
+                    tags: row.get(8)?,
+                    created_at: row.get(9)?,
+                    updated_at: row.get(10)?,
+                    effective_from: row.get(11)?,
+                    effective_to: row.get(12)?,
+                    actor: row.get(13)?,
+                    sources: None,
+                    edges: None,
+                })
+            })?;
 
-            let node_type_dir = vault_dir.join(&node.node_type);
-            fs::create_dir_all(&node_type_dir).map_err(error::DecapodError::IoError)?;
-            let note_path = node_type_dir.join(format!("{}.md", node.id));
+            let mut count = 0usize;
+            for row in rows {
+                let mut node = row?;
 
-            let tags = parse_tags(&node.tags);
-            let tags_yaml = if tags.is_empty() {
-                "[]".to_string()
-            } else {
-                format!(
-                    "[{}]",
-                    tags.iter()
-                        .map(|t| format!("\"{}\"", yaml_escape(t)))
-                        .collect::<Vec<_>>()
-                        .join(", ")
-                )
-            };
+                let mut src_stmt = conn.prepare(
+                    "SELECT metadata FROM node_edges
+                 WHERE source_id = ?1 AND edge_type = 'source'
+                 ORDER BY json_extract(metadata, '$.source')",
+                )?;
+                let sources = src_stmt
+                    .query_map(params![node.id.clone()], |r| r.get::<_, String>(0))?
+                    .filter_map(|r| r.ok())
+                    .filter_map(|meta| source_string_from_metadata(&meta))
+                    .collect::<Vec<String>>();
+                node.sources = Some(sources);
 
-            let mut md = String::new();
-            md.push_str("---\n");
-            md.push_str(&format!("id: \"{}\"\n", yaml_escape(&node.id)));
-            md.push_str(&format!("type: \"{}\"\n", yaml_escape(&node.node_type)));
-            md.push_str(&format!("status: \"{}\"\n", yaml_escape(&node.status)));
-            md.push_str(&format!("priority: \"{}\"\n", yaml_escape(&node.priority)));
-            md.push_str(&format!("confidence: \"{}\"\n", yaml_escape(&node.confidence)));
-            md.push_str(&format!("title: \"{}\"\n", yaml_escape(&node.title)));
-            md.push_str(&format!("scope: \"{}\"\n", yaml_escape(&node.scope)));
-            md.push_str(&format!("tags: {tags_yaml}\n"));
-            md.push_str(&format!("created_at: \"{}\"\n", yaml_escape(&node.created_at)));
-            md.push_str(&format!("updated_at: \"{}\"\n", yaml_escape(&node.updated_at)));
-            match node.effective_from.as_ref() {
-                Some(v) => md.push_str(&format!("effective_from: \"{}\"\n", yaml_escape(v))),
-                None => md.push_str("effective_from: null\n"),
-            }
-            match node.effective_to.as_ref() {
-                Some(v) => md.push_str(&format!("effective_to: \"{}\"\n", yaml_escape(v))),
-                None => md.push_str("effective_to: null\n"),
-            }
-            md.push_str(&format!("actor: \"{}\"\n", yaml_escape(&node.actor)));
-            md.push_str("sources:\n");
-            if let Some(ref srcs) = node.sources {
-                if srcs.is_empty() {
+                let mut edge_stmt = conn.prepare(
+                    "SELECT edge_type, target_id FROM node_edges
+                 WHERE source_id = ?1 AND edge_type != 'source'
+                 ORDER BY edge_type, target_id",
+                )?;
+                let outgoing = edge_stmt
+                    .query_map(params![node.id.clone()], |r| {
+                        Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?))
+                    })?
+                    .collect::<Result<Vec<(String, String)>, _>>()?;
+
+                let node_type_dir = vault_dir.join(&node.node_type);
+                fs::create_dir_all(&node_type_dir).map_err(error::DecapodError::IoError)?;
+                let note_path = node_type_dir.join(format!("{}.md", node.id));
+
+                let tags = parse_tags(&node.tags);
+                let tags_yaml = if tags.is_empty() {
+                    "[]".to_string()
+                } else {
+                    format!(
+                        "[{}]",
+                        tags.iter()
+                            .map(|t| format!("\"{}\"", yaml_escape(t)))
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    )
+                };
+
+                let mut md = String::new();
+                md.push_str("---\n");
+                md.push_str(&format!("id: \"{}\"\n", yaml_escape(&node.id)));
+                md.push_str(&format!("type: \"{}\"\n", yaml_escape(&node.node_type)));
+                md.push_str(&format!("status: \"{}\"\n", yaml_escape(&node.status)));
+                md.push_str(&format!("priority: \"{}\"\n", yaml_escape(&node.priority)));
+                md.push_str(&format!(
+                    "confidence: \"{}\"\n",
+                    yaml_escape(&node.confidence)
+                ));
+                md.push_str(&format!("title: \"{}\"\n", yaml_escape(&node.title)));
+                md.push_str(&format!("scope: \"{}\"\n", yaml_escape(&node.scope)));
+                md.push_str(&format!("tags: {tags_yaml}\n"));
+                md.push_str(&format!(
+                    "created_at: \"{}\"\n",
+                    yaml_escape(&node.created_at)
+                ));
+                md.push_str(&format!(
+                    "updated_at: \"{}\"\n",
+                    yaml_escape(&node.updated_at)
+                ));
+                match node.effective_from.as_ref() {
+                    Some(v) => md.push_str(&format!("effective_from: \"{}\"\n", yaml_escape(v))),
+                    None => md.push_str("effective_from: null\n"),
+                }
+                match node.effective_to.as_ref() {
+                    Some(v) => md.push_str(&format!("effective_to: \"{}\"\n", yaml_escape(v))),
+                    None => md.push_str("effective_to: null\n"),
+                }
+                md.push_str(&format!("actor: \"{}\"\n", yaml_escape(&node.actor)));
+                md.push_str("sources:\n");
+                if let Some(ref srcs) = node.sources {
+                    if srcs.is_empty() {
+                        md.push_str("  []\n");
+                    } else {
+                        for src in srcs {
+                            md.push_str(&format!("  - \"{}\"\n", yaml_escape(src)));
+                        }
+                    }
+                } else {
+                    md.push_str("  []\n");
+                }
+                md.push_str("edges:\n");
+                if outgoing.is_empty() {
                     md.push_str("  []\n");
                 } else {
-                    for src in srcs {
-                        md.push_str(&format!("  - \"{}\"\n", yaml_escape(src)));
+                    for (edge_type, target_id) in outgoing {
+                        md.push_str(&format!(
+                            "  - {{ type: \"{}\", target: \"{}\" }}\n",
+                            yaml_escape(&edge_type),
+                            yaml_escape(&target_id)
+                        ));
                     }
                 }
-            } else {
-                md.push_str("  []\n");
-            }
-            md.push_str("edges:\n");
-            if outgoing.is_empty() {
-                md.push_str("  []\n");
-            } else {
-                for (edge_type, target_id) in outgoing {
-                    md.push_str(&format!(
-                        "  - {{ type: \"{}\", target: \"{}\" }}\n",
-                        yaml_escape(&edge_type),
-                        yaml_escape(&target_id)
-                    ));
-                }
-            }
-            md.push_str("---\n\n");
-            md.push_str(
+                md.push_str("---\n\n");
+                md.push_str(
                 "<!-- Derived artifact. Edit through `decapod data federation` commands. -->\n\n",
             );
-            md.push_str(&node.body);
-            md.push('\n');
+                md.push_str(&node.body);
+                md.push('\n');
 
-            fs::write(&note_path, md).map_err(error::DecapodError::IoError)?;
-            count += 1;
-        }
+                fs::write(&note_path, md).map_err(error::DecapodError::IoError)?;
+                count += 1;
+            }
 
-        Ok(count)
-    })
+            Ok(count)
+        },
+    )
 }
 
 fn build_index_file(store: &Store) -> Result<usize, error::DecapodError> {
@@ -1472,10 +1544,9 @@ pub fn rebuild_from_events(root: &Path) -> Result<usize, error::DecapodError> {
         // federation-only temporary database would destroy unrelated state.
         conn.execute_batch("BEGIN IMMEDIATE")?;
         let result = (|| {
-            conn.execute("DELETE FROM edges", [])?;
-            conn.execute("DELETE FROM sources", [])?;
+            conn.execute("DELETE FROM node_edges", [])?;
             conn.execute("DELETE FROM nodes", [])?;
-            conn.execute("DELETE FROM federation_events", [])?;
+            conn.execute("DELETE FROM events WHERE stream = 'federation'", [])?;
 
             let mut count = 0;
             for event in &events {
@@ -1503,8 +1574,8 @@ pub fn rebuild_from_events(root: &Path) -> Result<usize, error::DecapodError> {
 
 fn load_federation_events(conn: &Connection) -> Result<Vec<FederationEvent>, error::DecapodError> {
     let mut stmt = conn.prepare(
-        "SELECT event_id, ts, event_type, node_id, payload, actor
-         FROM federation_events ORDER BY rowid",
+        "SELECT event_id, ts, event_type, subject_id, payload, actor
+         FROM events WHERE stream = 'federation' ORDER BY seq, event_id",
     )?;
     let events = stmt
         .query_map([], |row| {
@@ -1531,15 +1602,19 @@ fn load_federation_events(conn: &Connection) -> Result<Vec<FederationEvent>, err
 }
 
 fn replay_event(conn: &Connection, event: &FederationEvent) -> Result<(), error::DecapodError> {
-    // Always record the event in the DB events table
+    // Always record the event in the unified events table (stream = federation)
     conn.execute(
-        "INSERT OR IGNORE INTO federation_events(event_id, ts, event_type, node_id, payload, actor)
-         VALUES(?1, ?2, ?3, ?4, ?5, ?6)",
+        "INSERT OR IGNORE INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
+         VALUES(
+           ?1, ?2,
+           (SELECT COALESCE(MAX(seq), 0) + 1 FROM events WHERE stream = 'federation'),
+           'federation', 'node', ?3, ?4, ?5, ?6
+         )",
         params![
             event.event_id,
             event.ts,
-            event.event_type,
             event.node_id,
+            event.event_type,
             serde_json::to_string(&event.payload).unwrap(),
             event.actor,
         ],
@@ -1571,14 +1646,16 @@ fn replay_event(conn: &Connection, event: &FederationEvent) -> Result<(), error:
                 ],
             )?;
 
-            // Sources
+            // Sources as node_edges (edge_type = 'source')
             if let Some(sources) = p.get("sources").and_then(|v| v.as_array()) {
                 for src in sources {
                     if let Some(s) = src.as_str() {
                         let src_id = format!("FS_{}", crate::core::ulid::new_ulid());
+                        let meta = source_metadata_json(s);
                         conn.execute(
-                            "INSERT INTO sources(id, node_id, source, created_at) VALUES(?1, ?2, ?3, ?4)",
-                            params![src_id, node_id, s, event.ts],
+                            "INSERT INTO node_edges(id, source_id, target_id, edge_type, metadata, created_at, actor)
+                             VALUES(?1, ?2, ?2, ?3, ?4, ?5, ?6)",
+                            params![src_id, node_id, SOURCE_EDGE_TYPE, meta, event.ts, event.actor],
                         )?;
                     }
                 }
@@ -1629,7 +1706,7 @@ fn replay_event(conn: &Connection, event: &FederationEvent) -> Result<(), error:
                 .and_then(|v| v.as_str())
                 .unwrap_or(&fallback_edge_id);
             conn.execute(
-                "INSERT OR IGNORE INTO edges(id, source_id, target_id, edge_type, created_at, actor)
+                "INSERT OR IGNORE INTO node_edges(id, source_id, target_id, edge_type, created_at, actor)
                  VALUES(?1, ?2, ?3, 'supersedes', ?4, ?5)",
                 params![edge_id, new_id, old_id, event.ts, event.actor],
             )
@@ -1657,7 +1734,7 @@ fn replay_event(conn: &Connection, event: &FederationEvent) -> Result<(), error:
             let edge_type = p.get("edge_type").and_then(|v| v.as_str()).unwrap_or("");
 
             conn.execute(
-                "INSERT OR IGNORE INTO edges(id, source_id, target_id, edge_type, created_at, actor)
+                "INSERT OR IGNORE INTO node_edges(id, source_id, target_id, edge_type, created_at, actor)
                  VALUES(?1, ?2, ?3, ?4, ?5, ?6)",
                 params![edge_id, source_id, target_id, edge_type, event.ts, event.actor],
             )
@@ -1669,7 +1746,7 @@ fn replay_event(conn: &Connection, event: &FederationEvent) -> Result<(), error:
                 .get("edge_id")
                 .and_then(|v| v.as_str())
                 .unwrap_or("");
-            conn.execute("DELETE FROM edges WHERE id = ?1", params![edge_id])?;
+            conn.execute("DELETE FROM node_edges WHERE id = ?1", params![edge_id])?;
         }
         "source.add" => {
             let p = &event.payload;
@@ -1677,9 +1754,11 @@ fn replay_event(conn: &Connection, event: &FederationEvent) -> Result<(), error:
             let node_id = event.node_id.as_deref().unwrap_or("");
             let source = p.get("source").and_then(|v| v.as_str()).unwrap_or("");
 
+            let meta = source_metadata_json(source);
             conn.execute(
-                "INSERT OR IGNORE INTO sources(id, node_id, source, created_at) VALUES(?1, ?2, ?3, ?4)",
-                params![src_id, node_id, source, event.ts],
+                "INSERT OR IGNORE INTO node_edges(id, source_id, target_id, edge_type, metadata, created_at, actor)
+                 VALUES(?1, ?2, ?2, ?3, ?4, ?5, ?6)",
+                params![src_id, node_id, SOURCE_EDGE_TYPE, meta, event.ts, event.actor],
             )
             ?;
 
@@ -1725,14 +1804,18 @@ fn canonical_state_hash(conn: &Connection) -> Result<String, error::DecapodError
         }
     }
 
-    // Sources sorted by (node_id, source)
+    // Sources sorted by (node_id, source) — stored as edge_type = 'source'
     {
-        let mut stmt =
-            conn.prepare("SELECT node_id, source FROM sources ORDER BY node_id, source")?;
+        let mut stmt = conn.prepare(
+            "SELECT source_id, metadata FROM node_edges
+             WHERE edge_type = 'source'
+             ORDER BY source_id, json_extract(metadata, '$.source')",
+        )?;
         let mut rows = stmt.query([])?;
         while let Some(row) = rows.next()? {
             let node_id: String = row.get(0)?;
-            let source: String = row.get(1)?;
+            let metadata: String = row.get(1)?;
+            let source = source_string_from_metadata(&metadata).unwrap_or_default();
             hasher.update(node_id.as_bytes());
             hasher.update(b"|");
             hasher.update(source.as_bytes());
@@ -1740,10 +1823,12 @@ fn canonical_state_hash(conn: &Connection) -> Result<String, error::DecapodError
         }
     }
 
-    // Edges sorted by (source_id, edge_type, target_id)
+    // Relationship edges sorted by (source_id, edge_type, target_id)
     {
         let mut stmt = conn.prepare(
-            "SELECT source_id, edge_type, target_id FROM edges ORDER BY source_id, edge_type, target_id",
+            "SELECT source_id, edge_type, target_id FROM node_edges
+             WHERE edge_type != 'source'
+             ORDER BY source_id, edge_type, target_id",
         )?;
         let mut rows = stmt.query([])?;
         while let Some(row) = rows.next()? {
@@ -1765,8 +1850,16 @@ fn canonical_state_hash(conn: &Connection) -> Result<String, error::DecapodError
 /// Count nodes, sources, and edges in a federation DB for diff hints.
 fn db_counts(conn: &Connection) -> Result<(i64, i64, i64), error::DecapodError> {
     let nodes: i64 = conn.query_row("SELECT COUNT(*) FROM nodes", [], |r| r.get(0))?;
-    let sources: i64 = conn.query_row("SELECT COUNT(*) FROM sources", [], |r| r.get(0))?;
-    let edges: i64 = conn.query_row("SELECT COUNT(*) FROM edges", [], |r| r.get(0))?;
+    let sources: i64 = conn.query_row(
+        "SELECT COUNT(*) FROM node_edges WHERE edge_type = 'source'",
+        [],
+        |r| r.get(0),
+    )?;
+    let edges: i64 = conn.query_row(
+        "SELECT COUNT(*) FROM node_edges WHERE edge_type != 'source'",
+        [],
+        |r| r.get(0),
+    )?;
     Ok((nodes, sources, edges))
 }
 
@@ -1802,7 +1895,10 @@ pub fn validate_federation(
                  FROM nodes n
                  WHERE n.status = 'active'
                    AND (n.node_type IN ('decision', 'commitment') OR n.priority = 'critical')
-                   AND NOT EXISTS (SELECT 1 FROM sources s WHERE s.node_id = n.id)",
+                   AND NOT EXISTS (
+                       SELECT 1 FROM node_edges e
+                       WHERE e.source_id = n.id AND e.edge_type = 'source'
+                   )",
         )?;
 
         let violations: Vec<String> = stmt
@@ -1835,10 +1931,11 @@ pub fn validate_federation(
     // Gate 3: Write safety — no node.edit events for critical types
     {
         let mut stmt = conn.prepare(
-            "SELECT fe.node_id
-                 FROM federation_events fe
-                 JOIN nodes n ON fe.node_id = n.id
-                 WHERE fe.event_type = 'node.edit'
+            "SELECT fe.subject_id
+                 FROM events fe
+                 JOIN nodes n ON fe.subject_id = n.id
+                 WHERE fe.stream = 'federation'
+                   AND fe.event_type = 'node.edit'
                    AND (n.node_type IN ('decision', 'commitment') OR n.priority = 'critical')",
         )?;
 
@@ -1867,8 +1964,9 @@ pub fn validate_federation(
 
     // Gate 4: Lifecycle DAG — no cycles in supersedes edges
     {
-        let mut stmt =
-            conn.prepare("SELECT source_id, target_id FROM edges WHERE edge_type = 'supersedes'")?;
+        let mut stmt = conn.prepare(
+            "SELECT source_id, target_id FROM node_edges WHERE edge_type = 'supersedes'",
+        )?;
 
         let edges: Vec<(String, String)> = stmt
             .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?
@@ -1955,12 +2053,12 @@ pub fn validate_federation(
                 let _ = fs::remove_file(&tmp_db);
                 return Ok(results);
             }
-            if let Err(e) = tmp_conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_SOURCES) {
+            if let Err(e) = tmp_conn.execute_batch(schemas::MEMORY_DB_SCHEMA_NODE_EDGES) {
                 results.push((
                     "federation.rebuild_determinism".to_string(),
                     false,
                     format!(
-                        "federation.validate rebuild schema failed (sources) for {}: {}",
+                        "federation.validate rebuild schema failed (node_edges) for {}: {}",
                         tmp_db.display(),
                         e
                     ),
@@ -1969,21 +2067,7 @@ pub fn validate_federation(
                 let _ = fs::remove_file(&tmp_db);
                 return Ok(results);
             }
-            if let Err(e) = tmp_conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_EDGES) {
-                results.push((
-                    "federation.rebuild_determinism".to_string(),
-                    false,
-                    format!(
-                        "federation.validate rebuild schema failed (edges) for {}: {}",
-                        tmp_db.display(),
-                        e
-                    ),
-                ));
-                drop(tmp_conn);
-                let _ = fs::remove_file(&tmp_db);
-                return Ok(results);
-            }
-            if let Err(e) = tmp_conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_EVENTS) {
+            if let Err(e) = crate::core::events::ensure_tables(&tmp_conn) {
                 results.push((
                     "federation.rebuild_determinism".to_string(),
                     false,

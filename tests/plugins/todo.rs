@@ -843,7 +843,7 @@ fn expired_lease_is_reclaimable_by_another_agent() {
     .unwrap();
     // Presence must also be stale, or only lease expiry is enough for reclaim.
     conn.execute(
-        "UPDATE agent_presence SET last_seen = '1Z', updated_at = '1Z' WHERE agent_id = 'agent-old'",
+        "UPDATE agents SET last_seen = '1Z', updated_at = '1Z' WHERE agent_id = 'agent-old'",
         [],
     )
     .ok();

@@ -156,7 +156,7 @@ pub fn add_knowledge(
         })?;
         let event = lookup_promotion_event(store, event_id)?.ok_or_else(|| {
             error::DecapodError::ValidationError(format!(
-                "missing promotion firewall event '{event_id}' in decapod.db:knowledge_events"
+                "missing promotion firewall event '{event_id}' in decapod.db:events (stream=knowledge)"
             ))
         })?;
         if event.target_class != "procedural" {
@@ -600,7 +600,7 @@ fn lookup_promotion_event(
     let broker = DbBroker::new(&store.root);
     let payload = broker.with_conn(&db_path, "decapod", None, "knowledge.get", |conn| {
         conn.query_row(
-            "SELECT payload FROM knowledge_events WHERE event_id = ?1",
+            "SELECT payload FROM events WHERE stream = 'knowledge' AND event_id = ?1",
             [event_id],
             |row| row.get::<_, String>(0),
         )
@@ -611,7 +611,7 @@ fn lookup_promotion_event(
         .map(|raw| {
             serde_json::from_str(&raw).map_err(|e| {
                 error::DecapodError::ValidationError(format!(
-                    "invalid knowledge promotion event in decapod.db:knowledge_events: {e}"
+                    "invalid knowledge promotion event in decapod.db:events (stream=knowledge): {e}"
                 ))
             })
         })
@@ -693,7 +693,7 @@ pub fn schema() -> serde_json::Value {
         ],
         "storage": [
             "decapod.db",
-            "decapod.db:knowledge_events"
+            "decapod.db:events"
         ]
     })
 }
