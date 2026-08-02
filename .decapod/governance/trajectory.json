@@ -1,79 +1,56 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "pr-1150-fleet-coherence-contracts",
-  "intent_id": "intent:pr-1150-fleet-coherence-contracts",
-  "task_id": "docs_01kz07hgab4hkpmv",
-  "original_intent": "Update README with fleet coherence and research context; fix issues 1145-1148",
-  "derived_intent": "Ship fleet-coherence README, typed validation vocabulary, workspace regressions, JSONL seal, and tests/unit boundary with managed fingerprint refresh",
-  "destination": "PR #1150 fmt + governance artifacts",
-  "current_phase": "validation",
-  "next_transitions": [
-    "publish"
-  ],
+  "run_id": "schema-fold-1126-1131",
+  "intent_id": "intent:schema-fold-1126-1131",
+  "original_intent": "Consolidate SQLite schema issues 1126-1131 in one PR; polish README",
+  "derived_intent": "Fold events/agents/node_edges/task_tags/patterns; drop empty stream tables; clean README",
   "active_boundaries": [
-    "no empirical treatment claims in README",
-    "src/ may only reference tests under tests/unit/"
+    "workspace-only; no master mutation; behavior-preserving"
   ],
   "repo_scope": [
-    "README.md docs/agent src/decapod tests .decapod/managed .decapod/governance"
+    "src/decapod/core,src/decapod/plugins,tests,README.md"
   ],
   "inspected_files": [
     "README.md",
-    "src/decapod/core/validate.rs",
-    "tests/release_artifact_policy.rs"
+    "src/decapod/core/events.rs",
+    "src/decapod/core/migration.rs",
+    "src/decapod/core/schemas.rs",
+    "src/decapod/core/todo.rs",
+    "src/decapod/plugins/aptitude.rs",
+    "src/decapod/plugins/federation.rs"
   ],
-  "modified_files": [
-    ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json",
-    ".decapod/managed/Dockerfile.decapod",
-    ".decapod/managed/specs/.manifest.json",
-    "AGENTS.md",
-    "README.md",
-    "src/decapod/core/validate.rs",
-    "tests/release_artifact_policy.rs"
-  ],
-  "declared_commands": [
-    "cargo fmt --all",
-    "cargo test --test release_artifact_policy",
-    "decapod govern artifacts inventory --repair",
-    "decapod rpc --op specs.refresh",
-    "decapod validate"
-  ],
+  "modified_files": [],
+  "declared_commands": [],
   "tool_calls": [],
   "checks": [
     {
-      "name": "cargo_fmt",
+      "name": "aptitude_tests",
       "status": "passed"
     },
     {
-      "name": "decapod validate",
+      "name": "cargo_check",
       "status": "passed"
     },
     {
-      "name": "release_artifact_policy",
+      "name": "events_tests",
       "status": "passed"
     },
     {
-      "name": "todo_enforcement_claim_conflict",
+      "name": "federation_tests",
       "status": "passed"
     },
     {
-      "name": "typed_result_vocabulary",
+      "name": "single_datastore",
       "status": "passed"
     },
     {
-      "name": "workspace_prune_regression",
+      "name": "todo_reclaim",
       "status": "passed"
     }
   ],
-  "evidence": [
-    "Issues #1145 #1146 #1147 #1148 addressed",
-    "PR https://github.com/DecapodLabs/decapod/pull/1150",
-    "validation epoch ve_4b59a10987ed498c completed with zero failures"
-  ],
+  "evidence": [],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
-  "completion_claim": "Ready for CI re-check after governance artifacts and fmt fix",
   "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
@@ -81,22 +58,21 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:269155d6518b8eeef87824c25fc03050f179056b47ddf3245057c43d23c1307e",
+  "artifact_hash": "sha256:2bfc6cf250126d31916fb824db556ec803c18a4fc2d518f3324354c2fe795ecd",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:pr-1150-fleet-coherence-contracts": {
-        "id": "intent:pr-1150-fleet-coherence-contracts",
-        "raw_intent": "Update README with fleet coherence and research context; fix issues 1145-1148",
-        "refined_intent": "Ship fleet-coherence README, typed validation vocabulary, workspace regressions, JSONL seal, and tests/unit boundary with managed fingerprint refresh",
+      "intent:schema-fold-1126-1131": {
+        "id": "intent:schema-fold-1126-1131",
+        "raw_intent": "Consolidate SQLite schema issues 1126-1131 in one PR; polish README",
+        "refined_intent": "Fold events/agents/node_edges/task_tags/patterns; drop empty stream tables; clean README",
         "acceptance_criteria": [],
         "constraints": [
-          "README.md docs/agent src/decapod tests .decapod/managed .decapod/governance"
+          "src/decapod/core,src/decapod/plugins,tests,README.md"
         ],
         "assumptions": [],
         "boundaries": [
-          "src/ may only reference tests under tests/unit/",
-          "no empirical treatment claims in README"
+          "workspace-only; no master mutation; behavior-preserving"
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -109,89 +85,60 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:pr-1150-fleet-coherence-contracts",
+        "intent_id": "intent:schema-fold-1126-1131",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:pr-1150-fleet-coherence-contracts",
+        "intent_id": "intent:schema-fold-1126-1131",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:pr-1150-fleet-coherence-contracts",
+        "intent_id": "intent:schema-fold-1126-1131",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:pr-1150-fleet-coherence-contracts"
-      },
-      {
-        "sequence": 5,
-        "event_id": "event:5",
-        "intent_id": "intent:pr-1150-fleet-coherence-contracts",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:pr-1150-fleet-coherence-contracts"
+        "detail": "trajectory:schema-fold-1126-1131"
       }
     ],
     "trajectories": {
-      "pr-1150-fleet-coherence-contracts": {
-        "id": "pr-1150-fleet-coherence-contracts",
-        "intent_id": "intent:pr-1150-fleet-coherence-contracts",
+      "schema-fold-1126-1131": {
+        "id": "schema-fold-1126-1131",
+        "intent_id": "intent:schema-fold-1126-1131",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "complete",
-            "command": "cargo fmt --all",
+            "action": "trajectory.record",
             "scope": [
-              "README.md docs/agent src/decapod tests .decapod/managed .decapod/governance"
+              "src/decapod/core,src/decapod/plugins,tests,README.md"
             ],
             "observations": [
-              "README.md",
-              "src/decapod/core/validate.rs",
-              "tests/release_artifact_policy.rs",
-              "README.md",
-              "src/decapod/core/validate.rs",
-              "tests/release_artifact_policy.rs",
-              ".decapod/managed/Dockerfile.decapod",
-              ".decapod/managed/specs/.manifest.json",
-              "AGENTS.md",
-              "PR https://github.com/DecapodLabs/decapod/pull/1150",
-              "Issues #1145 #1146 #1147 #1148 addressed"
+              "src/decapod/core/schemas.rs",
+              "src/decapod/core/events.rs",
+              "src/decapod/core/migration.rs",
+              "src/decapod/core/todo.rs",
+              "src/decapod/plugins/federation.rs",
+              "src/decapod/plugins/aptitude.rs",
+              "README.md"
             ],
             "proof_refs": [
-              "cargo_fmt",
-              "release_artifact_policy",
-              "typed_result_vocabulary",
-              "workspace_prune_regression",
-              "todo_enforcement_claim_conflict"
+              "cargo_check",
+              "events_tests",
+              "single_datastore",
+              "federation_tests",
+              "aptitude_tests",
+              "todo_reclaim"
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
-          },
-          {
-            "sequence": 5,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "README.md docs/agent src/decapod tests .decapod/managed .decapod/governance"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_4b59a10987ed498c completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:5"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 5
+    "next_sequence": 4
   }
 }

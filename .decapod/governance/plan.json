@@ -1,29 +1,29 @@
 {
   "schema_version": "1.0.0",
-  "title": "PR #1150: fleet coherence README and contract repairs",
-  "intent": "Ship README fleet-coherence framing, typed validation vocabulary (#1145), workspace claim/prune regressions (#1146), sealed non-kernel JSONL paths (#1147), src test-location boundary (#1148), managed specs fingerprints, and Dockerfile 0.93.0 bump.",
+  "title": "Schema consolidation #1126\u2013#1131 + README polish",
+  "intent": "Single PR consolidating decapod.db tables per issues 1126-1131: unified events, agents, node_edges, task_tags, patterns\u2192meta, deprecate empty tables; rewrite README for product clarity without upgrade-path digressions.",
   "state": "APPROVED",
   "todo_ids": [
-    "docs_01kz07hgab4hkpmv"
+    "docs_01kz0ejezn3pxq96"
   ],
   "proof_hooks": [
-    "cargo fmt --all -- --check",
-    "cargo clippy --all-targets -- -D warnings",
-    "cargo test --test release_artifact_policy",
-    "cargo test --lib typed_result_vocabulary",
-    "cargo test --test workspace_prune_regression",
-    "cargo test --test todo_enforcement test_workspace_ensure_requires_claimed_todo_and_scopes_naming",
-    "decapod validate"
+    "cargo check",
+    "cargo test --lib events",
+    "cargo test --test single_datastore",
+    "cargo test --test plugins_federation_tests",
+    "cargo test --test plugins_aptitude_tests",
+    "cargo test --test plugins_todo_tests reclaimable"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [],
   "unresolved_contradictions": [],
   "deferred_questions": [],
-  "constraints": {
-    "forbidden_paths": [],
-    "file_touch_budget": 60
-  },
+  "constraints": [
+    "Behavior-preserving refactor",
+    "Forward-only SQLite migration schema_fold.v001",
+    "Do not mutate root master; work in Decapod workspace"
+  ],
   "phases": [],
-  "updated_at": "1785644671Z"
+  "updated_at": "2026-08-02T05:48:18Z"
 }
