@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.95.0](https://github.com/DecapodLabs/decapod/compare/v0.94.1...v0.95.0) - 2026-08-02
+
+### Added
+
+- Houseboat wave 4 lease-aware handoff + entrypoint/Dockerfile integrity (#852 #1154)
+- *(validate)* enforce entrypoint and Dockerfile release pins ([#1154](https://github.com/DecapodLabs/decapod/pull/1154))
+- *(houseboat)* make todo handoff lease-aware
+- *(houseboat)* add pure handoff lease-transfer helpers
+
+### Other
+
+- recapture verification baselines with source-built validate
+- recapture verification baselines for stuck done todos
+- bind houseboat wave 4 governance plan and receipts
+- regenerate v0.94.1 entrypoints, Dockerfile, and specs
+
 ### Added
 
 - lease-aware todo handoff with generation advance, intent preservation, and dependency gates (#852)
