@@ -204,11 +204,8 @@ required = true
     );
 
     let err = resolve_proof_config(tmp.path()).expect_err("malformed");
-    assert!(
-        err.to_string().contains("non-empty"),
-        "got: {}",
-        err.to_string()
-    );
+    let msg = err.to_string();
+    assert!(msg.contains("non-empty"), "got: {msg}");
 }
 
 #[test]
@@ -216,9 +213,6 @@ fn resolve_project_root_rejects_unrelated_path() {
     let tmp = tempdir().expect("tempdir");
     // No .decapod under this path.
     let err = resolve_project_root(tmp.path()).expect_err("unrelated");
-    assert!(
-        err.to_string().contains("PROOF_PROJECT_ROOT_UNRESOLVED"),
-        "got: {}",
-        err.to_string()
-    );
+    let msg = err.to_string();
+    assert!(msg.contains("PROOF_PROJECT_ROOT_UNRESOLVED"), "got: {msg}");
 }
