@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.94.0](https://github.com/DecapodLabs/decapod/compare/v0.93.0...v0.94.0) - 2026-08-02
+
+### Fixed
+
+- satisfy fmt and refresh PR governance artifacts
+- address validation vocabulary, workspace contracts, JSONL seal, and source/test boundary
+
+### Other
+
+- enforce src may only reference unit tests under tests/unit
+- refresh managed specs fingerprints and bump Dockerfile to 0.93.0
+- autogenerate/sync command contracts
+- place fleet coherence after Quick Start and tighten prose
+- promote fleet coherence and research foundation in README
+
 ## [0.93.0](https://github.com/DecapodLabs/decapod/compare/v0.92.0...v0.93.0) - 2026-08-02
 
 ### Fixed
