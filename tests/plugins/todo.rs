@@ -3,8 +3,8 @@ use decapod::core::store::Store;
 use decapod::core::store::StoreKind;
 use decapod::core::todo::{
     ClaimMode, TodoCommand, add_task, check_trust_level, claim_task, claim_task_with_lease,
-    fleet_health, get_task, get_work_claim, initialize_todo_db, list_tasks, rebuild_from_events,
-    renew_claim_lease, update_status, yield_claim_lease,
+    fleet_health, get_task, get_work_claim, handoff_task, initialize_todo_db, list_tasks,
+    rebuild_from_events, renew_claim_lease, update_status, yield_claim_lease,
 };
 use decapod::plugins::policy;
 use rusqlite::Connection;
@@ -27,6 +27,21 @@ fn assert_typed_todo_id(id: &str) {
         body.chars().all(|c| c.is_ascii_alphanumeric()),
         "id body should be alphanumeric"
     );
+}
+
+/// Set trust on the consolidated `agents` table (schema fold #1129).
+/// Ensures the row exists so handoff/shared claim policy gates can evaluate.
+fn set_agent_trust(db: &Connection, agent_id: &str, trust_level: &str, ts: &str) {
+    db.execute(
+        "INSERT INTO agents(agent_id, last_seen, status, updated_at, trust_level, expertise_json, category_claims_json)
+         VALUES(?1, ?2, 'active', ?2, ?3, '[]', '[]')
+         ON CONFLICT(agent_id) DO UPDATE SET
+           trust_level = excluded.trust_level,
+           updated_at = excluded.updated_at,
+           last_seen = excluded.last_seen",
+        rusqlite::params![agent_id, ts, trust_level],
+    )
+    .expect("set agent trust");
 }
 
 #[test]
@@ -225,7 +240,8 @@ fn test_todo_rebuild() {
     // stream lives in decapod.db; deleting that single source would delete
     // the source of truth rather than exercise a supported recovery path.
     let rebuild = rebuild_from_events(&root).unwrap();
-    assert_eq!(rebuild["source"], "todo_events");
+    // After #1127 the unified `events` stream is the sole rebuild source.
+    assert_eq!(rebuild["source"], "events");
     assert_eq!(rebuild["events"], 3);
 
     // Verify
@@ -348,13 +364,7 @@ fn test_claim_modes_and_owner_consolidation() {
 
     let db = Connection::open(repo.join(".decapod/data/decapod.db")).unwrap();
     let ts = "1771202800Z";
-    db.execute(
-        "INSERT INTO agent_trust(agent_id, trust_level, granted_at, updated_at, granted_by)
-         VALUES(?1, 'verified', ?2, ?2, 'test')
-         ON CONFLICT(agent_id) DO UPDATE SET trust_level='verified', updated_at=?2, granted_by='test'",
-        rusqlite::params!["agent-b", ts],
-    )
-    .unwrap();
+    set_agent_trust(&db, "agent-b", "verified", ts);
 
     let shared = run_cmd(
         repo,
@@ -451,13 +461,7 @@ fn test_risk_zones_and_trust_tiers_enforced() {
     // Grant verified trust to agent-b and retry shared claim.
     let db = Connection::open(repo.join(".decapod/data/decapod.db")).unwrap();
     let ts = "1771203000Z";
-    db.execute(
-        "INSERT INTO agent_trust(agent_id, trust_level, granted_at, updated_at, granted_by)
-         VALUES(?1, 'verified', ?2, ?2, 'test')
-         ON CONFLICT(agent_id) DO UPDATE SET trust_level='verified', updated_at=?2, granted_by='test'",
-        rusqlite::params!["agent-b", ts],
-    )
-    .unwrap();
+    set_agent_trust(&db, "agent-b", "verified", ts);
     drop(db);
     let shared_ok = run_cmd(
         repo,
@@ -471,13 +475,7 @@ fn test_risk_zones_and_trust_tiers_enforced() {
 
     // Handoff requires verified trust and explicit approval.
     let db = Connection::open(repo.join(".decapod/data/decapod.db")).unwrap();
-    db.execute(
-        "INSERT INTO agent_trust(agent_id, trust_level, granted_at, updated_at, granted_by)
-         VALUES(?1, 'verified', ?2, ?2, 'test')
-         ON CONFLICT(agent_id) DO UPDATE SET trust_level='verified', updated_at=?2, granted_by='test'",
-        rusqlite::params!["agent-a", ts],
-    )
-    .unwrap();
+    set_agent_trust(&db, "agent-a", "verified", ts);
 
     let handoff_fail = run_raw(
         repo,
@@ -525,6 +523,21 @@ fn test_risk_zones_and_trust_tiers_enforced() {
         ],
     );
     assert_eq!(handoff_ok["status"], "ok");
+    assert_eq!(handoff_ok["result"]["to"], "agent-c");
+    assert_eq!(handoff_ok["result"]["lease_lifecycle"], "claimed");
+    assert!(
+        handoff_ok["result"]["lease_generation"]
+            .as_u64()
+            .unwrap_or(0)
+            >= 1,
+        "handoff must publish a lease generation: {handoff_ok}"
+    );
+    assert!(
+        handoff_ok["result"]["intent_anchor"]
+            .as_str()
+            .is_some_and(|anchor| !anchor.is_empty()),
+        "handoff must preserve/bind an intent anchor: {handoff_ok}"
+    );
 }
 
 #[test]
@@ -616,13 +629,7 @@ fn test_ownership_rebuild_replay_parity() {
     // Prepare trust gates for shared claim.
     let db = Connection::open(repo.join(".decapod/data/decapod.db")).unwrap();
     let ts = "1771203600Z";
-    db.execute(
-        "INSERT INTO agent_trust(agent_id, trust_level, granted_at, updated_at, granted_by)
-         VALUES(?1, 'verified', ?2, ?2, 'test')
-         ON CONFLICT(agent_id) DO UPDATE SET trust_level='verified', updated_at=?2, granted_by='test'",
-        rusqlite::params!["agent-c", ts],
-    )
-    .unwrap();
+    set_agent_trust(&db, "agent-c", "verified", ts);
 
     let _ = run_cmd(
         repo,
@@ -932,6 +939,85 @@ fn yield_preserves_generation_and_frees_capacity() {
     assert_eq!(reclaim["status"], "ok", "post-yield claim: {reclaim}");
     assert_eq!(reclaim["result"]["assigned_to"], "agent-y");
     assert_eq!(reclaim["result"]["lease_lifecycle"], "claimed");
+}
+
+#[test]
+fn handoff_advances_lease_generation_and_preserves_intent() {
+    use decapod::core::store::{Store, StoreKind};
+
+    let tmp = tempdir().unwrap();
+    let root = tmp.path().to_path_buf();
+    initialize_todo_db(&root).unwrap();
+    let dir = tmp.path().join("src").join("handoff-lease");
+    std::fs::create_dir_all(&dir).unwrap();
+
+    let task_id = add_scoped_task(
+        &root,
+        "Houseboat handoff lease transfer unique",
+        "handoff_scope",
+        dir.to_str().unwrap(),
+    );
+    let claim = claim_task_with_lease(
+        &root,
+        &task_id,
+        "agent-from",
+        ClaimMode::Exclusive,
+        Some(900),
+        Some("intent:houseboat:wave4".to_string()),
+    )
+    .unwrap();
+    assert_eq!(claim["status"], "ok", "claim: {claim}");
+    assert_eq!(claim["result"]["lease_generation"], 1);
+    assert_eq!(claim["result"]["intent_anchor"], "intent:houseboat:wave4");
+
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: root.clone(),
+    };
+    // Policy gate: handoff requires verified trust + explicit approval.
+    // Trust lives on the consolidated agents table after schema fold (#1129).
+    let db = Connection::open(root.join(schemas::LOCAL_DB_NAME)).unwrap();
+    set_agent_trust(&db, "agent-from", "verified", "100Z");
+    policy::approve_action(&store, "todo.handoff", None, "operator", "global").unwrap();
+
+    let handed = handoff_task(
+        &store,
+        &task_id,
+        "agent-to",
+        Some("agent-from"),
+        "wave4 lease transfer",
+        Some(600),
+    )
+    .unwrap();
+    assert_eq!(handed["status"], "ok", "handoff: {handed}");
+    assert_eq!(handed["result"]["status"], "ok");
+    assert_eq!(handed["result"]["from"], "agent-from");
+    assert_eq!(handed["result"]["to"], "agent-to");
+    assert_eq!(handed["result"]["prior_lease_generation"], 1);
+    assert_eq!(handed["result"]["lease_generation"], 2);
+    assert_eq!(handed["result"]["lease_lifecycle"], "claimed");
+    assert_eq!(handed["result"]["intent_anchor"], "intent:houseboat:wave4");
+    assert_eq!(handed["result"]["lease_seconds"], 600);
+    assert!(
+        handed["result"]["lease_expires_at"]
+            .as_str()
+            .is_some_and(|v| !v.is_empty())
+    );
+
+    let task = get_task(&root, &task_id).unwrap().unwrap();
+    assert_eq!(task.assigned_to, "agent-to");
+
+    let fleet = fleet_health(&root, Some("agent-to")).unwrap();
+    let active = fleet["fleet"]["active_claims"].as_array().unwrap();
+    assert!(
+        active.iter().any(|c| {
+            c["task_id"] == task_id
+                && c["agent_id"] == "agent-to"
+                && c["lease_generation"] == 2
+                && c["intent_anchor"] == "intent:houseboat:wave4"
+        }),
+        "fleet must show receiver exclusive lease: {fleet}"
+    );
 }
 
 #[test]

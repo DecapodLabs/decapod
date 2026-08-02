@@ -282,6 +282,9 @@ pub enum TodoCommand {
         autoclose: bool,
     },
     /// Transfer a task between agents and record handoff artifacts.
+    ///
+    /// Houseboat lease graph: handoff advances generation, re-issues the
+    /// exclusive lease to the receiver, and preserves the intent anchor.
     Handoff {
         #[clap(long)]
         id: String,
@@ -291,6 +294,9 @@ pub enum TodoCommand {
         from: Option<String>,
         #[clap(long)]
         summary: String,
+        /// Exclusive lease duration for the receiving agent (seconds; default 30m, max 24h).
+        #[clap(long)]
+        lease_seconds: Option<u64>,
     },
     /// Add an additional owner to a task (supports multiple ownership).
     AddOwner {
@@ -4494,17 +4500,56 @@ pub fn fleet_health(
     }))
 }
 
-fn handoff_task(
+/// Transfer exclusive custody between agents with a lease-graph generation bump
+/// (Houseboat wave 4). Preserves intent anchor, re-issues the exclusive lease,
+/// and fails closed on dependency/proof readiness and scope overlap.
+pub fn handoff_task(
     store: &Store,
     id: &str,
     to: &str,
     from: Option<&str>,
     summary: &str,
+    lease_seconds: Option<u64>,
 ) -> Result<serde_json::Value, error::DecapodError> {
     let root = &store.root;
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
     let ts = now_iso();
+    let now_secs = parse_epoch_z(&ts).unwrap_or_else(now_unix_secs);
+    let lease_secs = lease_seconds
+        .unwrap_or(DEFAULT_CLAIM_LEASE_SECS)
+        .clamp(1, MAX_CLAIM_LEASE_SECS);
+
+    if to.trim().is_empty() {
+        return Ok(serde_json::json!({
+            "ts": ts,
+            "cmd": "todo.handoff",
+            "status": "error",
+            "root": root.to_string_lossy(),
+            "id": id,
+            "result": {
+                "status": "error",
+                "message": "handoff requires a non-empty --to agent id"
+            },
+            "event_id": null,
+            "reconcile": { "status": "skipped", "reason": "invalid_to" }
+        }));
+    }
+    if from.is_some_and(|agent| agent == to) {
+        return Ok(serde_json::json!({
+            "ts": ts,
+            "cmd": "todo.handoff",
+            "status": "error",
+            "root": root.to_string_lossy(),
+            "id": id,
+            "result": {
+                "status": "error",
+                "message": format!("handoff from and to must differ; both are '{to}'")
+            },
+            "event_id": null,
+            "reconcile": { "status": "skipped", "reason": "same_agent" }
+        }));
+    }
 
     let result = broker.with_conn(&db_path, "decapod", None, "todo.handoff", |conn| {
         ensure_schema(conn)?;
@@ -4512,49 +4557,191 @@ fn handoff_task(
         enforce_operation_policy(root, conn, "todo.handoff", acting_agent)?;
         touch_agent_presence(conn, to, &ts)?;
 
-        let current: Option<(String, String, String)> = conn
+        struct HandoffRow {
+            status: String,
+            assigned_to: String,
+            category: String,
+            scope: String,
+            dir_path: String,
+            lease_generation: u32,
+            lease_lifecycle: String,
+            intent_anchor: String,
+        }
+
+        let current: Option<HandoffRow> = conn
             .query_row(
-                "SELECT status, assigned_to, category FROM tasks WHERE id = ?",
+                "SELECT status, assigned_to, category, scope, dir_path,
+                        COALESCE(lease_generation, 0),
+                        COALESCE(lease_lifecycle, ''),
+                        COALESCE(intent_anchor, '')
+                 FROM tasks WHERE id = ?",
                 [id],
-                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+                |row| {
+                    Ok(HandoffRow {
+                        status: row.get(0)?,
+                        assigned_to: row.get(1)?,
+                        category: row.get(2)?,
+                        scope: row.get(3)?,
+                        dir_path: row.get(4)?,
+                        lease_generation: row.get::<_, i64>(5).unwrap_or(0) as u32,
+                        lease_lifecycle: row.get::<_, String>(6).unwrap_or_default(),
+                        intent_anchor: row.get::<_, String>(7).unwrap_or_default(),
+                    })
+                },
             )
             .optional()
             .map_err(error::DecapodError::RusqliteError)?;
 
-        let Some((status, assigned_to, category)) = current else {
-            return Ok((serde_json::json!({
-                "status": "not_found",
-                "message": format!("Task {} not found", id)
-            }), String::new()));
+        let Some(row) = current else {
+            return Ok((
+                serde_json::json!({
+                    "status": "not_found",
+                    "message": format!("Task {} not found", id)
+                }),
+                String::new(),
+            ));
         };
-        if status == "done" || status == "archived" {
-            return Ok((serde_json::json!({
-                "status": "error",
-                "message": format!("Task {} is already {}", id, status)
-            }), String::new()));
+        if row.status == "done" || row.status == "archived" {
+            return Ok((
+                serde_json::json!({
+                    "status": "error",
+                    "message": format!("Task {} is already {}", id, row.status)
+                }),
+                String::new(),
+            ));
         }
         if let Some(expected_from) = from
-            && !assigned_to.is_empty() && assigned_to != expected_from {
-                return Ok((serde_json::json!({
+            && !row.assigned_to.is_empty()
+            && row.assigned_to != expected_from
+        {
+            return Ok((
+                serde_json::json!({
                     "status": "error",
-                    "message": format!("Task {} assigned_to is {}, expected {}", id, assigned_to, expected_from)
-                }), String::new()));
-            }
-        if !category.is_empty() {
-            claim_category_for_agent(conn, to, &category, &ts)?;
+                    "message": format!(
+                        "Task {} assigned_to is {}, expected {}",
+                        id, row.assigned_to, expected_from
+                    ),
+                    "assigned_to": row.assigned_to
+                }),
+                String::new(),
+            ));
+        }
+        if !row.assigned_to.is_empty() && row.assigned_to == to {
+            return Ok((
+                serde_json::json!({
+                    "status": "error",
+                    "message": format!("Task {id} is already assigned to {to}"),
+                    "assigned_to": to
+                }),
+                String::new(),
+            ));
+        }
+
+        // Fail closed on dependency/proof readiness, same contract as exclusive claim.
+        let dependency_readiness = load_dependency_readiness(conn, id)?;
+        if !dependency_readiness.is_ready() {
+            let resolution = if dependency_readiness.state
+                == fleet_coord::DependencyReadinessState::Cycle
+            {
+                "repair_dependency_graph"
+            } else {
+                "satisfy_dependencies"
+            };
+            return Ok((
+                serde_json::json!({
+                    "status": "conflict",
+                    "resolution": resolution,
+                    "message": format!(
+                        "Task {id} dependencies are not proof-ready; resolve blockers before handoff"
+                    ),
+                    "dependency_readiness": dependency_readiness
+                }),
+                String::new(),
+            ));
+        }
+
+        // Receiver must not collide with other exclusive claims (self is excluded).
+        let active = list_active_exclusive_claims(conn, &ts)?;
+        let overlaps = fleet_coord::detect_overlaps(
+            id,
+            to,
+            &row.scope,
+            &row.category,
+            &row.dir_path,
+            &active,
+            &ts,
+        );
+        if !overlaps.is_empty() {
+            return Ok((
+                serde_json::json!({
+                    "status": "conflict",
+                    "resolution": "serialize_or_handoff",
+                    "message": format!(
+                        "Task {id} handoff to {to} overlaps {} active exclusive claim(s)",
+                        overlaps.len()
+                    ),
+                    "overlap": true,
+                    "overlaps": overlaps
+                }),
+                String::new(),
+            ));
+        }
+
+        if !row.category.is_empty() {
+            claim_category_for_agent(conn, to, &row.category, &ts)?;
+        }
+
+        let previous = if row.assigned_to.is_empty() {
+            from.unwrap_or("unassigned").to_string()
+        } else {
+            row.assigned_to.clone()
+        };
+        let prior_lifecycle = LeaseLifecycle::parse(Some(&row.lease_lifecycle));
+        let intent_anchor = if row.intent_anchor.trim().is_empty() {
+            resolve_default_intent_anchor(root, id)
+                .unwrap_or_else(|| fleet_coord::default_intent_anchor(id))
+        } else {
+            row.intent_anchor.clone()
+        };
+        let transfer = fleet_coord::plan_handoff_lease_transfer(
+            &previous,
+            to,
+            row.lease_generation,
+            prior_lifecycle,
+            &intent_anchor,
+            now_secs,
+            lease_secs,
+        );
+
+        // Drop prior primary owner before installing the receiver as primary.
+        if !previous.is_empty() && previous != "unassigned" {
+            conn.execute(
+                "DELETE FROM task_owners WHERE task_id = ?1 AND agent_id = ?2",
+                rusqlite::params![id, previous],
+            )
+            .map_err(error::DecapodError::RusqliteError)?;
         }
 
         conn.execute(
-            "UPDATE tasks SET assigned_to = ?, assigned_at = ?, updated_at = ? WHERE id = ?",
-            rusqlite::params![to, ts, ts, id],
+            "UPDATE tasks
+             SET assigned_to = ?1, assigned_at = ?2, updated_at = ?2,
+                 lease_expires_at = ?3, lease_generation = ?4,
+                 lease_lifecycle = ?5, intent_anchor = ?6
+             WHERE id = ?7",
+            rusqlite::params![
+                to,
+                ts,
+                transfer.lease_expires_at,
+                transfer.next_generation as i64,
+                transfer.next_lifecycle.as_str(),
+                transfer.intent_anchor,
+                id
+            ],
         )
         .map_err(error::DecapodError::RusqliteError)?;
 
-        let previous = if assigned_to.is_empty() {
-            from.unwrap_or("unassigned").to_string()
-        } else {
-            assigned_to
-        };
+        let claim_id = upsert_task_owner(conn, id, to, "primary", &ts)?;
+        sync_legacy_owner_column(conn, id)?;
 
         let event_id = crate::core::ulid::new_ulid();
         let ev = TodoEvent {
@@ -4567,16 +4754,40 @@ fn handoff_task(
                 "from": previous,
                 "to": to,
                 "summary": summary,
+                "prior_lease_generation": transfer.prior_generation,
+                "lease_generation": transfer.next_generation,
+                "prior_lease_lifecycle": transfer.prior_lifecycle.as_str(),
+                "lease_lifecycle": transfer.next_lifecycle.as_str(),
+                "intent_anchor": transfer.intent_anchor,
+                "lease_expires_at": transfer.lease_expires_at,
+                "lease_seconds": transfer.lease_seconds,
+                "claim_id": claim_id,
+                "dependency_readiness": dependency_readiness,
             }),
-            actor: "decapod".to_string(),
+            actor: acting_agent.to_string(),
         };
         append_event(conn, &ev)?;
         insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
 
-        Ok((serde_json::json!({
-            "status": "ok",
-            "message": format!("Task {} handed off to {}", id, to)
-        }), event_id))
+        Ok((
+            serde_json::json!({
+                "status": "ok",
+                "message": format!("Task {} handed off to {}", id, to),
+                "from": previous,
+                "to": to,
+                "claim_id": claim_id,
+                "prior_lease_generation": transfer.prior_generation,
+                "lease_generation": transfer.next_generation,
+                "prior_lease_lifecycle": transfer.prior_lifecycle.as_str(),
+                "lease_lifecycle": transfer.next_lifecycle.as_str(),
+                "intent_anchor": transfer.intent_anchor,
+                "lease_expires_at": transfer.lease_expires_at,
+                "lease_seconds": transfer.lease_seconds,
+                "lease_state": "active",
+                "dependency_readiness": dependency_readiness
+            }),
+            event_id,
+        ))
     })?;
 
     let (status_result, event_id): (serde_json::Value, String) = result;
@@ -5772,7 +5983,7 @@ pub fn schema() -> serde_json::Value {
             { "name": "heartbeat", "parameters": ["agent", "autoclaim", "max_claims"] },
             { "name": "presence", "parameters": ["agent"] },
             { "name": "worker-run", "parameters": ["agent", "task_id", "max_tasks", "lesson", "autoclose"] },
-            { "name": "handoff", "parameters": ["id", "to", "from", "summary"] },
+            { "name": "handoff", "parameters": ["id", "to", "from", "summary", "lease_seconds"] },
             { "name": "add-owner", "parameters": ["id", "agent", "claim_type"] },
             { "name": "remove-owner", "parameters": ["id", "agent"] },
             { "name": "list-owners", "parameters": ["id"] },
@@ -6516,7 +6727,8 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
             to,
             from,
             summary,
-        } => handoff_task(store, id, to, from.as_deref(), summary)?,
+            lease_seconds,
+        } => handoff_task(store, id, to, from.as_deref(), summary, *lease_seconds)?,
         TodoCommand::AddOwner {
             id,
             agent,
