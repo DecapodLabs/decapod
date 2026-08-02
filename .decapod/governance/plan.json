@@ -1,31 +1,32 @@
 {
   "schema_version": "1.0.0",
-  "title": "Schema consolidation #1126\u2013#1131 + README polish",
-  "intent": "Single PR consolidating decapod.db tables per issues 1126-1131: unified events, agents, node_edges, task_tags, patterns\u2192meta, deprecate empty tables; rewrite README for product clarity without upgrade-path digressions.",
+  "title": "Houseboat wave 4: lease-aware handoff + #1154 integrity",
+  "intent": "Advance Houseboat 2 with lease-aware handoff; account for #1154 by hard-failing stale entrypoint fingerprints and managed Dockerfile release pins without hand-maintained SHA tables.",
   "state": "APPROVED",
   "todo_ids": [
-    "docs_01kz0ejezn3pxq96"
+    "docs_01kz0pb9fbxrqv0j"
   ],
   "proof_hooks": [
-    "cargo check",
-    "cargo test --lib events",
-    "cargo test --test single_datastore",
-    "cargo test --test plugins_federation_tests",
-    "cargo test --test plugins_aptitude_tests",
-    "cargo test --test plugins_todo_tests reclaimable",
-    "cargo clippy -D warnings",
-    "cargo test --test agent_rpc_suite test_rpc_trace_and_redaction"
+    "cargo test --lib fleet_coord",
+    "cargo test --lib entrypoint_integrity",
+    "cargo test --lib managed_dockerfile",
+    "cargo test --test plugins_todo_tests",
+    "cargo clippy --all-targets --all-features -- -D warnings",
+    "decapod validate"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [],
   "unresolved_contradictions": [],
-  "deferred_questions": [],
-  "constraints": [
-    "Behavior-preserving refactor",
-    "Forward-only SQLite migration schema_fold.v001",
-    "Do not mutate root master; work in Decapod workspace"
+  "deferred_questions": [
+    "Typed non-prerequisite edge kinds remain open for #852",
+    "Trajectory merge/reconcile gates remain open for #852/#857",
+    "Capacity budgets remain open for #859"
   ],
+  "constraints": {
+    "forbidden_paths": [],
+    "file_touch_budget": null
+  },
   "phases": [],
-  "updated_at": "2026-08-02T05:48:18Z"
+  "updated_at": "2026-08-02T12:00:00Z"
 }
