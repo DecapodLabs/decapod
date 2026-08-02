@@ -18,35 +18,41 @@ const FINGERPRINT_MARKER: &str = "<!-- decapod-fingerprint:";
 const LEGACY_BINARY_MARKER: &str = "<!-- decapod-binary-sha256:";
 const FINGERPRINT_PLACEHOLDER: &str = "<fingerprint>";
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EntrypointExpectation {
     pub surface: &'static str,
-    pub fingerprint: &'static str,
+    pub fingerprint: String,
 }
 
-// These values are the v0.93.0 release manifest. Keep them immutable for the
-// lifetime of that release; a later release must update them deliberately and
-// regenerate the four root entrypoints through Decapod.
-pub const EXPECTED_ENTRYPOINTS: [EntrypointExpectation; 4] = [
-    EntrypointExpectation {
-        surface: "AGENTS.md",
-        fingerprint: "2b4e6a3672eba7fff6bdae068305436275800c18eb5460ed06e2ef48e0871a0e",
-    },
-    EntrypointExpectation {
-        surface: "CLAUDE.md",
-        fingerprint: "66f9aa874f26e6c4068e0ea7f35feb2629be71c919f9d8a83e979c417f7719b5",
-    },
-    EntrypointExpectation {
-        surface: "GEMINI.md",
-        fingerprint: "11dc00d4d5c1062632f330f9c0aee95c3ab7f7972f8a5eb79435893cb6f49647",
-    },
-    EntrypointExpectation {
-        surface: "CODEX.md",
-        fingerprint: "f5cf717c24c3f2ef557489af7d94a503d97089a79ab7a0416c1089d5e705094a",
-    },
-];
-
+// Release fingerprints are computed from the installed binary's templates and
+// CARGO_PKG_VERSION. A hand-maintained SHA table was a release footgun: every
+// version bump required four manual updates or unit tests failed while root
+// .md markers lagged. Runtime validate still hard-fails when on-disk markers
+// do not match the evaluating release (#1154).
 static COMPUTED_ENTRYPOINTS: OnceLock<[String; 4]> = OnceLock::new();
+
+/// Deterministic release manifest for the evaluating Decapod binary.
+pub fn expected_entrypoints() -> [EntrypointExpectation; 4] {
+    let fps = computed_entrypoints();
+    [
+        EntrypointExpectation {
+            surface: "AGENTS.md",
+            fingerprint: fps[0].clone(),
+        },
+        EntrypointExpectation {
+            surface: "CLAUDE.md",
+            fingerprint: fps[1].clone(),
+        },
+        EntrypointExpectation {
+            surface: "GEMINI.md",
+            fingerprint: fps[2].clone(),
+        },
+        EntrypointExpectation {
+            surface: "CODEX.md",
+            fingerprint: fps[3].clone(),
+        },
+    ]
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FindingKind {

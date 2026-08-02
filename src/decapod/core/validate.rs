@@ -950,6 +950,10 @@ fn validate_entrypoint_invariants(
         }
     }
 
+    // Issue #1154: managed workspace Dockerfile must declare the evaluating
+    // Decapod release after validate self-heal rewrites the image/version header.
+    validate_managed_dockerfile_release(ctx, working_root)?;
+
     // Check AGENTS.md for the four invariants
     let agents_path = working_root.join("AGENTS.md");
     if !agents_path.is_file() {
@@ -5696,6 +5700,44 @@ fn validate_tooling_gate(
         );
     }
 
+    Ok(())
+}
+
+/// Hard-fail when `.decapod/managed/Dockerfile.decapod` is pinned to an older
+/// Decapod release than the evaluating binary (GitHub Issue #1154).
+///
+/// Validate self-heal refreshes the image/version header first; this gate
+/// catches residual mismatch (heal skipped, non-profile file, or partial edit).
+fn validate_managed_dockerfile_release(
+    ctx: &ValidationContext,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    let path = crate::plugins::container::managed_dockerfile_path(repo_root);
+    if !path.is_file() {
+        // Optional until container workspaces are provisioned.
+        pass(
+            "Managed Dockerfile.decapod absent; release pin check skipped",
+            ctx,
+        );
+        return Ok(());
+    }
+    let content = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
+    let release = crate::plugins::container::expected_managed_decapod_version();
+    match crate::plugins::container::managed_dockerfile_matches_release(&content, release) {
+        Ok(()) => pass(
+            &format!(
+                "Managed Dockerfile.decapod pins Decapod release {release} (image/version header)"
+            ),
+            ctx,
+        ),
+        Err(detail) => fail(
+            &format!(
+                "Managed Dockerfile release pin failure\nSurface: {}\nRunning Decapod release: {release}\nFinding: managed_dockerfile_release_mismatch\nDetail: {detail}\nRemediation: run `decapod validate` (self-heal refreshes ARG DECAPOD_IMAGE/DECAPOD_VERSION) or regenerate the container profile",
+                crate::plugins::container::MANAGED_DOCKERFILE_REL_PATH
+            ),
+            ctx,
+        ),
+    }
     Ok(())
 }
 
