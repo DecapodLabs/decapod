@@ -1291,6 +1291,26 @@
         "The root rustup symlink does not prove that Git clients configured without symlink support will preserve the intended checkout semantics.",
         "The claim does not guarantee compatibility with Bazel versions outside the tested CI matrix."
       ]
+    },
+    {
+      "id": "claim.schema.fold.v001",
+      "statement": "Decapod local datastore consolidates event streams, agent state, graph edges, task tags, and aptitude patterns without changing public command contracts.",
+      "status": "supported",
+      "evidence": [
+        "migration db.consolidate.schema_fold.v001",
+        "cargo test --lib events",
+        "cargo test --test single_datastore",
+        "cargo test --test plugins_federation_tests",
+        "cargo test --test plugins_aptitude_tests"
+      ],
+      "issues": [
+        "#1126",
+        "#1127",
+        "#1128",
+        "#1129",
+        "#1130",
+        "#1131"
+      ]
     }
   ],
   "governance": {
