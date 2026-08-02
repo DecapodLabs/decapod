@@ -984,5 +984,5 @@ fn enforce_scope_constraints(
     Ok(())
 }
 #[cfg(test)]
-#[path = "../../tests/unit/lib_tests.rs"]
+#[path = "../../tests/unit/plan_governance_tests.rs"]
 mod tests;

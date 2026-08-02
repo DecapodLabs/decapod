@@ -1,3 +1,17 @@
+//! Release policy: production `src/` may *reference* unit tests, never define them.
+//!
+//! Allowed in `src/**/*.rs`:
+//! ```ignore
+//! #[cfg(test)]
+//! #[path = ".../tests/unit/..._tests.rs"]
+//! mod tests;
+//! ```
+//!
+//! Forbidden in `src/**/*.rs`:
+//! - `#[test]` / other test-case attributes
+//! - inline `mod … { … }` test bodies
+//! - `#[cfg(test)]` modules without a `tests/unit/` path attribute
+
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -19,40 +33,120 @@ fn rust_sources(root: &Path) -> Vec<PathBuf> {
     files
 }
 
+fn is_allowed_unit_test_path_attr(path_attr: &str) -> bool {
+    const PREFIXES: &[&str] = &[
+        "#[path = \"tests/unit/",
+        "#[path = \"../tests/unit/",
+        "#[path = \"../../tests/unit/",
+        "#[path = \"../../../tests/unit/",
+        "#[path = \"../../../../tests/unit/",
+    ];
+    PREFIXES.iter().any(|prefix| path_attr.starts_with(prefix))
+}
+
+fn path_attr_target(source_file: &Path, path_attr: &str) -> Option<PathBuf> {
+    let start = path_attr.find("#[path = \"")?;
+    let rest = &path_attr[start + "#[path = \"".len()..];
+    let end = rest.find('"')?;
+    let rel = &rest[..end];
+    Some(source_file.parent()?.join(rel))
+}
+
+/// Production sources may only *reference* unit tests under `tests/unit/`.
 #[test]
 fn release_source_tree_contains_no_test_code() {
     let source_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
-    let violations = rust_sources(&source_root)
-        .into_iter()
-        .filter_map(|path| {
-            let source = fs::read_to_string(&path).expect("read Rust source");
-            let has_test_case = source.lines().any(|line| line.trim() == "#[test]");
-            let has_inline_test_module = source.lines().any(|line| {
-                let line = line.trim();
-                line == "mod tests {" || line.starts_with("mod tests {")
-            });
-            let lines = source.lines().map(str::trim).collect::<Vec<_>>();
-            let has_invalid_test_module_declaration = lines
-                .iter()
-                .enumerate()
-                .filter(|(_, line)| line.starts_with("#[cfg(") && line.contains("test"))
-                .any(|(index, _)| {
-                    let path_attr = lines.get(index + 1).copied().unwrap_or_default();
-                    let module = lines.get(index + 2).copied().unwrap_or_default();
-                    !path_attr.starts_with("#[path = \"tests/unit/")
-                        && !path_attr.starts_with("#[path = \"../../tests/unit/")
-                        && !path_attr.starts_with("#[path = \"../../../tests/unit/")
-                        || !module.starts_with("mod ")
-                        || !module.ends_with(';')
-                });
-            (has_test_case || has_inline_test_module || has_invalid_test_module_declaration)
-                .then(|| path.display().to_string())
-        })
-        .collect::<Vec<_>>();
+    let mut violations = Vec::new();
+
+    for path in rust_sources(&source_root) {
+        let source = fs::read_to_string(&path).expect("read Rust source");
+        let lines: Vec<&str> = source.lines().map(str::trim).collect();
+        let mut reasons = Vec::new();
+
+        for (index, line) in lines.iter().enumerate() {
+            // Forbidden: test-case attributes in production sources.
+            if *line == "#[test]"
+                || line.starts_with("#[test(")
+                || line.starts_with("#[tokio::test")
+                || line.starts_with("#[rstest")
+            {
+                reasons.push(format!("line {}: test-case attribute `{line}`", index + 1));
+            }
+
+            // Forbidden: inline module bodies that look like test modules.
+            if *line == "mod tests {" || line.starts_with("mod tests {") {
+                reasons.push(format!(
+                    "line {}: inline `mod tests {{ ... }}` body (tests must live under tests/unit/)",
+                    index + 1
+                ));
+            }
+
+            // cfg(test) modules must be path stubs into tests/unit/.
+            if line.starts_with("#[cfg(") && line.contains("test") {
+                // Skip attributes after cfg until path / mod.
+                let mut cursor = index + 1;
+                while cursor < lines.len()
+                    && (lines[cursor].is_empty()
+                        || (lines[cursor].starts_with("#[") && !lines[cursor].starts_with("#[path")))
+                {
+                    cursor += 1;
+                }
+                let path_attr = lines.get(cursor).copied().unwrap_or_default();
+                let module = lines.get(cursor + 1).copied().unwrap_or_default();
+
+                let path_ok = is_allowed_unit_test_path_attr(path_attr);
+                let module_ok = module.starts_with("mod ") && module.ends_with(';');
+                if !path_ok || !module_ok {
+                    reasons.push(format!(
+                        "line {}: cfg(test) must be followed by `#[path = \".../tests/unit/...\"]` and `mod name;`, got path=`{path_attr}` module=`{module}`",
+                        index + 1
+                    ));
+                    continue;
+                }
+
+                if let Some(target) = path_attr_target(&path, path_attr) {
+                    if !target.exists() {
+                        reasons.push(format!(
+                            "line {}: unit test path does not exist: {}",
+                            index + 1,
+                            target.display()
+                        ));
+                    } else {
+                        let canon = target.canonicalize().unwrap_or(target.clone());
+                        let tests_unit = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/unit");
+                        let tests_unit = tests_unit.canonicalize().unwrap_or(tests_unit);
+                        if !canon.starts_with(&tests_unit) {
+                            reasons.push(format!(
+                                "line {}: unit test path must resolve under tests/unit/, got {}",
+                                index + 1,
+                                canon.display()
+                            ));
+                        }
+                    }
+                }
+            }
+        }
+
+        // Forbidden: test function definitions in production sources.
+        for (index, line) in lines.iter().enumerate() {
+            let trimmed = line.trim_start();
+            if trimmed.starts_with("fn test_") || trimmed.starts_with("async fn test_") {
+                reasons.push(format!(
+                    "line {}: test function definition `{trimmed}` (must live under tests/unit/)",
+                    index + 1
+                ));
+            }
+        }
+
+        if !reasons.is_empty() {
+            violations.push(format!("{}: {}", path.display(), reasons.join("; ")));
+        }
+    }
 
     assert!(
         violations.is_empty(),
-        "test implementations must live under tests/unit/, found: {violations:?}"
+        "src/ may only reference unit tests under tests/unit/, never define them. Violations:\n{}",
+        violations.join("\n")
     );
 }
 
