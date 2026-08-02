@@ -1,9 +1,9 @@
 // Moved from src/decapod/core/validate.rs
 use super::{
-    SurfaceKind, ValidationContext, is_allowed_non_code_path, is_decapod_isolated_worktree,
-    is_non_code_path, predict_ci_outcome, strip_git_quotes, validate_control_plane_contract,
-    validate_git_workspace_context, validate_root_dockerfile_seed_detection, validate_spec_drift,
-    validate_watcher_audit,
+    SurfaceKind, ValidationContext, advisory, fail, is_allowed_non_code_path,
+    is_decapod_isolated_worktree, is_non_code_path, note, pass, predict_ci_outcome, skip,
+    strip_git_quotes, validate_control_plane_contract, validate_git_workspace_context,
+    validate_root_dockerfile_seed_detection, validate_spec_drift, validate_watcher_audit, warn,
 };
 use super::{is_protected_git_branch, parse_ahead_behind_counts};
 use crate::core::events;
@@ -396,4 +396,62 @@ fn surface_kind_serialization() {
     assert_eq!(authority, "Authority");
     assert_eq!(evidence, "Evidence");
     assert_eq!(projection, "Projection");
+}
+
+#[test]
+fn typed_result_vocabulary_clean_run_has_zero_warn() {
+    let ctx = ValidationContext::new();
+    pass("clean pass", &ctx);
+    note("methodology note only", &ctx);
+    advisory("non-blocking advisory", &ctx);
+    skip("optional surface absent", &ctx);
+    assert_eq!(ctx.pass_count.load(Ordering::Relaxed), 1);
+    assert_eq!(ctx.skip_count.load(Ordering::Relaxed), 1);
+    assert_eq!(ctx.note_count.load(Ordering::Relaxed), 1);
+    assert_eq!(ctx.advisory_count.load(Ordering::Relaxed), 1);
+    assert_eq!(ctx.warn_count.load(Ordering::Relaxed), 0);
+    assert_eq!(ctx.fail_count.load(Ordering::Relaxed), 0);
+}
+
+#[test]
+fn typed_result_vocabulary_advisory_and_note_do_not_mutate_warnings() {
+    let ctx = ValidationContext::new();
+    note("informational methodology", &ctx);
+    advisory("review recommended", &ctx);
+    note("another note", &ctx);
+    assert_eq!(ctx.warn_count.load(Ordering::Relaxed), 0);
+    assert!(ctx.warns.lock().unwrap().is_empty());
+    assert_eq!(ctx.note_count.load(Ordering::Relaxed), 2);
+    assert_eq!(ctx.advisory_count.load(Ordering::Relaxed), 1);
+    assert_eq!(ctx.notes.lock().unwrap().len(), 2);
+    assert_eq!(ctx.advisories.lock().unwrap().len(), 1);
+}
+
+#[test]
+fn typed_result_vocabulary_condition_warning_and_blocking_failure() {
+    let ctx = ValidationContext::new();
+    warn("condition-specific warning", &ctx);
+    fail("blocking finding", &ctx);
+    assert_eq!(ctx.warn_count.load(Ordering::Relaxed), 1);
+    assert_eq!(ctx.fail_count.load(Ordering::Relaxed), 1);
+    assert_eq!(
+        ctx.warns.lock().unwrap().clone(),
+        vec!["condition-specific warning".to_string()]
+    );
+    assert_eq!(
+        ctx.fails.lock().unwrap().clone(),
+        vec!["blocking finding".to_string()]
+    );
+    // notes/advisories stay orthogonal
+    assert_eq!(ctx.note_count.load(Ordering::Relaxed), 0);
+    assert_eq!(ctx.advisory_count.load(Ordering::Relaxed), 0);
+}
+
+#[test]
+fn typed_result_vocabulary_skip_is_not_pass() {
+    let ctx = ValidationContext::new();
+    skip("skipped gate", &ctx);
+    assert_eq!(ctx.skip_count.load(Ordering::Relaxed), 1);
+    assert_eq!(ctx.pass_count.load(Ordering::Relaxed), 0);
+    assert_eq!(ctx.warn_count.load(Ordering::Relaxed), 0);
 }

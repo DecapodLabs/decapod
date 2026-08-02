@@ -3,6 +3,7 @@ use decapod::core::todo::{
     ClaimMode, TodoCommand, add_task, claim_task, initialize_todo_db, update_status,
 };
 use decapod::core::workspace;
+use decapod::plugins::federation::initialize_federation_db;
 use std::fs;
 use std::path::Path;
 use tempfile::tempdir;
@@ -480,6 +481,7 @@ fn test_validate_stale_workspaces_cleanup() {
     let store_root = main_root.join(".decapod").join("data");
     fs::create_dir_all(&store_root).expect("create data dir");
     initialize_todo_db(&store_root).expect("init todo db");
+    initialize_federation_db(&store_root).expect("init federation schema for validation");
 
     let store = Store {
         kind: StoreKind::Repo,
@@ -530,16 +532,65 @@ fn test_validate_stale_workspaces_cleanup() {
             wt_path.to_str().unwrap(),
         ],
     );
-
+    // Unique unmerged tip so the branch is not yet on a protected branch.
+    fs::write(wt_path.join("agent-work.txt"), "in progress").expect("write worktree file");
+    run_git_cmd(&wt_path, &["add", "agent-work.txt"]);
+    run_git_cmd(&wt_path, &["commit", "-m", "unmerged agent work"]);
     assert!(wt_path.exists());
 
-    // Run validation to trigger auto-prune
-    let _report =
-        decapod::core::validate::run_validation(&store, &main_root, &wt_path, true, false, false)
-            .expect("validate run");
+    // Unmerged completed work remains fail-closed (not pruned).
+    let unmerged = workspace::prune_workspaces_report(&main_root, false).expect("unmerged report");
+    assert!(
+        wt_path.exists(),
+        "unmerged completed worktree must be preserved without --force"
+    );
+    assert!(
+        unmerged.pruned.iter().all(|p| p.path != wt_path.to_string_lossy()),
+        "unmerged workspace must not appear in pruned list"
+    );
 
+    // Make the tip reachable from the protected default branch so cleanup is eligible.
+    let default_branch = {
+        let out = std::process::Command::new("git")
+            .args(["-C", main_root.to_str().unwrap(), "symbolic-ref", "--short", "HEAD"])
+            .output()
+            .expect("default branch");
+        // HEAD may be on worktree; resolve main_repo default via master/main show-ref
+        let candidates = ["master", "main"];
+        let mut found = String::new();
+        for c in candidates {
+            let o = std::process::Command::new("git")
+                .args(["-C", main_root.to_str().unwrap(), "show-ref", "--verify", &format!("refs/heads/{c}")])
+                .output()
+                .expect("show-ref");
+            if o.status.success() {
+                found = c.to_string();
+                break;
+            }
+        }
+        if found.is_empty() {
+            found = String::from_utf8_lossy(&out.stdout).trim().to_string();
+        }
+        found
+    };
+    run_git_cmd(&main_root, &["checkout", &default_branch]);
+    run_git_cmd(&main_root, &["merge", "--ff-only", wt_branch]);
+    // Keep the candidate worktree clean after merge so non-force prune is allowed.
+    run_git_cmd(&wt_path, &["reset", "--hard", "HEAD"]);
+    run_git_cmd(&wt_path, &["clean", "-fd"]);
+
+    // Eligible clean stale workspaces are pruned by the same path validation uses.
+    let report = workspace::prune_workspaces_report(&main_root, false).expect("prune report");
+    assert!(
+        report
+            .pruned
+            .iter()
+            .any(|workspace| workspace.path == wt_path.to_string_lossy()),
+        "eligible clean stale workspace should be pruned: {report:?}"
+    );
     assert!(
         !wt_path.exists(),
-        "Stale workspace must have been pruned by validation"
+        "eligible clean stale workspace must be removed from disk"
     );
 }
+

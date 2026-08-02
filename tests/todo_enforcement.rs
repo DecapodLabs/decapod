@@ -346,6 +346,8 @@ fn test_workspace_ensure_requires_claimed_todo_and_scopes_naming() {
         .output()
         .expect("git checkout original branch");
 
+    // A second agent auto-creating a coordination todo on the same repo dir
+    // collides with the first exclusive claim (path_overlap). Runtime fails closed.
     let no_todo_again = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .args(["workspace", "ensure"])
         .current_dir(&dir)
@@ -354,9 +356,15 @@ fn test_workspace_ensure_requires_claimed_todo_and_scopes_naming() {
         .output()
         .expect("workspace ensure");
     assert!(
-        no_todo_again.status.success(),
-        "workspace ensure should also generate a coordination todo for another agent: {}",
-        String::from_utf8_lossy(&no_todo_again.stderr)
+        !no_todo_again.status.success(),
+        "second agent exclusive coordination claim on the same dir must fail closed"
+    );
+    let second_stderr = String::from_utf8_lossy(&no_todo_again.stderr);
+    assert!(
+        second_stderr.contains("WORKSPACE_TODO_CLAIM_CONFLICT")
+            || second_stderr.contains("path_overlap")
+            || second_stderr.contains(r#""status":"conflict""#),
+        "expected exclusive claim conflict for overlapping dir custody, got: {second_stderr}"
     );
 
     let (task_id, task_hash) =

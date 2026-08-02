@@ -24,7 +24,6 @@ use std::time::{Duration, Instant};
 /// The DbBroker is the "Thin Waist" control plane for all state mutations.
 /// It provides read/write access with proper locking and full audit trail.
 pub struct DbBroker {
-    audit_log_path: PathBuf,
     root: PathBuf,
 }
 
@@ -80,7 +79,6 @@ pub struct BrokerEvent {
 impl DbBroker {
     pub fn new(root: &Path) -> Self {
         Self {
-            audit_log_path: root.join("broker.events.jsonl"),
             root: root.to_path_buf(),
         }
     }
@@ -150,11 +148,7 @@ impl DbBroker {
         };
 
         if !is_read {
-            let store_root = self
-                .audit_log_path
-                .parent()
-                .ok_or_else(|| error::DecapodError::PathError("invalid broker root".to_string()))?;
-            policy::enforce_broker_mutation_policy(store_root, actor, op_name)?;
+            policy::enforce_broker_mutation_policy(&self.root, actor, op_name)?;
         }
 
         let db_id = db_path
