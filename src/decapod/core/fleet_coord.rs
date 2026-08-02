@@ -415,6 +415,58 @@ pub fn extended_generation(current: u32) -> u32 {
     current.max(1).saturating_add(1)
 }
 
+/// Handoff transfers exclusive custody to a different agent.
+///
+/// Generation always advances so concurrent observations cannot confuse the
+/// prior holder's lease with the receiver's lease. A zero (legacy) generation
+/// becomes 1 on the first exclusive handoff.
+pub fn handoff_lease_generation(previous: u32) -> u32 {
+    next_lease_generation(previous, true)
+}
+
+/// Pure lease-graph outcome for a successful exclusive handoff transfer.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct HandoffLeaseTransfer {
+    pub previous_agent: String,
+    pub next_agent: String,
+    pub prior_generation: u32,
+    pub next_generation: u32,
+    pub prior_lifecycle: LeaseLifecycle,
+    pub next_lifecycle: LeaseLifecycle,
+    pub intent_anchor: String,
+    pub lease_expires_at: String,
+    pub lease_seconds: u64,
+}
+
+/// Compute the lease fields that must be written on a successful handoff.
+pub fn plan_handoff_lease_transfer(
+    previous_agent: &str,
+    next_agent: &str,
+    prior_generation: u32,
+    prior_lifecycle: LeaseLifecycle,
+    intent_anchor: &str,
+    now_secs: u64,
+    lease_seconds: u64,
+) -> HandoffLeaseTransfer {
+    let lease_seconds = lease_seconds.clamp(1, MAX_CLAIM_LEASE_SECS);
+    let intent = if intent_anchor.trim().is_empty() {
+        String::new()
+    } else {
+        intent_anchor.trim().to_string()
+    };
+    HandoffLeaseTransfer {
+        previous_agent: previous_agent.to_string(),
+        next_agent: next_agent.to_string(),
+        prior_generation,
+        next_generation: handoff_lease_generation(prior_generation),
+        prior_lifecycle,
+        next_lifecycle: LeaseLifecycle::Claimed,
+        intent_anchor: intent,
+        lease_expires_at: lease_expires_at(now_secs, lease_seconds),
+        lease_seconds,
+    }
+}
+
 /// Default intent anchor when none is supplied by the caller.
 pub fn default_intent_anchor(task_id: &str) -> String {
     format!("intent:todo:{task_id}")
