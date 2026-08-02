@@ -20,10 +20,9 @@
   <a href="https://github.com/DecapodLabs/decapod/actions"><img alt="CI" src="https://github.com/DecapodLabs/decapod/actions/workflows/ci.yml/badge.svg"></a>
   <a href="https://crates.io/crates/decapod"><img alt="crates.io" src="https://img.shields.io/crates/v/decapod.svg"></a>
   <a href="https://github.com/DecapodLabs/decapod/blob/master/LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
+  <a href="assets/constitution.json#L5"><img alt="Constitution" src="https://img.shields.io/badge/Constitution-core%2FDECAPOD-0A66C2"></a>
   <a href="https://decapodlabs.github.io/accountable-agentic-execution/"><img alt="Research" src="https://img.shields.io/badge/Research-Accountable%20Agentic%20Execution-blueviolet"></a>
 </p>
-
-[Constitution](assets/constitution.json#L5) · [Paper](https://github.com/DecapodLabs/accountable-agentic-execution/blob/main/paper/Accountable_Agentic_Execution.pdf) · [Research](https://decapodlabs.github.io/accountable-agentic-execution/)
 
 ---
 
@@ -35,45 +34,39 @@ decapod init
 ```
 
 One command installs the kernel. One command prepares the repository.
-Agents call Decapod at governance boundaries. You keep speaking naturally.
+You keep speaking naturally. Agents call Decapod at the points that matter —
+before acting, before inference, and before claiming done.
 
-Conversations are temporary. Repository state is durable.
-What was asked, what was understood, what changed, and what was proven —
-all of it lives in the project, not only in chat.
+What was asked, what was understood, what changed, and what was proven
+is written into the project itself.
 
 ---
 
 ## Fleet coherence
 
-Chat is ephemeral. The repository is where coordination belongs.
-
-**Fleet coherence** is independently launched agents sharing one project authority,
-claiming distinct work, keeping a selected governance record,
-and finishing against a common proof boundary.
+Independently launched agents need one project authority: distinct claims,
+a selected governance record, and a shared proof boundary for completion.
 
 | | |
 | --- | --- |
 | **Intent** | Outcome, constraints, and completion standard — carried in plans, todos, and specs. |
 | **Custody** | Exclusive claims and isolated workspaces so agents do not silently collide. |
-| **Trajectory** | Selected events so a later process can reorient without replaying a vendor chat. |
+| **Trajectory** | Selected events so a later process can reorient without replaying a vendor session. |
 | **Proof** | Validation bound to governed state. Completion is a verified transition. |
 
 The hard case is concurrent work that is *similar but distinct*:
 shared modules, different outcomes. Worktrees stop file trampling.
 Claims, context, trajectory, and publication gates keep the fleet coherent.
 
-You speak to whichever agent is available.
-The agent calls Decapod. Humans keep natural language.
-Agents hold a stable machine contract.
+You speak to whichever agent is available. The agent calls Decapod.
+Humans keep natural language. Agents hold a stable machine contract.
 
 ---
 
 ## How it works
 
-Agents forget intent, over-pull context, skip boundaries, and claim done too early.
-A second agent or a tool switch makes that worse when ownership lived only in the last chat.
-
-Decapod is called before acting, before inference, before touching code, and before completing.
+Decapod sits between the harness and the model as a governance kernel —
+not another agent, and not a model router.
 
 ```mermaid
 flowchart LR
@@ -121,9 +114,6 @@ flowchart LR
     style GovernanceGroup fill:#fef9c3,stroke:#fde047,color:#000
     style AgentGroup fill:#faf5ff,stroke:#d8b4fe,color:#000
 ```
-
-Decapod is not the agent and not the model.
-It is the governance kernel the agent calls when work needs control.
 
 The model stays fixed. The corridor around it changes:
 resolve project context before implementation, gate completion on proof.
