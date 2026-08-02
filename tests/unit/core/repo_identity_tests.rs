@@ -28,10 +28,9 @@ fn rejects_non_github_and_ambiguous_remotes() {
 
 #[test]
 fn repository_identity_is_canonical_without_a_local_gate() {
-    let identity = super::resolve_repository_identity_from_remote(
-        "git@github.com:DecapodLabs/decapod.git",
-    )
-    .expect("repository identity");
+    let identity =
+        super::resolve_repository_identity_from_remote("git@github.com:DecapodLabs/decapod.git")
+            .expect("repository identity");
     assert_eq!(identity.canonical_name, "DecapodLabs/decapod");
     assert_eq!(identity.owner, "DecapodLabs");
     assert_eq!(identity.repository, "decapod");

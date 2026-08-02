@@ -5750,9 +5750,10 @@ fn validate_state_commit_gate(
     let required_ci_job = std::env::var("DECAPOD_STATE_COMMIT_CI_JOB")
         .unwrap_or_else(|_| "state_commit_golden_vectors".to_string());
 
-    info(&format!(
-        "STATE_COMMIT: required_ci_job = {required_ci_job}"
-    ), ctx);
+    info(
+        &format!("STATE_COMMIT: required_ci_job = {required_ci_job}"),
+        ctx,
+    );
 
     // Check for v1 golden directory (versioned)
     let golden_v1_dir = repo_root

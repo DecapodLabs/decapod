@@ -1,19 +1,19 @@
 {
   "schema_version": "1.0.0",
-  "title": "Epistemic integrity repair release",
-  "intent": "Ship an idempotent upgrade repair so the first normal command after cargo install loads repository overrides safely, migrates legacy event JSONL into canonical SQLite, and validation observes only canonical authority and evidence.",
+  "title": "PR #1150: fleet coherence README and contract repairs",
+  "intent": "Ship README fleet-coherence framing, typed validation vocabulary (#1145), workspace claim/prune regressions (#1146), sealed non-kernel JSONL paths (#1147), src test-location boundary (#1148), managed specs fingerprints, and Dockerfile 0.93.0 bump.",
   "state": "APPROVED",
   "todo_ids": [
-    "secu_01kyzm1cjqfztpya"
+    "docs_01kz07hgab4hkpmv"
   ],
   "proof_hooks": [
     "cargo fmt --all -- --check",
     "cargo clippy --all-targets -- -D warnings",
-    "cargo test",
-    "cargo test --test context_capsule_schema",
-    "cargo test --test init_validate_green_field",
-    "decapod validate",
-    "git diff --check"
+    "cargo test --test release_artifact_policy",
+    "cargo test --lib typed_result_vocabulary",
+    "cargo test --test workspace_prune_regression",
+    "cargo test --test todo_enforcement test_workspace_ensure_requires_claimed_todo_and_scopes_naming",
+    "decapod validate"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -25,5 +25,5 @@
     "file_touch_budget": 60
   },
   "phases": [],
-  "updated_at": "1785623494Z"
+  "updated_at": "1785644671Z"
 }

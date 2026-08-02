@@ -186,8 +186,7 @@ fn auth_request_failures_have_actionable_distinct_states() {
 
     let provider = map_http_error(PropodusHttpResponse {
         status: 503,
-        body: br#"{"error":{"code":"provider_down","message":"secret provider detail"}}"#
-            .to_vec(),
+        body: br#"{"error":{"code":"provider_down","message":"secret provider detail"}}"#.to_vec(),
     });
     assert_eq!(
         cloud_auth_diagnostic(&provider).unwrap().status,

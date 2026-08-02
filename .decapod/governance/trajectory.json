@@ -1,40 +1,48 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "epistemic-integrity-1138-1140",
-  "intent_id": "intent:epistemic-integrity-1138-1140",
-  "task_id": "secu_01kyzm1cjqfztpya",
-  "original_intent": "Fix forward #1138 #1139 #1140 as one kernel epistemic-integrity repair and refer to overlapping GitHub issues.",
-  "derived_intent": "Repair repository-local override parsing and resolved-authority proof; remove unconditional spec-drift warnings; introduce canonical watcher event reads and eliminate runtime legacy watcher JSONL decisions; publish one PR.",
+  "run_id": "pr-1150-fleet-coherence-contracts",
+  "intent_id": "intent:pr-1150-fleet-coherence-contracts",
+  "task_id": "docs_01kz07hgab4hkpmv",
+  "original_intent": "Update README with fleet coherence and research context; fix issues 1145-1148",
+  "derived_intent": "Ship fleet-coherence README, typed validation vocabulary, workspace regressions, JSONL seal, and tests/unit boundary with managed fingerprint refresh",
+  "destination": "PR #1150 fmt + governance artifacts",
   "current_phase": "validation",
   "next_transitions": [
     "publish"
   ],
   "active_boundaries": [
-    "No organization overlay design; no full validation taxonomy redesign; no event-table consolidation."
+    "no empirical treatment claims in README",
+    "src/ may only reference tests under tests/unit/"
   ],
   "repo_scope": [
-    "src/ tests/ docs/specs only where contracts materially change"
+    "README.md docs/agent src/decapod tests .decapod/managed .decapod/governance"
   ],
-  "inspected_files": [],
+  "inspected_files": [
+    "README.md",
+    "src/decapod/core/validate.rs",
+    "tests/release_artifact_policy.rs"
+  ],
   "modified_files": [
     ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json"
+    ".decapod/governance/validation.json",
+    ".decapod/managed/Dockerfile.decapod",
+    ".decapod/managed/specs/.manifest.json",
+    "AGENTS.md",
+    "README.md",
+    "src/decapod/core/validate.rs",
+    "tests/release_artifact_policy.rs"
   ],
   "declared_commands": [
+    "cargo fmt --all",
+    "cargo test --test release_artifact_policy",
+    "decapod govern artifacts inventory --repair",
+    "decapod rpc --op specs.refresh",
     "decapod validate"
   ],
   "tool_calls": [],
   "checks": [
     {
-      "name": "cargo_clippy",
-      "status": "passed"
-    },
-    {
       "name": "cargo_fmt",
-      "status": "passed"
-    },
-    {
-      "name": "cargo_test_except_known_master_failures",
       "status": "passed"
     },
     {
@@ -42,54 +50,53 @@
       "status": "passed"
     },
     {
-      "name": "issue_regressions",
+      "name": "release_artifact_policy",
       "status": "passed"
     },
     {
-      "name": "release_source_policy",
-      "status": "failed"
+      "name": "todo_enforcement_claim_conflict",
+      "status": "passed"
     },
     {
-      "name": "stale_workspace_cleanup",
-      "status": "failed"
+      "name": "typed_result_vocabulary",
+      "status": "passed"
     },
     {
-      "name": "todo_coordination_contract",
-      "status": "failed"
+      "name": "workspace_prune_regression",
+      "status": "passed"
     }
   ],
   "evidence": [
-    "Clippy passed with -D warnings.",
-    "Issue-specific override, canonical SQLite, clean-drift, migration, capsule, and autonomous-init tests passed.",
-    "Known origin/master failures reproduced independently: inline-test release policy, overlapping exclusive workspace expectation, stale workspace cleanup.",
-    "validation epoch ve_bf531d1524a72eca completed with zero failures"
+    "Issues #1145 #1146 #1147 #1148 addressed",
+    "PR https://github.com/DecapodLabs/decapod/pull/1150",
+    "validation epoch ve_4b59a10987ed498c completed with zero failures"
   ],
   "shortcut_risk_signals": [],
-  "unresolved_assumptions": [
-    "Repository-wide pre-existing test-policy and workspace cleanup failures are tracked separately and do not weaken issue acceptance proofs."
-  ],
-  "proof_status": "failed",
+  "unresolved_assumptions": [],
+  "completion_claim": "Ready for CI re-check after governance artifacts and fmt fix",
+  "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "unsupported"
+    "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:d2da23f673df7151119a4494966a60043a5eb46e4cfbc0888091dfb2afede9a3",
+  "artifact_hash": "sha256:269155d6518b8eeef87824c25fc03050f179056b47ddf3245057c43d23c1307e",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:epistemic-integrity-1138-1140": {
-        "id": "intent:epistemic-integrity-1138-1140",
-        "raw_intent": "Fix forward #1138 #1139 #1140 as one kernel epistemic-integrity repair and refer to overlapping GitHub issues.",
-        "refined_intent": "Repair repository-local override parsing and resolved-authority proof; remove unconditional spec-drift warnings; introduce canonical watcher event reads and eliminate runtime legacy watcher JSONL decisions; publish one PR.",
+      "intent:pr-1150-fleet-coherence-contracts": {
+        "id": "intent:pr-1150-fleet-coherence-contracts",
+        "raw_intent": "Update README with fleet coherence and research context; fix issues 1145-1148",
+        "refined_intent": "Ship fleet-coherence README, typed validation vocabulary, workspace regressions, JSONL seal, and tests/unit boundary with managed fingerprint refresh",
         "acceptance_criteria": [],
         "constraints": [
-          "src/ tests/ docs/specs only where contracts materially change"
+          "README.md docs/agent src/decapod tests .decapod/managed .decapod/governance"
         ],
         "assumptions": [],
         "boundaries": [
-          "No organization overlay design; no full validation taxonomy redesign; no event-table consolidation."
+          "src/ may only reference tests under tests/unit/",
+          "no empirical treatment claims in README"
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -102,59 +109,64 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:epistemic-integrity-1138-1140",
+        "intent_id": "intent:pr-1150-fleet-coherence-contracts",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:epistemic-integrity-1138-1140",
+        "intent_id": "intent:pr-1150-fleet-coherence-contracts",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:epistemic-integrity-1138-1140",
+        "intent_id": "intent:pr-1150-fleet-coherence-contracts",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:epistemic-integrity-1138-1140"
+        "detail": "trajectory:pr-1150-fleet-coherence-contracts"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:epistemic-integrity-1138-1140",
+        "intent_id": "intent:pr-1150-fleet-coherence-contracts",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:epistemic-integrity-1138-1140"
+        "detail": "trajectory:pr-1150-fleet-coherence-contracts"
       }
     ],
     "trajectories": {
-      "epistemic-integrity-1138-1140": {
-        "id": "epistemic-integrity-1138-1140",
-        "intent_id": "intent:epistemic-integrity-1138-1140",
+      "pr-1150-fleet-coherence-contracts": {
+        "id": "pr-1150-fleet-coherence-contracts",
+        "intent_id": "intent:pr-1150-fleet-coherence-contracts",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "trajectory.record",
+            "action": "complete",
+            "command": "cargo fmt --all",
             "scope": [
-              "src/ tests/ docs/specs only where contracts materially change"
+              "README.md docs/agent src/decapod tests .decapod/managed .decapod/governance"
             ],
             "observations": [
-              "Issue-specific override, canonical SQLite, clean-drift, migration, capsule, and autonomous-init tests passed.",
-              "Clippy passed with -D warnings.",
-              "Known origin/master failures reproduced independently: inline-test release policy, overlapping exclusive workspace expectation, stale workspace cleanup."
+              "README.md",
+              "src/decapod/core/validate.rs",
+              "tests/release_artifact_policy.rs",
+              "README.md",
+              "src/decapod/core/validate.rs",
+              "tests/release_artifact_policy.rs",
+              ".decapod/managed/Dockerfile.decapod",
+              ".decapod/managed/specs/.manifest.json",
+              "AGENTS.md",
+              "PR https://github.com/DecapodLabs/decapod/pull/1150",
+              "Issues #1145 #1146 #1147 #1148 addressed"
             ],
             "proof_refs": [
-              "issue_regressions",
-              "cargo_clippy",
               "cargo_fmt",
-              "cargo_test_except_known_master_failures",
-              "release_source_policy",
-              "todo_coordination_contract",
-              "stale_workspace_cleanup"
+              "release_artifact_policy",
+              "typed_result_vocabulary",
+              "workspace_prune_regression",
+              "todo_enforcement_claim_conflict"
             ],
-            "validation_findings": [
-              "Repository-wide pre-existing test-policy and workspace cleanup failures are tracked separately and do not weaken issue acceptance proofs."
-            ],
+            "validation_findings": [],
             "custody_event_id": "event:4"
           },
           {
@@ -162,12 +174,12 @@
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              "src/ tests/ docs/specs only where contracts materially change"
+              "README.md docs/agent src/decapod tests .decapod/managed .decapod/governance"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_bf531d1524a72eca completed with zero failures"
+              "validation epoch ve_4b59a10987ed498c completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
