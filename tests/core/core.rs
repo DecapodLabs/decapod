@@ -963,11 +963,13 @@ fn schemas_errors_and_validate_entrypoint_are_exercised() {
     assert_eq!(schemas::TODO_EVENTS_NAME, "todo.events.jsonl");
     assert!(!schemas::TODO_DB_SCHEMA_META.trim().is_empty());
     assert!(!schemas::TODO_DB_SCHEMA_TASKS.trim().is_empty());
-    assert!(!schemas::TODO_DB_SCHEMA_TASK_EVENTS.trim().is_empty());
+    assert!(!schemas::EVENTS_TABLE_SCHEMA.trim().is_empty());
+    assert!(!schemas::AGENTS_TABLE_SCHEMA.trim().is_empty());
+    assert!(!schemas::TODO_DB_SCHEMA_TASK_TAGS.trim().is_empty());
+    assert!(!schemas::MEMORY_DB_SCHEMA_NODE_EDGES.trim().is_empty());
     assert!(!schemas::TODO_DB_SCHEMA_INDEX_STATUS.trim().is_empty());
     assert!(!schemas::TODO_DB_SCHEMA_INDEX_SCOPE.trim().is_empty());
     assert!(!schemas::TODO_DB_SCHEMA_INDEX_DIR.trim().is_empty());
-    assert!(!schemas::TODO_DB_SCHEMA_INDEX_EVENTS_TASK.trim().is_empty());
     assert_eq!(schemas::CRON_DB_NAME, "cron.db");
     assert!(!schemas::CRON_DB_SCHEMA.trim().is_empty());
     assert_eq!(schemas::REFLEX_DB_NAME, "reflex.db");
