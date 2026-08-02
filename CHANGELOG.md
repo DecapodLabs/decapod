@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- lease-aware todo handoff with generation advance, intent preservation, and dependency gates (#852)
+- validate managed Dockerfile release pin against the evaluating Decapod version (#1154)
+
+### Fixed
+
+- derive entrypoint release fingerprints from the evaluating binary so version bumps no longer require hand-maintained SHA tables (#1154)
+- regenerate governed entrypoints and managed Dockerfile headers for v0.94.1
+
 ## [0.94.1](https://github.com/DecapodLabs/decapod/compare/v0.94.0...v0.94.1) - 2026-08-02
 
 ### Fixed
