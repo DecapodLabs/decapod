@@ -112,3 +112,19 @@ This document defines the normative operational contracts for the Decapod CLI.
 ### Operation: `StandardsResolve`
 ### Operation: `MentorObligations`
 ### Operation: `AssuranceEvaluate`
+
+## `decapod validate` result vocabulary
+
+Validation findings are typed. Receipt and JSON counts map as follows:
+
+| Kind | Count field | Mutates `warn_count`? | Mutates `fail_count`? |
+| --- | --- | --- | --- |
+| pass | `pass_count` | no | no |
+| skip | `skip_count` | no | no |
+| note | `note_count` (+ `notes[]`) | no | no |
+| advisory | `advisory_count` (+ `advisories[]`) | no | no |
+| warning | `warn_count` (+ `warnings[]`) | yes | no |
+| failure | `fail_count` (+ `failures[]`) | no | yes |
+
+Informational methodology uses `note`. Non-blocking review items use `advisory`. Only condition-specific warnings increment `warn_count`. Healthy repositories can still return `warn=0`.
+

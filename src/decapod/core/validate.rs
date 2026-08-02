@@ -223,12 +223,37 @@ macro_rules! gate {
     }};
 }
 
+/// Typed validation result kinds.
+///
+/// Counting contract:
+/// - `Pass` increments `pass_count` only
+/// - `Skip` increments `skip_count` only (not pass, not warn)
+/// - `Note` records informational methodology without mutating warning state
+/// - `Advisory` records non-blocking review findings without mutating warning state
+/// - `Warning` is condition-specific and increments `warn_count`
+/// - `Failure` is blocking and increments `fail_count`
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum ValidationResultKind {
+    Pass,
+    Skip,
+    Note,
+    Advisory,
+    Warning,
+    Failure,
+}
+
 struct ValidationContext {
     pass_count: AtomicU32,
     fail_count: AtomicU32,
     warn_count: AtomicU32,
+    skip_count: AtomicU32,
+    note_count: AtomicU32,
+    advisory_count: AtomicU32,
     fails: Mutex<Vec<String>>,
     warns: Mutex<Vec<String>>,
+    notes: Mutex<Vec<String>>,
+    advisories: Mutex<Vec<String>>,
     drift_findings: Mutex<Vec<DriftFinding>>,
     repo_files_cache: Mutex<Vec<(PathBuf, Vec<PathBuf>)>>,
 }
@@ -255,8 +280,15 @@ pub struct ValidationReport {
     pub pass_count: u32,
     pub fail_count: u32,
     pub warn_count: u32,
+    pub skip_count: u32,
+    pub note_count: u32,
+    pub advisory_count: u32,
     pub failures: Vec<String>,
     pub warnings: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub notes: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub advisories: Vec<String>,
     pub drift_findings: Vec<DriftFinding>,
     pub temporary_artifacts_cleaned: u32,
     pub gate_timings: Vec<ValidationGateTiming>,
@@ -474,8 +506,13 @@ impl ValidationContext {
             pass_count: AtomicU32::new(0),
             fail_count: AtomicU32::new(0),
             warn_count: AtomicU32::new(0),
+            skip_count: AtomicU32::new(0),
+            note_count: AtomicU32::new(0),
+            advisory_count: AtomicU32::new(0),
             fails: Mutex::new(Vec::new()),
             warns: Mutex::new(Vec::new()),
+            notes: Mutex::new(Vec::new()),
+            advisories: Mutex::new(Vec::new()),
             drift_findings: Mutex::new(Vec::new()),
             repo_files_cache: Mutex::new(Vec::new()),
         }
@@ -548,7 +585,7 @@ fn validate_no_legacy_namespaces(
     ctx: &ValidationContext,
     working_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Namespace Purge Gate");
+    info("Namespace Purge Gate", ctx);
 
     let mut files = Vec::new();
     collect_repo_files(working_root, &mut files, ctx)?;
@@ -605,7 +642,7 @@ fn validate_embedded_self_contained(
     ctx: &ValidationContext,
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Embedded Self-Contained Gate");
+    info("Embedded Self-Contained Gate", ctx);
 
     // Only validate the embedded constitution source in the decapod repo itself.
     if !repo_root.join("assets/constitution.json").exists() {
@@ -688,20 +725,37 @@ fn pass(_message: &str, ctx: &ValidationContext) {
 }
 
 fn fail(message: &str, ctx: &ValidationContext) {
+    // Blocking finding.
     ctx.fail_count.fetch_add(1, Ordering::Relaxed);
     ctx.fails.lock().unwrap().push(message.to_string());
 }
 
 fn skip(_message: &str, ctx: &ValidationContext) {
-    ctx.pass_count.fetch_add(1, Ordering::Relaxed);
+    // Skipped gate/check: tracked separately so it never becomes pass or warn.
+    ctx.skip_count.fetch_add(1, Ordering::Relaxed);
 }
 
 fn warn(message: &str, ctx: &ValidationContext) {
+    // Condition-specific warning that participates in warn_count / CI review.
     ctx.warn_count.fetch_add(1, Ordering::Relaxed);
     ctx.warns.lock().unwrap().push(message.to_string());
 }
 
-fn info(_message: &str) {}
+fn note(message: &str, ctx: &ValidationContext) {
+    // Informational methodology. Must never mutate warning or failure state.
+    ctx.note_count.fetch_add(1, Ordering::Relaxed);
+    ctx.notes.lock().unwrap().push(message.to_string());
+}
+
+fn advisory(message: &str, ctx: &ValidationContext) {
+    // Non-blocking advisory finding. Must never mutate warning or failure state.
+    ctx.advisory_count.fetch_add(1, Ordering::Relaxed);
+    ctx.advisories.lock().unwrap().push(message.to_string());
+}
+
+fn info(message: &str, ctx: &ValidationContext) {
+    note(message, ctx);
+}
 
 fn count_tasks_in_db(db_path: &Path) -> Result<i64, error::DecapodError> {
     let conn = db::db_connect_for_validate(&db_path.to_string_lossy())?;
@@ -715,7 +769,7 @@ fn validate_user_store_blank_slate(
     ctx: &ValidationContext,
     working_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Store: user (blank-slate semantics)");
+    info("Store: user (blank-slate semantics)", ctx);
     let tmp_root = create_validation_temp_path(working_root, "user")?;
 
     todo::initialize_todo_db(&tmp_root)?;
@@ -738,7 +792,7 @@ fn validate_repo_store_dogfood(
     ctx: &ValidationContext,
     _working_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Store: repo (dogfood backlog semantics)");
+    info("Store: repo (dogfood backlog semantics)", ctx);
 
     let db_path = store.root.join(crate::core::schemas::LOCAL_DB_NAME);
     if !db_path.is_file() {
@@ -813,7 +867,7 @@ fn validate_repo_map(
     ctx: &ValidationContext,
     _working_root: &Path, // working_root is no longer used for filesystem constitution checks
 ) -> Result<(), error::DecapodError> {
-    info("Repo Map");
+    info("Repo Map", ctx);
 
     // We no longer check for a filesystem directory for constitution.
     // Instead, we verify embedded docs.
@@ -845,7 +899,7 @@ fn validate_docs_templates_bucket(
     ctx: &ValidationContext,
     working_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Entrypoint Gate");
+    info("Entrypoint Gate", ctx);
 
     // Entrypoints MUST be in the project root
     let required = ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md"];
@@ -896,7 +950,7 @@ fn validate_entrypoint_invariants(
     ctx: &ValidationContext,
     working_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Four Invariants Gate");
+    info("Four Invariants Gate", ctx);
 
     for surface in crate::core::entrypoint_integrity::ENTRYPOINT_FILES {
         if let Err(finding) =
@@ -1262,7 +1316,7 @@ fn validate_interface_contract_bootstrap(
     ctx: &ValidationContext,
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Interface Contract Bootstrap Gate");
+    info("Interface Contract Bootstrap Gate", ctx);
 
     // This gate applies to the decapod repository where assets/constitution.json is present.
     // Project repos initialized by `decapod init` should not fail on missing embedded source.
@@ -1347,7 +1401,7 @@ fn validate_health_purity(
     ctx: &ValidationContext,
     working_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Health Purity Gate");
+    info("Health Purity Gate", ctx);
     let mut files = Vec::new();
     collect_repo_files(working_root, &mut files, ctx)?;
 
@@ -1390,7 +1444,7 @@ fn validate_project_scoped_state(
     ctx: &ValidationContext,
     working_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Project-Scoped State Gate");
+    info("Project-Scoped State Gate", ctx);
     if store.kind != StoreKind::Repo {
         skip("Not in repo mode; skipping state scoping check", ctx);
         return Ok(());
@@ -1425,7 +1479,7 @@ fn validate_generated_artifact_whitelist(
     ctx: &ValidationContext,
     working_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Generated Artifact Whitelist Gate");
+    info("Generated Artifact Whitelist Gate", ctx);
 
     if store.kind != StoreKind::Repo {
         skip(
@@ -1515,7 +1569,7 @@ fn validate_project_config_toml(
     ctx: &ValidationContext,
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Project Config Gate");
+    info("Project Config Gate", ctx);
     let config_path = repo_root.join(".decapod").join("config.toml");
     if !config_path.exists() {
         warn(
@@ -1782,7 +1836,7 @@ fn validate_project_specs_docs(
     repo_root: &Path,
     refresh_specs: bool,
 ) -> Result<(), error::DecapodError> {
-    info("Project Specs Architecture Gate");
+    info("Project Specs Architecture Gate", ctx);
 
     let specs_dir = repo_root.join(LOCAL_PROJECT_SPECS_DIR);
     if !specs_dir.exists() {
@@ -1951,6 +2005,7 @@ fn validate_project_specs_docs(
         } else if refresh_specs {
             info(
                 "STALE_SPECS_FINGERPRINT: Significant codebase surfaces changed since the last spec attestation. Re-evaluating living specs...",
+                ctx,
             );
             let config = crate::cli::DecapodProjectConfig::load(repo_root).unwrap_or_default();
             let _ = crate::core::project_specs::refresh_specs_from_codebase(
@@ -2193,7 +2248,7 @@ fn validate_machine_contract(
     ctx: &ValidationContext,
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Machine Contract Drift Detection Gate");
+    info("Machine Contract Drift Detection Gate", ctx);
 
     let binary_path =
         std::env::current_exe().map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
@@ -2288,7 +2343,7 @@ fn validate_spec_drift(
     ctx: &ValidationContext,
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Spec Drift Detection Gate (Hygiene)");
+    info("Spec Drift Detection Gate (Hygiene)", ctx);
 
     let interfaces_path = repo_root.join(LOCAL_PROJECT_SPECS_INTERFACES);
     if !interfaces_path.exists() {
@@ -2374,7 +2429,7 @@ fn validate_override_authority(
     ctx: &ValidationContext,
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Repository Override Authority Gate");
+    info("Repository Override Authority Gate", ctx);
     match assets::resolved_override_evidence(repo_root) {
         Ok(resolved) => {
             pass(
@@ -2394,7 +2449,7 @@ fn validate_workunit_manifests_if_present(
     ctx: &ValidationContext,
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Work Unit Manifest Gate");
+    info("Work Unit Manifest Gate", ctx);
 
     let workunits_dir = repo_root
         .join(".decapod")
@@ -2457,7 +2512,7 @@ fn validate_trajectory_artifacts_if_present(
     ctx: &ValidationContext,
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Agent Trajectory Artifact Gate");
+    info("Agent Trajectory Artifact Gate", ctx);
 
     if !trajectory::trajectory_cookie_path(repo_root).exists() {
         skip(
@@ -2480,7 +2535,7 @@ fn validate_research_claims_if_present(
     ctx: &ValidationContext,
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Research Claims Ledger Gate");
+    info("Research Claims Ledger Gate", ctx);
     if research_claims::load_and_validate(repo_root)?.is_none() {
         skip(
             "No research claims ledger found; run `decapod govern artifacts inventory --repair` to create the preserved, schema-valid template",
@@ -2499,7 +2554,7 @@ fn validate_validation_receipt_if_present(
     ctx: &ValidationContext,
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Per-Commit Validation Receipt Gate");
+    info("Per-Commit Validation Receipt Gate", ctx);
     let path = repo_root.join(VALIDATION_RECEIPT_PATH);
     if !path.exists() {
         skip(
@@ -2524,7 +2579,7 @@ fn validate_context_capsules_if_present(
     ctx: &ValidationContext,
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Context Capsule Gate");
+    info("Context Capsule Gate", ctx);
 
     let capsules_dir = repo_root.join(".decapod").join("managed").join("context");
     if !capsules_dir.exists() {
@@ -2582,7 +2637,7 @@ fn validate_context_capsule_policy_contract(
     ctx: &ValidationContext,
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Context Capsule Policy Gate");
+    info("Context Capsule Policy Gate", ctx);
     let (policy, path) = match capsule_policy::load_policy_contract(repo_root) {
         Ok(v) => v,
         Err(error::DecapodError::ValidationError(msg))
@@ -2646,7 +2701,7 @@ fn validate_knowledge_promotions_if_present(
     ctx: &ValidationContext,
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Knowledge Promotion Ledger Gate");
+    info("Knowledge Promotion Ledger Gate", ctx);
 
     let ledger = repo_root
         .join(".decapod")
@@ -2756,7 +2811,7 @@ fn validate_internalization_artifacts_if_present(
     ctx: &ValidationContext,
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Internalization Artifact Gate");
+    info("Internalization Artifact Gate", ctx);
 
     let artifacts_dir = repo_root
         .join(".decapod")
@@ -2951,7 +3006,7 @@ fn validate_schema_determinism(
     ctx: &ValidationContext,
     _working_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Schema Determinism Gate");
+    info("Schema Determinism Gate", ctx);
     let run_schema = || -> Result<String, error::DecapodError> {
         let snapshot = crate::deterministic_schema_envelope();
         serde_json::to_string(&snapshot).map_err(|e| {
@@ -2977,7 +3032,7 @@ fn validate_database_schema_versions(
     store: &Store,
     ctx: &ValidationContext,
 ) -> Result<(), error::DecapodError> {
-    info("Database Schema Version Gate");
+    info("Database Schema Version Gate", ctx);
     if !matches!(store.kind, StoreKind::Repo) {
         skip(
             "Database schema version gate applies to repo store only",
@@ -3034,7 +3089,7 @@ fn validate_eval_gate_if_required(
     store: &Store,
     ctx: &ValidationContext,
 ) -> Result<(), error::DecapodError> {
-    info("Eval Gate Requirement");
+    info("Eval Gate Requirement", ctx);
     let failures = crate::plugins::eval::validate_eval_gate_if_required(&store.root)?;
     if failures.is_empty() {
         pass("Eval gate requirement satisfied or not configured", ctx);
@@ -3050,7 +3105,7 @@ fn validate_health_cache_integrity(
     store: &Store,
     ctx: &ValidationContext,
 ) -> Result<(), error::DecapodError> {
-    info("Health Cache Non-Authoritative Gate");
+    info("Health Cache Non-Authoritative Gate", ctx);
     let db_path = store.root.join(crate::core::schemas::LOCAL_DB_NAME);
     if !db_path.exists() {
         skip("decapod.db not found; skipping health integrity check", ctx);
@@ -3080,7 +3135,7 @@ fn validate_health_cache_integrity(
 }
 
 fn validate_risk_map(store: &Store, ctx: &ValidationContext) -> Result<(), error::DecapodError> {
-    info("Risk Map Gate");
+    info("Risk Map Gate", ctx);
     let map_path = store.root.join("RISKMAP.json");
     if map_path.exists() {
         pass("Risk map (blast-radius) is present", ctx);
@@ -3095,7 +3150,7 @@ fn validate_risk_map_violations(
     ctx: &ValidationContext,
     broker_content: &str,
 ) -> Result<(), error::DecapodError> {
-    info("Zone Violation Gate");
+    info("Zone Violation Gate", ctx);
     {
         let mut offenders = Vec::new();
         for line in broker_content.lines() {
@@ -3120,7 +3175,7 @@ fn validate_policy_integrity(
     ctx: &ValidationContext,
     broker_content: &str,
 ) -> Result<(), error::DecapodError> {
-    info("Policy Integrity Gates");
+    info("Policy Integrity Gates", ctx);
     let db_path = store.root.join(crate::core::schemas::LOCAL_DB_NAME);
     if !db_path.exists() {
         skip("decapod.db not found; skipping policy check", ctx);
@@ -3334,7 +3389,7 @@ fn validate_recursive_improvement_passes_if_present(
     ctx: &ValidationContext,
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Recursive Improvement Pass Gate");
+    info("Recursive Improvement Pass Gate", ctx);
 
     let passes_dir = repo_root
         .join(".decapod")
@@ -3385,7 +3440,7 @@ fn validate_knowledge_integrity(
     ctx: &ValidationContext,
     broker_content: &str,
 ) -> Result<(), error::DecapodError> {
-    info("Knowledge Integrity Gate");
+    info("Knowledge Integrity Gate", ctx);
     let db_path = store.root.join(crate::core::schemas::LOCAL_DB_NAME);
     if !db_path.exists() {
         skip(
@@ -3536,7 +3591,7 @@ fn validate_lineage_hard_gate(
     store: &Store,
     ctx: &ValidationContext,
 ) -> Result<(), error::DecapodError> {
-    info("Lineage Hard Gate");
+    info("Lineage Hard Gate", ctx);
     let federation_db = store.root.join(crate::core::schemas::LOCAL_DB_NAME);
     let todo_db = store.root.join(crate::core::schemas::LOCAL_DB_NAME);
 
@@ -3664,7 +3719,7 @@ fn validate_repomap_determinism(
     ctx: &ValidationContext,
     working_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Repo Map Determinism Gate");
+    info("Repo Map Determinism Gate", ctx);
     use crate::core::repomap;
     let dir1 = working_root.to_path_buf();
     let dir2 = working_root.to_path_buf();
@@ -3692,7 +3747,7 @@ fn validate_watcher_audit(
     store: &Store,
     ctx: &ValidationContext,
 ) -> Result<(), error::DecapodError> {
-    info("Watcher Audit Gate");
+    info("Watcher Audit Gate", ctx);
     if events::exists(&store.root, events::WATCHER)? {
         pass("Watcher audit trail present", ctx);
     } else {
@@ -3709,7 +3764,7 @@ fn validate_watcher_purity(
     ctx: &ValidationContext,
     broker_content: &str,
 ) -> Result<(), error::DecapodError> {
-    info("Watcher Purity Gate");
+    info("Watcher Purity Gate", ctx);
     {
         let mut offenders = Vec::new();
         for line in broker_content.lines() {
@@ -3733,7 +3788,7 @@ fn validate_archive_integrity(
     store: &Store,
     ctx: &ValidationContext,
 ) -> Result<(), error::DecapodError> {
-    info("Archive Integrity Gate");
+    info("Archive Integrity Gate", ctx);
     let db_path = store.root.join(crate::core::schemas::LOCAL_DB_NAME);
     if !db_path.exists() {
         skip("decapod.db not found; skipping archive check", ctx);
@@ -3760,7 +3815,7 @@ fn validate_control_plane_contract(
     store: &Store,
     ctx: &ValidationContext,
 ) -> Result<(), error::DecapodError> {
-    info("Control Plane Contract Gate");
+    info("Control Plane Contract Gate", ctx);
 
     // Check that all database mutations went through the broker
     // by verifying event log consistency
@@ -3851,7 +3906,7 @@ fn validate_canon_mutation(
     ctx: &ValidationContext,
     broker_content: &str,
 ) -> Result<(), error::DecapodError> {
-    info("Canon Mutation Gate");
+    info("Canon Mutation Gate", ctx);
     {
         let mut offenders = Vec::new();
         for line in broker_content.lines() {
@@ -3879,7 +3934,7 @@ fn validate_heartbeat_invocation_gate(
     ctx: &ValidationContext,
     working_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Heartbeat Invocation Gate");
+    info("Heartbeat Invocation Gate", ctx);
 
     let lib_rs = working_root.join("src").join("lib.rs");
     let todo_rs = working_root.join("src").join("plugins").join("todo.rs");
@@ -3961,7 +4016,7 @@ fn validate_federation_gates(
     store: &Store,
     ctx: &ValidationContext,
 ) -> Result<(), error::DecapodError> {
-    info("Federation Gates");
+    info("Federation Gates", ctx);
 
     let results = crate::plugins::federation::validate_federation(&store.root)?;
 
@@ -3969,10 +4024,9 @@ fn validate_federation_gates(
         if passed {
             pass(&format!("[{gate_name}] {message}"), ctx);
         } else {
-            // Federation gates are advisory (warn) rather than hard-fail because the
-            // two-phase DB+JSONL write design can produce transient drift that does
-            // not indicate data loss.
-            warn(&format!("[{gate_name}] {message}"), ctx);
+            // Federation gates are advisory (not warnings) so transient projection
+            // drift does not inflate warn_count or CI review predictions.
+            advisory(&format!("[{gate_name}] {message}"), ctx);
         }
     }
 
@@ -3983,7 +4037,7 @@ fn validate_markdown_primitives_roundtrip_gate(
     store: &Store,
     ctx: &ValidationContext,
 ) -> Result<(), error::DecapodError> {
-    info("Markdown Primitive Round-Trip Gate");
+    info("Markdown Primitive Round-Trip Gate", ctx);
     if DbBroker::new(&store.root).is_cloud() {
         skip(
             "Markdown primitive round-trip is local-store-only; cloud todo proof is supplied by the Propodus contract and protected production proof",
@@ -4012,7 +4066,7 @@ fn validate_git_workspace_context(
     main_root: &Path,
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Git Workspace Context Gate");
+    info("Git Workspace Context Gate", ctx);
 
     // Allow bypass for testing/CI environments
     if std::env::var("DECAPOD_VALIDATE_SKIP_GIT_GATES").is_ok() {
@@ -4377,7 +4431,7 @@ fn validate_projection_consistency(
     main_root: &Path,
     working_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Projection Consistency Gate");
+    info("Projection Consistency Gate", ctx);
 
     let mut findings = Vec::new();
 
@@ -4849,7 +4903,7 @@ fn validate_plan_governed_execution_gate(
     ctx: &ValidationContext,
     main_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Plan-Governed Execution Gate");
+    info("Plan-Governed Execution Gate", ctx);
 
     // Test harnesses and isolated fixture repos explicitly bypass git gates.
     // Keep plan-governed promotion checks out of that mode to preserve stable
@@ -4993,7 +5047,7 @@ fn validate_git_protected_branch(
     ctx: &ValidationContext,
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Git Protected Branch Gate");
+    info("Git Protected Branch Gate", ctx);
 
     // Allow bypass for testing/CI environments
     if std::env::var("DECAPOD_VALIDATE_SKIP_GIT_GATES").is_ok() {
@@ -5119,7 +5173,7 @@ fn validate_git_push_pr_gate(
     ctx: &ValidationContext,
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Git Push & PR Gate");
+    info("Git Push & PR Gate", ctx);
 
     if std::env::var("DECAPOD_VALIDATE_SKIP_GIT_GATES").is_ok() {
         skip(
@@ -5300,7 +5354,7 @@ fn validate_tooling_gate(
     ctx: &ValidationContext,
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Tooling Validation Gate");
+    info("Tooling Validation Gate", ctx);
 
     let tooling_enabled = std::env::var("DECAPOD_VALIDATE_ENABLE_TOOLING_GATES")
         .ok()
@@ -5651,7 +5705,7 @@ fn validate_root_dockerfile_seed_detection(
     ctx: &ValidationContext,
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Root Dockerfile Boundary Gate");
+    info("Root Dockerfile Boundary Gate", ctx);
 
     let dockerfile_path = repo_root.join("Dockerfile");
     if !dockerfile_path.exists() {
@@ -5690,7 +5744,7 @@ fn validate_state_commit_gate(
     ctx: &ValidationContext,
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("STATE_COMMIT Validation Gate");
+    info("STATE_COMMIT Validation Gate", ctx);
 
     // Policy knob: configurable CI job name (can be set via env var)
     let required_ci_job = std::env::var("DECAPOD_STATE_COMMIT_CI_JOB")
@@ -5698,7 +5752,7 @@ fn validate_state_commit_gate(
 
     info(&format!(
         "STATE_COMMIT: required_ci_job = {required_ci_job}"
-    ));
+    ), ctx);
 
     // Check for v1 golden directory (versioned)
     let golden_v1_dir = repo_root
@@ -5800,7 +5854,7 @@ fn validate_lcm_immutability(
     store: &Store,
     ctx: &ValidationContext,
 ) -> Result<(), error::DecapodError> {
-    info("LCM Immutability Gate");
+    info("LCM Immutability Gate", ctx);
     let ledger_path = store.root.join(crate::core::schemas::LCM_EVENTS_NAME);
     if !ledger_path.exists() {
         pass("No LCM ledger yet; gate trivially passes", ctx);
@@ -5822,7 +5876,7 @@ fn validate_lcm_rebuild_gate(
     store: &Store,
     ctx: &ValidationContext,
 ) -> Result<(), error::DecapodError> {
-    info("LCM Rebuild Gate");
+    info("LCM Rebuild Gate", ctx);
     let ledger_path = store.root.join(crate::core::schemas::LCM_EVENTS_NAME);
     if !ledger_path.exists() {
         pass("No LCM ledger yet; rebuild gate trivially passes", ctx);
@@ -5852,7 +5906,7 @@ fn validate_gatekeeper_gate(
     ctx: &ValidationContext,
     working_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Gatekeeper Safety Gate");
+    info("Gatekeeper Safety Gate", ctx);
 
     // Get staged files from git (if in a git repo)
     let output = std::process::Command::new("git")
@@ -6023,7 +6077,7 @@ fn validate_coplayer_policy_tightening(
     ctx: &ValidationContext,
     _working_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Co-Player Policy Tightening Gate");
+    info("Co-Player Policy Tightening Gate", ctx);
 
     use crate::core::coplayer::{CoPlayerSnapshot, derive_policy};
 
@@ -6520,12 +6574,19 @@ pub fn run_validation(
     let pass_count = ctx.pass_count.load(Ordering::Relaxed);
     let fail_count = ctx.fail_count.load(Ordering::Relaxed);
     let warn_count = ctx.warn_count.load(Ordering::Relaxed);
+    let skip_count = ctx.skip_count.load(Ordering::Relaxed);
+    let note_count = ctx.note_count.load(Ordering::Relaxed);
+    let advisory_count = ctx.advisory_count.load(Ordering::Relaxed);
     let mut fails = ctx.fails.lock().unwrap().clone();
     let mut warns = ctx.warns.lock().unwrap().clone();
+    let mut notes = ctx.notes.lock().unwrap().clone();
+    let mut advisories = ctx.advisories.lock().unwrap().clone();
     // Gate completion order is intentionally nondeterministic. Sort the
     // collected messages before exposing them in JSON, receipts, or hashes.
     fails.sort();
     warns.sort();
+    notes.sort();
+    advisories.sort();
     let mut drift_findings = ctx.drift_findings.lock().unwrap().clone();
     drift_findings.sort_by(|left, right| {
         (
@@ -6556,8 +6617,13 @@ pub fn run_validation(
         pass_count,
         fail_count: fail_total,
         warn_count: warn_total,
+        skip_count,
+        note_count,
+        advisory_count,
         failures: fails,
         warnings: warns,
+        notes,
+        advisories,
         drift_findings,
         temporary_artifacts_cleaned: 0,
         gate_timings: gate_timings
@@ -6664,11 +6730,14 @@ pub fn render_validation_report(report: &ValidationReport, verbose: bool) {
     }
 
     println!(
-        "  {} pass={} fail={} warn={} ({:.2}s)",
+        "  {} pass={} fail={} warn={} skip={} note={} advisory={} ({:.2}s)",
         "summary".bright_cyan().bold(),
         report.pass_count.to_string().bright_green(),
         report.fail_count.to_string().bright_red(),
         report.warn_count.to_string().bright_yellow(),
+        report.skip_count.to_string().bright_blue(),
+        report.note_count.to_string().bright_white(),
+        report.advisory_count.to_string().bright_magenta(),
         report.elapsed_ms as f64 / 1000.0
     );
 
@@ -6758,7 +6827,7 @@ fn validate_stale_workspaces(
     ctx: &ValidationContext,
     working_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Stale Workspaces Cleanup Gate");
+    info("Stale Workspaces Cleanup Gate", ctx);
 
     if std::env::var("DECAPOD_VALIDATE_SKIP_GIT_GATES").is_ok() {
         skip(

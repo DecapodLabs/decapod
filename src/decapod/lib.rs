@@ -5349,7 +5349,7 @@ fn attempt_validation_failure_heal(
 
     if report.failures.iter().any(|msg| {
         msg.contains("Repo store missing todo.db")
-            || msg.contains("Repo todo.db does NOT match rebuild from todo.events.jsonl")
+            || msg.contains("Repo todo tables do NOT match rebuild from canonical todo_events")
     }) {
         let rebuild = todo::rebuild_from_events(&store.root)?;
         actions.push(ValidationHealAction {

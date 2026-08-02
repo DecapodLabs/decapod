@@ -1,7 +1,7 @@
 //! Lossless Context Management (LCM) — immutable originals ledger + deterministic summary DAG.
 //!
-//! LCM stores verbatim interaction originals in an append-only JSONL ledger
-//! (`lcm.events.jsonl`) and maintains a derived SQLite index (`lcm.db`) that
+//! LCM stores verbatim interaction originals in the canonical event tables
+//! (`decapod.db:lcm_events`) and maintains a derived SQLite index that
 //! is always rebuildable from the ledger. Summaries reference originals by
 //! content hash, forming a deterministic DAG.
 

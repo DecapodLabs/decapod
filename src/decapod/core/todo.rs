@@ -5067,42 +5067,38 @@ pub fn rebuild_from_events(root: &Path) -> Result<serde_json::Value, error::Deca
         }
     }
 
+    // Sealed compatibility path: legacy JSONL is migration input only.
+    // Import into the canonical event tables, then treat SQLite as authority.
     let ev_path = events_path(root);
-    if !ev_path.is_file() {
-        // Empty store is valid; create empty DB with schema.
+    if ev_path.is_file() {
         let conn = connect_todo(root)?;
         ensure_schema(&conn)?;
+        let imported = crate::core::events::import_legacy_jsonl(root, &conn)?;
+        let count: i64 =
+            conn.query_row("SELECT COUNT(*) FROM todo_events", [], |row| row.get(0))?;
         return Ok(serde_json::json!({
             "ts": now_iso(),
             "cmd": "todo.rebuild",
             "status": "ok",
             "root": root.to_string_lossy(),
-            "events": 0,
-            "note": "no events file; created empty DB"
+            "events": count,
+            "imported_legacy_jsonl": imported,
+            "source": "legacy_jsonl_import_then_todo_events",
+            "note": "JSONL was sealed migration input; canonical authority is todo_events"
         }));
     }
 
-    // Rebuild into a temp DB then swap into place for atomicity.
-    let tmp_db = root.join(format!(".{}.tmp", schemas::TODO_DB_NAME));
-    if tmp_db.exists() {
-        fs::remove_file(&tmp_db).map_err(error::DecapodError::IoError)?;
-    }
-
-    let count = rebuild_db_from_events(&ev_path, &tmp_db)?;
-
-    // Swap
-    let final_db = todo_db_path(root);
-    if final_db.exists() {
-        fs::remove_file(&final_db).map_err(error::DecapodError::IoError)?;
-    }
-    fs::rename(&tmp_db, &final_db).map_err(error::DecapodError::IoError)?;
-
+    // Empty store is valid; create empty DB with schema.
+    let conn = connect_todo(root)?;
+    ensure_schema(&conn)?;
     Ok(serde_json::json!({
         "ts": now_iso(),
         "cmd": "todo.rebuild",
         "status": "ok",
         "root": root.to_string_lossy(),
-        "events": count,
+        "events": 0,
+        "source": "empty",
+        "note": "no canonical events and no legacy JSONL; created empty DB"
     }))
 }
 
