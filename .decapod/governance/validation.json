@@ -2,10 +2,10 @@
   "schema_version": "1.0.0",
   "kind": "validation_receipt",
   "decapod_release": "0.94.1",
-  "git_revision": "3df7bd6063c7203ace0d8c7d2cc35dee491accfe",
+  "git_revision": "ce2d1a0619e0ea7446f813feaa20251ea1532960",
   "repo_signal_fingerprint": "0fb8673768f187ad0fe1984802a1a2735658a98a83f7ce196dcfde4c3384d760",
   "trajectory_run_id": "validation_01KZ0QBFSGSFPN83778NWNNQ2M",
-  "trajectory_artifact_hash": "sha256:09f3048de840d4d88e7b2bccf578b092076142b1eef1e43c2883050f7346d917",
+  "trajectory_artifact_hash": "sha256:4f908f2fb87f72df3dbcba3fb2d20361866b9780f83b696c7444a567ffd6262b",
   "validation_epoch": {
     "schema_version": "1.0.0",
     "epoch_id": "ve_bc4429d15df8e894",
@@ -36,58 +36,64 @@
     }
   },
   "status": "ok",
-  "pass_count": 186,
+  "pass_count": 195,
   "fail_count": 0,
-  "warn_count": 3,
-  "elapsed_ms": 72630,
+  "warn_count": 5,
+  "elapsed_ms": 75363,
   "drift_findings": [],
   "temporary_artifacts_cleaned": 0,
   "failures": [],
   "warnings": [
     "Audit log contains 1 potential crash divergence(s); historical pending entries detected. Run `decapod data broker verify` for details.",
     "Risk map missing (run `decapod riskmap init`)",
-    "Watcher audit trail missing (run `decapod govern watcher run`)"
+    "Stale workspaces preserved for explicit review: /home/arx/src/decapod/.decapod/workspaces/agent-unknown-docs-01kz0pb9fbxrqv0j-01kz0pbj (unregistered_workspace: workspace directory is not registered with git; inspect it and rerun with --force only after preserving any needed files)",
+    "Watcher audit trail missing (run `decapod govern watcher run`)",
+    "Workspace branch 'agent/unknown/docs_01kz0pb9fbxrqv0j-houseboat-wave4' has unpushed commits or does not exist on origin. Run `git push origin agent/unknown/docs_01kz0pb9fbxrqv0j-houseboat-wave4`."
   ],
   "gate_timings": [
     {
       "name": "validate_markdown_primitives_roundtrip_gate",
-      "elapsed_ms": 57882
+      "elapsed_ms": 58543
     },
     {
       "name": "validate_federation_gates",
-      "elapsed_ms": 5631
+      "elapsed_ms": 6083
     },
     {
       "name": "validate_machine_contract",
-      "elapsed_ms": 2206
+      "elapsed_ms": 2173
+    },
+    {
+      "name": "validate_stale_workspaces",
+      "elapsed_ms": 1328
     },
     {
       "name": "validate_control_plane_contract",
-      "elapsed_ms": 294
+      "elapsed_ms": 286
     },
     {
       "name": "validate_obligations",
-      "elapsed_ms": 122
+      "elapsed_ms": 125
     },
     {
       "name": "validate_canon_mutation",
-      "elapsed_ms": 60
+      "elapsed_ms": 59
     },
     {
       "name": "validate_knowledge_integrity",
-      "elapsed_ms": 56
+      "elapsed_ms": 57
     },
     {
       "name": "validate_watcher_purity",
       "elapsed_ms": 55
     },
     {
-      "name": "validate_lineage_hard_gate",
-      "elapsed_ms": 52
+      "name": "validate_policy_integrity",
+      "elapsed_ms": 53
     },
     {
-      "name": "validate_policy_integrity",
-      "elapsed_ms": 51
+      "name": "validate_lineage_hard_gate",
+      "elapsed_ms": 49
     },
     {
       "name": "validate_risk_map_violations",
@@ -95,15 +101,19 @@
     },
     {
       "name": "validate_schema_determinism",
-      "elapsed_ms": 44
+      "elapsed_ms": 46
+    },
+    {
+      "name": "validate_git_workspace_context",
+      "elapsed_ms": 45
     },
     {
       "name": "validate_archive_integrity",
-      "elapsed_ms": 40
+      "elapsed_ms": 37
     },
     {
       "name": "validate_project_specs_docs",
-      "elapsed_ms": 18
+      "elapsed_ms": 19
     },
     {
       "name": "validate_embedded_self_contained",
@@ -111,27 +121,35 @@
     },
     {
       "name": "validate_no_legacy_namespaces",
-      "elapsed_ms": 10
+      "elapsed_ms": 11
+    },
+    {
+      "name": "validate_git_protected_branch",
+      "elapsed_ms": 11
     },
     {
       "name": "validate_interface_contract_bootstrap",
       "elapsed_ms": 9
     },
     {
+      "name": "validate_git_push_pr_gate",
+      "elapsed_ms": 8
+    },
+    {
       "name": "validate_repomap_determinism",
-      "elapsed_ms": 6
+      "elapsed_ms": 5
+    },
+    {
+      "name": "validate_gatekeeper_gate",
+      "elapsed_ms": 4
     },
     {
       "name": "validate_health_purity",
       "elapsed_ms": 3
     },
     {
-      "name": "validate_gatekeeper_gate",
-      "elapsed_ms": 2
-    },
-    {
       "name": "validate_override_authority",
-      "elapsed_ms": 2
+      "elapsed_ms": 3
     },
     {
       "name": "validate_generated_artifact_whitelist",
@@ -139,6 +157,10 @@
     },
     {
       "name": "validate_database_schema_versions",
+      "elapsed_ms": 1
+    },
+    {
+      "name": "validate_plan_governed_execution_gate",
       "elapsed_ms": 1
     },
     {
@@ -154,15 +176,11 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_trajectory_artifacts_if_present",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_heartbeat_invocation_gate",
-      "elapsed_ms": 0
-    },
-    {
       "name": "validate_entrypoint_invariants",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_trajectory_artifacts_if_present",
       "elapsed_ms": 0
     },
     {
@@ -170,11 +188,15 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_validation_receipt_if_present",
+      "name": "validate_heartbeat_invocation_gate",
       "elapsed_ms": 0
     },
     {
       "name": "validate_project_config_toml",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_validation_receipt_if_present",
       "elapsed_ms": 0
     },
     {
@@ -198,23 +220,7 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_recursive_improvement_passes_if_present",
-      "elapsed_ms": 0
-    },
-    {
       "name": "validate_workunit_manifests_if_present",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_eval_gate_if_required",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_internalization_artifacts_if_present",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_lcm_immutability",
       "elapsed_ms": 0
     },
     {
@@ -222,15 +228,11 @@
       "elapsed_ms": 0
     },
     {
+      "name": "validate_lcm_immutability",
+      "elapsed_ms": 0
+    },
+    {
       "name": "validate_root_dockerfile_seed_detection",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_git_workspace_context",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_risk_map",
       "elapsed_ms": 0
     },
     {
@@ -238,11 +240,23 @@
       "elapsed_ms": 0
     },
     {
+      "name": "validate_risk_map",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_internalization_artifacts_if_present",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_recursive_improvement_passes_if_present",
+      "elapsed_ms": 0
+    },
+    {
       "name": "validate_knowledge_promotions_if_present",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_plan_governed_execution_gate",
+      "name": "validate_eval_gate_if_required",
       "elapsed_ms": 0
     },
     {
@@ -251,18 +265,6 @@
     },
     {
       "name": "validate_tooling_gate",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_stale_workspaces",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_git_protected_branch",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_git_push_pr_gate",
       "elapsed_ms": 0
     }
   ],
@@ -273,12 +275,14 @@
     "reasons": [
       "Audit log contains 1 potential crash divergence(s); historical pending entries detected. Run `decapod data broker verify` for details.",
       "Risk map missing (run `decapod riskmap init`)",
-      "Watcher audit trail missing (run `decapod govern watcher run`)"
+      "Stale workspaces preserved for explicit review: /home/arx/src/decapod/.decapod/workspaces/agent-unknown-docs-01kz0pb9fbxrqv0j-01kz0pbj (unregistered_workspace: workspace directory is not registered with git; inspect it and rerun with --force only after preserving any needed files)",
+      "Watcher audit trail missing (run `decapod govern watcher run`)",
+      "Workspace branch 'agent/unknown/docs_01kz0pb9fbxrqv0j-houseboat-wave4' has unpushed commits or does not exist on origin. Run `git push origin agent/unknown/docs_01kz0pb9fbxrqv0j-houseboat-wave4`."
     ],
     "recommendations": [
       "Review the reported validation warnings before relying on the CI result.",
       "Use `decapod validate -v --format json` to inspect the affected gate output."
     ]
   },
-  "receipt_hash": "sha256:306b92f5d54a682d09e988ee515ba26be29743ef155525dd111551e624978aba"
+  "receipt_hash": "sha256:7660a4fbfeb42d81629581b08863e1e720ad02676ada429a4c2e864b5652a98e"
 }
