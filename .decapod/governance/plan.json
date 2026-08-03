@@ -1,32 +1,28 @@
 {
   "schema_version": "1.0.0",
-  "title": "Houseboat wave 4: lease-aware handoff + #1154 integrity",
-  "intent": "Advance Houseboat 2 with lease-aware handoff; account for #1154 by hard-failing stale entrypoint fingerprints and managed Dockerfile release pins without hand-maintained SHA tables.",
+  "title": "Bind project proof commands to a single repository-local authority (#1159)",
+  "intent": "Make .decapod/config.toml the sole live authority for project proof commands, resolve correctly from the CLI store-root path, fail closed on dual registries with .decapod/proofs.toml, report accurate provenance, and align validate with runtime resolution.",
   "state": "APPROVED",
   "todo_ids": [
-    "docs_01kz0pb9fbxrqv0j"
+    "secu_01kz2d64111qz0z3"
   ],
   "proof_hooks": [
-    "cargo test --lib fleet_coord",
-    "cargo test --lib entrypoint_integrity",
-    "cargo test --lib managed_dockerfile",
-    "cargo test --test plugins_todo_tests",
+    "cargo test --lib core::proof::tests",
+    "cargo test --test init_config_behavior",
     "cargo clippy --all-targets --all-features -- -D warnings",
-    "decapod validate"
+    "cargo fmt --check"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [],
   "unresolved_contradictions": [],
   "deferred_questions": [
-    "Typed non-prerequisite edge kinds remain open for #852",
-    "Trajectory merge/reconcile gates remain open for #852/#857",
-    "Capacity budgets remain open for #859"
+    "One-shot import of legacy-only .decapod/proofs.toml into config.toml remains optional transitional policy"
   ],
   "constraints": {
     "forbidden_paths": [],
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "2026-08-02T12:00:00Z"
+  "updated_at": "2026-08-02T23:50:00Z"
 }
