@@ -35,7 +35,8 @@
   "evidence": [
     "validation epoch ve_133317370b9042a9 completed with zero failures",
     "validation epoch ve_65b7f28e3398f698 completed with zero failures",
-    "validation epoch ve_65cfb4c1d2fb78b5 completed with zero failures"
+    "validation epoch ve_65cfb4c1d2fb78b5 completed with zero failures",
+    "validation epoch ve_d6398e11aaa3646e completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -46,7 +47,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:4bbcd03a43064a9afd934fe7a0c842cd3161ef7b97727699440e14dfa81b39bb",
+  "artifact_hash": "sha256:17b8a61c111ff609388e4f3a25e94d854974e8924117ad5bc1786af6bd3ecc4e",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -107,6 +108,13 @@
       {
         "sequence": 7,
         "event_id": "event:7",
+        "intent_id": "intent:validation_01KZ4WXFJY0VF0Y4ANCJZJ6R0D",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZ4WXFJY0VF0Y4ANCJZJ6R0D"
+      },
+      {
+        "sequence": 8,
+        "event_id": "event:8",
         "intent_id": "intent:validation_01KZ4WXFJY0VF0Y4ANCJZJ6R0D",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:validation_01KZ4WXFJY0VF0Y4ANCJZJ6R0D"
@@ -193,12 +201,31 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:7"
+          },
+          {
+            "sequence": 8,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_d6398e11aaa3646e completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:8"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 7
+    "next_sequence": 8
   }
 }
