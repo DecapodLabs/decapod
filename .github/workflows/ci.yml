@@ -219,6 +219,18 @@ jobs:
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
           DECAPOD_VALIDATE_TIMEOUT_SECS: "120"
+      - name: Ensure no spec or entrypoint drift
+        # init/validate rewrite generated_at every run; that is not semantic drift.
+        run: |
+          set -euo pipefail
+          MANIFEST=".decapod/managed/specs/.manifest.json"
+          if git cat-file -e "HEAD:${MANIFEST}" 2>/dev/null && [ -f "${MANIFEST}" ]; then
+            OLD=$(git show "HEAD:${MANIFEST}" | sed -n 's/.*"generated_at": "\([^"]*\)".*/\1/p' | head -1)
+            if [ -n "${OLD}" ]; then
+              sed -i "s/\"generated_at\": \"[^\"]*\"/\"generated_at\": \"${OLD}\"/" "${MANIFEST}"
+            fi
+          fi
+          git diff --exit-code -- . ':!.decapod/governance/'
       - name: Run watcher
         run: decapod govern watcher run
         env:

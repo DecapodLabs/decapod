@@ -52,10 +52,9 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 - [ ] Dependency vulnerability scan reviewed.
 - [ ] No unresolved critical/high security findings.
 
-<!-- decapod:codebase-attestation:start -->
-## Codebase Attestation
+<!-- decapod:codebase-attestation:start -->## Codebase Attestation
 
-- Repository signal fingerprint: `eda0678bbf6b449e5f47cf0a9b2a9cfbf46b2b7246488635cb8ae94999b68c72`
+- Repository signal fingerprint: `f17db20fcf21d7e574632586f612897edf4dd7a3de43bfaea32a623b6797b4f7`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
