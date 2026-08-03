@@ -1,0 +1,58 @@
+name: Nix Flake
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'flake.nix'
+      - 'flake.lock'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'rust-toolchain.toml'
+      - '.config/build/rust-toolchain.toml'
+      - '.cargo/config.toml'
+      - 'src/**'
+      - 'assets/**'
+      - 'tests/**'
+      - 'docs/**'
+      - '.github/workflows/nix-flake.yml'
+  pull_request:
+    branches: [ master ]
+    paths:
+      - 'flake.nix'
+      - 'flake.lock'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'rust-toolchain.toml'
+      - '.config/build/rust-toolchain.toml'
+      - '.cargo/config.toml'
+      - 'src/**'
+      - 'assets/**'
+      - 'tests/**'
+      - 'docs/**'
+      - '.github/workflows/nix-flake.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    # Packaging proof: the flake's packages.default must build from the
+    # committed Cargo.lock alone. The invocation surface is deliberately
+    # plain (`nix build` on deterministic inputs) so this gate can later
+    # fold into a `decapod validate` extension instead of being CI-only.
+    name: nix build (packages.default)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+      - name: Build packages.default
+        run: nix build --print-build-logs
+      - name: Smoke-check the built binary
+        run: ./result/bin/decapod system version

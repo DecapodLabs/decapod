@@ -1,24 +1,27 @@
 {
   "schema_version": "1.0.0",
-  "title": "CONTRIBUTING.md uplift + assets/tools scaffold (refs #1157)",
-  "intent": "Add three additive sections to CONTRIBUTING.md (Project Tooling Standard, Before You Open a PR, Architecture Boundary line) and scaffold assets/tools/.gitkeep to establish the home for non-runtime Rust maintenance tooling referenced by Issue #1157 followup. Does NOT implement #1157 flake.nix/packages.default.",
+  "title": "Nix flake with packages.default on master (#1157)",
+  "intent": "Ship flake.nix and flake.lock exposing packages.default built from the committed Cargo.lock via rustPlatform.importCargoLock with the repository-pinned 1.96.1 toolchain, preserve the devShells that cover the #647 contributor case, and gate the packaging with a dedicated nix-flake.yml CI workflow whose invocation surface (nix build on deterministic inputs) stays foldable into a future decapod validate extension",
   "state": "APPROVED",
   "todo_ids": [
-    "code_01kz29a1c1y0cdrg"
+    "cicd_01kz314drtr5x0px"
   ],
   "proof_hooks": [
-    "decapod validate passes",
-    "cargo run --bin <name> shape preserved for future tools"
+    "nix build --print-build-logs",
+    "./result/bin/decapod system version",
+    "nix flake show"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [],
   "unresolved_contradictions": [],
-  "deferred_questions": [],
+  "deferred_questions": [
+    "Fold the nix packaging proof behind a decapod validate extension seam once repository-defined gates over contributor-owned files like flake.lock exist (maintainer direction in #1157)"
+  ],
   "constraints": {
     "forbidden_paths": [],
-    "file_touch_budget": 16
+    "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1785715996Z"
+  "updated_at": "1785735934Z"
 }

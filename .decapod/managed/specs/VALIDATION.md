@@ -48,49 +48,7 @@ flowchart LR
 - A structurally healthy spec-drift fixture increments neither warning nor failure counts.
 - A watcher record imported by existing-project init is observed by validation, health, heartbeat, and flight recorder after the source JSONL is removed.
 - Re-running event reconciliation imports zero additional rows; malformed or conflicting fresh records return visible errors, and a proven consolidation receipt prevents retired archives from being reinterpreted.
-- A legacy SQLite store recreated after consolidation is copied into `decapod.db`, removed, and does not trigger the full-backup loop on the following command.## Promotion Gates
-
-<!-- decapod:capability-overlay:background-processing:start -->
-
-## Background Processing Validation Overlay
-
-### Duplicate Delivery Tests
-- Same message delivered multiple times MUST produce same result
-- Idempotency key verification
-- Verify the declared delivery guarantee; do not claim exactly-once behavior without proof
-
-### Retry Tests
-- Configured retry/backoff policy verified
-- Configured retry bound or unbounded policy verified
-- Poison-work handling verified when the project declares it
-
-### Shutdown Tests
-- Graceful drain on signal
-- In-flight job completion or safe requeue
-- No data loss on forced termination
-<!-- decapod:capability-overlay:background-processing:end -->
-
-<!-- decapod:capability-overlay:persistent-state:start -->
-
-## Persistent State Validation Overlay
-
-### Migration Proof Command
-- Configure `repo.migration_validation.command` and its arguments as the executable migration proof; file presence is not proof
-- The configured command MUST define its working directory, timeout, expected exit code, and evidence output
-
-### Migration Tests
-- All migrations MUST have integration tests
-- Rollback procedures MUST be tested
-- Data integrity checks post-migration
-
-### Persistence Integration Tests
-- Repository abstraction tested against real database
-- Transaction boundary tests
-- Concurrency conflict tests
-- Data integrity validation after recovery
-<!-- decapod:capability-overlay:persistent-state:end -->
-
-## Blocking Gates
+- A legacy SQLite store recreated after consolidation is copied into `decapod.db`, removed, and does not trigger the full-backup loop on the following command.## Promotion Gates## Blocking Gates
 | Gate | Command | Evidence |
 |---|---|---|
 | Architecture + interface drift check | `decapod validate` | Gate output |
@@ -123,7 +81,7 @@ flowchart LR
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4b2b363e7c982ea12e115908e96543ee8a00014bccde937e0d474ffea141032d`
-- Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
+- Repository signal fingerprint: `eda0678bbf6b449e5f47cf0a9b2a9cfbf46b2b7246488635cb8ae94999b68c72`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
