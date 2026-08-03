@@ -1469,3 +1469,28 @@ fn legacy_empty_spec_alias_sections_do_not_create_duplicate_authority() {
             .is_empty()
     );
 }
+
+#[test]
+fn override_blend_preserves_custom_comments_and_splices_new_directives() {
+    let input = r#"<!-- CHANGES ARE NOT PERMITTED ABOVE THIS LINE -->
+## CORE Overrides
+
+<!-- Custom Comment Here -->
+### core/DEMANDS
+````markdown
+Custom override body.
+````
+
+---
+"#;
+    let upgraded = assets::render_fenced_override_upgrade(input).expect("render upgrade");
+
+    // Assert custom comment is preserved
+    assert!(upgraded.contains("<!-- Custom Comment Here -->"));
+
+    // Assert existing override body is preserved
+    assert!(upgraded.contains("Custom override body."));
+
+    // Assert new directives (like core/DECAPOD) are spliced in
+    assert!(upgraded.contains("### core/DECAPOD"));
+}
