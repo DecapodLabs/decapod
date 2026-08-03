@@ -1,17 +1,24 @@
 {
   "schema_version": "1.0.0",
-  "title": "Solve GitHub Issue #1134",
-  "intent": "Add GHA checks in ci.yml and decapod-validate.yml workflows to ensure the PR includes updated entrypoints/specs and fails early on spec/entrypoint drift",
+  "title": "Fix federation double-wrapped payloads (#1178) and retire residual JSONL (#1180)",
+  "intent": "Make decapod.db sole runtime authority: repair legacy double-wrapped federation event payloads, make rebuild/replay lossless and transactional, one-shot import residual JSONL into events and retire files under .retired-jsonl, migrate assurance attestations to SQLite, and refresh 0.95.4 managed specs/entrypoints for CI validate drift.",
   "state": "APPROVED",
   "todo_ids": [
-    "todo_01kz30"
+    "feat_01kz4ct2yvb9s5ex"
   ],
   "proof_hooks": [
-    "git diff --exit-code"
+    "cargo test --lib events::",
+    "cargo test --test plugins_federation_tests",
+    "cargo test --test single_datastore",
+    "cargo clippy --lib -- -D warnings"
   ],
-  "unknowns": [],
+  "unknowns": [
+    "CI full suite after governance artifact refresh"
+  ],
   "human_questions": [],
-  "stop_conditions": [],
+  "stop_conditions": [
+    "decapod validate CI green with governance artifacts in PR diff"
+  ],
   "unresolved_contradictions": [],
   "deferred_questions": [],
   "constraints": {
@@ -19,5 +26,5 @@
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1785735406Z"
+  "updated_at": "1785786203Z"
 }
