@@ -77,6 +77,94 @@ jobs:
           fi
           echo "✅ All four governance artifacts are present and changed in the PR diff"
 
+  # MATERIAL LIVING SPECS: Each PR must rewrite authored living-spec prose,
+  # not only refresh fingerprints/attestation blocks (GitHub #1183).
+  material-specs:
+    name: Material Living Specs (beyond fingerprints)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'release')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Require material specs/*.md change versus base
+        run: |
+          set -euo pipefail
+          base_ref="${{ github.base_ref }}"
+          git fetch --no-tags --prune origin "$base_ref"
+          python3 - <<'PY'
+          import re, subprocess, sys
+          from pathlib import Path
+
+          base_ref = """${{ github.base_ref }}"""
+          specs_dir = Path(".decapod/managed/specs")
+          names = [
+              "INTENT.md",
+              "ARCHITECTURE.md",
+              "INTERFACES.md",
+              "VALIDATION.md",
+              "SEMANTICS.md",
+              "OPERATIONS.md",
+              "SECURITY.md",
+              "README.md",
+          ]
+          patterns = [
+              re.compile(
+                  r"<!-- decapod:codebase-attestation:start -->.*?<!-- decapod:codebase-attestation:end -->",
+                  re.S,
+              ),
+              re.compile(
+                  r"<!-- decapod:declared-capabilities:start -->.*?<!-- decapod:declared-capabilities:end -->",
+                  re.S,
+              ),
+              re.compile(
+                  r"<!-- decapod:capability-overlay:[^:]+:start -->.*?<!-- decapod:capability-overlay:[^:]+:end -->",
+                  re.S,
+              ),
+          ]
+
+          def material(text: str) -> str:
+              for pat in patterns:
+                  text = pat.sub("", text)
+              return text
+
+          def git_show(path: str) -> str:
+              proc = subprocess.run(
+                  ["git", "show", f"origin/{base_ref}:{path}"],
+                  capture_output=True,
+                  text=True,
+              )
+              return proc.stdout if proc.returncode == 0 else ""
+
+          material_hits = []
+          for name in names:
+              head_path = specs_dir / name
+              if not head_path.is_file():
+                  continue
+              rel = f"{specs_dir.as_posix()}/{name}"
+              base_mat = material(git_show(rel))
+              head_mat = material(head_path.read_text(encoding="utf-8"))
+              if base_mat != head_mat:
+                  print(f"✅ material change: {rel}")
+                  material_hits.append(rel)
+
+          if not material_hits:
+              print(
+                  f"❌ FINGERPRINT_ONLY_SPECS: no material authored-content change under "
+                  f"{specs_dir}/*.md versus origin/{base_ref}."
+              )
+              print(
+                  "Fingerprint/attestation refresh alone is insufficient. "
+                  "Update at least one living spec with prose for this PR."
+              )
+              sys.exit(1)
+
+          print(
+              f"✅ At least one living spec has a material rewrite versus origin/{base_ref}"
+          )
+          PY
+
   # PROPODUS LIVE PROOF: Manual, protected, and explicitly opt-in only.
   propodus-live:
     name: Propodus Live Contract Proof
