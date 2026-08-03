@@ -50,6 +50,7 @@
     "validation epoch ve_496446db7c654ee6 completed with zero failures",
     "validation epoch ve_7000a08791ae94fc completed with zero failures",
     "validation epoch ve_87defbf6a2dc1c92 completed with zero failures",
+    "validation epoch ve_be83604fbe7d9069 completed with zero failures",
     "validation epoch ve_eaf9b2194d40bf3e completed with zero failures",
     "validation epoch ve_f79804e783937510 completed with zero failures",
     "validation epoch ve_f923a9a7dc10a016 completed with zero failures"
@@ -64,7 +65,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:de2257833332aa6ebbc75a71f8c69406c7fa0d3ff9df341e74f8d74a61114ec7",
+  "artifact_hash": "sha256:85e8ed19f973febe6ae737cff5393c884612cf205688bb43fc88c5ed2ede7f53",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -307,6 +308,27 @@
       {
         "sequence": 33,
         "event_id": "event:33",
+        "intent_id": "intent:validation_01KZ31TWT4B7V0E4M1EM6R5QAA",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZ31TWT4B7V0E4M1EM6R5QAA"
+      },
+      {
+        "sequence": 34,
+        "event_id": "event:34",
+        "intent_id": "intent:validation_01KZ31TWT4B7V0E4M1EM6R5QAA",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZ31TWT4B7V0E4M1EM6R5QAA"
+      },
+      {
+        "sequence": 35,
+        "event_id": "event:35",
+        "intent_id": "intent:validation_01KZ31TWT4B7V0E4M1EM6R5QAA",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZ31TWT4B7V0E4M1EM6R5QAA"
+      },
+      {
+        "sequence": 36,
+        "event_id": "event:36",
         "intent_id": "intent:validation_01KZ31TWT4B7V0E4M1EM6R5QAA",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:validation_01KZ31TWT4B7V0E4M1EM6R5QAA"
@@ -884,12 +906,68 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:33"
+          },
+          {
+            "sequence": 34,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_be83604fbe7d9069 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:34"
+          },
+          {
+            "sequence": 35,
+            "action": "trajectory.record",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              "src/decapod/core/assets.rs",
+              "src/decapod/core/assets.rs",
+              ".github/workflows/decapod-validate.yml"
+            ],
+            "proof_refs": [
+              "validation"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:35"
+          },
+          {
+            "sequence": 36,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_be83604fbe7d9069 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:36"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 33
+    "next_sequence": 36
   }
 }

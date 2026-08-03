@@ -973,7 +973,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cargo/bin/decapod
-          key: ${{ runner.os }}-decapod-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'src/**/*.rs') }}
+          key: ${{ runner.os }}-decapod-v2-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'src/**/*.rs') }}
       - name: Install Decapod
         run: |
           if ! command -v decapod &> /dev/null; then
