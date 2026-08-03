@@ -6,10 +6,16 @@ use crate::error::DecapodError;
 use crate::plugins::health;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-/// A proof definition from proofs.toml
+/// Canonical live authority for project proof commands (repository-relative).
+pub const PROOF_CONFIG_AUTHORITY: &str = ".decapod/config.toml";
+/// Obsolete dual registry path (repository-relative). Present only for fail-closed
+/// dual-authority detection and a transitional read when config has no commands.
+pub const LEGACY_PROOF_REGISTRY: &str = ".decapod/proofs.toml";
+
+/// A proof definition from project proof configuration.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ProofDef {
     pub name: String,
@@ -24,14 +30,22 @@ pub struct ProofDef {
 
 /// Project-level proof declarations stored in `.decapod/config.toml`.
 ///
-/// The legacy `.decapod/proofs.toml` registry remains supported; this typed
-/// projection lets guided init capture proof intent without creating a second
-/// execution engine.
+/// This is the sole live authority for project proof commands. Guided init
+/// writes here; runtime resolution, validate, and provenance must agree.
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct ProjectProofConfig {
     #[serde(default)]
     pub commands: Vec<ProofDef>,
+}
+
+/// Resolved proof commands bound to an explicit repository-local authority.
+#[derive(Debug, Clone)]
+pub struct ResolvedProofConfig {
+    pub config: ProofConfig,
+    /// Repository-relative path of the selected authority
+    /// (`.decapod/config.toml` or transitional `.decapod/proofs.toml`).
+    pub authority: String,
 }
 
 /// Result of running a single proof
@@ -122,57 +136,165 @@ fn run_single_proof(
     })
 }
 
-/// Load proof config from .decapod/proofs.toml
-/// Accepts either the project root (parent of .decapod) or the store root (.decapod/data)
-pub fn load_proof_config(decapod_dir: &Path) -> Result<ProofConfig, DecapodError> {
-    // Try the project root path first (.decapod/proofs.toml)
-    let config_path = decapod_dir.join(".decapod").join("proofs.toml");
-
-    if config_path.exists() {
-        let content = fs::read_to_string(&config_path).map_err(DecapodError::IoError)?;
-        let config: ProofConfig =
-            toml::from_str(&content).map_err(|e| DecapodError::ValidationError(e.to_string()))?;
-        return Ok(config);
-    }
-
-    // If that doesn't exist, try the parent directory (for when store_root is passed)
-    if let Some(parent) = decapod_dir.parent() {
-        let config_path = parent.join("proofs.toml");
-        if config_path.exists() {
-            let content = fs::read_to_string(&config_path).map_err(DecapodError::IoError)?;
-            let config: ProofConfig = toml::from_str(&content)
-                .map_err(|e| DecapodError::ValidationError(e.to_string()))?;
-            return Ok(config);
-        }
-    }
-
-    let project_config_path = if decapod_dir.join(".decapod").exists() {
-        decapod_dir.join(".decapod").join("config.toml")
+/// Resolve the project root from a path that may be:
+/// - the project root (contains `.decapod/`)
+/// - the store root (`<project>/.decapod/data`)
+/// - the `.decapod` directory itself
+///
+/// Resolution stays under the project governance root and does not load proof
+/// config from outside the repository.
+pub fn resolve_project_root(path: &Path) -> Result<PathBuf, DecapodError> {
+    let path = if path.exists() {
+        path.canonicalize().unwrap_or_else(|_| path.to_path_buf())
     } else {
-        decapod_dir.join("config.toml")
+        path.to_path_buf()
     };
-    if project_config_path.exists() {
-        let content = fs::read_to_string(&project_config_path).map_err(DecapodError::IoError)?;
-        let config: crate::cli::DecapodProjectConfig = toml::from_str(&content)
-            .map_err(|e| DecapodError::ValidationError(format!("Invalid project config: {e}")))?;
-        if !config.proof.commands.is_empty() {
-            return Ok(ProofConfig {
-                proof: config.proof.commands,
-            });
-        }
+
+    // Store root: .../.decapod/data
+    if path
+        .file_name()
+        .and_then(|s| s.to_str())
+        .is_some_and(|name| name == "data")
+        && let Some(decapod_dir) = path.parent()
+        && decapod_dir
+            .file_name()
+            .and_then(|s| s.to_str())
+            .is_some_and(|name| name == ".decapod")
+        && let Some(project_root) = decapod_dir.parent()
+    {
+        return Ok(project_root.to_path_buf());
     }
 
-    // No config = no proofs configured (not an error)
-    Ok(ProofConfig::default())
+    // .decapod directory itself
+    if path
+        .file_name()
+        .and_then(|s| s.to_str())
+        .is_some_and(|name| name == ".decapod")
+        && let Some(project_root) = path.parent()
+    {
+        return Ok(project_root.to_path_buf());
+    }
+
+    // Project root containing .decapod/
+    if path.join(".decapod").is_dir() || path.join(".decapod").is_file() {
+        return Ok(path);
+    }
+
+    // Parent is .decapod (e.g. a file under .decapod/)
+    if let Some(parent) = path.parent()
+        && parent
+            .file_name()
+            .and_then(|s| s.to_str())
+            .is_some_and(|name| name == ".decapod")
+        && let Some(project_root) = parent.parent()
+    {
+        return Ok(project_root.to_path_buf());
+    }
+
+    Err(DecapodError::ValidationError(format!(
+        "PROOF_PROJECT_ROOT_UNRESOLVED: cannot resolve project root from '{}' for proof config (expected project root, .decapod/, or .decapod/data)",
+        path.display()
+    )))
+}
+
+fn read_legacy_proof_registry(legacy_path: &Path) -> Result<Option<ProofConfig>, DecapodError> {
+    if !legacy_path.exists() {
+        return Ok(None);
+    }
+    let content = fs::read_to_string(legacy_path).map_err(DecapodError::IoError)?;
+    let config: ProofConfig = toml::from_str(&content).map_err(|e| {
+        DecapodError::ValidationError(format!("invalid {}: {e}", LEGACY_PROOF_REGISTRY))
+    })?;
+    if config.proof.is_empty() {
+        return Ok(None);
+    }
+    for proof in &config.proof {
+        if proof.name.trim().is_empty() || proof.command.trim().is_empty() {
+            return Err(DecapodError::ValidationError(format!(
+                "invalid {}: proof entries must have non-empty name and command",
+                LEGACY_PROOF_REGISTRY
+            )));
+        }
+    }
+    Ok(Some(config))
+}
+
+fn read_config_toml_proof_commands(
+    config_path: &Path,
+) -> Result<Option<Vec<ProofDef>>, DecapodError> {
+    if !config_path.exists() {
+        return Ok(None);
+    }
+    let content = fs::read_to_string(config_path).map_err(DecapodError::IoError)?;
+    let project: crate::cli::DecapodProjectConfig = toml::from_str(&content)
+        .map_err(|e| DecapodError::ValidationError(format!("Invalid project config: {e}")))?;
+    if project.proof.commands.is_empty() {
+        return Ok(None);
+    }
+    for proof in &project.proof.commands {
+        if proof.name.trim().is_empty() || proof.command.trim().is_empty() {
+            return Err(DecapodError::ValidationError(format!(
+                "invalid {}: proof.commands entries must have non-empty name and command",
+                PROOF_CONFIG_AUTHORITY
+            )));
+        }
+    }
+    Ok(Some(project.proof.commands))
+}
+
+/// Resolve project proof commands from a single repository-local authority.
+///
+/// Accepts project root, store root (`.decapod/data`), or the `.decapod` directory.
+///
+/// Authority rules:
+/// 1. Non-empty `[proof].commands` in `.decapod/config.toml` is the live authority.
+/// 2. If both `config.toml` and a non-empty `.decapod/proofs.toml` are present → fail closed.
+/// 3. If only the legacy registry has commands → transitional read with explicit provenance
+///    (migrate into `config.toml` and remove the legacy file).
+/// 4. Neither present → empty command set (not an error).
+pub fn resolve_proof_config(path: &Path) -> Result<ResolvedProofConfig, DecapodError> {
+    let project_root = resolve_project_root(path)?;
+    let config_path = project_root.join(".decapod").join("config.toml");
+    let legacy_path = project_root.join(".decapod").join("proofs.toml");
+
+    let config_commands = read_config_toml_proof_commands(&config_path)?;
+    let legacy_config = read_legacy_proof_registry(&legacy_path)?;
+
+    match (config_commands, legacy_config) {
+        (Some(_), Some(_)) => Err(DecapodError::ValidationError(format!(
+            "PROOF_DUAL_AUTHORITY: both {PROOF_CONFIG_AUTHORITY} and {LEGACY_PROOF_REGISTRY} declare project proof commands. \
+Keep a single authority: move commands into {PROOF_CONFIG_AUTHORITY} [proof].commands and remove {LEGACY_PROOF_REGISTRY}."
+        ))),
+        (Some(commands), None) => Ok(ResolvedProofConfig {
+            config: ProofConfig { proof: commands },
+            authority: PROOF_CONFIG_AUTHORITY.to_string(),
+        }),
+        (None, Some(legacy)) => Ok(ResolvedProofConfig {
+            config: legacy,
+            authority: LEGACY_PROOF_REGISTRY.to_string(),
+        }),
+        (None, None) => Ok(ResolvedProofConfig {
+            config: ProofConfig::default(),
+            authority: PROOF_CONFIG_AUTHORITY.to_string(),
+        }),
+    }
+}
+
+/// Load proof config (commands only). Prefer [`resolve_proof_config`] when provenance is needed.
+///
+/// Accepts either the project root or the store root (`.decapod/data`).
+pub fn load_proof_config(path: &Path) -> Result<ProofConfig, DecapodError> {
+    Ok(resolve_proof_config(path)?.config)
 }
 
 /// Run all configured proofs
 pub fn run_proofs(
     store: &Store,
-    decapod_dir: &Path,
+    path: &Path,
     actor: &str,
 ) -> Result<ProofRunSummary, DecapodError> {
-    let config = load_proof_config(decapod_dir)?;
+    let project_root = resolve_project_root(path)?;
+    let resolved = resolve_proof_config(path)?;
     let run_id = crate::core::ulid::new_ulid();
     let ts = format!(
         "{}Z",
@@ -184,16 +306,16 @@ pub fn run_proofs(
 
     // Initialize health database and sync proof claims
     health::initialize_health_db(&store.root)?;
-    sync_proof_claims_to_health(store, &config)?;
+    sync_proof_claims_to_health(store, &resolved)?;
 
     let mut results = Vec::new();
     let mut passed = 0;
     let mut failed = 0;
 
-    for proof_def in &config.proof {
-        let result = run_single_proof(proof_def, decapod_dir, &store.root)?;
+    for proof_def in &resolved.config.proof {
+        // Execute against the project root, not the store root.
+        let result = run_single_proof(proof_def, &project_root, &store.root)?;
 
-        // Log event to proof.events.jsonl
         let event = ProofEvent {
             ts: ts.clone(),
             event_id: crate::core::ulid::new_ulid(),
@@ -245,9 +367,12 @@ pub fn run_proofs(
     })
 }
 
-/// Sync proof definitions to health claims
-fn sync_proof_claims_to_health(store: &Store, config: &ProofConfig) -> Result<(), DecapodError> {
-    for proof_def in &config.proof {
+/// Sync proof definitions to health claims with accurate authority provenance.
+fn sync_proof_claims_to_health(
+    store: &Store,
+    resolved: &ResolvedProofConfig,
+) -> Result<(), DecapodError> {
+    for proof_def in &resolved.config.proof {
         let claim_id = format!("proof.{}", proof_def.name);
         let subject = proof_def.name.clone();
         let kind = if proof_def.required {
@@ -255,7 +380,7 @@ fn sync_proof_claims_to_health(store: &Store, config: &ProofConfig) -> Result<()
         } else {
             "OPTIONAL"
         };
-        let provenance = "proofs.toml".to_string();
+        let provenance = resolved.authority.clone();
 
         // Try to add claim - ignore duplicate errors
         let _ = health::add_claim(store, &claim_id, &subject, kind, &provenance);
@@ -273,7 +398,7 @@ fn append_proof_event(store: &Store, event: &ProofEvent) -> Result<(), DecapodEr
     Ok(())
 }
 
-/// The proofs.toml config structure
+/// Runtime proof command set (source-agnostic after resolution).
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct ProofConfig {
     #[serde(default)]
@@ -318,9 +443,9 @@ pub fn execute_proof_cli(cli: &ProofCommandCli, store_root: &Path) -> Result<(),
             ))
         }
         crate::ProofSubCommand::List => {
-            let config = load_proof_config(store_root)?;
-            println!("Available proofs:");
-            for (i, proof_def) in config.proof.iter().enumerate() {
+            let resolved = resolve_proof_config(store_root)?;
+            println!("Available proofs (authority: {}):", resolved.authority);
+            for (i, proof_def) in resolved.config.proof.iter().enumerate() {
                 println!(
                     "  {}. {} - {} (required: {})",
                     i + 1,
@@ -339,17 +464,21 @@ pub fn execute_proof_cli(cli: &ProofCommandCli, store_root: &Path) -> Result<(),
 pub fn schema() -> serde_json::Value {
     serde_json::json!({
         "name": "proof",
-        "version": "0.1.0",
+        "version": "0.2.0",
         "description": "Configurable proof registry - executable checks with audit trail",
-        "config_file": ".decapod/proofs.toml",
+        "config_file": PROOF_CONFIG_AUTHORITY,
+        "legacy_config_file": LEGACY_PROOF_REGISTRY,
+        "authority_policy": "single_source_fail_closed",
         "config_schema": {
-            "proof": [{
-                "name": "string (required)",
-                "command": "string (required)",
-                "args": ["string array (optional)"],
-                "description": "string (optional)",
-                "required": "bool (default: true)"
-            }]
+            "proof": {
+                "commands": [{
+                    "name": "string (required)",
+                    "command": "string (required)",
+                    "args": ["string array (optional)"],
+                    "description": "string (optional)",
+                    "required": "bool (default: true)"
+                }]
+            }
         },
         "events": ["proof.run"],
         "storage": ["decapod.db:verification_events"]

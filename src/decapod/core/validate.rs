@@ -1783,6 +1783,89 @@ fn validate_project_config_toml(
         );
     }
 
+    // Single repository-local authority for project proof commands (#1159).
+    // Resolve via the same path shape the CLI uses (store root) so validate and
+    // `govern proof *` cannot disagree.
+    let store_root = repo_root.join(".decapod").join("data");
+    match crate::core::proof::resolve_proof_config(&store_root)
+        .or_else(|_| crate::core::proof::resolve_proof_config(repo_root))
+    {
+        Ok(resolved) => {
+            let configured_names: Vec<_> = typed_config
+                .proof
+                .commands
+                .iter()
+                .map(|p| p.name.trim().to_string())
+                .collect();
+            let resolved_names: Vec<_> = resolved
+                .config
+                .proof
+                .iter()
+                .map(|p| p.name.trim().to_string())
+                .collect();
+            if !configured_names.is_empty()
+                && resolved.authority == crate::core::proof::PROOF_CONFIG_AUTHORITY
+                && configured_names != resolved_names
+            {
+                fail(
+                    &format!(
+                        "Proof command resolution disagrees with {authority}: config has {configured:?}, resolver has {resolved:?}",
+                        authority = crate::core::proof::PROOF_CONFIG_AUTHORITY,
+                        configured = configured_names,
+                        resolved = resolved_names,
+                    ),
+                    ctx,
+                );
+            } else if !configured_names.is_empty() && resolved.config.proof.is_empty() {
+                fail(
+                    &format!(
+                        "Proof commands are declared in {} but runtime resolution returned an empty set",
+                        crate::core::proof::PROOF_CONFIG_AUTHORITY
+                    ),
+                    ctx,
+                );
+            } else if !configured_names.is_empty()
+                && resolved.authority == crate::core::proof::LEGACY_PROOF_REGISTRY
+            {
+                fail(
+                    &format!(
+                        "PROOF_DUAL_AUTHORITY or authority mismatch: config declares proof commands but resolver selected {}",
+                        crate::core::proof::LEGACY_PROOF_REGISTRY
+                    ),
+                    ctx,
+                );
+            } else {
+                pass(
+                    &format!(
+                        "Project proof commands resolve from a single authority ({})",
+                        resolved.authority
+                    ),
+                    ctx,
+                );
+            }
+        }
+        Err(e) => {
+            let msg = e.to_string();
+            if msg.contains("PROOF_DUAL_AUTHORITY") {
+                fail(&msg, ctx);
+            } else if typed_config.proof.commands.is_empty() {
+                // No configured proofs and no resolvable project root path shape
+                // in this validation workspace — treat as coherent empty set.
+                pass(
+                    "No project proof commands configured; dual-authority check not applicable",
+                    ctx,
+                );
+            } else {
+                fail(
+                    &format!(
+                        "Failed to resolve project proof commands for validate/runtime agreement: {msg}"
+                    ),
+                    ctx,
+                );
+            }
+        }
+    }
+
     let tracker_provider = typed_config.tracker.provider.trim();
     let tracker_coherent = !tracker_provider.is_empty()
         && (typed_config.repo.external_tracker == (tracker_provider != "decapod"));
