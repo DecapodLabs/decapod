@@ -239,6 +239,7 @@ pub fn transition_status(
 
     if to == WorkUnitStatus::Verified {
         ensure_verified_ready(&manifest)?;
+        ensure_living_specs_bound_for_proof(project_root, &manifest)?;
     }
 
     manifest.status = to;
@@ -248,6 +249,45 @@ pub fn transition_status(
 
 pub fn validate_verified_manifest(manifest: &WorkUnitManifest) -> Result<(), error::DecapodError> {
     ensure_verified_ready(manifest)
+}
+
+/// Living specs are evidence material for proof completion (GitHub #1183).
+///
+/// When the repository has a living-specs surface, a VERIFIED workunit must
+/// reference at least one `.decapod/managed/specs/*` path so completion evidence
+/// cannot omit the project contract.
+pub fn ensure_living_specs_bound_for_proof(
+    project_root: &Path,
+    manifest: &WorkUnitManifest,
+) -> Result<(), error::DecapodError> {
+    use crate::core::project_specs::LOCAL_PROJECT_SPECS;
+
+    let has_living_specs_surface = LOCAL_PROJECT_SPECS
+        .iter()
+        .any(|spec| project_root.join(spec.path).is_file());
+    if !has_living_specs_surface {
+        return Ok(());
+    }
+
+    let bound = manifest.spec_refs.iter().any(|spec_ref| {
+        let normalized = spec_ref.replace('\\', "/");
+        normalized.contains(".decapod/managed/specs/")
+            || LOCAL_PROJECT_SPECS.iter().any(|spec| {
+                normalized == spec.path
+                    || normalized.ends_with(&format!("/{}", spec.path))
+                    || normalized.ends_with(spec.path.trim_start_matches(".decapod/managed/specs/"))
+            })
+    });
+    if bound {
+        return Ok(());
+    }
+
+    Err(error::DecapodError::ValidationError(
+        "cannot transition to VERIFIED: living specs are evidence material for proof completion; \
+bind at least one `.decapod/managed/specs/*` path via workunit spec_refs (fingerprint/attestation \
+refresh alone is not a living-spec rewrite — see FINGERPRINT_ONLY_SPECS / #1183)"
+            .to_string(),
+    ))
 }
 
 fn can_transition(from: &WorkUnitStatus, to: &WorkUnitStatus) -> bool {

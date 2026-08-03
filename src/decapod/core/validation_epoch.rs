@@ -66,9 +66,17 @@ pub fn active_validation_epoch(
         generated_specs_fingerprint.clone(),
     );
     for spec in LOCAL_PROJECT_SPECS {
+        let path = project_root.join(spec.path);
         material_hashes.insert(
             format!("generated_spec:{}", spec.path),
-            hash_file_if_exists(project_root.join(spec.path).as_path())?,
+            hash_file_if_exists(path.as_path())?,
+        );
+        // Authored living-spec prose is evidence material for proof completion
+        // (#1183). Fingerprint/attestation blocks are excluded so completion
+        // packages bind the contract text agents must rewrite per change.
+        material_hashes.insert(
+            format!("living_spec_material:{}", spec.path),
+            hash_living_spec_material_if_exists(path.as_path())?,
         );
     }
 
@@ -143,6 +151,16 @@ fn hash_file_if_exists(path: &Path) -> Result<String, error::DecapodError> {
     }
     let bytes = fs::read(path).map_err(error::DecapodError::IoError)?;
     Ok(sha256_hex(&bytes))
+}
+
+fn hash_living_spec_material_if_exists(path: &Path) -> Result<String, error::DecapodError> {
+    if !path.exists() {
+        return Ok("absent".to_string());
+    }
+    let body = fs::read_to_string(path).map_err(error::DecapodError::IoError)?;
+    Ok(sha256_hex(
+        project_specs::material_spec_body(&body).as_bytes(),
+    ))
 }
 
 fn hash_specs_manifest_material(path: &Path) -> Result<String, error::DecapodError> {

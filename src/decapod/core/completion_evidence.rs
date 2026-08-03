@@ -701,6 +701,7 @@ pub fn build_record(
         )));
     }
     workunit::validate_verified_manifest(&manifest)?;
+    workunit::ensure_living_specs_bound_for_proof(project_root, &manifest)?;
     workunit::verify_capsule_policy_lineage_for_task(project_root, &manifest)?;
 
     let capsule_path = project_root
@@ -1030,21 +1031,109 @@ fn verify_record_value(
         &record.unresolved_claims,
         &mut checks,
     )?;
+    let living_specs_status =
+        verify_living_specs_evidence(project_root, record, &active_epoch, &mut checks);
 
     let status =
         if !workunit_ok || !workunit_projection_ok || !capsule_ok || artifact_status == "altered" {
             "altered"
-        } else if !workunit_ready || artifact_status == "incomplete" || plan_status == "incomplete"
+        } else if !workunit_ready
+            || artifact_status == "incomplete"
+            || plan_status == "incomplete"
+            || living_specs_status == "incomplete"
         {
             "incomplete"
         } else if !epoch_ok {
             "stale"
-        } else if !repository_ok || plan_status == "mismatch" {
+        } else if !repository_ok || plan_status == "mismatch" || living_specs_status == "mismatch" {
             "state_mismatch"
         } else {
             "current"
         };
     Ok(report(record, status, checks))
+}
+
+/// Living specs are evidence material for proof completion (#1183).
+///
+/// Completion packages must (1) bind at least one living-spec path when the
+/// surface exists, and (2) keep authored material-body digests aligned with the
+/// active validation epoch (fingerprint-only attestation churn is not enough).
+fn verify_living_specs_evidence(
+    project_root: &Path,
+    record: &CompletionEvidenceRecord,
+    active_epoch: &crate::core::validation_epoch::ValidationEpochMetadata,
+    checks: &mut Vec<EvidenceCheck>,
+) -> &'static str {
+    use crate::core::project_specs::{LOCAL_PROJECT_SPECS, material_spec_body};
+
+    let present: Vec<_> = LOCAL_PROJECT_SPECS
+        .iter()
+        .filter(|spec| project_root.join(spec.path).is_file())
+        .collect();
+    if present.is_empty() {
+        checks.push(check(
+            "living_specs_evidence",
+            "pass",
+            Some("no living-specs surface present".to_string()),
+        ));
+        return "pass";
+    }
+
+    let bound = record.spec_refs.iter().any(|spec_ref| {
+        let normalized = spec_ref.replace('\\', "/");
+        present.iter().any(|spec| {
+            normalized == spec.path
+                || normalized.ends_with(&format!("/{}", spec.path))
+                || normalized.contains(".decapod/managed/specs/")
+        })
+    });
+    if !bound {
+        checks.push(check(
+            "living_specs_evidence",
+            "fail",
+            Some(
+                "completion evidence omits living-spec refs; specs are evidence material for proof completion"
+                    .to_string(),
+            ),
+        ));
+        return "incomplete";
+    }
+
+    let mut mismatched = Vec::new();
+    for spec in &present {
+        let key = format!("living_spec_material:{}", spec.path);
+        let Some(expected) = active_epoch.material_hashes.get(&key) else {
+            continue;
+        };
+        let path = project_root.join(spec.path);
+        let Ok(body) = fs::read_to_string(&path) else {
+            mismatched.push(spec.path.to_string());
+            continue;
+        };
+        let mut hasher = Sha256::new();
+        hasher.update(material_spec_body(&body).as_bytes());
+        let actual = format!("sha256:{:x}", hasher.finalize());
+        if &actual != expected {
+            mismatched.push(spec.path.to_string());
+        }
+    }
+    if mismatched.is_empty() {
+        checks.push(check(
+            "living_specs_evidence",
+            "pass",
+            Some("living-spec material digests match validation epoch".to_string()),
+        ));
+        "pass"
+    } else {
+        checks.push(check(
+            "living_specs_evidence",
+            "fail",
+            Some(format!(
+                "living-spec material digests differ from validation epoch for {mismatched:?}"
+            )),
+        ));
+        "mismatch"
+    }
 }
 
 fn verify_proof_artifacts(

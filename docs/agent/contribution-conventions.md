@@ -57,6 +57,8 @@ Material means the document body differs from the PR base after stripping auto-g
 
 `decapod rpc --op specs.refresh` and `decapod validate --refresh-specs` only re-attest fingerprints and overlays. That is required hygiene, not a living-spec rewrite. Not every file needs an edit; at least one of INTENT, ARCHITECTURE, INTERFACES, VALIDATION, SEMANTICS, OPERATIONS, SECURITY, or README must carry a material prose change.
 
+Living specs are evidence material for proof completion: VERIFIED workunits must bind at least one `.decapod/managed/specs/*` path in `spec_refs`, validation epochs hash authored material bodies (`living_spec_material:*`), and completion evidence fails when those digests or bindings are missing.
+
 ## 4. Entrypoint and Dockerfile Pin Discipline
 
 `AGENTS.md`, `CLAUDE.md`, `CODEX.md`, `GEMINI.md`, and `.decapod/managed/Dockerfile.decapod` carry a Decapod release pin and fingerprint that MUST agree with the installed binary. `decapod validate` self-heals these when they drift; do not hand-edit the release pins or fingerprints. If `validate` reports `entrypoint_release_mismatch`, rerun it and let the binary refresh the pinned headers; the file bodies (project-specific prose, governed sections) are preserved.
