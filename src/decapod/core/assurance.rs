@@ -1,12 +1,11 @@
 use crate::core::error::DecapodError;
+use crate::core::events;
 use crate::core::mentor::{MentorEngine, Obligation, ObligationKind, ObligationsContext};
 use crate::core::rpc::{Advisory, Attestation, Interlock, LoopSignal, ReconciliationPointer};
 use crate::core::workspace;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
-use std::fs::{self, OpenOptions};
-use std::io::Write;
 use std::path::{Path, PathBuf};
 
 pub const INTERLOCK_WORKSPACE_REQUIRED: &str = "workspace_required";
@@ -57,6 +56,11 @@ impl AssuranceEngine {
         Self {
             repo_root: repo_root.to_path_buf(),
         }
+    }
+
+    /// Local datastore directory (`.decapod/data`) — sole authority for events.
+    fn data_root(&self) -> PathBuf {
+        self.repo_root.join(".decapod").join("data")
     }
 
     pub fn evaluate(
@@ -297,28 +301,25 @@ impl AssuranceEngine {
     }
 
     fn detect_loop_signal(&self) -> Result<Option<LoopSignal>, DecapodError> {
-        let attestation_path = self
-            .repo_root
-            .join(".decapod")
-            .join("managed")
-            .join("assurance_attestations.jsonl");
-        if !attestation_path.exists() {
+        // Authority: decapod.db events stream=assurance (JSONL path retired).
+        let recent = events::query(&self.data_root(), events::ASSURANCE, 40)?;
+        if recent.is_empty() {
             return Ok(None);
         }
 
-        let content = fs::read_to_string(&attestation_path).map_err(DecapodError::IoError)?;
         let mut file_counts: HashMap<String, usize> = HashMap::new();
         let mut interlock_counts: HashMap<String, usize> = HashMap::new();
 
-        for line in content.lines().rev().take(40) {
-            let parsed = serde_json::from_str::<Attestation>(line);
-            if let Ok(att) = parsed {
-                for path in &att.touched_paths {
-                    *file_counts.entry(path.clone()).or_default() += 1;
-                }
-                if let Some(code) = &att.interlock_code {
-                    *interlock_counts.entry(code.clone()).or_default() += 1;
-                }
+        for event in &recent {
+            let att: Attestation = match serde_json::from_value(event.payload.clone()) {
+                Ok(a) => a,
+                Err(_) => continue,
+            };
+            for path in &att.touched_paths {
+                *file_counts.entry(path.clone()).or_default() += 1;
+            }
+            if let Some(code) = &att.interlock_code {
+                *interlock_counts.entry(code.clone()).or_default() += 1;
             }
         }
 
@@ -365,10 +366,11 @@ impl AssuranceEngine {
         hasher.update(canonical_input.as_bytes());
         let input_hash = format!("{:x}", hasher.finalize());
 
+        let id = crate::core::ulid::new_ulid();
         let attestation = Attestation {
-            id: crate::core::ulid::new_ulid(),
+            id: id.clone(),
             op: "assurance.evaluate".to_string(),
-            timestamp,
+            timestamp: timestamp.clone(),
             input_hash,
             touched_paths: input.touched_paths.clone(),
             interlock_code: interlock.map(|i| i.code.clone()),
@@ -377,26 +379,20 @@ impl AssuranceEngine {
             } else {
                 "ok".to_string()
             },
-            trace_path: ".decapod/managed/assurance_attestations.jsonl".to_string(),
+            // Trace points at the canonical SQLite stream, not a dual JSONL log.
+            trace_path: format!("decapod.db:events(stream={})", events::ASSURANCE),
         };
 
-        let attestation_path = self
-            .repo_root
-            .join(".decapod")
-            .join("managed")
-            .join("assurance_attestations.jsonl");
-        if let Some(parent) = attestation_path.parent() {
-            fs::create_dir_all(parent).map_err(DecapodError::IoError)?;
-        }
-        let mut file = OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(&attestation_path)
-            .map_err(DecapodError::IoError)?;
-        let line = serde_json::to_string(&attestation).unwrap_or_else(|_| "{}".to_string());
-        file.write_all(line.as_bytes())
-            .map_err(DecapodError::IoError)?;
-        file.write_all(b"\n").map_err(DecapodError::IoError)?;
+        let mut envelope = serde_json::to_value(&attestation).map_err(|e| {
+            DecapodError::ValidationError(format!("serialize assurance attestation: {e}"))
+        })?;
+        // Ensure event envelope columns extract correctly.
+        envelope["event_id"] = serde_json::Value::String(id);
+        envelope["event_type"] = serde_json::Value::String("assurance.attestation".into());
+        envelope["ts"] = serde_json::Value::String(timestamp);
+        envelope["actor"] = serde_json::Value::String("decapod".into());
+
+        events::append(&self.data_root(), events::ASSURANCE, &envelope)?;
 
         Ok(attestation)
     }

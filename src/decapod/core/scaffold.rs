@@ -1359,7 +1359,6 @@ pub const DECAPOD_GITIGNORE_RULES: &[&str] = &[
     ".decapod/managed/*",
     ".decapod/governance/workunits/",
     "!.decapod/data/",
-    "!.decapod/data/knowledge.promotions.jsonl",
     "!.decapod/managed/",
     "!.decapod/managed/Dockerfile.decapod",
     "!.decapod/managed/specs/",
@@ -1374,6 +1373,8 @@ pub const DECAPOD_GITIGNORE_RULES: &[&str] = &[
 const DEPRECATED_DECAPOD_GITIGNORE_RULES: &[&str] = &[
     "!.decapod/generated/validation-epoch.json",
     "!.decapod/managed/validation-epoch.json",
+    // Knowledge promotions live in decapod.db; JSONL is no longer a tracked ledger (#1180).
+    "!.decapod/data/knowledge.promotions.jsonl",
 ];
 
 /// Ensure a given entry exists in the project's .gitignore file.
@@ -1419,10 +1420,7 @@ fn tracked_runtime_data_paths(target_dir: &Path) -> Vec<String> {
 
     let mut paths = String::from_utf8_lossy(&output.stdout)
         .lines()
-        .filter(|path| {
-            path.starts_with(".decapod/data/")
-                && *path != ".decapod/data/knowledge.promotions.jsonl"
-        })
+        .filter(|path| path.starts_with(".decapod/data/"))
         .map(str::to_string)
         .collect::<Vec<_>>();
     paths.sort();

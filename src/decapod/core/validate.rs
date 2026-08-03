@@ -1522,7 +1522,6 @@ fn validate_generated_artifact_whitelist(
 
     let allowed_tracked = [
         ".decapod/managed/Dockerfile.decapod",
-        ".decapod/data/knowledge.promotions.jsonl",
         ".decapod/managed/specs/.manifest",
         ".decapod/managed/specs/.manifest.json",
         VALIDATION_RECEIPT_PATH,
@@ -2774,37 +2773,117 @@ fn validate_context_capsule_policy_contract(
     Ok(())
 }
 
+/// Fail closed if known legacy event JSONL files remain live under `.decapod/data/`.
+/// Runtime authority is solely `decapod.db`; residual files must be imported+retired.
+fn validate_legacy_jsonl_retired(
+    ctx: &ValidationContext,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Legacy JSONL Retirement Gate", ctx);
+    let data_root = repo_root.join(".decapod").join("data");
+    if !data_root.exists() {
+        pass("No data directory; legacy JSONL retirement N/A", ctx);
+        return Ok(());
+    }
+
+    // Attempt self-heal: import + retire when a datastore exists.
+    let db_path = data_root.join(crate::core::schemas::LOCAL_DB_NAME);
+    if db_path.exists()
+        && let Ok(conn) = crate::core::db::db_connect(&db_path.to_string_lossy())
+    {
+        let _ = crate::core::events::import_legacy_jsonl(&data_root, &conn);
+    }
+
+    let live = crate::core::events::live_legacy_jsonl_files(&data_root);
+    // Also fail if the retired assurance managed file reappears as live dual authority.
+    let assurance_live = repo_root
+        .join(".decapod")
+        .join("managed")
+        .join("assurance_attestations.jsonl");
+    if assurance_live.is_file() {
+        // Self-heal path: migrations should retire it; surface as failure until migrate runs.
+        fail(
+            &format!(
+                "Live assurance JSONL still present at {} — run `decapod activate` (migration assurance.attestations.to_events.v001) so attestations live only in decapod.db",
+                assurance_live.display()
+            ),
+            ctx,
+        );
+        return Ok(());
+    }
+
+    if live.is_empty() {
+        pass(
+            "No live legacy event JSONL under .decapod/data (authority is decapod.db)",
+            ctx,
+        );
+    } else {
+        fail(
+            &format!(
+                "Live legacy event JSONL still present under .decapod/data: {}. Run `decapod activate` to import into decapod.db and retire files under .decapod/data/.retired-jsonl/",
+                live.join(", ")
+            ),
+            ctx,
+        );
+    }
+    Ok(())
+}
+
 fn validate_knowledge_promotions_if_present(
     ctx: &ValidationContext,
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
     info("Knowledge Promotion Ledger Gate", ctx);
 
-    let ledger = repo_root
-        .join(".decapod")
-        .join("data")
-        .join("knowledge.promotions.jsonl");
-    if !ledger.exists() {
+    // Authority is decapod.db events (stream=knowledge). Legacy JSONL is retired.
+    let data_root = repo_root.join(".decapod").join("data");
+    let db_path = data_root.join(crate::core::schemas::LOCAL_DB_NAME);
+    if !db_path.exists() {
         skip(
-            "No knowledge promotion ledger found; skipping promotion ledger gate",
+            "No local datastore; skipping knowledge promotion ledger gate",
             ctx,
         );
         return Ok(());
     }
 
-    let raw = fs::read_to_string(&ledger).map_err(error::DecapodError::IoError)?;
-    for (idx, line) in raw.lines().enumerate() {
-        if line.trim().is_empty() {
-            continue;
-        }
-        let v: serde_json::Value = serde_json::from_str(line).map_err(|e| {
-            error::DecapodError::ValidationError(format!(
-                "invalid promotion ledger line {} in {}: {}",
-                idx + 1,
-                ledger.display(),
-                e
-            ))
-        })?;
+    let promotions =
+        match crate::core::events::query(&data_root, crate::core::events::KNOWLEDGE, usize::MAX) {
+            Ok(rows) => rows
+                .into_iter()
+                .filter(|e| {
+                    e.payload.get("target_class").is_some()
+                        || e.payload.get("source_entry_id").is_some()
+                        || e.event_type.contains("promotion")
+                })
+                .collect::<Vec<_>>(),
+            Err(_) => {
+                skip(
+                    "Knowledge events unreadable; skipping promotion ledger gate",
+                    ctx,
+                );
+                return Ok(());
+            }
+        };
+
+    if promotions.is_empty() {
+        skip(
+            "No knowledge promotion events in decapod.db; skipping promotion ledger gate",
+            ctx,
+        );
+        return Ok(());
+    }
+
+    for event in &promotions {
+        let v = &event.payload;
+        // Canonical writers store the domain object; some rows may still hold
+        // envelope fields at the top level after legacy import.
+        let row = if v.get("source_entry_id").is_some() {
+            v.clone()
+        } else if let Some(inner) = v.get("payload") {
+            inner.clone()
+        } else {
+            v.clone()
+        };
         for key in [
             "event_id",
             "ts",
@@ -2815,31 +2894,36 @@ fn validate_knowledge_promotions_if_present(
             "actor",
             "reason",
         ] {
-            if v.get(key).is_none() {
+            let present = row.get(key).is_some()
+                || (key == "event_id" && !event.event_id.is_empty())
+                || (key == "ts" && !event.ts.is_empty())
+                || (key == "actor" && !event.actor.is_empty());
+            if !present {
                 fail(
                     &format!(
-                        "Knowledge promotion ledger missing '{}' on line {} ({})",
-                        key,
-                        idx + 1,
-                        ledger.display()
+                        "Knowledge promotion event '{}' missing required field '{}'",
+                        event.event_id, key
                     ),
                     ctx,
                 );
             }
         }
 
-        if v.get("target_class").and_then(|x| x.as_str()) != Some("procedural") {
+        let target = row
+            .get("target_class")
+            .and_then(|x| x.as_str())
+            .unwrap_or("");
+        if target != "procedural" {
             fail(
                 &format!(
-                    "Knowledge promotion ledger requires target_class='procedural' on line {} ({})",
-                    idx + 1,
-                    ledger.display()
+                    "Knowledge promotion event '{}' requires target_class='procedural' (got '{target}')",
+                    event.event_id
                 ),
                 ctx,
             );
         }
 
-        let evidence_ok = v
+        let evidence_ok = row
             .get("evidence_refs")
             .and_then(|x| x.as_array())
             .map(|arr| {
@@ -2852,27 +2936,25 @@ fn validate_knowledge_promotions_if_present(
         if !evidence_ok {
             fail(
                 &format!(
-                    "Knowledge promotion ledger evidence_refs must be a non-empty string array on line {} ({})",
-                    idx + 1,
-                    ledger.display()
+                    "Knowledge promotion event '{}' evidence_refs must be a non-empty string array",
+                    event.event_id
                 ),
                 ctx,
             );
         }
 
         for key in ["approved_by", "actor", "reason"] {
-            let non_empty = v
+            let non_empty = row
                 .get(key)
                 .and_then(|x| x.as_str())
                 .map(|s| !s.trim().is_empty())
-                .unwrap_or(false);
+                .unwrap_or(false)
+                || (key == "actor" && !event.actor.trim().is_empty());
             if !non_empty {
                 fail(
                     &format!(
-                        "Knowledge promotion ledger '{}' must be a non-empty string on line {} ({})",
-                        key,
-                        idx + 1,
-                        ledger.display()
+                        "Knowledge promotion event '{}' field '{}' must be a non-empty string",
+                        event.event_id, key
                     ),
                     ctx,
                 );
@@ -2880,7 +2962,13 @@ fn validate_knowledge_promotions_if_present(
         }
     }
 
-    pass("Knowledge promotion ledger schema check passed", ctx);
+    pass(
+        &format!(
+            "Knowledge promotion ledger schema check passed ({} event(s) in decapod.db)",
+            promotions.len()
+        ),
+        ctx,
+    );
     Ok(())
 }
 
@@ -5979,15 +6067,20 @@ fn validate_lcm_immutability(
     ctx: &ValidationContext,
 ) -> Result<(), error::DecapodError> {
     info("LCM Immutability Gate", ctx);
-    let ledger_path = store.root.join(crate::core::schemas::LCM_EVENTS_NAME);
-    if !ledger_path.exists() {
-        pass("No LCM ledger yet; gate trivially passes", ctx);
+    // LCM ledger authority is decapod.db events (stream=lcm), not lcm.events.jsonl.
+    let has_events =
+        crate::core::events::exists(&store.root, crate::core::events::LCM).unwrap_or(false);
+    if !has_events {
+        pass("No LCM events yet; gate trivially passes", ctx);
         return Ok(());
     }
 
     let failures = crate::plugins::lcm::validate_ledger_integrity(&store.root)?;
     if failures.is_empty() {
-        pass("LCM ledger integrity verified", ctx);
+        pass(
+            "LCM ledger integrity verified (decapod.db events stream=lcm)",
+            ctx,
+        );
     } else {
         for f in &failures {
             fail(&format!("LCM immutability: {f}"), ctx);
@@ -6001,15 +6094,16 @@ fn validate_lcm_rebuild_gate(
     ctx: &ValidationContext,
 ) -> Result<(), error::DecapodError> {
     info("LCM Rebuild Gate", ctx);
-    let ledger_path = store.root.join(crate::core::schemas::LCM_EVENTS_NAME);
-    if !ledger_path.exists() {
-        pass("No LCM ledger yet; rebuild gate trivially passes", ctx);
+    let has_events =
+        crate::core::events::exists(&store.root, crate::core::events::LCM).unwrap_or(false);
+    if !has_events {
+        pass("No LCM events yet; rebuild gate trivially passes", ctx);
         return Ok(());
     }
 
     let result = crate::plugins::lcm::rebuild_index(store, true)?;
     if result.get("status").and_then(|v| v.as_str()) == Some("success") {
-        pass("LCM index rebuild successful", ctx);
+        pass("LCM index rebuild successful from events table", ctx);
     } else {
         let errors = result
             .get("errors")
@@ -6458,6 +6552,15 @@ pub fn run_validation(
             ctx,
             "validate_context_capsules_if_present",
             validate_context_capsules_if_present(ctx, working_root)
+        );
+        // Import/retire residual JSONL before knowledge promotion checks so
+        // one-shot migration inputs are visible as events rows.
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_legacy_jsonl_retired",
+            validate_legacy_jsonl_retired(ctx, main_root)
         );
         gate!(
             s,

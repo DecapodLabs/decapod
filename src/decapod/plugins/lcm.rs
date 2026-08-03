@@ -460,7 +460,7 @@ pub fn show_summary(
     })
 }
 
-/// Rebuild the originals_index from the JSONL ledger.
+/// Rebuild the originals_index from the canonical events table (stream=lcm).
 pub fn rebuild_index_from_ledger(store: &Store) -> Result<usize, error::DecapodError> {
     let events = read_all_events(&store.root)?;
     let broker = DbBroker::new(&store.root);
