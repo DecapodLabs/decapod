@@ -51,6 +51,7 @@
     "validation epoch ve_7000a08791ae94fc completed with zero failures",
     "validation epoch ve_87defbf6a2dc1c92 completed with zero failures",
     "validation epoch ve_eaf9b2194d40bf3e completed with zero failures",
+    "validation epoch ve_f79804e783937510 completed with zero failures",
     "validation epoch ve_f923a9a7dc10a016 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
@@ -63,7 +64,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:57fb14a7748dece364bfa16470b3f9525e53ad47afa05eff44a97fa8bcf7e7a3",
+  "artifact_hash": "sha256:de2257833332aa6ebbc75a71f8c69406c7fa0d3ff9df341e74f8d74a61114ec7",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -299,6 +300,13 @@
       {
         "sequence": 32,
         "event_id": "event:32",
+        "intent_id": "intent:validation_01KZ31TWT4B7V0E4M1EM6R5QAA",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZ31TWT4B7V0E4M1EM6R5QAA"
+      },
+      {
+        "sequence": 33,
+        "event_id": "event:33",
         "intent_id": "intent:validation_01KZ31TWT4B7V0E4M1EM6R5QAA",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:validation_01KZ31TWT4B7V0E4M1EM6R5QAA"
@@ -857,12 +865,31 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:32"
+          },
+          {
+            "sequence": 33,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_f79804e783937510 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:33"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 32
+    "next_sequence": 33
   }
 }
