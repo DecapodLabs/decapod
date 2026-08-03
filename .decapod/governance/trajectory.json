@@ -42,6 +42,7 @@
     "validation epoch ve_bfe61bd2856ef703 completed with zero failures",
     "validation epoch ve_d222eb66e7fe62a4 completed with zero failures",
     "validation epoch ve_d66bc57256f222f6 completed with zero failures",
+    "validation epoch ve_d87f3f68b9a6b6da completed with zero failures",
     "validation epoch ve_d94d0c17d3a990eb completed with zero failures",
     "validation epoch ve_e1106f31c6e5eac9 completed with zero failures"
   ],
@@ -54,7 +55,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:8508bf8a56d163854c7306d3c653a652b953f74d1831d0884dde05ed3c93b509",
+  "artifact_hash": "sha256:e838c1799bb9b6cf693cf2521287c5b74288f78035ff948d8eeefe6cf076a26a",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -255,6 +256,13 @@
       {
         "sequence": 27,
         "event_id": "event:27",
+        "intent_id": "intent:validation_01KZ4RWTDJDQQMSCVQNX2E8JDB",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZ4RWTDJDQQMSCVQNX2E8JDB"
+      },
+      {
+        "sequence": 28,
+        "event_id": "event:28",
         "intent_id": "intent:validation_01KZ4RWTDJDQQMSCVQNX2E8JDB",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:validation_01KZ4RWTDJDQQMSCVQNX2E8JDB"
@@ -721,12 +729,31 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:27"
+          },
+          {
+            "sequence": 28,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_d87f3f68b9a6b6da completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:28"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 27
+    "next_sequence": 28
   }
 }
