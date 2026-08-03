@@ -48,6 +48,7 @@
     "validation epoch ve_299e910ee7600a4b completed with zero failures",
     "validation epoch ve_356837d6f21182ad completed with zero failures",
     "validation epoch ve_496446db7c654ee6 completed with zero failures",
+    "validation epoch ve_5c3775366549f149 completed with zero failures",
     "validation epoch ve_7000a08791ae94fc completed with zero failures",
     "validation epoch ve_87defbf6a2dc1c92 completed with zero failures",
     "validation epoch ve_be83604fbe7d9069 completed with zero failures",
@@ -65,7 +66,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:85e8ed19f973febe6ae737cff5393c884612cf205688bb43fc88c5ed2ede7f53",
+  "artifact_hash": "sha256:6d285ff2df45d44daa7cc52657680535891f6eb8fb672e76c2e23aee46e7ad29",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -329,6 +330,13 @@
       {
         "sequence": 36,
         "event_id": "event:36",
+        "intent_id": "intent:validation_01KZ31TWT4B7V0E4M1EM6R5QAA",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZ31TWT4B7V0E4M1EM6R5QAA"
+      },
+      {
+        "sequence": 37,
+        "event_id": "event:37",
         "intent_id": "intent:validation_01KZ31TWT4B7V0E4M1EM6R5QAA",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:validation_01KZ31TWT4B7V0E4M1EM6R5QAA"
@@ -962,12 +970,31 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:36"
+          },
+          {
+            "sequence": 37,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_5c3775366549f149 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:37"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 36
+    "next_sequence": 37
   }
 }
