@@ -1,28 +1,23 @@
 {
   "schema_version": "1.0.0",
-  "title": "Bind project proof commands to a single repository-local authority (#1159)",
-  "intent": "Make .decapod/config.toml the sole live authority for project proof commands, resolve correctly from the CLI store-root path, fail closed on dual registries with .decapod/proofs.toml, report accurate provenance, and align validate with runtime resolution.",
+  "title": "Solve GitHub Issue #1134",
+  "intent": "Add GHA checks in ci.yml and decapod-validate.yml workflows to ensure the PR includes updated entrypoints/specs and fails early on spec/entrypoint drift",
   "state": "APPROVED",
   "todo_ids": [
-    "secu_01kz2d64111qz0z3"
+    "todo_01kz30"
   ],
   "proof_hooks": [
-    "cargo test --lib core::proof::tests",
-    "cargo test --test init_config_behavior",
-    "cargo clippy --all-targets --all-features -- -D warnings",
-    "cargo fmt --check"
+    "git diff --exit-code"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [],
   "unresolved_contradictions": [],
-  "deferred_questions": [
-    "One-shot import of legacy-only .decapod/proofs.toml into config.toml remains optional transitional policy"
-  ],
+  "deferred_questions": [],
   "constraints": {
     "forbidden_paths": [],
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "2026-08-02T23:50:00Z"
+  "updated_at": "1785735406Z"
 }

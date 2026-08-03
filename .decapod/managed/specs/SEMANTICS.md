@@ -25,54 +25,10 @@ stateDiagram-v2
 - Replay order: canonical sequence ascending for replay and timeline construction
 - Conflict resolution: identical event IDs with equal semantic events are idempotent across fresh legacy and split-envelope storage shapes; different fresh events fail with `LEGACY_EVENT_CONFLICT`. Inputs covered by a successful single-datastore migration are retired evidence and are not re-read.
 - Snapshot cadence:
-- Determinism proof strategy: delete preserved JSONL after import and compare validation, health, heartbeat, and flight-recorder results
-
-<!-- decapod:capability-overlay:background-processing:start -->
-
-## Background Processing Semantics Overlay
-
-### Retry Semantics
-- Retry and backoff behavior MUST be selected and documented for each work class
-- Poison-work handling MUST be selected and documented for each work class
-- Retry MUST preserve the declared side-effect and idempotency semantics
-
-### Idempotency
-- Each job MUST declare whether it is idempotent, transactional, compensating, or otherwise duplicate-safe
-- Deduplication or compensation mechanisms are project decisions and require proof
-- Duplicate execution MUST follow the job's declared duplicate-handling semantics
-
-### Poison Message Handling
-- Messages failing after max retries go to dead letter queue
-- DLQ MUST be monitored and alerted
-- Manual replay capability for DLQ messages
-<!-- decapod:capability-overlay:background-processing:end -->
-
-<!-- decapod:capability-overlay:persistent-state:start -->
-
-## Persistent State Semantics Overlay
-
-### Transaction Semantics
-- All multi-entity operations MUST be atomic
-- Read-after-write consistency within transaction boundaries
-- Eventual consistency windows MUST be documented
-
-### Migration Semantics
-- Schema migrations MUST be backward-compatible
-- Migration rollback procedures MUST be documented
-- Data integrity checks post-migration
-
-### Recovery Semantics
-- Point-in-time recovery capability
-- Recovery objectives MUST be selected for the project and recorded as proof obligations
-- Recovery test cadence MUST be selected for the project and recorded as a proof obligation
-<!-- decapod:capability-overlay:persistent-state:end -->
-
-## Error Code Semantics
+- Determinism proof strategy: delete preserved JSONL after import and compare validation, health, heartbeat, and flight-recorder results## Error Code Semantics
 - Namespace:
 - Stable compatibility window:
-- Mapping to retry/degrade behavior:
-
-## Domain Rules
+- Mapping to retry/degrade behavior:## Domain Rules
 - Business rule 1:
 - Business rule 2:
 - Business rule 3:## Idempotency Contracts
@@ -85,7 +41,7 @@ stateDiagram-v2
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e638ddc78a73bbe89538a8fa0b6241f27610a023ee4425594c709a55ca412b36`
+- Repository signal fingerprint: `eed2faeffece64615195bcb9fce2755326263fdeaf96aa65a87fa143a3ec02da`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
