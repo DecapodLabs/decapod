@@ -193,7 +193,8 @@ pub enum FederationCommand {
     IndexBuild,
     /// Export deterministic graph file at federation/_graph.json.
     GraphExport,
-    /// Rebuild federation.db deterministically from federation.events.jsonl.
+    /// Rebuild federation projection tables deterministically from the
+    /// canonical `events` stream (`stream = 'federation'`) in decapod.db.
     Rebuild,
     /// Print the JSON schema for the federation subsystem.
     Schema,
@@ -262,10 +263,6 @@ fn now_ts() -> String {
 
 pub fn federation_db_path(root: &Path) -> PathBuf {
     root.join(schemas::LOCAL_DB_NAME)
-}
-
-fn federation_events_path(root: &Path) -> PathBuf {
-    root.join(schemas::FEDERATION_EVENTS_NAME)
 }
 
 fn federation_derived_dir(root: &Path) -> PathBuf {
@@ -371,13 +368,6 @@ fn source_string_from_metadata(metadata: &str) -> Option<String> {
 
 fn is_critical(node_type: &str, priority: &str) -> bool {
     CRITICAL_NODE_TYPES.contains(&node_type) || priority == "critical"
-}
-
-fn append_event(_events_path: &Path, _event: &FederationEvent) -> Result<(), error::DecapodError> {
-    // Federation events are persisted in the unified `events` table
-    // (stream = 'federation') by the surrounding transaction. The JSONL path
-    // is retained only for replaying legacy archives.
-    Ok(())
 }
 
 fn node_exists(conn: &Connection, id: &str) -> Result<bool, error::DecapodError> {
@@ -586,7 +576,6 @@ pub fn add_node(
 
     let broker = DbBroker::new(&store.root);
     let db_path = federation_db_path(&store.root);
-    let events_path = federation_events_path(&store.root);
     let now = now_ts();
     let node_id = format!("F_{}", crate::core::ulid::new_ulid());
     let event_id = crate::core::ulid::new_ulid();
@@ -643,19 +632,6 @@ pub fn add_node(
             ],
         )?;
 
-        // Append to JSONL inside the same logical unit to prevent drift
-        append_event(
-            &events_path,
-            &FederationEvent {
-                event_id: event_id.clone(),
-                ts: now.clone(),
-                event_type: "node.create".to_string(),
-                status: "success".to_string(),
-                node_id: Some(node_id.clone()),
-                payload: payload_json.clone(),
-                actor: actor.to_string(),
-            },
-        )?;
 
         Ok(FederationNode {
             id: node_id.clone(),
@@ -690,7 +666,6 @@ pub fn edit_node(
 ) -> Result<(), error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = federation_db_path(&store.root);
-    let events_path = federation_events_path(&store.root);
 
     if let Some(p) = priority {
         validate_priority(p)?;
@@ -778,18 +753,6 @@ pub fn edit_node(
             ],
         )?;
 
-        append_event(
-            &events_path,
-            &FederationEvent {
-                event_id,
-                ts: now.clone(),
-                event_type: "node.edit".to_string(),
-                status: "success".to_string(),
-                node_id: Some(id.to_string()),
-                payload: payload_json,
-                actor: "decapod".to_string(),
-            },
-        )?;
 
         Ok(())
     })?;
@@ -805,7 +768,6 @@ pub fn supersede_node(
 ) -> Result<(), error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = federation_db_path(&store.root);
-    let events_path = federation_events_path(&store.root);
     let now = now_ts();
 
     broker.with_conn(&db_path, "decapod", None, "federation.supersede", |conn| {
@@ -868,18 +830,6 @@ pub fn supersede_node(
             ],
         )?;
 
-        append_event(
-            &events_path,
-            &FederationEvent {
-                event_id,
-                ts: now.clone(),
-                event_type: "node.supersede".to_string(),
-                status: "success".to_string(),
-                node_id: Some(old_id.to_string()),
-                payload: payload_json,
-                actor: "decapod".to_string(),
-            },
-        )?;
 
         Ok(())
     })?;
@@ -898,7 +848,6 @@ pub fn transition_node_status(
 
     let broker = DbBroker::new(&store.root);
     let db_path = federation_db_path(&store.root);
-    let events_path = federation_events_path(&store.root);
     let now = now_ts();
 
     broker.with_conn(&db_path, "decapod", None, &format!("federation.{event_type}"), |conn| {
@@ -936,18 +885,6 @@ pub fn transition_node_status(
             ],
         )?;
 
-        append_event(
-            &events_path,
-            &FederationEvent {
-                event_id,
-                ts: now.clone(),
-                event_type: event_type.to_string(),
-                status: "success".to_string(),
-                node_id: Some(id.to_string()),
-                payload: payload_json,
-                actor: "decapod".to_string(),
-            },
-        )?;
 
         Ok(())
     })?;
@@ -965,7 +902,6 @@ pub fn add_edge(
 
     let broker = DbBroker::new(&store.root);
     let db_path = federation_db_path(&store.root);
-    let events_path = federation_events_path(&store.root);
     let now = now_ts();
     let edge_id = format!("FE_{}", crate::core::ulid::new_ulid());
 
@@ -1011,18 +947,6 @@ pub fn add_edge(
             ],
         )?;
 
-        append_event(
-            &events_path,
-            &FederationEvent {
-                event_id,
-                ts: now.clone(),
-                event_type: "edge.add".to_string(),
-                status: "success".to_string(),
-                node_id: Some(source_id.to_string()),
-                payload: payload_json,
-                actor: "decapod".to_string(),
-            },
-        )?;
 
         Ok(())
     })?;
@@ -1033,7 +957,6 @@ pub fn add_edge(
 fn remove_edge(store: &Store, edge_id: &str) -> Result<(), error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = federation_db_path(&store.root);
-    let events_path = federation_events_path(&store.root);
     let now = now_ts();
 
     broker.with_conn(&db_path, "decapod", None, "federation.unlink", |conn| {
@@ -1063,18 +986,6 @@ fn remove_edge(store: &Store, edge_id: &str) -> Result<(), error::DecapodError> 
             ],
         )?;
 
-        append_event(
-            &events_path,
-            &FederationEvent {
-                event_id,
-                ts: now.clone(),
-                event_type: "edge.remove".to_string(),
-                status: "success".to_string(),
-                node_id: None,
-                payload: payload_json,
-                actor: "decapod".to_string(),
-            },
-        )?;
 
         Ok(())
     })?;
@@ -1091,7 +1002,6 @@ pub fn add_source_to_node(
 
     let broker = DbBroker::new(&store.root);
     let db_path = federation_db_path(&store.root);
-    let events_path = federation_events_path(&store.root);
     let now = now_ts();
     let src_id = format!("FS_{}", crate::core::ulid::new_ulid());
 
@@ -1142,18 +1052,6 @@ pub fn add_source_to_node(
             ],
             )?;
 
-            append_event(
-                &events_path,
-                &FederationEvent {
-                    event_id,
-                    ts: now.clone(),
-                    event_type: "source.add".to_string(),
-                    status: "success".to_string(),
-                    node_id: Some(node_id.to_string()),
-                    payload: payload_json,
-                    actor: "decapod".to_string(),
-                },
-            )?;
 
             Ok(())
         },
@@ -1537,11 +1435,24 @@ pub fn rebuild_from_events(root: &Path) -> Result<usize, error::DecapodError> {
     let broker = DbBroker::new(root);
 
     broker.with_conn(&db_path, "decapod", None, "federation.rebuild", |conn| {
+        // Normalize any remaining double-wrapped rows before load so rebuild
+        // and later determinism checks share one storage shape.
+        let repair = crate::core::events::repair_double_wrapped_federation_payloads(conn)?;
+        if repair.normalized > 0 {
+            eprintln!(
+                "federation rebuild: normalized {} legacy double-wrapped event payload(s) before replay",
+                repair.normalized
+            );
+        }
+
         let events = load_federation_events(conn)?;
 
         // Rebuild only federation tables. The canonical database also owns
         // todo, policy, and every other subsystem table, so swapping a
         // federation-only temporary database would destroy unrelated state.
+        //
+        // Invariant: either the full replay commits into a valid projection,
+        // or the pre-rebuild projection remains intact.
         conn.execute_batch("BEGIN IMMEDIATE")?;
         let result = (|| {
             conn.execute("DELETE FROM node_edges", [])?;
@@ -1556,6 +1467,7 @@ pub fn rebuild_from_events(root: &Path) -> Result<usize, error::DecapodError> {
                 replay_event(conn, event)?;
                 count += 1;
             }
+            validate_replayed_projection(conn)?;
             Ok::<usize, error::DecapodError>(count)
         })();
 
@@ -1566,7 +1478,9 @@ pub fn rebuild_from_events(root: &Path) -> Result<usize, error::DecapodError> {
             }
             Err(err) => {
                 let _ = conn.execute_batch("ROLLBACK");
-                Err(err)
+                Err(error::DecapodError::ValidationError(format!(
+                    "federation.rebuild rolled back; pre-rebuild projection preserved: {err}"
+                )))
             }
         }
     })
@@ -1577,32 +1491,67 @@ fn load_federation_events(conn: &Connection) -> Result<Vec<FederationEvent>, err
         "SELECT event_id, ts, event_type, subject_id, payload, actor
          FROM events WHERE stream = 'federation' ORDER BY seq, event_id",
     )?;
-    let events = stmt
+    let rows = stmt
         .query_map([], |row| {
             let payload: String = row.get(4)?;
-            let payload = serde_json::from_str(&payload).map_err(|err| {
-                rusqlite::Error::FromSqlConversionFailure(
-                    4,
-                    rusqlite::types::Type::Text,
-                    Box::new(err),
-                )
-            })?;
-            Ok(FederationEvent {
-                event_id: row.get(0)?,
-                ts: row.get(1)?,
-                event_type: row.get(2)?,
-                status: default_federation_event_status(),
-                node_id: row.get(3)?,
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, Option<String>>(3)?,
                 payload,
-                actor: row.get(5)?,
-            })
+                row.get::<_, String>(5)?,
+            ))
         })?
         .collect::<Result<Vec<_>, _>>()?;
+
+    let mut events = Vec::with_capacity(rows.len());
+    for (event_id, ts, event_type, node_id, payload_raw, actor) in rows {
+        let raw_payload: JsonValue = serde_json::from_str(&payload_raw).map_err(|err| {
+            error::DecapodError::ValidationError(format!(
+                "invalid federation event payload for '{event_id}': {err}"
+            ))
+        })?;
+        // Single normalization boundary for replay and determinism: accept
+        // canonical inner payloads and known legacy double-wrapped envelopes.
+        let payload = crate::core::events::normalize_event_payload(
+            &event_id,
+            &event_type,
+            node_id.as_deref(),
+            &actor,
+            &ts,
+            &raw_payload,
+        )?;
+        events.push(FederationEvent {
+            event_id,
+            ts,
+            event_type,
+            status: default_federation_event_status(),
+            node_id,
+            payload,
+            actor,
+        });
+    }
     Ok(events)
 }
 
+fn require_nonempty_field(
+    event: &FederationEvent,
+    field: &str,
+    value: Option<&str>,
+) -> Result<String, error::DecapodError> {
+    match value.map(str::trim).filter(|s| !s.is_empty()) {
+        Some(v) => Ok(v.to_string()),
+        None => Err(error::DecapodError::ValidationError(format!(
+            "federation.replay: event '{}' ({}) missing required field '{field}'",
+            event.event_id, event.event_type
+        ))),
+    }
+}
+
 fn replay_event(conn: &Connection, event: &FederationEvent) -> Result<(), error::DecapodError> {
-    // Always record the event in the unified events table (stream = federation)
+    // Always record the event in the unified events table (stream = federation).
+    // Payload is already normalized by load_federation_events.
     conn.execute(
         "INSERT OR IGNORE INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
          VALUES(
@@ -1623,7 +1572,13 @@ fn replay_event(conn: &Connection, event: &FederationEvent) -> Result<(), error:
     match event.event_type.as_str() {
         "node.create" => {
             let p = &event.payload;
-            let node_id = event.node_id.as_deref().unwrap_or("");
+            let node_id = require_nonempty_field(event, "node_id", event.node_id.as_deref())?;
+            let node_type = require_nonempty_field(
+                event,
+                "node_type",
+                p.get("node_type").and_then(|v| v.as_str()),
+            )?;
+            let title = p.get("title").and_then(|v| v.as_str()).unwrap_or("");
             let dir_path = p.get("dir_path").and_then(|v| v.as_str()).unwrap_or("");
 
             conn.execute(
@@ -1631,10 +1586,10 @@ fn replay_event(conn: &Connection, event: &FederationEvent) -> Result<(), error:
                  VALUES(?1, ?2, 'active', ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
                 params![
                     node_id,
-                    p.get("node_type").and_then(|v| v.as_str()).unwrap_or(""),
+                    node_type,
                     p.get("priority").and_then(|v| v.as_str()).unwrap_or("notable"),
                     p.get("confidence").and_then(|v| v.as_str()).unwrap_or("agent_inferred"),
-                    p.get("title").and_then(|v| v.as_str()).unwrap_or(""),
+                    title,
                     p.get("body").and_then(|v| v.as_str()).unwrap_or(""),
                     p.get("scope").and_then(|v| v.as_str()).unwrap_or("repo"),
                     p.get("tags").and_then(|v| v.as_str()).unwrap_or(""),
@@ -1650,6 +1605,9 @@ fn replay_event(conn: &Connection, event: &FederationEvent) -> Result<(), error:
             if let Some(sources) = p.get("sources").and_then(|v| v.as_array()) {
                 for src in sources {
                     if let Some(s) = src.as_str() {
+                        if s.trim().is_empty() {
+                            continue;
+                        }
                         let src_id = format!("FS_{}", crate::core::ulid::new_ulid());
                         let meta = source_metadata_json(s);
                         conn.execute(
@@ -1662,7 +1620,7 @@ fn replay_event(conn: &Connection, event: &FederationEvent) -> Result<(), error:
             }
         }
         "node.edit" => {
-            let node_id = event.node_id.as_deref().unwrap_or("");
+            let node_id = require_nonempty_field(event, "node_id", event.node_id.as_deref())?;
             let p = &event.payload;
             if let Some(title) = p.get("title").and_then(|v| v.as_str()) {
                 conn.execute(
@@ -1691,36 +1649,37 @@ fn replay_event(conn: &Connection, event: &FederationEvent) -> Result<(), error:
         }
         "node.supersede" => {
             let p = &event.payload;
-            let old_id = p.get("old_id").and_then(|v| v.as_str()).unwrap_or("");
-            let new_id = p.get("new_id").and_then(|v| v.as_str()).unwrap_or("");
+            let old_id =
+                require_nonempty_field(event, "old_id", p.get("old_id").and_then(|v| v.as_str()))?;
+            let new_id =
+                require_nonempty_field(event, "new_id", p.get("new_id").and_then(|v| v.as_str()))?;
 
             conn.execute(
                 "UPDATE nodes SET status = 'superseded', updated_at = ?1, effective_to = ?1 WHERE id = ?2",
                 params![event.ts, old_id],
-            )
-            ?;
+            )?;
 
             let fallback_edge_id = format!("FE_{}", crate::core::ulid::new_ulid());
             let edge_id = p
                 .get("edge_id")
                 .and_then(|v| v.as_str())
+                .filter(|s| !s.is_empty())
                 .unwrap_or(&fallback_edge_id);
             conn.execute(
                 "INSERT OR IGNORE INTO node_edges(id, source_id, target_id, edge_type, created_at, actor)
                  VALUES(?1, ?2, ?3, 'supersedes', ?4, ?5)",
                 params![edge_id, new_id, old_id, event.ts, event.actor],
-            )
-            ?;
+            )?;
         }
         "node.deprecate" => {
-            let node_id = event.node_id.as_deref().unwrap_or("");
+            let node_id = require_nonempty_field(event, "node_id", event.node_id.as_deref())?;
             conn.execute(
                 "UPDATE nodes SET status = 'deprecated', updated_at = ?1 WHERE id = ?2",
                 params![event.ts, node_id],
             )?;
         }
         "node.dispute" => {
-            let node_id = event.node_id.as_deref().unwrap_or("");
+            let node_id = require_nonempty_field(event, "node_id", event.node_id.as_deref())?;
             conn.execute(
                 "UPDATE nodes SET status = 'disputed', updated_at = ?1 WHERE id = ?2",
                 params![event.ts, node_id],
@@ -1728,39 +1687,58 @@ fn replay_event(conn: &Connection, event: &FederationEvent) -> Result<(), error:
         }
         "edge.add" => {
             let p = &event.payload;
-            let edge_id = p.get("edge_id").and_then(|v| v.as_str()).unwrap_or("");
-            let source_id = p.get("source_id").and_then(|v| v.as_str()).unwrap_or("");
-            let target_id = p.get("target_id").and_then(|v| v.as_str()).unwrap_or("");
-            let edge_type = p.get("edge_type").and_then(|v| v.as_str()).unwrap_or("");
+            let edge_id = require_nonempty_field(
+                event,
+                "edge_id",
+                p.get("edge_id").and_then(|v| v.as_str()),
+            )?;
+            let source_id = require_nonempty_field(
+                event,
+                "source_id",
+                p.get("source_id").and_then(|v| v.as_str()),
+            )?;
+            let target_id = require_nonempty_field(
+                event,
+                "target_id",
+                p.get("target_id").and_then(|v| v.as_str()),
+            )?;
+            let edge_type = require_nonempty_field(
+                event,
+                "edge_type",
+                p.get("edge_type").and_then(|v| v.as_str()),
+            )?;
 
             conn.execute(
                 "INSERT OR IGNORE INTO node_edges(id, source_id, target_id, edge_type, created_at, actor)
                  VALUES(?1, ?2, ?3, ?4, ?5, ?6)",
                 params![edge_id, source_id, target_id, edge_type, event.ts, event.actor],
-            )
-            ?;
+            )?;
         }
         "edge.remove" => {
-            let edge_id = event
-                .payload
-                .get("edge_id")
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
+            let edge_id = require_nonempty_field(
+                event,
+                "edge_id",
+                event.payload.get("edge_id").and_then(|v| v.as_str()),
+            )?;
             conn.execute("DELETE FROM node_edges WHERE id = ?1", params![edge_id])?;
         }
         "source.add" => {
             let p = &event.payload;
-            let src_id = p.get("source_id").and_then(|v| v.as_str()).unwrap_or("");
-            let node_id = event.node_id.as_deref().unwrap_or("");
-            let source = p.get("source").and_then(|v| v.as_str()).unwrap_or("");
+            let src_id = require_nonempty_field(
+                event,
+                "source_id",
+                p.get("source_id").and_then(|v| v.as_str()),
+            )?;
+            let node_id = require_nonempty_field(event, "node_id", event.node_id.as_deref())?;
+            let source =
+                require_nonempty_field(event, "source", p.get("source").and_then(|v| v.as_str()))?;
 
-            let meta = source_metadata_json(source);
+            let meta = source_metadata_json(&source);
             conn.execute(
                 "INSERT OR IGNORE INTO node_edges(id, source_id, target_id, edge_type, metadata, created_at, actor)
                  VALUES(?1, ?2, ?2, ?3, ?4, ?5, ?6)",
                 params![src_id, node_id, SOURCE_EDGE_TYPE, meta, event.ts, event.actor],
-            )
-            ?;
+            )?;
 
             // Update node timestamp to match write-time behavior
             conn.execute(
@@ -1769,8 +1747,59 @@ fn replay_event(conn: &Connection, event: &FederationEvent) -> Result<(), error:
             )?;
         }
         _ => {
-            // Unknown event type — skip silently during rebuild
+            // Unknown event type — record the event row but skip projection mutation.
         }
+    }
+
+    Ok(())
+}
+
+/// Fail closed after replay: reject empty edge endpoints and empty node types
+/// before the rebuild transaction commits.
+fn validate_replayed_projection(conn: &Connection) -> Result<(), error::DecapodError> {
+    let bad_edges: i64 = conn.query_row(
+        "SELECT COUNT(*) FROM node_edges
+         WHERE trim(COALESCE(source_id, '')) = ''
+            OR trim(COALESCE(target_id, '')) = ''
+            OR trim(COALESCE(id, '')) = ''
+            OR trim(COALESCE(edge_type, '')) = ''",
+        [],
+        |r| r.get(0),
+    )?;
+    if bad_edges > 0 {
+        return Err(error::DecapodError::ValidationError(format!(
+            "replay produced {bad_edges} edge(s) with empty id/endpoints/type"
+        )));
+    }
+
+    let bad_nodes: i64 = conn.query_row(
+        "SELECT COUNT(*) FROM nodes
+         WHERE trim(COALESCE(id, '')) = ''
+            OR trim(COALESCE(node_type, '')) = ''",
+        [],
+        |r| r.get(0),
+    )?;
+    if bad_nodes > 0 {
+        return Err(error::DecapodError::ValidationError(format!(
+            "replay produced {bad_nodes} node(s) with empty id or node_type"
+        )));
+    }
+
+    // source.add and node.create sources must surface as edge_type='source' when
+    // the event stream contains them; detect missing representation by comparing
+    // distinct source.add events to projected source edges is not required when
+    // replay itself is strict — still ensure no orphan source edges lack metadata.
+    let bad_sources: i64 = conn.query_row(
+        "SELECT COUNT(*) FROM node_edges
+         WHERE edge_type = 'source'
+           AND (metadata IS NULL OR trim(metadata) = '' OR trim(metadata) = '{}')",
+        [],
+        |r| r.get(0),
+    )?;
+    if bad_sources > 0 {
+        return Err(error::DecapodError::ValidationError(format!(
+            "replay produced {bad_sources} source edge(s) without source metadata"
+        )));
     }
 
     Ok(())
@@ -2082,38 +2111,58 @@ pub fn validate_federation(
                 return Ok(results);
             }
 
+            let mut replay_error: Option<String> = None;
             for event in &events {
-                if event.status != "pending" {
-                    let _ = replay_event(&tmp_conn, event);
+                if event.status == "pending" {
+                    continue;
+                }
+                if let Err(err) = replay_event(&tmp_conn, event) {
+                    replay_error = Some(format!(
+                        "event '{}' ({}): {err}",
+                        event.event_id, event.event_type
+                    ));
+                    break;
                 }
             }
 
-            let rebuilt_hash = canonical_state_hash(&tmp_conn)?;
-            let (reb_nodes, reb_sources, reb_edges) = db_counts(&tmp_conn)?;
-
-            drop(tmp_conn);
-            let _ = fs::remove_file(&tmp_db);
-
-            if current_hash == rebuilt_hash {
-                results.push((
-                    "federation.rebuild_determinism".to_string(),
-                    true,
-                    format!(
-                        "DB matches event replay (hash: {}…, {} nodes, {} sources, {} edges)",
-                        &current_hash[..12],
-                        cur_nodes,
-                        cur_sources,
-                        cur_edges
-                    ),
-                ));
-            } else {
+            if let Some(err) = replay_error {
+                drop(tmp_conn);
+                let _ = fs::remove_file(&tmp_db);
                 results.push((
                     "federation.rebuild_determinism".to_string(),
                     false,
                     format!(
-                        "DB diverged from event replay. Current: {cur_nodes} nodes/{cur_sources} sources/{cur_edges} edges. Rebuilt: {reb_nodes} nodes/{reb_sources} sources/{reb_edges} edges. Run: decapod data federation rebuild"
+                        "Event replay failed during determinism check ({err}). Run: decapod data federation rebuild after repairing event payloads"
                     ),
                 ));
+            } else {
+                let rebuilt_hash = canonical_state_hash(&tmp_conn)?;
+                let (reb_nodes, reb_sources, reb_edges) = db_counts(&tmp_conn)?;
+
+                drop(tmp_conn);
+                let _ = fs::remove_file(&tmp_db);
+
+                if current_hash == rebuilt_hash {
+                    results.push((
+                        "federation.rebuild_determinism".to_string(),
+                        true,
+                        format!(
+                            "DB matches event replay (hash: {}…, {} nodes, {} sources, {} edges)",
+                            &current_hash[..12],
+                            cur_nodes,
+                            cur_sources,
+                            cur_edges
+                        ),
+                    ));
+                } else {
+                    results.push((
+                        "federation.rebuild_determinism".to_string(),
+                        false,
+                        format!(
+                            "DB diverged from event replay. Current: {cur_nodes} nodes/{cur_sources} sources/{cur_edges} edges. Rebuilt: {reb_nodes} nodes/{reb_sources} sources/{reb_edges} edges. Run: decapod data federation rebuild"
+                        ),
+                    ));
+                }
             }
         } else {
             results.push((
@@ -2842,10 +2891,16 @@ pub fn schema() -> serde_json::Value {
             {"name": "vault-export", "description": "Export vault markdown notes under federation/vault"},
             {"name": "index-build", "description": "Build deterministic federation/_index.md"},
             {"name": "graph-export", "description": "Build deterministic federation/_graph.json"},
-            {"name": "rebuild", "description": "Rebuild DB from event log"},
+            {"name": "rebuild", "description": "Rebuild projection from canonical events table"},
             {"name": "schema", "description": "Print JSON schema"},
         ],
-        "storage": ["federation.db", "federation.events.jsonl", "federation/_index.md", "federation/_graph.json", "federation/vault/"],
+        "storage": [
+            "decapod.db (nodes, node_edges, events stream=federation)",
+            "federation/_index.md",
+            "federation/_graph.json",
+            "federation/vault/"
+        ],
         "provenance_schemes": ["file:", "url:", "cmd:", "commit:", "event:"],
+        "note": "Legacy federation.events.jsonl is sealed migration input only; runtime authority is decapod.db."
     })
 }

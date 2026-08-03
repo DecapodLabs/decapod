@@ -37,6 +37,7 @@ The static/override rules of the repository.
 Append-only operational evidence.
 - **Authority:** Canonical tables in `.decapod/data/decapod.db`, accessed through `core::events`.
 - **Migration:** Unproven legacy JSONL is imported idempotently during startup. A successful single-datastore migration durably retires its inputs, and later runtime validation, health, heartbeat, and flight-recorder reads do not consult them. Recreated legacy SQLite stores are copied forward and removed.
+- **Federation payload shape:** Native federation writers and current legacy imports store only the inner domain `payload` object in `events.payload`. Older imports that double-wrapped the full JSONL envelope are unwrapped automatically by migration/activate and by `decapod data federation rebuild`. Operators must not hand-edit the SQLite store; verify recovery with `decapod validate --projections` and a green `federation.rebuild_determinism` gate.
 
 ## 6. Knowledge (Memory)
 The persistent, shared understanding of the project.

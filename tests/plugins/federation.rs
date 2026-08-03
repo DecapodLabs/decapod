@@ -767,3 +767,358 @@ fn test_intent_proof_chain() {
     let found_intent = find_node_by_source(&store, "event:R01KHG4QFQ6ZQAN2F3SR6XC5NA").unwrap();
     assert!(found_intent.is_some());
 }
+
+/// Seed a mixed store: some events already double-wrapped (legacy import shape),
+/// some canonical. Projection rows start correct (as after a healthy import
+/// that wrote nodes alongside envelope payloads).
+fn seed_mixed_legacy_store(store: &Store) -> (String, String, String) {
+    use decapod::core::db;
+    use decapod::core::schemas;
+    use rusqlite::params;
+
+    let commitment = add_node(
+        store,
+        "Task: legacy commitment",
+        "commitment",
+        "notable",
+        "agent_inferred",
+        "body commitment",
+        "event:code_01legacytask",
+        "todo",
+        "repo",
+        None,
+        "decapod",
+    )
+    .unwrap();
+    let lesson = add_node(
+        store,
+        "Native lesson",
+        "lesson",
+        "notable",
+        "agent_inferred",
+        "body lesson",
+        "",
+        "",
+        "repo",
+        None,
+        "decapod",
+    )
+    .unwrap();
+    let edge_id = add_edge(store, &commitment.id, &lesson.id, "depends_on").unwrap();
+    let _src_id = add_source_to_node(store, &lesson.id, "file:legacy.rs").unwrap();
+
+    // Rewrite selected event payloads to the historical double-wrapped shape
+    // while leaving the live projection intact (the pre-repair failure mode).
+    let db_path = store.root.join(schemas::LOCAL_DB_NAME);
+    let conn = db::db_connect(&db_path.to_string_lossy()).unwrap();
+
+    let mut stmt = conn
+        .prepare(
+            "SELECT event_id, event_type, subject_id, payload, actor, ts
+             FROM events WHERE stream = 'federation' AND event_type IN ('node.create', 'edge.add', 'source.add')
+             ORDER BY seq",
+        )
+        .unwrap();
+    let rows: Vec<(String, String, Option<String>, String, String, String)> = stmt
+        .query_map([], |row| {
+            Ok((
+                row.get(0)?,
+                row.get(1)?,
+                row.get(2)?,
+                row.get(3)?,
+                row.get(4)?,
+                row.get(5)?,
+            ))
+        })
+        .unwrap()
+        .map(|r| r.unwrap())
+        .collect();
+
+    // Double-wrap the first node.create and the edge.add only; leave one create
+    // and source.add canonical so the store is mixed.
+    let mut wrapped = 0;
+    for (event_id, event_type, subject_id, payload_raw, actor, ts) in rows {
+        if event_type == "source.add" {
+            continue;
+        }
+        if event_type == "node.create" && subject_id.as_deref() == Some(lesson.id.as_str()) {
+            continue; // keep lesson canonical
+        }
+        let inner: serde_json::Value = serde_json::from_str(&payload_raw).unwrap();
+        if inner.get("event_type").is_some() {
+            continue;
+        }
+        let envelope = serde_json::json!({
+            "actor": actor,
+            "event_id": event_id,
+            "event_type": event_type,
+            "node_id": subject_id,
+            "payload": inner,
+            "status": "success",
+            "ts": ts,
+        });
+        conn.execute(
+            "UPDATE events SET payload = ?1 WHERE event_id = ?2 AND stream = 'federation'",
+            params![serde_json::to_string(&envelope).unwrap(), event_id],
+        )
+        .unwrap();
+        wrapped += 1;
+    }
+    assert!(
+        wrapped >= 2,
+        "expected to double-wrap commitment create + edge, got {wrapped}"
+    );
+
+    (commitment.id, lesson.id, edge_id)
+}
+
+#[test]
+fn test_legacy_wrapped_rebuild_preserves_fields_sources_and_is_idempotent() {
+    use decapod::core::db;
+    use decapod::core::schemas;
+    use rusqlite::params;
+
+    let (_tmp, store) = test_store();
+    let (commitment_id, lesson_id, _edge_id) = seed_mixed_legacy_store(&store);
+
+    // Pre-rebuild projection is healthy.
+    let db_path = store.root.join(schemas::LOCAL_DB_NAME);
+    let conn = db::db_connect(&db_path.to_string_lossy()).unwrap();
+    let node_type: String = conn
+        .query_row(
+            "SELECT node_type FROM nodes WHERE id = ?1",
+            params![commitment_id],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert_eq!(node_type, "commitment");
+    drop(conn);
+
+    // First rebuild must recover from wrapped payloads without wiping fields.
+    let count1 = rebuild_from_events(&store.root).unwrap();
+    assert!(count1 > 0);
+
+    let conn = db::db_connect(&db_path.to_string_lossy()).unwrap();
+    let (nt, title): (String, String) = conn
+        .query_row(
+            "SELECT node_type, title FROM nodes WHERE id = ?1",
+            params![commitment_id],
+            |r| Ok((r.get(0)?, r.get(1)?)),
+        )
+        .unwrap();
+    assert_eq!(nt, "commitment");
+    assert_eq!(title, "Task: legacy commitment");
+
+    let (nt2, title2): (String, String) = conn
+        .query_row(
+            "SELECT node_type, title FROM nodes WHERE id = ?1",
+            params![lesson_id],
+            |r| Ok((r.get(0)?, r.get(1)?)),
+        )
+        .unwrap();
+    assert_eq!(nt2, "lesson");
+    assert_eq!(title2, "Native lesson");
+
+    // No empty-endpoint edges.
+    let bad_edges: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM node_edges
+             WHERE trim(COALESCE(source_id,'')) = '' OR trim(COALESCE(target_id,'')) = ''",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert_eq!(bad_edges, 0);
+
+    // depends_on edge restored with real endpoints.
+    let depends: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM node_edges
+             WHERE edge_type = 'depends_on' AND source_id = ?1 AND target_id = ?2",
+            params![commitment_id, lesson_id],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert_eq!(depends, 1);
+
+    // source.add provenance survives.
+    let sources: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM node_edges
+             WHERE edge_type = 'source' AND source_id = ?1
+               AND json_extract(metadata, '$.source') = 'file:legacy.rs'",
+            params![lesson_id],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert!(sources >= 1, "source.add provenance missing after rebuild");
+
+    // Stored payloads are canonical after rebuild re-insert.
+    let wrapped_left: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM events
+             WHERE stream = 'federation'
+               AND json_extract(payload, '$.event_type') IS NOT NULL
+               AND json_extract(payload, '$.payload') IS NOT NULL",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert_eq!(wrapped_left, 0);
+    drop(conn);
+
+    build_derived(&store);
+    let results = validate_federation(&store.root).unwrap();
+    for (gate, passed, msg) in &results {
+        assert!(passed, "Gate {gate} failed after rebuild: {msg}");
+    }
+
+    // Second rebuild is a semantic no-op (determinism holds).
+    let count2 = rebuild_from_events(&store.root).unwrap();
+    assert_eq!(count1, count2);
+    build_derived(&store);
+    let results2 = validate_federation(&store.root).unwrap();
+    for (gate, passed, msg) in &results2 {
+        assert!(passed, "Gate {gate} failed after second rebuild: {msg}");
+    }
+}
+
+#[test]
+fn test_rebuild_fails_closed_on_malformed_edge_without_replacing_projection() {
+    use decapod::core::db;
+    use decapod::core::schemas;
+    use rusqlite::params;
+
+    let (_tmp, store) = test_store();
+    let node = add_node(
+        &store,
+        "Keep me",
+        "lesson",
+        "notable",
+        "agent_inferred",
+        "body",
+        "",
+        "",
+        "repo",
+        None,
+        "decapod",
+    )
+    .unwrap();
+
+    let db_path = store.root.join(schemas::LOCAL_DB_NAME);
+    let conn = db::db_connect(&db_path.to_string_lossy()).unwrap();
+    // Inject a malformed edge.add that lacks endpoints.
+    conn.execute(
+        "INSERT INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
+         VALUES(
+           'bad-edge-1', '1779199999Z',
+           (SELECT COALESCE(MAX(seq),0)+1 FROM events WHERE stream = 'federation'),
+           'federation', 'node', ?1, 'edge.add', ?2, 'decapod'
+         )",
+        params![
+            node.id,
+            serde_json::json!({"edge_id": "FE_bad", "edge_type": "depends_on"}).to_string()
+        ],
+    )
+    .unwrap();
+    let nodes_before: i64 = conn
+        .query_row("SELECT COUNT(*) FROM nodes", [], |r| r.get(0))
+        .unwrap();
+    let title_before: String = conn
+        .query_row(
+            "SELECT title FROM nodes WHERE id = ?1",
+            params![node.id],
+            |r| r.get(0),
+        )
+        .unwrap();
+    drop(conn);
+
+    let err = rebuild_from_events(&store.root).expect_err("malformed edge must fail rebuild");
+    let msg = err.to_string();
+    assert!(
+        msg.contains("rolled back") || msg.contains("missing required field"),
+        "unexpected error: {msg}"
+    );
+
+    // Pre-rebuild projection preserved.
+    let conn = db::db_connect(&db_path.to_string_lossy()).unwrap();
+    let nodes_after: i64 = conn
+        .query_row("SELECT COUNT(*) FROM nodes", [], |r| r.get(0))
+        .unwrap();
+    let title_after: String = conn
+        .query_row(
+            "SELECT title FROM nodes WHERE id = ?1",
+            params![node.id],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert_eq!(nodes_before, nodes_after);
+    assert_eq!(title_before, title_after);
+    assert_eq!(title_after, "Keep me");
+}
+
+#[test]
+fn test_rebuild_fails_closed_on_contradictory_wrapped_payload() {
+    use decapod::core::db;
+    use decapod::core::schemas;
+    use rusqlite::params;
+
+    let (_tmp, store) = test_store();
+    let node = add_node(
+        &store,
+        "Keep me",
+        "lesson",
+        "notable",
+        "agent_inferred",
+        "body",
+        "",
+        "",
+        "repo",
+        None,
+        "decapod",
+    )
+    .unwrap();
+
+    let db_path = store.root.join(schemas::LOCAL_DB_NAME);
+    let conn = db::db_connect(&db_path.to_string_lossy()).unwrap();
+    // Contradictory wrapper: row is node.create, envelope claims edge.add.
+    let (event_id, actor, ts): (String, String, String) = conn
+        .query_row(
+            "SELECT event_id, actor, ts FROM events
+             WHERE stream = 'federation' AND event_type = 'node.create' AND subject_id = ?1",
+            params![node.id],
+            |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
+        )
+        .unwrap();
+    // Contradict only event_type; other duplicated fields match the row.
+    let bad = serde_json::json!({
+        "event_id": event_id,
+        "event_type": "edge.add",
+        "node_id": node.id,
+        "payload": {"edge_id": "x", "source_id": "a", "target_id": "b", "edge_type": "relates_to"},
+        "actor": actor,
+        "ts": ts
+    });
+    conn.execute(
+        "UPDATE events SET payload = ?1 WHERE event_id = ?2",
+        params![bad.to_string(), event_id],
+    )
+    .unwrap();
+    drop(conn);
+
+    let err = rebuild_from_events(&store.root).expect_err("contradictory envelope must fail");
+    assert!(
+        err.to_string().contains("LEGACY_EVENT_PAYLOAD") || err.to_string().contains("rolled back"),
+        "unexpected: {err}"
+    );
+
+    let conn = db::db_connect(&db_path.to_string_lossy()).unwrap();
+    let title: String = conn
+        .query_row(
+            "SELECT title FROM nodes WHERE id = ?1",
+            params![node.id],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert_eq!(title, "Keep me");
+}

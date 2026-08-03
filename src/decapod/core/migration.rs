@@ -128,6 +128,17 @@ pub fn all_migrations() -> Vec<Migration> {
             description: "Fold events, agents, node_edges, task_tags, patterns→meta; drop empty tables (#1126–#1131)",
             up: migrate_schema_fold_v001,
         },
+        Migration {
+            id: "federation.events.unwrap_legacy_payload.v001",
+            sequence: 700,
+            scope: "federation",
+            kind: "rust",
+            script_path: None,
+            min_version: "0.95.0",
+            target_version: "0.95.4",
+            description: "Unwrap double-wrapped legacy federation event payloads so rebuild preserves node_type/title/edges (#1178)",
+            up: migrate_unwrap_legacy_federation_payloads,
+        },
     ]
 }
 
@@ -471,6 +482,31 @@ fn reconcile_canonical_event_tables(
         )?;
     }
     migrate_task_events_to_canonical_stream(&conn)?;
+    // Defense in depth for stores that reach activate before the dedicated
+    // migration ledger entry is recorded: unwrap is data-driven and idempotent.
+    let _ = events::repair_double_wrapped_federation_payloads(&conn)?;
+    Ok(())
+}
+
+/// Repair federation event rows whose `payload` column still holds a full
+/// JSONL envelope instead of the inner domain object (#1178).
+fn migrate_unwrap_legacy_federation_payloads(
+    decapod_root: &Path,
+) -> Result<(), error::DecapodError> {
+    let data_root = decapod_root.join("data");
+    let db_path = data_root.join(schemas::LOCAL_DB_NAME);
+    if !db_path.exists() {
+        return Ok(());
+    }
+    let conn = db::db_connect(&db_path.to_string_lossy())?;
+    events::ensure_tables(&conn)?;
+    let report = events::repair_double_wrapped_federation_payloads(&conn)?;
+    if report.normalized > 0 {
+        eprintln!(
+            "migration federation.events.unwrap_legacy_payload.v001: normalized {} of {} candidate event row(s)",
+            report.normalized, report.candidates
+        );
+    }
     Ok(())
 }
 

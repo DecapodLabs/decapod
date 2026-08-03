@@ -383,6 +383,9 @@ pub fn append_on_conn(
         .and_then(Value::as_str)
         .unwrap_or("decapod");
     let (subject_kind, subject_id) = subject_for_stream(stream, event);
+    // Federation domain writers and replay store only the inner payload object.
+    // Other streams historically persist the full envelope as the payload column.
+    let payload_value = domain_payload_for_storage(stream, event, &event_id, event_type)?;
     let seq: u64 = conn.query_row(
         "SELECT COALESCE(MAX(seq), 0) + 1 FROM events WHERE stream = ?1",
         [stream],
@@ -399,11 +402,268 @@ pub fn append_on_conn(
             subject_kind,
             subject_id,
             event_type,
-            serde_json::to_string(event).unwrap(),
+            serde_json::to_string(&payload_value).unwrap(),
             actor
         ],
     )?;
     Ok(seq)
+}
+
+/// Choose the value written to `events.payload`.
+///
+/// For the federation stream, JSONL/API envelopes carry domain fields under a
+/// nested `payload` object; only that inner object is stored (matching native
+/// federation writers). Other streams keep the historical whole-envelope shape.
+pub fn domain_payload_for_storage(
+    stream: &str,
+    event: &Value,
+    event_id: &str,
+    event_type: &str,
+) -> Result<Value, error::DecapodError> {
+    if stream != FEDERATION {
+        return Ok(event.clone());
+    }
+
+    // Federation envelope form: a `payload` key is present. It must be an object;
+    // only the inner object is stored.
+    if let Some(inner) = event.get("payload") {
+        if !inner.is_object() {
+            return Err(error::DecapodError::ValidationError(format!(
+                "LEGACY_EVENT_PAYLOAD: event '{event_id}' inner payload is not a JSON object"
+            )));
+        }
+        let subject_id = event.get("node_id").and_then(Value::as_str);
+        let actor = event
+            .get("actor")
+            .or_else(|| event.get("actor_id"))
+            .and_then(Value::as_str)
+            .unwrap_or("decapod");
+        let ts = event
+            .get("ts")
+            .and_then(Value::as_str)
+            .unwrap_or("1970-01-01T00:00:00Z");
+        // When event_type is also present this is a full envelope; validate it.
+        if event.get("event_type").is_some() {
+            return normalize_event_payload(event_id, event_type, subject_id, actor, ts, event);
+        }
+        return Ok(inner.clone());
+    }
+
+    // Already a bare domain payload (native writer shape).
+    Ok(event.clone())
+}
+
+/// True when `value` looks like a federation event envelope with a nested payload object.
+pub fn looks_like_event_envelope(value: &Value) -> bool {
+    let Some(obj) = value.as_object() else {
+        return false;
+    };
+    obj.contains_key("event_type") && obj.get("payload").map(|p| p.is_object()).unwrap_or(false)
+}
+
+/// Normalize a stored or incoming federation payload into the canonical inner
+/// domain object. Accepts:
+/// - canonical inner payloads (returned as-is)
+/// - legacy double-wrapped envelopes (validated then unwrapped)
+///
+/// Contradictory envelopes fail closed; they are never silently unwrapped.
+pub fn normalize_event_payload(
+    event_id: &str,
+    event_type: &str,
+    subject_id: Option<&str>,
+    actor: &str,
+    ts: &str,
+    payload: &Value,
+) -> Result<Value, error::DecapodError> {
+    if !looks_like_event_envelope(payload) {
+        return Ok(payload.clone());
+    }
+    validate_envelope_against_row(event_id, event_type, subject_id, actor, ts, payload)?;
+    let inner = payload.get("payload").cloned().ok_or_else(|| {
+        error::DecapodError::ValidationError(format!(
+            "LEGACY_EVENT_PAYLOAD: event '{event_id}' envelope missing object payload"
+        ))
+    })?;
+    if !inner.is_object() {
+        return Err(error::DecapodError::ValidationError(format!(
+            "LEGACY_EVENT_PAYLOAD: event '{event_id}' inner payload is not a JSON object"
+        )));
+    }
+    Ok(inner)
+}
+
+fn validate_envelope_against_row(
+    event_id: &str,
+    event_type: &str,
+    subject_id: Option<&str>,
+    actor: &str,
+    ts: &str,
+    envelope: &Value,
+) -> Result<(), error::DecapodError> {
+    let outer_type = envelope
+        .get("event_type")
+        .and_then(Value::as_str)
+        .unwrap_or("");
+    if outer_type != event_type {
+        return Err(error::DecapodError::ValidationError(format!(
+            "LEGACY_EVENT_PAYLOAD: event '{event_id}' envelope event_type '{outer_type}' does not match row event_type '{event_type}'"
+        )));
+    }
+
+    if let Some(outer_id) = envelope.get("event_id").and_then(Value::as_str)
+        && outer_id != event_id
+    {
+        return Err(error::DecapodError::ValidationError(format!(
+            "LEGACY_EVENT_PAYLOAD: event '{event_id}' envelope event_id '{outer_id}' does not match row identity"
+        )));
+    }
+
+    if let (Some(row_node), Some(outer_node)) =
+        (subject_id, envelope.get("node_id").and_then(Value::as_str))
+        && outer_node != row_node
+    {
+        return Err(error::DecapodError::ValidationError(format!(
+            "LEGACY_EVENT_PAYLOAD: event '{event_id}' envelope node_id '{outer_node}' does not match row subject_id '{row_node}'"
+        )));
+    }
+
+    if let Some(outer_actor) = envelope
+        .get("actor")
+        .or_else(|| envelope.get("actor_id"))
+        .and_then(Value::as_str)
+        && outer_actor != actor
+    {
+        return Err(error::DecapodError::ValidationError(format!(
+            "LEGACY_EVENT_PAYLOAD: event '{event_id}' envelope actor '{outer_actor}' does not match row actor '{actor}'"
+        )));
+    }
+
+    if let Some(outer_ts) = envelope.get("ts").and_then(Value::as_str)
+        && outer_ts != ts
+    {
+        return Err(error::DecapodError::ValidationError(format!(
+            "LEGACY_EVENT_PAYLOAD: event '{event_id}' envelope ts does not match row ts"
+        )));
+    }
+
+    let inner = envelope.get("payload").ok_or_else(|| {
+        error::DecapodError::ValidationError(format!(
+            "LEGACY_EVENT_PAYLOAD: event '{event_id}' envelope missing payload field"
+        ))
+    })?;
+    if !inner.is_object() {
+        return Err(error::DecapodError::ValidationError(format!(
+            "LEGACY_EVENT_PAYLOAD: event '{event_id}' inner payload is not a JSON object"
+        )));
+    }
+    Ok(())
+}
+
+/// Summary of an unwrap repair pass over federation event rows.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+pub struct FederationPayloadRepairReport {
+    pub candidates: usize,
+    pub normalized: usize,
+    pub unchanged: usize,
+}
+
+/// Idempotent repair: unwrap double-wrapped federation `events.payload` values
+/// into the canonical inner domain object. Runs in one transaction; any
+/// consistency failure aborts with zero rows changed.
+pub fn repair_double_wrapped_federation_payloads(
+    conn: &Connection,
+) -> Result<FederationPayloadRepairReport, error::DecapodError> {
+    ensure_tables(conn)?;
+    let table_exists: bool = conn.query_row(
+        "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'events')",
+        [],
+        |row| row.get(0),
+    )?;
+    if !table_exists {
+        return Ok(FederationPayloadRepairReport::default());
+    }
+
+    conn.execute_batch("BEGIN IMMEDIATE")?;
+    let result = (|| {
+        let mut stmt = conn.prepare(
+            "SELECT event_id, event_type, subject_id, actor, ts, payload
+             FROM events
+             WHERE stream = 'federation'
+             ORDER BY seq, event_id",
+        )?;
+        let rows = stmt
+            .query_map([], |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, Option<String>>(2)?,
+                    row.get::<_, String>(3)?,
+                    row.get::<_, String>(4)?,
+                    row.get::<_, String>(5)?,
+                ))
+            })?
+            .collect::<Result<Vec<_>, _>>()?;
+
+        let mut report = FederationPayloadRepairReport::default();
+        let mut updates: Vec<(String, String)> = Vec::new();
+
+        for (event_id, event_type, subject_id, actor, ts, payload_raw) in rows {
+            let payload: Value = serde_json::from_str(&payload_raw).map_err(|e| {
+                error::DecapodError::ValidationError(format!(
+                    "LEGACY_EVENT_PAYLOAD: event '{event_id}' has invalid JSON payload: {e}"
+                ))
+            })?;
+            if !looks_like_event_envelope(&payload) {
+                report.unchanged += 1;
+                continue;
+            }
+            report.candidates += 1;
+            let inner = normalize_event_payload(
+                &event_id,
+                &event_type,
+                subject_id.as_deref(),
+                &actor,
+                &ts,
+                &payload,
+            )?;
+            let inner_raw = serde_json::to_string(&inner).map_err(|e| {
+                error::DecapodError::ValidationError(format!(
+                    "LEGACY_EVENT_PAYLOAD: failed to serialize repaired payload for '{event_id}': {e}"
+                ))
+            })?;
+            if inner_raw != payload_raw {
+                updates.push((event_id, inner_raw));
+                report.normalized += 1;
+            } else {
+                report.unchanged += 1;
+            }
+        }
+
+        for (event_id, inner_raw) in updates {
+            conn.execute(
+                "UPDATE events SET payload = ?1 WHERE stream = 'federation' AND event_id = ?2",
+                params![inner_raw, event_id],
+            )?;
+        }
+        Ok(report)
+    })();
+
+    match result {
+        Ok(report) => {
+            conn.execute_batch("COMMIT")?;
+            if report.normalized > 0 {
+                eprintln!(
+                    "federation payload repair: candidates={} normalized={} unchanged={}",
+                    report.candidates, report.normalized, report.unchanged
+                );
+            }
+            Ok(report)
+        }
+        Err(err) => {
+            let _ = conn.execute_batch("ROLLBACK");
+            Err(err)
+        }
+    }
 }
 
 fn event_id(event: &Value) -> String {
@@ -415,6 +675,9 @@ fn event_id(event: &Value) -> String {
 
 /// Import the legacy JSONL streams without modifying or deleting the source.
 /// Re-running this function is safe because event IDs are unique.
+///
+/// Each file is imported inside one SQLite transaction. A partial parse or
+/// validation failure rolls back the file and does not mark it imported.
 pub fn import_legacy_jsonl(
     data_root: &Path,
     conn: &Connection,
@@ -440,66 +703,104 @@ pub fn import_legacy_jsonl(
         let content_hash = file_content_hash(&path)?;
         let file = fs::File::open(&path).map_err(error::DecapodError::IoError)?;
         let mut record_count = 0usize;
-        for (line_no, line) in BufReader::new(file).lines().enumerate() {
-            let line = line.map_err(error::DecapodError::IoError)?;
-            if line.trim().is_empty() {
-                continue;
-            }
-            record_count += 1;
-            let mut value: Value = serde_json::from_str(&line).map_err(|e| {
-                error::DecapodError::ValidationError(format!(
-                    "invalid legacy event in {}:{}: {e}",
-                    path.display(),
-                    line_no + 1
-                ))
-            })?;
-            if value.get("event_id").and_then(Value::as_str).is_none() {
-                let mut digest = Sha256::new();
-                digest.update(stream.as_bytes());
-                digest.update([0]);
-                digest.update(line_no.to_string().as_bytes());
-                digest.update([0]);
-                digest.update(line.as_bytes());
-                let id = format!(
-                    "legacy_{}",
-                    digest
-                        .finalize()
-                        .iter()
-                        .map(|byte| format!("{byte:02x}"))
-                        .collect::<String>()
-                );
-                value["event_id"] = Value::String(id);
-            }
-            let event_id = value.get("event_id").and_then(Value::as_str).unwrap();
-            if let Some(existing) = load_canonical_event_shape(conn, stream, event_id)? {
-                let matches = canonical_event_matches(stream, &existing, &value)?;
-                if !matches {
-                    return Err(error::DecapodError::ValidationError(format!(
-                        "LEGACY_EVENT_CONFLICT: {}:{} event_id '{}' differs from the canonical {stream} event",
-                        path.display(),
-                        line_no + 1,
-                        event_id
-                    )));
+        let mut file_imported = 0usize;
+
+        conn.execute_batch("BEGIN IMMEDIATE")?;
+        let file_result = (|| {
+            for (line_no, line) in BufReader::new(file).lines().enumerate() {
+                let line = line.map_err(error::DecapodError::IoError)?;
+                if line.trim().is_empty() {
+                    continue;
                 }
-                continue;
+                record_count += 1;
+                let mut value: Value = serde_json::from_str(&line).map_err(|e| {
+                    error::DecapodError::ValidationError(format!(
+                        "invalid legacy event in {}:{}: {e}",
+                        path.display(),
+                        line_no + 1
+                    ))
+                })?;
+                if value.get("event_id").and_then(Value::as_str).is_none() {
+                    let mut digest = Sha256::new();
+                    digest.update(stream.as_bytes());
+                    digest.update([0]);
+                    digest.update(line_no.to_string().as_bytes());
+                    digest.update([0]);
+                    digest.update(line.as_bytes());
+                    let id = format!(
+                        "legacy_{}",
+                        digest
+                            .finalize()
+                            .iter()
+                            .map(|byte| format!("{byte:02x}"))
+                            .collect::<String>()
+                    );
+                    value["event_id"] = Value::String(id);
+                }
+                let event_id = value
+                    .get("event_id")
+                    .and_then(Value::as_str)
+                    .unwrap()
+                    .to_string();
+                let event_type = value
+                    .get("event_type")
+                    .or_else(|| value.get("op"))
+                    .and_then(Value::as_str)
+                    .unwrap_or("");
+                // Fail closed on contradictory federation envelopes before insert.
+                if stream == FEDERATION {
+                    domain_payload_for_storage(stream, &value, &event_id, event_type).map_err(
+                        |e| {
+                            error::DecapodError::ValidationError(format!(
+                                "{}:{}: {e}",
+                                path.display(),
+                                line_no + 1
+                            ))
+                        },
+                    )?;
+                }
+                if let Some(existing) = load_canonical_event_shape(conn, stream, &event_id)? {
+                    let matches = canonical_event_matches(stream, &existing, &value)?;
+                    if !matches {
+                        return Err(error::DecapodError::ValidationError(format!(
+                            "LEGACY_EVENT_CONFLICT: {}:{} event_id '{}' differs from the canonical {stream} event",
+                            path.display(),
+                            line_no + 1,
+                            event_id
+                        )));
+                    }
+                    continue;
+                }
+                append_on_conn(conn, stream, &value)?;
+                file_imported += 1;
             }
-            append_on_conn(conn, stream, &value)?;
-            imported += 1;
+            conn.execute(
+                "INSERT INTO legacy_event_imports(filename, content_hash, record_count, imported_at)
+                 VALUES(?1, ?2, ?3, ?4)
+                 ON CONFLICT(filename) DO UPDATE SET
+                     content_hash = excluded.content_hash,
+                     record_count = excluded.record_count,
+                     imported_at = excluded.imported_at",
+                params![
+                    filename,
+                    content_hash,
+                    i64::try_from(record_count).unwrap_or(i64::MAX),
+                    crate::core::time::now_epoch_z()
+                ],
+            )?;
+            Ok(file_imported)
+        })();
+
+        match file_result {
+            Ok(count) => {
+                conn.execute_batch("COMMIT")?;
+                imported += count;
+            }
+            Err(err) => {
+                let _ = conn.execute_batch("ROLLBACK");
+                return Err(err);
+            }
         }
-        conn.execute(
-            "INSERT INTO legacy_event_imports(filename, content_hash, record_count, imported_at)
-             VALUES(?1, ?2, ?3, ?4)
-             ON CONFLICT(filename) DO UPDATE SET
-                 content_hash = excluded.content_hash,
-                 record_count = excluded.record_count,
-                 imported_at = excluded.imported_at",
-            params![
-                filename,
-                content_hash,
-                i64::try_from(record_count).unwrap_or(i64::MAX),
-                crate::core::time::now_epoch_z()
-            ],
-        )?;
     }
     Ok(imported)
 }
