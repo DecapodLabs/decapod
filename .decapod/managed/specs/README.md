@@ -47,7 +47,7 @@ These files are the project-local contract for humans and agents.
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b39e39897cd4ed19553aa508437ec21a00cc4207f1f23dd8577f0f4caaa80b35`
+- Repository signal fingerprint: `da68a168838dbce78e7e6e759b536f356d88331f9fda8bd36ae27ef1a8ec4243`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

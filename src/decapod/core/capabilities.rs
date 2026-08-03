@@ -949,64 +949,40 @@ fn apply_overlay(content: String, capability_id: &str, spec_path: &str) -> Strin
     if let Some(overlay) = overlay {
         let overlay = normalize_overlay_language(overlay);
         let overlay = format!("{start_marker}\n{overlay}\n{end_marker}");
-        // Insert overlay before the first major section after the title
-        if let Some(pos) = first_unmarked_section_start(&content) {
+        // Always insert immediately before the codebase attestation block (or
+        // append when attestation is absent). Mid-document `## ` anchors are
+        // unstable on compacted living specs and caused CI drift: each refresh
+        // re-sliced authored prose around the insertion point.
+        if let Some(pos) = capability_overlay_insert_pos(&content) {
             let mut result = content[..pos].to_string();
-            result.push_str(&format!("\n\n{}\n\n", overlay));
-            result.push_str(&content[pos..]);
+            // Keep a single blank line boundary around generated overlays.
+            while result.ends_with("\n\n") {
+                result.pop();
+            }
+            if !result.is_empty() && !result.ends_with('\n') {
+                result.push('\n');
+            }
+            result.push('\n');
+            result.push_str(&overlay);
+            result.push_str("\n\n");
+            let rest = content[pos..].trim_start_matches('\n');
+            result.push_str(rest);
             return result;
         }
     }
     content
 }
 
-fn first_unmarked_section_start(content: &str) -> Option<usize> {
-    let mut offset = 0;
-    let mut inside_overlay = false;
-    let mut inside_attestation = false;
-    let mut inside_declared_capabilities = false;
-    let mut attestation_start: Option<usize> = None;
-
-    for line in content.split_inclusive('\n') {
-        let trimmed = line.trim_end_matches(['\r', '\n']).trim();
-        if trimmed.starts_with("<!-- decapod:capability-overlay:")
-            && trimmed.ends_with(":start -->")
-        {
-            inside_overlay = true;
-        } else if inside_overlay
-            && trimmed.starts_with("<!-- decapod:capability-overlay:")
-            && trimmed.ends_with(":end -->")
-        {
-            inside_overlay = false;
-        } else if trimmed.contains("decapod:codebase-attestation:start") {
-            inside_attestation = true;
-            attestation_start.get_or_insert(offset);
-        } else if trimmed.contains("decapod:codebase-attestation:end") {
-            inside_attestation = false;
-        } else if trimmed.contains("decapod:declared-capabilities:start") {
-            inside_declared_capabilities = true;
-        } else if trimmed.contains("decapod:declared-capabilities:end") {
-            inside_declared_capabilities = false;
-        } else if !inside_overlay
-            && !inside_attestation
-            && !inside_declared_capabilities
-            && trimmed.starts_with("## ")
-            // Never treat generated section titles as insertion anchors.
-            && !trimmed.contains("Codebase Attestation")
-            && !trimmed.contains("Declared Capability")
-            && !trimmed.contains("Overlay")
-        {
-            // Prefer authored ## sections that appear before generated blocks.
-            return Some(offset);
-        }
-        offset += line.len();
+/// Deterministic insertion point for capability overlays.
+///
+/// Prefer the start of the codebase attestation block so overlays never nest
+/// inside attestation markers and never bisect authored prose on refresh.
+fn capability_overlay_insert_pos(content: &str) -> Option<usize> {
+    if let Some(pos) = content.find("<!-- decapod:codebase-attestation:start -->") {
+        return Some(pos);
     }
-
-    // Living specs often use compacted headings (`# Title## Section`) with no
-    // standalone `## ` lines before the codebase attestation. Insert overlays
-    // immediately before attestation so refresh is deterministic and never
-    // nests capability overlays inside attestation markers (CI drift root cause).
-    attestation_start.or_else(|| content.find("<!-- decapod:codebase-attestation:start -->"))
+    // No attestation yet: append after authored content.
+    Some(content.trim_end().len())
 }
 
 /// Built-in packs transfer obligations without silently choosing local architecture,

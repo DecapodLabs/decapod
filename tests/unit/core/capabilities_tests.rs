@@ -111,10 +111,9 @@ fn built_in_overlays_do_not_select_universal_service_levels() {
 
 #[test]
 fn capability_overlays_are_not_nested_inside_codebase_attestation() {
-    // Compacted living specs often lack a standalone `## ` heading before the
-    // attestation block. Overlays must land before attestation markers so
-    // `validate --refresh-specs` is drift-free in CI.
-    let body = "# Semantics## State Machines\n- item\n\n<!-- decapod:codebase-attestation:start -->\n## Codebase Attestation\n- Repository signal fingerprint: `abc`\n<!-- decapod:codebase-attestation:end -->\n";
+    // Compacted living specs with mid-document prose after potential anchors
+    // must still receive overlays immediately before attestation only.
+    let body = "# Semantics## State Machines\n- item\n- Business rule 3:## Idempotency Contracts\n\n| Operation | Key |\n|---|---|\n| create | id |\n## Language Note\n- Primary language inferred: Rust\n<!-- decapod:codebase-attestation:start -->\n## Codebase Attestation\n- Repository signal fingerprint: `abc`\n<!-- decapod:codebase-attestation:end -->\n";
     let updated = reconcile_capability_overlays(
         ".decapod/managed/specs/SEMANTICS.md",
         body.to_string(),
@@ -134,6 +133,21 @@ fn capability_overlays_are_not_nested_inside_codebase_attestation() {
         overlay_start < attestation_start,
         "capability overlays must precede codebase attestation:\n{updated}"
     );
+    // Authored prose after the last bullet and before attestation must stay
+    // contiguous before overlays (never split by refresh).
+    let authored_tail = &updated[..overlay_start];
+    assert!(
+        authored_tail.contains("- Business rule 3:## Idempotency Contracts"),
+        "authored prose must stay before overlays:\n{updated}"
+    );
+    assert!(
+        authored_tail.contains("| Operation | Key |"),
+        "table body must stay before overlays:\n{updated}"
+    );
+    assert!(
+        authored_tail.contains("## Language Note"),
+        "language note must stay before overlays:\n{updated}"
+    );
     let attestation_end = updated
         .find("<!-- decapod:codebase-attestation:end -->")
         .expect("attestation end");
@@ -143,7 +157,7 @@ fn capability_overlays_are_not_nested_inside_codebase_attestation() {
         "overlays must not nest inside attestation:\n{between}"
     );
 
-    // A second reconcile must keep overlays outside attestation.
+    // A second reconcile must keep placement and authored prose.
     let again = reconcile_capability_overlays(
         ".decapod/managed/specs/SEMANTICS.md",
         updated.clone(),
@@ -152,25 +166,8 @@ fn capability_overlays_are_not_nested_inside_codebase_attestation() {
             "persistent-state".to_string(),
         ],
     );
-    let attestation_start = again
-        .find("<!-- decapod:codebase-attestation:start -->")
-        .expect("attestation start after re-reconcile");
-    let overlay_start = again
-        .find("<!-- decapod:capability-overlay:background-processing:start -->")
-        .expect("overlay after re-reconcile");
-    assert!(
-        overlay_start < attestation_start,
-        "second reconcile must still place overlays before attestation:\n{again}"
-    );
-    let attestation_end = again
-        .find("<!-- decapod:codebase-attestation:end -->")
-        .expect("attestation end after re-reconcile");
-    assert!(
-        !again[attestation_start..attestation_end].contains("decapod:capability-overlay:"),
-        "second reconcile must not nest overlays in attestation:\n{again}"
-    );
-    assert!(
-        again.contains("- item"),
-        "authored body must survive reconcile cycles:\n{again}"
+    assert_eq!(
+        updated, again,
+        "overlay reconciliation must be byte-stable after the first apply"
     );
 }
