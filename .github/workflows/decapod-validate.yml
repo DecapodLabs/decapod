@@ -17,11 +17,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cargo/bin/decapod
-          key: ${{ runner.os }}-decapod-${{ hashFiles('Cargo.toml', 'Cargo.lock') }}
+          key: ${{ runner.os }}-decapod-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'src/**/*.rs') }}
       - name: Install Decapod
         run: |
           if ! command -v decapod &> /dev/null; then
-            cargo install decapod
+            cargo install --path .
           fi
       - name: Decapod Validate
         env:
