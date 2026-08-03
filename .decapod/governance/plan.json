@@ -1,23 +1,19 @@
 {
   "schema_version": "1.0.0",
-  "title": "Fix federation double-wrapped payloads (#1178) and retire residual JSONL (#1180)",
-  "intent": "Make decapod.db sole runtime authority: repair legacy double-wrapped federation event payloads, make rebuild/replay lossless and transactional, one-shot import residual JSONL into events and retire files under .retired-jsonl, migrate assurance attestations to SQLite, and refresh 0.95.4 managed specs/entrypoints for CI validate drift.",
+  "title": "Fix dry-run override modifications and override splicing (#1179)",
+  "intent": "Honor dry_run during OVERRIDE.md refresh/init so dry-run does not mutate disk; splice new constitution directive sections into OVERRIDE.md during init/refresh without dropping existing authored bodies.",
   "state": "APPROVED",
   "todo_ids": [
-    "feat_01kz4ct2yvb9s5ex"
+    "todo_01kz4c_plus_1"
   ],
   "proof_hooks": [
-    "cargo test --lib events::",
-    "cargo test --test plugins_federation_tests",
-    "cargo test --test single_datastore",
+    "cargo test --test core_tests",
     "cargo clippy --lib -- -D warnings"
   ],
-  "unknowns": [
-    "CI full suite after governance artifact refresh"
-  ],
+  "unknowns": [],
   "human_questions": [],
   "stop_conditions": [
-    "decapod validate CI green with governance artifacts in PR diff"
+    "CI Governance Artifacts green; Decapod Validate green"
   ],
   "unresolved_contradictions": [],
   "deferred_questions": [],
@@ -26,5 +22,5 @@
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1785786203Z"
+  "updated_at": "1785795195Z"
 }

@@ -1395,7 +1395,7 @@ fn override_blend_adds_markdown_body_cues_without_changing_authored_body() {
     )
     .expect("write existing override");
 
-    blend_overrides(tmp.path()).expect("blend override template");
+    blend_overrides(tmp.path(), false).expect("blend override template");
     let updated =
         fs::read_to_string(tmp.path().join(".decapod/OVERRIDE.md")).expect("read blended override");
     assert!(updated.contains(
@@ -1468,4 +1468,29 @@ fn legacy_empty_spec_alias_sections_do_not_create_duplicate_authority() {
             .expect("empty legacy aliases are compatible")
             .is_empty()
     );
+}
+
+#[test]
+fn override_blend_preserves_custom_comments_and_splices_new_directives() {
+    let input = r#"<!-- CHANGES ARE NOT PERMITTED ABOVE THIS LINE -->
+## CORE Overrides
+
+<!-- Custom Comment Here -->
+### core/DEMANDS
+````markdown
+Custom override body.
+````
+
+---
+"#;
+    let upgraded = assets::render_fenced_override_upgrade(input).expect("render upgrade");
+
+    // Assert custom comment is preserved
+    assert!(upgraded.contains("<!-- Custom Comment Here -->"));
+
+    // Assert existing override body is preserved
+    assert!(upgraded.contains("Custom override body."));
+
+    // Assert new directives (like core/DECAPOD) are spliced in
+    assert!(upgraded.contains("### core/DECAPOD"));
 }
