@@ -45,6 +45,7 @@
   ],
   "evidence": [
     "validation epoch ve_356837d6f21182ad completed with zero failures",
+    "validation epoch ve_496446db7c654ee6 completed with zero failures",
     "validation epoch ve_7000a08791ae94fc completed with zero failures",
     "validation epoch ve_eaf9b2194d40bf3e completed with zero failures",
     "validation epoch ve_f923a9a7dc10a016 completed with zero failures"
@@ -59,7 +60,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:8fff7a49342f5f0bf767890834bea5426fed5c0cd6493321b6eecd71b01c48b1",
+  "artifact_hash": "sha256:9d7623cfb298b593260f7a394aeedd0029c7540f2eaec71bc01de1164f70925d",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -239,6 +240,13 @@
       {
         "sequence": 24,
         "event_id": "event:24",
+        "intent_id": "intent:validation_01KZ31TWT4B7V0E4M1EM6R5QAA",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZ31TWT4B7V0E4M1EM6R5QAA"
+      },
+      {
+        "sequence": 25,
+        "event_id": "event:25",
         "intent_id": "intent:validation_01KZ31TWT4B7V0E4M1EM6R5QAA",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:validation_01KZ31TWT4B7V0E4M1EM6R5QAA"
@@ -646,12 +654,31 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:24"
+          },
+          {
+            "sequence": 25,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_496446db7c654ee6 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:25"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 24
+    "next_sequence": 25
   }
 }
