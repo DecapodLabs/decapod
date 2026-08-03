@@ -56,7 +56,10 @@ jobs:
           set -euo pipefail
           # Session is not required for init/validate self-heal of managed pins.
           decapod init --proof --force
+          # validate rewrites entrypoint headers + Dockerfile ARG; specs.refresh
+          # rewrites living-spec attestations (validate alone can leave MD stale).
           decapod validate --refresh-specs || true
+          decapod rpc --op specs.refresh || true
           # Drop init backups; they are not tracked.
           rm -f AGENTS.md.bak CLAUDE.md.bak CODEX.md.bak GEMINI.md.bak
           # Normalize generated_at so only material pin drift remains.
