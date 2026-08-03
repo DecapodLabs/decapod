@@ -8,4 +8,5 @@ This directory contains the API-awareness layer for Decapod.
 - [error-recovery.md](error-recovery.md): Handling failures.
 - [state-model.md](state-model.md): Conceptual state entities.
 - [config-schema.md](config-schema.md): Configuration policy keys.
+- [contribution-conventions.md](contribution-conventions.md): Project tooling standard, source layout, and per-PR governance artifact rules.
 - [llms.txt](llms.txt): Full documentation index.

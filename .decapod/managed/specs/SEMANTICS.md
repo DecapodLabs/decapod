@@ -25,7 +25,10 @@ stateDiagram-v2
 - Replay order: canonical sequence ascending for replay and timeline construction
 - Conflict resolution: identical event IDs with equal semantic events are idempotent across fresh legacy and split-envelope storage shapes; different fresh events fail with `LEGACY_EVENT_CONFLICT`. Inputs covered by a successful single-datastore migration are retired evidence and are not re-read.
 - Snapshot cadence:
-- Determinism proof strategy: delete preserved JSONL after import and compare validation, health, heartbeat, and flight-recorder results
+- Determinism proof strategy: delete preserved JSONL after import and compare validation, health, heartbeat, and flight-recorder results## Error Code Semantics
+- Namespace:
+- Stable compatibility window:
+- Mapping to retry/degrade behavior:
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -67,11 +70,6 @@ stateDiagram-v2
 - Recovery test cadence MUST be selected for the project and recorded as a proof obligation
 <!-- decapod:capability-overlay:persistent-state:end -->
 
-## Error Code Semantics
-- Namespace:
-- Stable compatibility window:
-- Mapping to retry/degrade behavior:
-
 ## Domain Rules
 - Business rule 1:
 - Business rule 2:
@@ -85,7 +83,7 @@ stateDiagram-v2
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e638ddc78a73bbe89538a8fa0b6241f27610a023ee4425594c709a55ca412b36`
+- Repository signal fingerprint: `4b2b363e7c982ea12e115908e96543ee8a00014bccde937e0d474ffea141032d`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
