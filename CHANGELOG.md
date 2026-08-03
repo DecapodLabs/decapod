@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.96.1](https://github.com/DecapodLabs/decapod/compare/v0.96.0...v0.96.1) - 2026-08-03
+
+### Fixed
+
+- *(ci)* commit clean-tree ARCHITECTURE template_hash
+- *(ci)* rustfmt entrypoint heal path and harden release artifact sync
+- *(release)* stop post-release entrypoint/spec drift failures
+
+### Other
+
+- record validation proof after release-sync harden
+- sync validation receipt after 0.96.0 artifact refresh
+- integrate master v0.96.0 into material living-specs PR
+
 ### Added
 
 - *(validate)* require material living-spec rewrites beyond fingerprint/attestation refresh on feature PRs ([#1183](https://github.com/DecapodLabs/decapod/issues/1183))
