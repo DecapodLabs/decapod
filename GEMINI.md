@@ -1,5 +1,5 @@
 <!-- decapod-release: 0.95.4 -->
-<!-- decapod-fingerprint: d7d023aa18af56090b1c6f6a0e6e99f1f3fb69c6b2cee136013938c0c876509c -->
+<!-- decapod-fingerprint: 9ec98a22431265ec1c3eb7fbb3dfa7981757b52dcca6dddaa1c2dfb716675830 -->
 # GEMINI.md - Agent Entrypoint
 
 You are working in a Decapod-managed repository.
@@ -61,7 +61,7 @@ decapod data schema --deterministic
 - `DECAPOD_SESSION_PASSWORD` is required for session-scoped operations.
 - Read canonical router: `decapod constitution get core/DECAPOD`. Reference `docs/PLAYBOOK`, capabilities, or context.scope RPC.
 
-Treat `.decapod/managed/specs/*` as living documents. Adjust specs as intent and code change over time. Fingerprint/attestation refresh is not a substitute for rewriting living-spec prose on each PR.
+Treat `.decapod/managed/specs/*` as living documents. Adjust specs as intent and code change over time; fingerprint refresh alone is not enough.
 
 Stop if requirements are ambiguous or conflicting.
 <!-- decapod-validator-anchors

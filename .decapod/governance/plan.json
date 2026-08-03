@@ -1,17 +1,22 @@
 {
   "schema_version": "1.0.0",
-  "title": "Solve GitHub Issue #1134",
-  "intent": "Add GHA checks in ci.yml and decapod-validate.yml workflows to ensure the PR includes updated entrypoints/specs and fails early on spec/entrypoint drift",
+  "title": "Material living-spec rewrites beyond fingerprints (#1183)",
+  "intent": "Enhance validate, publish, entrypoints, and CI so each non-release PR must include material authored living-spec prose under .decapod/managed/specs/*.md, not only fingerprint/attestation refresh.",
   "state": "APPROVED",
   "todo_ids": [
-    "todo_01kz30"
+    "bugs_01kz4pb814wgb8ae"
   ],
   "proof_hooks": [
-    "git diff --exit-code"
+    "cargo test --lib project_specs",
+    "cargo test --lib workspace::tests::material_specs",
+    "cargo test --test release_workflow_policy material_specs",
+    "decapod validate"
   ],
   "unknowns": [],
   "human_questions": [],
-  "stop_conditions": [],
+  "stop_conditions": [
+    "FINGERPRINT_ONLY_SPECS fails closed on fingerprint-only PR deltas"
+  ],
   "unresolved_contradictions": [],
   "deferred_questions": [],
   "constraints": {
@@ -19,5 +24,5 @@
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1785735406Z"
+  "updated_at": "1785791474Z"
 }
