@@ -32,7 +32,6 @@ stateDiagram-v2
 - Business rule 1:
 - Business rule 2:
 - Business rule 3:## Idempotency Contracts
-| Operation | Idempotency Key | Duplicate Behavior |
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -74,7 +73,7 @@ stateDiagram-v2
 - Recovery test cadence MUST be selected for the project and recorded as a proof obligation
 <!-- decapod:capability-overlay:persistent-state:end -->
 
-|---|---|---|| create/update mutation | request_id | return original result || async enqueue | event_id | ignore duplicate enqueue |## Language Note- Primary language inferred: Rust<!-- decapod:codebase-attestation:start -->
+| Operation | Idempotency Key | Duplicate Behavior ||---|---|---|| create/update mutation | request_id | return original result || async enqueue | event_id | ignore duplicate enqueue |## Language Note- Primary language inferred: Rust<!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
 - Repository signal fingerprint: `b39e39897cd4ed19553aa508437ec21a00cc4207f1f23dd8577f0f4caaa80b35`

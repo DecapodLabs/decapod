@@ -45,7 +45,6 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 | Dependency scan | each PR + weekly | supply-chain tools |
 | DAST/pentest | scheduled | external/internal |## Compliance and Audit
 - Regulatory scope:
-- Audit evidence location:
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -84,7 +83,7 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 - Migration health checks and rollback triggers
 <!-- decapod:capability-overlay:persistent-state:end -->
 
-- Exception process:## Pre-Promotion Security Checklist- [ ] Threat model updated for changed surfaces.- [ ] Auth/authz tests pass.- [ ] Dependency vulnerability scan reviewed.- [ ] No unresolved critical/high security findings.<!-- decapod:codebase-attestation:start -->
+- Audit evidence location:- Exception process:## Pre-Promotion Security Checklist- [ ] Threat model updated for changed surfaces.- [ ] Auth/authz tests pass.- [ ] Dependency vulnerability scan reviewed.- [ ] No unresolved critical/high security findings.<!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
 - Repository signal fingerprint: `b39e39897cd4ed19553aa508437ec21a00cc4207f1f23dd8577f0f4caaa80b35`
