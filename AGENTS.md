@@ -1,5 +1,5 @@
-<!-- decapod-release: 0.95.3 -->
-<!-- decapod-fingerprint: 48453842acf26f4befcb8ec06f08d43b8c6e4b2f5d564ecc226914e073d45d1d -->
+<!-- decapod-release: 0.95.4 -->
+<!-- decapod-fingerprint: 35f838f4e0cb09891e72665ca076a33c155360bd5dac09f629d6007063b5ffeb -->
 # AGENTS.md — Universal Agent Contract
 
 This is a Decapod-managed repository. **Strict Dependency: You are strictly bound to the Decapod governance kernel.**
@@ -70,7 +70,7 @@ decapod constitution search --query "<problem>"
 8. **MUST NOT** invent capabilities that are not exposed by the binary.
 9. **MUST** stop if requirements conflict or intent is ambiguous.
 10. **MUST** respect the interface abstraction boundary.
-11. **MUST** maintain **Living Specs**: treat `.decapod/managed/specs/*` as dynamic documents.
+11. **MUST** maintain **Living Specs**: treat `.decapod/managed/specs/*` as dynamic documents. Fingerprint/attestation refresh alone is **not** enough — each PR must include a material authored-content change in at least one `specs/*.md` file.
 12. **MUST** use the command contracts from `decapod docs` output instead of guessing arguments.
 
 ## Decapod Invocation Contract
@@ -78,6 +78,8 @@ Agents act. Decapod orients. Call Decapod at decision boundaries: ambiguous requ
 
 ## Living Specs & Governance
 The files under `.decapod/managed/specs/` are living contracts. Review and update [INTENT.md](.decapod/managed/specs/INTENT.md), [ARCHITECTURE.md](.decapod/managed/specs/ARCHITECTURE.md), and [INTERFACES.md](.decapod/managed/specs/INTERFACES.md) to align with evolving intent and reality.
+
+**Material rewrite rule (enforced by validate + publish):** `decapod rpc --op specs.refresh` (and validate `--refresh-specs`) only re-attests codebase fingerprints and capability overlays. That hygiene is required but insufficient. For every feature PR, mutate authored prose somewhere under `.decapod/managed/specs/*.md` so the living contract reflects the change (not every file needs an edit — at least one material rewrite beyond fingerprint/attestation blocks). Publication fails with `FINGERPRINT_ONLY_SPECS` when the PR only refreshes hashes.
 
 ## Epistemic Custody
 Preserve the chain between intent, context, assumptions, action, and proof.
