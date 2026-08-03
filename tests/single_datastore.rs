@@ -104,7 +104,16 @@ fn legacy_jsonl_is_imported_idempotently_without_new_jsonl_writes() {
     assert_eq!(count, 1);
     assert_eq!(seq, 1);
     assert!(payload.contains("legacy"));
-    assert_eq!(std::fs::read_to_string(&legacy).unwrap(), legacy_content);
+    // Live JSONL is retired after one-shot import; content lives only in SQLite.
+    assert!(!legacy.exists(), "live todo.events.jsonl must be retired");
+    let retired = data
+        .join(events::RETIRED_JSONL_DIR)
+        .join(schemas::TODO_EVENTS_NAME);
+    assert!(
+        retired.exists(),
+        "retired copy should exist under .retired-jsonl"
+    );
+    assert_eq!(std::fs::read_to_string(&retired).unwrap(), legacy_content);
     assert!(events::table_for_stream(events::TODO).is_some());
 }
 

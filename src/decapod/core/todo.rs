@@ -224,7 +224,7 @@ pub enum TodoCommand {
         #[clap(long)]
         id: String,
     },
-    /// Rebuild the SQLite DB deterministically from the JSONL event log.
+    /// Rebuild / reconcile the todo projection from the canonical events table.
     Rebuild,
     /// List available task categories.
     Categories,
@@ -570,10 +570,6 @@ fn reconcile_commit_to_agent_branch(
 
 pub fn todo_db_path(root: &Path) -> PathBuf {
     root.join(schemas::LOCAL_DB_NAME)
-}
-
-fn events_path(root: &Path) -> PathBuf {
-    root.join(schemas::TODO_EVENTS_NAME)
 }
 
 fn connect_todo(root: &Path) -> Result<Connection, error::DecapodError> {
@@ -5428,40 +5424,16 @@ pub fn list_tasks(
 }
 
 pub fn rebuild_from_events(root: &Path) -> Result<serde_json::Value, error::DecapodError> {
-    let db_path = todo_db_path(root);
-    if db_path.exists() {
-        let conn = crate::core::db::db_connect(&db_path.to_string_lossy())?;
-        ensure_schema(&conn)?;
-        let count: i64 = conn.query_row(
-            "SELECT COUNT(*) FROM events WHERE stream = 'todo'",
-            [],
-            |row| row.get(0),
-        )?;
-        if count > 0 {
-            return Ok(serde_json::json!({
-                "ts": now_iso(),
-                "cmd": "todo.rebuild",
-                "status": "ok",
-                "root": root.to_string_lossy(),
-                "events": count,
-                "source": "events",
-                "note": "canonical unified events table is already part of the shared datastore"
-            }));
-        }
-    }
-
-    // Sealed compatibility path: legacy JSONL is migration input only.
-    // Import into the canonical event tables, then treat SQLite as authority.
-    let ev_path = events_path(root);
-    if ev_path.is_file() {
-        let conn = connect_todo(root)?;
-        ensure_schema(&conn)?;
-        let imported = crate::core::events::import_legacy_jsonl(root, &conn)?;
-        let count: i64 = conn.query_row(
-            "SELECT COUNT(*) FROM events WHERE stream = 'todo'",
-            [],
-            |row| row.get(0),
-        )?;
+    let conn = connect_todo(root)?;
+    ensure_schema(&conn)?;
+    // One-shot: import any residual live legacy JSONL, then SQLite is sole authority.
+    let imported = crate::core::events::import_legacy_jsonl(root, &conn)?;
+    let count: i64 = conn.query_row(
+        "SELECT COUNT(*) FROM events WHERE stream = 'todo'",
+        [],
+        |row| row.get(0),
+    )?;
+    if count > 0 || imported > 0 {
         return Ok(serde_json::json!({
             "ts": now_iso(),
             "cmd": "todo.rebuild",
@@ -5469,14 +5441,11 @@ pub fn rebuild_from_events(root: &Path) -> Result<serde_json::Value, error::Deca
             "root": root.to_string_lossy(),
             "events": count,
             "imported_legacy_jsonl": imported,
-            "source": "legacy_jsonl_import_then_events",
-            "note": "JSONL was sealed migration input; canonical authority is events (stream=todo)"
+            "source": if imported > 0 { "legacy_jsonl_import_then_events" } else { "events" },
+            "note": "canonical authority is events (stream=todo); JSONL is one-shot migration only"
         }));
     }
 
-    // Empty store is valid; create empty DB with schema.
-    let conn = connect_todo(root)?;
-    ensure_schema(&conn)?;
     Ok(serde_json::json!({
         "ts": now_iso(),
         "cmd": "todo.rebuild",
@@ -5484,7 +5453,7 @@ pub fn rebuild_from_events(root: &Path) -> Result<serde_json::Value, error::Deca
         "root": root.to_string_lossy(),
         "events": 0,
         "source": "empty",
-        "note": "no canonical events and no legacy JSONL; created empty DB"
+        "note": "no canonical events; created empty DB"
     }))
 }
 

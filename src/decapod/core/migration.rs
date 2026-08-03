@@ -128,6 +128,39 @@ pub fn all_migrations() -> Vec<Migration> {
             description: "Fold events, agents, node_edges, task_tags, patterns→meta; drop empty tables (#1126–#1131)",
             up: migrate_schema_fold_v001,
         },
+        Migration {
+            id: "federation.events.unwrap_legacy_payload.v001",
+            sequence: 700,
+            scope: "federation",
+            kind: "rust",
+            script_path: None,
+            min_version: "0.95.0",
+            target_version: "0.95.4",
+            description: "Unwrap double-wrapped legacy federation event payloads so rebuild preserves node_type/title/edges (#1178)",
+            up: migrate_unwrap_legacy_federation_payloads,
+        },
+        Migration {
+            id: "events.retire_legacy_jsonl.v001",
+            sequence: 800,
+            scope: "global",
+            kind: "rust",
+            script_path: None,
+            min_version: "0.95.0",
+            target_version: "0.95.4",
+            description: "One-shot import of residual .decapod/data/*.jsonl event logs into decapod.db, then retire files (#1180)",
+            up: migrate_retire_legacy_jsonl,
+        },
+        Migration {
+            id: "assurance.attestations.to_events.v001",
+            sequence: 900,
+            scope: "global",
+            kind: "rust",
+            script_path: None,
+            min_version: "0.95.0",
+            target_version: "0.95.4",
+            description: "Move assurance_attestations.jsonl into events stream=assurance and retire the file (#1180)",
+            up: migrate_assurance_jsonl_to_events,
+        },
     ]
 }
 
@@ -471,6 +504,111 @@ fn reconcile_canonical_event_tables(
         )?;
     }
     migrate_task_events_to_canonical_stream(&conn)?;
+    // Defense in depth for stores that reach activate before the dedicated
+    // migration ledger entry is recorded: unwrap is data-driven and idempotent.
+    let _ = events::repair_double_wrapped_federation_payloads(&conn)?;
+    Ok(())
+}
+
+/// Repair federation event rows whose `payload` column still holds a full
+/// JSONL envelope instead of the inner domain object (#1178).
+fn migrate_unwrap_legacy_federation_payloads(
+    decapod_root: &Path,
+) -> Result<(), error::DecapodError> {
+    let data_root = decapod_root.join("data");
+    let db_path = data_root.join(schemas::LOCAL_DB_NAME);
+    if !db_path.exists() {
+        return Ok(());
+    }
+    let conn = db::db_connect(&db_path.to_string_lossy())?;
+    events::ensure_tables(&conn)?;
+    let report = events::repair_double_wrapped_federation_payloads(&conn)?;
+    if report.normalized > 0 {
+        eprintln!(
+            "migration federation.events.unwrap_legacy_payload.v001: normalized {} of {} candidate event row(s)",
+            report.normalized, report.candidates
+        );
+    }
+    Ok(())
+}
+
+/// One-shot: import any residual `.decapod/data/*.jsonl` event logs into
+/// `decapod.db`, then move them under `.decapod/data/.retired-jsonl/` (#1180).
+fn migrate_retire_legacy_jsonl(decapod_root: &Path) -> Result<(), error::DecapodError> {
+    let data_root = decapod_root.join("data");
+    if !data_root.exists() {
+        return Ok(());
+    }
+    let db_path = data_root.join(schemas::LOCAL_DB_NAME);
+    let conn = db::db_connect(&db_path.to_string_lossy())?;
+    events::ensure_tables(&conn)?;
+    let imported = events::import_legacy_jsonl(&data_root, &conn)?;
+    // import_legacy_jsonl already retires; re-run for previously-marked leftovers.
+    let retired = events::retire_imported_legacy_jsonl(&data_root, &conn)?;
+    if imported > 0 || retired > 0 {
+        eprintln!(
+            "migration events.retire_legacy_jsonl.v001: imported={imported} retired={retired}"
+        );
+    }
+    Ok(())
+}
+
+/// Move historical assurance JSONL attestations into `events` (stream=assurance).
+fn migrate_assurance_jsonl_to_events(decapod_root: &Path) -> Result<(), error::DecapodError> {
+    let path = decapod_root
+        .join("managed")
+        .join("assurance_attestations.jsonl");
+    if !path.is_file() {
+        return Ok(());
+    }
+    let data_root = decapod_root.join("data");
+    fs::create_dir_all(&data_root).map_err(error::DecapodError::IoError)?;
+    let db_path = data_root.join(schemas::LOCAL_DB_NAME);
+    let conn = db::db_connect(&db_path.to_string_lossy())?;
+    events::ensure_tables(&conn)?;
+
+    let content = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
+    let mut count = 0usize;
+    for (line_no, line) in content.lines().enumerate() {
+        let line = line.trim();
+        if line.is_empty() {
+            continue;
+        }
+        let mut value: Value = serde_json::from_str(line).map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "invalid assurance attestation at {}:{}: {e}",
+                path.display(),
+                line_no + 1
+            ))
+        })?;
+        if value.get("event_id").and_then(Value::as_str).is_none() {
+            if let Some(id) = value.get("id").and_then(Value::as_str) {
+                value["event_id"] = Value::String(id.to_string());
+            } else {
+                value["event_id"] = Value::String(crate::core::ulid::new_ulid());
+            }
+        }
+        if value.get("event_type").and_then(Value::as_str).is_none() {
+            value["event_type"] = Value::String("assurance.attestation".to_string());
+        }
+        if value.get("ts").and_then(Value::as_str).is_none()
+            && let Some(ts) = value.get("timestamp").and_then(Value::as_str)
+        {
+            value["ts"] = Value::String(ts.to_string());
+        }
+        events::append_on_conn(&conn, events::ASSURANCE, &value)?;
+        count += 1;
+    }
+
+    // Retire the managed JSONL file so it is not a dual authority.
+    let archive_dir = data_root.join(events::RETIRED_JSONL_DIR);
+    fs::create_dir_all(&archive_dir).map_err(error::DecapodError::IoError)?;
+    let dest = archive_dir.join("assurance_attestations.jsonl");
+    fs::rename(&path, &dest).map_err(error::DecapodError::IoError)?;
+    eprintln!(
+        "migration assurance.attestations.to_events.v001: imported={count} retired={}",
+        dest.display()
+    );
     Ok(())
 }
 
