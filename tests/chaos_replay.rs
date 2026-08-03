@@ -221,16 +221,22 @@ fn chaos_multi_agent_replay_is_deterministic() {
     let after_second_rebuild = list_chaos_projection(&dir);
     assert_eq!(after_first_rebuild, after_second_rebuild);
 
-    // Event log integrity: all event IDs must be unique even under concurrent writers.
-    let events_path = dir.join(".decapod").join("data").join("todo.events.jsonl");
-    let content = std::fs::read_to_string(events_path).expect("read todo events");
+    // Event log integrity: all event IDs must be unique in the canonical events table.
+    let db_path = dir.join(".decapod").join("data").join("decapod.db");
+    let conn = rusqlite::Connection::open(db_path).expect("open decapod.db");
+    let mut stmt = conn
+        .prepare("SELECT event_id FROM events WHERE stream = 'todo'")
+        .expect("prepare");
+    let ids_iter = stmt
+        .query_map([], |row| row.get::<_, String>(0))
+        .expect("query");
     let mut ids = HashSet::new();
-    for line in content.lines() {
-        let v: serde_json::Value = serde_json::from_str(line).expect("event json");
-        let id = v["event_id"].as_str().expect("event_id").to_string();
+    for id in ids_iter {
+        let id = id.expect("row");
         assert!(
-            ids.insert(id),
-            "duplicate event_id found in todo.events.jsonl"
+            ids.insert(id.clone()),
+            "duplicate event_id found in events stream=todo: {id}"
         );
     }
+    assert!(!ids.is_empty(), "expected todo events after chaos replay");
 }

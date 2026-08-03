@@ -159,6 +159,7 @@ pub const GOVERNANCE_DB_SCHEMA_OBLIGATION_EDGES: &str = "
 
 // --- 2. Memory Bin ---
 pub const MEMORY_DB_NAME: &str = "memory.db";
+/// Historical basename for migration discovery only — not a runtime write target.
 pub const MEMORY_EVENTS_NAME: &str = "memory.events.jsonl";
 pub const MEMORY_SCHEMA_VERSION: u32 = 1;
 pub const MEMORY_META_NAMESPACE: &str = "memory";
@@ -322,6 +323,7 @@ pub const DECIDE_DB_SCHEMA_DECISIONS: &str = "
 // while sharing the identical table structure.
 pub const KNOWLEDGE_DB_NAME: &str = "knowledge.db";
 pub const FEDERATION_DB_NAME: &str = "federation.db";
+/// Historical basename for migration discovery only — not a runtime write target.
 pub const FEDERATION_EVENTS_NAME: &str = "federation.events.jsonl";
 pub const FEDERATION_SCHEMA_VERSION: u32 = 1;
 pub const FEDERATION_DB_SCHEMA_META: &str = MEMORY_DB_SCHEMA_META;
@@ -398,6 +400,7 @@ pub const REFLEX_DB_SCHEMA: &str = "
 
 // --- 4. Transactional Bin (TODO) ---
 pub const TODO_DB_NAME: &str = "todo.db";
+/// Historical basename for migration discovery only — not a runtime write target.
 pub const TODO_EVENTS_NAME: &str = "todo.events.jsonl";
 pub const TODO_SCHEMA_VERSION: u32 = 17;
 
@@ -691,6 +694,7 @@ pub const APTITUDE_DB_SCHEMA_INDEX_PROMPT_CONTEXT: &str =
 
 // --- 5. LCM Bin (Lossless Context Management) ---
 pub const LCM_DB_NAME: &str = "lcm.db";
+/// Historical basename for migration discovery only — not a runtime write target.
 pub const LCM_EVENTS_NAME: &str = "lcm.events.jsonl";
 
 pub const LCM_DB_SCHEMA_ORIGINALS_INDEX: &str = "
@@ -733,4 +737,5 @@ pub const LCM_DB_INDEX_SUMMARIES_SCOPE: &str =
     "CREATE INDEX IF NOT EXISTS idx_lcm_summaries_scope ON summaries(scope)";
 
 // --- 6. Map Operators ---
+/// Historical basename for migration discovery only — not a runtime write target.
 pub const MAP_EVENTS_NAME: &str = "map.events.jsonl";

@@ -43,8 +43,12 @@ Decapod uses deterministic error messages and exit codes. Treat these as **Opera
 - **Protocol:** Close the source block with at least the same number of backticks. Keep nested examples shorter than the outer fence, then re-run validation.
 
 ### `LEGACY_EVENT_CONFLICT`
-- **Reason:** A legacy JSONL migration record reuses an event ID whose payload differs from canonical SQLite evidence.
-- **Protocol:** Preserve both artifacts and request human review. Decapod does not guess which event is authoritative or continue with a partial import.
+- **Reason:** A one-shot legacy JSONL migration record reuses an event ID whose payload differs from canonical SQLite evidence.
+- **Protocol:** Preserve both artifacts and request human review. Decapod does not guess which event is authoritative or continue with a partial import. After a successful import the JSONL file is retired under `.decapod/data/.retired-jsonl/` and is never runtime authority.
+
+### Live legacy JSONL under `.decapod/data/`
+- **Reason:** A historical event log file is still present in the live data directory (not yet imported/retired).
+- **Protocol:** Run `decapod activate` (or any path that runs migrations). Decapod imports into `decapod.db` and moves the file to `.decapod/data/.retired-jsonl/`. Do not hand-edit or re-create JSONL ledgers as dual authority.
 
 ### `LEGACY_EVENT_PAYLOAD` / federation rebuild wiped `node_type` or titles
 - **Reason:** Older pre-0.95 one-shot imports copied a full event envelope into `events.payload` instead of the inner domain object. Runtime authority is **only** `.decapod/data/decapod.db`. Replay then reads `node_type`, `title`, and edge endpoints as absent, which can make `federation.rebuild_determinism` diverge and turn the lineage gate red after rebuild.

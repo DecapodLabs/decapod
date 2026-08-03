@@ -2901,6 +2901,6 @@ pub fn schema() -> serde_json::Value {
             "federation/vault/"
         ],
         "provenance_schemes": ["file:", "url:", "cmd:", "commit:", "event:"],
-        "note": "Legacy federation.events.jsonl is sealed migration input only; runtime authority is decapod.db."
+        "note": "Runtime authority is decapod.db only. Historical federation.events.jsonl is one-shot-migrated then retired under .decapod/data/.retired-jsonl/."
     })
 }

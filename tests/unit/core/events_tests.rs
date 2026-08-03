@@ -53,7 +53,20 @@ fn migrated_watcher_events_remain_observable_without_legacy_jsonl() {
     assert_eq!(import_legacy_jsonl(dir.path(), &conn).unwrap(), 1);
     drop(conn);
 
-    fs::remove_file(legacy_path).unwrap();
+    // Import retires the live JSONL; events remain readable from SQLite only.
+    assert!(!legacy_path.exists());
+    assert!(
+        dir.path()
+            .join(RETIRED_JSONL_DIR)
+            .join("watcher.events.jsonl")
+            .exists()
+            || dir
+                .path()
+                .join(RETIRED_JSONL_DIR)
+                .read_dir()
+                .map(|d| d.count() > 0)
+                .unwrap_or(false)
+    );
     let event = latest(dir.path(), WATCHER).unwrap().unwrap();
     assert_eq!(event.event_id, "legacy-watch-1");
     assert_eq!(event.event_type, "watcher.run");

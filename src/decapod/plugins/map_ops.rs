@@ -9,21 +9,16 @@
 
 use crate::core::error;
 use crate::core::events;
-use crate::core::schemas;
 use crate::core::store::Store;
 use clap::Subcommand;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 // ---------------------------------------------------------------------------
 // Paths
 // ---------------------------------------------------------------------------
-
-fn map_events_path(root: &Path) -> PathBuf {
-    root.join(schemas::MAP_EVENTS_NAME)
-}
 
 // ---------------------------------------------------------------------------
 // Data types
@@ -247,22 +242,7 @@ pub fn read_map_events(root: &Path) -> Result<Vec<MapEvent>, error::DecapodError
         }
         return Ok(out);
     }
-    let path = map_events_path(root);
-    if !path.exists() {
-        return Ok(Vec::new());
-    }
-    let content = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
-    let mut events = Vec::new();
-    for line in content.lines() {
-        let trimmed = line.trim();
-        if trimmed.is_empty() {
-            continue;
-        }
-        let event: MapEvent = serde_json::from_str(trimmed)
-            .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
-        events.push(event);
-    }
-    Ok(events)
+    Ok(Vec::new())
 }
 
 // ---------------------------------------------------------------------------
@@ -348,10 +328,10 @@ pub fn schema() -> serde_json::Value {
             { "name": "agentic", "description": "Subagent map with scope-reduction enforcement" },
             { "name": "schema", "description": "Emit subsystem schema JSON" },
         ],
-        "storage": [schemas::MAP_EVENTS_NAME],
+        "storage": ["decapod.db:events(stream=map)"],
         "invariants": [
             "map agentic requires --retain (scope-reduction invariant)",
-            "All operations are logged to the append-only decapod.db:map_events table",
+            "All operations are logged to the append-only decapod.db events table (stream=map)",
             "Deterministic: same items + same prompt + same schema → same result_hash",
         ],
     })

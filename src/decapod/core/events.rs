@@ -1,13 +1,12 @@
 //! Canonical append-only event streams for the local datastore.
 //!
-//! Classification of remaining JSONL references:
-//! - **sealed migration input**: filenames listed in `LEGACY_JSONL_STREAMS` (import only)
-//! - **serialization-only / test fixtures**: checkout fixtures under `tests/`
-//! - **schema name constants**: historical filenames kept for import path matching
-//! - **not runtime authority**: after import, `decapod.db` event tables own the stream
+//! **Single source of truth:** `.decapod/data/decapod.db` (`events` + projection tables).
 //!
-//! Runtime event writes go through these tables so the local SQLite shape matches
-//! the cloud datastore. JSONL is never a live runtime write target.
+//! Historical `*.jsonl` files under `.decapod/data/` are **one-shot migration inputs only**.
+//! After a successful import they are moved to `.decapod/data/.retired-jsonl/` and are
+//! never read again at runtime. Runtime writers must use [`append`] / [`append_on_conn`].
+//!
+//! Schema filename constants remain solely so migrations can discover old paths.
 
 use crate::core::db;
 use crate::core::error;
@@ -30,6 +29,8 @@ pub const WATCHER: &str = "watcher";
 pub const MAP: &str = "map";
 pub const LCM: &str = "lcm";
 pub const KNOWLEDGE: &str = "knowledge";
+/// Assurance attestations (formerly `.decapod/managed/assurance_attestations.jsonl`).
+pub const ASSURANCE: &str = "assurance";
 
 /// Known event stream names. All streams share the single `events` table (#1127).
 pub const STREAMS: &[&str] = &[
@@ -43,7 +44,11 @@ pub const STREAMS: &[&str] = &[
     MAP,
     LCM,
     KNOWLEDGE,
+    ASSURANCE,
 ];
+
+/// Directory under `.decapod/data/` where retired JSONL migration inputs are moved.
+pub const RETIRED_JSONL_DIR: &str = ".retired-jsonl";
 
 /// Physical table name for every stream after consolidation.
 pub const EVENTS_TABLE: &str = "events";
@@ -62,7 +67,8 @@ const LEGACY_STREAM_TABLES: &[(&str, &str)] = &[
     (KNOWLEDGE, "knowledge_events"),
 ];
 
-const LEGACY_FILES: &[(&str, &str)] = &[
+/// Historical on-disk JSONL basenames under `.decapod/data/` (migration discovery only).
+pub const LEGACY_JSONL_FILES: &[(&str, &str)] = &[
     ("broker.events.jsonl", BROKER),
     (schemas::TODO_EVENTS_NAME, TODO),
     (schemas::FEDERATION_EVENTS_NAME, FEDERATION),
@@ -78,6 +84,9 @@ const LEGACY_FILES: &[(&str, &str)] = &[
     ("knowledge.promotions.jsonl", KNOWLEDGE),
     ("knowledge.promotions.events.jsonl", KNOWLEDGE),
 ];
+
+// Keep the private alias so existing call sites in this module stay short.
+const LEGACY_FILES: &[(&str, &str)] = LEGACY_JSONL_FILES;
 
 pub fn table_for_stream(stream: &str) -> Option<&'static str> {
     if STREAMS.contains(&stream) {
@@ -673,12 +682,22 @@ fn event_id(event: &Value) -> String {
     crate::core::ulid::new_ulid()
 }
 
-/// Import the legacy JSONL streams without modifying or deleting the source.
-/// Re-running this function is safe because event IDs are unique.
+/// Import the legacy JSONL streams into `events`, then retire the files.
 ///
-/// Each file is imported inside one SQLite transaction. A partial parse or
-/// validation failure rolls back the file and does not mark it imported.
+/// Re-running is safe: already-imported files are skipped and retired if still
+/// present. Each file is imported inside one SQLite transaction. A partial
+/// parse or validation failure rolls back the file and does not mark it imported.
 pub fn import_legacy_jsonl(
+    data_root: &Path,
+    conn: &Connection,
+) -> Result<usize, error::DecapodError> {
+    let imported = import_legacy_jsonl_without_retire(data_root, conn)?;
+    let _ = retire_imported_legacy_jsonl(data_root, conn)?;
+    Ok(imported)
+}
+
+/// Import only (no filesystem move). Prefer [`import_legacy_jsonl`].
+fn import_legacy_jsonl_without_retire(
     data_root: &Path,
     conn: &Connection,
 ) -> Result<usize, error::DecapodError> {
@@ -742,6 +761,14 @@ pub fn import_legacy_jsonl(
                     .and_then(Value::as_str)
                     .unwrap()
                     .to_string();
+                // Historical promotions ledgers often omit event_type; stamp one so
+                // post-migration validation can still classify them as promotions.
+                if filename.contains("promotion")
+                    && value.get("event_type").and_then(Value::as_str).is_none()
+                    && value.get("op").and_then(Value::as_str).is_none()
+                {
+                    value["event_type"] = Value::String("knowledge.promotion".to_string());
+                }
                 let event_type = value
                     .get("event_type")
                     .or_else(|| value.get("op"))
@@ -805,9 +832,67 @@ pub fn import_legacy_jsonl(
     Ok(imported)
 }
 
+/// Move imported legacy JSONL files out of the live data directory.
+///
+/// Only files already recorded in `legacy_event_imports` are retired. Unimported
+/// files are left in place so a later import can still consume them.
+pub fn retire_imported_legacy_jsonl(
+    data_root: &Path,
+    conn: &Connection,
+) -> Result<usize, error::DecapodError> {
+    ensure_tables(conn)?;
+    let archive = data_root.join(RETIRED_JSONL_DIR);
+    let mut retired = 0usize;
+    for &(filename, _) in LEGACY_FILES {
+        let path = data_root.join(filename);
+        if !path.is_file() {
+            continue;
+        }
+        let marked: bool = conn.query_row(
+            "SELECT EXISTS(SELECT 1 FROM legacy_event_imports WHERE filename = ?1)",
+            [filename],
+            |row| row.get(0),
+        )?;
+        if !marked {
+            continue;
+        }
+        fs::create_dir_all(&archive).map_err(error::DecapodError::IoError)?;
+        let dest_name = filename.replace('/', "__");
+        let mut dest = archive.join(&dest_name);
+        if dest.exists() {
+            // Avoid clobbering a previous retirement; append content hash suffix.
+            let hash = file_content_hash(&path).unwrap_or_else(|_| "dup".into());
+            dest = archive.join(format!("{dest_name}.{hash}"));
+        }
+        fs::rename(&path, &dest).map_err(error::DecapodError::IoError)?;
+        retired += 1;
+        eprintln!(
+            "legacy jsonl retired: {} → {}",
+            path.display(),
+            dest.display()
+        );
+    }
+    Ok(retired)
+}
+
+/// List any still-live legacy JSONL basenames under `data_root` (not retired).
+pub fn live_legacy_jsonl_files(data_root: &Path) -> Vec<String> {
+    LEGACY_FILES
+        .iter()
+        .filter_map(|(filename, _)| {
+            let path = data_root.join(filename);
+            if path.is_file() {
+                Some((*filename).to_string())
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
 /// A successful single-datastore migration already proved that its legacy
 /// inputs were parsed and copied. Record that durable proof so later versions
-/// never reinterpret those archives as live authority.
+/// never reinterpret those archives as live authority, then retire the files.
 pub fn mark_previously_consolidated_legacy_inputs(
     data_root: &Path,
     conn: &Connection,
@@ -830,6 +915,7 @@ pub fn mark_previously_consolidated_legacy_inputs(
             ],
         )?;
     }
+    let _ = retire_imported_legacy_jsonl(data_root, conn)?;
     Ok(marked)
 }
 

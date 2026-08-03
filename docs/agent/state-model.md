@@ -35,9 +35,10 @@ The static/override rules of the repository.
 
 ## 5. Event Evidence
 Append-only operational evidence.
-- **Authority:** Canonical tables in `.decapod/data/decapod.db`, accessed through `core::events`.
-- **Migration:** Unproven legacy JSONL is imported idempotently during startup. A successful single-datastore migration durably retires its inputs, and later runtime validation, health, heartbeat, and flight-recorder reads do not consult them. Recreated legacy SQLite stores are copied forward and removed.
-- **Federation payload shape:** Native federation writers and current legacy imports store only the inner domain `payload` object in `events.payload`. Older imports that double-wrapped the full JSONL envelope are unwrapped automatically by migration/activate and by `decapod data federation rebuild`. Operators must not hand-edit the SQLite store; verify recovery with `decapod validate --projections` and a green `federation.rebuild_determinism` gate.
+- **Authority:** Canonical tables in `.decapod/data/decapod.db` only (`events` streams + projection tables), accessed through `core::events`.
+- **No live JSONL:** Runtime writers never append to `*.jsonl`. Historical files under `.decapod/data/` are one-shot migration inputs: imported into `events`, then moved to `.decapod/data/.retired-jsonl/`. Validate fails if known live legacy JSONL reappears.
+- **Migration:** `events.retire_legacy_jsonl.v001` and related migrations import residual logs, unwrap double-wrapped federation payloads, and migrate assurance attestations into `events` (stream=`assurance`). Recreated legacy SQLite stores are copied forward and removed.
+- **Federation payload shape:** Native federation writers and imports store only the inner domain `payload` object in `events.payload`. Older double-wrapped rows are unwrapped automatically. Operators must not hand-edit the SQLite store; verify recovery with `decapod validate --projections` and a green `federation.rebuild_determinism` gate.
 
 ## 6. Knowledge (Memory)
 The persistent, shared understanding of the project.

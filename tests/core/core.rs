@@ -779,8 +779,8 @@ fn scaffold_store_and_docs_cli_behaviors() {
         "decapod init must allowlist generated project specs artifacts in .gitignore"
     );
     assert!(
-        gitignore.contains("!.decapod/data/knowledge.promotions.jsonl"),
-        "decapod init must allowlist knowledge promotion ledger in .gitignore"
+        !gitignore.contains("!.decapod/data/knowledge.promotions.jsonl"),
+        "decapod init must not allowlist retired knowledge promotions JSONL (authority is decapod.db)"
     );
     assert!(
         gitignore.lines().any(|line| line.trim() == "target/"),
