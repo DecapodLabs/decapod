@@ -39,6 +39,47 @@ stateDiagram-v2
 - Primary language inferred: Rust
 
 <!-- decapod:codebase-attestation:start -->
+
+<!-- decapod:capability-overlay:background-processing:start -->
+
+## Background Processing Semantics Overlay
+
+### Retry Semantics
+- Retry and backoff behavior MUST be selected and documented for each work class
+- Poison-work handling MUST be selected and documented for each work class
+- Retry MUST preserve the declared side-effect and idempotency semantics
+
+### Idempotency
+- Each job MUST declare whether it is idempotent, transactional, compensating, or otherwise duplicate-safe
+- Deduplication or compensation mechanisms are project decisions and require proof
+- Duplicate execution MUST follow the job's declared duplicate-handling semantics
+
+### Poison Message Handling
+- Messages failing after max retries go to dead letter queue
+- DLQ MUST be monitored and alerted
+- Manual replay capability for DLQ messages
+<!-- decapod:capability-overlay:background-processing:end -->
+
+<!-- decapod:capability-overlay:persistent-state:start -->
+
+## Persistent State Semantics Overlay
+
+### Transaction Semantics
+- All multi-entity operations MUST be atomic
+- Read-after-write consistency within transaction boundaries
+- Eventual consistency windows MUST be documented
+
+### Migration Semantics
+- Schema migrations MUST be backward-compatible
+- Migration rollback procedures MUST be documented
+- Data integrity checks post-migration
+
+### Recovery Semantics
+- Point-in-time recovery capability
+- Recovery objectives MUST be selected for the project and recorded as proof obligations
+- Recovery test cadence MUST be selected for the project and recorded as a proof obligation
+<!-- decapod:capability-overlay:persistent-state:end -->
+
 ## Codebase Attestation
 
 - Repository signal fingerprint: `bb91e65abc694680cf0ac2a766d4302fade2d08f25e7c6665d2e3c07c38858f9`

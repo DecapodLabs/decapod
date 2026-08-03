@@ -79,6 +79,47 @@ flowchart LR
 - [ ] Docs/diagram/changelog updates included.
 
 <!-- decapod:codebase-attestation:start -->
+
+<!-- decapod:capability-overlay:background-processing:start -->
+
+## Background Processing Validation Overlay
+
+### Duplicate Delivery Tests
+- Same message delivered multiple times MUST produce same result
+- Idempotency key verification
+- Verify the declared delivery guarantee; do not claim exactly-once behavior without proof
+
+### Retry Tests
+- Configured retry/backoff policy verified
+- Configured retry bound or unbounded policy verified
+- Poison-work handling verified when the project declares it
+
+### Shutdown Tests
+- Graceful drain on signal
+- In-flight job completion or safe requeue
+- No data loss on forced termination
+<!-- decapod:capability-overlay:background-processing:end -->
+
+<!-- decapod:capability-overlay:persistent-state:start -->
+
+## Persistent State Validation Overlay
+
+### Migration Proof Command
+- Configure `repo.migration_validation.command` and its arguments as the executable migration proof; file presence is not proof
+- The configured command MUST define its working directory, timeout, expected exit code, and evidence output
+
+### Migration Tests
+- All migrations MUST have integration tests
+- Rollback procedures MUST be tested
+- Data integrity checks post-migration
+
+### Persistence Integration Tests
+- Repository abstraction tested against real database
+- Transaction boundary tests
+- Concurrency conflict tests
+- Data integrity validation after recovery
+<!-- decapod:capability-overlay:persistent-state:end -->
+
 ## Codebase Attestation
 
 - Repository signal fingerprint: `bb91e65abc694680cf0ac2a766d4302fade2d08f25e7c6665d2e3c07c38858f9`
