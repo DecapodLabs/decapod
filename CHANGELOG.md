@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.95.5](https://github.com/DecapodLabs/decapod/compare/v0.95.4...v0.95.5) - 2026-08-03
+
+### Fixed
+
+- *(federation)* lossless rebuild + retire residual JSONL into decapod.db ([#1181](https://github.com/DecapodLabs/decapod/pull/1181))
+
 ## [0.95.4](https://github.com/DecapodLabs/decapod/compare/v0.95.3...v0.95.4) - 2026-08-03
 
 ### Fixed
