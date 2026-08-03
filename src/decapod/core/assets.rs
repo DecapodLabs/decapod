@@ -836,7 +836,7 @@ decapod data schema --deterministic
 - `DECAPOD_SESSION_PASSWORD` is required for session-scoped operations.
 - Read canonical router: `decapod constitution get core/DECAPOD`. Reference `docs/PLAYBOOK`, capabilities, or context.scope RPC.
 
-Treat `.decapod/managed/specs/*` as living documents. Adjust specs as intent and code change over time.
+Treat `.decapod/managed/specs/*` as living documents. Adjust specs as intent and code change over time; fingerprint refresh alone is not enough.
 
 Stop if requirements are ambiguous or conflicting.
 <!-- decapod-validator-anchors
@@ -917,14 +917,14 @@ decapod constitution search --query "<problem>"
 8. **MUST NOT** invent capabilities that are not exposed by the binary.
 9. **MUST** stop if requirements conflict or intent is ambiguous.
 10. **MUST** respect the interface abstraction boundary.
-11. **MUST** maintain **Living Specs**: treat `.decapod/managed/specs/*` as dynamic documents.
+11. **MUST** maintain **Living Specs**: treat `.decapod/managed/specs/*` as dynamic documents. Each PR needs a material authored `specs/*.md` rewrite — fingerprint/attestation refresh alone fails with `FINGERPRINT_ONLY_SPECS`.
 12. **MUST** use the command contracts from `decapod docs` output instead of guessing arguments.
 
 ## Decapod Invocation Contract
 Agents act. Decapod orients. Call Decapod at decision boundaries: ambiguous requests, public impact, unclear proof, todo lifecycle, scope expansion, context loss, or multi-agent collision risk.
 
 ## Living Specs & Governance
-The files under `.decapod/managed/specs/` are living contracts. Review and update [INTENT.md](.decapod/managed/specs/INTENT.md), [ARCHITECTURE.md](.decapod/managed/specs/ARCHITECTURE.md), and [INTERFACES.md](.decapod/managed/specs/INTERFACES.md) to align with evolving intent and reality.
+The files under `.decapod/managed/specs/` are living contracts. Update [INTENT.md](.decapod/managed/specs/INTENT.md), [ARCHITECTURE.md](.decapod/managed/specs/ARCHITECTURE.md), and [INTERFACES.md](.decapod/managed/specs/INTERFACES.md) when intent or code changes. `specs.refresh` only re-attests fingerprints/overlays; mutate authored prose in at least one living spec per PR.
 
 ## Epistemic Custody
 Preserve the chain between intent, context, assumptions, action, and proof.
@@ -1197,10 +1197,12 @@ jobs:
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
         run: |
-          decapod init --proof --force
+          if [ ! -d .decapod ]; then
+            decapod init --proof
+          fi
           decapod validate --refresh-specs
       - name: Ensure no spec or entrypoint drift
-        # init/validate rewrite generated_at every run; that is not semantic drift.
+        # validate rewrites generated_at every run; that is not semantic drift.
         # Normalize it to HEAD before the exit-code check so only real content,
         # entrypoint, Dockerfile, or manifest hash drift fails CI.
         run: |
@@ -1212,7 +1214,11 @@ jobs:
               sed -i "s/\"generated_at\": \"[^\"]*\"/\"generated_at\": \"${OLD}\"/" "${MANIFEST}"
             fi
           fi
-          git diff --exit-code -- . ':!.decapod/governance/'
+          if ! git diff --exit-code -- . ':!.decapod/governance/'; then
+            echo "::error::Release-bound or living-spec drift after validate --refresh-specs."
+            echo "Commit regenerated entrypoints and .decapod/managed/specs from the evaluating binary."
+            exit 1
+          fi
 "#
     .to_string()
 }

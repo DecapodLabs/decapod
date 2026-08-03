@@ -205,3 +205,25 @@ fn governance_artifact_gate_skips_release_labeled_prs() {
         );
     }
 }
+
+#[test]
+fn material_specs_gate_skips_release_labeled_prs() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let workflow =
+        fs::read_to_string(root.join(".github/workflows/ci.yml")).expect("read CI workflow");
+
+    assert!(
+        workflow.contains("material-specs:"),
+        "CI must retain the material living-specs job (#1183)"
+    );
+    assert!(
+        workflow.contains("FINGERPRINT_ONLY_SPECS"),
+        "material-specs job must fail closed on fingerprint-only refreshes"
+    );
+    assert!(
+        workflow.contains(
+            "if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'release')"
+        ),
+        "release-labeled PRs must not be forced through the material living-specs gate"
+    );
+}

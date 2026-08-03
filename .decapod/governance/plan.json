@@ -1,20 +1,15 @@
 {
   "schema_version": "1.0.0",
-  "title": "Fix dry-run override modifications and override splicing (#1179)",
-  "intent": "Honor dry_run during OVERRIDE.md refresh/init so dry-run does not mutate disk; splice new constitution directive sections into OVERRIDE.md during init/refresh without dropping existing authored bodies.",
+  "title": "Material living-spec rewrites beyond fingerprints (#1183)",
+  "intent": "Enhance validate, publish, completion evidence so living specs are material proof evidence beyond fingerprint refresh.",
   "state": "APPROVED",
   "todo_ids": [
-    "todo_01kz4c_plus_1"
+    "bugs_01kz4pb814wgb8ae"
   ],
-  "proof_hooks": [
-    "cargo test --test core_tests",
-    "cargo clippy --lib -- -D warnings"
-  ],
+  "proof_hooks": [],
   "unknowns": [],
   "human_questions": [],
-  "stop_conditions": [
-    "CI Governance Artifacts green; Decapod Validate green"
-  ],
+  "stop_conditions": [],
   "unresolved_contradictions": [],
   "deferred_questions": [],
   "constraints": {
@@ -22,5 +17,5 @@
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1785795195Z"
+  "updated_at": "1785792965Z"
 }

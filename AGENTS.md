@@ -1,5 +1,5 @@
-<!-- decapod-release: 0.95.5 -->
-<!-- decapod-fingerprint: 2999e5aaf81a6ffa70c7c808def9e0824b2e9f5ca137a2cc4652f69ad824ce6a -->
+<!-- decapod-release: 0.96.0 -->
+<!-- decapod-fingerprint: 950a557a1d130d07fd3fbb11b3bc2aa91b8bc8be257a4c129937e69087e6efc0 -->
 # AGENTS.md — Universal Agent Contract
 
 This is a Decapod-managed repository. **Strict Dependency: You are strictly bound to the Decapod governance kernel.**
@@ -70,14 +70,14 @@ decapod constitution search --query "<problem>"
 8. **MUST NOT** invent capabilities that are not exposed by the binary.
 9. **MUST** stop if requirements conflict or intent is ambiguous.
 10. **MUST** respect the interface abstraction boundary.
-11. **MUST** maintain **Living Specs**: treat `.decapod/managed/specs/*` as dynamic documents.
+11. **MUST** maintain **Living Specs**: treat `.decapod/managed/specs/*` as dynamic documents. Each PR needs a material authored `specs/*.md` rewrite — fingerprint/attestation refresh alone fails with `FINGERPRINT_ONLY_SPECS`.
 12. **MUST** use the command contracts from `decapod docs` output instead of guessing arguments.
 
 ## Decapod Invocation Contract
 Agents act. Decapod orients. Call Decapod at decision boundaries: ambiguous requests, public impact, unclear proof, todo lifecycle, scope expansion, context loss, or multi-agent collision risk.
 
 ## Living Specs & Governance
-The files under `.decapod/managed/specs/` are living contracts. Review and update [INTENT.md](.decapod/managed/specs/INTENT.md), [ARCHITECTURE.md](.decapod/managed/specs/ARCHITECTURE.md), and [INTERFACES.md](.decapod/managed/specs/INTERFACES.md) to align with evolving intent and reality.
+The files under `.decapod/managed/specs/` are living contracts. Update [INTENT.md](.decapod/managed/specs/INTENT.md), [ARCHITECTURE.md](.decapod/managed/specs/ARCHITECTURE.md), and [INTERFACES.md](.decapod/managed/specs/INTERFACES.md) when intent or code changes. `specs.refresh` only re-attests fingerprints/overlays; mutate authored prose in at least one living spec per PR.
 
 ## Epistemic Custody
 Preserve the chain between intent, context, assumptions, action, and proof.

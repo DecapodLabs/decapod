@@ -8,6 +8,7 @@
 use crate::core::container_runtime;
 use crate::core::db;
 use crate::core::error::DecapodError;
+use crate::core::project_specs;
 use crate::core::research_claims;
 use crate::core::rpc::{AllowedOp, Blocker, BlockerKind};
 use crate::core::todo;
@@ -871,7 +872,11 @@ pub fn resolve_base_branch(repo_root: &Path, explicit: Option<&str>) -> String {
         .unwrap_or_else(|| "master".to_string())
 }
 
-fn base_ref_for_branch(repo_root: &Path, branch: &str) -> Option<String> {
+/// Resolve a git ref usable in `git diff` / `git show` for the configured base.
+///
+/// Prefers `origin/<branch>` when the remote-tracking ref exists, otherwise the
+/// local branch tip. Returns `None` when neither is available.
+pub fn base_ref_for_branch(repo_root: &Path, branch: &str) -> Option<String> {
     let remote_ref = format!("refs/remotes/origin/{branch}");
     if git_ref_exists(repo_root, &remote_ref) {
         return Some(format!("origin/{branch}"));
@@ -1414,6 +1419,7 @@ pub fn publish_workspace(
 
     ensure_validation_artifacts_staged(repo_root)?;
     ensure_required_governance_artifacts_in_pr(repo_root, &base_branch)?;
+    ensure_material_specs_change_in_pr(repo_root, &base_branch)?;
 
     // Get current commit hash
     let hash_output = Command::new("git")
@@ -1733,6 +1739,57 @@ pub fn ensure_required_governance_artifacts_in_pr(
     }
 
     Ok(())
+}
+
+/// Require at least one material living-spec rewrite in the PR diff.
+///
+/// `decapod rpc --op specs.refresh` and fingerprint attestation updates are
+/// necessary but insufficient: each PR must mutate authored prose under
+/// `.decapod/managed/specs/*.md` (not only auto-generated attestation /
+/// capability blocks). See GitHub #1183.
+pub fn ensure_material_specs_change_in_pr(
+    repo_root: &Path,
+    base_branch: &str,
+) -> Result<(), DecapodError> {
+    let base_ref = base_ref_for_branch(repo_root, base_branch).ok_or_else(|| {
+        DecapodError::ValidationError(format!(
+            "Cannot publish: base branch '{base_branch}' is not available locally; fetch it before checking material living-spec rewrites."
+        ))
+    })?;
+
+    // Same commit as base: nothing to publish as a PR delta.
+    let dir = repo_root.to_str().unwrap_or(".");
+    let same_commit = Command::new("git")
+        .args(["-C", dir, "rev-parse", base_ref.as_str(), "HEAD"])
+        .output()
+        .map_err(DecapodError::IoError)?;
+    if same_commit.status.success() {
+        let stdout = String::from_utf8_lossy(&same_commit.stdout);
+        let revs: Vec<&str> = stdout
+            .lines()
+            .map(str::trim)
+            .filter(|line| !line.is_empty())
+            .collect();
+        if revs.len() == 2 && revs[0] == revs[1] {
+            return Ok(());
+        }
+    }
+
+    let report = project_specs::material_specs_change_vs_base(repo_root, &base_ref)?;
+    if report.has_material_change {
+        return Ok(());
+    }
+
+    let fingerprint_only = if report.fingerprint_only_changed_paths.is_empty() {
+        "none".to_string()
+    } else {
+        report.fingerprint_only_changed_paths.join(", ")
+    };
+    Err(DecapodError::ValidationError(format!(
+        "Cannot publish: FINGERPRINT_ONLY_SPECS — living specs under .decapod/managed/specs/*.md have no material authored-content change versus '{base_ref}'. \
+Fingerprint/attestation refresh alone is insufficient (observed fingerprint-only paths: {fingerprint_only}). \
+Update at least one living spec (INTENT/ARCHITECTURE/INTERFACES/VALIDATION/SEMANTICS/OPERATIONS/SECURITY/README) with prose that reflects this PR's change, then re-run `decapod rpc --op specs.refresh` and `decapod validate`."
+    )))
 }
 
 pub fn get_allowed_ops(status: &WorkspaceStatus) -> Vec<AllowedOp> {

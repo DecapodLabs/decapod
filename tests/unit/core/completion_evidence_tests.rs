@@ -234,6 +234,14 @@ fn local_record_replays_and_detects_artifact_change() {
     let record_path = write_record(root, &record).expect("write record");
     let report = verify_record(root, "task-1", &record_path).expect("verify record");
     assert_eq!(report.status, "current");
+    assert!(
+        report
+            .checks
+            .iter()
+            .any(|check| check.name == "living_specs_evidence" && check.status == "pass"),
+        "completion evidence must evaluate living-specs proof material: {:?}",
+        report.checks
+    );
 
     let portable_path = root.parent().unwrap().join("completion-evidence.json");
     let envelope = export_record(root, "task-1", &record_path, &portable_path)

@@ -479,6 +479,176 @@ pub fn refresh_specs_manifest(
 
 const CODEBASE_ATTESTATION_START: &str = "<!-- decapod:codebase-attestation:start -->";
 const CODEBASE_ATTESTATION_END: &str = "<!-- decapod:codebase-attestation:end -->";
+const DECLARED_CAPABILITIES_START: &str = "<!-- decapod:declared-capabilities:start -->";
+const DECLARED_CAPABILITIES_END: &str = "<!-- decapod:declared-capabilities:end -->";
+const CAPABILITY_OVERLAY_MARKER_PREFIX: &str = "<!-- decapod:capability-overlay:";
+
+/// Auto-generated living-spec blocks that must not count as material prose.
+///
+/// Fingerprint/attestation refresh and capability overlay reconciliation are
+/// necessary hygiene, but they are not evidence that agents rewrote project
+/// contracts for the change under review (GitHub #1183).
+const AUTO_GENERATED_SPEC_BLOCK_MARKERS: &[(&str, &str)] = &[
+    (CODEBASE_ATTESTATION_START, CODEBASE_ATTESTATION_END),
+    (DECLARED_CAPABILITIES_START, DECLARED_CAPABILITIES_END),
+];
+
+/// Strip Decapod-owned generated sections from a living spec body.
+///
+/// Remaining content is the authored contract surface that agents must mutate
+/// when intent, architecture, interfaces, or proof obligations change.
+pub fn strip_auto_generated_spec_blocks(body: &str) -> String {
+    let mut content = body.to_string();
+    for (start, end) in AUTO_GENERATED_SPEC_BLOCK_MARKERS {
+        content = strip_all_marked_blocks(&content, start, end);
+    }
+    strip_capability_overlay_blocks(&content)
+}
+
+/// Authored living-spec body used for material mutation comparisons.
+pub fn material_spec_body(body: &str) -> String {
+    strip_auto_generated_spec_blocks(body)
+}
+
+/// SHA-256 of the material (non-generated) living-spec body.
+pub fn material_spec_body_hash(body: &str) -> String {
+    hash_text(&material_spec_body(body))
+}
+
+/// True when two living-spec documents differ outside auto-generated blocks.
+pub fn material_spec_bodies_differ(base_body: &str, head_body: &str) -> bool {
+    material_spec_body(base_body) != material_spec_body(head_body)
+}
+
+/// Report describing whether living specs changed materially versus a base ref.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MaterialSpecsChangeReport {
+    pub base_ref: String,
+    pub has_material_change: bool,
+    pub material_changed_paths: Vec<String>,
+    pub fingerprint_only_changed_paths: Vec<String>,
+    pub unchanged_paths: Vec<String>,
+}
+
+/// Compare living specs under `.decapod/managed/specs/*.md` against a git base.
+///
+/// A change is material when authored prose differs after stripping codebase
+/// attestation, declared-capability, and capability-overlay blocks. Manifest
+/// hash churn and fingerprint-only attestation edits do not count.
+pub fn material_specs_change_vs_base(
+    project_root: &Path,
+    base_ref: &str,
+) -> Result<MaterialSpecsChangeReport, error::DecapodError> {
+    let mut material_changed_paths = Vec::new();
+    let mut fingerprint_only_changed_paths = Vec::new();
+    let mut unchanged_paths = Vec::new();
+
+    for spec in LOCAL_PROJECT_SPECS {
+        let path = project_root.join(spec.path);
+        let head_body = if path.is_file() {
+            fs::read_to_string(&path).map_err(error::DecapodError::IoError)?
+        } else {
+            String::new()
+        };
+        let base_body = git_show_text(project_root, base_ref, spec.path).unwrap_or_default();
+
+        if material_spec_bodies_differ(&base_body, &head_body) {
+            material_changed_paths.push(spec.path.to_string());
+            continue;
+        }
+
+        if base_body == head_body {
+            unchanged_paths.push(spec.path.to_string());
+            continue;
+        }
+
+        // Full bodies differ but material bodies do not: attestation/overlay only.
+        fingerprint_only_changed_paths.push(spec.path.to_string());
+    }
+
+    Ok(MaterialSpecsChangeReport {
+        base_ref: base_ref.to_string(),
+        has_material_change: !material_changed_paths.is_empty(),
+        material_changed_paths,
+        fingerprint_only_changed_paths,
+        unchanged_paths,
+    })
+}
+
+fn strip_all_marked_blocks(body: &str, start_marker: &str, end_marker: &str) -> String {
+    let mut content = body.to_string();
+    while let Some(start) = content.find(start_marker) {
+        let Some(end_offset) = content[start..].find(end_marker) else {
+            break;
+        };
+        let end = start + end_offset + end_marker.len();
+        content = remove_byte_range_preserving_newlines(&content, start, end);
+    }
+    content
+}
+
+fn strip_capability_overlay_blocks(body: &str) -> String {
+    let mut content = body.to_string();
+    while let Some(start) = content.find(CAPABILITY_OVERLAY_MARKER_PREFIX) {
+        let after_start = &content[start..];
+        let Some(start_close) = after_start.find("-->") else {
+            break;
+        };
+        let start_marker_end = start + start_close + 3;
+        let start_marker = content[start..start_marker_end].to_string();
+        if !start_marker.ends_with(":start -->") {
+            // Malformed marker; drop the prefix match by advancing one byte so
+            // find does not re-hit the same position forever.
+            content = format!("{}{}", &content[..start], &content[start + 1..]);
+            continue;
+        }
+        // start: <!-- decapod:capability-overlay:{id}:start -->
+        // end:   <!-- decapod:capability-overlay:{id}:end -->
+        let end_marker = start_marker.replacen(":start -->", ":end -->", 1);
+        let Some(rel_end) = content[start_marker_end..].find(&end_marker) else {
+            break;
+        };
+        let end = start_marker_end + rel_end + end_marker.len();
+        content = remove_byte_range_preserving_newlines(&content, start, end);
+    }
+    content
+}
+
+fn remove_byte_range_preserving_newlines(content: &str, start: usize, end: usize) -> String {
+    let end = end.min(content.len());
+    let start = start.min(end);
+    let mut remove_start = start;
+    let mut remove_end = end;
+    // Expand to surrounding newline boundaries so stripping does not leave
+    // double blank-line noise that could look like material churn.
+    if remove_start > 0 && content.as_bytes()[remove_start - 1] == b'\n' {
+        remove_start -= 1;
+    }
+    if remove_end < content.len() && content.as_bytes()[remove_end] == b'\n' {
+        remove_end += 1;
+    }
+    let mut updated =
+        String::with_capacity(content.len().saturating_sub(remove_end - remove_start));
+    updated.push_str(&content[..remove_start]);
+    updated.push_str(&content[remove_end..]);
+    updated
+}
+
+fn git_show_text(project_root: &Path, git_ref: &str, rel_path: &str) -> Option<String> {
+    let output = std::process::Command::new("git")
+        .args([
+            "-C",
+            project_root.to_str().unwrap_or("."),
+            "show",
+            &format!("{git_ref}:{rel_path}"),
+        ])
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    Some(String::from_utf8_lossy(&output.stdout).into_owned())
+}
 
 fn codebase_surface_summary(project_root: &Path) -> Result<String, error::DecapodError> {
     let mut files = Vec::new();

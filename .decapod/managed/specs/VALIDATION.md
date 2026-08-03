@@ -76,11 +76,62 @@ flowchart LR
 - [ ] Unit tests cover critical branches.
 - [ ] Integration tests cover key user flows.
 - [ ] Failure-path tests cover retries/timeouts.
-- [ ] Docs/diagram/changelog updates included.
+- [ ] Docs/diagram/changelog updates included.## Material Living-Spec Mutation Gate (#1183)
+Living specs are **evidence material for proof completion**, not optional documentation. Fingerprint/attestation refresh is necessary but insufficient for PR promotion and for verified workunit completion packages.
 
-<!-- decapod:codebase-attestation:start -->## Codebase Attestation
+Feature-branch validation and workspace publication require at least one **material** authored-content change under `.decapod/managed/specs/*.md` versus the PR base after stripping:
 
-- Repository signal fingerprint: `bb91e65abc694680cf0ac2a766d4302fade2d08f25e7c6665d2e3c07c38858f9`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
+- codebase attestation blocks (`decapod:codebase-attestation`)
+- declared capability blocks (`decapod:declared-capabilities`)
+- capability overlay blocks (`decapod:capability-overlay`)
+
+Failure mode: `FINGERPRINT_ONLY_SPECS`. Not every living-spec file must change; at least one of INTENT, ARCHITECTURE, INTERFACES, VALIDATION, SEMANTICS, OPERATIONS, SECURITY, or README must carry prose that reflects the change under review. Release-labeled PRs may skip the CI job; the binary publish gate still prefers material rewrites when a PR delta exists.
+Proof-completion bindings:- Validation epochs record `living_spec_material:<path>` digests of authored prose (excluding auto-generated blocks).- VERIFIED workunits must bind at least one `.decapod/managed/specs/*` path in `spec_refs` when the living-specs surface exists.- Completion evidence verification fails closed when living-spec material digests diverge from the active epoch or when living-spec refs are omitted.
+
+<!-- decapod:capability-overlay:background-processing:start -->
+
+## Background Processing Validation Overlay
+
+### Duplicate Delivery Tests
+- Same message delivered multiple times MUST produce same result
+- Idempotency key verification
+- Verify the declared delivery guarantee; do not claim exactly-once behavior without proof
+
+### Retry Tests
+- Configured retry/backoff policy verified
+- Configured retry bound or unbounded policy verified
+- Poison-work handling verified when the project declares it
+
+### Shutdown Tests
+- Graceful drain on signal
+- In-flight job completion or safe requeue
+- No data loss on forced termination
+<!-- decapod:capability-overlay:background-processing:end -->
+
+<!-- decapod:capability-overlay:persistent-state:start -->
+
+## Persistent State Validation Overlay
+
+### Migration Proof Command
+- Configure `repo.migration_validation.command` and its arguments as the executable migration proof; file presence is not proof
+- The configured command MUST define its working directory, timeout, expected exit code, and evidence output
+
+### Migration Tests
+- All migrations MUST have integration tests
+- Rollback procedures MUST be tested
+- Data integrity checks post-migration
+
+### Persistence Integration Tests
+- Repository abstraction tested against real database
+- Transaction boundary tests
+- Concurrency conflict tests
+- Data integrity validation after recovery
+<!-- decapod:capability-overlay:persistent-state:end -->
+
+<!-- decapod:codebase-attestation:start -->
+## Codebase Attestation
+
+- Repository signal fingerprint: `bd7da3178927e5873f80343c8ec996d2900bdbb4828231fe19bfc3cc3b8e0051`
+- Significant implementation surfaces: `.github/` (10 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

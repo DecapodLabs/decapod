@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- *(validate)* require material living-spec rewrites beyond fingerprint/attestation refresh on feature PRs ([#1183](https://github.com/DecapodLabs/decapod/issues/1183))
+
+### Fixed
+
+- *(release)* heal stale release-bound entrypoint pins after version bumps and stop CI `init --force` from inventing living-spec drift; sync release-labeled PRs automatically
+
 ## [0.96.0](https://github.com/DecapodLabs/decapod/compare/v0.95.5...v0.96.0) - 2026-08-03
 
 ### Added

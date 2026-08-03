@@ -108,3 +108,66 @@ fn built_in_overlays_do_not_select_universal_service_levels() {
     assert!(content.contains("Background Processing Validation Overlay"));
     assert!(content.contains("Verify the declared delivery guarantee"));
 }
+
+#[test]
+fn capability_overlays_are_not_nested_inside_codebase_attestation() {
+    // Compacted living specs with mid-document prose after potential anchors
+    // must still receive overlays immediately before attestation only.
+    let body = "# Semantics## State Machines\n- item\n- Business rule 3:## Idempotency Contracts\n\n| Operation | Key |\n|---|---|\n| create | id |\n## Language Note\n- Primary language inferred: Rust\n<!-- decapod:codebase-attestation:start -->\n## Codebase Attestation\n- Repository signal fingerprint: `abc`\n<!-- decapod:codebase-attestation:end -->\n";
+    let updated = reconcile_capability_overlays(
+        ".decapod/managed/specs/SEMANTICS.md",
+        body.to_string(),
+        &[
+            "background-processing".to_string(),
+            "persistent-state".to_string(),
+        ],
+    );
+
+    let attestation_start = updated
+        .find("<!-- decapod:codebase-attestation:start -->")
+        .expect("attestation start");
+    let overlay_start = updated
+        .find("<!-- decapod:capability-overlay:background-processing:start -->")
+        .expect("background-processing overlay");
+    assert!(
+        overlay_start < attestation_start,
+        "capability overlays must precede codebase attestation:\n{updated}"
+    );
+    // Authored prose after the last bullet and before attestation must stay
+    // contiguous before overlays (never split by refresh).
+    let authored_tail = &updated[..overlay_start];
+    assert!(
+        authored_tail.contains("- Business rule 3:## Idempotency Contracts"),
+        "authored prose must stay before overlays:\n{updated}"
+    );
+    assert!(
+        authored_tail.contains("| Operation | Key |"),
+        "table body must stay before overlays:\n{updated}"
+    );
+    assert!(
+        authored_tail.contains("## Language Note"),
+        "language note must stay before overlays:\n{updated}"
+    );
+    let attestation_end = updated
+        .find("<!-- decapod:codebase-attestation:end -->")
+        .expect("attestation end");
+    let between = &updated[attestation_start..attestation_end];
+    assert!(
+        !between.contains("decapod:capability-overlay:"),
+        "overlays must not nest inside attestation:\n{between}"
+    );
+
+    // A second reconcile must keep placement and authored prose.
+    let again = reconcile_capability_overlays(
+        ".decapod/managed/specs/SEMANTICS.md",
+        updated.clone(),
+        &[
+            "background-processing".to_string(),
+            "persistent-state".to_string(),
+        ],
+    );
+    assert_eq!(
+        updated, again,
+        "overlay reconciliation must be byte-stable after the first apply"
+    );
+}
