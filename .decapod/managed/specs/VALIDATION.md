@@ -87,10 +87,6 @@ Feature-branch validation and workspace publication require at least one **mater
 
 Failure mode: `FINGERPRINT_ONLY_SPECS`. Not every living-spec file must change; at least one of INTENT, ARCHITECTURE, INTERFACES, VALIDATION, SEMANTICS, OPERATIONS, SECURITY, or README must carry prose that reflects the change under review. Release-labeled PRs may skip the CI job; the binary publish gate still prefers material rewrites when a PR delta exists.
 
-Proof-completion bindings:
-- Validation epochs record `living_spec_material:<path>` digests of authored prose (excluding auto-generated blocks).
-- VERIFIED workunits must bind at least one `.decapod/managed/specs/*` path in `spec_refs` when the living-specs surface exists.
-
 <!-- decapod:capability-overlay:background-processing:start -->
 
 ## Background Processing Validation Overlay
@@ -131,10 +127,10 @@ Proof-completion bindings:
 - Data integrity validation after recovery
 <!-- decapod:capability-overlay:persistent-state:end -->
 
-- Completion evidence verification fails closed when living-spec material digests diverge from the active epoch or when living-spec refs are omitted.<!-- decapod:codebase-attestation:start -->
+Proof-completion bindings:- Validation epochs record `living_spec_material:<path>` digests of authored prose (excluding auto-generated blocks).- VERIFIED workunits must bind at least one `.decapod/managed/specs/*` path in `spec_refs` when the living-specs surface exists.- Completion evidence verification fails closed when living-spec material digests diverge from the active epoch or when living-spec refs are omitted.<!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4cea62657231204c57262996e4d6d1a7ae670dbc670b00a5ee88c1066bf90638`
+- Repository signal fingerprint: `b39e39897cd4ed19553aa508437ec21a00cc4207f1f23dd8577f0f4caaa80b35`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

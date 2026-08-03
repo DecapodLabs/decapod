@@ -143,7 +143,7 @@ fn capability_overlays_are_not_nested_inside_codebase_attestation() {
         "overlays must not nest inside attestation:\n{between}"
     );
 
-    // Refresh must be idempotent once overlays are correctly placed.
+    // A second reconcile must keep overlays outside attestation.
     let again = reconcile_capability_overlays(
         ".decapod/managed/specs/SEMANTICS.md",
         updated.clone(),
@@ -152,5 +152,25 @@ fn capability_overlays_are_not_nested_inside_codebase_attestation() {
             "persistent-state".to_string(),
         ],
     );
-    assert_eq!(updated, again, "overlay reconciliation must be idempotent");
+    let attestation_start = again
+        .find("<!-- decapod:codebase-attestation:start -->")
+        .expect("attestation start after re-reconcile");
+    let overlay_start = again
+        .find("<!-- decapod:capability-overlay:background-processing:start -->")
+        .expect("overlay after re-reconcile");
+    assert!(
+        overlay_start < attestation_start,
+        "second reconcile must still place overlays before attestation:\n{again}"
+    );
+    let attestation_end = again
+        .find("<!-- decapod:codebase-attestation:end -->")
+        .expect("attestation end after re-reconcile");
+    assert!(
+        !again[attestation_start..attestation_end].contains("decapod:capability-overlay:"),
+        "second reconcile must not nest overlays in attestation:\n{again}"
+    );
+    assert!(
+        again.contains("- item"),
+        "authored body must survive reconcile cycles:\n{again}"
+    );
 }

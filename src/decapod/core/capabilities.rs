@@ -991,6 +991,10 @@ fn first_unmarked_section_start(content: &str) -> Option<usize> {
             && !inside_attestation
             && !inside_declared_capabilities
             && trimmed.starts_with("## ")
+            // Never treat generated section titles as insertion anchors.
+            && !trimmed.contains("Codebase Attestation")
+            && !trimmed.contains("Declared Capability")
+            && !trimmed.contains("Overlay")
         {
             // Prefer authored ## sections that appear before generated blocks.
             return Some(offset);
