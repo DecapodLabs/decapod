@@ -266,3 +266,52 @@ fn test_github_repo_slug_supports_common_remote_forms() {
     );
     assert_eq!(github_repo_slug("/tmp/decapod-root-clone"), None);
 }
+
+#[test]
+fn material_specs_publish_gate_rejects_fingerprint_only_refresh() {
+    let tmp = tempdir().expect("tempdir");
+    git(tmp.path(), &["init", "-q", "-b", "master"]);
+    git(tmp.path(), &["config", "user.email", "test@test.com"]);
+    git(tmp.path(), &["config", "user.name", "Test"]);
+
+    let specs = tmp.path().join(".decapod/managed/specs");
+    std::fs::create_dir_all(&specs).expect("specs dir");
+    let intent = specs.join("INTENT.md");
+    let base_body = "# Intent\n\nBaseline contract.\n\n<!-- decapod:codebase-attestation:start -->\n## Codebase Attestation\n- Repository signal fingerprint: `aaa`\n<!-- decapod:codebase-attestation:end -->\n";
+    std::fs::write(&intent, base_body).expect("write intent");
+    for name in [
+        "README.md",
+        "ARCHITECTURE.md",
+        "INTERFACES.md",
+        "VALIDATION.md",
+        "SEMANTICS.md",
+        "OPERATIONS.md",
+        "SECURITY.md",
+    ] {
+        std::fs::write(specs.join(name), format!("# {name}\n\nBaseline.\n")).expect("write spec");
+    }
+    git(tmp.path(), &["add", "."]);
+    git(tmp.path(), &["commit", "-m", "base"]);
+    git(tmp.path(), &["checkout", "-q", "-b", "feature"]);
+
+    // Fingerprint-only attestation churn must fail publication.
+    std::fs::write(&intent, base_body.replace("`aaa`", "`bbb`")).expect("fingerprint only");
+    git(tmp.path(), &["add", "."]);
+    git(tmp.path(), &["commit", "-m", "fingerprint only"]);
+
+    let error = ensure_material_specs_change_in_pr(tmp.path(), "master")
+        .expect_err("fingerprint-only living specs must fail publish");
+    let message = error.to_string();
+    assert!(message.contains("FINGERPRINT_ONLY_SPECS"), "{message}");
+
+    // Material authored rewrite must pass.
+    std::fs::write(
+        &intent,
+        "# Intent\n\nBaseline contract plus material rewrite for #1183.\n\n<!-- decapod:codebase-attestation:start -->\n## Codebase Attestation\n- Repository signal fingerprint: `bbb`\n<!-- decapod:codebase-attestation:end -->\n",
+    )
+    .expect("material rewrite");
+    git(tmp.path(), &["add", "."]);
+    git(tmp.path(), &["commit", "-m", "material rewrite"]);
+    ensure_material_specs_change_in_pr(tmp.path(), "master")
+        .expect("material living-spec rewrite must pass publish gate");
+}

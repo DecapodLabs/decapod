@@ -16,7 +16,8 @@ use crate::core::project_specs::{
     LOCAL_PROJECT_SPECS_INTENT, LOCAL_PROJECT_SPECS_INTERFACES, LOCAL_PROJECT_SPECS_MANIFEST,
     LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA, LOCAL_PROJECT_SPECS_OPERATIONS,
     LOCAL_PROJECT_SPECS_SECURITY, LOCAL_PROJECT_SPECS_SEMANTICS, LOCAL_PROJECT_SPECS_VALIDATION,
-    config_input_hash, hash_text, read_specs_manifest, repo_signal_fingerprint, spec_input_hash,
+    config_input_hash, hash_text, material_specs_change_vs_base, read_specs_manifest,
+    repo_signal_fingerprint, spec_input_hash,
 };
 use crate::core::research_claims;
 use crate::core::scaffold::DECAPOD_GITIGNORE_RULES;
@@ -2095,11 +2096,15 @@ fn validate_project_specs_docs(
             );
         } else {
             fail(
-                "STALE_SPECS_FINGERPRINT: Significant repo surfaces changed since last specs refresh. Review and update INTENT/ARCHITECTURE/INTERFACES/VALIDATION accordingly, then call `decapod rpc --op specs.refresh`.",
+                "STALE_SPECS_FINGERPRINT: Significant repo surfaces changed since last specs refresh. Review and rewrite living-spec authored prose (INTENT/ARCHITECTURE/INTERFACES/VALIDATION/…) to account for the code change — fingerprint/attestation refresh alone is insufficient (see FINGERPRINT_ONLY_SPECS / GitHub #1183) — then call `decapod rpc --op specs.refresh`.",
                 ctx,
             );
         }
     }
+
+    // After freshness checks, enforce material mutation versus the PR base when
+    // this is an isolated feature branch with a resolvable base.
+    validate_material_specs_mutation(ctx, repo_root)?;
 
     let architecture_path = repo_root.join(LOCAL_PROJECT_SPECS_ARCHITECTURE);
     if architecture_path.exists() {
@@ -2414,6 +2419,114 @@ fn validate_machine_contract(
     }
 
     Ok(())
+}
+
+/// Require material living-spec rewrites on feature branches versus base.
+///
+/// Fingerprint attestation and capability overlays are excluded from the
+/// material body. When the working tree is on a protected base branch, or the
+/// base ref cannot be resolved, the gate is skipped.
+fn validate_material_specs_mutation(
+    ctx: &ValidationContext,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Living Specs Material Mutation Gate", ctx);
+
+    if !is_inside_git_work_tree(repo_root) {
+        skip(
+            "Not inside a git work tree; skipping material living-spec mutation gate",
+            ctx,
+        );
+        return Ok(());
+    }
+
+    let status = match workspace::get_workspace_status(repo_root) {
+        Ok(status) => status,
+        Err(_) => {
+            skip(
+                "Workspace status unavailable; skipping material living-spec mutation gate",
+                ctx,
+            );
+            return Ok(());
+        }
+    };
+    if status.git.is_protected {
+        skip(
+            "On protected base branch; material living-spec mutation is enforced on feature PRs",
+            ctx,
+        );
+        return Ok(());
+    }
+
+    let base_branch = workspace::resolve_base_branch(repo_root, None);
+    let Some(base_ref) = workspace::base_ref_for_branch(repo_root, &base_branch) else {
+        skip(
+            &format!(
+                "Base branch '{base_branch}' unavailable; skipping material living-spec mutation gate"
+            ),
+            ctx,
+        );
+        return Ok(());
+    };
+
+    // No delta versus base: nothing to enforce yet.
+    if git_same_commit(repo_root, &base_ref, "HEAD") {
+        skip(
+            "HEAD matches base ref; no PR delta for material living-spec mutation",
+            ctx,
+        );
+        return Ok(());
+    }
+
+    let report = material_specs_change_vs_base(repo_root, &base_ref)?;
+    if report.has_material_change {
+        pass(
+            &format!(
+                "Living specs include material authored changes versus {base_ref}: {}",
+                report.material_changed_paths.join(", ")
+            ),
+            ctx,
+        );
+    } else {
+        let fingerprint_only = if report.fingerprint_only_changed_paths.is_empty() {
+            "none".to_string()
+        } else {
+            report.fingerprint_only_changed_paths.join(", ")
+        };
+        fail(
+            &format!(
+                "FINGERPRINT_ONLY_SPECS: no material authored-content change under .decapod/managed/specs/*.md versus '{base_ref}'. \
+Fingerprint/attestation-only refresh is insufficient (fingerprint-only paths: {fingerprint_only}). \
+Rewrite at least one living spec to reflect this change (INTENT/ARCHITECTURE/INTERFACES/VALIDATION/SEMANTICS/OPERATIONS/SECURITY/README), then run `decapod rpc --op specs.refresh`."
+            ),
+            ctx,
+        );
+    }
+    Ok(())
+}
+
+fn git_same_commit(repo_root: &Path, left: &str, right: &str) -> bool {
+    let output = std::process::Command::new("git")
+        .args([
+            "-C",
+            repo_root.to_str().unwrap_or("."),
+            "rev-parse",
+            left,
+            right,
+        ])
+        .output();
+    match output {
+        Ok(output) if output.status.success() => {
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            let revs: Vec<&str> = stdout
+                .lines()
+                .map(str::trim)
+                .filter(|line| !line.is_empty())
+                .collect();
+            revs.len() == 2 && revs[0] == revs[1]
+        }
+        _ => false,
+    }
 }
 
 fn validate_spec_drift(
