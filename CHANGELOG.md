@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.95.4](https://github.com/DecapodLabs/decapod/compare/v0.95.3...v0.95.4) - 2026-08-03
+
+### Fixed
+
+- *(ci)* check for spec and entrypoint drift after validation ([#1170](https://github.com/DecapodLabs/decapod/pull/1170))
+
 ## [0.95.3](https://github.com/DecapodLabs/decapod/compare/v0.95.2...v0.95.3) - 2026-08-03
 
 ### Added
