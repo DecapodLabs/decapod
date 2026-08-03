@@ -17,17 +17,28 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cargo/bin/decapod
-          key: ${{ runner.os }}-decapod-v2-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'src/**/*.rs') }}
+          key: ${{ runner.os }}-decapod-v3-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'src/**/*.rs') }}
       - name: Install Decapod
-        run: |
-          if ! command -v decapod &> /dev/null; then
-            cargo install --path .
-          fi
+        # Always rebuild from the PR tree so a restored cache binary cannot
+        # evaluate against a different template/fingerprint generation path.
+        run: cargo install --path . --force --locked
       - name: Decapod Validate
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
         run: |
           decapod init --proof --force
-          decapod validate
+          decapod validate --refresh-specs
       - name: Ensure no spec or entrypoint drift
-        run: git diff --exit-code -- . ':!.decapod/governance/'
+        # init/validate rewrite generated_at every run; that is not semantic drift.
+        # Normalize it to HEAD before the exit-code check so only real content,
+        # entrypoint, Dockerfile, or manifest hash drift fails CI.
+        run: |
+          set -euo pipefail
+          MANIFEST=".decapod/managed/specs/.manifest.json"
+          if git cat-file -e "HEAD:${MANIFEST}" 2>/dev/null && [ -f "${MANIFEST}" ]; then
+            OLD=$(git show "HEAD:${MANIFEST}" | sed -n 's/.*"generated_at": "\([^"]*\)".*/\1/p' | head -1)
+            if [ -n "${OLD}" ]; then
+              sed -i "s/\"generated_at\": \"[^\"]*\"/\"generated_at\": \"${OLD}\"/" "${MANIFEST}"
+            fi
+          fi
+          git diff --exit-code -- . ':!.decapod/governance/'
