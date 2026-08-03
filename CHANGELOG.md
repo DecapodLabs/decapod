@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.95.1](https://github.com/DecapodLabs/decapod/compare/v0.95.0...v0.95.1) - 2026-08-03
+
+### Fixed
+
+- *(ci)* resolve PR #1160 clippy and governance artifact gates
+- *(proof)* bind project proof commands to a single authority
+
+### Other
+
+- refresh 0.95.0 entrypoint fingerprints, Dockerfile pin, and specs
+
 ## [0.95.0](https://github.com/DecapodLabs/decapod/compare/v0.94.1...v0.95.0) - 2026-08-02
 
 ### Added
