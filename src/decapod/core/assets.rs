@@ -138,56 +138,251 @@ pub fn validate_override_structure(repo_root: &Path) -> Result<(), error::Decapo
 pub fn render_fenced_override_upgrade(
     override_content: &str,
 ) -> Result<String, error::DecapodError> {
+    let marker = "CHANGES ARE NOT PERMITTED ABOVE THIS LINE";
+    let Some(marker_idx) = override_content.find(marker) else {
+        return Ok(template_override());
+    };
+
+    let after_marker_content = &override_content[marker_idx..];
+    let end_of_line = after_marker_content.find('\n').unwrap_or(after_marker_content.len());
+    let split_idx = marker_idx + end_of_line + 1;
+    let above_boundary = &override_content[..split_idx.min(override_content.len())];
+    let below_boundary = &override_content[split_idx.min(override_content.len())..];
+
     let sections = parse_override_sections(override_content)?;
-    let template = template_override();
-    let mut current_id: Option<String> = None;
-    let mut current_fence = OVERRIDE_BODY_FENCE_CLOSE.to_string();
-    let mut rendered = String::new();
 
-    for line in template.lines() {
-        if let Some(heading) = line.strip_prefix("### ").map(str::trim) {
-            current_id = canonical_override_id(heading);
-            let body = current_id
-                .as_ref()
-                .and_then(|id| sections.get(id))
-                .map(|section| section.content.as_str())
-                .unwrap_or("");
-            let longest_run = body
-                .lines()
-                .map(|line| line.trim_start().chars().take_while(|c| *c == '`').count())
-                .max()
-                .unwrap_or(0);
-            current_fence = "`".repeat(longest_run.max(3) + 1);
-        }
-
-        if line == OVERRIDE_BODY_FENCE_OPEN {
-            rendered.push_str(&current_fence);
-            rendered.push_str("markdown\n");
-            continue;
-        }
-        if line == OVERRIDE_BODY_FENCE_CLOSE {
-            rendered.push_str(&current_fence);
-            rendered.push('\n');
-            continue;
-        }
-        if line == OVERRIDE_BODY_PLACEHOLDER {
-            let body = current_id
-                .as_ref()
-                .and_then(|id| sections.get(id))
-                .map(|section| section.content.as_str())
-                .unwrap_or("");
-            if body.is_empty() {
-                rendered.push_str(OVERRIDE_BODY_PLACEHOLDER);
-            } else {
-                rendered.push_str(body);
-            }
-            rendered.push('\n');
-            continue;
-        }
-        rendered.push_str(line);
-        rendered.push('\n');
+    #[derive(Debug, Clone)]
+    enum DocElement {
+        CategoryHeader { name: String, text: String },
+        Directive { id: String, heading: String, body: String },
+        CommentOrText(String),
     }
+
+    let mut elements = Vec::new();
+    let mut active_directive_id = None;
+    let mut fence = None;
+
+    for line in below_boundary.lines() {
+        let trimmed = line.trim_start();
+        let fence_marker = ['`', '~'].into_iter().find_map(|marker| {
+            let length = trimmed.chars().take_while(|c| *c == marker).count();
+            (length >= 3).then_some((marker, length))
+        });
+
+        let in_active_directive = active_directive_id.is_some();
+        let mut fence_closed = false;
+
+        if let Some((marker, length)) = fence_marker {
+            fence = match fence {
+                Some((open, open_length)) if open == marker && length >= open_length => {
+                    fence_closed = true;
+                    None
+                }
+                None => Some((marker, length)),
+                other => other,
+            };
+        }
+
+        let is_category = fence.is_none() && line.starts_with("## ");
+        let is_directive = fence.is_none() && line.starts_with("### ");
+
+        if is_category {
+            active_directive_id = None;
+            if let Some(cat_name) = extract_category_name(line) {
+                elements.push(DocElement::CategoryHeader {
+                    name: cat_name,
+                    text: line.to_string(),
+                });
+            } else {
+                elements.push(DocElement::CommentOrText(line.to_string()));
+            }
+        } else if is_directive {
+            let heading_content = line.strip_prefix("### ").unwrap().trim();
+            if let Some(canonical_id) = canonical_override_id(heading_content) {
+                let body = sections.get(&canonical_id).map(|p| p.content.clone()).unwrap_or_default();
+                elements.push(DocElement::Directive {
+                    id: canonical_id.clone(),
+                    heading: line.to_string(),
+                    body,
+                });
+                active_directive_id = Some(canonical_id);
+            } else {
+                if !in_active_directive {
+                    elements.push(DocElement::CommentOrText(line.to_string()));
+                }
+            }
+        } else {
+            if !in_active_directive {
+                elements.push(DocElement::CommentOrText(line.to_string()));
+            }
+        }
+
+        if fence_closed {
+            active_directive_id = None;
+        }
+    }
+
+    let mut present_ids = HashSet::new();
+    for el in &elements {
+        if let DocElement::Directive { id, .. } = el {
+            present_ids.insert(id.clone());
+        }
+    }
+
+    let cat_order = [
+        "core",
+        "specs",
+        "interfaces",
+        "methodology",
+        "architecture",
+        "data",
+        "plugins",
+        "docs",
+        "metadata",
+    ];
+
+    let template_categories = template_category_directives();
+
+    for cat_name in &cat_order {
+        let template_dirs = template_categories.get(*cat_name).cloned().unwrap_or_default();
+        if template_dirs.is_empty() {
+            continue;
+        }
+
+        let mut missing_dirs = Vec::new();
+        for id in &template_dirs {
+            if !present_ids.contains(id) {
+                missing_dirs.push(id.clone());
+            }
+        }
+
+        let category_header_pos = elements.iter().position(|el| {
+            matches!(el, DocElement::CategoryHeader { name, .. } if name == *cat_name)
+        });
+
+        if let Some(pos) = category_header_pos {
+            let mut insert_pos = pos + 1;
+            while insert_pos < elements.len() {
+                match &elements[insert_pos] {
+                    DocElement::CategoryHeader { .. } => break,
+                    DocElement::CommentOrText(text) if text.trim() == "---" => break,
+                    _ => {
+                        insert_pos += 1;
+                    }
+                }
+            }
+
+            for id in missing_dirs {
+                elements.insert(
+                    insert_pos,
+                    DocElement::Directive {
+                        id: id.clone(),
+                        heading: format!("### {id}"),
+                        body: String::new(),
+                    },
+                );
+                insert_pos += 1;
+            }
+        } else {
+            if !missing_dirs.is_empty() {
+                elements.push(DocElement::CategoryHeader {
+                    name: cat_name.to_string(),
+                    text: format!("## {} Overrides", cat_name.to_uppercase()),
+                });
+                elements.push(DocElement::CommentOrText(String::new()));
+                for id in missing_dirs {
+                    elements.push(DocElement::Directive {
+                        heading: format!("### {id}"),
+                        id: id.clone(),
+                        body: String::new(),
+                    });
+                }
+                elements.push(DocElement::CommentOrText(String::new()));
+                elements.push(DocElement::CommentOrText("---".to_string()));
+                elements.push(DocElement::CommentOrText(String::new()));
+            }
+        }
+    }
+
+    let mut rendered = String::new();
+    rendered.push_str(above_boundary);
+
+    for el in elements {
+        match el {
+            DocElement::CategoryHeader { text, .. } => {
+                rendered.push_str(&text);
+                rendered.push('\n');
+            }
+            DocElement::Directive { heading, body, .. } => {
+                rendered.push_str(&heading);
+                rendered.push('\n');
+
+                let longest_run = body
+                    .lines()
+                    .map(|line| line.trim_start().chars().take_while(|c| *c == '`').count())
+                    .max()
+                    .unwrap_or(0);
+                let fence = "`".repeat(longest_run.max(3) + 1);
+
+                rendered.push_str(&fence);
+                rendered.push_str("markdown\n");
+                if body.is_empty() {
+                    rendered.push_str(OVERRIDE_BODY_PLACEHOLDER);
+                } else {
+                    rendered.push_str(&body);
+                }
+                rendered.push('\n');
+                rendered.push_str(&fence);
+                rendered.push('\n');
+            }
+            DocElement::CommentOrText(text) => {
+                rendered.push_str(&text);
+                rendered.push('\n');
+            }
+        }
+    }
+
     Ok(rendered)
+}
+
+fn extract_category_name(header: &str) -> Option<String> {
+    let stripped = header.strip_prefix("## ")?;
+    let name = stripped.trim().strip_suffix(" Overrides").unwrap_or(stripped).trim().to_lowercase();
+    Some(name)
+}
+
+fn template_category_directives() -> BTreeMap<String, Vec<String>> {
+    let mut categories: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    let mut ids = list_docs();
+    for spec in [
+        "specs/README.md",
+        "specs/INTENT.md",
+        "specs/ARCHITECTURE.md",
+        "specs/INTERFACES.md",
+        "specs/VALIDATION.md",
+        "specs/SEMANTICS.md",
+        "specs/OPERATIONS.md",
+        "specs/SECURITY.md",
+    ] {
+        if !ids.iter().any(|id| {
+            doc_id_candidates(id)
+                .into_iter()
+                .any(|candidate| candidate == spec)
+        }) {
+            ids.push(spec.to_string());
+        }
+    }
+    ids.sort();
+    ids.dedup();
+
+    for id in ids {
+        if let Some((cat, _, _)) = get_metadata(&id) {
+            categories.entry(cat.to_lowercase()).or_default().push(id);
+        } else if id.starts_with("specs/") {
+            categories.entry("specs".to_string()).or_default().push(id);
+        }
+    }
+    categories
 }
 
 /// List component override section headings from .decapod/OVERRIDE.md.

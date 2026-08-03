@@ -1395,7 +1395,7 @@ fn override_blend_adds_markdown_body_cues_without_changing_authored_body() {
     )
     .expect("write existing override");
 
-    blend_overrides(tmp.path()).expect("blend override template");
+    blend_overrides(tmp.path(), false).expect("blend override template");
     let updated =
         fs::read_to_string(tmp.path().join(".decapod/OVERRIDE.md")).expect("read blended override");
     assert!(updated.contains(
