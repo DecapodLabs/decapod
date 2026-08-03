@@ -1,0 +1,88 @@
+# When release-plz bumps Cargo.toml, managed entrypoints / Dockerfile / specs
+# still carry the previous release pin. CI then fails "Ensure no spec or
+# entrypoint drift" after validate self-heals those files.
+#
+# This workflow runs on release-labeled PRs (and on PRs that only touch the
+# package version) and commits the refreshed pins back to the branch.
+name: Sync Release Pins
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+    paths:
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/sync-release-pins.yml"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    name: Refresh managed release pins
+    runs-on: ubuntu-latest
+    # release-plz labels its PRs with "release" (see .github/release.toml).
+    if: >-
+      contains(github.event.pull_request.labels.*.name, 'release')
+      || startsWith(github.head_ref, 'release-plz-')
+    steps:
+      - name: Generate GitHub App token
+        uses: actions/create-github-app-token@v2
+        id: generate-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          owner: DecapodLabs
+        continue-on-error: true
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+          token: ${{ steps.generate-token.outputs.token || secrets.GITHUB_TOKEN }}
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Decapod from this PR tree
+        run: cargo install --path . --force --locked
+
+      - name: Refresh entrypoints, Dockerfile pin, and managed specs
+        env:
+          DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
+          DECAPOD_VALIDATE_TIMEOUT_SECS: "300"
+        run: |
+          set -euo pipefail
+          # Session is not required for init/validate self-heal of managed pins.
+          decapod init --proof --force
+          decapod validate --refresh-specs || true
+          # Drop init backups; they are not tracked.
+          rm -f AGENTS.md.bak CLAUDE.md.bak CODEX.md.bak GEMINI.md.bak
+          # Normalize generated_at so only material pin drift remains.
+          MANIFEST=".decapod/managed/specs/.manifest.json"
+          if git cat-file -e "HEAD:${MANIFEST}" 2>/dev/null && [ -f "${MANIFEST}" ]; then
+            OLD=$(git show "HEAD:${MANIFEST}" | sed -n 's/.*"generated_at": "\([^"]*\)".*/\1/p' | head -1 || true)
+            if [ -n "${OLD:-}" ]; then
+              sed -i "s/\"generated_at\": \"[^\"]*\"/\"generated_at\": \"${OLD}\"/" "${MANIFEST}"
+            fi
+          fi
+
+      - name: Commit and push refreshed pins if needed
+        env:
+          # Prefer app token so branch protection bots can push.
+          GH_TOKEN: ${{ steps.generate-token.outputs.token || secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            AGENTS.md CLAUDE.md CODEX.md GEMINI.md \
+            .decapod/managed/Dockerfile.decapod \
+            .decapod/managed/specs/ || true
+          if git diff --cached --quiet; then
+            echo "No managed release pin changes to commit."
+            exit 0
+          fi
+          git commit -m "chore: refresh managed release pins for $(sed -n 's/^version = \"\(.*\)\"/\1/p' Cargo.toml | head -1)"
+          git push origin "HEAD:${{ github.head_ref }}"

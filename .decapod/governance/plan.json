@@ -1,19 +1,19 @@
 {
   "schema_version": "1.0.0",
-  "title": "Fix dry-run override modifications and override splicing (#1179)",
-  "intent": "Honor dry_run during OVERRIDE.md refresh/init so dry-run does not mutate disk; splice new constitution directive sections into OVERRIDE.md during init/refresh without dropping existing authored bodies.",
+  "title": "Sync managed release pins for v0.96.0 and prevent release-plz drift",
+  "intent": "After Cargo.toml version bumps, entrypoints/Dockerfile/specs must match the evaluating binary. Refresh 0.96.0 pins on master and add a workflow that auto-commits pin refreshes on release-plz PRs so validate drift checks stop failing every release.",
   "state": "APPROVED",
   "todo_ids": [
-    "todo_01kz4c_plus_1"
+    "bugs_01kz4w1e401wbzmy"
   ],
   "proof_hooks": [
-    "cargo test --test core_tests",
-    "cargo clippy --lib -- -D warnings"
+    "decapod validate --refresh-specs",
+    "git diff --exit-code -- AGENTS.md .decapod/managed/Dockerfile.decapod"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [
-    "CI Governance Artifacts green; Decapod Validate green"
+    "CI green on master after pin refresh"
   ],
   "unresolved_contradictions": [],
   "deferred_questions": [],
@@ -22,5 +22,5 @@
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1785795195Z"
+  "updated_at": "1785796987Z"
 }
