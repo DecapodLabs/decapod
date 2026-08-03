@@ -589,10 +589,7 @@ fn strip_all_marked_blocks(body: &str, start_marker: &str, end_marker: &str) -> 
 
 fn strip_capability_overlay_blocks(body: &str) -> String {
     let mut content = body.to_string();
-    loop {
-        let Some(start) = content.find(CAPABILITY_OVERLAY_MARKER_PREFIX) else {
-            break;
-        };
+    while let Some(start) = content.find(CAPABILITY_OVERLAY_MARKER_PREFIX) {
         let after_start = &content[start..];
         let Some(start_close) = after_start.find("-->") else {
             break;
