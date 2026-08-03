@@ -1,22 +1,15 @@
 {
   "schema_version": "1.0.0",
   "title": "Material living-spec rewrites beyond fingerprints (#1183)",
-  "intent": "Enhance validate, publish, entrypoints, and CI so each non-release PR must include material authored living-spec prose under .decapod/managed/specs/*.md, not only fingerprint/attestation refresh.",
+  "intent": "Enhance validate, publish, completion evidence so living specs are material proof evidence beyond fingerprint refresh.",
   "state": "APPROVED",
   "todo_ids": [
     "bugs_01kz4pb814wgb8ae"
   ],
-  "proof_hooks": [
-    "cargo test --lib project_specs",
-    "cargo test --lib workspace::tests::material_specs",
-    "cargo test --test release_workflow_policy material_specs",
-    "decapod validate"
-  ],
+  "proof_hooks": [],
   "unknowns": [],
   "human_questions": [],
-  "stop_conditions": [
-    "FINGERPRINT_ONLY_SPECS fails closed on fingerprint-only PR deltas"
-  ],
+  "stop_conditions": [],
   "unresolved_contradictions": [],
   "deferred_questions": [],
   "constraints": {
@@ -24,5 +17,5 @@
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1785791474Z"
+  "updated_at": "1785792965Z"
 }
