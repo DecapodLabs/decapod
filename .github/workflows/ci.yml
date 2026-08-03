@@ -308,7 +308,9 @@ jobs:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
           DECAPOD_VALIDATE_TIMEOUT_SECS: "120"
       - name: Ensure no spec or entrypoint drift
-        # init/validate rewrite generated_at every run; that is not semantic drift.
+        # validate rewrites generated_at every run; that is not semantic drift.
+        # Post-release drift usually means Cargo.toml was bumped without committing
+        # regenerated release-bound entrypoints/specs for the evaluating binary.
         run: |
           set -euo pipefail
           MANIFEST=".decapod/managed/specs/.manifest.json"
@@ -318,7 +320,11 @@ jobs:
               sed -i "s/\"generated_at\": \"[^\"]*\"/\"generated_at\": \"${OLD}\"/" "${MANIFEST}"
             fi
           fi
-          git diff --exit-code -- . ':!.decapod/governance/'
+          if ! git diff --exit-code -- . ':!.decapod/governance/'; then
+            echo "::error::Release-bound or living-spec drift detected after validate --refresh-specs."
+            echo "Commit regenerated entrypoints (AGENTS/CLAUDE/CODEX/GEMINI), managed Dockerfile, and .decapod/managed/specs/*."
+            exit 1
+          fi
       - name: Run watcher
         run: decapod govern watcher run
         env:

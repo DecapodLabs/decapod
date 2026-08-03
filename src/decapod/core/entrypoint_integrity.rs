@@ -162,12 +162,16 @@ pub fn render_entrypoint(surface: &str) -> Option<String> {
     ))
 }
 
-/// Refresh release metadata when the generated payload is still canonical.
+/// Refresh release-bound entrypoint headers when the payload is still canonical.
 ///
-/// A current-format marker is migrated only when its value is internally valid
-/// for the release named by that marker. This keeps a hand-edited fingerprint
-/// from being silently repaired. The legacy binary marker is accepted only as
-/// a migration source for the pre-v0.70 entrypoint format.
+/// Post-release root cause: a version bump changes `RELEASE_VERSION` (and thus
+/// expected fingerprints) while release automation often commits only
+/// `Cargo.toml`/`CHANGELOG`. Validate then rewrites pins and CI drift fails.
+///
+/// When the body still matches the compiled template, always rewrite headers to
+/// the running release — including pure version bumps where the old fingerprint
+/// is still valid for the *previous* release marker. Hand-edited payloads
+/// (non-canonical bodies) are left alone so project overrides stay blocked.
 pub fn refresh_entrypoint_metadata(project_root: &Path) -> Result<usize, error::DecapodError> {
     let mut updated = 0;
     for surface in ENTRYPOINT_FILES {
@@ -195,17 +199,36 @@ pub fn refresh_entrypoint_metadata(project_root: &Path) -> Result<usize, error::
         let Some(Ok(declared_release)) = marker_value(first, RELEASE_MARKER) else {
             continue;
         };
+        // Only auto-heal files whose body is still the governed template.
         if canonical_template(surface).as_deref() != Some(payload) {
             continue;
         }
 
-        match marker_value(second, FINGERPRINT_MARKER) {
-            Some(Ok(declared_fingerprint))
-                if fingerprint_for_payload(surface, &declared_release, payload)
-                    == declared_fingerprint => {}
-            Some(_) => continue,
-            None if matches!(marker_value(second, LEGACY_BINARY_MARKER), Some(Ok(_))) => {}
-            None => continue,
+        let expected = expected_fingerprint(surface).unwrap_or("");
+        let declared_fingerprint = marker_value(second, FINGERPRINT_MARKER)
+            .and_then(|result| result.ok())
+            .unwrap_or_default();
+        let fingerprint_valid_for_declared = !declared_fingerprint.is_empty()
+            && fingerprint_for_payload(surface, &declared_release, payload)
+                == declared_fingerprint;
+        let legacy_binary_marker =
+            matches!(marker_value(second, LEGACY_BINARY_MARKER), Some(Ok(_)));
+        let release_mismatch = declared_release != RELEASE_VERSION;
+        let fingerprint_mismatch =
+            !declared_fingerprint.is_empty() && declared_fingerprint != expected;
+
+        // Rewrite when:
+        // - release pin is stale (post-release version bump), or
+        // - fingerprint is stale for the current release, or
+        // - legacy binary marker still present, or
+        // - declared fingerprint is consistent with the declared release
+        //   (pure header migration path).
+        let should_rewrite = release_mismatch
+            || fingerprint_mismatch
+            || legacy_binary_marker
+            || fingerprint_valid_for_declared;
+        if !should_rewrite {
+            continue;
         }
 
         let Some(rendered) = render_entrypoint(surface) else {

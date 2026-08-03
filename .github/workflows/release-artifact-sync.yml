@@ -1,0 +1,81 @@
+name: Release Artifact Sync
+
+# Post-release root cause: release-plz version bumps Cargo.toml/CHANGELOG but
+# does not regenerate release-bound entrypoint pins, managed Dockerfile headers,
+# or living-spec attestations. CI then runs validate --refresh-specs against the
+# new binary and fails the drift gate. This workflow rewrites those artifacts on
+# release-labeled PRs and pushes the result back to the PR branch.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+
+concurrency:
+  group: release-artifact-sync-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  sync-release-bound-artifacts:
+    name: Sync release-bound entrypoints and specs
+    runs-on: ubuntu-latest
+    if: >
+      contains(github.event.pull_request.labels.*.name, 'release')
+      && github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+          # Default token can push back to same-repo release PR branches.
+          persist-credentials: true
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.96.1
+
+      - name: Build evaluating binary
+        run: cargo build --release --locked
+
+      - name: Refresh release-bound artifacts
+        env:
+          DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
+        run: |
+          set -euo pipefail
+          BIN=./target/release/decapod
+          chmod +x "$BIN"
+          # Validate self-heals stale release pins and living-spec attestations.
+          "$BIN" validate --refresh-specs || true
+          # Ensure entrypoint bodies that still match the template are rewritten
+          # for the Cargo package version even when validate exits non-zero for
+          # unrelated release-PR gates.
+          "$BIN" validate --refresh-specs --format json >/tmp/validate.json || true
+          python3 - <<'PY'
+          import json
+          try:
+              report = json.load(open("/tmp/validate.json"))
+              status = report.get("report", report).get("status")
+              print(f"validate status after refresh: {status}")
+          except Exception as exc:
+              print(f"validate json unavailable: {exc}")
+          PY
+
+      - name: Commit regenerated artifacts
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            AGENTS.md CLAUDE.md CODEX.md GEMINI.md \
+            .decapod/managed/Dockerfile.decapod \
+            .decapod/managed/specs/ \
+            || true
+          if git diff --cached --quiet; then
+            echo "No release-bound artifact drift to commit."
+            exit 0
+          fi
+          git commit -m "chore: sync release-bound entrypoints and living specs"
+          git push origin "HEAD:${{ github.head_ref }}"

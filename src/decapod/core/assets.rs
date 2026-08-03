@@ -1197,10 +1197,12 @@ jobs:
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
         run: |
-          decapod init --proof --force
+          if [ ! -d .decapod ]; then
+            decapod init --proof
+          fi
           decapod validate --refresh-specs
       - name: Ensure no spec or entrypoint drift
-        # init/validate rewrite generated_at every run; that is not semantic drift.
+        # validate rewrites generated_at every run; that is not semantic drift.
         # Normalize it to HEAD before the exit-code check so only real content,
         # entrypoint, Dockerfile, or manifest hash drift fails CI.
         run: |
@@ -1212,7 +1214,11 @@ jobs:
               sed -i "s/\"generated_at\": \"[^\"]*\"/\"generated_at\": \"${OLD}\"/" "${MANIFEST}"
             fi
           fi
-          git diff --exit-code -- . ':!.decapod/governance/'
+          if ! git diff --exit-code -- . ':!.decapod/governance/'; then
+            echo "::error::Release-bound or living-spec drift after validate --refresh-specs."
+            echo "Commit regenerated entrypoints and .decapod/managed/specs from the evaluating binary."
+            exit 1
+          fi
 "#
     .to_string()
 }
