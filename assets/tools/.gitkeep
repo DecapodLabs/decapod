@@ -1,0 +1,3 @@
+# Non-runtime Rust maintenance tools (release-ops, hash updaters, codegen helpers).
+# Each tool lives as its own .rs file and is exposed as a [[bin]] target in Cargo.toml,
+# invoked via `cargo run --bin <name>`. See CONTRIBUTING.md "Project Tooling Standard".

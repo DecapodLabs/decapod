@@ -16,6 +16,10 @@ dev/
 *.exe
 *.dylib
 
+# --- Nix ---
+/result
+/result-*
+
 # --- Rust/Cargo ---
 # Note: We keep Cargo.lock for the binary crate decapod
 # but if we had workspace member crates that were libraries, 

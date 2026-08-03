@@ -42,7 +42,8 @@
     }
   ],
   "evidence": [
-    "validation epoch ve_356837d6f21182ad completed with zero failures"
+    "validation epoch ve_356837d6f21182ad completed with zero failures",
+    "validation epoch ve_7000a08791ae94fc completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -54,7 +55,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:f25cf47b33149564e99c71ddd7755a3b430588f71edee1254327eb9c40c820b0",
+  "artifact_hash": "sha256:3c92696ea72ce2f7bcd034e651b168355eb4b3333092b576052de87b08993e3b",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -192,6 +193,13 @@
       {
         "sequence": 18,
         "event_id": "event:18",
+        "intent_id": "intent:validation_01KZ31TWT4B7V0E4M1EM6R5QAA",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZ31TWT4B7V0E4M1EM6R5QAA"
+      },
+      {
+        "sequence": 19,
+        "event_id": "event:19",
         "intent_id": "intent:validation_01KZ31TWT4B7V0E4M1EM6R5QAA",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:validation_01KZ31TWT4B7V0E4M1EM6R5QAA"
@@ -487,12 +495,31 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:18"
+          },
+          {
+            "sequence": 19,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_7000a08791ae94fc completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:19"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 18
+    "next_sequence": 19
   }
 }

@@ -12,6 +12,16 @@ Every PR MUST include:
 
 "No vibes PRs": assertion-only changes with no enforcement path are rejectable.
 
+## Project Tooling Standard
+
+Project tooling is Rust. Runtime code lives under `src/` (`src/decapod/`, `src/main.rs`); non-runtime Rust lives under `assets/`:
+
+- `assets/build/` — build-time Rust (build scripts, codegen).
+- `assets/benches/` — benchmark Rust.
+- `assets/tools/` — maintenance and release-ops Rust, exposed as additional `[[bin]]` targets in `Cargo.toml` and invoked via `cargo run --bin <name>`. Keep each tool deterministic: fixed inputs to fixed outputs so a workflow or future validate extension can call it without surprises.
+
+Python/Bash one-offs are not the contribution path. If a one-off became necessary, raise it in an issue first so it can be folded into a `assets/tools/` Rust tool rather than committed as a stray script.
+
 ## Invariant-Touching Changes
 
 If a change touches invariants, contracts, schema, or promotion logic, the PR MUST add or update at least one gate.
@@ -116,8 +126,22 @@ Before release PR merge:
 decapod release check
 ```
 
+## Before You Open a PR
+
+Beyond the rules above, every PR must satisfy Decapod's governance gates and CI's artifact expectations:
+
+- Work in an isolated worktree: `decapod workspace ensure` after claiming a todo. Do not push directly to `master`.
+- `decapod validate` must pass. If it reports `entrypoint_release_mismatch`, regenerate the governed entrypoints (`AGENTS.md`, `CLAUDE.md`, `CODEX.md`, `GEMINI.md`) with the installed Decapod release and re-run; the entrypoint pin and the binary must agree before validate can pass.
+- The `governance-artifacts` CI job requires every PR to change all four of:
+  - `.decapod/governance/claims.json`
+  - `.decapod/governance/trajectory.json`
+  - `.decapod/governance/validation.json`
+  - `.decapod/governance/plan.json`
+- Use `decapod govern trajectory init` and `decapod govern trajectory record` to record intent, inspected/modified files, and check results at `.decapod/governance/trajectory.json` so reviewers (and future agents) can recover the run from the repo.
+
 ## Architecture Boundary
 
 - Keep core deterministic and minimal.
 - Prefer plugin/local shim extension over core expansion.
 - Do not bypass Decapod command surfaces to mutate `.decapod` state.
+- Keep project tooling Rust-native; non-Rust one-offs belong in issue discussion, not in the tree.

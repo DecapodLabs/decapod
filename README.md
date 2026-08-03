@@ -40,6 +40,17 @@ before acting, before inference, and before claiming done.
 What was asked, what was understood, what changed, and what was proven
 is written into the project itself.
 
+### Nix
+Nix users can build and run Decapod straight from the repository flake — the
+dependency closure derives from the committed `Cargo.lock`, so no hashes need
+computing:
+
+```bash
+nix run github:DecapodLabs/decapod -- init
+nix build github:DecapodLabs/decapod    # binary at ./result/bin/decapod
+nix develop github:DecapodLabs/decapod  # contributor shell
+```
+
 ---
 
 ## Fleet coherence

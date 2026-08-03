@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.95.3](https://github.com/DecapodLabs/decapod/compare/v0.95.2...v0.95.3) - 2026-08-03
+
+### Added
+
+- *(nix)* expose flake.nix on master with packages.default ([#1157](https://github.com/DecapodLabs/decapod/pull/1157)) ([#1169](https://github.com/DecapodLabs/decapod/pull/1169))
+
+## [0.95.2](https://github.com/DecapodLabs/decapod/compare/v0.95.1...v0.95.2) - 2026-08-03
+
+### Added
+
+- surface project tooling standard across CONTRIBUTING.md + docs/agent (refs #1157)
+
+### Other
+
+- refresh managed specs after merge with master
+- resolve conflicts with master for PR #1162
+- rebump entrypoint fingerprints + Dockerfile ARG to v0.95.1
+
 ## [0.95.1](https://github.com/DecapodLabs/decapod/compare/v0.95.0...v0.95.1) - 2026-08-03
 
 ### Fixed
