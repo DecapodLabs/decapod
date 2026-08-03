@@ -51,6 +51,7 @@
     "./result/bin/decapod system version",
     "decapod govern artifacts inventory --claims-note (per #1163)",
     "decapod validate",
+    "decapod validate (v0.95.2 self-heal: entrypoints, Dockerfile pin, specs)",
     "nix build --print-build-logs",
     "nix flake lock",
     "nix flake show"
@@ -62,11 +63,19 @@
       "status": "passed"
     },
     {
+      "name": "built_binary_smoke_version_v0952",
+      "status": "passed"
+    },
+    {
       "name": "decapod validate",
       "status": "passed"
     },
     {
       "name": "nix_build_packages_default_rebased",
+      "status": "passed"
+    },
+    {
+      "name": "nix_build_packages_default_v0952",
       "status": "passed"
     },
     {
@@ -81,6 +90,9 @@
     "Rebased packaging re-proof: nix build exit 0 on the edcb434-based tree at commit 47c0e4f, built binary answers v0.95.1",
     "Workflow file content committed by worldofgeese on the initial fork branch verified byte-identical to the authored nix-flake.yml",
     "rusqlite bundled feature compiles SQLite from source, so packages.default needs no external C libraries beyond stdenv",
+    "v0.95.2 binary self-healed entrypoint fingerprints, Dockerfile ARG DECAPOD_VERSION, and managed specs via decapod validate; changes committed house-style",
+    "v0.95.2 release absorbed with zero flake changes: rebased onto 93b8ce4, nix build produced decapod-0.95.2, binary answers v0.95.2 — no hash or flake edits required, which is the packaging claim of #1157 demonstrated live",
+    "validation epoch ve_5d22e5851d929bcf completed with zero failures",
     "validation epoch ve_658210fc15530ef4 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
@@ -95,7 +107,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:9c5559394e8d96cc97ba7a66e5d10f7dd36a5d5405bbb6e96d3f9d9674f7eba1",
+  "artifact_hash": "sha256:f23c00b5cfc8df17c74d37cc2c79b4e9f19aead097cda2966c9622ee0509a12e",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -164,6 +176,20 @@
       {
         "sequence": 7,
         "event_id": "event:7",
+        "intent_id": "intent:nix_flake_1157",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:nix_flake_1157"
+      },
+      {
+        "sequence": 8,
+        "event_id": "event:8",
+        "intent_id": "intent:nix_flake_1157",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:nix_flake_1157"
+      },
+      {
+        "sequence": 9,
+        "event_id": "event:9",
         "intent_id": "intent:nix_flake_1157",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:nix_flake_1157"
@@ -275,12 +301,56 @@
               "Container-workspace verification for the done todo is unavailable in this sandbox (no Docker); verification record pruned to keep validate green, todo remains open for a container-capable environment"
             ],
             "custody_event_id": "event:7"
+          },
+          {
+            "sequence": 8,
+            "action": "trajectory.record",
+            "command": "decapod validate (v0.95.2 self-heal: entrypoints, Dockerfile pin, specs)",
+            "scope": [
+              ".github/workflows/nix-flake.yml",
+              ".gitignore",
+              "README.md",
+              "flake.lock",
+              "flake.nix"
+            ],
+            "observations": [
+              "v0.95.2 release absorbed with zero flake changes: rebased onto 93b8ce4, nix build produced decapod-0.95.2, binary answers v0.95.2 — no hash or flake edits required, which is the packaging claim of #1157 demonstrated live",
+              "v0.95.2 binary self-healed entrypoint fingerprints, Dockerfile ARG DECAPOD_VERSION, and managed specs via decapod validate; changes committed house-style"
+            ],
+            "proof_refs": [
+              "nix_build_packages_default_v0952",
+              "built_binary_smoke_version_v0952"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:8"
+          },
+          {
+            "sequence": 9,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".github/workflows/nix-flake.yml",
+              ".gitignore",
+              "README.md",
+              "flake.lock",
+              "flake.nix"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_5d22e5851d929bcf completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:9"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 7
+    "next_sequence": 9
   }
 }
