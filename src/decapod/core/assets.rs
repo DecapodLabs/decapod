@@ -144,7 +144,9 @@ pub fn render_fenced_override_upgrade(
     };
 
     let after_marker_content = &override_content[marker_idx..];
-    let end_of_line = after_marker_content.find('\n').unwrap_or(after_marker_content.len());
+    let end_of_line = after_marker_content
+        .find('\n')
+        .unwrap_or(after_marker_content.len());
     let split_idx = marker_idx + end_of_line + 1;
     let above_boundary = &override_content[..split_idx.min(override_content.len())];
     let below_boundary = &override_content[split_idx.min(override_content.len())..];
@@ -153,8 +155,15 @@ pub fn render_fenced_override_upgrade(
 
     #[derive(Debug, Clone)]
     enum DocElement {
-        CategoryHeader { name: String, text: String },
-        Directive { id: String, heading: String, body: String },
+        CategoryHeader {
+            name: String,
+            text: String,
+        },
+        Directive {
+            id: String,
+            heading: String,
+            body: String,
+        },
         CommentOrText(String),
     }
 
@@ -199,7 +208,10 @@ pub fn render_fenced_override_upgrade(
         } else if is_directive {
             let heading_content = line.strip_prefix("### ").unwrap().trim();
             if let Some(canonical_id) = canonical_override_id(heading_content) {
-                let body = sections.get(&canonical_id).map(|p| p.content.clone()).unwrap_or_default();
+                let body = sections
+                    .get(&canonical_id)
+                    .map(|p| p.content.clone())
+                    .unwrap_or_default();
                 elements.push(DocElement::Directive {
                     id: canonical_id.clone(),
                     heading: line.to_string(),
@@ -244,7 +256,10 @@ pub fn render_fenced_override_upgrade(
     let template_categories = template_category_directives();
 
     for cat_name in &cat_order {
-        let template_dirs = template_categories.get(*cat_name).cloned().unwrap_or_default();
+        let template_dirs = template_categories
+            .get(*cat_name)
+            .cloned()
+            .unwrap_or_default();
         if template_dirs.is_empty() {
             continue;
         }
@@ -256,9 +271,9 @@ pub fn render_fenced_override_upgrade(
             }
         }
 
-        let category_header_pos = elements.iter().position(|el| {
-            matches!(el, DocElement::CategoryHeader { name, .. } if name == *cat_name)
-        });
+        let category_header_pos = elements.iter().position(
+            |el| matches!(el, DocElement::CategoryHeader { name, .. } if name == *cat_name),
+        );
 
         if let Some(pos) = category_header_pos {
             let mut insert_pos = pos + 1;
@@ -347,7 +362,12 @@ pub fn render_fenced_override_upgrade(
 
 fn extract_category_name(header: &str) -> Option<String> {
     let stripped = header.strip_prefix("## ")?;
-    let name = stripped.trim().strip_suffix(" Overrides").unwrap_or(stripped).trim().to_lowercase();
+    let name = stripped
+        .trim()
+        .strip_suffix(" Overrides")
+        .unwrap_or(stripped)
+        .trim()
+        .to_lowercase();
     Some(name)
 }
 

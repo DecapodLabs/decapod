@@ -1590,7 +1590,10 @@ pub fn cleanup_legacy_entrypoint_backups(target_dir: &Path) -> Result<(), error:
 }
 
 /// Blend new constitution sections into existing OVERRIDE.md.
-pub fn blend_overrides(target_dir: &Path, dry_run: bool) -> Result<FileAction, error::DecapodError> {
+pub fn blend_overrides(
+    target_dir: &Path,
+    dry_run: bool,
+) -> Result<FileAction, error::DecapodError> {
     let override_path = target_dir.join(".decapod").join("OVERRIDE.md");
     if !override_path.exists() {
         return Ok(FileAction::Unchanged);
