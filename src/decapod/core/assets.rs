@@ -986,7 +986,7 @@ jobs:
           decapod init --proof --force
           decapod validate
       - name: Ensure no spec or entrypoint drift
-        run: git diff --exit-code
+        run: git diff --exit-code -- . ':!.decapod/governance/'
 "#
     .to_string()
 }

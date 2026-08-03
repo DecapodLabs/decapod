@@ -220,7 +220,7 @@ jobs:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
           DECAPOD_VALIDATE_TIMEOUT_SECS: "120"
       - name: Ensure no spec or entrypoint drift
-        run: git diff --exit-code
+        run: git diff --exit-code -- . ':!.decapod/governance/'
       - name: Run watcher
         run: decapod govern watcher run
         env:
