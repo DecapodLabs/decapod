@@ -1,8 +1,8 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "validation_01KZ0QBFSGSFPN83778NWNNQ2M",
-  "intent_id": "intent:validation_01KZ0QBFSGSFPN83778NWNNQ2M",
-  "task_id": "docs_01kz0pb9fbxrqv0j",
+  "run_id": "validation_01KZ2ARF1XFTBYSME4PXK3FS0G",
+  "intent_id": "intent:validation_01KZ2ARF1XFTBYSME4PXK3FS0G",
+  "task_id": "todo_01kz29",
   "original_intent": "Produce proof artifacts for a repository validation completion.",
   "derived_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
   "destination": "validation completion",
@@ -33,8 +33,7 @@
     }
   ],
   "evidence": [
-    "validation epoch ve_a328f9404bf40ee0 completed with zero failures",
-    "validation epoch ve_bc4429d15df8e894 completed with zero failures"
+    "validation epoch ve_bc2712bb370654f5 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -45,12 +44,12 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:4f908f2fb87f72df3dbcba3fb2d20361866b9780f83b696c7444a567ffd6262b",
+  "artifact_hash": "sha256:4b9731a2ec753b0339a095d5bbd5869d43d773b23431bcdcadb75880d3dc0b47",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:validation_01KZ0QBFSGSFPN83778NWNNQ2M": {
-        "id": "intent:validation_01KZ0QBFSGSFPN83778NWNNQ2M",
+      "intent:validation_01KZ2ARF1XFTBYSME4PXK3FS0G": {
+        "id": "intent:validation_01KZ2ARF1XFTBYSME4PXK3FS0G",
         "raw_intent": "Produce proof artifacts for a repository validation completion.",
         "refined_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
         "acceptance_criteria": [],
@@ -73,76 +72,34 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:validation_01KZ0QBFSGSFPN83778NWNNQ2M",
+        "intent_id": "intent:validation_01KZ2ARF1XFTBYSME4PXK3FS0G",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:validation_01KZ0QBFSGSFPN83778NWNNQ2M",
+        "intent_id": "intent:validation_01KZ2ARF1XFTBYSME4PXK3FS0G",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:validation_01KZ0QBFSGSFPN83778NWNNQ2M",
+        "intent_id": "intent:validation_01KZ2ARF1XFTBYSME4PXK3FS0G",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KZ0QBFSGSFPN83778NWNNQ2M"
+        "detail": "trajectory:validation_01KZ2ARF1XFTBYSME4PXK3FS0G"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:validation_01KZ0QBFSGSFPN83778NWNNQ2M",
+        "intent_id": "intent:validation_01KZ2ARF1XFTBYSME4PXK3FS0G",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KZ0QBFSGSFPN83778NWNNQ2M"
-      },
-      {
-        "sequence": 6,
-        "event_id": "event:6",
-        "intent_id": "intent:validation_01KZ0QBFSGSFPN83778NWNNQ2M",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KZ0QBFSGSFPN83778NWNNQ2M"
-      },
-      {
-        "sequence": 7,
-        "event_id": "event:7",
-        "intent_id": "intent:validation_01KZ0QBFSGSFPN83778NWNNQ2M",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KZ0QBFSGSFPN83778NWNNQ2M"
-      },
-      {
-        "sequence": 8,
-        "event_id": "event:8",
-        "intent_id": "intent:validation_01KZ0QBFSGSFPN83778NWNNQ2M",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KZ0QBFSGSFPN83778NWNNQ2M"
-      },
-      {
-        "sequence": 9,
-        "event_id": "event:9",
-        "intent_id": "intent:validation_01KZ0QBFSGSFPN83778NWNNQ2M",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KZ0QBFSGSFPN83778NWNNQ2M"
-      },
-      {
-        "sequence": 10,
-        "event_id": "event:10",
-        "intent_id": "intent:validation_01KZ0QBFSGSFPN83778NWNNQ2M",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KZ0QBFSGSFPN83778NWNNQ2M"
-      },
-      {
-        "sequence": 11,
-        "event_id": "event:11",
-        "intent_id": "intent:validation_01KZ0QBFSGSFPN83778NWNNQ2M",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KZ0QBFSGSFPN83778NWNNQ2M"
+        "detail": "trajectory:validation_01KZ2ARF1XFTBYSME4PXK3FS0G"
       }
     ],
     "trajectories": {
-      "validation_01KZ0QBFSGSFPN83778NWNNQ2M": {
-        "id": "validation_01KZ0QBFSGSFPN83778NWNNQ2M",
-        "intent_id": "intent:validation_01KZ0QBFSGSFPN83778NWNNQ2M",
+      "validation_01KZ2ARF1XFTBYSME4PXK3FS0G": {
+        "id": "validation_01KZ2ARF1XFTBYSME4PXK3FS0G",
+        "intent_id": "intent:validation_01KZ2ARF1XFTBYSME4PXK3FS0G",
         "evidence_only": true,
         "steps": [
           {
@@ -156,7 +113,7 @@
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_bc4429d15df8e894 completed with zero failures"
+              "validation epoch ve_bc2712bb370654f5 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
@@ -175,133 +132,19 @@
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_bc4429d15df8e894 completed with zero failures"
+              "validation epoch ve_bc2712bb370654f5 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
-          },
-          {
-            "sequence": 6,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_a328f9404bf40ee0 completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:6"
-          },
-          {
-            "sequence": 7,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_bc4429d15df8e894 completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:7"
-          },
-          {
-            "sequence": 8,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_bc4429d15df8e894 completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:8"
-          },
-          {
-            "sequence": 9,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_bc4429d15df8e894 completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:9"
-          },
-          {
-            "sequence": 10,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_bc4429d15df8e894 completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:10"
-          },
-          {
-            "sequence": 11,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_bc4429d15df8e894 completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:11"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 11
+    "next_sequence": 5
   }
 }

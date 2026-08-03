@@ -25,7 +25,10 @@ stateDiagram-v2
 - Replay order: canonical sequence ascending for replay and timeline construction
 - Conflict resolution: identical event IDs with equal semantic events are idempotent across fresh legacy and split-envelope storage shapes; different fresh events fail with `LEGACY_EVENT_CONFLICT`. Inputs covered by a successful single-datastore migration are retired evidence and are not re-read.
 - Snapshot cadence:
-- Determinism proof strategy: delete preserved JSONL after import and compare validation, health, heartbeat, and flight-recorder results
+- Determinism proof strategy: delete preserved JSONL after import and compare validation, health, heartbeat, and flight-recorder results## Error Code Semantics
+- Namespace:
+- Stable compatibility window:
+- Mapping to retry/degrade behavior:
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -66,11 +69,6 @@ stateDiagram-v2
 - Recovery objectives MUST be selected for the project and recorded as proof obligations
 - Recovery test cadence MUST be selected for the project and recorded as a proof obligation
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Error Code Semantics
-- Namespace:
-- Stable compatibility window:
-- Mapping to retry/degrade behavior:
 
 ## Domain Rules
 - Business rule 1:

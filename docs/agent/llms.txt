@@ -6,6 +6,7 @@
 - [Error Recovery](docs/agent/error-recovery.md)
 - [State Model](docs/agent/state-model.md)
 - [Config Schema](docs/agent/config-schema.md)
+- [Contribution Conventions](docs/agent/contribution-conventions.md)
 - [MCP Integration](docs/agent/mcp.md)
 
 # Decapod Human Book

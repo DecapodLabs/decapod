@@ -1,32 +1,24 @@
 {
   "schema_version": "1.0.0",
-  "title": "Houseboat wave 4: lease-aware handoff + #1154 integrity",
-  "intent": "Advance Houseboat 2 with lease-aware handoff; account for #1154 by hard-failing stale entrypoint fingerprints and managed Dockerfile release pins without hand-maintained SHA tables.",
+  "title": "CONTRIBUTING.md uplift + assets/tools scaffold (refs #1157)",
+  "intent": "Add three additive sections to CONTRIBUTING.md (Project Tooling Standard, Before You Open a PR, Architecture Boundary line) and scaffold assets/tools/.gitkeep to establish the home for non-runtime Rust maintenance tooling referenced by Issue #1157 followup. Does NOT implement #1157 flake.nix/packages.default.",
   "state": "APPROVED",
   "todo_ids": [
-    "docs_01kz0pb9fbxrqv0j"
+    "code_01kz29a1c1y0cdrg"
   ],
   "proof_hooks": [
-    "cargo test --lib fleet_coord",
-    "cargo test --lib entrypoint_integrity",
-    "cargo test --lib managed_dockerfile",
-    "cargo test --test plugins_todo_tests",
-    "cargo clippy --all-targets --all-features -- -D warnings",
-    "decapod validate"
+    "decapod validate passes",
+    "cargo run --bin <name> shape preserved for future tools"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [],
   "unresolved_contradictions": [],
-  "deferred_questions": [
-    "Typed non-prerequisite edge kinds remain open for #852",
-    "Trajectory merge/reconcile gates remain open for #852/#857",
-    "Capacity budgets remain open for #859"
-  ],
+  "deferred_questions": [],
   "constraints": {
     "forbidden_paths": [],
-    "file_touch_budget": null
+    "file_touch_budget": 16
   },
   "phases": [],
-  "updated_at": "2026-08-02T12:00:00Z"
+  "updated_at": "1785715996Z"
 }
