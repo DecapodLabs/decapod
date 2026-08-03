@@ -247,7 +247,7 @@ fn seed_init_generated_state(target_dir: &Path, dry_run: bool) -> Result<(), err
             core::research_claims::CLAIMS_PATH
         );
     }
-    let _ = docs_cli::sync_override_checksum(target_dir, false)?;
+    let _ = docs_cli::sync_override_checksum(target_dir, false, dry_run)?;
     Ok(())
 }
 
@@ -1802,20 +1802,22 @@ fn run_init_apply(
             "init:".bright_yellow()
         );
         // Blend OVERRIDE.md additions
-        let _ = scaffold::blend_overrides(&target_dir)?;
+        let _ = scaffold::blend_overrides(&target_dir, init_with.dry_run)?;
         // Sync config (adds missing default fields)
         if let Some(cfg) = load_project_config_if_present(&target_dir)? {
-            write_project_config(&target_dir, &cfg, false)?;
+            write_project_config(&target_dir, &cfg, init_with.dry_run)?;
         }
         // Sync override checksums
-        let _ = docs_cli::sync_override_checksum(&target_dir, false)?;
-        // Existing projects upgrade autonomously on the same path as normal
-        // governed commands. Legacy event files remain recovery inputs while
-        // every runtime reader observes the reconciled canonical datastore.
-        core::assets::validate_override_structure(&target_dir)?;
-        migration::check_and_migrate_with_backup(&setup_decapod_root, |data_root| {
-            subsystems::initialize_all_dbs(data_root)
-        })?;
+        let _ = docs_cli::sync_override_checksum(&target_dir, false, init_with.dry_run)?;
+        if !init_with.dry_run {
+            // Existing projects upgrade autonomously on the same path as normal
+            // governed commands. Legacy event files remain recovery inputs while
+            // every runtime reader observes the reconciled canonical datastore.
+            core::assets::validate_override_structure(&target_dir)?;
+            migration::check_and_migrate_with_backup(&setup_decapod_root, |data_root| {
+                subsystems::initialize_all_dbs(data_root)
+            })?;
+        }
     }
 
     use sha2::{Digest, Sha256};
@@ -5203,7 +5205,7 @@ fn heal_release_bound_entrypoints(
 fn heal_override_checksum(
     project_root: &Path,
 ) -> Result<Option<ValidationHealAction>, error::DecapodError> {
-    match docs_cli::sync_override_checksum(project_root, false)? {
+    match docs_cli::sync_override_checksum(project_root, false, false)? {
         docs_cli::OverrideChecksumStatus::MissingOverride
         | docs_cli::OverrideChecksumStatus::Unchanged => Ok(None),
         docs_cli::OverrideChecksumStatus::Cached => Ok(Some(ValidationHealAction {
