@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.96.0](https://github.com/DecapodLabs/decapod/compare/v0.95.5...v0.96.0) - 2026-08-03
+
+### Added
+
+- implement override splicing and fix dry_run issues
+
+### Other
+
+- add claims and plan governance artifacts for PR #1182
+- commit verified trajectory and validation receipt
+- commit validation receipt and trajectory for rebased commit
+- refresh entrypoints to v0.95.5
+- format core_tests and commit validation receipt
+- format files and refresh specs
+
 ## [0.95.5](https://github.com/DecapodLabs/decapod/compare/v0.95.4...v0.95.5) - 2026-08-03
 
 ### Fixed
