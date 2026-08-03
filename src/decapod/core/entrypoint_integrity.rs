@@ -209,8 +209,7 @@ pub fn refresh_entrypoint_metadata(project_root: &Path) -> Result<usize, error::
             .and_then(|result| result.ok())
             .unwrap_or_default();
         let fingerprint_valid_for_declared = !declared_fingerprint.is_empty()
-            && fingerprint_for_payload(surface, &declared_release, payload)
-                == declared_fingerprint;
+            && fingerprint_for_payload(surface, &declared_release, payload) == declared_fingerprint;
         let legacy_binary_marker =
             matches!(marker_value(second, LEGACY_BINARY_MARKER), Some(Ok(_)));
         let release_mismatch = declared_release != RELEASE_VERSION;
