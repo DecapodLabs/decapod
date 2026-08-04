@@ -23,10 +23,21 @@ Darwin Cargo and Nix builds share one linker story: no host absolute `-fuse-ld=/
 After a version bump (`Cargo.toml`), the evaluating binary rewrites release-bound
 entrypoint headers (`AGENTS.md` / `CLAUDE.md` / `CODEX.md` / `GEMINI.md`), the
 managed Dockerfile pin, and living-spec attestations via `validate --refresh-specs`.
-Those regenerated files **must** land on the same branch before the drift gate
-(added in #1170 / v0.95.4) will pass. The release workflow heals pins immediately
-after release-plz, and `release-artifact-sync` also heals open release PRs and
-master if a fast merge left pins stale.
+Those regenerated files **must** land on the same branch before the PR drift gate
+(added in #1170 / v0.95.4) will pass.
+
+**Post-merge fingerprint policy:** dogfood CI builds a tree-local binary whose
+expected release fingerprints differ from the last published pin. Post-merge
+(`push` to master) and release heal jobs set
+`DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES=1` so validate does not hard-fail on
+entrypoint/Dockerfile/manifest fingerprint mismatch; PRs still enforce pins and
+the drift gate. The env requires a truthy value (`1`/`true`/`yes`) so empty
+GitHub Actions expressions do not accidentally skip on PRs.
+
+**Master ruleset delivery:** master forbids direct push (PR required, required
+signatures, update protection). Release heal never pushes to master; it force-
+updates `chore/release-bound-sync` and opens/updates a PR labeled `release`.
+Open release-plz branches still receive in-place pin heals.
 
 ## Installed-Version Upgrade Path
 After `cargo install decapod`, the next normal governed command runs protected, idempotent schema migration and legacy-event reconciliation before runtime consumers read evidence. Existing-project `decapod init` executes the same reconciliation before regeneration. A prior successful single-datastore migration retires its JSONL inputs through a durable receipt; startup does not rescan them. Legacy SQLite stores recreated by an older binary are copied forward and removed without entering the full-backup loop. Human-authored `OVERRIDE.md` content is validated but never mechanically rewritten. Fresh import conflicts preserve source artifacts and stop with an actionable error.## Service Level Objectives

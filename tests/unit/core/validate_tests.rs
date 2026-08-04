@@ -455,3 +455,32 @@ fn typed_result_vocabulary_skip_is_not_pass() {
     assert_eq!(ctx.pass_count.load(Ordering::Relaxed), 0);
     assert_eq!(ctx.warn_count.load(Ordering::Relaxed), 0);
 }
+
+#[test]
+fn skip_fingerprint_gates_requires_truthy_value() {
+    // Empty string is what GitHub Actions emits for `false && '1' || ''`.
+    // Presence alone must not bypass fingerprint enforcement on PRs.
+    unsafe {
+        std::env::remove_var("DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES");
+    }
+    assert!(!super::skip_fingerprint_gates());
+
+    unsafe {
+        std::env::set_var("DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES", "");
+    }
+    assert!(!super::skip_fingerprint_gates());
+
+    unsafe {
+        std::env::set_var("DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES", "0");
+    }
+    assert!(!super::skip_fingerprint_gates());
+
+    unsafe {
+        std::env::set_var("DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES", "1");
+    }
+    assert!(super::skip_fingerprint_gates());
+
+    unsafe {
+        std::env::remove_var("DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES");
+    }
+}

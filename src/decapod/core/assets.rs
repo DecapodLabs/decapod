@@ -1196,12 +1196,16 @@ jobs:
       - name: Decapod Validate
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
+          # Post-merge: tree-local binary fingerprints lag the last published pin.
+          # PRs still enforce release-bound pins + drift.
+          DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES: ${{ github.event_name == 'push' && '1' || '' }}
         run: |
           if [ ! -d .decapod ]; then
             decapod init --proof
           fi
           decapod validate --refresh-specs
       - name: Ensure no spec or entrypoint drift
+        if: github.event_name == 'pull_request'
         # validate rewrites generated_at every run; that is not semantic drift.
         # Normalize it to HEAD before the exit-code check so only real content,
         # entrypoint, Dockerfile, or manifest hash drift fails CI.

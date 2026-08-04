@@ -50,6 +50,25 @@ fn is_inside_git_work_tree(repo_root: &Path) -> bool {
         .unwrap_or(false)
 }
 
+/// Post-merge / release dogfood CI compiles a tree-local binary whose release
+/// fingerprints necessarily differ from the last published pin until
+/// release-artifact-sync heals them. Set `DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES=1`
+/// to skip entrypoint/Dockerfile/manifest fingerprint hard-fails (content
+/// invariants still run).
+///
+/// Unlike `DECAPOD_VALIDATE_SKIP_GIT_GATES` (presence-only), this requires a
+/// truthy value so GitHub Actions expressions that emit an empty string on PR
+/// events do not accidentally bypass fingerprint enforcement.
+pub(crate) fn skip_fingerprint_gates() -> bool {
+    matches!(
+        std::env::var("DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES")
+            .ok()
+            .as_deref()
+            .map(str::trim),
+        Some("1") | Some("true") | Some("TRUE") | Some("yes") | Some("YES")
+    )
+}
+
 fn container_signal_reasons(repo_root: &Path) -> Vec<&'static str> {
     [
         (
@@ -943,17 +962,24 @@ fn validate_entrypoint_invariants(
 ) -> Result<(), error::DecapodError> {
     info("Four Invariants Gate", ctx);
 
-    for surface in crate::core::entrypoint_integrity::ENTRYPOINT_FILES {
-        if let Err(finding) =
-            crate::core::entrypoint_integrity::validate_entrypoint(working_root, surface)
-        {
-            fail(&finding.to_string(), ctx);
+    if skip_fingerprint_gates() {
+        skip(
+            "Entrypoint/Dockerfile release fingerprint gates skipped (DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES set)",
+            ctx,
+        );
+    } else {
+        for surface in crate::core::entrypoint_integrity::ENTRYPOINT_FILES {
+            if let Err(finding) =
+                crate::core::entrypoint_integrity::validate_entrypoint(working_root, surface)
+            {
+                fail(&finding.to_string(), ctx);
+            }
         }
-    }
 
-    // Issue #1154: managed workspace Dockerfile must declare the evaluating
-    // Decapod release after validate self-heal rewrites the image/version header.
-    validate_managed_dockerfile_release(ctx, working_root)?;
+        // Issue #1154: managed workspace Dockerfile must declare the evaluating
+        // Decapod release after validate self-heal rewrites the image/version header.
+        validate_managed_dockerfile_release(ctx, working_root)?;
+    }
 
     // Check AGENTS.md for the four invariants
     let agents_path = working_root.join("AGENTS.md");
@@ -1986,7 +2012,12 @@ fn validate_project_specs_docs(
             );
         }
 
-        if manifest.decapod_release == crate::core::entrypoint_integrity::RELEASE_VERSION {
+        if skip_fingerprint_gates() {
+            skip(
+                "Specs manifest entrypoint release/fingerprint checks skipped (DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES set)",
+                ctx,
+            );
+        } else if manifest.decapod_release == crate::core::entrypoint_integrity::RELEASE_VERSION {
             pass(
                 "Project specs manifest records the running Decapod release",
                 ctx,
@@ -2001,18 +2032,20 @@ fn validate_project_specs_docs(
                 ctx,
             );
         }
-        let expected_entrypoints =
-            crate::core::project_specs::entrypoint_manifest_entries(repo_root)?;
-        if manifest.entrypoints == expected_entrypoints {
-            pass(
-                "Generated agent entrypoint hashes match the specs manifest",
-                ctx,
-            );
-        } else {
-            fail(
-                "OUT_OF_SYNC_ENTRYPOINTS: Generated agent entrypoint hashes differ from .decapod/managed/specs/.manifest.json. Regenerate the governed entrypoints and refresh specs.",
-                ctx,
-            );
+        if !skip_fingerprint_gates() {
+            let expected_entrypoints =
+                crate::core::project_specs::entrypoint_manifest_entries(repo_root)?;
+            if manifest.entrypoints == expected_entrypoints {
+                pass(
+                    "Generated agent entrypoint hashes match the specs manifest",
+                    ctx,
+                );
+            } else {
+                fail(
+                    "OUT_OF_SYNC_ENTRYPOINTS: Generated agent entrypoint hashes differ from .decapod/managed/specs/.manifest.json. Regenerate the governed entrypoints and refresh specs.",
+                    ctx,
+                );
+            }
         }
 
         let mut untouched_templates = Vec::new();
