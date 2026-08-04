@@ -42,8 +42,8 @@ fn release_workflow_syncs_release_bound_artifacts_after_release_plz() {
 
 #[test]
 fn release_artifact_sync_heals_master_and_release_prs() {
-    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join(".github/workflows/release-artifact-sync.yml");
+    let path =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/workflows/release-artifact-sync.yml");
     let workflow = fs::read_to_string(&path).expect("read release-artifact-sync workflow");
     assert!(
         workflow.contains("branches: [master]") || workflow.contains("branches: [master]"),
