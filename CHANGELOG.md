@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.96.2](https://github.com/DecapodLabs/decapod/compare/v0.96.1...v0.96.2) - 2026-08-04
+
+### Fixed
+
+- *(nix)* prove Darwin packaging and guard Rust overlay drift
+
+### Other
+
+- *(nix)* move packaging notes off README; refresh validation receipt
+
 ### Fixed
 
 - *(nix)* remove Darwin `-fuse-ld=/usr/bin/ld` host path so Cargo and Nix share the Apple system linker ([#1171](https://github.com/DecapodLabs/decapod/issues/1171))
