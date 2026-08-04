@@ -9,7 +9,8 @@
   "proof_hooks": [
     "cargo test --locked --test release_workflow_policy",
     "cargo test --locked --test init_ci_scaffolding",
-    "cargo test --locked --lib skip_fingerprint_gates_requires_truthy_value"
+    "cargo test --locked --lib skip_fingerprint_gates_requires_truthy_value",
+    "decapod validate --refresh-specs"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -19,8 +20,10 @@
   ],
   "unresolved_contradictions": [],
   "deferred_questions": [],
-  "assumptions": [
-    "Master ruleset still requires PR + required signatures + blocks direct update",
-    "GitHub App token can push to non-default branches and open PRs"
-  ]
+  "constraints": {
+    "forbidden_paths": [],
+    "file_touch_budget": null
+  },
+  "phases": [],
+  "updated_at": "1785830000Z"
 }
