@@ -48,34 +48,6 @@ small Bazel discovery shims; `MODULE.bazel.lock` remains at the repository root
 because Bazel generates and discovers that lockfile there. The root
 `rust-toolchain.toml` is a rustup-compatible symlink to `.config/build/`.
 
-### Bumping the Rust toolchain (Nix maintainers)
-
-The Nix package builds with `pkgs.rust-bin.fromRustupToolchainFile` against the
-repository channel (`.config/build/rust-toolchain.toml`, exposed at the root
-via `rust-toolchain.toml`). That requires the committed **`rust-overlay`**
-revision in `flake.lock` to already know that release.
-
-When you change the channel:
-
-1. Edit `.config/build/rust-toolchain.toml` (the root `rust-toolchain.toml`
-   symlink follows it).
-2. Refresh only the overlay input and review the lock diff:
-   ```bash
-   nix flake update rust-overlay
-   ```
-3. Commit **both** the toolchain file and `flake.lock` together.
-4. Confirm the focused check and package still work:
-   ```bash
-   nix build .#checks.$(nix eval --impure --raw --expr builtins.currentSystem).rust-toolchain
-   nix build --print-build-logs
-   ./result/bin/decapod system version
-   ```
-
-CI runs the same toolchain check before `packages.default` on Linux and Darwin.
-It fails with a remediation message if the overlay is stale; it **never**
-updates or commits `flake.lock` automatically. Do not float `rust-overlay` or
-fall back to nixpkgs rustc.
-
 To build, test, and run validation locally, you can use the following commands:
 
 ```bash
@@ -145,6 +117,58 @@ cargo install cargo-watch
 cargo watch -x check
 ```
 
+
+## Nix packaging (maintainers / packagers)
+
+Ordinary installs stay on Cargo (`cargo binstall decapod` / `cargo install
+decapod`). The repository flake is an optional packaging path for Nix users and
+downstream packagers.
+
+```bash
+nix run . -- init
+nix build .                 # binary at ./result/bin/decapod
+nix develop .               # optional contributor shell
+```
+
+`packages.default` builds from the committed `Cargo.lock` with the repository
+Rust channel (`rust-toolchain.toml` → `.config/build/rust-toolchain.toml`) via
+the locked `rust-overlay` input. No `cargoHash` treadmill.
+
+### Support matrix
+
+| System | Status |
+|---|---|
+| `x86_64-linux` | CI-proven (native build + `decapod system version`) |
+| `aarch64-darwin` | CI-proven on GitHub `macos-latest` (Apple Silicon) |
+| `x86_64-darwin`, `aarch64-linux` | Flake may evaluate; not continuously proven |
+
+Darwin Cargo and Nix builds share one linker story: do not pin
+`-fuse-ld=/usr/bin/ld` (host path breaks the Nix sandbox). The Apple toolchain
+selects the system linker.
+
+### Bumping the Rust channel
+
+The package and `checks.<system>.rust-toolchain` use the same
+`buildToolchain`. Changing the channel requires a matching `rust-overlay` lock:
+
+1. Edit `.config/build/rust-toolchain.toml`.
+2. Refresh only the overlay input:
+   ```bash
+   nix flake update rust-overlay
+   ```
+3. Review and commit **both** the toolchain file and `flake.lock`.
+4. Prove:
+   ```bash
+   nix build .#checks.$(nix eval --impure --raw --expr builtins.currentSystem).rust-toolchain
+   nix build --print-build-logs
+   ./result/bin/decapod system version
+   ```
+
+CI runs the focused toolchain check before `packages.default` on Linux and
+Darwin. A stale overlay fails with remediation text; CI **never** mutates
+`flake.lock`. Do not float the overlay or fall back to nixpkgs rustc.
+
+See also the mdbook page [Nix packaging](docs/book/src/reference/nix.md).
 
 ## Release Discipline
 

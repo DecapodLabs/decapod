@@ -40,30 +40,6 @@ before acting, before inference, and before claiming done.
 What was asked, what was understood, what changed, and what was proven
 is written into the project itself.
 
-### Nix
-Nix users can build and run Decapod straight from the repository flake — the
-dependency closure derives from the committed `Cargo.lock`, so no hashes need
-computing:
-
-```bash
-nix run github:DecapodLabs/decapod -- init
-nix build github:DecapodLabs/decapod    # binary at ./result/bin/decapod
-nix develop github:DecapodLabs/decapod  # contributor shell
-```
-
-The flake evaluates package outputs for `eachDefaultSystem` systems. **Native
-CI continuously proves** `packages.default` (build + `decapod system version`)
-on **`x86_64-linux`** and **`aarch64-darwin`** (GitHub `macos-latest`, Apple
-Silicon). Other exposed systems (for example `x86_64-darwin` and
-`aarch64-linux`) may evaluate but are **not** continuously proven. Ordinary
-`cargo install` / `cargo binstall` remains fully supported for non-Nix users.
-
-`flake.lock` is committed and deliberate. The package uses the repository
-Rust channel from `rust-toolchain.toml` through the locked `rust-overlay`
-input. When that channel is bumped, maintainers refresh only `rust-overlay`
-(see [CONTRIBUTING.md](CONTRIBUTING.md)); CI detects a stale overlay and does
-not rewrite the lock.
-
 ---
 
 ## Fleet coherence
