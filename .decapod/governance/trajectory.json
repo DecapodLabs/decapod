@@ -5,53 +5,61 @@
   "task_id": "cicd_01kz592c20br0wvh",
   "original_intent": "Skip fingerprint evaluation post-merge/release; fix ruleset-blocked master push",
   "derived_intent": "DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES on push/release heal; PR-only drift; open chore/release-bound-sync PR instead of pushing master",
-  "current_phase": "publish",
+  "current_phase": "validation",
   "next_transitions": [
-    "merge"
+    "publish"
   ],
   "active_boundaries": [
     "CI/release workflows + validate fingerprint gates only"
   ],
   "repo_scope": [
+    ".decapod/managed/specs",
     ".github/workflows",
-    "src/decapod/core/validate.rs",
     "src/decapod/core/assets.rs",
-    ".decapod/managed/specs"
+    "src/decapod/core/validate.rs"
   ],
   "inspected_files": [
-    ".github/workflows/release-artifact-sync.yml",
     ".github/workflows/decapod-validate.yml",
+    ".github/workflows/release-artifact-sync.yml",
     ".github/workflows/release.yml"
   ],
   "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
+    ".decapod/managed/Dockerfile.decapod",
+    ".decapod/managed/specs/OPERATIONS.md",
+    ".decapod/managed/specs/VALIDATION.md",
     ".github/workflows/decapod-validate.yml",
     ".github/workflows/release-artifact-sync.yml",
     ".github/workflows/release.yml",
-    "src/decapod/core/validate.rs",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "CODEX.md",
+    "GEMINI.md",
     "src/decapod/core/assets.rs",
-    "tests/release_workflow_policy.rs",
+    "src/decapod/core/validate.rs",
     "tests/init_ci_scaffolding.rs",
-    "tests/unit/core/validate_tests.rs",
-    ".decapod/managed/specs/OPERATIONS.md",
-    ".decapod/managed/specs/VALIDATION.md",
-    ".decapod/governance/plan.json",
-    ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json",
-    ".decapod/governance/claims.json"
+    "tests/release_workflow_policy.rs",
+    "tests/unit/core/validate_tests.rs"
   ],
   "declared_commands": [
-    "cargo test --locked --test release_workflow_policy",
+    "cargo test --locked --lib skip_fingerprint_gates_requires_truthy_value",
     "cargo test --locked --test init_ci_scaffolding",
-    "cargo test --locked --lib skip_fingerprint_gates_requires_truthy_value"
+    "cargo test --locked --test release_workflow_policy",
+    "decapod validate"
   ],
   "tool_calls": [],
   "checks": [
     {
-      "name": "release-workflow-policy",
+      "name": "decapod validate",
       "status": "passed"
     },
     {
       "name": "init-ci-scaffolding",
+      "status": "passed"
+    },
+    {
+      "name": "release-workflow-policy",
       "status": "passed"
     },
     {
@@ -60,8 +68,9 @@
     }
   ],
   "evidence": [
-    "GitHub Actions run 30870806233: validate passed; push to master rejected by ruleset (PR required, signatures, update)",
-    "policy tests green for fingerprint skip and PR-based heal"
+    "GitHub Actions run 30870806233: validate passed; push to master rejected by ruleset",
+    "policy tests green for fingerprint skip and PR-based heal",
+    "validation epoch ve_4987340ec22f331b completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -70,9 +79,9 @@
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "partial"
+    "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:ci_skip_fingerprint_post_merge_v1",
+  "artifact_hash": "sha256:697a17ff46aa309e3663054daa5579de15a04650d5809890f8c8aae5fedbff96",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -80,21 +89,152 @@
         "id": "intent:ci_skip_fingerprint_post_merge",
         "raw_intent": "Skip fingerprint evaluation post-merge/release; fix ruleset-blocked master push",
         "refined_intent": "DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES on push/release heal; PR-only drift; open chore/release-bound-sync PR instead of pushing master",
-        "acceptance_criteria": [
-          "Post-merge validate does not hard-fail fingerprints",
-          "Release heal opens PR rather than pushing master",
-          "PRs still enforce fingerprint drift"
-        ],
+        "acceptance_criteria": [],
         "constraints": [
-          "CI/release workflows + validate fingerprint gates only"
+          ".github/workflows",
+          "src/decapod/core/validate.rs",
+          "src/decapod/core/assets.rs",
+          ".decapod/managed/specs"
         ],
-        "assumptions": [
-          "Master ruleset remains PR-gated"
-        ],
+        "assumptions": [],
         "boundaries": [
           "CI/release workflows + validate fingerprint gates only"
+        ],
+        "out_of_scope": [],
+        "proof_requirements": [],
+        "status": "refined",
+        "created_sequence": 1,
+        "updated_sequence": 3
+      }
+    },
+    "events": [
+      {
+        "sequence": 2,
+        "event_id": "event:2",
+        "intent_id": "intent:ci_skip_fingerprint_post_merge",
+        "kind": "created"
+      },
+      {
+        "sequence": 3,
+        "event_id": "event:3",
+        "intent_id": "intent:ci_skip_fingerprint_post_merge",
+        "kind": "refined"
+      },
+      {
+        "sequence": 4,
+        "event_id": "event:4",
+        "intent_id": "intent:ci_skip_fingerprint_post_merge",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:ci_skip_fingerprint_post_merge"
+      },
+      {
+        "sequence": 5,
+        "event_id": "event:5",
+        "intent_id": "intent:ci_skip_fingerprint_post_merge",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:ci_skip_fingerprint_post_merge"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
+        "intent_id": "intent:ci_skip_fingerprint_post_merge",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:ci_skip_fingerprint_post_merge"
+      }
+    ],
+    "trajectories": {
+      "ci_skip_fingerprint_post_merge": {
+        "id": "ci_skip_fingerprint_post_merge",
+        "intent_id": "intent:ci_skip_fingerprint_post_merge",
+        "evidence_only": true,
+        "steps": [
+          {
+            "sequence": 4,
+            "action": "validation",
+            "command": "cargo test --locked --test release_workflow_policy",
+            "scope": [
+              ".decapod/managed/specs",
+              ".github/workflows",
+              "src/decapod/core/assets.rs",
+              "src/decapod/core/validate.rs"
+            ],
+            "observations": [
+              ".github/workflows/release-artifact-sync.yml",
+              ".github/workflows/decapod-validate.yml",
+              ".github/workflows/release.yml",
+              ".github/workflows/decapod-validate.yml",
+              ".github/workflows/release-artifact-sync.yml",
+              ".github/workflows/release.yml",
+              "src/decapod/core/validate.rs",
+              "src/decapod/core/assets.rs",
+              "tests/release_workflow_policy.rs",
+              "tests/init_ci_scaffolding.rs",
+              "tests/unit/core/validate_tests.rs",
+              ".decapod/managed/specs/OPERATIONS.md",
+              ".decapod/managed/specs/VALIDATION.md",
+              "AGENTS.md",
+              "CLAUDE.md",
+              "CODEX.md",
+              "GEMINI.md",
+              ".decapod/managed/Dockerfile.decapod",
+              "GitHub Actions run 30870806233: validate passed; push to master rejected by ruleset",
+              "policy tests green for fingerprint skip and PR-based heal"
+            ],
+            "proof_refs": [
+              "release-workflow-policy",
+              "init-ci-scaffolding",
+              "skip-fingerprint-gates-unit"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:4"
+          },
+          {
+            "sequence": 5,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/managed/specs",
+              ".github/workflows",
+              "src/decapod/core/assets.rs",
+              "src/decapod/core/validate.rs"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_4987340ec22f331b completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/managed/specs",
+              ".github/workflows",
+              "src/decapod/core/assets.rs",
+              "src/decapod/core/validate.rs"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_4987340ec22f331b completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:6"
+          }
         ]
       }
-    }
+    },
+    "summaries": {},
+    "knowledge_candidates": [],
+    "next_sequence": 6
   }
 }
