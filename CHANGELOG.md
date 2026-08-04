@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.96.4](https://github.com/DecapodLabs/decapod/compare/v0.96.3...v0.96.4) - 2026-08-04
+
+### Fixed
+
+- *(governance)* repair trajectory and validation receipts for PR #1195
+- *(ci)* skip post-merge fingerprint gates; heal via PR under ruleset
+
+### Other
+
+- refresh 0.96.3 entrypoint fingerprints, Dockerfile pin, and specs
+
 ## [0.96.3](https://github.com/DecapodLabs/decapod/compare/v0.96.2...v0.96.3) - 2026-08-04
 
 ### Fixed
