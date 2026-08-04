@@ -41,18 +41,64 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Packaging proof: packages.default must build from the committed Cargo.lock
+  # on each natively proven OS, and the locked rust-overlay must supply the
+  # repository-pinned Rust channel. Fail closed; CI never mutates flake.lock.
   build:
-    # Packaging proof: the flake's packages.default must build from the
-    # committed Cargo.lock alone. The invocation surface is deliberately
-    # plain (`nix build` on deterministic inputs) so this gate can later
-    # fold into a `decapod validate` extension instead of being CI-only.
-    name: nix build (packages.default)
-    runs-on: ubuntu-latest
+    name: nix (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Native x86_64 Linux (ubuntu-latest is x64).
+          - os: ubuntu-latest
+            expected_system: x86_64-linux
+          # Native aarch64 Darwin: macos-latest is Apple Silicon (arm64) per
+          # GitHub-hosted runners docs (not Intel).
+          - os: macos-latest
+            expected_system: aarch64-darwin
     steps:
       - uses: actions/checkout@v4
+
       - name: Install Nix
         uses: cachix/install-nix-action@v31
+
+      - name: Print native system and Nix version
+        run: |
+          set -euo pipefail
+          nix --version
+          system="$(nix eval --impure --raw --expr builtins.currentSystem)"
+          echo "builtins.currentSystem=${system}"
+          if [ "${system}" != "${{ matrix.expected_system }}" ]; then
+            echo "::error::expected Nix system ${{ matrix.expected_system }}, got ${system} (runner label ${{ matrix.os }} may have changed architecture)"
+            exit 1
+          fi
+
+      - name: Verify repository Rust toolchain via locked rust-overlay
+        run: |
+          set -euo pipefail
+          set +e
+          nix build --print-build-logs .#checks.$(nix eval --impure --raw --expr builtins.currentSystem).rust-toolchain
+          status=$?
+          set -e
+          if [ "$status" -ne 0 ]; then
+            echo
+            echo "::error::The repository-pinned Rust channel could not be resolved through the committed rust-overlay lock."
+            echo
+            echo "If rust-toolchain.toml (or .config/build/rust-toolchain.toml) changed, refresh only the rust-overlay input,"
+            echo "review the resulting flake.lock diff, and commit both changes:"
+            echo
+            echo "  nix flake update rust-overlay"
+            echo
+            echo "CI does not update or commit flake.lock automatically."
+            exit "$status"
+          fi
+          echo "rust-toolchain check ok:"
+          cat ./result
+
       - name: Build packages.default
         run: nix build --print-build-logs
+
       - name: Smoke-check the built binary
         run: ./result/bin/decapod system version

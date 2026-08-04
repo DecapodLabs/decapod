@@ -5,7 +5,20 @@
 - [ ] Runbooks linked for all Sev1/Sev2 alerts.
 - [ ] Rollback plan validated.
 - [ ] Capacity guardrails documented.## Deployment Model
-Decapod is a daemonless CLI installed as a versioned Rust binary. Each invocation discovers the repository-local governance store and completes bounded work before exiting.## Installed-Version Upgrade Path
+Decapod is a daemonless CLI installed as a versioned Rust binary. Each invocation discovers the repository-local governance store and completes bounded work before exiting.
+
+## Nix packaging support matrix
+
+The repository flake (`flake.nix`) exposes `packages.default` / `packages.decapod` via `flake-utils.lib.eachDefaultSystem`. **Evaluating an output is not the same as supporting a platform.**
+
+| System | Status |
+|---|---|
+| `x86_64-linux` | **CI-proven**: native `nix build` + `decapod system version` on Ubuntu |
+| `aarch64-darwin` | **CI-proven**: native `nix build` + `decapod system version` on GitHub `macos-latest` (Apple Silicon) |
+| `x86_64-darwin` | Exposed by the flake; **not** continuously proven in CI |
+| `aarch64-linux` | Exposed by the flake; **not** continuously proven in CI |
+
+Darwin Cargo and Nix builds share one linker story: no host absolute `-fuse-ld=/usr/bin/ld` pin; the Apple toolchain selects the system linker. The package and `checks.<system>.rust-toolchain` use the same `buildToolchain` from `rust-toolchain.toml` through the locked `rust-overlay`. CI never mutates `flake.lock`; maintainers refresh with `nix flake update rust-overlay` when the channel changes (see CONTRIBUTING.md).## Installed-Version Upgrade Path
 After `cargo install decapod`, the next normal governed command runs protected, idempotent schema migration and legacy-event reconciliation before runtime consumers read evidence. Existing-project `decapod init` executes the same reconciliation before regeneration. A prior successful single-datastore migration retires its JSONL inputs through a durable receipt; startup does not rescan them. Legacy SQLite stores recreated by an older binary are copied forward and removed without entering the full-backup loop. Human-authored `OVERRIDE.md` content is validated but never mechanically rewritten. Fresh import conflicts preserve source artifacts and stop with an actionable error.## Service Level Objectives
 | SLI | SLO Target | Measurement Window | Owner |
 |---|---|---|---|
@@ -86,7 +99,7 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `70ff66e79a886165c52e343c6636e0685a9ebccea4cf029013ff1fa61552528c`
+- Repository signal fingerprint: `24ace37433c2c92637bde79c1413534c398df833366d192e993921743bdcca4e`
 - Significant implementation surfaces: `.github/` (10 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
