@@ -18,7 +18,17 @@ The repository flake (`flake.nix`) exposes `packages.default` / `packages.decapo
 | `x86_64-darwin` | Exposed by the flake; **not** continuously proven in CI |
 | `aarch64-linux` | Exposed by the flake; **not** continuously proven in CI |
 
-Darwin Cargo and Nix builds share one linker story: no host absolute `-fuse-ld=/usr/bin/ld` pin; the Apple toolchain selects the system linker. The package and `checks.<system>.rust-toolchain` use the same `buildToolchain` from `rust-toolchain.toml` through the locked `rust-overlay`. CI never mutates `flake.lock`; maintainers refresh with `nix flake update rust-overlay` when the channel changes (see CONTRIBUTING.md).## Installed-Version Upgrade Path
+Darwin Cargo and Nix builds share one linker story: no host absolute `-fuse-ld=/usr/bin/ld` pin; the Apple toolchain selects the system linker. The package and `checks.<system>.rust-toolchain` use the same `buildToolchain` from `rust-toolchain.toml` through the locked `rust-overlay`. CI never mutates `flake.lock`; maintainers refresh with `nix flake update rust-overlay` when the channel changes (see CONTRIBUTING.md).## Release-bound CI pins
+
+After a version bump (`Cargo.toml`), the evaluating binary rewrites release-bound
+entrypoint headers (`AGENTS.md` / `CLAUDE.md` / `CODEX.md` / `GEMINI.md`), the
+managed Dockerfile pin, and living-spec attestations via `validate --refresh-specs`.
+Those regenerated files **must** land on the same branch before the drift gate
+(added in #1170 / v0.95.4) will pass. The release workflow heals pins immediately
+after release-plz, and `release-artifact-sync` also heals open release PRs and
+master if a fast merge left pins stale.
+
+## Installed-Version Upgrade Path
 After `cargo install decapod`, the next normal governed command runs protected, idempotent schema migration and legacy-event reconciliation before runtime consumers read evidence. Existing-project `decapod init` executes the same reconciliation before regeneration. A prior successful single-datastore migration retires its JSONL inputs through a durable receipt; startup does not rescan them. Legacy SQLite stores recreated by an older binary are copied forward and removed without entering the full-backup loop. Human-authored `OVERRIDE.md` content is validated but never mechanically rewritten. Fresh import conflicts preserve source artifacts and stop with an actionable error.## Service Level Objectives
 | SLI | SLO Target | Measurement Window | Owner |
 |---|---|---|---|
@@ -99,7 +109,7 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `88c622d1f5e33f70df681a6ffb37813697b681c15db51d1de9f41113af323cc3`
+- Repository signal fingerprint: `c35f612c484693d548caced5e240f3811f544d9be9e9273becff29076de8a855`
 - Significant implementation surfaces: `.github/` (10 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

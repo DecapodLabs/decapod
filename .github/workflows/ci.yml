@@ -294,7 +294,12 @@ jobs:
           chmod +x target/debug/decapod
           echo "$PWD/target/debug" >> "$GITHUB_PATH"
       - name: Initialize Decapod
-        run: decapod init
+        # Do not re-init an existing tree: init can invent non-idempotent churn
+        # that the drift gate below would treat as a packaging failure.
+        run: |
+          if [ ! -d .decapod ]; then
+            decapod init --proof
+          fi
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
       - name: Acquire Decapod session
@@ -309,8 +314,10 @@ jobs:
           DECAPOD_VALIDATE_TIMEOUT_SECS: "120"
       - name: Ensure no spec or entrypoint drift
         # validate rewrites generated_at every run; that is not semantic drift.
-        # Post-release drift usually means Cargo.toml was bumped without committing
-        # regenerated release-bound entrypoints/specs for the evaluating binary.
+        # Post-release drift means Cargo.toml was bumped without committing
+        # regenerated release-bound entrypoints/specs for the evaluating binary
+        # (regression since #1170 / v0.95.4). Heal via release-artifact-sync or
+        # the post-release-plz step in release.yml — do not silence this gate.
         run: |
           set -euo pipefail
           MANIFEST=".decapod/managed/specs/.manifest.json"
@@ -323,6 +330,7 @@ jobs:
           if ! git diff --exit-code -- . ':!.decapod/governance/'; then
             echo "::error::Release-bound or living-spec drift detected after validate --refresh-specs."
             echo "Commit regenerated entrypoints (AGENTS/CLAUDE/CODEX/GEMINI), managed Dockerfile, and .decapod/managed/specs/*."
+            echo "On release-plz PRs this is auto-healed by release-artifact-sync and the post-release-plz step in release.yml."
             exit 1
           fi
       - name: Run watcher

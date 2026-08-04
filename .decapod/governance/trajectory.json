@@ -1,45 +1,34 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "nix_pkg_1171_1172_1785805113",
-  "intent_id": "intent:nix_pkg_1171_1172_1785805113",
-  "task_id": "bugs_01kz518hhkpjeq9h",
-  "original_intent": "Implement #1171 and #1172 Nix packaging hardening",
-  "derived_intent": "Darwin packaging proof + rust-overlay lockstep; docs to CONTRIBUTING/mdbook; validation receipt",
+  "run_id": "ci_release_pin_drift_1170",
+  "intent_id": "intent:ci_release_pin_drift_1170",
+  "task_id": "bugs_01kz56kbfeqyq5p0",
+  "original_intent": "Fix recurring master CI drift after release since v0.95.4",
+  "derived_intent": "Heal pins; sync after release-plz; heal master on push; no re-init drift",
   "current_phase": "validation",
   "next_transitions": [
     "publish"
   ],
   "active_boundaries": [
-    "Nix packaging and documentation only"
+    "CI/release workflows + release-bound artifacts only"
   ],
   "repo_scope": [
-    "flake.nix .cargo/config.toml .github/workflows CONTRIBUTING.md docs/book"
+    ".github/workflows AGENTS.md specs release pins"
   ],
   "inspected_files": [],
   "modified_files": [
-    ".cargo/config.toml",
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
-    ".github/workflows/nix-flake.yml",
-    "CONTRIBUTING.md",
-    "README.md",
-    "docs/book/src/SUMMARY.md",
-    "docs/book/src/reference/nix.md",
-    "flake.nix"
+    ".github/workflows/ci.yml",
+    ".github/workflows/release-artifact-sync.yml",
+    ".github/workflows/release.yml",
+    "AGENTS.md"
   ],
   "declared_commands": [
     "decapod validate"
   ],
   "tool_calls": [],
   "checks": [
-    {
-      "name": "cargo-build-locked",
-      "status": "passed"
-    },
-    {
-      "name": "cargo-clippy",
-      "status": "passed"
-    },
     {
       "name": "decapod validate",
       "status": "passed"
@@ -49,28 +38,20 @@
       "status": "passed"
     },
     {
-      "name": "nix-build-x86_64-linux",
+      "name": "entrypoint-integrity",
       "status": "passed"
     },
     {
-      "name": "nix-ci-macos-aarch64-darwin",
+      "name": "pins-match-cargo-0.96.2",
       "status": "passed"
     },
     {
-      "name": "nix-ci-ubuntu",
-      "status": "passed"
-    },
-    {
-      "name": "rust-toolchain-negative",
-      "status": "passed"
-    },
-    {
-      "name": "rust-toolchain-positive",
+      "name": "release-workflow-policy",
       "status": "passed"
     }
   ],
   "evidence": [
-    "validation epoch ve_3acca14c59137cf4 completed with zero failures"
+    "validation epoch ve_1eb0620403fbfdff completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -81,21 +62,21 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:fb6e9f7c94a4add495b6e294ff350e6579246358a493b5ff0945cda492d3487b",
+  "artifact_hash": "sha256:ab225f93c9cda1573091af10c18e3e0dd5be227d29470726953056cfee028753",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:nix_pkg_1171_1172_1785805113": {
-        "id": "intent:nix_pkg_1171_1172_1785805113",
-        "raw_intent": "Implement #1171 and #1172 Nix packaging hardening",
-        "refined_intent": "Darwin packaging proof + rust-overlay lockstep; docs to CONTRIBUTING/mdbook; validation receipt",
+      "intent:ci_release_pin_drift_1170": {
+        "id": "intent:ci_release_pin_drift_1170",
+        "raw_intent": "Fix recurring master CI drift after release since v0.95.4",
+        "refined_intent": "Heal pins; sync after release-plz; heal master on push; no re-init drift",
         "acceptance_criteria": [],
         "constraints": [
-          "flake.nix .cargo/config.toml .github/workflows CONTRIBUTING.md docs/book"
+          ".github/workflows AGENTS.md specs release pins"
         ],
         "assumptions": [],
         "boundaries": [
-          "Nix packaging and documentation only"
+          "CI/release workflows + release-bound artifacts only"
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -108,64 +89,53 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:nix_pkg_1171_1172_1785805113",
+        "intent_id": "intent:ci_release_pin_drift_1170",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:nix_pkg_1171_1172_1785805113",
+        "intent_id": "intent:ci_release_pin_drift_1170",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:nix_pkg_1171_1172_1785805113",
+        "intent_id": "intent:ci_release_pin_drift_1170",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:nix_pkg_1171_1172_1785805113"
+        "detail": "trajectory:ci_release_pin_drift_1170"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:nix_pkg_1171_1172_1785805113",
+        "intent_id": "intent:ci_release_pin_drift_1170",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:nix_pkg_1171_1172_1785805113"
-      },
-      {
-        "sequence": 6,
-        "event_id": "event:6",
-        "intent_id": "intent:nix_pkg_1171_1172_1785805113",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:nix_pkg_1171_1172_1785805113"
+        "detail": "trajectory:ci_release_pin_drift_1170"
       }
     ],
     "trajectories": {
-      "nix_pkg_1171_1172_1785805113": {
-        "id": "nix_pkg_1171_1172_1785805113",
-        "intent_id": "intent:nix_pkg_1171_1172_1785805113",
+      "ci_release_pin_drift_1170": {
+        "id": "ci_release_pin_drift_1170",
+        "intent_id": "intent:ci_release_pin_drift_1170",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
             "action": "trajectory.record",
             "scope": [
-              "flake.nix .cargo/config.toml .github/workflows CONTRIBUTING.md docs/book"
+              ".github/workflows AGENTS.md specs release pins"
             ],
             "observations": [
-              "flake.nix",
-              ".cargo/config.toml",
-              ".github/workflows/nix-flake.yml",
-              "CONTRIBUTING.md",
-              "README.md"
+              ".github/workflows/release.yml",
+              ".github/workflows/release-artifact-sync.yml",
+              ".github/workflows/ci.yml",
+              "AGENTS.md"
             ],
             "proof_refs": [
-              "nix-build-x86_64-linux",
-              "rust-toolchain-positive",
-              "rust-toolchain-negative",
-              "cargo-build-locked",
-              "cargo-clippy",
-              "nix-ci-ubuntu",
-              "nix-ci-macos-aarch64-darwin"
+              "release-workflow-policy",
+              "entrypoint-integrity",
+              "decapod-validate",
+              "pins-match-cargo-0.96.2"
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
@@ -175,43 +145,24 @@
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              "flake.nix .cargo/config.toml .github/workflows CONTRIBUTING.md docs/book"
+              ".github/workflows AGENTS.md specs release pins"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_3acca14c59137cf4 completed with zero failures"
+              "validation epoch ve_1eb0620403fbfdff completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
-          },
-          {
-            "sequence": 6,
-            "action": "trajectory.record",
-            "scope": [
-              "flake.nix .cargo/config.toml .github/workflows CONTRIBUTING.md docs/book"
-            ],
-            "observations": [
-              "README.md",
-              "CONTRIBUTING.md",
-              "docs/book/src/reference/nix.md",
-              "docs/book/src/SUMMARY.md",
-              ".decapod/governance/validation.json"
-            ],
-            "proof_refs": [
-              "decapod-validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:6"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 6
+    "next_sequence": 5
   }
 }

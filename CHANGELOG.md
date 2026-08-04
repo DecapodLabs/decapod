@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- *(ci)* stop post-release entrypoint/spec drift failures on master (regression since #1170 / v0.95.4): sync release-bound pins in the release-plz job, heal master on push, and avoid re-init inventing drift
+
 ## [0.96.2](https://github.com/DecapodLabs/decapod/compare/v0.96.1...v0.96.2) - 2026-08-04
 
 ### Fixed

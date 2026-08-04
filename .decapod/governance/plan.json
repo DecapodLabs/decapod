@@ -1,24 +1,20 @@
 {
   "schema_version": "1.0.0",
-  "title": "fix(nix): prove Darwin packaging and guard Rust overlay drift (#1171, #1172)",
-  "intent": "Prove packages.default builds and runs natively on Darwin (aarch64) and Linux (x86_64); remove invalid Darwin /usr/bin/ld fuse-ld pins; enforce repository rust-toolchain channel through locked rust-overlay with a focused Nix check and clear CI remediation; document CI-proven vs exposed systems and the rust-overlay refresh procedure. No flake.lock auto-mutation, no cache/release work.",
+  "title": "fix(ci): stop post-release entrypoint/spec drift on master (#1170 / v0.95.4)",
+  "intent": "Heal master 0.96.2 pins; prevent release-plz vs drift-gate race by syncing release-bound artifacts in release.yml and healing master via release-artifact-sync; stop ci.yml re-init inventing drift.",
   "state": "APPROVED",
   "todo_ids": [
-    "bugs_01kz518hhkpjeq9h"
+    "bugs_01kz56kbfeqyq5p0"
   ],
   "proof_hooks": [
-    "nix build + decapod system version on x86_64-linux",
-    "nix build + decapod system version on aarch64-darwin (CI macos-latest)",
-    "checks.rust-toolchain matches rust-toolchain.toml channel via locked overlay",
-    "cargo build/test/clippy on Linux host",
-    "decapod validate"
+    "cargo test --test release_workflow_policy",
+    "decapod validate --refresh-specs clean tree",
+    "AGENTS.md pin matches Cargo.toml 0.96.2"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [
-    "Do not mark Darwin supported without green native Darwin CI",
-    "Do not auto-update flake.lock in CI",
-    "Do not expand into #1173 #1176 #1177 #1178 or release packaging"
+    "Do not weaken the #1170 drift gate"
   ],
   "unresolved_contradictions": [],
   "deferred_questions": [],
@@ -29,5 +25,5 @@
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1785802078Z"
+  "updated_at": "1785808060Z"
 }
