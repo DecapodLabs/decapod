@@ -4,6 +4,10 @@
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    # rust-overlay must know the channel in rust-toolchain.toml.
+    # When that channel is bumped, refresh only this input and commit flake.lock:
+    #   nix flake update rust-overlay
+    # CI never mutates the lock; checks.rust-toolchain fails closed with a remediation hint.
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -27,10 +31,15 @@
 
         cargoToml = builtins.fromTOML (builtins.readFile ./Cargo.toml);
 
+        # Canonical channel is rust-toolchain.toml (symlink -> .config/build/).
+        # Parse once so package and checks share the same expected version string.
+        rustToolchainToml = builtins.fromTOML (builtins.readFile ./rust-toolchain.toml);
+        expectedRustChannel = rustToolchainToml.toolchain.channel;
+
         # The package builds with the exact toolchain the repository pins
         # (rust-toolchain.toml -> .config/build/rust-toolchain.toml), so the
         # flake tracks the repo's MSRV instead of whatever rustc the pinned
-        # nixpkgs happens to carry.
+        # nixpkgs happens to carry. Package and checks MUST share this value.
         buildToolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
         buildRustPlatform = pkgs.makeRustPlatform {
           cargo = buildToolchain;
@@ -46,6 +55,27 @@
             "rustfmt"
           ];
         };
+
+        # Focused preflight: locked rust-overlay can instantiate and supply
+        # the repository-pinned channel. Fails before the expensive package
+        # build when the overlay is stale after a toolchain bump.
+        rustToolchainCheck = pkgs.runCommand "decapod-rust-toolchain-${expectedRustChannel}" { } ''
+          actual="$(${buildToolchain}/bin/rustc --version)"
+          case "$actual" in
+            "rustc ${expectedRustChannel} "*)
+              printf '%s\n' "$actual" > "$out"
+              ;;
+            *)
+              echo "decapod rust-toolchain check failed" >&2
+              echo "expected rustc ${expectedRustChannel} (from rust-toolchain.toml / .config/build/rust-toolchain.toml)" >&2
+              echo "got: $actual" >&2
+              echo "The committed rust-overlay lock may be stale relative to the repository channel." >&2
+              echo "Refresh only the rust-overlay input, review flake.lock, and commit both changes:" >&2
+              echo "  nix flake update rust-overlay" >&2
+              exit 1
+              ;;
+          esac
+        '';
       in
       {
         packages = {
@@ -78,6 +108,13 @@
           };
 
           default = self.packages.${system}.decapod;
+        };
+
+        # Packaging support matrix (eachDefaultSystem still exposes all four):
+        #   CI-proven (native build + binary smoke): x86_64-linux, aarch64-darwin
+        #   Exposed / not continuously proven:       aarch64-linux, x86_64-darwin
+        checks = {
+          rust-toolchain = rustToolchainCheck;
         };
 
         devShells.default = pkgs.mkShell {

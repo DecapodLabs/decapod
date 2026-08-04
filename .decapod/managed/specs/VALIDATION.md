@@ -42,7 +42,8 @@ flowchart LR
 ```## Proof Surfaces
 - `decapod validate`
 - Required test command: `cargo test`
-- Required integration/e2e commands: `cargo test --test context_capsule_schema`, `cargo test --test init_validate_green_field`## Epistemic Integrity Regression Proof
+- Required integration/e2e commands: `cargo test --test context_capsule_schema`, `cargo test --test init_validate_green_field`
+- Nix packaging (when flake/Cargo/toolchain paths change): `.github/workflows/nix-flake.yml` runs, on native **x86_64-linux** and **aarch64-darwin**, (1) `checks.<system>.rust-toolchain` proving the locked `rust-overlay` supplies the channel in `rust-toolchain.toml`, then (2) `nix build` of `packages.default`, then (3) `./result/bin/decapod system version`. Evaluating a flake output alone is not packaging proof. CI does not mutate `flake.lock`.## Epistemic Integrity Regression Proof
 - Nested H3/H4 headings, slash prose, fenced directive examples, and arbitrary Markdown survive through final resolved context.
 - Duplicate exact directive IDs and non-empty unknown Decapod-namespaced IDs fail closed; empty retired generated sections remain upgrade-compatible.
 - A structurally healthy spec-drift fixture increments neither warning nor failure counts.
@@ -131,7 +132,7 @@ Proof-completion bindings:- Validation epochs record `living_spec_material:<path
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `70ff66e79a886165c52e343c6636e0685a9ebccea4cf029013ff1fa61552528c`
+- Repository signal fingerprint: `24ace37433c2c92637bde79c1413534c398df833366d192e993921743bdcca4e`
 - Significant implementation surfaces: `.github/` (10 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

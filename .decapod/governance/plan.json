@@ -1,21 +1,33 @@
 {
   "schema_version": "1.0.0",
-  "title": "Material living-spec rewrites beyond fingerprints (#1183)",
-  "intent": "Enhance validate, publish, completion evidence so living specs are material proof evidence beyond fingerprint refresh.",
+  "title": "fix(nix): prove Darwin packaging and guard Rust overlay drift (#1171, #1172)",
+  "intent": "Prove packages.default builds and runs natively on Darwin (aarch64) and Linux (x86_64); remove invalid Darwin /usr/bin/ld fuse-ld pins; enforce repository rust-toolchain channel through locked rust-overlay with a focused Nix check and clear CI remediation; document CI-proven vs exposed systems and the rust-overlay refresh procedure. No flake.lock auto-mutation, no cache/release work.",
   "state": "APPROVED",
   "todo_ids": [
-    "bugs_01kz4pb814wgb8ae"
+    "bugs_01kz518hhkpjeq9h"
   ],
-  "proof_hooks": [],
+  "proof_hooks": [
+    "nix build + decapod system version on x86_64-linux",
+    "nix build + decapod system version on aarch64-darwin (CI macos-latest)",
+    "checks.rust-toolchain matches rust-toolchain.toml channel via locked overlay",
+    "cargo build/test/clippy on Linux host",
+    "decapod validate"
+  ],
   "unknowns": [],
   "human_questions": [],
-  "stop_conditions": [],
+  "stop_conditions": [
+    "Do not mark Darwin supported without green native Darwin CI",
+    "Do not auto-update flake.lock in CI",
+    "Do not expand into #1173 #1176 #1177 #1178 or release packaging"
+  ],
   "unresolved_contradictions": [],
   "deferred_questions": [],
   "constraints": {
-    "forbidden_paths": [],
+    "forbidden_paths": [
+      "src/"
+    ],
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1785792965Z"
+  "updated_at": "1785802078Z"
 }

@@ -13,12 +13,11 @@ CLIPPY_CONF_DIR = { value = ".config", relative = true }
 # linker = "clang"
 # rustflags = ["-C", "link-arg=-fuse-ld=lld"]
 
-# macOS uses system linker (already fast)
-[target.x86_64-apple-darwin]
-rustflags = ["-C", "link-arg=-fuse-ld=/usr/bin/ld"]
-
-[target.aarch64-apple-darwin]
-rustflags = ["-C", "link-arg=-fuse-ld=/usr/bin/ld"]
+# Darwin: do not pin -fuse-ld to a host absolute path such as /usr/bin/ld.
+# That path is invalid or unavailable inside a pure Nix sandbox and is
+# unnecessary on macOS — Cargo/Rust already selects the Apple toolchain
+# linker (ld64 / ld-prime via the system cc). Leave Darwin targets unconfigured
+# so plain `cargo build` and `nix build` share one coherent linker story.
 
 # Build settings
 [build]
