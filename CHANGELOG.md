@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.96.3](https://github.com/DecapodLabs/decapod/compare/v0.96.2...v0.96.3) - 2026-08-04
+
+### Fixed
+
+- *(ci)* stop post-release entrypoint/spec drift on master
+
+### Other
+
+- rustfmt release_workflow_policy tests
+
 ### Fixed
 
 - *(ci)* stop post-release entrypoint/spec drift failures on master (regression since #1170 / v0.95.4): sync release-bound pins in the release-plz job, heal master on push, and avoid re-init inventing drift
