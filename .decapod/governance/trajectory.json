@@ -1,36 +1,35 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "nix_darwin_toolchain_1171_1172",
-  "intent_id": "intent:nix_darwin_toolchain_1171_1172",
+  "run_id": "nix_pkg_1171_1172_1785805113",
+  "intent_id": "intent:nix_pkg_1171_1172_1785805113",
   "task_id": "bugs_01kz518hhkpjeq9h",
-  "original_intent": "Implement #1171 and #1172: Darwin Nix packaging proof + rust-overlay lockstep enforcement",
-  "derived_intent": "Remove Darwin fuse-ld host path; add aarch64-darwin CI; add checks.rust-toolchain; document proven systems and overlay refresh",
-  "current_phase": "implementation",
+  "original_intent": "Implement #1171 and #1172 Nix packaging hardening",
+  "derived_intent": "Darwin packaging proof + rust-overlay lockstep; docs to CONTRIBUTING/mdbook; validation receipt",
+  "current_phase": "validation",
+  "next_transitions": [
+    "publish"
+  ],
   "active_boundaries": [
-    "Nix packaging and CI only; no release caches, no Windows, no custom validate extension"
+    "Nix packaging and documentation only"
   ],
   "repo_scope": [
-    "flake.nix flake.lock .cargo/config.toml .github/workflows/nix-flake.yml README.md CONTRIBUTING.md living specs"
+    "flake.nix .cargo/config.toml .github/workflows CONTRIBUTING.md docs/book"
   ],
-  "inspected_files": [
-    ".cargo/config.toml",
-    ".config/build/rust-toolchain.toml",
-    ".github/workflows/nix-flake.yml",
-    "flake.lock",
-    "flake.nix",
-    "rust-toolchain.toml"
-  ],
+  "inspected_files": [],
   "modified_files": [
     ".cargo/config.toml",
-    ".decapod/managed/specs/OPERATIONS.md",
-    ".decapod/managed/specs/VALIDATION.md",
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
     ".github/workflows/nix-flake.yml",
-    "CHANGELOG.md",
     "CONTRIBUTING.md",
     "README.md",
+    "docs/book/src/SUMMARY.md",
+    "docs/book/src/reference/nix.md",
     "flake.nix"
   ],
-  "declared_commands": [],
+  "declared_commands": [
+    "decapod validate"
+  ],
   "tool_calls": [],
   "checks": [
     {
@@ -42,23 +41,23 @@
       "status": "passed"
     },
     {
-      "name": "cargo-test-all-features",
-      "status": "partial"
-    },
-    {
-      "name": "decapod-system-version-smoke",
+      "name": "decapod validate",
       "status": "passed"
     },
     {
-      "name": "decapod-validate-host",
-      "status": "partial"
-    },
-    {
-      "name": "lcm-test-preexisting-on-master",
-      "status": "failed"
+      "name": "decapod-validate",
+      "status": "passed"
     },
     {
       "name": "nix-build-x86_64-linux",
+      "status": "passed"
+    },
+    {
+      "name": "nix-ci-macos-aarch64-darwin",
+      "status": "passed"
+    },
+    {
+      "name": "nix-ci-ubuntu",
       "status": "passed"
     },
     {
@@ -68,40 +67,35 @@
     {
       "name": "rust-toolchain-positive",
       "status": "passed"
-    },
-    {
-      "name": "workflow-yaml-yq",
-      "status": "passed"
     }
   ],
-  "evidence": [],
-  "shortcut_risk_signals": [],
-  "unresolved_assumptions": [
-    "Host-only validate reports container_workspace_required (auto-remediable); container validate hit VALIDATE_TIMEOUT_OR_LOCK (120s). Plain checkout CI job is unaffected.",
-    "Native Darwin package build is proven by CI macos-latest (aarch64) not this Linux host."
+  "evidence": [
+    "validation epoch ve_3acca14c59137cf4 completed with zero failures"
   ],
-  "proof_status": "failed",
+  "shortcut_risk_signals": [],
+  "unresolved_assumptions": [],
+  "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "unsupported"
+    "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:3d4c4be0a3c71a0a8774e71a7333a7c134e6c9871ab631fd6b12c15ee28d6261",
+  "artifact_hash": "sha256:fb6e9f7c94a4add495b6e294ff350e6579246358a493b5ff0945cda492d3487b",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:nix_darwin_toolchain_1171_1172": {
-        "id": "intent:nix_darwin_toolchain_1171_1172",
-        "raw_intent": "Implement #1171 and #1172: Darwin Nix packaging proof + rust-overlay lockstep enforcement",
-        "refined_intent": "Remove Darwin fuse-ld host path; add aarch64-darwin CI; add checks.rust-toolchain; document proven systems and overlay refresh",
+      "intent:nix_pkg_1171_1172_1785805113": {
+        "id": "intent:nix_pkg_1171_1172_1785805113",
+        "raw_intent": "Implement #1171 and #1172 Nix packaging hardening",
+        "refined_intent": "Darwin packaging proof + rust-overlay lockstep; docs to CONTRIBUTING/mdbook; validation receipt",
         "acceptance_criteria": [],
         "constraints": [
-          "flake.nix flake.lock .cargo/config.toml .github/workflows/nix-flake.yml README.md CONTRIBUTING.md living specs"
+          "flake.nix .cargo/config.toml .github/workflows CONTRIBUTING.md docs/book"
         ],
         "assumptions": [],
         "boundaries": [
-          "Nix packaging and CI only; no release caches, no Windows, no custom validate extension"
+          "Nix packaging and documentation only"
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -114,93 +108,110 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:nix_darwin_toolchain_1171_1172",
+        "intent_id": "intent:nix_pkg_1171_1172_1785805113",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:nix_darwin_toolchain_1171_1172",
+        "intent_id": "intent:nix_pkg_1171_1172_1785805113",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:nix_darwin_toolchain_1171_1172",
+        "intent_id": "intent:nix_pkg_1171_1172_1785805113",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:nix_darwin_toolchain_1171_1172"
+        "detail": "trajectory:nix_pkg_1171_1172_1785805113"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:nix_darwin_toolchain_1171_1172",
+        "intent_id": "intent:nix_pkg_1171_1172_1785805113",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:nix_darwin_toolchain_1171_1172"
+        "detail": "trajectory:nix_pkg_1171_1172_1785805113"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
+        "intent_id": "intent:nix_pkg_1171_1172_1785805113",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:nix_pkg_1171_1172_1785805113"
       }
     ],
     "trajectories": {
-      "nix_darwin_toolchain_1171_1172": {
-        "id": "nix_darwin_toolchain_1171_1172",
-        "intent_id": "intent:nix_darwin_toolchain_1171_1172",
+      "nix_pkg_1171_1172_1785805113": {
+        "id": "nix_pkg_1171_1172_1785805113",
+        "intent_id": "intent:nix_pkg_1171_1172_1785805113",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
             "action": "trajectory.record",
             "scope": [
-              "flake.nix flake.lock .cargo/config.toml .github/workflows/nix-flake.yml README.md CONTRIBUTING.md living specs"
+              "flake.nix .cargo/config.toml .github/workflows CONTRIBUTING.md docs/book"
             ],
             "observations": [
               "flake.nix",
-              "flake.lock",
               ".cargo/config.toml",
               ".github/workflows/nix-flake.yml",
-              "rust-toolchain.toml",
-              ".config/build/rust-toolchain.toml",
-              "flake.nix",
-              ".cargo/config.toml",
-              ".github/workflows/nix-flake.yml",
-              "README.md",
               "CONTRIBUTING.md",
-              "CHANGELOG.md",
-              ".decapod/managed/specs/OPERATIONS.md",
-              ".decapod/managed/specs/VALIDATION.md"
+              "README.md"
             ],
             "proof_refs": [
+              "nix-build-x86_64-linux",
               "rust-toolchain-positive",
               "rust-toolchain-negative",
-              "nix-build-x86_64-linux",
-              "decapod-system-version-smoke",
               "cargo-build-locked",
-              "workflow-yaml-yq"
+              "cargo-clippy",
+              "nix-ci-ubuntu",
+              "nix-ci-macos-aarch64-darwin"
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
           },
           {
             "sequence": 5,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "flake.nix .cargo/config.toml .github/workflows CONTRIBUTING.md docs/book"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_3acca14c59137cf4 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
             "action": "trajectory.record",
             "scope": [
-              "flake.nix flake.lock .cargo/config.toml .github/workflows/nix-flake.yml README.md CONTRIBUTING.md living specs"
+              "flake.nix .cargo/config.toml .github/workflows CONTRIBUTING.md docs/book"
             ],
-            "observations": [],
+            "observations": [
+              "README.md",
+              "CONTRIBUTING.md",
+              "docs/book/src/reference/nix.md",
+              "docs/book/src/SUMMARY.md",
+              ".decapod/governance/validation.json"
+            ],
             "proof_refs": [
-              "cargo-clippy",
-              "cargo-test-all-features",
-              "lcm-test-preexisting-on-master",
-              "decapod-validate-host"
+              "decapod-validate"
             ],
-            "validation_findings": [
-              "Host-only validate reports container_workspace_required (auto-remediable); container validate hit VALIDATE_TIMEOUT_OR_LOCK (120s). Plain checkout CI job is unaffected.",
-              "Native Darwin package build is proven by CI macos-latest (aarch64) not this Linux host."
-            ],
-            "custody_event_id": "event:5"
+            "validation_findings": [],
+            "custody_event_id": "event:6"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 5
+    "next_sequence": 6
   }
 }
