@@ -9,9 +9,12 @@ name: Release Artifact Sync
 # finished, the branch was deleted and the push recreated an orphan that never
 # landed on master.
 #
+# Master is ruleset-protected (PR required, required signatures, no direct
+# update). Never push healed artifacts straight to master — open/update a PR.
+#
 # This workflow heals:
 #   1. open release-plz / release-labeled PRs (before merge when possible), and
-#   2. master itself when pins are already stale after a merge/release.
+#   2. master pin lag via a dedicated chore PR after merge/release.
 
 on:
   pull_request:
@@ -51,14 +54,21 @@ jobs:
       contents: write
       pull-requests: write
     steps:
+      - name: Generate GitHub App token
+        uses: actions/create-github-app-token@v2
+        id: generate-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          owner: DecapodLabs
+
       - uses: actions/checkout@v4
         with:
           # On PR events, check out the PR head. On master push, check out master.
           ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
           fetch-depth: 0
-          # Default GITHUB_TOKEN can push back to same-repo PR branches and master
-          # when contents:write is granted (no fork PRs reach this job).
-          persist-credentials: true
+          token: ${{ steps.generate-token.outputs.token }}
+          persist-credentials: false
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
@@ -88,6 +98,10 @@ jobs:
       - name: Refresh release-bound artifacts
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
+          # Healing job: tree-local binary pins lag the last published fingerprint
+          # until refresh rewrites them. Skip fingerprint hard-fails; pin-version
+          # match is still enforced below.
+          DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES: "1"
         run: |
           set -euo pipefail
           BIN=./target/release/decapod
@@ -125,11 +139,17 @@ jobs:
 
       - name: Commit regenerated artifacts
         env:
-          TARGET_REF: ${{ github.event_name == 'pull_request' && github.head_ref || 'master' }}
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          PR_HEAD: ${{ github.head_ref }}
         run: |
           set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          # Commit as the GitHub App identity so merges attribute correctly.
+          # Ruleset required_signatures applies to master only; branch pushes
+          # (PR heads / chore/*) are not under that ruleset. Do not push to master.
+          git config user.name "decapod-release-manager[bot]"
+          git config user.email "261518511+decapod-release-manager[bot]@users.noreply.github.com"
           git add \
             AGENTS.md CLAUDE.md CODEX.md GEMINI.md \
             .decapod/managed/Dockerfile.decapod \
@@ -140,6 +160,37 @@ jobs:
             exit 0
           fi
           git commit -m "chore: sync release-bound entrypoints and living specs"
-          # Always push to the intended live ref. Never recreate a deleted
-          # release-plz branch after the PR has already merged.
-          git push origin "HEAD:${TARGET_REF}"
+
+          if [ "${EVENT_NAME}" = "pull_request" ]; then
+            # Never recreate a deleted release-plz branch after the PR merged.
+            git push origin "HEAD:${PR_HEAD}"
+            exit 0
+          fi
+
+          # Master path: open/update a PR. Direct push to master is blocked by
+          # ruleset (PR required + required signatures + update protection).
+          BRANCH="chore/release-bound-sync"
+          git fetch origin master
+          # Rebase-free force is intentional: this branch is bot-owned heal tip.
+          git push --force origin "HEAD:${BRANCH}"
+          if gh pr list --state open --head "${BRANCH}" --json number --jq 'length' | grep -qx '0'; then
+            gh pr create \
+              --base master \
+              --head "${BRANCH}" \
+              --title "chore: sync release-bound entrypoints and living specs" \
+              --label release \
+              --body "$(cat <<'EOF'
+## Summary
+Automated heal of release-bound entrypoint pins, managed Dockerfile headers, and living-spec attestations after a master version/pin drift.
+
+Master is ruleset-protected (PR required, signed commits). This PR is the only supported way for CI to land release-bound regenerations.
+
+## Test plan
+- [ ] Confirm AGENTS/CLAUDE/CODEX/GEMINI release pins match Cargo.toml
+- [ ] Confirm .decapod/managed/Dockerfile.decapod pins match
+- [ ] Merge after review (release label skips material-specs/governance artifact gates)
+EOF
+)"
+          else
+            echo "Updated existing open PR for ${BRANCH}"
+          fi

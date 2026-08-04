@@ -91,11 +91,15 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.generate-token.outputs.token }}
           DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
+          # Tree-local binary pins lag the last published release fingerprint
+          # until this heal step commits regenerated markers. Do not hard-fail
+          # validate on fingerprint mismatch while regenerating.
+          DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES: "1"
         run: |
           set -euo pipefail
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "decapod-release-manager[bot]"
+          git config user.email "261518511+decapod-release-manager[bot]@users.noreply.github.com"
 
           # Prefer an open release PR branch; otherwise heal master if pins lag.
           BRANCH="$(gh pr list --state open --label release --json headRefName --jq '.[0].headRefName // empty' || true)"
@@ -103,6 +107,7 @@ jobs:
             BRANCH="$(gh pr list --state open --json headRefName,title --jq '.[] | select(.title|test("(?i)release v")) | .headRefName' | head -1 || true)"
           fi
 
+          OPEN_PR_AFTER=0
           if [ -n "${BRANCH}" ]; then
             echo "Syncing open release PR branch: ${BRANCH}"
             git fetch origin "${BRANCH}"
@@ -117,8 +122,11 @@ jobs:
               echo "No open release PR and pins already match Cargo.toml (${cargo_ver})."
               exit 0
             fi
-            echo "No open release PR; healing master pins (Cargo=${cargo_ver} pin=${pin_ver})."
-            PUSH_REF="master"
+            # Master is ruleset-protected (PR required + required signatures).
+            # Never push heal commits directly to master — use a chore branch + PR.
+            echo "No open release PR; opening heal PR (Cargo=${cargo_ver} pin=${pin_ver})."
+            PUSH_REF="chore/release-bound-sync"
+            OPEN_PR_AFTER=1
           fi
 
           cargo build --release --locked
@@ -153,7 +161,21 @@ jobs:
             exit 0
           fi
           git commit -m "chore: sync release-bound entrypoints and living specs"
-          git push origin "HEAD:${PUSH_REF}"
+          if [ "${OPEN_PR_AFTER}" = "1" ]; then
+            git push --force origin "HEAD:${PUSH_REF}"
+            if gh pr list --state open --head "${PUSH_REF}" --json number --jq 'length' | grep -qx '0'; then
+              gh pr create \
+                --base master \
+                --head "${PUSH_REF}" \
+                --title "chore: sync release-bound entrypoints and living specs" \
+                --label release \
+                --body "Automated post-release-plz heal of release-bound entrypoints/specs. Master ruleset forbids direct push."
+            else
+              echo "Updated existing open PR for ${PUSH_REF}"
+            fi
+          else
+            git push origin "HEAD:${PUSH_REF}"
+          fi
 
   # Run 'cargo dist plan' (or host) to determine what tasks we need to do
   plan:

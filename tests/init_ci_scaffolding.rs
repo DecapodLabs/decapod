@@ -29,12 +29,23 @@ fn init_scaffolds_github_action_workflow() {
     let content = fs::read_to_string(workflow_path).expect("read workflow file");
     assert!(content.contains("name: Decapod Validate"));
     assert!(content.contains("decapod validate"));
-    assert!(content.contains("decapod init --proof --force"));
+    // Bootstrap only when .decapod is missing; --force rewrites living specs and
+    // invents drift against the PR drift gate.
+    assert!(content.contains("decapod init --proof"));
     assert!(
-        content
-            .contains("key: ${{ runner.os }}-decapod-${{ hashFiles('Cargo.toml', 'Cargo.lock') }}")
+        !content.contains("decapod init --proof --force"),
+        "scaffold must not force-init in CI (rewrites living specs)"
     );
+    assert!(content.contains("hashFiles('Cargo.toml', 'Cargo.lock'"));
     assert!(content.contains("DECAPOD_VALIDATE_SKIP_GIT_GATES: 1"));
+    assert!(
+        content.contains("DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES"),
+        "scaffolded workflow must skip fingerprint hard-fails on post-merge push"
+    );
+    assert!(
+        content.contains("if: github.event_name == 'pull_request'"),
+        "scaffolded drift gate must be PR-only"
+    );
     assert!(content.contains("on:"));
     assert!(content.contains("push:"));
     assert!(content.contains("pull_request:"));

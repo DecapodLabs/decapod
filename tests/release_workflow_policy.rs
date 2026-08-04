@@ -35,8 +35,16 @@ fn release_workflow_syncs_release_bound_artifacts_after_release_plz() {
         "post-release-plz sync must regenerate via validate --refresh-specs"
     );
     assert!(
+        workflow.contains("DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES"),
+        "release heal must skip fingerprint hard-fails while regenerating pins"
+    );
+    assert!(
         workflow.contains("chore: sync release-bound entrypoints and living specs"),
         "post-release-plz sync must commit healed release-bound artifacts"
+    );
+    assert!(
+        workflow.contains("chore/release-bound-sync") && workflow.contains("gh pr create"),
+        "when no release PR is open, heal must open a PR rather than push master"
     );
 }
 
@@ -54,12 +62,49 @@ fn release_artifact_sync_heals_master_and_release_prs() {
         "release-artifact-sync must still cover release-plz PR branches"
     );
     assert!(
+        workflow.contains("DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES"),
+        "sync must skip fingerprint hard-fails while healing release-bound pins"
+    );
+    assert!(
         workflow.contains("Release pin heal failed"),
         "sync must fail closed when entrypoint pins remain stale after refresh"
     );
     assert!(
-        workflow.contains("Never recreate a deleted"),
-        "sync must document that it will not orphan deleted release-plz branches"
+        workflow.contains("create-github-app-token@"),
+        "sync must use the GitHub App token (same as release.yml)"
+    );
+    assert!(
+        workflow.contains("gh pr create"),
+        "master path must open a PR; direct master push is ruleset-blocked"
+    );
+    assert!(
+        !workflow.contains("TARGET_REF: master")
+            && !workflow.contains("git push origin \"HEAD:master\""),
+        "must not push healed artifacts directly to master"
+    );
+    assert!(
+        workflow.contains("chore/release-bound-sync"),
+        "master heal branch name must be stable for PR updates"
+    );
+}
+
+#[test]
+fn post_merge_validate_skips_fingerprint_evaluation() {
+    // A tree-local post-merge binary cannot match the last published
+    // entrypoint fingerprint; enforce pins on PRs, not on push to master.
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/workflows/decapod-validate.yml");
+    let workflow = fs::read_to_string(&path).expect("read decapod-validate workflow");
+    assert!(
+        workflow.contains("DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES"),
+        "decapod-validate must support skipping fingerprint gates post-merge"
+    );
+    assert!(
+        workflow.contains("github.event_name == 'push'"),
+        "fingerprint skip must be limited to push/post-merge events"
+    );
+    assert!(
+        workflow.contains("if: github.event_name == 'pull_request'"),
+        "entrypoint/spec drift gate must remain PR-only"
     );
 }
 

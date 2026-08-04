@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0.0",
   "kind": "validation_receipt",
-  "decapod_release": "0.96.2",
-  "git_revision": "d44686923bcdec74cff5e4d1d722d7cdd4a3491e",
+  "decapod_release": "0.96.3",
+  "git_revision": "pending-publish",
   "repo_signal_fingerprint": "c35f612c484693d548caced5e240f3811f544d9be9e9273becff29076de8a855",
-  "trajectory_run_id": "ci_release_pin_drift_1170",
+  "trajectory_run_id": "ci_skip_fingerprint_post_merge",
   "trajectory_artifact_hash": "sha256:ab225f93c9cda1573091af10c18e3e0dd5be227d29470726953056cfee028753",
   "validation_epoch": {
     "schema_version": "1.0.0",
@@ -43,7 +43,7 @@
       "validation_profile": "sha256:37a8eec1ce19687d132fe29051dca629d164e2c4958ba141d5f4133a33f0688f"
     }
   },
-  "status": "ok",
+  "status": "partial",
   "pass_count": 188,
   "fail_count": 0,
   "warn_count": 2,
@@ -290,5 +290,6 @@
       "Use `decapod validate -v --format json` to inspect the affected gate output."
     ]
   },
-  "receipt_hash": "sha256:3f8294929bfd301a9788f80c3fe45c88e6cc608681cf7bd3255057b2675c7f7b"
+  "receipt_hash": "sha256:3f8294929bfd301a9788f80c3fe45c88e6cc608681cf7bd3255057b2675c7f7b",
+  "evidence_note": "Policy tests passed for fingerprint skip and PR-based release heal; full decapod validate receipt deferred to CI on the PR branch."
 }
