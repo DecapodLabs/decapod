@@ -1,28 +1,51 @@
 name: Release Artifact Sync
 
-# Post-release root cause: release-plz version bumps Cargo.toml/CHANGELOG but
-# does not regenerate release-bound entrypoint pins, managed Dockerfile headers,
-# or living-spec attestations. CI then runs validate --refresh-specs against the
-# new binary and fails the drift gate. This workflow rewrites those artifacts on
-# release-labeled PRs and pushes the result back to the PR branch.
+# Root cause (since #1170 / v0.95.4):
+# release-plz bumps Cargo.toml/CHANGELOG without regenerating release-bound
+# entrypoint pins, managed Dockerfile headers, or living-spec attestations.
+# CI then runs `validate --refresh-specs` and fails the drift gate.
+#
+# A prior PR-only sync raced with fast release-PR merge: by the time the job
+# finished, the branch was deleted and the push recreated an orphan that never
+# landed on master.
+#
+# This workflow heals:
+#   1. open release-plz / release-labeled PRs (before merge when possible), and
+#   2. master itself when pins are already stale after a merge/release.
 
 on:
   pull_request:
     types: [opened, synchronize, reopened, labeled]
+  push:
+    branches: [master]
+    paths:
+      - 'Cargo.toml'
+      - 'AGENTS.md'
+      - 'CLAUDE.md'
+      - 'CODEX.md'
+      - 'GEMINI.md'
+      - '.decapod/managed/**'
+      - '.github/workflows/release-artifact-sync.yml'
 
 concurrency:
-  group: release-artifact-sync-${{ github.event.pull_request.number }}
+  group: release-artifact-sync-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
   sync-release-bound-artifacts:
     name: Sync release-bound entrypoints and specs
     runs-on: ubuntu-latest
+    # PR path: only release-plz / release-labeled same-repo PRs.
+    # Push path: master after version/pin/spec changes.
     if: >
-      github.event.pull_request.head.repo.full_name == github.repository
-      && (
-        contains(github.event.pull_request.labels.*.name, 'release')
-        || startsWith(github.head_ref, 'release-plz-')
+      (github.event_name == 'push' && github.ref == 'refs/heads/master')
+      || (
+        github.event_name == 'pull_request'
+        && github.event.pull_request.head.repo.full_name == github.repository
+        && (
+          contains(github.event.pull_request.labels.*.name, 'release')
+          || startsWith(github.head_ref, 'release-plz-')
+        )
       )
     permissions:
       contents: write
@@ -30,15 +53,34 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }}
+          # On PR events, check out the PR head. On master push, check out master.
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
           fetch-depth: 0
-          # Default token can push back to same-repo release PR branches.
+          # Default GITHUB_TOKEN can push back to same-repo PR branches and master
+          # when contents:write is granted (no fork PRs reach this job).
           persist-credentials: true
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: 1.96.1
+
+      - name: Detect stale release pins
+        id: detect
+        run: |
+          set -euo pipefail
+          cargo_ver="$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)"
+          pin_ver="$(sed -n 's/^<!-- decapod-release: \(.*\) -->/\1/p' AGENTS.md | head -1 || true)"
+          echo "cargo_version=${cargo_ver}" >> "$GITHUB_OUTPUT"
+          echo "pin_version=${pin_ver}" >> "$GITHUB_OUTPUT"
+          if [ -n "${cargo_ver}" ] && [ -n "${pin_ver}" ] && [ "${cargo_ver}" = "${pin_ver}" ]; then
+            # Still refresh when only fingerprint/attestation drift is possible
+            # (e.g. Dockerfile ARG). Always build + validate below.
+            echo "pins_match=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "pins_match=false" >> "$GITHUB_OUTPUT"
+            echo "Stale pins: Cargo.toml=${cargo_ver} AGENTS.md=${pin_ver}"
+          fi
 
       - name: Build evaluating binary
         run: cargo build --release --locked
@@ -50,10 +92,9 @@ jobs:
           set -euo pipefail
           BIN=./target/release/decapod
           chmod +x "$BIN"
-          # Validate self-heals stale release pins (entrypoint headers + Dockerfile).
+          # Self-heal stale release pins (entrypoint headers + Dockerfile).
           "$BIN" validate --refresh-specs || true
-          # Explicit specs.refresh rewrites living-spec MD attestations; validate
-          # alone can leave MD fingerprints stale while only the manifest moves.
+          # Explicit specs.refresh rewrites living-spec MD attestations.
           "$BIN" rpc --op specs.refresh || true
           "$BIN" validate --refresh-specs --format json >/tmp/validate.json || true
           python3 - <<'PY'
@@ -74,7 +115,17 @@ jobs:
             fi
           fi
 
+          cargo_ver="$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)"
+          pin_ver="$(sed -n 's/^<!-- decapod-release: \(.*\) -->/\1/p' AGENTS.md | head -1 || true)"
+          if [ -n "${cargo_ver}" ] && [ -n "${pin_ver}" ] && [ "${cargo_ver}" != "${pin_ver}" ]; then
+            echo "::error::Release pin heal failed: Cargo.toml=${cargo_ver} AGENTS.md=${pin_ver}"
+            echo "refresh_entrypoint_metadata did not rewrite entrypoints; investigate template/body mismatch."
+            exit 1
+          fi
+
       - name: Commit regenerated artifacts
+        env:
+          TARGET_REF: ${{ github.event_name == 'pull_request' && github.head_ref || 'master' }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
@@ -89,4 +140,6 @@ jobs:
             exit 0
           fi
           git commit -m "chore: sync release-bound entrypoints and living specs"
-          git push origin "HEAD:${{ github.head_ref }}"
+          # Always push to the intended live ref. Never recreate a deleted
+          # release-plz branch after the PR has already merged.
+          git push origin "HEAD:${TARGET_REF}"

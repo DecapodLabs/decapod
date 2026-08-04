@@ -83,6 +83,78 @@ jobs:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
           CARGO_NET_GIT_FETCH_WITH_CLI: "true"
 
+      # release-plz only rewrites Cargo.toml/CHANGELOG. Since #1170 the drift
+      # gate fails unless entrypoint pins + living-spec attestations match the
+      # new binary version. Sync immediately in this job so a fast merge cannot
+      # leave master with stale pins (the PR-only sync race).
+      - name: Sync release-bound artifacts after release-plz
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+          DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
+        run: |
+          set -euo pipefail
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Prefer an open release PR branch; otherwise heal master if pins lag.
+          BRANCH="$(gh pr list --state open --label release --json headRefName --jq '.[0].headRefName // empty' || true)"
+          if [ -z "${BRANCH}" ]; then
+            BRANCH="$(gh pr list --state open --json headRefName,title --jq '.[] | select(.title|test("(?i)release v")) | .headRefName' | head -1 || true)"
+          fi
+
+          if [ -n "${BRANCH}" ]; then
+            echo "Syncing open release PR branch: ${BRANCH}"
+            git fetch origin "${BRANCH}"
+            git checkout -B "${BRANCH}" "origin/${BRANCH}"
+            PUSH_REF="${BRANCH}"
+          else
+            git fetch origin master
+            git checkout -B master origin/master
+            cargo_ver="$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)"
+            pin_ver="$(sed -n 's/^<!-- decapod-release: \(.*\) -->/\1/p' AGENTS.md | head -1 || true)"
+            if [ -n "${cargo_ver}" ] && [ -n "${pin_ver}" ] && [ "${cargo_ver}" = "${pin_ver}" ]; then
+              echo "No open release PR and pins already match Cargo.toml (${cargo_ver})."
+              exit 0
+            fi
+            echo "No open release PR; healing master pins (Cargo=${cargo_ver} pin=${pin_ver})."
+            PUSH_REF="master"
+          fi
+
+          cargo build --release --locked
+          BIN=./target/release/decapod
+          chmod +x "$BIN"
+          "$BIN" validate --refresh-specs || true
+          "$BIN" rpc --op specs.refresh || true
+          "$BIN" validate --refresh-specs || true
+
+          MANIFEST=".decapod/managed/specs/.manifest.json"
+          if git cat-file -e "HEAD:${MANIFEST}" 2>/dev/null && [ -f "${MANIFEST}" ]; then
+            OLD=$(git show "HEAD:${MANIFEST}" | sed -n 's/.*"generated_at": "\([^"]*\)".*/\1/p' | head -1 || true)
+            if [ -n "${OLD:-}" ]; then
+              sed -i "s/\"generated_at\": \"[^\"]*\"/\"generated_at\": \"${OLD}\"/" "${MANIFEST}"
+            fi
+          fi
+
+          cargo_ver="$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)"
+          pin_ver="$(sed -n 's/^<!-- decapod-release: \(.*\) -->/\1/p' AGENTS.md | head -1 || true)"
+          if [ -n "${cargo_ver}" ] && [ -n "${pin_ver}" ] && [ "${cargo_ver}" != "${pin_ver}" ]; then
+            echo "::error::Failed to heal release pins after release-plz (Cargo=${cargo_ver} pin=${pin_ver})."
+            exit 1
+          fi
+
+          git add \
+            AGENTS.md CLAUDE.md CODEX.md GEMINI.md \
+            .decapod/managed/Dockerfile.decapod \
+            .decapod/managed/specs/ \
+            || true
+          if git diff --cached --quiet; then
+            echo "No release-bound artifact drift to commit."
+            exit 0
+          fi
+          git commit -m "chore: sync release-bound entrypoints and living specs"
+          git push origin "HEAD:${PUSH_REF}"
+
   # Run 'cargo dist plan' (or host) to determine what tasks we need to do
   plan:
     runs-on: "ubuntu-24.04"

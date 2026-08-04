@@ -21,6 +21,49 @@ fn release_workflow_lets_release_plz_update_the_manifest() {
 }
 
 #[test]
+fn release_workflow_syncs_release_bound_artifacts_after_release_plz() {
+    // Regression since #1170 / v0.95.4: release-plz bumps Cargo.toml without
+    // regenerating entrypoint pins; CI drift gate then fails on every release.
+    let workflow_path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/workflows/release.yml");
+    let workflow = fs::read_to_string(&workflow_path).expect("read release workflow");
+    assert!(
+        workflow.contains("Sync release-bound artifacts after release-plz"),
+        "release workflow must heal entrypoint/spec pins in the same job as release-plz"
+    );
+    assert!(
+        workflow.contains("validate --refresh-specs"),
+        "post-release-plz sync must regenerate via validate --refresh-specs"
+    );
+    assert!(
+        workflow.contains("chore: sync release-bound entrypoints and living specs"),
+        "post-release-plz sync must commit healed release-bound artifacts"
+    );
+}
+
+#[test]
+fn release_artifact_sync_heals_master_and_release_prs() {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join(".github/workflows/release-artifact-sync.yml");
+    let workflow = fs::read_to_string(&path).expect("read release-artifact-sync workflow");
+    assert!(
+        workflow.contains("branches: [master]") || workflow.contains("branches: [master]"),
+        "release-artifact-sync must also run on master pushes to heal post-merge pin lag"
+    );
+    assert!(
+        workflow.contains("startsWith(github.head_ref, 'release-plz-')"),
+        "release-artifact-sync must still cover release-plz PR branches"
+    );
+    assert!(
+        workflow.contains("Release pin heal failed"),
+        "sync must fail closed when entrypoint pins remain stale after refresh"
+    );
+    assert!(
+        workflow.contains("Never recreate a deleted"),
+        "sync must document that it will not orphan deleted release-plz branches"
+    );
+}
+
+#[test]
 fn release_workflow_publishes_decapod_ghcr_image() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let workflow = fs::read_to_string(root.join(".github/workflows/release.yml"))
