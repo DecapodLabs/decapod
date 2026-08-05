@@ -79,7 +79,7 @@ decapod workspace ensure
 
 ## 7. Delivery and Proof
 
-Once implementation is complete within the isolated workspace, run validation and mark the task as done. This turns completion into a verified state transition and generates the final proof artifacts (see [Artifact Reference](reference/artifacts.md)). Human users should never call this.
+After the agent has performed the work in the isolated workspace, it runs validation. A failed gate leaves the task incomplete. When the result includes supported remediation, the agent corrects the violated artifact or state, re-runs validation, and continues. Only passing required gates and evidence permit the governed completion and publication transitions (see [Artifact Reference](reference/artifacts.md)). Human users should never call these commands.
 
 ```bash
 decapod validate

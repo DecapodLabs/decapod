@@ -8,6 +8,17 @@ This is the primary orientation surface for AI agents. Before performing impleme
 
 Call Decapod at **Inference Pressure Points**. Each call should move transient agent activity into governed project state: intent, context, custody, boundaries, validation, or completion.
 
+One agent task may span many Decapod invocations. Every CLI or RPC process is
+ephemeral; the repository is the durable execution surface. Decapod is
+intentionally daemonless, so the agent calls it again when the work reaches a
+decision, validation, remediation, or publication boundary.
+
+The human expresses intent and provides judgment. The agent interprets the
+repository, performs the work, authors living specifications, follows validation
+feedback, and gathers evidence. Decapod maintains governance state, validates
+invariants, refreshes supported projections, and blocks publication when
+required conditions are unsatisfied.
+
 ### Before Any Agent Action
 
 Run the side-effect-free prompt safety gate before repository reads, tool calls, or any other Decapod operation, once at agent startup and after every new prompt:
@@ -35,6 +46,7 @@ Proceed only when the command exits successfully and returns `"status": "allow"`
 - **Respect the Schema:** Consult Decapod configuration to understand the current repo's policy (e.g., if container isolation is required).
 - **Maintain Custody:** Update `specs/INTENT.md` if your research reveals that the original task intent needs refinement.
 - **Preserve State:** Do not rely on chat history as the only record. Use Decapod todos, workspaces, specs, context capsules, validation, and proof artifacts so future agents and reviewers can recover the work from the repository.
+- **Continue After Recoverable Failure:** Validation failure means a required condition remains unsatisfied. Inspect the result, identify the violated invariant, perform the sanctioned remediation, update the affected artifact, re-run validation, and continue toward publication. Stop when remediation is unsupported or a decision gate requires human judgment.
 
 ## Documentation Index
 

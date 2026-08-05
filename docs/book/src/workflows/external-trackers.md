@@ -1,11 +1,11 @@
 # External Trackers
 
-Decapod is built to be a "good citizen" in your existing developer ecosystem. It does not replace your high-level project management tools (GitHub Issues, Linear, Jira); it provides the **operational bridge** to the repository.
+Decapod does not replace project-management systems such as GitHub Issues, Linear, Jira, or Beads. Those systems may remain the organizational system of record. Decapod governs accepted work at the repository execution layer.
 
 ## The Integration Pattern
 
-1.  **Management Layer (External):** A human creates an issue in Linear (e.g., `DEV-456`).
-2.  **Operational Layer (Decapod):** An agent adds a Decapod todo that references the external issue (see [CLI Reference](../reference/cli.md#task-tracking)).
+1.  **Organizational Layer (External):** A human creates an issue in Linear (e.g., `DEV-456`).
+2.  **Execution Layer (Decapod):** An agent adds a Decapod todo that references the external issue (see [CLI Reference](../reference/cli.md#task-tracking)).
     ```bash
     decapod todo add "Fix regression in auth" --ref "DEV-456"
     ```
@@ -16,4 +16,4 @@ Decapod is built to be a "good citizen" in your existing developer ecosystem. It
 
 ## Why This Bridge Matters
 
-External trackers are "blind" to the repository state. They don't know if an agent is currently corrupting a worktree or if the implementation violates a security policy. Decapod provides the **technical proof** that the work associated with an external issue is actually correct and compliant.
+External trackers organize work but do not enforce Decapod's repository invariants. Decapod contributes execution-layer custody, validation, and evidence. The external item is closed according to the team's own approval policy after the governed work reaches its required publication state.

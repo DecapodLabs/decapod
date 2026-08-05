@@ -27,7 +27,7 @@ Functions that can fail return `Result` and use `?` to propagate errors. Use
 `map_err` when a lower-level error needs to be translated into Decapod's
 domain error type or given application context:
 
-```rust
+```rust,ignore
 fn load_config(path: &Path) -> Result<Config, DecapodError> {
     let text = std::fs::read_to_string(path)?;
     toml::from_str(&text).map_err(|error| DecapodError::Config(error.to_string()))

@@ -836,7 +836,7 @@ decapod data schema --deterministic
 - `DECAPOD_SESSION_PASSWORD` is required for session-scoped operations.
 - Read canonical router: `decapod constitution get core/DECAPOD`. Reference `docs/PLAYBOOK`, capabilities, or context.scope RPC.
 
-Treat `.decapod/managed/specs/*` as living documents. Adjust specs as intent and code change over time; fingerprint refresh alone is not enough.
+Treat `.decapod/managed/specs/*` as the acting agent's authored interpretation of the repository. Decapod requires and validates the semantic content; refresh only updates supported generated attestations and projections. Correct stale or incorrect prose, revalidate, and continue toward publication.
 
 Stop if requirements are ambiguous or conflicting.
 <!-- decapod-validator-anchors
@@ -913,7 +913,7 @@ decapod constitution search --query "<problem>"
 4. **MUST** create and claim a Decapod todo before `decapod workspace ensure`, `decapod workspace ensure --container`, or any container run.
 5. **MUST NOT** work on main/master or modify the root repository's active branch. **MUST** use `decapod workspace ensure`.
 6. **MUST** read [.decapod/config.toml](.decapod/config.toml) as user-editable project context.
-7. **MUST NOT** claim done without `decapod validate` passing.
+7. **MUST NOT** claim done or stop after a recoverable validation failure. Follow supported remediation, re-run `decapod validate`, and continue toward publication.
 8. **MUST NOT** invent capabilities that are not exposed by the binary.
 9. **MUST** stop if requirements conflict or intent is ambiguous.
 10. **MUST** respect the interface abstraction boundary.
@@ -921,10 +921,10 @@ decapod constitution search --query "<problem>"
 12. **MUST** use the command contracts from `decapod docs` output instead of guessing arguments.
 
 ## Decapod Invocation Contract
-Agents act. Decapod orients. Call Decapod at decision boundaries: ambiguous requests, public impact, unclear proof, todo lifecycle, scope expansion, context loss, or multi-agent collision risk.
+Agents act. Decapod governs accepted work. One task may span many ephemeral Decapod invocations; durable state lives in the repository. Call Decapod at decision boundaries: ambiguous requests, public impact, unclear proof, todo lifecycle, scope expansion, context loss, validation and recovery, publication, or multi-agent collision risk.
 
 ## Living Specs & Governance
-The files under `.decapod/managed/specs/` are living contracts. Update [INTENT.md](.decapod/managed/specs/INTENT.md), [ARCHITECTURE.md](.decapod/managed/specs/ARCHITECTURE.md), and [INTERFACES.md](.decapod/managed/specs/INTERFACES.md) when intent or code changes. `specs.refresh` only re-attests fingerprints/overlays; mutate authored prose in at least one living spec per PR.
+The files under `.decapod/managed/specs/` are the acting agent's explicit, reviewable interpretation of the repository. The agent authors and maintains their semantic content; Decapod requires and validates it. Update [INTENT.md](.decapod/managed/specs/INTENT.md), [ARCHITECTURE.md](.decapod/managed/specs/ARCHITECTURE.md), and [INTERFACES.md](.decapod/managed/specs/INTERFACES.md) when intent or code changes. `specs.refresh` only refreshes supported fingerprints, attestations, overlays, and manifests. An incorrect or stale spec exposes incomplete governed work before publication; correct the prose and revalidate.
 
 ## Epistemic Custody
 Preserve the chain between intent, context, assumptions, action, and proof.
@@ -990,15 +990,14 @@ pub fn canonical_template(name: &str) -> Option<String> {
 fn template_readme() -> String {
     r#"# .decapod - Decapod Control Plane
 
-Decapod is the daemonless, local-first governance kernel behind AI coding agents. Agents call it on demand to turn intent into context, then context into explicit specifications before inference, enforce boundaries, and deliver proof-backed completion across concurrent multi-agent work.
+Decapod is a repo-native governance kernel for AI coding agents. It turns human intent into bounded, durable, and proof-backed agent work. Its layer is explicit: models produce intelligence, agents perform work, repositories preserve state, and Decapod governs the transition from intent to proof. Reliability is designed, not hoped for. Agents invoke it at decision, validation, recovery, and publication boundaries; it does not perform the agent's work.
 
 GitHub: https://github.com/DecapodLabs/decapod
 Canonical Contract: `assets/constitution.json` section `core/DECAPOD`
 
 ## What This Directory Is
 
-This `.decapod/` directory is the local control plane for this repository.
-It keeps Decapod-owned state, generated artifacts, and isolated workspaces separate from your product source tree.
+This `.decapod/` directory is the durable execution surface for governed work in this repository. It keeps authored specifications, Decapod-owned state, generated projections and evidence, and isolated workspaces separate from product source.
 
 `OVERRIDE.md` and `README.md` intentionally stay at this top level.
 
@@ -1039,8 +1038,8 @@ decapod data aptitude observe --category code_style --content "Team prefers asyn
 - `README.md`: operator onboarding and control-plane map.
 - `OVERRIDE.md`: project-local override layer for embedded constitution directives.
 - `data/`: canonical control-plane state (SQLite + ledgers).
-- `managed/specs/`: living project specs scaffolded by `decapod init`.
-- `managed/context/`: deterministic context capsule artifacts.
+- `managed/specs/`: agent-authored living project specs; only fresh initialization scaffolds their starting structure.
+- `managed/context/`: generated deterministic context projections.
 - `managed/artifacts/provenance/`: promotion manifests and convergence checklist.
 - `managed/artifacts/inventory/`: deterministic release inventory artifacts.
 - `managed/artifacts/diagnostics/`: opt-in diagnostics artifacts.
@@ -1048,11 +1047,12 @@ decapod data aptitude observe --category code_style --content "Team prefers asyn
 
 ## How It Works
 
-Decapod uses a **JSON-based constitution** to govern agent behavior. Instead of the agent reading full Markdown documents, it uses the Decapod CLI to query specific directives.
+Each Decapod process is ephemeral. The repository preserves the durable state that lets one task span many invocations, processes, models, and harnesses.
 
-1. **Indexing**: Decapod indexes the constitution graph when called.
-2. **Selective Context**: Agents query exact sections (directives) needed for the current task, minimizing context overhead.
-3. **Local Overrides**: You can override any constitution directive in [.decapod/OVERRIDE.md](OVERRIDE.md) using the specific directive ID.
+1. **Intent and Boundaries**: The agent records its interpretation and accepts a governed task scope.
+2. **Execution**: The agent performs the work in an isolated workspace and maintains living specifications.
+3. **Validation and Recovery**: Decapod evaluates invariants. The agent follows supported remediation and revalidates.
+4. **Publication and Proof**: Publication remains blocked until required validation and evidence are satisfied.
 
 ## Why Teams Use This
 
