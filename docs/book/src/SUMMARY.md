@@ -17,6 +17,7 @@
   - [Intent](concepts/intent.md)
   - [Workspaces](concepts/workspaces.md)
   - [Proof](concepts/proof.md)
+  - [Common Questions](concepts/faq.md)
   - [Constitution](concepts/constitution.md)
   - [Overrides](concepts/overrides.md)
   - [Model Context Protocol (MCP)](concepts/mcp.md)

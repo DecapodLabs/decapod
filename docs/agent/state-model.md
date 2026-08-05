@@ -2,7 +2,10 @@
 
 Decapod manages a finite set of stateful entities. Understanding their lifecycles is critical for successful agentic operation.
 
-These entities are the durable substrate for governed work. They turn a temporary agent conversation into inspectable project state that can be resumed, audited, verified, and handed off.
+These entities are the durable substrate for governed work. Each Decapod
+invocation is ephemeral and no daemon owns the task. Repository state turns a
+temporary agent conversation into work that can be resumed, audited, validated,
+and handed off across processes, models, harnesses, and later invocations.
 
 ## 1. Tasks (Todos)
 The primary unit of work.
@@ -44,3 +47,17 @@ Append-only operational evidence.
 The persistent, shared understanding of the project.
 - **Class:** Advisory (Aptitude) | Procedural (Federated Knowledge).
 - **Persistence:** Surmounts individual sessions and agents.
+
+## 7. Governance and Proof Artifacts
+
+- **Intent and Plans:** The human supplies intent; the agent records and updates its governed interpretation through Decapod. Plans are execution state, not proof by themselves.
+- **Claims:** Falsifiable repository-owned statements linked to a baseline, failure mode, measurement, and proof gate. They change as research evidence changes.
+- **Trajectories:** Agent-recorded custody evidence for intent, boundaries, inspected and modified files, assumptions, tool calls, checks, and proof references across a run.
+- **Living Specifications:** Agent-authored interpretations under `.decapod/managed/specs/`. Decapod requires and validates them but does not independently author their semantic claims.
+- **Validation Receipts and Evidence:** Decapod records validation outcomes and binds required evidence to identified repository state. A failed result leaves the task incomplete.
+- **Projections:** Generated views derived from supported authoritative inputs. Refresh may update them, but a projection does not become a second source of truth.
+- **Publication State:** A governed transition that remains blocked while required validation, evidence, or approval is unsatisfied.
+
+External systems such as GitHub Issues, Jira, Linear, or Beads may remain the
+organizational system of record. Decapod todos and claims govern the accepted
+work at the execution layer.

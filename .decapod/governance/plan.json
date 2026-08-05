@@ -1,29 +1,30 @@
 {
   "schema_version": "1.0.0",
-  "title": "fix(ci): skip post-merge fingerprint evaluation; heal via PR under master ruleset",
-  "intent": "Stop dogfood post-merge/release CI from hard-failing on tree-local binary fingerprints that lag published pins; stop release-artifact-sync direct master push rejected by ruleset (PR required + signatures + update protection) by opening chore/release-bound-sync PRs instead.",
+  "title": "Clarify Decapod product positioning and governed execution model",
+  "intent": "Teach Decapod's architectural layer before listing capabilities: models produce intelligence, agents perform work, repositories preserve state, and Decapod governs the transition from intent to proof. Center reliability as designed, not hoped for, while positioning Decapod as the repo-native governance kernel for bounded, convergent, proof-backed agent work without runtime or architecture changes.",
   "state": "APPROVED",
   "todo_ids": [
-    "cicd_01kz592c20br0wvh"
+    "docs_01kza3j6mf354j1p"
   ],
   "proof_hooks": [
-    "cargo test --locked --test release_workflow_policy",
-    "cargo test --locked --test init_ci_scaffolding",
-    "cargo test --locked --lib skip_fingerprint_gates_requires_truthy_value",
-    "decapod validate --refresh-specs"
+    "ontology and reliability positioning is visible in README and mdBook introduction",
+    "mdbook build and mdbook test docs/book",
+    "cargo test --test doc_alignment",
+    "decapod validate --refresh-specs (bounded)",
+    "git diff --check"
   ],
   "unknowns": [],
   "human_questions": [],
-  "stop_conditions": [
-    "Do not skip fingerprint gates on pull_request events",
-    "Do not push healed artifacts directly to master"
-  ],
+  "stop_conditions": [],
   "unresolved_contradictions": [],
   "deferred_questions": [],
   "constraints": {
-    "forbidden_paths": [],
+    "forbidden_paths": [
+      "src/main.rs",
+      "tests"
+    ],
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1785830000Z"
+  "updated_at": "1785974137Z"
 }

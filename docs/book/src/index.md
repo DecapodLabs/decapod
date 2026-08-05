@@ -1,8 +1,8 @@
 # Decapod Documentation
 
-Welcome to the official documentation for **Decapod**—the daemonless, local-first, repo-native governance kernel for AI coding agents.
+**Decapod** is a daemonless, repo-native governance kernel for AI coding agents. It turns human intent into bounded, durable, and proof-backed agent work.
 
-This documentation serves as the comprehensive guide (the **Decapod Book**) for both humans designing repository boundaries and agents navigating them.
+This book explains the product, its execution model, and the repository contracts used by humans, agents, and reviewers.
 
 ---
 
@@ -34,6 +34,7 @@ Deep dive into the architecture and mechanisms that make Decapod unique.
 *   **[Explicit Intent](concepts/intent.md)**: Converting ambiguous prompts into concrete, versioned specifications.
 *   **[Workspace Sandboxing](concepts/workspaces.md)**: How isolated execution layers keep your primary branches clean and safe.
 *   **[Proof & Validation](concepts/proof.md)**: Verifying correctness programmatically through policy evaluation instead of agent self-reporting.
+*   **[Common Questions](concepts/faq.md)**: Short architectural answers about agents, specifications, daemonless execution, trackers, and proof-backed completion.
 *   **[Repository Constitution](concepts/constitution.md)**: Setting the global guidelines that steer agent behavior.
 *   **[Config Overrides](concepts/overrides.md)**: Project-specific adjustments to constitutional guidelines.
 *   **[Model Context Protocol (MCP)](concepts/mcp.md)**: Navigating Decapod tools through structured agent protocols.

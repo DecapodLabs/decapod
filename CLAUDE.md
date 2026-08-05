@@ -1,5 +1,5 @@
 <!-- decapod-release: 0.96.4 -->
-<!-- decapod-fingerprint: 5c0b9fe1070d5929e6bd3264e8b6585d968fc6bad54c156ff34165b652e5d13b -->
+<!-- decapod-fingerprint: a678641db41effb0621d37488e05fe95b41760b2fe857e9cc7a681be040ae5d3 -->
 # CLAUDE.md - Agent Entrypoint
 
 You are working in a Decapod-managed repository.
@@ -61,7 +61,7 @@ decapod data schema --deterministic
 - `DECAPOD_SESSION_PASSWORD` is required for session-scoped operations.
 - Read canonical router: `decapod constitution get core/DECAPOD`. Reference `docs/PLAYBOOK`, capabilities, or context.scope RPC.
 
-Treat `.decapod/managed/specs/*` as living documents. Adjust specs as intent and code change over time; fingerprint refresh alone is not enough.
+Treat `.decapod/managed/specs/*` as the acting agent's authored interpretation of the repository. Decapod requires and validates the semantic content; refresh only updates supported generated attestations and projections. Correct stale or incorrect prose, revalidate, and continue toward publication.
 
 Stop if requirements are ambiguous or conflicting.
 <!-- decapod-validator-anchors

@@ -39,6 +39,8 @@ This document defines the normative operational contracts for the Decapod CLI.
 - **Intent:** Validate methodology compliance
 - **Intent:** Verify methodology compliance.
 - **Outcome:** Exit code 0 on success, 1 on failure.
+- **Failure State:** A failed gate leaves the task incomplete; it is not a completion signal.
+- **Recovery:** Follow supported remediation, update the violated artifact or state, and re-run validation. Escalate decision gates or unsupported recovery to the human.
 
 ## `decapod govern`
 - **Intent:** Governance: policy, health, proofs, audits
@@ -59,6 +61,7 @@ This document defines the normative operational contracts for the Decapod CLI.
 - **Intent:** Agent workspace management
 - **Preconditions:** Task must be claimed.
 - **State Transition:** Creates git worktrees/containers.
+- **Publication:** Publication is a governed transition and remains blocked while required validation or evidence is unsatisfied.
 
 ## `decapod rpc`
 - **Intent:** Decapod-specific structured RPC interface for agents

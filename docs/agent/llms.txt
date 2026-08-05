@@ -23,6 +23,7 @@
 - [Intent](docs/book/src/concepts/intent.md)
 - [Workspaces](docs/book/src/concepts/workspaces.md)
 - [Proof](docs/book/src/concepts/proof.md)
+- [Common Questions](docs/book/src/concepts/faq.md)
 - [Constitution](docs/book/src/concepts/constitution.md)
 - [Overrides](docs/book/src/concepts/overrides.md)
 - [MCP](docs/book/src/concepts/mcp.md)
@@ -30,3 +31,5 @@
 - [CLI Reference](docs/book/src/reference/cli.md)
 - [Error Codes](docs/book/src/reference/errors.md)
 - [Artifacts](docs/book/src/reference/artifacts.md)
+- [Governance Artifacts](docs/book/src/reference/governance-artifacts.md)
+- [Governed Execution Architecture](docs/architecture/governed-execution.md)

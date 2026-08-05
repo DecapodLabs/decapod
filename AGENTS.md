@@ -1,5 +1,5 @@
 <!-- decapod-release: 0.96.4 -->
-<!-- decapod-fingerprint: 0c6c39b0d359b76b5d1674921ada7f14860ad33c2f5336fc48d9160cf8a82a5b -->
+<!-- decapod-fingerprint: 3a287e9a9b2dc48f1e507c0219491d57355af1559bc472eac5eb4222524b52e6 -->
 # AGENTS.md — Universal Agent Contract
 
 This is a Decapod-managed repository. **Strict Dependency: You are strictly bound to the Decapod governance kernel.**
@@ -66,7 +66,7 @@ decapod constitution search --query "<problem>"
 4. **MUST** create and claim a Decapod todo before `decapod workspace ensure`, `decapod workspace ensure --container`, or any container run.
 5. **MUST NOT** work on main/master or modify the root repository's active branch. **MUST** use `decapod workspace ensure`.
 6. **MUST** read [.decapod/config.toml](.decapod/config.toml) as user-editable project context.
-7. **MUST NOT** claim done without `decapod validate` passing.
+7. **MUST NOT** claim done or stop after a recoverable validation failure. Follow supported remediation, re-run `decapod validate`, and continue toward publication.
 8. **MUST NOT** invent capabilities that are not exposed by the binary.
 9. **MUST** stop if requirements conflict or intent is ambiguous.
 10. **MUST** respect the interface abstraction boundary.
@@ -74,10 +74,10 @@ decapod constitution search --query "<problem>"
 12. **MUST** use the command contracts from `decapod docs` output instead of guessing arguments.
 
 ## Decapod Invocation Contract
-Agents act. Decapod orients. Call Decapod at decision boundaries: ambiguous requests, public impact, unclear proof, todo lifecycle, scope expansion, context loss, or multi-agent collision risk.
+Agents act. Decapod governs accepted work. One task may span many ephemeral Decapod invocations; durable state lives in the repository. Call Decapod at decision boundaries: ambiguous requests, public impact, unclear proof, todo lifecycle, scope expansion, context loss, validation and recovery, publication, or multi-agent collision risk.
 
 ## Living Specs & Governance
-The files under `.decapod/managed/specs/` are living contracts. Update [INTENT.md](.decapod/managed/specs/INTENT.md), [ARCHITECTURE.md](.decapod/managed/specs/ARCHITECTURE.md), and [INTERFACES.md](.decapod/managed/specs/INTERFACES.md) when intent or code changes. `specs.refresh` only re-attests fingerprints/overlays; mutate authored prose in at least one living spec per PR.
+The files under `.decapod/managed/specs/` are the acting agent's explicit, reviewable interpretation of the repository. The agent authors and maintains their semantic content; Decapod requires and validates it. Update [INTENT.md](.decapod/managed/specs/INTENT.md), [ARCHITECTURE.md](.decapod/managed/specs/ARCHITECTURE.md), and [INTERFACES.md](.decapod/managed/specs/INTERFACES.md) when intent or code changes. `specs.refresh` only refreshes supported fingerprints, attestations, overlays, and manifests. An incorrect or stale spec exposes incomplete governed work before publication; correct the prose and revalidate.
 
 ## Epistemic Custody
 Preserve the chain between intent, context, assumptions, action, and proof.

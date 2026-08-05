@@ -1,16 +1,19 @@
 # Error Recovery
 
-Decapod uses deterministic error messages and exit codes. Treat these as **Operational Instructions**, not just failure reports.
+Decapod uses deterministic error messages and recovery guidance. Treat these as **Operational Instructions**, not just failure reports.
 
-## Standard Exit Codes
+## Process Exit Status
 
-| Code | Label | Meaning | Recovery Path |
-|---|---|---|---|
-| `1` | `Validation` | Methodology gate failed. | Read the error, fix the code/state, and re-run `validate`. |
-| `2` | `Config` | `config.toml` error. | Verify key names and types in `config.toml`. |
-| `3` | `Auth` | Missing session. | Run `decapod session acquire`. |
-| `4` | `NotFound` | Entity missing. | Verify the ID with `todo list` or `workspace status`. |
-| `5` | `Conflict` | Resource locked. | Select a different task; the resource is owned by another agent. |
+| Status | Meaning | Recovery Path |
+|---|---|---|
+| `0` | Operation succeeded. | Continue to the next governed action. |
+| `1` | A Decapod domain, validation, configuration, session, I/O, or storage operation failed. | Inspect the typed message or structured result and follow its recovery guidance. |
+| `2` | CLI syntax was rejected before the operation ran. | Consult the command contract or `--help`, correct the invocation, and retry. |
+| `127` | The calling shell could not find a command. | Install or select the required executable; Decapod does not emit this status for its Rust domain errors. |
+
+Do not infer a distinct process status for configuration, authentication,
+not-found, or conflict errors. Current domain errors use status 1. Use structured
+output when a caller must distinguish failure kinds.
 
 ## Common Error Patterns
 
@@ -63,4 +66,6 @@ Decapod uses deterministic error messages and exit codes. Treat these as **Opera
 ## General Strategy
 1.  **Parse the Error:** Decapod errors are strongly typed. Look for the `kind` and `message`.
 2.  **Consult the Contract:** Cross-reference the command in `command-contracts.md`.
-3.  **No Guessing:** Do not attempt "brute-force" argument variations. If a recovery path is not obvious, stop and request human assistance.
+3.  **Remediate When Supported:** Identify the violated invariant, perform the sanctioned remediation, update the affected artifact, and re-run the failed validation.
+4.  **Continue the Task:** A recoverable failure means the work remains incomplete. Continue toward publication after revalidation succeeds.
+5.  **Escalate Real Blockers:** Do not attempt "brute-force" argument variations. Stop for human judgment when the result is a decision gate, contradiction, unsupported remediation, or unavailable proof.

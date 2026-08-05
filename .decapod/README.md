@@ -1,14 +1,13 @@
 # .decapod - Decapod Control Plane
 
-Decapod is the daemonless, local-first governance kernel behind AI coding agents. Agents call it on demand to turn intent into context, then context into explicit specifications before inference, enforce boundaries, and deliver proof-backed completion across concurrent multi-agent work.
+Decapod is a repo-native governance kernel for AI coding agents. It turns human intent into bounded, durable, and proof-backed agent work. Agents invoke it at decision, validation, recovery, and publication boundaries; it does not perform the agent's work.
 
 GitHub: https://github.com/DecapodLabs/decapod
 Canonical Contract: `assets/constitution.json` section `core/DECAPOD`
 
 ## What This Directory Is
 
-This `.decapod/` directory is the local control plane for this repository.
-It keeps Decapod-owned state, generated artifacts, and isolated workspaces separate from your product source tree.
+This `.decapod/` directory is the durable execution surface for governed work in this repository. It keeps authored specifications, Decapod-owned state, generated projections and evidence, and isolated workspaces separate from product source.
 
 `OVERRIDE.md` and `README.md` intentionally stay at this top level.
 
@@ -49,8 +48,8 @@ decapod data aptitude observe --category code_style --content "Team prefers asyn
 - `README.md`: operator onboarding and control-plane map.
 - `OVERRIDE.md`: project-local override layer for embedded constitution directives.
 - `data/`: canonical control-plane state (SQLite + ledgers).
-- `managed/specs/`: living project specs scaffolded by `decapod init`.
-- `managed/context/`: deterministic context capsule artifacts.
+- `managed/specs/`: agent-authored living project specs; only fresh initialization scaffolds their starting structure.
+- `managed/context/`: generated deterministic context projections.
 - `managed/artifacts/provenance/`: promotion manifests and convergence checklist.
 - `managed/artifacts/inventory/`: deterministic release inventory artifacts.
 - `managed/artifacts/diagnostics/`: opt-in diagnostics artifacts.
@@ -58,11 +57,12 @@ decapod data aptitude observe --category code_style --content "Team prefers asyn
 
 ## How It Works
 
-Decapod uses a **JSON-based constitution** to govern agent behavior. Instead of the agent reading full Markdown documents, it uses the Decapod CLI to query specific directives.
+Each Decapod process is ephemeral. The repository preserves the durable state that lets one task span many invocations, processes, models, and harnesses.
 
-1. **Indexing**: Decapod indexes the constitution graph when called.
-2. **Selective Context**: Agents query exact sections (directives) needed for the current task, minimizing context overhead.
-3. **Local Overrides**: You can override any constitution directive in [.decapod/OVERRIDE.md](OVERRIDE.md) using the specific directive ID.
+1. **Intent and Boundaries**: The agent records its interpretation and accepts a governed task scope.
+2. **Execution**: The agent performs the work in an isolated workspace and maintains living specifications.
+3. **Validation and Recovery**: Decapod evaluates invariants. The agent follows supported remediation and revalidates.
+4. **Publication and Proof**: Publication remains blocked until required validation and evidence are satisfied.
 
 ## Why Teams Use This
 

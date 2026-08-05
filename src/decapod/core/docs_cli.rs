@@ -390,10 +390,22 @@ fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
                         file,
                         "- **State Transition:** Creates git worktrees/containers."
                     )?;
+                    writeln!(
+                        file,
+                        "- **Publication:** Publication is a governed transition and remains blocked while required validation or evidence is unsatisfied."
+                    )?;
                 }
                 "validate" => {
                     writeln!(file, "- **Intent:** Verify methodology compliance.")?;
                     writeln!(file, "- **Outcome:** Exit code 0 on success, 1 on failure.")?;
+                    writeln!(
+                        file,
+                        "- **Failure State:** A failed gate leaves the task incomplete; it is not a completion signal."
+                    )?;
+                    writeln!(
+                        file,
+                        "- **Recovery:** Follow supported remediation, update the violated artifact or state, and re-run validation. Escalate decision gates or unsupported recovery to the human."
+                    )?;
                 }
                 _ => {}
             }

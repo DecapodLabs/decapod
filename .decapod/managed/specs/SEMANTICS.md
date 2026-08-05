@@ -76,7 +76,7 @@ stateDiagram-v2
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `47071e89a5d0b963d6263ab3b20b19e6c1481299b8e5a76635917eb3f0e48ca4`
+- Repository signal fingerprint: `608afee8beeaeced12e540254230afdd9b80041296fc77ef3278aec1ab14cb77`
 - Significant implementation surfaces: `.github/` (10 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
