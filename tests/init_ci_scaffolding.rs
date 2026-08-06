@@ -36,7 +36,16 @@ fn init_scaffolds_github_action_workflow() {
         !content.contains("decapod init --proof --force"),
         "scaffold must not force-init in CI (rewrites living specs)"
     );
-    assert!(content.contains("hashFiles('Cargo.toml', 'Cargo.lock'"));
+    assert!(content.contains("uses: cargo-bins/cargo-binstall@main"));
+    assert!(content.contains("cargo binstall --no-confirm decapod"));
+    assert!(
+        !content.contains("cargo install --path ."),
+        "project validation must install the published Decapod binary instead of compiling the checked-out project"
+    );
+    assert!(content.contains("~/.cargo/bin/cargo-binstall"));
+    assert!(content.contains("~/.cargo/bin/decapod"));
+    assert!(content.contains("steps.cache_decapod_tools.outputs.cache-hit"));
+    assert!(content.contains("hashFiles('AGENTS.md')"));
     assert!(content.contains("DECAPOD_VALIDATE_SKIP_GIT_GATES: 1"));
     assert!(
         content.contains("DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES"),

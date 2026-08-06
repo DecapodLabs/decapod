@@ -1184,15 +1184,20 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-      - name: Cache Decapod
+      - name: Cache cargo-binstall and Decapod
+        id: cache_decapod_tools
         uses: actions/cache@v4
         with:
-          path: ~/.cargo/bin/decapod
-          key: ${{ runner.os }}-decapod-v3-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'src/**/*.rs') }}
+          path: |
+            ~/.cargo/bin/cargo-binstall
+            ~/.cargo/bin/decapod
+          key: ${{ runner.os }}-decapod-tools-v1-${{ hashFiles('AGENTS.md') }}
+      - name: Install cargo-binstall
+        if: steps.cache_decapod_tools.outputs.cache-hit != 'true'
+        uses: cargo-bins/cargo-binstall@main
       - name: Install Decapod
-        # Always rebuild from the PR tree so a restored cache binary cannot
-        # evaluate against a different template/fingerprint generation path.
-        run: cargo install --path . --force --locked
+        if: steps.cache_decapod_tools.outputs.cache-hit != 'true'
+        run: cargo binstall --no-confirm decapod
       - name: Decapod Validate
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
