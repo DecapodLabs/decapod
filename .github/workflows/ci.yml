@@ -3,6 +3,10 @@ name: CI
 on:
   push:
     branches: [ master ]
+    paths-ignore:
+      - 'CHANGELOG.md'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
   pull_request:
     branches: [ master ]
   workflow_dispatch:
@@ -314,10 +318,8 @@ jobs:
           DECAPOD_VALIDATE_TIMEOUT_SECS: "120"
       - name: Ensure no spec or entrypoint drift
         # validate rewrites generated_at every run; that is not semantic drift.
-        # Post-release drift means Cargo.toml was bumped without committing
-        # regenerated release-bound entrypoints/specs for the evaluating binary
-        # (regression since #1170 / v0.95.4). Heal via release-artifact-sync or
-        # the post-release-plz step in release.yml — do not silence this gate.
+        # Release-bound projections must be refreshed by the agent and committed
+        # with the code PR. Release-only commits are excluded from push CI.
         run: |
           set -euo pipefail
           MANIFEST=".decapod/managed/specs/.manifest.json"
@@ -330,7 +332,7 @@ jobs:
           if ! git diff --exit-code -- . ':!.decapod/governance/'; then
             echo "::error::Release-bound or living-spec drift detected after validate --refresh-specs."
             echo "Commit regenerated entrypoints (AGENTS/CLAUDE/CODEX/GEMINI), managed Dockerfile, and .decapod/managed/specs/*."
-            echo "On release-plz PRs this is auto-healed by release-artifact-sync and the post-release-plz step in release.yml."
+            echo "Refresh and commit release-bound projections before opening the code PR."
             exit 1
           fi
       - name: Run watcher

@@ -1,14 +1,14 @@
 {
   "schema_version": "1.0.0",
-  "title": "PR #1192: enforce complete publication bundles",
-  "intent": "Ensure workspace creation and validation keep release-bound fingerprints, specs, Dockerfile pins, and governance artifacts aligned so each publishable commit is complete.",
+  "title": "Remove obsolete release validation path (release boundary)",
+  "intent": "Keep release-only merges limited to compilation and publication; require release-bound projections on the preceding code PR.",
   "state": "APPROVED",
   "todo_ids": [
-    "bugs_01kzah5ffgsahare"
+    "cicd_01kzam7c62jy4fk6"
   ],
   "proof_hooks": [
-    "cargo check --bin decapod",
-    "decapod validate --store user --format json"
+    "git diff --check",
+    "decapod validate"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -17,12 +17,10 @@
   "deferred_questions": [],
   "constraints": {
     "forbidden_paths": [
-      "src/main.rs",
-      "docs",
-      "README.md"
+      "runtime behavior"
     ],
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1785987186Z"
+  "updated_at": "1785990467Z"
 }
