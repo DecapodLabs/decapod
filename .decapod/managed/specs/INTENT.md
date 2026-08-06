@@ -143,7 +143,7 @@ flowchart LR
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9b3cd5017b31432a4e0a6352731b0f864c1183458315024d85b8af706d06d49c`
+- Repository signal fingerprint: `90c2209cbca9ecf63ccdca4f7fccb73aa35d8f7dc6f9145a6f9106f14a611ffe`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

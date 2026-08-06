@@ -1,26 +1,33 @@
 {
   "schema_version": "1.0.0",
-  "title": "Speed project validation workflows with cached cargo-binstall Decapod installs",
-  "intent": "Update project-facing GitHub Actions workflow templates to install the published Decapod binary with cargo binstall and cache the cargo-binstall download/install paths for fast repeated validation runs; preserve Decapod's own source-build validation path.",
+  "title": "Implement Decapod-owned slices for Issues #1222, #1223, and #1224",
+  "intent": "Implement only the Decapod-owned storage seams that are stable before dactyl: backend-neutral contention/retry classification, caller-owned explicit IDs with affected-row writes, and migration planning/applied-ledger orchestration. Keep physical schema execution and dactyl error conversion deferred until dactyl's pure-Rust contract is available.",
   "state": "APPROVED",
   "todo_ids": [
-    "cicd_01kzawhttff6s577"
+    "feat_01kzc8xd0thvgpmy"
   ],
   "proof_hooks": [
+    "cargo test --lib",
+    "cargo test --test sqlite_hardening",
+    "cargo test --test single_datastore",
+    "cargo test --test chaos_replay",
     "git diff --check",
     "decapod validate"
   ],
   "unknowns": [],
   "human_questions": [],
-  "stop_conditions": [],
+  "stop_conditions": [
+    "Stop before implementing backend-specific schema execution or dactyl code; leave those issue scopes open for the dactyl migration."
+  ],
   "unresolved_contradictions": [],
   "deferred_questions": [],
   "constraints": {
     "forbidden_paths": [
-      "runtime behavior"
+      ".decapod/data/decapod.db",
+      "direct mutation of .decapod store state"
     ],
-    "file_touch_budget": null
+    "file_touch_budget": 40
   },
   "phases": [],
-  "updated_at": "1785998219Z"
+  "updated_at": "1786046404Z"
 }

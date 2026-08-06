@@ -27,7 +27,9 @@ This project's architecture consists of the following key layers/directories:
 - Storage adapter reads or writes data to the underlying persistence layers.
 
 ## Strongest Existing Primitives
-- Define the strongest existing primitives in the codebase (e.g., helper utilities, base controllers, data access layers).
+- `core::error::StorageFailureKind` is the application-owned classification seam for contention, storage I/O, constraint, query, value, capability, and unknown failures. The current SQLite mapping is a compatibility adapter; retry and governance callers do not select behavior by backend name.
+- `core::migration` separates version-gated pending-plan selection and applied-ledger recording from migration execution. Backup, restore, legacy import, and schema policy remain Decapod responsibilities while the future dactyl boundary supplies execution.
+- `DbBroker::execute_write_sync` returns affected rows. Decapod callers own stable IDs rather than reading ambient connection-generated row IDs.
 
 ## Topology
 ```mermaid
@@ -96,7 +98,7 @@ sequenceDiagram
 - Inbound contracts (CLI/API/events):
 - Outbound dependencies (datastores/queues/external APIs):
 - Data ownership boundaries:
-- Schema evolution + migration policy:
+- Schema evolution + migration policy: Decapod owns migration identity, ordering, version gates, applied-ledger persistence, backup/restore, and legacy-store import. Storage execution is a replaceable boundary.
 
 ## Governance Authority and Evidence Boundaries
 - Each exact registered directive H3 in `.decapod/OVERRIDE.md` owns a fenced human-authored documentation body. The scaffold uses a four-backtick Markdown source block so headings and nested triple-backtick examples do not render as outer document structure. `core::assets` extracts the wrapper-free body, preserves legacy body bytes during upgrade, and fails the whole overlay on unclosed wrappers, duplicate exact IDs, or non-empty unknown Decapod-namespaced IDs.
@@ -143,7 +145,7 @@ sequenceDiagram
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9b3cd5017b31432a4e0a6352731b0f864c1183458315024d85b8af706d06d49c`
+- Repository signal fingerprint: `90c2209cbca9ecf63ccdca4f7fccb73aa35d8f7dc6f9145a6f9106f14a611ffe`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

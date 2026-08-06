@@ -17,6 +17,13 @@ Generated interface specs should include:
 |---|---|---|---|---|---|
 | `TODO` | `TODO` | `TODO` | `TODO` | `TODO` | `TODO` |
 
+## Storage Boundary Contracts
+| Interface | Producer | Consumer | Contract |
+|---|---|---|---|
+| `DecapodError::storage_failure_kind` | Current storage adapter | Retry, validation, and governance policy | Backend-neutral failure class; only bounded retryable contention/storage-I/O classes may be retried |
+| `migration::plan_pending_migrations` | Decapod migration catalog and applied ledger | Migration executor | Deterministic version/sequence filtering with no datastore access |
+| `DbBroker::execute_write_sync` | Broker caller | Storage write path | Returns affected rows; stable IDs are supplied by the caller and no ambient generated-ID lookup is allowed |
+
 ## Event Consumers
 | Consumer | Event | Ordering Requirement | Retry Policy | DLQ Policy |
 |---|---|---|---|---|
@@ -65,6 +72,7 @@ pub enum ApiError {
 | Validation | No retry | 4xx typed error | warn log + metric |
 | Dependency timeout | Exponential backoff | 503 with retryable code | error log + alert |
 | Conflict | Conditional retry | 409 with conflict detail | info log + metric |
+| Storage contention | Bounded retry with explicit budget | Actionable validation/governance outcome | warning with retry classification |
 
 ## Timeout Budget
 | Hop | Budget (ms) | Notes |
@@ -81,7 +89,7 @@ pub enum ApiError {
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9b3cd5017b31432a4e0a6352731b0f864c1183458315024d85b8af706d06d49c`
+- Repository signal fingerprint: `90c2209cbca9ecf63ccdca4f7fccb73aa35d8f7dc6f9145a6f9106f14a611ffe`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

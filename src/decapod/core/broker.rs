@@ -92,8 +92,9 @@ impl DbBroker {
         false
     }
 
-    /// Execute a write through the queue (synchronous for now).
-    /// In future, this will queue writes to be processed by background thread.
+    /// Execute a write through the queue (synchronous for now) and return its
+    /// affected-row count. IDs belong to the caller; this API never reads
+    /// ambient connection state such as `last_insert_rowid`.
     pub fn execute_write_sync(
         &self,
         db_path: &Path,
@@ -104,7 +105,7 @@ impl DbBroker {
         let params: Vec<i64> = params.iter().map(|(_, v)| *v).collect();
         let db_path_owned = db_path.to_path_buf();
 
-        let rowid = pool::global_pool().with_write(db_path, |conn| {
+        let affected_rows = pool::global_pool().with_write(db_path, |conn| {
             let mut stmt = conn.prepare(&sql)?;
             let param_vec: Vec<Box<dyn rusqlite::ToSql>> = params
                 .iter()
@@ -112,14 +113,10 @@ impl DbBroker {
                 .collect();
             let params_refs: Vec<&dyn rusqlite::ToSql> =
                 param_vec.iter().map(|p| p.as_ref()).collect();
-            stmt.execute(params_refs.as_slice())?;
-
-            let rowid = conn.last_insert_rowid();
-
-            Ok(rowid as u64)
+            Ok(stmt.execute(params_refs.as_slice())? as u64)
         })?;
         log_write_event(&self.root, "queued_write", &db_path_owned)?;
-        Ok(rowid)
+        Ok(affected_rows)
     }
 
     /// Execute a closure with a serialized connection to the specified DB.
