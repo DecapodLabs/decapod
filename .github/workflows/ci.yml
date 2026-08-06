@@ -1,6 +1,7 @@
 name: CI
 
 on:
+  # Keep the complete PR check suite attached to every pull-request update.
   push:
     branches: [ master ]
     paths-ignore:
