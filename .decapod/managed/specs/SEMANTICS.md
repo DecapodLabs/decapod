@@ -1,4 +1,6 @@
-# Semantics## State Machines
+# Semantics
+
+## State Machines
 ```mermaid
 stateDiagram-v2
   [*] --> Draft
@@ -7,31 +9,52 @@ stateDiagram-v2
   InProgress --> Blocked
   Blocked --> InProgress
   Verified --> [*]
-```## Invariants
+```
+
+## Invariants
 | Invariant | Type | Validation |
 |---|---|---|
 | No promoted change without proof | System | validation gate |
 | Canonical source-of-truth per entity | Data | interface/spec review |
 | Mutation events are replayable | Data | deterministic replay |
 | Reported authority equals loaded authority | Governance | resolved authority hashes and capsule custody |
-| Reported evidence equals canonical observations | Governance | semantic event-query boundary and migration tests |## Event Sourcing Schema
+| Reported evidence equals canonical observations | Governance | semantic event-query boundary and migration tests |
+
+## Event Sourcing Schema
 | Field | Type | Description |
 |---|---|---|
 | event_id | string | globally unique event id |
 | aggregate_id | string | entity/workflow id |
 | event_type | string | semantic transition |
 | payload | object | transition data |
-| recorded_at | timestamp | append time |## Replay Semantics
+| recorded_at | timestamp | append time |
+
+## Replay Semantics
 - Replay order: canonical sequence ascending for replay and timeline construction
 - Conflict resolution: identical event IDs with equal semantic events are idempotent across fresh legacy and split-envelope storage shapes; different fresh events fail with `LEGACY_EVENT_CONFLICT`. Inputs covered by a successful single-datastore migration are retired evidence and are not re-read.
 - Snapshot cadence:
-- Determinism proof strategy: delete preserved JSONL after import and compare validation, health, heartbeat, and flight-recorder results## Error Code Semantics
+- Determinism proof strategy: delete preserved JSONL after import and compare validation, health, heartbeat, and flight-recorder results
+
+## Error Code Semantics
 - Namespace:
 - Stable compatibility window:
-- Mapping to retry/degrade behavior:## Domain Rules
+- Mapping to retry/degrade behavior:
+
+## Domain Rules
 - Business rule 1:
 - Business rule 2:
-- Business rule 3:## Idempotency Contracts| Operation | Idempotency Key | Duplicate Behavior ||---|---|---|| create/update mutation | request_id | return original result || async enqueue | event_id | ignore duplicate enqueue |## Language Note- Primary language inferred: Rust
+- Business rule 3:
+
+## Idempotency Contracts
+
+| Operation | Idempotency Key | Duplicate Behavior |
+|---|---|---|
+| create/update mutation | request_id | return original result |
+| async enqueue | event_id | ignore duplicate enqueue |
+
+## Language Note
+
+- Primary language inferred: Rust
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -76,7 +99,7 @@ stateDiagram-v2
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fd0ab99ad57ccdc164cd3f4730e750c43fa32c5f304a1bc8987eeac28683ef8b`
+- Repository signal fingerprint: `aca60957ac7fc8a2868422fedd2652a6c0c624fae2c1be1c77727ef052f00ee6`
 - Significant implementation surfaces: `.github/` (10 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

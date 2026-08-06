@@ -1,6 +1,6 @@
 # .decapod - Decapod Control Plane
 
-Decapod is a repo-native governance kernel for AI coding agents. It turns human intent into bounded, durable, and proof-backed agent work. Agents invoke it at decision, validation, recovery, and publication boundaries; it does not perform the agent's work.
+Decapod is a repo-native governance kernel for AI coding agents. It turns human intent into bounded, durable, and proof-backed agent work. Its layer is explicit: models produce intelligence, agents perform work, repositories preserve state, and Decapod governs the transition from intent to proof. Reliability is designed, not hoped for. Agents invoke it at decision, validation, recovery, and publication boundaries; it does not perform the agent's work.
 
 GitHub: https://github.com/DecapodLabs/decapod
 Canonical Contract: `assets/constitution.json` section `core/DECAPOD`

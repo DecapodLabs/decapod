@@ -707,11 +707,198 @@ pub fn refresh_specs_from_codebase(
         let body = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
         let updated = reconcile_capability_overlays(spec.path, body.clone(), declared_capabilities);
         let updated = update_codebase_attestation(&updated, &fingerprint, &surfaces);
+        let updated = normalize_markdown_heading_boundaries(&updated);
         if updated != body {
             fs::write(path, updated).map_err(error::DecapodError::IoError)?;
         }
     }
     refresh_specs_manifest(project_root, declared_capabilities)
+}
+
+/// Keep Markdown headings structurally separate when repairing older compacted
+/// living specs. This only changes an inline `## ` heading marker outside fenced
+/// code; authored prose and fenced examples remain untouched.
+pub fn normalize_markdown_heading_boundaries(body: &str) -> String {
+    let mut normalized = String::with_capacity(body.len());
+    let mut in_fence = false;
+
+    for line in body.split_inclusive('\n') {
+        let trimmed = line.trim_start();
+        if trimmed.starts_with("```") || trimmed.starts_with("~~~") {
+            in_fence = !in_fence;
+            normalized.push_str(line);
+            continue;
+        }
+
+        if in_fence {
+            normalized.push_str(line);
+            continue;
+        }
+
+        let repaired_line = line.replace(":- ", ":\n- ").replace(".- [ ]", ".\n- [ ]");
+        let mut remainder = repaired_line.as_str();
+        loop {
+            let Some(index) = remainder.find("## ") else {
+                normalized.push_str(remainder);
+                break;
+            };
+            // `### ` contains `## ` at offset one; it is already a valid
+            // level-three heading and must not be split into `#` + `##`.
+            if index > 0 && remainder.as_bytes()[index - 1] == b'#' {
+                let end = index + 3;
+                normalized.push_str(&remainder[..end]);
+                remainder = &remainder[end..];
+                continue;
+            }
+            if index == 0 {
+                normalized.push_str(remainder);
+                break;
+            }
+
+            normalized.push_str(&remainder[..index]);
+            if !normalized.ends_with('\n') {
+                normalized.push('\n');
+                normalized.push('\n');
+            }
+            normalized.push_str("## ");
+            remainder = &remainder[index + 3..];
+        }
+
+        // Older generated specs also compacted a heading's first table row,
+        // checklist item, quote, or code fence onto the heading line. Repair
+        // those boundaries while leaving ordinary prose and fenced examples
+        // unchanged.
+        if !in_fence {
+            let content_end = normalized.trim_end_matches('\n').len();
+            let line_start = normalized[..content_end]
+                .rfind('\n')
+                .map(|index| index + 1)
+                .unwrap_or(0);
+            let suffix = &normalized[line_start..content_end];
+            if suffix.starts_with("## ") {
+                let heading_end = ["| ", "- ", "> ", "```"]
+                    .iter()
+                    .filter_map(|marker| suffix.find(marker).filter(|index| *index > 3))
+                    .min();
+                if let Some(index) = heading_end {
+                    normalized.insert(line_start + index, '\n');
+                    normalized.insert(line_start + index + 1, '\n');
+                }
+            }
+        }
+
+        // A compacted table uses `||` where row boundaries were lost. This
+        // conversion is restricted to non-fenced text so Rust/SQL examples
+        // containing `||` remain byte-stable.
+        if !in_fence {
+            let content_end = normalized.trim_end_matches('\n').len();
+            let line_start = normalized[..content_end]
+                .rfind('\n')
+                .map(|index| index + 1)
+                .unwrap_or(0);
+            let suffix = &normalized[line_start..content_end];
+            if suffix.starts_with('|') {
+                let repaired = suffix.replace("||", "|\n|");
+                let trailing_newline = &normalized[content_end..];
+                normalized.replace_range(line_start.., &format!("{repaired}{trailing_newline}"));
+            }
+        }
+    }
+
+    // A previous projection pass could join a closing fence directly to the
+    // next heading. The exact marker is unambiguous in Markdown and is safe to
+    // repair after the fenced-content pass above.
+    normalized
+        .replace("```## ", "```\n\n## ")
+        .replace("\n#\n\n## ", "\n\n### ")
+}
+
+/// Validate the deterministic Mermaid subset used by generated specs.
+pub fn mermaid_syntax_errors(body: &str) -> Vec<String> {
+    const KINDS: &[&str] = &[
+        "block-beta",
+        "c4context",
+        "classDiagram",
+        "erDiagram",
+        "flowchart",
+        "gantt",
+        "gitGraph",
+        "graph",
+        "journey",
+        "mindmap",
+        "pie",
+        "quadrantChart",
+        "sequenceDiagram",
+        "stateDiagram",
+        "timeline",
+        "xychart-beta",
+    ];
+    let mut errors = Vec::new();
+    let mut block_start = None;
+    let mut block = Vec::new();
+    for (line_no, line) in body.lines().enumerate() {
+        let trimmed = line.trim();
+        if trimmed == "```mermaid" {
+            if block_start.is_some() {
+                errors.push(format!("line {}: nested Mermaid fence", line_no + 1));
+            } else {
+                block_start = Some(line_no + 1);
+                block.clear();
+            }
+            continue;
+        }
+        if block_start.is_some() && trimmed == "```" {
+            let start = block_start.take().unwrap_or(line_no + 1);
+            let first = block
+                .iter()
+                .map(String::as_str)
+                .map(str::trim)
+                .find(|l| !l.is_empty());
+            match first {
+                None => errors.push(format!("line {start}: empty Mermaid diagram")),
+                Some(declaration) if !KINDS.iter().any(|kind| declaration.starts_with(kind)) => {
+                    errors.push(format!(
+                        "line {start}: unsupported Mermaid declaration `{declaration}`"
+                    ));
+                }
+                Some(_) => {
+                    let mut stack = Vec::new();
+                    for character in block.iter().flat_map(|line| line.chars()) {
+                        match character {
+                            '[' | '(' | '{' => stack.push(character),
+                            ']' | ')' | '}' => {
+                                let expected = match character {
+                                    ']' => '[',
+                                    ')' => '(',
+                                    '}' => '{',
+                                    _ => unreachable!(),
+                                };
+                                if stack.pop() != Some(expected) {
+                                    errors.push(format!(
+                                        "line {start}: unbalanced Mermaid delimiter `{character}`"
+                                    ));
+                                    break;
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+                    if !stack.is_empty() {
+                        errors.push(format!("line {start}: unbalanced Mermaid delimiters"));
+                    }
+                }
+            }
+            block.clear();
+            continue;
+        }
+        if block_start.is_some() {
+            block.push(line.to_string());
+        }
+    }
+    if let Some(start) = block_start {
+        errors.push(format!("line {start}: unclosed Mermaid fence"));
+    }
+    errors
 }
 #[cfg(test)]
 #[path = "../../../tests/unit/core/project_specs_tests.rs"]

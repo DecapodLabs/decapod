@@ -16,8 +16,9 @@ use crate::core::project_specs::{
     LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA, LOCAL_PROJECT_SPECS_OPERATIONS,
     LOCAL_PROJECT_SPECS_README, LOCAL_PROJECT_SPECS_SECURITY, LOCAL_PROJECT_SPECS_SEMANTICS,
     LOCAL_PROJECT_SPECS_VALIDATION, ProjectSpecManifestEntry, ProjectSpecsManifest,
-    config_input_hash, entrypoint_manifest_entries, hash_text, read_specs_manifest,
-    repo_signal_fingerprint, spec_input_hash,
+    config_input_hash, entrypoint_manifest_entries, hash_text,
+    normalize_markdown_heading_boundaries, read_specs_manifest, repo_signal_fingerprint,
+    spec_input_hash,
 };
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -841,6 +842,13 @@ Refresh output requirements:
 - Update `.decapod/managed/specs/.manifest.json` after writing files.
 - Avoid adding parallel project-state or architecture-survey documents outside the canonical spec set.
 
+## Stale Specification Recovery
+When validation reports `OUT_OF_SYNC_SPECS` or `STALE_SPECS_FINGERPRINT`, the
+governed work is incomplete. Run `decapod rpc --op specs.refresh`, inspect the
+refreshed artifacts, and retry validation. A stale-spec error is actionable
+only when the agent follows that refresh-and-revalidate loop; it does not
+justify claiming completion or publishing an unvalidated state.
+
 ## Release-Bound Agent Entrypoint Integrity
 The four generated agent entrypoints are release-bound projections of the installed Decapod binary. Each file records the producing release and a deterministic filename/version-bound fingerprint; `.decapod/managed/specs/.manifest.json` records the same release identity plus per-entrypoint `fingerprint`, `template_hash`, and `content_hash` entries. Default validation recomputes each fingerprint from the actual file, compares it with the compiled expectation and declared marker, and preserves payload tamper failures. Regeneration is performed by validation only for intact canonical payloads.
 
@@ -1177,7 +1185,10 @@ fn render_project_spec_content(
         LOCAL_PROJECT_SPECS_SECURITY => Some(specs_security_template(seed)),
         _ => None,
     };
-    base_content.map(|content| apply_capability_overlays(rel_path, content, capabilities))
+    base_content.map(|content| {
+        let content = apply_capability_overlays(rel_path, content, capabilities);
+        normalize_markdown_heading_boundaries(&content)
+    })
 }
 
 fn project_spec_scaffold_hash(rel_path: &str, diagram_style: DiagramStyle) -> Option<String> {
