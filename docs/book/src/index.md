@@ -55,4 +55,5 @@ Hard specifications, command lists, configuration schemas, and error codes.
 ## 🛠️ Developer Resources
 
 To contribute or integrate Decapod into your platform:
+*   Read the **[Contributing Guidelines](contributing.md)**.
 *   Visit the main GitHub Repository: [DecapodLabs/decapod](https://github.com/DecapodLabs/decapod)

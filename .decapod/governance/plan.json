@@ -1,16 +1,14 @@
 {
   "schema_version": "1.0.0",
-  "title": "Finish PR #1198 stale-spec recovery diagnostics",
-  "intent": "Make OUT_OF_SYNC_SPECS and STALE_SPECS_FINGERPRINT validation errors actionable so agents can run decapod rpc --op specs.refresh and retry validation, without changing governance invariants.",
+  "title": "PR #1192: enforce complete publication bundles",
+  "intent": "Ensure workspace creation and validation keep release-bound fingerprints, specs, Dockerfile pins, and governance artifacts aligned so each publishable commit is complete.",
   "state": "APPROVED",
   "todo_ids": [
-    "bugs_01kz9vb1kjsyq30b"
+    "bugs_01kzah5ffgsahare"
   ],
   "proof_hooks": [
-    "cargo test --test doc_alignment",
-    "cargo test --lib",
-    "decapod validate --refresh-specs",
-    "git diff --check"
+    "cargo check --bin decapod",
+    "decapod validate --store user --format json"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -26,5 +24,5 @@
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1785977148Z"
+  "updated_at": "1785987186Z"
 }

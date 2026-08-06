@@ -67,6 +67,22 @@ bazel run //:decapod -- validate
 
 If you do not have Bazelisk installed, you can install it via your package manager (e.g., `npm install -g @bazel/bazelisk`, `brew install bazelisk`, etc.).
 
+### Nix Development Shell
+
+If you are using Nix, you can enter a fully reproducible development shell containing all the required tooling by running:
+
+```bash
+nix develop
+```
+
+You can also build Decapod using Nix:
+
+```bash
+nix build
+```
+
+For more details, see the **[Contributing Guidelines](docs/book/src/contributing.md)** section in the mdBook.
+
 ## Recommended Workflow Tooling
 
 While Bazel is used for CI/CD and large-scale tests, local iteration is supported via standard Cargo tooling. The following tools are recommended for code quality, dependency integrity, and developer productivity:
@@ -118,58 +134,6 @@ cargo watch -x check
 ```
 
 
-## Nix packaging (maintainers / packagers)
-
-Ordinary installs stay on Cargo (`cargo binstall decapod` / `cargo install
-decapod`). The repository flake is an optional packaging path for Nix users and
-downstream packagers.
-
-```bash
-nix run . -- init
-nix build .                 # binary at ./result/bin/decapod
-nix develop .               # optional contributor shell
-```
-
-`packages.default` builds from the committed `Cargo.lock` with the repository
-Rust channel (`rust-toolchain.toml` → `.config/build/rust-toolchain.toml`) via
-the locked `rust-overlay` input. No `cargoHash` treadmill.
-
-### Support matrix
-
-| System | Status |
-|---|---|
-| `x86_64-linux` | CI-proven (native build + `decapod system version`) |
-| `aarch64-darwin` | CI-proven on GitHub `macos-latest` (Apple Silicon) |
-| `x86_64-darwin`, `aarch64-linux` | Flake may evaluate; not continuously proven |
-
-Darwin Cargo and Nix builds share one linker story: do not pin
-`-fuse-ld=/usr/bin/ld` (host path breaks the Nix sandbox). The Apple toolchain
-selects the system linker.
-
-### Bumping the Rust channel
-
-The package and `checks.<system>.rust-toolchain` use the same
-`buildToolchain`. Changing the channel requires a matching `rust-overlay` lock:
-
-1. Edit `.config/build/rust-toolchain.toml`.
-2. Refresh only the overlay input:
-   ```bash
-   nix flake update rust-overlay
-   ```
-3. Review and commit **both** the toolchain file and `flake.lock`.
-4. Prove:
-   ```bash
-   nix build .#checks.$(nix eval --impure --raw --expr builtins.currentSystem).rust-toolchain
-   nix build --print-build-logs
-   ./result/bin/decapod system version
-   ```
-
-CI runs the focused toolchain check before `packages.default` on Linux and
-Darwin. A stale overlay fails with remediation text; CI **never** mutates
-`flake.lock`. Do not float the overlay or fall back to nixpkgs rustc.
-
-See also the mdbook page [Nix packaging](docs/book/src/reference/nix.md).
-
 ## Release Discipline
 
 Before release PR merge:
@@ -179,6 +143,17 @@ decapod release check
 ```
 
 ## Before You Open a PR
+
+> [!IMPORTANT]
+> **GitHub Workflow Permissions (`workflow` scope)**
+> 
+> If you are contributing changes that trigger GitHub Actions workflows or edit files under `.github/workflows/`, your Personal Access Token (PAT) must have the `workflow` scope.
+> 
+> To verify if your token has the appropriate permission level, run the following API call:
+> ```bash
+> curl -I -H "Authorization: Bearer YOUR_GITHUB_TOKEN" https://api.github.com/user
+> ```
+> Inspect the **`X-OAuth-Scopes`** header in the response. It must contain the `workflow` scope (for example: `X-OAuth-Scopes: repo, workflow`).
 
 Beyond the rules above, every PR must satisfy Decapod's governance gates and CI's artifact expectations:
 

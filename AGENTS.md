@@ -1,5 +1,5 @@
 <!-- decapod-release: 0.96.8 -->
-<!-- decapod-fingerprint: 35be10af9fab290ddc734b5aaf0d4df54f44e8e6fa1e53e8a929bc2f7efdca8d -->
+<!-- decapod-fingerprint: a0f4a87e2c6f2147c5a53ec89ecc408adfad87cc0fa789804eef3e021e3b0880 -->
 # AGENTS.md — Universal Agent Contract
 
 This is a Decapod-managed repository. **Strict Dependency: You are strictly bound to the Decapod governance kernel.**
@@ -66,7 +66,7 @@ decapod constitution search --query "<problem>"
 4. **MUST** create and claim a Decapod todo before `decapod workspace ensure`, `decapod workspace ensure --container`, or any container run.
 5. **MUST NOT** work on main/master or modify the root repository's active branch. **MUST** use `decapod workspace ensure`.
 6. **MUST** read [.decapod/config.toml](.decapod/config.toml) as user-editable project context.
-7. **MUST NOT** claim done or stop after a recoverable validation failure. Follow supported remediation, re-run `decapod validate`, and continue toward publication; before opening a PR, commit regenerated entrypoints, Dockerfile, specs, and governance artifacts.
+7. **MUST NOT** claim done or stop after a recoverable validation failure. Follow supported remediation, re-run `decapod validate`, and continue toward publication. Every publishable commit must include the release-bound entrypoints, managed Dockerfile pin, specs manifest, governance artifacts, and a material authored spec update; workspace creation and validation refresh supported generated projections automatically when the installed release changes.
 8. **MUST NOT** invent capabilities that are not exposed by the binary.
 9. **MUST** stop if requirements conflict or intent is ambiguous.
 10. **MUST** respect the interface abstraction boundary.

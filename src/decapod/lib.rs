@@ -5517,7 +5517,7 @@ fn run_validate_command(
         governance_root,
         workspace_root,
         validate_cli.verbose,
-        validate_cli.refresh_specs,
+        true,
         validate_cli.projections,
     )?;
     for _ in 0..2 {
@@ -5534,7 +5534,7 @@ fn run_validate_command(
             governance_root,
             workspace_root,
             validate_cli.verbose,
-            validate_cli.refresh_specs,
+            true,
             validate_cli.projections,
         )?;
     }
@@ -7497,7 +7497,7 @@ fn run_workspace_command(
                     &governance_root,
                     workspace_root,
                     false,
-                    false,
+                    true,
                     false,
                 )?;
                 report_summary = Some(report);
@@ -7525,7 +7525,7 @@ fn run_workspace_command(
                 &governance_root,
                 workspace_root,
                 false,
-                false,
+                true,
                 false,
             )?;
             if report.fail_count > 0 {
@@ -8631,7 +8631,7 @@ mod rpc_handlers {
     }
 
     pub(crate) fn handle_validate_run(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
-        let params: ValidateRunParams = serde_json::from_value(ctx.request.params.clone())
+        let _params: ValidateRunParams = serde_json::from_value(ctx.request.params.clone())
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
         let workspace_root = &ctx.project_root;
@@ -8645,7 +8645,7 @@ mod rpc_handlers {
             &governance_root,
             workspace_root,
             false,
-            params.refresh_specs,
+            true,
             false,
         );
 
