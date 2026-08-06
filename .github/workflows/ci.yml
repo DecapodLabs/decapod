@@ -29,7 +29,7 @@ jobs:
   commit-lint:
     name: Commit Lint
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -49,7 +49,7 @@ jobs:
   governance-artifacts:
     name: Governance Artifacts (all four)
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'release')
+    if: (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && !contains(github.event.pull_request.labels.*.name, 'release')
     steps:
       - uses: actions/checkout@v4
         with:
@@ -58,7 +58,7 @@ jobs:
       - name: Require all governance artifacts in the PR diff
         run: |
           set -euo pipefail
-          base_ref="${{ github.base_ref }}"
+          base_ref="${{ github.base_ref || 'master' }}"
           git fetch --no-tags --prune origin "$base_ref"
           required=(
             .decapod/governance/claims.json
@@ -87,7 +87,7 @@ jobs:
   material-specs:
     name: Material Living Specs (beyond fingerprints)
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'release')
+    if: (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && !contains(github.event.pull_request.labels.*.name, 'release')
     steps:
       - uses: actions/checkout@v4
         with:
@@ -96,13 +96,13 @@ jobs:
       - name: Require material specs/*.md change versus base
         run: |
           set -euo pipefail
-          base_ref="${{ github.base_ref }}"
+          base_ref="${{ github.base_ref || 'master' }}"
           git fetch --no-tags --prune origin "$base_ref"
           python3 - <<'PY'
           import re, subprocess, sys
           from pathlib import Path
 
-          base_ref = """${{ github.base_ref }}"""
+          base_ref = """${{ github.base_ref || 'master' }}"""
           specs_dir = Path(".decapod/managed/specs")
           names = [
               "INTENT.md",
@@ -205,7 +205,7 @@ jobs:
   detect-migration-script-changes:
     name: Detect Migration Script Changes
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     outputs:
       changed: ${{ steps.diff.outputs.changed }}
     steps:
@@ -216,7 +216,7 @@ jobs:
         id: diff
         run: |
           set -euo pipefail
-          base_ref="${{ github.base_ref }}"
+          base_ref="${{ github.base_ref || 'master' }}"
           git fetch --no-tags --prune origin "$base_ref"
           changed_files="$(git diff --name-only "origin/$base_ref"...HEAD)"
           echo "$changed_files"
@@ -442,7 +442,7 @@ jobs:
     name: Tests (${{ matrix.target }})
     runs-on: ubuntu-latest
     needs: setup
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
       matrix:
@@ -461,7 +461,7 @@ jobs:
       - name: Detect changed files
         id: changed
         run: |
-          base_ref="${{ github.base_ref }}"
+          base_ref="${{ github.base_ref || 'master' }}"
           git fetch --no-tags --prune origin "$base_ref"
           chg=$(git diff --name-only "origin/$base_ref"...HEAD | tr '\n' ',' | sed 's/,$//')
           echo "changed=$chg" >> "$GITHUB_OUTPUT"
@@ -618,7 +618,7 @@ jobs:
     name: Migration Script Tests
     runs-on: ubuntu-latest
     needs: [setup, detect-migration-script-changes]
-    if: github.event_name == 'pull_request' && needs.detect-migration-script-changes.outputs.changed == 'true'
+    if: (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && needs.detect-migration-script-changes.outputs.changed == 'true'
     steps:
       - uses: actions/checkout@v4
         with:
