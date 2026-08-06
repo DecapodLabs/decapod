@@ -196,6 +196,26 @@ struct AppliedMigrationLedger {
     entries: Vec<AppliedMigrationEntry>,
 }
 
+impl AppliedMigrationLedger {
+    fn applied_ids(&self) -> HashSet<String> {
+        self.entries.iter().map(|entry| entry.id.clone()).collect()
+    }
+
+    fn record(&mut self, migration: &Migration) {
+        self.entries.push(AppliedMigrationEntry {
+            id: migration.id.to_string(),
+            sequence: migration.sequence,
+            scope: migration.scope.to_string(),
+            kind: migration.kind.to_string(),
+            script_path: migration.script_path.map(|s| s.to_string()),
+            min_version: migration.min_version.to_string(),
+            target_version: migration.target_version.to_string(),
+            applied_at: crate::core::time::now_epoch_z(),
+            applied_by_version: DECAPOD_VERSION.to_string(),
+        });
+    }
+}
+
 #[derive(Debug, Clone, Serialize)]
 struct MigrationCatalogEntry {
     id: String,
@@ -443,39 +463,41 @@ fn remove_data_entry(path: &Path) -> Result<(), error::DecapodError> {
     Ok(())
 }
 
-/// Run all idempotent migrations
+/// Select migrations for execution without touching the datastore.
+///
+/// This is intentionally separate from migration execution so Decapod owns
+/// ordering, version gates, and the applied ledger independently of dactyl's
+/// eventual schema-operation primitive.
+fn plan_pending_migrations<'a>(
+    current_version: &str,
+    migrations: &'a [Migration],
+    applied_ids: &HashSet<String>,
+) -> Result<Vec<&'a Migration>, error::DecapodError> {
+    let mut ordered = migrations.iter().collect::<Vec<_>>();
+    ordered.sort_by_key(|migration| migration.sequence);
+    validate_migration_plan(migrations)?;
+    Ok(ordered
+        .into_iter()
+        .filter(|migration| version_gte(current_version, migration.min_version))
+        .filter(|migration| version_gte(current_version, migration.target_version))
+        .filter(|migration| !applied_ids.contains(migration.id))
+        .collect())
+}
+
+/// Run all idempotent migrations.
 fn run_migrations(decapod_root: &Path) -> Result<(), error::DecapodError> {
     let mut migrations = all_migrations();
     migrations.sort_by_key(|m| m.sequence);
-    validate_migration_plan(&migrations)?;
     touch_generated_version_counter(decapod_root)?;
     touch_generated_migration_catalog(decapod_root, &migrations)?;
     let mut applied = load_applied_migrations(decapod_root)?;
-    let mut applied_ids: HashSet<String> = applied.entries.iter().map(|e| e.id.clone()).collect();
+    let mut applied_ids = applied.applied_ids();
     let single_datastore_was_previously_consolidated =
         applied_ids.contains("db.consolidate.single_datastore.v001");
-    for migration in migrations {
-        if !version_gte(DECAPOD_VERSION, migration.min_version) {
-            continue;
-        }
-        if !version_gte(DECAPOD_VERSION, migration.target_version) {
-            continue;
-        }
-        if applied_ids.contains(migration.id) {
-            continue;
-        }
+    let pending = plan_pending_migrations(DECAPOD_VERSION, &migrations, &applied_ids)?;
+    for migration in pending {
         (migration.up)(decapod_root)?;
-        applied.entries.push(AppliedMigrationEntry {
-            id: migration.id.to_string(),
-            sequence: migration.sequence,
-            scope: migration.scope.to_string(),
-            kind: migration.kind.to_string(),
-            script_path: migration.script_path.map(|s| s.to_string()),
-            min_version: migration.min_version.to_string(),
-            target_version: migration.target_version.to_string(),
-            applied_at: crate::core::time::now_epoch_z(),
-            applied_by_version: DECAPOD_VERSION.to_string(),
-        });
+        applied.record(migration);
         applied_ids.insert(migration.id.to_string());
         store_applied_migrations(decapod_root, &applied)?;
     }

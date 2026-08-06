@@ -51,6 +51,33 @@ impl CloudAuthDiagnostic {
     }
 }
 
+/// Backend-neutral classification for failures that may cross the storage
+/// boundary. The current SQLite adapter supplies the compatibility mapping;
+/// dactyl can provide the same classification without changing Decapod's
+/// retry, validation, or governance policy.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum StorageFailureKind {
+    Contention,
+    Io,
+    Constraint,
+    Query,
+    Value,
+    Capability,
+    Unknown,
+}
+
+impl StorageFailureKind {
+    /// Whether Decapod may retry the operation under its bounded policy.
+    pub fn is_retryable(self) -> bool {
+        matches!(self, Self::Contention | Self::Io)
+    }
+
+    pub fn is_contention(self) -> bool {
+        self == Self::Contention
+    }
+}
+
 /// Canonical error type for all Decapod operations.
 #[derive(Debug)]
 pub enum DecapodError {
@@ -149,6 +176,70 @@ impl From<env::VarError> for DecapodError {
         Self::EnvVarError(e)
     }
 }
+impl DecapodError {
+    /// Classify storage failures without requiring callers to know the active
+    /// backend. This is the application-side seam that dactyl can implement
+    /// against later.
+    pub fn storage_failure_kind(&self) -> StorageFailureKind {
+        match self {
+            Self::RusqliteError(err) => classify_rusqlite_error(err),
+            Self::IoError(err)
+                if err
+                    .to_string()
+                    .to_ascii_lowercase()
+                    .contains("disk i/o error") =>
+            {
+                StorageFailureKind::Io
+            }
+            Self::IoError(_) => StorageFailureKind::Unknown,
+            Self::ValidationError(message) => classify_storage_message(message),
+            _ => StorageFailureKind::Unknown,
+        }
+    }
+}
+
+fn classify_rusqlite_error(err: &rusqlite::Error) -> StorageFailureKind {
+    match err {
+        rusqlite::Error::SqliteFailure(code, message) => {
+            let text = message.as_deref().unwrap_or_default();
+            if matches!(
+                code.code,
+                rusqlite::ErrorCode::DatabaseBusy | rusqlite::ErrorCode::DatabaseLocked
+            ) || code.extended_code == 522
+                || text.to_ascii_lowercase().contains("locked")
+            {
+                StorageFailureKind::Contention
+            } else if text.to_ascii_lowercase().contains("disk i/o error") {
+                StorageFailureKind::Io
+            } else {
+                StorageFailureKind::Query
+            }
+        }
+        _ => StorageFailureKind::Query,
+    }
+}
+
+fn classify_storage_message(message: &str) -> StorageFailureKind {
+    let lower = message.to_ascii_lowercase();
+    if lower.contains("database is locked")
+        || lower.contains("databasebusy")
+        || lower.contains("sqlite contention")
+        || lower.contains("sqlite_code=databasebusy")
+        || lower.contains("extended_code: 522")
+    {
+        StorageFailureKind::Contention
+    } else if lower.contains("disk i/o error") {
+        StorageFailureKind::Io
+    } else if lower.contains("constraint failed")
+        || lower.contains("unique constraint")
+        || lower.contains("foreign key constraint")
+    {
+        StorageFailureKind::Constraint
+    } else {
+        StorageFailureKind::Unknown
+    }
+}
+
 #[cfg(test)]
 #[path = "../../../tests/unit/core/error_tests.rs"]
 mod tests;

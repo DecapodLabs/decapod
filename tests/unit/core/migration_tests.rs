@@ -1,6 +1,43 @@
 // Moved from src/decapod/core/migration.rs
 use super::*;
+use std::collections::HashSet;
 use tempfile::tempdir;
+
+#[test]
+fn pending_migration_plan_is_versioned_and_ledger_aware() {
+    let migrations = all_migrations();
+    let mut applied = HashSet::new();
+    applied.insert(migrations[0].id.to_string());
+
+    let pending = plan_pending_migrations(DECAPOD_VERSION, &migrations, &applied).unwrap();
+
+    assert!(
+        pending
+            .iter()
+            .all(|migration| migration.id != migrations[0].id)
+    );
+    assert!(
+        pending
+            .windows(2)
+            .all(|pair| pair[0].sequence < pair[1].sequence)
+    );
+}
+
+#[test]
+fn migration_ledger_records_application_metadata_without_execution() {
+    let migrations = all_migrations();
+    let mut ledger = AppliedMigrationLedger {
+        schema_version: "1.0.0".to_string(),
+        entries: Vec::new(),
+    };
+
+    ledger.record(&migrations[0]);
+
+    assert_eq!(ledger.entries.len(), 1);
+    assert_eq!(ledger.entries[0].id, migrations[0].id);
+    assert_eq!(ledger.entries[0].sequence, migrations[0].sequence);
+    assert!(!ledger.entries[0].applied_at.is_empty());
+}
 
 #[test]
 fn proven_consolidation_copies_forward_and_retires_recreated_databases() {

@@ -2386,11 +2386,11 @@ pub fn run() -> Result<(), error::DecapodError> {
             if !cloud_todo_command
                 && should_auto_clock_in(&cli.command)
                 && let Err(e) =
-                    retry_transient_sqlite(|| todo::clock_in_agent_presence(&project_store), 4)
+                    retry_transient_storage(|| todo::clock_in_agent_presence(&project_store), 4)
             {
-                if is_transient_sqlite_contention_error(&e) {
+                if is_transient_storage_error(&e) {
                     eprintln!(
-                        "warn: presence clock-in skipped due transient sqlite contention: {e}"
+                        "warn: presence clock-in skipped due transient storage contention: {e}"
                     );
                 } else {
                     return Err(e);
@@ -5580,7 +5580,10 @@ fn validate_diagnostics_enabled() -> bool {
 
 fn classify_validate_failure_reason(message: &str) -> &'static str {
     let lower = message.to_ascii_lowercase();
-    if lower.contains("sqlite contention") || lower.contains("database is locked") {
+    if lower.contains("storage contention")
+        || lower.contains("sqlite contention")
+        || lower.contains("database is locked")
+    {
         return "timeout_acquiring_lock";
     }
     if lower.contains("exceeded timeout") {
@@ -5695,39 +5698,16 @@ fn attach_validate_diagnostic_if_enabled(
 }
 
 fn normalize_validate_error(err: error::DecapodError) -> error::DecapodError {
-    match err {
-        error::DecapodError::RusqliteError(rusqlite::Error::SqliteFailure(code, msg)) => {
-            let is_lock = code.code == rusqlite::ErrorCode::DatabaseBusy
-                || code.extended_code == 522
-                || msg
-                    .as_deref()
-                    .unwrap_or_default()
-                    .to_ascii_lowercase()
-                    .contains("locked");
-            if is_lock {
-                return error::DecapodError::ValidationError(
-                    "VALIDATE_TIMEOUT_OR_LOCK: SQLite contention detected. Retry with backoff or inspect concurrent decapod processes.".to_string(),
-                );
-            }
-            error::DecapodError::RusqliteError(rusqlite::Error::SqliteFailure(code, msg))
-        }
-        error::DecapodError::ValidationError(message) => {
-            let lower = message.to_ascii_lowercase();
-            if lower.contains("database is locked")
-                || lower.contains("databasebusy")
-                || lower.contains("sqlite_code=databasebusy")
-            {
-                return error::DecapodError::ValidationError(
-                    "VALIDATE_TIMEOUT_OR_LOCK: SQLite contention detected. Retry with backoff or inspect concurrent decapod processes.".to_string(),
-                );
-            }
-            error::DecapodError::ValidationError(message)
-        }
-        other => other,
+    if err.storage_failure_kind().is_contention() {
+        error::DecapodError::ValidationError(
+            "VALIDATE_TIMEOUT_OR_LOCK: Storage contention detected. Retry with backoff or inspect concurrent decapod processes.".to_string(),
+        )
+    } else {
+        err
     }
 }
 
-fn retry_transient_sqlite<T, F>(mut op: F, max_attempts: u32) -> Result<T, error::DecapodError>
+fn retry_transient_storage<T, F>(mut op: F, max_attempts: u32) -> Result<T, error::DecapodError>
 where
     F: FnMut() -> Result<T, error::DecapodError>,
 {
@@ -5735,7 +5715,7 @@ where
     loop {
         match op() {
             Ok(v) => return Ok(v),
-            Err(e) if is_transient_sqlite_contention_error(&e) && attempt + 1 < max_attempts => {
+            Err(e) if is_transient_storage_error(&e) && attempt + 1 < max_attempts => {
                 let delay_ms = (50u64 * 2u64.pow(attempt)).min(800);
                 attempt += 1;
                 thread::sleep(std::time::Duration::from_millis(delay_ms));
@@ -5745,35 +5725,8 @@ where
     }
 }
 
-fn is_transient_sqlite_contention_error(err: &error::DecapodError) -> bool {
-    match err {
-        error::DecapodError::RusqliteError(rusqlite::Error::SqliteFailure(code, msg)) => {
-            if matches!(
-                code.code,
-                rusqlite::ErrorCode::DatabaseBusy | rusqlite::ErrorCode::DatabaseLocked
-            ) || code.extended_code == 522
-            {
-                return true;
-            }
-            let lower = msg.as_deref().unwrap_or_default().to_ascii_lowercase();
-            lower.contains("locked") || lower.contains("disk i/o error")
-        }
-        error::DecapodError::ValidationError(message) => {
-            let lower = message.to_ascii_lowercase();
-            lower.contains("database is locked")
-                || lower.contains("databasebusy")
-                || lower.contains("sqlite contention")
-                || lower.contains("disk i/o error")
-                || lower.contains("extended_code: 522")
-        }
-        other => {
-            let lower = other.to_string().to_ascii_lowercase();
-            lower.contains("database is locked")
-                || lower.contains("databasebusy")
-                || lower.contains("disk i/o error")
-                || lower.contains("extended_code: 522")
-        }
-    }
+fn is_transient_storage_error(err: &error::DecapodError) -> bool {
+    err.storage_failure_kind().is_retryable()
 }
 
 fn run_validation_bounded(
@@ -5802,15 +5755,7 @@ fn run_validation_bounded(
         );
         for attempt in 1..=2 {
             let should_retry = match &result {
-                Err(error::DecapodError::RusqliteError(err)) => {
-                    format!("{err}").to_ascii_lowercase().contains("locked")
-                }
-                Err(error::DecapodError::ValidationError(msg)) => {
-                    let lower = msg.to_ascii_lowercase();
-                    lower.contains("database is locked")
-                        || lower.contains("databasebusy")
-                        || lower.contains("sqlite_code=databasebusy")
-                }
+                Err(err) => is_transient_storage_error(err),
                 _ => false,
             };
             if !should_retry {

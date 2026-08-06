@@ -30,3 +30,18 @@ fn test_path_error_display() {
     let err = DecapodError::PathError("invalid path".to_string());
     assert_eq!(format!("{err}"), "Path error: invalid path");
 }
+
+#[test]
+fn storage_failure_classifies_contention_without_backend_callers() {
+    let err = DecapodError::ValidationError("database is locked".to_string());
+    assert_eq!(err.storage_failure_kind(), StorageFailureKind::Contention);
+    assert!(err.storage_failure_kind().is_retryable());
+    assert!(err.storage_failure_kind().is_contention());
+}
+
+#[test]
+fn storage_failure_does_not_retry_generic_validation_errors() {
+    let err = DecapodError::ValidationError("schema contract is invalid".to_string());
+    assert_eq!(err.storage_failure_kind(), StorageFailureKind::Unknown);
+    assert!(!err.storage_failure_kind().is_retryable());
+}
