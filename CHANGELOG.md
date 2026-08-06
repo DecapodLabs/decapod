@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.96.5](https://github.com/DecapodLabs/decapod/compare/v0.96.4...v0.96.5) - 2026-08-06
+
+### Other
+
+- refresh validation receipt after claims review
+- record positioning claims review
+- refresh validation receipt
+- record validation evidence
+- define Decapod's reliability layer
+
 ## [0.96.4](https://github.com/DecapodLabs/decapod/compare/v0.96.3...v0.96.4) - 2026-08-04
 
 ### Fixed
