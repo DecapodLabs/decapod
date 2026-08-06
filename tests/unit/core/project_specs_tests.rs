@@ -62,6 +62,31 @@ fn codebase_attestation_preserves_authored_spec_content() {
 }
 
 #[test]
+fn normalize_markdown_heading_boundaries_repairs_compacted_specs() {
+    let compacted = "# Validation## Validation Philosophy\ntext.## Validation Harness\n## Idempotency Contracts| Operation | Key ||---|---|| create | id |\n## Checklist- [ ] verify\n### Nested Heading\n```text\n## keep inline\n```## Invariants\n";
+    let normalized = normalize_markdown_heading_boundaries(compacted);
+
+    assert_eq!(
+        normalized,
+        "# Validation\n\n## Validation Philosophy\ntext.\n\n## Validation Harness\n\n## Idempotency Contracts\n\n| Operation | Key |\n|---|---|\n| create | id |\n\n## Checklist\n\n- [ ] verify\n### Nested Heading\n```text\n## keep inline\n```\n\n## Invariants\n"
+    );
+}
+
+#[test]
+fn mermaid_syntax_errors_guard_generated_diagrams() {
+    let valid = "```mermaid\nflowchart LR\n  A[Intent] --> B[Proof]\n```\n";
+    assert!(mermaid_syntax_errors(valid).is_empty());
+
+    let invalid = "```mermaid\nflowchart LR\n  A[Intent --> B[Proof]\n";
+    let errors = mermaid_syntax_errors(invalid);
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.contains("unclosed Mermaid fence"))
+    );
+}
+
+#[test]
 fn material_spec_body_ignores_fingerprint_and_capability_blocks() {
     let authored = "# Intent\n\n## Product Outcome\n- Ship governed agent workflows.\n";
     let with_generated = format!(

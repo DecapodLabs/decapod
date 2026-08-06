@@ -69,3 +69,13 @@ stale spec normally means the governed work remains incomplete.
 ## 4. Entrypoint and Dockerfile Pin Discipline
 
 `AGENTS.md`, `CLAUDE.md`, `CODEX.md`, `GEMINI.md`, and `.decapod/managed/Dockerfile.decapod` carry a Decapod release pin and fingerprint that MUST agree with the installed binary. `decapod validate` self-heals these when they drift; do not hand-edit the release pins or fingerprints. If `validate` reports `entrypoint_release_mismatch`, rerun it and let the binary refresh the pinned headers; the file bodies (project-specific prose, governed sections) are preserved.
+
+## 5. First-Commit Publication Readiness
+
+Run validation before opening the pull request and commit every generated
+projection it refreshes in that first commit. The PR diff must carry changed
+entrypoint fingerprints, the managed Dockerfile release pin, managed-spec
+fingerprints or authored spec updates, and all four governance artifacts when
+the change affects them. A pull request is a completion signal, not a place to
+discover local-only drift. If a generated artifact is stale, regenerate it
+through Decapod, stage it, and rerun validation before publication.

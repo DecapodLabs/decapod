@@ -16,8 +16,9 @@ use crate::core::project_specs::{
     LOCAL_PROJECT_SPECS_INTENT, LOCAL_PROJECT_SPECS_INTERFACES, LOCAL_PROJECT_SPECS_MANIFEST,
     LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA, LOCAL_PROJECT_SPECS_OPERATIONS,
     LOCAL_PROJECT_SPECS_SECURITY, LOCAL_PROJECT_SPECS_SEMANTICS, LOCAL_PROJECT_SPECS_VALIDATION,
-    config_input_hash, hash_text, material_specs_change_vs_base, read_specs_manifest,
-    repo_signal_fingerprint, spec_input_hash,
+    config_input_hash, hash_text, material_specs_change_vs_base, mermaid_syntax_errors,
+    normalize_markdown_heading_boundaries, read_specs_manifest, repo_signal_fingerprint,
+    spec_input_hash,
 };
 use crate::core::research_claims;
 use crate::core::scaffold::DECAPOD_GITIGNORE_RULES;
@@ -2080,8 +2081,12 @@ fn validate_project_specs_docs(
             );
         } else {
             fail(
-                &format!(
-                    "OUT_OF_SYNC_SPECS: Spec content changed on disk but manifest is not updated for {out_of_sync_specs:?}. Review changes and call `decapod rpc --op specs.refresh` to acknowledge."
+                &auto_remediable_validation_message(
+                    "OUT_OF_SYNC_SPECS",
+                    format!(
+                        "OUT_OF_SYNC_SPECS: Spec content changed on disk but manifest is not updated for {out_of_sync_specs:?}. Review changes and call `decapod rpc --op specs.refresh` to acknowledge.",
+                    ),
+                    "Run `decapod rpc --op specs.refresh` to update the manifest with the current spec content, then rerun validation.",
                 ),
                 ctx,
             );
@@ -2128,11 +2133,17 @@ fn validate_project_specs_docs(
             );
         } else {
             fail(
-                "STALE_SPECS_FINGERPRINT: Significant repo surfaces changed since last specs refresh. Review and rewrite living-spec authored prose (INTENT/ARCHITECTURE/INTERFACES/VALIDATION/…) to account for the code change — fingerprint/attestation refresh alone is insufficient (see FINGERPRINT_ONLY_SPECS / GitHub #1183) — then call `decapod rpc --op specs.refresh`.",
+                &auto_remediable_validation_message(
+                    "STALE_SPECS_FINGERPRINT",
+                    "STALE_SPECS_FINGERPRINT: Significant repo surfaces changed since last specs refresh. Review and rewrite living-spec authored prose (INTENT/ARCHITECTURE/INTERFACES/VALIDATION/…) to account for the code change — fingerprint/attestation refresh alone is insufficient (see FINGERPRINT_ONLY_SPECS / GitHub #1183) — then call `decapod rpc --op specs.refresh`.",
+                    "Edit the affected spec files to reflect the changes in the codebase, then run `decapod rpc --op specs.refresh` to update the attestation, and rerun validation.",
+                ),
                 ctx,
             );
         }
     }
+
+    validate_project_specs_layout(ctx, repo_root, refresh_specs)?;
 
     // After freshness checks, enforce material mutation versus the PR base when
     // this is an isolated feature branch with a resolvable base.
@@ -2355,6 +2366,58 @@ fn validate_project_specs_docs(
         pass("Security spec contains required sections", ctx);
     }
 
+    Ok(())
+}
+
+fn validate_project_specs_layout(
+    ctx: &ValidationContext,
+    repo_root: &Path,
+    refresh_specs: bool,
+) -> Result<(), error::DecapodError> {
+    let malformed = || -> Result<Vec<String>, error::DecapodError> {
+        let mut paths = Vec::new();
+        for spec in LOCAL_PROJECT_SPECS {
+            let path = repo_root.join(spec.path);
+            if !path.is_file() {
+                continue;
+            }
+            let body = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
+            if normalize_markdown_heading_boundaries(&body) != body
+                || !mermaid_syntax_errors(&body).is_empty()
+            {
+                paths.push(spec.path.to_string());
+            }
+        }
+        Ok(paths)
+    };
+
+    let mut malformed_paths = malformed()?;
+    if !malformed_paths.is_empty() && refresh_specs {
+        let config = crate::cli::DecapodProjectConfig::load(repo_root).unwrap_or_default();
+        crate::core::project_specs::refresh_specs_from_codebase(
+            repo_root,
+            &config.repo.capabilities,
+        )?;
+        malformed_paths = malformed()?;
+    }
+
+    if malformed_paths.is_empty() {
+        pass(
+            "Project specs Markdown layout is readable and structurally separated",
+            ctx,
+        );
+    } else {
+        fail(
+            &auto_remediable_validation_message(
+                "MALFORMED_PROJECT_SPEC_LAYOUT",
+                format!(
+                    "MALFORMED_PROJECT_SPEC_LAYOUT: headings, tables, lists, or Mermaid diagrams are malformed in {malformed_paths:?}."
+                ),
+                "Run `decapod rpc --op specs.refresh` to repair generated Markdown boundaries, inspect Mermaid blocks, and rerun validation.",
+            ),
+            ctx,
+        );
+    }
     Ok(())
 }
 

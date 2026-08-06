@@ -1,16 +1,15 @@
 {
   "schema_version": "1.0.0",
-  "title": "Clarify Decapod product positioning and governed execution model",
-  "intent": "Teach Decapod's architectural layer before listing capabilities: models produce intelligence, agents perform work, repositories preserve state, and Decapod governs the transition from intent to proof. Center reliability as designed, not hoped for, while positioning Decapod as the repo-native governance kernel for bounded, convergent, proof-backed agent work without runtime or architecture changes.",
+  "title": "Finish PR #1198 stale-spec recovery diagnostics",
+  "intent": "Make OUT_OF_SYNC_SPECS and STALE_SPECS_FINGERPRINT validation errors actionable so agents can run decapod rpc --op specs.refresh and retry validation, without changing governance invariants.",
   "state": "APPROVED",
   "todo_ids": [
-    "docs_01kza3j6mf354j1p"
+    "bugs_01kz9vb1kjsyq30b"
   ],
   "proof_hooks": [
-    "ontology and reliability positioning is visible in README and mdBook introduction",
-    "mdbook build and mdbook test docs/book",
     "cargo test --test doc_alignment",
-    "decapod validate --refresh-specs (bounded)",
+    "cargo test --lib",
+    "decapod validate --refresh-specs",
     "git diff --check"
   ],
   "unknowns": [],
@@ -21,10 +20,11 @@
   "constraints": {
     "forbidden_paths": [
       "src/main.rs",
-      "tests"
+      "docs",
+      "README.md"
     ],
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1785974137Z"
+  "updated_at": "1785977148Z"
 }
