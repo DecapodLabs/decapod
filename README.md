@@ -24,6 +24,20 @@
 
 ---
 
+## Quick start
+
+```bash
+cargo binstall decapod
+decapod init
+```
+
+One command installs the kernel. One command prepares the repository. You keep
+speaking naturally. Agents call Decapod at the points that matter: before
+acting, before inference, at validation boundaries, and before publication.
+
+What was asked, what was understood, what changed, and what was proven
+is written into the project itself.
+
 ## The layer Decapod occupies
 
 Decapod sits between agent capability and trusted delivery:
@@ -82,20 +96,6 @@ models, harnesses, and Decapod invocations.
 Decapod is not an autonomous coding agent, LLM, inference engine, orchestration
 framework, daemon, prompt library, coding assistant, project-management system,
 or replacement for an agent harness. It governs work performed by agents.
-
-## Quick start
-
-```bash
-cargo binstall decapod
-decapod init
-```
-
-One command installs the kernel. One command prepares the repository. You keep
-speaking naturally. Agents call Decapod at the points that matter: before
-acting, before inference, at validation boundaries, and before publication.
-
-What was asked, what was understood, what changed, and what was proven
-is written into the project itself.
 
 ---
 
