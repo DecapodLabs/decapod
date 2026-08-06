@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0.0",
-  "title": "Remove obsolete release validation path (release boundary)",
-  "intent": "Keep release-only merges limited to compilation and publication; require release-bound projections on the preceding code PR.",
+  "title": "Speed project validation workflows with cached cargo-binstall Decapod installs",
+  "intent": "Update project-facing GitHub Actions workflow templates to install the published Decapod binary with cargo binstall and cache the cargo-binstall download/install paths for fast repeated validation runs; preserve Decapod's own source-build validation path.",
   "state": "APPROVED",
   "todo_ids": [
-    "cicd_01kzam7c62jy4fk6"
+    "cicd_01kzawhttff6s577"
   ],
   "proof_hooks": [
     "git diff --check",
@@ -22,5 +22,5 @@
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1785990467Z"
+  "updated_at": "1785998219Z"
 }
