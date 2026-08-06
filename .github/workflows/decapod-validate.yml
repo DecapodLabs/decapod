@@ -3,6 +3,10 @@ name: Decapod Validate
 on:
   push:
     branches: [ main, master ]
+    paths-ignore:
+      - 'CHANGELOG.md'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
   pull_request:
     branches: [ main, master ]
 
@@ -25,18 +29,17 @@ jobs:
       - name: Decapod Validate
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
-          # Post-merge (push): tree-local binary fingerprints lag the last
-          # published pin until release-artifact-sync heals them. Skip fingerprint
-          # hard-fails here; PRs still enforce release-bound pins + drift.
-          DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES: ${{ github.event_name == 'push' && '1' || '' }}
+          # Release-bound projections are refreshed by the agent before the code
+          # PR is opened. Release-only commits are excluded from push validation.
+          DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES: ""
         run: |
           if [ ! -d .decapod ]; then
             decapod init --proof
           fi
           decapod validate --refresh-specs
       - name: Ensure no spec or entrypoint drift
-        # PR-only: post-merge must not fail because a newly compiled binary
-        # rewrites fingerprints that release-artifact-sync owns.
+        # PR-only: generated release-bound projections must already be committed
+        # by the agent before review.
         if: github.event_name == 'pull_request'
         # validate rewrites generated_at every run; that is not semantic drift.
         # Normalize it to HEAD before the exit-code check so only real content,

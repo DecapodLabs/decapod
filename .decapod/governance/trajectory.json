@@ -2,7 +2,7 @@
   "schema_version": "1.1.0",
   "run_id": "validation_01KZA9FQ478P3AMTYTEN2PC0CD",
   "intent_id": "intent:validation_01KZA9FQ478P3AMTYTEN2PC0CD",
-  "task_id": "todo_01kz51",
+  "task_id": "cicd_01kzam7c62jy4fk6",
   "original_intent": "Produce proof artifacts for a repository validation completion.",
   "derived_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
   "destination": "validation completion",
@@ -12,14 +12,20 @@
   ],
   "active_boundaries": [
     "No runtime behavior changes; generated release-bound surfaces and validation gates only",
-    "Repository validation and tracked proof artifacts"
+    "Repository validation and tracked proof artifacts",
+    "Workflow and documentation policy only; no runtime behavior or governance invariant changes."
   ],
   "repo_scope": [
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
+    ".github/workflows, .decapod/managed/specs, generated entrypoints and managed Dockerfile",
     "PR #1192 and Decapod validation lifecycle"
   ],
   "inspected_files": [
+    ".github/workflows/ci.yml",
+    ".github/workflows/decapod-validate.yml",
+    ".github/workflows/release-artifact-sync.yml",
+    ".github/workflows/release.yml",
     "src/decapod/core/scaffold.rs",
     "src/decapod/core/validate.rs",
     "src/decapod/core/workspace.rs",
@@ -31,7 +37,12 @@
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
     ".decapod/managed/specs/.manifest.json",
+    ".decapod/managed/specs/OPERATIONS.md",
     ".decapod/managed/specs/VALIDATION.md",
+    ".github/workflows/ci.yml",
+    ".github/workflows/decapod-validate.yml",
+    ".github/workflows/release-artifact-sync.yml",
+    ".github/workflows/release.yml",
     "src/decapod/core/scaffold.rs",
     "src/decapod/core/validate.rs",
     "src/decapod/core/workspace.rs",
@@ -39,7 +50,9 @@
   ],
   "declared_commands": [
     "cargo check --bin decapod",
-    "decapod validate"
+    "decapod validate",
+    "decapod validate --store user --format json",
+    "git diff --check"
   ],
   "tool_calls": [],
   "checks": [
@@ -58,6 +71,10 @@
     {
       "name": "decapod validate",
       "status": "passed"
+    },
+    {
+      "name": "decapod_validate",
+      "status": "failed"
     },
     {
       "name": "decapod_validate_repo",
@@ -86,12 +103,14 @@
   ],
   "evidence": [
     "PR #1192 workflow parse failure reproduced and fixed; release-bound refresh and per-commit bundle gate implemented",
+    "Validation failed only because the first commit lacked governance artifacts; code and generated projections were refreshed.",
     "cargo test --test doc_alignment: 4 passed; cargo test --lib: 267 passed, 1 pre-existing LCM temporary-database failure (no such table: lcm_events); timeout 180s target/debug/decapod validate --refresh-specs: VALIDATE_TIMEOUT_OR_LOCK after bounded 120s; DECAPOD_VALIDATE_SKIP_GIT_GATES=1 target/debug/decapod validate --store user --format json: status ok, fail_count 0, pass_count 172, warnings risk map and watcher audit only",
     "validation epoch ve_042ab9bdd551e257 completed with zero failures",
     "validation epoch ve_37e3e1c0d46a03be completed with zero failures",
     "validation epoch ve_3f4c69bda3266603 completed with zero failures",
     "validation epoch ve_69553b123efa501a completed with zero failures",
     "validation epoch ve_8421ec91be3bd8ca completed with zero failures",
+    "validation epoch ve_889d64ed489f46e8 completed with zero failures",
     "validation epoch ve_c7e8970b4adceaf6 completed with zero failures",
     "validation epoch ve_ddeda231d9c39ab7 completed with zero failures",
     "validation epoch ve_e2b5f17a37815726 completed with zero failures",
@@ -103,16 +122,18 @@
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [
+    "Release-only merges continue to run release publication and package workflows.",
     "The hosted CI split is the authoritative full-suite proof for the existing LCM test; the local failure is environmental and unrelated to this PR."
   ],
-  "proof_status": "partial",
+  "completion_claim": "Workflow boundary is implemented; governance artifacts must be included in the publishable commit.",
+  "proof_status": "failed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "caution"
+    "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:d3c52b1565473d81818be270cbee730bd3ca25c4464d54f0eebd609cd7cffb8d",
+  "artifact_hash": "sha256:3745095c4c0392457108794c3d2badad837f68abd24b30e3bb3dc4a5b1f4f89b",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -292,6 +313,27 @@
       {
         "sequence": 24,
         "event_id": "event:24",
+        "intent_id": "intent:validation_01KZA9FQ478P3AMTYTEN2PC0CD",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZA9FQ478P3AMTYTEN2PC0CD"
+      },
+      {
+        "sequence": 25,
+        "event_id": "event:25",
+        "intent_id": "intent:validation_01KZA9FQ478P3AMTYTEN2PC0CD",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZA9FQ478P3AMTYTEN2PC0CD"
+      },
+      {
+        "sequence": 26,
+        "event_id": "event:26",
+        "intent_id": "intent:validation_01KZA9FQ478P3AMTYTEN2PC0CD",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZA9FQ478P3AMTYTEN2PC0CD"
+      },
+      {
+        "sequence": 27,
+        "event_id": "event:27",
         "intent_id": "intent:validation_01KZA9FQ478P3AMTYTEN2PC0CD",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:validation_01KZA9FQ478P3AMTYTEN2PC0CD"
@@ -724,12 +766,84 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:24"
+          },
+          {
+            "sequence": 25,
+            "action": "trajectory.record",
+            "command": "git diff --check",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "PR #1192 and Decapod validation lifecycle"
+            ],
+            "observations": [
+              ".github/workflows/release-artifact-sync.yml",
+              ".github/workflows/release.yml",
+              ".github/workflows/ci.yml",
+              ".github/workflows/decapod-validate.yml",
+              ".github/workflows/release-artifact-sync.yml",
+              ".github/workflows/release.yml",
+              ".github/workflows/ci.yml",
+              ".github/workflows/decapod-validate.yml",
+              ".decapod/managed/specs/OPERATIONS.md",
+              "Validation failed only because the first commit lacked governance artifacts; code and generated projections were refreshed."
+            ],
+            "proof_refs": [
+              "git_diff_check",
+              "decapod_validate"
+            ],
+            "validation_findings": [
+              "Release-only merges continue to run release publication and package workflows."
+            ],
+            "custody_event_id": "event:25"
+          },
+          {
+            "sequence": 26,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              ".github/workflows, .decapod/managed/specs, generated entrypoints and managed Dockerfile",
+              "PR #1192 and Decapod validation lifecycle"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_889d64ed489f46e8 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:26"
+          },
+          {
+            "sequence": 27,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              ".github/workflows, .decapod/managed/specs, generated entrypoints and managed Dockerfile",
+              "PR #1192 and Decapod validation lifecycle"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_889d64ed489f46e8 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:27"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 24
+    "next_sequence": 27
   }
 }
