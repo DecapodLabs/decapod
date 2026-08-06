@@ -90,6 +90,12 @@ This document defines the normative operational contracts for the Decapod CLI.
 ### Operation: `WorkspaceStatus`
 ### Operation: `WorkspaceEnsure`
 ### Operation: `WorkspacePublish`
+
+Publication uses an ordinary fast-forward Git push. Decapod never force-pushes a
+governed workspace branch. If the remote rejects the push as non-fast-forward,
+inspect and reconcile the divergence in the workspace, rerun validation, and
+retry publication. Do not use `git push --force` or `git push --force-with-lease`;
+stop for human judgment if shared history would need to be rewritten.
 ### Operation: `ContextResolve`
 ### Operation: `ContextCapsuleQuery`
 ### Operation: `ContextBundleExport`

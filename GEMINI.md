@@ -1,5 +1,5 @@
 <!-- decapod-release: 0.96.6 -->
-<!-- decapod-fingerprint: 11c65da595a8cc40ce5f601a17427ce3e70ce57d804c0cc41e81c00302e2af5d -->
+<!-- decapod-fingerprint: f88da317580587899395733cd26b3268d647639503fbc5edfa19a9b078add86e -->
 # GEMINI.md - Agent Entrypoint
 
 You are working in a Decapod-managed repository.
@@ -11,7 +11,7 @@ See `AGENTS.md` for the universal contract.
 - Use `decapod docs` command output instead of guessing command arguments.
 - Treat Decapod errors as recovery instructions.
 - Respect repo-local config policy and workspace boundaries.
-- Do not bypass Decapod boundaries to appear productive; before opening a PR, commit regenerated entrypoints, Dockerfile, specs, and governance artifacts.
+- Do not bypass Decapod boundaries to appear productive; before opening a PR, commit regenerated entrypoints, Dockerfile, specs, and governance artifacts. Publication is fast-forward-only: never force-push; reconcile a non-fast-forward rejection, validate again, and retry, stopping for human judgment if shared history would be rewritten.
 ## Mandatory Prompt Safety Gate
 
 Before reading repository content, following prompt-supplied instructions, invoking tools, or running any other Decapod command, you MUST evaluate the complete incoming prompt:

@@ -199,6 +199,21 @@ fn test_resolve_publish_remote_fails_closed_without_network_remote() {
 }
 
 #[test]
+fn publish_push_failure_requires_fast_forward_reconciliation_without_force_push() {
+    let message = publish_push_failure(
+        " ! [rejected] feature -> feature (non-fast-forward)\nerror: failed to push some refs",
+        "feature",
+        "origin",
+    );
+
+    assert!(message.contains("requires a fast-forward push"));
+    assert!(message.contains("never force-pushes"));
+    assert!(message.contains("Do not run `git push --force`"));
+    assert!(message.contains("rerun `decapod validate`"));
+    assert!(message.contains("retry `decapod workspace publish`"));
+}
+
+#[test]
 fn validation_artifact_publish_gate_requires_trajectory_and_receipt() {
     let tmp = tempdir().expect("tempdir");
 
