@@ -55,7 +55,7 @@ is designed, not hoped for: intent, boundaries, durable state, validation,
 recovery, and evidence make trust an architectural property of the delivery
 path.
 
-## Product definition
+## What Decapod is
 
 > Decapod is a repo-native governance kernel that turns human intent into bounded, durable, and proof-backed agent work.
 
@@ -64,7 +64,7 @@ and recovery. AI agents improve that interface, but natural language alone does
 not prevent drift, lost context, conflicting work, or false completion. Decapod
 moves those execution burdens into governed repository state.
 
-## Product statement
+## Why you need Decapod
 
 > The model can reason. Decapod makes the agent converge.
 
@@ -91,7 +91,7 @@ blocks publication when required conditions are not satisfied. The repository
 preserves the state and history that let the work continue across processes,
 models, harnesses, and Decapod invocations.
 
-## Product boundaries
+## Boundaries
 
 Decapod is not an autonomous coding agent, LLM, inference engine, orchestration
 framework, daemon, prompt library, coding assistant, project-management system,
@@ -99,7 +99,7 @@ or replacement for an agent harness. It governs work performed by agents.
 
 ---
 
-## How it works
+## How Decapod works
 
 An agent task may span many Decapod invocations. Each CLI or RPC invocation is
 ephemeral. Decapod intentionally runs without a daemon; durable execution state
@@ -175,7 +175,7 @@ state transition, and agent-reported completion is not proof that it occurred.
 
 ---
 
-## The substrate
+## Substrate
 
 `.decapod/` holds the durable state of governed agent work:
 
@@ -207,10 +207,10 @@ the work reviewable and publishable by turning governance into repository state.
 
 ---
 
-## The constitution
+## The Constitution
 
 Decapod ships with an embedded engineering constitution —
-architecture, security, performance, and testing as queryable doctrine.
+architecture, security, performance, research, and testing as queryable doctrine.
 
 Agents consult it, cite claims, follow gates, and produce proof.
 Judgment remains human. Authority is explicit:
