@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.96.7](https://github.com/DecapodLabs/decapod/compare/v0.96.6...v0.96.7) - 2026-08-06
+
+### Fixed
+
+- satisfy clippy in promotion diagnostics
+- make workspace promotion fast-forward only
+- make stale-spec recovery actionable
+
 ## [0.96.6](https://github.com/DecapodLabs/decapod/compare/v0.96.5...v0.96.6) - 2026-08-06
 
 ### Other
