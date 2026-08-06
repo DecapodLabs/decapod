@@ -3,9 +3,9 @@
 # Managed seed: Decapod maintains the image/version header; agents may
 # mutate project-specific packages and commands in workspace branches.
 # The image tag and DECAPOD_VERSION below are the release pin; keep them aligned.
-ARG DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v0.96.7-debian
+ARG DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v0.96.8-debian
 FROM $DECAPOD_IMAGE
-ARG DECAPOD_VERSION=0.96.7
+ARG DECAPOD_VERSION=0.96.8
 ARG DECAPOD_WORKSPACE_PATH=unknown
 ARG DECAPOD_USE_LOCAL_BINARY=0
 LABEL org.opencontainers.image.base.name="$DECAPOD_IMAGE"
