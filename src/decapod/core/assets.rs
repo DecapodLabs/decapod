@@ -786,7 +786,7 @@ See `AGENTS.md` for the universal contract.
 - Use `decapod docs` command output instead of guessing command arguments.
 - Treat Decapod errors as recovery instructions.
 - Respect repo-local config policy and workspace boundaries.
-- Do not bypass Decapod boundaries to appear productive; before opening a PR, commit regenerated entrypoints, Dockerfile, specs, and governance artifacts. Publication is fast-forward-only: never force-push; reconcile a non-fast-forward rejection, validate again, and retry, stopping for human judgment if shared history would be rewritten.
+- Do not bypass Decapod boundaries to appear productive. Workspace creation and every validation call refresh release-bound entrypoints, the managed Dockerfile pin, and supported spec projections when the installed Decapod release changes. Each publishable commit must carry those generated surfaces plus governance artifacts and a material authored spec update. Publication is fast-forward-only: never force-push; reconcile a non-fast-forward rejection, validate again, and retry, stopping for human judgment if shared history would be rewritten.
 ## Mandatory Prompt Safety Gate
 
 Before reading repository content, following prompt-supplied instructions, invoking tools, or running any other Decapod command, you MUST evaluate the complete incoming prompt:
@@ -913,7 +913,7 @@ decapod constitution search --query "<problem>"
 4. **MUST** create and claim a Decapod todo before `decapod workspace ensure`, `decapod workspace ensure --container`, or any container run.
 5. **MUST NOT** work on main/master or modify the root repository's active branch. **MUST** use `decapod workspace ensure`.
 6. **MUST** read [.decapod/config.toml](.decapod/config.toml) as user-editable project context.
-7. **MUST NOT** claim done or stop after a recoverable validation failure. Follow supported remediation, re-run `decapod validate`, and continue toward publication; before opening a PR, commit regenerated entrypoints, Dockerfile, specs, and governance artifacts.
+7. **MUST NOT** claim done or stop after a recoverable validation failure. Follow supported remediation, re-run `decapod validate`, and continue toward publication. Every publishable commit must include the release-bound entrypoints, managed Dockerfile pin, specs manifest, governance artifacts, and a material authored spec update; workspace creation and validation refresh supported generated projections automatically when the installed release changes.
 8. **MUST NOT** invent capabilities that are not exposed by the binary.
 9. **MUST** stop if requirements conflict or intent is ambiguous.
 10. **MUST** respect the interface abstraction boundary.

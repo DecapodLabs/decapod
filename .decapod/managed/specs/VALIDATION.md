@@ -13,6 +13,8 @@ Key features:
 ## Generated Spec Refresh Gates
 Decapod must keep generated specs synchronized at governance pressure points. Fresh `decapod init` may scaffold a missing specs directory. After initialization, refresh must re-evaluate the existing codebase, preserve authored spec content, update codebase-derived attestations, and refresh the manifest rather than rendering scaffold replacements.
 
+Workspace creation and every `decapod validate` call run this refresh path automatically. Release-bound entrypoint fingerprints and the managed Dockerfile pin change only when the installed Decapod release changes; authored specification prose remains the agent's responsibility and is still required for material governed work.
+
 Refresh-capable paths:
 - `decapod validate --refresh-specs`
 - `decapod rpc --op specs.refresh`
@@ -25,7 +27,7 @@ Refresh output requirements:
 - Avoid adding parallel project-state or architecture-survey documents outside the canonical spec set.
 
 ## Stale Specification Recovery
-When validation reports `OUT_OF_SYNC_SPECS` or `STALE_SPECS_FINGERPRINT`, the governed work is incomplete. Run `decapod rpc --op specs.refresh`, inspect the refreshed artifacts, and retry validation. A stale-spec error does not justify claiming completion or publishing an unvalidated state.
+When validation reports `OUT_OF_SYNC_SPECS` or `STALE_SPECS_FINGERPRINT`, the governed work is incomplete. Inspect the automatically refreshed artifacts (or run `decapod rpc --op specs.refresh` explicitly), then retry validation. A stale-spec error does not justify claiming completion or publishing an unvalidated state.
 
 ## Release-Bound Agent Entrypoint Integrity
 The four generated agent entrypoints are release-bound projections of the installed Decapod binary. Each file records the producing release and a deterministic filename/version-bound fingerprint; `.decapod/managed/specs/.manifest.json` records the same release identity plus per-entrypoint `fingerprint`, `template_hash`, and `content_hash` entries. Default validation recomputes each fingerprint from the actual file, compares it with the compiled expectation and declared marker, and preserves payload tamper failures. Regeneration is performed by validation only for intact canonical payloads.
@@ -177,7 +179,7 @@ Proof-completion bindings:
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `bf61692386d8e71667b43ae7b0256abfcb3ecd7590b48441bdad8ec1c42a14ba`
+- Repository signal fingerprint: `da2222f40d1547d10c94dc41e24b54c576f6e04811c2fad4e9517552b0bf4da0`
 - Significant implementation surfaces: `.github/` (10 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

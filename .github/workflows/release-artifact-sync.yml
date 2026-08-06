@@ -180,17 +180,17 @@ jobs:
               --title "chore: sync release-bound entrypoints and living specs" \
               --label release \
               --body "$(cat <<'EOF'
-## Summary
-Automated heal of release-bound entrypoint pins, managed Dockerfile headers, and living-spec attestations after a master version/pin drift.
+              ## Summary
+              Automated heal of release-bound entrypoint pins, managed Dockerfile headers, and living-spec attestations after a master version/pin drift.
 
-Master is ruleset-protected (PR required, signed commits). This PR is the only supported way for CI to land release-bound regenerations.
+              Master is ruleset-protected (PR required, signed commits). This PR is the only supported way for CI to land release-bound regenerations.
 
-## Test plan
-- [ ] Confirm AGENTS/CLAUDE/CODEX/GEMINI release pins match Cargo.toml
-- [ ] Confirm .decapod/managed/Dockerfile.decapod pins match
-- [ ] Merge after review (release label skips material-specs/governance artifact gates)
-EOF
-)"
+              ## Test plan
+              - [ ] Confirm AGENTS/CLAUDE/CODEX/GEMINI release pins match Cargo.toml
+              - [ ] Confirm .decapod/managed/Dockerfile.decapod pins match
+              - [ ] Merge after review (release label skips material-specs/governance artifact gates)
+              EOF
+              )"
           else
             echo "Updated existing open PR for ${BRANCH}"
           fi

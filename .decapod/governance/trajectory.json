@@ -2,7 +2,7 @@
   "schema_version": "1.1.0",
   "run_id": "validation_01KZA9FQ478P3AMTYTEN2PC0CD",
   "intent_id": "intent:validation_01KZA9FQ478P3AMTYTEN2PC0CD",
-  "task_id": "todo_01kz9v",
+  "task_id": "todo_01kz51",
   "original_intent": "Produce proof artifacts for a repository validation completion.",
   "derived_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
   "destination": "validation completion",
@@ -11,15 +11,19 @@
     "publish"
   ],
   "active_boundaries": [
+    "No runtime behavior changes; generated release-bound surfaces and validation gates only",
     "Repository validation and tracked proof artifacts"
   ],
   "repo_scope": [
     ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json"
+    ".decapod/governance/validation.json",
+    "PR #1192 and Decapod validation lifecycle"
   ],
   "inspected_files": [
     "src/decapod/core/scaffold.rs",
-    "src/decapod/core/validate.rs"
+    "src/decapod/core/validate.rs",
+    "src/decapod/core/workspace.rs",
+    "src/decapod/plugins/container.rs"
   ],
   "modified_files": [
     ".decapod/governance/claims.json",
@@ -29,13 +33,20 @@
     ".decapod/managed/specs/.manifest.json",
     ".decapod/managed/specs/VALIDATION.md",
     "src/decapod/core/scaffold.rs",
-    "src/decapod/core/validate.rs"
+    "src/decapod/core/validate.rs",
+    "src/decapod/core/workspace.rs",
+    "src/decapod/plugins/container.rs"
   ],
   "declared_commands": [
+    "cargo check --bin decapod",
     "decapod validate"
   ],
   "tool_calls": [],
   "checks": [
+    {
+      "name": "cargo_check",
+      "status": "passed"
+    },
     {
       "name": "cargo_fmt",
       "status": "passed"
@@ -67,10 +78,16 @@
     {
       "name": "specs_refresh",
       "status": "passed"
+    },
+    {
+      "name": "workflow_actionlint",
+      "status": "passed"
     }
   ],
   "evidence": [
+    "PR #1192 workflow parse failure reproduced and fixed; release-bound refresh and per-commit bundle gate implemented",
     "cargo test --test doc_alignment: 4 passed; cargo test --lib: 267 passed, 1 pre-existing LCM temporary-database failure (no such table: lcm_events); timeout 180s target/debug/decapod validate --refresh-specs: VALIDATE_TIMEOUT_OR_LOCK after bounded 120s; DECAPOD_VALIDATE_SKIP_GIT_GATES=1 target/debug/decapod validate --store user --format json: status ok, fail_count 0, pass_count 172, warnings risk map and watcher audit only",
+    "validation epoch ve_042ab9bdd551e257 completed with zero failures",
     "validation epoch ve_37e3e1c0d46a03be completed with zero failures",
     "validation epoch ve_3f4c69bda3266603 completed with zero failures",
     "validation epoch ve_69553b123efa501a completed with zero failures",
@@ -95,7 +112,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:c892bc183fecfebb400285975ee39e03383704bfb984c44c2c8901c04653215d",
+  "artifact_hash": "sha256:d3c52b1565473d81818be270cbee730bd3ca25c4464d54f0eebd609cd7cffb8d",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -247,6 +264,34 @@
       {
         "sequence": 20,
         "event_id": "event:20",
+        "intent_id": "intent:validation_01KZA9FQ478P3AMTYTEN2PC0CD",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZA9FQ478P3AMTYTEN2PC0CD"
+      },
+      {
+        "sequence": 21,
+        "event_id": "event:21",
+        "intent_id": "intent:validation_01KZA9FQ478P3AMTYTEN2PC0CD",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZA9FQ478P3AMTYTEN2PC0CD"
+      },
+      {
+        "sequence": 22,
+        "event_id": "event:22",
+        "intent_id": "intent:validation_01KZA9FQ478P3AMTYTEN2PC0CD",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZA9FQ478P3AMTYTEN2PC0CD"
+      },
+      {
+        "sequence": 23,
+        "event_id": "event:23",
+        "intent_id": "intent:validation_01KZA9FQ478P3AMTYTEN2PC0CD",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZA9FQ478P3AMTYTEN2PC0CD"
+      },
+      {
+        "sequence": 24,
+        "event_id": "event:24",
         "intent_id": "intent:validation_01KZA9FQ478P3AMTYTEN2PC0CD",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:validation_01KZA9FQ478P3AMTYTEN2PC0CD"
@@ -595,12 +640,96 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:20"
+          },
+          {
+            "sequence": 21,
+            "action": "implementation",
+            "command": "cargo check --bin decapod",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              "src/decapod/core/validate.rs",
+              "src/decapod/core/workspace.rs",
+              "src/decapod/plugins/container.rs",
+              "src/decapod/core/validate.rs",
+              "src/decapod/core/workspace.rs",
+              "src/decapod/plugins/container.rs",
+              "PR #1192 workflow parse failure reproduced and fixed; release-bound refresh and per-commit bundle gate implemented"
+            ],
+            "proof_refs": [
+              "cargo_check",
+              "workflow_actionlint"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:21"
+          },
+          {
+            "sequence": 22,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "PR #1192 and Decapod validation lifecycle"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_042ab9bdd551e257 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:22"
+          },
+          {
+            "sequence": 23,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "PR #1192 and Decapod validation lifecycle"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_042ab9bdd551e257 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:23"
+          },
+          {
+            "sequence": 24,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "PR #1192 and Decapod validation lifecycle"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_042ab9bdd551e257 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:24"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 20
+    "next_sequence": 24
   }
 }

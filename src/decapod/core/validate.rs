@@ -2148,6 +2148,7 @@ fn validate_project_specs_docs(
     // After freshness checks, enforce material mutation versus the PR base when
     // this is an isolated feature branch with a resolvable base.
     validate_material_specs_mutation(ctx, repo_root)?;
+    validate_per_commit_publication_bundle(ctx, repo_root)?;
 
     let architecture_path = repo_root.join(LOCAL_PROJECT_SPECS_ARCHITECTURE);
     if architecture_path.exists() {
@@ -2593,6 +2594,152 @@ fn validate_material_specs_mutation(
                 "FINGERPRINT_ONLY_SPECS: no material authored-content change under .decapod/managed/specs/*.md versus '{base_ref}'. \
 Fingerprint/attestation-only refresh is insufficient (fingerprint-only paths: {fingerprint_only}). \
 Rewrite at least one living spec to reflect this change (INTENT/ARCHITECTURE/INTERFACES/VALIDATION/SEMANTICS/OPERATIONS/SECURITY/README), then run `decapod rpc --op specs.refresh`."
+            ),
+            ctx,
+        );
+    }
+    Ok(())
+}
+
+/// Require every publishable commit to carry the complete governed publication
+/// bundle. This keeps a PR's first commit self-contained instead of allowing
+/// release-bound fingerprints, specs, Dockerfile pins, or proof artifacts to
+/// appear only in a later repair commit.
+fn validate_per_commit_publication_bundle(
+    ctx: &ValidationContext,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Per-Commit Publication Bundle Gate", ctx);
+
+    if std::env::var("DECAPOD_VALIDATE_SKIP_GIT_GATES").is_ok() {
+        skip(
+            "Per-commit publication bundle gate skipped (DECAPOD_VALIDATE_SKIP_GIT_GATES set)",
+            ctx,
+        );
+        return Ok(());
+    }
+
+    if !is_inside_git_work_tree(repo_root) {
+        skip(
+            "Not inside a git work tree; skipping per-commit publication bundle gate",
+            ctx,
+        );
+        return Ok(());
+    }
+
+    let status = match workspace::get_workspace_status(repo_root) {
+        Ok(status) => status,
+        Err(_) => {
+            skip(
+                "Workspace status unavailable; skipping per-commit publication bundle gate",
+                ctx,
+            );
+            return Ok(());
+        }
+    };
+    if status.git.is_protected {
+        skip(
+            "On protected base branch; no publishable commit bundle to inspect",
+            ctx,
+        );
+        return Ok(());
+    }
+
+    let base_branch = workspace::resolve_base_branch(repo_root, None);
+    let Some(base_ref) = workspace::base_ref_for_branch(repo_root, &base_branch) else {
+        skip(
+            &format!(
+                "Base branch '{base_branch}' unavailable; skipping per-commit publication bundle gate"
+            ),
+            ctx,
+        );
+        return Ok(());
+    };
+
+    let git_dir = repo_root.to_str().unwrap_or(".");
+    let rev_list = std::process::Command::new("git")
+        .args([
+            "-C",
+            git_dir,
+            "rev-list",
+            "--reverse",
+            &format!("{base_ref}..HEAD"),
+        ])
+        .output()
+        .map_err(error::DecapodError::IoError)?;
+    if !rev_list.status.success() {
+        skip(
+            "Unable to enumerate feature-branch commits; skipping per-commit publication bundle gate",
+            ctx,
+        );
+        return Ok(());
+    }
+
+    let required_files = [
+        "AGENTS.md",
+        "CLAUDE.md",
+        "CODEX.md",
+        "GEMINI.md",
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json",
+        ".decapod/governance/claims.json",
+        ".decapod/governance/plan.json",
+        ".decapod/governance/trajectory.json",
+        ".decapod/governance/validation.json",
+    ];
+    let mut failures = Vec::new();
+    for commit in String::from_utf8_lossy(&rev_list.stdout)
+        .lines()
+        .map(str::trim)
+    {
+        if commit.is_empty() {
+            continue;
+        }
+        let changed = std::process::Command::new("git")
+            .args([
+                "-C",
+                git_dir,
+                "diff-tree",
+                "--no-commit-id",
+                "--name-only",
+                "-r",
+                "--root",
+                commit,
+            ])
+            .output()
+            .map_err(error::DecapodError::IoError)?;
+        if !changed.status.success() {
+            failures.push(format!("{commit}: unable to inspect changed paths"));
+            continue;
+        }
+        let changed_paths = String::from_utf8_lossy(&changed.stdout);
+        let paths = changed_paths.lines().map(str::trim).collect::<HashSet<_>>();
+        let mut missing = required_files
+            .iter()
+            .filter(|path| !paths.contains(**path))
+            .map(|path| (*path).to_string())
+            .collect::<Vec<_>>();
+        if !paths
+            .iter()
+            .any(|path| path.starts_with(".decapod/managed/specs/") && path.ends_with(".md"))
+        {
+            missing.push(".decapod/managed/specs/*.md".to_string());
+        }
+        if !missing.is_empty() {
+            failures.push(format!("{commit}: missing {}", missing.join(", ")));
+        }
+    }
+
+    if failures.is_empty() {
+        pass(
+            "Every feature-branch commit carries fingerprints, specs, Dockerfile pin, and governance artifacts",
+            ctx,
+        );
+    } else {
+        fail(
+            &format!(
+                "PER_COMMIT_PUBLICATION_BUNDLE: each commit must carry the release-bound entrypoints, managed Dockerfile, specs, and governance artifacts. {}. Amend or squash the branch so the first publishable commit is complete, then rerun `decapod validate`.",
+                failures.join("; ")
             ),
             ctx,
         );

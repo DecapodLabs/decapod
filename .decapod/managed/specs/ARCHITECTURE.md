@@ -143,7 +143,7 @@ sequenceDiagram
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `bf61692386d8e71667b43ae7b0256abfcb3ecd7590b48441bdad8ec1c42a14ba`
+- Repository signal fingerprint: `da2222f40d1547d10c94dc41e24b54c576f6e04811c2fad4e9517552b0bf4da0`
 - Significant implementation surfaces: `.github/` (10 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

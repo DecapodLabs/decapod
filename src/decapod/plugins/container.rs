@@ -738,6 +738,45 @@ pub fn prepare_generated_container_profile(repo: &Path) -> Result<PathBuf, error
     Ok(dockerfile)
 }
 
+/// Refresh only the release-bound header of the managed workspace Dockerfile.
+/// Project-specific packages and commands remain authored workspace content.
+pub fn refresh_managed_dockerfile_release(repo: &Path) -> Result<bool, error::DecapodError> {
+    let dockerfile = managed_dockerfile_path(repo);
+    if !dockerfile.exists() {
+        prepare_generated_container_profile(repo)?;
+        return Ok(true);
+    }
+
+    let current = fs::read_to_string(&dockerfile).map_err(error::DecapodError::IoError)?;
+    let expected = generated_dockerfile_for_repo(repo);
+    let expected_image = dockerfile_arg_value(&expected, "DECAPOD_IMAGE").ok_or_else(|| {
+        error::DecapodError::ValidationError(
+            "generated managed Dockerfile is missing DECAPOD_IMAGE".to_string(),
+        )
+    })?;
+    let expected_version = expected_managed_decapod_version();
+    let mut updated = String::with_capacity(current.len());
+    let mut changed = false;
+    for line in current.lines() {
+        if line.trim_start().starts_with("ARG DECAPOD_IMAGE=") {
+            let replacement = format!("ARG DECAPOD_IMAGE={expected_image}");
+            changed |= line != replacement;
+            updated.push_str(&replacement);
+        } else if line.trim_start().starts_with("ARG DECAPOD_VERSION=") {
+            let replacement = format!("ARG DECAPOD_VERSION={expected_version}");
+            changed |= line != replacement;
+            updated.push_str(&replacement);
+        } else {
+            updated.push_str(line);
+        }
+        updated.push('\n');
+    }
+    if changed {
+        fs::write(&dockerfile, updated).map_err(error::DecapodError::IoError)?;
+    }
+    Ok(changed)
+}
+
 pub fn managed_dockerfile_path(repo: &Path) -> PathBuf {
     repo.join(MANAGED_DOCKERFILE_REL_PATH)
 }
@@ -1036,6 +1075,7 @@ fn render_generated_dockerfile(capabilities: &ProjectCapabilities) -> String {
          # Managed seed: Decapod maintains the image/version header; agents may\n\
          # mutate project-specific packages and commands in workspace branches.\n\
          # The image tag and DECAPOD_VERSION below are the release pin; keep them aligned.\n\
+         # Workspace creation and validation refresh this pin only when the evaluating Decapod release changes.\n\
          ARG DECAPOD_IMAGE={decapod_image}\n\
          FROM $DECAPOD_IMAGE\n\
          ARG DECAPOD_VERSION={decapod_version}\n\

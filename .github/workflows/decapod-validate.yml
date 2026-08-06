@@ -30,10 +30,6 @@ jobs:
           # hard-fails here; PRs still enforce release-bound pins + drift.
           DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES: ${{ github.event_name == 'push' && '1' || '' }}
         run: |
-          # Do not use `init --force` here: force-scaffold rewrites living specs
-          # and entrypoints non-deterministically relative to a pure validate
-          # refresh, which is exactly what the drift gate below forbids.
-          # Bootstrap only when the control-plane layout is missing.
           if [ ! -d .decapod ]; then
             decapod init --proof
           fi
@@ -45,10 +41,6 @@ jobs:
         # validate rewrites generated_at every run; that is not semantic drift.
         # Normalize it to HEAD before the exit-code check so only real content,
         # entrypoint, Dockerfile, or manifest hash drift fails CI.
-        # Post-release failures usually mean the release PR bumped Cargo.toml
-        # without committing regenerated release-bound entrypoints/specs —
-        # run `cargo build --release && ./target/release/decapod validate --refresh-specs`
-        # and commit the result (or use the release-artifact-sync workflow).
         run: |
           set -euo pipefail
           MANIFEST=".decapod/managed/specs/.manifest.json"
@@ -59,7 +51,7 @@ jobs:
             fi
           fi
           if ! git diff --exit-code -- . ':!.decapod/governance/'; then
-            echo "::error::Release-bound or living-spec drift detected after validate --refresh-specs."
-            echo "Commit the regenerated AGENTS.md/CLAUDE.md/CODEX.md/GEMINI.md, managed Dockerfile, and .decapod/managed/specs/* from the evaluating binary."
+            echo "::error::Release-bound or living-spec drift after validate --refresh-specs."
+            echo "Commit regenerated entrypoints and .decapod/managed/specs from the evaluating binary."
             exit 1
           fi

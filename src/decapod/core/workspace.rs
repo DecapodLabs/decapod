@@ -7,6 +7,7 @@
 
 use crate::core::container_runtime;
 use crate::core::db;
+use crate::core::entrypoint_integrity;
 use crate::core::error::DecapodError;
 use crate::core::project_specs;
 use crate::core::research_claims;
@@ -15,6 +16,7 @@ use crate::core::todo;
 use crate::core::trajectory;
 use crate::core::workunit::{self, WorkUnitStatus};
 use crate::plan_governance;
+use crate::plugins::container;
 use crate::plugins::eval;
 use fancy_regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -426,6 +428,17 @@ fn ensure_assigned_open_tasks(
     Ok(assigned_todos)
 }
 
+/// Refresh release-bound projections immediately after a workspace is created.
+/// This keeps a new worktree aligned with the Decapod binary that will govern it
+/// without rewriting agent-authored specification prose.
+fn refresh_workspace_release_surfaces(worktree_path: &Path) -> Result<(), DecapodError> {
+    entrypoint_integrity::refresh_entrypoint_metadata(worktree_path)?;
+    let config = crate::cli::DecapodProjectConfig::load(worktree_path)?;
+    project_specs::refresh_specs_from_codebase(worktree_path, &config.repo.capabilities)?;
+    container::refresh_managed_dockerfile_release(worktree_path)?;
+    Ok(())
+}
+
 fn claim_branch_scoped_open_tasks(
     repo_root: &Path,
     agent_id: &str,
@@ -583,6 +596,8 @@ pub fn ensure_workspace(
             .unwrap_or_else(|| resolve_base_branch(&main_repo, None));
         create_worktree(repo_root, branch, agent_id, &todo_scope, &base_branch)?
     };
+
+    refresh_workspace_release_surfaces(&worktree_path)?;
 
     // 2. Ensure container (if requested)
     if config.use_container {
