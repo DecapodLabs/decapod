@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.96.13](https://github.com/DecapodLabs/decapod/compare/v0.96.12...v0.96.13) - 2026-08-06
+
+### Other
+
+- include claims governance artifact
+- speed project validation installs
+
 ## [0.96.12](https://github.com/DecapodLabs/decapod/compare/v0.96.11...v0.96.12) - 2026-08-06
 
 ### Other
