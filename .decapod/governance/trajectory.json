@@ -71,8 +71,10 @@
   ],
   "evidence": [
     "cargo test --test doc_alignment: 4 passed; cargo test --lib: 267 passed, 1 pre-existing LCM temporary-database failure (no such table: lcm_events); timeout 180s target/debug/decapod validate --refresh-specs: VALIDATE_TIMEOUT_OR_LOCK after bounded 120s; DECAPOD_VALIDATE_SKIP_GIT_GATES=1 target/debug/decapod validate --store user --format json: status ok, fail_count 0, pass_count 172, warnings risk map and watcher audit only",
+    "validation epoch ve_37e3e1c0d46a03be completed with zero failures",
     "validation epoch ve_3f4c69bda3266603 completed with zero failures",
     "validation epoch ve_69553b123efa501a completed with zero failures",
+    "validation epoch ve_8421ec91be3bd8ca completed with zero failures",
     "validation epoch ve_c7e8970b4adceaf6 completed with zero failures",
     "validation epoch ve_ddeda231d9c39ab7 completed with zero failures",
     "validation epoch ve_e2b5f17a37815726 completed with zero failures",
@@ -93,7 +95,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:1bd9397e3d02330c9ad687788314bc8c5241b7999494b8c1f9998a498d79d157",
+  "artifact_hash": "sha256:c892bc183fecfebb400285975ee39e03383704bfb984c44c2c8901c04653215d",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -231,6 +233,20 @@
       {
         "sequence": 18,
         "event_id": "event:18",
+        "intent_id": "intent:validation_01KZA9FQ478P3AMTYTEN2PC0CD",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZA9FQ478P3AMTYTEN2PC0CD"
+      },
+      {
+        "sequence": 19,
+        "event_id": "event:19",
+        "intent_id": "intent:validation_01KZA9FQ478P3AMTYTEN2PC0CD",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZA9FQ478P3AMTYTEN2PC0CD"
+      },
+      {
+        "sequence": 20,
+        "event_id": "event:20",
         "intent_id": "intent:validation_01KZA9FQ478P3AMTYTEN2PC0CD",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:validation_01KZA9FQ478P3AMTYTEN2PC0CD"
@@ -541,12 +557,50 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:18"
+          },
+          {
+            "sequence": 19,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_37e3e1c0d46a03be completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:19"
+          },
+          {
+            "sequence": 20,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_8421ec91be3bd8ca completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:20"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 18
+    "next_sequence": 20
   }
 }

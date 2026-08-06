@@ -1465,13 +1465,10 @@ pub fn publish_workspace(
         .output()
         .map_err(DecapodError::IoError)?;
     if !push_output.status.success() {
-        return Err(DecapodError::ValidationError(format!(
-            "{}",
-            publish_push_failure(
-                &String::from_utf8_lossy(&push_output.stderr),
-                &status.git.current_branch,
-                &publish_remote.name,
-            )
+        return Err(DecapodError::ValidationError(publish_push_failure(
+            &String::from_utf8_lossy(&push_output.stderr),
+            &status.git.current_branch,
+            &publish_remote.name,
         )));
     }
 
