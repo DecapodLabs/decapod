@@ -125,7 +125,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:ff02c26cd82154010f7cb2447ec7c4a27e8c98119170b08ac9566aed254fb02f",
+  "artifact_hash": "sha256:cf76bc53c0ce38269ed35874795cfb2efb6de8ff005ec1d1b5ad7acfccee3634",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -192,6 +192,13 @@
       {
         "sequence": 8,
         "event_id": "event:8",
+        "intent_id": "intent:docs-positioning-1785972330",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:docs-positioning-1785972330"
+      },
+      {
+        "sequence": 9,
+        "event_id": "event:9",
         "intent_id": "intent:docs-positioning-1785972330",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:docs-positioning-1785972330"
@@ -292,12 +299,30 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:8"
+          },
+          {
+            "sequence": 9,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "README.md, mdBook, docs/architecture, docs/agents, governance docs, agent instruction sources, generated documentation sources, living specs, and GitHub description."
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_b749e820dd07b7e9 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:9"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 8
+    "next_sequence": 9
   }
 }
