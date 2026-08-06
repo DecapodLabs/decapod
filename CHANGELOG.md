@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.96.14](https://github.com/DecapodLabs/decapod/compare/v0.96.13...v0.96.14) - 2026-08-06
+
+### Other
+
+- run pull request checks from manual dispatch
+- *(governance)* refresh specs after CI trigger update
+- document pull request check trigger
+- *(governance)* record final storage seam validation
+- *(storage)* prepare dactyl migration seams
+
 ## [0.96.13](https://github.com/DecapodLabs/decapod/compare/v0.96.12...v0.96.13) - 2026-08-06
 
 ### Other
