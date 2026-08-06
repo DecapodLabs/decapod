@@ -103,6 +103,7 @@
     "Container validation with git publication gates suppressed passed 189 gates with zero failures; three pre-existing warnings remain for audit divergence, missing risk map, and missing watcher audit.",
     "Focused Rust tests passed; full cargo test --lib retained three unrelated baseline failures; decapod validate reached the bounded timeout and reported container_workspace_required plus a pre-existing markdown primitive database-lock failure.",
     "Full unsuppressed container validation passed with zero failures.",
+    "validation epoch ve_30682e0aa29dfa14 completed with zero failures",
     "validation epoch ve_435a7e474d6e9f96 completed with zero failures",
     "validation epoch ve_88666043aaa85c01 completed with zero failures"
   ],
@@ -120,7 +121,7 @@
     "shortcut_risk": "caution",
     "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:600a518528fe8316219ef640fccec5e72d8cb5d6198197dc4afd5d94b0f3d264",
+  "artifact_hash": "sha256:dc9d9a15f41740d17ff5afd6de1b9f5af2cbe152f1a97863eb55475f33682362",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -243,6 +244,13 @@
       {
         "sequence": 16,
         "event_id": "event:16",
+        "intent_id": "intent:storage-policy-01kzc8xd0thvgpmy",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:storage-policy-01kzc8xd0thvgpmy"
+      },
+      {
+        "sequence": 17,
+        "event_id": "event:17",
         "intent_id": "intent:storage-policy-01kzc8xd0thvgpmy",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:storage-policy-01kzc8xd0thvgpmy"
@@ -502,12 +510,30 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:16"
+          },
+          {
+            "sequence": 17,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src/decapod/core, tests, living specs, and issue/PR documentation"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_30682e0aa29dfa14 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:17"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 16
+    "next_sequence": 17
   }
 }
