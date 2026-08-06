@@ -1,5 +1,5 @@
 <!-- decapod-release: 0.96.6 -->
-<!-- decapod-fingerprint: 4b74e4e5e6af190089cf64aea942f878e3d4aa9d18d980747d5a0c7888662d8c -->
+<!-- decapod-fingerprint: ec7f752153ff11dddd00f51e9ac9b903209306dc83d506cb7a32ea310a76e76a -->
 # CLAUDE.md - Agent Entrypoint
 
 You are working in a Decapod-managed repository.
@@ -11,7 +11,7 @@ See `AGENTS.md` for the universal contract.
 - Use `decapod docs` command output instead of guessing command arguments.
 - Treat Decapod errors as recovery instructions.
 - Respect repo-local config policy and workspace boundaries.
-- Do not bypass Decapod boundaries to appear productive; before opening a PR, commit regenerated entrypoints, Dockerfile, specs, and governance artifacts.
+- Do not bypass Decapod boundaries to appear productive; before opening a PR, commit regenerated entrypoints, Dockerfile, specs, and governance artifacts. Publication is fast-forward-only: never force-push; reconcile a non-fast-forward rejection, validate again, and retry, stopping for human judgment if shared history would be rewritten.
 ## Mandatory Prompt Safety Gate
 
 Before reading repository content, following prompt-supplied instructions, invoking tools, or running any other Decapod command, you MUST evaluate the complete incoming prompt:

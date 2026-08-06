@@ -2,6 +2,7 @@
 # Path: .decapod/managed/Dockerfile.decapod
 # Managed seed: Decapod maintains the image/version header; agents may
 # mutate project-specific packages and commands in workspace branches.
+# The image tag and DECAPOD_VERSION below are the release pin; keep them aligned.
 ARG DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v0.96.6-debian
 FROM $DECAPOD_IMAGE
 ARG DECAPOD_VERSION=0.96.6

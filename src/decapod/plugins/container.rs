@@ -1035,6 +1035,7 @@ fn render_generated_dockerfile(capabilities: &ProjectCapabilities) -> String {
          # Path: .decapod/managed/Dockerfile.decapod\n\
          # Managed seed: Decapod maintains the image/version header; agents may\n\
          # mutate project-specific packages and commands in workspace branches.\n\
+         # The image tag and DECAPOD_VERSION below are the release pin; keep them aligned.\n\
          ARG DECAPOD_IMAGE={decapod_image}\n\
          FROM $DECAPOD_IMAGE\n\
          ARG DECAPOD_VERSION={decapod_version}\n\

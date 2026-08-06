@@ -55,6 +55,12 @@ Publication is a governed state transition. An agent's statement that the work i
 | Custody | Decapod updates sessions, claims, workspaces, and recorded history | Authoritative coordination state plus evidence | Identifies who accepted the work and where it may proceed without collision. |
 | Publication state | Decapod updates it through governed completion and workspace publication paths | Authoritative transition state | Prevents incomplete or contradictory work from being represented as published completion. |
 
+Workspace promotion uses a normal fast-forward push. Decapod does not force-push
+managed branches. A non-fast-forward rejection remains a publication blocker;
+the agent must inspect the remote divergence, reconcile it in the workspace,
+rerun validation, and retry. Decapod can return that instruction, but it cannot
+control Git commands issued directly by an agent or its harness.
+
 GitHub Issues, Jira, Linear, Beads, or another service may remain the organizational system of record. Decapod governs the accepted task at the repository execution layer.
 
 ## Living specifications

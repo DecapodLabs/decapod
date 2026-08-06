@@ -54,6 +54,10 @@ Display active workspaces, their owners, and their current state.
 
 ### `workspace publish`
 Prepare and bundle changes from an isolated workspace for promotion (PR/merge).
+The promotion push is fast-forward-only. Decapod never force-pushes a governed
+workspace branch. A non-fast-forward rejection is a blocker: reconcile the
+remote divergence, rerun validation, and retry publication rather than rewriting
+shared history.
 
 ---
 

@@ -1353,6 +1353,24 @@ fn resolve_publish_remote(repo_root: &Path) -> Result<PublishRemote, DecapodErro
         })
 }
 
+fn publish_push_failure(stderr: &str, branch: &str, remote: &str) -> String {
+    let detail = stderr.trim();
+    let divergence = detail.contains("non-fast-forward")
+        || detail.contains("fetch first")
+        || detail.contains("rejected")
+        || detail.contains("failed to push some refs");
+
+    if divergence {
+        format!(
+            "Workspace publication requires a fast-forward push and Decapod never force-pushes. Git rejected {remote}/{branch} because the remote branch has diverged: {detail}\nRemediation: do not run `git push --force` or `git push --force-with-lease`. Fetch the remote, inspect the divergence, reconcile it with a reviewed merge or rebase in this workspace, rerun `decapod validate`, and retry `decapod workspace publish`. Stop for human judgment if history would need to be rewritten."
+        )
+    } else {
+        format!(
+            "Failed to push {remote}/{branch}: {detail}\nRemediation: Decapod uses an ordinary fast-forward push and never force-pushes. Inspect the Git error, correct the workspace state, rerun `decapod validate`, and retry `decapod workspace publish`."
+        )
+    }
+}
+
 /// Publish workspace changes: commit, push, and optionally create a PR
 pub fn publish_workspace(
     repo_root: &Path,
@@ -1448,8 +1466,12 @@ pub fn publish_workspace(
         .map_err(DecapodError::IoError)?;
     if !push_output.status.success() {
         return Err(DecapodError::ValidationError(format!(
-            "Failed to push: {}",
-            String::from_utf8_lossy(&push_output.stderr)
+            "{}",
+            publish_push_failure(
+                &String::from_utf8_lossy(&push_output.stderr),
+                &status.git.current_branch,
+                &publish_remote.name,
+            )
         )));
     }
 
