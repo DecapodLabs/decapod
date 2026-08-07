@@ -24,22 +24,37 @@
     "src/decapod/lib.rs",
     "tests"
   ],
-  "inspected_files": [],
+  "inspected_files": [
+    "src/decapod/core/trajectory.rs",
+    "src/decapod/lib.rs"
+  ],
   "modified_files": [
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
     "src/decapod/core/assets.rs",
     "src/decapod/core/scaffold.rs",
+    "src/decapod/core/trajectory.rs",
+    "src/decapod/lib.rs",
     "src/decapod/plugins/container.rs"
   ],
   "declared_commands": [
+    "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings",
     "decapod validate",
+    "decapod validate --refresh-specs",
     "target/debug/decapod init --all --force --proof"
   ],
   "tool_calls": [],
   "checks": [
     {
+      "name": "clippy",
+      "status": "passed"
+    },
+    {
       "name": "decapod validate",
+      "status": "passed"
+    },
+    {
+      "name": "decapod-validate",
       "status": "passed"
     },
     {
@@ -52,9 +67,15 @@
     }
   ],
   "evidence": [
+    "Clippy passes with rustc 1.96.1 after applying the workflow diagnostics.",
     "Source-built init regenerated all four entrypoints with migration guidance; managed Dockerfile refresh inserted the migration note.",
+    "Validation passes with zero failures after honoring the configured Mermaid diagram style during recovery scaffolding.",
+    "validation epoch ve_17ebc78582e822f3 completed with zero failures",
     "validation epoch ve_2d45bcd4222ff836 completed with zero failures",
+    "validation epoch ve_312177682f401fed completed with zero failures",
+    "validation epoch ve_35664c030e0cbb13 completed with zero failures",
     "validation epoch ve_4ed1b74fd7ec2cd3 completed with zero failures",
+    "validation epoch ve_c4d75fdaca0b96d6 completed with zero failures",
     "validation epoch ve_e1e2f06545faef92 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
@@ -66,7 +87,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:ecafc4b8e7e24d961be3d5b129f53cf9f6fb002231fd206ab9147f47a29c4a01",
+  "artifact_hash": "sha256:f1eb8c56990cc8d2cb7b0ee02695dbe0aa11de8a52664497da55f70d10641fa4",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -140,6 +161,69 @@
       {
         "sequence": 8,
         "event_id": "event:8",
+        "intent_id": "intent:issue1226-1228",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue1226-1228"
+      },
+      {
+        "sequence": 9,
+        "event_id": "event:9",
+        "intent_id": "intent:issue1226-1228",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue1226-1228"
+      },
+      {
+        "sequence": 10,
+        "event_id": "event:10",
+        "intent_id": "intent:issue1226-1228",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue1226-1228"
+      },
+      {
+        "sequence": 11,
+        "event_id": "event:11",
+        "intent_id": "intent:issue1226-1228",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue1226-1228"
+      },
+      {
+        "sequence": 12,
+        "event_id": "event:12",
+        "intent_id": "intent:issue1226-1228",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue1226-1228"
+      },
+      {
+        "sequence": 13,
+        "event_id": "event:13",
+        "intent_id": "intent:issue1226-1228",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue1226-1228"
+      },
+      {
+        "sequence": 14,
+        "event_id": "event:14",
+        "intent_id": "intent:issue1226-1228",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue1226-1228"
+      },
+      {
+        "sequence": 15,
+        "event_id": "event:15",
+        "intent_id": "intent:issue1226-1228",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue1226-1228"
+      },
+      {
+        "sequence": 16,
+        "event_id": "event:16",
+        "intent_id": "intent:issue1226-1228",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue1226-1228"
+      },
+      {
+        "sequence": 17,
+        "event_id": "event:17",
         "intent_id": "intent:issue1226-1228",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:issue1226-1228"
@@ -272,12 +356,230 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:8"
+          },
+          {
+            "sequence": 9,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/managed/specs/*.md",
+              "src/decapod/core/migration.rs",
+              "src/decapod/core/project_specs.rs",
+              "src/decapod/core/scaffold.rs",
+              "src/decapod/core/trajectory.rs",
+              "src/decapod/lib.rs",
+              "tests"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_17ebc78582e822f3 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:9"
+          },
+          {
+            "sequence": 10,
+            "action": "validation",
+            "command": "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings",
+            "scope": [
+              ".decapod/managed/specs/*.md",
+              "src/decapod/core/migration.rs",
+              "src/decapod/core/project_specs.rs",
+              "src/decapod/core/scaffold.rs",
+              "src/decapod/core/trajectory.rs",
+              "src/decapod/lib.rs",
+              "tests"
+            ],
+            "observations": [
+              "src/decapod/core/trajectory.rs",
+              "src/decapod/lib.rs",
+              "src/decapod/core/trajectory.rs",
+              "src/decapod/lib.rs",
+              "Clippy passes with rustc 1.96.1 after applying the workflow diagnostics."
+            ],
+            "proof_refs": [
+              "clippy"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:10"
+          },
+          {
+            "sequence": 11,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/managed/specs/*.md",
+              "src/decapod/core/migration.rs",
+              "src/decapod/core/project_specs.rs",
+              "src/decapod/core/scaffold.rs",
+              "src/decapod/core/trajectory.rs",
+              "src/decapod/lib.rs",
+              "tests"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_c4d75fdaca0b96d6 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:11"
+          },
+          {
+            "sequence": 12,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/managed/specs/*.md",
+              "src/decapod/core/migration.rs",
+              "src/decapod/core/project_specs.rs",
+              "src/decapod/core/scaffold.rs",
+              "src/decapod/core/trajectory.rs",
+              "src/decapod/lib.rs",
+              "tests"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_c4d75fdaca0b96d6 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:12"
+          },
+          {
+            "sequence": 13,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/managed/specs/*.md",
+              "src/decapod/core/migration.rs",
+              "src/decapod/core/project_specs.rs",
+              "src/decapod/core/scaffold.rs",
+              "src/decapod/core/trajectory.rs",
+              "src/decapod/lib.rs",
+              "tests"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_35664c030e0cbb13 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:13"
+          },
+          {
+            "sequence": 14,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/managed/specs/*.md",
+              "src/decapod/core/migration.rs",
+              "src/decapod/core/project_specs.rs",
+              "src/decapod/core/scaffold.rs",
+              "src/decapod/core/trajectory.rs",
+              "src/decapod/lib.rs",
+              "tests"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_35664c030e0cbb13 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:14"
+          },
+          {
+            "sequence": 15,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/managed/specs/*.md",
+              "src/decapod/core/migration.rs",
+              "src/decapod/core/project_specs.rs",
+              "src/decapod/core/scaffold.rs",
+              "src/decapod/core/trajectory.rs",
+              "src/decapod/lib.rs",
+              "tests"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_35664c030e0cbb13 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:15"
+          },
+          {
+            "sequence": 16,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/managed/specs/*.md",
+              "src/decapod/core/migration.rs",
+              "src/decapod/core/project_specs.rs",
+              "src/decapod/core/scaffold.rs",
+              "src/decapod/core/trajectory.rs",
+              "src/decapod/lib.rs",
+              "tests"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_312177682f401fed completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:16"
+          },
+          {
+            "sequence": 17,
+            "action": "validation",
+            "command": "decapod validate --refresh-specs",
+            "scope": [
+              ".decapod/managed/specs/*.md",
+              "src/decapod/core/migration.rs",
+              "src/decapod/core/project_specs.rs",
+              "src/decapod/core/scaffold.rs",
+              "src/decapod/core/trajectory.rs",
+              "src/decapod/lib.rs",
+              "tests"
+            ],
+            "observations": [
+              "src/decapod/lib.rs",
+              "src/decapod/lib.rs",
+              "Validation passes with zero failures after honoring the configured Mermaid diagram style during recovery scaffolding."
+            ],
+            "proof_refs": [
+              "decapod-validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:17"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 8
+    "next_sequence": 17
   }
 }

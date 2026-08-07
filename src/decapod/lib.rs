@@ -1816,7 +1816,7 @@ fn run_init_apply(
             core::assets::validate_override_structure(&target_dir)?;
             let migration_report = migration::check_and_migrate_with_backup_report(
                 &setup_decapod_root,
-                |data_root| subsystems::initialize_all_dbs(data_root),
+                subsystems::initialize_all_dbs,
             )?;
             announce_migration_notice(&migration_report);
         }
@@ -2041,7 +2041,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                     std::fs::create_dir_all(&data_root).map_err(error::DecapodError::IoError)?;
                     let migration_report = migration::check_and_migrate_with_backup_report(
                         &decapod_root_path,
-                        |data_root| subsystems::initialize_all_dbs(data_root),
+                        subsystems::initialize_all_dbs,
                     )?;
                     announce_migration_notice(&migration_report);
                 }
@@ -2370,7 +2370,7 @@ pub fn run() -> Result<(), error::DecapodError> {
             if !cloud_todo_command {
                 let migration_result = migration::check_and_migrate_with_backup_report(
                     &decapod_root_path,
-                    |data_root| subsystems::initialize_all_dbs(data_root),
+                    subsystems::initialize_all_dbs,
                 );
                 match migration_result {
                     Ok(report) => announce_migration_notice(&report),
@@ -5135,6 +5135,11 @@ fn heal_validation_scaffold(
     }
 
     let repo_ctx = infer_repo_context(project_root)?;
+    let config = crate::cli::DecapodProjectConfig::load(project_root).unwrap_or_default();
+    let diagram_style = match config.init.diagram_style {
+        InitDiagramStyle::Ascii => scaffold::DiagramStyle::Ascii,
+        InitDiagramStyle::Mermaid => scaffold::DiagramStyle::Mermaid,
+    };
     let summary = scaffold::scaffold_project_entrypoints(&scaffold::ScaffoldOptions {
         target_dir: project_root.to_path_buf(),
         force: false,
@@ -5145,7 +5150,7 @@ fn heal_validation_scaffold(
         preserved_agent_content: Vec::new(),
         generate_specs: true,
         generate_ci: true,
-        diagram_style: scaffold::DiagramStyle::Ascii,
+        diagram_style,
         specs_seed: Some(scaffold::SpecsSeed {
             product_name: repo_ctx.product_name.clone(),
             product_summary: repo_ctx.product_summary.clone(),
