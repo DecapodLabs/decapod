@@ -86,6 +86,7 @@ flowchart LR
 | Trajectory is one JSON object | Unit test appends a legacy second value, initializes a new run, and parses the result | Current run ID, current hash, no concatenated values |
 | Migrations are agent-visible | Migration report test seeds an older release, checks notice once, then verifies steady state is quiet | Previous/current versions and instruction |
 | CI lint remains warning-free | `CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings` | Clippy exits successfully without diagnostics |
+| Recovery preserves release-bound spec metadata | Source-built validation in a checkout missing local policy exercises scaffold recovery with an older manifest template | Existing template version and per-spec template hashes remain unchanged |
 
 ## Migration and Artifact Regression Rules
 - A migration path must be safe to invoke repeatedly and must not make the
@@ -207,7 +208,7 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1c0019f26404ff0e8da67f5ae5836d09537111a67d9456575e44c890ec304f10`
+- Repository signal fingerprint: `5125357dd258e56a76f5d8b369d3d9ebb290d2c19ea52dde02cfc7e068f56614`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

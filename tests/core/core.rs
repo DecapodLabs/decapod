@@ -877,12 +877,46 @@ fn scaffold_store_and_docs_cli_behaviors() {
     stale_gitignore.push_str("!.decapod/managed/validation-epoch.json\n");
     fs::write(&gitignore_path, stale_gitignore).expect("seed stale validation epoch allowlist");
 
+    let manifest_path = live_target.join(".decapod/managed/specs/.manifest.json");
+    let mut legacy_manifest: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(&manifest_path).expect("read specs manifest"))
+            .expect("parse specs manifest");
+    legacy_manifest["template_version"] = serde_json::Value::String("scaffold-v3".to_string());
+    for file in legacy_manifest["files"]
+        .as_array_mut()
+        .expect("manifest files")
+    {
+        file["template_hash"] = serde_json::Value::String("legacy-template-hash".to_string());
+    }
+    fs::write(
+        &manifest_path,
+        serde_json::to_string_pretty(&legacy_manifest).expect("serialize legacy manifest"),
+    )
+    .expect("write legacy specs manifest");
+
     // Second run should succeed with checksum verification and prune deprecated ignore rules.
     scaffold_project_entrypoints(&live_opts).expect("second scaffold succeeds when files match");
     let gitignore = fs::read_to_string(&gitignore_path).expect("read refreshed .gitignore");
     assert!(
         !gitignore.contains("!.decapod/managed/validation-epoch.json"),
         "decapod init must remove stale validation epoch allowlist rules from existing projects"
+    );
+    let preserved_manifest: serde_json::Value = serde_json::from_str(
+        &fs::read_to_string(&manifest_path).expect("read preserved specs manifest"),
+    )
+    .expect("parse preserved specs manifest");
+    assert_eq!(
+        preserved_manifest["template_version"],
+        serde_json::Value::String("scaffold-v3".to_string()),
+        "non-forced recovery must preserve an existing specs template version"
+    );
+    assert!(
+        preserved_manifest["files"]
+            .as_array()
+            .expect("preserved manifest files")
+            .iter()
+            .all(|file| file["template_hash"] == "legacy-template-hash"),
+        "non-forced recovery must preserve existing per-spec template hashes"
     );
 
     let force_opts = ScaffoldOptions {
