@@ -25,6 +25,7 @@
     "tests"
   ],
   "inspected_files": [
+    ".decapod/managed/specs/.manifest.json",
     "src/decapod/core/assets.rs",
     "src/decapod/core/trajectory.rs",
     "src/decapod/lib.rs",
@@ -33,6 +34,7 @@
   "modified_files": [
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
+    ".decapod/managed/specs/.manifest.json",
     "src/decapod/core/assets.rs",
     "src/decapod/core/scaffold.rs",
     "src/decapod/core/trajectory.rs",
@@ -41,6 +43,7 @@
   ],
   "declared_commands": [
     "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings",
+    "DECAPOD_VALIDATE_SKIP_GIT_GATES=1 decapod validate --refresh-specs --format json",
     "decapod validate",
     "decapod validate --refresh-specs",
     "target/debug/decapod init --all --force --proof"
@@ -66,11 +69,20 @@
     {
       "name": "focused tests",
       "status": "passed"
+    },
+    {
+      "name": "published-validator-refresh",
+      "status": "passed"
+    },
+    {
+      "name": "source-validator",
+      "status": "passed"
     }
   ],
   "evidence": [
     "Clippy passes with rustc 1.96.1 after applying the workflow diagnostics.",
     "Published decapod 0.96.14 and source-built validation both pass with zero failures; generated entrypoints match release-bound fingerprints.",
+    "Reproduced the CI evaluator in a disposable worktree with published decapod 0.96.14; scaffold-v3 manifest and evaluator template hashes validate with zero failures, while source validation accepts the stale template as an authoritative living-spec warning.",
     "Source-built init regenerated all four entrypoints with migration guidance; managed Dockerfile refresh inserted the migration note.",
     "Validation passes with zero failures after honoring the configured Mermaid diagram style during recovery scaffolding.",
     "validation epoch ve_0e21e79982b3706a completed with zero failures",
@@ -80,7 +92,9 @@
     "validation epoch ve_35664c030e0cbb13 completed with zero failures",
     "validation epoch ve_4996bd0c798a57d4 completed with zero failures",
     "validation epoch ve_4ed1b74fd7ec2cd3 completed with zero failures",
+    "validation epoch ve_6c2b61e7a29cd1cf completed with zero failures",
     "validation epoch ve_91a8103bf90a3823 completed with zero failures",
+    "validation epoch ve_c171bc12ab56a30a completed with zero failures",
     "validation epoch ve_c4d75fdaca0b96d6 completed with zero failures",
     "validation epoch ve_e1e2f06545faef92 completed with zero failures",
     "validation epoch ve_f594048b72055bbe completed with zero failures"
@@ -94,7 +108,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:2b7379b8ccc0a60ca57018aff19975ebce605bc57a59c01e952a667ded30d53a",
+  "artifact_hash": "sha256:5d0830ef9e0f65af7b5c052987425ffd8d390f2eedae60c76de74154b8e4fa84",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -273,6 +287,27 @@
       {
         "sequence": 23,
         "event_id": "event:23",
+        "intent_id": "intent:issue1226-1228",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue1226-1228"
+      },
+      {
+        "sequence": 24,
+        "event_id": "event:24",
+        "intent_id": "intent:issue1226-1228",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue1226-1228"
+      },
+      {
+        "sequence": 25,
+        "event_id": "event:25",
+        "intent_id": "intent:issue1226-1228",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue1226-1228"
+      },
+      {
+        "sequence": 26,
+        "event_id": "event:26",
         "intent_id": "intent:issue1226-1228",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:issue1226-1228"
@@ -770,12 +805,85 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:23"
+          },
+          {
+            "sequence": 24,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/managed/specs/*.md",
+              "src/decapod/core/migration.rs",
+              "src/decapod/core/project_specs.rs",
+              "src/decapod/core/scaffold.rs",
+              "src/decapod/core/trajectory.rs",
+              "src/decapod/lib.rs",
+              "tests"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_6c2b61e7a29cd1cf completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:24"
+          },
+          {
+            "sequence": 25,
+            "action": "validation",
+            "command": "DECAPOD_VALIDATE_SKIP_GIT_GATES=1 decapod validate --refresh-specs --format json",
+            "scope": [
+              ".decapod/managed/specs/*.md",
+              "src/decapod/core/migration.rs",
+              "src/decapod/core/project_specs.rs",
+              "src/decapod/core/scaffold.rs",
+              "src/decapod/core/trajectory.rs",
+              "src/decapod/lib.rs",
+              "tests"
+            ],
+            "observations": [
+              ".decapod/managed/specs/.manifest.json",
+              ".decapod/managed/specs/.manifest.json",
+              "Reproduced the CI evaluator in a disposable worktree with published decapod 0.96.14; scaffold-v3 manifest and evaluator template hashes validate with zero failures, while source validation accepts the stale template as an authoritative living-spec warning."
+            ],
+            "proof_refs": [
+              "published-validator-refresh",
+              "source-validator"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:25"
+          },
+          {
+            "sequence": 26,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/managed/specs/*.md",
+              "src/decapod/core/migration.rs",
+              "src/decapod/core/project_specs.rs",
+              "src/decapod/core/scaffold.rs",
+              "src/decapod/core/trajectory.rs",
+              "src/decapod/lib.rs",
+              "tests"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_c171bc12ab56a30a completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:26"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 23
+    "next_sequence": 26
   }
 }
