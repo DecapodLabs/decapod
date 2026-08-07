@@ -2096,8 +2096,17 @@ pub fn scaffold_project_entrypoints(
             // If we are regenerating INTENT.md and it already exists, try to preserve the Epistemic Custody Fields section.
             content = preserve_intent_custody(&opts.target_dir, rel_path, content);
 
-            let template_hash = project_spec_scaffold_hash(rel_path, opts.diagram_style)
+            let current_template_hash = project_spec_scaffold_hash(rel_path, opts.diagram_style)
                 .unwrap_or_else(|| hash_text(&content));
+            let template_hash = if !opts.force {
+                existing_manifest
+                    .as_ref()
+                    .and_then(|manifest| manifest.files.iter().find(|entry| entry.path == rel_path))
+                    .map(|entry| entry.template_hash.clone())
+                    .unwrap_or(current_template_hash)
+            } else {
+                current_template_hash
+            };
 
             let dest = opts.target_dir.join(rel_path);
             let existing_content = fs::read_to_string(&dest).ok();
@@ -2191,7 +2200,14 @@ pub fn scaffold_project_entrypoints(
 
             let manifest = ProjectSpecsManifest {
                 schema_version: LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA.to_string(),
-                template_version: PROJECT_SPEC_TEMPLATE_VERSION.to_string(),
+                template_version: if !opts.force {
+                    existing_manifest
+                        .as_ref()
+                        .map(|manifest| manifest.template_version.clone())
+                        .unwrap_or_else(|| PROJECT_SPEC_TEMPLATE_VERSION.to_string())
+                } else {
+                    PROJECT_SPEC_TEMPLATE_VERSION.to_string()
+                },
                 generated_at: crate::core::time::now_epoch_z(),
                 repo_signal_fingerprint: repo_fingerprint,
                 declared_capabilities: opts.capabilities.clone(),
