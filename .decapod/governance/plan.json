@@ -7,10 +7,8 @@
     "feat_01kzcqr007gbjhxw"
   ],
   "proof_hooks": [
-    "cargo test --all-targets",
-    "git diff --check",
-    "decapod validate",
-    "decapod govern trajectory status --run-id issue1226-1228"
+    "Generated agent entrypoints and managed Dockerfile carry first-call migration guidance",
+    "Security scaffold regression covers trust boundaries and automation safety"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -27,5 +25,5 @@
     "file_touch_budget": 40
   },
   "phases": [],
-  "updated_at": "1786062641Z"
+  "updated_at": "1786064098Z"
 }

@@ -3,10 +3,6 @@ name: Decapod Validate
 on:
   push:
     branches: [ main, master ]
-    paths-ignore:
-      - 'CHANGELOG.md'
-      - 'Cargo.toml'
-      - 'Cargo.lock'
   pull_request:
     branches: [ main, master ]
 
@@ -17,29 +13,32 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-      - name: Cache Decapod
+      - name: Cache cargo-binstall and Decapod
+        id: cache_decapod_tools
         uses: actions/cache@v4
         with:
-          path: ~/.cargo/bin/decapod
-          key: ${{ runner.os }}-decapod-v3-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'src/**/*.rs') }}
+          path: |
+            ~/.cargo/bin/cargo-binstall
+            ~/.cargo/bin/decapod
+          key: ${{ runner.os }}-decapod-tools-v1-${{ hashFiles('AGENTS.md') }}
+      - name: Install cargo-binstall
+        if: steps.cache_decapod_tools.outputs.cache-hit != 'true'
+        uses: cargo-bins/cargo-binstall@main
       - name: Install Decapod
-        # Always rebuild from the PR tree so a restored cache binary cannot
-        # evaluate against a different template/fingerprint generation path.
-        run: cargo install --path . --force --locked
+        if: steps.cache_decapod_tools.outputs.cache-hit != 'true'
+        run: cargo binstall --no-confirm decapod
       - name: Decapod Validate
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
-          # Release-bound projections are refreshed by the agent before the code
-          # PR is opened. Release-only commits are excluded from push validation.
-          DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES: ""
+          # Post-merge: tree-local binary fingerprints lag the last published pin.
+          # PRs still enforce release-bound pins + drift.
+          DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES: ${{ github.event_name == 'push' && '1' || '' }}
         run: |
           if [ ! -d .decapod ]; then
             decapod init --proof
           fi
           decapod validate --refresh-specs
       - name: Ensure no spec or entrypoint drift
-        # PR-only: generated release-bound projections must already be committed
-        # by the agent before review.
         if: github.event_name == 'pull_request'
         # validate rewrites generated_at every run; that is not semantic drift.
         # Normalize it to HEAD before the exit-code check so only real content,

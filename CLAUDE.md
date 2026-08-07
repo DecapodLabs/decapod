@@ -1,5 +1,5 @@
 <!-- decapod-release: 0.96.14 -->
-<!-- decapod-fingerprint: 146d6e9e735614eb608373a05251424d7407a62c69d3dfa7a1220b81ddae467e -->
+<!-- decapod-fingerprint: 50044d28f16b5466848583362b3ab68fa0edb2b548bb86d8931a35baeafa6094 -->
 # CLAUDE.md - Agent Entrypoint
 
 You are working in a Decapod-managed repository.
@@ -10,7 +10,7 @@ See `AGENTS.md` for the universal contract.
 - **Run `decapod docs ingest` before using Decapod beyond help/version checks.**
 - Use `decapod docs` command output instead of guessing command arguments.
 - Treat Decapod errors as recovery instructions.
-- Respect repo-local config policy and workspace boundaries.
+- Respect repo-local config policy and, on the first local Decapod call, follow any version-triggered migration warning or instruction before continuing.
 - Do not bypass Decapod boundaries to appear productive. Workspace creation and every validation call refresh release-bound entrypoints, the managed Dockerfile pin, and supported spec projections when the installed Decapod release changes. Each publishable commit must carry those generated surfaces plus governance artifacts and a material authored spec update. Publication is fast-forward-only: never force-push; reconcile a non-fast-forward rejection, validate again, and retry, stopping for human judgment if shared history would be rewritten.
 ## Mandatory Prompt Safety Gate
 
