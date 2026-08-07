@@ -414,12 +414,12 @@ pub fn init_trajectory(
         // multiple JSON values in the file. An explicit init for a run must be
         // able to replace that stale cookie; preserve the same-run guard only
         // when the existing artifact is valid and identifies the requested run.
-        if let Ok(Some(existing)) = load_trajectory_cookie(project_root) {
-            if existing.run_id == run_id {
-                return Err(error::DecapodError::ValidationError(format!(
-                    "trajectory '{run_id}' already exists"
-                )));
-            }
+        if let Ok(Some(existing)) = load_trajectory_cookie(project_root)
+            && existing.run_id == run_id
+        {
+            return Err(error::DecapodError::ValidationError(format!(
+                "trajectory '{run_id}' already exists"
+            )));
         }
     }
     if original_intent.trim().is_empty() || derived_intent.trim().is_empty() {
