@@ -18,6 +18,9 @@ Generated interface specs should include:
 | `TODO` | `TODO` | `TODO` | `TODO` | `TODO` | `TODO` |
 
 ## Storage Boundary Contracts
+| Trajectory writer | Trajectory recorder | Governance trajectory file | Writes one canonical JSON object with a recomputed hash through atomic replacement |
+| Migration report | Local command path | Migration ledger and datastore | Returns version transition and applied migration evidence after verification succeeds |
+
 | Interface | Producer | Consumer | Contract |
 |---|---|---|---|
 | `DecapodError::storage_failure_kind` | Current storage adapter | Retry, validation, and governance policy | Backend-neutral failure class; only bounded retryable contention/storage-I/O classes may be retried |
@@ -82,6 +85,25 @@ pub enum ApiError {
 | Domain -> Store/Dependency | 200 | Includes retry overhead |
 
 ## Interface Versioning
+
+## Current PR Contract Details
+### Trajectory Cookie
+- Input: a valid run identifier and trajectory fields.
+- Output: exactly one schema-valid JSON object at the canonical cookie path.
+- Update semantics: same-run initialization is rejected when the existing
+  object is valid; a different or malformed legacy cookie is replaced.
+- Historical semantics: Git commits preserve prior cookies; the file is not an
+  append-only JSONL stream.
+
+### Migration Notice
+- Trigger: every local command performs the version/ledger check; a previously
+  recorded release differing from the installed release, or newly applied
+  migrations, requires notice.
+- Output: a warning naming previous/current release, applied IDs, and the
+  applied ledger and catalog inspection paths.
+- Failure: migration or verification errors remain typed and block command
+  continuation; a notice is never used as proof that migration succeeded.
+
 - Version strategy (`v1`, date-based, semver):
 - Backward-compatibility guarantees:
 - Deprecation window and removal policy:
@@ -89,7 +111,7 @@ pub enum ApiError {
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d0ba8924775d416f34254725e2f8d7aba8143cb56e80ff48675f8246433a3009`
+- Repository signal fingerprint: `b30857665faa26f3f6b5af3fdb8e030a696478a957e7f5e1a7fc19b85310c329`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

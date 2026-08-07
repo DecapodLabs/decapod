@@ -735,6 +735,13 @@ pub fn normalize_markdown_heading_boundaries(body: &str) -> String {
             continue;
         }
 
+        if trimmed.starts_with("## ")
+            && !normalized.trim().is_empty()
+            && !normalized.ends_with("\n\n")
+        {
+            normalized.push('\n');
+        }
+
         let repaired_line = line.replace(":- ", ":\n- ").replace(".- [ ]", ".\n- [ ]");
         let mut remainder = repaired_line.as_str();
         loop {

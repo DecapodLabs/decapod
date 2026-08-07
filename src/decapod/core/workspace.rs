@@ -1377,7 +1377,7 @@ fn publish_push_failure(stderr: &str, branch: &str, remote: &str) -> String {
 
     if divergence {
         format!(
-            "Workspace publication requires a fast-forward push and Decapod never force-pushes. Git rejected {remote}/{branch} because the remote branch has diverged: {detail}\nRemediation: do not run `git push --force` or `git push --force-with-lease`. Fetch the remote, inspect the divergence, reconcile it with a reviewed merge or rebase in this workspace, rerun `decapod validate`, and retry `decapod workspace publish`. Stop for human judgment if history would need to be rewritten."
+            "Workspace publication requires a fast-forward push and Decapod never force-pushes. Git rejected {remote}/{branch} because the remote branch has diverged: {detail}\nRemediation: Do not run `git push --force` or `git push --force-with-lease`. Fetch the remote, inspect the divergence, reconcile it with a reviewed merge or rebase in this workspace, rerun `decapod validate`, and retry `decapod workspace publish`. Stop for human judgment if history would need to be rewritten."
         )
     } else {
         format!(

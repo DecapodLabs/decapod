@@ -52,6 +52,22 @@ stateDiagram-v2
 | create/update mutation | request_id | return original result |
 | async enqueue | event_id | ignore duplicate enqueue |
 
+## Current Governance Artifact Semantics
+### Trajectory Cookie
+- Cardinality: one file, one canonical object.
+- Replacement: a new run replaces the previous cookie through an atomic
+  write; same-run initialization remains a duplicate error for a valid object.
+- Recovery: an explicit new initialization may replace a malformed or appended
+  legacy cookie, restoring the single-object invariant.
+- History: the repository commit graph is the history mechanism.
+
+### Migration Notice
+- Detection is idempotent and occurs before each local command dispatch.
+- A release transition is reported once when the version counter advances;
+  applied migration IDs are also reported when work is performed.
+- The command must stop on migration/verification failure. A notice does not
+  authorize the agent to skip migration-specific instructions.
+
 ## Language Note
 
 - Primary language inferred: Rust
@@ -99,7 +115,7 @@ stateDiagram-v2
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d0ba8924775d416f34254725e2f8d7aba8143cb56e80ff48675f8246433a3009`
+- Repository signal fingerprint: `b30857665faa26f3f6b5af3fdb8e030a696478a957e7f5e1a7fc19b85310c329`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

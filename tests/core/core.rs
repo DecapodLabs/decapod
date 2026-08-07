@@ -854,6 +854,24 @@ fn scaffold_store_and_docs_cli_behaviors() {
         "default diagram style should scaffold ascii topology block"
     );
 
+    for (file, section) in [
+        ("README.md", "## Per-Change Maintenance Loop"),
+        ("INTENT.md", "## User and Actor Contract"),
+        ("ARCHITECTURE.md", "## Component Responsibility Matrix"),
+        ("INTERFACES.md", "## Compatibility Matrix"),
+        ("VALIDATION.md", "## Evidence Matrix"),
+        ("SEMANTICS.md", "## Transition Contract"),
+        ("OPERATIONS.md", "## Release and Migration Readiness"),
+        ("SECURITY.md", "## Trust-Boundary Inventory"),
+    ] {
+        let body = fs::read_to_string(live_target.join(".decapod/managed/specs").join(file))
+            .expect("read verbose living spec");
+        assert!(
+            body.contains(section),
+            "{file} must include the expanded living-spec section {section}"
+        );
+    }
+
     let gitignore_path = live_target.join(".gitignore");
     let mut stale_gitignore = fs::read_to_string(&gitignore_path).expect("read .gitignore");
     stale_gitignore.push_str("!.decapod/managed/validation-epoch.json\n");

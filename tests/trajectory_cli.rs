@@ -1,4 +1,5 @@
 use serde_json::Value;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 use tempfile::TempDir;
@@ -135,6 +136,84 @@ fn trajectory_cli_records_scope_actions_checks_and_verdicts() {
     assert_eq!(status_json["motion_state"], "blocked");
     assert_eq!(status_json["blockers"][0], "awaiting proof");
     assert!(root.join(".decapod/governance/trajectory.json").exists());
+}
+
+#[test]
+fn trajectory_cli_replaces_a_legacy_appended_cookie() {
+    let (_temp, root, password) = setup_repo();
+    let env_password = Some(password.as_str());
+    let init = run_decapod(
+        &root,
+        &[
+            "govern",
+            "trajectory",
+            "init",
+            "--run-id",
+            "run_cli_old",
+            "--original-intent",
+            "preserve one cookie",
+            "--derived-intent",
+            "write the current run",
+        ],
+        env_password,
+    );
+    json(&init, "old trajectory init");
+
+    let cookie = root.join(".decapod/governance/trajectory.json");
+    let mut file = std::fs::OpenOptions::new()
+        .append(true)
+        .open(&cookie)
+        .expect("open trajectory cookie");
+    file.write_all(b"\n{\"legacy\":true}\n")
+        .expect("append legacy value");
+
+    let replacement = run_decapod(
+        &root,
+        &[
+            "govern",
+            "trajectory",
+            "init",
+            "--run-id",
+            "run_cli_new",
+            "--original-intent",
+            "preserve one cookie",
+            "--derived-intent",
+            "replace the current run",
+        ],
+        env_password,
+    );
+    json(&replacement, "new trajectory init");
+
+    let raw = std::fs::read_to_string(cookie).expect("read replaced trajectory cookie");
+    let parsed: Value = serde_json::from_str(&raw).expect("cookie is one JSON value");
+    assert_eq!(parsed["run_id"], "run_cli_new");
+    assert!(!raw.contains("\"legacy\":true"));
+}
+
+#[test]
+fn local_command_announces_a_detected_version_transition_once() {
+    let (_temp, root, _password) = setup_repo();
+    let counter_path = root.join(".decapod/managed/version_counter.json");
+    let mut counter: Value =
+        serde_json::from_str(&std::fs::read_to_string(&counter_path).expect("read counter"))
+            .expect("counter json");
+    counter["last_seen_version"] = Value::String("0.96.13".to_string());
+    std::fs::write(
+        &counter_path,
+        serde_json::to_string_pretty(&counter).expect("serialize counter"),
+    )
+    .expect("seed prior release");
+
+    let first = run_decapod(&root, &["system", "version"], None);
+    assert!(first.status.success());
+    let first_stderr = String::from_utf8_lossy(&first.stderr);
+    assert!(first_stderr.contains("Decapod migration notice"));
+    assert!(first_stderr.contains("0.96.13"));
+    assert!(first_stderr.contains("applied.json"));
+
+    let second = run_decapod(&root, &["system", "version"], None);
+    assert!(second.status.success());
+    assert!(!String::from_utf8_lossy(&second.stderr).contains("Decapod migration notice"));
 }
 
 #[test]

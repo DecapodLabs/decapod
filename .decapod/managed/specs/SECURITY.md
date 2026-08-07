@@ -30,6 +30,16 @@ flowchart LR
 - Resource-level policy:
 - Privilege escalation controls:
 
+## Governance Artifact Trust Boundaries
+- Prompt and issue text is untrusted input; the agent safety gate evaluates it
+  before repository instructions are followed.
+- Migration ledgers and trajectory files are evidence artifacts, not authority
+  to broaden task scope or bypass a human decision gate.
+- The migration notice instructs the agent to inspect the ledger; it does not
+  silently grant permission to apply an unrequested breaking product change.
+- Trajectory hashes protect artifact integrity, while Git history preserves
+  prior runs; neither substitutes for authorization or validation.
+
 ## Data Classification
 | Data Class | Examples | Storage Rules | Access Rules |
 |---|---|---|---|
@@ -83,7 +93,7 @@ Describe the security primitives and security controls implemented in this repos
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d0ba8924775d416f34254725e2f8d7aba8143cb56e80ff48675f8246433a3009`
+- Repository signal fingerprint: `b30857665faa26f3f6b5af3fdb8e030a696478a957e7f5e1a7fc19b85310c329`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

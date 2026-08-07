@@ -62,6 +62,39 @@ fn new_run_replaces_the_single_cookie_but_same_run_is_rejected() {
 }
 
 #[test]
+fn init_replaces_a_malformed_or_appended_cookie() {
+    let temp = tempdir().unwrap();
+    let init = |run_id: &str| TrajectoryInit {
+        run_id: run_id.to_string(),
+        task_id: None,
+        intent_id: None,
+        original_intent: "original".to_string(),
+        derived_intent: "derived".to_string(),
+        active_boundaries: vec!["src/**".to_string()],
+        repo_scope: vec!["src/decapod/core/trajectory.rs".to_string()],
+        destination: None,
+        current_phase: None,
+        next_transitions: Vec::new(),
+        blockers: Vec::new(),
+    };
+
+    init_trajectory(temp.path(), init("run_old")).unwrap();
+    let cookie = trajectory_cookie_path(temp.path());
+    let mut raw = fs::read_to_string(&cookie).unwrap();
+    raw.push_str("\n{\"stale\":true}\n");
+    fs::write(&cookie, raw).unwrap();
+
+    let replacement = init_trajectory(temp.path(), init("run_new")).unwrap();
+    let cookie_raw = fs::read_to_string(cookie).unwrap();
+    let parsed: serde_json::Value = serde_json::from_str(&cookie_raw).unwrap();
+    assert_eq!(parsed["run_id"], "run_new");
+    assert_eq!(
+        load_trajectory_cookie(temp.path()).unwrap(),
+        Some(replacement)
+    );
+}
+
+#[test]
 fn trajectory_proof_status_distinguishes_check_outcomes() {
     let temp = tempdir().unwrap();
     init_trajectory(
