@@ -898,10 +898,6 @@ Replace this line with this directive's override. Use Markdown or any documentat
 Replace this line with this directive's override. Use Markdown or any documentation style you prefer.
 ````
 
-### docs/agent/contribution-conventions.md
-````markdown
-Replace this line with this directive's override. Use Markdown or any documentation style you prefer.
-````
 ---
 
 ## METADATA Overrides
