@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.96.15](https://github.com/DecapodLabs/decapod/compare/v0.96.14...v0.96.15) - 2026-08-07
+
+### Fixed
+
+- preserve stale spec metadata during recovery
+- preserve generated manifest bytes
+- match published validator spec manifest
+- align release-bound validation projections
+- pass governed validation and clippy
+- complete governed migration refresh bundle
+- deepen specs and govern migrations
+
 ## [0.96.14](https://github.com/DecapodLabs/decapod/compare/v0.96.13...v0.96.14) - 2026-08-06
 
 ### Other
