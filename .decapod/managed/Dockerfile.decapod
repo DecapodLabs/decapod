@@ -4,7 +4,6 @@
 # mutate project-specific packages and commands in workspace branches.
 # The image tag and DECAPOD_VERSION below are the release pin; keep them aligned.
 # Workspace creation and validation refresh this pin only when the evaluating Decapod release changes.
-# The first local Decapod call in a run also reports any version-triggered migration.
 ARG DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v0.96.14-debian
 FROM $DECAPOD_IMAGE
 ARG DECAPOD_VERSION=0.96.14

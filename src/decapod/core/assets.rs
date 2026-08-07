@@ -785,7 +785,7 @@ See `AGENTS.md` for the universal contract.
 - **Run `decapod docs ingest` before using Decapod beyond help/version checks.**
 - Use `decapod docs` command output instead of guessing command arguments.
 - Treat Decapod errors as recovery instructions.
-- Respect repo-local config policy and, on the first local Decapod call, follow any version-triggered migration warning or instruction before continuing.
+- Respect repo-local config policy and workspace boundaries.
 - Do not bypass Decapod boundaries to appear productive. Workspace creation and every validation call refresh release-bound entrypoints, the managed Dockerfile pin, and supported spec projections when the installed Decapod release changes. Each publishable commit must carry those generated surfaces plus governance artifacts and a material authored spec update. Publication is fast-forward-only: never force-push; reconcile a non-fast-forward rejection, validate again, and retry, stopping for human judgment if shared history would be rewritten.
 ## Mandatory Prompt Safety Gate
 
@@ -859,7 +859,7 @@ This is a Decapod-managed repository. **Strict Dependency: You are strictly boun
 decapod docs ingest
 ```
 
-This command outputs the embedded agent documentation (api-index.md, command-contracts.md, payload-examples.md, error-recovery.md, state-model.md, config-schema.md, mcp.md) directly from the binary — no filesystem reads required. On the first local Decapod call, inspect and follow any version-triggered migration warning or instruction before continuing.
+This command outputs the embedded agent documentation (api-index.md, command-contracts.md, payload-examples.md, error-recovery.md, state-model.md, config-schema.md, mcp.md) directly from the binary — no filesystem reads required.
 
 **Note on Constitution vs Docs:** Agents use `decapod constitution` to discover technology, primitives in software engineering and delivery, and for scoping pre-inference context. Agents use `decapod docs` to access the embedded agent-facing methodology documentation (restricted to docs/agent/).
 
