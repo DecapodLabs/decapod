@@ -2,13 +2,13 @@
   "schema_version": "1.0.0",
   "kind": "validation_receipt",
   "decapod_release": "0.96.14",
-  "git_revision": "111fd4862db8b41c563fc46a9ae670bd9e70e8c0",
+  "git_revision": "0e2d553a7ba60bc3a83063fa65f17c1f431425c7",
   "repo_signal_fingerprint": "1c0019f26404ff0e8da67f5ae5836d09537111a67d9456575e44c890ec304f10",
   "trajectory_run_id": "issue1226-1228",
-  "trajectory_artifact_hash": "sha256:2b7379b8ccc0a60ca57018aff19975ebce605bc57a59c01e952a667ded30d53a",
+  "trajectory_artifact_hash": "sha256:5d0830ef9e0f65af7b5c052987425ffd8d390f2eedae60c76de74154b8e4fa84",
   "validation_epoch": {
     "schema_version": "1.0.0",
-    "epoch_id": "ve_0e21e79982b3706a",
+    "epoch_id": "ve_c171bc12ab56a30a",
     "evaluator_identity": "decapod-validate@0.96.14",
     "evaluator_set_hash": "sha256:f50e1e2442edb2b5568be85975d51f8a3e0c1ff57c756118ce775cb1606374af",
     "constitution_version": "embedded-docs@0.96.14",
@@ -17,7 +17,7 @@
     "validation_profile_hash": "sha256:37a8eec1ce19687d132fe29051dca629d164e2c4958ba141d5f4133a33f0688f",
     "proof_rubric": "decapod-validate/current-proof-v1",
     "proof_rubric_hash": "sha256:99e8ef25629da391e9b479db9fff52b82f340224f7a69d8a88d2992ae8e90466",
-    "generated_specs_manifest_hash": "sha256:17a1904c0fe478703ad4b7f43a5bfccf7077b26b13e54aad3620c8021f0f5527",
+    "generated_specs_manifest_hash": "sha256:cd6b5c4bda88d62a142f23315c43f24cb8c0bf2518467e8e1beb503b88b87331",
     "generated_specs_fingerprint": "1c0019f26404ff0e8da67f5ae5836d09537111a67d9456575e44c890ec304f10",
     "material_hashes": {
       "constitution:core/DECAPOD": "sha256:3f22d17837692d1ad55670a4f1a288f5f76561c5536cf28d43efa91cb45be41f",
@@ -30,7 +30,7 @@
       "generated_spec:.decapod/managed/specs/SEMANTICS.md": "sha256:3cfb382486251a0399263d5f8ef06578ab3643d518f4cfb7470db4c5d8f2757e",
       "generated_spec:.decapod/managed/specs/VALIDATION.md": "sha256:2784c8d4616e9cd49d59cc35950fd61b9f85b02a8acab4e3199a7cda2b4bff50",
       "generated_specs_fingerprint": "1c0019f26404ff0e8da67f5ae5836d09537111a67d9456575e44c890ec304f10",
-      "generated_specs_manifest": "sha256:17a1904c0fe478703ad4b7f43a5bfccf7077b26b13e54aad3620c8021f0f5527",
+      "generated_specs_manifest": "sha256:cd6b5c4bda88d62a142f23315c43f24cb8c0bf2518467e8e1beb503b88b87331",
       "living_spec_material:.decapod/managed/specs/ARCHITECTURE.md": "sha256:2b4adb9895148006840747384cfbc619b425c647bf1ac09fd7f9cf4d5d61a9af",
       "living_spec_material:.decapod/managed/specs/INTENT.md": "sha256:acdb78385a51457f0a9e4554208ff1a75de1037495e877931a1931a6a806bb6d",
       "living_spec_material:.decapod/managed/specs/INTERFACES.md": "sha256:40c9447bc92b699f0afa06a05964184def458d6fa99842d01870f4ba8ec50ed4",
@@ -44,22 +44,21 @@
     }
   },
   "status": "ok",
-  "pass_count": 189,
+  "pass_count": 190,
   "fail_count": 0,
-  "warn_count": 3,
-  "elapsed_ms": 1616,
+  "warn_count": 2,
+  "elapsed_ms": 1656,
   "drift_findings": [],
   "temporary_artifacts_cleaned": 0,
   "failures": [],
   "warnings": [
     "Risk map missing (run `decapod riskmap init`)",
-    "STALE_SPECS_TEMPLATE: Project specs use template version 'scaffold-v4' while current scaffolding is 'scaffold-v3'; living spec content remains authoritative.",
     "Watcher audit trail missing (run `decapod govern watcher run`)"
   ],
   "gate_timings": [
     {
       "name": "validate_machine_contract",
-      "elapsed_ms": 932
+      "elapsed_ms": 935
     },
     {
       "name": "validate_control_plane_contract",
@@ -67,42 +66,46 @@
     },
     {
       "name": "validate_markdown_primitives_roundtrip_gate",
-      "elapsed_ms": 75
+      "elapsed_ms": 79
     },
     {
       "name": "validate_project_specs_docs",
-      "elapsed_ms": 69
-    },
-    {
-      "name": "validate_obligations",
-      "elapsed_ms": 37
-    },
-    {
-      "name": "validate_schema_determinism",
-      "elapsed_ms": 34
+      "elapsed_ms": 73
     },
     {
       "name": "validate_federation_gates",
-      "elapsed_ms": 31
+      "elapsed_ms": 42
+    },
+    {
+      "name": "validate_obligations",
+      "elapsed_ms": 39
+    },
+    {
+      "name": "validate_schema_determinism",
+      "elapsed_ms": 37
     },
     {
       "name": "validate_embedded_self_contained",
-      "elapsed_ms": 16
+      "elapsed_ms": 15
     },
     {
       "name": "validate_archive_integrity",
       "elapsed_ms": 12
     },
     {
-      "name": "validate_interface_contract_bootstrap",
-      "elapsed_ms": 10
-    },
-    {
       "name": "validate_no_legacy_namespaces",
       "elapsed_ms": 8
     },
     {
+      "name": "validate_interface_contract_bootstrap",
+      "elapsed_ms": 7
+    },
+    {
       "name": "validate_repomap_determinism",
+      "elapsed_ms": 5
+    },
+    {
+      "name": "validate_gatekeeper_gate",
       "elapsed_ms": 5
     },
     {
@@ -110,24 +113,20 @@
       "elapsed_ms": 4
     },
     {
-      "name": "validate_gatekeeper_gate",
-      "elapsed_ms": 4
-    },
-    {
       "name": "validate_lineage_hard_gate",
-      "elapsed_ms": 3
-    },
-    {
-      "name": "validate_override_authority",
-      "elapsed_ms": 2
+      "elapsed_ms": 4
     },
     {
       "name": "validate_knowledge_integrity",
       "elapsed_ms": 2
     },
     {
-      "name": "validate_generated_artifact_whitelist",
+      "name": "validate_override_authority",
       "elapsed_ms": 2
+    },
+    {
+      "name": "validate_generated_artifact_whitelist",
+      "elapsed_ms": 1
     },
     {
       "name": "validate_lcm_immutability",
@@ -138,19 +137,19 @@
       "elapsed_ms": 1
     },
     {
-      "name": "validate_lcm_rebuild_gate",
-      "elapsed_ms": 1
-    },
-    {
       "name": "validate_watcher_audit",
       "elapsed_ms": 1
     },
     {
-      "name": "validate_health_purity",
+      "name": "validate_lcm_rebuild_gate",
       "elapsed_ms": 1
     },
     {
       "name": "validate_knowledge_promotions_if_present",
+      "elapsed_ms": 1
+    },
+    {
+      "name": "validate_health_purity",
       "elapsed_ms": 1
     },
     {
@@ -162,7 +161,7 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_research_claims_if_present",
+      "name": "validate_canon_mutation",
       "elapsed_ms": 0
     },
     {
@@ -170,7 +169,7 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_canon_mutation",
+      "name": "validate_research_claims_if_present",
       "elapsed_ms": 0
     },
     {
@@ -186,11 +185,11 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_repo_map",
+      "name": "validate_heartbeat_invocation_gate",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_heartbeat_invocation_gate",
+      "name": "validate_repo_map",
       "elapsed_ms": 0
     },
     {
@@ -206,15 +205,15 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_docs_templates_bucket",
-      "elapsed_ms": 0
-    },
-    {
       "name": "validate_spec_drift",
       "elapsed_ms": 0
     },
     {
       "name": "validate_state_commit_gate",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_docs_templates_bucket",
       "elapsed_ms": 0
     },
     {
@@ -238,10 +237,6 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_context_capsules_if_present",
-      "elapsed_ms": 0
-    },
-    {
       "name": "validate_risk_map",
       "elapsed_ms": 0
     },
@@ -254,7 +249,7 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_plan_governed_execution_gate",
+      "name": "validate_context_capsules_if_present",
       "elapsed_ms": 0
     },
     {
@@ -263,6 +258,10 @@
     },
     {
       "name": "validate_tooling_gate",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_plan_governed_execution_gate",
       "elapsed_ms": 0
     },
     {
@@ -284,7 +283,6 @@
     "confidence": "medium",
     "reasons": [
       "Risk map missing (run `decapod riskmap init`)",
-      "STALE_SPECS_TEMPLATE: Project specs use template version 'scaffold-v4' while current scaffolding is 'scaffold-v3'; living spec content remains authoritative.",
       "Watcher audit trail missing (run `decapod govern watcher run`)"
     ],
     "recommendations": [
@@ -292,5 +290,5 @@
       "Use `decapod validate -v --format json` to inspect the affected gate output."
     ]
   },
-  "receipt_hash": "sha256:2ed20208fef309a636de584005db32702b4169a28b258071254e501df30c58dc"
+  "receipt_hash": "sha256:296b967c14528283f97990a7e4dd98c1b1f2573df1d16ddc11541a8fe8e2f6d8"
 }
