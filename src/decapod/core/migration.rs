@@ -245,6 +245,38 @@ pub struct DbSchemaVersionCheck {
     pub exists: bool,
 }
 
+/// Evidence from the migration check performed for one Decapod invocation.
+///
+/// Every local command runs this check. The report lets the agent-facing
+/// command path announce a version transition or newly applied migration
+/// instead of silently changing the environment underneath the agent.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MigrationReport {
+    pub previous_version: Option<String>,
+    pub current_version: String,
+    pub version_changed: bool,
+    pub applied_migrations: Vec<String>,
+}
+
+impl MigrationReport {
+    pub fn agent_instruction(&self) -> Option<String> {
+        if !self.version_changed && self.applied_migrations.is_empty() {
+            return None;
+        }
+
+        let previous = self.previous_version.as_deref().unwrap_or("unknown");
+        let applied = if self.applied_migrations.is_empty() {
+            "none".to_string()
+        } else {
+            self.applied_migrations.join(", ")
+        };
+        Some(format!(
+            "Decapod migration notice: the environment changed from {previous} to {}. Applied migrations: {applied}. Inspect .decapod/managed/migrations/applied.json and catalog.json, then follow any migration-specific instructions before continuing agent work.",
+            self.current_version
+        ))
+    }
+}
+
 /// Run any pending migrations (idempotent — safe to call every startup)
 pub fn check_and_migrate(decapod_root: &Path) -> Result<(), error::DecapodError> {
     reconcile_post_consolidation_artifacts(decapod_root)?;
@@ -259,39 +291,54 @@ pub fn check_and_migrate_with_backup<F>(
 where
     F: FnOnce(&Path) -> Result<(), error::DecapodError>,
 {
+    check_and_migrate_with_backup_report(decapod_root, verify).map(|_| ())
+}
+
+/// Run the migration check, including the protected backup/restore path, and
+/// return the evidence needed by the agent-facing command to announce work.
+pub fn check_and_migrate_with_backup_report<F>(
+    decapod_root: &Path,
+    verify: F,
+) -> Result<MigrationReport, error::DecapodError>
+where
+    F: FnOnce(&Path) -> Result<(), error::DecapodError>,
+{
     let data_root = decapod_root.join("data");
     reconcile_post_consolidation_artifacts(decapod_root)?;
     if !schema_upgrade_pending(&data_root)? {
-        run_migrations(decapod_root)?;
+        let report = run_migrations(decapod_root)?;
         verify(&data_root)?;
-        return Ok(());
+        return Ok(report);
     }
 
     checkpoint_legacy_databases(&data_root)?;
     let Some(backup_dir) = create_data_backup(&data_root)? else {
-        run_migrations(decapod_root)?;
+        let report = run_migrations(decapod_root)?;
         verify(&data_root)?;
-        return Ok(());
+        return Ok(report);
     };
 
-    let result = (|| -> Result<(), error::DecapodError> {
-        run_migrations(decapod_root)?;
+    let result = (|| -> Result<MigrationReport, error::DecapodError> {
+        let report = run_migrations(decapod_root)?;
         verify(&data_root)?;
-        Ok(())
+        Ok(report)
     })();
 
-    if let Err(err) = result {
-        restore_data_backup(&data_root, &backup_dir)?;
-        let _ = fs::remove_dir_all(&backup_dir);
-        return Err(error::DecapodError::ValidationError(format!(
-            "Migration failed; restored .decapod/data backup from {}: {}",
-            backup_dir.display(),
-            err
-        )));
+    match result {
+        Err(err) => {
+            restore_data_backup(&data_root, &backup_dir)?;
+            let _ = fs::remove_dir_all(&backup_dir);
+            Err(error::DecapodError::ValidationError(format!(
+                "Migration failed; restored .decapod/data backup from {}: {}",
+                backup_dir.display(),
+                err
+            )))
+        }
+        Ok(report) => {
+            fs::remove_dir_all(&backup_dir).map_err(error::DecapodError::IoError)?;
+            Ok(report)
+        }
     }
-
-    fs::remove_dir_all(&backup_dir).map_err(error::DecapodError::IoError)?;
-    Ok(())
 }
 
 fn reconcile_post_consolidation_artifacts(decapod_root: &Path) -> Result<(), error::DecapodError> {
@@ -484,10 +531,14 @@ fn plan_pending_migrations<'a>(
         .collect())
 }
 
-/// Run all idempotent migrations.
-fn run_migrations(decapod_root: &Path) -> Result<(), error::DecapodError> {
+/// Run all idempotent migrations and return the durable transition evidence.
+fn run_migrations(decapod_root: &Path) -> Result<MigrationReport, error::DecapodError> {
     let mut migrations = all_migrations();
     migrations.sort_by_key(|m| m.sequence);
+    let previous_version = load_last_seen_version(decapod_root)?;
+    let version_changed = previous_version
+        .as_deref()
+        .is_some_and(|version| version != DECAPOD_VERSION);
     touch_generated_version_counter(decapod_root)?;
     touch_generated_migration_catalog(decapod_root, &migrations)?;
     let mut applied = load_applied_migrations(decapod_root)?;
@@ -495,14 +546,21 @@ fn run_migrations(decapod_root: &Path) -> Result<(), error::DecapodError> {
     let single_datastore_was_previously_consolidated =
         applied_ids.contains("db.consolidate.single_datastore.v001");
     let pending = plan_pending_migrations(DECAPOD_VERSION, &migrations, &applied_ids)?;
+    let mut applied_migrations = Vec::with_capacity(pending.len());
     for migration in pending {
         (migration.up)(decapod_root)?;
         applied.record(migration);
         applied_ids.insert(migration.id.to_string());
+        applied_migrations.push(migration.id.to_string());
         store_applied_migrations(decapod_root, &applied)?;
     }
     reconcile_canonical_event_tables(decapod_root, single_datastore_was_previously_consolidated)?;
-    Ok(())
+    Ok(MigrationReport {
+        previous_version,
+        current_version: DECAPOD_VERSION.to_string(),
+        version_changed,
+        applied_migrations,
+    })
 }
 
 /// Keep canonical SQLite event tables complete. JSONL import is sealed inside
@@ -717,6 +775,17 @@ fn version_gte(left: &str, right: &str) -> bool {
     parse_version(left) >= parse_version(right)
 }
 
+fn load_last_seen_version(decapod_root: &Path) -> Result<Option<String>, error::DecapodError> {
+    let path = decapod_root.join(GENERATED_VERSION_COUNTER);
+    if !path.exists() {
+        return Ok(None);
+    }
+    let raw = fs::read_to_string(path).map_err(error::DecapodError::IoError)?;
+    Ok(serde_json::from_str::<GeneratedVersionCounter>(&raw)
+        .ok()
+        .map(|counter| counter.last_seen_version))
+}
+
 fn touch_generated_version_counter(decapod_root: &Path) -> Result<(), error::DecapodError> {
     let path = decapod_root.join(GENERATED_VERSION_COUNTER);
     if let Some(parent) = path.parent() {
@@ -749,7 +818,8 @@ fn touch_generated_version_counter(decapod_root: &Path) -> Result<(), error::Dec
     counter.updated_at = now;
     let body = serde_json::to_string_pretty(&counter)
         .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
-    fs::write(path, body).map_err(error::DecapodError::IoError)?;
+    crate::core::atomic::write_atomic(&path, body.as_bytes())
+        .map_err(error::DecapodError::IoError)?;
     Ok(())
 }
 

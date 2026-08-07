@@ -77,6 +77,22 @@ flowchart LR
 ```
 
 ## Proof Surfaces
+## Current PR Proof Plan
+| Claim | Focused Proof | Expected Evidence |
+|---|---|---|
+| New specs are materially deeper | Fresh scaffold test checks all eight new contract sections and template version | Core scaffold test output |
+| Authored specs survive refresh | Existing project refresh preserves authored content and updates only bounded projections | Refresh test plus material spec diff |
+| Trajectory is one JSON object | Unit test appends a legacy second value, initializes a new run, and parses the result | Current run ID, current hash, no concatenated values |
+| Migrations are agent-visible | Migration report test seeds an older release, checks notice once, then verifies steady state is quiet | Previous/current versions and instruction |
+
+## Migration and Artifact Regression Rules
+- A migration path must be safe to invoke repeatedly and must not make the
+  agent guess whether a version transition occurred.
+- A trajectory write must be atomic and parse as one complete JSON document
+  after replacement.
+- A command-path warning is actionable guidance, not a completion claim; the
+  migration ledger and post-migration verification remain authoritative.
+
 - `decapod validate`
 - Required test command: `cargo test`
 - Required integration/e2e commands: `cargo test --test context_capsule_schema`, `cargo test --test init_validate_green_field`
@@ -188,7 +204,7 @@ Proof-completion bindings:
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d0ba8924775d416f34254725e2f8d7aba8143cb56e80ff48675f8246433a3009`
+- Repository signal fingerprint: `b30857665faa26f3f6b5af3fdb8e030a696478a957e7f5e1a7fc19b85310c329`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

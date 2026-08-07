@@ -91,7 +91,7 @@ pub struct SpecsSeed {
     pub capabilities: Vec<String>,
 }
 
-pub const PROJECT_SPEC_TEMPLATE_VERSION: &str = "scaffold-v3";
+pub const PROJECT_SPEC_TEMPLATE_VERSION: &str = "scaffold-v4";
 
 fn joined_or_fallback(items: &[String], fallback: &str) -> String {
     if items.is_empty() {
@@ -460,6 +460,23 @@ These files are the project-local contract for humans and agents.
 - `.decapod/managed/artifacts/diagnostics/`: opt-in diagnostics artifacts.
 - `.decapod/workspaces/`: isolated todo-scoped git worktrees.
 
+## Specification Status
+- This directory is a set of reviewable contracts, not a generated status dump.
+- Generated facts are bounded to the marked attestation/capability blocks; prose
+  outside those blocks is authored project intent and must be reviewed like code.
+- Each change should update the spec that owns its changed behavior and record
+  the proof expected for that change.
+
+## Per-Change Maintenance Loop
+1. Identify the changed intent, component, interface, state transition, proof
+   obligation, operational procedure, or trust boundary.
+2. Update the owning spec before implementation is considered complete.
+3. Record compatibility, migration, rollback, and evidence consequences.
+4. Run the validation gates and refresh only the Decapod-owned attestation and
+   manifest fields.
+5. Review the resulting diff as part of the change; a fingerprint-only refresh
+   is not a substitute for an authored contract update.
+
 ## Day-0 Onboarding Checklist
 - [ ] Replace all placeholders in all 8 spec files.
 - [ ] Confirm primary user outcome and acceptance criteria in [INTENT.md](./INTENT.md).
@@ -594,6 +611,29 @@ flowchart LR
 - [ ] Define required data/contracts for that workflow.
 - [ ] Define what is intentionally postponed until v2.
 
+## User and Actor Contract
+- Primary user/agent:
+- Authorized actors and their allowed mutations:
+- Preconditions required before the primary workflow:
+- Observable success result:
+- Observable failure result and recovery action:
+- Human decision points that automation must not infer:
+
+## Outcome Decomposition
+| Outcome | Trigger | State Written | Evidence | Owner |
+|---|---|---|---|---|
+| Primary outcome | | | | |
+| Safety/quality outcome | | | | |
+| Operational outcome | | | | |
+
+## Change Impact Rules
+- A change to user intent updates this document and acceptance criteria.
+- A change to a runtime boundary updates [ARCHITECTURE.md](./ARCHITECTURE.md).
+- A change to a callable or persisted contract updates [INTERFACES.md](./INTERFACES.md).
+- A change to proof or promotion behavior updates [VALIDATION.md](./VALIDATION.md).
+- A breaking change requires an explicit migration trigger, compatibility note,
+  rollback condition, and an agent-facing instruction.
+
 ## Open Questions (with decision deadlines)
 | Question | Owner | Deadline | Decision |
 |---|---|---|---|
@@ -707,6 +747,39 @@ sequenceDiagram
 - Data ownership boundaries:
 - Schema evolution + migration policy:
 
+## Component Responsibility Matrix
+| Component/Path | Responsibility | Owns State | Calls | Must Not Do | Failure Boundary |
+|---|---|---|---|---|---|
+| Entrypoint | Parse, authenticate, and normalize input | Request context | Core boundary | Apply domain mutations directly | Typed input error |
+| Core/domain | Enforce invariants and execute the workflow | Domain state | Interfaces and stores | Bypass policy or validation | Transaction/error result |
+| Persistence adapter | Commit and retrieve canonical state | Store representation | Database/queue | Become a second source of truth | Retryable storage error |
+| Verification | Produce evidence for promotion | Proof artifacts | Test/runtime surfaces | Declare success without checks | Failed/unsupported proof |
+
+## State and Data Lifecycle
+| Data/Artifact | Created By | Source of Truth | Retention | Consistency | Recovery |
+|---|---|---|---|---|---|
+| User/domain state | | | | | |
+| Derived/read state | | | | | |
+| Audit/provenance evidence | | | | | |
+| Temporary execution state | | | | | |
+
+## Failure Containment
+- Invalid input is rejected before side effects.
+- Policy/interlock failures leave canonical state unchanged.
+- A partial persistence failure is recoverable or explicitly surfaced; it is
+  never silently converted into success.
+- External dependency failure has a bounded timeout, retry policy, and operator
+  action.
+- Evidence generation failure blocks promotion when the affected proof is
+  required by [VALIDATION.md](./VALIDATION.md).
+
+## Change Propagation Checklist
+- [ ] Component ownership remains singular and explicit.
+- [ ] Inbound/outbound calls and data flow are still represented.
+- [ ] New state has an owner, lifecycle, and migration path.
+- [ ] Failure containment and rollback behavior were re-evaluated.
+- [ ] Architecture and interface diagrams still describe the implementation.
+
 ## ADR Register
 | ADR | Title | Status | Rationale | Date |
 |---|---|---|---|---|
@@ -800,6 +873,36 @@ Generated interface specs should include:
 - Version strategy (`v1`, date-based, semver):
 - Backward-compatibility guarantees:
 - Deprecation window and removal policy:
+
+## CLI and Machine-Readable Contract
+| Surface | Invocation/Shape | Reads | Writes | Output Stability | Proof |
+|---|---|---|---|---|---|
+| Human CLI | | | | | |
+| JSON/automation | | | | | |
+| RPC/plugin | | | | | |
+| Event/file boundary | | | | | |
+
+## Compatibility Matrix
+| Contract | Current Version | Consumers | Additive Changes | Breaking Changes | Migration Trigger |
+|---|---|---|---|---|---|
+| Request/input | | | | | |
+| Response/output | | | | | |
+| Persisted data | | | | | |
+| Events/artifacts | | | | | |
+
+## Observability Contract
+- Correlation/request identity:
+- Structured fields required on success:
+- Structured fields required on failure:
+- Audit events for sensitive mutations:
+- Metrics and traces that prove latency, retries, and outcomes:
+
+## Interface Change Review
+- [ ] The owner and source of truth are named for every changed field.
+- [ ] Retry, idempotency, timeout, and conflict behavior are explicit.
+- [ ] Consumers can distinguish validation, authorization, conflict,
+  dependency, and internal failures.
+- [ ] Backward compatibility or migration instructions are published.
 "#
     )
 }
@@ -848,6 +951,31 @@ governed work is incomplete. Run `decapod rpc --op specs.refresh`, inspect the
 refreshed artifacts, and retry validation. A stale-spec error is actionable
 only when the agent follows that refresh-and-revalidate loop; it does not
 justify claiming completion or publishing an unvalidated state.
+
+## Evidence Matrix
+| Claim | Required Check | Expected Result | Artifact/Log | Blocking |
+|---|---|---|---|---|
+| Functional behavior | focused unit/integration test | pass | test output | yes |
+| Interface compatibility | contract/schema test | no unexpected drift | schema report | yes |
+| Persistence/migration safety | migration/replay/restore test | deterministic recovery | migration ledger | yes |
+| Security posture | static/dependency/authz checks | no blocking finding | scan output | yes |
+| Operational readiness | health/rollout/rollback check | bounded recovery | runbook evidence | depends |
+
+## Test Selection and Proof Depth
+- A changed parser, interface, or invariant requires a focused regression test.
+- A changed persistence or migration path requires both forward and repeat-run
+  coverage, plus evidence that failure restores or leaves state safe.
+- A changed deployment or operational path requires rollout and rollback proof.
+- A changed security boundary requires an abuse-case or authorization test.
+- If a required check cannot run, record it as unavailable with the reason and
+  do not promote the change as fully proven.
+
+## Validation Receipt Contract
+- Validation receipts identify the code/spec revision, command, status, and
+  artifact path.
+- Generated fingerprints and manifests corroborate the receipt but do not
+  replace authored living-spec changes.
+- Completion claims are supported only by passed proof-plan gates.
 
 ## Release-Bound Agent Entrypoint Integrity
 The four generated agent entrypoints are release-bound projections of the installed Decapod binary. Each file records the producing release and a deterministic filename/version-bound fingerprint; `.decapod/managed/specs/.manifest.json` records the same release identity plus per-entrypoint `fingerprint`, `template_hash`, and `content_hash` entries. Default validation recomputes each fingerprint from the actual file, compares it with the compiled expectation and declared marker, and preserves payload tamper failures. Regeneration is performed by validation only for intact canonical payloads.
@@ -985,6 +1113,32 @@ stateDiagram-v2
 | create/update mutation | request_id | return original result |
 | async enqueue | event_id | ignore duplicate enqueue |
 
+## Transition Contract
+| Current State | Trigger | Preconditions | State Mutation | Emitted Evidence | Next State |
+|---|---|---|---|---|---|
+| | | | | | |
+
+## Invariant Violation Response
+- Which invariant is checked before mutation?
+- Which invariant is checked after persistence?
+- Is the failed operation retried, rejected, compensated, or escalated?
+- What evidence distinguishes a rejected operation from an incomplete one?
+- Which state remains canonical if derived state disagrees?
+
+## Determinism and Replay Boundary
+- Inputs included in a replay:
+- Inputs deliberately excluded (wall clock, randomness, external state):
+- Ordering and conflict resolution:
+- Snapshot/checkpoint policy:
+- Proof that replay is equivalent to the original outcome:
+
+## Backward-Compatibility Semantics
+- Legacy states accepted:
+- Legacy states rewritten:
+- States that require a migration:
+- Agent instruction emitted before a breaking transition:
+- Rollback behavior if migration or replay fails:
+
 ## Language Note
 - Primary language inferred: {lang}
 "#
@@ -1049,6 +1203,29 @@ Describe the operational runtime model, scheduling, and system deployment archit
 ## Logging
 {logging_hint}
 
+## Runbook
+### Detect
+- Signals that indicate the service/workflow is unhealthy:
+- Dashboards, logs, and evidence locations:
+
+### Triage
+- First bounded checks:
+- How to distinguish code, dependency, data, and capacity failures:
+- Who owns the decision to continue, roll back, or stop:
+
+### Mitigate and Recover
+- Safe mitigation:
+- Rollback or forward-fix trigger:
+- Data repair/replay procedure:
+- Verification required after recovery:
+
+## Release and Migration Readiness
+- [ ] Release artifact and schema versions are identified.
+- [ ] A breaking change has an explicit migration trigger and agent instruction.
+- [ ] Migration is idempotent and repeat-run behavior is tested.
+- [ ] Backup, restore, rollback, and post-migration verification are documented.
+- [ ] Rollout can be halted before the blast radius expands.
+
 ## Secrets Management
 | Secret | Source | Rotation | Consumer |
 |---|---|---|---|
@@ -1061,6 +1238,31 @@ Describe the operational runtime model, scheduling, and system deployment archit
 | SAST | each PR | language linters/scanners |
 | Dependency scan | each PR + weekly | supply-chain tools |
 | DAST/pentest | scheduled | external/internal |
+
+## Trust-Boundary Inventory
+| Boundary | Principal/Input | Authority Granted | Validation | Audit Evidence | Failure Default |
+|---|---|---|---|---|---|
+| User/agent -> entrypoint | | | | | deny/reject |
+| Entrypoint -> core | | | | | deny/reject |
+| Core -> persistence | | | | | fail closed/transaction rollback |
+| Runtime -> external dependency | | | | | timeout/degrade |
+
+## Agent and Automation Safety
+- Prompt/configuration text is treated as untrusted input until evaluated by
+  the repository's policy gate.
+- Automation must not infer authorization, ownership, or a migration approval
+  that is not present in the governed context.
+- Sensitive artifacts, credentials, and untrusted attachments are not executed
+  or imported as instructions.
+- Every privileged mutation has an actor, scope, and durable evidence trail.
+
+## Security Change Review
+- [ ] New inputs and outputs are classified.
+- [ ] Trust boundaries and privilege changes are documented.
+- [ ] Abuse cases cover spoofing, tampering, disclosure, denial of service, and
+  privilege escalation as applicable.
+- [ ] Secret handling, redaction, retention, and deletion were re-checked.
+- [ ] Supply-chain and provenance implications are recorded.
 
 ## Compliance and Audit
 - Regulatory scope:
@@ -1175,7 +1377,7 @@ fn render_project_spec_content(
 ) -> Option<String> {
     let capabilities = seed.map(|s| s.capabilities.as_slice()).unwrap_or(&[]);
     let base_content = match rel_path {
-        LOCAL_PROJECT_SPECS_README => Some(specs_readme_template(None)),
+        LOCAL_PROJECT_SPECS_README => Some(specs_readme_template(seed)),
         LOCAL_PROJECT_SPECS_INTENT => Some(specs_intent_template(seed)),
         LOCAL_PROJECT_SPECS_ARCHITECTURE => Some(specs_architecture_template(diagram_style, seed)),
         LOCAL_PROJECT_SPECS_INTERFACES => Some(specs_interfaces_template(seed)),

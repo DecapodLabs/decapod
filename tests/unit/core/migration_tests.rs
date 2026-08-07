@@ -40,6 +40,43 @@ fn migration_ledger_records_application_metadata_without_execution() {
 }
 
 #[test]
+fn migration_report_warns_once_after_a_version_transition() {
+    let root = tempdir().unwrap();
+    fs::create_dir_all(root.path().join("managed/migrations")).unwrap();
+    fs::write(
+        root.path().join("managed/version_counter.json"),
+        serde_json::json!({
+            "schema_version": "1.0.0",
+            "version_count": 3,
+            "initialized_with_version": "0.95.0",
+            "last_seen_version": "0.96.13",
+            "updated_at": "2026-08-01T00:00:00Z"
+        })
+        .to_string(),
+    )
+    .unwrap();
+
+    let mut ledger = AppliedMigrationLedger {
+        schema_version: "1.0.0".to_string(),
+        entries: Vec::new(),
+    };
+    for migration in all_migrations() {
+        ledger.record(&migration);
+    }
+    store_applied_migrations(root.path(), &ledger).unwrap();
+
+    let first = check_and_migrate_with_backup_report(root.path(), |_| Ok(())).unwrap();
+    assert_eq!(first.previous_version.as_deref(), Some("0.96.13"));
+    assert!(first.version_changed);
+    assert!(first.applied_migrations.is_empty());
+    assert!(first.agent_instruction().is_some());
+
+    let second = check_and_migrate_with_backup_report(root.path(), |_| Ok(())).unwrap();
+    assert!(!second.version_changed);
+    assert!(second.agent_instruction().is_none());
+}
+
+#[test]
 fn proven_consolidation_copies_forward_and_retires_recreated_databases() {
     let root = tempdir().unwrap();
     let data_root = root.path().join("data");

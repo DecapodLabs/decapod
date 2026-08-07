@@ -18,6 +18,29 @@ These files are the project-local contract for humans and agents.
 - [OPERATIONS.md](./OPERATIONS.md): SLOs, monitoring, incident response, and rollout strategy.
 - [SECURITY.md](./SECURITY.md): threat model, trust boundaries, auth/authz, and supply-chain posture.
 
+## Living-Spec Authoring Contract
+The eight documents are one contract set with distinct ownership. A change is
+not fully specified until its owning document records the new behavior,
+compatibility expectations, proof obligation, and recovery consequence.
+Decapod-owned attestation, capability overlays, and manifests corroborate the
+contract but do not replace authored prose.
+
+## Per-PR Change Review
+1. Start from the changed user outcome and name the owning spec.
+2. Update the smallest set of affected contracts before implementation closes.
+3. Record whether the change is additive, compatible-by-adapter, or breaking.
+4. For breaking state/data changes, name the migration trigger, agent notice,
+   backup/rollback behavior, and post-migration proof.
+5. Review the implementation diff and material spec diff together.
+
+## Current PR Contract
+This change establishes two repository invariants:
+- The governance trajectory path is one valid, replaceable trajectory object.
+  Git history, not appended JSON values, preserves prior runs.
+- Every local Decapod command checks the installed-version ledger. A version
+  transition or applied migration produces an agent-facing notice that points
+  to the migration ledger and requires migration instructions to be reviewed.
+
 ## Canonical `.decapod/` Layout
 - `.decapod/data/`: canonical control-plane state (SQLite + ledgers).
 - `.decapod/managed/Dockerfile.decapod`: Decapod's project-specific execution image; Decapod runs inside it and may add project build dependencies such as Go, Python, or system packages. Glibc is the default; `--image-profile alpine` selects the GHCR `-alpine`-tagged musl image.
@@ -47,7 +70,7 @@ These files are the project-local contract for humans and agents.
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d0ba8924775d416f34254725e2f8d7aba8143cb56e80ff48675f8246433a3009`
+- Repository signal fingerprint: `b30857665faa26f3f6b5af3fdb8e030a696478a957e7f5e1a7fc19b85310c329`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -47,6 +47,19 @@ the code PR, and release automation handles only compilation and publication.
 ## Installed-Version Upgrade Path
 After `cargo install decapod`, the next normal governed command runs protected, idempotent schema migration and legacy-event reconciliation before runtime consumers read evidence. Existing-project `decapod init` executes the same reconciliation before regeneration. A prior successful single-datastore migration retires its JSONL inputs through a durable receipt; startup does not rescan them. Legacy SQLite stores recreated by an older binary are copied forward and removed without entering the full-backup loop. Human-authored `OVERRIDE.md` content is validated but never mechanically rewritten. Fresh import conflicts preserve source artifacts and stop with an actionable error.
 
+## Agent-Triggered Migration Runbook
+1. Let the first governed command after installing a new Decapod release run
+   the normal migration check.
+2. If the command emits a migration notice, inspect the managed migration
+   ledger and catalog before further agent mutations.
+3. Confirm the reported migration completed and the command verification
+   callback passed; do not treat the warning alone as proof.
+4. For a failed migration, follow the bounded backup/restore diagnostic,
+   preserve the source artifact, and stop for human review if supported
+   recovery cannot establish a clean state.
+5. For trajectory work, confirm the cookie parses as one object and that the
+   intended run ID is the only current cookie identity.
+
 ## Service Level Objectives
 | SLI | SLO Target | Measurement Window | Owner |
 |---|---|---|---|
@@ -154,7 +167,7 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d0ba8924775d416f34254725e2f8d7aba8143cb56e80ff48675f8246433a3009`
+- Repository signal fingerprint: `b30857665faa26f3f6b5af3fdb8e030a696478a957e7f5e1a7fc19b85310c329`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

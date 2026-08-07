@@ -1814,9 +1814,11 @@ fn run_init_apply(
             // governed commands. Legacy event files remain recovery inputs while
             // every runtime reader observes the reconciled canonical datastore.
             core::assets::validate_override_structure(&target_dir)?;
-            migration::check_and_migrate_with_backup(&setup_decapod_root, |data_root| {
-                subsystems::initialize_all_dbs(data_root)
-            })?;
+            let migration_report = migration::check_and_migrate_with_backup_report(
+                &setup_decapod_root,
+                |data_root| subsystems::initialize_all_dbs(data_root),
+            )?;
+            announce_migration_notice(&migration_report);
         }
     }
 
@@ -2028,7 +2030,22 @@ pub fn run() -> Result<(), error::DecapodError> {
         Command::System(SystemCli {
             command: SystemCommand::Version,
         }) => {
-            // Version command - simple output for scripts/parsing
+            // Keep the version output simple, but do not let this early
+            // script-friendly path bypass the first-command migration check.
+            // A project-local store may have been created by an older binary.
+            if let Ok(workspace_root) = decapod_root_option.as_ref() {
+                let governance_root = find_governance_root(workspace_root);
+                let decapod_root_path = governance_root.join(".decapod");
+                if decapod_root_path.exists() {
+                    let data_root = decapod_root_path.join("data");
+                    std::fs::create_dir_all(&data_root).map_err(error::DecapodError::IoError)?;
+                    let migration_report = migration::check_and_migrate_with_backup_report(
+                        &decapod_root_path,
+                        |data_root| subsystems::initialize_all_dbs(data_root),
+                    )?;
+                    announce_migration_notice(&migration_report);
+                }
+            }
             println!("v{}", migration::DECAPOD_VERSION);
             return Ok(());
         }
@@ -2351,12 +2368,12 @@ pub fn run() -> Result<(), error::DecapodError> {
             // Check for version/schema changes and run protected migrations if needed.
             // Backups are auto-created in .decapod/data only when schema upgrades are pending.
             if !cloud_todo_command {
-                let migration_result =
-                    migration::check_and_migrate_with_backup(&decapod_root_path, |data_root| {
-                        subsystems::initialize_all_dbs(data_root)
-                    });
+                let migration_result = migration::check_and_migrate_with_backup_report(
+                    &decapod_root_path,
+                    |data_root| subsystems::initialize_all_dbs(data_root),
+                );
                 match migration_result {
-                    Ok(()) => {}
+                    Ok(report) => announce_migration_notice(&report),
                     Err(e) if is_validate_cmd => {
                         let normalized = normalize_validate_error(e);
                         return Err(attach_validate_diagnostic_if_enabled(
@@ -2463,6 +2480,12 @@ pub fn run() -> Result<(), error::DecapodError> {
         }
     }
     Ok(())
+}
+
+fn announce_migration_notice(report: &migration::MigrationReport) {
+    if let Some(instruction) = report.agent_instruction() {
+        eprintln!("warn: {instruction}");
+    }
 }
 
 fn should_route_via_group_broker(command: &Command, argv: &[String]) -> bool {

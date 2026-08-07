@@ -100,6 +100,28 @@ sequenceDiagram
 - Data ownership boundaries:
 - Schema evolution + migration policy: Decapod owns migration identity, ordering, version gates, applied-ledger persistence, backup/restore, and legacy-store import. Storage execution is a replaceable boundary.
 
+## Current PR Control-Plane Sequence
+1. The CLI resolves the repository governance root and creates the local data
+   directory when required.
+2. Before command dispatch, migration reconciliation runs against the
+   version-counter and applied-migration ledger.
+3. Successful version transitions return a report; the agent-facing command
+   emits a warning/instruction naming the applied migrations and inspection
+   paths.
+4. Trajectory initialization validates the requested run only when the existing
+   cookie is a valid same-run artifact, then atomically replaces the single
+   tracked JSON file.
+5. Validation and publication consume the resulting artifact; no runtime
+   reader treats appended JSON values as history.
+
+## Artifact Ownership Matrix
+| Artifact | Authority | Update Mechanism | Failure Policy | Historical Record |
+|---|---|---|---|---|
+| Managed spec authored sections | Project/user contract | Agent-authored PR edit | Material change required when affected | Git history |
+| Specs attestation/manifest | Decapod projection | Governed refresh | Validation blocks stale/malformed projection | Git history |
+| Managed migration ledger/catalog | Migration history | Startup migration check | Backup/restore and visible failure | Git history |
+| Governance trajectory file | Current run evidence | Atomic replace/update | Invalid legacy cookie is replaced by explicit init | Git history |
+
 ## Governance Authority and Evidence Boundaries
 - Each exact registered directive H3 in `.decapod/OVERRIDE.md` owns a fenced human-authored documentation body. The scaffold uses a four-backtick Markdown source block so headings and nested triple-backtick examples do not render as outer document structure. `core::assets` extracts the wrapper-free body, preserves legacy body bytes during upgrade, and fails the whole overlay on unclosed wrappers, duplicate exact IDs, or non-empty unknown Decapod-namespaced IDs.
 - Context resolution and context capsules carry derived authority evidence: directive ID, source path, source hash, body hash, byte count, and precedence.
@@ -145,7 +167,7 @@ sequenceDiagram
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d0ba8924775d416f34254725e2f8d7aba8143cb56e80ff48675f8246433a3009`
+- Repository signal fingerprint: `b30857665faa26f3f6b5af3fdb8e030a696478a957e7f5e1a7fc19b85310c329`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -27,6 +27,25 @@
 - Decapod owns bounded retry/contention policy, stable identifier generation, migration planning, applied-ledger state, backup/restore, and legacy import. A future dactyl implementation owns only the physical storage guarantees behind those contracts.
 - The current PR proves these seams against the existing SQLite implementation without claiming that dactyl's pure-Rust backend contract is complete.
 
+## Current Governance Artifact Intent
+- Managed specs are living project contracts: fresh scaffolds must be
+  substantially explanatory, while refresh must preserve authored meaning and
+  update only bounded Decapod-owned projections.
+- A trajectory is a single run cookie for the current branch/PR. It is
+  replaced atomically when a new run is initialized; historical runs belong in
+  Git history and must never be represented by concatenated JSON documents.
+- Migration work is agent-visible. The first governed command after a detected
+  Decapod version transition reports the previous/current release, applied
+  migrations, and the ledger/catalog paths the agent must inspect.
+
+## Issue Acceptance Contract (#1226 and #1228)
+| Requirement | Implementation Obligation | Proof |
+|---|---|---|
+| Verbose managed specs | Bump the scaffold contract and add explicit intent, topology, interface, proof, state, operations, and security sections | Fresh-init scaffold regression |
+| Iterative spec hygiene | Preserve authored prose while refreshing bounded attestations/manifests | Existing refresh-preservation tests plus material spec diff |
+| Single trajectory JSON | Replace the cookie atomically and recover from legacy appended/malformed content on explicit init | Unit regression plus CLI trajectory coverage |
+| Agent-triggered migrations | Run the migration check on every local command and announce version/migration transitions | Migration report regression and command-path review |
+
 ## What This Project Is
 Decapod is a Rust governance kernel invoked by agents through ephemeral CLI and structured RPC processes. It is intentionally daemonless. The repository is the durable execution surface, so one task can continue across processes, models, harnesses, and Decapod invocations.
 
@@ -148,7 +167,7 @@ flowchart LR
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d0ba8924775d416f34254725e2f8d7aba8143cb56e80ff48675f8246433a3009`
+- Repository signal fingerprint: `b30857665faa26f3f6b5af3fdb8e030a696478a957e7f5e1a7fc19b85310c329`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
