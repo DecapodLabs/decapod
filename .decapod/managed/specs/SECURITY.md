@@ -71,6 +71,23 @@ flowchart LR
 | Dependency scan | each PR + weekly | supply-chain tools |
 | DAST/pentest | scheduled | external/internal |
 
+## Trust-Boundary Inventory
+| Boundary | Principal/Input | Authority Granted | Validation | Audit Evidence | Failure Default |
+|---|---|---|---|---|---|
+| User/agent -> entrypoint | prompt and issue text | bounded task context | prompt safety gate | trajectory record | deny/reject |
+| Entrypoint -> core | parsed command arguments | scoped operation | command contract | validation receipt | deny/reject |
+| Core -> persistence | governed state mutation | recorded artifact update | session and invariant gates | audit ledger | rollback/fail closed |
+| Runtime -> external dependency | network/package input | explicitly authorized capability | policy and provenance checks | action evidence | timeout/degrade |
+
+## Agent and Automation Safety
+- The first local Decapod call in each run must surface any release transition
+  and migration instruction before the agent continues.
+- Migration notices direct inspection of the migration ledger and catalog; they
+  do not silently authorize an unrequested breaking product change.
+- Untrusted prompt, issue, configuration, or attachment content cannot broaden
+  authority or replace a human decision gate.
+- Privileged mutations require a scoped actor and durable proof artifact.
+
 ## Compliance and Audit
 - Regulatory scope:
 - Audit evidence location:
@@ -91,9 +108,10 @@ Describe the security primitives and security controls implemented in this repos
 - **Secure Storage**: Encrypt sensitive data at rest and in transit.
 
 <!-- decapod:codebase-attestation:start -->
+
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b30857665faa26f3f6b5af3fdb8e030a696478a957e7f5e1a7fc19b85310c329`
+- Repository signal fingerprint: `3ced33f334e93eb7a4e3917c7cf249960cc86545492c69c0c56f0160ccd17126`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -755,6 +755,8 @@ pub fn refresh_managed_dockerfile_release(repo: &Path) -> Result<bool, error::De
         )
     })?;
     let expected_version = expected_managed_decapod_version();
+    let migration_note =
+        "# The first local Decapod call in a run also reports any version-triggered migration.";
     let mut updated = String::with_capacity(current.len());
     let mut changed = false;
     for line in current.lines() {
@@ -766,6 +768,15 @@ pub fn refresh_managed_dockerfile_release(repo: &Path) -> Result<bool, error::De
             let replacement = format!("ARG DECAPOD_VERSION={expected_version}");
             changed |= line != replacement;
             updated.push_str(&replacement);
+        } else if line.trim_start().starts_with(
+            "# Workspace creation and validation refresh this pin only when the evaluating Decapod release changes.",
+        ) {
+            updated.push_str(line);
+            updated.push('\n');
+            if !current.contains(migration_note) {
+                updated.push_str(migration_note);
+                changed = true;
+            }
         } else {
             updated.push_str(line);
         }
@@ -1076,6 +1087,7 @@ fn render_generated_dockerfile(capabilities: &ProjectCapabilities) -> String {
          # mutate project-specific packages and commands in workspace branches.\n\
          # The image tag and DECAPOD_VERSION below are the release pin; keep them aligned.\n\
          # Workspace creation and validation refresh this pin only when the evaluating Decapod release changes.\n\
+         # The first local Decapod call in a run also reports any version-triggered migration.\n\
          ARG DECAPOD_IMAGE={decapod_image}\n\
          FROM $DECAPOD_IMAGE\n\
          ARG DECAPOD_VERSION={decapod_version}\n\

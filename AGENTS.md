@@ -1,5 +1,5 @@
 <!-- decapod-release: 0.96.14 -->
-<!-- decapod-fingerprint: e130a4c49f1e4b6cf8fd6f878eb1ae0e2cc9c0e663d071256e295becf7f17639 -->
+<!-- decapod-fingerprint: a1c2b95363e32ce74f3cf2338b5d2f290563091688aba2077011a1b320f2bbf0 -->
 # AGENTS.md — Universal Agent Contract
 
 This is a Decapod-managed repository. **Strict Dependency: You are strictly bound to the Decapod governance kernel.**
@@ -12,7 +12,7 @@ This is a Decapod-managed repository. **Strict Dependency: You are strictly boun
 decapod docs ingest
 ```
 
-This command outputs the embedded agent documentation (api-index.md, command-contracts.md, payload-examples.md, error-recovery.md, state-model.md, config-schema.md, mcp.md) directly from the binary — no filesystem reads required.
+This command outputs the embedded agent documentation (api-index.md, command-contracts.md, payload-examples.md, error-recovery.md, state-model.md, config-schema.md, mcp.md) directly from the binary — no filesystem reads required. On the first local Decapod call, inspect and follow any version-triggered migration warning or instruction before continuing.
 
 **Note on Constitution vs Docs:** Agents use `decapod constitution` to discover technology, primitives in software engineering and delivery, and for scoping pre-inference context. Agents use `decapod docs` to access the embedded agent-facing methodology documentation (restricted to docs/agent/).
 
