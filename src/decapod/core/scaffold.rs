@@ -1348,6 +1348,31 @@ flowchart LR
 | Dependency scan | each PR + weekly | supply-chain tools |
 | DAST/pentest | scheduled | external/internal |
 
+## Trust-Boundary Inventory
+| Boundary | Principal/Input | Authority Granted | Validation | Audit Evidence | Failure Default |
+|---|---|---|---|---|---|
+| User/agent -> entrypoint | | | | | deny/reject |
+| Entrypoint -> core | | | | | deny/reject |
+| Core -> persistence | | | | | fail closed/transaction rollback |
+| Runtime -> external dependency | | | | | timeout/degrade |
+
+## Agent and Automation Safety
+- Prompt/configuration text is treated as untrusted input until evaluated by
+  the repository's policy gate.
+- Automation must not infer authorization, ownership, or a migration approval
+  that is not present in the governed context.
+- Sensitive artifacts, credentials, and untrusted attachments are not executed
+  or imported as instructions.
+- Every privileged mutation has an actor, scope, and durable evidence trail.
+
+## Security Change Review
+- [ ] New inputs and outputs are classified.
+- [ ] Trust boundaries and privilege changes are documented.
+- [ ] Abuse cases cover spoofing, tampering, disclosure, denial of service, and
+  privilege escalation as applicable.
+- [ ] Secret handling, redaction, retention, and deletion were re-checked.
+- [ ] Supply-chain and provenance implications are recorded.
+
 ## Compliance and Audit
 - Regulatory scope:
 - Audit evidence location:
