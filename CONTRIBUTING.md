@@ -159,7 +159,7 @@ Beyond the rules above, every PR must satisfy Decapod's governance gates and CI'
 
 - Work in an isolated worktree: `decapod workspace ensure` after claiming a todo. Do not push directly to `master`.
 - `decapod validate` must pass. If it reports `entrypoint_release_mismatch`, regenerate the governed entrypoints (`AGENTS.md`, `CLAUDE.md`, `CODEX.md`, `GEMINI.md`) with the installed Decapod release and re-run; the entrypoint pin and the binary must agree before validate can pass.
-- The `governance-artifacts` CI job requires every PR to change all four of:
+- The `governance-artifacts` CI job requires every PR to have all four present and parseable at HEAD (unchanged inherited files are fine when still valid — GitHub #1232):
   - `.decapod/governance/claims.json`
   - `.decapod/governance/trajectory.json`
   - `.decapod/governance/validation.json`

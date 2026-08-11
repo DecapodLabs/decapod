@@ -32,14 +32,14 @@ When asked to add a maintenance or release-ops tool:
 
 ## 3. Governance Artifacts Per PR
 
-Every PR MUST change all four governance files, enforced by the `governance-artifacts` CI job:
+Every PR MUST carry all four governance files **present and schema-valid at HEAD**, enforced by the `governance-artifacts` CI job and publication gates. Unchanged files inherited from the base branch are sufficient when they still load and validate (GitHub #1232); do not force artificial content or mode churn solely to place a path in the PR diff.
 
-- `.decapod/governance/claims.json` — the falsifiable research claims ledger. Refresh for the change being made: add or update the claim this PR advances, with its baseline, observable Decapod condition, failure mode, measurement, and proof gate. Do not hand-edit; use the sanctioned CLI surface.
+- `.decapod/governance/claims.json` — the falsifiable research claims ledger. When the change advances a claim, refresh it with baseline, observable Decapod condition, failure mode, measurement, and proof gate. Do not hand-edit; use the sanctioned CLI surface.
 - `.decapod/governance/plan.json` — the governed plan for the change. Initialize with `decapod govern plan init`, approve with `decapod govern plan approve`, patch with `decapod govern plan update`.
 - `.decapod/governance/trajectory.json` — the per-run custody ledger. Initialize with `decapod govern trajectory init` and record evidence with `decapod govern trajectory record`.
 - `.decapod/governance/validation.json` — the validation receipt. Refreshed by `decapod validate`.
 
-If a PR legitimately advances no falsifiable claim about the governance kernel (e.g. a pure docs/conventions change), surface that in the PR body and confirm with the reviewer that no `claims.json` entry is required before merge. Do not invent a fake claim to satisfy the gate.
+When a code change invalidates an artifact's governed dependency surface, prior proof is no longer sufficient: refresh the affected artifact and revalidate before publication. If a PR legitimately advances no falsifiable claim about the governance kernel (e.g. a pure docs/conventions change), surface that in the PR body and confirm with the reviewer that no `claims.json` entry is required before merge. Do not invent a fake claim to satisfy the gate.
 
 ## 3b. Material Living-Spec Rewrites Per PR
 
@@ -70,12 +70,17 @@ stale spec normally means the governed work remains incomplete.
 
 `AGENTS.md`, `CLAUDE.md`, `CODEX.md`, `GEMINI.md`, and `.decapod/managed/Dockerfile.decapod` carry a Decapod release pin and fingerprint that MUST agree with the installed binary. `decapod validate` self-heals these when they drift; do not hand-edit the release pins or fingerprints. If `validate` reports `entrypoint_release_mismatch`, rerun it and let the binary refresh the pinned headers; the file bodies (project-specific prose, governed sections) are preserved.
 
-## 5. First-Commit Publication Readiness
+## 5. Publication Bundle Currency
 
 Run validation before opening the pull request and commit every generated
-projection it refreshes in that first commit. The PR diff must carry changed
-entrypoint fingerprints, the managed Dockerfile release pin, managed-spec
-fingerprints or authored spec updates, and all four governance artifacts when
-the change affects them. A pull request is a completion signal, not a place to
-discover local-only drift. If a generated artifact is stale, regenerate it
-through Decapod, stage it, and rerun validation before publication.
+projection it refreshes. Publication requires release-bound entrypoints, the
+managed Dockerfile pin, the specs manifest, living specs, and governance
+artifacts to be **present and current for the published state** — not that
+every intermediate commit (or every PR) textually mutates each path.
+
+When the installed Decapod release is unchanged from the base branch, already-
+current entrypoints and Dockerfile pins need no artificial churn. When the
+release advances, or when a dependency surface invalidates an artifact, refresh
+through Decapod, stage the result, and revalidate. Material living-spec rewrites
+remain required for non-release PRs (see §3b). A pull request is a completion
+signal, not a place to discover local-only drift.

@@ -2148,7 +2148,7 @@ fn validate_project_specs_docs(
     // After freshness checks, enforce material mutation versus the PR base when
     // this is an isolated feature branch with a resolvable base.
     validate_material_specs_mutation(ctx, repo_root)?;
-    validate_per_commit_publication_bundle(ctx, repo_root)?;
+    validate_publication_bundle_currency(ctx, repo_root)?;
 
     let architecture_path = repo_root.join(LOCAL_PROJECT_SPECS_ARCHITECTURE);
     if architecture_path.exists() {
@@ -2601,19 +2601,24 @@ Rewrite at least one living spec to reflect this change (INTENT/ARCHITECTURE/INT
     Ok(())
 }
 
-/// Require every publishable commit to carry the complete governed publication
-/// bundle. This keeps a PR's first commit self-contained instead of allowing
-/// release-bound fingerprints, specs, Dockerfile pins, or proof artifacts to
-/// appear only in a later repair commit.
-fn validate_per_commit_publication_bundle(
+/// Prove the publication bundle at HEAD is present and current for the state
+/// being published.
+///
+/// Unchanged artifacts inherited from the base branch are sufficient when
+/// release-bound fingerprints and governance provenance still validate against
+/// the candidate state. Textual participation in every feature-branch commit
+/// is not required (GitHub #1232). When the installed Decapod release changes
+/// (or a dependency surface is invalidated), sibling fingerprint / material-
+/// specs / governance gates still force a refresh before publication.
+fn validate_publication_bundle_currency(
     ctx: &ValidationContext,
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Per-Commit Publication Bundle Gate", ctx);
+    info("Publication Bundle Currency Gate", ctx);
 
     if std::env::var("DECAPOD_VALIDATE_SKIP_GIT_GATES").is_ok() {
         skip(
-            "Per-commit publication bundle gate skipped (DECAPOD_VALIDATE_SKIP_GIT_GATES set)",
+            "Publication bundle currency gate skipped (DECAPOD_VALIDATE_SKIP_GIT_GATES set)",
             ctx,
         );
         return Ok(());
@@ -2621,7 +2626,7 @@ fn validate_per_commit_publication_bundle(
 
     if !is_inside_git_work_tree(repo_root) {
         skip(
-            "Not inside a git work tree; skipping per-commit publication bundle gate",
+            "Not inside a git work tree; skipping publication bundle currency gate",
             ctx,
         );
         return Ok(());
@@ -2631,7 +2636,7 @@ fn validate_per_commit_publication_bundle(
         Ok(status) => status,
         Err(_) => {
             skip(
-                "Workspace status unavailable; skipping per-commit publication bundle gate",
+                "Workspace status unavailable; skipping publication bundle currency gate",
                 ctx,
             );
             return Ok(());
@@ -2639,7 +2644,7 @@ fn validate_per_commit_publication_bundle(
     };
     if status.git.is_protected {
         skip(
-            "On protected base branch; no publishable commit bundle to inspect",
+            "On protected base branch; no publishable publication bundle to inspect",
             ctx,
         );
         return Ok(());
@@ -2649,27 +2654,17 @@ fn validate_per_commit_publication_bundle(
     let Some(base_ref) = workspace::base_ref_for_branch(repo_root, &base_branch) else {
         skip(
             &format!(
-                "Base branch '{base_branch}' unavailable; skipping per-commit publication bundle gate"
+                "Base branch '{base_branch}' unavailable; skipping publication bundle currency gate"
             ),
             ctx,
         );
         return Ok(());
     };
 
-    let git_dir = repo_root.to_str().unwrap_or(".");
-    let rev_list = std::process::Command::new("git")
-        .args([
-            "-C",
-            git_dir,
-            "rev-list",
-            "--reverse",
-            &format!("{base_ref}..HEAD"),
-        ])
-        .output()
-        .map_err(error::DecapodError::IoError)?;
-    if !rev_list.status.success() {
+    // No PR delta yet: nothing to enforce.
+    if git_same_commit(repo_root, &base_ref, "HEAD") {
         skip(
-            "Unable to enumerate feature-branch commits; skipping per-commit publication bundle gate",
+            "HEAD matches base ref; no PR delta for publication bundle currency",
             ctx,
         );
         return Ok(());
@@ -2688,63 +2683,169 @@ fn validate_per_commit_publication_bundle(
         ".decapod/governance/validation.json",
     ];
     let mut failures = Vec::new();
-    for commit in String::from_utf8_lossy(&rev_list.stdout)
-        .lines()
-        .map(str::trim)
-    {
-        if commit.is_empty() {
-            continue;
+
+    // Presence at the published working tree — not participation in each commit
+    // diff. Inherited base content counts when the file is still present.
+    for path in required_files {
+        if !repo_root.join(path).is_file() {
+            failures.push(format!("missing {path}"));
         }
-        let changed = std::process::Command::new("git")
-            .args([
-                "-C",
-                git_dir,
-                "diff-tree",
-                "--no-commit-id",
-                "--name-only",
-                "-r",
-                "--root",
-                commit,
-            ])
-            .output()
-            .map_err(error::DecapodError::IoError)?;
-        if !changed.status.success() {
-            failures.push(format!("{commit}: unable to inspect changed paths"));
-            continue;
+    }
+
+    let specs_dir = repo_root.join(".decapod/managed/specs");
+    let has_living_spec = specs_dir.is_dir()
+        && fs::read_dir(&specs_dir)
+            .map(|entries| {
+                entries.filter_map(Result::ok).any(|entry| {
+                    entry
+                        .path()
+                        .extension()
+                        .is_some_and(|ext| ext.eq_ignore_ascii_case("md"))
+                })
+            })
+            .unwrap_or(false);
+    if !has_living_spec {
+        failures.push("missing .decapod/managed/specs/*.md".to_string());
+    }
+
+    // Release-bound refresh when the evaluating Decapod version advanced past
+    // the base pin. Sibling entrypoint/Dockerfile fingerprint gates prove
+    // on-disk currency against the running binary; this check only ensures the
+    // branch actually carried the refresh once a version bump made inheritance
+    // insufficient (GitHub #1232 — same-version PRs need no artificial churn).
+    if !skip_fingerprint_gates() {
+        if let Some(base_release) = git_blob_release_marker(repo_root, &base_ref, "AGENTS.md") {
+            let running = crate::core::entrypoint_integrity::RELEASE_VERSION;
+            if base_release != running {
+                let branch_changed_release_bound = release_bound_paths_changed_vs_base(
+                    repo_root,
+                    &base_ref,
+                    &[
+                        "AGENTS.md",
+                        "CLAUDE.md",
+                        "CODEX.md",
+                        "GEMINI.md",
+                        ".decapod/managed/Dockerfile.decapod",
+                        ".decapod/managed/specs/.manifest.json",
+                    ],
+                )?;
+                if !branch_changed_release_bound {
+                    failures.push(format!(
+                        "Decapod release advanced from base '{base_release}' to running '{running}' but release-bound entrypoints/Dockerfile/manifest were not refreshed on this branch"
+                    ));
+                }
+            }
         }
-        let changed_paths = String::from_utf8_lossy(&changed.stdout);
-        let paths = changed_paths.lines().map(str::trim).collect::<HashSet<_>>();
-        let mut missing = required_files
-            .iter()
-            .filter(|path| !paths.contains(**path))
-            .map(|path| (*path).to_string())
-            .collect::<Vec<_>>();
-        if !paths
-            .iter()
-            .any(|path| path.starts_with(".decapod/managed/specs/") && path.ends_with(".md"))
-        {
-            missing.push(".decapod/managed/specs/*.md".to_string());
+    }
+
+    // Governance artifacts must load as schema-valid documents. Semantic
+    // binding (trajectory↔receipt, plan/task) is enforced by publish-time
+    // gates; this gate only requires a present, parseable proof surface.
+    match plan_governance::load_plan(repo_root) {
+        Ok(None) => failures.push(".decapod/governance/plan.json: missing or empty".to_string()),
+        Err(error) => failures.push(format!(".decapod/governance/plan.json: {error}")),
+        Ok(Some(_)) => {}
+    }
+    match research_claims::load_and_validate(repo_root) {
+        Ok(None) => failures.push(".decapod/governance/claims.json: missing or empty".to_string()),
+        Err(error) => failures.push(format!(".decapod/governance/claims.json: {error}")),
+        Ok(Some(_)) => {}
+    }
+    match trajectory::load_trajectory_cookie(repo_root) {
+        Ok(None) => {
+            failures.push(".decapod/governance/trajectory.json: missing or empty".to_string())
         }
-        if !missing.is_empty() {
-            failures.push(format!("{commit}: missing {}", missing.join(", ")));
-        }
+        Err(error) => failures.push(format!(".decapod/governance/trajectory.json: {error}")),
+        Ok(Some(_)) => {}
+    }
+    // Presence + parseable schema only. Integrity binding to the active
+    // trajectory is enforced at publish time; during validate the receipt is
+    // often the prior successful run and is rewritten at the end of this pass.
+    match load_validation_receipt_for_currency(repo_root) {
+        Ok(()) => {}
+        Err(error) => failures.push(format!(".decapod/governance/validation.json: {error}")),
     }
 
     if failures.is_empty() {
         pass(
-            "Every feature-branch commit carries fingerprints, specs, Dockerfile pin, and governance artifacts",
+            "Publication bundle is present and current at HEAD; unchanged artifacts accepted when release pins and provenance still validate",
             ctx,
         );
     } else {
         fail(
             &format!(
-                "PER_COMMIT_PUBLICATION_BUNDLE: each commit must carry the release-bound entrypoints, managed Dockerfile, specs, and governance artifacts. {}. Amend or squash the branch so the first publishable commit is complete, then rerun `decapod validate`.",
+                "PUBLICATION_BUNDLE_CURRENCY: required publication artifacts must be present and provably current for the state being published (unchanged inherited files are fine when fingerprints/provenance still validate; refresh when the Decapod release or dependency surface changes). {}. Repair via `decapod validate` self-heal / `decapod govern artifacts inventory --repair`, commit refreshed artifacts, then rerun `decapod validate`.",
                 failures.join("; ")
             ),
             ctx,
         );
     }
     Ok(())
+}
+
+fn load_validation_receipt_for_currency(repo_root: &Path) -> Result<(), String> {
+    let path = repo_root.join(VALIDATION_RECEIPT_PATH);
+    if !path.is_file() {
+        return Err("missing".to_string());
+    }
+    let raw = fs::read_to_string(&path).map_err(|error| error.to_string())?;
+    let _: ValidationReceipt =
+        serde_json::from_str(&raw).map_err(|error| format!("invalid JSON: {error}"))?;
+    Ok(())
+}
+
+/// Read the `<!-- decapod-release: ... -->` marker from a blob at `reference:path`.
+fn git_blob_release_marker(repo_root: &Path, reference: &str, path: &str) -> Option<String> {
+    let spec = format!("{reference}:{path}");
+    let output = std::process::Command::new("git")
+        .args(["-C", repo_root.to_str().unwrap_or("."), "show", &spec])
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    let content = String::from_utf8_lossy(&output.stdout);
+    for line in content.lines().take(8) {
+        let trimmed = line.trim();
+        if let Some(rest) = trimmed.strip_prefix("<!-- decapod-release:") {
+            let value = rest
+                .trim()
+                .trim_end_matches("-->")
+                .trim()
+                .trim_matches(|c: char| c == '"' || c == '\'');
+            if !value.is_empty() {
+                return Some(value.to_string());
+            }
+        }
+    }
+    None
+}
+
+/// True when any release-bound path differs between `base_ref` and HEAD.
+fn release_bound_paths_changed_vs_base(
+    repo_root: &Path,
+    base_ref: &str,
+    paths: &[&str],
+) -> Result<bool, error::DecapodError> {
+    let git_dir = repo_root.to_str().unwrap_or(".");
+    let output = std::process::Command::new("git")
+        .args([
+            "-C",
+            git_dir,
+            "diff",
+            "--name-only",
+            &format!("{base_ref}...HEAD"),
+            "--",
+        ])
+        .args(paths)
+        .output()
+        .map_err(error::DecapodError::IoError)?;
+    if !output.status.success() {
+        return Ok(false);
+    }
+    Ok(String::from_utf8_lossy(&output.stdout)
+        .lines()
+        .any(|line| !line.trim().is_empty()))
 }
 
 fn git_same_commit(repo_root: &Path, left: &str, right: &str) -> bool {
