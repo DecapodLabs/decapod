@@ -184,10 +184,13 @@ flowchart LR
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9b9d1508e071f9cc191083b2d637dc37f27f8823dff256b2de6172b49bdcb106`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
+- Repository signal fingerprint: `a4af6e8584f3f38d36d13da8a0e1dafea7d8823d8d516717b9e5663f05086dce`
+- Significant implementation surfaces: `.github/` (10 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
 ## Honest composition note (#1233 review)
 `PUBLICATION_BUNDLE_CURRENCY` is a HEAD load/presence predicate; fingerprint and living-spec attestation remain sibling gates.
+
+## Release-bound sync for release-plz PRs (#1236)
+release-plz version bumps change `Cargo.toml` (and thus `repo_signal_fingerprint`) without regenerating entrypoint pins. Validation must not hard-fail those PRs on drift; `release-artifact-sync` and the post-release-plz heal step regenerate pins/specs and commit them.
