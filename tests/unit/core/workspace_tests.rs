@@ -312,10 +312,7 @@ fn inherited_valid_governance_artifacts_need_not_appear_in_pr_diff() {
     git(tmp.path(), &["commit", "-m", "app change only"]);
 
     // Diff must not include governance artifacts.
-    let diff = git_stdout(
-        tmp.path(),
-        &["diff", "--name-only", "master...HEAD"],
-    );
+    let diff = git_stdout(tmp.path(), &["diff", "--name-only", "master...HEAD"]);
     for path in REQUIRED_PR_GOVERNANCE_ARTIFACTS {
         assert!(
             !diff.lines().any(|line| line.trim() == *path),
