@@ -194,3 +194,13 @@ flowchart LR
 
 ## Release-bound sync for release-plz PRs (#1236)
 release-plz version bumps change `Cargo.toml` (and thus `repo_signal_fingerprint`) without regenerating entrypoint pins. Validation must not hard-fail those PRs on drift; `release-artifact-sync` and the post-release-plz heal step regenerate pins/specs and commit them.
+
+## Three-tier project PR contract (#1234 / #1232)
+
+1. **Governance JSON** — always update every PR (`claims`, `plan`, `trajectory`, `validation`).
+2. **Living specs** — unique material prose for the change under review; fingerprint/attestation
+   re-verify always, but fingerprint *value* need only change when the evaluating Decapod version
+   is newer than the project base.
+3. **Entrypoints** — Decapod-owned. Always verify early against the evaluating binary. When pins
+   match (same Decapod version as base), leave files untouched. When pins mismatch (version bump),
+   Decapod rewrites them and the PR must include those diffs. Hand edits and mode-only touches fail.

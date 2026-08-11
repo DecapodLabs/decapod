@@ -5180,7 +5180,21 @@ fn heal_validation_scaffold(
 fn heal_release_bound_entrypoints(
     project_root: &Path,
 ) -> Result<Option<ValidationHealAction>, error::DecapodError> {
+    // Early alignment: always verify pins against this binary; rewrite only on
+    // mismatch so same-version project PRs stay quiet while upgrades bump pins.
     let updated = core::entrypoint_integrity::refresh_entrypoint_metadata(project_root)?;
+    let mut matching = 0usize;
+    let mut stale = 0usize;
+    let mut divergent = 0usize;
+    for surface in core::entrypoint_integrity::ENTRYPOINT_FILES {
+        match core::entrypoint_integrity::classify_entrypoint_alignment(project_root, surface)? {
+            core::entrypoint_integrity::EntrypointAlignment::MatchesEvaluatingRelease => {
+                matching += 1;
+            }
+            core::entrypoint_integrity::EntrypointAlignment::StalePin => stale += 1,
+            core::entrypoint_integrity::EntrypointAlignment::Divergent => divergent += 1,
+        }
+    }
     let all_entrypoints_valid =
         core::entrypoint_integrity::ENTRYPOINT_FILES
             .iter()
@@ -5195,7 +5209,8 @@ fn heal_release_bound_entrypoints(
                 action: "heal_release_bound_entrypoints".to_string(),
                 outcome: "refreshed".to_string(),
                 detail: format!(
-                    "Refreshed {updated} valid legacy release-bound entrypoint metadata file(s); validation remains blocked by another entrypoint integrity finding."
+                    "Bumped {updated} entrypoint pin(s) toward Decapod {}; validation remains blocked (matching={matching}, stale={stale}, divergent={divergent}). Hand-edited bodies are not overwritten.",
+                    core::entrypoint_integrity::RELEASE_VERSION
                 ),
             }))
         };
@@ -5213,18 +5228,31 @@ fn heal_release_bound_entrypoints(
         }
     };
     if updated == 0 && !manifest_needs_refresh {
-        return Ok(None);
+        // Explicit no-op success path: pins already match evaluating release.
+        return Ok(Some(ValidationHealAction {
+            action: "heal_release_bound_entrypoints".to_string(),
+            outcome: "verified".to_string(),
+            detail: format!(
+                "Entrypoint pins already match evaluating Decapod {} (matching={matching}); no fingerprint bump required.",
+                core::entrypoint_integrity::RELEASE_VERSION
+            ),
+        }));
     }
 
     let config = crate::cli::DecapodProjectConfig::load(project_root).unwrap_or_default();
     let _ =
         core::project_specs::refresh_specs_from_codebase(project_root, &config.repo.capabilities)?;
 
+    let outcome = if updated > 0 {
+        "bumped".to_string()
+    } else {
+        "refreshed".to_string()
+    };
     Ok(Some(ValidationHealAction {
         action: "heal_release_bound_entrypoints".to_string(),
-        outcome: "refreshed".to_string(),
+        outcome,
         detail: format!(
-            "Refreshed {updated} release-bound entrypoint metadata file(s) and the generated specs manifest for Decapod {}.",
+            "Entrypoint alignment for Decapod {}: bumped_files={updated}, matching={matching}, stale_remaining={stale}, divergent={divergent}; specs manifest refreshed when attestation lagged.",
             core::entrypoint_integrity::RELEASE_VERSION
         ),
     }))

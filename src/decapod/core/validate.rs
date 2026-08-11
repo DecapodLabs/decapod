@@ -2148,7 +2148,12 @@ fn validate_project_specs_docs(
     // After freshness checks, enforce material mutation versus the PR base when
     // this is an isolated feature branch with a resolvable base.
     validate_material_specs_mutation(ctx, repo_root)?;
+    // PR-level: every project PR must update the four governance JSON files.
+    validate_governance_pr_updates(ctx, repo_root)?;
     validate_publication_bundle_currency(ctx, repo_root)?;
+    // Entrypoints: Decapod-owned; only canonical rewrites when pins mismatch.
+    // Same Decapod version as base → no entrypoint diffs expected or required.
+    validate_entrypoint_commit_discipline(ctx, repo_root)?;
 
     let architecture_path = repo_root.join(LOCAL_PROJECT_SPECS_ARCHITECTURE);
     if architecture_path.exists() {
@@ -2601,6 +2606,119 @@ Rewrite at least one living spec to reflect this change (INTENT/ARCHITECTURE/INT
     Ok(())
 }
 
+/// Require the four governance JSON files to be updated in the feature-branch
+/// delta vs base (PR-level, not per-commit).
+///
+/// Agents must refresh claims/plan/trajectory/validation for every project PR.
+/// Intermediate commits need not each touch them; `base...HEAD` must include all
+/// four paths.
+fn validate_governance_pr_updates(
+    ctx: &ValidationContext,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Governance PR Update Gate", ctx);
+
+    if std::env::var("DECAPOD_VALIDATE_SKIP_GIT_GATES").is_ok() {
+        skip(
+            "Governance PR update gate skipped (DECAPOD_VALIDATE_SKIP_GIT_GATES set)",
+            ctx,
+        );
+        return Ok(());
+    }
+    if !is_inside_git_work_tree(repo_root) {
+        skip(
+            "Not inside a git work tree; skipping governance PR update gate",
+            ctx,
+        );
+        return Ok(());
+    }
+    let status = match workspace::get_workspace_status(repo_root) {
+        Ok(status) => status,
+        Err(_) => {
+            skip(
+                "Workspace status unavailable; skipping governance PR update gate",
+                ctx,
+            );
+            return Ok(());
+        }
+    };
+    if status.git.is_protected {
+        skip(
+            "On protected base branch; governance PR updates enforced on feature PRs",
+            ctx,
+        );
+        return Ok(());
+    }
+    let base_branch = workspace::resolve_base_branch(repo_root, None);
+    let Some(base_ref) = workspace::base_ref_for_branch(repo_root, &base_branch) else {
+        skip(
+            &format!("Base branch '{base_branch}' unavailable; skipping governance PR update gate"),
+            ctx,
+        );
+        return Ok(());
+    };
+    if git_same_commit(repo_root, &base_ref, "HEAD") {
+        skip(
+            "HEAD matches base ref; no PR delta for governance updates",
+            ctx,
+        );
+        return Ok(());
+    }
+
+    let required = [
+        ".decapod/governance/claims.json",
+        ".decapod/governance/plan.json",
+        ".decapod/governance/trajectory.json",
+        ".decapod/governance/validation.json",
+    ];
+    let git_dir = repo_root.to_str().unwrap_or(".");
+    let output = std::process::Command::new("git")
+        .args([
+            "-C",
+            git_dir,
+            "diff",
+            "--name-only",
+            &format!("{base_ref}...HEAD"),
+            "--",
+        ])
+        .args(required)
+        .output()
+        .map_err(error::DecapodError::IoError)?;
+    if !output.status.success() {
+        fail(
+            &format!("GOVERNANCE_PR_UPDATES: unable to inspect PR diff against {base_ref}"),
+            ctx,
+        );
+        return Ok(());
+    }
+    let changed: HashSet<String> = String::from_utf8_lossy(&output.stdout)
+        .lines()
+        .map(str::trim)
+        .filter(|p| !p.is_empty())
+        .map(str::to_string)
+        .collect();
+    let missing: Vec<&str> = required
+        .iter()
+        .copied()
+        .filter(|p| !changed.contains(*p))
+        .collect();
+    if missing.is_empty() {
+        pass(
+            "PR updates all four governance JSON artifacts versus base",
+            ctx,
+        );
+    } else {
+        fail(
+            &format!(
+                "GOVERNANCE_PR_UPDATES: every project PR must update all four governance files versus '{base_ref}' (missing: {}). Intermediate commits need not each touch them; the PR tip must. Update via governed CLI + `decapod validate`.",
+                missing.join(", ")
+            ),
+            ctx,
+        );
+    }
+    Ok(())
+}
+
 /// Publication-bundle **participation** gate at HEAD (GitHub #1232).
 ///
 /// This gate deliberately does **not** re-prove fingerprint currency, living-spec
@@ -2851,6 +2969,234 @@ fn release_bound_paths_changed_vs_base(
     Ok(String::from_utf8_lossy(&output.stdout)
         .lines()
         .any(|line| !line.trim().is_empty()))
+}
+
+fn validate_entrypoint_commit_discipline(
+    ctx: &ValidationContext,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Entrypoint Commit Discipline Gate", ctx);
+
+    if std::env::var("DECAPOD_VALIDATE_SKIP_GIT_GATES").is_ok() {
+        skip(
+            "Entrypoint commit discipline gate skipped (DECAPOD_VALIDATE_SKIP_GIT_GATES set)",
+            ctx,
+        );
+        return Ok(());
+    }
+    if skip_fingerprint_gates() {
+        skip(
+            "Entrypoint commit discipline gate skipped (DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES set)",
+            ctx,
+        );
+        return Ok(());
+    }
+    if !is_inside_git_work_tree(repo_root) {
+        skip(
+            "Not inside a git work tree; skipping entrypoint commit discipline gate",
+            ctx,
+        );
+        return Ok(());
+    }
+
+    let status = match workspace::get_workspace_status(repo_root) {
+        Ok(status) => status,
+        Err(_) => {
+            skip(
+                "Workspace status unavailable; skipping entrypoint commit discipline gate",
+                ctx,
+            );
+            return Ok(());
+        }
+    };
+    if status.git.is_protected {
+        skip(
+            "On protected base branch; no feature-branch entrypoint commits to inspect",
+            ctx,
+        );
+        return Ok(());
+    }
+
+    let base_branch = workspace::resolve_base_branch(repo_root, None);
+    let Some(base_ref) = workspace::base_ref_for_branch(repo_root, &base_branch) else {
+        skip(
+            &format!(
+                "Base branch '{base_branch}' unavailable; skipping entrypoint commit discipline gate"
+            ),
+            ctx,
+        );
+        return Ok(());
+    };
+
+    let git_dir = repo_root.to_str().unwrap_or(".");
+    let rev_list = std::process::Command::new("git")
+        .args([
+            "-C",
+            git_dir,
+            "rev-list",
+            "--reverse",
+            &format!("{base_ref}..HEAD"),
+        ])
+        .output()
+        .map_err(error::DecapodError::IoError)?;
+    if !rev_list.status.success() {
+        skip(
+            "Unable to enumerate feature-branch commits; skipping entrypoint commit discipline gate",
+            ctx,
+        );
+        return Ok(());
+    }
+
+    let mut failures = Vec::new();
+    let mut canonical_rewrites = 0usize;
+    for commit in String::from_utf8_lossy(&rev_list.stdout)
+        .lines()
+        .map(str::trim)
+        .filter(|c| !c.is_empty())
+    {
+        let changed = std::process::Command::new("git")
+            .args([
+                "-C",
+                git_dir,
+                "diff-tree",
+                "--no-commit-id",
+                "--name-status",
+                "-r",
+                "--root",
+                "-z",
+                commit,
+            ])
+            .output()
+            .map_err(error::DecapodError::IoError)?;
+        if !changed.status.success() {
+            failures.push(format!("{commit}: unable to inspect changed paths"));
+            continue;
+        }
+        let raw = changed.stdout;
+        // --name-status -z yields: STATUS\0PATH\0STATUS\0PATH\0...
+        // renames: R100\0old\0new\0
+        let mut parts = raw.split(|b| *b == 0).filter(|p| !p.is_empty());
+        while let Some(status_bytes) = parts.next() {
+            let status = String::from_utf8_lossy(status_bytes);
+            let status_code = status.chars().next().unwrap_or('?');
+            let path = match parts.next() {
+                Some(p) => String::from_utf8_lossy(p).into_owned(),
+                None => break,
+            };
+            // Skip rename old path; only inspect the destination for renames.
+            if status_code == 'R' || status_code == 'C' {
+                let _old = path;
+                let Some(new_path) = parts.next() else {
+                    break;
+                };
+                let new_path = String::from_utf8_lossy(new_path).into_owned();
+                if let Some(msg) =
+                    entrypoint_commit_path_violation(git_dir, commit, status_code, &new_path)
+                {
+                    failures.push(msg);
+                } else if crate::core::entrypoint_integrity::ENTRYPOINT_FILES
+                    .contains(&new_path.as_str())
+                {
+                    canonical_rewrites += 1;
+                }
+                continue;
+            }
+            if !crate::core::entrypoint_integrity::ENTRYPOINT_FILES.contains(&path.as_str()) {
+                continue;
+            }
+            if let Some(msg) = entrypoint_commit_path_violation(git_dir, commit, status_code, &path)
+            {
+                failures.push(msg);
+            } else {
+                canonical_rewrites += 1;
+            }
+        }
+    }
+
+    if failures.is_empty() {
+        if canonical_rewrites == 0 {
+            pass(
+                "No feature-branch commits hand-edit root agent entrypoints",
+                ctx,
+            );
+        } else {
+            pass(
+                &format!(
+                    "Feature-branch entrypoint rewrites are canonical for Decapod {} ({canonical_rewrites} path update(s))",
+                    crate::core::entrypoint_integrity::RELEASE_VERSION
+                ),
+                ctx,
+            );
+        }
+    } else {
+        fail(
+            &format!(
+                "ENTRYPOINT_COMMIT_DISCIPLINE: root agent entrypoints (AGENTS.md, CLAUDE.md, CODEX.md, GEMINI.md) are Decapod-owned templates. They must never be hand-edited in PRs. Only Decapod may rewrite them so content is byte-identical to the installed release template and fingerprint. {}. Drop entrypoint changes from the commit, or regenerate with `decapod init` / validate heal after a real template/release update.",
+                failures.join("; ")
+            ),
+            ctx,
+        );
+    }
+    Ok(())
+}
+
+/// Return a failure message when `path` at `commit` is not a pure Decapod template rewrite.
+fn entrypoint_commit_path_violation(
+    git_dir: &str,
+    commit: &str,
+    status_code: char,
+    path: &str,
+) -> Option<String> {
+    if !crate::core::entrypoint_integrity::ENTRYPOINT_FILES.contains(&path) {
+        return None;
+    }
+    if status_code == 'D' {
+        return Some(format!(
+            "{commit}: deleted Decapod-owned entrypoint {path} (not allowed)"
+        ));
+    }
+    let Some(new_content) = git_show_blob(git_dir, commit, path) else {
+        return Some(format!(
+            "{commit}: unable to read entrypoint {path} at commit"
+        ));
+    };
+    let parent_content = git_show_blob(git_dir, &format!("{commit}^"), path);
+    if parent_content.as_deref() == Some(new_content.as_str()) {
+        return Some(format!(
+            "{commit}: non-content touch of entrypoint {path} (mode/metadata-only changes are forbidden; leave Decapod-owned entrypoints alone)"
+        ));
+    }
+    let Some(canonical) = crate::core::entrypoint_integrity::render_entrypoint(path) else {
+        return Some(format!(
+            "{commit}: no canonical template for entrypoint {path}"
+        ));
+    };
+    // Normalize to the repository's usual trailing-newline style for comparison.
+    let new_norm = normalize_entrypoint_blob(&new_content);
+    let canonical_norm = normalize_entrypoint_blob(&canonical);
+    if new_norm != canonical_norm {
+        return Some(format!(
+            "{commit}: entrypoint {path} is not the Decapod {release} template (hand edit or stale body). Regenerate via Decapod; do not hand-edit.",
+            release = crate::core::entrypoint_integrity::RELEASE_VERSION
+        ));
+    }
+    None
+}
+
+fn normalize_entrypoint_blob(content: &str) -> String {
+    let trimmed = content.trim_end_matches(['\r', '\n']);
+    format!("{trimmed}\n")
+}
+
+fn git_show_blob(git_dir: &str, rev: &str, path: &str) -> Option<String> {
+    let output = std::process::Command::new("git")
+        .args(["-C", git_dir, "show", &format!("{rev}:{path}")])
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    String::from_utf8(output.stdout).ok()
 }
 
 fn git_same_commit(repo_root: &Path, left: &str, right: &str) -> bool {

@@ -276,14 +276,12 @@ fn src_change_with_material_rewrite_does_not_require_entrypoint_churn() {
     );
 }
 
-/// C (integration): stale release pin on HEAD without matching running binary
-/// must fail validate (entrypoint integrity).
+/// Committing a non-canonical entrypoint pin (not byte-identical to
+/// `render_entrypoint`) hard-fails ENTRYPOINT_COMMIT_DISCIPLINE.
 #[test]
-fn release_advance_without_refresh_fails_validate() {
+fn non_canonical_entrypoint_commit_fails_discipline() {
     let (_tmp, dir, password) = setup_feature_branch();
 
-    // Forge a stale release pin on the feature worktree without refreshing
-    // fingerprints for the evaluating binary.
     let agents = dir.join("AGENTS.md");
     let agents_body = fs::read_to_string(&agents).expect("read agents");
     let stale = agents_body.replacen(
@@ -293,26 +291,20 @@ fn release_advance_without_refresh_fails_validate() {
     );
     assert_ne!(stale, agents_body, "fixture must alter the release marker");
     fs::write(&agents, &stale).expect("write stale agents");
-    fs::write(dir.join("only-app.txt"), "app\n").expect("write app");
     let intent = dir.join(".decapod/managed/specs/INTENT.md");
     let body = fs::read_to_string(&intent).unwrap_or_default();
     fs::write(
         &intent,
-        format!("{body}\n\n## Release advance note\n\nMaterial rewrite.\n"),
+        format!("{body}\n\n## Discipline note\n\nMaterial rewrite.\n"),
     )
     .expect("intent");
     git(
         &dir,
-        &[
-            "add",
-            "AGENTS.md",
-            "only-app.txt",
-            ".decapod/managed/specs/INTENT.md",
-        ],
+        &["add", "AGENTS.md", ".decapod/managed/specs/INTENT.md"],
     );
     git(
         &dir,
-        &["commit", "-m", "feat: app with stale release pin on HEAD"],
+        &["commit", "-m", "feat: non-canonical entrypoint pin"],
     );
 
     let validate = run_decapod(
@@ -328,14 +320,10 @@ fn release_advance_without_refresh_fails_validate() {
     let text = combined(&validate);
     assert!(
         !validate.status.success(),
-        "stale release pin must fail validation, got success with: {text}"
+        "non-canonical entrypoint commit must fail validate"
     );
     assert!(
-        text.contains("PUBLICATION_BUNDLE_CURRENCY")
-            || text.contains("entrypoint_release_mismatch")
-            || text.contains("release advanced")
-            || text.contains("STALE_ENTRYPOINT")
-            || text.contains("Governed agent entrypoint"),
-        "failure must cite release-bound / currency surface, got: {text}"
+        text.contains("ENTRYPOINT_COMMIT_DISCIPLINE"),
+        "expected ENTRYPOINT_COMMIT_DISCIPLINE, got: {text}"
     );
 }
