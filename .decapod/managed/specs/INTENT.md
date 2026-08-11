@@ -16,6 +16,7 @@
 - `scheduled-jobs`
 
 <!-- decapod:declared-capabilities:end -->
+
 ## Product Outcome
 - Decapod is a repo-native governance kernel for AI coding agents. It turns human intent into bounded, durable, and proof-backed agent work.
 - Reliable convergence is the outcome: the agent preserves accepted intent, stays within explicit boundaries, maintains durable state, responds to validation, remediates supported failures, and produces evidence before completion.
