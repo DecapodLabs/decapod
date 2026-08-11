@@ -21,7 +21,7 @@ jobs:
       - name: Decapod Validate
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
-          # release-plz / release-labeled PRs: skip hard fingerprint fails while heal runs.
+          # release-plz / release-labeled PRs: skip hard fingerprint fails (pins lag cargo intentionally).
           # Code PRs enforce pins against the tree-local binary.
           DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES: ${{ (github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'release') || startsWith(github.head_ref, 'release-plz-')) && '1' || '' }}
         run: |
@@ -33,7 +33,7 @@ jobs:
           fi
           "$BIN" validate --refresh-specs
       - name: Ensure no spec or entrypoint drift
-        # release-plz bumps Cargo.toml without pins; release-artifact-sync heals those PRs.
+        # release-plz bumps Cargo.toml without pins; fingerprint gates skip; pins advance on next user PR.
         if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'release') && !startsWith(github.head_ref, 'release-plz-')
         # validate rewrites generated_at every run; that is not semantic drift.
         # Normalize it to HEAD before the exit-code check so only real content,
