@@ -5,9 +5,10 @@
   "task_id": "fend_01kzs9d8fcw8y18m",
   "original_intent": "Advance Decapod-owned local concurrency durability and Dactyl-boundary prerequisites after merged PR #1248",
   "derived_intent": "Implement only Decapod-side local semantics and tests that remain valid before Dactyl/Propodus contracts; preserve backend=local",
-  "current_phase": "local persistence implementation",
+  "current_phase": "validation",
   "next_transitions": [
-    "final governed validation and publication"
+    "final governed validation and publication",
+    "publish"
   ],
   "active_boundaries": [
     "Decapod local persistence only; stop at Dactyl/Propodus operation and schema contract",
@@ -28,12 +29,16 @@
     "tests/unit/plugins/lcm_tests.rs"
   ],
   "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
     "src/decapod/core/todo.rs",
     "src/decapod/plugins/policy.rs",
     "tests/plugins/todo.rs",
     "tests/unit/plugins/lcm_tests.rs"
   ],
-  "declared_commands": [],
+  "declared_commands": [
+    "decapod validate"
+  ],
   "tool_calls": [],
   "checks": [
     {
@@ -65,6 +70,10 @@
       "status": "unavailable"
     },
     {
+      "name": "decapod validate",
+      "status": "passed"
+    },
+    {
       "name": "focused_todo_and_sqlite_tests",
       "status": "passed"
     },
@@ -86,7 +95,8 @@
     }
   ],
   "evidence": [
-    "Host Rust 2024 toolchain: 283 library tests passed serially; focused todo, SQLite hardening, single datastore, rebuild, fmt, and Clippy proofs passed. Container v0.97.0 governance binary ran; its bundled Cargo is too old for edition 2024. Remote Dactyl/Propodus implementation intentionally not changed."
+    "Host Rust 2024 toolchain: 283 library tests passed serially; focused todo, SQLite hardening, single datastore, rebuild, fmt, and Clippy proofs passed. Container v0.97.0 governance binary ran; its bundled Cargo is too old for edition 2024. Remote Dactyl/Propodus implementation intentionally not changed.",
+    "validation epoch ve_2c142e3bb2d64838 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -97,7 +107,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:206eaf411dbb2904326e9dc8479ec957e255a6e82f41f787b0ca6a3741619f66",
+  "artifact_hash": "sha256:355fbb2895e0596336558448db0316d62756081b877b20e3162ad982e4a2ee14",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -178,6 +188,13 @@
       {
         "sequence": 10,
         "event_id": "event:10",
+        "intent_id": "intent:fend_01kzs7s5b28xtyh2",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:fend_01kzs7s5b28xtyh2"
+      },
+      {
+        "sequence": 11,
+        "event_id": "event:11",
         "intent_id": "intent:fend_01kzs7s5b28xtyh2",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:fend_01kzs7s5b28xtyh2"
@@ -309,12 +326,31 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:10"
+          },
+          {
+            "sequence": 11,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "shared task/event durability, local concurrency proof, backend boundary handoff",
+              "shared task/event durability, local concurrency proof, backend-boundary prerequisites"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_2c142e3bb2d64838 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:11"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 10
+    "next_sequence": 11
   }
 }
