@@ -1,15 +1,14 @@
 {
   "schema_version": "1.0.0",
-  "title": "README tagline: bounded, provable, shippable AI coding work",
-  "intent": "Replace the public README tagline to position Decapod as a governance kernel for bounded, provable, shippable AI coding work (not only AI coding agents). Align INTENT living-spec product outcome with that framing. No code or validation gate changes.",
+  "title": "README tagline + canonical managed Dockerfile.decapod for 0.96.18",
+  "intent": "Public README tagline and INTENT framing for bounded, provable, shippable work; rewrite .decapod/managed/Dockerfile.decapod to the evaluating Decapod 0.96.18 canonical container profile (pin + body).",
   "state": "APPROVED",
   "todo_ids": [
     "docs_01kzqvk4am5drmgf"
   ],
   "proof_hooks": [
-    "README.md hero tagline matches the new product framing",
-    "INTENT.md Product Outcome material rewrite documents bounded/provable/shippable",
-    "decapod validate pass on same Decapod 0.96.18 pin without entrypoint churn"
+    "Dockerfile.decapod ARG DECAPOD_IMAGE/VERSION pin 0.96.18",
+    "README hero tagline matches product framing"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -23,5 +22,5 @@
     "file_touch_budget": 15
   },
   "phases": [],
-  "updated_at": "1786433563Z"
+  "updated_at": "1786434715Z"
 }
