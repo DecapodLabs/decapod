@@ -318,9 +318,30 @@ fn material_specs_gate_skips_release_labeled_prs() {
         "material-specs job must fail closed on fingerprint-only refreshes"
     );
     assert!(
-        workflow.contains(
-            "if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'release')"
-        ),
+        workflow.contains("!contains(github.event.pull_request.labels.*.name, 'release')"),
         "release-labeled PRs must not be forced through the material living-specs gate"
+    );
+}
+
+#[test]
+fn release_pr_skips_spec_entrypoint_drift_gate() {
+    // Regression for release PR #1236 / actions run 31461500432:
+    // release-plz bumps Cargo.toml (repo_signal changes) without entrypoint
+    // pins; validate --refresh-specs rewrites the manifest and the drift gate
+    // must not hard-fail the release PR. Heal is owned by release-artifact-sync.
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let validate = fs::read_to_string(root.join(".github/workflows/decapod-validate.yml"))
+        .expect("read decapod-validate workflow");
+    let ci = fs::read_to_string(root.join(".github/workflows/ci.yml")).expect("read CI workflow");
+
+    assert!(
+        validate.contains("startsWith(github.head_ref, 'release-plz-')")
+            && validate.contains("!contains(github.event.pull_request.labels.*.name, 'release')"),
+        "decapod-validate drift gate must skip release-plz / release-labeled PRs"
+    );
+    assert!(
+        ci.contains("startsWith(github.head_ref, 'release-plz-')")
+            && ci.contains("Ensure no spec or entrypoint drift"),
+        "CI drift gate must also skip release-plz / release-labeled PRs"
     );
 }
