@@ -230,7 +230,7 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a4af6e8584f3f38d36d13da8a0e1dafea7d8823d8d516717b9e5663f05086dce`
+- Repository signal fingerprint: `48ebce25bad8a0746b996851f3c1d9529eddbed59d2be41849335dc836864393`
 - Significant implementation surfaces: `.github/` (10 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
