@@ -1,5 +1,12 @@
 //! Release-bound integrity for the generated agent entrypoints.
 //!
+//! `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, and `CODEX.md` are Decapod-owned
+//! templates. Agents and humans must not hand-edit them. The only permitted
+//! on-disk form is the exact template body plus release/fingerprint headers
+//! for the evaluating Decapod binary. Feature-branch commits that touch these
+//! files for any other reason (payload edits, fingerprint tweaks, mode-only
+//! changes) fail validation via the entrypoint commit-discipline gate.
+//!
 //! The expected fingerprints in this module are release artifact data. They
 //! are deliberately not derived from the files being validated or from the
 //! repository at runtime.
@@ -162,16 +169,21 @@ pub fn render_entrypoint(surface: &str) -> Option<String> {
     ))
 }
 
-/// Refresh release-bound entrypoint headers when the payload is still canonical.
+/// Refresh release-bound entrypoints when they do not match the evaluating binary.
 ///
-/// Post-release root cause: a version bump changes `RELEASE_VERSION` (and thus
-/// expected fingerprints) while release automation often commits only
-/// `Cargo.toml`/`CHANGELOG`. Validate then rewrites pins and CI drift fails.
+/// **Always verify; write only on mismatch.**
 ///
-/// When the body still matches the compiled template, always rewrite headers to
-/// the running release — including pure version bumps where the old fingerprint
-/// is still valid for the *previous* release marker. Hand-edited payloads
-/// (non-canonical bodies) are left alone so project overrides stay blocked.
+/// - If on-disk content is already byte-identical to [`render_entrypoint`] for
+///   this binary's [`RELEASE_VERSION`], do nothing (subsequent project PRs on
+///   the same Decapod version produce no entrypoint churn).
+/// - If the release pin or fingerprint is stale (project or CI moved to a newer
+///   Decapod) **and** the body is still the canonical template, rewrite to the
+///   evaluating template so the agent can commit a real pin/fingerprint bump.
+/// - Hand-edited (non-canonical) bodies are left alone so validation can hard-fail
+///   them via [`validate_entrypoint`] instead of silently overwriting project text.
+///
+/// Agents must call this path early (validate / workspace entry) so Decapod
+/// version alignment is established before implementation work.
 pub fn refresh_entrypoint_metadata(project_root: &Path) -> Result<usize, error::DecapodError> {
     let mut updated = 0;
     for surface in ENTRYPOINT_FILES {
@@ -186,6 +198,14 @@ pub fn refresh_entrypoint_metadata(project_root: &Path) -> Result<usize, error::
         }
 
         let existing = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
+        let Some(rendered) = render_entrypoint(surface) else {
+            continue;
+        };
+        // Fast path: already matches evaluating release → verify-only, no write.
+        if existing == rendered {
+            continue;
+        }
+
         let mut lines = existing.splitn(3, '\n');
         let Some(first) = lines.next() else {
             continue;
@@ -216,12 +236,12 @@ pub fn refresh_entrypoint_metadata(project_root: &Path) -> Result<usize, error::
         let fingerprint_mismatch =
             !declared_fingerprint.is_empty() && declared_fingerprint != expected;
 
-        // Rewrite when:
-        // - release pin is stale (post-release version bump), or
+        // Rewrite when on-disk pin is stale relative to the evaluating binary:
+        // - release pin differs (project upgraded / CI evaluates newer Decapod), or
         // - fingerprint is stale for the current release, or
         // - legacy binary marker still present, or
-        // - declared fingerprint is consistent with the declared release
-        //   (pure header migration path).
+        // - declared fingerprint is consistent with the declared (older) release
+        //   so a pure header migration to the evaluating release is safe.
         let should_rewrite = release_mismatch
             || fingerprint_mismatch
             || legacy_binary_marker
@@ -230,15 +250,57 @@ pub fn refresh_entrypoint_metadata(project_root: &Path) -> Result<usize, error::
             continue;
         }
 
-        let Some(rendered) = render_entrypoint(surface) else {
-            continue;
-        };
-        if existing != rendered {
-            fs::write(&path, rendered).map_err(error::DecapodError::IoError)?;
-            updated += 1;
-        }
+        fs::write(&path, rendered).map_err(error::DecapodError::IoError)?;
+        updated += 1;
     }
     Ok(updated)
+}
+
+/// Classify on-disk entrypoint alignment with the evaluating binary.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EntrypointAlignment {
+    /// Byte-identical to [`render_entrypoint`] for [`RELEASE_VERSION`].
+    MatchesEvaluatingRelease,
+    /// Canonical body but stale release pin and/or fingerprint (heal will bump).
+    StalePin,
+    /// Missing, non-canonical, or otherwise not auto-healable.
+    Divergent,
+}
+
+/// Inspect whether a surface already matches the evaluating Decapod release.
+pub fn classify_entrypoint_alignment(
+    project_root: &Path,
+    surface: &str,
+) -> Result<EntrypointAlignment, error::DecapodError> {
+    let path = project_root.join(surface);
+    let existing = match fs::read_to_string(&path) {
+        Ok(content) => content,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+            return Ok(EntrypointAlignment::Divergent);
+        }
+        Err(error) => return Err(error::DecapodError::IoError(error)),
+    };
+    let Some(rendered) = render_entrypoint(surface) else {
+        return Ok(EntrypointAlignment::Divergent);
+    };
+    if existing == rendered {
+        return Ok(EntrypointAlignment::MatchesEvaluatingRelease);
+    }
+    let mut lines = existing.splitn(3, '\n');
+    let Some(_first) = lines.next() else {
+        return Ok(EntrypointAlignment::Divergent);
+    };
+    let Some(_second) = lines.next() else {
+        return Ok(EntrypointAlignment::Divergent);
+    };
+    let Some(payload) = lines.next() else {
+        return Ok(EntrypointAlignment::Divergent);
+    };
+    if canonical_template(surface).as_deref() == Some(payload) {
+        Ok(EntrypointAlignment::StalePin)
+    } else {
+        Ok(EntrypointAlignment::Divergent)
+    }
 }
 
 fn marker_value(line: &str, prefix: &str) -> Option<Result<String, ()>> {

@@ -32,14 +32,14 @@ When asked to add a maintenance or release-ops tool:
 
 ## 3. Governance Artifacts Per PR
 
-Every PR MUST carry all four governance files **present and schema-valid at HEAD**, enforced by the `governance-artifacts` CI job and publication gates. Unchanged files inherited from the base branch are sufficient when they still load and validate (GitHub #1232); do not force artificial content or mode churn solely to place a path in the PR diff.
+Every PR MUST change all four governance files, enforced by the `governance-artifacts` CI job:
 
-- `.decapod/governance/claims.json` — the falsifiable research claims ledger. When the change advances a claim, refresh it with baseline, observable Decapod condition, failure mode, measurement, and proof gate. Do not hand-edit; use the sanctioned CLI surface.
+- `.decapod/governance/claims.json` — the falsifiable research claims ledger. Refresh for the change being made: add or update the claim this PR advances, with its baseline, observable Decapod condition, failure mode, measurement, and proof gate. Do not hand-edit; use the sanctioned CLI surface.
 - `.decapod/governance/plan.json` — the governed plan for the change. Initialize with `decapod govern plan init`, approve with `decapod govern plan approve`, patch with `decapod govern plan update`.
 - `.decapod/governance/trajectory.json` — the per-run custody ledger. Initialize with `decapod govern trajectory init` and record evidence with `decapod govern trajectory record`.
 - `.decapod/governance/validation.json` — the validation receipt. Refreshed by `decapod validate`.
 
-When a code change invalidates an artifact's governed dependency surface, prior proof is no longer sufficient: refresh the affected artifact and revalidate before publication. If a PR legitimately advances no falsifiable claim about the governance kernel (e.g. a pure docs/conventions change), surface that in the PR body and confirm with the reviewer that no `claims.json` entry is required before merge. Do not invent a fake claim to satisfy the gate.
+If a PR legitimately advances no falsifiable claim about the governance kernel (e.g. a pure docs/conventions change), surface that in the PR body and confirm with the reviewer that no `claims.json` entry is required before merge. Do not invent a fake claim to satisfy the gate.
 
 ## 3b. Material Living-Spec Rewrites Per PR
 
@@ -66,21 +66,76 @@ If a spec is wrong, validation has exposed the agent's misunderstanding in a
 reviewable artifact before publication. Correct the prose and revalidate; a
 stale spec normally means the governed work remains incomplete.
 
+
 ## 4. Entrypoint and Dockerfile Pin Discipline
 
-`AGENTS.md`, `CLAUDE.md`, `CODEX.md`, `GEMINI.md`, and `.decapod/managed/Dockerfile.decapod` carry a Decapod release pin and fingerprint that MUST agree with the installed binary. `decapod validate` self-heals these when they drift; do not hand-edit the release pins or fingerprints. If `validate` reports `entrypoint_release_mismatch`, rerun it and let the binary refresh the pinned headers; the file bodies (project-specific prose, governed sections) are preserved.
+`AGENTS.md`, `CLAUDE.md`, `CODEX.md`, and `GEMINI.md` are **Decapod-owned
+templates**. Agents and humans MUST NOT hand-edit them in project PRs. The only
+allowed content is the exact template and release fingerprint for the installed
+Decapod binary (`decapod-release` + `decapod-fingerprint` headers plus the
+compiled body).
 
-## 5. Publication Bundle Currency
+### Always verify; bump only on mismatch
+
+| Situation | Behavior |
+| --- | --- |
+| On-disk pin **matches** evaluating Decapod release/fingerprint | **Verify only** — do not rewrite entrypoints; no PR noise |
+| On-disk pin **differs** (project or CI moved to a newer Decapod) | **Decapod rewrites** entrypoints (and the managed Dockerfile pin) to the evaluating template; **include those diffs in the PR** |
+| Hand edit, mode-only touch, or invented fingerprint | **Hard fail** |
+
+Subsequent project PRs on the **same** Decapod version should confirm pins and
+leave entrypoints untouched. The next Decapod upgrade will fail verification
+until Decapod bumps the fingerprints again.
+
+`.decapod/managed/Dockerfile.decapod` likewise carries a Decapod release pin.
+Do not hand-edit the image/version header; validate self-heals the pin when the
+installed release changes. Project-specific package lines below the pin remain
+the only intentional local Dockerfile edits.
+
+## 4b. Governance JSON — always update every PR
+
+These files are required publication/governance artifacts and **must change on
+every PR** (they are not optional when “nothing broke”):
+
+- `.decapod/governance/claims.json`
+- `.decapod/governance/plan.json`
+- `.decapod/governance/trajectory.json`
+- `.decapod/governance/validation.json` (from a successful `decapod validate`)
+
+## 4c. Living specs — material every PR; fingerprint only on Decapod version advance
+
+- Every non-release PR must include a **unique material** living-spec rewrite that
+  encompasses the code/ops/intent change under review (`FINGERPRINT_ONLY_SPECS`).
+- Always re-verify attestation against the evaluating binary (`specs.refresh` /
+  validate). Do not skip the check.
+- Spec **fingerprint** values (and release-bound attestation) only **need to
+  change** when this PR evaluates a **newer Decapod version** than the project
+  base (previous merged pin). Same Decapod version as base/master → fingerprint
+  may stay stable even while material prose updates.
+
+## 4d. Early alignment check (agent + validate)
+
+Agents calling Decapod must establish version alignment **early** (before heavy
+implementation), typically as part of the first `decapod validate` / workspace
+entry sequence:
+
+1. Resolve evaluating Decapod release (binary identity).
+2. Verify entrypoint + Dockerfile pins; rewrite only on mismatch.
+3. Ensure governance JSON is updated for the active work.
+4. Verify/refresh specs attestation (material prose as needed).
+5. Continue remaining validation / implementation.
+
+## 5. First-Commit Publication Readiness
 
 Run validation before opening the pull request and commit every generated
-projection it refreshes. Publication requires release-bound entrypoints, the
-managed Dockerfile pin, the specs manifest, living specs, and governance
-artifacts to be **present and current for the published state** — not that
-every intermediate commit (or every PR) textually mutates each path.
+projection it refreshes in that first commit. The PR diff must carry:
 
-When the installed Decapod release is unchanged from the base branch, already-
-current entrypoints and Dockerfile pins need no artificial churn. When the
-release advances, or when a dependency surface invalidates an artifact, refresh
-through Decapod, stage the result, and revalidate. Material living-spec rewrites
-remain required for non-release PRs (see §3b). A pull request is a completion
-signal, not a place to discover local-only drift.
+- **Always:** all four governance JSON files
+- **When changed:** managed Dockerfile pin, managed-spec attestation, material
+  living-spec prose
+- **Entrypoints only when** Decapod rewrote them because the evaluating release
+  fingerprint differed from on-disk pins
+
+A pull request is a completion signal, not a place to discover local-only drift.
+If a generated artifact is stale, regenerate it through Decapod, stage the
+surfaces that legitimately changed, and rerun validation before publication.

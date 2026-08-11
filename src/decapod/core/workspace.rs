@@ -1720,20 +1720,19 @@ fn ensure_validation_artifacts_staged(repo_root: &Path) -> Result<(), DecapodErr
     Ok(())
 }
 
-/// Require every governance artifact to be present and schema-valid for the
-/// published state.
+/// Require every governance artifact to be present, valid, and updated in the PR.
 ///
-/// Inherited, unchanged artifacts from the base branch are sufficient when
-/// they still load and validate (GitHub #1232). Textual participation in the
-/// PR diff is not required solely to make an already-current proof surface
-/// appear in `git diff`. This gate runs after publication has committed local
-/// changes and before any push. Receipt↔trajectory binding is enforced by
-/// [`verify_validation_artifacts_for_publish`].
+/// Project PRs must always carry the four governance JSON files in the
+/// `base...HEAD` delta (claims, plan, trajectory, validation). That is a
+/// **PR-level** requirement (GitHub #1234 / three-tier contract), not a
+/// per-commit path-participation mandate (#1232 / #1233). Intermediate
+/// commits need not each touch them; the published tip must. Receipt↔trajectory
+/// binding is enforced by [`verify_validation_artifacts_for_publish`].
 pub fn ensure_required_governance_artifacts_in_pr(
     repo_root: &Path,
     base_branch: &str,
 ) -> Result<(), DecapodError> {
-    let _base_ref = base_ref_for_branch(repo_root, base_branch).ok_or_else(|| {
+    let base_ref = base_ref_for_branch(repo_root, base_branch).ok_or_else(|| {
         DecapodError::ValidationError(format!(
             "Cannot publish: base branch '{base_branch}' is not available locally; fetch it before checking required PR governance artifacts."
         ))
@@ -1756,8 +1755,47 @@ pub fn ensure_required_governance_artifacts_in_pr(
         .collect();
     if !incomplete.is_empty() {
         return Err(DecapodError::ValidationError(format!(
-            "Cannot publish: required governance artifacts are missing or invalid: {}. Artifacts must be present and schema-valid for the published state; unchanged inherited files are acceptable when they still validate. Run `decapod govern artifacts inventory --repair` then re-validate.",
+            "Cannot publish: required governance artifacts are missing or invalid: {}. Run `decapod govern artifacts inventory --repair` then re-validate.",
             incomplete.join(", ")
+        )));
+    }
+
+    // PR-level participation: every project PR must update all four governance
+    // JSON files vs base (not each intermediate commit).
+    let dir = repo_root.to_str().unwrap_or(".");
+    let output = Command::new("git")
+        .args([
+            "-C",
+            dir,
+            "diff",
+            "--name-only",
+            &format!("{base_ref}...HEAD"),
+            "--",
+        ])
+        .args(REQUIRED_PR_GOVERNANCE_ARTIFACTS)
+        .output()
+        .map_err(DecapodError::IoError)?;
+    if !output.status.success() {
+        return Err(DecapodError::ValidationError(format!(
+            "Cannot publish: failed to inspect the PR diff against '{base_ref}': {}",
+            String::from_utf8_lossy(&output.stderr).trim()
+        )));
+    }
+    let changed: std::collections::HashSet<String> = String::from_utf8_lossy(&output.stdout)
+        .lines()
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
+        .map(str::to_string)
+        .collect();
+    let missing: Vec<&str> = REQUIRED_PR_GOVERNANCE_ARTIFACTS
+        .iter()
+        .copied()
+        .filter(|path| !changed.contains(*path))
+        .collect();
+    if !missing.is_empty() {
+        return Err(DecapodError::ValidationError(format!(
+            "Cannot publish: required governance artifacts are not included in the PR diff against '{base_ref}': {}. Every project PR must update all four (plan, claims, trajectory, validation). Intermediate commits need not each touch them.",
+            missing.join(", ")
         )));
     }
 

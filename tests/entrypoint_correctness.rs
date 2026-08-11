@@ -953,3 +953,160 @@ fn test_core_decapod_routes_without_competing_with_agents() {
         );
     }
 }
+
+/// Nested path under `.decapod/workspaces/` so workspace protection treats the
+/// tree as an agent worktree (plain TempDir is classified as the main checkout).
+fn worktree_like_temp() -> (TempDir, PathBuf) {
+    let outer = TempDir::new().expect("temp dir");
+    let path = outer
+        .path()
+        .join(".decapod")
+        .join("workspaces")
+        .join("test-entrypoint-discipline");
+    fs::create_dir_all(&path).expect("create nested worktree path");
+    (outer, path)
+}
+
+/// Feature-branch repo with init artifacts committed on `main`.
+fn git_init_feature_repo(temp_path: &PathBuf) {
+    let git = |args: &[&str]| {
+        let status = Command::new("git")
+            .args(args)
+            .current_dir(temp_path)
+            .status()
+            .expect("run git");
+        assert!(status.success(), "git {args:?} failed");
+    };
+    git(&["init", "-b", "main"]);
+    git(&["config", "user.email", "test@example.com"]);
+    git(&["config", "user.name", "Decapod Test"]);
+    let (success, output) = run_decapod(temp_path, &["init", "--force"]);
+    assert!(success, "decapod init should succeed: {output}");
+    git(&["add", "-A"]);
+    git(&["commit", "-m", "chore: initial decapod scaffold"]);
+    git(&["checkout", "-b", "feature/entrypoint-discipline"]);
+}
+
+#[test]
+fn test_feature_branch_rejects_hand_edited_entrypoint_commit() {
+    let (_outer, temp_path) = worktree_like_temp();
+    git_init_feature_repo(&temp_path);
+    acquire_session(&temp_path);
+
+    let path = temp_path.join("AGENTS.md");
+    let mut content = fs::read_to_string(&path).expect("read AGENTS.md");
+    content.push_str("\nhand-edited in a PR\n");
+    fs::write(&path, content).expect("hand edit");
+    let status = Command::new("git")
+        .args(["add", "AGENTS.md"])
+        .current_dir(&temp_path)
+        .status()
+        .expect("git add");
+    assert!(status.success());
+    let status = Command::new("git")
+        .args(["commit", "-m", "bad: hand edit entrypoint"])
+        .current_dir(&temp_path)
+        .status()
+        .expect("git commit");
+    assert!(status.success());
+
+    // Enable git gates (do not set DECAPOD_VALIDATE_SKIP_GIT_GATES).
+    let (success, output) =
+        run_decapod_with_env(&temp_path, &["validate", "--format", "json"], &[]);
+    assert!(
+        !success,
+        "hand-edited entrypoint commit must fail: {output}"
+    );
+    assert!(
+        output.contains("ENTRYPOINT_COMMIT_DISCIPLINE")
+            || output.contains("entrypoint_payload_modified"),
+        "expected entrypoint discipline or payload finding. Output:\n{output}"
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn test_feature_branch_rejects_mode_only_entrypoint_touch() {
+    use std::os::unix::fs::PermissionsExt;
+
+    let (_outer, temp_path) = worktree_like_temp();
+    git_init_feature_repo(&temp_path);
+    acquire_session(&temp_path);
+
+    let path = temp_path.join("CLAUDE.md");
+    let mut perms = fs::metadata(&path).expect("meta").permissions();
+    perms.set_mode(0o755);
+    fs::set_permissions(&path, perms).expect("chmod");
+    let status = Command::new("git")
+        .args(["update-index", "--chmod=+x", "CLAUDE.md"])
+        .current_dir(&temp_path)
+        .status()
+        .expect("git update-index");
+    assert!(status.success(), "update-index chmod");
+    // Ensure the mode change is staged for commit.
+    let status = Command::new("git")
+        .args(["add", "CLAUDE.md"])
+        .current_dir(&temp_path)
+        .status()
+        .expect("git add");
+    assert!(status.success());
+    let status = Command::new("git")
+        .args(["commit", "-m", "bad: mode-only entrypoint touch"])
+        .current_dir(&temp_path)
+        .status()
+        .expect("git commit");
+    assert!(status.success(), "mode-only commit");
+
+    let (success, output) =
+        run_decapod_with_env(&temp_path, &["validate", "--format", "json"], &[]);
+    assert!(!success, "mode-only entrypoint touch must fail: {output}");
+    assert!(
+        output.contains("ENTRYPOINT_COMMIT_DISCIPLINE"),
+        "expected ENTRYPOINT_COMMIT_DISCIPLINE. Output:\n{output}"
+    );
+    assert!(
+        output.contains("non-content touch") || output.contains("mode"),
+        "expected mode-only messaging. Output:\n{output}"
+    );
+}
+
+#[test]
+fn test_feature_branch_allows_canonical_entrypoint_rewrite() {
+    let (_outer, temp_path) = worktree_like_temp();
+    git_init_feature_repo(&temp_path);
+    acquire_session(&temp_path);
+
+    // Simulate a stale body then force-regenerate via init --force (Decapod path).
+    let path = temp_path.join("GEMINI.md");
+    fs::write(&path, "stale\n").expect("stale write");
+    let (success, output) = run_decapod(&temp_path, &["init", "--force"]);
+    assert!(success, "init --force should restore template: {output}");
+    let status = Command::new("git")
+        .args(["add", "GEMINI.md"])
+        .current_dir(&temp_path)
+        .status()
+        .expect("git add");
+    assert!(status.success());
+    // Commit only if GEMINI.md actually changed.
+    let porcelain = Command::new("git")
+        .args(["status", "--porcelain", "GEMINI.md"])
+        .current_dir(&temp_path)
+        .output()
+        .expect("git status");
+    if !porcelain.stdout.is_empty() {
+        let status = Command::new("git")
+            .args(["commit", "-m", "chore: regenerate entrypoint via decapod"])
+            .current_dir(&temp_path)
+            .status()
+            .expect("git commit");
+        assert!(status.success());
+    }
+
+    let (_success, output) =
+        run_decapod_with_env(&temp_path, &["validate", "--format", "json"], &[]);
+    // Other gates may still fail (publication bundle, specs, etc.); discipline must not.
+    assert!(
+        !output.contains("ENTRYPOINT_COMMIT_DISCIPLINE"),
+        "canonical rewrite must not trip discipline gate: {output}"
+    );
+}

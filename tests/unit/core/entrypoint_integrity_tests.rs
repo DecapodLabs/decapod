@@ -74,3 +74,43 @@ fn refresh_entrypoint_metadata_rewrites_stale_release_pins() {
     // Idempotent once current.
     assert_eq!(refresh_entrypoint_metadata(root).expect("second"), 0);
 }
+
+#[test]
+fn matching_entrypoints_are_not_rewritten() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let root = dir.path();
+    let rendered = render_entrypoint("AGENTS.md").expect("render");
+    std::fs::write(root.join("AGENTS.md"), &rendered).expect("write");
+    assert_eq!(
+        classify_entrypoint_alignment(root, "AGENTS.md").expect("classify"),
+        EntrypointAlignment::MatchesEvaluatingRelease
+    );
+    assert_eq!(refresh_entrypoint_metadata(root).expect("refresh"), 0);
+}
+
+#[test]
+fn stale_release_pin_is_bumped_to_evaluating_release() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let root = dir.path();
+    let payload = canonical_template("AGENTS.md").expect("template");
+    let stale_release = if RELEASE_VERSION == "0.0.0" {
+        "0.0.1"
+    } else {
+        "0.0.0"
+    };
+    let stale_fp = fingerprint_for_payload("AGENTS.md", stale_release, &payload);
+    let stale = format!(
+        "<!-- decapod-release: {stale_release} -->\n<!-- decapod-fingerprint: {stale_fp} -->\n{payload}"
+    );
+    std::fs::write(root.join("AGENTS.md"), &stale).expect("write stale");
+    assert_eq!(
+        classify_entrypoint_alignment(root, "AGENTS.md").expect("classify"),
+        EntrypointAlignment::StalePin
+    );
+    assert_eq!(refresh_entrypoint_metadata(root).expect("refresh"), 1);
+    assert_eq!(
+        classify_entrypoint_alignment(root, "AGENTS.md").expect("classify after"),
+        EntrypointAlignment::MatchesEvaluatingRelease
+    );
+    assert_eq!(refresh_entrypoint_metadata(root).expect("second"), 0);
+}
