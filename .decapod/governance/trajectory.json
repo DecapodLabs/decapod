@@ -85,7 +85,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:145fd17324edeace1ed9907558e659fe6ad77d6ae3bf8807f8d1431619ef844c",
+  "artifact_hash": "sha256:64a6f6730ef85257de62cbf33817df6941041698ce51fcd46f26a5f9868f80f3",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -138,6 +138,13 @@
       {
         "sequence": 6,
         "event_id": "event:6",
+        "intent_id": "intent:run-20260811-decapod-architecture-wave",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:run-20260811-decapod-architecture-wave"
+      },
+      {
+        "sequence": 7,
+        "event_id": "event:7",
         "intent_id": "intent:run-20260811-decapod-architecture-wave",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:run-20260811-decapod-architecture-wave"
@@ -224,12 +231,30 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:6"
+          },
+          {
+            "sequence": 7,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src/decapod/core/todo.rs, src/decapod/core/events.rs, src/decapod/core/broker.rs, src/decapod/core/schemas.rs, src/decapod/plugins/federation.rs, focused tests, governed specs and publication artifacts"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_2b7d22cb1865f444 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:7"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 6
+    "next_sequence": 7
   }
 }
