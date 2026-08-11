@@ -1313,7 +1313,7 @@ fn register_agent_categories(
         ));
     }
 
-    broker.with_conn(&db_path, "decapod", None, "todo.register_agent", |conn| {
+    broker.with_transaction(&db_path, "decapod", None, "todo.register_agent", |conn| {
         ensure_schema(conn)?;
         touch_agent_presence(conn, agent_id, &ts)?;
 
@@ -1662,7 +1662,7 @@ fn record_heartbeat(root: &Path, agent_id: &str) -> Result<serde_json::Value, er
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
     let ts = now_iso();
-    broker.with_conn(&db_path, "decapod", None, "todo.heartbeat", |conn| {
+    broker.with_transaction(&db_path, "decapod", None, "todo.heartbeat", |conn| {
         ensure_schema(conn)?;
         touch_agent_presence(conn, agent_id, &ts)?;
 
@@ -1708,7 +1708,7 @@ pub fn cleanup_stale_agent_assignments(
     let db_path = todo_db_path(root);
     let ts = now_iso();
 
-    broker.with_conn(&db_path, "decapod", None, "todo.session.cleanup", |conn| {
+    broker.with_transaction(&db_path, "decapod", None, "todo.session.cleanup", |conn| {
         ensure_schema(conn)?;
         let mut released_count = 0usize;
 
@@ -2210,7 +2210,7 @@ fn enforce_operation_policy(
         if !policy::human_in_loop_required(&store, zone_name, level, true) {
             return Ok(());
         }
-        if !policy::check_approval(&store, zone_name, None, "global")? {
+        if !policy::check_approval_on_conn(conn, zone_name, None, "global")? {
             return Err(error::DecapodError::ValidationError(format!(
                 "Policy gate denied for {zone_name}: missing approval"
             )));
@@ -4360,7 +4360,7 @@ pub fn yield_claim_lease(
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
 
-    let result = broker.with_conn(&db_path, "decapod", None, "todo.yield", |conn| {
+    let result = broker.with_transaction(&db_path, "decapod", None, "todo.yield", |conn| {
         ensure_schema(conn)?;
         touch_agent_presence(conn, agent_id, &ts)?;
         enforce_operation_policy(root, conn, "todo.claim.exclusive", agent_id)?;
@@ -4658,7 +4658,7 @@ pub fn handoff_task(
         }));
     }
 
-    let result = broker.with_conn(&db_path, "decapod", None, "todo.handoff", |conn| {
+    let result = broker.with_transaction(&db_path, "decapod", None, "todo.handoff", |conn| {
         ensure_schema(conn)?;
         let acting_agent = from.unwrap_or("unknown");
         enforce_operation_policy(root, conn, "todo.handoff", acting_agent)?;
@@ -4969,7 +4969,7 @@ fn add_task_owner(
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
 
-    broker.with_conn(&db_path, "decapod", None, "todo.add_owner", |conn| {
+    broker.with_transaction(&db_path, "decapod", None, "todo.add_owner", |conn| {
         ensure_schema(conn)?;
 
         // Verify task exists
@@ -5040,7 +5040,7 @@ fn remove_task_owner(
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
 
-    broker.with_conn(&db_path, "decapod", None, "todo.remove_owner", |conn| {
+    broker.with_transaction(&db_path, "decapod", None, "todo.remove_owner", |conn| {
         ensure_schema(conn)?;
 
         let deleted = conn.execute(
@@ -5115,7 +5115,7 @@ fn register_agent_expertise(
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
 
-    broker.with_conn(
+    broker.with_transaction(
         &db_path,
         "decapod",
         None,

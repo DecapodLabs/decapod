@@ -1,3 +1,5 @@
+use decapod::core::broker::DbBroker;
+use decapod::core::events;
 use decapod::core::schemas;
 use decapod::core::store::Store;
 use decapod::core::store::StoreKind;
@@ -195,6 +197,52 @@ fn concurrent_status_transition_has_one_winner_and_no_duplicate_events() {
         )
         .unwrap();
     assert_eq!(done_events, 1, "losing transitions must not emit events");
+}
+
+#[test]
+fn broker_transaction_rolls_back_state_when_event_append_fails() {
+    let tmp = tempdir().unwrap();
+    let root = tmp.path().to_path_buf();
+    initialize_todo_db(&root).unwrap();
+    let db_path = root.join(schemas::LOCAL_DB_NAME);
+    let broker = DbBroker::new(&root);
+
+    let failed = broker.with_transaction(
+        &db_path,
+        "test-agent",
+        None,
+        "todo.atomicity.test",
+        |conn| {
+            conn.execute(
+                "INSERT INTO meta(namespace, key, value) VALUES('test', 'atomicity', 'written')",
+                [],
+            )
+            .map_err(decapod::core::error::DecapodError::RusqliteError)?;
+
+            let event = serde_json::json!({
+                "event_id": "01atomicityfailure000000000000",
+                "event_type": "test.failure",
+                "payload": {},
+                "actor": "test-agent",
+            });
+            events::append_on_conn(conn, "unknown-stream", &event)?;
+            Ok(())
+        },
+    );
+    assert!(
+        failed.is_err(),
+        "unknown event streams must fail the mutation"
+    );
+
+    let conn = Connection::open(&db_path).unwrap();
+    let state_count: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM meta WHERE namespace = 'test' AND key = 'atomicity'",
+            [],
+            |row| row.get(0),
+        )
+        .unwrap();
+    assert_eq!(state_count, 0, "state must roll back with the failed event");
 }
 
 #[test]
