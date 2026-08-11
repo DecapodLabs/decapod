@@ -19,6 +19,14 @@ stateDiagram-v2
 | Mutation events are replayable | Data | deterministic replay |
 | Reported authority equals loaded authority | Governance | resolved authority hashes and capsule custody |
 | Reported evidence equals canonical observations | Governance | semantic event-query boundary and migration tests |
+| Durable task or agent state and its required event commit together | Data | broker transaction rollback regression |
+| Read-only projections do not acquire mutation transactions | Runtime | operation-path review and read-path tests |
+
+The local proof covers the Decapod-owned portion of the shared-state contract:
+state-plus-event mutations are atomic before they cross the future Dactyl
+boundary. Dactyl must provide the corresponding atomic operation primitive,
+while Propodus must host compatible ordinary database constraints; neither
+backend decides whether a Decapod transition is valid.
 
 ## Event Sourcing Schema
 | Field | Type | Description |
@@ -116,7 +124,7 @@ stateDiagram-v2
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ac539c29d9a00240bbea4eec6d581a68616f603302fcd075ed74dc84384699ea`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
+- Repository signal fingerprint: `99d2e4ff8a3f7ea3d491a4627c66063efaa30ca95663559599225a4f407dc20e`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (102 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -295,6 +295,22 @@ fn test_expired_session_releases_assigned_tasks() {
     let mut session_json: serde_json::Value =
         serde_json::from_str(&fs::read_to_string(&session_path).expect("session file"))
             .expect("session json");
+    assert!(
+        session_json["token"]
+            .as_str()
+            .is_some_and(|token| token.starts_with("local_")),
+        "local session token should identify its backend"
+    );
+    let issued = session_json["issued_at_epoch_secs"]
+        .as_u64()
+        .expect("issued timestamp");
+    let expires = session_json["expires_at_epoch_secs"]
+        .as_u64()
+        .expect("expiry timestamp");
+    assert!(
+        expires.saturating_sub(issued) >= 4 * 60 * 60,
+        "local sessions should default to a multi-hour lifetime"
+    );
     session_json["expires_at_epoch_secs"] = serde_json::json!(0);
     fs::write(
         &session_path,

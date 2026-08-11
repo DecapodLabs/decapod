@@ -26,7 +26,11 @@ Generated interface specs should include:
 | `DecapodError::storage_failure_kind` | Current storage adapter | Retry, validation, and governance policy | Backend-neutral failure class; only bounded retryable contention/storage-I/O classes may be retried |
 | `migration::plan_pending_migrations` | Decapod migration catalog and applied ledger | Migration executor | Deterministic version/sequence filtering with no datastore access |
 | `DbBroker::execute_write_sync` | Broker caller | Storage write path | Returns affected rows; stable IDs are supplied by the caller and no ambient generated-ID lookup is allowed |
+| `DbBroker::with_transaction` | Decapod domain mutation | Current local datastore; future Dactyl atomic operation | Commits state and its canonical event together; rolls both back on failure |
+| `core::backend::BackendSelection` / `BackendRoute` | `.decapod/config.toml` backend plus Git origin identity | Local datastore or authenticated Dactyl session | `local` binds `.decapod/data/decapod.db`; `cloud` binds the GitHub owner/repository and accepts only an opaque remote URI supplied by the session boundary; provider names and URI construction are outside ordinary Decapod persistence |
+| Decapod agent session | Backend selection and machine-local session directory | Local SQLite or authenticated cloud command path | Machine-local session records use a backend discriminator (`local_` or `cloud_`) and default to a four-hour lifetime, bounded to 30 minutes minimum and six hours maximum; cloud bearer credentials remain separate opaque machine-local material |
 | `todo::update_status` | Decapod lifecycle caller | Local database today; future Dactyl operation | Requires expected status and revision; returns `ok`, `not_found`, or `conflict` and emits an event only after the conditional update wins |
+| `todo` lease/ownership mutations | Decapod coordination caller | Local database today; future Dactyl operation | Claim, yield, handoff, owner, heartbeat, cleanup, and expertise state plus their events share one transaction |
 | `events::append_on_conn` | Decapod domain writers | Canonical event stream | Replaying the same event identity is idempotent; divergent content fails with `EVENT_ID_CONFLICT`; stream sequence allocation is unique and transactional |
 
 ## Event Consumers
@@ -114,7 +118,7 @@ pub enum ApiError {
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ac539c29d9a00240bbea4eec6d581a68616f603302fcd075ed74dc84384699ea`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
+- Repository signal fingerprint: `99d2e4ff8a3f7ea3d491a4627c66063efaa30ca95663559599225a4f407dc20e`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (102 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

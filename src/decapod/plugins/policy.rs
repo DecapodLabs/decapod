@@ -4,7 +4,7 @@ use crate::core::error;
 use crate::core::schemas;
 use crate::core::store::Store;
 use clap::{Parser, Subcommand};
-use rusqlite::{OptionalExtension, params};
+use rusqlite::{Connection, OptionalExtension, params};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
@@ -716,6 +716,29 @@ pub fn check_approval(
         )?;
         Ok(count > 0)
     })
+}
+
+/// Check an approval using a caller-owned connection.
+///
+/// Transactional domain mutations must not open a second broker connection to
+/// the canonical datastore while holding their write transaction. This helper
+/// keeps the approval lookup on the same connection so the policy read remains
+/// composable with Decapod's atomic state-plus-event mutation boundary.
+pub fn check_approval_on_conn(
+    conn: &Connection,
+    command: &str,
+    target_path: Option<&str>,
+    scope: &str,
+) -> Result<bool, error::DecapodError> {
+    let fingerprint = derive_fingerprint(command, target_path, scope);
+    let count: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM approvals WHERE action_fingerprint = ?1",
+            params![fingerprint],
+            |row| row.get(0),
+        )
+        .map_err(error::DecapodError::RusqliteError)?;
+    Ok(count > 0)
 }
 
 pub fn list_approvals(store: &Store) -> Result<Vec<Approval>, error::DecapodError> {

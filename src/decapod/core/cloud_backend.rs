@@ -15,6 +15,18 @@ pub const CLOUD_ONBOARDING_STATUS_ROUTE: &str = "/api/onboarding/status";
 pub const CLOUD_ONBOARDING_EXCHANGE_ROUTE: &str = "/api/onboarding/exchange";
 pub const CLOUD_SESSION_EXCHANGE_ROUTE: &str = "/api/auth/session/exchange";
 pub const CLOUD_SESSION_REFRESH_ROUTE: &str = "/api/auth/session/refresh";
+pub const CLOUD_SESSION_TTL_MIN_SECS: u64 = 30 * 60;
+pub const CLOUD_SESSION_TTL_DEFAULT_SECS: u64 = 4 * 60 * 60;
+pub const CLOUD_SESSION_TTL_MAX_SECS: u64 = 6 * 60 * 60;
+pub const CLOUD_SESSION_TTL_ENV: &str = "DECAPOD_CLOUD_SESSION_TTL_SECS";
+
+pub fn requested_cloud_session_ttl_secs() -> u64 {
+    std::env::var(CLOUD_SESSION_TTL_ENV)
+        .ok()
+        .and_then(|value| value.parse::<u64>().ok())
+        .map(|value| value.clamp(CLOUD_SESSION_TTL_MIN_SECS, CLOUD_SESSION_TTL_MAX_SECS))
+        .unwrap_or(CLOUD_SESSION_TTL_DEFAULT_SECS)
+}
 
 /// Provider-neutral states returned while an external onboarding handoff is
 /// being completed. Decapod does not interpret provider identity or policy
@@ -129,6 +141,8 @@ pub struct CloudOnboardingExchangeResponse {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct CloudSessionExchangeRequest {
     pub code: String,
+    #[serde(default = "requested_cloud_session_ttl_secs")]
+    pub requested_ttl_seconds: u64,
 }
 
 impl CloudSessionExchangeRequest {
@@ -141,6 +155,7 @@ impl CloudSessionExchangeRequest {
         }
         Ok(Self {
             code: code.to_string(),
+            requested_ttl_seconds: requested_cloud_session_ttl_secs(),
         })
     }
 }
@@ -209,6 +224,8 @@ impl CloudSessionExchangeResponse {
 pub struct CloudSessionRefreshRequest {
     pub session_id: String,
     pub refresh_token: String,
+    #[serde(default = "requested_cloud_session_ttl_secs")]
+    pub requested_ttl_seconds: u64,
 }
 
 impl CloudSessionRefreshRequest {
@@ -231,6 +248,7 @@ impl CloudSessionRefreshRequest {
         Ok(Self {
             session_id: session_id.to_string(),
             refresh_token: refresh_token.to_string(),
+            requested_ttl_seconds: requested_cloud_session_ttl_secs(),
         })
     }
 }

@@ -81,6 +81,7 @@ fn onboarding_endpoints_are_bounded_and_credentials_never_enter_urls() {
 fn exchange_and_refresh_payloads_validate_opaque_credentials() {
     let exchange = CloudSessionExchangeRequest::new("code-123").expect("exchange request");
     assert_eq!(exchange.code, "code-123");
+    assert_eq!(exchange.requested_ttl_seconds, 4 * 60 * 60);
     assert!(CloudSessionExchangeRequest::new("code 123").is_err());
 
     let session = CloudSession {
@@ -96,6 +97,7 @@ fn exchange_and_refresh_payloads_validate_opaque_credentials() {
     let refresh =
         CloudSessionRefreshRequest::new("session-opaque", "refresh-opaque").expect("refresh");
     assert_eq!(refresh.session_id, "session-opaque");
+    assert_eq!(refresh.requested_ttl_seconds, 4 * 60 * 60);
     assert!(CloudSessionRefreshRequest::new(" ", "refresh-opaque").is_err());
 }
 

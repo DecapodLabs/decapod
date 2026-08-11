@@ -358,7 +358,7 @@ pub fn ensure_cloud_session<T: PropodusTransport>(
     let mut expired_machine_session = false;
     if let Ok(credential) = auth::load_cloud_credential(None) {
         if credential.source != auth::CredentialSource::MachineFile
-            || !auth::cloud_session_is_expired(&credential)
+            || !auth::cloud_session_needs_refresh(&credential)
         {
             return Ok(credential);
         }

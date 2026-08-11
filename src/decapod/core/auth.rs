@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub const CLOUD_ACCESS_TOKEN_ENV: &str = "DECAPOD_ACCESS_TOKEN";
+pub const CLOUD_SESSION_REFRESH_LEAD_SECS: i64 = 30 * 60;
 
 fn machine_data_dir() -> Result<PathBuf, DecapodError> {
     if let Ok(data_home) = env::var("XDG_DATA_HOME") {
@@ -209,6 +210,18 @@ pub fn cloud_session_is_expired(credential: &CloudCredential) -> bool {
     };
     DateTime::parse_from_rfc3339(expires_at)
         .map(|value| value.with_timezone(&Utc) <= Utc::now())
+        .unwrap_or(true)
+}
+
+pub fn cloud_session_needs_refresh(credential: &CloudCredential) -> bool {
+    let Some(expires_at) = credential.expires_at.as_deref() else {
+        return false;
+    };
+    DateTime::parse_from_rfc3339(expires_at)
+        .map(|value| {
+            value.with_timezone(&Utc)
+                <= Utc::now() + chrono::Duration::seconds(CLOUD_SESSION_REFRESH_LEAD_SECS)
+        })
         .unwrap_or(true)
 }
 

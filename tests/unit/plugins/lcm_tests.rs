@@ -59,7 +59,9 @@ fn test_validate_catches_tamper() {
     // Tamper with the canonical append-only event table.
     let conn = rusqlite::Connection::open(lcm_db_path(&store.root)).unwrap();
     conn.execute(
-        "UPDATE lcm_events SET payload = replace(payload, ?1, ?2)",
+        "UPDATE events
+         SET payload = replace(payload, ?1, ?2)
+         WHERE stream = 'lcm'",
         ["good content", "bad content"],
     )
     .unwrap();

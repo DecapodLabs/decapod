@@ -28,10 +28,13 @@
 - The Decapod-owned portion of the dactyl migration is intentionally incremental: application policy must become backend-neutral before storage execution is replaced.
 - Decapod owns bounded retry/contention policy, stable identifier generation, migration planning, applied-ledger state, backup/restore, and legacy import. A future dactyl implementation owns only the physical storage guarantees behind those contracts.
 - The current PR proves these seams against the existing SQLite implementation without claiming that dactyl's pure-Rust backend contract is complete.
+- `core::backend::BackendSelection` maps the project `repo.backend` choice to a repository-scoped route. Local resolves to `.decapod/data/decapod.db`; cloud derives `owner/repository` from the Git `origin` remote and accepts an opaque remote URI only after the authenticated/session boundary supplies it. Decapod does not assemble or interpret a provider-specific cloud URI for ordinary state.
+- Local and cloud Decapod agent sessions are machine-local, backend-discriminated (`local_` or `cloud_`), and long-lived enough for an agent run: four hours by default, with a 30-minute minimum and six-hour maximum. Cloud access/refresh credentials remain opaque and are persisted separately from repository state.
 
 ## Shared-State Durability Intent
 - Material TODO lifecycle mutations are compare-and-swap operations over `(task.id, task.status, task.revision)`. A stale agent receives an explicit conflict and must not create a success event.
 - Decapod increments task revisions for durable task mutations, attributes lifecycle events to the actor supplied by the operation or `DECAPOD_AGENT_ID`, and commits state-plus-event writes atomically through the broker transaction boundary.
+- The local coordination slice applies that same atomicity rule to agent category/expertise registration, heartbeats, stale-session cleanup, lease yield/handoff, and task-owner add/remove; read-only fleet, presence, ownership, and expertise projections remain non-mutating reads.
 - Event stream sequence allocation is idempotent by event identity and protected by a unique `(stream, seq)` invariant. These are Decapod semantics that a future Dactyl/Propodus backend must preserve; they are not Propodus governance rules.
 
 ## Release pin flywheel
@@ -193,8 +196,8 @@ flowchart LR
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ac539c29d9a00240bbea4eec6d581a68616f603302fcd075ed74dc84384699ea`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
+- Repository signal fingerprint: `99d2e4ff8a3f7ea3d491a4627c66063efaa30ca95663559599225a4f407dc20e`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (102 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

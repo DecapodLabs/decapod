@@ -1,37 +1,9 @@
 name: Nix Flake
 
 on:
-  push:
-    branches: [ master ]
-    paths:
-      - 'flake.nix'
-      - 'flake.lock'
-      - 'Cargo.toml'
-      - 'Cargo.lock'
-      - 'rust-toolchain.toml'
-      - '.config/build/rust-toolchain.toml'
-      - '.cargo/config.toml'
-      - 'src/**'
-      - 'assets/**'
-      - 'tests/**'
-      - 'docs/**'
-      - '.github/workflows/nix-flake.yml'
   pull_request:
+    types: [closed]
     branches: [ master ]
-    paths:
-      - 'flake.nix'
-      - 'flake.lock'
-      - 'Cargo.toml'
-      - 'Cargo.lock'
-      - 'rust-toolchain.toml'
-      - '.config/build/rust-toolchain.toml'
-      - '.cargo/config.toml'
-      - 'src/**'
-      - 'assets/**'
-      - 'tests/**'
-      - 'docs/**'
-      - '.github/workflows/nix-flake.yml'
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -46,6 +18,12 @@ jobs:
   # repository-pinned Rust channel. Fail closed; CI never mutates flake.lock.
   build:
     name: nix (${{ matrix.os }})
+    if: >
+      github.event.pull_request.merged == true &&
+      (
+        contains(github.event.pull_request.labels.*.name, 'release') ||
+        startsWith(github.event.pull_request.head.ref, 'release-plz-')
+      )
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

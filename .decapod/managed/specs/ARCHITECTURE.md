@@ -31,7 +31,9 @@ This project's architecture consists of the following key layers/directories:
 - `core::error::StorageFailureKind` is the application-owned classification seam for contention, storage I/O, constraint, query, value, capability, and unknown failures. The current SQLite mapping is a compatibility adapter; retry and governance callers do not select behavior by backend name.
 - `core::migration` separates version-gated pending-plan selection and applied-ledger recording from migration execution. Backup, restore, legacy import, and schema policy remain Decapod responsibilities while the future dactyl boundary supplies execution.
 - `DbBroker::execute_write_sync` returns affected rows. Decapod callers own stable IDs rather than reading ambient connection-generated row IDs.
-- `DbBroker::with_transaction` is the Decapod-owned atomic mutation seam. TODO and federation state changes append their canonical event within the same transaction; `events::append_on_conn` composes with caller-owned transactions and uses idempotent event identity plus unique stream sequencing.
+- `DbBroker::with_transaction` is the Decapod-owned atomic mutation seam. Material TODO lifecycle, ownership, lease, agent-session, and federation state changes append their canonical event within the same transaction; `events::append_on_conn` composes with caller-owned transactions and uses idempotent event identity plus unique stream sequencing.
+- `core::backend::BackendSelection` is the provider-neutral route seam: it reads `repo.backend`, uses the Git `origin` remote for cloud repository scope, binds local to `.decapod/data/decapod.db`, and passes a session-supplied cloud URI through as opaque data for Dactyl. Ordinary Decapod persistence does not construct a Propodus, Vercel, or Neon path.
+- Session custody is machine-local for both backend choices: the Decapod agent-session record is stored under the machine config directory, uses `local_`/`cloud_` token prefixes to detect backend changes, and defaults to a four-hour TTL bounded between 30 minutes and six hours. Cloud access and refresh tokens are stored separately under the machine data directory and refreshed before the remaining lifetime falls below 30 minutes.
 
 ## Publication Bundle Currency Architecture (#1232)
 - `core::validate::validate_publication_bundle_currency` proves presence and
@@ -184,7 +186,7 @@ sequenceDiagram
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ac539c29d9a00240bbea4eec6d581a68616f603302fcd075ed74dc84384699ea`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
+- Repository signal fingerprint: `99d2e4ff8a3f7ea3d491a4627c66063efaa30ca95663559599225a4f407dc20e`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (102 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
