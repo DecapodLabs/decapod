@@ -24,6 +24,12 @@ pub const EVENTS_TABLE_SCHEMA: &str = "CREATE TABLE IF NOT EXISTS events (
 ); CREATE INDEX IF NOT EXISTS idx_events_stream_seq ON events(stream, seq);
 CREATE INDEX IF NOT EXISTS idx_events_subject ON events(subject_kind, subject_id);";
 
+/// A stream sequence is an ordered identity, not a best-effort projection.
+/// The unique constraint makes a concurrent allocator fail visibly instead of
+/// silently dropping an event into an existing sequence slot.
+pub const EVENTS_TABLE_UNIQUE_STREAM_SEQUENCE_INDEX: &str =
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_events_stream_seq_unique ON events(stream, seq)";
+
 /// Back-compat alias: historical per-stream DDL is no longer used for new tables.
 #[deprecated(note = "use EVENTS_TABLE_SCHEMA; streams share one events table")]
 pub const CANONICAL_EVENT_TABLE_SCHEMA: &str = EVENTS_TABLE_SCHEMA;
@@ -402,7 +408,7 @@ pub const REFLEX_DB_SCHEMA: &str = "
 pub const TODO_DB_NAME: &str = "todo.db";
 /// Historical basename for migration discovery only — not a runtime write target.
 pub const TODO_EVENTS_NAME: &str = "todo.events.jsonl";
-pub const TODO_SCHEMA_VERSION: u32 = 17;
+pub const TODO_SCHEMA_VERSION: u32 = 18;
 
 pub const TODO_DB_SCHEMA_META: &str = "
     CREATE TABLE IF NOT EXISTS meta (
@@ -442,7 +448,8 @@ pub const TODO_DB_SCHEMA_TASKS: &str = "
         lease_expires_at TEXT,
         lease_generation INTEGER DEFAULT 0,
         lease_lifecycle TEXT DEFAULT '',
-        intent_anchor TEXT DEFAULT ''
+        intent_anchor TEXT DEFAULT '',
+        revision INTEGER NOT NULL DEFAULT 0
     )
 ";
 
@@ -569,6 +576,7 @@ pub const TODO_DB_SCHEMA_TASK_OWNERS: &str = "
 
 pub const TODO_DB_SCHEMA_INDEX_TASK_OWNERS_TASK: &str =
     "CREATE INDEX IF NOT EXISTS idx_task_owners_task ON task_owners(task_id)";
+pub const TODO_DB_SCHEMA_INDEX_TASK_OWNERS_UNIQUE: &str = "CREATE UNIQUE INDEX IF NOT EXISTS idx_task_owners_task_agent ON task_owners(task_id, agent_id)";
 
 pub const TODO_DB_SCHEMA_TASK_DEPENDENCIES: &str = "
     CREATE TABLE IF NOT EXISTS task_dependencies (

@@ -31,6 +31,7 @@ This project's architecture consists of the following key layers/directories:
 - `core::error::StorageFailureKind` is the application-owned classification seam for contention, storage I/O, constraint, query, value, capability, and unknown failures. The current SQLite mapping is a compatibility adapter; retry and governance callers do not select behavior by backend name.
 - `core::migration` separates version-gated pending-plan selection and applied-ledger recording from migration execution. Backup, restore, legacy import, and schema policy remain Decapod responsibilities while the future dactyl boundary supplies execution.
 - `DbBroker::execute_write_sync` returns affected rows. Decapod callers own stable IDs rather than reading ambient connection-generated row IDs.
+- `DbBroker::with_transaction` is the Decapod-owned atomic mutation seam. TODO and federation state changes append their canonical event within the same transaction; `events::append_on_conn` composes with caller-owned transactions and uses idempotent event identity plus unique stream sequencing.
 
 ## Publication Bundle Currency Architecture (#1232)
 - `core::validate::validate_publication_bundle_currency` proves presence and
@@ -183,7 +184,7 @@ sequenceDiagram
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `66139940444f1bafd44696af88a7e9b8595f5e7431beda230ac157fd419cb77f`
+- Repository signal fingerprint: `6e036127b400309de9bce2d9f6069f0bd3f4549cc1091a07f77b0865b46014ca`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

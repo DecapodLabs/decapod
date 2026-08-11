@@ -337,24 +337,39 @@ fn migrate_legacy_stream_tables_into_events(conn: &Connection) -> Result<(), err
         conn.execute("DROP TABLE IF EXISTS task_events", [])?;
     }
 
-    for stream in STREAMS {
-        backfill_stream_sequence(conn, stream)?;
+    let sequence_index_exists: bool = conn.query_row(
+        "SELECT EXISTS(
+             SELECT 1 FROM sqlite_master
+             WHERE type = 'index' AND name = 'idx_events_stream_seq_unique'
+         )",
+        [],
+        |row| row.get(0),
+    )?;
+    if !sequence_index_exists {
+        normalize_stream_sequences(conn)?;
+        conn.execute(schemas::EVENTS_TABLE_UNIQUE_STREAM_SEQUENCE_INDEX, [])?;
     }
     Ok(())
 }
 
-fn backfill_stream_sequence(conn: &Connection, stream: &str) -> Result<(), error::DecapodError> {
-    conn.execute(
-        "WITH ordered AS (
-             SELECT event_id, ROW_NUMBER() OVER (ORDER BY ts, event_id) AS next_seq
-             FROM events
-             WHERE stream = ?1 AND (seq IS NULL OR seq = 0)
-         )
-         UPDATE events
-         SET seq = (SELECT next_seq FROM ordered WHERE ordered.event_id = events.event_id)
-         WHERE event_id IN (SELECT event_id FROM ordered)",
-        [stream],
-    )?;
+/// Normalize legacy and concurrently-produced sequence values before the
+/// unique stream-sequence index is installed. Ordering by the previous
+/// sequence, timestamp, and event identity is deterministic and idempotent.
+fn normalize_stream_sequences(conn: &Connection) -> Result<(), error::DecapodError> {
+    for stream in STREAMS {
+        conn.execute(
+            "WITH ordered AS (
+                 SELECT event_id,
+                        ROW_NUMBER() OVER (ORDER BY seq, ts, event_id) AS next_seq
+                 FROM events
+                 WHERE stream = ?1
+             )
+             UPDATE events
+             SET seq = (SELECT next_seq FROM ordered WHERE ordered.event_id = events.event_id)
+             WHERE stream = ?1",
+            [stream],
+        )?;
+    }
     Ok(())
 }
 
@@ -366,6 +381,33 @@ pub fn append(root: &Path, stream: &str, event: &Value) -> Result<u64, error::De
 }
 
 pub fn append_on_conn(
+    conn: &Connection,
+    stream: &str,
+    event: &Value,
+) -> Result<u64, error::DecapodError> {
+    let owns_transaction = conn.is_autocommit();
+    if owns_transaction {
+        conn.execute_batch("BEGIN IMMEDIATE")?;
+    }
+
+    let result = append_on_conn_inner(conn, stream, event);
+    if !owns_transaction {
+        return result;
+    }
+
+    match result {
+        Ok(seq) => {
+            conn.execute_batch("COMMIT")?;
+            Ok(seq)
+        }
+        Err(error) => {
+            let _ = conn.execute_batch("ROLLBACK");
+            Err(error)
+        }
+    }
+}
+
+fn append_on_conn_inner(
     conn: &Connection,
     stream: &str,
     event: &Value,
@@ -395,14 +437,31 @@ pub fn append_on_conn(
     // Federation domain writers and replay store only the inner payload object.
     // Other streams historically persist the full envelope as the payload column.
     let payload_value = domain_payload_for_storage(stream, event, &event_id, event_type)?;
+
+    if let Some(existing) = load_canonical_event_shape(conn, stream, &event_id)? {
+        if canonical_event_matches(stream, &existing, event)? {
+            return conn
+                .query_row(
+                    "SELECT seq FROM events WHERE stream = ?1 AND event_id = ?2",
+                    params![stream, event_id],
+                    |row| row.get(0),
+                )
+                .map_err(error::DecapodError::RusqliteError);
+        }
+        return Err(error::DecapodError::ValidationError(format!(
+            "EVENT_ID_CONFLICT: event '{event_id}' already exists in stream '{stream}' with different contents"
+        )));
+    }
+
     let seq: u64 = conn.query_row(
         "SELECT COALESCE(MAX(seq), 0) + 1 FROM events WHERE stream = ?1",
         [stream],
         |row| row.get(0),
     )?;
-    conn.execute(
-        "INSERT OR IGNORE INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
-         VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+    let inserted = conn.execute(
+        "INSERT INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
+         VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)
+         ON CONFLICT(event_id) DO NOTHING",
         params![
             event_id,
             ts,
@@ -415,6 +474,25 @@ pub fn append_on_conn(
             actor
         ],
     )?;
+    if inserted == 0 {
+        let existing = load_canonical_event_shape(conn, stream, &event_id)?.ok_or_else(|| {
+            error::DecapodError::ValidationError(format!(
+                "event '{event_id}' was ignored without a readable canonical row"
+            ))
+        })?;
+        if canonical_event_matches(stream, &existing, event)? {
+            return conn
+                .query_row(
+                    "SELECT seq FROM events WHERE stream = ?1 AND event_id = ?2",
+                    params![stream, event_id],
+                    |row| row.get(0),
+                )
+                .map_err(error::DecapodError::RusqliteError);
+        }
+        return Err(error::DecapodError::ValidationError(format!(
+            "EVENT_ID_CONFLICT: event '{event_id}' already exists in stream '{stream}' with different contents"
+        )));
+    }
     Ok(seq)
 }
 

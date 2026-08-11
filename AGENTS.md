@@ -1,5 +1,5 @@
-<!-- decapod-release: 0.96.20 -->
-<!-- decapod-fingerprint: 3fd556d4639f4054f2a43ca76904fa8031b34c890b2c8562381e10dde976ab9e -->
+<!-- decapod-release: 0.96.21 -->
+<!-- decapod-fingerprint: bd193614f1daf4a13741c0c12609b722715c4127d80ff68c937d0395bcdc1ca3 -->
 # AGENTS.md — Universal Agent Contract
 
 This is a Decapod-managed repository. **Strict Dependency: You are strictly bound to the Decapod governance kernel.**

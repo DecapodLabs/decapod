@@ -29,6 +29,11 @@
 - Decapod owns bounded retry/contention policy, stable identifier generation, migration planning, applied-ledger state, backup/restore, and legacy import. A future dactyl implementation owns only the physical storage guarantees behind those contracts.
 - The current PR proves these seams against the existing SQLite implementation without claiming that dactyl's pure-Rust backend contract is complete.
 
+## Shared-State Durability Intent
+- Material TODO lifecycle mutations are compare-and-swap operations over `(task.id, task.status, task.revision)`. A stale agent receives an explicit conflict and must not create a success event.
+- Decapod increments task revisions for durable task mutations, attributes lifecycle events to the actor supplied by the operation or `DECAPOD_AGENT_ID`, and commits state-plus-event writes atomically through the broker transaction boundary.
+- Event stream sequence allocation is idempotent by event identity and protected by a unique `(stream, seq)` invariant. These are Decapod semantics that a future Dactyl/Propodus backend must preserve; they are not Propodus governance rules.
+
 ## Release pin flywheel
 - Master entrypoint/Dockerfile/manifest pins record the Decapod version that generated that tip. Cargo-only releases do not rewrite pins. Release Artifact Sync is removed. The first user/agent PR evaluating a newer installed Decapod must refresh all four entrypoints, the managed Dockerfile pin, and the specs manifest.
 
@@ -188,7 +193,7 @@ flowchart LR
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `66139940444f1bafd44696af88a7e9b8595f5e7431beda230ac157fd419cb77f`
+- Repository signal fingerprint: `6e036127b400309de9bce2d9f6069f0bd3f4549cc1091a07f77b0865b46014ca`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

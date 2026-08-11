@@ -11,6 +11,7 @@ use rusqlite::Connection;
 use serde_json::Value;
 use std::path::Path;
 use std::process::Command;
+use std::sync::{Arc, Barrier};
 use tempfile::tempdir;
 
 fn assert_typed_todo_id(id: &str) {
@@ -86,7 +87,16 @@ fn test_todo_lifecycle() {
         kind: StoreKind::Repo,
         root: root.clone(),
     };
-    update_status(&store, task_id, "done", "task.done", serde_json::json!({})).unwrap();
+    update_status(
+        &store,
+        task_id,
+        task.revision,
+        &task.status,
+        "done",
+        "task.done",
+        serde_json::json!({}),
+    )
+    .unwrap();
     let task = get_task(&root, task_id).unwrap().unwrap();
     assert_eq!(task.status, "done");
 
@@ -94,6 +104,126 @@ fn test_todo_lifecycle() {
     let tasks = list_tasks(&root, Some("done".to_string()), None, None, None, None).unwrap();
     assert_eq!(tasks.len(), 1);
     assert_eq!(tasks[0].id, task_id);
+}
+
+#[test]
+fn concurrent_status_transition_has_one_winner_and_no_duplicate_events() {
+    let tmp = tempdir().unwrap();
+    let root = tmp.path().to_path_buf();
+    initialize_todo_db(&root).unwrap();
+    let add_args = TodoCommand::Add {
+        title: "CAS transition torture task".to_string(),
+        description: "Many agents attempt the same completion from one snapshot".to_string(),
+        tags: "concurrency,test".to_string(),
+        owner: "".to_string(),
+        due: None,
+        r#ref: "".to_string(),
+        scope: "workspace".to_string(),
+        dir: Some(root.to_string_lossy().to_string()),
+        priority: "high".to_string(),
+        depends_on: "".to_string(),
+        blocks: "".to_string(),
+        parent: None,
+        one_shot: 0,
+    };
+    let added = add_task(&root, &add_args).unwrap();
+    let task_id = added["id"].as_str().unwrap().to_string();
+    let snapshot = get_task(&root, &task_id).unwrap().unwrap();
+    let worker_count = 25;
+    let barrier = Arc::new(Barrier::new(worker_count));
+    let mut workers = Vec::new();
+
+    for index in 0..worker_count {
+        let barrier = Arc::clone(&barrier);
+        let root = root.clone();
+        let task_id = task_id.clone();
+        let expected_revision = snapshot.revision;
+        let expected_status = snapshot.status.clone();
+        workers.push(std::thread::spawn(move || {
+            barrier.wait();
+            let store = Store {
+                kind: StoreKind::Repo,
+                root,
+            };
+            update_status(
+                &store,
+                &task_id,
+                expected_revision,
+                &expected_status,
+                "done",
+                "task.done",
+                serde_json::json!({ "actor": format!("agent-{index}") }),
+            )
+        }));
+    }
+
+    let results: Vec<_> = workers
+        .into_iter()
+        .map(|worker| worker.join().expect("concurrency worker panicked"))
+        .collect();
+    let outputs: Vec<_> = results
+        .into_iter()
+        .map(|result| result.expect("status mutation should return a structured result"))
+        .collect();
+    assert_eq!(
+        outputs
+            .iter()
+            .filter(|output| output["status"] == "ok")
+            .count(),
+        1,
+        "exactly one stale snapshot may win: {outputs:?}"
+    );
+    assert_eq!(
+        outputs
+            .iter()
+            .filter(|output| output["status"] == "conflict")
+            .count(),
+        worker_count - 1,
+        "all losers must be explicit conflicts: {outputs:?}"
+    );
+
+    let final_task = get_task(&root, &task_id).unwrap().unwrap();
+    assert_eq!(final_task.status, "done");
+    assert_eq!(final_task.revision, snapshot.revision + 1);
+
+    let conn = Connection::open(root.join(schemas::LOCAL_DB_NAME)).unwrap();
+    let done_events: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM events WHERE stream = 'todo' AND subject_id = ?1 AND event_type = 'task.done'",
+            [&task_id],
+            |row| row.get(0),
+        )
+        .unwrap();
+    assert_eq!(done_events, 1, "losing transitions must not emit events");
+}
+
+#[test]
+fn event_identity_is_idempotent_and_conflicts_fail_closed() {
+    let tmp = tempdir().unwrap();
+    let root = tmp.path().to_path_buf();
+    initialize_todo_db(&root).unwrap();
+    let conn = Connection::open(root.join(schemas::LOCAL_DB_NAME)).unwrap();
+    let event = serde_json::json!({
+        "event_id": "01eventidentity0000000000000000",
+        "ts": "2026-08-11T00:00:00Z",
+        "event_type": "task.test",
+        "status": "success",
+        "task_id": "feat_01eventidentity",
+        "payload": { "value": 1 },
+        "actor": "test-agent"
+    });
+    let first =
+        decapod::core::events::append_on_conn(&conn, decapod::core::events::TODO, &event).unwrap();
+    let retry =
+        decapod::core::events::append_on_conn(&conn, decapod::core::events::TODO, &event).unwrap();
+    assert_eq!(first, retry, "replaying an event must be idempotent");
+
+    let mut divergent = event.clone();
+    divergent["payload"]["value"] = serde_json::json!(2);
+    let error =
+        decapod::core::events::append_on_conn(&conn, decapod::core::events::TODO, &divergent)
+            .unwrap_err();
+    assert!(error.to_string().contains("EVENT_ID_CONFLICT"));
 }
 
 #[test]
@@ -1057,7 +1187,17 @@ fn exclusive_lease_blocks_unproven_done() {
         kind: StoreKind::Repo,
         root: root.clone(),
     };
-    let done = update_status(&store, &task_id, "done", "task.done", serde_json::json!({})).unwrap();
+    let current = get_task(&root, &task_id).unwrap().unwrap();
+    let done = update_status(
+        &store,
+        &task_id,
+        current.revision,
+        &current.status,
+        "done",
+        "task.done",
+        serde_json::json!({}),
+    )
+    .unwrap();
     assert_eq!(done["status"], "ok", "yielded task may complete: {done}");
 }
 
