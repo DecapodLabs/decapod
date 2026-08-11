@@ -29,6 +29,9 @@
 - Decapod owns bounded retry/contention policy, stable identifier generation, migration planning, applied-ledger state, backup/restore, and legacy import. A future dactyl implementation owns only the physical storage guarantees behind those contracts.
 - The current PR proves these seams against the existing SQLite implementation without claiming that dactyl's pure-Rust backend contract is complete.
 
+## Release pin flywheel
+- Master entrypoint/Dockerfile/manifest pins record the Decapod version that generated that tip. Cargo-only releases do not rewrite pins. Release Artifact Sync is removed. The first user/agent PR evaluating a newer installed Decapod must refresh all four entrypoints, the managed Dockerfile pin, and the specs manifest.
+
 ## Current Governance Artifact Intent
 - Managed specs are living project contracts: fresh scaffolds must be
   substantially explanatory, while refresh must preserve authored meaning and
@@ -185,8 +188,8 @@ flowchart LR
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7ec41934dc3140e700d9459e7839e0a0cb17db6e5e1279d0c69f46787810201b`
-- Significant implementation surfaces: `.github/` (10 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
+- Repository signal fingerprint: `66139940444f1bafd44696af88a7e9b8595f5e7431beda230ac157fd419cb77f`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
