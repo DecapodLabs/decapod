@@ -11,12 +11,14 @@
     "local and cloud-facing operation contracts have backend-neutral tests",
     "durability/concurrency invariants are enforced by Decapod schema and conditional mutations",
     "decapod validate and required Rust tests pass",
-    "one canonical PR is published and relevant issues have status comments"
+    "one canonical PR is published and relevant issues have status comments",
+    "backend=cloud atomic operation contract is explicit at the Decapod-Dactyl-Propodus boundary"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [
-    "Stop at the Dactyl/Propodus operation and schema contract boundary; record exact handoff requirements instead of implementing remote behavior."
+    "Stop at the Dactyl/Propodus operation and schema contract boundary; record exact handoff requirements instead of implementing remote behavior.",
+    "Do not claim backend=cloud atomicity until Dactyl forwards each Decapod state-plus-event mutation as one Propodus request and Neon commits it transactionally."
   ],
   "unresolved_contradictions": [],
   "deferred_questions": [
@@ -27,5 +29,5 @@
     "file_touch_budget": 50
   },
   "phases": [],
-  "updated_at": "1786481563Z"
+  "updated_at": "1786482501Z"
 }

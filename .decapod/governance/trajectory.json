@@ -7,18 +7,22 @@
   "derived_intent": "Implement only Decapod-side local semantics and tests that remain valid before Dactyl/Propodus contracts; preserve backend=local",
   "current_phase": "validation",
   "next_transitions": [
+    "Dactyl/Propodus contract implementation",
     "final governed validation and publication",
     "publish"
   ],
   "active_boundaries": [
+    "Decapod defines state-plus-event atomicity; Dactyl forwards one operation; Propodus/Neon commits atomically",
     "Decapod local persistence only; stop at Dactyl/Propodus operation and schema contract",
     "Decapod source, schema, queries, local tests, and governed specs; no Dactyl or Propodus implementation"
   ],
   "repo_scope": [
+    "backend=cloud atomic read/write contract; local remains fully functional",
     "shared task/event durability, local concurrency proof, backend boundary handoff",
     "shared task/event durability, local concurrency proof, backend-boundary prerequisites"
   ],
   "inspected_files": [
+    ".decapod/config.toml",
     "src/decapod/core/broker.rs",
     "src/decapod/core/events.rs",
     "src/decapod/core/pool.rs",
@@ -29,6 +33,7 @@
     "tests/unit/plugins/lcm_tests.rs"
   ],
   "modified_files": [
+    ".decapod/governance/plan.json",
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
     "src/decapod/core/todo.rs",
@@ -44,6 +49,10 @@
     {
       "name": "atomic_task_mutation_audit",
       "status": "partial"
+    },
+    {
+      "name": "backend_cloud_atomicity_contract",
+      "status": "unavailable"
     },
     {
       "name": "canonical_event_append",
@@ -78,6 +87,10 @@
       "status": "passed"
     },
     {
+      "name": "local_backend_regression",
+      "status": "passed"
+    },
+    {
       "name": "local_concurrency_proof",
       "status": "passed"
     },
@@ -95,6 +108,7 @@
     }
   ],
   "evidence": [
+    "Clarified acceptance boundary: backend=cloud must preserve Decapod state-plus-event atomicity through Dactyl to one Propodus/Neon transaction. This Decapod repository does not implement the remote adapter; Dactyl and Propodus remain the next boundary owners.",
     "Host Rust 2024 toolchain: 283 library tests passed serially; focused todo, SQLite hardening, single datastore, rebuild, fmt, and Clippy proofs passed. Container v0.97.0 governance binary ran; its bundled Cargo is too old for edition 2024. Remote Dactyl/Propodus implementation intentionally not changed.",
     "validation epoch ve_2c142e3bb2d64838 completed with zero failures"
   ],
@@ -107,7 +121,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:349129f42ba2923a6c1dafc864366bbe5136bb54b293426787b05bae573cd1f1",
+  "artifact_hash": "sha256:83f9f4a9212a6f0304e8547f058f80ce1abb615f88802194f2240321f9c900ad",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -202,6 +216,20 @@
       {
         "sequence": 12,
         "event_id": "event:12",
+        "intent_id": "intent:fend_01kzs7s5b28xtyh2",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:fend_01kzs7s5b28xtyh2"
+      },
+      {
+        "sequence": 13,
+        "event_id": "event:13",
+        "intent_id": "intent:fend_01kzs7s5b28xtyh2",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:fend_01kzs7s5b28xtyh2"
+      },
+      {
+        "sequence": 14,
+        "event_id": "event:14",
         "intent_id": "intent:fend_01kzs7s5b28xtyh2",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:fend_01kzs7s5b28xtyh2"
@@ -371,12 +399,51 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:12"
+          },
+          {
+            "sequence": 13,
+            "action": "cloud atomicity boundary clarification",
+            "scope": [
+              "shared task/event durability, local concurrency proof, backend boundary handoff",
+              "shared task/event durability, local concurrency proof, backend-boundary prerequisites"
+            ],
+            "observations": [
+              ".decapod/config.toml",
+              ".decapod/governance/plan.json",
+              "Clarified acceptance boundary: backend=cloud must preserve Decapod state-plus-event atomicity through Dactyl to one Propodus/Neon transaction. This Decapod repository does not implement the remote adapter; Dactyl and Propodus remain the next boundary owners."
+            ],
+            "proof_refs": [
+              "backend_cloud_atomicity_contract",
+              "local_backend_regression"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:13"
+          },
+          {
+            "sequence": 14,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "backend=cloud atomic read/write contract; local remains fully functional",
+              "shared task/event durability, local concurrency proof, backend boundary handoff",
+              "shared task/event durability, local concurrency proof, backend-boundary prerequisites"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_2c142e3bb2d64838 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:14"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 12
+    "next_sequence": 14
   }
 }
