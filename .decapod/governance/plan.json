@@ -1,14 +1,16 @@
 {
   "schema_version": "1.0.0",
-  "title": "Solve GitHub Issues #1226 and #1228 in one PR",
-  "intent": "Expand managed project specifications into verbose living contracts, make trajectory.json a single replaceable JSON cookie, and make every local Decapod invocation inspect and announce version-triggered migrations.",
+  "title": "Three-tier PR contract: entrypoint discipline on publication-bundle currency",
+  "intent": "Finish PR #1234 on top of #1233: Decapod-owned entrypoints verify early and bump only on version/pin mismatch; living specs require unique material rewrites; governance JSON updates every project PR; no per-commit full-bundle churn.",
   "state": "APPROVED",
   "todo_ids": [
-    "feat_01kzcqr007gbjhxw"
+    "cicd_01kzqpb0xd5ekf30"
   ],
   "proof_hooks": [
-    "Generated agent entrypoints and managed Dockerfile carry first-call migration guidance",
-    "Security scaffold regression covers trust boundaries and automation safety"
+    "ENTRYPOINT_COMMIT_DISCIPLINE rejects hand edits and mode-only entrypoint touches",
+    "Same-version project PRs leave entrypoints untouched when pins match evaluating binary",
+    "GOVERNANCE_PR_UPDATES requires all four governance files in base...HEAD",
+    "PUBLICATION_BUNDLE_CURRENCY remains HEAD currency (no per-commit path participation)"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -25,5 +27,5 @@
     "file_touch_budget": 40
   },
   "phases": [],
-  "updated_at": "1786064098Z"
+  "updated_at": "1786429920Z"
 }
