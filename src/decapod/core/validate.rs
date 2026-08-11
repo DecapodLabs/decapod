@@ -53,7 +53,7 @@ fn is_inside_git_work_tree(repo_root: &Path) -> bool {
 
 /// Post-merge / release dogfood CI compiles a tree-local binary whose release
 /// fingerprints necessarily differ from the last published pin until
-/// release-artifact-sync heals them. Set `DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES=1`
+/// the next user/agent PR with the new binary advances pins. Set `DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES=1`
 /// to skip entrypoint/Dockerfile/manifest fingerprint hard-fails (content
 /// invariants still run).
 ///
@@ -2844,21 +2844,22 @@ fn validate_publication_bundle_currency(
         && base_release != crate::core::entrypoint_integrity::RELEASE_VERSION
     {
         let running = crate::core::entrypoint_integrity::RELEASE_VERSION;
-        let branch_changed_release_bound = release_bound_paths_changed_vs_base(
-            repo_root,
-            &base_ref,
-            &[
-                "AGENTS.md",
-                "CLAUDE.md",
-                "CODEX.md",
-                "GEMINI.md",
-                ".decapod/managed/Dockerfile.decapod",
-                ".decapod/managed/specs/.manifest.json",
-            ],
-        )?;
-        if !branch_changed_release_bound {
+        // First PR evaluating a newer Decapod than base must refresh *each*
+        // release-bound surface. Pin lag after a cargo-only release is intentional.
+        let required_refresh = [
+            "AGENTS.md",
+            "CLAUDE.md",
+            "CODEX.md",
+            "GEMINI.md",
+            ".decapod/managed/Dockerfile.decapod",
+            ".decapod/managed/specs/.manifest.json",
+        ];
+        let missing_refresh =
+            release_bound_paths_missing_vs_base(repo_root, &base_ref, &required_refresh)?;
+        if !missing_refresh.is_empty() {
             failures.push(format!(
-                "Decapod release advanced from base '{base_release}' to running '{running}' but release-bound entrypoints/Dockerfile/manifest were not refreshed on this branch"
+                "Decapod release advanced from base '{base_release}' to running '{running}' but release-bound surfaces were not fully refreshed on this branch (missing from base...HEAD: {}). First PR for a new installed Decapod must bump all four entrypoint fingerprints, Dockerfile pin, and specs manifest.",
+                missing_refresh.join(", ")
             ));
         }
     }
@@ -2944,12 +2945,12 @@ fn git_blob_release_marker(repo_root: &Path, reference: &str, path: &str) -> Opt
     None
 }
 
-/// True when any release-bound path differs between `base_ref` and HEAD.
-fn release_bound_paths_changed_vs_base(
+/// Paths among `paths` that do not differ between `base_ref` and HEAD.
+fn release_bound_paths_missing_vs_base(
     repo_root: &Path,
     base_ref: &str,
     paths: &[&str],
-) -> Result<bool, error::DecapodError> {
+) -> Result<Vec<String>, error::DecapodError> {
     let git_dir = repo_root.to_str().unwrap_or(".");
     let output = std::process::Command::new("git")
         .args([
@@ -2964,11 +2965,19 @@ fn release_bound_paths_changed_vs_base(
         .output()
         .map_err(error::DecapodError::IoError)?;
     if !output.status.success() {
-        return Ok(false);
+        return Ok(paths.iter().map(|p| (*p).to_string()).collect());
     }
-    Ok(String::from_utf8_lossy(&output.stdout)
+    let changed: std::collections::HashSet<String> = String::from_utf8_lossy(&output.stdout)
         .lines()
-        .any(|line| !line.trim().is_empty()))
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .map(str::to_string)
+        .collect();
+    Ok(paths
+        .iter()
+        .filter(|path| !changed.contains(**path))
+        .map(|path| (*path).to_string())
+        .collect())
 }
 
 fn validate_entrypoint_commit_discipline(

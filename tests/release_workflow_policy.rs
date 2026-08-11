@@ -20,73 +20,40 @@ fn release_workflow_lets_release_plz_update_the_manifest() {
     );
 }
 
+
 #[test]
-fn release_workflow_syncs_release_bound_artifacts_after_release_plz() {
-    // Regression since #1170 / v0.95.4: release-plz bumps Cargo.toml without
-    // regenerating entrypoint pins; CI drift gate then fails on every release.
+fn release_workflow_does_not_auto_heal_release_bound_pins() {
+    // Master pins stay at the Decapod version that generated master.
+    // release-plz may bump Cargo.toml only; the next user/agent PR advances pins.
+    // Release Artifact Sync is removed entirely (#1245).
     let workflow_path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/workflows/release.yml");
     let workflow = fs::read_to_string(&workflow_path).expect("read release workflow");
     assert!(
-        workflow.contains("Sync release-bound artifacts after release-plz"),
-        "release workflow must heal entrypoint/spec pins in the same job as release-plz"
+        !workflow.contains("Sync release-bound artifacts after release-plz"),
+        "release.yml must not run a post-release-plz pin heal step"
     );
     assert!(
-        workflow.contains("validate --refresh-specs"),
-        "post-release-plz sync must regenerate via validate --refresh-specs"
+        !workflow.contains("gh pr create"),
+        "release.yml must not open automated release-bound-sync PRs"
     );
     assert!(
-        workflow.contains("DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES"),
-        "release heal must skip fingerprint hard-fails while regenerating pins"
-    );
-    assert!(
-        workflow.contains("chore: sync release-bound entrypoints and living specs"),
-        "post-release-plz sync must commit healed release-bound artifacts"
-    );
-    assert!(
-        workflow.contains("chore/release-bound-sync") && workflow.contains("gh pr create"),
-        "when no release PR is open, heal must open a PR rather than push master"
+        workflow.contains("Intentionally NO post-release-plz")
+            || workflow.contains("Release Artifact Sync"),
+        "release.yml must document that auto pin heal is gone"
     );
 }
 
 #[test]
-fn release_artifact_sync_heals_master_and_release_prs() {
+fn release_artifact_sync_workflow_is_removed() {
     let path =
         Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/workflows/release-artifact-sync.yml");
-    let workflow = fs::read_to_string(&path).expect("read release-artifact-sync workflow");
     assert!(
-        workflow.contains("branches: [master]") || workflow.contains("branches: [master]"),
-        "release-artifact-sync must also run on master pushes to heal post-merge pin lag"
-    );
-    assert!(
-        workflow.contains("startsWith(github.head_ref, 'release-plz-')"),
-        "release-artifact-sync must still cover release-plz PR branches"
-    );
-    assert!(
-        workflow.contains("DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES"),
-        "sync must skip fingerprint hard-fails while healing release-bound pins"
-    );
-    assert!(
-        workflow.contains("Release pin heal failed"),
-        "sync must fail closed when entrypoint pins remain stale after refresh"
-    );
-    assert!(
-        workflow.contains("create-github-app-token@"),
-        "sync must use the GitHub App token (same as release.yml)"
-    );
-    assert!(
-        workflow.contains("gh pr create"),
-        "master path must open a PR; direct master push is ruleset-blocked"
-    );
-    assert!(
-        !workflow.contains("TARGET_REF: master")
-            && !workflow.contains("git push origin \"HEAD:master\""),
-        "must not push healed artifacts directly to master"
-    );
-    assert!(
-        workflow.contains("chore/release-bound-sync"),
-        "master heal branch name must be stable for PR updates"
+        !path.exists(),
+        "Release Artifact Sync workflow must be deleted; agents advance pins in PRs via local validate"
     );
 }
+
+
 
 #[test]
 fn post_merge_validate_skips_fingerprint_evaluation() {
@@ -324,7 +291,7 @@ fn release_pr_skips_spec_entrypoint_drift_gate() {
     // Regression for release PR #1236 / actions run 31461500432:
     // release-plz bumps Cargo.toml (repo_signal changes) without entrypoint
     // pins; validate --refresh-specs rewrites the manifest and the drift gate
-    // must not hard-fail the release PR. Heal is owned by release-artifact-sync.
+    // must not hard-fail the release PR. Pin advancement is deferred to the next user/agent PR (Release Artifact Sync removed).
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let validate = fs::read_to_string(root.join(".github/workflows/decapod-validate.yml"))
         .expect("read decapod-validate workflow");
