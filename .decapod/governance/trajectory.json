@@ -107,7 +107,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:355fbb2895e0596336558448db0316d62756081b877b20e3162ad982e4a2ee14",
+  "artifact_hash": "sha256:349129f42ba2923a6c1dafc864366bbe5136bb54b293426787b05bae573cd1f1",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -195,6 +195,13 @@
       {
         "sequence": 11,
         "event_id": "event:11",
+        "intent_id": "intent:fend_01kzs7s5b28xtyh2",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:fend_01kzs7s5b28xtyh2"
+      },
+      {
+        "sequence": 12,
+        "event_id": "event:12",
         "intent_id": "intent:fend_01kzs7s5b28xtyh2",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:fend_01kzs7s5b28xtyh2"
@@ -345,12 +352,31 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:11"
+          },
+          {
+            "sequence": 12,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "shared task/event durability, local concurrency proof, backend boundary handoff",
+              "shared task/event durability, local concurrency proof, backend-boundary prerequisites"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_2c142e3bb2d64838 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:12"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 11
+    "next_sequence": 12
   }
 }
