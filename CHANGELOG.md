@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.97.0](https://github.com/DecapodLabs/decapod/compare/v0.96.21...v0.97.0) - 2026-08-11
+
+### Added
+
+- harden shared task and event mutations
+
+### Fixed
+
+- satisfy clippy in todo output merge
+
+### Other
+
+- refresh specs after clippy fix
+- refresh validation receipt before publication
+- bind final validation to published wave
+- record governed validation receipt
+- bind architecture wave governance artifacts
+- refresh governed spec attestations
+
 ## [0.96.21](https://github.com/DecapodLabs/decapod/compare/v0.96.20...v0.96.21) - 2026-08-11
 
 ### Fixed
