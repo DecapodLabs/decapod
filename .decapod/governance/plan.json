@@ -1,14 +1,15 @@
 {
   "schema_version": "1.0.0",
-  "title": "README tagline + canonical managed Dockerfile.decapod for 0.96.18",
-  "intent": "Public README tagline and INTENT framing for bounded, provable, shippable work; rewrite .decapod/managed/Dockerfile.decapod to the evaluating Decapod 0.96.18 canonical container profile (pin + body).",
+  "title": "Remove Release Artifact Sync; #1065 coherent bundle docs; 0.96.20 pin advance",
+  "intent": "Delete Release Artifact Sync and post-release-plz pin heal. Master pins lag cargo until a user PR with the new binary advances them. Document #1065 coherent-bundle disposition and pin flywheel. This PR is the first user PR for installed 0.96.20 and carries full release-bound refresh.",
   "state": "APPROVED",
   "todo_ids": [
-    "docs_01kzqvk4am5drmgf"
+    "docs_01kzqx9wr0tzsy85"
   ],
   "proof_hooks": [
-    "Dockerfile.decapod ARG DECAPOD_IMAGE/VERSION pin 0.96.18",
-    "README hero tagline matches product framing"
+    "release-artifact-sync.yml deleted",
+    "release.yml has no post-release pin heal",
+    "entrypoints and Dockerfile pin 0.96.20"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -19,8 +20,8 @@
   "deferred_questions": [],
   "constraints": {
     "forbidden_paths": [],
-    "file_touch_budget": 15
+    "file_touch_budget": 50
   },
   "phases": [],
-  "updated_at": "1786434715Z"
+  "updated_at": "1786438175Z"
 }
