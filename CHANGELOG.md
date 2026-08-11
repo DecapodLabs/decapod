@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.96.21](https://github.com/DecapodLabs/decapod/compare/v0.96.20...v0.96.21) - 2026-08-11
+
+### Fixed
+
+- *(validate)* require full release-bound refresh on version advance
+
+### Other
+
+- rustfmt release_workflow_policy tests
+- *(governance)* final trajectory/validation tip refresh
+- *(governance)* refresh validation receipt for PR tip
+- *(governance)* update claims, plan, trajectory for PR tip
+- #1065 coherent governance bundle and pin flywheel
+- remove Release Artifact Sync; pins advance only on user PRs
+
 ## [0.96.20](https://github.com/DecapodLabs/decapod/compare/v0.96.19...v0.96.20) - 2026-08-11
 
 ### Other
