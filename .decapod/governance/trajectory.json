@@ -45,7 +45,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:e88a09d481cd5e589f614ef5861537eb24faa7517b357c10dc73bbc9480801a6",
+  "artifact_hash": "sha256:60704324cfab77a61d0cf4fe0f5ed7e1606380d66e2c1d2c58a4dcce4d2c6921",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -134,6 +134,13 @@
       {
         "sequence": 11,
         "event_id": "event:11",
+        "intent_id": "intent:validation_01KZQJ7SHV5J8QG1NDAGHR7MK2",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZQJ7SHV5J8QG1NDAGHR7MK2"
+      },
+      {
+        "sequence": 12,
+        "event_id": "event:12",
         "intent_id": "intent:validation_01KZQJ7SHV5J8QG1NDAGHR7MK2",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:validation_01KZQJ7SHV5J8QG1NDAGHR7MK2"
@@ -296,12 +303,31 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:11"
+          },
+          {
+            "sequence": 12,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_dab22850cf95c9e2 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:12"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 11
+    "next_sequence": 12
   }
 }
