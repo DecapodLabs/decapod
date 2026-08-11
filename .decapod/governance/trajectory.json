@@ -5,7 +5,7 @@
   "task_id": "feat_01kzs151rgv5v1b7",
   "original_intent": "Complete the Decapod shared-state durability architecture wave and publish one governed PR.",
   "derived_intent": "Harden Decapod-owned task and federation mutations with revisions, compare-and-swap transitions, atomic state-plus-event writes, actor attribution, and idempotent event sequencing while preserving local-first behavior.",
-  "current_phase": "implementation and proof",
+  "current_phase": "validation",
   "next_transitions": [
     "publish"
   ],
@@ -24,6 +24,8 @@
     "tests/plugins/todo.rs"
   ],
   "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
     ".decapod/managed/specs/ARCHITECTURE.md",
     ".decapod/managed/specs/INTENT.md",
     ".decapod/managed/specs/INTERFACES.md",
@@ -40,10 +42,15 @@
     "cargo test --test plugins_federation_tests -- --nocapture",
     "cargo test --test plugins_todo_tests -- --nocapture",
     "cargo test --test workspace_prune_regression -- --nocapture",
+    "decapod validate",
     "decapod validate --refresh-specs -v --format json"
   ],
   "tool_calls": [],
   "checks": [
+    {
+      "name": "decapod validate",
+      "status": "passed"
+    },
     {
       "name": "decapod_validate",
       "status": "partial"
@@ -64,7 +71,8 @@
   "evidence": [
     "21 TODO tests, 22 federation tests, and 4 workspace regression tests passed",
     "25-agent local CAS torture test: exactly one ok, 24 conflicts, one revision increment, one task.done event",
-    "Governed validation reached 200 passing gates but requires current four-artifact PR diff before final receipt"
+    "Governed validation reached 200 passing gates but requires current four-artifact PR diff before final receipt",
+    "validation epoch ve_2b7d22cb1865f444 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [
@@ -77,7 +85,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:1f3e1a9cffdf267b3af7992f2258732a708c0916399f706be0362913eb24ba1f",
+  "artifact_hash": "sha256:4f046908bf2aa34a1256f07d3ca56568a2af4e3b8f1e0afc08d7f536295c2069",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -116,6 +124,13 @@
       {
         "sequence": 4,
         "event_id": "event:4",
+        "intent_id": "intent:run-20260811-decapod-architecture-wave",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:run-20260811-decapod-architecture-wave"
+      },
+      {
+        "sequence": 5,
+        "event_id": "event:5",
         "intent_id": "intent:run-20260811-decapod-architecture-wave",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:run-20260811-decapod-architecture-wave"
@@ -166,12 +181,30 @@
               "Dactyl v0.4.0 and Propodus remain outside this Decapod-only implementation wave"
             ],
             "custody_event_id": "event:4"
+          },
+          {
+            "sequence": 5,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src/decapod/core/todo.rs, src/decapod/core/events.rs, src/decapod/core/broker.rs, src/decapod/core/schemas.rs, src/decapod/plugins/federation.rs, focused tests, governed specs and publication artifacts"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_2b7d22cb1865f444 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:5"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 4
+    "next_sequence": 5
   }
 }
