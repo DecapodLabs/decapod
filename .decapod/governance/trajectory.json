@@ -5,7 +5,7 @@
   "task_id": "fend_01kzs9d8fcw8y18m",
   "original_intent": "Advance Decapod-owned local concurrency durability and Dactyl-boundary prerequisites after merged PR #1248",
   "derived_intent": "Implement only Decapod-side local semantics and tests that remain valid before Dactyl/Propodus contracts; preserve backend=local",
-  "current_phase": "boundary-refinement",
+  "current_phase": "validation",
   "next_transitions": [
     "Dactyl routing implementation and parity proof",
     "Dactyl/Propodus contract implementation",
@@ -35,6 +35,7 @@
   ],
   "inspected_files": [
     ".decapod/config.toml",
+    ".decapod/governance/validation.json",
     "/home/arx/src/dactyl/README.md",
     "/home/arx/src/dactyl/src/adapter/neon/mod.rs",
     "/home/arx/src/dactyl/src/adapter/sqlite/mod.rs",
@@ -120,6 +121,10 @@
       "status": "passed"
     },
     {
+      "name": "cloud_session_refresh_window",
+      "status": "passed"
+    },
+    {
       "name": "cloud_session_ttl_request",
       "status": "passed"
     },
@@ -156,6 +161,10 @@
       "status": "unavailable"
     },
     {
+      "name": "decapod_validate",
+      "status": "passed"
+    },
+    {
       "name": "direct_propodus_selection_in_decapod",
       "status": "partial"
     },
@@ -185,6 +194,10 @@
     },
     {
       "name": "local_schema",
+      "status": "passed"
+    },
+    {
+      "name": "local_session_ttl",
       "status": "passed"
     },
     {
@@ -219,7 +232,8 @@
     "Host Rust 2024 toolchain: 283 library tests passed serially; focused todo, SQLite hardening, single datastore, rebuild, fmt, and Clippy proofs passed. Container v0.97.0 governance binary ran; its bundled Cargo is too old for edition 2024. Remote Dactyl/Propodus implementation intentionally not changed.",
     "User clarified that Decapod must not encode Propodus, Vercel, or Neon in ordinary storage paths. Provider-specific SQL/API is permitted only for auth sessions, registration, entitlement/payment, and related session control. Existing cloud auth is in Decapod's Propodus integration module; ordinary cloud todo storage remains a separate Dactyl/remote contract.",
     "v0.97 source models the field as RepoContext.backend serialized under config.repo.backend. Current cloud todo code still directly builds PropodusCloudTodoStoreFactory while DbBroker remains local-oriented; the Dactyl session/router universalization is an explicit cross-repository follow-up, not a completed Decapod fact.",
-    "validation epoch ve_2c142e3bb2d64838 completed with zero failures"
+    "validation epoch ve_2c142e3bb2d64838 completed with zero failures",
+    "validation epoch ve_90d4d56609172f00 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [
@@ -233,7 +247,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:cfd320ad2737f647f7652fa46f85adc9b29c7993a45fdc6aecb7b87138f6c614",
+  "artifact_hash": "sha256:8c509a8342710a49bcc707e375fbd36ec17b72c00d5d81e919db47c197e4f4ec",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -405,6 +419,20 @@
       {
         "sequence": 23,
         "event_id": "event:23",
+        "intent_id": "intent:fend_01kzs7s5b28xtyh2",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:fend_01kzs7s5b28xtyh2"
+      },
+      {
+        "sequence": 24,
+        "event_id": "event:24",
+        "intent_id": "intent:fend_01kzs7s5b28xtyh2",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:fend_01kzs7s5b28xtyh2"
+      },
+      {
+        "sequence": 25,
+        "event_id": "event:25",
         "intent_id": "intent:fend_01kzs7s5b28xtyh2",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:fend_01kzs7s5b28xtyh2"
@@ -828,12 +856,59 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:23"
+          },
+          {
+            "sequence": 24,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "Decapod v0.97 local correctness and provider-neutral cloud boundary",
+              "Decapod v0.97 local persistence and backend-neutral handoff",
+              "backend selection, identical Decapod/Dactyl behavior, storage latency separation",
+              "backend=cloud atomic read/write contract; local remains fully functional",
+              "runtime backend selection, universal Dactyl routing, local/cloud semantic parity",
+              "shared task/event durability, local concurrency proof, backend boundary handoff",
+              "shared task/event durability, local concurrency proof, backend-boundary prerequisites"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_90d4d56609172f00 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:24"
+          },
+          {
+            "sequence": 25,
+            "action": "trajectory.record",
+            "scope": [
+              "Decapod v0.97 local correctness and provider-neutral cloud boundary",
+              "Decapod v0.97 local persistence and backend-neutral handoff",
+              "backend selection, identical Decapod/Dactyl behavior, storage latency separation",
+              "backend=cloud atomic read/write contract; local remains fully functional",
+              "runtime backend selection, universal Dactyl routing, local/cloud semantic parity",
+              "shared task/event durability, local concurrency proof, backend boundary handoff",
+              "shared task/event durability, local concurrency proof, backend-boundary prerequisites"
+            ],
+            "observations": [
+              ".decapod/governance/validation.json"
+            ],
+            "proof_refs": [
+              "decapod_validate",
+              "local_session_ttl",
+              "cloud_session_refresh_window"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:25"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 23
+    "next_sequence": 25
   }
 }
