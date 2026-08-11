@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.96.17](https://github.com/DecapodLabs/decapod/compare/v0.96.16...v0.96.17) - 2026-08-11
+
+### Fixed
+
+- *(ci)* restore release-bound sync so release-plz PRs pass validation
+
+### Other
+
+- refresh governance receipt after release-sync fix
+
 ## [0.96.16](https://github.com/DecapodLabs/decapod/compare/v0.96.15...v0.96.16) - 2026-08-11
 
 ### Fixed
