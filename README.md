@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Decapod</strong><br />
-  Repo-native governance kernel for AI coding agents.
+  Repo-native governance kernel for bounded, provable, shippable AI coding work.
 </p>
 
 <p align="center">
