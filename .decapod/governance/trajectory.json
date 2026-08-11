@@ -36,6 +36,7 @@
   "inspected_files": [
     ".decapod/config.toml",
     ".decapod/governance/validation.json",
+    ".github/workflows/nix-flake.yml",
     "/home/arx/src/dactyl/README.md",
     "/home/arx/src/dactyl/src/adapter/neon/mod.rs",
     "/home/arx/src/dactyl/src/adapter/sqlite/mod.rs",
@@ -209,6 +210,10 @@
       "status": "passed"
     },
     {
+      "name": "nix_release_merge_trigger",
+      "status": "passed"
+    },
+    {
       "name": "physical_latency_equivalence",
       "status": "unavailable"
     },
@@ -247,7 +252,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:8c509a8342710a49bcc707e375fbd36ec17b72c00d5d81e919db47c197e4f4ec",
+  "artifact_hash": "sha256:31f0f6bb6e5c386cc3548b3ad58c93727dbf49f2c298d7596b5af9711cfa1669",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -433,6 +438,13 @@
       {
         "sequence": 25,
         "event_id": "event:25",
+        "intent_id": "intent:fend_01kzs7s5b28xtyh2",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:fend_01kzs7s5b28xtyh2"
+      },
+      {
+        "sequence": 26,
+        "event_id": "event:26",
         "intent_id": "intent:fend_01kzs7s5b28xtyh2",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:fend_01kzs7s5b28xtyh2"
@@ -903,12 +915,33 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:25"
+          },
+          {
+            "sequence": 26,
+            "action": "trajectory.record",
+            "scope": [
+              "Decapod v0.97 local correctness and provider-neutral cloud boundary",
+              "Decapod v0.97 local persistence and backend-neutral handoff",
+              "backend selection, identical Decapod/Dactyl behavior, storage latency separation",
+              "backend=cloud atomic read/write contract; local remains fully functional",
+              "runtime backend selection, universal Dactyl routing, local/cloud semantic parity",
+              "shared task/event durability, local concurrency proof, backend boundary handoff",
+              "shared task/event durability, local concurrency proof, backend-boundary prerequisites"
+            ],
+            "observations": [
+              ".github/workflows/nix-flake.yml"
+            ],
+            "proof_refs": [
+              "nix_release_merge_trigger"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:26"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 25
+    "next_sequence": 26
   }
 }
