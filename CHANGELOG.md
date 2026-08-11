@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.96.18](https://github.com/DecapodLabs/decapod/compare/v0.96.17...v0.96.18) - 2026-08-11
+
+### Fixed
+
+- *(ci)* tree-local monorepo validate; update claims/plan for #1234
+- *(validate)* three-tier PR contract on #1233 currency base
+
+### Other
+
+- refresh validation receipt after CI fixes
+- bind validation receipt after rebase
+- refresh pins/specs after rebase onto v0.96.17 master
+- refresh governance and specs after three-tier validate
+
 ## [0.96.17](https://github.com/DecapodLabs/decapod/compare/v0.96.16...v0.96.17) - 2026-08-11
 
 ### Fixed
