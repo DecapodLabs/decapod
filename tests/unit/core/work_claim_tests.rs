@@ -29,6 +29,7 @@ fn task(status: &str, assigned_to: &str) -> Task {
         owners: Vec::new(),
         comments: Vec::new(),
         one_shot: 0,
+        revision: 0,
     }
 }
 

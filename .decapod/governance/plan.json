@@ -1,21 +1,21 @@
 {
   "schema_version": "1.0.0",
-  "title": "Remove Release Artifact Sync; #1065 coherent bundle docs; 0.96.20 pin advance",
-  "intent": "Delete Release Artifact Sync and post-release-plz pin heal. Master pins lag cargo until a user PR with the new binary advances them. Document #1065 coherent-bundle disposition and pin flywheel. This PR is the first user PR for installed 0.96.20 and carries full release-bound refresh.",
+  "title": "Canonical Decapod persistence and Dactyl routing model",
+  "intent": "Implement the final Decapod-owned persistence model for local/cloud-equivalent database operations: route all Decapod database state through the canonical Dactyl boundary, remove obsolete direct SQLite seams, express concurrency and durability semantics in Decapod schema/queries, and preserve backend=local without Propodus.",
   "state": "APPROVED",
   "todo_ids": [
-    "docs_01kzqx9wr0tzsy85"
+    "feat_01kzs151rgv5v1b7"
   ],
   "proof_hooks": [
-    "release-artifact-sync.yml deleted",
-    "release.yml has no post-release pin heal",
-    "entrypoints and Dockerfile pin 0.96.20"
+    "all Decapod database call sites use the canonical Dactyl model",
+    "local and cloud-facing operation contracts have backend-neutral tests",
+    "durability/concurrency invariants are enforced by Decapod schema and conditional mutations",
+    "decapod validate and required Rust tests pass",
+    "one canonical PR is published and relevant issues have status comments"
   ],
   "unknowns": [],
   "human_questions": [],
-  "stop_conditions": [
-    "Stop if validate requires entrypoint rewrites or unrelated release-bound churn on same version."
-  ],
+  "stop_conditions": [],
   "unresolved_contradictions": [],
   "deferred_questions": [],
   "constraints": {
@@ -23,5 +23,5 @@
     "file_touch_budget": 50
   },
   "phases": [],
-  "updated_at": "1786438175Z"
+  "updated_at": "1786473061Z"
 }

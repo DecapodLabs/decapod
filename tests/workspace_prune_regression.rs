@@ -1,6 +1,6 @@
 use decapod::core::store::{Store, StoreKind};
 use decapod::core::todo::{
-    ClaimMode, TodoCommand, add_task, claim_task, initialize_todo_db, update_status,
+    ClaimMode, TodoCommand, add_task, claim_task, get_task, initialize_todo_db, update_status,
 };
 use decapod::core::workspace;
 use decapod::plugins::federation::initialize_federation_db;
@@ -138,7 +138,17 @@ fn test_workspace_prune() {
     // Set claims and status
     claim_task(&store_root, id_a, "test-agent", ClaimMode::Exclusive).expect("claim task a");
     claim_task(&store_root, id_b, "test-agent", ClaimMode::Exclusive).expect("claim task b");
-    update_status(&store, id_b, "done", "task.done", serde_json::json!({})).expect("done task b");
+    let current = get_task(&store_root, id_b).unwrap().unwrap();
+    update_status(
+        &store,
+        id_b,
+        current.revision,
+        &current.status,
+        "done",
+        "task.done",
+        serde_json::json!({}),
+    )
+    .expect("done task b");
 
     // 4. Create actual git worktrees for A, B, C, D
     let workspaces_dir = main_root.join(".decapod").join("workspaces");
@@ -309,7 +319,17 @@ fn test_workspace_prune_unmerged_prevention() {
 
     let hash_f = "hashff";
     claim_task(&store_root, id_f, "test-agent", ClaimMode::Exclusive).expect("claim task f");
-    update_status(&store, id_f, "done", "task.done", serde_json::json!({})).expect("done task f");
+    let current = get_task(&store_root, id_f).unwrap().unwrap();
+    update_status(
+        &store,
+        id_f,
+        current.revision,
+        &current.status,
+        "done",
+        "task.done",
+        serde_json::json!({}),
+    )
+    .expect("done task f");
 
     let workspaces_dir = main_root.join(".decapod").join("workspaces");
     fs::create_dir_all(&workspaces_dir).expect("create workspaces dir");
@@ -407,8 +427,17 @@ fn test_workspace_prune_non_force_preserves_dirty_and_unregistered_data() {
     )
     .expect("update task hash");
     claim_task(&store_root, task_id, "test-agent", ClaimMode::Exclusive).expect("claim task");
-    update_status(&store, task_id, "done", "task.done", serde_json::json!({}))
-        .expect("complete task");
+    let current = get_task(&store_root, task_id).unwrap().unwrap();
+    update_status(
+        &store,
+        task_id,
+        current.revision,
+        &current.status,
+        "done",
+        "task.done",
+        serde_json::json!({}),
+    )
+    .expect("complete task");
 
     let workspaces_dir = main_root.join(".decapod").join("workspaces");
     fs::create_dir_all(&workspaces_dir).expect("create workspaces dir");
@@ -515,7 +544,17 @@ fn test_validate_stale_workspaces_cleanup() {
         .expect("update hash");
 
     claim_task(&store_root, id, "test-agent", ClaimMode::Exclusive).expect("claim task");
-    update_status(&store, id, "done", "task.done", serde_json::json!({})).expect("done task");
+    let current = get_task(&store_root, id).unwrap().unwrap();
+    update_status(
+        &store,
+        id,
+        current.revision,
+        &current.status,
+        "done",
+        "task.done",
+        serde_json::json!({}),
+    )
+    .expect("done task");
 
     let workspaces_dir = main_root.join(".decapod").join("workspaces");
     fs::create_dir_all(&workspaces_dir).expect("create workspaces dir");

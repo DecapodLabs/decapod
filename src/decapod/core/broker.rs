@@ -178,6 +178,40 @@ impl DbBroker {
         }
     }
 
+    /// Execute a state mutation and its audit/event writes as one SQLite
+    /// transaction. The transaction is acquired only when the connection is
+    /// not already inside a caller-owned transaction, so migration and
+    /// rebuild paths can safely compose this primitive.
+    pub fn with_transaction<F, R>(
+        &self,
+        db_path: &Path,
+        actor: &str,
+        intent_ref: Option<&str>,
+        op_name: &str,
+        f: F,
+    ) -> Result<R, error::DecapodError>
+    where
+        F: FnOnce(&Connection) -> Result<R, error::DecapodError>,
+    {
+        self.with_conn(db_path, actor, intent_ref, op_name, |conn| {
+            if !conn.is_autocommit() {
+                return f(conn);
+            }
+
+            conn.execute_batch("BEGIN IMMEDIATE")?;
+            match f(conn) {
+                Ok(value) => {
+                    conn.execute_batch("COMMIT")?;
+                    Ok(value)
+                }
+                Err(error) => {
+                    let _ = conn.execute_batch("ROLLBACK");
+                    Err(error)
+                }
+            }
+        })
+    }
+
     fn log_event(
         &self,
         actor: &str,

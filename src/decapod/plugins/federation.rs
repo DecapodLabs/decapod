@@ -34,6 +34,27 @@ const VALID_CONFIDENCES: &[&str] = &["human_confirmed", "agent_inferred", "impor
 
 const VALID_EDGE_TYPES: &[&str] = &["relates_to", "depends_on", "supersedes", "invalidated_by"];
 
+fn append_federation_event(
+    conn: &Connection,
+    event_id: &str,
+    ts: &str,
+    subject_id: Option<&str>,
+    event_type: &str,
+    payload: &JsonValue,
+    actor: &str,
+) -> Result<(), error::DecapodError> {
+    let event = serde_json::json!({
+        "event_id": event_id,
+        "ts": ts,
+        "node_id": subject_id,
+        "event_type": event_type,
+        "payload": payload,
+        "actor": actor,
+    });
+    crate::core::events::append_on_conn(conn, crate::core::events::FEDERATION, &event)?;
+    Ok(())
+}
+
 // --- CLI ---
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, ValueEnum)]
@@ -593,7 +614,7 @@ pub fn add_node(
         "dir_path": store.root.to_string_lossy().to_string(),
     });
 
-    let node = broker.with_conn(&db_path, actor, None, "federation.add", |conn| {
+    let node = broker.with_transaction(&db_path, actor, None, "federation.add", |conn| {
         conn.execute(
             "INSERT INTO nodes(id, node_type, status, priority, confidence, title, body, scope, tags, created_at, updated_at, effective_from, dir_path, actor)
              VALUES(?1, ?2, 'active', ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
@@ -614,22 +635,14 @@ pub fn add_node(
             )?;
         }
 
-        // Insert event record
-        conn.execute(
-            "INSERT INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
-             VALUES(
-               ?1, ?2,
-               (SELECT COALESCE(MAX(seq), 0) + 1 FROM events WHERE stream = 'federation'),
-               'federation', 'node', ?3, ?4, ?5, ?6
-             )",
-            params![
-                event_id,
-                now,
-                node_id,
-                "node.create",
-                serde_json::to_string(&payload_json).unwrap(),
-                actor,
-            ],
+        append_federation_event(
+            conn,
+            &event_id,
+            &now,
+            Some(&node_id),
+            "node.create",
+            &payload_json,
+            actor,
         )?;
 
 
@@ -673,7 +686,7 @@ pub fn edit_node(
 
     let now = now_ts();
 
-    broker.with_conn(&db_path, "decapod", None, "federation.edit", |conn| {
+    broker.with_transaction(&db_path, "decapod", None, "federation.edit", |conn| {
         // Check node exists and is not critical
         let (nt, pri) = get_node_type_and_priority(conn, id)?;
         if is_critical(&nt, &pri) {
@@ -736,21 +749,14 @@ pub fn edit_node(
             "tags": tags,
             "priority": priority,
         });
-        conn.execute(
-            "INSERT INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
-             VALUES(
-               ?1, ?2,
-               (SELECT COALESCE(MAX(seq), 0) + 1 FROM events WHERE stream = 'federation'),
-               'federation', 'node', ?3, ?4, ?5, ?6
-             )",
-            params![
-                event_id,
-                now,
-                id,
-                "node.edit",
-                serde_json::to_string(&payload_json).unwrap(),
-                "decapod",
-            ],
+        append_federation_event(
+            conn,
+            &event_id,
+            &now,
+            Some(id),
+            "node.edit",
+            &payload_json,
+            "decapod",
         )?;
 
 
@@ -770,7 +776,7 @@ pub fn supersede_node(
     let db_path = federation_db_path(&store.root);
     let now = now_ts();
 
-    broker.with_conn(&db_path, "decapod", None, "federation.supersede", |conn| {
+    broker.with_transaction(&db_path, "decapod", None, "federation.supersede", |conn| {
         // Verify both nodes exist
         if !node_exists(conn, old_id)? {
             return Err(error::DecapodError::NotFound(format!(
@@ -813,21 +819,14 @@ pub fn supersede_node(
             "reason": reason,
             "edge_id": edge_id,
         });
-        conn.execute(
-            "INSERT INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
-             VALUES(
-               ?1, ?2,
-               (SELECT COALESCE(MAX(seq), 0) + 1 FROM events WHERE stream = 'federation'),
-               'federation', 'node', ?3, ?4, ?5, ?6
-             )",
-            params![
-                event_id,
-                now,
-                old_id,
-                "node.supersede",
-                serde_json::to_string(&payload_json).unwrap(),
-                "decapod",
-            ],
+        append_federation_event(
+            conn,
+            &event_id,
+            &now,
+            Some(old_id),
+            "node.supersede",
+            &payload_json,
+            "decapod",
         )?;
 
 
@@ -850,7 +849,7 @@ pub fn transition_node_status(
     let db_path = federation_db_path(&store.root);
     let now = now_ts();
 
-    broker.with_conn(&db_path, "decapod", None, &format!("federation.{event_type}"), |conn| {
+    broker.with_transaction(&db_path, "decapod", None, &format!("federation.{event_type}"), |conn| {
         let old_status = get_node_status(conn, id)?;
         if old_status != "active" {
             return Err(error::DecapodError::ValidationError(format!(
@@ -868,21 +867,14 @@ pub fn transition_node_status(
             "new_status": new_status,
             "reason": reason,
         });
-        conn.execute(
-            "INSERT INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
-             VALUES(
-               ?1, ?2,
-               (SELECT COALESCE(MAX(seq), 0) + 1 FROM events WHERE stream = 'federation'),
-               'federation', 'node', ?3, ?4, ?5, ?6
-             )",
-            params![
-                event_id,
-                now,
-                id,
-                event_type,
-                serde_json::to_string(&payload_json).unwrap(),
-                "decapod",
-            ],
+        append_federation_event(
+            conn,
+            &event_id,
+            &now,
+            Some(id),
+            event_type,
+            &payload_json,
+            "decapod",
         )?;
 
 
@@ -905,7 +897,7 @@ pub fn add_edge(
     let now = now_ts();
     let edge_id = format!("FE_{}", crate::core::ulid::new_ulid());
 
-    broker.with_conn(&db_path, "decapod", None, "federation.link", |conn| {
+    broker.with_transaction(&db_path, "decapod", None, "federation.link", |conn| {
         if !node_exists(conn, source_id)? {
             return Err(error::DecapodError::NotFound(format!(
                 "Source node '{source_id}' not found"
@@ -930,23 +922,15 @@ pub fn add_edge(
             "target_id": target_id,
             "edge_type": edge_type,
         });
-        conn.execute(
-            "INSERT INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
-             VALUES(
-               ?1, ?2,
-               (SELECT COALESCE(MAX(seq), 0) + 1 FROM events WHERE stream = 'federation'),
-               'federation', 'node', ?3, ?4, ?5, ?6
-             )",
-            params![
-                event_id,
-                now,
-                source_id,
-                "edge.add",
-                serde_json::to_string(&payload_json).unwrap(),
-                "decapod",
-            ],
+        append_federation_event(
+            conn,
+            &event_id,
+            &now,
+            Some(source_id),
+            "edge.add",
+            &payload_json,
+            "decapod",
         )?;
-
 
         Ok(())
     })?;
@@ -959,7 +943,7 @@ fn remove_edge(store: &Store, edge_id: &str) -> Result<(), error::DecapodError> 
     let db_path = federation_db_path(&store.root);
     let now = now_ts();
 
-    broker.with_conn(&db_path, "decapod", None, "federation.unlink", |conn| {
+    broker.with_transaction(&db_path, "decapod", None, "federation.unlink", |conn| {
         let changes = conn.execute("DELETE FROM node_edges WHERE id = ?1", params![edge_id])?;
 
         if changes == 0 {
@@ -970,22 +954,15 @@ fn remove_edge(store: &Store, edge_id: &str) -> Result<(), error::DecapodError> 
 
         let event_id = crate::core::ulid::new_ulid();
         let payload_json = serde_json::json!({ "edge_id": edge_id });
-        conn.execute(
-            "INSERT INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
-             VALUES(
-               ?1, ?2,
-               (SELECT COALESCE(MAX(seq), 0) + 1 FROM events WHERE stream = 'federation'),
-               'federation', 'node', NULL, ?3, ?4, ?5
-             )",
-            params![
-                event_id,
-                now,
-                "edge.remove",
-                serde_json::to_string(&payload_json).unwrap(),
-                "decapod",
-            ],
+        append_federation_event(
+            conn,
+            &event_id,
+            &now,
+            None,
+            "edge.remove",
+            &payload_json,
+            "decapod",
         )?;
-
 
         Ok(())
     })?;
@@ -1005,7 +982,7 @@ pub fn add_source_to_node(
     let now = now_ts();
     let src_id = format!("FS_{}", crate::core::ulid::new_ulid());
 
-    broker.with_conn(
+    broker.with_transaction(
         &db_path,
         "decapod",
         None,
@@ -1035,21 +1012,14 @@ pub fn add_source_to_node(
                 "source_id": src_id,
                 "source": source,
             });
-            conn.execute(
-                "INSERT INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
-             VALUES(
-               ?1, ?2,
-               (SELECT COALESCE(MAX(seq), 0) + 1 FROM events WHERE stream = 'federation'),
-               'federation', 'node', ?3, ?4, ?5, ?6
-             )",
-            params![
-                event_id,
-                now,
-                node_id,
+            append_federation_event(
+                conn,
+                &event_id,
+                &now,
+                Some(node_id),
                 "source.add",
-                serde_json::to_string(&payload_json).unwrap(),
+                &payload_json,
                 "decapod",
-            ],
             )?;
 
 
@@ -1552,21 +1522,14 @@ fn require_nonempty_field(
 fn replay_event(conn: &Connection, event: &FederationEvent) -> Result<(), error::DecapodError> {
     // Always record the event in the unified events table (stream = federation).
     // Payload is already normalized by load_federation_events.
-    conn.execute(
-        "INSERT OR IGNORE INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
-         VALUES(
-           ?1, ?2,
-           (SELECT COALESCE(MAX(seq), 0) + 1 FROM events WHERE stream = 'federation'),
-           'federation', 'node', ?3, ?4, ?5, ?6
-         )",
-        params![
-            event.event_id,
-            event.ts,
-            event.node_id,
-            event.event_type,
-            serde_json::to_string(&event.payload).unwrap(),
-            event.actor,
-        ],
+    append_federation_event(
+        conn,
+        &event.event_id,
+        &event.ts,
+        event.node_id.as_deref(),
+        &event.event_type,
+        &event.payload,
+        &event.actor,
     )?;
 
     match event.event_type.as_str() {

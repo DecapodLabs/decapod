@@ -368,6 +368,8 @@ pub struct Task {
     #[serde(default)]
     pub comments: Vec<TaskComment>,
     pub one_shot: i32,
+    /// Monotonic task revision used by compare-and-swap mutations.
+    pub revision: i64,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -598,6 +600,7 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     // Always enforce critical additive tables/indexes even when schema_version is current.
     // Cached CI databases can carry stale meta while missing newer tables.
     // Consolidated agents surface (#1129) replaces agent_presence/trust/expertise/category_claims.
+    conn.execute(schemas::TODO_DB_SCHEMA_TASKS, [])?;
     conn.execute_batch(schemas::AGENTS_TABLE_SCHEMA)
         .map_err(error::DecapodError::RusqliteError)?;
     // Task tags junction (#1130); denormalized tasks.tags kept for one-release compat.
@@ -605,6 +608,16 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
         .map_err(error::DecapodError::RusqliteError)?;
     conn.execute(schemas::TODO_DB_SCHEMA_TASK_OWNERS, [])?;
     conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_OWNERS_TASK, [])?;
+    // Preserve the first historical claim for each pair before installing the
+    // invariant required by concurrent owner upserts.
+    conn.execute(
+        "DELETE FROM task_owners
+         WHERE rowid NOT IN (
+             SELECT MIN(rowid) FROM task_owners GROUP BY task_id, agent_id
+         )",
+        [],
+    )?;
+    conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_OWNERS_UNIQUE, [])?;
     conn.execute(schemas::TODO_DB_SCHEMA_TASK_DEPENDENCIES, [])?;
     conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_TASK, [])?;
     conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_DEPENDS_ON, [])?;
@@ -627,7 +640,10 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
         "ALTER TABLE tasks ADD COLUMN intent_anchor TEXT DEFAULT ''",
         [],
     );
-
+    let _ = conn.execute(
+        "ALTER TABLE tasks ADD COLUMN revision INTEGER NOT NULL DEFAULT 0",
+        [],
+    );
     if current_version >= schemas::TODO_SCHEMA_VERSION {
         return Ok(());
     }
@@ -1718,7 +1734,8 @@ pub fn cleanup_stale_agent_assignments(
                 let changed = conn
                     .execute(
                         "UPDATE tasks
-                             SET assigned_to = '', assigned_at = NULL, updated_at = ?1
+                             SET assigned_to = '', assigned_at = NULL, updated_at = ?1,
+                                 revision = revision + 1
                              WHERE id = ?2
                                AND assigned_to = ?3
                                AND status NOT IN ('done', 'archived')",
@@ -2006,6 +2023,8 @@ fn run_worker_loop(
         let done_out = update_status(
             store,
             &task_id,
+            task.revision,
+            &task.status,
             "done",
             "task.done",
             serde_json::json!({
@@ -2023,20 +2042,28 @@ fn run_worker_loop(
         }
 
         let archive_out = if autoclose {
-            match update_status(
-                store,
-                &task_id,
-                "archived",
-                "task.archive",
-                serde_json::json!({
-                    "reason": "worker_loop_autoclose",
-                    "actor": agent_id
-                }),
-            ) {
-                Ok(out) => Some(out),
-                Err(e) => Some(serde_json::json!({
-                    "status": "error",
-                    "error": e.to_string(),
+            match get_task(root, &task_id)? {
+                Some(current) => match update_status(
+                    store,
+                    &task_id,
+                    current.revision,
+                    &current.status,
+                    "archived",
+                    "task.archive",
+                    serde_json::json!({
+                        "reason": "worker_loop_autoclose",
+                        "actor": agent_id
+                    }),
+                ) {
+                    Ok(out) => Some(out),
+                    Err(e) => Some(serde_json::json!({
+                        "status": "error",
+                        "error": e.to_string(),
+                    })),
+                },
+                None => Some(serde_json::json!({
+                    "status": "not_found",
+                    "id": task_id,
                 })),
             }
         } else {
@@ -2670,32 +2697,36 @@ fn upsert_task_owner(
     claim_type: &str,
     ts: &str,
 ) -> Result<String, error::DecapodError> {
-    let existing_id: Option<String> = conn
-        .query_row(
-            "SELECT id FROM task_owners WHERE task_id = ?1 AND agent_id = ?2 ORDER BY claimed_at LIMIT 1",
-            rusqlite::params![task_id, agent_id],
-            |row| row.get(0),
-        )
-        .optional()
-        .map_err(error::DecapodError::RusqliteError)?;
+    let candidate_id = crate::core::ulid::new_ulid();
+    conn.execute(
+        "INSERT INTO task_owners(id, task_id, agent_id, claimed_at, claim_type)
+         VALUES(?1, ?2, ?3, ?4, ?5)
+         ON CONFLICT(task_id, agent_id) DO UPDATE SET
+             claim_type = excluded.claim_type,
+             claimed_at = excluded.claimed_at",
+        rusqlite::params![candidate_id, task_id, agent_id, ts, claim_type],
+    )
+    .map_err(error::DecapodError::RusqliteError)?;
+    conn.query_row(
+        "SELECT id FROM task_owners WHERE task_id = ?1 AND agent_id = ?2",
+        rusqlite::params![task_id, agent_id],
+        |row| row.get(0),
+    )
+    .map_err(error::DecapodError::RusqliteError)
+}
 
-    if let Some(id) = existing_id {
-        conn.execute(
-            "UPDATE task_owners SET claim_type = ?1, claimed_at = ?2 WHERE id = ?3",
-            rusqlite::params![claim_type, ts, id],
-        )
-        .map_err(error::DecapodError::RusqliteError)?;
-        Ok(id)
-    } else {
-        let claim_id = crate::core::ulid::new_ulid();
-        conn.execute(
-            "INSERT INTO task_owners(id, task_id, agent_id, claimed_at, claim_type)
-             VALUES(?1, ?2, ?3, ?4, ?5)",
-            rusqlite::params![claim_id, task_id, agent_id, ts, claim_type],
-        )
-        .map_err(error::DecapodError::RusqliteError)?;
-        Ok(claim_id)
-    }
+fn mutation_actor(payload: Option<&JsonValue>) -> String {
+    payload
+        .and_then(|value| value.get("actor"))
+        .and_then(JsonValue::as_str)
+        .filter(|value| !value.trim().is_empty())
+        .map(str::to_string)
+        .or_else(|| {
+            env::var("DECAPOD_AGENT_ID")
+                .ok()
+                .filter(|value| !value.trim().is_empty())
+        })
+        .unwrap_or_else(|| "decapod".to_string())
 }
 
 struct OwnershipClaimRecord<'a> {
@@ -2962,9 +2993,10 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
         return Err(crate::core::cloud_backend::unavailable_error());
     }
 
-    let (task_id, task_hash, effective_tags, consolidation) = broker.with_conn(
+    let actor = mutation_actor(None);
+    let (task_id, task_hash, effective_tags, consolidation) = broker.with_transaction(
         &db_path,
-        "decapod",
+        &actor,
         Some(&intent_ref),
         "todo.add",
         |conn| {
@@ -3123,7 +3155,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
             status: "success".to_string(),
             task_id: Some(task_id.clone()),
             payload,
-            actor: "decapod".to_string(),
+            actor: actor.clone(),
         };
         append_event(conn, &ev)?;
         insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
@@ -3139,7 +3171,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
                     agent_id: owner_agent,
                     claim_type,
                     claim_id: &claim_id,
-                    actor: "decapod",
+                    actor: &actor,
                     ts: &ts,
                 },
             )?;
@@ -3200,6 +3232,8 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
 pub fn update_status(
     store: &Store,
     id: &str,
+    expected_revision: i64,
+    expected_status: &str,
     new_status: &str,
     event_type: &str,
     payload: JsonValue,
@@ -3227,41 +3261,107 @@ pub fn update_status(
         )));
     }
 
+    let actor = mutation_actor(Some(&payload));
     let mut payload = payload;
     if let Some(obj) = payload.as_object_mut() {
         obj.insert(
             "intent_ref".to_string(),
             serde_json::json!(intent_ref.clone()),
         );
+        obj.insert(
+            "expected_revision".to_string(),
+            serde_json::json!(expected_revision),
+        );
+        obj.insert(
+            "expected_status".to_string(),
+            serde_json::json!(expected_status),
+        );
     }
 
-    let changed = broker.with_conn(&db_path, "decapod", Some(&intent_ref), event_type, |conn| {
-        ensure_schema(conn)?;
-        let changed = conn.execute(
-            "UPDATE tasks SET status = ?1, updated_at = ?2, completed_at = CASE WHEN ?1 = 'done' THEN ?2 ELSE completed_at END WHERE id = ?3",
-            rusqlite::params![new_status, ts, id],
-        )?;
+    let result =
+        broker.with_transaction(&db_path, &actor, Some(&intent_ref), event_type, |conn| {
+            ensure_schema(conn)?;
 
-        let ev = TodoEvent {
-            ts: ts.clone(),
-            event_id: crate::core::ulid::new_ulid(),
-            event_type: event_type.to_string(),
-            status: "success".to_string(),
-            task_id: Some(id.to_string()),
-            payload: payload.clone(),
-            actor: "decapod".to_string(),
-        };
-        append_event(conn, &ev)?;
-        insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
-        Ok(changed)
-    })?;
+            let current: Option<(String, i64)> = conn
+                .query_row(
+                    "SELECT status, revision FROM tasks WHERE id = ?1",
+                    [id],
+                    |row| Ok((row.get(0)?, row.get(1)?)),
+                )
+                .optional()
+                .map_err(error::DecapodError::RusqliteError)?;
+            let Some((actual_status, actual_revision)) = current else {
+                return Ok(serde_json::json!({
+                    "status": "not_found",
+                    "id": id,
+                }));
+            };
+            if actual_status != expected_status || actual_revision != expected_revision {
+                return Ok(serde_json::json!({
+                    "status": "conflict",
+                    "reason": "stale_task_revision",
+                    "id": id,
+                    "expected_status": expected_status,
+                    "actual_status": actual_status,
+                    "expected_revision": expected_revision,
+                    "actual_revision": actual_revision,
+                }));
+            }
 
-    if changed > 0 {
+            let changed = conn.execute(
+                "UPDATE tasks
+             SET status = ?1,
+                 updated_at = ?2,
+                 revision = revision + 1,
+                 completed_at = CASE WHEN ?1 = 'done' THEN ?2 ELSE completed_at END,
+                 closed_at = CASE WHEN ?1 = 'archived' THEN ?2 ELSE closed_at END
+             WHERE id = ?3 AND status = ?4 AND revision = ?5",
+                rusqlite::params![new_status, ts, id, expected_status, expected_revision],
+            )?;
+            if changed != 1 {
+                return Ok(serde_json::json!({
+                    "status": "conflict",
+                    "reason": "stale_task_revision",
+                    "id": id,
+                    "expected_status": expected_status,
+                    "expected_revision": expected_revision,
+                }));
+            }
+
+            let new_revision = expected_revision + 1;
+            if let Some(obj) = payload.as_object_mut() {
+                obj.insert(
+                    "previous_status".to_string(),
+                    serde_json::json!(expected_status),
+                );
+                obj.insert("revision".to_string(), serde_json::json!(new_revision));
+            }
+
+            let ev = TodoEvent {
+                ts: ts.clone(),
+                event_id: crate::core::ulid::new_ulid(),
+                event_type: event_type.to_string(),
+                status: "success".to_string(),
+                task_id: Some(id.to_string()),
+                payload: payload.clone(),
+                actor: actor.clone(),
+            };
+            append_event(conn, &ev)?;
+            insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
+            Ok(serde_json::json!({
+                "status": "ok",
+                "id": id,
+                "revision": new_revision,
+            }))
+        })?;
+
+    let changed = result.get("status").and_then(|v| v.as_str()) == Some("ok");
+    if changed {
         let _ = DbBroker::cache_invalidate_key(&db_path, CLAIM_STATUS_CACHE_SCOPE, id);
     }
 
     // Create a lifecycle-change node for every successful task status transition.
-    if changed > 0 {
+    if changed {
         let source = format!("event:{id}");
         let anchor = federation::find_node_by_source(store, &source)
             .ok()
@@ -3287,7 +3387,7 @@ pub fn update_status(
     }
 
     // Create federation node for proof when task is completed and link to intent
-    if new_status == "done" && changed > 0 {
+    if new_status == "done" && changed {
         // Find the original intent node (created at task.add)
         let intent_source = format!("event:{id}");
         let intent_node_id = federation::find_node_by_source(store, &intent_source)
@@ -3318,13 +3418,22 @@ pub fn update_status(
         let _ = federation::refresh_derived_files(store);
     }
 
-    Ok(serde_json::json!({
+    let mut output = serde_json::json!({
         "ts": ts,
         "cmd": event_type,
-        "status": if changed > 0 { "ok" } else { "not_found" },
+        "status": result.get("status").and_then(|v| v.as_str()).unwrap_or("error"),
         "root": root.to_string_lossy(),
         "id": id,
-    }))
+        "result": result.clone(),
+    });
+    if let Some(result_obj) = result.as_object()
+        && let Some(output_obj) = output.as_object_mut()
+    {
+        for (key, value) in result_obj {
+            output_obj.insert(key.clone(), value.clone());
+        }
+    }
+    Ok(output)
 }
 
 fn comment_task(
@@ -3369,8 +3478,9 @@ fn edit_task(
     let ts = now_iso();
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
+    let actor = mutation_actor(None);
 
-    let changed = broker.with_conn(&db_path, "decapod", None, "todo.edit", |conn| {
+    let changed = broker.with_transaction(&db_path, &actor, None, "todo.edit", |conn| {
         ensure_schema(conn)?;
 
         // Validate category if provided
@@ -3416,13 +3526,13 @@ fn edit_task(
 
         let changed = if updates.is_empty() {
             conn.execute(
-                "UPDATE tasks SET updated_at = ? WHERE id = ?",
+                "UPDATE tasks SET updated_at = ?, revision = revision + 1 WHERE id = ?",
                 rusqlite::params![ts, id],
             )?
         } else {
             // Always update updated_at
             let sql = format!(
-                "UPDATE tasks SET {}, updated_at = ? WHERE id = ?",
+                "UPDATE tasks SET {}, updated_at = ?, revision = revision + 1 WHERE id = ?",
                 updates.join(", ")
             );
             params.push(Box::new(ts.clone()));
@@ -3455,14 +3565,14 @@ fn edit_task(
             status: "success".to_string(),
             task_id: Some(id.to_string()),
             payload: serde_json::Value::Object(payload),
-            actor: "decapod".to_string(),
+            actor: actor.clone(),
         };
         append_event(conn, &ev)?;
         insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
 
         if let Some(o) = owner {
             let owner_list = parse_owners_input(o);
-            set_task_owners(root, conn, id, &owner_list, "decapod", &ts)?;
+            set_task_owners(root, conn, id, &owner_list, &actor, &ts)?;
         }
 
         Ok(changed)
@@ -3608,7 +3718,7 @@ pub fn claim_task_with_lease(
     // Do not short-circuit exclusive conflicts from cache: lease expiry must hit the DB
     // so another agent can reclaim an expired ownership lease.
 
-    let result = broker.with_conn(&db_path, "decapod", None, "todo.claim", |conn| {
+    let result = broker.with_transaction(&db_path, "decapod", None, "todo.claim", |conn| {
         ensure_schema(conn)?;
         touch_agent_presence(conn, agent_id, &ts)?;
         let claim_zone = if mode == ClaimMode::Shared {
@@ -3817,7 +3927,8 @@ pub fn claim_task_with_lease(
                 .execute(
                     "UPDATE tasks
                      SET assigned_to = ?1, assigned_at = ?2, updated_at = ?2, lease_expires_at = ?3,
-                         lease_generation = ?4, lease_lifecycle = ?5, intent_anchor = ?6
+                         lease_generation = ?4, lease_lifecycle = ?5, intent_anchor = ?6,
+                         revision = revision + 1
                      WHERE id = ?7
                        AND status NOT IN ('done', 'archived')
                        AND (assigned_to = '' OR assigned_to = ?1)",
@@ -3863,7 +3974,7 @@ pub fn claim_task_with_lease(
             }
         } else {
             conn.execute(
-                "UPDATE tasks SET assigned_to = ?, assigned_at = ?, updated_at = ? WHERE id = ?",
+                "UPDATE tasks SET assigned_to = ?, assigned_at = ?, updated_at = ?, revision = revision + 1 WHERE id = ?",
                 [agent_id, &ts, &ts, id],
             )
             .map_err(error::DecapodError::RusqliteError)?;
@@ -3977,7 +4088,7 @@ fn force_release_assignment(
     conn.execute(
         "UPDATE tasks
          SET assigned_to = '', assigned_at = NULL, lease_expires_at = NULL,
-             lease_lifecycle = ?1, updated_at = ?2
+             lease_lifecycle = ?1, updated_at = ?2, revision = revision + 1
          WHERE id = ?3",
         rusqlite::params![lifecycle.as_str(), ts, task_id],
     )
@@ -4111,7 +4222,7 @@ pub fn renew_claim_lease(
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
 
-    let result = broker.with_conn(&db_path, "decapod", None, "todo.renew", |conn| {
+    let result = broker.with_transaction(&db_path, "decapod", None, "todo.renew", |conn| {
         ensure_schema(conn)?;
         touch_agent_presence(conn, agent_id, &ts)?;
         enforce_operation_policy(root, conn, "todo.claim.exclusive", agent_id)?;
@@ -4187,7 +4298,7 @@ pub fn renew_claim_lease(
                 conn.execute(
                     "UPDATE tasks
                      SET lease_expires_at = ?1, lease_generation = ?2, lease_lifecycle = ?3,
-                         updated_at = ?4
+                         updated_at = ?4, revision = revision + 1
                      WHERE id = ?5",
                     rusqlite::params![
                         lease_exp,
@@ -4298,7 +4409,7 @@ pub fn yield_claim_lease(
                 conn.execute(
                     "UPDATE tasks
                      SET assigned_to = '', assigned_at = NULL, lease_expires_at = NULL,
-                         lease_lifecycle = ?1, updated_at = ?2
+                         lease_lifecycle = ?1, updated_at = ?2, revision = revision + 1
                      WHERE id = ?3",
                     rusqlite::params![LeaseLifecycle::Yielded.as_str(), ts, id],
                 )
@@ -4722,7 +4833,8 @@ pub fn handoff_task(
             "UPDATE tasks
              SET assigned_to = ?1, assigned_at = ?2, updated_at = ?2,
                  lease_expires_at = ?3, lease_generation = ?4,
-                 lease_lifecycle = ?5, intent_anchor = ?6
+                 lease_lifecycle = ?5, intent_anchor = ?6,
+                 revision = revision + 1
              WHERE id = ?7",
             rusqlite::params![
                 to,
@@ -5114,8 +5226,9 @@ fn release_task(root: &Path, id: &str) -> Result<serde_json::Value, error::Decap
     let ts = now_iso();
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
+    let actor = mutation_actor(None);
 
-    let result = broker.with_conn(&db_path, "decapod", None, "todo.release", |conn| {
+    let result = broker.with_transaction(&db_path, &actor, None, "todo.release", |conn| {
         ensure_schema(conn)?;
 
         // Check if task exists
@@ -5133,15 +5246,36 @@ fn release_task(root: &Path, id: &str) -> Result<serde_json::Value, error::Decap
             }));
         }
 
-        // Release the task and clear its exclusive lease.
-        conn.execute(
-            "UPDATE tasks
+        let Some(previous_assignee) = exists else {
+            unreachable!("checked task existence above");
+        };
+
+        // Release the task and clear its exclusive lease only if the observed
+        // assignee is still current. This prevents a stale release from
+        // clearing a newer claim acquired by another agent.
+        let changed = conn
+            .execute(
+                "UPDATE tasks
              SET assigned_to = '', assigned_at = NULL, lease_expires_at = NULL,
-                 lease_lifecycle = ?1, updated_at = ?2
-             WHERE id = ?3",
-            rusqlite::params![LeaseLifecycle::Released.as_str(), ts, id],
-        )
-        .map_err(error::DecapodError::RusqliteError)?;
+                 lease_lifecycle = ?1, updated_at = ?2, revision = revision + 1
+             WHERE id = ?3 AND assigned_to = ?4",
+                rusqlite::params![LeaseLifecycle::Released.as_str(), ts, id, previous_assignee],
+            )
+            .map_err(error::DecapodError::RusqliteError)?;
+        if changed != 1 {
+            return Ok(serde_json::json!({
+                "status": "conflict",
+                "reason": "stale_release",
+                "message": format!("Task {} changed while release was in progress", id),
+            }));
+        }
+        if !previous_assignee.is_empty() {
+            conn.execute(
+                "DELETE FROM task_owners WHERE task_id = ?1 AND agent_id = ?2",
+                rusqlite::params![id, previous_assignee],
+            )?;
+            sync_legacy_owner_column(conn, id)?;
+        }
 
         // Create release event
         let ev = TodoEvent {
@@ -5150,8 +5284,10 @@ fn release_task(root: &Path, id: &str) -> Result<serde_json::Value, error::Decap
             event_type: "task.release".to_string(),
             status: "success".to_string(),
             task_id: Some(id.to_string()),
-            payload: serde_json::json!({}),
-            actor: "decapod".to_string(),
+            payload: serde_json::json!({
+                "previous_assignee": previous_assignee,
+            }),
+            actor: actor.clone(),
         };
         append_event(conn, &ev)?;
         insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
@@ -5187,7 +5323,7 @@ pub fn get_task(root: &Path, id: &str) -> Result<Option<Task>, error::DecapodErr
 
     broker.with_conn(&db_path, "decapod", None, "todo.get", |conn| {
         ensure_schema(conn)?;
-        let mut stmt = conn.prepare("SELECT id,hash,title,description,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks,category,component,assigned_to,assigned_at FROM tasks WHERE id = ?1")?;
+        let mut stmt = conn.prepare("SELECT id,hash,title,description,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks,category,component,assigned_to,assigned_at,one_shot,revision FROM tasks WHERE id = ?1")?;
         let mut rows = stmt.query(rusqlite::params![id])?;
         if let Some(row) = rows.next()? {
             let task_id: String = row.get(0)?;
@@ -5222,6 +5358,7 @@ pub fn get_task(root: &Path, id: &str) -> Result<Option<Task>, error::DecapodErr
                 owners,
                 comments,
                 one_shot: row.get(23).unwrap_or(0),
+                revision: row.get(24).unwrap_or(0),
             }))
         } else {
             Ok(None)
@@ -5344,7 +5481,7 @@ pub fn list_tasks(
     broker.with_conn(&db_path, "decapod", None, "todo.list", |conn| {
         ensure_schema(conn)?;
 
-        let mut query = "SELECT id,hash,title,description,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks,category,component,assigned_to,assigned_at FROM tasks WHERE 1=1".to_string();
+        let mut query = "SELECT id,hash,title,description,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks,category,component,assigned_to,assigned_at,one_shot,revision FROM tasks WHERE 1=1".to_string();
         let mut params: Vec<Box<dyn ToSql>> = Vec::new();
 
         if let Some(s) = status {
@@ -5417,6 +5554,7 @@ pub fn list_tasks(
                 owners,
                 comments,
                 one_shot: row.get(23).map_err(error::DecapodError::RusqliteError).unwrap_or(0),
+                revision: row.get(24).map_err(error::DecapodError::RusqliteError).unwrap_or(0),
             });
         }
         Ok(out)
@@ -6467,8 +6605,18 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
             } else if !*validated && let Some(gate) = exclusive_lease_proof_gate(root, &task_id)? {
                 gate
             } else {
-                let out =
-                    update_status(store, &task_id, "done", "task.done", serde_json::json!({}))?;
+                let current = get_task(root, &task_id)?.ok_or_else(|| {
+                    error::DecapodError::ValidationError(format!("Task {task_id} not found"))
+                })?;
+                let out = update_status(
+                    store,
+                    &task_id,
+                    current.revision,
+                    &current.status,
+                    "done",
+                    "task.done",
+                    serde_json::json!({}),
+                )?;
                 if *validated && out.get("status").and_then(|v| v.as_str()) == Some("ok") {
                     verify::capture_baseline_for_todo(
                         store,
@@ -6484,9 +6632,14 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
         }
         TodoCommand::Archive { id, id_positional } => {
             let task_id = resolve_task_id_arg(id, id_positional, "todo archive")?;
+            let current = get_task(root, &task_id)?.ok_or_else(|| {
+                error::DecapodError::ValidationError(format!("Task {task_id} not found"))
+            })?;
             update_status(
                 store,
                 &task_id,
+                current.revision,
+                &current.status,
                 "archived",
                 "task.archive",
                 serde_json::json!({}),
