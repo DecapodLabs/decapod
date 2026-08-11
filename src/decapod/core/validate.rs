@@ -2708,39 +2708,38 @@ fn validate_publication_bundle_currency(
         failures.push("missing .decapod/managed/specs/*.md".to_string());
     }
 
-    // Release-bound refresh when the evaluating Decapod version advanced past
-    // the base pin. Sibling entrypoint/Dockerfile fingerprint gates prove
-    // on-disk currency against the running binary; this check only ensures the
-    // branch actually carried the refresh once a version bump made inheritance
-    // insufficient (GitHub #1232 — same-version PRs need no artificial churn).
-    if !skip_fingerprint_gates() {
-        if let Some(base_release) = git_blob_release_marker(repo_root, &base_ref, "AGENTS.md") {
-            let running = crate::core::entrypoint_integrity::RELEASE_VERSION;
-            if base_release != running {
-                let branch_changed_release_bound = release_bound_paths_changed_vs_base(
-                    repo_root,
-                    &base_ref,
-                    &[
-                        "AGENTS.md",
-                        "CLAUDE.md",
-                        "CODEX.md",
-                        "GEMINI.md",
-                        ".decapod/managed/Dockerfile.decapod",
-                        ".decapod/managed/specs/.manifest.json",
-                    ],
-                )?;
-                if !branch_changed_release_bound {
-                    failures.push(format!(
-                        "Decapod release advanced from base '{base_release}' to running '{running}' but release-bound entrypoints/Dockerfile/manifest were not refreshed on this branch"
-                    ));
-                }
-            }
+    // Release-bound currency is proven by sibling fingerprint/Dockerfile gates
+    // (fingerprint/provenance still validates ⇒ unchanged inheritance is fine).
+    // When the base pin is older than the evaluating release, inheritance is
+    // not enough: the branch must carry refreshed release-bound surfaces.
+    if !skip_fingerprint_gates()
+        && let Some(base_release) = git_blob_release_marker(repo_root, &base_ref, "AGENTS.md")
+        && base_release != crate::core::entrypoint_integrity::RELEASE_VERSION
+    {
+        let running = crate::core::entrypoint_integrity::RELEASE_VERSION;
+        let branch_changed_release_bound = release_bound_paths_changed_vs_base(
+            repo_root,
+            &base_ref,
+            &[
+                "AGENTS.md",
+                "CLAUDE.md",
+                "CODEX.md",
+                "GEMINI.md",
+                ".decapod/managed/Dockerfile.decapod",
+                ".decapod/managed/specs/.manifest.json",
+            ],
+        )?;
+        if !branch_changed_release_bound {
+            failures.push(format!(
+                "Decapod release advanced from base '{base_release}' to running '{running}' but release-bound entrypoints/Dockerfile/manifest were not refreshed on this branch"
+            ));
         }
     }
 
-    // Governance artifacts must load as schema-valid documents. Semantic
-    // binding (trajectory↔receipt, plan/task) is enforced by publish-time
-    // gates; this gate only requires a present, parseable proof surface.
+    // Governance: present and schema-valid / loadable. Unchanged inherited
+    // artifacts are sufficient when provenance still validates. Semantic
+    // trajectory↔receipt binding is enforced at publish time (receipt is often
+    // the prior successful run mid-validate and is rewritten at end of pass).
     match plan_governance::load_plan(repo_root) {
         Ok(None) => failures.push(".decapod/governance/plan.json: missing or empty".to_string()),
         Err(error) => failures.push(format!(".decapod/governance/plan.json: {error}")),
@@ -2758,9 +2757,6 @@ fn validate_publication_bundle_currency(
         Err(error) => failures.push(format!(".decapod/governance/trajectory.json: {error}")),
         Ok(Some(_)) => {}
     }
-    // Presence + parseable schema only. Integrity binding to the active
-    // trajectory is enforced at publish time; during validate the receipt is
-    // often the prior successful run and is rewritten at the end of this pass.
     match load_validation_receipt_for_currency(repo_root) {
         Ok(()) => {}
         Err(error) => failures.push(format!(".decapod/governance/validation.json: {error}")),

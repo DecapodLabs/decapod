@@ -51,7 +51,11 @@ fn setup_feature_branch() -> (TempDir, PathBuf, String) {
     git(&repo, &["config", "user.name", "Test User"]);
     git(&repo, &["config", "user.email", "test@example.com"]);
 
-    let init = run_decapod(&repo, &["init", "--force", "--no-container-workspaces"], &[]);
+    let init = run_decapod(
+        &repo,
+        &["init", "--force", "--no-container-workspaces"],
+        &[],
+    );
     assert!(
         init.status.success(),
         "decapod init failed: {}",
@@ -108,7 +112,10 @@ fn same_version_app_commit_does_not_require_bundle_diff_churn() {
     .expect("material intent rewrite");
 
     // Do NOT touch entrypoints, Dockerfile, governance files, or manifest.
-    git(&dir, &["add", "app-feature.txt", ".decapod/managed/specs/INTENT.md"]);
+    git(
+        &dir,
+        &["add", "app-feature.txt", ".decapod/managed/specs/INTENT.md"],
+    );
     git(
         &dir,
         &["commit", "-m", "feat: app change with material intent only"],
@@ -165,17 +172,17 @@ fn release_advance_requires_release_bound_refresh_on_branch() {
     // Replace the release marker with a deliberately stale version string while
     // leaving the rest of the file intact enough for git history purposes.
     let stale = agents_body.replacen(
-        &format!(
-            "<!-- decapod-release: {} -->",
-            env!("CARGO_PKG_VERSION")
-        ),
+        &format!("<!-- decapod-release: {} -->", env!("CARGO_PKG_VERSION")),
         "<!-- decapod-release: 0.0.0-stale -->",
         1,
     );
     assert_ne!(stale, agents_body, "fixture must alter the release marker");
     fs::write(&agents, &stale).expect("write stale agents");
     git(&dir, &["add", "AGENTS.md"]);
-    git(&dir, &["commit", "-m", "chore: simulate older base release pin"]);
+    git(
+        &dir,
+        &["commit", "-m", "chore: simulate older base release pin"],
+    );
 
     git(&dir, &["checkout", "-b", "agent/test/release-advance"]);
     fs::write(dir.join("only-app.txt"), "app\n").expect("write app");

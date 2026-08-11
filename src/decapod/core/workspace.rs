@@ -1748,10 +1748,8 @@ pub fn ensure_required_governance_artifacts_in_pr(
         .map(|artifact| {
             let reason = if !artifact.present {
                 "missing"
-            } else if let Some(error) = artifact.schema_error.as_deref() {
-                error
             } else {
-                "invalid"
+                artifact.schema_error.as_deref().unwrap_or("invalid")
             };
             format!("{} ({reason})", artifact.path)
         })
