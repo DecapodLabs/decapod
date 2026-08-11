@@ -13,32 +13,25 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-      - name: Cache cargo-binstall and Decapod
-        id: cache_decapod_tools
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/cargo-binstall
-            ~/.cargo/bin/decapod
-          key: ${{ runner.os }}-decapod-tools-v1-${{ hashFiles('AGENTS.md') }}
-      - name: Install cargo-binstall
-        if: steps.cache_decapod_tools.outputs.cache-hit != 'true'
-        uses: cargo-bins/cargo-binstall@main
-      - name: Install Decapod
-        if: steps.cache_decapod_tools.outputs.cache-hit != 'true'
-        run: cargo binstall --no-confirm decapod
+      # This repository is the Decapod source. Evaluate with a tree-local binary so
+      # pins match Cargo.toml (crates.io can lag mid-release and rewrite pins
+      # e.g. 0.96.17 → 0.96.16, failing the drift gate).
+      - name: Build tree-local Decapod
+        run: cargo build --release --locked
       - name: Decapod Validate
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
-          # Post-merge tree-local pins lag the last published fingerprint.
-          # release-plz PRs heal via release-artifact-sync (skip hard fingerprint fails).
-          # Code PRs still enforce release-bound pins + drift below.
+          # release-plz / release-labeled PRs: skip hard fingerprint fails while heal runs.
+          # Code PRs enforce pins against the tree-local binary.
           DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES: ${{ (github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'release') || startsWith(github.head_ref, 'release-plz-')) && '1' || '' }}
         run: |
+          set -euo pipefail
+          BIN=./target/release/decapod
+          chmod +x "$BIN"
           if [ ! -d .decapod ]; then
-            decapod init --proof
+            "$BIN" init --proof
           fi
-          decapod validate --refresh-specs
+          "$BIN" validate --refresh-specs
       - name: Ensure no spec or entrypoint drift
         # release-plz bumps Cargo.toml without pins; release-artifact-sync heals those PRs.
         if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'release') && !startsWith(github.head_ref, 'release-plz-')
@@ -56,6 +49,6 @@ jobs:
           fi
           if ! git diff --exit-code -- . ':!.decapod/governance/'; then
             echo "::error::Release-bound or living-spec drift after validate --refresh-specs."
-            echo "Commit regenerated entrypoints and .decapod/managed/specs from the evaluating binary."
+            echo "Commit regenerated entrypoints and .decapod/managed/specs from the tree-local evaluating binary."
             exit 1
           fi
