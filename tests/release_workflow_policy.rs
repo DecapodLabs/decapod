@@ -20,7 +20,6 @@ fn release_workflow_lets_release_plz_update_the_manifest() {
     );
 }
 
-
 #[test]
 fn release_workflow_does_not_auto_heal_release_bound_pins() {
     // Master pins stay at the Decapod version that generated master.
@@ -52,8 +51,6 @@ fn release_artifact_sync_workflow_is_removed() {
         "Release Artifact Sync workflow must be deleted; agents advance pins in PRs via local validate"
     );
 }
-
-
 
 #[test]
 fn post_merge_validate_skips_fingerprint_evaluation() {
