@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.98.0](https://github.com/DecapodLabs/decapod/compare/v0.97.0...v0.98.0) - 2026-08-11
+
+### Added
+
+- bind backend routes and durable sessions
+
+### Fixed
+
+- make local coordination mutations atomic
+
+### Other
+
+- run Nix builds only after release merges
+- record session validation proof
+- define cloud atomicity handoff
+- bind validation receipt to final tip
+- record successful v0.97 validation
+- record governed local persistence boundary
+- target unified lcm event stream
+- automated container updates
+
 ## [0.97.0](https://github.com/DecapodLabs/decapod/compare/v0.96.21...v0.97.0) - 2026-08-11
 
 ### Added
