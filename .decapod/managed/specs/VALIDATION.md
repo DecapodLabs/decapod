@@ -42,19 +42,26 @@ When validation reports `OUT_OF_SYNC_SPECS` or `STALE_SPECS_FINGERPRINT`, the go
 The four generated agent entrypoints are release-bound projections of the installed Decapod binary. Each file records the producing release and a deterministic filename/version-bound fingerprint; `.decapod/managed/specs/.manifest.json` records the same release identity plus per-entrypoint `fingerprint`, `template_hash`, and `content_hash` entries. Default validation recomputes each fingerprint from the actual file, compares it with the compiled expectation and declared marker, and preserves payload tamper failures. Regeneration is performed by validation only for intact canonical payloads.
 
 ## Publication Bundle Currency Gate (#1232)
-`decapod validate` on a feature branch enforces **publication bundle currency at
-HEAD**, not textual participation of every governed path in every commit diff.
+`decapod validate` on a feature branch no longer requires every governed path to
+appear in every commit's `diff-tree`. That ceremonial participation model is
+gone.
 
-| Surface | Pass when | Fail until |
+`PUBLICATION_BUNDLE_CURRENCY` itself only proves a **HEAD participation/load
+predicate**: required paths exist, living-spec `*.md` exists, plan/claims/
+trajectory load, validation.json parses, and (when base release pin ≠ running
+release) some release-bound path appears in `base...HEAD`. It does **not** by
+itself prove fingerprint currency, living-spec attestation, or receipt↔HEAD
+binding — those remain sibling gates.
+
+| Surface | Currency mechanism (composition) | Fail until |
 |---|---|---|
-| Release-bound entrypoints + Dockerfile + specs manifest | Present at HEAD; fingerprints match the running release; if base pin equals running release, inheritance needs no mutation | Release advanced past base without refreshing release-bound paths, or fingerprint/integrity gates fail |
-| Living specs (`*.md`) | Present; material authored rewrite vs base on non-release PRs | Missing, or fingerprint-only refresh (`FINGERPRINT_ONLY_SPECS`) |
-| Governance (`plan`, `claims`, `trajectory`, `validation`) | Present and schema-valid at HEAD (and bound at publish) | Missing or invalid; unchanged inherited files are fine when still valid |
+| Release-bound entrypoints + Dockerfile | Sibling entrypoint/Dockerfile integrity vs running binary; inheritance OK when fingerprints match | Integrity fail, or release advanced past base without branch refresh |
+| Living specs | Sibling `STALE_SPECS_FINGERPRINT` / content hashes + material mutation vs base | Fingerprint-only PR (`FINGERPRINT_ONLY_SPECS`) or missing material rewrite |
+| Governance | Present + schema-loadable at HEAD; trajectory↔receipt bind at **publish** | Missing/invalid load; publish rejects unbound receipt |
 
 Regression proof:
-- Same Decapod version, app + material intent commit(s) without bundle churn: no `PER_COMMIT_PUBLICATION_BUNDLE` / per-commit participation failure (`tests/publication_bundle_currency.rs`).
-- Release advance without refresh: validation blocks until release-bound surfaces are refreshed on the branch.
-- Publish gate accepts inherited valid governance artifacts that do not appear in the PR diff.
+- Unit: inherited bundle without per-commit churn passes the currency gate; release advance without refresh fails; missing plan fails (`tests/unit/core/validate_tests.rs`).
+- Integration: multi-commit history without full-bundle path participation; `src/**` without material rewrite fails composition; release advance fails validate (`tests/publication_bundle_currency.rs`).
 
 When `DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES` is set to a truthy value, validate
 skips hard-fails for entrypoint fingerprints, managed Dockerfile release pins,

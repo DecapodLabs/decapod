@@ -2601,15 +2601,24 @@ Rewrite at least one living spec to reflect this change (INTENT/ARCHITECTURE/INT
     Ok(())
 }
 
-/// Prove the publication bundle at HEAD is present and current for the state
-/// being published.
+/// Publication-bundle **participation** gate at HEAD (GitHub #1232).
 ///
-/// Unchanged artifacts inherited from the base branch are sufficient when
-/// release-bound fingerprints and governance provenance still validate against
-/// the candidate state. Textual participation in every feature-branch commit
-/// is not required (GitHub #1232). When the installed Decapod release changes
-/// (or a dependency surface is invalidated), sibling fingerprint / material-
-/// specs / governance gates still force a refresh before publication.
+/// This gate deliberately does **not** re-prove fingerprint currency, living-spec
+/// attestation, or receipt↔HEAD binding. Those are sibling gates
+/// (`validate_entrypoint_invariants`, `STALE_SPECS_FINGERPRINT` /
+/// material mutation, publish-time trajectory binding).
+///
+/// Predicate actually enforced here:
+/// - required publication paths exist at the working tree (inheritance OK);
+/// - at least one living-spec `*.md` exists;
+/// - plan/claims/trajectory load and validation.json parses as a receipt;
+/// - when the base `AGENTS.md` release pin differs from the running release,
+///   some release-bound path appears in `base...HEAD` (branch must carry the
+///   refresh — sibling integrity still proves on-disk fingerprints).
+///
+/// Textual participation of every path in every commit's `diff-tree` is **not**
+/// required. Do not treat a pass here as sole proof that every artifact is
+/// semantically current for HEAD.
 fn validate_publication_bundle_currency(
     ctx: &ValidationContext,
     repo_root: &Path,
@@ -2736,10 +2745,10 @@ fn validate_publication_bundle_currency(
         }
     }
 
-    // Governance: present and schema-valid / loadable. Unchanged inherited
-    // artifacts are sufficient when provenance still validates. Semantic
-    // trajectory↔receipt binding is enforced at publish time (receipt is often
-    // the prior successful run mid-validate and is rewritten at end of pass).
+    // Governance: present and loadable/parseable at HEAD. This is not semantic
+    // currency against the candidate code surface; claims/plan content relevance
+    // and receipt↔trajectory↔HEAD binding are other gates (publish-time for the
+    // latter). Mid-validate the receipt is often the prior successful run.
     match plan_governance::load_plan(repo_root) {
         Ok(None) => failures.push(".decapod/governance/plan.json: missing or empty".to_string()),
         Err(error) => failures.push(format!(".decapod/governance/plan.json: {error}")),
@@ -2764,13 +2773,13 @@ fn validate_publication_bundle_currency(
 
     if failures.is_empty() {
         pass(
-            "Publication bundle is present and current at HEAD; unchanged artifacts accepted when release pins and provenance still validate",
+            "Publication bundle present and loadable at HEAD (inheritance OK; fingerprint/spec attestation currency is sibling gates, not this gate)",
             ctx,
         );
     } else {
         fail(
             &format!(
-                "PUBLICATION_BUNDLE_CURRENCY: required publication artifacts must be present and provably current for the state being published (unchanged inherited files are fine when fingerprints/provenance still validate; refresh when the Decapod release or dependency surface changes). {}. Repair via `decapod validate` self-heal / `decapod govern artifacts inventory --repair`, commit refreshed artifacts, then rerun `decapod validate`.",
+                "PUBLICATION_BUNDLE_CURRENCY: required publication paths must exist at HEAD and load/parse (commit diff participation is not required; release-bound fingerprints and living-spec attestation are sibling gates). {}. Repair missing/invalid artifacts via governed CLI surfaces, then rerun `decapod validate`.",
                 failures.join("; ")
             ),
             ctx,

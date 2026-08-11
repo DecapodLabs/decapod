@@ -1,8 +1,8 @@
-//! Regression coverage for GitHub #1232: publication-bundle currency.
+//! Composition-level regression for GitHub #1232 publication-bundle model.
 //!
-//! Unchanged artifacts whose fingerprints/provenance still validate must pass
-//! without artificial mutation. When the Decapod release advances past the base
-//! pin, release-bound surfaces must be refreshed on the branch.
+//! These tests exercise the full binary where unit tests already pin the
+//! PUBLICATION_BUNDLE_CURRENCY gate predicate. Focus here is sibling-gate
+//! composition: material living-spec invalidation and multi-commit history.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -42,7 +42,6 @@ fn combined(out: &std::process::Output) -> String {
     )
 }
 
-/// Green-field init, commit base, branch, then return worktree-like dir on the feature branch.
 fn setup_feature_branch() -> (TempDir, PathBuf, String) {
     let tmp = TempDir::new().expect("tmpdir");
     let repo = tmp.path().to_path_buf();
@@ -62,20 +61,41 @@ fn setup_feature_branch() -> (TempDir, PathBuf, String) {
         combined(&init)
     );
 
-    // Ensure governance shells exist for currency presence checks.
     let _ = run_decapod(
         &repo,
         &["govern", "artifacts", "inventory", "--repair"],
         &[],
     );
 
+    // Significant path so STALE_SPECS / repo_signal composition is exercisable.
+    fs::create_dir_all(repo.join("src")).expect("src");
+    fs::write(repo.join("src/lib.rs"), "pub fn f() {}\n").expect("lib");
+
     git(&repo, &["add", "."]);
     git(&repo, &["commit", "-m", "base"]);
 
-    git(&repo, &["checkout", "-b", "agent/test/publication-bundle"]);
+    // Validate treats paths under `.decapod/workspaces/` as isolated agent
+    // workspaces; put the feature branch there so workspace protection does not
+    // short-circuit before publication/spec gates run.
+    let worktree = repo
+        .join(".decapod")
+        .join("workspaces")
+        .join("test-publication-bundle");
+    fs::create_dir_all(worktree.parent().unwrap()).expect("workspaces parent");
+    git(
+        &repo,
+        &[
+            "worktree",
+            "add",
+            "-b",
+            "agent/test/publication-bundle",
+            worktree.to_str().expect("utf8 path"),
+            "HEAD",
+        ],
+    );
 
     let acquire = run_decapod(
-        &repo,
+        &worktree,
         &["session", "acquire"],
         &[("DECAPOD_AGENT_ID", "unknown")],
     );
@@ -92,14 +112,15 @@ fn setup_feature_branch() -> (TempDir, PathBuf, String) {
         })
         .unwrap_or_default();
 
-    (tmp, repo, password)
+    (tmp, worktree, password)
 }
 
+/// A/B/G (integration): multi-commit app history without full-bundle path
+/// participation must not resurrect PER_COMMIT_PUBLICATION_BUNDLE.
 #[test]
-fn same_version_app_commit_does_not_require_bundle_diff_churn() {
+fn multi_commit_history_does_not_require_full_bundle_participation() {
     let (_tmp, dir, password) = setup_feature_branch();
 
-    // Ordinary application change + material living-spec rewrite only.
     fs::write(dir.join("app-feature.txt"), "feature work\n").expect("write app");
     let intent = dir.join(".decapod/managed/specs/INTENT.md");
     let body = fs::read_to_string(&intent).expect("read intent");
@@ -111,7 +132,6 @@ fn same_version_app_commit_does_not_require_bundle_diff_churn() {
     )
     .expect("material intent rewrite");
 
-    // Do NOT touch entrypoints, Dockerfile, governance files, or manifest.
     git(
         &dir,
         &["add", "app-feature.txt", ".decapod/managed/specs/INTENT.md"],
@@ -121,10 +141,28 @@ fn same_version_app_commit_does_not_require_bundle_diff_churn() {
         &["commit", "-m", "feat: app change with material intent only"],
     );
 
-    // Second incremental commit also omits the bundle — must not re-require churn.
     fs::write(dir.join("app-feature-2.txt"), "more work\n").expect("write app 2");
     git(&dir, &["add", "app-feature-2.txt"]);
     git(&dir, &["commit", "-m", "feat: incremental app commit"]);
+
+    let changed = Command::new("git")
+        .current_dir(&dir)
+        .args(["log", "master..HEAD", "--name-only", "--pretty=format:"])
+        .output()
+        .expect("git log");
+    let names = String::from_utf8_lossy(&changed.stdout);
+    for forbidden in [
+        "AGENTS.md",
+        "CLAUDE.md",
+        "CODEX.md",
+        "GEMINI.md",
+        ".decapod/managed/Dockerfile.decapod",
+    ] {
+        assert!(
+            !names.lines().any(|l| l.trim() == forbidden),
+            "commits must not require {forbidden} churn; log paths:\n{names}"
+        );
+    }
 
     let validate = run_decapod(
         &dir,
@@ -133,7 +171,6 @@ fn same_version_app_commit_does_not_require_bundle_diff_churn() {
             ("DECAPOD_AGENT_ID", "unknown"),
             ("DECAPOD_SESSION_PASSWORD", &password),
             ("DECAPOD_CONTAINER", "1"),
-            // Skip tooling/proof gates that need a full project build surface.
             ("DECAPOD_VALIDATE_SKIP_TOOLING_GATES", "1"),
         ],
     );
@@ -142,35 +179,113 @@ fn same_version_app_commit_does_not_require_bundle_diff_churn() {
         !text.contains("PER_COMMIT_PUBLICATION_BUNDLE"),
         "old per-commit participation gate must not fire: {text}"
     );
-    // Currency gate may still fail for other reasons (e.g. missing validation
-    // receipt integrity in a fresh fixture). It must not demand that every
-    // commit list the full bundle.
-    if text.contains("PUBLICATION_BUNDLE_CURRENCY") {
-        assert!(
-            !text.contains("each commit must carry"),
-            "currency failures must not demand per-commit textual participation: {text}"
-        );
-        assert!(
-            !text.contains("missing AGENTS.md")
-                || text.contains("release advanced")
-                || text.contains("missing .decapod/governance"),
-            "same-version current entrypoints should not be reported as missing from commits: {text}"
-        );
-    }
+    assert!(
+        !text.contains("each commit must carry"),
+        "must not demand per-commit textual participation: {text}"
+    );
 }
 
+/// D (composition): governed `src/**` change without material living-spec rewrite
+/// must fail (material mutation / FINGERPRINT_ONLY_SPECS), even though default
+/// validate auto-refreshes attestation fingerprints.
 #[test]
-fn release_advance_requires_release_bound_refresh_on_branch() {
+fn src_change_without_material_living_spec_rewrite_fails() {
     let (_tmp, dir, password) = setup_feature_branch();
 
-    // Simulate base pin at an older release by rewriting the committed AGENTS.md
-    // marker on master, then branching a feature that only changes app code.
-    // First move back to master and forge an older release pin in history.
-    git(&dir, &["checkout", "master"]);
+    fs::write(dir.join("src/lib.rs"), "pub fn f() { let _x = 1; }\n").expect("code change");
+    git(&dir, &["add", "src/lib.rs"]);
+    git(
+        &dir,
+        &["commit", "-m", "feat: change governed src without specs"],
+    );
+
+    let validate = run_decapod(
+        &dir,
+        &["validate"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_CONTAINER", "1"),
+            ("DECAPOD_VALIDATE_SKIP_TOOLING_GATES", "1"),
+        ],
+    );
+    let text = combined(&validate);
+    assert!(
+        !validate.status.success(),
+        "src change without material living-spec rewrite must fail validate; got success: {text}"
+    );
+    assert!(
+        text.contains("FINGERPRINT_ONLY_SPECS")
+            || text.contains("material")
+            || text.contains("Living Specs Material"),
+        "expected material living-spec / fingerprint-only failure, got: {text}"
+    );
+}
+
+/// E (composition): after material rewrite, the material-mutation sibling allows
+/// the PR delta (auto-refresh handles attestation). Still must not require
+/// release-bound path churn on the same version.
+#[test]
+fn src_change_with_material_rewrite_does_not_require_entrypoint_churn() {
+    let (_tmp, dir, password) = setup_feature_branch();
+
+    fs::write(dir.join("src/lib.rs"), "pub fn f() { let _x = 2; }\n").expect("code");
+    let intent = dir.join(".decapod/managed/specs/INTENT.md");
+    let body = fs::read_to_string(&intent).expect("intent");
+    fs::write(
+        &intent,
+        format!("{body}\n\n## Material rewrite after src change (#1232)\n"),
+    )
+    .expect("material");
+    git(
+        &dir,
+        &["add", "src/lib.rs", ".decapod/managed/specs/INTENT.md"],
+    );
+    git(&dir, &["commit", "-m", "feat: src + material intent"]);
+
+    let show = Command::new("git")
+        .current_dir(&dir)
+        .args(["show", "--name-only", "--pretty=format:", "HEAD"])
+        .output()
+        .expect("git show");
+    let names = String::from_utf8_lossy(&show.stdout);
+    assert!(
+        !names.lines().any(|l| l.trim() == "AGENTS.md"),
+        "material+src commit must not force AGENTS.md churn"
+    );
+
+    let validate = run_decapod(
+        &dir,
+        &["validate"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_CONTAINER", "1"),
+            ("DECAPOD_VALIDATE_SKIP_TOOLING_GATES", "1"),
+        ],
+    );
+    let text = combined(&validate);
+    assert!(
+        !text.contains("PER_COMMIT_PUBLICATION_BUNDLE"),
+        "must not revive per-commit participation: {text}"
+    );
+    // Material gate must not be the failure mode when a rewrite is present.
+    assert!(
+        !text.contains("FINGERPRINT_ONLY_SPECS"),
+        "material rewrite should satisfy living-spec material gate: {text}"
+    );
+}
+
+/// C (integration): stale release pin on HEAD without matching running binary
+/// must fail validate (entrypoint integrity).
+#[test]
+fn release_advance_without_refresh_fails_validate() {
+    let (_tmp, dir, password) = setup_feature_branch();
+
+    // Forge a stale release pin on the feature worktree without refreshing
+    // fingerprints for the evaluating binary.
     let agents = dir.join("AGENTS.md");
     let agents_body = fs::read_to_string(&agents).expect("read agents");
-    // Replace the release marker with a deliberately stale version string while
-    // leaving the rest of the file intact enough for git history purposes.
     let stale = agents_body.replacen(
         &format!("<!-- decapod-release: {} -->", env!("CARGO_PKG_VERSION")),
         "<!-- decapod-release: 0.0.0-stale -->",
@@ -178,15 +293,7 @@ fn release_advance_requires_release_bound_refresh_on_branch() {
     );
     assert_ne!(stale, agents_body, "fixture must alter the release marker");
     fs::write(&agents, &stale).expect("write stale agents");
-    git(&dir, &["add", "AGENTS.md"]);
-    git(
-        &dir,
-        &["commit", "-m", "chore: simulate older base release pin"],
-    );
-
-    git(&dir, &["checkout", "-b", "agent/test/release-advance"]);
     fs::write(dir.join("only-app.txt"), "app\n").expect("write app");
-    // Material living-spec rewrite so material gate is not the failure mode.
     let intent = dir.join(".decapod/managed/specs/INTENT.md");
     let body = fs::read_to_string(&intent).unwrap_or_default();
     fs::write(
@@ -196,11 +303,18 @@ fn release_advance_requires_release_bound_refresh_on_branch() {
     .expect("intent");
     git(
         &dir,
-        &["add", "only-app.txt", ".decapod/managed/specs/INTENT.md"],
+        &[
+            "add",
+            "AGENTS.md",
+            "only-app.txt",
+            ".decapod/managed/specs/INTENT.md",
+        ],
     );
-    git(&dir, &["commit", "-m", "feat: app without release refresh"]);
+    git(
+        &dir,
+        &["commit", "-m", "feat: app with stale release pin on HEAD"],
+    );
 
-    // Working tree still has stale AGENTS from base; do not heal before validate.
     let validate = run_decapod(
         &dir,
         &["validate"],
@@ -209,18 +323,19 @@ fn release_advance_requires_release_bound_refresh_on_branch() {
             ("DECAPOD_SESSION_PASSWORD", &password),
             ("DECAPOD_CONTAINER", "1"),
             ("DECAPOD_VALIDATE_SKIP_TOOLING_GATES", "1"),
-            // Keep fingerprint gates on so release-bound currency is evaluated.
         ],
     );
     let text = combined(&validate);
-    // Either PUBLICATION_BUNDLE_CURRENCY (release advanced without refresh) or
-    // the entrypoint integrity gate must block publication.
     assert!(
-        !validate.status.success()
-            || text.contains("PUBLICATION_BUNDLE_CURRENCY")
+        !validate.status.success(),
+        "stale release pin must fail validation, got success with: {text}"
+    );
+    assert!(
+        text.contains("PUBLICATION_BUNDLE_CURRENCY")
             || text.contains("entrypoint_release_mismatch")
             || text.contains("release advanced")
-            || text.contains("STALE_ENTRYPOINT"),
-        "release advance without refresh must fail validation, got success with: {text}"
+            || text.contains("STALE_ENTRYPOINT")
+            || text.contains("Governed agent entrypoint"),
+        "failure must cite release-bound / currency surface, got: {text}"
     );
 }
