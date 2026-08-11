@@ -1,31 +1,27 @@
 {
   "schema_version": "1.0.0",
-  "title": "Three-tier PR contract: entrypoint discipline on publication-bundle currency",
-  "intent": "Finish PR #1234 on top of #1233: Decapod-owned entrypoints verify early and bump only on version/pin mismatch; living specs require unique material rewrites; governance JSON updates every project PR; no per-commit full-bundle churn.",
+  "title": "README tagline: bounded, provable, shippable AI coding work",
+  "intent": "Replace the public README tagline to position Decapod as a governance kernel for bounded, provable, shippable AI coding work (not only AI coding agents). Align INTENT living-spec product outcome with that framing. No code or validation gate changes.",
   "state": "APPROVED",
   "todo_ids": [
-    "cicd_01kzqpb0xd5ekf30"
+    "docs_01kzqvk4am5drmgf"
   ],
   "proof_hooks": [
-    "ENTRYPOINT_COMMIT_DISCIPLINE rejects hand edits and mode-only entrypoint touches",
-    "Same-version project PRs leave entrypoints untouched when pins match evaluating binary",
-    "GOVERNANCE_PR_UPDATES requires all four governance files in base...HEAD",
-    "PUBLICATION_BUNDLE_CURRENCY remains HEAD currency (no per-commit path participation)"
+    "README.md hero tagline matches the new product framing",
+    "INTENT.md Product Outcome material rewrite documents bounded/provable/shippable",
+    "decapod validate pass on same Decapod 0.96.18 pin without entrypoint churn"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [
-    "Stop if migration or validation cannot establish a clean verified state."
+    "Stop if validate requires entrypoint rewrites or unrelated release-bound churn on same version."
   ],
   "unresolved_contradictions": [],
   "deferred_questions": [],
   "constraints": {
-    "forbidden_paths": [
-      ".decapod/data/decapod.db",
-      "direct mutation of .decapod store state"
-    ],
-    "file_touch_budget": 40
+    "forbidden_paths": [],
+    "file_touch_budget": 15
   },
   "phases": [],
-  "updated_at": "1786429920Z"
+  "updated_at": "1786433563Z"
 }
