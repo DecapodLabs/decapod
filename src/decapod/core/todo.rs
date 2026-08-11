@@ -3426,11 +3426,11 @@ pub fn update_status(
         "id": id,
         "result": result.clone(),
     });
-    if let Some(result_obj) = result.as_object() {
-        if let Some(output_obj) = output.as_object_mut() {
-            for (key, value) in result_obj {
-                output_obj.insert(key.clone(), value.clone());
-            }
+    if let Some(result_obj) = result.as_object()
+        && let Some(output_obj) = output.as_object_mut()
+    {
+        for (key, value) in result_obj {
+            output_obj.insert(key.clone(), value.clone());
         }
     }
     Ok(output)
