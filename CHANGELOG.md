@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.96.16](https://github.com/DecapodLabs/decapod/compare/v0.96.15...v0.96.16) - 2026-08-11
+
+### Fixed
+
+- *(validate)* honest currency predicate and hard #1232 boundary tests
+- *(ci)* heal entrypoint pins and satisfy clippy/fmt for #1233
+- *(validate)* publication-bundle currency instead of per-commit churn ([#1232](https://github.com/DecapodLabs/decapod/pull/1232))
+- *(validate)* prove publication-bundle currency instead of per-commit churn
+
+### Other
+
+- refresh specs and validation receipt after review fixes
+- rebind validation receipt
+- refresh validation receipt after entrypoint heal
+- sync governance receipt before publish
+- sync post-validate governance cookie
+- bind latest validation receipt to trajectory
+- refresh validation receipt and specs after currency-gate validate
+- automated container updates
+
 ## [0.96.15](https://github.com/DecapodLabs/decapod/compare/v0.96.14...v0.96.15) - 2026-08-07
 
 ### Fixed
