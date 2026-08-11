@@ -224,13 +224,12 @@ pub fn run_inventory(
             ))
         })?
     );
-    if !report.all_present
-        || !report.all_valid
-        || !report.all_in_pr_diff
-        || !report.all_semantically_current
-    {
+    // Presence, schema validity, and semantic currency matter. PR-diff
+    // participation is informational only: unchanged inherited artifacts are
+    // acceptable when they still validate (GitHub #1232).
+    if !report.all_present || !report.all_valid || !report.all_semantically_current {
         return Err(crate::core::error::DecapodError::ValidationError(format!(
-            "governance artifact inventory is incomplete or stale; run `{INVENTORY_COMMAND} --repair`, then stage all four artifacts and rerun with `--base-branch <branch>`."
+            "governance artifact inventory is incomplete or stale; run `{INVENTORY_COMMAND} --repair`, ensure all four artifacts are present and current, then rerun with `--base-branch <branch>`. Unchanged inherited files are fine when provenance still validates."
         )));
     }
     Ok(())

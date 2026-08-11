@@ -41,6 +41,21 @@ When validation reports `OUT_OF_SYNC_SPECS` or `STALE_SPECS_FINGERPRINT`, the go
 ## Release-Bound Agent Entrypoint Integrity
 The four generated agent entrypoints are release-bound projections of the installed Decapod binary. Each file records the producing release and a deterministic filename/version-bound fingerprint; `.decapod/managed/specs/.manifest.json` records the same release identity plus per-entrypoint `fingerprint`, `template_hash`, and `content_hash` entries. Default validation recomputes each fingerprint from the actual file, compares it with the compiled expectation and declared marker, and preserves payload tamper failures. Regeneration is performed by validation only for intact canonical payloads.
 
+## Publication Bundle Currency Gate (#1232)
+`decapod validate` on a feature branch enforces **publication bundle currency at
+HEAD**, not textual participation of every governed path in every commit diff.
+
+| Surface | Pass when | Fail until |
+|---|---|---|
+| Release-bound entrypoints + Dockerfile + specs manifest | Present at HEAD; fingerprints match the running release; if base pin equals running release, inheritance needs no mutation | Release advanced past base without refreshing release-bound paths, or fingerprint/integrity gates fail |
+| Living specs (`*.md`) | Present; material authored rewrite vs base on non-release PRs | Missing, or fingerprint-only refresh (`FINGERPRINT_ONLY_SPECS`) |
+| Governance (`plan`, `claims`, `trajectory`, `validation`) | Present and schema-valid at HEAD (and bound at publish) | Missing or invalid; unchanged inherited files are fine when still valid |
+
+Regression proof:
+- Same Decapod version, app + material intent commit(s) without bundle churn: no `PER_COMMIT_PUBLICATION_BUNDLE` / per-commit participation failure (`tests/publication_bundle_currency.rs`).
+- Release advance without refresh: validation blocks until release-bound surfaces are refreshed on the branch.
+- Publish gate accepts inherited valid governance artifacts that do not appear in the PR diff.
+
 When `DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES` is set to a truthy value, validate
 skips hard-fails for entrypoint fingerprints, managed Dockerfile release pins,
 and specs-manifest entrypoint release/hash checks (content invariant strings in
@@ -208,7 +223,7 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3df36d212d2f42e6b212f1cd1bb84ab3db6f9b6e04a1dec182dc44c12b625f32`
+- Repository signal fingerprint: `8d30f4e5b2386db3456261959f5445cbae111c851a6975427c5baf5cee66efa4`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

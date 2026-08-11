@@ -45,9 +45,10 @@ jobs:
           done
           echo "✅ Commit messages look good"
 
-  # GOVERNANCE ARTIFACTS: Every PR must carry the complete proof bundle.
+  # GOVERNANCE ARTIFACTS: Every PR must carry a present, parseable proof bundle.
+  # Unchanged inherited artifacts are fine when still valid (GitHub #1232).
   governance-artifacts:
-    name: Governance Artifacts (all four)
+    name: Governance Artifacts (present and valid)
     runs-on: ubuntu-latest
     if: (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && !contains(github.event.pull_request.labels.*.name, 'release')
     steps:
@@ -55,32 +56,37 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Require all governance artifacts in the PR diff
+      - name: Require governance artifacts present and parseable at HEAD
         run: |
           set -euo pipefail
-          base_ref="${{ github.base_ref || 'master' }}"
-          git fetch --no-tags --prune origin "$base_ref"
           required=(
             .decapod/governance/claims.json
             .decapod/governance/trajectory.json
             .decapod/governance/validation.json
             .decapod/governance/plan.json
           )
-          changed="$(git diff --name-only "origin/$base_ref"...HEAD)"
           missing=()
           for path in "${required[@]}"; do
-            test -f "$path" || { echo "❌ missing from checkout: $path"; missing+=("$path"); continue; }
-            if ! grep -Fxq "$path" <<<"$changed"; then
-              echo "❌ not changed in PR diff: $path"
+            if [[ ! -f "$path" ]]; then
+              echo "❌ missing from checkout: $path"
               missing+=("$path")
+              continue
             fi
+            if ! python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$path"; then
+              echo "❌ not valid JSON: $path"
+              missing+=("$path")
+              continue
+            fi
+            echo "✅ present and parseable: $path"
           done
           if (( ${#missing[@]} > 0 )); then
-            echo "Required governance artifacts are missing from the PR diff: ${missing[*]}"
-            echo "Every PR must change claims.json, trajectory.json, validation.json, and plan.json."
+            echo "Required governance artifacts are missing or invalid: ${missing[*]}"
+            echo "Artifacts must be present and schema-valid for the published state."
+            echo "Unchanged inherited files are acceptable when they still validate (GitHub #1232)."
+            echo "Repair with: decapod govern artifacts inventory --repair && decapod validate"
             exit 1
           fi
-          echo "✅ All four governance artifacts are present and changed in the PR diff"
+          echo "✅ All four governance artifacts are present and parseable at HEAD"
 
   # MATERIAL LIVING SPECS: Each PR must rewrite authored living-spec prose,
   # not only refresh fingerprints/attestation blocks (GitHub #1183).

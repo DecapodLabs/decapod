@@ -16,7 +16,6 @@
 - `scheduled-jobs`
 
 <!-- decapod:declared-capabilities:end -->
-
 ## Product Outcome
 - Decapod is a repo-native governance kernel for AI coding agents. It turns human intent into bounded, durable, and proof-backed agent work.
 - Reliable convergence is the outcome: the agent preserves accepted intent, stays within explicit boundaries, maintains durable state, responds to validation, remediates supported failures, and produces evidence before completion.
@@ -38,6 +37,21 @@
 - Migration work is agent-visible. The first governed command after a detected
   Decapod version transition reports the previous/current release, applied
   migrations, and the ledger/catalog paths the agent must inspect.
+
+## Publication Bundle Currency Intent (#1232)
+- Publication and validation prove that release-bound entrypoints, the managed
+  Dockerfile pin, the specs manifest, living specs, and governance artifacts are
+  **present and current for the published repository state**.
+- Unchanged artifacts inherited from the base branch are sufficient when their
+  release pins and provenance still validate. Consumer repos that stay on one
+  Decapod release for a long time must not be forced to invent textual or mode
+  churn solely so those paths appear in every commit or PR diff.
+- When the installed Decapod release advances past the base pin, or when a code
+  change invalidates an artifact's governed dependency surface, prior proof is
+  insufficient: the affected surfaces must be refreshed and revalidated before
+  publication.
+- Material authored living-spec rewrites remain required for non-release PRs;
+  fingerprint-only attestation refresh is never enough (`FINGERPRINT_ONLY_SPECS`).
 
 ## Issue Acceptance Contract (#1226 and #1228)
 | Requirement | Implementation Obligation | Proof |
@@ -169,7 +183,7 @@ flowchart LR
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3df36d212d2f42e6b212f1cd1bb84ab3db6f9b6e04a1dec182dc44c12b625f32`
+- Repository signal fingerprint: `8d30f4e5b2386db3456261959f5445cbae111c851a6975427c5baf5cee66efa4`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

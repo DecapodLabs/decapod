@@ -32,6 +32,20 @@ This project's architecture consists of the following key layers/directories:
 - `core::migration` separates version-gated pending-plan selection and applied-ledger recording from migration execution. Backup, restore, legacy import, and schema policy remain Decapod responsibilities while the future dactyl boundary supplies execution.
 - `DbBroker::execute_write_sync` returns affected rows. Decapod callers own stable IDs rather than reading ambient connection-generated row IDs.
 
+## Publication Bundle Currency Architecture (#1232)
+- `core::validate::validate_publication_bundle_currency` proves presence and
+  version-stability at HEAD for the publication bundle. It replaced the
+  per-commit `diff-tree` participation model (`PER_COMMIT_PUBLICATION_BUNDLE`)
+  that forced artificial churn on long-lived consumer releases.
+- Sibling gates remain authoritative for fingerprint integrity, material
+  living-spec mutation, and specs-manifest freshness. The currency gate adds
+  the explicit rule: when base `AGENTS.md` release pin differs from
+  `RELEASE_VERSION`, release-bound paths must appear in `base...HEAD`.
+- `workspace::ensure_required_governance_artifacts_in_pr` and the CI
+  `governance-artifacts` job require present+valid artifacts, not mandatory
+  PR-diff membership. `governance_artifacts::run_inventory` treats
+  `all_in_pr_diff` as informational only.
+
 ## Topology
 ```mermaid
 flowchart LR
@@ -169,7 +183,7 @@ sequenceDiagram
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3df36d212d2f42e6b212f1cd1bb84ab3db6f9b6e04a1dec182dc44c12b625f32`
+- Repository signal fingerprint: `8d30f4e5b2386db3456261959f5445cbae111c851a6975427c5baf5cee66efa4`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (101 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

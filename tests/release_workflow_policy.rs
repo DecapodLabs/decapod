@@ -276,10 +276,19 @@ fn governance_artifact_gate_skips_release_labeled_prs() {
         "CI must retain the governance artifact job"
     );
     assert!(
-        workflow.contains(
-            "if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'release')"
-        ),
+        workflow.contains("!contains(github.event.pull_request.labels.*.name, 'release')"),
         "release-labeled PRs must not be forced to carry the four governance artifacts"
+    );
+    // GitHub #1232: currency at HEAD, not forced PR-diff participation.
+    assert!(
+        workflow.contains("present and parseable")
+            || workflow.contains("present and valid")
+            || workflow.contains("GitHub #1232"),
+        "governance job must prove presence/validity rather than forced PR-diff churn"
+    );
+    assert!(
+        !workflow.contains("not changed in PR diff"),
+        "governance job must not require every artifact to appear in the PR diff"
     );
     for artifact in [
         ".decapod/governance/claims.json",
