@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.96.19](https://github.com/DecapodLabs/decapod/compare/v0.96.18...v0.96.19) - 2026-08-11
+
+### Fixed
+
+- *(managed)* rewrite Dockerfile.decapod to canonical 0.96.18 profile
+
+### Other
+
+- position Decapod as bounded, provable, shippable work
+
 ## [0.96.18](https://github.com/DecapodLabs/decapod/compare/v0.96.17...v0.96.18) - 2026-08-11
 
 ### Fixed
