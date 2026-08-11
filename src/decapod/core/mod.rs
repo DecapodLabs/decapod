@@ -9,6 +9,7 @@ pub mod assets;
 pub mod assurance;
 pub mod atomic;
 pub mod auth;
+pub mod backend;
 pub mod broker;
 pub mod capabilities;
 pub mod capsule_policy;

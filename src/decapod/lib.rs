@@ -151,7 +151,12 @@ fn map_cloud_preflight_error(error: core::propodus::PropodusClientError) -> erro
 fn ensure_project_cloud_session(
     project_root: &Path,
 ) -> Result<core::repo_identity::RepositoryIdentity, error::DecapodError> {
-    let identity = core::repo_identity::resolve_repository_identity(project_root)?;
+    let selection = core::backend::BackendSelection::from_project(project_root)?;
+    let identity = selection.repository_identity().cloned().ok_or_else(|| {
+        error::DecapodError::ValidationError(
+            "cloud session setup did not resolve a repository identity".to_string(),
+        )
+    })?;
     let propodus = core::propodus::PropodusConfig::for_repository(
         &crate::cli::CloudRuntimeConfig::default(),
         &identity,
@@ -204,10 +209,15 @@ fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
     let CloudCli { format, command } = cloud_cli;
     match command {
         CloudCommand::Login => {
-            let project_root = find_decapod_project_root(&std::env::current_dir()?)?;
+            let current_dir = std::env::current_dir()?;
             eprintln!(
                 "Deprecated compatibility command; use `decapod init --backend cloud` for human setup."
             );
+            // Resolve repository scope before project configuration so a
+            // login attempt outside a GitHub repository fails with the
+            // actionable origin error rather than a misleading config error.
+            core::repo_identity::resolve_repository_identity(&current_dir)?;
+            let project_root = find_decapod_project_root(&current_dir)?;
             match bootstrap_cloud_session(&project_root) {
                 Ok(()) => Ok(()),
                 Err(error @ error::DecapodError::CloudAuth(_)) => {
@@ -2853,6 +2863,10 @@ struct AgentSessionRecord {
     expires_at_epoch_secs: u64,
 }
 
+const SESSION_TTL_MIN_SECS: u64 = 30 * 60;
+const SESSION_TTL_DEFAULT_SECS: u64 = 4 * 60 * 60;
+const SESSION_TTL_MAX_SECS: u64 = 6 * 60 * 60;
+
 #[derive(Debug, Serialize, Deserialize)]
 struct ConstitutionalAwarenessRecord {
     agent_id: String,
@@ -2875,8 +2889,34 @@ fn session_ttl_secs() -> u64 {
     std::env::var("DECAPOD_SESSION_TTL_SECS")
         .ok()
         .and_then(|v| v.parse::<u64>().ok())
-        .filter(|v| *v > 0)
-        .unwrap_or(3600)
+        .map(|value| value.clamp(SESSION_TTL_MIN_SECS, SESSION_TTL_MAX_SECS))
+        .unwrap_or(SESSION_TTL_DEFAULT_SECS)
+}
+
+fn session_token_prefix(backend: BackendType) -> &'static str {
+    if backend.is_cloud() {
+        "cloud_"
+    } else {
+        "local_"
+    }
+}
+
+fn configured_session_backend(project_root: &Path) -> BackendType {
+    cli::DecapodProjectConfig::load(project_root)
+        .map(|config| config.repo.effective_backend())
+        .unwrap_or_default()
+}
+
+fn new_session_token(backend: BackendType) -> String {
+    format!(
+        "{}{}",
+        session_token_prefix(backend),
+        crate::core::ulid::new_ulid()
+    )
+}
+
+fn session_token_matches_backend(token: &str, backend: BackendType) -> bool {
+    token.starts_with(session_token_prefix(backend))
 }
 
 fn current_agent_id() -> String {
@@ -3288,6 +3328,12 @@ fn ensure_session_valid() -> Result<(), error::DecapodError> {
         return auto_acquire_session(&project_root, &agent_id);
     };
 
+    let backend = configured_session_backend(&project_root);
+    if !session_token_matches_backend(&session.token, backend) {
+        let _ = remove_agent_session_files(&project_root, &agent_id);
+        return auto_acquire_session(&project_root, &agent_id);
+    }
+
     if session.expires_at_epoch_secs <= now_epoch_secs() {
         let _ = remove_agent_session_files(&project_root, &agent_id);
         let _ = todo::cleanup_stale_agent_assignments(
@@ -3351,7 +3397,7 @@ fn remove_agent_session_files(
 fn auto_acquire_session(project_root: &Path, agent_id: &str) -> Result<(), error::DecapodError> {
     let issued = now_epoch_secs();
     let expires = issued.saturating_add(session_ttl_secs());
-    let token = crate::core::ulid::new_ulid();
+    let token = new_session_token(configured_session_backend(project_root));
     let temp_p = generate_ephemeral_password()?;
     let rec = AgentSessionRecord {
         agent_id: agent_id.to_string(),
@@ -3565,15 +3611,21 @@ fn run_session_command(session_cli: SessionCli) -> Result<(), error::DecapodErro
     match session_cli.command {
         SessionCommand::Acquire => {
             let agent_id = current_agent_id();
+            let session_backend = if cloud_backend {
+                crate::cli::BackendType::Cloud
+            } else {
+                crate::cli::BackendType::Local
+            };
             let newly_acquired = if let Some(existing) =
                 read_agent_session(&project_root, &agent_id)?
+                && session_token_matches_backend(&existing.token, session_backend)
                 && existing.expires_at_epoch_secs > now_epoch_secs()
             {
                 Some(None)
             } else {
                 let issued = now_epoch_secs();
                 let expires = issued.saturating_add(session_ttl_secs());
-                let token = crate::core::ulid::new_ulid();
+                let token = new_session_token(session_backend);
                 let temp_p = generate_ephemeral_password()?;
                 let rec = AgentSessionRecord {
                     agent_id: agent_id.clone(),

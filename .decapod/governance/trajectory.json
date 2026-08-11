@@ -5,30 +5,56 @@
   "task_id": "fend_01kzs9d8fcw8y18m",
   "original_intent": "Advance Decapod-owned local concurrency durability and Dactyl-boundary prerequisites after merged PR #1248",
   "derived_intent": "Implement only Decapod-side local semantics and tests that remain valid before Dactyl/Propodus contracts; preserve backend=local",
-  "current_phase": "validation",
+  "current_phase": "boundary-refinement",
   "next_transitions": [
+    "Dactyl routing implementation and parity proof",
     "Dactyl/Propodus contract implementation",
+    "Dactyl/Propodus parity implementation and proof",
     "final governed validation and publication",
+    "keep Decapod local-only until Dactyl exposes the required env mapping and atomic operation contract",
+    "keep ordinary domain persistence provider-neutral; isolate auth/session SQL and API exceptions; then publish Decapod local proof and cross-repo handoff",
     "publish"
   ],
   "active_boundaries": [
     "Decapod defines state-plus-event atomicity; Dactyl forwards one operation; Propodus/Neon commits atomically",
     "Decapod local persistence only; stop at Dactyl/Propodus operation and schema contract",
-    "Decapod source, schema, queries, local tests, and governed specs; no Dactyl or Propodus implementation"
+    "Decapod maps repo.backend to Dactyl DATASTORE runtime inputs; Dactyl selects sqlite or neon and forwards equivalent operations; stop before Dactyl/Propodus implementation",
+    "Decapod owns one backend-neutral operation model; local SQLite and Propodus/Neon are interchangeable storage implementations",
+    "Decapod source, schema, queries, local tests, and governed specs; no Dactyl or Propodus implementation",
+    "config.repo.backend selects one Dactyl session; Decapod must not directly select Propodus",
+    "ordinary Decapod state uses Dactyl; Decapod may know backend=local|cloud and establish local/cloud auth sessions; provider-specific SQL/API is limited to auth, registration, entitlement/payment, and session control"
   ],
   "repo_scope": [
+    "Decapod v0.97 local correctness and provider-neutral cloud boundary",
+    "Decapod v0.97 local persistence and backend-neutral handoff",
+    "backend selection, identical Decapod/Dactyl behavior, storage latency separation",
     "backend=cloud atomic read/write contract; local remains fully functional",
+    "runtime backend selection, universal Dactyl routing, local/cloud semantic parity",
     "shared task/event durability, local concurrency proof, backend boundary handoff",
     "shared task/event durability, local concurrency proof, backend-boundary prerequisites"
   ],
   "inspected_files": [
     ".decapod/config.toml",
+    "/home/arx/src/dactyl/README.md",
+    "/home/arx/src/dactyl/src/adapter/neon/mod.rs",
+    "/home/arx/src/dactyl/src/adapter/sqlite/mod.rs",
+    "/home/arx/src/dactyl/src/lib.rs",
+    "/home/arx/src/dactyl/tests/backend_contract.rs",
+    "/home/arx/src/dactyl/tests/conformance.rs",
+    "src/decapod/cli.rs",
+    "src/decapod/core/auth.rs",
+    "src/decapod/core/backend.rs",
     "src/decapod/core/broker.rs",
+    "src/decapod/core/cloud_backend.rs",
     "src/decapod/core/events.rs",
     "src/decapod/core/pool.rs",
+    "src/decapod/core/propodus.rs",
     "src/decapod/core/schemas.rs",
     "src/decapod/core/todo.rs",
+    "src/decapod/lib.rs",
     "src/decapod/plugins/policy.rs",
+    "tests/cloud_backend_storage.rs",
+    "tests/entrypoint_correctness.rs",
     "tests/plugins/todo.rs",
     "tests/unit/plugins/lcm_tests.rs"
   ],
@@ -42,7 +68,10 @@
     "tests/unit/plugins/lcm_tests.rs"
   ],
   "declared_commands": [
-    "decapod validate"
+    "decapod docs ingest and context.resolve in isolated Dactyl review copy",
+    "decapod validate",
+    "git log/show in /home/arx/src/dactyl",
+    "source review of Decapod auth/session and cloud todo dispatch"
   ],
   "tool_calls": [],
   "checks": [
@@ -51,8 +80,24 @@
       "status": "partial"
     },
     {
+      "name": "auth_session_exception_boundary",
+      "status": "passed"
+    },
+    {
       "name": "backend_cloud_atomicity_contract",
       "status": "unavailable"
+    },
+    {
+      "name": "backend_env_mapping",
+      "status": "partial"
+    },
+    {
+      "name": "backend_neutral_domain_path",
+      "status": "passed"
+    },
+    {
+      "name": "backend_route_wrapper",
+      "status": "passed"
     },
     {
       "name": "canonical_event_append",
@@ -71,6 +116,18 @@
       "status": "passed"
     },
     {
+      "name": "cloud_machine_session_prefix",
+      "status": "passed"
+    },
+    {
+      "name": "cloud_session_ttl_request",
+      "status": "passed"
+    },
+    {
+      "name": "config_repo_backend_field",
+      "status": "passed"
+    },
+    {
       "name": "dactyl_boundary",
       "status": "unavailable"
     },
@@ -79,8 +136,28 @@
       "status": "unavailable"
     },
     {
+      "name": "dactyl_provider_contract",
+      "status": "unavailable"
+    },
+    {
+      "name": "dactyl_source_contract",
+      "status": "passed"
+    },
+    {
+      "name": "dactyl_transaction_surface",
+      "status": "unavailable"
+    },
+    {
       "name": "decapod validate",
       "status": "passed"
+    },
+    {
+      "name": "decapod_direct_dactyl_integration",
+      "status": "unavailable"
+    },
+    {
+      "name": "direct_propodus_selection_in_decapod",
+      "status": "partial"
     },
     {
       "name": "focused_todo_and_sqlite_tests",
@@ -91,7 +168,19 @@
       "status": "passed"
     },
     {
+      "name": "local_backend_remains_default",
+      "status": "passed"
+    },
+    {
+      "name": "local_cloud_behavioral_parity",
+      "status": "unavailable"
+    },
+    {
       "name": "local_concurrency_proof",
+      "status": "passed"
+    },
+    {
+      "name": "local_machine_session_prefix",
       "status": "passed"
     },
     {
@@ -103,17 +192,40 @@
       "status": "passed"
     },
     {
+      "name": "machine_session_ttl",
+      "status": "passed"
+    },
+    {
+      "name": "physical_latency_equivalence",
+      "status": "unavailable"
+    },
+    {
+      "name": "provider_neutral_storage_boundary",
+      "status": "partial"
+    },
+    {
+      "name": "universal_dactyl_session",
+      "status": "unavailable"
+    },
+    {
       "name": "with_transaction",
       "status": "passed"
     }
   ],
   "evidence": [
     "Clarified acceptance boundary: backend=cloud must preserve Decapod state-plus-event atomicity through Dactyl to one Propodus/Neon transaction. This Decapod repository does not implement the remote adapter; Dactyl and Propodus remain the next boundary owners.",
+    "Clarified invariant: equivalent operations must have identical Decapod/Dactyl semantics regardless of local SQLite or Propodus/Neon backend. Backend-specific Decapod logic is forbidden; unavoidable cloud network latency remains a storage characteristic, not a semantic or algorithmic path.",
+    "Dactyl v0.4.0 accepts DATASTORE=sqlite|neon and DATASTORE_ROUTE, exposes Connection::from_env/read/write, and has no transaction or batch API; Decapod v0.97 currently has no dactyl dependency or DATASTORE mapping and routes cloud todo calls to PropodusCloudTodoStoreFactory directly",
     "Host Rust 2024 toolchain: 283 library tests passed serially; focused todo, SQLite hardening, single datastore, rebuild, fmt, and Clippy proofs passed. Container v0.97.0 governance binary ran; its bundled Cargo is too old for edition 2024. Remote Dactyl/Propodus implementation intentionally not changed.",
+    "User clarified that Decapod must not encode Propodus, Vercel, or Neon in ordinary storage paths. Provider-specific SQL/API is permitted only for auth sessions, registration, entitlement/payment, and related session control. Existing cloud auth is in Decapod's Propodus integration module; ordinary cloud todo storage remains a separate Dactyl/remote contract.",
+    "v0.97 source models the field as RepoContext.backend serialized under config.repo.backend. Current cloud todo code still directly builds PropodusCloudTodoStoreFactory while DbBroker remains local-oriented; the Dactyl session/router universalization is an explicit cross-repository follow-up, not a completed Decapod fact.",
     "validation epoch ve_2c142e3bb2d64838 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
-  "unresolved_assumptions": [],
+  "unresolved_assumptions": [
+    "Dactyl and Propodus contract changes remain outside this Decapod wave",
+    "Dactyl will expose a provider-neutral runtime datastore selector and the remote adapter contract separately"
+  ],
   "proof_status": "partial",
   "verdicts": {
     "intent_alignment": "supported",
@@ -121,7 +233,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:83f9f4a9212a6f0304e8547f058f80ce1abb615f88802194f2240321f9c900ad",
+  "artifact_hash": "sha256:cfd320ad2737f647f7652fa46f85adc9b29c7993a45fdc6aecb7b87138f6c614",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -230,6 +342,69 @@
       {
         "sequence": 14,
         "event_id": "event:14",
+        "intent_id": "intent:fend_01kzs7s5b28xtyh2",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:fend_01kzs7s5b28xtyh2"
+      },
+      {
+        "sequence": 15,
+        "event_id": "event:15",
+        "intent_id": "intent:fend_01kzs7s5b28xtyh2",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:fend_01kzs7s5b28xtyh2"
+      },
+      {
+        "sequence": 16,
+        "event_id": "event:16",
+        "intent_id": "intent:fend_01kzs7s5b28xtyh2",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:fend_01kzs7s5b28xtyh2"
+      },
+      {
+        "sequence": 17,
+        "event_id": "event:17",
+        "intent_id": "intent:fend_01kzs7s5b28xtyh2",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:fend_01kzs7s5b28xtyh2"
+      },
+      {
+        "sequence": 18,
+        "event_id": "event:18",
+        "intent_id": "intent:fend_01kzs7s5b28xtyh2",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:fend_01kzs7s5b28xtyh2"
+      },
+      {
+        "sequence": 19,
+        "event_id": "event:19",
+        "intent_id": "intent:fend_01kzs7s5b28xtyh2",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:fend_01kzs7s5b28xtyh2"
+      },
+      {
+        "sequence": 20,
+        "event_id": "event:20",
+        "intent_id": "intent:fend_01kzs7s5b28xtyh2",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:fend_01kzs7s5b28xtyh2"
+      },
+      {
+        "sequence": 21,
+        "event_id": "event:21",
+        "intent_id": "intent:fend_01kzs7s5b28xtyh2",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:fend_01kzs7s5b28xtyh2"
+      },
+      {
+        "sequence": 22,
+        "event_id": "event:22",
+        "intent_id": "intent:fend_01kzs7s5b28xtyh2",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:fend_01kzs7s5b28xtyh2"
+      },
+      {
+        "sequence": 23,
+        "event_id": "event:23",
         "intent_id": "intent:fend_01kzs7s5b28xtyh2",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:fend_01kzs7s5b28xtyh2"
@@ -438,12 +613,227 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:14"
+          },
+          {
+            "sequence": 15,
+            "action": "backend-neutral parity clarification",
+            "scope": [
+              "backend=cloud atomic read/write contract; local remains fully functional",
+              "shared task/event durability, local concurrency proof, backend boundary handoff",
+              "shared task/event durability, local concurrency proof, backend-boundary prerequisites"
+            ],
+            "observations": [
+              ".decapod/config.toml",
+              ".decapod/governance/plan.json",
+              "Clarified invariant: equivalent operations must have identical Decapod/Dactyl semantics regardless of local SQLite or Propodus/Neon backend. Backend-specific Decapod logic is forbidden; unavoidable cloud network latency remains a storage characteristic, not a semantic or algorithmic path."
+            ],
+            "proof_refs": [
+              "backend_neutral_domain_path",
+              "physical_latency_equivalence",
+              "local_cloud_behavioral_parity"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:15"
+          },
+          {
+            "sequence": 16,
+            "action": "configured backend session boundary clarification",
+            "scope": [
+              "backend selection, identical Decapod/Dactyl behavior, storage latency separation",
+              "backend=cloud atomic read/write contract; local remains fully functional",
+              "shared task/event durability, local concurrency proof, backend boundary handoff",
+              "shared task/event durability, local concurrency proof, backend-boundary prerequisites"
+            ],
+            "observations": [
+              "src/decapod/cli.rs",
+              "src/decapod/core/broker.rs",
+              "src/decapod/core/pool.rs",
+              "src/decapod/core/todo.rs",
+              ".decapod/governance/plan.json",
+              "v0.97 source models the field as RepoContext.backend serialized under config.repo.backend. Current cloud todo code still directly builds PropodusCloudTodoStoreFactory while DbBroker remains local-oriented; the Dactyl session/router universalization is an explicit cross-repository follow-up, not a completed Decapod fact."
+            ],
+            "proof_refs": [
+              "config_repo_backend_field",
+              "universal_dactyl_session",
+              "direct_propodus_selection_in_decapod",
+              "local_backend_remains_default"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:16"
+          },
+          {
+            "sequence": 17,
+            "action": "dactyl-boundary-review",
+            "command": "git log/show in /home/arx/src/dactyl",
+            "scope": [
+              "backend selection, identical Decapod/Dactyl behavior, storage latency separation",
+              "backend=cloud atomic read/write contract; local remains fully functional",
+              "runtime backend selection, universal Dactyl routing, local/cloud semantic parity",
+              "shared task/event durability, local concurrency proof, backend boundary handoff",
+              "shared task/event durability, local concurrency proof, backend-boundary prerequisites"
+            ],
+            "observations": [
+              "/home/arx/src/dactyl/src/lib.rs",
+              "/home/arx/src/dactyl/src/adapter/sqlite/mod.rs",
+              "/home/arx/src/dactyl/src/adapter/neon/mod.rs",
+              "/home/arx/src/dactyl/README.md",
+              "/home/arx/src/dactyl/tests/backend_contract.rs",
+              "/home/arx/src/dactyl/tests/conformance.rs",
+              "src/decapod/core/todo.rs",
+              "src/decapod/core/broker.rs",
+              "Dactyl v0.4.0 accepts DATASTORE=sqlite|neon and DATASTORE_ROUTE, exposes Connection::from_env/read/write, and has no transaction or batch API; Decapod v0.97 currently has no dactyl dependency or DATASTORE mapping and routes cloud todo calls to PropodusCloudTodoStoreFactory directly"
+            ],
+            "proof_refs": [
+              "dactyl_source_contract",
+              "backend_env_mapping",
+              "dactyl_transaction_surface",
+              "decapod_direct_dactyl_integration"
+            ],
+            "validation_findings": [
+              "Dactyl and Propodus contract changes remain outside this Decapod wave"
+            ],
+            "custody_event_id": "event:17"
+          },
+          {
+            "sequence": 18,
+            "action": "boundary-refinement",
+            "command": "source review of Decapod auth/session and cloud todo dispatch",
+            "scope": [
+              "Decapod v0.97 local persistence and backend-neutral handoff",
+              "backend selection, identical Decapod/Dactyl behavior, storage latency separation",
+              "backend=cloud atomic read/write contract; local remains fully functional",
+              "runtime backend selection, universal Dactyl routing, local/cloud semantic parity",
+              "shared task/event durability, local concurrency proof, backend boundary handoff",
+              "shared task/event durability, local concurrency proof, backend-boundary prerequisites"
+            ],
+            "observations": [
+              "src/decapod/core/auth.rs",
+              "src/decapod/core/propodus.rs",
+              "src/decapod/lib.rs",
+              "src/decapod/core/todo.rs",
+              "User clarified that Decapod must not encode Propodus, Vercel, or Neon in ordinary storage paths. Provider-specific SQL/API is permitted only for auth sessions, registration, entitlement/payment, and related session control. Existing cloud auth is in Decapod's Propodus integration module; ordinary cloud todo storage remains a separate Dactyl/remote contract."
+            ],
+            "proof_refs": [
+              "provider_neutral_storage_boundary",
+              "auth_session_exception_boundary",
+              "local_backend_regression",
+              "dactyl_provider_contract"
+            ],
+            "validation_findings": [
+              "Dactyl will expose a provider-neutral runtime datastore selector and the remote adapter contract separately"
+            ],
+            "custody_event_id": "event:18"
+          },
+          {
+            "sequence": 19,
+            "action": "trajectory.record",
+            "scope": [
+              "Decapod v0.97 local correctness and provider-neutral cloud boundary",
+              "Decapod v0.97 local persistence and backend-neutral handoff",
+              "backend selection, identical Decapod/Dactyl behavior, storage latency separation",
+              "backend=cloud atomic read/write contract; local remains fully functional",
+              "runtime backend selection, universal Dactyl routing, local/cloud semantic parity",
+              "shared task/event durability, local concurrency proof, backend boundary handoff",
+              "shared task/event durability, local concurrency proof, backend-boundary prerequisites"
+            ],
+            "observations": [
+              "src/decapod/core/backend.rs"
+            ],
+            "proof_refs": [
+              "backend_route_wrapper"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:19"
+          },
+          {
+            "sequence": 20,
+            "action": "trajectory.record",
+            "scope": [
+              "Decapod v0.97 local correctness and provider-neutral cloud boundary",
+              "Decapod v0.97 local persistence and backend-neutral handoff",
+              "backend selection, identical Decapod/Dactyl behavior, storage latency separation",
+              "backend=cloud atomic read/write contract; local remains fully functional",
+              "runtime backend selection, universal Dactyl routing, local/cloud semantic parity",
+              "shared task/event durability, local concurrency proof, backend boundary handoff",
+              "shared task/event durability, local concurrency proof, backend-boundary prerequisites"
+            ],
+            "observations": [
+              "src/decapod/lib.rs"
+            ],
+            "proof_refs": [
+              "machine_session_ttl"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:20"
+          },
+          {
+            "sequence": 21,
+            "action": "trajectory.record",
+            "scope": [
+              "Decapod v0.97 local correctness and provider-neutral cloud boundary",
+              "Decapod v0.97 local persistence and backend-neutral handoff",
+              "backend selection, identical Decapod/Dactyl behavior, storage latency separation",
+              "backend=cloud atomic read/write contract; local remains fully functional",
+              "runtime backend selection, universal Dactyl routing, local/cloud semantic parity",
+              "shared task/event durability, local concurrency proof, backend boundary handoff",
+              "shared task/event durability, local concurrency proof, backend-boundary prerequisites"
+            ],
+            "observations": [
+              "src/decapod/core/cloud_backend.rs"
+            ],
+            "proof_refs": [
+              "cloud_session_ttl_request"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:21"
+          },
+          {
+            "sequence": 22,
+            "action": "trajectory.record",
+            "scope": [
+              "Decapod v0.97 local correctness and provider-neutral cloud boundary",
+              "Decapod v0.97 local persistence and backend-neutral handoff",
+              "backend selection, identical Decapod/Dactyl behavior, storage latency separation",
+              "backend=cloud atomic read/write contract; local remains fully functional",
+              "runtime backend selection, universal Dactyl routing, local/cloud semantic parity",
+              "shared task/event durability, local concurrency proof, backend boundary handoff",
+              "shared task/event durability, local concurrency proof, backend-boundary prerequisites"
+            ],
+            "observations": [
+              "tests/cloud_backend_storage.rs"
+            ],
+            "proof_refs": [
+              "cloud_machine_session_prefix"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:22"
+          },
+          {
+            "sequence": 23,
+            "action": "trajectory.record",
+            "scope": [
+              "Decapod v0.97 local correctness and provider-neutral cloud boundary",
+              "Decapod v0.97 local persistence and backend-neutral handoff",
+              "backend selection, identical Decapod/Dactyl behavior, storage latency separation",
+              "backend=cloud atomic read/write contract; local remains fully functional",
+              "runtime backend selection, universal Dactyl routing, local/cloud semantic parity",
+              "shared task/event durability, local concurrency proof, backend boundary handoff",
+              "shared task/event durability, local concurrency proof, backend-boundary prerequisites"
+            ],
+            "observations": [
+              "tests/entrypoint_correctness.rs"
+            ],
+            "proof_refs": [
+              "local_machine_session_prefix"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:23"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 14
+    "next_sequence": 23
   }
 }

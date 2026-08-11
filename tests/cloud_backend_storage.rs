@@ -379,4 +379,18 @@ fn cloud_session_acquire_uses_explicit_mock_onboarding_in_validation_harness() {
     assert!(stored.contains("decapod-test-mock-access"));
     assert!(stored.contains("decapod-test-mock-refresh"));
     assert!(!tmp.path().join(".decapod/data/decapod.db").exists());
+
+    let agent_session = machine_session_files(config_home.path())
+        .into_iter()
+        .next()
+        .expect("machine-local Decapod agent session");
+    let agent_session: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(agent_session).expect("agent session"))
+            .expect("agent session JSON");
+    assert!(
+        agent_session["token"]
+            .as_str()
+            .is_some_and(|token| token.starts_with("cloud_")),
+        "cloud agent session token should identify its backend"
+    );
 }

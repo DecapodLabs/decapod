@@ -1,24 +1,24 @@
 {
   "schema_version": "1.0.0",
   "title": "Canonical Decapod persistence and Dactyl routing model",
-  "intent": "Advance only the Decapod-owned local persistence and concurrency semantics that can be completed before the Dactyl and Propodus contracts are available; preserve backend=local and publish a proof-backed boundary handoff.",
+  "intent": "Advance Decapod v0.97 toward one provider-neutral Dactyl execution path: repo.backend remains the only project choice for ordinary Decapod state, Decapod passes the runtime datastore selector to Dactyl, local SQLite remains fully functional and is the regression oracle, and cloud may remain blocked only at the unfinished Dactyl/remote contract. The only provider-aware Decapod exception is the explicit auth/session control plane, including the narrowly scoped SQL or API calls required for local session state, cloud registration, entitlement/payment, and auth-session establishment.",
   "state": "APPROVED",
   "todo_ids": [
     "fend_01kzs9d8fcw8y18m"
   ],
   "proof_hooks": [
-    "all Decapod database call sites use the canonical Dactyl model",
-    "local and cloud-facing operation contracts have backend-neutral tests",
-    "durability/concurrency invariants are enforced by Decapod schema and conditional mutations",
-    "decapod validate and required Rust tests pass",
-    "one canonical PR is published and relevant issues have status comments",
-    "backend=cloud atomic operation contract is explicit at the Decapod-Dactyl-Propodus boundary"
+    "ordinary Decapod domain persistence has no provider-specific storage call sites",
+    "auth/session exceptions are explicit, bounded, and separate from domain state semantics",
+    "local behavior remains green across existing focused, serial library, fmt, and clippy proofs",
+    "PR #1250 and relevant Decapod, Dactyl, and Propodus issues carry the same evidence-backed boundary status"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [
-    "Stop at the Dactyl/Propodus operation and schema contract boundary; record exact handoff requirements instead of implementing remote behavior.",
-    "Do not claim backend=cloud atomicity until Dactyl forwards each Decapod state-plus-event mutation as one Propodus request and Neon commits it transactionally."
+    "Do not add Propodus, Vercel, or Neon names to ordinary Decapod domain storage code; those details remain behind Dactyl.",
+    "Provider-specific SQL/API calls are allowed only for the authentication, registration, entitlement/payment, and session-control plane.",
+    "Do not weaken or bypass local SQLite behavior to make cloud compile; local tests are the non-regression gate.",
+    "Do not claim end-to-end cloud parity until Dactyl runtime selection, atomic operation support, remote schema, and conformance proof exist."
   ],
   "unresolved_contradictions": [],
   "deferred_questions": [
@@ -29,5 +29,5 @@
     "file_touch_budget": 50
   },
   "phases": [],
-  "updated_at": "1786482501Z"
+  "updated_at": "1786484008Z"
 }

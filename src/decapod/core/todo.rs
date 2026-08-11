@@ -1,4 +1,5 @@
-use crate::cli::{CloudRuntimeConfig, DecapodProjectConfig};
+use crate::cli::CloudRuntimeConfig;
+use crate::core::backend::BackendSelection;
 use crate::core::broker::DbBroker;
 use crate::core::error;
 use crate::core::external_action::{self, ExternalCapability};
@@ -7,7 +8,7 @@ use crate::core::fleet_coord::{
     LeaseLifecycle, MAX_CLAIM_LEASE_SECS,
 };
 use crate::core::propodus::{PropodusClient, PropodusClientError, PropodusTodoStore};
-use crate::core::repo_identity::{RepositoryIdentity, resolve_repository_identity};
+use crate::core::repo_identity::RepositoryIdentity;
 use crate::core::schemas; // Import the new schemas module
 use crate::core::storage::{Task as StorageTask, TodoStore};
 use crate::core::store::Store;
@@ -6183,12 +6184,16 @@ fn cloud_runtime(
                 "unable to resolve the project root for cloud todo configuration".to_string(),
             )
         })?;
-    let config = DecapodProjectConfig::load(&project_root)?;
-    if !config.repo.effective_backend().is_cloud() {
+    let selection = BackendSelection::from_project(&project_root)?;
+    if !selection.backend().is_cloud() {
         return Ok(None);
     }
     let cloud = CloudRuntimeConfig::default();
-    let identity = resolve_repository_identity(&project_root)?;
+    let identity = selection.repository_identity().cloned().ok_or_else(|| {
+        error::DecapodError::ValidationError(
+            "cloud todo runtime did not resolve a repository identity".to_string(),
+        )
+    })?;
     Ok(Some((cloud, identity)))
 }
 
