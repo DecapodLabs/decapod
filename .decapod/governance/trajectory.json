@@ -1,83 +1,95 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "run-20260811-decapod-architecture-wave",
-  "intent_id": "intent:run-20260811-decapod-architecture-wave",
-  "task_id": "feat_01kzs151rgv5v1b7",
-  "original_intent": "Complete the Decapod shared-state durability architecture wave and publish one governed PR.",
-  "derived_intent": "Harden Decapod-owned task and federation mutations with revisions, compare-and-swap transitions, atomic state-plus-event writes, actor attribution, and idempotent event sequencing while preserving local-first behavior.",
-  "current_phase": "validation",
+  "run_id": "fend_01kzs7s5b28xtyh2",
+  "intent_id": "intent:fend_01kzs7s5b28xtyh2",
+  "task_id": "fend_01kzs9d8fcw8y18m",
+  "original_intent": "Advance Decapod-owned local concurrency durability and Dactyl-boundary prerequisites after merged PR #1248",
+  "derived_intent": "Implement only Decapod-side local semantics and tests that remain valid before Dactyl/Propodus contracts; preserve backend=local",
+  "current_phase": "local persistence implementation",
   "next_transitions": [
-    "publish"
+    "final governed validation and publication"
   ],
   "active_boundaries": [
-    "Decapod semantics and local SQLite only; do not absorb Dactyl routing or Propodus hosting/auth semantics."
+    "Decapod local persistence only; stop at Dactyl/Propodus operation and schema contract",
+    "Decapod source, schema, queries, local tests, and governed specs; no Dactyl or Propodus implementation"
   ],
   "repo_scope": [
-    "src/decapod/core/todo.rs, src/decapod/core/events.rs, src/decapod/core/broker.rs, src/decapod/core/schemas.rs, src/decapod/plugins/federation.rs, focused tests, governed specs and publication artifacts"
+    "shared task/event durability, local concurrency proof, backend boundary handoff",
+    "shared task/event durability, local concurrency proof, backend-boundary prerequisites"
   ],
   "inspected_files": [
     "src/decapod/core/broker.rs",
     "src/decapod/core/events.rs",
+    "src/decapod/core/pool.rs",
     "src/decapod/core/schemas.rs",
     "src/decapod/core/todo.rs",
-    "src/decapod/plugins/federation.rs",
-    "tests/plugins/todo.rs"
+    "src/decapod/plugins/policy.rs",
+    "tests/plugins/todo.rs",
+    "tests/unit/plugins/lcm_tests.rs"
   ],
   "modified_files": [
-    ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json",
-    ".decapod/managed/specs/ARCHITECTURE.md",
-    ".decapod/managed/specs/INTENT.md",
-    ".decapod/managed/specs/INTERFACES.md",
-    "src/decapod/core/broker.rs",
-    "src/decapod/core/events.rs",
-    "src/decapod/core/schemas.rs",
     "src/decapod/core/todo.rs",
-    "src/decapod/plugins/federation.rs",
+    "src/decapod/plugins/policy.rs",
     "tests/plugins/todo.rs",
-    "tests/unit/core/work_claim_tests.rs",
-    "tests/workspace_prune_regression.rs"
+    "tests/unit/plugins/lcm_tests.rs"
   ],
-  "declared_commands": [
-    "cargo test --test plugins_federation_tests -- --nocapture",
-    "cargo test --test plugins_todo_tests -- --nocapture",
-    "cargo test --test workspace_prune_regression -- --nocapture",
-    "decapod validate",
-    "decapod validate --refresh-specs -v --format json"
-  ],
+  "declared_commands": [],
   "tool_calls": [],
   "checks": [
     {
-      "name": "decapod validate",
-      "status": "passed"
-    },
-    {
-      "name": "decapod_validate",
+      "name": "atomic_task_mutation_audit",
       "status": "partial"
     },
     {
-      "name": "federation_tests",
+      "name": "canonical_event_append",
       "status": "passed"
     },
     {
-      "name": "focused_todo_tests",
+      "name": "cargo_clippy_deny_warnings",
       "status": "passed"
     },
     {
-      "name": "workspace_regression",
+      "name": "cargo_fmt_check",
+      "status": "passed"
+    },
+    {
+      "name": "cargo_test_lib_serial",
+      "status": "passed"
+    },
+    {
+      "name": "dactyl_boundary",
+      "status": "unavailable"
+    },
+    {
+      "name": "dactyl_propudos_remote_contract",
+      "status": "unavailable"
+    },
+    {
+      "name": "focused_todo_and_sqlite_tests",
+      "status": "passed"
+    },
+    {
+      "name": "local_concurrency_proof",
+      "status": "passed"
+    },
+    {
+      "name": "local_schema",
+      "status": "passed"
+    },
+    {
+      "name": "local_transaction_rollback",
+      "status": "passed"
+    },
+    {
+      "name": "with_transaction",
       "status": "passed"
     }
   ],
   "evidence": [
-    "21 TODO tests, 22 federation tests, and 4 workspace regression tests passed",
-    "25-agent local CAS torture test: exactly one ok, 24 conflicts, one revision increment, one task.done event",
-    "Governed validation reached 200 passing gates but requires current four-artifact PR diff before final receipt",
-    "validation epoch ve_2b7d22cb1865f444 completed with zero failures"
+    "Host Rust 2024 toolchain: 283 library tests passed serially; focused todo, SQLite hardening, single datastore, rebuild, fmt, and Clippy proofs passed. Container v0.97.0 governance binary ran; its bundled Cargo is too old for edition 2024. Remote Dactyl/Propodus implementation intentionally not changed."
   ],
   "shortcut_risk_signals": [],
-  "unresolved_assumptions": [
-    "Dactyl v0.4.0 and Propodus remain outside this Decapod-only implementation wave"
-  ],
+  "unresolved_assumptions": [],
   "proof_status": "partial",
   "verdicts": {
     "intent_alignment": "supported",
@@ -85,21 +97,21 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:64a6f6730ef85257de62cbf33817df6941041698ce51fcd46f26a5f9868f80f3",
+  "artifact_hash": "sha256:206eaf411dbb2904326e9dc8479ec957e255a6e82f41f787b0ca6a3741619f66",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:run-20260811-decapod-architecture-wave": {
-        "id": "intent:run-20260811-decapod-architecture-wave",
-        "raw_intent": "Complete the Decapod shared-state durability architecture wave and publish one governed PR.",
-        "refined_intent": "Harden Decapod-owned task and federation mutations with revisions, compare-and-swap transitions, atomic state-plus-event writes, actor attribution, and idempotent event sequencing while preserving local-first behavior.",
+      "intent:fend_01kzs7s5b28xtyh2": {
+        "id": "intent:fend_01kzs7s5b28xtyh2",
+        "raw_intent": "Advance Decapod-owned local concurrency durability and Dactyl-boundary prerequisites after merged PR #1248",
+        "refined_intent": "Implement only Decapod-side local semantics and tests that remain valid before Dactyl/Propodus contracts; preserve backend=local",
         "acceptance_criteria": [],
         "constraints": [
-          "src/decapod/core/todo.rs, src/decapod/core/events.rs, src/decapod/core/broker.rs, src/decapod/core/schemas.rs, src/decapod/plugins/federation.rs, focused tests, governed specs and publication artifacts"
+          "shared task/event durability, local concurrency proof, backend-boundary prerequisites"
         ],
         "assumptions": [],
         "boundaries": [
-          "Decapod semantics and local SQLite only; do not absorb Dactyl routing or Propodus hosting/auth semantics."
+          "Decapod source, schema, queries, local tests, and governed specs; no Dactyl or Propodus implementation"
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -112,149 +124,197 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:run-20260811-decapod-architecture-wave",
+        "intent_id": "intent:fend_01kzs7s5b28xtyh2",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:run-20260811-decapod-architecture-wave",
+        "intent_id": "intent:fend_01kzs7s5b28xtyh2",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:run-20260811-decapod-architecture-wave",
+        "intent_id": "intent:fend_01kzs7s5b28xtyh2",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run-20260811-decapod-architecture-wave"
+        "detail": "trajectory:fend_01kzs7s5b28xtyh2"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:run-20260811-decapod-architecture-wave",
+        "intent_id": "intent:fend_01kzs7s5b28xtyh2",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run-20260811-decapod-architecture-wave"
+        "detail": "trajectory:fend_01kzs7s5b28xtyh2"
       },
       {
         "sequence": 6,
         "event_id": "event:6",
-        "intent_id": "intent:run-20260811-decapod-architecture-wave",
+        "intent_id": "intent:fend_01kzs7s5b28xtyh2",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run-20260811-decapod-architecture-wave"
+        "detail": "trajectory:fend_01kzs7s5b28xtyh2"
       },
       {
         "sequence": 7,
         "event_id": "event:7",
-        "intent_id": "intent:run-20260811-decapod-architecture-wave",
+        "intent_id": "intent:fend_01kzs7s5b28xtyh2",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run-20260811-decapod-architecture-wave"
+        "detail": "trajectory:fend_01kzs7s5b28xtyh2"
+      },
+      {
+        "sequence": 8,
+        "event_id": "event:8",
+        "intent_id": "intent:fend_01kzs7s5b28xtyh2",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:fend_01kzs7s5b28xtyh2"
+      },
+      {
+        "sequence": 9,
+        "event_id": "event:9",
+        "intent_id": "intent:fend_01kzs7s5b28xtyh2",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:fend_01kzs7s5b28xtyh2"
+      },
+      {
+        "sequence": 10,
+        "event_id": "event:10",
+        "intent_id": "intent:fend_01kzs7s5b28xtyh2",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:fend_01kzs7s5b28xtyh2"
       }
     ],
     "trajectories": {
-      "run-20260811-decapod-architecture-wave": {
-        "id": "run-20260811-decapod-architecture-wave",
-        "intent_id": "intent:run-20260811-decapod-architecture-wave",
+      "fend_01kzs7s5b28xtyh2": {
+        "id": "fend_01kzs7s5b28xtyh2",
+        "intent_id": "intent:fend_01kzs7s5b28xtyh2",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "implementation and proof",
-            "command": "cargo test --test plugins_todo_tests -- --nocapture",
+            "action": "trajectory.record",
             "scope": [
-              "src/decapod/core/todo.rs, src/decapod/core/events.rs, src/decapod/core/broker.rs, src/decapod/core/schemas.rs, src/decapod/plugins/federation.rs, focused tests, governed specs and publication artifacts"
+              "shared task/event durability, local concurrency proof, backend-boundary prerequisites"
             ],
             "observations": [
-              "src/decapod/core/todo.rs",
-              "src/decapod/core/events.rs",
-              "src/decapod/core/broker.rs",
-              "src/decapod/core/schemas.rs",
-              "src/decapod/plugins/federation.rs",
-              "tests/plugins/todo.rs",
-              "src/decapod/core/todo.rs",
-              "src/decapod/core/events.rs",
-              "src/decapod/core/broker.rs",
-              "src/decapod/core/schemas.rs",
-              "src/decapod/plugins/federation.rs",
-              "tests/plugins/todo.rs",
-              "tests/unit/core/work_claim_tests.rs",
-              "tests/workspace_prune_regression.rs",
-              ".decapod/managed/specs/INTENT.md",
-              ".decapod/managed/specs/ARCHITECTURE.md",
-              ".decapod/managed/specs/INTERFACES.md",
-              "25-agent local CAS torture test: exactly one ok, 24 conflicts, one revision increment, one task.done event",
-              "21 TODO tests, 22 federation tests, and 4 workspace regression tests passed",
-              "Governed validation reached 200 passing gates but requires current four-artifact PR diff before final receipt"
+              "src/decapod/core/events.rs"
             ],
             "proof_refs": [
-              "focused_todo_tests",
-              "federation_tests",
-              "workspace_regression",
-              "decapod_validate"
+              "canonical_event_append"
             ],
-            "validation_findings": [
-              "Dactyl v0.4.0 and Propodus remain outside this Decapod-only implementation wave"
-            ],
+            "validation_findings": [],
             "custody_event_id": "event:4"
           },
           {
             "sequence": 5,
-            "action": "validation",
-            "command": "decapod validate",
+            "action": "trajectory.record",
             "scope": [
-              "src/decapod/core/todo.rs, src/decapod/core/events.rs, src/decapod/core/broker.rs, src/decapod/core/schemas.rs, src/decapod/plugins/federation.rs, focused tests, governed specs and publication artifacts"
+              "shared task/event durability, local concurrency proof, backend-boundary prerequisites"
             ],
             "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_2b7d22cb1865f444 completed with zero failures"
+              "tests/plugins/todo.rs"
             ],
             "proof_refs": [
-              "decapod validate"
+              "local_concurrency_proof"
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
           },
           {
             "sequence": 6,
-            "action": "validation",
-            "command": "decapod validate",
+            "action": "trajectory.record",
             "scope": [
-              "src/decapod/core/todo.rs, src/decapod/core/events.rs, src/decapod/core/broker.rs, src/decapod/core/schemas.rs, src/decapod/plugins/federation.rs, focused tests, governed specs and publication artifacts"
+              "shared task/event durability, local concurrency proof, backend-boundary prerequisites"
             ],
             "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_2b7d22cb1865f444 completed with zero failures"
+              "src/decapod/core/schemas.rs"
             ],
             "proof_refs": [
-              "decapod validate"
+              "local_schema"
             ],
             "validation_findings": [],
             "custody_event_id": "event:6"
           },
           {
             "sequence": 7,
-            "action": "validation",
-            "command": "decapod validate",
+            "action": "trajectory.record",
             "scope": [
-              "src/decapod/core/todo.rs, src/decapod/core/events.rs, src/decapod/core/broker.rs, src/decapod/core/schemas.rs, src/decapod/plugins/federation.rs, focused tests, governed specs and publication artifacts"
+              "shared task/event durability, local concurrency proof, backend-boundary prerequisites"
             ],
             "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_2b7d22cb1865f444 completed with zero failures"
+              "src/decapod/core/broker.rs"
             ],
             "proof_refs": [
-              "decapod validate"
+              "with_transaction"
             ],
             "validation_findings": [],
             "custody_event_id": "event:7"
+          },
+          {
+            "sequence": 8,
+            "action": "trajectory.record",
+            "scope": [
+              "shared task/event durability, local concurrency proof, backend-boundary prerequisites"
+            ],
+            "observations": [
+              "src/decapod/core/todo.rs"
+            ],
+            "proof_refs": [
+              "atomic_task_mutation_audit"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:8"
+          },
+          {
+            "sequence": 9,
+            "action": "trajectory.record",
+            "scope": [
+              "shared task/event durability, local concurrency proof, backend-boundary prerequisites"
+            ],
+            "observations": [
+              "src/decapod/core/pool.rs"
+            ],
+            "proof_refs": [
+              "dactyl_boundary"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:9"
+          },
+          {
+            "sequence": 10,
+            "action": "local persistence implementation",
+            "scope": [
+              "shared task/event durability, local concurrency proof, backend-boundary prerequisites"
+            ],
+            "observations": [
+              "src/decapod/core/todo.rs",
+              "src/decapod/core/events.rs",
+              "src/decapod/core/broker.rs",
+              "src/decapod/core/schemas.rs",
+              "src/decapod/plugins/policy.rs",
+              "tests/plugins/todo.rs",
+              "tests/unit/plugins/lcm_tests.rs",
+              "src/decapod/core/todo.rs",
+              "src/decapod/plugins/policy.rs",
+              "tests/plugins/todo.rs",
+              "tests/unit/plugins/lcm_tests.rs",
+              "Host Rust 2024 toolchain: 283 library tests passed serially; focused todo, SQLite hardening, single datastore, rebuild, fmt, and Clippy proofs passed. Container v0.97.0 governance binary ran; its bundled Cargo is too old for edition 2024. Remote Dactyl/Propodus implementation intentionally not changed."
+            ],
+            "proof_refs": [
+              "cargo_test_lib_serial",
+              "cargo_fmt_check",
+              "cargo_clippy_deny_warnings",
+              "focused_todo_and_sqlite_tests",
+              "local_transaction_rollback",
+              "dactyl_propudos_remote_contract"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:10"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 7
+    "next_sequence": 10
   }
 }
