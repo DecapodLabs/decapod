@@ -168,7 +168,7 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e3322ee47bc3060006029a5ddae3f36e5a88979405b6a2f40f033af6a26c583b`
+- Repository signal fingerprint: `efeed463117a6c0f92da68905a983d82bca9c9dd5d3a5f41fcdd2c857ea2e2ad`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (103 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
