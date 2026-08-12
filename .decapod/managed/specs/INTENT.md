@@ -52,6 +52,22 @@
   Decapod version transition reports the previous/current release, applied
   migrations, and the ledger/catalog paths the agent must inspect.
 
+## First-PR Publication Sequence (#1259)
+- Agents do not need `DECAPOD_VALIDATE_SKIP_GIT_GATES` to emit a validation
+  receipt. After plan, claims, and trajectory appear in the feature-branch
+  delta (or working tree), `decapod validate` writes
+  `.decapod/governance/validation.json` on success. The governance PR-update
+  gate treats a just-written receipt as the remaining participation, then
+  skips rewrite when later commits only carry the four governance files.
+- Local-clone workspaces inherit the parent checkout's GitHub remote as
+  `upstream`. `workspace publish` walks a filesystem `origin` to that parent
+  and publishes there; agents must not invent a raw `git push` + `gh pr create`
+  bypass when the prescribed command can now resolve the network remote.
+- Workspace snapshots fetch `origin/<base_branch>` before cloning or adding a
+  worktree so a stale local protected branch is not the start point.
+- `todo done` and `--artifact` use the host todo store and the workspace
+  worktree that owns the claim.
+
 ## Publication Bundle Currency Intent (#1232)
 - Publication and validation prove that release-bound entrypoints, the managed
   Dockerfile pin, the specs manifest, living specs, and governance artifacts are
@@ -197,7 +213,7 @@ flowchart LR
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `65e342d060acfb735b870ab14ff057b2ed15e25020fa1b5986749bdd726e7289`
+- Repository signal fingerprint: `8323113c658e1bc9c9215b9397ca3f106ea1f459b971ea0edc12cd460eb4da06`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (102 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

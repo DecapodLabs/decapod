@@ -1210,6 +1210,7 @@ fn prepare_workspace_clone(
         .to_str()
         .ok_or_else(|| error::DecapodError::PathError("invalid workspace path".to_string()))?;
 
+    let start_oid = workspace::preferred_base_oid(repo, base_branch);
     let base_ref = format!("refs/heads/{base_branch}");
     let clone_output = if git_ref_exists(repo, &base_ref)? {
         Command::new("git")
@@ -1238,16 +1239,35 @@ fn prepare_workspace_clone(
         )));
     }
 
-    let local_base_ref = format!("refs/heads/{base_branch}");
-    let remote_base_ref = format!("refs/remotes/origin/{base_branch}");
-    if git_ref_exists(&workspace_path, &local_base_ref)? {
-        run_git(&workspace_path, &["checkout", "-B", branch, base_branch])?;
-    } else if git_ref_exists(&workspace_path, &remote_base_ref)? {
-        let from_remote = format!("origin/{base_branch}");
-        run_git(&workspace_path, &["checkout", "-B", branch, &from_remote])?;
+    if let Some(oid) = start_oid {
+        // `--single-branch` only copies the parent's local base. Fetch the
+        // preferred OID (usually origin/base) from the parent object store
+        // so a stale local protected branch is not the start point.
+        let fetch_ref = format!("{oid}:refs/decapod/base");
+        let _ = run_git(
+            &workspace_path,
+            &[
+                "fetch",
+                "--no-tags",
+                repo.to_str().unwrap_or("."),
+                &fetch_ref,
+            ],
+        );
+        run_git(&workspace_path, &["checkout", "-B", branch, &oid])?;
     } else {
-        run_git(&workspace_path, &["checkout", "-B", branch])?;
+        let local_base_ref = format!("refs/heads/{base_branch}");
+        let remote_base_ref = format!("refs/remotes/origin/{base_branch}");
+        if git_ref_exists(&workspace_path, &local_base_ref)? {
+            run_git(&workspace_path, &["checkout", "-B", branch, base_branch])?;
+        } else if git_ref_exists(&workspace_path, &remote_base_ref)? {
+            let from_remote = format!("origin/{base_branch}");
+            run_git(&workspace_path, &["checkout", "-B", branch, &from_remote])?;
+        } else {
+            run_git(&workspace_path, &["checkout", "-B", branch])?;
+        }
     }
+
+    let _ = workspace::inherit_network_remotes_from_parent(repo, &workspace_path);
 
     Ok(WorkspaceSpec {
         branch: branch.to_string(),

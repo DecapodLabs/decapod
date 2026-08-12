@@ -1,29 +1,30 @@
 {
   "schema_version": "1.0.0",
-  "title": "Isolated-workspace ownership for spec projections (#1255)",
-  "intent": "Prevent Decapod from writing .decapod/managed/specs/* from a protected root main/master checkout. Fail closed with workspace_required. Refresh projections only inside a claimed isolated worktree identified by the Git toplevel path. Require those managed spec files in the same PR as the code change that caused them. Restore workspace status to read-only validation as in 0.96.0.",
+  "title": "Close publication deadlock from Decapod #1259",
+  "intent": "Fix the validation.json chicken-and-egg, local-clone publish remote, stale-base snapshot, and workspace-local todo done/artifact binding reported in DecapodLabs/decapod#1259. Document the intended first-PR publication sequence. Work in a git worktree.",
   "state": "APPROVED",
   "todo_ids": [
-    "feat_01kzvf5tt0nk3k0m"
+    "bugs_01kzvshraxt1mtj2"
   ],
   "proof_hooks": [
-    "cargo test spec_workspace_ownership -- --nocapture",
-    "cargo test --lib workspace:: -- --nocapture",
+    "cargo test --lib",
     "decapod validate"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [
-    "Do not stash, reset, or rewrite files in the host root checkout as part of the product fix"
+    "Do not force-push or work on protected master."
   ],
   "unresolved_contradictions": [],
-  "deferred_questions": [],
+  "deferred_questions": [
+    "Host-vs-container validate stickiness is documented if not fully removed in this slice."
+  ],
   "constraints": {
     "forbidden_paths": [
-      "Do not force-push or rewrite shared history"
+      ".decapod/data"
     ],
-    "file_touch_budget": 25
+    "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1786555621Z"
+  "updated_at": "1786565619Z"
 }

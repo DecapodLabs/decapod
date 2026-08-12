@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- write validation receipts without `DECAPOD_VALIDATE_SKIP_GIT_GATES` and stop the receipt rewrite chase
+- publish local-clone workspaces through the parent GitHub remote
+- snapshot workspaces from the fetched remote base tip
+- bind `todo done` and `--artifact` to the host store and workspace worktree
+
 ## [0.98.2](https://github.com/DecapodLabs/decapod/compare/v0.98.1...v0.98.2) - 2026-08-12
 
 ### Fixed

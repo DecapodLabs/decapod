@@ -655,6 +655,9 @@ fn create_worktree(
         return Ok(worktree_path);
     }
 
+    // Prefer the fetched remote tip so claim/ensure does not snapshot a
+    // stale local protected branch (GitHub #1259).
+    fetch_base_branch_best_effort(&main_repo, base_branch);
     let start_point = base_ref_for_branch(&main_repo, base_branch);
 
     // git worktree add <path> -b <branch> <base-ref>
@@ -792,7 +795,61 @@ fn env_bool(name: &str, default_value: bool) -> bool {
     }
 }
 
+/// Host checkout that owns a canonical `.decapod/workspaces/<name>` path.
+///
+/// Local-clone workspaces have their own `.git`, so `git-common-dir` cannot
+/// see the parent. Walk path components instead (GitHub #1259).
+pub fn host_repo_from_canonical_workspace(path: &Path) -> Option<PathBuf> {
+    let canon = std::fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf());
+    let comps: Vec<_> = canon.components().collect();
+    for i in 0..comps.len().saturating_sub(1) {
+        if comps[i].as_os_str() == ".decapod" && comps[i + 1].as_os_str() == "workspaces" {
+            let mut host = PathBuf::new();
+            for component in &comps[..i] {
+                host.push(component);
+            }
+            if host.as_os_str().is_empty() {
+                return None;
+            }
+            return Some(host);
+        }
+    }
+    None
+}
+
+/// Newest workspace directory whose name contains the task id (either ULID
+/// form). Used so `--artifact` can resolve against the worktree that owns
+/// the claim even when the command is run from the parent checkout.
+pub fn find_workspace_for_task(host_repo: &Path, task_id: &str) -> Option<PathBuf> {
+    let workspaces = host_repo.join(".decapod").join("workspaces");
+    let entries = std::fs::read_dir(&workspaces).ok()?;
+    let hyphenated = task_id.replace('_', "-");
+    let mut matches = Vec::new();
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if !path.is_dir() {
+            continue;
+        }
+        let name = path.file_name()?.to_string_lossy();
+        if name.contains(task_id) || name.contains(&hyphenated) {
+            let modified = path
+                .metadata()
+                .ok()
+                .and_then(|meta| meta.modified().ok())
+                .unwrap_or(std::time::SystemTime::UNIX_EPOCH);
+            matches.push((modified, path));
+        }
+    }
+    matches
+        .into_iter()
+        .max_by_key(|(modified, _)| *modified)
+        .map(|(_, path)| path)
+}
+
 pub fn get_main_repo_root(current_dir: &Path) -> Result<PathBuf, DecapodError> {
+    if let Some(host) = host_repo_from_canonical_workspace(current_dir) {
+        return Ok(host);
+    }
     let output = Command::new("git")
         .args([
             "-C",
@@ -900,6 +957,43 @@ pub fn base_ref_for_branch(repo_root: &Path, branch: &str) -> Option<String> {
     }
     let local_ref = format!("refs/heads/{branch}");
     git_ref_exists(repo_root, &local_ref).then(|| branch.to_string())
+}
+
+/// Best-effort `git fetch origin <base>` so workspace snapshots can start from
+/// the remote tip rather than a stale local protected branch (GitHub #1259).
+pub fn fetch_base_branch_best_effort(repo_root: &Path, base_branch: &str) {
+    let dir = repo_root.to_str().unwrap_or(".");
+    let _ = Command::new("git")
+        .args([
+            "-C",
+            dir,
+            "fetch",
+            "--no-tags",
+            "--update-head-ok",
+            "origin",
+            base_branch,
+        ])
+        .output();
+}
+
+/// SHA of the preferred workspace start point: `origin/<base>` after a
+/// best-effort fetch, else the local base branch tip.
+pub fn preferred_base_oid(repo_root: &Path, base_branch: &str) -> Option<String> {
+    fetch_base_branch_best_effort(repo_root, base_branch);
+    let dir = repo_root.to_str().unwrap_or(".");
+    for candidate in [format!("origin/{base_branch}"), base_branch.to_string()] {
+        let output = Command::new("git")
+            .args(["-C", dir, "rev-parse", "--verify", &candidate])
+            .output()
+            .ok()?;
+        if output.status.success() {
+            let oid = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            if !oid.is_empty() {
+                return Some(oid);
+            }
+        }
+    }
+    None
 }
 
 fn git_ref_exists(repo_root: &Path, git_ref: &str) -> bool {
@@ -1344,7 +1438,7 @@ pub struct PublishResult {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-struct PublishRemote {
+pub(crate) struct PublishRemote {
     name: String,
     url: String,
 }
@@ -1384,7 +1478,7 @@ fn github_repo_slug(url: &str) -> Option<String> {
     Some(format!("{owner}/{repo}"))
 }
 
-fn resolve_publish_remote(repo_root: &Path) -> Result<PublishRemote, DecapodError> {
+fn git_remote_names(repo_root: &Path) -> Result<Vec<String>, DecapodError> {
     let dir = repo_root.to_str().unwrap_or(".");
     let remotes = Command::new("git")
         .args(["-C", dir, "remote"])
@@ -1396,48 +1490,146 @@ fn resolve_publish_remote(repo_root: &Path) -> Result<PublishRemote, DecapodErro
             String::from_utf8_lossy(&remotes.stderr).trim()
         )));
     }
-
-    let remote_names = String::from_utf8_lossy(&remotes.stdout);
-    let names: Vec<&str> = remote_names
+    Ok(String::from_utf8_lossy(&remotes.stdout)
         .lines()
         .map(str::trim)
         .filter(|name| !name.is_empty())
-        .collect();
+        .map(str::to_string)
+        .collect())
+}
 
-    let mut candidates = Vec::new();
-    for name in names {
-        let mut remote = Command::new("git")
-            .args(["-C", dir, "remote", "get-url", "--push", name])
+fn git_remote_url(repo_root: &Path, name: &str) -> Option<String> {
+    let dir = repo_root.to_str().unwrap_or(".");
+    let mut remote = Command::new("git")
+        .args(["-C", dir, "remote", "get-url", "--push", name])
+        .output()
+        .ok()?;
+    if !remote.status.success() {
+        remote = Command::new("git")
+            .args(["-C", dir, "remote", "get-url", name])
             .output()
-            .map_err(DecapodError::IoError)?;
-        if !remote.status.success() {
-            remote = Command::new("git")
-                .args(["-C", dir, "remote", "get-url", name])
-                .output()
-                .map_err(DecapodError::IoError)?;
-        }
-        if !remote.status.success() {
+            .ok()?;
+    }
+    if !remote.status.success() {
+        return None;
+    }
+    let url = String::from_utf8_lossy(&remote.stdout).trim().to_string();
+    (!url.is_empty()).then_some(url)
+}
+
+fn collect_network_remotes(repo_root: &Path) -> Result<Vec<PublishRemote>, DecapodError> {
+    let mut candidates = Vec::new();
+    for name in git_remote_names(repo_root)? {
+        let Some(url) = git_remote_url(repo_root, &name) else {
             continue;
-        }
-        let url = String::from_utf8_lossy(&remote.stdout).trim().to_string();
+        };
         if is_network_remote_url(&url) {
-            candidates.push(PublishRemote {
-                name: name.to_string(),
-                url,
-            });
+            candidates.push(PublishRemote { name, url });
         }
     }
+    Ok(candidates)
+}
 
+fn pick_network_remote(candidates: &[PublishRemote]) -> Option<PublishRemote> {
     candidates
         .iter()
         .find(|remote| remote.name == "origin")
         .cloned()
-        .or_else(|| candidates.into_iter().next())
-        .ok_or_else(|| {
-            DecapodError::ValidationError(
-                "Cannot publish: no network-capable git remote is configured. The workspace may inherit a local-clone origin; add the upstream GitHub remote before retrying, for example: git remote add upstream git@github.com:OWNER/REPO.git. No commit was pushed.".to_string(),
-            )
+        .or_else(|| {
+            candidates
+                .iter()
+                .find(|remote| remote.name == "upstream")
+                .cloned()
         })
+        .or_else(|| candidates.first().cloned())
+}
+
+fn local_remote_paths(repo_root: &Path) -> Result<Vec<PathBuf>, DecapodError> {
+    let mut paths = Vec::new();
+    for name in git_remote_names(repo_root)? {
+        let Some(url) = git_remote_url(repo_root, &name) else {
+            continue;
+        };
+        if is_network_remote_url(&url) {
+            continue;
+        }
+        let path = PathBuf::from(url.trim_start_matches("file://"));
+        if path.exists() {
+            paths.push(path);
+        }
+    }
+    Ok(paths)
+}
+
+fn ensure_git_remote(repo_root: &Path, name: &str, url: &str) -> Result<(), DecapodError> {
+    let dir = repo_root.to_str().unwrap_or(".");
+    if git_remote_url(repo_root, name).as_deref() == Some(url) {
+        return Ok(());
+    }
+    if git_remote_url(repo_root, name).is_some() {
+        return Ok(());
+    }
+    let output = Command::new("git")
+        .args(["-C", dir, "remote", "add", name, url])
+        .output()
+        .map_err(DecapodError::IoError)?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        if !stderr.contains("already exists") {
+            return Err(DecapodError::ValidationError(format!(
+                "Cannot add publish remote '{name}': {}",
+                stderr.trim()
+            )));
+        }
+    }
+    Ok(())
+}
+
+/// Copy network remotes from a parent checkout onto a local-clone workspace
+/// as `upstream` (origin stays the parent path).
+pub(crate) fn inherit_network_remotes_from_parent(
+    parent: &Path,
+    workspace: &Path,
+) -> Result<Option<PublishRemote>, DecapodError> {
+    let Some(remote) = pick_network_remote(&collect_network_remotes(parent)?) else {
+        return Ok(None);
+    };
+    let name = if git_remote_url(workspace, "origin").is_some() {
+        "upstream"
+    } else {
+        "origin"
+    };
+    ensure_git_remote(workspace, name, &remote.url)?;
+    Ok(Some(PublishRemote {
+        name: name.to_string(),
+        url: remote.url,
+    }))
+}
+
+fn resolve_publish_remote(repo_root: &Path) -> Result<PublishRemote, DecapodError> {
+    if let Some(remote) = pick_network_remote(&collect_network_remotes(repo_root)?) {
+        return Ok(remote);
+    }
+
+    // Local-clone workspaces inherit `origin` as a filesystem path. Walk that
+    // parent (and the canonical host checkout) for a GitHub remote, then add
+    // it as `upstream` so `workspace publish` can push (GitHub #1259 / #758).
+    let mut parents = local_remote_paths(repo_root)?;
+    if let Some(host) = host_repo_from_canonical_workspace(repo_root) {
+        parents.push(host);
+    }
+    for parent in parents {
+        if parent == repo_root {
+            continue;
+        }
+        if let Some(remote) = inherit_network_remotes_from_parent(&parent, repo_root)? {
+            return Ok(remote);
+        }
+    }
+
+    Err(DecapodError::ValidationError(
+        "Cannot publish: no network-capable git remote is configured. The workspace may inherit a local-clone origin; Decapod tried to copy a GitHub remote from the parent checkout and did not find one. Add the upstream GitHub remote before retrying, for example: git remote add upstream git@github.com:OWNER/REPO.git. No commit was pushed.".to_string(),
+    ))
 }
 
 fn publish_push_failure(stderr: &str, branch: &str, remote: &str) -> String {
