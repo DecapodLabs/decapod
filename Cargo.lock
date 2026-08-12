@@ -420,9 +420,8 @@ dependencies = [
 
 [[package]]
 name = "dactyl-db"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ae2d56a8039ba8b13f29754aa5afcb9969bb13958a0bd456ed5c92ef902d4baf"
+version = "0.3.0"
+source = "git+https://github.com/DecapodLabs/dactyl?rev=07fc271a66a391035795495b4d51b221a0af50e0#07fc271a66a391035795495b4d51b221a0af50e0"
 dependencies = [
  "reqwest",
  "serde",

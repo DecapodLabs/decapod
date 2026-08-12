@@ -29,7 +29,7 @@ Generated interface specs should include:
 | `DbBroker::with_transaction` | Decapod domain mutation | Current local datastore; future Dactyl atomic operation | Commits state and its canonical event together; rolls both back on failure |
 | `core::backend::BackendSelection` / `BackendRoute` | `.decapod/config.toml` backend plus Git origin identity | Local datastore or authenticated Dactyl session | `local` binds `.decapod/data/decapod.db`; `cloud` binds the GitHub owner/repository and accepts only an opaque remote URI supplied by the session boundary; provider names and URI construction are outside ordinary Decapod persistence |
 | `core::backend::StorageContext` | `BackendSelection`, opaque route, and optional session bearer | Dactyl bridge or future physical driver | Version 1 distinguishes local and remote targets; local has no cloud scope or credential, remote requires an authenticated bearer, credentials are never serialized, and unsupported future versions fail closed before I/O; Propodus owns effective membership/repository authorization |
-| `core::dactyl::DactylBridge` | Backend route, access mode, and optional opaque bearer | Dactyl v0.6.2 physical driver | Provides explicit reads, writes, atomic batches, access-mode enforcement, Decapod-normalized errors, and an explicit file-backed Dactyl-snapshot route; remote contexts are forwarded as versioned opaque envelopes, canonical local SQLite is rejected as a different format, and cloud construction fails closed without a bearer |
+| `core::dactyl::DactylBridge` | Backend route, access mode, and optional opaque bearer | Current Dactyl v0.3.0 release commit under the new versioning schema | Provides explicit reads, writes, atomic batches, access-mode enforcement, Decapod-normalized errors, and an explicit file-backed Dactyl-snapshot route; remote contexts are forwarded as versioned opaque envelopes, canonical local SQLite is rejected as a different format, and cloud construction fails closed without a bearer |
 | Decapod agent session | Backend selection and machine-local session directory | Local SQLite or authenticated cloud command path | Machine-local session records use a backend discriminator (`local_` or `cloud_`) and default to a four-hour lifetime, bounded to 30 minutes minimum and six hours maximum; cloud bearer credentials remain separate opaque machine-local material |
 | `todo::update_status` | Decapod lifecycle caller | Local database today; future Dactyl operation | Requires expected status and revision; returns `ok`, `not_found`, or `conflict` and emits an event only after the conditional update wins |
 | `todo` lease/ownership mutations | Decapod coordination caller | Local database today; future Dactyl operation | Claim, yield, handoff, owner, heartbeat, cleanup, and expertise state plus their events share one transaction |
@@ -138,7 +138,7 @@ pub enum ApiError {
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `13180aaaac14709089d64a88378b26b68a15972434da95262e05177436414c18`
+- Repository signal fingerprint: `652dbab71d79b4ead7bd8a57d8c70afb95e267a44fc851c84c328f633c772f37`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (103 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -28,7 +28,7 @@
 ## Current Storage Cutover Intent
 - The Decapod-owned portion of the dactyl migration is intentionally incremental: application policy must become backend-neutral before storage execution is replaced.
 - Decapod owns bounded retry/contention policy, stable identifier generation, migration planning, applied-ledger state, backup/restore, and legacy import. A future dactyl implementation owns only the physical storage guarantees behind those contracts.
-- The current PR pins `dactyl-db` v0.6.2 and adds `core::dactyl::DactylBridge`. Its proof covers explicit caller-owned IDs, atomic rollback, read-only enforcement, normalized errors, durable reopen of an explicitly named Dactyl snapshot, and forwarding the versioned storage-context envelope into remote Dactyl connections. It does not claim canonical SQLite migration or live cloud parity: those remain gated by the Dactyl compatibility work in [Dactyl #57](https://github.com/DecapodLabs/dactyl/issues/57) and the live Propodus route/schema proofs in [Propodus #55](https://github.com/DecapodLabs/propodus/issues/55), [#71](https://github.com/DecapodLabs/propodus/issues/71), and [#79](https://github.com/DecapodLabs/propodus/issues/79).
+- The current PR pins the current Dactyl `v0.3.0` release commit under the new versioning schema and adds `core::dactyl::DactylBridge`. Its proof covers explicit caller-owned IDs, atomic rollback, read-only enforcement, normalized errors, durable reopen of an explicitly named Dactyl snapshot, and forwarding the versioned storage-context envelope into remote Dactyl connections. It does not claim canonical SQLite migration or live cloud parity: those remain gated by the Dactyl compatibility work in [Dactyl #57](https://github.com/DecapodLabs/dactyl/issues/57) and the live Propodus route/schema proofs in [Propodus #55](https://github.com/DecapodLabs/propodus/issues/55), [#71](https://github.com/DecapodLabs/propodus/issues/71), and [#79](https://github.com/DecapodLabs/propodus/issues/79).
 - `core::backend::BackendSelection` maps the project `repo.backend` choice to a repository-scoped route. Local resolves to `.decapod/data/decapod.db`; cloud derives `owner/repository` from the Git `origin` remote and accepts an opaque remote URI only after the authenticated/session boundary supplies it. Decapod does not assemble or interpret a provider-specific cloud URI for ordinary state.
 - Local and cloud Decapod agent sessions are machine-local, backend-discriminated (`local_` or `cloud_`), and long-lived enough for an agent run: four hours by default, with a 30-minute minimum and six-hour maximum. Cloud access/refresh credentials remain opaque and are persisted separately from repository state.
 
@@ -213,7 +213,7 @@ flowchart LR
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `13180aaaac14709089d64a88378b26b68a15972434da95262e05177436414c18`
+- Repository signal fingerprint: `652dbab71d79b4ead7bd8a57d8c70afb95e267a44fc851c84c328f633c772f37`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (103 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -1,13 +1,13 @@
 {
   "schema_version": "1.0.0",
-  "title": "PR #1256 Dactyl v0.6.2 issue sweep",
-  "intent": "Within PR #1256, implement the Decapod-owned work for GitHub Issues #1028, #1110, #1111, #1112, #1120, #1216, #1217, #1220, #1221, #1222, #1223, #1224, #1247, and #1254 using dactyl-db v0.6.2, preserving thin Decapod/Dactyl/Propodus boundaries and recording unprovable cross-repository gates explicitly.",
+  "title": "PR #1256 Dactyl v0.3.0 issue sweep",
+  "intent": "Within PR #1256, implement the Decapod-owned work for GitHub Issues #1028, #1110, #1111, #1112, #1120, #1216, #1217, #1220, #1221, #1222, #1223, #1224, #1247, and #1254 using the current Dactyl v0.3.0 release commit under the new versioning schema, preserving thin Decapod/Dactyl/Propodus boundaries and recording unprovable cross-repository gates explicitly.",
   "state": "APPROVED",
   "todo_ids": [
     "code_01kzvey011rqf9py"
   ],
   "proof_hooks": [
-    "Dactyl v0.6.2 API and dependency audit matches the implementation",
+    "Dactyl v0.3.0 API and dependency audit matches the implementation",
     "Issue-by-issue acceptance mapping distinguishes passed, partial, unavailable, and deferred evidence"
   ],
   "unknowns": [],
@@ -28,5 +28,5 @@
     "file_touch_budget": 80
   },
   "phases": [],
-  "updated_at": "1786566932Z"
+  "updated_at": "1786573150Z"
 }

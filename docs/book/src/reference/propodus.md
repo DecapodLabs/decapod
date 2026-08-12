@@ -77,7 +77,7 @@ logical repository scope derived from `origin`; it requires an authenticated
 session bearer, but the bearer is memory-only and is omitted from serialized
 context data.
 
-The Dactyl v0.6.2 bridge forwards the route, versioned context envelope, and
+The Dactyl v0.3.0 bridge forwards the route, versioned context envelope, and
 opaque bearer without interpreting membership or authorization. Propodus remains responsible for resolving the
 authenticated principal, organization membership, and repository access. The
 current Decapod bridge supports explicitly named Dactyl snapshots but

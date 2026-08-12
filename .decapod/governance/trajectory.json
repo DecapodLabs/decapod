@@ -29,6 +29,7 @@
     "src/decapod/core/dactyl.rs"
   ],
   "modified_files": [
+    ".decapod/governance/claims.json",
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
     ".decapod/managed/specs/ARCHITECTURE.md",
@@ -67,7 +68,15 @@
       "status": "passed"
     },
     {
+      "name": "dactyl-v0.3.0-compile",
+      "status": "passed"
+    },
+    {
       "name": "dactyl-v0.6.2-api",
+      "status": "passed"
+    },
+    {
+      "name": "dactyl-version-correction",
       "status": "passed"
     },
     {
@@ -88,7 +97,9 @@
     }
   ],
   "evidence": [
+    "Dactyl release commit 07fc271a66a391035795495b4d51b221a0af50e0 compiles and 312 library tests pass",
     "Dactyl v0.6.2 context forwarding and fail-closed version test pass; local runtime migration remains blocked by canonical SQLite format incompatibility and live cloud proof is unavailable",
+    "The PR dependency and governed plan/specs now target Dactyl v0.3.0 release commit 07fc271a66a391035795495b4d51b221a0af50e0; superseded v0.6.2 wording is retained only in prior trajectory history.",
     "validation epoch ve_3356b048a00d4ef1 completed with zero failures",
     "validation epoch ve_baf4d95d524025a6 completed with zero failures"
   ],
@@ -105,7 +116,7 @@
     "shortcut_risk": "caution",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:359e54bde16d5a0ded393353afdfbaa3887c9d585fdc0dd9dedc7d88c710664c",
+  "artifact_hash": "sha256:37fe0ed5cc58249ee12f41bc5e5f35c7086e3c5a93aa2aaec381bae9089b5316",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -173,6 +184,20 @@
       {
         "sequence": 8,
         "event_id": "event:8",
+        "intent_id": "intent:validation_01KZVYNCR2DFZXB7MRY7PT9KPN",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZVYNCR2DFZXB7MRY7PT9KPN"
+      },
+      {
+        "sequence": 9,
+        "event_id": "event:9",
+        "intent_id": "intent:validation_01KZVYNCR2DFZXB7MRY7PT9KPN",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZVYNCR2DFZXB7MRY7PT9KPN"
+      },
+      {
+        "sequence": 10,
+        "event_id": "event:10",
         "intent_id": "intent:validation_01KZVYNCR2DFZXB7MRY7PT9KPN",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:validation_01KZVYNCR2DFZXB7MRY7PT9KPN"
@@ -303,12 +328,50 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:8"
+          },
+          {
+            "sequence": 9,
+            "action": "trajectory.record",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "Issues #1028, #1110, #1111, #1112, #1120, #1216, #1217, #1220, #1221, #1222, #1223, #1224, #1247, #1254"
+            ],
+            "observations": [
+              "Cargo.toml",
+              "Cargo.lock",
+              "docs/book/src/reference/propodus.md",
+              "Dactyl release commit 07fc271a66a391035795495b4d51b221a0af50e0 compiles and 312 library tests pass"
+            ],
+            "proof_refs": [
+              "dactyl-v0.3.0-compile"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:9"
+          },
+          {
+            "sequence": 10,
+            "action": "trajectory.record",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "Issues #1028, #1110, #1111, #1112, #1120, #1216, #1217, #1220, #1221, #1222, #1223, #1224, #1247, #1254"
+            ],
+            "observations": [
+              ".decapod/governance/claims.json",
+              "The PR dependency and governed plan/specs now target Dactyl v0.3.0 release commit 07fc271a66a391035795495b4d51b221a0af50e0; superseded v0.6.2 wording is retained only in prior trajectory history."
+            ],
+            "proof_refs": [
+              "dactyl-version-correction"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:10"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 8
+    "next_sequence": 10
   }
 }
