@@ -31,12 +31,17 @@ impl DactylBridge {
         Self::open_route(
             dactyl_db::DatastoreRoute::sqlite(":memory:"),
             AccessMode::ReadWrite,
+            None,
         )
     }
 
     /// Open Dactyl's isolated in-memory store with an explicit access mode.
     pub fn open_memory_with_access_mode(access_mode: AccessMode) -> Result<Self, DecapodError> {
-        Self::open_route(dactyl_db::DatastoreRoute::sqlite(":memory:"), access_mode)
+        Self::open_route(
+            dactyl_db::DatastoreRoute::sqlite(":memory:"),
+            access_mode,
+            None,
+        )
     }
 
     /// Open a Dactyl-owned local snapshot with an explicit access mode.
@@ -53,6 +58,7 @@ impl DactylBridge {
         Self::open_route(
             dactyl_db::DatastoreRoute::sqlite(path.to_string_lossy().into_owned()),
             access_mode,
+            None,
         )
     }
 
@@ -87,6 +93,7 @@ impl DactylBridge {
                 Self::open_route(
                     dactyl_db::DatastoreRoute::neon(uri.clone(), Some(bearer.to_string())),
                     access_mode,
+                    None,
                 )
             }
         }
@@ -102,7 +109,25 @@ impl DactylBridge {
         access_mode: AccessMode,
     ) -> Result<Self, DecapodError> {
         context.validate()?;
-        Self::from_backend_route(context.route(), access_mode, context.bearer())
+        let dactyl_context = dactyl_db::StorageContext::new(
+            context.version(),
+            serde_json::to_value(context).map_err(|error| {
+                DecapodError::Config(format!("failed to encode storage context: {error}"))
+            })?,
+        )?;
+
+        match context.route() {
+            BackendRoute::Local { .. } => {
+                // The canonical local SQLite store remains outside the Dactyl
+                // snapshot format until the compatibility/import proof exists.
+                Self::from_backend_route(context.route(), access_mode, context.bearer())
+            }
+            BackendRoute::Cloud { uri, .. } => Self::open_route(
+                dactyl_db::DatastoreRoute::neon(uri.clone(), context.bearer().map(str::to_owned)),
+                access_mode,
+                Some(dactyl_context),
+            ),
+        }
     }
 
     pub fn read(&self, sql: &str, params: &[Parameter]) -> Result<Rows, DecapodError> {
@@ -124,13 +149,15 @@ impl DactylBridge {
     fn open_route(
         route: dactyl_db::DatastoreRoute,
         access_mode: AccessMode,
+        context: Option<dactyl_db::StorageContext>,
     ) -> Result<Self, DecapodError> {
-        let connection = Connection::open_with_options(
+        let connection = Connection::open_with_options_and_context(
             route,
             OpenOptions {
                 access_mode,
                 lock_timeout: DEFAULT_LOCK_TIMEOUT,
             },
+            context,
         )?;
         Ok(Self { connection })
     }
@@ -303,9 +330,45 @@ mod tests {
         assert_eq!(context.version(), StorageContext::CURRENT_VERSION);
         assert_eq!(context.bearer(), Some("opaque-session-token"));
         assert!(bridge.access_mode() == AccessMode::ReadOnly);
+        let forwarded = bridge
+            .connection
+            .context()
+            .expect("remote context is attached to the Dactyl connection");
+        assert_eq!(forwarded.version(), context.version());
+        assert_eq!(
+            forwarded.payload(),
+            &serde_json::to_value(&context).expect("context payload")
+        );
         let encoded = serde_json::to_string(&context).expect("context JSON");
         assert!(!encoded.contains("opaque-session-token"));
         assert!(!encoded.contains("organization"));
+    }
+
+    #[test]
+    fn unsupported_context_version_fails_before_dactyl_open() {
+        let identity = RepositoryIdentity {
+            canonical_name: "DecapodLabs/decapod".to_string(),
+            owner: "DecapodLabs".to_string(),
+            repository: "decapod".to_string(),
+            remote_url: "git@github.com:DecapodLabs/decapod.git".to_string(),
+        };
+        let context = StorageContext::from_route(
+            BackendRoute::Cloud {
+                repository: identity,
+                uri: "https://example.invalid/api/v1/store".to_string(),
+            },
+            Some("opaque-session-token"),
+        )
+        .expect("remote context");
+        let mut encoded = serde_json::to_value(&context).expect("context JSON");
+        encoded["version"] = serde_json::json!(StorageContext::CURRENT_VERSION + 1);
+        let future: StorageContext = serde_json::from_value(encoded).expect("future context");
+
+        assert!(matches!(
+            DactylBridge::from_storage_context(&future, AccessMode::ReadOnly),
+            Err(DecapodError::Config(message))
+                if message.contains("unsupported storage context version")
+        ));
     }
 
     #[test]
@@ -326,5 +389,24 @@ mod tests {
             constraint.storage_failure_kind(),
             StorageFailureKind::Constraint
         );
+
+        let unavailable = DecapodError::from(dactyl_db::DactylError::Adapter {
+            kind: dactyl_db::AdapterErrorKind::Unavailable,
+            code: Some("service_unavailable".to_string()),
+            message: "temporarily unavailable".to_string(),
+        });
+        assert_eq!(unavailable.storage_failure_kind(), StorageFailureKind::Io);
+        assert!(unavailable.storage_failure_kind().is_retryable());
+
+        let authorization = DecapodError::from(dactyl_db::DactylError::Adapter {
+            kind: dactyl_db::AdapterErrorKind::Authorization,
+            code: Some("repository_not_authorized".to_string()),
+            message: "not authorized".to_string(),
+        });
+        assert_eq!(
+            authorization.storage_failure_kind(),
+            StorageFailureKind::Unknown
+        );
+        assert!(!authorization.storage_failure_kind().is_retryable());
     }
 }

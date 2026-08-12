@@ -139,7 +139,7 @@ future version must retain an explicit rollback path before it is accepted.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `781cd86581a56647221a5616f19bd82c1732cef1127b69236ef17082d2eac387`
+- Repository signal fingerprint: `27c013469fde0c97e4d6d195eb45214f61899461f31b3198ff48556cbdda9f36`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (103 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

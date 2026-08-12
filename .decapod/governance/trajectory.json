@@ -1,37 +1,32 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "issue-sweep-v0981-20260811",
-  "intent_id": "intent:issue-sweep-v0981-20260811",
-  "task_id": "bugs_01kzt0bq5f269jq6",
-  "original_intent": "Implement the requested Decapod issue sweep in one reviewable PR.",
-  "derived_intent": "Implement and prove Decapod-owned Dactyl compatibility, representative storage bridge, explicit-ID and local concurrency safeguards; report any Propodus route or live-cloud proof boundary without silent fallback.",
+  "run_id": "validation_01KZVYNCR2DFZXB7MRY7PT9KPN",
+  "intent_id": "intent:validation_01KZVYNCR2DFZXB7MRY7PT9KPN",
+  "task_id": "code_01kzvey011rqf9py",
+  "original_intent": "Produce proof artifacts for a repository validation completion.",
+  "derived_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
+  "destination": "PR #1256 publication",
   "current_phase": "validation",
   "next_transitions": [
-    "inspect current source and implement bounded bridge",
     "publish"
   ],
   "active_boundaries": [
-    "One Decapod PR; no dactyl or propodus source mutations; no direct .decapod state mutation; no false cloud-parity claim."
+    "Decapod owns the adapter and context semantics; Dactyl owns physical storage; Propodus owns hosting, auth, and tenancy",
+    "Repository validation and tracked proof artifacts"
   ],
   "repo_scope": [
-    "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
+    "Issues #1028, #1110, #1111, #1112, #1120, #1216, #1217, #1220, #1221, #1222, #1223, #1224, #1247, #1254"
   ],
   "inspected_files": [
-    ".config/deny.toml",
-    ".decapod/governance/validation.json",
-    ".decapod/managed/Dockerfile.decapod",
-    ".decapod/managed/specs/.manifest.json",
-    ".decapod/managed/specs/SECURITY.md",
-    ".github/workflows/ci.yml",
-    "AGENTS.md",
+    ".decapod/managed/specs/ARCHITECTURE.md",
+    ".decapod/managed/specs/INTENT.md",
+    ".decapod/managed/specs/INTERFACES.md",
     "Cargo.lock",
     "Cargo.toml",
-    "docs/book/src/reference/propodus.md",
-    "src/decapod/core/dactyl.rs",
-    "src/decapod/core/entrypoint_integrity.rs",
-    "src/decapod/core/validate.rs",
-    "tests/entrypoint_correctness.rs",
-    "tests/plugins/todo.rs"
+    "src/decapod/core/backend.rs",
+    "src/decapod/core/dactyl.rs"
   ],
   "modified_files": [
     ".decapod/governance/trajectory.json",
@@ -39,44 +34,40 @@
     ".decapod/managed/specs/ARCHITECTURE.md",
     ".decapod/managed/specs/INTENT.md",
     ".decapod/managed/specs/INTERFACES.md",
-    ".decapod/managed/specs/SEMANTICS.md",
+    "Cargo.lock",
+    "Cargo.toml",
     "docs/book/src/reference/propodus.md",
     "src/decapod/core/dactyl.rs"
   ],
   "declared_commands": [
-    "cargo fmt --all -- --check",
-    "cargo test --lib core::dactyl",
-    "decapod rpc --op specs.refresh",
-    "decapod validate"
+    "cargo clippy --all-targets --all-features -- -D warnings",
+    "cargo deny check --config .config/deny.toml",
+    "cargo test --lib",
+    "cargo test --test cloud_cli_boundary",
+    "cargo test --test propodus_contract",
+    "decapod validate",
+    "decapod validate --refresh-specs --format json"
   ],
   "tool_calls": [],
   "checks": [
     {
-      "name": "cargo_clippy",
+      "name": "cargo-deny",
       "status": "passed"
     },
     {
-      "name": "cargo_deny",
+      "name": "cargo-test-lib",
       "status": "passed"
     },
     {
-      "name": "cargo_fmt",
+      "name": "clippy",
       "status": "passed"
     },
     {
-      "name": "ci_lint_dependencies",
+      "name": "cloud-cli-boundary",
       "status": "passed"
     },
     {
-      "name": "container_validate_v0982",
-      "status": "passed"
-    },
-    {
-      "name": "container_validate_v0982_after_clippy",
-      "status": "passed"
-    },
-    {
-      "name": "dactyl_unit_tests",
+      "name": "dactyl-v0.6.2-api",
       "status": "passed"
     },
     {
@@ -84,67 +75,51 @@
       "status": "passed"
     },
     {
-      "name": "decapod_release_0.98.2",
+      "name": "normal-governed-validation",
+      "status": "partial"
+    },
+    {
+      "name": "propodus-contract",
       "status": "passed"
     },
     {
-      "name": "decapod_validate",
-      "status": "passed"
-    },
-    {
-      "name": "fmt",
-      "status": "passed"
-    },
-    {
-      "name": "historical_entrypoint_compatibility",
-      "status": "passed"
-    },
-    {
-      "name": "source_validate",
-      "status": "passed"
-    },
-    {
-      "name": "specs_refresh",
-      "status": "passed"
+      "name": "propodus-live",
+      "status": "unavailable"
     }
   ],
   "evidence": [
-    "Dactyl snapshot reopen and canonical SQLite header rejection are covered by core::dactyl::tests::local_snapshot_reopens_and_rejects_canonical_sqlite",
-    "source-built Decapod v0.98.2 validation passed with 204 checks and zero failures when evaluated in container mode; hosted CI remains the final environment proof",
-    "validation epoch ve_2348599cda8f87dc completed with zero failures",
-    "validation epoch ve_5315301241f1680d completed with zero failures",
-    "validation epoch ve_62dc7100446cda89 completed with zero failures",
-    "validation epoch ve_b422a7fd5ce61bdc completed with zero failures",
-    "validation epoch ve_c3d90cb9e31cf770 completed with zero failures",
-    "validation epoch ve_e3eacade6ba13e26 completed with zero failures"
+    "Dactyl v0.6.2 context forwarding and fail-closed version test pass; local runtime migration remains blocked by canonical SQLite format incompatibility and live cloud proof is unavailable",
+    "validation epoch ve_baf4d95d524025a6 completed with zero failures"
   ],
-  "shortcut_risk_signals": [],
+  "shortcut_risk_signals": [
+    "Do not claim full issue closure from local adapter or mock conformance"
+  ],
   "unresolved_assumptions": [
-    "Canonical SQLite remains a separate format and still requires an explicit Decapod-owned import/migration proof",
-    "The prepared container image cannot compile Rust 2024 and its stock binary predates this branch entrypoint compatibility fix; use hosted CI for image-equivalent source validation"
+    "Protected Propodus credentials and deployed Neon route/schema are not available in this workspace"
   ],
-  "proof_status": "passed",
+  "proof_status": "partial",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
-    "shortcut_risk": "supported",
-    "completion_proof": "supported"
+    "shortcut_risk": "caution",
+    "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:b68c69fd6569dc2123530515d6179b5a5e422be03ca57012837ffb4d7da7e0d3",
+  "artifact_hash": "sha256:f11d111953799fa47df055a668b953aad8772e2d560a9b0fc4841762e1ac34b1",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:issue-sweep-v0981-20260811": {
-        "id": "intent:issue-sweep-v0981-20260811",
-        "raw_intent": "Implement the requested Decapod issue sweep in one reviewable PR.",
-        "refined_intent": "Implement and prove Decapod-owned Dactyl compatibility, representative storage bridge, explicit-ID and local concurrency safeguards; report any Propodus route or live-cloud proof boundary without silent fallback.",
+      "intent:validation_01KZVYNCR2DFZXB7MRY7PT9KPN": {
+        "id": "intent:validation_01KZVYNCR2DFZXB7MRY7PT9KPN",
+        "raw_intent": "Produce proof artifacts for a repository validation completion.",
+        "refined_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
         "acceptance_criteria": [],
         "constraints": [
-          "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
+          ".decapod/governance/trajectory.json",
+          ".decapod/governance/validation.json"
         ],
         "assumptions": [],
         "boundaries": [
-          "One Decapod PR; no dactyl or propodus source mutations; no direct .decapod state mutation; no false cloud-parity claim."
+          "Repository validation and tracked proof artifacts"
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -157,139 +132,41 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:issue-sweep-v0981-20260811",
+        "intent_id": "intent:validation_01KZVYNCR2DFZXB7MRY7PT9KPN",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:issue-sweep-v0981-20260811",
+        "intent_id": "intent:validation_01KZVYNCR2DFZXB7MRY7PT9KPN",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:issue-sweep-v0981-20260811",
+        "intent_id": "intent:validation_01KZVYNCR2DFZXB7MRY7PT9KPN",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-sweep-v0981-20260811"
+        "detail": "trajectory:validation_01KZVYNCR2DFZXB7MRY7PT9KPN"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:issue-sweep-v0981-20260811",
+        "intent_id": "intent:validation_01KZVYNCR2DFZXB7MRY7PT9KPN",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-sweep-v0981-20260811"
+        "detail": "trajectory:validation_01KZVYNCR2DFZXB7MRY7PT9KPN"
       },
       {
         "sequence": 6,
         "event_id": "event:6",
-        "intent_id": "intent:issue-sweep-v0981-20260811",
+        "intent_id": "intent:validation_01KZVYNCR2DFZXB7MRY7PT9KPN",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-sweep-v0981-20260811"
-      },
-      {
-        "sequence": 7,
-        "event_id": "event:7",
-        "intent_id": "intent:issue-sweep-v0981-20260811",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-sweep-v0981-20260811"
-      },
-      {
-        "sequence": 8,
-        "event_id": "event:8",
-        "intent_id": "intent:issue-sweep-v0981-20260811",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-sweep-v0981-20260811"
-      },
-      {
-        "sequence": 9,
-        "event_id": "event:9",
-        "intent_id": "intent:issue-sweep-v0981-20260811",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-sweep-v0981-20260811"
-      },
-      {
-        "sequence": 10,
-        "event_id": "event:10",
-        "intent_id": "intent:issue-sweep-v0981-20260811",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-sweep-v0981-20260811"
-      },
-      {
-        "sequence": 11,
-        "event_id": "event:11",
-        "intent_id": "intent:issue-sweep-v0981-20260811",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-sweep-v0981-20260811"
-      },
-      {
-        "sequence": 12,
-        "event_id": "event:12",
-        "intent_id": "intent:issue-sweep-v0981-20260811",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-sweep-v0981-20260811"
-      },
-      {
-        "sequence": 13,
-        "event_id": "event:13",
-        "intent_id": "intent:issue-sweep-v0981-20260811",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-sweep-v0981-20260811"
-      },
-      {
-        "sequence": 14,
-        "event_id": "event:14",
-        "intent_id": "intent:issue-sweep-v0981-20260811",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-sweep-v0981-20260811"
-      },
-      {
-        "sequence": 15,
-        "event_id": "event:15",
-        "intent_id": "intent:issue-sweep-v0981-20260811",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-sweep-v0981-20260811"
-      },
-      {
-        "sequence": 16,
-        "event_id": "event:16",
-        "intent_id": "intent:issue-sweep-v0981-20260811",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-sweep-v0981-20260811"
-      },
-      {
-        "sequence": 17,
-        "event_id": "event:17",
-        "intent_id": "intent:issue-sweep-v0981-20260811",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-sweep-v0981-20260811"
-      },
-      {
-        "sequence": 18,
-        "event_id": "event:18",
-        "intent_id": "intent:issue-sweep-v0981-20260811",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-sweep-v0981-20260811"
-      },
-      {
-        "sequence": 19,
-        "event_id": "event:19",
-        "intent_id": "intent:issue-sweep-v0981-20260811",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-sweep-v0981-20260811"
-      },
-      {
-        "sequence": 20,
-        "event_id": "event:20",
-        "intent_id": "intent:issue-sweep-v0981-20260811",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-sweep-v0981-20260811"
+        "detail": "trajectory:validation_01KZVYNCR2DFZXB7MRY7PT9KPN"
       }
     ],
     "trajectories": {
-      "issue-sweep-v0981-20260811": {
-        "id": "issue-sweep-v0981-20260811",
-        "intent_id": "intent:issue-sweep-v0981-20260811",
+      "validation_01KZVYNCR2DFZXB7MRY7PT9KPN": {
+        "id": "validation_01KZVYNCR2DFZXB7MRY7PT9KPN",
+        "intent_id": "intent:validation_01KZVYNCR2DFZXB7MRY7PT9KPN",
         "evidence_only": true,
         "steps": [
           {
@@ -297,12 +174,13 @@
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_c3d90cb9e31cf770 completed with zero failures"
+              "validation epoch ve_baf4d95d524025a6 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
@@ -313,19 +191,42 @@
           {
             "sequence": 5,
             "action": "validation",
-            "command": "decapod validate",
+            "command": "cargo test --lib",
             "scope": [
-              "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
             ],
             "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_c3d90cb9e31cf770 completed with zero failures"
+              "src/decapod/core/dactyl.rs",
+              "src/decapod/core/backend.rs",
+              "Cargo.toml",
+              "Cargo.lock",
+              ".decapod/managed/specs/INTENT.md",
+              ".decapod/managed/specs/ARCHITECTURE.md",
+              ".decapod/managed/specs/INTERFACES.md",
+              "src/decapod/core/dactyl.rs",
+              "Cargo.toml",
+              "Cargo.lock",
+              "docs/book/src/reference/propodus.md",
+              ".decapod/managed/specs/INTENT.md",
+              ".decapod/managed/specs/ARCHITECTURE.md",
+              ".decapod/managed/specs/INTERFACES.md",
+              "Dactyl v0.6.2 context forwarding and fail-closed version test pass; local runtime migration remains blocked by canonical SQLite format incompatibility and live cloud proof is unavailable"
             ],
             "proof_refs": [
-              "decapod validate"
+              "dactyl-v0.6.2-api",
+              "cargo-test-lib",
+              "propodus-contract",
+              "cloud-cli-boundary",
+              "clippy",
+              "cargo-deny",
+              "propodus-live",
+              "normal-governed-validation"
             ],
-            "validation_findings": [],
+            "validation_findings": [
+              "Do not claim full issue closure from local adapter or mock conformance",
+              "Protected Propodus credentials and deployed Neon route/schema are not available in this workspace"
+            ],
             "custody_event_id": "event:5"
           },
           {
@@ -333,283 +234,26 @@
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "Issues #1028, #1110, #1111, #1112, #1120, #1216, #1217, #1220, #1221, #1222, #1223, #1224, #1247, #1254"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_b422a7fd5ce61bdc completed with zero failures"
+              "validation epoch ve_baf4d95d524025a6 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
             ],
             "validation_findings": [],
             "custody_event_id": "event:6"
-          },
-          {
-            "sequence": 7,
-            "action": "trajectory.record",
-            "scope": [
-              "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
-            ],
-            "observations": [
-              ".config/deny.toml",
-              "Cargo.toml",
-              "Cargo.lock",
-              ".github/workflows/ci.yml"
-            ],
-            "proof_refs": [
-              "ci_lint_dependencies",
-              "cargo_deny",
-              "cargo_fmt"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:7"
-          },
-          {
-            "sequence": 8,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_5315301241f1680d completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:8"
-          },
-          {
-            "sequence": 9,
-            "action": "trajectory.record",
-            "scope": [
-              "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
-            ],
-            "observations": [
-              ".config/deny.toml",
-              ".decapod/managed/specs/SECURITY.md"
-            ],
-            "proof_refs": [
-              "ci_lint_dependencies",
-              "decapod_validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:9"
-          },
-          {
-            "sequence": 10,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_5315301241f1680d completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:10"
-          },
-          {
-            "sequence": 11,
-            "action": "trajectory.record",
-            "scope": [
-              "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
-            ],
-            "observations": [
-              "AGENTS.md",
-              ".decapod/managed/Dockerfile.decapod",
-              ".decapod/managed/specs/.manifest.json"
-            ],
-            "proof_refs": [
-              "decapod_release_0.98.2"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:11"
-          },
-          {
-            "sequence": 12,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_2348599cda8f87dc completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:12"
-          },
-          {
-            "sequence": 13,
-            "action": "trajectory.record",
-            "scope": [
-              "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
-            ],
-            "observations": [
-              "src/decapod/core/entrypoint_integrity.rs",
-              "src/decapod/core/validate.rs",
-              "tests/entrypoint_correctness.rs"
-            ],
-            "proof_refs": [
-              "historical_entrypoint_compatibility",
-              "source_validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:13"
-          },
-          {
-            "sequence": 14,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_2348599cda8f87dc completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:14"
-          },
-          {
-            "sequence": 15,
-            "action": "trajectory.record",
-            "scope": [
-              "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
-            ],
-            "observations": [
-              ".decapod/governance/validation.json"
-            ],
-            "proof_refs": [
-              "container_validate_v0982"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:15"
-          },
-          {
-            "sequence": 16,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_e3eacade6ba13e26 completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:16"
-          },
-          {
-            "sequence": 17,
-            "action": "trajectory.record",
-            "scope": [
-              "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
-            ],
-            "observations": [
-              "src/decapod/core/validate.rs"
-            ],
-            "proof_refs": [
-              "cargo_clippy",
-              "container_validate_v0982_after_clippy"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:17"
-          },
-          {
-            "sequence": 18,
-            "action": "implementation",
-            "command": "cargo fmt --all -- --check",
-            "scope": [
-              "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
-            ],
-            "observations": [
-              "src/decapod/core/dactyl.rs",
-              "tests/plugins/todo.rs",
-              "docs/book/src/reference/propodus.md",
-              "src/decapod/core/dactyl.rs",
-              "docs/book/src/reference/propodus.md",
-              ".decapod/managed/specs/INTENT.md",
-              ".decapod/managed/specs/ARCHITECTURE.md",
-              ".decapod/managed/specs/INTERFACES.md",
-              ".decapod/managed/specs/SEMANTICS.md",
-              "Dactyl snapshot reopen and canonical SQLite header rejection are covered by core::dactyl::tests::local_snapshot_reopens_and_rejects_canonical_sqlite"
-            ],
-            "proof_refs": [
-              "fmt",
-              "dactyl_unit_tests",
-              "specs_refresh"
-            ],
-            "validation_findings": [
-              "Canonical SQLite remains a separate format and still requires an explicit Decapod-owned import/migration proof"
-            ],
-            "custody_event_id": "event:18"
-          },
-          {
-            "sequence": 19,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_62dc7100446cda89 completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:19"
-          },
-          {
-            "sequence": 20,
-            "action": "validation",
-            "scope": [
-              "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
-            ],
-            "observations": [
-              "source-built Decapod v0.98.2 validation passed with 204 checks and zero failures when evaluated in container mode; hosted CI remains the final environment proof"
-            ],
-            "proof_refs": [
-              "source_validate",
-              "dactyl_unit_tests",
-              "specs_refresh"
-            ],
-            "validation_findings": [
-              "The prepared container image cannot compile Rust 2024 and its stock binary predates this branch entrypoint compatibility fix; use hosted CI for image-equivalent source validation"
-            ],
-            "custody_event_id": "event:20"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 20
+    "next_sequence": 6
   }
 }
