@@ -2,10 +2,10 @@
   "schema_version": "1.0.0",
   "kind": "validation_receipt",
   "decapod_release": "0.98.1",
-  "git_revision": "2931a4e28fb3a72772db2822655b81a52ffda2e9",
+  "git_revision": "f6fb3363b15d111c6ced28a0cd78c0975b7e3617",
   "repo_signal_fingerprint": "8496aea578bde0498477604893f6639646446fe4b46abd05faa2000bf756ead0",
   "trajectory_run_id": "issue-sweep-v0981-20260811",
-  "trajectory_artifact_hash": "sha256:144b97ef46426362279c17cc9678c213fb1784a63a009b12242c6817837f9d12",
+  "trajectory_artifact_hash": "sha256:336cb3ca6565daaebe845e8fe85ed531fe0249b705d68e84993909c0a0163e30",
   "validation_epoch": {
     "schema_version": "1.0.0",
     "epoch_id": "ve_5315301241f1680d",
@@ -47,7 +47,7 @@
   "pass_count": 202,
   "fail_count": 0,
   "warn_count": 4,
-  "elapsed_ms": 1283,
+  "elapsed_ms": 1426,
   "drift_findings": [],
   "temporary_artifacts_cleaned": 0,
   "failures": [],
@@ -60,67 +60,67 @@
   "gate_timings": [
     {
       "name": "validate_machine_contract",
-      "elapsed_ms": 472
+      "elapsed_ms": 510
     },
     {
       "name": "validate_stale_workspaces",
-      "elapsed_ms": 271
+      "elapsed_ms": 313
     },
     {
       "name": "validate_project_specs_docs",
-      "elapsed_ms": 153
+      "elapsed_ms": 169
     },
     {
       "name": "validate_markdown_primitives_roundtrip_gate",
-      "elapsed_ms": 97
+      "elapsed_ms": 110
     },
     {
       "name": "validate_schema_determinism",
-      "elapsed_ms": 35
+      "elapsed_ms": 40
     },
     {
       "name": "validate_obligations",
-      "elapsed_ms": 35
+      "elapsed_ms": 31
     },
     {
       "name": "validate_git_workspace_context",
-      "elapsed_ms": 24
+      "elapsed_ms": 26
+    },
+    {
+      "name": "validate_archive_integrity",
+      "elapsed_ms": 15
     },
     {
       "name": "validate_embedded_self_contained",
       "elapsed_ms": 14
     },
     {
-      "name": "validate_archive_integrity",
-      "elapsed_ms": 10
+      "name": "validate_git_protected_branch",
+      "elapsed_ms": 13
     },
     {
-      "name": "validate_git_protected_branch",
-      "elapsed_ms": 10
+      "name": "validate_git_push_pr_gate",
+      "elapsed_ms": 9
     },
     {
       "name": "validate_no_legacy_namespaces",
+      "elapsed_ms": 9
+    },
+    {
+      "name": "validate_federation_gates",
       "elapsed_ms": 8
     },
     {
       "name": "validate_interface_contract_bootstrap",
-      "elapsed_ms": 8
-    },
-    {
-      "name": "validate_git_push_pr_gate",
       "elapsed_ms": 7
     },
     {
       "name": "validate_repomap_determinism",
-      "elapsed_ms": 6
+      "elapsed_ms": 7
     },
     {
       "name": "validate_control_plane_contract",
-      "elapsed_ms": 5
-    },
-    {
-      "name": "validate_federation_gates",
-      "elapsed_ms": 5
+      "elapsed_ms": 6
     },
     {
       "name": "validate_lineage_hard_gate",
@@ -128,15 +128,15 @@
     },
     {
       "name": "validate_health_purity",
-      "elapsed_ms": 3
+      "elapsed_ms": 4
     },
     {
       "name": "validate_gatekeeper_gate",
-      "elapsed_ms": 2
+      "elapsed_ms": 3
     },
     {
       "name": "validate_knowledge_integrity",
-      "elapsed_ms": 2
+      "elapsed_ms": 3
     },
     {
       "name": "validate_override_authority",
@@ -148,6 +148,10 @@
     },
     {
       "name": "validate_legacy_jsonl_retired",
+      "elapsed_ms": 2
+    },
+    {
+      "name": "validate_watcher_audit",
       "elapsed_ms": 1
     },
     {
@@ -155,7 +159,7 @@
       "elapsed_ms": 1
     },
     {
-      "name": "validate_watcher_audit",
+      "name": "validate_knowledge_promotions_if_present",
       "elapsed_ms": 1
     },
     {
@@ -163,19 +167,15 @@
       "elapsed_ms": 1
     },
     {
+      "name": "validate_health_cache_integrity",
+      "elapsed_ms": 1
+    },
+    {
       "name": "validate_lcm_rebuild_gate",
-      "elapsed_ms": 1
-    },
-    {
-      "name": "validate_knowledge_promotions_if_present",
-      "elapsed_ms": 1
-    },
-    {
-      "name": "validate_plan_governed_execution_gate",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_health_cache_integrity",
+      "name": "validate_plan_governed_execution_gate",
       "elapsed_ms": 0
     },
     {
@@ -191,11 +191,11 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_research_claims_if_present",
+      "name": "validate_risk_map_violations",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_risk_map_violations",
+      "name": "validate_research_claims_if_present",
       "elapsed_ms": 0
     },
     {
@@ -207,15 +207,15 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_repo_map",
-      "elapsed_ms": 0
-    },
-    {
       "name": "validate_project_config_toml",
       "elapsed_ms": 0
     },
     {
       "name": "validate_trajectory_artifacts_if_present",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_repo_map",
       "elapsed_ms": 0
     },
     {
@@ -231,6 +231,10 @@
       "elapsed_ms": 0
     },
     {
+      "name": "validate_docs_templates_bucket",
+      "elapsed_ms": 0
+    },
+    {
       "name": "validate_state_commit_gate",
       "elapsed_ms": 0
     },
@@ -239,7 +243,7 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_docs_templates_bucket",
+      "name": "validate_eval_gate_if_required",
       "elapsed_ms": 0
     },
     {
@@ -247,7 +251,7 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_eval_gate_if_required",
+      "name": "validate_internalization_artifacts_if_present",
       "elapsed_ms": 0
     },
     {
@@ -255,15 +259,11 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_internalization_artifacts_if_present",
+      "name": "validate_coplayer_policy_tightening",
       "elapsed_ms": 0
     },
     {
       "name": "validate_context_capsules_if_present",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_coplayer_policy_tightening",
       "elapsed_ms": 0
     },
     {
@@ -294,5 +294,5 @@
       "Use `decapod validate -v --format json` to inspect the affected gate output."
     ]
   },
-  "receipt_hash": "sha256:a743ae9d56d427fe0e8a0df49857c8f8f1f0848489b77a7ad2aa4363b679af6c"
+  "receipt_hash": "sha256:f3e44136be8961f8dcd45904829859e8060ca8f6adad4a2598f62572be92baf5"
 }
