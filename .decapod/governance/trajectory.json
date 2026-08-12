@@ -18,8 +18,11 @@
   ],
   "inspected_files": [
     ".config/deny.toml",
+    ".decapod/managed/Dockerfile.decapod",
+    ".decapod/managed/specs/.manifest.json",
     ".decapod/managed/specs/SECURITY.md",
     ".github/workflows/ci.yml",
+    "AGENTS.md",
     "Cargo.lock",
     "Cargo.toml"
   ],
@@ -49,6 +52,10 @@
       "status": "passed"
     },
     {
+      "name": "decapod_release_0.98.2",
+      "status": "passed"
+    },
+    {
       "name": "decapod_validate",
       "status": "passed"
     }
@@ -67,7 +74,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:336cb3ca6565daaebe845e8fe85ed531fe0249b705d68e84993909c0a0163e30",
+  "artifact_hash": "sha256:016c1c20e69501c98006670eb133b9085298e9c84c9a897a5a40fdb06e2d6643",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -148,6 +155,13 @@
       {
         "sequence": 10,
         "event_id": "event:10",
+        "intent_id": "intent:issue-sweep-v0981-20260811",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-sweep-v0981-20260811"
+      },
+      {
+        "sequence": 11,
+        "event_id": "event:11",
         "intent_id": "intent:issue-sweep-v0981-20260811",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:issue-sweep-v0981-20260811"
@@ -285,12 +299,29 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:10"
+          },
+          {
+            "sequence": 11,
+            "action": "trajectory.record",
+            "scope": [
+              "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
+            ],
+            "observations": [
+              "AGENTS.md",
+              ".decapod/managed/Dockerfile.decapod",
+              ".decapod/managed/specs/.manifest.json"
+            ],
+            "proof_refs": [
+              "decapod_release_0.98.2"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:11"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 10
+    "next_sequence": 11
   }
 }
