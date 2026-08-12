@@ -3257,6 +3257,20 @@ fn entrypoint_commit_path_violation(
     let new_norm = normalize_entrypoint_blob(&new_content);
     let canonical_norm = normalize_entrypoint_blob(&canonical);
     if new_norm != canonical_norm {
+        let prior_release_canonical = new_content
+            .splitn(3, '\n')
+            .next()
+            .and_then(|line| line.strip_prefix("<!-- decapod-release:"))
+            .and_then(|value| value.strip_suffix("-->"))
+            .map(str::trim)
+            .filter(|release| !release.is_empty())
+            .and_then(|release| {
+                crate::core::entrypoint_integrity::render_entrypoint_for_release(path, release)
+            })
+            .map(|rendered| normalize_entrypoint_blob(&rendered));
+        if prior_release_canonical.as_deref() == Some(new_norm.as_str()) {
+            return None;
+        }
         return Some(format!(
             "{commit}: entrypoint {path} is not the Decapod {release} template (hand edit or stale body). Regenerate via Decapod; do not hand-edit.",
             release = crate::core::entrypoint_integrity::RELEASE_VERSION

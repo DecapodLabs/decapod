@@ -1126,3 +1126,33 @@ fn test_feature_branch_allows_canonical_entrypoint_rewrite() {
         "canonical rewrite must not trip discipline gate: {output}"
     );
 }
+
+#[test]
+fn test_feature_branch_allows_canonical_rewrite_from_prior_release() {
+    let (_outer, temp_path) = worktree_like_temp();
+    git_init_feature_repo(&temp_path);
+    acquire_session(&temp_path);
+
+    let prior_release = entrypoint_integrity::render_entrypoint_for_release("AGENTS.md", "0.98.1")
+        .expect("prior release should render the canonical entrypoint");
+    fs::write(temp_path.join("AGENTS.md"), prior_release).expect("write prior release entrypoint");
+    let status = Command::new("git")
+        .args(["add", "AGENTS.md"])
+        .current_dir(&temp_path)
+        .status()
+        .expect("git add");
+    assert!(status.success());
+    let status = Command::new("git")
+        .args(["commit", "-m", "chore: restore prior release entrypoint"])
+        .current_dir(&temp_path)
+        .status()
+        .expect("git commit");
+    assert!(status.success());
+
+    let (_success, output) =
+        run_decapod_with_env(&temp_path, &["validate", "--format", "json"], &[]);
+    assert!(
+        !output.contains("ENTRYPOINT_COMMIT_DISCIPLINE"),
+        "canonical prior-release rewrite must not trip discipline gate: {output}"
+    );
+}
