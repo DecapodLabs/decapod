@@ -103,6 +103,7 @@ flowchart LR
 ## Current PR Proof Plan
 | Claim | Focused Proof | Expected Evidence |
 |---|---|---|
+| Bootstrap recovery remains available | Initialized-project integration test invokes version, capabilities, constitution, and docs commands before any stateful setup | `bootstrap_commands_remain_available_when_project_state_needs_repair` plus direct command probes |
 | New specs are materially deeper | Fresh scaffold test checks all eight new contract sections and template version | Core scaffold test output |
 | Authored specs survive refresh | Existing project refresh preserves authored content and updates only bounded projections | Refresh test plus material spec diff |
 | Trajectory is one JSON object | Unit test appends a legacy second value, initializes a new run, and parses the result | Current run ID, current hash, no concatenated values |
@@ -230,7 +231,7 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `99d2e4ff8a3f7ea3d491a4627c66063efaa30ca95663559599225a4f407dc20e`
+- Repository signal fingerprint: `2482f6f9a3ae853ae7e57c2f9eb44decde53380cc64a95079deb3ef60d20693b`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (102 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

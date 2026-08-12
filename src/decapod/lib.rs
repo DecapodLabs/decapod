@@ -2030,6 +2030,37 @@ pub fn run() -> Result<(), error::DecapodError> {
         Command::Eval(eval_cli) => return core::agent_eval::run_agent_eval_cli(eval_cli),
         command => command,
     };
+
+    // These commands are deliberately usable before a project session or
+    // datastore exists.  In particular, the agent contract requires
+    // `capabilities` and `docs ingest` before any repository context is read.
+    // Keep them out of the migration/session path so a missing or damaged
+    // local store cannot prevent bootstrap diagnostics from running.
+    let command = match command {
+        Command::Capabilities(cap_cli) => return run_capabilities_command(cap_cli),
+        Command::Constitution(constitution_cli) => {
+            return crate::core::constitution_cli::run_constitution_cli(constitution_cli);
+        }
+        Command::Docs(docs_cli) => {
+            let result = docs_cli::run_docs_cli(docs_cli)?;
+            if result.ingested_core_constitution
+                && let Ok(current_dir) = std::env::current_dir()
+                && let Ok(workspace_root) = find_decapod_project_root(&current_dir)
+            {
+                let governance_root = find_governance_root(&workspace_root);
+                mark_core_constitution_ingested(&governance_root, "docs.ingest")?;
+            }
+            return Ok(());
+        }
+        Command::System(SystemCli {
+            command: SystemCommand::Version,
+        }) => return show_version_info(),
+        Command::System(SystemCli {
+            command: SystemCommand::Capabilities(cap_cli),
+        }) => return run_capabilities_command(cap_cli),
+        command => command,
+    };
+
     let cli = Cli { command };
     let argv: Vec<String> = std::env::args().skip(1).collect();
     let current_dir = std::env::current_dir()?;
@@ -2037,28 +2068,6 @@ pub fn run() -> Result<(), error::DecapodError> {
     let store_root: PathBuf;
 
     match cli.command {
-        Command::System(SystemCli {
-            command: SystemCommand::Version,
-        }) => {
-            // Keep the version output simple, but do not let this early
-            // script-friendly path bypass the first-command migration check.
-            // A project-local store may have been created by an older binary.
-            if let Ok(workspace_root) = decapod_root_option.as_ref() {
-                let governance_root = find_governance_root(workspace_root);
-                let decapod_root_path = governance_root.join(".decapod");
-                if decapod_root_path.exists() {
-                    let data_root = decapod_root_path.join("data");
-                    std::fs::create_dir_all(&data_root).map_err(error::DecapodError::IoError)?;
-                    let migration_report = migration::check_and_migrate_with_backup_report(
-                        &decapod_root_path,
-                        subsystems::initialize_all_dbs,
-                    )?;
-                    announce_migration_notice(&migration_report);
-                }
-            }
-            println!("v{}", migration::DECAPOD_VERSION);
-            return Ok(());
-        }
         Command::Init(init_group) => {
             let base_init_invocation = init_group.command.is_none();
             let init_with = match init_group.command {

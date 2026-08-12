@@ -110,6 +110,19 @@ pub enum ApiError {
 - Failure: migration or verification errors remain typed and block command
   continuation; a notice is never used as proof that migration succeeded.
 
+### Bootstrap Diagnostics
+- `capabilities`, `system capabilities`, `constitution get`, and `system
+  version` are bootstrap-safe and do not require a project session, datastore,
+  or migration reconciliation before returning their output.
+- `docs list`, `docs show`, and `docs ingest` are dispatched before the
+  stateful command path so embedded agent guidance remains available when
+  project state needs repair. `docs ingest` may update the existing
+  project-local constitutional-awareness marker after successfully emitting
+  the embedded documents.
+- Stateful commands retain the migration, session, worktree, and validation
+  gates; this exception is limited to discovery and diagnostics needed to
+  recover those gates.
+
 - Version strategy (`v1`, date-based, semver):
 - Backward-compatibility guarantees:
 - Deprecation window and removal policy:
@@ -118,7 +131,7 @@ pub enum ApiError {
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `99d2e4ff8a3f7ea3d491a4627c66063efaa30ca95663559599225a4f407dc20e`
+- Repository signal fingerprint: `2482f6f9a3ae853ae7e57c2f9eb44decde53380cc64a95079deb3ef60d20693b`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (102 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
