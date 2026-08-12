@@ -43,7 +43,15 @@ Refresh each surface through its governed CLI:
 - `.decapod/governance/claims.json` — falsifiable research claims ledger (`decapod govern artifacts inventory --claims-note` for ledger notes).
 - `.decapod/governance/plan.json` — `decapod govern plan {init,update,approve}`.
 - `.decapod/governance/trajectory.json` — `decapod govern trajectory {init,record}`.
-- `.decapod/governance/validation.json` — refreshed by `decapod validate`.
+- `.decapod/governance/validation.json` — written by a successful `decapod validate`. If plan, claims, and trajectory already participate, the receipt is not a chicken-and-egg: the gate lets that run succeed and writes the file. Do not set `DECAPOD_VALIDATE_SKIP_GIT_GATES`. After the receipt exists, commit it (or run `workspace publish`, which commits a dirty receipt) and do not expect a rewrite just because `git_revision` is the parent of HEAD.
+
+### One-shot first-PR sequence (0.98.2+)
+
+1. Fast-forward the protected base, then `todo claim` and `workspace ensure`. Work only in the printed workspace.
+2. Commit incremental product work (commit-often).
+3. Refresh plan, claims, and trajectory through the governed CLI.
+4. `decapod validate` — writes `validation.json` without skipping git gates.
+5. `decapod workspace publish`. Local-clone workspaces inherit the parent GitHub remote as `upstream`; do not add remotes by hand unless publish still reports none.
 
 See [governance-artifacts.md](../book/src/reference/governance-artifacts.md).
 
