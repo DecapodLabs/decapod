@@ -33,6 +33,10 @@ Generated interface specs should include:
 | `todo` lease/ownership mutations | Decapod coordination caller | Local database today; future Dactyl operation | Claim, yield, handoff, owner, heartbeat, cleanup, and expertise state plus their events share one transaction |
 | `events::append_on_conn` | Decapod domain writers | Canonical event stream | Replaying the same event identity is idempotent; divergent content fails with `EVENT_ID_CONFLICT`; stream sequence allocation is unique and transactional |
 | `workspace::ensure_isolated_workspace_for_projection_mutation` | Git toplevel of the invoking checkout | `refresh_specs_from_codebase`, validate self-heal, `specs.refresh` | Writes `.decapod/managed/specs/*` only when the Git worktree root is a non-protected path under `.decapod/workspaces/*`; protected `main`/`master` fails closed with `workspace_required` and does not touch root files (GitHub #1255) |
+| `workspace::get_main_repo_root` / `host_repo_from_canonical_workspace` | Cwd inside `.decapod/workspaces/*` | Todo store, session, `find_governance_root` | Local-clone workspaces resolve the host checkout so `todo done` sees the claim that created them (GitHub #1259) |
+| `verify::resolve_artifact_path_for_todo` | `--artifact` path plus optional todo id | `todo done --validated` | Resolves first against cwd, then the newest workspace directory matching the todo id |
+| `workspace::resolve_publish_remote` | Workspace remotes, then parent filesystem remotes | `workspace publish` | Inherits a GitHub remote from the local-clone parent as `upstream`; never treats a path `origin` as publication |
+| `validate::governance_paths_updated_vs_base` | `base...HEAD` plus working tree | `GOVERNANCE_PR_UPDATES` | Working-tree and just-written `validation.json` count; the gate does not require `DECAPOD_VALIDATE_SKIP_GIT_GATES` |
 
 ## Event Consumers
 | Consumer | Event | Ordering Requirement | Retry Policy | DLQ Policy |
@@ -132,7 +136,7 @@ pub enum ApiError {
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `65e342d060acfb735b870ab14ff057b2ed15e25020fa1b5986749bdd726e7289`
+- Repository signal fingerprint: `e1a076d44427fb59b053b05768c23044263caf3cd9328e431202fdb4ef84988a`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (102 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
