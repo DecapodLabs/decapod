@@ -3258,7 +3258,7 @@ fn entrypoint_commit_path_violation(
     let canonical_norm = normalize_entrypoint_blob(&canonical);
     if new_norm != canonical_norm {
         let prior_release_canonical = new_content
-            .splitn(3, '\n')
+            .split('\n')
             .next()
             .and_then(|line| line.strip_prefix("<!-- decapod-release:"))
             .and_then(|value| value.strip_suffix("-->"))
