@@ -19,6 +19,7 @@
 
 ## Product Outcome
 - Decapod is a repo-native governance kernel for bounded, provable, shippable AI coding work. It turns human intent into durable, proof-backed agent execution that can leave the branch as a reviewable, publishable change—not only agent activity in a session.
+- Living-spec projections are part of that publishable change: when code changes the attestation, Decapod writes `.decapod/managed/specs/*` only inside the claimed isolated workspace so the same PR carries both the code and its specs. Root-checkout generation is a custody failure (GitHub #1255), not a cleanup chore.
 - Public positioning (README tagline, 0.96.18 era): governance for **bounded** work (explicit intent and boundaries), **provable** work (evidence and gates before completion claims), and **shippable** work (publication as a governed state transition, not thrash of already-current release surfaces).
 - Reliable convergence is the outcome: the agent preserves accepted intent, stays within explicit boundaries, maintains durable state, responds to validation, remediates supported failures, and produces evidence before completion.
 - Product ontology: models produce intelligence; agents perform work; repositories preserve state; Decapod governs the transition from intent to proof.
@@ -197,7 +198,7 @@ flowchart LR
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8496aea578bde0498477604893f6639646446fe4b46abd05faa2000bf756ead0`
+- Repository signal fingerprint: `7d74c0afe1a4b60ee3d063e06c53d4d588a7457be1ba3f7f66a960d5ee7ad5f2`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (103 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

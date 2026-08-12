@@ -1,5 +1,6 @@
 // Moved from src/decapod/core/workspace.rs
 use super::*;
+use std::path::Path;
 use tempfile::tempdir;
 
 fn git(dir: &Path, args: &[&str]) {
@@ -359,4 +360,98 @@ fn material_specs_publish_gate_rejects_fingerprint_only_refresh() {
     git(tmp.path(), &["commit", "-m", "material rewrite"]);
     ensure_material_specs_change_in_pr(tmp.path(), "master")
         .expect("material living-spec rewrite must pass publish gate");
+}
+
+#[test]
+fn canonical_workspace_path_requires_consecutive_decapod_workspaces() {
+    assert!(is_canonical_decapod_workspace_path(Path::new(
+        "/repo/.decapod/workspaces/agent-task"
+    )));
+    assert!(!is_canonical_decapod_workspace_path(Path::new(
+        "/repo/.decapod/bar/workspaces/agent-task"
+    )));
+    assert!(!is_canonical_decapod_workspace_path(Path::new("/repo")));
+    assert!(!is_canonical_decapod_workspace_path(Path::new(
+        "/tmp/.decapod-workspaces/agent-task"
+    )));
+}
+
+fn protected_root_blocks_projection_mutation(default_branch: &str) {
+    let tmp = tempdir().expect("tempdir");
+    git(tmp.path(), &["init", "-q", "-b", default_branch]);
+    git(tmp.path(), &["config", "user.email", "test@test.com"]);
+    git(tmp.path(), &["config", "user.name", "Test"]);
+    std::fs::write(tmp.path().join("README.md"), "root\n").expect("write readme");
+    git(tmp.path(), &["add", "README.md"]);
+    git(tmp.path(), &["commit", "-m", "init"]);
+
+    let error = ensure_isolated_workspace_for_projection_mutation(tmp.path())
+        .expect_err("protected root must fail closed");
+    let message = error.to_string();
+    assert!(message.contains("workspace_required"), "{message}");
+    assert!(message.contains(".decapod/managed/specs"), "{message}");
+}
+
+#[test]
+fn protected_master_root_cannot_mutate_managed_specs() {
+    protected_root_blocks_projection_mutation("master");
+}
+
+#[test]
+fn protected_main_root_cannot_mutate_managed_specs() {
+    protected_root_blocks_projection_mutation("main");
+}
+
+#[test]
+fn claimed_decapod_worktree_can_mutate_managed_specs() {
+    let tmp = tempdir().expect("tempdir");
+    let main = tmp.path().join("main");
+    std::fs::create_dir_all(&main).expect("main");
+    git(&main, &["init", "-q", "-b", "master"]);
+    git(&main, &["config", "user.email", "test@test.com"]);
+    git(&main, &["config", "user.name", "Test"]);
+    std::fs::write(main.join("README.md"), "root\n").expect("write readme");
+    git(&main, &["add", "README.md"]);
+    git(&main, &["commit", "-m", "init"]);
+
+    let wt = main.join(".decapod").join("workspaces").join("agent-task");
+    std::fs::create_dir_all(wt.parent().unwrap()).expect("workspaces dir");
+    git(
+        &main,
+        &[
+            "worktree",
+            "add",
+            "-b",
+            "agent/test/task",
+            wt.to_str().unwrap(),
+        ],
+    );
+
+    ensure_isolated_workspace_for_projection_mutation(&wt)
+        .expect("claimed Decapod worktree must be allowed to refresh specs");
+}
+
+#[test]
+fn code_pr_without_managed_specs_fails_projection_inventory() {
+    let tmp = tempdir().expect("tempdir");
+    git(tmp.path(), &["init", "-q", "-b", "master"]);
+    git(tmp.path(), &["config", "user.email", "test@test.com"]);
+    git(tmp.path(), &["config", "user.name", "Test"]);
+    std::fs::write(tmp.path().join("README.md"), "base\n").expect("write base");
+    git(tmp.path(), &["add", "README.md"]);
+    git(tmp.path(), &["commit", "-m", "base"]);
+    git(tmp.path(), &["checkout", "-q", "-b", "feature"]);
+
+    std::fs::write(tmp.path().join("src.rs"), "fn main() {}\n").expect("write code");
+    git(tmp.path(), &["add", "src.rs"]);
+    git(tmp.path(), &["commit", "-m", "code only"]);
+
+    let error = ensure_managed_spec_projections_in_pr(tmp.path(), "master")
+        .expect_err("code PR must include managed spec projections");
+    let message = error.to_string();
+    assert!(message.contains("managed spec projections"), "{message}");
+    assert!(
+        message.contains("workspace_required") || message.contains("#1255"),
+        "{message}"
+    );
 }

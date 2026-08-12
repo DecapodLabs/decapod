@@ -46,6 +46,7 @@ nix build
 Before submitting your PR, ensure that Decapod's governance gates and CI expectations are satisfied:
 - Work in an isolated worktree via `decapod workspace ensure` after claiming a todo. Do not work directly on `master`.
 - Run `decapod validate` and ensure it passes successfully.
+- Managed spec projections (`.decapod/managed/specs/*`) are written only inside that claimed worktree. `workspace status` does not refresh them on the protected root. Include the refreshed specs in the same PR as the code change (GitHub #1255).
 
 ### GitHub Workflow Permissions
 

@@ -2629,18 +2629,7 @@ fn command_requires_worktree(command: &Command) -> bool {
 }
 
 fn is_canonical_decapod_worktree_path(path: &Path) -> bool {
-    let mut saw_decapod = false;
-    for comp in path.components() {
-        let seg = comp.as_os_str().to_string_lossy();
-        if seg == ".decapod" {
-            saw_decapod = true;
-            continue;
-        }
-        if saw_decapod && seg == "workspaces" {
-            return true;
-        }
-    }
-    false
+    crate::core::workspace::is_canonical_decapod_workspace_path(path)
 }
 
 fn command_requires_todo_scoped_worktree(command: &Command) -> bool {
@@ -5300,9 +5289,15 @@ fn heal_release_bound_entrypoints(
         }));
     }
 
-    let config = crate::cli::DecapodProjectConfig::load(project_root).unwrap_or_default();
-    let _ =
-        core::project_specs::refresh_specs_from_codebase(project_root, &config.repo.capabilities)?;
+    // Spec projections belong to the claimed worktree. A protected-root
+    // self-heal must not rewrite `.decapod/managed/specs/*` (GitHub #1255).
+    if core::workspace::ensure_isolated_workspace_for_projection_mutation(project_root).is_ok() {
+        let config = crate::cli::DecapodProjectConfig::load(project_root).unwrap_or_default();
+        let _ = core::project_specs::refresh_specs_from_codebase(
+            project_root,
+            &config.repo.capabilities,
+        )?;
+    }
 
     let outcome = if updated > 0 {
         "bumped".to_string()
@@ -7554,12 +7549,16 @@ fn run_workspace_command(
                     kind: StoreKind::Repo,
                     root: store_root,
                 };
+                // Status is observational. Refreshing specs here is the GitHub
+                // #1255 failure mode: a protected-root `workspace status`
+                // rewrote `.decapod/managed/specs/*` outside the claimed
+                // worktree. Restore the 0.96.0 read-only validate path.
                 let report = run_validation_bounded(
                     &project_store,
                     &governance_root,
                     workspace_root,
                     false,
-                    true,
+                    false,
                     false,
                 )?;
                 report_summary = Some(report);

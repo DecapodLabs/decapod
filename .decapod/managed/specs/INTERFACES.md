@@ -34,6 +34,7 @@ Generated interface specs should include:
 | `todo::update_status` | Decapod lifecycle caller | Local database today; future Dactyl operation | Requires expected status and revision; returns `ok`, `not_found`, or `conflict` and emits an event only after the conditional update wins |
 | `todo` lease/ownership mutations | Decapod coordination caller | Local database today; future Dactyl operation | Claim, yield, handoff, owner, heartbeat, cleanup, and expertise state plus their events share one transaction |
 | `events::append_on_conn` | Decapod domain writers | Canonical event stream | Replaying the same event identity is idempotent; divergent content fails with `EVENT_ID_CONFLICT`; stream sequence allocation is unique and transactional |
+| `workspace::ensure_isolated_workspace_for_projection_mutation` | Git toplevel of the invoking checkout | `refresh_specs_from_codebase`, validate self-heal, `specs.refresh` | Writes `.decapod/managed/specs/*` only when the Git worktree root is a non-protected path under `.decapod/workspaces/*`; protected `main`/`master` fails closed with `workspace_required` and does not touch root files (GitHub #1255) |
 
 ## Event Consumers
 | Consumer | Event | Ordering Requirement | Retry Policy | DLQ Policy |
@@ -133,7 +134,7 @@ pub enum ApiError {
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8496aea578bde0498477604893f6639646446fe4b46abd05faa2000bf756ead0`
+- Repository signal fingerprint: `7d74c0afe1a4b60ee3d063e06c53d4d588a7457be1ba3f7f66a960d5ee7ad5f2`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (103 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

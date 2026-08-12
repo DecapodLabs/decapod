@@ -29,8 +29,12 @@ Darwin Cargo and Nix builds share one linker story: no host absolute `-fuse-ld=/
 During workspace iteration, the evaluating binary rewrites release-bound
 entrypoint headers (`AGENTS.md` / `CLAUDE.md` / `CODEX.md` / `GEMINI.md`), the
 managed Dockerfile pin, and living-spec attestations via
-`validate --refresh-specs`. Those projections **must** land on the same code
-branch before the PR drift gate passes.
+`validate --refresh-specs` **inside the claimed worktree**. Those projections
+**must** land on the same code branch before the PR drift gate passes. Decapod
+must not generate `.decapod/managed/specs/*` in the protected root checkout
+and later ask the agent to clean that dirt up; the agent is directed into
+`.decapod/workspaces/*` instead of stashing or resetting the host tree
+(GitHub #1255).
 
 **Release boundary:** release-only commits are excluded from push validation.
 The code PR carries the release-bound projections; after review, the release
@@ -168,7 +172,7 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8496aea578bde0498477604893f6639646446fe4b46abd05faa2000bf756ead0`
+- Repository signal fingerprint: `7d74c0afe1a4b60ee3d063e06c53d4d588a7457be1ba3f7f66a960d5ee7ad5f2`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (103 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

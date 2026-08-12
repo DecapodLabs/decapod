@@ -37,6 +37,21 @@ This project's architecture consists of the following key layers/directories:
 - `core::backend::StorageContext` is the versioned Decapod-owned handoff between logical selection and physical execution. Local contexts contain only the canonical repository path; remote contexts contain the opaque route, logical repository scope, and an in-memory bearer that is excluded from serialization. Organization membership and repository authorization remain Propodus concerns.
 - Session custody is machine-local for both backend choices: the Decapod agent-session record is stored under the machine config directory, uses `local_`/`cloud_` token prefixes to detect backend changes, and defaults to a four-hour TTL bounded between 30 minutes and six hours. Cloud access and refresh tokens are stored separately under the machine data directory and refreshed before the remaining lifetime falls below 30 minutes.
 
+## Isolated Workspace Ownership for Spec Projections (#1255)
+- Mutation of `.decapod/managed/specs/*` is a custody operation, not a
+  convenience rewrite of the host checkout. The control-plane identity is
+  the Git worktree root, never `DECAPOD_WORKSPACE` or the current branch
+  name alone.
+- `workspace::ensure_isolated_workspace_for_projection_mutation` is the
+  choke point in front of `refresh_specs_from_codebase`. Protected
+  `main`/`master` roots fail closed with `workspace_required`. Isolated
+  clones and git worktrees under `.decapod/workspaces/` are the only
+  permitted writers.
+- `workspace status` must not pass `refresh_specs=true`. Status reports
+  drift; the claimed workspace repairs it. Publication then requires the
+  managed spec files to appear in the same `base...HEAD` diff as the
+  code that caused the projection change.
+
 ## Publication Bundle Currency Architecture (#1232)
 - `core::validate::validate_publication_bundle_currency` proves presence and
   version-stability at HEAD for the publication bundle. It replaced the
@@ -191,7 +206,7 @@ sequenceDiagram
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8496aea578bde0498477604893f6639646446fe4b46abd05faa2000bf756ead0`
+- Repository signal fingerprint: `7d74c0afe1a4b60ee3d063e06c53d4d588a7457be1ba3f7f66a960d5ee7ad5f2`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (103 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
