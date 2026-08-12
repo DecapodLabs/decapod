@@ -16,7 +16,13 @@
   "repo_scope": [
     "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
   ],
-  "inspected_files": [],
+  "inspected_files": [
+    ".config/deny.toml",
+    ".decapod/managed/specs/SECURITY.md",
+    ".github/workflows/ci.yml",
+    "Cargo.lock",
+    "Cargo.toml"
+  ],
   "modified_files": [
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json"
@@ -27,11 +33,28 @@
   "tool_calls": [],
   "checks": [
     {
+      "name": "cargo_deny",
+      "status": "passed"
+    },
+    {
+      "name": "cargo_fmt",
+      "status": "passed"
+    },
+    {
+      "name": "ci_lint_dependencies",
+      "status": "passed"
+    },
+    {
       "name": "decapod validate",
+      "status": "passed"
+    },
+    {
+      "name": "decapod_validate",
       "status": "passed"
     }
   ],
   "evidence": [
+    "validation epoch ve_5315301241f1680d completed with zero failures",
     "validation epoch ve_b422a7fd5ce61bdc completed with zero failures",
     "validation epoch ve_c3d90cb9e31cf770 completed with zero failures"
   ],
@@ -44,7 +67,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:f5e8940246353886c902b0febe8e6226e396b98f6567b4c5888dd6480bbd57a3",
+  "artifact_hash": "sha256:81ca450f191097bacd236c87bbc057d043a30e5ef5bb2a516b0f65193bdf6418",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -97,6 +120,27 @@
       {
         "sequence": 6,
         "event_id": "event:6",
+        "intent_id": "intent:issue-sweep-v0981-20260811",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-sweep-v0981-20260811"
+      },
+      {
+        "sequence": 7,
+        "event_id": "event:7",
+        "intent_id": "intent:issue-sweep-v0981-20260811",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-sweep-v0981-20260811"
+      },
+      {
+        "sequence": 8,
+        "event_id": "event:8",
+        "intent_id": "intent:issue-sweep-v0981-20260811",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-sweep-v0981-20260811"
+      },
+      {
+        "sequence": 9,
+        "event_id": "event:9",
         "intent_id": "intent:issue-sweep-v0981-20260811",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:issue-sweep-v0981-20260811"
@@ -161,12 +205,67 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:6"
+          },
+          {
+            "sequence": 7,
+            "action": "trajectory.record",
+            "scope": [
+              "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
+            ],
+            "observations": [
+              ".config/deny.toml",
+              "Cargo.toml",
+              "Cargo.lock",
+              ".github/workflows/ci.yml"
+            ],
+            "proof_refs": [
+              "ci_lint_dependencies",
+              "cargo_deny",
+              "cargo_fmt"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:7"
+          },
+          {
+            "sequence": 8,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_5315301241f1680d completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:8"
+          },
+          {
+            "sequence": 9,
+            "action": "trajectory.record",
+            "scope": [
+              "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
+            ],
+            "observations": [
+              ".config/deny.toml",
+              ".decapod/managed/specs/SECURITY.md"
+            ],
+            "proof_refs": [
+              "ci_lint_dependencies",
+              "decapod_validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:9"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 6
+    "next_sequence": 9
   }
 }

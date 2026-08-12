@@ -71,6 +71,8 @@ flowchart LR
 | Dependency scan | each PR + weekly | supply-chain tools |
 | DAST/pentest | scheduled | external/internal |
 
+Dependency license policy is enforced through `.config/deny.toml` and `cargo deny` on each PR. The Dactyl/Neon dependency graph explicitly permits the `CDLA-Permissive-2.0` webpki-roots license while retaining the existing allowlist and source checks.
+
 ## Trust-Boundary Inventory
 | Boundary | Principal/Input | Authority Granted | Validation | Audit Evidence | Failure Default |
 |---|---|---|---|---|---|
