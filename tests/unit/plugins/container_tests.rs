@@ -1,5 +1,19 @@
 // Moved from src/decapod/plugins/container.rs
 use super::*;
+use tempfile::tempdir;
+
+fn git(dir: &Path, args: &[&str]) {
+    let output = Command::new("git")
+        .current_dir(dir)
+        .args(args)
+        .output()
+        .expect("git");
+    assert!(
+        output.status.success(),
+        "git {args:?} failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
 
 fn disable_container_runtime_override(
     repo_root: &Path,
@@ -61,9 +75,7 @@ fn docker_spec_contains_safety_flags_and_sdlc_steps() {
     assert!(joined.contains("--cap-drop ALL"));
     assert!(joined.contains("--security-opt no-new-privileges:true"));
     assert!(!joined.contains("-e PATH="));
-    assert!(
-        joined.contains("-v /tmp/repo/.decapod/workspaces/w1:/tmp/repo/.decapod/workspaces/w1")
-    );
+    assert!(joined.contains("-v /tmp/repo/.decapod/workspaces/w1:/tmp/repo/.decapod/workspaces/w1"));
     assert!(joined.contains("-v /tmp/repo/.decapod:/tmp/repo/.decapod/workspaces/w1/.decapod"));
     assert!(joined.contains("DECAPOD_LOCAL_ONLY=1"));
     assert!(joined.contains("decapod() { cargo run --quiet --bin decapod -- \"$@\"; }"));
@@ -336,9 +348,12 @@ fn local_generated_image_builds_generated_dockerfile_from_repo_context() {
     let args = fs::read_to_string(&args_file).expect("runtime args");
     assert!(args.contains("build\n"));
     assert!(args.contains(&format!(
-            "{}\n",
-            root.join(".decapod").join("managed").join("Dockerfile.decapod").display()
-        )));
+        "{}\n",
+        root.join(".decapod")
+            .join("managed")
+            .join("Dockerfile.decapod")
+            .display()
+    )));
     assert!(
         args.ends_with(&format!("{}\n", root.display())),
         "build context should be the repository root, got: {args}"
@@ -477,5 +492,90 @@ ARG DECAPOD_VERSION=0.0.0
     assert!(
         err.contains("DECAPOD_VERSION") || err.contains("does not match"),
         "expected version mismatch detail, got: {err}"
+    );
+}
+
+#[test]
+fn prepare_workspace_clone_inherits_parent_github_remote_and_remote_tip() {
+    let tmp = tempdir().expect("tempdir");
+    let origin = tmp.path().join("origin.git");
+    let parent = tmp.path().join("parent");
+    git(
+        tmp.path(),
+        &["init", "--bare", "-q", origin.to_str().unwrap()],
+    );
+
+    fs::create_dir_all(&parent).expect("parent");
+    git(&parent, &["init", "-q"]);
+    git(&parent, &["config", "user.email", "test@test.com"]);
+    git(&parent, &["config", "user.name", "Test"]);
+    git(&parent, &["checkout", "-q", "-b", "master"]);
+    fs::write(parent.join("README.md"), "stale\n").expect("readme");
+    git(&parent, &["add", "README.md"]);
+    git(&parent, &["commit", "-m", "stale local main"]);
+    git(
+        &parent,
+        &["remote", "add", "origin", origin.to_str().unwrap()],
+    );
+    git(&parent, &["push", "-u", "origin", "master"]);
+
+    // Advance origin without updating the parent's local master tip.
+    let updater = tmp.path().join("updater");
+    git(
+        tmp.path(),
+        &[
+            "clone",
+            "-q",
+            origin.to_str().unwrap(),
+            updater.to_str().unwrap(),
+        ],
+    );
+    git(&updater, &["config", "user.email", "test@test.com"]);
+    git(&updater, &["config", "user.name", "Test"]);
+    fs::write(updater.join("README.md"), "remote tip\n").expect("advance");
+    git(&updater, &["commit", "-am", "advance origin/master"]);
+    git(&updater, &["push", "origin", "HEAD:master"]);
+
+    git(
+        &parent,
+        &[
+            "remote",
+            "add",
+            "upstream",
+            "git@github.com:DecapodLabs/dactyl.git",
+        ],
+    );
+
+    let workspace =
+        prepare_workspace_clone(&parent, "agent/test-1259", "master").expect("clone workspace");
+
+    let head = Command::new("git")
+        .args(["-C", workspace.path.to_str().unwrap(), "rev-parse", "HEAD"])
+        .output()
+        .expect("workspace head");
+    let remote_tip = Command::new("git")
+        .args(["-C", origin.to_str().unwrap(), "rev-parse", "master"])
+        .output()
+        .expect("origin tip");
+    assert_eq!(
+        String::from_utf8_lossy(&head.stdout).trim(),
+        String::from_utf8_lossy(&remote_tip.stdout).trim(),
+        "workspace must snapshot origin/master, not the stale local branch"
+    );
+
+    let inherited = Command::new("git")
+        .args([
+            "-C",
+            workspace.path.to_str().unwrap(),
+            "remote",
+            "get-url",
+            "upstream",
+        ])
+        .output()
+        .expect("workspace upstream");
+    assert!(inherited.status.success());
+    assert_eq!(
+        String::from_utf8_lossy(&inherited.stdout).trim(),
+        "git@github.com:DecapodLabs/dactyl.git"
     );
 }
