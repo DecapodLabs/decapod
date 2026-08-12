@@ -218,10 +218,15 @@ impl DriftFinding {
 }
 
 fn is_decapod_isolated_worktree(_main_root: &Path, repo_root: &Path) -> bool {
-    if let Ok(status) = crate::core::workspace::get_workspace_status(repo_root) {
-        status.can_work
-    } else {
-        false
+    let Ok(Some(toplevel)) = crate::core::workspace::git_toplevel(repo_root) else {
+        return false;
+    };
+    if !crate::core::workspace::is_canonical_decapod_workspace_path(&toplevel) {
+        return false;
+    }
+    match crate::core::workspace::get_workspace_status(&toplevel) {
+        Ok(status) => status.can_work && status.git.in_worktree && !status.git.is_protected,
+        Err(_) => false,
     }
 }
 
@@ -2148,6 +2153,7 @@ fn validate_project_specs_docs(
     // After freshness checks, enforce material mutation versus the PR base when
     // this is an isolated feature branch with a resolvable base.
     validate_material_specs_mutation(ctx, repo_root)?;
+    validate_managed_spec_projection_inventory(ctx, repo_root)?;
     // PR-level: every project PR must update the four governance JSON files.
     validate_governance_pr_updates(ctx, repo_root)?;
     validate_publication_bundle_currency(ctx, repo_root)?;
@@ -2602,6 +2608,73 @@ Rewrite at least one living spec to reflect this change (INTENT/ARCHITECTURE/INT
             ),
             ctx,
         );
+    }
+    Ok(())
+}
+
+/// Code-related PRs must carry `.decapod/managed/specs/*` in the same diff.
+///
+/// This is the publication half of GitHub #1255: projections generated later
+/// from the protected root checkout are not a valid publication shape.
+fn validate_managed_spec_projection_inventory(
+    ctx: &ValidationContext,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Managed Spec Projection Inventory Gate", ctx);
+
+    if std::env::var("DECAPOD_VALIDATE_SKIP_GIT_GATES").is_ok() {
+        skip(
+            "Managed spec projection inventory skipped (DECAPOD_VALIDATE_SKIP_GIT_GATES set)",
+            ctx,
+        );
+        return Ok(());
+    }
+    if !is_inside_git_work_tree(repo_root) {
+        skip(
+            "Not inside a git work tree; skipping managed spec projection inventory",
+            ctx,
+        );
+        return Ok(());
+    }
+    let status = match workspace::get_workspace_status(repo_root) {
+        Ok(status) => status,
+        Err(_) => {
+            skip(
+                "Workspace status unavailable; skipping managed spec projection inventory",
+                ctx,
+            );
+            return Ok(());
+        }
+    };
+    if status.git.is_protected {
+        skip(
+            "On protected base branch; managed spec projection inventory is enforced on feature PRs",
+            ctx,
+        );
+        return Ok(());
+    }
+
+    let base_branch = workspace::resolve_base_branch(repo_root, None);
+    match workspace::ensure_managed_spec_projections_in_pr(repo_root, &base_branch) {
+        Ok(()) => {
+            pass(
+                "Code-related PR diff includes managed spec projections in the same workspace",
+                ctx,
+            );
+        }
+        Err(err) => {
+            let message = err.to_string();
+            if message.contains("not available locally") {
+                skip(
+                    &format!(
+                        "Base branch '{base_branch}' unavailable; skipping managed spec projection inventory"
+                    ),
+                    ctx,
+                );
+            } else {
+                fail(&message, ctx);
+            }
+        }
     }
     Ok(())
 }
