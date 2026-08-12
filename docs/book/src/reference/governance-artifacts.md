@@ -70,7 +70,10 @@ never overwrites project-specific claim content.
 
 Inventory fails closed when any artifact is missing, schema-invalid, or not
 semantically current. Publication and `decapod validate` additionally require
-all four paths in the PR delta for project PRs.
+all four paths in the PR delta for project PRs. `validation.json` is the one
+file produced *by* a successful validate: when it is the only missing path,
+validate writes it and counts the working-tree file. `DECAPOD_VALIDATE_SKIP_GIT_GATES`
+is a test/debug escape hatch, not the agent publication sequence.
 
 An external tracker such as GitHub Issues, Jira, Linear, or Beads may remain the
 organizational system of record. Decapod's todo and claim state governs the

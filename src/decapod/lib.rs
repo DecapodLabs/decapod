@@ -5957,7 +5957,21 @@ fn record_validation_proof(
             },
         )?
     } else {
-        existing.expect("existing trajectory is present when a fresh one is not required")
+        let existing =
+            existing.expect("existing trajectory is present when a fresh one is not required");
+        if existing.checks.iter().any(|check| {
+            check.name == "decapod validate"
+                && matches!(
+                    check.status,
+                    core::trajectory::TrajectoryCheckStatus::Passed
+                )
+        }) && existing.task_id == task_id
+        {
+            // Do not re-record a duplicate successful validate: that would
+            // change the trajectory hash and force a receipt rewrite (#1259).
+            return Ok(existing);
+        }
+        existing
     };
 
     core::trajectory::record_trajectory(
@@ -6005,13 +6019,20 @@ fn write_validation_receipt(
             "validation completion requires .decapod/governance/trajectory.json".to_string(),
         )
     })?;
+    let path = project_root.join(validate::VALIDATION_RECEIPT_PATH);
+    if path.is_file()
+        && let Ok(raw) = fs::read_to_string(&path)
+        && let Ok(existing) = serde_json::from_str::<validate::ValidationReceipt>(&raw)
+        && validate::receipt_is_reusable(project_root, &existing, &trajectory)
+    {
+        return Ok(path);
+    }
     let receipt = validate::build_validation_receipt(
         report,
         git_revision,
         repo_signal_fingerprint,
         Some(&trajectory),
     )?;
-    let path = project_root.join(validate::VALIDATION_RECEIPT_PATH);
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
     }

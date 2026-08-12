@@ -104,6 +104,31 @@ fn test_get_main_repo_root_bare_repo() {
     let _ = result;
 }
 
+#[test]
+fn test_get_main_repo_root_from_local_clone_workspace() {
+    let tmp = tempdir().expect("tempdir");
+    let host = tmp.path().join("host");
+    fs::create_dir_all(&host).expect("host");
+    git_init(&host);
+    git_commit(&host, "init");
+
+    let workspace = host
+        .join(".decapod")
+        .join("workspaces")
+        .join("agent-unknown-bugs-01kzclone");
+    fs::create_dir_all(&workspace).expect("workspace");
+    git_init(&workspace);
+    git_commit(&workspace, "clone");
+
+    let resolved = workspace::get_main_repo_root(&workspace).expect("resolve clone");
+    let canonical_resolved = fs::canonicalize(&resolved).unwrap_or(resolved);
+    let canonical_host = fs::canonicalize(&host).unwrap_or(host);
+    assert_eq!(
+        canonical_resolved, canonical_host,
+        "local-clone workspaces must use the host todo store"
+    );
+}
+
 // ---- is_worktree ----
 
 #[test]

@@ -71,8 +71,6 @@ flowchart LR
 | Dependency scan | each PR + weekly | supply-chain tools |
 | DAST/pentest | scheduled | external/internal |
 
-Dependency license policy is enforced through `.config/deny.toml` and `cargo deny` on each PR. The Dactyl/Neon dependency graph explicitly permits the `CDLA-Permissive-2.0` webpki-roots license while retaining the existing allowlist and source checks.
-
 ## Trust-Boundary Inventory
 | Boundary | Principal/Input | Authority Granted | Validation | Audit Evidence | Failure Default |
 |---|---|---|---|---|---|
@@ -113,7 +111,7 @@ Describe the security primitives and security controls implemented in this repos
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `27c013469fde0c97e4d6d195eb45214f61899461f31b3198ff48556cbdda9f36`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (103 files), `tests/` (4 files)
+- Repository signal fingerprint: `8323113c658e1bc9c9215b9397ca3f106ea1f459b971ea0edc12cd460eb4da06`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (102 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -37,6 +37,18 @@ This project's architecture consists of the following key layers/directories:
 - `core::backend::StorageContext` is the versioned Decapod-owned handoff between logical selection and physical execution. Local contexts contain only the canonical repository path; remote contexts contain the opaque route, logical repository scope, and an in-memory bearer that is excluded from serialization. Organization membership and repository authorization remain Propodus concerns.
 - Session custody is machine-local for both backend choices: the Decapod agent-session record is stored under the machine config directory, uses `local_`/`cloud_` token prefixes to detect backend changes, and defaults to a four-hour TTL bounded between 30 minutes and six hours. Cloud access and refresh tokens are stored separately under the machine data directory and refreshed before the remaining lifetime falls below 30 minutes.
 
+## Local-Clone Publication and Store Binding (#1259)
+- A container local-clone under `.decapod/workspaces/*` has its own `.git`
+  whose `origin` is the parent filesystem path. `get_main_repo_root` walks
+  out of that path so todo/session store operations hit the host
+  `.decapod/data`, not an empty clone copy.
+- `prepare_workspace_clone` fetches `origin/<base>` on the parent, checks
+  the feature branch out at that OID, and copies the parent's network remotes
+  onto the clone as `upstream`.
+- `resolve_publish_remote` first uses a network remote already on the
+  workspace; if none exist it walks local remotes and the canonical host
+  checkout, adds `upstream`, and pushes there.
+
 ## Isolated Workspace Ownership for Spec Projections (#1255)
 - Mutation of `.decapod/managed/specs/*` is a custody operation, not a
   convenience rewrite of the host checkout. The control-plane identity is
@@ -206,7 +218,7 @@ sequenceDiagram
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `27c013469fde0c97e4d6d195eb45214f61899461f31b3198ff48556cbdda9f36`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (103 files), `tests/` (4 files)
+- Repository signal fingerprint: `8323113c658e1bc9c9215b9397ca3f106ea1f459b971ea0edc12cd460eb4da06`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (102 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

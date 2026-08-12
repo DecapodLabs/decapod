@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.98.3](https://github.com/DecapodLabs/decapod/compare/v0.98.2...v0.98.3) - 2026-08-12
+
+### Fixed
+
+- *(verify)* resolve --artifact against the claim workspace
+- *(validate)* write validation.json without skip-git-gates
+- *(container)* snapshot clones from origin/base and copy remotes
+- *(workspace)* publish local-clones via the parent GitHub remote
+
+### Other
+
+- *(governance)* rebind receipt after rustfmt
+- rustfmt validate, container, and verify #1260 surfaces
+- *(governance)* record validation receipt for #1259
+- *(specs)* author #1259 publication and local-clone custody
+- record the 0.98.2 first-PR publication sequence
+
+### Fixed
+
+- write validation receipts without `DECAPOD_VALIDATE_SKIP_GIT_GATES` and stop the receipt rewrite chase
+- publish local-clone workspaces through the parent GitHub remote
+- snapshot workspaces from the fetched remote base tip
+- bind `todo done` and `--artifact` to the host store and workspace worktree
+
 ## [0.98.2](https://github.com/DecapodLabs/decapod/compare/v0.98.1...v0.98.2) - 2026-08-12
 
 ### Fixed

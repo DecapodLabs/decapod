@@ -42,6 +42,26 @@ When validation reports `OUT_OF_SYNC_SPECS` or `STALE_SPECS_FINGERPRINT`, the go
 ## Release-Bound Agent Entrypoint Integrity
 The four generated agent entrypoints are release-bound projections of the installed Decapod binary. Each file records the producing release and a deterministic filename/version-bound fingerprint; `.decapod/managed/specs/.manifest.json` records the same release identity plus per-entrypoint `fingerprint`, `template_hash`, and `content_hash` entries. Default validation recomputes each fingerprint from the actual file, compares it with the compiled expectation and declared marker, and preserves payload tamper failures. Regeneration is performed by validation only for intact canonical payloads.
 
+## Validation Receipt Without Skip-Git-Gates (#1259)
+The first successful `decapod validate` on a feature branch writes
+`.decapod/governance/validation.json` when plan, claims, and trajectory already
+participate in the PR or working tree. `GOVERNANCE_PR_UPDATES` does not fail
+that run solely because the receipt is not yet in `base...HEAD`. Subsequent
+validates reuse the receipt when it is still bound to the current trajectory
+and HEAD only added governance files — there is no commit/validate/amend
+chase, and `DECAPOD_VALIDATE_SKIP_GIT_GATES` is not a sanctioned agent path.
+
+One-shot sequence: claim a clean, fetched base → work in the printed
+workspace → commit incrementally → `govern plan` / `trajectory` / claims →
+`decapod validate` (writes the receipt) → commit the four governance files
+or go straight to `workspace publish` (it commits dirty receipts) → publish
+uses the inherited GitHub remote.
+
+Host-vs-container validate stickiness after `ensure --container` remains a
+documented deferred question: prefer staying in the printed container when
+`container_workspaces = true`, but host validate is not permanently sticky
+once the workspace exists.
+
 ## Publication Bundle Currency Gate (#1232)
 `decapod validate` on a feature branch no longer requires every governed path to
 appear in every commit's `diff-tree`. That ceremonial participation model is
@@ -232,7 +252,7 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `27c013469fde0c97e4d6d195eb45214f61899461f31b3198ff48556cbdda9f36`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (103 files), `tests/` (4 files)
+- Repository signal fingerprint: `8323113c658e1bc9c9215b9397ca3f106ea1f459b971ea0edc12cd460eb4da06`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (102 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

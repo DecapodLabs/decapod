@@ -29,12 +29,16 @@ Generated interface specs should include:
 | `DbBroker::with_transaction` | Decapod domain mutation | Current local datastore; future Dactyl atomic operation | Commits state and its canonical event together; rolls both back on failure |
 | `core::backend::BackendSelection` / `BackendRoute` | `.decapod/config.toml` backend plus Git origin identity | Local datastore or authenticated Dactyl session | `local` binds `.decapod/data/decapod.db`; `cloud` binds the GitHub owner/repository and accepts only an opaque remote URI supplied by the session boundary; provider names and URI construction are outside ordinary Decapod persistence |
 | `core::backend::StorageContext` | `BackendSelection`, opaque route, and optional session bearer | Dactyl bridge or future physical driver | Version 1 distinguishes local and remote targets; local has no cloud scope or credential, remote requires an authenticated bearer, credentials are never serialized, and unsupported future versions fail closed before I/O; Propodus owns effective membership/repository authorization |
-| `core::dactyl::DactylBridge` | Backend route, access mode, and optional opaque bearer | Dactyl v0.6.2 physical driver | Provides explicit reads/writes, atomic batches, access-mode enforcement, Decapod-normalized errors, and an explicit file-backed Dactyl-snapshot route; remote contexts are forwarded as versioned opaque envelopes, canonical local SQLite is rejected as a different format, and cloud construction fails closed without a bearer |
+| `core::dactyl::DactylBridge` | Backend route, access mode, and optional opaque bearer | Dactyl v0.6.2 physical driver | Provides explicit reads, writes, atomic batches, access-mode enforcement, Decapod-normalized errors, and an explicit file-backed Dactyl-snapshot route; remote contexts are forwarded as versioned opaque envelopes, canonical local SQLite is rejected as a different format, and cloud construction fails closed without a bearer |
 | Decapod agent session | Backend selection and machine-local session directory | Local SQLite or authenticated cloud command path | Machine-local session records use a backend discriminator (`local_` or `cloud_`) and default to a four-hour lifetime, bounded to 30 minutes minimum and six hours maximum; cloud bearer credentials remain separate opaque machine-local material |
 | `todo::update_status` | Decapod lifecycle caller | Local database today; future Dactyl operation | Requires expected status and revision; returns `ok`, `not_found`, or `conflict` and emits an event only after the conditional update wins |
 | `todo` lease/ownership mutations | Decapod coordination caller | Local database today; future Dactyl operation | Claim, yield, handoff, owner, heartbeat, cleanup, and expertise state plus their events share one transaction |
 | `events::append_on_conn` | Decapod domain writers | Canonical event stream | Replaying the same event identity is idempotent; divergent content fails with `EVENT_ID_CONFLICT`; stream sequence allocation is unique and transactional |
 | `workspace::ensure_isolated_workspace_for_projection_mutation` | Git toplevel of the invoking checkout | `refresh_specs_from_codebase`, validate self-heal, `specs.refresh` | Writes `.decapod/managed/specs/*` only when the Git worktree root is a non-protected path under `.decapod/workspaces/*`; protected `main`/`master` fails closed with `workspace_required` and does not touch root files (GitHub #1255) |
+| `workspace::get_main_repo_root` / `host_repo_from_canonical_workspace` | Cwd inside `.decapod/workspaces/*` | Todo store, session, `find_governance_root` | Local-clone workspaces resolve the host checkout so `todo done` sees the claim that created them (GitHub #1259) |
+| `verify::resolve_artifact_path_for_todo` | `--artifact` path plus optional todo id | `todo done --validated` | Resolves first against cwd, then the newest workspace directory matching the todo id |
+| `workspace::resolve_publish_remote` | Workspace remotes, then parent filesystem remotes | `workspace publish` | Inherits a GitHub remote from the local-clone parent as `upstream`; never treats a path `origin` as publication |
+| `validate::governance_paths_updated_vs_base` | `base...HEAD` plus working tree | `GOVERNANCE_PR_UPDATES` | Working-tree and just-written `validation.json` count; the gate does not require `DECAPOD_VALIDATE_SKIP_GIT_GATES` |
 
 ## Event Consumers
 | Consumer | Event | Ordering Requirement | Retry Policy | DLQ Policy |
@@ -134,7 +138,7 @@ pub enum ApiError {
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `27c013469fde0c97e4d6d195eb45214f61899461f31b3198ff48556cbdda9f36`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (103 files), `tests/` (4 files)
+- Repository signal fingerprint: `8323113c658e1bc9c9215b9397ca3f106ea1f459b971ea0edc12cd460eb4da06`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (102 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

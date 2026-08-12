@@ -28,21 +28,6 @@ boundary. Dactyl must provide the corresponding atomic operation primitive,
 while Propodus must host compatible ordinary database constraints; neither
 backend decides whether a Decapod transition is valid.
 
-The Dactyl bridge exercises this boundary with caller-owned identifiers, an
-atomic batch that rolls back on constraint failure, read-only enforcement,
-typed error normalization, and durable reopen of an explicitly named Dactyl
-snapshot. It is intentionally an isolated physical-driver probe: the
-canonical local SQLite route remains a different format and fails closed
-rather than creating a second authority, and the cloud route requires an
-opaque bearer without deriving organization or repository semantics in
-Decapod.
-
-`StorageContext` is versioned independently from the physical route. Version 1
-has a local form with no cloud identity fields and a remote form that requires
-an opaque bearer; serialization omits the bearer. Deserialization therefore
-preserves a safe target description but never persists a credential, and any
-future version must retain an explicit rollback path before it is accepted.
-
 ## Event Sourcing Schema
 | Field | Type | Description |
 |---|---|---|
@@ -139,7 +124,7 @@ future version must retain an explicit rollback path before it is accepted.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `27c013469fde0c97e4d6d195eb45214f61899461f31b3198ff48556cbdda9f36`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (103 files), `tests/` (4 files)
+- Repository signal fingerprint: `8323113c658e1bc9c9215b9397ca3f106ea1f459b971ea0edc12cd460eb4da06`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (102 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
