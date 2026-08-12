@@ -35,6 +35,12 @@ probe: the canonical local SQLite route fails closed until Dactyl can prove
 file-backed compatibility, and the cloud route requires an opaque bearer
 without deriving organization or repository semantics in Decapod.
 
+`StorageContext` is versioned independently from the physical route. Version 1
+has a local form with no cloud identity fields and a remote form that requires
+an opaque bearer; serialization omits the bearer. Deserialization therefore
+preserves a safe target description but never persists a credential, and any
+future version must retain an explicit rollback path before it is accepted.
+
 ## Event Sourcing Schema
 | Field | Type | Description |
 |---|---|---|

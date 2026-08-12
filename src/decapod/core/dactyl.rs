@@ -7,7 +7,7 @@
 //! usable for backend-neutral conformance work and authenticated cloud routes,
 //! while local call-site migration remains gated on the compatibility matrix.
 
-use crate::core::backend::BackendRoute;
+use crate::core::backend::{BackendRoute, StorageContext};
 use crate::core::error::{CloudAuthDiagnostic, CloudAuthStatus, DecapodError};
 use dactyl_db::{AccessMode, AtomicResult, Connection, OpenOptions, Operation, Parameter, Rows};
 use std::time::Duration;
@@ -72,6 +72,18 @@ impl DactylBridge {
                 )
             }
         }
+    }
+
+    /// Open the physical driver from a Decapod-owned storage context.
+    ///
+    /// The context's bearer is passed as opaque authentication material to
+    /// Dactyl and is never interpreted as organization, user, or repository
+    /// policy by this bridge.
+    pub fn from_storage_context(
+        context: &StorageContext,
+        access_mode: AccessMode,
+    ) -> Result<Self, DecapodError> {
+        Self::from_backend_route(context.route(), access_mode, context.bearer())
     }
 
     pub fn read(&self, sql: &str, params: &[Parameter]) -> Result<Rows, DecapodError> {
@@ -201,6 +213,30 @@ mod tests {
         )
         .expect("constructing a cloud route does not perform I/O");
         assert_eq!(bridge.access_mode(), AccessMode::ReadOnly);
+    }
+
+    #[test]
+    fn storage_context_binds_the_opaque_bearer_without_serializing_it() {
+        let identity = RepositoryIdentity {
+            canonical_name: "DecapodLabs/decapod".to_string(),
+            owner: "DecapodLabs".to_string(),
+            repository: "decapod".to_string(),
+            remote_url: "git@github.com:DecapodLabs/decapod.git".to_string(),
+        };
+        let route = BackendRoute::Cloud {
+            repository: identity,
+            uri: "https://example.invalid/api/v1/store".to_string(),
+        };
+        let context = StorageContext::from_route(route, Some("opaque-session-token"))
+            .expect("remote context");
+        let bridge = DactylBridge::from_storage_context(&context, AccessMode::ReadOnly)
+            .expect("constructing cloud route does not perform I/O");
+        assert_eq!(context.version(), StorageContext::CURRENT_VERSION);
+        assert_eq!(context.bearer(), Some("opaque-session-token"));
+        assert!(bridge.access_mode() == AccessMode::ReadOnly);
+        let encoded = serde_json::to_string(&context).expect("context JSON");
+        assert!(!encoded.contains("opaque-session-token"));
+        assert!(!encoded.contains("organization"));
     }
 
     #[test]

@@ -7,7 +7,7 @@
 //! interpret provider-specific storage URLs here.
 
 use crate::cli::{BackendType, DecapodProjectConfig};
-use crate::core::error::DecapodError;
+use crate::core::error::{CloudAuthDiagnostic, CloudAuthStatus, DecapodError};
 use crate::core::repo_identity::{RepositoryIdentity, resolve_repository_identity};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
@@ -84,6 +84,19 @@ impl BackendSelection {
             }
         }
     }
+
+    /// Resolve the versioned Decapod storage context for a physical route.
+    ///
+    /// The bearer is an opaque session credential and is retained only in
+    /// memory. It is never serialized into the context or treated as a
+    /// repository/organization identity.
+    pub fn storage_context(
+        &self,
+        remote_uri: Option<&str>,
+        bearer: Option<&str>,
+    ) -> Result<StorageContext, DecapodError> {
+        StorageContext::from_route(self.route(remote_uri)?, bearer)
+    }
 }
 
 /// A fully bound datastore route.  The cloud URI is opaque: callers may pass
@@ -120,6 +133,64 @@ impl BackendRoute {
             Self::Local { .. } => None,
             Self::Cloud { repository, .. } => Some(repository),
         }
+    }
+}
+
+/// Versioned, backend-neutral storage target passed from Decapod policy to a
+/// physical driver. Cloud tenancy and authorization are deliberately not
+/// modeled as local storage fields: the remote route carries only the logical
+/// repository scope, while Propodus remains responsible for resolving the
+/// authenticated principal and its effective authorization.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct StorageContext {
+    version: u16,
+    route: BackendRoute,
+    #[serde(skip)]
+    bearer: Option<String>,
+}
+
+impl StorageContext {
+    pub const CURRENT_VERSION: u16 = 1;
+
+    pub fn from_route(route: BackendRoute, bearer: Option<&str>) -> Result<Self, DecapodError> {
+        let bearer = bearer.map(str::trim).filter(|value| !value.is_empty());
+        match route {
+            BackendRoute::Local { .. } if bearer.is_some() => Err(DecapodError::Config(
+                "local storage context must not contain a cloud session credential".to_string(),
+            )),
+            BackendRoute::Cloud { .. } if bearer.is_none() => {
+                Err(DecapodError::CloudAuth(CloudAuthDiagnostic::new(
+                    CloudAuthStatus::Missing,
+                    "remote storage requires an authenticated opaque session context",
+                    "acquire or refresh the cloud session, then retry the command",
+                )))
+            }
+            route => Ok(Self {
+                version: Self::CURRENT_VERSION,
+                route,
+                bearer: bearer.map(str::to_owned),
+            }),
+        }
+    }
+
+    pub fn version(&self) -> u16 {
+        self.version
+    }
+
+    pub fn route(&self) -> &BackendRoute {
+        &self.route
+    }
+
+    pub fn bearer(&self) -> Option<&str> {
+        self.bearer.as_deref()
+    }
+
+    pub fn is_local(&self) -> bool {
+        matches!(self.route, BackendRoute::Local { .. })
+    }
+
+    pub fn is_remote(&self) -> bool {
+        matches!(self.route, BackendRoute::Cloud { .. })
     }
 }
 
