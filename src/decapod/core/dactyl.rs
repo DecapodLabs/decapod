@@ -10,6 +10,7 @@
 use crate::core::backend::{BackendRoute, StorageContext};
 use crate::core::error::{CloudAuthDiagnostic, CloudAuthStatus, DecapodError};
 use dactyl_db::{AccessMode, AtomicResult, Connection, OpenOptions, Operation, Parameter, Rows};
+use std::path::Path;
 use std::time::Duration;
 
 pub use dactyl_db::{OperationResult, WriteResult};
@@ -36,6 +37,23 @@ impl DactylBridge {
     /// Open Dactyl's isolated in-memory store with an explicit access mode.
     pub fn open_memory_with_access_mode(access_mode: AccessMode) -> Result<Self, DecapodError> {
         Self::open_route(dactyl_db::DatastoreRoute::sqlite(":memory:"), access_mode)
+    }
+
+    /// Open a Dactyl-owned local snapshot with an explicit access mode.
+    ///
+    /// The snapshot is deliberately a Dactyl format, not the canonical
+    /// `.decapod/data/decapod.db` SQLite file. Callers must use the migration
+    /// boundary before moving existing Decapod state into this route; opening
+    /// a canonical SQLite file here fails closed in the Dactyl adapter.
+    pub fn open_local_snapshot(
+        path: impl AsRef<Path>,
+        access_mode: AccessMode,
+    ) -> Result<Self, DecapodError> {
+        let path = path.as_ref();
+        Self::open_route(
+            dactyl_db::DatastoreRoute::sqlite(path.to_string_lossy().into_owned()),
+            access_mode,
+        )
     }
 
     /// Bind a governed backend route to Dactyl.
@@ -124,7 +142,9 @@ mod tests {
     use crate::core::backend::LOCAL_DATASTORE_RELATIVE_PATH;
     use crate::core::error::{DecapodError, StorageFailureKind};
     use crate::core::repo_identity::RepositoryIdentity;
+    use std::io::Write;
     use std::path::PathBuf;
+    use tempfile::tempdir;
 
     fn no_params() -> Vec<Parameter> {
         Vec::new()
@@ -172,6 +192,54 @@ mod tests {
             .write("INSERT INTO missing (id) VALUES (?)", &[1_i64.into()])
             .expect_err("read-only route must reject writes");
         assert_eq!(error.storage_failure_kind(), StorageFailureKind::Capability);
+    }
+
+    #[test]
+    fn local_snapshot_reopens_and_rejects_canonical_sqlite() {
+        let tmp = tempdir().expect("temporary snapshot directory");
+        let snapshot_path = tmp.path().join("decapod.snapshot");
+        std::fs::File::create(&snapshot_path).expect("empty snapshot target");
+        let bridge = DactylBridge::open_local_snapshot(&snapshot_path, AccessMode::ReadWrite)
+            .expect("Dactyl snapshot bridge");
+        bridge
+            .atomic(&[Operation::schema(
+                "CREATE TABLE tasks (id INTEGER PRIMARY KEY, title TEXT NOT NULL)",
+                no_params(),
+            )])
+            .expect("snapshot schema");
+        bridge
+            .write(
+                "INSERT INTO tasks (id, title) VALUES (?, ?)",
+                &[101_i64.into(), "persisted".into()],
+            )
+            .expect("snapshot row");
+        drop(bridge);
+
+        let reopened = DactylBridge::open_local_snapshot(&snapshot_path, AccessMode::ReadOnly)
+            .expect("reopen Dactyl snapshot");
+        let rows = reopened
+            .read("SELECT id, title FROM tasks", &no_params())
+            .expect("read persisted snapshot");
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows.as_slice()[0].get_int("id").expect("id"), 101);
+        assert_eq!(
+            rows.as_slice()[0].get_str("title").expect("title"),
+            "persisted"
+        );
+        drop(reopened);
+
+        let sqlite_path = tmp.path().join("canonical.db");
+        let mut sqlite = std::fs::File::create(&sqlite_path).expect("canonical SQLite fixture");
+        sqlite
+            .write_all(b"SQLite format 3\0")
+            .expect("write SQLite header");
+        drop(sqlite);
+        let error = match DactylBridge::open_local_snapshot(&sqlite_path, AccessMode::ReadWrite) {
+            Err(error) => error,
+            Ok(_) => panic!("canonical SQLite must not be opened as a Dactyl snapshot"),
+        };
+        assert_eq!(error.storage_failure_kind(), StorageFailureKind::Capability);
+        assert!(error.to_string().contains("import into the Dactyl format"));
     }
 
     #[test]

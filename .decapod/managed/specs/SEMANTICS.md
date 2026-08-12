@@ -29,11 +29,13 @@ while Propodus must host compatible ordinary database constraints; neither
 backend decides whether a Decapod transition is valid.
 
 The Dactyl bridge exercises this boundary with caller-owned identifiers, an
-atomic batch that rolls back on constraint failure, read-only enforcement, and
-typed error normalization. It is intentionally an isolated physical-driver
-probe: the canonical local SQLite route fails closed until Dactyl can prove
-file-backed compatibility, and the cloud route requires an opaque bearer
-without deriving organization or repository semantics in Decapod.
+atomic batch that rolls back on constraint failure, read-only enforcement,
+typed error normalization, and durable reopen of an explicitly named Dactyl
+snapshot. It is intentionally an isolated physical-driver probe: the
+canonical local SQLite route remains a different format and fails closed
+rather than creating a second authority, and the cloud route requires an
+opaque bearer without deriving organization or repository semantics in
+Decapod.
 
 `StorageContext` is versioned independently from the physical route. Version 1
 has a local form with no cloud identity fields and a remote form that requires
@@ -137,7 +139,7 @@ future version must retain an explicit rollback path before it is accepted.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8b4ac742067f180fb7d7995b215a2d99d11010b550dd3d84d83f91e5308b829c`
+- Repository signal fingerprint: `781cd86581a56647221a5616f19bd82c1732cef1127b69236ef17082d2eac387`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (103 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

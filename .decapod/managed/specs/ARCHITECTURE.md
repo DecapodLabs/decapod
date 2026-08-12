@@ -33,7 +33,7 @@ This project's architecture consists of the following key layers/directories:
 - `DbBroker::execute_write_sync` returns affected rows. Decapod callers own stable IDs rather than reading ambient connection-generated row IDs.
 - `DbBroker::with_transaction` is the Decapod-owned atomic mutation seam. Material TODO lifecycle, ownership, lease, agent-session, and federation state changes append their canonical event within the same transaction; `events::append_on_conn` composes with caller-owned transactions and uses idempotent event identity plus unique stream sequencing.
 - `core::backend::BackendSelection` is the provider-neutral route seam: it reads `repo.backend`, uses the Git `origin` remote for cloud repository scope, binds local to `.decapod/data/decapod.db`, and passes a session-supplied cloud URI through as opaque data for Dactyl. Ordinary Decapod persistence does not construct a Propodus, Vercel, or Neon path.
-- `core::dactyl::DactylBridge` is the physical-driver seam for backend-neutral conformance: it exposes Dactyl's explicit result, atomic-batch, access-mode, and typed-error contract without leaking a backend handle. It refuses to open the canonical SQLite path until Dactyl's file-backed compatibility is proven, preventing a second local authority; cloud route construction remains bearer-gated and opaque.
+- `core::dactyl::DactylBridge` is the physical-driver seam for backend-neutral conformance: it exposes Dactyl's explicit result, atomic-batch, access-mode, and typed-error contract without leaking a backend handle. It can reopen an explicitly named Dactyl snapshot, but refuses to treat the canonical SQLite path as that snapshot, preventing a second local authority; cloud route construction remains bearer-gated and opaque.
 - `core::backend::StorageContext` is the versioned Decapod-owned handoff between logical selection and physical execution. Local contexts contain only the canonical repository path; remote contexts contain the opaque route, logical repository scope, and an in-memory bearer that is excluded from serialization. Organization membership and repository authorization remain Propodus concerns.
 - Session custody is machine-local for both backend choices: the Decapod agent-session record is stored under the machine config directory, uses `local_`/`cloud_` token prefixes to detect backend changes, and defaults to a four-hour TTL bounded between 30 minutes and six hours. Cloud access and refresh tokens are stored separately under the machine data directory and refreshed before the remaining lifetime falls below 30 minutes.
 
@@ -206,7 +206,7 @@ sequenceDiagram
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8b4ac742067f180fb7d7995b215a2d99d11010b550dd3d84d83f91e5308b829c`
+- Repository signal fingerprint: `781cd86581a56647221a5616f19bd82c1732cef1127b69236ef17082d2eac387`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (103 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

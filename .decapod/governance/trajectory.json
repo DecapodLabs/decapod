@@ -26,15 +26,27 @@
     "AGENTS.md",
     "Cargo.lock",
     "Cargo.toml",
+    "docs/book/src/reference/propodus.md",
+    "src/decapod/core/dactyl.rs",
     "src/decapod/core/entrypoint_integrity.rs",
     "src/decapod/core/validate.rs",
-    "tests/entrypoint_correctness.rs"
+    "tests/entrypoint_correctness.rs",
+    "tests/plugins/todo.rs"
   ],
   "modified_files": [
     ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json"
+    ".decapod/governance/validation.json",
+    ".decapod/managed/specs/ARCHITECTURE.md",
+    ".decapod/managed/specs/INTENT.md",
+    ".decapod/managed/specs/INTERFACES.md",
+    ".decapod/managed/specs/SEMANTICS.md",
+    "docs/book/src/reference/propodus.md",
+    "src/decapod/core/dactyl.rs"
   ],
   "declared_commands": [
+    "cargo fmt --all -- --check",
+    "cargo test --lib core::dactyl",
+    "decapod rpc --op specs.refresh",
     "decapod validate"
   ],
   "tool_calls": [],
@@ -64,6 +76,10 @@
       "status": "passed"
     },
     {
+      "name": "dactyl_unit_tests",
+      "status": "passed"
+    },
+    {
       "name": "decapod validate",
       "status": "passed"
     },
@@ -76,23 +92,37 @@
       "status": "passed"
     },
     {
+      "name": "fmt",
+      "status": "passed"
+    },
+    {
       "name": "historical_entrypoint_compatibility",
       "status": "passed"
     },
     {
       "name": "source_validate",
       "status": "passed"
+    },
+    {
+      "name": "specs_refresh",
+      "status": "passed"
     }
   ],
   "evidence": [
+    "Dactyl snapshot reopen and canonical SQLite header rejection are covered by core::dactyl::tests::local_snapshot_reopens_and_rejects_canonical_sqlite",
+    "source-built Decapod v0.98.2 validation passed with 204 checks and zero failures when evaluated in container mode; hosted CI remains the final environment proof",
     "validation epoch ve_2348599cda8f87dc completed with zero failures",
     "validation epoch ve_5315301241f1680d completed with zero failures",
+    "validation epoch ve_62dc7100446cda89 completed with zero failures",
     "validation epoch ve_b422a7fd5ce61bdc completed with zero failures",
     "validation epoch ve_c3d90cb9e31cf770 completed with zero failures",
     "validation epoch ve_e3eacade6ba13e26 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
-  "unresolved_assumptions": [],
+  "unresolved_assumptions": [
+    "Canonical SQLite remains a separate format and still requires an explicit Decapod-owned import/migration proof",
+    "The prepared container image cannot compile Rust 2024 and its stock binary predates this branch entrypoint compatibility fix; use hosted CI for image-equivalent source validation"
+  ],
   "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
@@ -100,7 +130,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:b8ef8755dcf7363bd20fec61378bed08fc25703122cc07133fcc076046c1750a",
+  "artifact_hash": "sha256:b68c69fd6569dc2123530515d6179b5a5e422be03ca57012837ffb4d7da7e0d3",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -230,6 +260,27 @@
       {
         "sequence": 17,
         "event_id": "event:17",
+        "intent_id": "intent:issue-sweep-v0981-20260811",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-sweep-v0981-20260811"
+      },
+      {
+        "sequence": 18,
+        "event_id": "event:18",
+        "intent_id": "intent:issue-sweep-v0981-20260811",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-sweep-v0981-20260811"
+      },
+      {
+        "sequence": 19,
+        "event_id": "event:19",
+        "intent_id": "intent:issue-sweep-v0981-20260811",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-sweep-v0981-20260811"
+      },
+      {
+        "sequence": 20,
+        "event_id": "event:20",
         "intent_id": "intent:issue-sweep-v0981-20260811",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:issue-sweep-v0981-20260811"
@@ -487,12 +538,78 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:17"
+          },
+          {
+            "sequence": 18,
+            "action": "implementation",
+            "command": "cargo fmt --all -- --check",
+            "scope": [
+              "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
+            ],
+            "observations": [
+              "src/decapod/core/dactyl.rs",
+              "tests/plugins/todo.rs",
+              "docs/book/src/reference/propodus.md",
+              "src/decapod/core/dactyl.rs",
+              "docs/book/src/reference/propodus.md",
+              ".decapod/managed/specs/INTENT.md",
+              ".decapod/managed/specs/ARCHITECTURE.md",
+              ".decapod/managed/specs/INTERFACES.md",
+              ".decapod/managed/specs/SEMANTICS.md",
+              "Dactyl snapshot reopen and canonical SQLite header rejection are covered by core::dactyl::tests::local_snapshot_reopens_and_rejects_canonical_sqlite"
+            ],
+            "proof_refs": [
+              "fmt",
+              "dactyl_unit_tests",
+              "specs_refresh"
+            ],
+            "validation_findings": [
+              "Canonical SQLite remains a separate format and still requires an explicit Decapod-owned import/migration proof"
+            ],
+            "custody_event_id": "event:18"
+          },
+          {
+            "sequence": 19,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_62dc7100446cda89 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:19"
+          },
+          {
+            "sequence": 20,
+            "action": "validation",
+            "scope": [
+              "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
+            ],
+            "observations": [
+              "source-built Decapod v0.98.2 validation passed with 204 checks and zero failures when evaluated in container mode; hosted CI remains the final environment proof"
+            ],
+            "proof_refs": [
+              "source_validate",
+              "dactyl_unit_tests",
+              "specs_refresh"
+            ],
+            "validation_findings": [
+              "The prepared container image cannot compile Rust 2024 and its stock binary predates this branch entrypoint compatibility fix; use hosted CI for image-equivalent source validation"
+            ],
+            "custody_event_id": "event:20"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 17
+    "next_sequence": 20
   }
 }

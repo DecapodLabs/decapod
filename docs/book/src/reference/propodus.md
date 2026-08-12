@@ -80,9 +80,11 @@ context data.
 The Dactyl bridge forwards the route and opaque bearer without interpreting
 membership or authorization. Propodus remains responsible for resolving the
 authenticated principal, organization membership, and repository access. The
-current Decapod bridge rejects canonical SQLite through Dactyl until a
-file-backed compatibility proof exists, so no second local authority is
-created and no cloud operation silently falls back to SQLite. See [Decapod
+current Decapod bridge supports explicitly named Dactyl snapshots but
+rejects canonical SQLite through Dactyl as a different format; existing
+SQLite state still requires a Decapod-owned import/migration proof. This
+keeps the canonical SQLite authority singular and prevents cloud operations
+from silently falling back to SQLite. See [Decapod
 #1254](https://github.com/DecapodLabs/decapod/issues/1254), [Dactyl
 #64](https://github.com/DecapodLabs/dactyl/issues/64), and [Propodus
 #79](https://github.com/DecapodLabs/propodus/issues/79).
