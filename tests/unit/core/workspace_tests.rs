@@ -200,6 +200,89 @@ fn test_resolve_publish_remote_fails_closed_without_network_remote() {
 }
 
 #[test]
+fn resolve_publish_remote_walks_local_clone_parent_for_github() {
+    let tmp = tempdir().expect("tempdir");
+    let parent = tmp.path().join("parent");
+    let clone = tmp.path().join("clone");
+    std::fs::create_dir_all(&parent).expect("parent");
+    std::fs::create_dir_all(&clone).expect("clone");
+    git(&parent, &["init", "-q"]);
+    git(&parent, &["config", "user.email", "test@test.com"]);
+    git(&parent, &["config", "user.name", "Test"]);
+    git(
+        &parent,
+        &[
+            "remote",
+            "add",
+            "origin",
+            "git@github.com:DecapodLabs/decapod.git",
+        ],
+    );
+    git(&clone, &["init", "-q"]);
+    git(&clone, &["config", "user.email", "test@test.com"]);
+    git(&clone, &["config", "user.name", "Test"]);
+    git(
+        &clone,
+        &[
+            "remote",
+            "add",
+            "origin",
+            parent.to_str().expect("parent path"),
+        ],
+    );
+
+    let remote = resolve_publish_remote(&clone).expect("inherit parent GitHub remote");
+    assert_eq!(remote.name, "upstream");
+    assert_eq!(remote.url, "git@github.com:DecapodLabs/decapod.git");
+    let listed = Command::new("git")
+        .args([
+            "-C",
+            clone.to_str().unwrap(),
+            "remote",
+            "get-url",
+            "upstream",
+        ])
+        .output()
+        .expect("get-url");
+    assert!(listed.status.success());
+    assert_eq!(
+        String::from_utf8_lossy(&listed.stdout).trim(),
+        "git@github.com:DecapodLabs/decapod.git"
+    );
+}
+
+#[test]
+fn host_repo_from_canonical_workspace_walks_out_of_local_clone() {
+    let tmp = tempdir().expect("tempdir");
+    let host = tmp.path().join("host");
+    let workspace = host
+        .join(".decapod")
+        .join("workspaces")
+        .join("agent-unknown-bugs-01kztestxx");
+    std::fs::create_dir_all(&workspace).expect("workspace");
+    assert_eq!(
+        host_repo_from_canonical_workspace(&workspace).expect("host"),
+        std::fs::canonicalize(&host).unwrap_or(host)
+    );
+}
+
+#[test]
+fn find_workspace_for_task_matches_hyphenated_todo_id() {
+    let tmp = tempdir().expect("tempdir");
+    let host = tmp.path();
+    let workspace = host
+        .join(".decapod")
+        .join("workspaces")
+        .join("agent-unknown-bugs-01kztestxx-01ab");
+    std::fs::create_dir_all(&workspace).expect("workspace");
+    let found = find_workspace_for_task(host, "bugs_01kztestxx").expect("found");
+    assert_eq!(
+        std::fs::canonicalize(found).unwrap(),
+        std::fs::canonicalize(workspace).unwrap()
+    );
+}
+
+#[test]
 fn publish_push_failure_requires_fast_forward_reconciliation_without_force_push() {
     let message = publish_push_failure(
         " ! [rejected] feature -> feature (non-fast-forward)\nerror: failed to push some refs",
