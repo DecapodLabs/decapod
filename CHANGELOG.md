@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.98.2](https://github.com/DecapodLabs/decapod/compare/v0.98.1...v0.98.2) - 2026-08-12
+
+### Fixed
+
+- keep managed spec projections inside the claimed workspace
+- *(workspace)* fail closed on protected-root spec projection writes
+
+### Other
+
+- *(governance)* keep publication-bundle receipt current
+- *(governance)* rebind receipt to the post-validate tip
+- *(governance)* record validation receipt for #1255
+- *(governance)* bind plan, claims, and trajectory to #1255
+- *(specs)* author workspace-owned projection custody
+- record workspace ownership for living-spec projections
+- prove spec projections stay off dirty main/master roots
+
 ## [0.98.1](https://github.com/DecapodLabs/decapod/compare/v0.98.0...v0.98.1) - 2026-08-12
 
 ### Fixed
