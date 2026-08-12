@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.98.1](https://github.com/DecapodLabs/decapod/compare/v0.98.0...v0.98.1) - 2026-08-12
+
+### Fixed
+
+- keep bootstrap diagnostics independent of migration state
+
+### Other
+
+- record emergency bootstrap proof
+- bind emergency proof plan
+
 ## [0.98.0](https://github.com/DecapodLabs/decapod/compare/v0.97.0...v0.98.0) - 2026-08-11
 
 ### Added
