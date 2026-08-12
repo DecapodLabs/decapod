@@ -89,6 +89,7 @@
   ],
   "evidence": [
     "Dactyl v0.6.2 context forwarding and fail-closed version test pass; local runtime migration remains blocked by canonical SQLite format incompatibility and live cloud proof is unavailable",
+    "validation epoch ve_3356b048a00d4ef1 completed with zero failures",
     "validation epoch ve_baf4d95d524025a6 completed with zero failures"
   ],
   "shortcut_risk_signals": [
@@ -104,7 +105,7 @@
     "shortcut_risk": "caution",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:baba1fdbbd8fd093f1c9eb8d73f318758a02d71576211a4acd9ff7dd40108513",
+  "artifact_hash": "sha256:359e54bde16d5a0ded393353afdfbaa3887c9d585fdc0dd9dedc7d88c710664c",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -165,6 +166,13 @@
       {
         "sequence": 7,
         "event_id": "event:7",
+        "intent_id": "intent:validation_01KZVYNCR2DFZXB7MRY7PT9KPN",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KZVYNCR2DFZXB7MRY7PT9KPN"
+      },
+      {
+        "sequence": 8,
+        "event_id": "event:8",
         "intent_id": "intent:validation_01KZVYNCR2DFZXB7MRY7PT9KPN",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:validation_01KZVYNCR2DFZXB7MRY7PT9KPN"
@@ -275,12 +283,32 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:7"
+          },
+          {
+            "sequence": 8,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "Issues #1028, #1110, #1111, #1112, #1120, #1216, #1217, #1220, #1221, #1222, #1223, #1224, #1247, #1254"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_3356b048a00d4ef1 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:8"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 7
+    "next_sequence": 8
   }
 }
