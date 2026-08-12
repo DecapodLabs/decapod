@@ -5,9 +5,10 @@
   "task_id": "bugs_01kzt0bq5f269jq6",
   "original_intent": "Implement the requested Decapod issue sweep in one reviewable PR.",
   "derived_intent": "Implement and prove Decapod-owned Dactyl compatibility, representative storage bridge, explicit-ID and local concurrency safeguards; report any Propodus route or live-cloud proof boundary without silent fallback.",
-  "current_phase": "implementation and proof",
+  "current_phase": "validation",
   "next_transitions": [
-    "inspect current source and implement bounded bridge"
+    "inspect current source and implement bounded bridge",
+    "publish"
   ],
   "active_boundaries": [
     "One Decapod PR; no dactyl or propodus source mutations; no direct .decapod state mutation; no false cloud-parity claim."
@@ -16,21 +17,33 @@
     "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
   ],
   "inspected_files": [],
-  "modified_files": [],
-  "declared_commands": [],
+  "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json"
+  ],
+  "declared_commands": [
+    "decapod validate"
+  ],
   "tool_calls": [],
-  "checks": [],
-  "evidence": [],
+  "checks": [
+    {
+      "name": "decapod validate",
+      "status": "passed"
+    }
+  ],
+  "evidence": [
+    "validation epoch ve_c3d90cb9e31cf770 completed with zero failures"
+  ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
-  "proof_status": "no_checks_run",
+  "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "unsupported"
+    "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:2d828aec1b0950113f8769042a607c882fc483f352b0eed2b23aeb779c35d2c8",
+  "artifact_hash": "sha256:1a542ee98321b0e946163a3c9ea01b9cb0172b4723367f12840cd8d9ae85d90b",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -65,11 +78,44 @@
         "event_id": "event:3",
         "intent_id": "intent:issue-sweep-v0981-20260811",
         "kind": "refined"
+      },
+      {
+        "sequence": 4,
+        "event_id": "event:4",
+        "intent_id": "intent:issue-sweep-v0981-20260811",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-sweep-v0981-20260811"
       }
     ],
-    "trajectories": {},
+    "trajectories": {
+      "issue-sweep-v0981-20260811": {
+        "id": "issue-sweep-v0981-20260811",
+        "intent_id": "intent:issue-sweep-v0981-20260811",
+        "evidence_only": true,
+        "steps": [
+          {
+            "sequence": 4,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_c3d90cb9e31cf770 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:4"
+          }
+        ]
+      }
+    },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 3
+    "next_sequence": 4
   }
 }
