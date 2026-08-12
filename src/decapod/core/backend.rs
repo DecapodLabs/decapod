@@ -177,6 +177,17 @@ impl StorageContext {
         self.version
     }
 
+    pub fn validate(&self) -> Result<(), DecapodError> {
+        if self.version != Self::CURRENT_VERSION {
+            return Err(DecapodError::Config(format!(
+                "unsupported storage context version {}; expected {}",
+                self.version,
+                Self::CURRENT_VERSION
+            )));
+        }
+        Ok(())
+    }
+
     pub fn route(&self) -> &BackendRoute {
         &self.route
     }

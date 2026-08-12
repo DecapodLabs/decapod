@@ -179,6 +179,25 @@ fn local_context_rejects_cloud_credentials() {
 }
 
 #[test]
+fn future_context_versions_fail_closed_before_driver_use() {
+    let project = TempDir::new().expect("project directory");
+    let selection =
+        BackendSelection::resolve(project.path(), BackendType::Local).expect("local selection");
+    let context = selection
+        .storage_context(None, None)
+        .expect("local context");
+    let mut encoded = serde_json::to_value(&context).expect("context JSON");
+    encoded["version"] = serde_json::json!(2);
+    let future: StorageContext = serde_json::from_value(encoded).expect("future context");
+
+    assert!(matches!(
+        future.validate(),
+        Err(crate::core::error::DecapodError::Config(message))
+            if message.contains("unsupported storage context version")
+    ));
+}
+
+#[test]
 fn route_serialization_preserves_only_the_opaque_target_and_scope() {
     let route = BackendRoute::Cloud {
         repository: crate::core::repo_identity::resolve_repository_identity_from_remote(

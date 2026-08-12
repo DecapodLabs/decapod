@@ -83,6 +83,7 @@ impl DactylBridge {
         context: &StorageContext,
         access_mode: AccessMode,
     ) -> Result<Self, DecapodError> {
+        context.validate()?;
         Self::from_backend_route(context.route(), access_mode, context.bearer())
     }
 
