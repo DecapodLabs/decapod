@@ -1246,7 +1246,12 @@ fn prepare_workspace_clone(
         let fetch_ref = format!("{oid}:refs/decapod/base");
         let _ = run_git(
             &workspace_path,
-            &["fetch", "--no-tags", repo.to_str().unwrap_or("."), &fetch_ref],
+            &[
+                "fetch",
+                "--no-tags",
+                repo.to_str().unwrap_or("."),
+                &fetch_ref,
+            ],
         );
         run_git(&workspace_path, &["checkout", "-B", branch, &oid])?;
     } else {

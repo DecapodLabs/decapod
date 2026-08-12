@@ -549,7 +549,8 @@ fn resolve_artifact_path_for_todo(
         return local;
     }
     if let Some(todo_id) = todo_id {
-        let host = workspace::get_main_repo_root(repo_root).unwrap_or_else(|_| repo_root.to_path_buf());
+        let host =
+            workspace::get_main_repo_root(repo_root).unwrap_or_else(|_| repo_root.to_path_buf());
         if let Some(workspace_path) = workspace::find_workspace_for_task(&host, todo_id) {
             let candidate = workspace_path.join(path);
             if candidate.exists() {

@@ -5957,7 +5957,8 @@ fn record_validation_proof(
             },
         )?
     } else {
-        let existing = existing.expect("existing trajectory is present when a fresh one is not required");
+        let existing =
+            existing.expect("existing trajectory is present when a fresh one is not required");
         if existing.checks.iter().any(|check| {
             check.name == "decapod validate"
                 && matches!(

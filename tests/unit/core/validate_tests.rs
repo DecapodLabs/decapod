@@ -1,11 +1,11 @@
 // Moved from src/decapod/core/validate.rs
 use super::{
-    advisory, fail, governance_paths_updated_vs_base, is_allowed_non_code_path,
-    is_decapod_isolated_worktree, is_non_code_path, note, pass, predict_ci_outcome,
-    receipt_is_reusable, skip, strip_git_quotes, validate_control_plane_contract,
-    validate_git_workspace_context, validate_publication_bundle_currency,
-    validate_root_dockerfile_seed_detection, validate_spec_drift, validate_watcher_audit, warn,
-    SurfaceKind, ValidationContext, VALIDATION_RECEIPT_PATH,
+    SurfaceKind, VALIDATION_RECEIPT_PATH, ValidationContext, advisory, fail,
+    governance_paths_updated_vs_base, is_allowed_non_code_path, is_decapod_isolated_worktree,
+    is_non_code_path, note, pass, predict_ci_outcome, receipt_is_reusable, skip, strip_git_quotes,
+    validate_control_plane_contract, validate_git_workspace_context,
+    validate_publication_bundle_currency, validate_root_dockerfile_seed_detection,
+    validate_spec_drift, validate_watcher_audit, warn,
 };
 use super::{is_protected_git_branch, parse_ahead_behind_counts};
 use crate::core::events;

@@ -75,7 +75,9 @@ fn docker_spec_contains_safety_flags_and_sdlc_steps() {
     assert!(joined.contains("--cap-drop ALL"));
     assert!(joined.contains("--security-opt no-new-privileges:true"));
     assert!(!joined.contains("-e PATH="));
-    assert!(joined.contains("-v /tmp/repo/.decapod/workspaces/w1:/tmp/repo/.decapod/workspaces/w1"));
+    assert!(
+        joined.contains("-v /tmp/repo/.decapod/workspaces/w1:/tmp/repo/.decapod/workspaces/w1")
+    );
     assert!(joined.contains("-v /tmp/repo/.decapod:/tmp/repo/.decapod/workspaces/w1/.decapod"));
     assert!(joined.contains("DECAPOD_LOCAL_ONLY=1"));
     assert!(joined.contains("decapod() { cargo run --quiet --bin decapod -- \"$@\"; }"));
