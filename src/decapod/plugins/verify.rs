@@ -527,12 +527,37 @@ fn is_stale(target: &VerifyTarget, now_secs: i64) -> bool {
 }
 
 fn resolve_artifact_path(repo_root: &Path, stored: &str) -> PathBuf {
+    resolve_artifact_path_for_todo(repo_root, None, stored)
+}
+
+/// Resolve `--artifact` against the workspace that owns the claim.
+///
+/// Local-clone worktrees can hold files that do not exist in the parent
+/// checkout. Prefer a path that exists in `repo_root`, then the newest
+/// `.decapod/workspaces/*` directory for `todo_id` (GitHub #1259).
+fn resolve_artifact_path_for_todo(
+    repo_root: &Path,
+    todo_id: Option<&str>,
+    stored: &str,
+) -> PathBuf {
     let path = Path::new(stored);
     if path.is_absolute() {
-        path.to_path_buf()
-    } else {
-        repo_root.join(path)
+        return path.to_path_buf();
     }
+    let local = repo_root.join(path);
+    if local.exists() {
+        return local;
+    }
+    if let Some(todo_id) = todo_id {
+        let host = workspace::get_main_repo_root(repo_root).unwrap_or_else(|_| repo_root.to_path_buf());
+        if let Some(workspace_path) = workspace::find_workspace_for_task(&host, todo_id) {
+            let candidate = workspace_path.join(path);
+            if candidate.exists() {
+                return candidate;
+            }
+        }
+    }
+    local
 }
 
 fn verify_target(
@@ -915,10 +940,10 @@ pub fn capture_baseline_for_todo(
 
     let mut file_artifacts = Vec::new();
     for path in paths {
-        let disk_path = resolve_artifact_path(repo_root, &path);
+        let disk_path = resolve_artifact_path_for_todo(repo_root, Some(todo_id), &path);
         if !disk_path.exists() {
             return Err(error::DecapodError::NotFound(format!(
-                "Verification artifact file not found: {}. `--artifact` expects a file path relative to the repo root, for example `--artifact README.md`. To attach notes, use `decapod todo comment --id {}`.",
+                "Verification artifact file not found: {}. `--artifact` expects a file path relative to the workspace worktree that owns the claim, for example `--artifact README.md`. To attach notes, use `decapod todo comment --id {}`.",
                 disk_path.display(),
                 todo_id
             )));
