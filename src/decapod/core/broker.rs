@@ -94,7 +94,7 @@ impl DbBroker {
 
     /// Execute a write through the queue (synchronous for now) and return its
     /// affected-row count. IDs belong to the caller; this API never reads
-    /// ambient connection state such as `last_insert_rowid`.
+    /// connection-local generated-ID state.
     pub fn execute_write_sync(
         &self,
         db_path: &Path,

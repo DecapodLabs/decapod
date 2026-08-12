@@ -33,6 +33,7 @@ This project's architecture consists of the following key layers/directories:
 - `DbBroker::execute_write_sync` returns affected rows. Decapod callers own stable IDs rather than reading ambient connection-generated row IDs.
 - `DbBroker::with_transaction` is the Decapod-owned atomic mutation seam. Material TODO lifecycle, ownership, lease, agent-session, and federation state changes append their canonical event within the same transaction; `events::append_on_conn` composes with caller-owned transactions and uses idempotent event identity plus unique stream sequencing.
 - `core::backend::BackendSelection` is the provider-neutral route seam: it reads `repo.backend`, uses the Git `origin` remote for cloud repository scope, binds local to `.decapod/data/decapod.db`, and passes a session-supplied cloud URI through as opaque data for Dactyl. Ordinary Decapod persistence does not construct a Propodus, Vercel, or Neon path.
+- `core::dactyl::DactylBridge` is the physical-driver seam for backend-neutral conformance: it exposes Dactyl's explicit result, atomic-batch, access-mode, and typed-error contract without leaking a backend handle. It refuses to open the canonical SQLite path until Dactyl's file-backed compatibility is proven, preventing a second local authority; cloud route construction remains bearer-gated and opaque.
 - Session custody is machine-local for both backend choices: the Decapod agent-session record is stored under the machine config directory, uses `local_`/`cloud_` token prefixes to detect backend changes, and defaults to a four-hour TTL bounded between 30 minutes and six hours. Cloud access and refresh tokens are stored separately under the machine data directory and refreshed before the remaining lifetime falls below 30 minutes.
 
 ## Publication Bundle Currency Architecture (#1232)
@@ -189,7 +190,7 @@ sequenceDiagram
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2482f6f9a3ae853ae7e57c2f9eb44decde53380cc64a95079deb3ef60d20693b`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (102 files), `tests/` (4 files)
+- Repository signal fingerprint: `e3322ee47bc3060006029a5ddae3f36e5a88979405b6a2f40f033af6a26c583b`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (103 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

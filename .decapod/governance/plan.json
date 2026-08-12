@@ -1,32 +1,34 @@
 {
   "schema_version": "1.0.0",
-  "title": "Emergency v0.98 bootstrap diagnostics repair",
-  "intent": "Keep Decapod capabilities, constitution, docs, and version diagnostics available before session and migration state; publish only this emergency fix.",
+  "title": "Unified storage, Dactyl seam, migration, and compatibility issue sweep",
+  "intent": "Implement the user-requested Decapod GitHub Issues #1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, and #1247 in one reviewable PR, preserving existing interface boundaries and proving each issue-relevant behavior.",
   "state": "APPROVED",
   "todo_ids": [
-    "data_01kzswb216t0we1x"
+    "bugs_01kzt0bq5f269jq6"
   ],
   "proof_hooks": [
-    "bootstrap command integration test passes",
-    "migration unit slice passes",
-    "decapod validate passes with a bound receipt"
+    "Live issue acceptance mapping covers every requested issue",
+    "Focused tests cover storage, migration, Dactyl boundary, and compatibility behavior",
+    "cargo fmt --check and targeted cargo tests pass",
+    "decapod validate passes with current governance artifacts"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [
-    "Do not resume the broad issue sweep in this PR.",
-    "Do not weaken stateful migration, session, worktree, or validation gates."
+    "Stop for human review if live issue requirements conflict materially or require expanding beyond the listed issues.",
+    "Do not weaken migration, session, workspace, interface, or validation gates to make the issue sweep pass.",
+    "Do not claim an issue resolved without a linked implementation and proof result."
   ],
   "unresolved_contradictions": [],
   "deferred_questions": [
-    "Broad issues #1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, and #1247 remain explicitly deferred."
+    "Full all-store call-site migration and live cloud conformance remain contingent on a verified Decapod-compatible Propodus Dactyl HTTP route; report this boundary explicitly if it cannot be proven in this repository PR."
   ],
   "constraints": {
     "forbidden_paths": [
-      "No external credentials, production data, or unrelated storage migration changes."
+      "External credentials, production data, unrelated repository migrations, and direct mutation of .decapod state."
     ],
-    "file_touch_budget": 20
+    "file_touch_budget": 80
   },
   "phases": [],
-  "updated_at": "1786501509Z"
+  "updated_at": "1786506065Z"
 }

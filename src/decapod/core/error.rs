@@ -83,6 +83,8 @@ impl StorageFailureKind {
 pub enum DecapodError {
     /// SQLite database error (auto-converts from `rusqlite::Error`)
     RusqliteError(rusqlite::Error),
+    /// Dactyl physical storage error, normalized at the Decapod boundary.
+    DactylError(dactyl_db::DactylError),
     /// I/O error (auto-converts from `std::io::Error`)
     IoError(io::Error),
     /// Database initialization failure
@@ -111,6 +113,7 @@ impl fmt::Display for DecapodError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::RusqliteError(e) => write!(f, "SQLite error: {e}"),
+            Self::DactylError(e) => write!(f, "Dactyl error: {e}"),
             Self::IoError(e) => {
                 if e.kind() == std::io::ErrorKind::InvalidInput && e.to_string().contains("SUN_LEN")
                 {
@@ -152,6 +155,7 @@ impl std::error::Error for DecapodError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::RusqliteError(e) => Some(e),
+            Self::DactylError(e) => Some(e),
             Self::IoError(e) => Some(e),
             Self::EnvVarError(e) => Some(e),
             _ => None,
@@ -162,6 +166,12 @@ impl std::error::Error for DecapodError {
 impl From<rusqlite::Error> for DecapodError {
     fn from(e: rusqlite::Error) -> Self {
         Self::RusqliteError(e)
+    }
+}
+
+impl From<dactyl_db::DactylError> for DecapodError {
+    fn from(e: dactyl_db::DactylError) -> Self {
+        Self::DactylError(e)
     }
 }
 
@@ -183,6 +193,7 @@ impl DecapodError {
     pub fn storage_failure_kind(&self) -> StorageFailureKind {
         match self {
             Self::RusqliteError(err) => classify_rusqlite_error(err),
+            Self::DactylError(err) => classify_dactyl_error(err),
             Self::IoError(err)
                 if err
                     .to_string()
@@ -194,6 +205,48 @@ impl DecapodError {
             Self::IoError(_) => StorageFailureKind::Unknown,
             Self::ValidationError(message) => classify_storage_message(message),
             _ => StorageFailureKind::Unknown,
+        }
+    }
+}
+
+fn classify_dactyl_error(err: &dactyl_db::DactylError) -> StorageFailureKind {
+    use dactyl_db::AdapterErrorKind;
+
+    match err {
+        dactyl_db::DactylError::Adapter { kind, .. } => match kind {
+            AdapterErrorKind::Busy | AdapterErrorKind::Locked | AdapterErrorKind::Timeout => {
+                StorageFailureKind::Contention
+            }
+            AdapterErrorKind::Storage
+            | AdapterErrorKind::Transport
+            | AdapterErrorKind::Unavailable => StorageFailureKind::Io,
+            AdapterErrorKind::Constraint
+            | AdapterErrorKind::Conflict
+            | AdapterErrorKind::VersionConflict
+            | AdapterErrorKind::IdempotencyConflict
+            | AdapterErrorKind::IdempotencyInProgress => StorageFailureKind::Constraint,
+            AdapterErrorKind::Capability | AdapterErrorKind::ReadOnly => {
+                StorageFailureKind::Capability
+            }
+            AdapterErrorKind::Value => StorageFailureKind::Value,
+            AdapterErrorKind::Query | AdapterErrorKind::InvalidOperation => {
+                StorageFailureKind::Query
+            }
+            AdapterErrorKind::TransactionAborted => StorageFailureKind::Query,
+            AdapterErrorKind::Authentication
+            | AdapterErrorKind::Authorization
+            | AdapterErrorKind::RateLimited
+            | AdapterErrorKind::Quota
+            | AdapterErrorKind::NotFound
+            | AdapterErrorKind::Cancellation
+            | AdapterErrorKind::Protocol
+            | AdapterErrorKind::Unknown => StorageFailureKind::Unknown,
+        },
+        dactyl_db::DactylError::Config(_) | dactyl_db::DactylError::UnsupportedOperation(_) => {
+            StorageFailureKind::Capability
+        }
+        dactyl_db::DactylError::ColumnNotFound(_) | dactyl_db::DactylError::Conversion(_) => {
+            StorageFailureKind::Value
         }
     }
 }

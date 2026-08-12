@@ -28,6 +28,13 @@ boundary. Dactyl must provide the corresponding atomic operation primitive,
 while Propodus must host compatible ordinary database constraints; neither
 backend decides whether a Decapod transition is valid.
 
+The Dactyl bridge exercises this boundary with caller-owned identifiers, an
+atomic batch that rolls back on constraint failure, read-only enforcement, and
+typed error normalization. It is intentionally an isolated physical-driver
+probe: the canonical local SQLite route fails closed until Dactyl can prove
+file-backed compatibility, and the cloud route requires an opaque bearer
+without deriving organization or repository semantics in Decapod.
+
 ## Event Sourcing Schema
 | Field | Type | Description |
 |---|---|---|
@@ -124,7 +131,7 @@ backend decides whether a Decapod transition is valid.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2482f6f9a3ae853ae7e57c2f9eb44decde53380cc64a95079deb3ef60d20693b`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (102 files), `tests/` (4 files)
+- Repository signal fingerprint: `e3322ee47bc3060006029a5ddae3f36e5a88979405b6a2f40f033af6a26c583b`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (103 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
