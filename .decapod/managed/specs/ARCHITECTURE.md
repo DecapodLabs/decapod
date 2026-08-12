@@ -119,17 +119,20 @@ sequenceDiagram
 - Schema evolution + migration policy: Decapod owns migration identity, ordering, version gates, applied-ledger persistence, backup/restore, and legacy-store import. Storage execution is a replaceable boundary.
 
 ## Current PR Control-Plane Sequence
-1. The CLI resolves the repository governance root and creates the local data
-   directory when required.
-2. Before command dispatch, migration reconciliation runs against the
+1. Bootstrap discovery and diagnostics (`capabilities`, constitution lookup,
+   embedded docs, and version inspection) dispatch before stateful setup so a
+   damaged or missing datastore cannot hide the recovery instructions.
+2. For stateful commands, the CLI resolves the repository governance root and
+   creates the local data directory when required.
+3. Before stateful command dispatch, migration reconciliation runs against the
    version-counter and applied-migration ledger.
-3. Successful version transitions return a report; the agent-facing command
+4. Successful version transitions return a report; the agent-facing command
    emits a warning/instruction naming the applied migrations and inspection
    paths.
-4. Trajectory initialization validates the requested run only when the existing
+5. Trajectory initialization validates the requested run only when the existing
    cookie is a valid same-run artifact, then atomically replaces the single
    tracked JSON file.
-5. Validation and publication consume the resulting artifact; no runtime
+6. Validation and publication consume the resulting artifact; no runtime
    reader treats appended JSON values as history.
 
 ## Artifact Ownership Matrix
@@ -186,7 +189,7 @@ sequenceDiagram
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `99d2e4ff8a3f7ea3d491a4627c66063efaa30ca95663559599225a4f407dc20e`
+- Repository signal fingerprint: `2482f6f9a3ae853ae7e57c2f9eb44decde53380cc64a95079deb3ef60d20693b`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (102 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

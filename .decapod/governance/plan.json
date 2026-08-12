@@ -1,33 +1,32 @@
 {
   "schema_version": "1.0.0",
-  "title": "Canonical Decapod persistence and Dactyl routing model",
-  "intent": "Advance Decapod v0.97 toward one provider-neutral Dactyl execution path: repo.backend remains the only project choice for ordinary Decapod state, Decapod passes the runtime datastore selector to Dactyl, local SQLite remains fully functional and is the regression oracle, and cloud may remain blocked only at the unfinished Dactyl/remote contract. The only provider-aware Decapod exception is the explicit auth/session control plane, including the narrowly scoped SQL or API calls required for local session state, cloud registration, entitlement/payment, and auth-session establishment.",
+  "title": "Emergency v0.98 bootstrap diagnostics repair",
+  "intent": "Keep Decapod capabilities, constitution, docs, and version diagnostics available before session and migration state; publish only this emergency fix.",
   "state": "APPROVED",
   "todo_ids": [
-    "fend_01kzs9d8fcw8y18m"
+    "data_01kzswb216t0we1x"
   ],
   "proof_hooks": [
-    "ordinary Decapod domain persistence has no provider-specific storage call sites",
-    "auth/session exceptions are explicit, bounded, and separate from domain state semantics",
-    "local behavior remains green across existing focused, serial library, fmt, and clippy proofs",
-    "PR #1250 and relevant Decapod, Dactyl, and Propodus issues carry the same evidence-backed boundary status"
+    "bootstrap command integration test passes",
+    "migration unit slice passes",
+    "decapod validate passes with a bound receipt"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [
-    "Do not add Propodus, Vercel, or Neon names to ordinary Decapod domain storage code; those details remain behind Dactyl.",
-    "Provider-specific SQL/API calls are allowed only for the authentication, registration, entitlement/payment, and session-control plane.",
-    "Do not weaken or bypass local SQLite behavior to make cloud compile; local tests are the non-regression gate.",
-    "Do not claim end-to-end cloud parity until Dactyl runtime selection, atomic operation support, remote schema, and conformance proof exist."
+    "Do not resume the broad issue sweep in this PR.",
+    "Do not weaken stateful migration, session, worktree, or validation gates."
   ],
   "unresolved_contradictions": [],
   "deferred_questions": [
-    "Dactyl and Propodus adapter APIs remain external prerequisites; record the exact atomic operation contract at the boundary before remote implementation."
+    "Broad issues #1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, and #1247 remain explicitly deferred."
   ],
   "constraints": {
-    "forbidden_paths": [],
-    "file_touch_budget": 50
+    "forbidden_paths": [
+      "No external credentials, production data, or unrelated storage migration changes."
+    ],
+    "file_touch_budget": 20
   },
   "phases": [],
-  "updated_at": "1786484008Z"
+  "updated_at": "1786501509Z"
 }

@@ -85,6 +85,34 @@ fn test_capabilities_schema_stability() {
 }
 
 #[test]
+fn bootstrap_commands_remain_available_when_project_state_needs_repair() {
+    let (_tmp, dir) = setup_repo();
+
+    let version = run_decapod(dir, &["system", "version"]);
+    assert!(
+        version.status.success(),
+        "system version failed: {}",
+        String::from_utf8_lossy(&version.stderr)
+    );
+
+    for args in [
+        vec!["capabilities", "--format", "json"],
+        vec!["system", "capabilities", "--format", "json"],
+        vec!["constitution", "get", "core/DECAPOD"],
+        vec!["docs", "list"],
+        vec!["docs", "ingest"],
+    ] {
+        let output = run_decapod(dir, &args);
+        assert!(
+            output.status.success(),
+            "bootstrap command {:?} failed: {}",
+            args,
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+}
+
+#[test]
 fn test_schema_determinism_command() {
     let (_tmp, dir) = setup_repo();
 
