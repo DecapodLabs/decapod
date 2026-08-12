@@ -24,7 +24,10 @@
     ".github/workflows/ci.yml",
     "AGENTS.md",
     "Cargo.lock",
-    "Cargo.toml"
+    "Cargo.toml",
+    "src/decapod/core/entrypoint_integrity.rs",
+    "src/decapod/core/validate.rs",
+    "tests/entrypoint_correctness.rs"
   ],
   "modified_files": [
     ".decapod/governance/trajectory.json",
@@ -58,9 +61,18 @@
     {
       "name": "decapod_validate",
       "status": "passed"
+    },
+    {
+      "name": "historical_entrypoint_compatibility",
+      "status": "passed"
+    },
+    {
+      "name": "source_validate",
+      "status": "passed"
     }
   ],
   "evidence": [
+    "validation epoch ve_2348599cda8f87dc completed with zero failures",
     "validation epoch ve_5315301241f1680d completed with zero failures",
     "validation epoch ve_b422a7fd5ce61bdc completed with zero failures",
     "validation epoch ve_c3d90cb9e31cf770 completed with zero failures"
@@ -74,7 +86,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:016c1c20e69501c98006670eb133b9085298e9c84c9a897a5a40fdb06e2d6643",
+  "artifact_hash": "sha256:cd8fa5c156e289464877659d57a578d3a07f7140493a3303e9b8428096e3fbd9",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -162,6 +174,20 @@
       {
         "sequence": 11,
         "event_id": "event:11",
+        "intent_id": "intent:issue-sweep-v0981-20260811",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-sweep-v0981-20260811"
+      },
+      {
+        "sequence": 12,
+        "event_id": "event:12",
+        "intent_id": "intent:issue-sweep-v0981-20260811",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-sweep-v0981-20260811"
+      },
+      {
+        "sequence": 13,
+        "event_id": "event:13",
         "intent_id": "intent:issue-sweep-v0981-20260811",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:issue-sweep-v0981-20260811"
@@ -316,12 +342,48 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:11"
+          },
+          {
+            "sequence": 12,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_2348599cda8f87dc completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:12"
+          },
+          {
+            "sequence": 13,
+            "action": "trajectory.record",
+            "scope": [
+              "#1028, #1110-#1112, #1120, #1216-#1217, #1220-#1224, #1247"
+            ],
+            "observations": [
+              "src/decapod/core/entrypoint_integrity.rs",
+              "src/decapod/core/validate.rs",
+              "tests/entrypoint_correctness.rs"
+            ],
+            "proof_refs": [
+              "historical_entrypoint_compatibility",
+              "source_validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:13"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 11
+    "next_sequence": 13
   }
 }
