@@ -427,6 +427,83 @@ pub fn build_validation_receipt(
     .with_recomputed_hash()
 }
 
+/// True when an existing receipt can stay on disk instead of being rewritten.
+///
+/// Rewriting on every successful validate forces a commit/validate/amend chase
+/// because `git_revision` then lags the new HEAD (GitHub #1259). Reuse when the
+/// receipt is integrity-valid, bound to the current trajectory, and HEAD only
+/// added governance files since that revision.
+pub(crate) fn receipt_is_reusable(
+    project_root: &Path,
+    receipt: &ValidationReceipt,
+    trajectory: &trajectory::TrajectoryArtifact,
+) -> bool {
+    if receipt.validate_integrity().is_err() {
+        return false;
+    }
+    if receipt.trajectory_run_id.as_deref() != Some(trajectory.run_id.as_str())
+        || receipt.trajectory_artifact_hash.as_deref() != Some(trajectory.artifact_hash.as_str())
+    {
+        return false;
+    }
+    if receipt.decapod_release != crate::core::entrypoint_integrity::RELEASE_VERSION {
+        return false;
+    }
+    let git_dir = project_root.to_str().unwrap_or(".");
+    let head = std::process::Command::new("git")
+        .args(["-C", git_dir, "rev-parse", "HEAD"])
+        .output()
+        .ok()
+        .filter(|output| output.status.success())
+        .map(|output| String::from_utf8_lossy(&output.stdout).trim().to_string())
+        .unwrap_or_default();
+    if head.is_empty() {
+        return false;
+    }
+    if receipt.git_revision == head || receipt.git_revision == "UNRESOLVED" {
+        return true;
+    }
+    let ancestor = std::process::Command::new("git")
+        .args([
+            "-C",
+            git_dir,
+            "merge-base",
+            "--is-ancestor",
+            &receipt.git_revision,
+            "HEAD",
+        ])
+        .status()
+        .map(|status| status.success())
+        .unwrap_or(false);
+    if !ancestor {
+        return false;
+    }
+    let output = std::process::Command::new("git")
+        .args([
+            "-C",
+            git_dir,
+            "diff",
+            "--name-only",
+            &receipt.git_revision,
+            "HEAD",
+        ])
+        .output();
+    let Ok(output) = output else {
+        return false;
+    };
+    if !output.status.success() {
+        return false;
+    }
+    String::from_utf8_lossy(&output.stdout)
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .all(|path| {
+            workspace::REQUIRED_PR_GOVERNANCE_ARTIFACTS.contains(&path)
+                || path.starts_with(".decapod/governance/")
+        })
+}
+
 static VALIDATION_TEMP_PATHS: OnceLock<Mutex<Vec<PathBuf>>> = OnceLock::new();
 
 fn validation_temp_paths() -> &'static Mutex<Vec<PathBuf>> {
@@ -2744,32 +2821,16 @@ fn validate_governance_pr_updates(
         ".decapod/governance/trajectory.json",
         ".decapod/governance/validation.json",
     ];
-    let git_dir = repo_root.to_str().unwrap_or(".");
-    let output = std::process::Command::new("git")
-        .args([
-            "-C",
-            git_dir,
-            "diff",
-            "--name-only",
-            &format!("{base_ref}...HEAD"),
-            "--",
-        ])
-        .args(required)
-        .output()
-        .map_err(error::DecapodError::IoError)?;
-    if !output.status.success() {
-        fail(
-            &format!("GOVERNANCE_PR_UPDATES: unable to inspect PR diff against {base_ref}"),
-            ctx,
-        );
-        return Ok(());
-    }
-    let changed: HashSet<String> = String::from_utf8_lossy(&output.stdout)
-        .lines()
-        .map(str::trim)
-        .filter(|p| !p.is_empty())
-        .map(str::to_string)
-        .collect();
+    let changed = match governance_paths_updated_vs_base(repo_root, &base_ref, &required) {
+        Ok(changed) => changed,
+        Err(_) => {
+            fail(
+                &format!("GOVERNANCE_PR_UPDATES: unable to inspect PR diff against {base_ref}"),
+                ctx,
+            );
+            return Ok(());
+        }
+    };
     let missing: Vec<&str> = required
         .iter()
         .copied()
@@ -2778,6 +2839,15 @@ fn validate_governance_pr_updates(
     if missing.is_empty() {
         pass(
             "PR updates all four governance JSON artifacts versus base",
+            ctx,
+        );
+    } else if missing == [VALIDATION_RECEIPT_PATH] {
+        // Receipt is written only after a successful validate. Counting it as
+        // a hard miss here is the #1259 deadlock: the same gate that requires
+        // the file also prevents writing it. Plan/claims/trajectory must still
+        // appear in the PR; the receipt is emitted on this successful run.
+        pass(
+            "PR updates plan/claims/trajectory; validation.json is written on successful validate (GitHub #1259)",
             ctx,
         );
     } else {
@@ -2790,6 +2860,71 @@ fn validate_governance_pr_updates(
         );
     }
     Ok(())
+}
+
+/// Paths among `required` that differ from `base_ref` in commits, the index,
+/// or the working tree. Untracked required files count so a just-written
+/// receipt participates before it is committed.
+pub(crate) fn governance_paths_updated_vs_base(
+    repo_root: &Path,
+    base_ref: &str,
+    required: &[&str],
+) -> Result<HashSet<String>, error::DecapodError> {
+    let git_dir = repo_root.to_str().unwrap_or(".");
+    let mut changed = HashSet::new();
+    for args in [
+        vec![
+            "diff".to_string(),
+            "--name-only".to_string(),
+            format!("{base_ref}...HEAD"),
+        ],
+        vec![
+            "diff".to_string(),
+            "--name-only".to_string(),
+            base_ref.to_string(),
+        ],
+        vec![
+            "diff".to_string(),
+            "--cached".to_string(),
+            "--name-only".to_string(),
+        ],
+    ] {
+        let output = std::process::Command::new("git")
+            .args(["-C", git_dir])
+            .args(&args)
+            .args(["--"])
+            .args(required)
+            .output()
+            .map_err(error::DecapodError::IoError)?;
+        if !output.status.success() {
+            return Err(error::DecapodError::ValidationError(format!(
+                "unable to inspect git diff against {base_ref}"
+            )));
+        }
+        for line in String::from_utf8_lossy(&output.stdout).lines() {
+            let path = line.trim();
+            if !path.is_empty() {
+                changed.insert(path.to_string());
+            }
+        }
+    }
+    for path in required {
+        let disk = repo_root.join(path);
+        if !disk.is_file() {
+            continue;
+        }
+        let tracked = std::process::Command::new("git")
+            .args(["-C", git_dir, "ls-files", "--error-unmatch", "--", path])
+            .output();
+        let is_tracked = tracked
+            .as_ref()
+            .map(|output| output.status.success())
+            .unwrap_or(false);
+        if !is_tracked {
+            changed.insert((*path).to_string());
+        }
+    }
+    Ok(changed)
 }
 
 /// Publication-bundle **participation** gate at HEAD (GitHub #1232).

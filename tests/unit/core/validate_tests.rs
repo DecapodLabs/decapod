@@ -1,10 +1,11 @@
 // Moved from src/decapod/core/validate.rs
 use super::{
-    SurfaceKind, VALIDATION_RECEIPT_PATH, ValidationContext, advisory, fail,
-    is_allowed_non_code_path, is_decapod_isolated_worktree, is_non_code_path, note, pass,
-    predict_ci_outcome, skip, strip_git_quotes, validate_control_plane_contract,
+    advisory, fail, governance_paths_updated_vs_base, is_allowed_non_code_path,
+    is_decapod_isolated_worktree, is_non_code_path, note, pass, predict_ci_outcome,
+    receipt_is_reusable, skip, strip_git_quotes, validate_control_plane_contract,
     validate_git_workspace_context, validate_publication_bundle_currency,
     validate_root_dockerfile_seed_detection, validate_spec_drift, validate_watcher_audit, warn,
+    SurfaceKind, ValidationContext, VALIDATION_RECEIPT_PATH,
 };
 use super::{is_protected_git_branch, parse_ahead_behind_counts};
 use crate::core::events;
@@ -728,5 +729,128 @@ fn publication_bundle_currency_fails_when_plan_missing() {
     assert!(
         ctx.fail_count.load(Ordering::Relaxed) >= 1,
         "missing plan at HEAD must fail currency gate"
+    );
+}
+
+#[test]
+fn governance_paths_count_working_tree_receipt() {
+    let tmp = tempdir().expect("tmpdir");
+    let dir = tmp.path();
+    git(dir, &["init", "-b", "master"]);
+    git(dir, &["config", "user.email", "t@t.com"]);
+    git(dir, &["config", "user.name", "t"]);
+    let receipt = dir.join(VALIDATION_RECEIPT_PATH);
+    fs::create_dir_all(receipt.parent().unwrap()).expect("gov dir");
+    fs::write(&receipt, "{}\n").expect("base receipt");
+    git(dir, &["add", "."]);
+    git(dir, &["commit", "-m", "base"]);
+    git(dir, &["checkout", "-b", "feature"]);
+    fs::write(&receipt, "{\"rewritten\":true}\n").expect("dirty receipt");
+
+    let changed =
+        governance_paths_updated_vs_base(dir, "master", &[VALIDATION_RECEIPT_PATH]).expect("diff");
+    assert!(
+        changed.contains(VALIDATION_RECEIPT_PATH),
+        "uncommitted receipt rewrite must count as PR participation: {changed:?}"
+    );
+}
+
+#[test]
+fn receipt_is_reusable_after_governance_only_commit() {
+    let tmp = tempdir().expect("tmpdir");
+    let dir = tmp.path();
+    git(dir, &["init", "-b", "master"]);
+    git(dir, &["config", "user.email", "t@t.com"]);
+    git(dir, &["config", "user.name", "t"]);
+    fs::write(dir.join("app.txt"), "base\n").expect("app");
+    git(dir, &["add", "."]);
+    git(dir, &["commit", "-m", "base"]);
+    let head = std::process::Command::new("git")
+        .args(["-C", dir.to_str().unwrap(), "rev-parse", "HEAD"])
+        .output()
+        .expect("head");
+    let revision = String::from_utf8_lossy(&head.stdout).trim().to_string();
+
+    let trajectory = crate::core::trajectory::TrajectoryArtifact {
+        schema_version: "1.1.0".to_string(),
+        run_id: "run_reuse".to_string(),
+        intent_id: None,
+        task_id: Some("bugs_01test".to_string()),
+        original_intent: "t".to_string(),
+        derived_intent: "t".to_string(),
+        destination: None,
+        current_phase: None,
+        next_transitions: Vec::new(),
+        blockers: Vec::new(),
+        active_boundaries: Vec::new(),
+        repo_scope: Vec::new(),
+        inspected_files: Vec::new(),
+        modified_files: Vec::new(),
+        declared_commands: Vec::new(),
+        tool_calls: Vec::new(),
+        loops: Vec::new(),
+        checks: Vec::new(),
+        evidence: Vec::new(),
+        shortcut_risk_signals: Vec::new(),
+        unresolved_assumptions: Vec::new(),
+        completion_claim: None,
+        proof_status: crate::core::trajectory::TrajectoryProofStatus::Passed,
+        verdicts: crate::core::trajectory::TrajectoryVerdicts {
+            intent_alignment: crate::core::trajectory::TrajectoryVerdict::Supported,
+            boundary_discipline: crate::core::trajectory::TrajectoryVerdict::Supported,
+            shortcut_risk: crate::core::trajectory::TrajectoryVerdict::Supported,
+            completion_proof: crate::core::trajectory::TrajectoryVerdict::Supported,
+        },
+        artifact_hash: "sha256:traj".to_string(),
+        custody: crate::core::custody::CustodyState::default(),
+    };
+    let receipt = super::ValidationReceipt {
+        schema_version: "1.0.0".to_string(),
+        kind: "validation_receipt".to_string(),
+        decapod_release: crate::core::entrypoint_integrity::RELEASE_VERSION.to_string(),
+        git_revision: revision,
+        repo_signal_fingerprint: "0".to_string(),
+        trajectory_run_id: Some(trajectory.run_id.clone()),
+        trajectory_artifact_hash: Some(trajectory.artifact_hash.clone()),
+        validation_epoch: crate::core::validation_epoch::ValidationEpochMetadata {
+            schema_version: "1.0.0".to_string(),
+            epoch_id: "ve".to_string(),
+            evaluator_identity: "t".to_string(),
+            evaluator_set_hash: "sha256:00".to_string(),
+            constitution_version: "t".to_string(),
+            constitution_hash: "sha256:00".to_string(),
+            validation_profile: "t".to_string(),
+            validation_profile_hash: "sha256:00".to_string(),
+            proof_rubric: "t".to_string(),
+            proof_rubric_hash: "sha256:00".to_string(),
+            generated_specs_manifest_hash: "sha256:00".to_string(),
+            generated_specs_fingerprint: "0".to_string(),
+            material_hashes: std::collections::BTreeMap::new(),
+        },
+        status: "ok".to_string(),
+        pass_count: 1,
+        fail_count: 0,
+        warn_count: 0,
+        elapsed_ms: 1,
+        drift_findings: Vec::new(),
+        temporary_artifacts_cleaned: 0,
+        failures: Some(Vec::new()),
+        warnings: Some(Vec::new()),
+        gate_timings: None,
+        parallelism: None,
+        ci_prediction: None,
+        receipt_hash: String::new(),
+    }
+    .with_recomputed_hash()
+    .expect("hash");
+
+    fs::create_dir_all(dir.join(".decapod/governance")).expect("gov");
+    fs::write(dir.join(VALIDATION_RECEIPT_PATH), "{}\n").expect("receipt");
+    git(dir, &["add", VALIDATION_RECEIPT_PATH]);
+    git(dir, &["commit", "-m", "receipt"]);
+
+    assert!(
+        receipt_is_reusable(dir, &receipt, &trajectory),
+        "receipt must stay reusable when HEAD only added governance files"
     );
 }
