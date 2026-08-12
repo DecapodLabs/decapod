@@ -697,6 +697,7 @@ pub fn refresh_specs_from_codebase(
     project_root: &Path,
     declared_capabilities: &[String],
 ) -> Result<ProjectSpecsManifest, error::DecapodError> {
+    crate::core::workspace::ensure_isolated_workspace_for_projection_mutation(project_root)?;
     let fingerprint = repo_signal_fingerprint(project_root)?;
     let surfaces = codebase_surface_summary(project_root)?;
     for spec in LOCAL_PROJECT_SPECS {

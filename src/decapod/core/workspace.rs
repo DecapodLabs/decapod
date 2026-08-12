@@ -281,8 +281,9 @@ fn check_git_status(repo_root: &Path) -> Result<GitStatus, DecapodError> {
     let in_worktree = is_worktree(repo_root)?;
     let has_local_mods = has_local_modifications(repo_root)?;
 
-    // Check if this is the main repository checkout (not an isolated workspace)
-    let is_main_repo = !repo_root.to_string_lossy().contains(".decapod/workspaces");
+    // Identity is the Git checkout path, not the branch name or DECAPOD_* env.
+    // Only a Decapod-owned path under `.decapod/workspaces/` is isolated.
+    let is_main_repo = !is_canonical_decapod_workspace_path(repo_root);
 
     Ok(GitStatus {
         current_branch,
@@ -1149,8 +1150,78 @@ pub fn is_worktree(repo_root: &Path) -> Result<bool, DecapodError> {
     let git_dir = String::from_utf8_lossy(&output.stdout).trim().to_string();
     // In a worktree, git-dir is usually <main-repo>/.git/worktrees/<name>
     // A local-clone workspace under .decapod/workspaces is also treated as a worktree context
-    Ok(git_dir.contains("/worktrees/")
-        || repo_root.to_string_lossy().contains(".decapod/workspaces"))
+    Ok(git_dir.contains("/worktrees/") || is_canonical_decapod_workspace_path(repo_root))
+}
+
+/// True when `path` is a Decapod-owned isolated workspace.
+///
+/// Walks path components for `.decapod/workspaces` so a stray filename or
+/// environment variable cannot impersonate custody. GitHub #1255.
+pub fn is_canonical_decapod_workspace_path(path: &Path) -> bool {
+    let mut saw_decapod = false;
+    for comp in path.components() {
+        let seg = comp.as_os_str().to_string_lossy();
+        if seg == ".decapod" {
+            saw_decapod = true;
+            continue;
+        }
+        if saw_decapod && seg == "workspaces" {
+            return true;
+        }
+        saw_decapod = false;
+    }
+    false
+}
+
+/// Resolve the actual Git worktree root (`rev-parse --show-toplevel`).
+///
+/// Returns `None` when `start_dir` is not inside a Git repository. Callers
+/// that mutate projections must not fall back to `DECAPOD_WORKSPACE` or the
+/// current branch name.
+pub fn git_toplevel(start_dir: &Path) -> Result<Option<PathBuf>, DecapodError> {
+    match get_repo_root(start_dir) {
+        Ok(path) => Ok(Some(path)),
+        Err(DecapodError::ValidationError(message))
+            if message.contains("Not in a git repository") =>
+        {
+            Ok(None)
+        }
+        Err(err) => Err(err),
+    }
+}
+
+fn projection_workspace_required(toplevel: &Path) -> DecapodError {
+    DecapodError::ValidationError(format!(
+        "AUTOREMEDIABLE_VALIDATION_ERROR code=workspace_required severity=transient auto_remediable=true audience=agent agent_action=\"Run `decapod todo claim --id <task-id>` then `decapod workspace ensure`, cd into the reported `.decapod/workspaces/*` path, and retry. Do not mutate, stash, or reset files in the protected root checkout.\" user_note=\"Managed spec projections may be written only inside the claimed isolated Decapod workspace.\"\nworkspace_required: refusing to mutate `.decapod/managed/specs/*` outside an isolated Decapod workspace (git toplevel: {}). Protected root main/master checkouts stay untouched.",
+        toplevel.display()
+    ))
+}
+
+/// Fail closed unless `project_root`'s Git toplevel is a claimed isolated
+/// Decapod workspace. Tests may set `DECAPOD_VALIDATE_SKIP_GIT_GATES`.
+///
+/// Non-git directories (scaffold fixtures) are allowed so `decapod init` and
+/// unit tests can still write specs. GitHub #1255.
+pub fn ensure_isolated_workspace_for_projection_mutation(
+    project_root: &Path,
+) -> Result<(), DecapodError> {
+    if std::env::var("DECAPOD_VALIDATE_SKIP_GIT_GATES").is_ok() {
+        return Ok(());
+    }
+
+    let Some(toplevel) = git_toplevel(project_root)? else {
+        return Ok(());
+    };
+
+    if !is_canonical_decapod_workspace_path(&toplevel) {
+        return Err(projection_workspace_required(&toplevel));
+    }
+
+    let status = get_workspace_status(&toplevel)?;
+    if status.git.is_protected || status.git.is_main_repo || !status.git.in_worktree {
+        return Err(projection_workspace_required(&toplevel));
+    }
+    Ok(())
 }
 
 fn has_local_modifications(repo_root: &Path) -> Result<bool, DecapodError> {
@@ -1454,6 +1525,7 @@ pub fn publish_workspace(
     ensure_validation_artifacts_staged(repo_root)?;
     ensure_required_governance_artifacts_in_pr(repo_root, &base_branch)?;
     ensure_material_specs_change_in_pr(repo_root, &base_branch)?;
+    ensure_managed_spec_projections_in_pr(repo_root, &base_branch)?;
 
     // Get current commit hash
     let hash_output = Command::new("git")
@@ -1850,6 +1922,91 @@ pub fn ensure_material_specs_change_in_pr(
         "Cannot publish: FINGERPRINT_ONLY_SPECS — living specs under .decapod/managed/specs/*.md have no material authored-content change versus '{base_ref}'. \
 Fingerprint/attestation refresh alone is insufficient (observed fingerprint-only paths: {fingerprint_only}). \
 Update at least one living spec (INTENT/ARCHITECTURE/INTERFACES/VALIDATION/SEMANTICS/OPERATIONS/SECURITY/README) with prose that reflects this PR's change, then re-run `decapod rpc --op specs.refresh` and `decapod validate`."
+    )))
+}
+
+/// List paths changed in `base_ref...HEAD`.
+pub fn pr_changed_paths(repo_root: &Path, base_ref: &str) -> Result<Vec<String>, DecapodError> {
+    let dir = repo_root.to_str().unwrap_or(".");
+    let output = Command::new("git")
+        .args([
+            "-C",
+            dir,
+            "diff",
+            "--name-only",
+            &format!("{base_ref}...HEAD"),
+        ])
+        .output()
+        .map_err(DecapodError::IoError)?;
+    if !output.status.success() {
+        return Err(DecapodError::ValidationError(format!(
+            "Cannot inspect PR diff against '{base_ref}': {}",
+            String::from_utf8_lossy(&output.stderr).trim()
+        )));
+    }
+    Ok(String::from_utf8_lossy(&output.stdout)
+        .lines()
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
+        .map(str::to_string)
+        .collect())
+}
+
+fn path_is_managed_spec(path: &str) -> bool {
+    path == project_specs::LOCAL_PROJECT_SPECS_DIR
+        || path.starts_with(&format!("{}/", project_specs::LOCAL_PROJECT_SPECS_DIR))
+}
+
+fn path_is_code_related(path: &str) -> bool {
+    matches!(
+        crate::core::dirty_classification::classify_path(path, &[]),
+        crate::core::dirty_classification::DirtyFileClass::UserAuthored
+    )
+}
+
+/// When a PR changes implementation files, the managed spec bundle must travel
+/// in the same diff. Projections generated on a later root-checkout cleanup
+/// are the GitHub #1255 failure mode.
+pub fn ensure_managed_spec_projections_in_pr(
+    repo_root: &Path,
+    base_branch: &str,
+) -> Result<(), DecapodError> {
+    let base_ref = base_ref_for_branch(repo_root, base_branch).ok_or_else(|| {
+        DecapodError::ValidationError(format!(
+            "Cannot publish: base branch '{base_branch}' is not available locally; fetch it before checking managed spec projections."
+        ))
+    })?;
+
+    let dir = repo_root.to_str().unwrap_or(".");
+    let same_commit = Command::new("git")
+        .args(["-C", dir, "rev-parse", base_ref.as_str(), "HEAD"])
+        .output()
+        .map_err(DecapodError::IoError)?;
+    if same_commit.status.success() {
+        let stdout = String::from_utf8_lossy(&same_commit.stdout);
+        let revs: Vec<&str> = stdout
+            .lines()
+            .map(str::trim)
+            .filter(|line| !line.is_empty())
+            .collect();
+        if revs.len() == 2 && revs[0] == revs[1] {
+            return Ok(());
+        }
+    }
+
+    let changed = pr_changed_paths(repo_root, &base_ref)?;
+    let has_code = changed.iter().any(|path| path_is_code_related(path));
+    if !has_code {
+        return Ok(());
+    }
+    if changed.iter().any(|path| path_is_managed_spec(path)) {
+        return Ok(());
+    }
+
+    Err(DecapodError::ValidationError(format!(
+        "Cannot publish: code-related changes versus '{base_ref}' are missing the managed spec projections that belong in the same PR. \
+Include `.decapod/managed/specs/*` (authored living-spec rewrite plus `decapod rpc --op specs.refresh`) in this workspace commit. \
+Do not generate those files later from the protected root checkout (workspace_required / GitHub #1255)."
     )))
 }
 
