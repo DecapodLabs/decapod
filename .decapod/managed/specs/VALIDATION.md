@@ -22,11 +22,12 @@ a source-build workflow because it validates the current repository tree.
 ## Generated Spec Refresh Gates
 Decapod must keep generated specs synchronized at governance pressure points. Fresh `decapod init` may scaffold a missing specs directory. After initialization, refresh must re-evaluate the existing codebase, preserve authored spec content, update codebase-derived attestations, and refresh the manifest rather than rendering scaffold replacements.
 
-Workspace creation and every `decapod validate` call run this refresh path automatically. Release-bound entrypoint fingerprints and the managed Dockerfile pin change only when the installed Decapod release changes; authored specification prose remains the agent's responsibility and is still required for material governed work.
+Refresh is a **workspace-owned write**. `refresh_specs_from_codebase`, validation self-heal, and `specs.refresh` identify custody from the Git toplevel (`rev-parse --show-toplevel`) and write only when that root is a claimed isolated path under `.decapod/workspaces/*` that is not `main`/`master`. A protected-root invocation fails closed with `workspace_required` and must leave pre-existing root files, including unrelated dirt, byte-for-byte untouched. `decapod workspace status` is observational: it may report stale projections, but it must not refresh them (the 0.96.0 contract; GitHub #1255). Workspace creation still aligns release-bound surfaces inside the new worktree.
 
 Refresh-capable paths:
-- `decapod validate --refresh-specs`
-- `decapod rpc --op specs.refresh`
+- `decapod validate` / `decapod validate --refresh-specs` (inside the claimed workspace only)
+- `decapod rpc --op specs.refresh` (inside the claimed workspace only)
+- `decapod workspace ensure` (writes only to the created worktree)
 - fresh initialization only: scaffold `.decapod/managed/specs/*.md` when the directory is absent
 
 Refresh output requirements:
@@ -231,7 +232,7 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2482f6f9a3ae853ae7e57c2f9eb44decde53380cc64a95079deb3ef60d20693b`
+- Repository signal fingerprint: `65e342d060acfb735b870ab14ff057b2ed15e25020fa1b5986749bdd726e7289`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (102 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
