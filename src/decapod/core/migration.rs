@@ -4,10 +4,10 @@
 //! necessary migrations for schema updates, data transformations, etc.
 
 use crate::core::db;
+use crate::core::db::{Connection, OptionalExtension};
 use crate::core::error;
 use crate::core::events;
 use crate::core::schemas;
-use rusqlite::{Connection, OptionalExtension};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -419,9 +419,7 @@ fn checkpoint_legacy_databases(data_root: &Path) -> Result<(), error::DecapodErr
         if !path.is_file() {
             continue;
         }
-        let conn = Connection::open(&path)?;
-        conn.busy_timeout(std::time::Duration::from_secs(5))?;
-        conn.query_row("PRAGMA wal_checkpoint(TRUNCATE)", [], |_| Ok(()))?;
+        let _conn = db::db_connect(&path.to_string_lossy())?;
     }
     Ok(())
 }
@@ -716,7 +714,7 @@ pub fn check_versioned_db_schema_expectations(
                 |row| row.get(0),
             )
             .optional()
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         let actual = raw.and_then(|s| s.parse::<u32>().ok());
         checks.push(DbSchemaVersionCheck {
             db_name: db_name.to_string(),
@@ -911,7 +909,7 @@ fn migrate_reconstruct_todo_events(decapod_root: &Path) -> Result<(), error::Dec
     // Read all tasks from database
     let mut stmt = source
         .prepare("SELECT id, title, status, created_at FROM tasks ORDER BY created_at")
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
 
     let tasks = stmt
         .query_map([], |row| {
@@ -922,10 +920,10 @@ fn migrate_reconstruct_todo_events(decapod_root: &Path) -> Result<(), error::Dec
                 row.get::<_, String>(3)?, // created_at (TEXT in schema)
             ))
         })
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
 
     for task in tasks {
-        let (id, title, status, created_at) = task.map_err(error::DecapodError::RusqliteError)?;
+        let (id, title, status, created_at) = task.map_err(error::DecapodError::StorageError)?;
 
         let event = json!({
             "ts": created_at,
@@ -1007,14 +1005,7 @@ fn migrate_consolidate_databases(decapod_root: &Path) -> Result<(), error::Decap
         // Guard against concurrent processes that may have created the file
         // but not yet populated the schema (race between Connection::open and
         // CREATE TABLE in initialize_knowledge_db).
-        let has_table: bool = k_conn
-            .query_row(
-                "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='knowledge'",
-                [],
-                |row| row.get::<_, i64>(0),
-            )
-            .map(|c| c > 0)
-            .unwrap_or(false);
+        let has_table = k_conn.has_table("knowledge").unwrap_or(false);
         if has_table {
             let mut stmt = k_conn
                 .prepare("SELECT id, title, content, provenance, created_at FROM knowledge")?;
@@ -1029,8 +1020,8 @@ fn migrate_consolidate_databases(decapod_root: &Path) -> Result<(), error::Decap
             })?;
             for r in rows {
                 let (id, title, content, prov, ts) = r?;
-                mem_conn.execute("INSERT OR IGNORE INTO nodes(id, node_type, title, body, created_at, updated_at, dir_path, scope) VALUES(?1, 'observation', ?2, ?3, ?4, ?4, '', 'repo')", rusqlite::params![id, title, content, ts])?;
-                mem_conn.execute("INSERT OR IGNORE INTO sources(id, node_id, source, created_at) VALUES(?1, ?2, ?3, ?4)", rusqlite::params![crate::core::ulid::new_ulid(), id, prov, ts])?;
+                mem_conn.execute("INSERT OR IGNORE INTO nodes(id, node_type, title, body, created_at, updated_at, dir_path, scope) VALUES(?1, 'observation', ?2, ?3, ?4, ?4, '', 'repo')", crate::core::db::params![id, title, content, ts])?;
+                mem_conn.execute("INSERT OR IGNORE INTO sources(id, node_id, source, created_at) VALUES(?1, ?2, ?3, ?4)", crate::core::db::params![crate::core::ulid::new_ulid(), id, prov, ts])?;
             }
         }
     }
@@ -1371,7 +1362,7 @@ fn migrate_schema_fold_v001(decapod_root: &Path) -> Result<(), error::DecapodErr
                 "INSERT INTO agents(agent_id, trust_level, expertise_json, category_claims_json, updated_at, status)
                  VALUES(?1, 'basic', ?2, '[]', '', 'active')
                  ON CONFLICT(agent_id) DO UPDATE SET expertise_json = excluded.expertise_json",
-                rusqlite::params![agent_id, json],
+                crate::core::db::params![agent_id, json],
             )?;
         }
     }
@@ -1408,7 +1399,7 @@ fn migrate_schema_fold_v001(decapod_root: &Path) -> Result<(), error::DecapodErr
                 "INSERT INTO agents(agent_id, trust_level, expertise_json, category_claims_json, updated_at, status)
                  VALUES(?1, 'basic', '[]', ?2, '', 'active')
                  ON CONFLICT(agent_id) DO UPDATE SET category_claims_json = excluded.category_claims_json",
-                rusqlite::params![agent_id, json],
+                crate::core::db::params![agent_id, json],
             )?;
         }
     }
@@ -1466,7 +1457,7 @@ fn migrate_schema_fold_v001(decapod_root: &Path) -> Result<(), error::DecapodErr
                 }
                 conn.execute(
                     "INSERT OR IGNORE INTO task_tags(task_id, tag) VALUES(?1, ?2)",
-                    rusqlite::params![id, tag],
+                    crate::core::db::params![id, tag],
                 )?;
             }
         }
@@ -1503,7 +1494,7 @@ fn migrate_schema_fold_v001(decapod_root: &Path) -> Result<(), error::DecapodErr
             });
             conn.execute(
                 "INSERT OR REPLACE INTO meta(namespace, key, value) VALUES('aptitude', ?1, ?2)",
-                rusqlite::params![format!("pattern:{name}"), value.to_string()],
+                crate::core::db::params![format!("pattern:{name}"), value.to_string()],
             )?;
         }
         conn.execute("DROP TABLE IF EXISTS patterns", [])?;
@@ -1571,7 +1562,7 @@ fn migrate_legacy_meta(
             let (row_namespace, key, value) = row?;
             target.execute(
                 "INSERT OR IGNORE INTO meta(namespace, key, value) VALUES(?1, ?2, ?3)",
-                rusqlite::params![row_namespace, key, value],
+                crate::core::db::params![row_namespace, key, value],
             )?;
         }
     } else {
@@ -1583,7 +1574,7 @@ fn migrate_legacy_meta(
             let (key, value) = row?;
             target.execute(
                 "INSERT OR IGNORE INTO meta(namespace, key, value) VALUES(?1, ?2, ?3)",
-                rusqlite::params![namespace, key, value],
+                crate::core::db::params![namespace, key, value],
             )?;
         }
     }
@@ -1705,44 +1696,11 @@ fn table_has_column(
     table: &str,
     column: &str,
 ) -> Result<bool, error::DecapodError> {
-    let pragma = format!("PRAGMA table_info({table})");
-    let mut stmt = conn
-        .prepare(&pragma)
-        .map_err(error::DecapodError::RusqliteError)?;
-    let mut rows = stmt.query([]).map_err(error::DecapodError::RusqliteError)?;
-    while let Some(row) = rows.next().map_err(error::DecapodError::RusqliteError)? {
-        let name: String = row.get(1).map_err(error::DecapodError::RusqliteError)?;
-        if name == column {
-            return Ok(true);
-        }
-    }
-    Ok(false)
+    Ok(conn.has_column(table, column)?)
 }
 
 fn table_exists(conn: &Connection, table: &str) -> Result<bool, error::DecapodError> {
-    conn.query_row(
-        "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?1",
-        [table],
-        |_| Ok(true),
-    )
-    .optional()
-    .map_err(error::DecapodError::RusqliteError)
-    .map(|v| v.unwrap_or(false))
-}
-
-fn table_columns(
-    conn: &Connection,
-    schema: &str,
-    table: &str,
-) -> Result<Vec<String>, error::DecapodError> {
-    let pragma = format!("PRAGMA {schema}.table_info({table})");
-    let mut stmt = conn.prepare(&pragma)?;
-    let rows = stmt.query_map([], |row| row.get::<_, String>(1))?;
-    let mut columns = Vec::new();
-    for row in rows {
-        columns.push(row?);
-    }
-    Ok(columns)
+    Ok(conn.has_table(table)?)
 }
 
 fn migrate_todo_ids_to_typed_format(decapod_root: &Path) -> Result<(), error::DecapodError> {
@@ -1752,16 +1710,8 @@ fn migrate_todo_ids_to_typed_format(decapod_root: &Path) -> Result<(), error::De
         return Ok(());
     }
 
-    let mut conn = db::db_connect(&todo_db.to_string_lossy())?;
-    let tasks_exists: bool = conn
-        .query_row(
-            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='tasks'",
-            [],
-            |_| Ok(true),
-        )
-        .optional()
-        .map_err(error::DecapodError::RusqliteError)?
-        .unwrap_or(false);
+    let conn = db::db_connect(&todo_db.to_string_lossy())?;
+    let tasks_exists = table_exists(&conn, "tasks")?;
     if !tasks_exists {
         return Ok(());
     }
@@ -1781,7 +1731,7 @@ fn migrate_todo_ids_to_typed_format(decapod_root: &Path) -> Result<(), error::De
         };
         let mut stmt = conn
             .prepare(select_sql)
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         let rows = stmt
             .query_map([], |row| {
                 Ok((
@@ -1790,9 +1740,9 @@ fn migrate_todo_ids_to_typed_format(decapod_root: &Path) -> Result<(), error::De
                     row.get::<_, String>(2).unwrap_or_default(),
                 ))
             })
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         for row in rows {
-            let (id, category, title) = row.map_err(error::DecapodError::RusqliteError)?;
+            let (id, category, title) = row.map_err(error::DecapodError::StorageError)?;
             existing_ids.insert(id.clone());
             if !is_typed_todo_id(&id) {
                 legacy_rows.push((id, category, title));
@@ -1828,11 +1778,9 @@ fn migrate_todo_ids_to_typed_format(decapod_root: &Path) -> Result<(), error::De
     }
 
     let sql = include_str!("sql/todo_task_id_v15_migration.sql");
-    conn.execute_batch("PRAGMA foreign_keys=OFF;")
-        .map_err(error::DecapodError::RusqliteError)?;
     let tx = conn
         .transaction()
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
 
     tx.execute(
         "CREATE TEMP TABLE task_id_migration_map(
@@ -1841,13 +1789,13 @@ fn migrate_todo_ids_to_typed_format(decapod_root: &Path) -> Result<(), error::De
         )",
         [],
     )
-    .map_err(error::DecapodError::RusqliteError)?;
+    .map_err(error::DecapodError::StorageError)?;
     for (old_id, new_id) in &id_map {
         tx.execute(
             "INSERT INTO task_id_migration_map(old_id, new_id) VALUES(?1, ?2)",
             [old_id, new_id],
         )
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     }
 
     let full_schema_compatible = table_has_column(&tx, "tasks", "parent_task_id")?
@@ -1863,12 +1811,12 @@ fn migrate_todo_ids_to_typed_format(decapod_root: &Path) -> Result<(), error::De
 
     if full_schema_compatible {
         tx.execute_batch(sql)
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
     } else {
         let run_if = |cond: bool, statement: &str| -> Result<(), error::DecapodError> {
             if cond {
                 tx.execute(statement, [])
-                    .map_err(error::DecapodError::RusqliteError)?;
+                    .map_err(error::DecapodError::StorageError)?;
             }
             Ok(())
         };
@@ -1931,7 +1879,7 @@ fn migrate_todo_ids_to_typed_format(decapod_root: &Path) -> Result<(), error::De
              WHERE id IN (SELECT old_id FROM task_id_migration_map)",
             [],
         )
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     }
 
     {
@@ -1945,7 +1893,7 @@ fn migrate_todo_ids_to_typed_format(decapod_root: &Path) -> Result<(), error::De
         };
         let mut stmt = tx
             .prepare(select_sql)
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         let rows = stmt
             .query_map([], |row| {
                 Ok((
@@ -1954,10 +1902,10 @@ fn migrate_todo_ids_to_typed_format(decapod_root: &Path) -> Result<(), error::De
                     row.get::<_, String>(2).unwrap_or_default(),
                 ))
             })
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         let mut rewrites = Vec::new();
         for row in rows {
-            let (task_id, depends_on, blocks) = row.map_err(error::DecapodError::RusqliteError)?;
+            let (task_id, depends_on, blocks) = row.map_err(error::DecapodError::StorageError)?;
             let next_depends = rewrite_csv_task_ids(&depends_on, &id_map);
             let next_blocks = rewrite_csv_task_ids(&blocks, &id_map);
             if next_depends != depends_on || next_blocks != blocks {
@@ -1971,23 +1919,23 @@ fn migrate_todo_ids_to_typed_format(decapod_root: &Path) -> Result<(), error::De
                     (true, true) => {
                         tx.execute(
                             "UPDATE tasks SET depends_on = ?1, blocks = ?2 WHERE id = ?3",
-                            rusqlite::params![depends_on, blocks, task_id],
+                            crate::core::db::params![depends_on, blocks, task_id],
                         )
-                        .map_err(error::DecapodError::RusqliteError)?;
+                        .map_err(error::DecapodError::StorageError)?;
                     }
                     (true, false) => {
                         tx.execute(
                             "UPDATE tasks SET depends_on = ?1 WHERE id = ?2",
-                            rusqlite::params![depends_on, task_id],
+                            crate::core::db::params![depends_on, task_id],
                         )
-                        .map_err(error::DecapodError::RusqliteError)?;
+                        .map_err(error::DecapodError::StorageError)?;
                     }
                     (false, true) => {
                         tx.execute(
                             "UPDATE tasks SET blocks = ?1 WHERE id = ?2",
-                            rusqlite::params![blocks, task_id],
+                            crate::core::db::params![blocks, task_id],
                         )
-                        .map_err(error::DecapodError::RusqliteError)?;
+                        .map_err(error::DecapodError::StorageError)?;
                     }
                     (false, false) => {}
                 }
@@ -1995,37 +1943,28 @@ fn migrate_todo_ids_to_typed_format(decapod_root: &Path) -> Result<(), error::De
         }
     }
 
-    if tx
-        .query_row(
-            "SELECT 1 FROM pragma_table_info('tasks') WHERE name='hash'",
-            [],
-            |_| Ok(true),
-        )
-        .optional()
-        .map_err(error::DecapodError::RusqliteError)?
-        .unwrap_or(false)
-    {
+    if table_has_column(&tx, "tasks", "hash")? {
         tx.execute(
             "UPDATE tasks
              SET hash = lower(substr(id, instr(id, '_') + 1, 6))
              WHERE instr(id, '_') > 0",
             [],
         )
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     }
 
     if table_exists(&tx, "task_events")? && table_has_column(&tx, "task_events", "payload")? {
         let mut stmt = tx
             .prepare("SELECT event_id, payload FROM task_events")
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         let rows = stmt
             .query_map([], |row| {
                 Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
             })
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         let mut payload_rewrites = Vec::new();
         for row in rows {
-            let (event_id, payload_raw) = row.map_err(error::DecapodError::RusqliteError)?;
+            let (event_id, payload_raw) = row.map_err(error::DecapodError::StorageError)?;
             if let Ok(mut payload_json) = serde_json::from_str::<Value>(&payload_raw) {
                 rewrite_json_task_ids(&mut payload_json, &id_map);
                 if let Ok(next_raw) = serde_json::to_string(&payload_json)
@@ -2039,30 +1978,27 @@ fn migrate_todo_ids_to_typed_format(decapod_root: &Path) -> Result<(), error::De
         for (event_id, payload) in payload_rewrites {
             tx.execute(
                 "UPDATE task_events SET payload = ?1 WHERE event_id = ?2",
-                rusqlite::params![payload, event_id],
+                crate::core::db::params![payload, event_id],
             )
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         }
     }
 
-    tx.commit().map_err(error::DecapodError::RusqliteError)?;
-    conn.execute_batch("PRAGMA foreign_keys=ON;")
-        .map_err(error::DecapodError::RusqliteError)?;
-
+    tx.commit().map_err(error::DecapodError::StorageError)?;
     // Legacy JSONL is an immutable migration input. The consolidated event
     // table is the rewrite target; never rewrite the archive in place.
     if table_exists(&conn, "todo_events")? {
         let mut stmt = conn
             .prepare("SELECT event_id, payload FROM todo_events")
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         let rows = stmt
             .query_map([], |row| {
                 Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
             })
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         let mut updates = Vec::new();
         for row in rows {
-            let (event_id, raw) = row.map_err(error::DecapodError::RusqliteError)?;
+            let (event_id, raw) = row.map_err(error::DecapodError::StorageError)?;
             if let Ok(mut value) = serde_json::from_str::<Value>(&raw) {
                 rewrite_json_task_ids(&mut value, &id_map);
                 let next = serde_json::to_string(&value)
@@ -2076,7 +2012,7 @@ fn migrate_todo_ids_to_typed_format(decapod_root: &Path) -> Result<(), error::De
         for (event_id, payload) in updates {
             conn.execute(
                 "UPDATE todo_events SET payload = ?1 WHERE event_id = ?2",
-                rusqlite::params![payload, event_id],
+                crate::core::db::params![payload, event_id],
             )?;
         }
     }
@@ -2092,15 +2028,7 @@ fn migrate_todo_one_shot_column(decapod_root: &Path) -> Result<(), error::Decapo
     }
 
     let conn = db::db_connect(&todo_db.to_string_lossy())?;
-    let tasks_exists: bool = conn
-        .query_row(
-            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='tasks'",
-            [],
-            |_| Ok(true),
-        )
-        .optional()
-        .map_err(error::DecapodError::RusqliteError)?
-        .unwrap_or(false);
+    let tasks_exists = table_exists(&conn, "tasks")?;
     if !tasks_exists {
         return Ok(());
     }
@@ -2111,7 +2039,7 @@ fn migrate_todo_one_shot_column(decapod_root: &Path) -> Result<(), error::Decapo
             "ALTER TABLE tasks ADD COLUMN one_shot INTEGER DEFAULT 0",
             [],
         )
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     }
 
     Ok(())
@@ -2127,54 +2055,41 @@ fn migrate_table(
     if !source_path.exists() {
         return Ok(());
     }
+    let source_conn = db::db_connect(&source_path.to_string_lossy())?;
+    if !source_conn.has_table(table)? || !target_conn.has_table(table)? {
+        return Ok(());
+    }
+    let source_columns = source_conn.columns(table)?;
+    let target_columns = target_conn.columns(table)?;
+    let columns: Vec<String> = target_columns
+        .into_iter()
+        .filter(|column| source_columns.iter().any(|source| source == column))
+        .collect();
+    if columns.is_empty() {
+        return Ok(());
+    }
 
-    target_conn
-        .execute(
-            "ATTACH DATABASE ?1 AS source",
-            [source_path.to_string_lossy().as_ref()],
-        )
-        .map_err(error::DecapodError::RusqliteError)?;
-
-    let source_has_table = target_conn
-        .query_row(
-            "SELECT 1 FROM source.sqlite_master WHERE type='table' AND name=?1",
-            [table],
-            |_| Ok(true),
-        )
-        .optional()
-        .map_err(error::DecapodError::RusqliteError)?
-        .unwrap_or(false);
-    let res = if source_has_table {
-        let source_columns = table_columns(target_conn, "source", table)?;
-        let target_columns = table_columns(target_conn, "main", table)?;
-        let columns: Vec<String> = target_columns
-            .into_iter()
-            .filter(|column| source_columns.iter().any(|source| source == column))
-            .collect();
-        if columns.is_empty() {
-            Ok(0)
-        } else {
-            let quoted = columns
-                .iter()
-                .map(|column| format!("\"{column}\""))
-                .collect::<Vec<_>>()
-                .join(", ");
-            target_conn.execute(
-                &format!(
-                    "INSERT OR IGNORE INTO main.{table} ({quoted}) SELECT {quoted} FROM source.{table}"
-                ),
-                [],
-            )
-        }
-    } else {
-        Ok(0)
-    };
-
-    target_conn
-        .execute("DETACH DATABASE source", [])
-        .map_err(error::DecapodError::RusqliteError)?;
-
-    res.map_err(error::DecapodError::RusqliteError)?;
+    let quoted = columns
+        .iter()
+        .map(|column| format!("\"{column}\""))
+        .collect::<Vec<_>>()
+        .join(", ");
+    let placeholders = (1..=columns.len())
+        .map(|index| format!("?{index}"))
+        .collect::<Vec<_>>()
+        .join(", ");
+    let select_sql = format!("SELECT {quoted} FROM \"{table}\"");
+    let insert_sql =
+        format!("INSERT OR IGNORE INTO \"{table}\" ({quoted}) VALUES ({placeholders})");
+    let mut stmt = source_conn.prepare(&select_sql)?;
+    let rows = stmt.query([])?;
+    let mut rows = rows;
+    while let Some(row) = rows.next()? {
+        target_conn.execute(
+            &insert_sql,
+            crate::core::db::params_from_values(row.parameters()),
+        )?;
+    }
     Ok(())
 }
 

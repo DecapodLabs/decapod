@@ -67,6 +67,29 @@ variable.
 Propodus also uses `403 organization_seat_required` when a valid GitHub bearer
 token lacks the required organization seat for the canonical repository.
 
+## Backend-neutral storage context
+
+Decapod's versioned `core::backend::StorageContext` is the handoff from
+logical backend selection to a physical driver. A local context contains only
+the repository-local SQLite route and has no organization, user, or cloud
+repository fields. A remote context contains the opaque service route and the
+logical repository scope derived from `origin`; it requires an authenticated
+session bearer, but the bearer is memory-only and is omitted from serialized
+context data.
+
+The Dactyl v0.8.2 bridge forwards the route, versioned context envelope, and
+opaque bearer without interpreting membership or authorization. Propodus remains
+responsible for resolving the authenticated principal, organization membership,
+and repository access. The current Decapod bridge opens the canonical local
+`decapod.db` directly through Dactyl's local adapter; it does not create a
+snapshot or bundled compatibility database. Existing SQLite state is inspected
+and migrated by Decapod through the same Dactyl-backed facade. This keeps one
+canonical Dactyl authority and prevents cloud operations from silently falling
+back to local storage. See [Decapod
+#1254](https://github.com/DecapodLabs/decapod/issues/1254), [Dactyl
+#64](https://github.com/DecapodLabs/dactyl/issues/64), and [Propodus
+#79](https://github.com/DecapodLabs/propodus/issues/79).
+
 ## Credentials
 
 Credentials are never read from `.decapod/config.toml`. Lookup precedence is:
@@ -138,5 +161,5 @@ cloud todo command path, remote-derived repository identity, deployed
 onboarding/session exchange, machine-local refresh, adapter-level command
 proof, and protected command-level live proof without moving hosted
 authentication, repository authorization, persistence, or deployment into
-Decapod. Local mode continues to use SQLite through the same backend-neutral
-todo command boundary.
+Decapod. Local mode continues to use the same backend-neutral todo command
+boundary, with physical canonical storage owned by Dactyl.

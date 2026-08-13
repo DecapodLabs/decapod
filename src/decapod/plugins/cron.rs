@@ -1,10 +1,10 @@
 use crate::core::broker::DbBroker;
+use crate::core::db::{Result as SqlResult, types::ToSql};
 use crate::core::error;
 use crate::core::schemas;
 use crate::core::store::Store;
 use crate::core::todo;
 use clap::{Parser, Subcommand};
-use rusqlite::{Result as SqlResult, types::ToSql};
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs;
@@ -20,7 +20,7 @@ pub fn initialize_cron_db(root: &Path) -> Result<(), error::DecapodError> {
     let db_path = cron_db_path(root);
     broker.with_conn(&db_path, "decapod", None, "cron.init", |conn| {
         conn.execute(schemas::CRON_DB_SCHEMA, [])
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         Ok(())
     })?;
     Ok(())
@@ -204,7 +204,7 @@ fn add_cron_job(
         conn.execute(
             "INSERT INTO cron_jobs(id, name, description, schedule, command, status, tags, created_at, updated_at, dir_path, scope)
              VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
-            rusqlite::params![job_id, name, description, schedule, command, status, tags, now, now, dir_abs, scope],
+            crate::core::db::params![job_id, name, description, schedule, command, status, tags, now, now, dir_abs, scope],
         )?;
         Ok(())
     })?;

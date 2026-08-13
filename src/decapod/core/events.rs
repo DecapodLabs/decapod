@@ -9,9 +9,9 @@
 //! Schema filename constants remain solely so migrations can discover old paths.
 
 use crate::core::db;
+use crate::core::db::{Connection, OptionalExtension, params};
 use crate::core::error;
 use crate::core::schemas;
-use rusqlite::{Connection, OptionalExtension, params};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -153,11 +153,7 @@ pub fn query(
         return Ok(Vec::new());
     }
     let conn = db::db_connect_for_validate(&path.to_string_lossy())?;
-    let table_exists: bool = conn.query_row(
-        "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'events')",
-        [],
-        |row| row.get(0),
-    )?;
+    let table_exists = conn.has_table("events")?;
     if !table_exists {
         return Ok(Vec::new());
     }
@@ -251,12 +247,7 @@ pub fn ensure_tables(conn: &Connection) -> Result<(), error::DecapodError> {
 }
 
 fn table_exists_local(conn: &Connection, name: &str) -> Result<bool, error::DecapodError> {
-    let exists: bool = conn.query_row(
-        "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?1)",
-        [name],
-        |row| row.get(0),
-    )?;
-    Ok(exists)
+    Ok(conn.has_table(name)?)
 }
 
 fn column_exists(
@@ -264,12 +255,7 @@ fn column_exists(
     table: &str,
     column: &str,
 ) -> Result<bool, error::DecapodError> {
-    let exists: bool = conn.query_row(
-        &format!("SELECT EXISTS(SELECT 1 FROM pragma_table_info('{table}') WHERE name = ?1)"),
-        [column],
-        |row| row.get(0),
-    )?;
-    Ok(exists)
+    Ok(conn.has_column(table, column)?)
 }
 
 fn migrate_legacy_stream_tables_into_events(conn: &Connection) -> Result<(), error::DecapodError> {
@@ -337,14 +323,11 @@ fn migrate_legacy_stream_tables_into_events(conn: &Connection) -> Result<(), err
         conn.execute("DROP TABLE IF EXISTS task_events", [])?;
     }
 
-    let sequence_index_exists: bool = conn.query_row(
-        "SELECT EXISTS(
-             SELECT 1 FROM sqlite_master
-             WHERE type = 'index' AND name = 'idx_events_stream_seq_unique'
-         )",
-        [],
-        |row| row.get(0),
-    )?;
+    let sequence_index_exists = conn
+        .inspect_schema()?
+        .indexes
+        .iter()
+        .any(|index| index.name == "idx_events_stream_seq_unique");
     if !sequence_index_exists {
         normalize_stream_sequences(conn)?;
         conn.execute(schemas::EVENTS_TABLE_UNIQUE_STREAM_SEQUENCE_INDEX, [])?;
@@ -446,7 +429,7 @@ fn append_on_conn_inner(
                     params![stream, event_id],
                     |row| row.get(0),
                 )
-                .map_err(error::DecapodError::RusqliteError);
+                .map_err(error::DecapodError::StorageError);
         }
         return Err(error::DecapodError::ValidationError(format!(
             "EVENT_ID_CONFLICT: event '{event_id}' already exists in stream '{stream}' with different contents"
@@ -487,7 +470,7 @@ fn append_on_conn_inner(
                     params![stream, event_id],
                     |row| row.get(0),
                 )
-                .map_err(error::DecapodError::RusqliteError);
+                .map_err(error::DecapodError::StorageError);
         }
         return Err(error::DecapodError::ValidationError(format!(
             "EVENT_ID_CONFLICT: event '{event_id}' already exists in stream '{stream}' with different contents"
@@ -661,11 +644,7 @@ pub fn repair_double_wrapped_federation_payloads(
     conn: &Connection,
 ) -> Result<FederationPayloadRepairReport, error::DecapodError> {
     ensure_tables(conn)?;
-    let table_exists: bool = conn.query_row(
-        "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'events')",
-        [],
-        |row| row.get(0),
-    )?;
+    let table_exists = conn.has_table("events")?;
     if !table_exists {
         return Ok(FederationPayloadRepairReport::default());
     }

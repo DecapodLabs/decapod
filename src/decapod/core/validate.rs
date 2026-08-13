@@ -864,7 +864,7 @@ fn count_tasks_in_db(db_path: &Path) -> Result<i64, error::DecapodError> {
     let conn = db::db_connect_for_validate(&db_path.to_string_lossy())?;
     let count: i64 = conn
         .query_row("SELECT COUNT(*) FROM tasks", [], |row| row.get(0))
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     Ok(count)
 }
 
@@ -3392,6 +3392,20 @@ fn entrypoint_commit_path_violation(
     let new_norm = normalize_entrypoint_blob(&new_content);
     let canonical_norm = normalize_entrypoint_blob(&canonical);
     if new_norm != canonical_norm {
+        let prior_release_canonical = new_content
+            .split('\n')
+            .next()
+            .and_then(|line| line.strip_prefix("<!-- decapod-release:"))
+            .and_then(|value| value.strip_suffix("-->"))
+            .map(str::trim)
+            .filter(|release| !release.is_empty())
+            .and_then(|release| {
+                crate::core::entrypoint_integrity::render_entrypoint_for_release(path, release)
+            })
+            .map(|rendered| normalize_entrypoint_blob(&rendered));
+        if prior_release_canonical.as_deref() == Some(new_norm.as_str()) {
+            return None;
+        }
         return Some(format!(
             "{commit}: entrypoint {path} is not the Decapod {release} template (hand edit or stale body). Regenerate via Decapod; do not hand-edit.",
             release = crate::core::entrypoint_integrity::RELEASE_VERSION
@@ -4309,7 +4323,7 @@ fn validate_health_cache_integrity(
         "SELECT COUNT(*) FROM health_cache hc LEFT JOIN proof_events pe ON hc.claim_id = pe.claim_id WHERE pe.event_id IS NULL",
         [],
         |row| row.get(0),
-    ).map_err(error::DecapodError::RusqliteError)?;
+    ).map_err(error::DecapodError::StorageError)?;
 
     if orphaned == 0 {
         pass("No orphaned health cache entries (integrity pass)", ctx);
@@ -4640,26 +4654,25 @@ fn validate_knowledge_integrity(
         return Ok(());
     }
 
-    let query_missing_provenance = |conn: &rusqlite::Connection| -> Result<i64, rusqlite::Error> {
-        conn.query_row(
-            "SELECT COUNT(*) FROM knowledge WHERE provenance IS NULL OR provenance = ''",
-            [],
-            |row| row.get(0),
-        )
-    };
+    let query_missing_provenance =
+        |conn: &crate::core::db::Connection| -> Result<i64, crate::core::db::Error> {
+            conn.query_row(
+                "SELECT COUNT(*) FROM knowledge WHERE provenance IS NULL OR provenance = ''",
+                [],
+                |row| row.get(0),
+            )
+        };
 
     let mut conn = db::db_connect_for_validate(&db_path.to_string_lossy())?;
     let missing_provenance: i64 = match query_missing_provenance(&conn) {
         Ok(v) => v,
-        Err(rusqlite::Error::SqliteFailure(_, Some(msg)))
-            if msg.contains("no such table: knowledge") =>
-        {
+        Err(e) if e.to_string().contains("no such table: knowledge") => {
             // Self-heal schema drift/partial bootstrap before validating integrity.
             db::initialize_knowledge_db(&store.root)?;
             conn = db::db_connect_for_validate(&db_path.to_string_lossy())?;
-            query_missing_provenance(&conn).map_err(error::DecapodError::RusqliteError)?
+            query_missing_provenance(&conn).map_err(error::DecapodError::StorageError)?
         }
-        Err(e) => return Err(error::DecapodError::RusqliteError(e)),
+        Err(e) => return Err(error::DecapodError::StorageError(e)),
     };
 
     if missing_provenance == 0 {
@@ -4682,7 +4695,7 @@ fn validate_knowledge_integrity(
             [],
             |row| row.get(0),
         )
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     if procedural_missing_event_provenance == 0 {
         pass(
             "Knowledge promotion firewall verified (procedural entries carry event provenance)",
@@ -4703,13 +4716,13 @@ fn validate_knowledge_integrity(
             "SELECT provenance FROM knowledge
              WHERE id LIKE 'procedural/%' AND provenance LIKE 'event:%'",
         )
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     let rows = stmt
         .query_map([], |row| row.get::<_, String>(0))
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     let mut missing_event_refs = 0usize;
     for row in rows {
-        let prov = row.map_err(error::DecapodError::RusqliteError)?;
+        let prov = row.map_err(error::DecapodError::StorageError)?;
         let event_id = prov.trim_start_matches("event:");
         if !event_ids.contains(event_id) {
             missing_event_refs += 1;
@@ -4758,13 +4771,13 @@ fn load_knowledge_promotion_event_ids(
     let conn = db::db_connect_for_validate(&db_path.to_string_lossy())?;
     let mut stmt = conn
         .prepare("SELECT payload FROM events WHERE stream = 'knowledge'")
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     let rows = stmt
         .query_map([], |row| row.get::<_, String>(0))
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     let mut ids = HashSet::new();
     for row in rows {
-        let raw = row.map_err(error::DecapodError::RusqliteError)?;
+        let raw = row.map_err(error::DecapodError::StorageError)?;
         let v: serde_json::Value = serde_json::from_str(&raw).map_err(|e| {
             error::DecapodError::ValidationError(format!(
                 "invalid knowledge promotion event in decapod.db:events (stream=knowledge): {e}"
@@ -4839,10 +4852,10 @@ fn validate_lineage_hard_gate(
         let exists: i64 = todo_conn
             .query_row(
                 "SELECT COUNT(*) FROM tasks WHERE id = ?1",
-                rusqlite::params![task_id.clone()],
+                crate::core::db::params![task_id.clone()],
                 |row| row.get(0),
             )
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         if exists == 0 {
             continue;
         }
@@ -4850,10 +4863,10 @@ fn validate_lineage_hard_gate(
         let commitment_count: i64 = conn
             .query_row(
                 "SELECT COUNT(*) FROM nodes n JOIN node_edges e ON e.source_id = n.id WHERE e.edge_type = 'source' AND json_extract(e.metadata, '$.source') = ?1 AND n.node_type = 'commitment'",
-                rusqlite::params![source],
+                crate::core::db::params![source],
                 |row| row.get(0),
             )
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         if commitment_count == 0 {
             violations.push(format!(
                 "task.add {task_id} missing commitment lineage node"
@@ -4865,10 +4878,10 @@ fn validate_lineage_hard_gate(
         let exists: i64 = todo_conn
             .query_row(
                 "SELECT COUNT(*) FROM tasks WHERE id = ?1",
-                rusqlite::params![task_id.clone()],
+                crate::core::db::params![task_id.clone()],
                 |row| row.get(0),
             )
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         if exists == 0 {
             continue;
         }
@@ -4876,17 +4889,17 @@ fn validate_lineage_hard_gate(
         let commitment_count: i64 = conn
             .query_row(
                 "SELECT COUNT(*) FROM nodes n JOIN node_edges e ON e.source_id = n.id WHERE e.edge_type = 'source' AND json_extract(e.metadata, '$.source') = ?1 AND n.node_type = 'commitment'",
-                rusqlite::params![source.clone()],
+                crate::core::db::params![source.clone()],
                 |row| row.get(0),
             )
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         let decision_count: i64 = conn
             .query_row(
                 "SELECT COUNT(*) FROM nodes n JOIN node_edges e ON e.source_id = n.id WHERE e.edge_type = 'source' AND json_extract(e.metadata, '$.source') = ?1 AND n.node_type = 'decision'",
-                rusqlite::params![source],
+                crate::core::db::params![source],
                 |row| row.get(0),
             )
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         if commitment_count == 0 || decision_count == 0 {
             violations.push(format!(
                 "task.done {task_id} missing commitment/decision lineage nodes"
@@ -5023,13 +5036,7 @@ fn validate_control_plane_contract(
     let local_db = data_dir.join(crate::core::schemas::LOCAL_DB_NAME);
     if local_db.exists() {
         let conn = db::db_connect_for_validate(&local_db.to_string_lossy())?;
-        let has_tasks_table: bool = conn
-            .query_row(
-                "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name='tasks')",
-                [],
-                |row| row.get(0),
-            )
-            .unwrap_or(false);
+        let has_tasks_table = conn.has_table("tasks").unwrap_or(false);
         let has_tasks = has_tasks_table
             && conn
                 .query_row("SELECT EXISTS(SELECT 1 FROM tasks)", [], |row| row.get(0))
@@ -5038,13 +5045,7 @@ fn validate_control_plane_contract(
             violations
                 .push("decapod.db has tasks but canonical todo events are missing".to_string());
         }
-        let has_nodes_table: bool = conn
-            .query_row(
-                "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name='nodes')",
-                [],
-                |row| row.get(0),
-            )
-            .unwrap_or(false);
+        let has_nodes_table = conn.has_table("nodes").unwrap_or(false);
         let has_nodes = has_nodes_table
             && conn
                 .query_row("SELECT EXISTS(SELECT 1 FROM nodes)", [], |row| row.get(0))
@@ -5867,7 +5868,7 @@ fn validate_projection_consistency(
                 [],
                 |row| row.get(0),
             )
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
 
         if done_count > 0 {
             match trajectory::load_trajectory_cookie(main_root) {
@@ -6034,7 +6035,7 @@ fn validate_projection_consistency(
                     let status: Option<String> = conn
                         .query_row(
                             "SELECT status FROM tasks WHERE id = ?1",
-                            rusqlite::params![task_id],
+                            crate::core::db::params![task_id],
                             |row| row.get(0),
                         )
                         .ok();
@@ -6204,7 +6205,7 @@ fn collect_active_todo_handoff_comments(
                AND e.event_type = 'task.comment'
              ORDER BY e.ts ASC, e.event_id ASC",
         )
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     let rows = stmt
         .query_map([], |row| {
             Ok((
@@ -6213,11 +6214,11 @@ fn collect_active_todo_handoff_comments(
                 row.get::<_, String>(2)?,
             ))
         })
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
 
     let mut comments = Vec::new();
     for row in rows {
-        let (todo_id, assigned_to, payload) = row.map_err(error::DecapodError::RusqliteError)?;
+        let (todo_id, assigned_to, payload) = row.map_err(error::DecapodError::StorageError)?;
         let raw: serde_json::Value =
             serde_json::from_str(&payload).unwrap_or(serde_json::Value::Null);
         // New writers store full TodoEvent; migrated task_events used inner payload only.

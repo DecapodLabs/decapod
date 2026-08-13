@@ -9,11 +9,11 @@
 //! - No user-settable status field - status is always derived
 
 use crate::core::broker::DbBroker;
+use crate::core::db::{OptionalExtension, params};
 use crate::core::error;
 use crate::core::schemas;
 use crate::core::store::Store;
 use clap::{Parser, Subcommand, ValueEnum};
-use rusqlite::{OptionalExtension, params};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
@@ -306,12 +306,12 @@ pub fn get_obligation(store: &Store, id: &str) -> Result<ObligationNode, error::
                     metadata,
                 })
             },
-        ).map_err(error::DecapodError::RusqliteError)
+        ).map_err(error::DecapodError::StorageError)
     })
 }
 
 pub fn detect_cycle(
-    conn: &rusqlite::Connection,
+    conn: &crate::core::db::Connection,
     from_id: &str,
     to_id: &str,
 ) -> Result<bool, error::DecapodError> {

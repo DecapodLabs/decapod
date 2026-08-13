@@ -1,5 +1,5 @@
+use crate::core::db::{Connection, OptionalExtension};
 use crate::core::error;
-use rusqlite::{Connection, OptionalExtension};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::fs;
@@ -454,17 +454,17 @@ pub fn ensure_execute_ready(
     }
 
     let db_path = crate::core::todo::todo_db_path(input.store_root);
-    let conn = Connection::open(&db_path).map_err(error::DecapodError::RusqliteError)?;
+    let conn = Connection::open(&db_path).map_err(error::DecapodError::StorageError)?;
     let mut found = false;
     for todo_id in &candidate_todo_ids {
         let exists: Option<i64> = conn
             .query_row(
                 "SELECT 1 FROM tasks WHERE id = ?1 LIMIT 1",
-                rusqlite::params![todo_id],
+                crate::core::db::params![todo_id],
                 |row| row.get(0),
             )
             .optional()
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         if exists.is_some() {
             found = true;
             break;
@@ -841,7 +841,7 @@ pub fn collect_unverified_done_todos(
     if !db_path.exists() {
         return Ok(Vec::new());
     }
-    let conn = Connection::open(db_path).map_err(error::DecapodError::RusqliteError)?;
+    let conn = Connection::open(db_path).map_err(error::DecapodError::StorageError)?;
     let mut stmt = conn
         .prepare(
             "SELECT t.id
@@ -854,14 +854,14 @@ pub fn collect_unverified_done_todos(
                )
              ORDER BY t.updated_at DESC",
         )
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     let rows = stmt
         .query_map([], |row| row.get::<_, String>(0))
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     let verifying_ids = verifying_todo_ids();
     let mut out = Vec::new();
     for row in rows {
-        let id = row.map_err(error::DecapodError::RusqliteError)?;
+        let id = row.map_err(error::DecapodError::StorageError)?;
         if !verifying_ids.iter().any(|verifying_id| verifying_id == &id) {
             out.push(id);
         }
@@ -874,18 +874,18 @@ pub fn count_done_todos(store_root: &Path) -> Result<usize, error::DecapodError>
     if !db_path.exists() {
         return Ok(0);
     }
-    let conn = Connection::open(db_path).map_err(error::DecapodError::RusqliteError)?;
+    let conn = Connection::open(db_path).map_err(error::DecapodError::StorageError)?;
     let verifying_ids = verifying_todo_ids();
     if !verifying_ids.is_empty() {
         let mut stmt = conn
             .prepare("SELECT id FROM tasks WHERE status = 'done'")
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         let rows = stmt
             .query_map([], |row| row.get::<_, String>(0))
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         let mut count = 0usize;
         for row in rows {
-            let id = row.map_err(error::DecapodError::RusqliteError)?;
+            let id = row.map_err(error::DecapodError::StorageError)?;
             if !verifying_ids.iter().any(|verifying_id| verifying_id == &id) {
                 count += 1;
             }
@@ -899,7 +899,7 @@ pub fn count_done_todos(store_root: &Path) -> Result<usize, error::DecapodError>
             [],
             |row| row.get(0),
         )
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     Ok(count.max(0) as usize)
 }
 

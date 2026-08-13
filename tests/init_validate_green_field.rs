@@ -1,4 +1,4 @@
-use rusqlite::Connection;
+use decapod::core::db::Connection;
 use std::fs;
 use std::path::Path;
 use std::process::Command;

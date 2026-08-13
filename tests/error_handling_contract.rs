@@ -37,7 +37,7 @@ fn error_reference_matches_the_current_error_contract() {
         .expect("failed to read the error reference");
 
     for variant in [
-        "RusqliteError",
+        "StorageError",
         "IoError",
         "DatabaseInitializationError",
         "PathError",

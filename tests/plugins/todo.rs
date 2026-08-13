@@ -1,4 +1,5 @@
 use decapod::core::broker::DbBroker;
+use decapod::core::db::Connection;
 use decapod::core::events;
 use decapod::core::schemas;
 use decapod::core::store::Store;
@@ -9,7 +10,6 @@ use decapod::core::todo::{
     rebuild_from_events, renew_claim_lease, update_status, yield_claim_lease,
 };
 use decapod::plugins::policy;
-use rusqlite::Connection;
 use serde_json::Value;
 use std::path::Path;
 use std::process::Command;
@@ -42,7 +42,7 @@ fn set_agent_trust(db: &Connection, agent_id: &str, trust_level: &str, ts: &str)
            trust_level = excluded.trust_level,
            updated_at = excluded.updated_at,
            last_seen = excluded.last_seen",
-        rusqlite::params![agent_id, ts, trust_level],
+        decapod::core::db::params![agent_id, ts, trust_level],
     )
     .expect("set agent trust");
 }
@@ -217,7 +217,7 @@ fn broker_transaction_rolls_back_state_when_event_append_fails() {
                 "INSERT INTO meta(namespace, key, value) VALUES('test', 'atomicity', 'written')",
                 [],
             )
-            .map_err(decapod::core::error::DecapodError::RusqliteError)?;
+            .map_err(decapod::core::error::DecapodError::StorageError)?;
 
             let event = serde_json::json!({
                 "event_id": "01atomicityfailure000000000000",
@@ -1296,7 +1296,7 @@ fn dependency_readiness_gates_claim_and_feeds_work_claim_and_fleet() {
             todo_id, proof_plan, verification_artifacts, last_verified_at,
             last_verified_status, last_verified_notes, verification_policy_days, updated_at
          ) VALUES(?1, '[\"validate_passes\"]', ?2, '100Z', 'passed', '', 90, '100Z')",
-        rusqlite::params![
+        decapod::core::db::params![
             dependency_id,
             r#"{"proof_plan_results":[{"proof_gate":"validate_passes","output_hash":"sha256:dep-proof"}]}"#
         ],
@@ -1353,12 +1353,12 @@ fn dependency_cycle_fails_closed_before_claim() {
     let conn = Connection::open(&db).unwrap();
     conn.execute(
         "UPDATE tasks SET depends_on = ?1 WHERE id = ?2",
-        rusqlite::params![second_id, first_id],
+        decapod::core::db::params![second_id, first_id],
     )
     .unwrap();
     conn.execute(
         "UPDATE tasks SET depends_on = ?1 WHERE id = ?2",
-        rusqlite::params![first_id, second_id],
+        decapod::core::db::params![first_id, second_id],
     )
     .unwrap();
 

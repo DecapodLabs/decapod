@@ -1,11 +1,11 @@
 use crate::core::broker::DbBroker;
+use crate::core::db::{Result, types::ToSql};
 use crate::core::error;
 use crate::core::external_action;
 use crate::core::schemas;
 use crate::core::store::Store;
 use crate::plugins::health;
 use clap::{Parser, Subcommand};
-use rusqlite::{Result, types::ToSql};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::env;
@@ -21,7 +21,7 @@ pub fn initialize_reflex_db(root: &Path) -> Result<(), error::DecapodError> {
     let db_path = reflex_db_path(root);
     broker.with_conn(&db_path, "decapod", None, "reflex.init", |conn| {
         conn.execute(schemas::REFLEX_DB_SCHEMA, [])
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         Ok(())
     })?;
     Ok(())
@@ -856,7 +856,7 @@ fn add_reflex(
         conn.execute(
             "INSERT INTO reflexes(id, name, description, trigger_type, trigger_config, action_type, action_config, status, tags, created_at, updated_at, dir_path, scope)
              VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
-            rusqlite::params![reflex_id, name, description, trigger_type, trigger_config, action_type, action_config, status, tags, now, now, dir_abs, scope],
+            crate::core::db::params![reflex_id, name, description, trigger_type, trigger_config, action_type, action_config, status, tags, now, now, dir_abs, scope],
         )?;
         Ok(())
     })?;

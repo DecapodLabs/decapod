@@ -773,8 +773,8 @@ fn test_intent_proof_chain() {
 /// that wrote nodes alongside envelope payloads).
 fn seed_mixed_legacy_store(store: &Store) -> (String, String, String) {
     use decapod::core::db;
+    use decapod::core::db::params;
     use decapod::core::schemas;
-    use rusqlite::params;
 
     let commitment = add_node(
         store,
@@ -875,8 +875,8 @@ fn seed_mixed_legacy_store(store: &Store) -> (String, String, String) {
 #[test]
 fn test_legacy_wrapped_rebuild_preserves_fields_sources_and_is_idempotent() {
     use decapod::core::db;
+    use decapod::core::db::params;
     use decapod::core::schemas;
-    use rusqlite::params;
 
     let (_tmp, store) = test_store();
     let (commitment_id, lesson_id, _edge_id) = seed_mixed_legacy_store(&store);
@@ -986,8 +986,8 @@ fn test_legacy_wrapped_rebuild_preserves_fields_sources_and_is_idempotent() {
 #[test]
 fn test_rebuild_fails_closed_on_malformed_edge_without_replacing_projection() {
     use decapod::core::db;
+    use decapod::core::db::params;
     use decapod::core::schemas;
-    use rusqlite::params;
 
     let (_tmp, store) = test_store();
     let node = add_node(
@@ -1060,8 +1060,8 @@ fn test_rebuild_fails_closed_on_malformed_edge_without_replacing_projection() {
 #[test]
 fn test_rebuild_fails_closed_on_contradictory_wrapped_payload() {
     use decapod::core::db;
+    use decapod::core::db::params;
     use decapod::core::schemas;
-    use rusqlite::params;
 
     let (_tmp, store) = test_store();
     let node = add_node(

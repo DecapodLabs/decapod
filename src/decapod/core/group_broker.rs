@@ -1,7 +1,7 @@
 use crate::core::db;
+use crate::core::db::OptionalExtension;
 use crate::core::error;
 use crate::core::time;
-use rusqlite::OptionalExtension;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::fs::{self, File, OpenOptions};
@@ -477,7 +477,7 @@ fn dedupe_lookup(
             Ok((payload_hash, status, commit_marker, result_json, retry_hint))
         })
         .optional()
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
 
     let Some((payload_hash, status, commit_marker, result_json, retry_after_ms_hint)) = row else {
         return Ok(None);
@@ -512,7 +512,7 @@ fn dedupe_store(
     conn.execute(
         "INSERT OR REPLACE INTO request_dedupe(request_id, payload_hash, status, commit_marker, result_envelope, retry_after_ms_hint, created_at)
          VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7)",
-        rusqlite::params![
+        crate::core::db::params![
             request.request_id,
             request.payload_hash,
             response.status,
@@ -525,7 +525,7 @@ fn dedupe_store(
     Ok(())
 }
 
-fn ensure_dedupe_schema(conn: &rusqlite::Connection) -> Result<(), error::DecapodError> {
+fn ensure_dedupe_schema(conn: &crate::core::db::Connection) -> Result<(), error::DecapodError> {
     conn.execute_batch(
         "CREATE TABLE IF NOT EXISTS request_dedupe(
             request_id TEXT PRIMARY KEY,

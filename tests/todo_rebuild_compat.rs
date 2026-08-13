@@ -1,5 +1,5 @@
+use decapod::core::db::Connection;
 use decapod::core::todo;
-use rusqlite::Connection;
 use serde_json::json;
 use tempfile::TempDir;
 

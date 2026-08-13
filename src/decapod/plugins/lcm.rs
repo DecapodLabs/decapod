@@ -6,13 +6,13 @@
 //! content hash, forming a deterministic DAG.
 
 use crate::core::broker::DbBroker;
+use crate::core::db::params;
 use crate::core::error;
 use crate::core::events;
 use crate::core::schemas;
 use crate::core::store::Store;
 use crate::core::todo;
 use clap::Subcommand;
-use rusqlite::params;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::fs;
@@ -40,17 +40,17 @@ pub fn initialize_lcm_db(root: &Path) -> Result<(), error::DecapodError> {
     let db_path = lcm_db_path(root);
     broker.with_conn(&db_path, "decapod", None, "lcm.init", |conn| {
         conn.execute(schemas::LCM_DB_SCHEMA_META, [])
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         conn.execute(schemas::LCM_DB_SCHEMA_ORIGINALS_INDEX, [])
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         conn.execute(schemas::LCM_DB_SCHEMA_SUMMARIES, [])
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         conn.execute(schemas::LCM_DB_INDEX_ORIGINALS_KIND, [])
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         conn.execute(schemas::LCM_DB_INDEX_ORIGINALS_TS, [])
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         conn.execute(schemas::LCM_DB_INDEX_SUMMARIES_SCOPE, [])
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         Ok(())
     })?;
     Ok(())
@@ -119,13 +119,13 @@ fn read_all_events(root: &Path) -> Result<Vec<LcmEvent>, error::DecapodError> {
     let conn = crate::core::db::db_connect_for_validate(&db_path.to_string_lossy())?;
     let mut stmt = conn
         .prepare("SELECT payload FROM events WHERE stream = 'lcm' ORDER BY seq ASC")
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     let rows = stmt
         .query_map([], |row| row.get::<_, String>(0))
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     let mut events = Vec::new();
     for row in rows {
-        let payload = row.map_err(error::DecapodError::RusqliteError)?;
+        let payload = row.map_err(error::DecapodError::StorageError)?;
         events.push(
             serde_json::from_str(&payload)
                 .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
@@ -200,7 +200,7 @@ pub fn ingest(
         conn.execute(
             "INSERT OR IGNORE INTO originals_index(content_hash, event_id, ts, actor, kind, byte_size, session_id) VALUES(?1,?2,?3,?4,?5,?6,?7)",
             params![content_hash, event_id, ts, actor, kind, byte_size, session_id.unwrap_or("")],
-        ).map_err(error::DecapodError::RusqliteError)?;
+        ).map_err(error::DecapodError::StorageError)?;
         Ok(())
     })?;
 
@@ -222,7 +222,7 @@ pub fn list_originals(
     let db_path = lcm_db_path(&store.root);
 
     broker.with_conn(&db_path, "decapod", None, "lcm.list", |conn| {
-        let (sql, bind_values): (String, Vec<Box<dyn rusqlite::types::ToSql>>) = match kind_filter {
+        let (sql, bind_values): (String, Vec<Box<dyn crate::core::db::types::ToSql>>) = match kind_filter {
             Some(k) => {
                 let mut sql = "SELECT content_hash, event_id, ts, actor, kind, byte_size, session_id FROM originals_index WHERE kind = ?1 ORDER BY ts DESC".to_string();
                 if let Some(n) = last_n {
@@ -240,7 +240,7 @@ pub fn list_originals(
         };
 
         let mut stmt = conn.prepare(&sql)?;
-        let params_refs: Vec<&dyn rusqlite::types::ToSql> = bind_values.iter().map(|b| b.as_ref()).collect();
+        let params_refs: Vec<&dyn crate::core::db::types::ToSql> = bind_values.iter().map(|b| b.as_ref()).collect();
         let rows = stmt.query_map(params_refs.as_slice(), |row| {
             let sid: String = row.get(6)?;
             Ok(OriginalEntry {
@@ -255,7 +255,7 @@ pub fn list_originals(
         })?;
         let mut out = Vec::new();
         for r in rows {
-            out.push(r.map_err(error::DecapodError::RusqliteError)?);
+            out.push(r.map_err(error::DecapodError::StorageError)?);
         }
         Ok(out)
     })
@@ -342,7 +342,7 @@ pub fn summarize(store: &Store, scope: &str) -> Result<serde_json::Value, error:
         conn.execute(
             "INSERT OR REPLACE INTO summaries(summary_hash, ts, scope, original_hashes, summary_text, token_estimate) VALUES(?1,?2,?3,?4,?5,?6)",
             params![summary_hash, ts, scope, hashes_json, summary_text, token_estimate],
-        ).map_err(error::DecapodError::RusqliteError)?;
+        ).map_err(error::DecapodError::StorageError)?;
         Ok(())
     })?;
 
@@ -428,7 +428,7 @@ pub fn show_summary(
     let db_path = lcm_db_path(&store.root);
 
     broker.with_conn(&db_path, "decapod", None, "lcm.summary.show", |conn| {
-        let (sql, bind_values): (String, Vec<Box<dyn rusqlite::types::ToSql>>) = match summary_hash {
+        let (sql, bind_values): (String, Vec<Box<dyn crate::core::db::types::ToSql>>) = match summary_hash {
             Some(h) => (
                 "SELECT summary_hash, ts, scope, original_hashes, summary_text, token_estimate FROM summaries WHERE summary_hash = ?1".to_string(),
                 vec![Box::new(h.to_string())],
@@ -440,7 +440,7 @@ pub fn show_summary(
         };
 
         let mut stmt = conn.prepare(&sql)?;
-        let params_refs: Vec<&dyn rusqlite::types::ToSql> = bind_values.iter().map(|b| b.as_ref()).collect();
+        let params_refs: Vec<&dyn crate::core::db::types::ToSql> = bind_values.iter().map(|b| b.as_ref()).collect();
         let mut rows = stmt.query(params_refs.as_slice())?;
         if let Some(row) = rows.next()? {
             let hashes_json: String = row.get(3)?;
@@ -468,7 +468,7 @@ pub fn rebuild_index_from_ledger(store: &Store) -> Result<usize, error::DecapodE
 
     broker.with_conn(&db_path, "decapod", None, "lcm.rebuild", |conn| {
         conn.execute("DELETE FROM originals_index", [])
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         let mut count = 0usize;
         for event in &events {
             let session_id = event
@@ -487,7 +487,7 @@ pub fn rebuild_index_from_ledger(store: &Store) -> Result<usize, error::DecapodE
                     event.content.len() as i64,
                     session_id,
                 ],
-            ).map_err(error::DecapodError::RusqliteError)?;
+            ).map_err(error::DecapodError::StorageError)?;
             count += 1;
         }
         Ok(count)

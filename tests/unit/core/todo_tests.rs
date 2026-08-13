@@ -14,6 +14,17 @@ fn claim_container_error_summary_hides_preflight_dump() {
 }
 
 #[test]
+fn read_task_listing_does_not_attempt_schema_writes() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path().to_path_buf();
+    super::initialize_todo_db(&root).unwrap();
+
+    let tasks = super::list_tasks(&root, None, None, None, None, None).unwrap();
+
+    assert!(tasks.is_empty());
+}
+
+#[test]
 fn completion_dependency_gate_rechecks_proof_readiness() {
     let tmp = tempfile::tempdir().unwrap();
     let root = tmp.path().to_path_buf();
@@ -54,7 +65,7 @@ fn completion_dependency_gate_rechecks_proof_readiness() {
     );
 
     let db = root.join(crate::core::schemas::LOCAL_DB_NAME);
-    let conn = rusqlite::Connection::open(db).unwrap();
+    let conn = decapod::core::db::Connection::open(db).unwrap();
     conn.execute(
         "UPDATE tasks SET status = 'done' WHERE id = ?1",
         [&dependency_id],

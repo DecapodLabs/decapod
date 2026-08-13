@@ -52,9 +52,8 @@ impl CloudAuthDiagnostic {
 }
 
 /// Backend-neutral classification for failures that may cross the storage
-/// boundary. The current SQLite adapter supplies the compatibility mapping;
-/// dactyl can provide the same classification without changing Decapod's
-/// retry, validation, or governance policy.
+/// boundary. Dactyl supplies physical errors; Decapod retains retry,
+/// validation, and governance policy.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum StorageFailureKind {
@@ -81,8 +80,10 @@ impl StorageFailureKind {
 /// Canonical error type for all Decapod operations.
 #[derive(Debug)]
 pub enum DecapodError {
-    /// SQLite database error (auto-converts from `rusqlite::Error`)
-    RusqliteError(rusqlite::Error),
+    /// Application storage error normalized by the Dactyl facade.
+    StorageError(crate::core::db::Error),
+    /// Dactyl physical storage error, normalized at the Decapod boundary.
+    DactylError(dactyl_db::DactylError),
     /// I/O error (auto-converts from `std::io::Error`)
     IoError(io::Error),
     /// Database initialization failure
@@ -110,7 +111,8 @@ pub enum DecapodError {
 impl fmt::Display for DecapodError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::RusqliteError(e) => write!(f, "SQLite error: {e}"),
+            Self::StorageError(e) => write!(f, "storage error: {e}"),
+            Self::DactylError(e) => write!(f, "Dactyl error: {e}"),
             Self::IoError(e) => {
                 if e.kind() == std::io::ErrorKind::InvalidInput && e.to_string().contains("SUN_LEN")
                 {
@@ -151,7 +153,8 @@ impl fmt::Display for DecapodError {
 impl std::error::Error for DecapodError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            Self::RusqliteError(e) => Some(e),
+            Self::StorageError(e) => Some(e),
+            Self::DactylError(e) => Some(e),
             Self::IoError(e) => Some(e),
             Self::EnvVarError(e) => Some(e),
             _ => None,
@@ -159,9 +162,15 @@ impl std::error::Error for DecapodError {
     }
 }
 
-impl From<rusqlite::Error> for DecapodError {
-    fn from(e: rusqlite::Error) -> Self {
-        Self::RusqliteError(e)
+impl From<crate::core::db::Error> for DecapodError {
+    fn from(e: crate::core::db::Error) -> Self {
+        Self::StorageError(e)
+    }
+}
+
+impl From<dactyl_db::DactylError> for DecapodError {
+    fn from(e: dactyl_db::DactylError) -> Self {
+        Self::DactylError(e)
     }
 }
 
@@ -182,7 +191,8 @@ impl DecapodError {
     /// against later.
     pub fn storage_failure_kind(&self) -> StorageFailureKind {
         match self {
-            Self::RusqliteError(err) => classify_rusqlite_error(err),
+            Self::StorageError(err) => classify_storage_error(err),
+            Self::DactylError(err) => classify_dactyl_error(err),
             Self::IoError(err)
                 if err
                     .to_string()
@@ -198,24 +208,58 @@ impl DecapodError {
     }
 }
 
-fn classify_rusqlite_error(err: &rusqlite::Error) -> StorageFailureKind {
+fn classify_dactyl_error(err: &dactyl_db::DactylError) -> StorageFailureKind {
+    use dactyl_db::AdapterErrorKind;
+
     match err {
-        rusqlite::Error::SqliteFailure(code, message) => {
-            let text = message.as_deref().unwrap_or_default();
-            if matches!(
-                code.code,
-                rusqlite::ErrorCode::DatabaseBusy | rusqlite::ErrorCode::DatabaseLocked
-            ) || code.extended_code == 522
-                || text.to_ascii_lowercase().contains("locked")
-            {
+        dactyl_db::DactylError::Adapter { kind, .. } => match kind {
+            AdapterErrorKind::Busy | AdapterErrorKind::Locked | AdapterErrorKind::Timeout => {
                 StorageFailureKind::Contention
-            } else if text.to_ascii_lowercase().contains("disk i/o error") {
-                StorageFailureKind::Io
-            } else {
+            }
+            AdapterErrorKind::Storage
+            | AdapterErrorKind::Transport
+            | AdapterErrorKind::Unavailable => StorageFailureKind::Io,
+            AdapterErrorKind::Constraint
+            | AdapterErrorKind::Conflict
+            | AdapterErrorKind::VersionConflict
+            | AdapterErrorKind::IdempotencyConflict
+            | AdapterErrorKind::IdempotencyInProgress => StorageFailureKind::Constraint,
+            AdapterErrorKind::Capability | AdapterErrorKind::ReadOnly => {
+                StorageFailureKind::Capability
+            }
+            AdapterErrorKind::Value => StorageFailureKind::Value,
+            AdapterErrorKind::Query | AdapterErrorKind::InvalidOperation => {
                 StorageFailureKind::Query
             }
+            AdapterErrorKind::TransactionAborted => StorageFailureKind::Query,
+            AdapterErrorKind::Authentication
+            | AdapterErrorKind::Authorization
+            | AdapterErrorKind::RateLimited
+            | AdapterErrorKind::Quota
+            | AdapterErrorKind::NotFound
+            | AdapterErrorKind::Cancellation
+            | AdapterErrorKind::Protocol
+            | AdapterErrorKind::Unknown => StorageFailureKind::Unknown,
+        },
+        dactyl_db::DactylError::Config(_) | dactyl_db::DactylError::UnsupportedOperation(_) => {
+            StorageFailureKind::Capability
         }
-        _ => StorageFailureKind::Query,
+        dactyl_db::DactylError::ColumnNotFound(_) | dactyl_db::DactylError::Conversion(_) => {
+            StorageFailureKind::Value
+        }
+    }
+}
+
+fn classify_storage_error(err: &crate::core::db::Error) -> StorageFailureKind {
+    match err {
+        crate::core::db::Error::Dactyl(error) => classify_dactyl_error(error),
+        crate::core::db::Error::QueryReturnedNoRows => StorageFailureKind::Query,
+        crate::core::db::Error::FromSqlConversionFailure(_, _, _)
+        | crate::core::db::Error::ToSqlConversionFailure(_)
+        | crate::core::db::Error::InvalidColumnType(_, _, _) => StorageFailureKind::Value,
+        crate::core::db::Error::InvalidParameterName(_) | crate::core::db::Error::InvalidQuery => {
+            StorageFailureKind::Query
+        }
     }
 }
 
@@ -223,8 +267,7 @@ fn classify_storage_message(message: &str) -> StorageFailureKind {
     let lower = message.to_ascii_lowercase();
     if lower.contains("database is locked")
         || lower.contains("databasebusy")
-        || lower.contains("sqlite contention")
-        || lower.contains("sqlite_code=databasebusy")
+        || lower.contains("storage contention")
         || lower.contains("extended_code: 522")
     {
         StorageFailureKind::Contention

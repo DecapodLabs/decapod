@@ -52,7 +52,7 @@ flate2 = "1.0"
 
 [dependencies]
 flate2 = "1.0"
-rusqlite = { version = "0.32", features = ["bundled"] }
+dactyl-db = { git = "https://github.com/DecapodLabs/dactyl", tag = "v0.8.2", features = ["sqlite", "neon"] }
 fancy-regex = "0.13"
 clap = { version = "4", features = ["derive"] }
 serde = { version = "1.0", features = ["derive"] }

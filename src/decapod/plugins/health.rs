@@ -1,10 +1,10 @@
 use crate::core::broker::DbBroker;
+use crate::core::db::params;
 use crate::core::schemas;
 use crate::core::store::Store;
 use crate::core::{error, events};
 use crate::plugins::policy;
 use clap::{Parser, Subcommand};
-use rusqlite::params;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::path::{Path, PathBuf};
@@ -303,7 +303,7 @@ pub fn get_health(
             })
         })?;
 
-        let events: Vec<ProofEvent> = event_iter.collect::<Result<Vec<_>, _>>().map_err(error::DecapodError::RusqliteError)?;
+        let events: Vec<ProofEvent> = event_iter.collect::<Result<Vec<_>, _>>().map_err(error::DecapodError::StorageError)?;
         let (state, reason) = compute_health(&claim, &events, now);
 
         // Update cache (non-authoritative)
@@ -354,7 +354,7 @@ pub fn get_all_health(
                     sla_seconds: row.get(5)?,
                 })
             })?;
-            let events: Vec<ProofEvent> = event_iter.collect::<Result<Vec<_>, _>>().map_err(error::DecapodError::RusqliteError)?;
+            let events: Vec<ProofEvent> = event_iter.collect::<Result<Vec<_>, _>>().map_err(error::DecapodError::StorageError)?;
             let (state, reason) = compute_health(&claim, &events, now);
             results.push((claim.id, state, reason));
         }

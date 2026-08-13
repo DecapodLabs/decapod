@@ -1,4 +1,4 @@
-use rusqlite::Connection;
+use decapod::core::db::Connection;
 use serde_json::Value;
 use std::fs;
 use std::io::Write;
@@ -113,7 +113,7 @@ fn verify_mvp_pass_fail_unknown_flow() {
     let artifacts_json: String = db
         .query_row(
             "SELECT verification_artifacts FROM task_verification WHERE todo_id = ?1",
-            rusqlite::params![todo_id.clone()],
+            decapod::core::db::params![todo_id.clone()],
             |row| row.get(0),
         )
         .unwrap();
@@ -201,7 +201,7 @@ fn verify_mvp_pass_fail_unknown_flow() {
         .query_row(
             "SELECT last_verified_status, last_verified_notes, verification_artifacts
              FROM task_verification WHERE todo_id = ?1",
-            rusqlite::params![unknown_id.clone()],
+            decapod::core::db::params![unknown_id.clone()],
             |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
         )
         .unwrap();
@@ -228,7 +228,7 @@ fn verify_mvp_pass_fail_unknown_flow() {
 
     db.execute(
         "UPDATE task_verification SET verification_artifacts = NULL WHERE todo_id = ?1",
-        rusqlite::params![unknown_id.clone()],
+        decapod::core::db::params![unknown_id.clone()],
     )
     .unwrap();
 

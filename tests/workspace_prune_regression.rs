@@ -123,7 +123,7 @@ fn test_workspace_prune() {
 
     // Manually set distinct hashes in the SQLite db so they don't overlap within the 4.3 minute ULID millisecond threshold
     let db_path = decapod::core::todo::todo_db_path(&store_root);
-    let conn = rusqlite::Connection::open(&db_path).expect("open db");
+    let conn = decapod::core::db::Connection::open(&db_path).expect("open db");
     conn.execute("UPDATE tasks SET hash = 'hashaa' WHERE id = ?", [id_a])
         .expect("update a");
     conn.execute("UPDATE tasks SET hash = 'hashbb' WHERE id = ?", [id_b])
@@ -313,7 +313,7 @@ fn test_workspace_prune_unmerged_prevention() {
     let id_f = task_f_res.get("id").unwrap().as_str().unwrap();
 
     let db_path = decapod::core::todo::todo_db_path(&store_root);
-    let conn = rusqlite::Connection::open(&db_path).expect("open db");
+    let conn = decapod::core::db::Connection::open(&db_path).expect("open db");
     conn.execute("UPDATE tasks SET hash = 'hashff' WHERE id = ?", [id_f])
         .expect("update f");
 
@@ -420,7 +420,7 @@ fn test_workspace_prune_non_force_preserves_dirty_and_unregistered_data() {
     .expect("add task");
     let task_id = task.get("id").unwrap().as_str().unwrap();
     let db_path = decapod::core::todo::todo_db_path(&store_root);
-    let conn = rusqlite::Connection::open(&db_path).expect("open todo db");
+    let conn = decapod::core::db::Connection::open(&db_path).expect("open todo db");
     conn.execute(
         "UPDATE tasks SET hash = 'hashdirty' WHERE id = ?",
         [task_id],
@@ -539,7 +539,7 @@ fn test_validate_stale_workspaces_cleanup() {
     let id = task_res.get("id").unwrap().as_str().unwrap();
 
     let db_path = decapod::core::todo::todo_db_path(&store_root);
-    let conn = rusqlite::Connection::open(&db_path).expect("open db");
+    let conn = decapod::core::db::Connection::open(&db_path).expect("open db");
     conn.execute("UPDATE tasks SET hash = 'hashprune' WHERE id = ?", [id])
         .expect("update hash");
 
