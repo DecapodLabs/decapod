@@ -23,21 +23,33 @@
     "Cargo.toml"
   ],
   "inspected_files": [],
-  "modified_files": [],
-  "declared_commands": [],
+  "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json"
+  ],
+  "declared_commands": [
+    "decapod validate"
+  ],
   "tool_calls": [],
-  "checks": [],
-  "evidence": [],
+  "checks": [
+    {
+      "name": "decapod validate",
+      "status": "passed"
+    }
+  ],
+  "evidence": [
+    "validation epoch ve_3b537a65e43e9a38 completed with zero failures"
+  ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
-  "proof_status": "no_checks_run",
+  "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "unsupported"
+    "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:7e4aab8c7fbed2f761936a79f32663cc02ced23cef50322afb42186d2fbd42a6",
+  "artifact_hash": "sha256:c3168467148dee46d501426f7120b8ea1842f13d077a7b68f640b76ffd6def0f",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -79,11 +91,51 @@
         "event_id": "event:3",
         "intent_id": "intent:release_0990_dactyl_1265_01",
         "kind": "refined"
+      },
+      {
+        "sequence": 4,
+        "event_id": "event:4",
+        "intent_id": "intent:release_0990_dactyl_1265_01",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:release_0990_dactyl_1265_01"
       }
     ],
-    "trajectories": {},
+    "trajectories": {
+      "release_0990_dactyl_1265_01": {
+        "id": "release_0990_dactyl_1265_01",
+        "intent_id": "intent:release_0990_dactyl_1265_01",
+        "evidence_only": true,
+        "steps": [
+          {
+            "sequence": 4,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/governance/claims.json",
+              ".decapod/governance/plan.json",
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              ".decapod/managed/specs/.manifest.json",
+              ".decapod/managed/specs/ARCHITECTURE.md",
+              "Cargo.lock",
+              "Cargo.toml"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_3b537a65e43e9a38 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:4"
+          }
+        ]
+      }
+    },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 3
+    "next_sequence": 4
   }
 }
