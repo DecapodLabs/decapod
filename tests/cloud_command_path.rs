@@ -24,6 +24,17 @@ impl TodoStore for RecordingStore {
         Ok(self.tasks.lock().expect("tasks lock").clone())
     }
 
+    async fn get_task(&self, id: &str) -> Result<Option<Task>> {
+        self.calls.lock().expect("calls lock").push("get".into());
+        Ok(self
+            .tasks
+            .lock()
+            .expect("tasks lock")
+            .iter()
+            .find(|task| task.id == id)
+            .cloned())
+    }
+
     async fn add_task(&self, mut task: Task, _actor: String, _intent: String) -> Result<Task> {
         self.calls.lock().expect("calls lock").push("add".into());
         task.id = "cloud-1".to_string();
@@ -36,6 +47,18 @@ impl TodoStore for RecordingStore {
         let mut tasks = self.tasks.lock().expect("tasks lock");
         let task = tasks.iter_mut().find(|task| task.id == id).expect("task");
         task.assignee = Some("agent-two".to_string());
+        Ok(task.clone())
+    }
+
+    async fn release_task(&self, id: &str, _actor: String) -> Result<Task> {
+        self.calls
+            .lock()
+            .expect("calls lock")
+            .push("release".into());
+        let mut tasks = self.tasks.lock().expect("tasks lock");
+        let task = tasks.iter_mut().find(|task| task.id == id).expect("task");
+        task.status = "open".to_string();
+        task.assignee = None;
         Ok(task.clone())
     }
 
@@ -91,6 +114,14 @@ fn active_cloud_commands_use_the_storage_adapter_without_local_fallback() {
     .expect("cloud list");
     run_cloud_todo_command_with_store(
         root.path(),
+        &TodoCommand::Get {
+            id: "cloud-1".into(),
+        },
+        &store,
+    )
+    .expect("cloud get");
+    run_cloud_todo_command_with_store(
+        root.path(),
         &TodoCommand::Claim {
             id: "cloud-1".into(),
             agent: Some("agent-two".into()),
@@ -103,6 +134,14 @@ fn active_cloud_commands_use_the_storage_adapter_without_local_fallback() {
     .expect("cloud claim");
     run_cloud_todo_command_with_store(
         root.path(),
+        &TodoCommand::Release {
+            id: "cloud-1".into(),
+        },
+        &store,
+    )
+    .expect("cloud release");
+    run_cloud_todo_command_with_store(
+        root.path(),
         &TodoCommand::Done {
             id: Some("cloud-1".into()),
             id_positional: None,
@@ -113,5 +152,8 @@ fn active_cloud_commands_use_the_storage_adapter_without_local_fallback() {
     )
     .expect("cloud complete");
 
-    assert_eq!(store.calls(), ["add", "list", "claim", "complete"]);
+    assert_eq!(
+        store.calls(),
+        ["add", "list", "get", "claim", "release", "complete"]
+    );
 }

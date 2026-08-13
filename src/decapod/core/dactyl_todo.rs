@@ -10,7 +10,7 @@ use crate::core::dactyl::{DactylBridge, OperationResult};
 use crate::core::storage::{Task, TodoStore};
 use anyhow::{Result, anyhow};
 use async_trait::async_trait;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, NaiveDateTime, SecondsFormat, Utc};
 use dactyl_db::{Operation, Parameter, Rows};
 
 const TASK_COLUMNS: &str = "repo_id, id, hash, title, description, status, assigned_to AS assignee, scope, dir_path, priority, category, tags, created_at, updated_at, version";
@@ -42,6 +42,23 @@ impl DactylTodoStore {
 
     fn get_sql() -> String {
         format!("SELECT {TASK_COLUMNS} FROM tasks WHERE id = $1")
+    }
+
+    fn event_insert_sql() -> &'static str {
+        "INSERT INTO events (event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
+         SELECT CASE WHEN EXISTS (SELECT 1 FROM tasks WHERE id = $3 AND updated_at = $2) THEN $1 ELSE NULL END,
+                $2,
+                COALESCE((SELECT MAX(seq) FROM events WHERE stream = 'todo'), 0) + 1,
+                'todo',
+                'task',
+                $3,
+                $4,
+                $5,
+                $6"
+    }
+
+    fn operation_timestamp() -> String {
+        Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true)
     }
 
     fn task_from_rows(&self, rows: Rows) -> Result<Task> {
@@ -76,7 +93,16 @@ impl TodoStore for DactylTodoStore {
             .collect()
     }
 
-    async fn add_task(&self, mut task: Task, _actor: String, _intent: String) -> Result<Task> {
+    async fn get_task(&self, id: &str) -> Result<Option<Task>> {
+        let bridge = self.bridge()?;
+        let rows = bridge.read(&Self::get_sql(), &[id.into()])?;
+        rows.as_slice()
+            .first()
+            .map(|row| task_from_row(row, &self.repository))
+            .transpose()
+    }
+
+    async fn add_task(&self, mut task: Task, actor: String, _intent: String) -> Result<Task> {
         if task.id.trim().is_empty() {
             task.id = new_task_id();
         }
@@ -86,12 +112,23 @@ impl TodoStore for DactylTodoStore {
         if task.status.trim().is_empty() {
             task.status = "open".to_string();
         }
+        if task.repo_id.trim().is_empty() {
+            task.repo_id = self.repository.clone();
+        }
 
+        let ts = Self::operation_timestamp();
+        let event_id = crate::core::ulid::new_ulid().to_string();
+        let payload = serde_json::json!({
+            "title": task.title.clone(),
+            "status": task.status.clone(),
+        })
+        .to_string();
         let bridge = self.bridge()?;
         let result = bridge.atomic(&[
             Operation::write(
-                "INSERT INTO tasks (id, hash, title, description, tags, owner, status, dir_path, scope, priority, category, assigned_to) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
+                "INSERT INTO tasks (repo_id, id, hash, title, description, tags, owner, status, dir_path, scope, priority, category, assigned_to, created_at, updated_at, version) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $14, 1)",
                 vec![
+                    task.repo_id.clone().into(),
                     task.id.clone().into(),
                     task.hash.clone().into(),
                     task.title.clone().into(),
@@ -104,6 +141,18 @@ impl TodoStore for DactylTodoStore {
                     task.priority.clone().into(),
                     task.category.clone().into(),
                     Parameter::Text(String::new()),
+                    ts.clone().into(),
+                ],
+            ),
+            Operation::write(
+                Self::event_insert_sql(),
+                vec![
+                    event_id.into(),
+                    ts.into(),
+                    task.id.clone().into(),
+                    "task.add".into(),
+                    payload.into(),
+                    actor.into(),
                 ],
             ),
             Operation::read(Self::get_sql(), vec![task.id.clone().into()]),
@@ -116,6 +165,10 @@ impl TodoStore for DactylTodoStore {
             .first()
             .ok_or_else(|| anyhow!("Dactyl add returned no write result"))?;
         Self::require_write(write, "add")?;
+        let event = results
+            .get(1)
+            .ok_or_else(|| anyhow!("Dactyl add returned no event result"))?;
+        Self::require_write(event, "add event")?;
         match observation {
             OperationResult::Rows(rows) => self.task_from_rows(rows),
             OperationResult::Write(_) => Err(anyhow!(
@@ -125,11 +178,25 @@ impl TodoStore for DactylTodoStore {
     }
 
     async fn claim_task(&self, id: &str, actor: String) -> Result<Task> {
+        let ts = Self::operation_timestamp();
+        let event_id = crate::core::ulid::new_ulid().to_string();
+        let payload = serde_json::json!({ "assigned_to": actor }).to_string();
         let bridge = self.bridge()?;
         let result = bridge.atomic(&[
             Operation::write(
-                "UPDATE tasks SET status = 'in_progress', assigned_to = $1, assigned_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND status IN ('open', 'pending') AND (assigned_to = '' OR assigned_to IS NULL)",
-                vec![actor.into(), id.into()],
+                "UPDATE tasks SET status = 'in_progress', assigned_to = $1, assigned_at = $2, updated_at = $2, version = COALESCE(version, 1) + 1 WHERE id = $3 AND status IN ('open', 'pending') AND (assigned_to = '' OR assigned_to IS NULL)",
+                vec![actor.clone().into(), ts.clone().into(), id.into()],
+            ),
+            Operation::write(
+                Self::event_insert_sql(),
+                vec![
+                    event_id.into(),
+                    ts.into(),
+                    id.into(),
+                    "task.claim".into(),
+                    payload.into(),
+                    actor.into(),
+                ],
             ),
             Operation::read(Self::get_sql(), vec![id.into()]),
         ])?;
@@ -141,6 +208,10 @@ impl TodoStore for DactylTodoStore {
             .first()
             .ok_or_else(|| anyhow!("Dactyl claim returned no write result"))?;
         Self::require_write(write, "claim")?;
+        let event = results
+            .get(1)
+            .ok_or_else(|| anyhow!("Dactyl claim returned no event result"))?;
+        Self::require_write(event, "claim event")?;
         match observation {
             OperationResult::Rows(rows) => self.task_from_rows(rows),
             OperationResult::Write(_) => Err(anyhow!(
@@ -149,12 +220,69 @@ impl TodoStore for DactylTodoStore {
         }
     }
 
-    async fn complete_task(&self, id: &str, actor: String, _resolution: String) -> Result<Task> {
+    async fn release_task(&self, id: &str, actor: String) -> Result<Task> {
+        let ts = Self::operation_timestamp();
+        let event_id = crate::core::ulid::new_ulid().to_string();
+        let payload = serde_json::json!({ "released_by": actor }).to_string();
         let bridge = self.bridge()?;
         let result = bridge.atomic(&[
             Operation::write(
-                "UPDATE tasks SET status = 'completed', completed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = $1 AND status = 'in_progress' AND assigned_to = $2",
-                vec![id.into(), actor.into()],
+                "UPDATE tasks SET status = 'open', assigned_to = '', assigned_at = NULL, updated_at = $2, version = COALESCE(version, 1) + 1 WHERE id = $3 AND status = 'in_progress' AND assigned_to = $1",
+                vec![actor.clone().into(), ts.clone().into(), id.into()],
+            ),
+            Operation::write(
+                Self::event_insert_sql(),
+                vec![
+                    event_id.into(),
+                    ts.into(),
+                    id.into(),
+                    "task.release".into(),
+                    payload.into(),
+                    actor.into(),
+                ],
+            ),
+            Operation::read(Self::get_sql(), vec![id.into()]),
+        ])?;
+        let mut results = result.results;
+        let observation = results
+            .pop()
+            .ok_or_else(|| anyhow!("Dactyl release returned no observation result"))?;
+        let write = results
+            .first()
+            .ok_or_else(|| anyhow!("Dactyl release returned no write result"))?;
+        Self::require_write(write, "release")?;
+        let event = results
+            .get(1)
+            .ok_or_else(|| anyhow!("Dactyl release returned no event result"))?;
+        Self::require_write(event, "release event")?;
+        match observation {
+            OperationResult::Rows(rows) => self.task_from_rows(rows),
+            OperationResult::Write(_) => Err(anyhow!(
+                "Dactyl release returned a write result for its task observation"
+            )),
+        }
+    }
+
+    async fn complete_task(&self, id: &str, actor: String, resolution: String) -> Result<Task> {
+        let ts = Self::operation_timestamp();
+        let event_id = crate::core::ulid::new_ulid().to_string();
+        let payload = serde_json::json!({ "resolution": resolution }).to_string();
+        let bridge = self.bridge()?;
+        let result = bridge.atomic(&[
+            Operation::write(
+                "UPDATE tasks SET status = 'completed', completed_at = $2, updated_at = $2, version = COALESCE(version, 1) + 1 WHERE id = $1 AND status = 'in_progress' AND assigned_to = $3",
+                vec![id.into(), ts.clone().into(), actor.clone().into()],
+            ),
+            Operation::write(
+                Self::event_insert_sql(),
+                vec![
+                    event_id.into(),
+                    ts.into(),
+                    id.into(),
+                    "task.done".into(),
+                    payload.into(),
+                    actor.into(),
+                ],
             ),
             Operation::read(Self::get_sql(), vec![id.into()]),
         ])?;
@@ -166,6 +294,10 @@ impl TodoStore for DactylTodoStore {
             .first()
             .ok_or_else(|| anyhow!("Dactyl complete returned no write result"))?;
         Self::require_write(write, "complete")?;
+        let event = results
+            .get(1)
+            .ok_or_else(|| anyhow!("Dactyl complete returned no event result"))?;
+        Self::require_write(event, "complete event")?;
         match observation {
             OperationResult::Rows(rows) => self.task_from_rows(rows),
             OperationResult::Write(_) => Err(anyhow!(
@@ -210,9 +342,16 @@ fn task_from_row(row: &dactyl_db::Row, repository: &str) -> Result<Task> {
 }
 
 fn parse_timestamp(value: Option<&str>) -> Option<DateTime<Utc>> {
-    value
-        .and_then(|value| DateTime::parse_from_rfc3339(value).ok())
-        .map(|value| value.with_timezone(&Utc))
+    value.and_then(|value| {
+        DateTime::parse_from_rfc3339(value)
+            .map(|value| value.with_timezone(&Utc))
+            .ok()
+            .or_else(|| {
+                NaiveDateTime::parse_from_str(value, "%Y-%m-%d %H:%M:%S%.f")
+                    .ok()
+                    .map(|value| DateTime::from_naive_utc_and_offset(value, Utc))
+            })
+    })
 }
 
 fn new_task_id() -> String {
@@ -238,6 +377,8 @@ mod tests {
     use super::*;
     use crate::core::dactyl::DactylBridge;
 
+    const EVENTS_TABLE_SQL: &str = "CREATE TABLE events (event_id TEXT PRIMARY KEY, ts TEXT NOT NULL, seq INTEGER NOT NULL, stream TEXT NOT NULL, subject_kind TEXT, subject_id TEXT, event_type TEXT NOT NULL DEFAULT '', payload TEXT NOT NULL, actor TEXT NOT NULL DEFAULT 'decapod')";
+
     fn local_store() -> Option<(DactylTodoStore, tempfile::TempDir)> {
         let tempdir = tempfile::tempdir().expect("Dactyl tempdir");
         let path = tempdir.path().join("tasks.db");
@@ -257,6 +398,13 @@ mod tests {
                 &[],
             )
             .expect("task schema");
+        bridge.write(EVENTS_TABLE_SQL, &[]).expect("event schema");
+        bridge
+            .write(
+                "CREATE UNIQUE INDEX events_stream_seq ON events(stream, seq)",
+                &[],
+            )
+            .expect("event sequence index");
         drop(bridge);
         let context =
             StorageContext::from_route(crate::core::backend::BackendRoute::Local { path }, None)
@@ -288,6 +436,19 @@ mod tests {
         }
     }
 
+    fn event_count(store: &DactylTodoStore) -> i64 {
+        store
+            .bridge()
+            .expect("event bridge")
+            .read("SELECT COUNT(*) AS count FROM events", &[])
+            .expect("event count")
+            .as_slice()
+            .first()
+            .expect("event count row")
+            .get("count")
+            .expect("event count value")
+    }
+
     #[tokio::test]
     async fn mutations_use_dactyl_atomic_write_and_observation() {
         let Some((store, _tempdir)) = local_store() else {
@@ -303,6 +464,11 @@ mod tests {
             .await
             .expect("add");
         assert_eq!(added.status, "open");
+        assert_eq!(event_count(&store), 1);
+        assert_eq!(
+            store.get_task(&added.id).await.expect("get").unwrap().id,
+            added.id
+        );
         assert_eq!(store.list_tasks().await.expect("list").len(), 1);
 
         let claimed = store
@@ -311,12 +477,29 @@ mod tests {
             .expect("claim");
         assert_eq!(claimed.status, "in_progress");
         assert_eq!(claimed.assignee.as_deref(), Some("agent-a"));
+        assert_eq!(claimed.version, added.version + 1);
+        assert_eq!(event_count(&store), 2);
+
+        let released = store
+            .release_task(&added.id, "agent-a".to_string())
+            .await
+            .expect("release");
+        assert_eq!(released.status, "open");
+        assert_eq!(released.assignee.as_deref(), Some(""));
+        assert_eq!(event_count(&store), 3);
+
+        store
+            .claim_task(&added.id, "agent-a".to_string())
+            .await
+            .expect("re-claim");
+        assert_eq!(event_count(&store), 4);
 
         let completed = store
             .complete_task(&added.id, "agent-a".to_string(), String::new())
             .await
             .expect("complete");
         assert_eq!(completed.status, "completed");
+        assert_eq!(event_count(&store), 5);
     }
 
     #[tokio::test]
@@ -337,11 +520,13 @@ mod tests {
             .claim_task(&added.id, "agent-a".to_string())
             .await
             .expect("first claim");
+        let events_before_conflict = event_count(&store);
         let error = store
             .claim_task(&added.id, "agent-b".to_string())
             .await
             .expect_err("second claim must conflict");
         assert!(error.to_string().contains("state conflict"));
+        assert_eq!(event_count(&store), events_before_conflict);
         assert_eq!(
             store.list_tasks().await.expect("list")[0]
                 .assignee

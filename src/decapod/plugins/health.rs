@@ -278,7 +278,9 @@ pub fn get_health(
         .unwrap()
         .as_secs() as i64;
 
-    broker.with_conn(&db_path, "decapod", None, "health.get", |conn| {
+    // This read also refreshes the non-authoritative health cache, so it must
+    // use a write connection. Do not classify it as a pure `.get` operation.
+    broker.with_conn(&db_path, "decapod", None, "health.inspect", |conn| {
         let claim: Claim = conn.query_row(
             "SELECT id, subject, kind, provenance, created_at FROM claims WHERE id = ?1 OR subject = ?1",
             params![claim_id],
