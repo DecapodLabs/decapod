@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "title": "Publish native local-Dactyl SQLite runtime preflight",
-  "intent": "When a Decapod project uses backend=local, agentic startup must resolve a usable host SQLite shared library for Dactyl. It must honor DACTYL_SQLITE_LIBRARY or the machine-local Decapod runtime config, discover and persist a usable host path at the OS/user level when possible, and otherwise return concise installation and export instructions. Cloud-backed startup must not require or probe SQLite.",
+  "intent": "Update multi-arch docker image for apple silicon",
   "state": "APPROVED",
   "todo_ids": [
     "bugs_01kzwwfjye4hxthf"
@@ -23,5 +23,5 @@
     "file_touch_budget": 20
   },
   "phases": [],
-  "updated_at": "1786617187Z"
+  "updated_at": "1786648999Z"
 }
