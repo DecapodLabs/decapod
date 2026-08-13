@@ -1,10 +1,11 @@
 {
   "schema_version": "1.0.0",
-  "title": "Continue PR #1256 Decapod storage seam",
-  "intent": "Continue PR #1256 by moving the canonical .decapod/data/decapod.db boundary to Dactyl. All canonical-store reads, writes, transactions, schema operations, migration/import, validation, and tests must use Dactyl APIs; Dactyl owns physical storage execution while Decapod retains schema, migration ordering, IDs, retry/governance policy, and domain semantics. Keep the Dactyl Issue #77 release status explicit and do not claim downstream release proof.",
+  "title": "PR #1256 complete Decapod slice for storage and shared-state issues",
+  "intent": "Complete the Decapod-owned portion of PR #1256 for issues #1028, #1110, #1111, #1112, #1120, #1216, #1217, #1220, #1221, #1222, #1223, #1224, #1247, and #1254. Route the canonical repository store through the thin Dactyl operation boundary, preserve Decapod schema/migration/domain/concurrency semantics, add offline compatibility and failure proofs, and keep protected live Propodus/Vercel evidence explicit as an external completion gate.",
   "state": "APPROVED",
   "todo_ids": [
-    "code_01kzvey011rqf9py"
+    "code_01kzvey011rqf9py",
+    "bugs_01kzt0bq5f269jq6"
   ],
   "proof_hooks": [
     "cargo fmt --all -- --check",
@@ -15,7 +16,8 @@
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [
-    "Do not leave any canonical .decapod/data/decapod.db access on rusqlite or another direct SQLite handle. Do not claim Dactyl Issue #77 is released or merged until the user confirms it."
+    "Do not claim hosted Vercel/Neon, Propodus tenancy, or cross-repository transaction proof from local or mock tests",
+    "Do not move schema, migration ordering, retry policy, or Decapod governance semantics into Dactyl or Propodus"
   ],
   "unresolved_contradictions": [],
   "deferred_questions": [],
@@ -23,8 +25,8 @@
     "forbidden_paths": [
       "External credentials, production data, unrelated repository migrations, and direct mutation of .decapod state."
     ],
-    "file_touch_budget": 80
+    "file_touch_budget": 120
   },
   "phases": [],
-  "updated_at": "1786587566Z"
+  "updated_at": "1786591606Z"
 }
