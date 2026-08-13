@@ -5,8 +5,9 @@
   "task_id": "bugs_01kzwwfjye4hxthf",
   "original_intent": "Integrate Dactyl v0.8.2 for Decapod local database writes and complete the Decapod-owned acceptance slice for the requested storage issues.",
   "derived_intent": "Replace Decapod-owned direct rusqlite/libsqlite3-sys usage with one Dactyl v0.8.2-backed local storage facade, preserve schema/migration/retry/governance semantics, and prove local failure and reopen behavior.",
-  "current_phase": "final-local-proof",
+  "current_phase": "validation",
   "next_transitions": [
+    "publish",
     "publish the clean workspace when external publication authorization is supplied; complete Propodus/Neon cloud integration separately"
   ],
   "active_boundaries": [
@@ -32,6 +33,8 @@
     "tests/sqlite_hardening.rs"
   ],
   "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
     ".decapod/managed/specs/ARCHITECTURE.md",
     ".decapod/managed/specs/INTENT.md",
     ".decapod/managed/specs/INTERFACES.md",
@@ -54,6 +57,7 @@
     "cargo clippy --all-targets --all-features -- -D warnings",
     "cargo fmt --all -- --check",
     "container decapod validate --refresh-specs --format json",
+    "decapod validate",
     "decapod validate --format json"
   ],
   "tool_calls": [],
@@ -75,6 +79,10 @@
       "status": "passed"
     },
     {
+      "name": "decapod validate",
+      "status": "passed"
+    },
+    {
       "name": "decapod_validate_container",
       "status": "passed"
     },
@@ -88,7 +96,8 @@
     }
   ],
   "evidence": [
-    "Dactyl v0.8.2 tag commit 68555e1 is pinned; the Decapod dependency graph contains no rusqlite or libsqlite3-sys; production code has no sqlite_master, pragma_table_info, PRAGMA, or last_insert_rowid metadata path; the managed shared library libsqlite3.so.0.8.6 enabled 9/9 Dactyl conformance, 313/313 library, 23/23 core integration, 4/4 single-datastore, and 4/4 SQLite hardening tests; host and container validation have no failures."
+    "Dactyl v0.8.2 tag commit 68555e1 is pinned; the Decapod dependency graph contains no rusqlite or libsqlite3-sys; production code has no sqlite_master, pragma_table_info, PRAGMA, or last_insert_rowid metadata path; the managed shared library libsqlite3.so.0.8.6 enabled 9/9 Dactyl conformance, 313/313 library, 23/23 core integration, 4/4 single-datastore, and 4/4 SQLite hardening tests; host and container validation have no failures.",
+    "validation epoch ve_7e544f6c74bad5e3 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [
@@ -101,7 +110,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:e2100935f7e794765a2e621670212915d64a566459bc8d3d7a0c2bef8ca3fd73",
+  "artifact_hash": "sha256:54806dc63b0bcadb61bdd6a8d7a6a477d3e10ef3eb971dd1895393abe9c968aa",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -140,6 +149,13 @@
       {
         "sequence": 4,
         "event_id": "event:4",
+        "intent_id": "intent:run-dactyl-v082-final-20260813",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:run-dactyl-v082-final-20260813"
+      },
+      {
+        "sequence": 5,
+        "event_id": "event:5",
         "intent_id": "intent:run-dactyl-v082-final-20260813",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:run-dactyl-v082-final-20260813"
@@ -202,12 +218,30 @@
               "Cloud Propodus/Vercel/Neon routing, hosted tenancy, credential, deployment, and cross-repository transaction proof are not integrated and remain downstream work."
             ],
             "custody_event_id": "event:4"
+          },
+          {
+            "sequence": 5,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "Decapod repository source, tests, living specs, generated governance artifacts, and local/container validation only."
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_7e544f6c74bad5e3 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:5"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 4
+    "next_sequence": 5
   }
 }
