@@ -1,16 +1,14 @@
 {
   "schema_version": "1.0.0",
-  "title": "Publish Decapod v0.99.0 with registry-backed Dactyl v0.8.2",
-  "intent": "Fix PR #1265 so Decapod v0.99.0 publishes dactyl-db v0.8.2 from crates.io with sqlite and neon features, Nix vendoring succeeds on Ubuntu and macOS, and all governance and living-spec proof artifacts are current.",
+  "title": "Publish native local-Dactyl SQLite runtime preflight",
+  "intent": "When a Decapod project uses backend=local, agentic startup must resolve a usable host SQLite shared library for Dactyl. It must honor DACTYL_SQLITE_LIBRARY or the machine-local Decapod runtime config, discover and persist a usable host path at the OS/user level when possible, and otherwise return concise installation and export instructions. Cloud-backed startup must not require or probe SQLite.",
   "state": "APPROVED",
   "todo_ids": [
-    "bugs_01kzx6bbqdz5w768"
+    "bugs_01kzwwfjye4hxthf"
   ],
   "proof_hooks": [
-    "cargo fmt --all -- --check",
-    "cargo check --all-targets",
-    "cargo package --locked --allow-dirty",
-    "decapod validate"
+    "cargo test --all-targets (activation fixture failure remains separately reported)",
+    "decapod validate --refresh-specs --projections"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -21,11 +19,9 @@
   "unresolved_contradictions": [],
   "deferred_questions": [],
   "constraints": {
-    "forbidden_paths": [
-      "Do not mutate .decapod state directly; use Decapod CLI."
-    ],
-    "file_touch_budget": null
+    "forbidden_paths": [],
+    "file_touch_budget": 20
   },
   "phases": [],
-  "updated_at": "1786613220Z"
+  "updated_at": "1786617187Z"
 }

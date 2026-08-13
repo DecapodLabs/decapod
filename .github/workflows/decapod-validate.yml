@@ -13,28 +13,33 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-      # This repository is the Decapod source. Evaluate with a tree-local binary so
-      # pins match Cargo.toml (crates.io can lag mid-release and rewrite pins
-      # e.g. 0.96.17 → 0.96.16, failing the drift gate).
-      - name: Build tree-local Decapod
-        run: cargo build --release --locked
+      - name: Cache cargo-binstall and Decapod
+        id: cache_decapod_tools
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/cargo-binstall
+            ~/.cargo/bin/decapod
+          key: ${{ runner.os }}-decapod-tools-v1-${{ hashFiles('AGENTS.md') }}
+      - name: Install cargo-binstall
+        if: steps.cache_decapod_tools.outputs.cache-hit != 'true'
+        uses: cargo-bins/cargo-binstall@main
+      - name: Install Decapod
+        if: steps.cache_decapod_tools.outputs.cache-hit != 'true'
+        run: cargo binstall --no-confirm decapod
       - name: Decapod Validate
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
-          # release-plz / release-labeled PRs: skip hard fingerprint fails (pins lag cargo intentionally).
-          # Code PRs enforce pins against the tree-local binary.
-          DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES: ${{ (github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'release') || startsWith(github.head_ref, 'release-plz-')) && '1' || '' }}
+          # Post-merge: tree-local binary fingerprints lag the last published pin.
+          # PRs still enforce release-bound pins + drift.
+          DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES: ${{ github.event_name == 'push' && '1' || '' }}
         run: |
-          set -euo pipefail
-          BIN=./target/release/decapod
-          chmod +x "$BIN"
           if [ ! -d .decapod ]; then
-            "$BIN" init --proof
+            decapod init --proof
           fi
-          "$BIN" validate --refresh-specs
+          decapod validate --refresh-specs
       - name: Ensure no spec or entrypoint drift
-        # release-plz bumps Cargo.toml without pins; fingerprint gates skip; pins advance on next user PR.
-        if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'release') && !startsWith(github.head_ref, 'release-plz-')
+        if: github.event_name == 'pull_request'
         # validate rewrites generated_at every run; that is not semantic drift.
         # Normalize it to HEAD before the exit-code check so only real content,
         # entrypoint, Dockerfile, or manifest hash drift fails CI.
@@ -49,6 +54,6 @@ jobs:
           fi
           if ! git diff --exit-code -- . ':!.decapod/governance/'; then
             echo "::error::Release-bound or living-spec drift after validate --refresh-specs."
-            echo "Commit regenerated entrypoints and .decapod/managed/specs from the tree-local evaluating binary."
+            echo "Commit regenerated entrypoints and .decapod/managed/specs from the evaluating binary."
             exit 1
           fi

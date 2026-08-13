@@ -8,12 +8,232 @@ use crate::core::backend::{BackendRoute, StorageContext};
 use crate::core::error::{CloudAuthDiagnostic, CloudAuthStatus, DecapodError};
 use crate::core::schemas;
 use dactyl_db::{AccessMode, AtomicResult, Connection, OpenOptions, Operation, Parameter, Rows};
-use std::path::Path;
+use serde::{Deserialize, Serialize};
+use std::fs;
+use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 pub use dactyl_db::{OperationResult, WriteResult};
 
 const DEFAULT_LOCK_TIMEOUT: Duration = Duration::from_millis(250);
+pub const SQLITE_LIBRARY_ENV: &str = "DACTYL_SQLITE_LIBRARY";
+const HOST_RUNTIME_CONFIG_FILE: &str = "runtime.toml";
+
+#[derive(Debug, Default, Deserialize, Serialize)]
+struct HostRuntimeConfig {
+    #[serde(default = "default_runtime_schema_version")]
+    schema_version: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    sqlite_library: Option<String>,
+}
+
+fn default_runtime_schema_version() -> String {
+    "1".to_string()
+}
+
+/// Prepare the native SQLite capability required by Dactyl's local adapter.
+///
+/// The capability is machine-local rather than repository-local: the same
+/// host library can serve every Decapod project, while different hosts may
+/// resolve different paths. An explicit shell variable or persisted runtime
+/// value is trusted and applied without repeating discovery. Discovery only
+/// runs when neither value exists, and a discovered path is persisted beside
+/// Decapod's machine-local session state.
+pub fn ensure_local_sqlite_runtime() -> Result<(), DecapodError> {
+    if std::env::var(SQLITE_LIBRARY_ENV)
+        .ok()
+        .is_some_and(|value| !value.trim().is_empty())
+    {
+        return Ok(());
+    }
+
+    if let Some(configured) = configured_sqlite_library()? {
+        set_sqlite_library_env(&configured);
+        return Ok(());
+    }
+
+    match DactylBridge::open_memory() {
+        Ok(_) => Ok(()),
+        Err(error) if is_sqlite_runtime_unavailable(&error) => {
+            let Some(discovered) = discover_sqlite_library() else {
+                return Err(sqlite_runtime_required_error());
+            };
+
+            set_sqlite_library_env(&discovered);
+            if let Err(error) = persist_sqlite_library(&discovered) {
+                eprintln!(
+                    "warn: native SQLite is available at '{}', but Decapod could not persist it for future runs: {error}; set {SQLITE_LIBRARY_ENV} in the current shell to reuse it",
+                    discovered.display()
+                );
+            }
+
+            if let Err(error) = DactylBridge::open_memory() {
+                if is_sqlite_runtime_unavailable(&error) {
+                    return Err(sqlite_runtime_required_error());
+                }
+                return Err(error);
+            }
+            Ok(())
+        }
+        Err(error) => Err(error),
+    }
+}
+
+fn is_sqlite_runtime_unavailable(error: &DecapodError) -> bool {
+    matches!(
+        error,
+        DecapodError::DactylError(error)
+            if error.adapter_code() == Some("sqlite_runtime_unavailable")
+                || error.adapter_code() == Some("sqlite_runtime_incompatible")
+    )
+}
+
+fn configured_sqlite_library() -> Result<Option<String>, DecapodError> {
+    let path = host_runtime_config_path()?;
+    if !path.exists() {
+        return Ok(None);
+    }
+
+    let raw = fs::read_to_string(&path).map_err(DecapodError::IoError)?;
+    let config: HostRuntimeConfig = toml::from_str(&raw).map_err(|error| {
+        DecapodError::Config(format!(
+            "invalid Decapod machine runtime config '{}': {error}; remove or repair the file, then retry",
+            path.display()
+        ))
+    })?;
+    Ok(config
+        .sqlite_library
+        .filter(|value| !value.trim().is_empty()))
+}
+
+fn persist_sqlite_library(path: &Path) -> Result<(), DecapodError> {
+    let config_path = host_runtime_config_path()?;
+    let parent = config_path.parent().ok_or_else(|| {
+        DecapodError::Config("Decapod machine runtime config has no parent directory".to_string())
+    })?;
+    fs::create_dir_all(parent).map_err(DecapodError::IoError)?;
+
+    let config = HostRuntimeConfig {
+        schema_version: default_runtime_schema_version(),
+        sqlite_library: Some(path.to_string_lossy().into_owned()),
+    };
+    let body = toml::to_string_pretty(&config)
+        .map_err(|error| DecapodError::Config(format!("encode machine runtime config: {error}")))?;
+    let temporary = config_path.with_extension(format!("toml.{}.tmp", std::process::id()));
+    fs::write(&temporary, body).map_err(DecapodError::IoError)?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut permissions = fs::metadata(&temporary)
+            .map_err(DecapodError::IoError)?
+            .permissions();
+        permissions.set_mode(0o600);
+        fs::set_permissions(&temporary, permissions).map_err(DecapodError::IoError)?;
+    }
+    fs::rename(&temporary, &config_path).map_err(DecapodError::IoError)
+}
+
+fn host_runtime_config_path() -> Result<PathBuf, DecapodError> {
+    // Keep this beside the machine-local session records by using the same
+    // resolver, including XDG_CONFIG_HOME, rather than inventing a second
+    // notion of the user's Decapod configuration directory.
+    Ok(crate::machine_config_dir()?.join(HOST_RUNTIME_CONFIG_FILE))
+}
+
+fn set_sqlite_library_env(path: impl AsRef<Path>) {
+    // Startup capability resolution runs before Decapod starts worker threads.
+    // Dactyl's public configuration surface is the process environment.
+    unsafe { std::env::set_var(SQLITE_LIBRARY_ENV, path.as_ref().to_string_lossy().as_ref()) };
+}
+
+fn discover_sqlite_library() -> Option<PathBuf> {
+    let mut directories = Vec::new();
+    if let Ok(search_path) = std::env::var("LD_LIBRARY_PATH") {
+        directories.extend(
+            search_path
+                .split(':')
+                .filter(|path| !path.is_empty())
+                .map(PathBuf::from),
+        );
+    }
+    for path in [
+        "/usr/lib",
+        "/usr/lib64",
+        "/usr/local/lib",
+        "/lib",
+        "/lib64",
+        "/opt/homebrew/opt/sqlite/lib",
+        "/usr/local/opt/sqlite/lib",
+        "/nix/var/nix/profiles/default/lib",
+    ] {
+        directories.push(PathBuf::from(path));
+    }
+    if let Ok(home) = std::env::var("HOME") {
+        directories.push(PathBuf::from(home).join(".nix-profile/lib"));
+    }
+
+    // Nix keeps package libraries under content-addressed store entries rather
+    // than a conventional global loader path. Inspect only each entry's direct
+    // `lib` directory so a missing host symlink does not hide an installed runtime.
+    if let Ok(entries) = fs::read_dir("/nix/store") {
+        directories.extend(entries.flatten().map(|entry| entry.path().join("lib")));
+    }
+
+    directories.sort();
+    directories.dedup();
+    let mut candidates = directories
+        .into_iter()
+        .flat_map(|directory| fs::read_dir(directory).into_iter().flatten().flatten())
+        .map(|entry| entry.path())
+        .filter(|path| path.is_file())
+        .filter(|path| {
+            path.file_name()
+                .and_then(|name| name.to_str())
+                .is_some_and(is_sqlite_library_name)
+        })
+        .collect::<Vec<_>>();
+    candidates.sort_by_key(|path| {
+        let name = path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or_default();
+        (sqlite_library_name_rank(name), path.clone())
+    });
+    candidates.into_iter().next()
+}
+
+fn is_sqlite_library_name(name: &str) -> bool {
+    name == "sqlite3.dll"
+        || name == "libsqlite3.dylib"
+        || name == "libsqlite3.so"
+        || name.starts_with("libsqlite3.so.")
+}
+
+fn sqlite_library_name_rank(name: &str) -> u8 {
+    match name {
+        "libsqlite3.so" | "libsqlite3.dylib" | "sqlite3.dll" => 0,
+        "libsqlite3.so.0" => 1,
+        _ => 2,
+    }
+}
+
+fn sqlite_runtime_required_error() -> DecapodError {
+    let config_path = host_runtime_config_path()
+        .map(|path| path.display().to_string())
+        .unwrap_or_else(|_| "~/.config/decapod/runtime.toml".to_string());
+    let install = if cfg!(target_os = "macos") {
+        "brew install sqlite"
+    } else if cfg!(target_os = "windows") {
+        "winget install SQLite.SQLite"
+    } else if cfg!(target_os = "linux") {
+        "Debian/Ubuntu: sudo apt-get install libsqlite3-0; Fedora/RHEL: sudo dnf install sqlite-libs; Nix: nix profile install nixpkgs#sqlite"
+    } else {
+        "install the SQLite runtime shared library supplied by your operating system"
+    };
+    DecapodError::ValidationError(format!(
+        "AUTOREMEDIABLE_VALIDATION_ERROR code=LOCAL_SQLITE_RUNTIME_REQUIRED severity=transient auto_remediable=true audience=agent agent_action=\"Install the OS SQLite runtime using the platform command below, then retry; if it is already installed, set {SQLITE_LIBRARY_ENV} to its absolute shared-library path\" user_note=\"backend=local requires Dactyl's native host SQLite library; Cloud backend does not require SQLite.\"\nLOCAL_SQLITE_RUNTIME_REQUIRED: no host SQLite shared library was found for backend=local. Install: {install}\nAlternative: export {SQLITE_LIBRARY_ENV}=/path/to/libsqlite3.so and retry. Decapod stores discovered paths in the user-level config '{config_path}' for future projects."
+    ))
+}
 
 /// A route-scoped Dactyl driver. The underlying connection never escapes this
 /// wrapper, so Decapod callers use Dactyl's operation/result contract rather
@@ -206,6 +426,48 @@ mod tests {
                     if error.adapter_code() == Some("sqlite_runtime_unavailable")
             ));
         }
+    }
+
+    #[test]
+    fn missing_runtime_message_is_concise_and_agent_actionable() {
+        let message = sqlite_runtime_required_error().to_string();
+        assert!(message.starts_with(
+            "Validation error: AUTOREMEDIABLE_VALIDATION_ERROR code=LOCAL_SQLITE_RUNTIME_REQUIRED"
+        ));
+        assert!(message.contains("auto_remediable=true"));
+        assert!(message.contains("audience=agent"));
+        assert!(message.contains("agent_action=\"Install the OS SQLite runtime"));
+        assert!(message.contains("backend=local"));
+        assert!(message.contains("DACTYL_SQLITE_LIBRARY"));
+        assert!(message.contains("export DACTYL_SQLITE_LIBRARY="));
+        assert!(message.contains(".config/decapod/runtime.toml"));
+        assert!(message.contains("Cloud backend does not require SQLite"));
+        assert!(!message.contains("storage open failed at stage="));
+    }
+
+    #[test]
+    fn host_runtime_config_is_machine_local_and_serializable() {
+        let config = HostRuntimeConfig {
+            schema_version: default_runtime_schema_version(),
+            sqlite_library: Some("/opt/sqlite/lib/libsqlite3.so".to_string()),
+        };
+        let encoded = toml::to_string_pretty(&config).expect("runtime config encoding");
+        let decoded: HostRuntimeConfig = toml::from_str(&encoded).expect("runtime config decode");
+        assert_eq!(decoded.schema_version, "1");
+        assert_eq!(
+            decoded.sqlite_library.as_deref(),
+            Some("/opt/sqlite/lib/libsqlite3.so")
+        );
+    }
+
+    #[test]
+    fn sqlite_library_discovery_accepts_supported_host_names_only() {
+        assert!(is_sqlite_library_name("libsqlite3.so"));
+        assert!(is_sqlite_library_name("libsqlite3.so.0"));
+        assert!(is_sqlite_library_name("libsqlite3.dylib"));
+        assert!(is_sqlite_library_name("sqlite3.dll"));
+        assert!(!is_sqlite_library_name("libsqlite.so"));
+        assert!(!is_sqlite_library_name("sqlite3"));
     }
 
     #[test]
