@@ -24,6 +24,7 @@ pub mod coplayer;
 pub mod custody;
 pub mod dactyl;
 pub mod dactyl_db;
+pub mod dactyl_todo;
 pub mod db;
 pub mod dirty_classification;
 pub mod docs;

@@ -71,7 +71,7 @@ This change establishes two repository invariants:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d136fce5009bcc9ee55d5ca12d1e37be97081aafdd5eaf2afb8be49f6bd3f1b4`
+- Repository signal fingerprint: `c84c21f8a0950bbe6b78afb7907b4189e591d8b65cbfd062526c7827bce17941`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (104 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -5231,7 +5231,7 @@ fn validate_markdown_primitives_roundtrip_gate(
     info("Markdown Primitive Round-Trip Gate", ctx);
     if DbBroker::new(&store.root).is_cloud() {
         skip(
-            "Markdown primitive round-trip is local-store-only; cloud todo proof is supplied by the Propodus contract and protected production proof",
+            "Markdown primitive round-trip is local-store-only; cloud todo proof is supplied by the Dactyl contract and protected production proof",
             ctx,
         );
         return Ok(());

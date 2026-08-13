@@ -5,10 +5,10 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-pub const PUBLIC_CLOUD_BACKEND_UNAVAILABLE: &str = "Cloud todo persistence is not selected automatically. Use the optional Propodus HTTP adapter explicitly; local SQLite remains the default and no private backend dependency is required.";
+pub const PUBLIC_CLOUD_BACKEND_UNAVAILABLE: &str = "This cloud storage operation is not implemented yet; cloud mode never falls back to local SQLite, and todo persistence is routed through Dactyl.";
 
 pub const PROPODUS_TODO_ROUTE_SUMMARY: &str =
-    "GET /api/health; GET /api/todos?repo_id=<repo>; POST /api/todos; PATCH /api/todos?id=<todo>";
+    "POST /query for task reads/writes; POST /batch for atomic task operations";
 pub const CLOUD_ONBOARDING_CONTRACT_VERSION: &str = "v1";
 pub const CLOUD_ONBOARDING_START_ROUTE: &str = "/api/onboarding/start";
 pub const CLOUD_ONBOARDING_STATUS_ROUTE: &str = "/api/onboarding/status";
@@ -415,14 +415,14 @@ impl CloudInitRegistration {
             created_at: time::now_epoch_z(),
             writes: vec![
                 CloudWriteIntent {
-                    table: "todos".to_string(),
-                    operation: "list/create".to_string(),
-                    key: "repo_id".to_string(),
+                    table: "tasks".to_string(),
+                    operation: "Dactyl query list/add".to_string(),
+                    key: "id".to_string(),
                 },
                 CloudWriteIntent {
-                    table: "todos".to_string(),
-                    operation: "claim/complete".to_string(),
-                    key: "todo_id".to_string(),
+                    table: "tasks".to_string(),
+                    operation: "Dactyl batch claim/complete".to_string(),
+                    key: "id".to_string(),
                 },
             ],
         }
