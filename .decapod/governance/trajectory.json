@@ -8,6 +8,7 @@
   "current_phase": "validation",
   "next_transitions": [
     "publish",
+    "review hosted checks and resolve any failures",
     "run full validation and publish",
     "run governed validation and publish"
   ],
@@ -44,6 +45,10 @@
   "tool_calls": [],
   "checks": [
     {
+      "name": "branch_push",
+      "status": "passed"
+    },
+    {
       "name": "cargo_check_all_targets",
       "status": "passed"
     },
@@ -60,23 +65,34 @@
       "status": "passed"
     },
     {
+      "name": "container_workspace",
+      "status": "passed"
+    },
+    {
       "name": "dactyl_unit_tests",
       "status": "passed"
     },
     {
       "name": "decapod validate",
       "status": "passed"
+    },
+    {
+      "name": "pull_request_created",
+      "status": "passed"
     }
   ],
   "evidence": [
     "317 unit tests passed; tests/activation_conformance.rs::clean_checkout_activation_path_is_bounded_and_proof_gated failed because its fixture attempted VERIFIED without binding living-spec spec_refs; no SQLite or cloud regression failed",
     "Native temp-project launch without DACTYL_SQLITE_LIBRARY discovered /nix/store/.../libsqlite3.so and persisted it to XDG_CONFIG_HOME/decapod/runtime.toml; cloud regression confirmed no local SQLite initialization.",
+    "Prepared and entered the governed Podman workspace localhost/decapod-workspace:unknown-agent-unknown-todo-01kww-plus-5-1786617507; container decapod validate --format json completed with status=ok, fail_count=0, pass_count=204.",
+    "Pushed agent/unknown/bugs-01kzwwfjye4hxthf-dactyl-v0.8.2-local-db and created https://github.com/DecapodLabs/decapod/pull/1266; hosted checks are pending.",
     "validation epoch ve_6a7c5d880de32787 completed with zero failures"
   ],
   "shortcut_risk_signals": [
     "Do not claim full-suite completion while activation fixture remains red"
   ],
   "unresolved_assumptions": [
+    "Hosted CI may independently reject the activation fixture or release-bound projections; local proof and hosted proof remain distinct.",
     "The activation fixture failure is outside the SQLite preflight change because tests/activation_conformance.rs is unchanged and the failure is the existing living-spec proof gate"
   ],
   "proof_status": "failed",
@@ -86,7 +102,7 @@
     "shortcut_risk": "caution",
     "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:984726330d960e515bc3905387f4c95207b4af201a816aa281203a923fbe1a09",
+  "artifact_hash": "sha256:27778fe030579c02a11b50c741608e63fa28db8232d99879be626db1c24fab4d",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -139,6 +155,20 @@
       {
         "sequence": 6,
         "event_id": "event:6",
+        "intent_id": "intent:sqlite-native-preflight-20260813",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:sqlite-native-preflight-20260813"
+      },
+      {
+        "sequence": 7,
+        "event_id": "event:7",
+        "intent_id": "intent:sqlite-native-preflight-20260813",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:sqlite-native-preflight-20260813"
+      },
+      {
+        "sequence": 8,
+        "event_id": "event:8",
         "intent_id": "intent:sqlite-native-preflight-20260813",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:sqlite-native-preflight-20260813"
@@ -215,12 +245,45 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:6"
+          },
+          {
+            "sequence": 7,
+            "action": "publication",
+            "scope": [
+              "src/decapod/core/dactyl.rs, src/decapod/lib.rs, tests, docs, living specs, governed publication artifacts"
+            ],
+            "observations": [
+              "Pushed agent/unknown/bugs-01kzwwfjye4hxthf-dactyl-v0.8.2-local-db and created https://github.com/DecapodLabs/decapod/pull/1266; hosted checks are pending."
+            ],
+            "proof_refs": [
+              "branch_push",
+              "pull_request_created"
+            ],
+            "validation_findings": [
+              "Hosted CI may independently reject the activation fixture or release-bound projections; local proof and hosted proof remain distinct."
+            ],
+            "custody_event_id": "event:7"
+          },
+          {
+            "sequence": 8,
+            "action": "validation",
+            "scope": [
+              "src/decapod/core/dactyl.rs, src/decapod/lib.rs, tests, docs, living specs, governed publication artifacts"
+            ],
+            "observations": [
+              "Prepared and entered the governed Podman workspace localhost/decapod-workspace:unknown-agent-unknown-todo-01kww-plus-5-1786617507; container decapod validate --format json completed with status=ok, fail_count=0, pass_count=204."
+            ],
+            "proof_refs": [
+              "container_workspace"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:8"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 6
+    "next_sequence": 8
   }
 }
