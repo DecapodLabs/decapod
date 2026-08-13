@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -60,8 +60,24 @@ pub struct Decision {
 #[async_trait]
 pub trait TodoStore: Send + Sync {
     async fn list_tasks(&self) -> Result<Vec<Task>>;
+    /// Read one task without requiring callers to scan the complete projection.
+    /// Implementations may override this with a keyed backend query.
+    async fn get_task(&self, id: &str) -> Result<Option<Task>> {
+        Ok(self
+            .list_tasks()
+            .await?
+            .into_iter()
+            .find(|task| task.id == id))
+    }
     async fn add_task(&self, task: Task, actor: String, intent: String) -> Result<Task>;
     async fn claim_task(&self, id: &str, actor: String) -> Result<Task>;
+    /// Release an active claim back to the open state.
+    ///
+    /// The default keeps older adapters source-compatible while making an
+    /// unsupported cloud capability explicit instead of falling back locally.
+    async fn release_task(&self, _id: &str, _actor: String) -> Result<Task> {
+        Err(anyhow!("todo release is not supported by this storage adapter"))
+    }
     async fn complete_task(&self, id: &str, actor: String, resolution: String) -> Result<Task>;
 }
 
