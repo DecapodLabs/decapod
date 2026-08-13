@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.99.4](https://github.com/DecapodLabs/decapod/compare/v0.99.3...v0.99.4) - 2026-08-13
+
+### Added
+
+- *(cloud)* resolve dactyl through ambient runtime values
+- *(cloud)* route todo get and release through dactyl
+- *(cloud)* make dactyl todo transitions event-atomic
+- *(storage)* expose keyed todo reads and release transition
+
+### Fixed
+
+- *(cloud)* keep ambient route cleanup warning-free
+- *(ci)* skip release spec inspection and repair master gates
+
+### Other
+
+- autogenerate/sync command contracts
+- *(governance)* bind final container validation
+- *(governance)* refresh ambient routing validation receipt
+- *(cloud)* specify ambient dactyl routing contract
+- *(governance)* bind cloud proof and validation receipt
+- *(governance)* document dactyl 0.9 and release gates
+- *(local)* tolerate missing host sqlite in broad init suite
+- *(storage)* lock dactyl-db v0.9.0
+- *(storage)* upgrade dactyl-db to v0.9.0
+
 ## [0.99.3](https://github.com/DecapodLabs/decapod/compare/v0.99.2...v0.99.3) - 2026-08-13
 
 ### Added
