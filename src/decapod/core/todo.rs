@@ -6412,6 +6412,18 @@ async fn run_cloud_todo_command_with_store_async(
                 "item": task,
             })
         }
+        TodoCommand::Release { id } => {
+            let task = store.release_task(id, actor).await.map_err(cloud_error)?;
+            serde_json::json!({
+                "ts": now_iso(),
+                "cmd": "todo.release",
+                "status": "ok",
+                "root": root.to_string_lossy(),
+                "backend": "dactyl",
+                "id": id,
+                "item": task,
+            })
+        }
         TodoCommand::Done {
             id,
             id_positional,
@@ -6469,12 +6481,7 @@ async fn cloud_get_task(
     store: &dyn TodoStore,
     id: &str,
 ) -> Result<JsonValue, error::DecapodError> {
-    let item = store
-        .list_tasks()
-        .await
-        .map_err(cloud_error)?
-        .into_iter()
-        .find(|task| task.id == id);
+    let item = store.get_task(id).await.map_err(cloud_error)?;
     Ok(serde_json::json!({
         "ts": now_iso(),
         "cmd": "todo.get",
