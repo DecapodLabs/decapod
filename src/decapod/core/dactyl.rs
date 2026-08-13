@@ -456,11 +456,9 @@ impl AmbientDactylEnvironment {
 
 impl Drop for AmbientDactylEnvironment {
     fn drop(&mut self) {
-        unsafe {
-            restore_env(DATASTORE_ENV, self.datastore.take());
-            restore_env(DATASTORE_ROUTE_ENV, self.route.take());
-            restore_env(DATASTORE_TOKEN_ENV, self.token.take());
-        }
+        restore_env(DATASTORE_ENV, self.datastore.take());
+        restore_env(DATASTORE_ROUTE_ENV, self.route.take());
+        restore_env(DATASTORE_TOKEN_ENV, self.token.take());
     }
 }
 
