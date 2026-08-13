@@ -9,15 +9,15 @@
   "proof_hooks": [
     "focused Rust tests, cargo fmt --check, cargo clippy, decapod validate, hosted PR checks"
   ],
-  "unknowns": [
-    "live Neon/Vercel deployment parity and credentials are unavailable by user instruction"
-  ],
+  "unknowns": [],
   "human_questions": [],
   "stop_conditions": [
     "Do not claim live hosted stability or close issues whose proof belongs to Dactyl/Propodus deployment; stop on a Decapod decision gate or contract mismatch."
   ],
   "unresolved_contradictions": [],
-  "deferred_questions": [],
+  "deferred_questions": [
+    "Live Neon/Vercel deployment parity and credentials are intentionally unavailable in this run; retain as a downstream proof gate and do not claim hosted stability."
+  ],
   "constraints": {
     "forbidden_paths": [
       "Do not mutate Dactyl or Propodus repositories; do not add per-query backend parameters; do not hand-edit .decapod generated state; do not work on protected master."
@@ -59,5 +59,5 @@
       "completed_at": null
     }
   ],
-  "updated_at": "1786651823Z"
+  "updated_at": "1786651969Z"
 }

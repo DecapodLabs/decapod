@@ -5,10 +5,14 @@
   "task_id": "bugs_01kzy9z7jz0v66zt",
   "original_intent": "Address open Decapod GitHub Issues labeled dactyl and propodus as far as possible, integrate cloud backend selection through Dactyl and Propodus, publish one PR, and update issues.",
   "derived_intent": "Implement the Decapod-side backend=cloud integration against existing Dactyl and Propodus contracts without per-query backend inputs, prove local/mock troubleshooting paths, preserve thin ownership boundaries, and state hosted Neon/Vercel limits honestly.",
-  "current_phase": "cloud todo Dactyl adapter",
+  "current_phase": "validation and publication",
   "next_transitions": [
+    "commit governance receipt inputs and attempt governed publication; hosted/container gates remain explicit",
     "inspect live issues and current code contracts",
     "refresh governance artifacts, validate, commit, publish one PR"
+  ],
+  "blockers": [
+    "container workspace required for final validation but ghcr.io/decapodlabs/decapod:v0.99.2-debian returns manifest unknown"
   ],
   "active_boundaries": [
     "Decapod owns backend selection, domain semantics, schema/migration policy, retry/governance policy, and local-first correctness; Dactyl owns thin storage execution/routing/binding/transactions/errors; Propodus owns hosted storage/auth/authorization/tenant isolation; no direct Neon/Vercel dependency is assumed.",
@@ -45,8 +49,16 @@
   "tool_calls": [],
   "checks": [
     {
+      "name": "container_workspace",
+      "status": "unavailable"
+    },
+    {
       "name": "dactyl_protocol_boundary",
       "status": "passed"
+    },
+    {
+      "name": "decapod_validate",
+      "status": "failed"
     },
     {
       "name": "hosted_neon_vercel",
@@ -59,27 +71,34 @@
     {
       "name": "local_cloud_cli_dispatch",
       "status": "passed"
+    },
+    {
+      "name": "product_tests",
+      "status": "passed"
     }
   ],
   "evidence": [
     "Cloud CLI tests report backend=dactyl and preserve no-local-SQLite behavior",
-    "Dactyl /query wire proof observed bearer, versioned context, and no backend field"
+    "Dactyl /query wire proof observed bearer, versioned context, and no backend field",
+    "decapod validate reports 201 passes and only container_workspace_required failure",
+    "prescribed container remediation retried and failed on missing v0.99.2-debian manifest"
   ],
   "shortcut_risk_signals": [
     "No direct Propodus /api/todos storage calls remain in the production cloud factory"
   ],
   "unresolved_assumptions": [
     "Downstream Dactyl/Propodus agents will provide the compatible hosted /query and /batch service contract",
+    "The image registry may publish the required v0.99.2-debian image after this run; no product change can resolve that external registry state",
     "Vercel and Neon are intentionally unavailable for this run"
   ],
-  "proof_status": "partial",
+  "proof_status": "failed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "caution",
-    "completion_proof": "caution"
+    "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:17dc2e03d67e8c9b9e92c2bda0380515a016cf436cd4431afd0f6a36a313a085",
+  "artifact_hash": "sha256:956563facca11b6f7d47b995f1f74e923f2d541e4d42a718ebd466efb49ba794",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -118,6 +137,13 @@
       {
         "sequence": 4,
         "event_id": "event:4",
+        "intent_id": "intent:run-20260813-cloud-dactyl-propodus",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:run-20260813-cloud-dactyl-propodus"
+      },
+      {
+        "sequence": 5,
+        "event_id": "event:5",
         "intent_id": "intent:run-20260813-cloud-dactyl-propodus",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:run-20260813-cloud-dactyl-propodus"
@@ -164,12 +190,33 @@
               "Vercel and Neon are intentionally unavailable for this run"
             ],
             "custody_event_id": "event:4"
+          },
+          {
+            "sequence": 5,
+            "action": "validation and publication",
+            "scope": [
+              "Decapod repository and its labeled GitHub issue handoff; no direct implementation in Dactyl or Propodus repositories.",
+              "backend=cloud todo command path and related docs/tests"
+            ],
+            "observations": [
+              "decapod validate reports 201 passes and only container_workspace_required failure",
+              "prescribed container remediation retried and failed on missing v0.99.2-debian manifest"
+            ],
+            "proof_refs": [
+              "product_tests",
+              "decapod_validate",
+              "container_workspace"
+            ],
+            "validation_findings": [
+              "The image registry may publish the required v0.99.2-debian image after this run; no product change can resolve that external registry state"
+            ],
+            "custody_event_id": "event:5"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 4
+    "next_sequence": 5
   }
 }
