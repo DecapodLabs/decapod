@@ -581,6 +581,16 @@ fn connect_todo(root: &Path) -> Result<Connection, error::DecapodError> {
 }
 
 fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
+    // Read operations are intentionally backed by Dactyl read-only
+    // connections. Schema creation, additive migrations, and invariant
+    // repairs belong to the write-side initialization path; attempting them
+    // here turns an otherwise valid read into a ReadOnly storage failure.
+    // A missing or incompatible schema still fails at the actual query and
+    // is repaired by the next governed initialization/migration step.
+    if conn.is_read_only() {
+        return Ok(());
+    }
+
     conn.execute(schemas::TODO_DB_SCHEMA_META, [])?;
     crate::core::events::ensure_tables(conn)?;
 

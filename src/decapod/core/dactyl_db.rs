@@ -387,6 +387,15 @@ impl Connection {
         Ok(())
     }
 
+    /// Report whether this facade was opened with Dactyl's read-only policy.
+    ///
+    /// Callers use this to keep schema initialization and migration writes off
+    /// read paths. Dactyl remains the authority for enforcing the policy; this
+    /// accessor only lets Decapod avoid attempting a write that must fail.
+    pub fn is_read_only(&self) -> bool {
+        self.driver.access_mode() == AccessMode::ReadOnly
+    }
+
     pub fn execute<P: IntoParams>(&self, sql: &str, params: P) -> Result<usize> {
         Ok(self.driver.write(sql, &params.into_params())? as usize)
     }
