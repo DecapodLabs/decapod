@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.99.0](https://github.com/DecapodLabs/decapod/compare/v0.98.3...v0.99.0) - 2026-08-13
+
+### Added
+
+- *(storage)* integrate dactyl v0.8.2 local persistence
+
+### Fixed
+
+- *(storage)* keep read-only todo paths non-mutating
+
+### Other
+
+- *(governance)* bind final validation receipt
+- *(governance)* record dactyl v0.8.2 proof
+
 ## [0.98.3](https://github.com/DecapodLabs/decapod/compare/v0.98.2...v0.98.3) - 2026-08-12
 
 ### Fixed
