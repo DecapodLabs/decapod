@@ -1,120 +1,97 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "pr1256-continue-20260812",
-  "intent_id": "intent:pr1256-continue-20260812",
+  "run_id": "run_pr1256_20260812_continuation",
+  "intent_id": "intent:run_pr1256_20260812_continuation",
   "task_id": "code_01kzvey011rqf9py",
-  "original_intent": "Continue PR #1256 in Decapod while the Dactyl Issue #77 migration/import work is being developed.",
-  "derived_intent": "Keep the Decapod storage seam and governance artifacts truthful, resolve current-master and validation drift, and implement only Decapod-side proof that does not require an unreleased Dactyl API.",
-  "current_phase": "final-local-proof",
+  "original_intent": "Resume PR #1256 and publish the changes currently present, then continue to address issues #1028, #1110, #1111, #1112, #1120, #1216, #1217, #1220, #1221, #1222, #1223, #1224, #1247, and #1254.",
+  "derived_intent": "Publish the verified Dactyl v0.7 storage-context and canonical local route slice, then continue Decapod-owned storage compatibility and concurrency work while preserving external hosted proof gates.",
+  "current_phase": "publication-and-cutover",
   "next_transitions": [
-    "migrate-direct-canonical-callers"
+    "audit and implement the next Decapod-owned storage seam without importing the uncommitted compatibility attempt",
+    "audit remaining Decapod-owned storage callers and proof gaps"
   ],
   "active_boundaries": [
-    "Decapod repository only; no Dactyl or Propodus changes; no dependency/API claim beyond user-provided assumption; no direct .decapod state mutation.",
-    "canonical .decapod/data/decapod.db access is Dactyl-only; no direct rusqlite or SQLite subprocess"
+    "Decapod owns route/context/schema/migration/domain semantics and proof; Dactyl owns physical execution; Propodus owns hosted auth/tenancy/deployment; no production credentials or direct .decapod mutation."
   ],
   "repo_scope": [
-    "Decapod PR #1256; Dactyl v0.7.0/#77 import and canonical route contract; remaining Decapod callsite migration",
-    "PR #1256 continuation workspace, storage seam, release-bound artifacts, living specs, local and hosted proof state."
+    "PR #1256 Decapod repository slice, governed specs and proof artifacts, and offline tests."
   ],
   "inspected_files": [
     "Cargo.toml",
+    "docs/book/src/reference/propodus.md",
+    "src/decapod/core/backend.rs",
     "src/decapod/core/dactyl.rs",
     "src/decapod/core/db.rs",
     "src/decapod/core/events.rs",
-    "src/decapod/core/migration.rs",
     "src/decapod/core/todo.rs"
   ],
   "modified_files": [
-    ".decapod/managed/specs/ARCHITECTURE.md",
-    ".decapod/managed/specs/INTENT.md",
-    ".decapod/managed/specs/INTERFACES.md",
-    ".decapod/managed/specs/OPERATIONS.md",
-    ".decapod/managed/specs/README.md",
-    ".decapod/managed/specs/SEMANTICS.md",
-    ".decapod/managed/specs/VALIDATION.md",
-    "Cargo.lock",
+    ".decapod/governance/plan.json",
     "Cargo.toml",
     "docs/book/src/reference/propodus.md",
     "src/decapod/core/dactyl.rs"
   ],
   "declared_commands": [
-    "cargo check --lib",
-    "cargo fmt --all",
-    "cargo test --lib core::dactyl -- --nocapture",
-    "cargo test --lib core::events -- --nocapture"
+    "cargo test/check and fmt",
+    "decapod validate --format json",
+    "gh api issues and PR state"
   ],
-  "tool_calls": [],
+  "tool_calls": [
+    "decapod infer orientation",
+    "decapod workspace ensure --container"
+  ],
   "checks": [
     {
-      "name": "cargo check --lib",
+      "name": "cargo_check_uncommitted_cutover",
       "status": "passed"
     },
     {
-      "name": "cargo clippy --all-targets --all-features -- -D warnings",
+      "name": "cargo_fmt",
       "status": "passed"
     },
     {
-      "name": "cargo fmt",
-      "status": "passed"
-    },
-    {
-      "name": "cargo test --lib",
-      "status": "passed"
-    },
-    {
-      "name": "cargo test --lib core::dactyl",
-      "status": "passed"
-    },
-    {
-      "name": "cargo test --lib core::dactyl --features legacy-import",
-      "status": "passed"
-    },
-    {
-      "name": "cargo test --lib core::events",
-      "status": "passed"
-    },
-    {
-      "name": "decapod validate --refresh-specs",
+      "name": "decapod_validate_container",
       "status": "failed"
+    },
+    {
+      "name": "decapod_validate_host",
+      "status": "failed"
+    },
+    {
+      "name": "published_current_slice",
+      "status": "passed"
     }
   ],
   "evidence": [
-    "313 library tests passed; Dactyl-focused tests passed with and without legacy-import; clippy all targets/features passed; validation refreshed specs but remains blocked by container_workspace_required and historical ENTRYPOINT_COMMIT_DISCIPLINE",
-    "After restoring the transitional event facade, the full library suite and targeted event/Dactyl tests pass; the earlier targeted event failure came from an intentionally abandoned partial cutover and is not the current tree state",
-    "Dactyl v0.7.0 bridge opens explicit snapshots, rejects SQLite headers, supports portable schema inspection, and exposes optional Dactyl-owned legacy import; direct canonical Decapod callsites remain to be migrated",
-    "No hosted publication was performed; the current PR remains the review surface and Dactyl #77 release confirmation is still pending",
-    "Repository scan still finds direct rusqlite/SQLite connection callsites in core, plugins, and plan governance; canonical cutover is incomplete and not claimed"
+    "Local validation is blocked only by historical entrypoint commit-discipline findings; container workspace proof is available.",
+    "PR #1256 head 102fb177 then da5ab8d6 on the requested branch; hosted checks for the published slice passed before the governance-only update, with the latest run pending."
   ],
-  "shortcut_risk_signals": [
-    "do not claim canonical cutover while direct rusqlite callsites remain",
-    "full canonical cutover is not complete while direct SQLite callers remain"
-  ],
+  "shortcut_risk_signals": [],
   "unresolved_assumptions": [
-    "Dactyl Issue #77 implementation head is the development contract; user will confirm release before release-bound pin update"
+    "Protected live Propodus/Vercel credentials and deployment proof are external and unavailable in this run."
   ],
   "proof_status": "failed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
-    "shortcut_risk": "caution",
+    "shortcut_risk": "supported",
     "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:d5f35ffc48dc60b45d52779e8b15dba860a02538cac4f7507e8b54ac499d8d01",
+  "artifact_hash": "sha256:5b44df99703488ae1c5d9e332e010ff504673ad94210b795bb4b1b27aafc106e",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:pr1256-continue-20260812": {
-        "id": "intent:pr1256-continue-20260812",
-        "raw_intent": "Continue PR #1256 in Decapod while the Dactyl Issue #77 migration/import work is being developed.",
-        "refined_intent": "Keep the Decapod storage seam and governance artifacts truthful, resolve current-master and validation drift, and implement only Decapod-side proof that does not require an unreleased Dactyl API.",
+      "intent:run_pr1256_20260812_continuation": {
+        "id": "intent:run_pr1256_20260812_continuation",
+        "raw_intent": "Resume PR #1256 and publish the changes currently present, then continue to address issues #1028, #1110, #1111, #1112, #1120, #1216, #1217, #1220, #1221, #1222, #1223, #1224, #1247, and #1254.",
+        "refined_intent": "Publish the verified Dactyl v0.7 storage-context and canonical local route slice, then continue Decapod-owned storage compatibility and concurrency work while preserving external hosted proof gates.",
         "acceptance_criteria": [],
         "constraints": [
-          "PR #1256 continuation workspace, storage seam, release-bound artifacts, living specs, local and hosted proof state."
+          "PR #1256 Decapod repository slice, governed specs and proof artifacts, and offline tests."
         ],
         "assumptions": [],
         "boundaries": [
-          "Decapod repository only; no Dactyl or Propodus changes; no dependency/API claim beyond user-provided assumption; no direct .decapod state mutation."
+          "Decapod owns route/context/schema/migration/domain semantics and proof; Dactyl owns physical execution; Propodus owns hosted auth/tenancy/deployment; no production credentials or direct .decapod mutation."
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -127,131 +104,69 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:pr1256-continue-20260812",
+        "intent_id": "intent:run_pr1256_20260812_continuation",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:pr1256-continue-20260812",
+        "intent_id": "intent:run_pr1256_20260812_continuation",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:pr1256-continue-20260812",
+        "intent_id": "intent:run_pr1256_20260812_continuation",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:pr1256-continue-20260812"
-      },
-      {
-        "sequence": 5,
-        "event_id": "event:5",
-        "intent_id": "intent:pr1256-continue-20260812",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:pr1256-continue-20260812"
-      },
-      {
-        "sequence": 6,
-        "event_id": "event:6",
-        "intent_id": "intent:pr1256-continue-20260812",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:pr1256-continue-20260812"
+        "detail": "trajectory:run_pr1256_20260812_continuation"
       }
     ],
     "trajectories": {
-      "pr1256-continue-20260812": {
-        "id": "pr1256-continue-20260812",
-        "intent_id": "intent:pr1256-continue-20260812",
+      "run_pr1256_20260812_continuation": {
+        "id": "run_pr1256_20260812_continuation",
+        "intent_id": "intent:run_pr1256_20260812_continuation",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "canonical-dactyl-boundary",
-            "command": "cargo fmt --all",
+            "action": "publication-and-cutover",
+            "tool": "decapod infer orientation",
+            "command": "gh api issues and PR state",
             "scope": [
-              "PR #1256 continuation workspace, storage seam, release-bound artifacts, living specs, local and hosted proof state."
+              "PR #1256 Decapod repository slice, governed specs and proof artifacts, and offline tests."
             ],
             "observations": [
+              "src/decapod/core/backend.rs",
               "src/decapod/core/dactyl.rs",
-              "src/decapod/core/events.rs",
               "src/decapod/core/db.rs",
+              "src/decapod/core/events.rs",
               "src/decapod/core/todo.rs",
-              "src/decapod/core/migration.rs",
               "Cargo.toml",
+              "docs/book/src/reference/propodus.md",
               "src/decapod/core/dactyl.rs",
               "Cargo.toml",
-              "Cargo.lock",
-              ".decapod/managed/specs/INTENT.md",
-              ".decapod/managed/specs/ARCHITECTURE.md",
-              ".decapod/managed/specs/INTERFACES.md",
-              ".decapod/managed/specs/README.md",
-              ".decapod/managed/specs/OPERATIONS.md",
-              ".decapod/managed/specs/VALIDATION.md",
-              ".decapod/managed/specs/SEMANTICS.md",
               "docs/book/src/reference/propodus.md",
-              "Dactyl v0.7.0 bridge opens explicit snapshots, rejects SQLite headers, supports portable schema inspection, and exposes optional Dactyl-owned legacy import; direct canonical Decapod callsites remain to be migrated"
+              ".decapod/governance/plan.json",
+              "PR #1256 head 102fb177 then da5ab8d6 on the requested branch; hosted checks for the published slice passed before the governance-only update, with the latest run pending.",
+              "Local validation is blocked only by historical entrypoint commit-discipline findings; container workspace proof is available."
             ],
             "proof_refs": [
-              "cargo fmt",
-              "cargo check --lib",
-              "cargo test --lib core::events",
-              "cargo test --lib core::dactyl"
+              "published_current_slice",
+              "cargo_fmt",
+              "cargo_check_uncommitted_cutover",
+              "decapod_validate_host",
+              "decapod_validate_container"
             ],
             "validation_findings": [
-              "do not claim canonical cutover while direct rusqlite callsites remain",
-              "Dactyl Issue #77 implementation head is the development contract; user will confirm release before release-bound pin update"
+              "Protected live Propodus/Vercel credentials and deployment proof are external and unavailable in this run."
             ],
             "custody_event_id": "event:4"
-          },
-          {
-            "sequence": 5,
-            "action": "proof-review",
-            "scope": [
-              "Decapod PR #1256; Dactyl v0.7.0/#77 import and canonical route contract; remaining Decapod callsite migration",
-              "PR #1256 continuation workspace, storage seam, release-bound artifacts, living specs, local and hosted proof state."
-            ],
-            "observations": [
-              ".decapod/managed/specs/ARCHITECTURE.md",
-              ".decapod/managed/specs/INTENT.md",
-              ".decapod/managed/specs/INTERFACES.md",
-              "313 library tests passed; Dactyl-focused tests passed with and without legacy-import; clippy all targets/features passed; validation refreshed specs but remains blocked by container_workspace_required and historical ENTRYPOINT_COMMIT_DISCIPLINE",
-              "Repository scan still finds direct rusqlite/SQLite connection callsites in core, plugins, and plan governance; canonical cutover is incomplete and not claimed"
-            ],
-            "proof_refs": [
-              "cargo fmt",
-              "cargo test --lib",
-              "cargo test --lib core::dactyl --features legacy-import",
-              "cargo clippy --all-targets --all-features -- -D warnings",
-              "decapod validate --refresh-specs"
-            ],
-            "validation_findings": [
-              "full canonical cutover is not complete while direct SQLite callers remain"
-            ],
-            "custody_event_id": "event:5"
-          },
-          {
-            "sequence": 6,
-            "action": "final-local-proof",
-            "scope": [
-              "Decapod PR #1256; Dactyl v0.7.0/#77 import and canonical route contract; remaining Decapod callsite migration",
-              "PR #1256 continuation workspace, storage seam, release-bound artifacts, living specs, local and hosted proof state."
-            ],
-            "observations": [
-              "After restoring the transitional event facade, the full library suite and targeted event/Dactyl tests pass; the earlier targeted event failure came from an intentionally abandoned partial cutover and is not the current tree state",
-              "No hosted publication was performed; the current PR remains the review surface and Dactyl #77 release confirmation is still pending"
-            ],
-            "proof_refs": [
-              "cargo test --lib core::events",
-              "cargo test --lib core::dactyl"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:6"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 6
+    "next_sequence": 4
   }
 }
