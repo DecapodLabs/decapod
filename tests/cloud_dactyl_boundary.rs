@@ -3,15 +3,14 @@ use decapod::core::backend::{BackendRoute, StorageContext};
 use decapod::core::dactyl::DactylBridge;
 use decapod::core::repo_identity::RepositoryIdentity;
 use serde_json::Value;
-use std::io::{Read, Write};
-use std::net::{TcpListener, TcpStream};
-use std::thread;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::net::{TcpListener, TcpStream};
 
-fn read_http_request(stream: &mut TcpStream) -> (String, Value) {
+async fn read_http_request(stream: &mut TcpStream) -> (String, Value) {
     let mut bytes = Vec::new();
     let mut chunk = [0_u8; 1024];
     let header_end = loop {
-        let count = stream.read(&mut chunk).expect("read request");
+        let count = stream.read(&mut chunk).await.expect("read request");
         assert!(count > 0, "request ended before headers");
         bytes.extend_from_slice(&chunk[..count]);
         if let Some(end) = bytes.windows(4).position(|window| window == b"\r\n\r\n") {
@@ -30,7 +29,7 @@ fn read_http_request(stream: &mut TcpStream) -> (String, Value) {
         .parse::<usize>()
         .expect("numeric content length");
     while bytes.len() < header_end + content_length {
-        let count = stream.read(&mut chunk).expect("read request body");
+        let count = stream.read(&mut chunk).await.expect("read request body");
         assert!(count > 0, "request ended before body");
         bytes.extend_from_slice(&chunk[..count]);
     }
@@ -39,13 +38,15 @@ fn read_http_request(stream: &mut TcpStream) -> (String, Value) {
     (headers, body)
 }
 
-#[test]
-fn cloud_dactyl_uses_query_with_opaque_context_not_backend_query_inputs() {
-    let listener = TcpListener::bind("127.0.0.1:0").expect("bind fake Dactyl service");
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn cloud_dactyl_uses_query_with_opaque_context_not_backend_query_inputs() {
+    let listener = TcpListener::bind("127.0.0.1:0")
+        .await
+        .expect("bind fake Dactyl service");
     let address = listener.local_addr().expect("fake service address");
-    let server = thread::spawn(move || {
-        let (mut stream, _) = listener.accept().expect("accept Dactyl request");
-        let (headers, body) = read_http_request(&mut stream);
+    let server = tokio::spawn(async move {
+        let (mut stream, _) = listener.accept().await.expect("accept Dactyl request");
+        let (headers, body) = read_http_request(&mut stream).await;
         assert!(
             headers.starts_with("POST /query HTTP/1.1"),
             "unexpected request: {headers}"
@@ -62,35 +63,44 @@ fn cloud_dactyl_uses_query_with_opaque_context_not_backend_query_inputs() {
 
         let response =
             br#"{"columns":["id","title"],"rows":[{"id":"task_1","title":"from dactyl"}]}"#;
-        write!(
-            stream,
+        let response_headers = format!(
             "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
             response.len()
-        )
-        .expect("write response headers");
-        stream.write_all(response).expect("write response body");
+        );
+        stream
+            .write_all(response_headers.as_bytes())
+            .await
+            .expect("write response headers");
+        stream
+            .write_all(response)
+            .await
+            .expect("write response body");
     });
 
-    let identity = RepositoryIdentity {
-        canonical_name: "DecapodLabs/decapod".to_string(),
-        owner: "DecapodLabs".to_string(),
-        repository: "decapod".to_string(),
-        remote_url: "git@github.com:DecapodLabs/decapod.git".to_string(),
-    };
-    let route =
-        BackendRoute::cloud(identity, format!("http://{address}")).expect("validated cloud route");
-    let context = StorageContext::from_route(route, Some("test-token"))
-        .expect("authenticated storage context");
-    let bridge =
-        DactylBridge::from_storage_context(&context, AccessMode::ReadOnly).expect("Dactyl bridge");
-    let rows = bridge
-        .read("SELECT id, title FROM tasks", &[])
-        .expect("remote query");
+    let rows = tokio::task::spawn_blocking(move || {
+        let identity = RepositoryIdentity {
+            canonical_name: "DecapodLabs/decapod".to_string(),
+            owner: "DecapodLabs".to_string(),
+            repository: "decapod".to_string(),
+            remote_url: "git@github.com:DecapodLabs/decapod.git".to_string(),
+        };
+        let route = BackendRoute::cloud(identity, format!("http://{address}"))
+            .expect("validated cloud route");
+        let context = StorageContext::from_route(route, Some("test-token"))
+            .expect("authenticated storage context");
+        let bridge = DactylBridge::from_storage_context(&context, AccessMode::ReadOnly)
+            .expect("Dactyl bridge");
+        bridge
+            .read("SELECT id, title FROM tasks", &[])
+            .expect("remote query")
+    })
+    .await
+    .expect("Dactyl client task");
     assert_eq!(rows.len(), 1);
     assert_eq!(rows.as_slice()[0].get_str("id").expect("id"), "task_1");
     assert_eq!(
         rows.as_slice()[0].get_str("title").expect("title"),
         "from dactyl"
     );
-    server.join().expect("fake Dactyl service");
+    server.await.expect("fake Dactyl service");
 }
