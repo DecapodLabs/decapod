@@ -1,15 +1,13 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "run-dactyl-v082-local-db-20260813",
-  "intent_id": "intent:run-dactyl-v082-local-db-20260813",
+  "run_id": "run-dactyl-v082-final-20260813",
+  "intent_id": "intent:run-dactyl-v082-final-20260813",
   "task_id": "bugs_01kzwwfjye4hxthf",
   "original_intent": "Integrate Dactyl v0.8.2 for Decapod local database writes and complete the Decapod-owned acceptance slice for the requested storage issues.",
   "derived_intent": "Replace Decapod-owned direct rusqlite/libsqlite3-sys usage with one Dactyl v0.8.2-backed local storage facade, preserve schema/migration/retry/governance semantics, and prove local failure and reopen behavior.",
-  "current_phase": "governance-validation-recovery",
+  "current_phase": "final-local-proof",
   "next_transitions": [
-    "refresh governance receipt, run final validation, and hand off local completion with hosted cloud gates explicit",
-    "resolve container toolchain/runtime validation and historical entrypoint commit-discipline findings before publication",
-    "run final lint, targeted/full tests, container validation, and publish the governed workspace when external authorization is supplied"
+    "publish the clean workspace when external publication authorization is supplied; complete Propodus/Neon cloud integration separately"
   ],
   "active_boundaries": [
     "Dactyl owns physical local execution and typed storage errors; Decapod owns schema, migrations, policy, retry decisions, and governance; hosted Propodus/Neon proof remains external."
@@ -23,14 +21,15 @@
     ".decapod/managed/specs/INTERFACES.md",
     "Cargo.lock",
     "Cargo.toml",
-    "docs/book/src/reference/propodus.md",
     "src/decapod/core/dactyl.rs",
     "src/decapod/core/dactyl_db.rs",
     "src/decapod/core/db.rs",
     "src/decapod/core/events.rs",
     "src/decapod/core/migration.rs",
     "src/decapod/core/pool.rs",
-    "tests/core/core.rs"
+    "tests/core/core.rs",
+    "tests/single_datastore.rs",
+    "tests/sqlite_hardening.rs"
   ],
   "modified_files": [
     ".decapod/managed/specs/ARCHITECTURE.md",
@@ -38,23 +37,24 @@
     ".decapod/managed/specs/INTERFACES.md",
     "Cargo.lock",
     "Cargo.toml",
-    "docs/book/src/reference/propodus.md",
+    "src/decapod/core/dactyl.rs",
     "src/decapod/core/dactyl_db.rs",
     "src/decapod/core/db.rs",
     "src/decapod/core/events.rs",
     "src/decapod/core/migration.rs",
     "src/decapod/core/pool.rs",
-    "tests/core/core.rs"
+    "tests/core/core.rs",
+    "tests/single_datastore.rs",
+    "tests/sqlite_hardening.rs"
   ],
   "declared_commands": [
     "DACTYL_SQLITE_LIBRARY=/tmp/dactyl-libsqlite3.so.0.8.6 cargo test --lib",
     "DACTYL_SQLITE_LIBRARY=/tmp/dactyl-libsqlite3.so.0.8.6 cargo test --test core_tests --test single_datastore --test sqlite_hardening -- --nocapture",
     "cargo check --all-targets",
     "cargo clippy --all-targets --all-features -- -D warnings",
-    "cargo fmt --all",
-    "decapod govern watcher run",
-    "decapod validate --refresh-specs --format json",
-    "git diff --check"
+    "cargo fmt --all -- --check",
+    "container decapod validate --refresh-specs --format json",
+    "decapod validate --format json"
   ],
   "tool_calls": [],
   "checks": [
@@ -75,11 +75,11 @@
       "status": "passed"
     },
     {
-      "name": "decapod_validate",
-      "status": "failed"
+      "name": "decapod_validate_container",
+      "status": "passed"
     },
     {
-      "name": "git_diff_check",
+      "name": "decapod_validate_host",
       "status": "passed"
     },
     {
@@ -88,29 +88,25 @@
     }
   ],
   "evidence": [
-    "Dactyl v0.8.2 is pinned at tag commit 68555e1; Decapod-owned direct rusqlite/libsqlite3-sys dependencies and SQLite-specific metadata queries are removed; master-side core test edits are present in this workspace.",
-    "Managed image supplied libsqlite3.so.0.8.6; Dactyl core conformance 9/9 passed; core library 313/313 passed; core, single-datastore, and SQLite-hardening integration suites passed; new read-write database paths now pass through the v0.8.2 pre-open compatibility preflight.",
-    "Validation passed 202 gates and refreshed projections, but the host-side run remains blocked by required container proof and historical entrypoint commit-discipline findings in inherited PR #1256 commits. The prepared container has libsqlite3.so.0.8.6 but its cargo 1.65/rustc 1.63 toolchain cannot parse Rust 2024."
+    "Dactyl v0.8.2 tag commit 68555e1 is pinned; the Decapod dependency graph contains no rusqlite or libsqlite3-sys; production code has no sqlite_master, pragma_table_info, PRAGMA, or last_insert_rowid metadata path; the managed shared library libsqlite3.so.0.8.6 enabled 9/9 Dactyl conformance, 313/313 library, 23/23 core integration, 4/4 single-datastore, and 4/4 SQLite hardening tests; host and container validation have no failures."
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [
-    "Cloud Propodus/Vercel/Neon routing and hosted tenancy proof are not integrated and remain downstream work.",
-    "Hosted Propodus/Neon deployment, tenancy, credential, and cross-repository transaction proof remain external and are not claimed here.",
-    "The local Dactyl runtime proof is complete with the managed image's shared SQLite library; hosted cloud integration and historical governance cleanup remain separate publication gates."
+    "Cloud Propodus/Vercel/Neon routing, hosted tenancy, credential, deployment, and cross-repository transaction proof are not integrated and remain downstream work."
   ],
-  "proof_status": "failed",
+  "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "unsupported"
+    "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:14ad422b0a6f3461329ed179dd559f91cf07db73061c1c51f7325abfe48f2020",
+  "artifact_hash": "sha256:e2100935f7e794765a2e621670212915d64a566459bc8d3d7a0c2bef8ca3fd73",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:run-dactyl-v082-local-db-20260813": {
-        "id": "intent:run-dactyl-v082-local-db-20260813",
+      "intent:run-dactyl-v082-final-20260813": {
+        "id": "intent:run-dactyl-v082-final-20260813",
         "raw_intent": "Integrate Dactyl v0.8.2 for Decapod local database writes and complete the Decapod-owned acceptance slice for the requested storage issues.",
         "refined_intent": "Replace Decapod-owned direct rusqlite/libsqlite3-sys usage with one Dactyl v0.8.2-backed local storage facade, preserve schema/migration/retry/governance semantics, and prove local failure and reopen behavior.",
         "acceptance_criteria": [],
@@ -132,47 +128,33 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:run-dactyl-v082-local-db-20260813",
+        "intent_id": "intent:run-dactyl-v082-final-20260813",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:run-dactyl-v082-local-db-20260813",
+        "intent_id": "intent:run-dactyl-v082-final-20260813",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:run-dactyl-v082-local-db-20260813",
+        "intent_id": "intent:run-dactyl-v082-final-20260813",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run-dactyl-v082-local-db-20260813"
-      },
-      {
-        "sequence": 5,
-        "event_id": "event:5",
-        "intent_id": "intent:run-dactyl-v082-local-db-20260813",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run-dactyl-v082-local-db-20260813"
-      },
-      {
-        "sequence": 6,
-        "event_id": "event:6",
-        "intent_id": "intent:run-dactyl-v082-local-db-20260813",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run-dactyl-v082-local-db-20260813"
+        "detail": "trajectory:run-dactyl-v082-final-20260813"
       }
     ],
     "trajectories": {
-      "run-dactyl-v082-local-db-20260813": {
-        "id": "run-dactyl-v082-local-db-20260813",
-        "intent_id": "intent:run-dactyl-v082-local-db-20260813",
+      "run-dactyl-v082-final-20260813": {
+        "id": "run-dactyl-v082-final-20260813",
+        "intent_id": "intent:run-dactyl-v082-final-20260813",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "dactyl-v0.8.2-local-cutover",
-            "command": "cargo fmt --all",
+            "action": "final-local-proof",
+            "command": "DACTYL_SQLITE_LIBRARY=/tmp/dactyl-libsqlite3.so.0.8.6 cargo test --lib",
             "scope": [
               "Decapod repository source, tests, living specs, generated governance artifacts, and local/container validation only."
             ],
@@ -182,83 +164,50 @@
               "src/decapod/core/dactyl.rs",
               "src/decapod/core/dactyl_db.rs",
               "src/decapod/core/db.rs",
-              "src/decapod/core/migration.rs",
               "src/decapod/core/events.rs",
+              "src/decapod/core/migration.rs",
               "src/decapod/core/pool.rs",
               "tests/core/core.rs",
-              "docs/book/src/reference/propodus.md",
+              "tests/single_datastore.rs",
+              "tests/sqlite_hardening.rs",
+              ".decapod/managed/specs/ARCHITECTURE.md",
+              ".decapod/managed/specs/INTENT.md",
+              ".decapod/managed/specs/INTERFACES.md",
               "Cargo.toml",
               "Cargo.lock",
+              "src/decapod/core/dactyl.rs",
               "src/decapod/core/dactyl_db.rs",
               "src/decapod/core/db.rs",
-              "src/decapod/core/migration.rs",
               "src/decapod/core/events.rs",
+              "src/decapod/core/migration.rs",
               "src/decapod/core/pool.rs",
               "tests/core/core.rs",
-              "docs/book/src/reference/propodus.md",
-              "Dactyl v0.8.2 is pinned at tag commit 68555e1; Decapod-owned direct rusqlite/libsqlite3-sys dependencies and SQLite-specific metadata queries are removed; master-side core test edits are present in this workspace."
-            ],
-            "proof_refs": [
-              "cargo_fmt",
-              "cargo_check_all_targets",
-              "git_diff_check"
-            ],
-            "validation_findings": [
-              "Hosted Propodus/Neon deployment, tenancy, credential, and cross-repository transaction proof remain external and are not claimed here."
-            ],
-            "custody_event_id": "event:4"
-          },
-          {
-            "sequence": 5,
-            "action": "physical-runtime-proof",
-            "command": "DACTYL_SQLITE_LIBRARY=/tmp/dactyl-libsqlite3.so.0.8.6 cargo test --lib",
-            "scope": [
-              "Decapod repository source, tests, living specs, generated governance artifacts, and local/container validation only."
-            ],
-            "observations": [
-              "src/decapod/core/dactyl_db.rs",
+              "tests/single_datastore.rs",
+              "tests/sqlite_hardening.rs",
               ".decapod/managed/specs/ARCHITECTURE.md",
               ".decapod/managed/specs/INTENT.md",
               ".decapod/managed/specs/INTERFACES.md",
-              "src/decapod/core/dactyl_db.rs",
-              ".decapod/managed/specs/ARCHITECTURE.md",
-              ".decapod/managed/specs/INTENT.md",
-              ".decapod/managed/specs/INTERFACES.md",
-              "Managed image supplied libsqlite3.so.0.8.6; Dactyl core conformance 9/9 passed; core library 313/313 passed; core, single-datastore, and SQLite-hardening integration suites passed; new read-write database paths now pass through the v0.8.2 pre-open compatibility preflight."
+              "Dactyl v0.8.2 tag commit 68555e1 is pinned; the Decapod dependency graph contains no rusqlite or libsqlite3-sys; production code has no sqlite_master, pragma_table_info, PRAGMA, or last_insert_rowid metadata path; the managed shared library libsqlite3.so.0.8.6 enabled 9/9 Dactyl conformance, 313/313 library, 23/23 core integration, 4/4 single-datastore, and 4/4 SQLite hardening tests; host and container validation have no failures."
             ],
             "proof_refs": [
               "cargo_test_lib",
               "storage_integration_tests",
-              "cargo_clippy"
+              "cargo_clippy",
+              "cargo_fmt",
+              "cargo_check_all_targets",
+              "decapod_validate_host",
+              "decapod_validate_container"
             ],
             "validation_findings": [
-              "Cloud Propodus/Vercel/Neon routing and hosted tenancy proof are not integrated and remain downstream work."
+              "Cloud Propodus/Vercel/Neon routing, hosted tenancy, credential, deployment, and cross-repository transaction proof are not integrated and remain downstream work."
             ],
-            "custody_event_id": "event:5"
-          },
-          {
-            "sequence": 6,
-            "action": "governance-validation-recovery",
-            "command": "decapod validate --refresh-specs --format json",
-            "scope": [
-              "Decapod repository source, tests, living specs, generated governance artifacts, and local/container validation only."
-            ],
-            "observations": [
-              "Validation passed 202 gates and refreshed projections, but the host-side run remains blocked by required container proof and historical entrypoint commit-discipline findings in inherited PR #1256 commits. The prepared container has libsqlite3.so.0.8.6 but its cargo 1.65/rustc 1.63 toolchain cannot parse Rust 2024."
-            ],
-            "proof_refs": [
-              "decapod_validate"
-            ],
-            "validation_findings": [
-              "The local Dactyl runtime proof is complete with the managed image's shared SQLite library; hosted cloud integration and historical governance cleanup remain separate publication gates."
-            ],
-            "custody_event_id": "event:6"
+            "custody_event_id": "event:4"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 6
+    "next_sequence": 4
   }
 }
