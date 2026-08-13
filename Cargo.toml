@@ -53,7 +53,7 @@ flate2 = "1.0"
 [dependencies]
 flate2 = "1.0"
 rusqlite = { version = "0.32", features = ["bundled"] }
-dactyl-db = { git = "https://github.com/DecapodLabs/dactyl", rev = "07fc271a66a391035795495b4d51b221a0af50e0", features = ["sqlite", "neon"] }
+dactyl-db = { git = "https://github.com/DecapodLabs/dactyl", rev = "74db1a763eca722dd3336fb3cc57bda8b7117a38", features = ["sqlite", "neon"] }
 fancy-regex = "0.13"
 clap = { version = "4", features = ["derive"] }
 serde = { version = "1.0", features = ["derive"] }
@@ -75,6 +75,7 @@ ignored = ["flate2"]
 [features]
 default = []
 cloud = []
+legacy-import = ["dactyl-db/legacy-import"]
 
 [dev-dependencies]
 tempfile = "3.10"

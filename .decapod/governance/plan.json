@@ -1,26 +1,24 @@
 {
   "schema_version": "1.0.0",
-  "title": "PR #1256 Dactyl v0.3.0 issue sweep",
-  "intent": "Within PR #1256, implement the Decapod-owned work for GitHub Issues #1028, #1110, #1111, #1112, #1120, #1216, #1217, #1220, #1221, #1222, #1223, #1224, #1247, and #1254 using the current Dactyl v0.3.0 release commit under the new versioning schema, preserving thin Decapod/Dactyl/Propodus boundaries and recording unprovable cross-repository gates explicitly.",
+  "title": "Continue PR #1256 Decapod storage seam",
+  "intent": "Continue PR #1256 by moving the canonical .decapod/data/decapod.db boundary to Dactyl. All canonical-store reads, writes, transactions, schema operations, migration/import, validation, and tests must use Dactyl APIs; Dactyl owns physical storage execution while Decapod retains schema, migration ordering, IDs, retry/governance policy, and domain semantics. Keep the Dactyl Issue #77 release status explicit and do not claim downstream release proof.",
   "state": "APPROVED",
   "todo_ids": [
     "code_01kzvey011rqf9py"
   ],
   "proof_hooks": [
-    "Dactyl v0.3.0 API and dependency audit matches the implementation",
-    "Issue-by-issue acceptance mapping distinguishes passed, partial, unavailable, and deferred evidence"
+    "cargo fmt --all -- --check",
+    "cargo test --lib",
+    "cargo clippy --all-targets --all-features -- -D warnings",
+    "decapod validate"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [
-    "Stop for human review if live issue requirements conflict materially or require expanding beyond the listed issues.",
-    "Do not weaken migration, session, workspace, interface, or validation gates to make the issue sweep pass.",
-    "Do not claim an issue resolved without a linked implementation and proof result."
+    "Do not leave any canonical .decapod/data/decapod.db access on rusqlite or another direct SQLite handle. Do not claim Dactyl Issue #77 is released or merged until the user confirms it."
   ],
   "unresolved_contradictions": [],
-  "deferred_questions": [
-    "Full all-store runtime migration and live Propodus/Neon conformance remain contingent on verified deployed route/schema/credentials; do not claim them from local or mock proof."
-  ],
+  "deferred_questions": [],
   "constraints": {
     "forbidden_paths": [
       "External credentials, production data, unrelated repository migrations, and direct mutation of .decapod state."
@@ -28,5 +26,5 @@
     "file_touch_budget": 80
   },
   "phases": [],
-  "updated_at": "1786573150Z"
+  "updated_at": "1786587566Z"
 }

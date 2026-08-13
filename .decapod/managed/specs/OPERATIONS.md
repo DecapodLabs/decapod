@@ -49,7 +49,7 @@ signatures, update protection). Agents publish release-bound changes through
 the code PR, and release automation handles only compilation and publication.
 
 ## Installed-Version Upgrade Path
-After `cargo install decapod`, the next normal governed command runs protected, idempotent schema migration and legacy-event reconciliation before runtime consumers read evidence. Existing-project `decapod init` executes the same reconciliation before regeneration. A prior successful single-datastore migration retires its JSONL inputs through a durable receipt; startup does not rescan them. Legacy SQLite stores recreated by an older binary are copied forward and removed without entering the full-backup loop. Human-authored `OVERRIDE.md` content is validated but never mechanically rewritten. Fresh import conflicts preserve source artifacts and stop with an actionable error.
+After `cargo install decapod`, the next normal governed command runs protected, idempotent schema migration and legacy-event reconciliation before runtime consumers read evidence. Existing-project `decapod init` executes the same reconciliation before regeneration. A prior successful single-datastore migration retires its JSONL inputs through a durable receipt; startup does not rescan them. A legacy SQLite store is admitted only through Dactyl's explicit import/conversion boundary, which owns the read-only inspection, atomic snapshot replacement, backup, and idempotency check. Decapod never opens the canonical path with SQLite. Human-authored `OVERRIDE.md` content is validated but never mechanically rewritten. Fresh import conflicts preserve source artifacts and stop with an actionable error.
 
 ## Agent-Triggered Migration Runbook
 1. Let the first governed command after installing a new Decapod release run
@@ -172,7 +172,7 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `652dbab71d79b4ead7bd8a57d8c70afb95e267a44fc851c84c328f633c772f37`
+- Repository signal fingerprint: `9dc9b909f29fad0c8ea86556993d5c9c1c38b9af1de6000197cae86d69081613`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (103 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -1,19 +1,24 @@
 //! Decapod's narrow boundary to the Dactyl physical storage contract.
 //!
-//! This module deliberately does not replace the canonical local SQLite
-//! runtime yet. Dactyl's current local adapter is a separate pure-Rust store,
-//! so opening `.decapod/data/decapod.db` through it would create a second
-//! authority rather than migrate Decapod safely. The bridge is therefore
-//! usable for backend-neutral conformance work and authenticated cloud routes,
-//! while local call-site migration remains gated on the compatibility matrix.
+//! This module deliberately keeps legacy migration explicit. Dactyl's local
+//! route is a versioned snapshot, so opening an existing SQLite
+//! `.decapod/data/decapod.db` without conversion would create a second
+//! authority rather than migrate Decapod safely. The normal runtime therefore
+//! uses only the Dactyl snapshot contract after a separately proven cutover;
+//! the optional `legacy-import` feature exposes Dactyl's one-shot conversion
+//! boundary without making it part of the default runtime.
 
 use crate::core::backend::{BackendRoute, StorageContext};
 use crate::core::error::{CloudAuthDiagnostic, CloudAuthStatus, DecapodError};
+use crate::core::schemas;
 use dactyl_db::{AccessMode, AtomicResult, Connection, OpenOptions, Operation, Parameter, Rows};
 use std::path::Path;
 use std::time::Duration;
 
 pub use dactyl_db::{OperationResult, WriteResult};
+
+#[cfg(feature = "legacy-import")]
+pub use dactyl_db::ImportReport;
 
 const DEFAULT_LOCK_TIMEOUT: Duration = Duration::from_millis(250);
 
@@ -46,10 +51,10 @@ impl DactylBridge {
 
     /// Open a Dactyl-owned local snapshot with an explicit access mode.
     ///
-    /// The snapshot is deliberately a Dactyl format, not the canonical
-    /// `.decapod/data/decapod.db` SQLite file. Callers must use the migration
-    /// boundary before moving existing Decapod state into this route; opening
-    /// a canonical SQLite file here fails closed in the Dactyl adapter.
+    /// The canonical `.decapod/data/decapod.db` path is now a Dactyl snapshot
+    /// after the explicit Dactyl-owned legacy import has completed. Opening a
+    /// pre-cutover SQLite file fails closed; callers must import it before any
+    /// canonical read or write.
     pub fn open_local_snapshot(
         path: impl AsRef<Path>,
         access_mode: AccessMode,
@@ -62,23 +67,31 @@ impl DactylBridge {
         )
     }
 
+    /// Open the repository's canonical local datastore through Dactyl.
+    ///
+    /// This is the only supported local runtime entrypoint for
+    /// `.decapod/data/decapod.db`. The path remains Decapod-owned policy, but
+    /// physical opening and all subsequent operations belong to Dactyl.
+    pub fn open_canonical(
+        data_root: impl AsRef<Path>,
+        access_mode: AccessMode,
+    ) -> Result<Self, DecapodError> {
+        Self::open_local_snapshot(data_root.as_ref().join(schemas::LOCAL_DB_NAME), access_mode)
+    }
+
     /// Bind a governed backend route to Dactyl.
     ///
-    /// Local canonical SQLite is intentionally rejected until Dactyl proves a
-    /// compatible file-backed driver. Cloud routes require a separate
-    /// machine-local bearer credential and are passed through as opaque HTTP
-    /// endpoints; this method never derives provider URLs or silently falls
-    /// back to local storage.
+    /// A local route is always opened as a Dactyl snapshot. Cloud routes
+    /// require a separate machine-local bearer credential and are passed
+    /// through as opaque HTTP endpoints; this method never derives provider
+    /// URLs or silently falls back to local storage.
     pub fn from_backend_route(
         route: &BackendRoute,
         access_mode: AccessMode,
         bearer: Option<&str>,
     ) -> Result<Self, DecapodError> {
         match route {
-            BackendRoute::Local { path } => Err(DecapodError::NotImplemented(format!(
-                "Dactyl local compatibility is not proven for canonical SQLite path {}",
-                path.display()
-            ))),
+            BackendRoute::Local { path } => Self::open_local_snapshot(path, access_mode),
             BackendRoute::Cloud { uri, .. } => {
                 let bearer = bearer
                     .map(str::trim)
@@ -118,8 +131,6 @@ impl DactylBridge {
 
         match context.route() {
             BackendRoute::Local { .. } => {
-                // The canonical local SQLite store remains outside the Dactyl
-                // snapshot format until the compatibility/import proof exists.
                 Self::from_backend_route(context.route(), access_mode, context.bearer())
             }
             BackendRoute::Cloud { uri, .. } => Self::open_route(
@@ -146,6 +157,34 @@ impl DactylBridge {
         self.connection.access_mode()
     }
 
+    /// Inspect the backend-neutral schema exposed by Dactyl.
+    pub fn inspect_schema(&self) -> Result<dactyl_db::StoreSchema, DecapodError> {
+        Ok(self.connection.inspect_schema()?)
+    }
+
+    /// Return whether a caller-owned table is present without querying a
+    /// backend-specific catalog such as `sqlite_master` or `PRAGMA`.
+    pub fn has_table(&self, name: &str) -> Result<bool, DecapodError> {
+        Ok(self.inspect_schema()?.table(name).is_some())
+    }
+
+    /// Convert an existing SQLite store into a Dactyl snapshot.
+    ///
+    /// This is intentionally opt-in and explicit. Dactyl performs the
+    /// read-only inspection, temporary-output write, atomic replacement, and
+    /// idempotency/divergence checks; Decapod retains ownership of when this
+    /// migration is allowed by its schema and recovery policy.
+    #[cfg(feature = "legacy-import")]
+    pub fn import_legacy_sqlite(
+        source: impl AsRef<Path>,
+        destination: impl AsRef<Path>,
+    ) -> Result<ImportReport, DecapodError> {
+        Ok(dactyl_db::import_sqlite_file(
+            source.as_ref(),
+            destination.as_ref(),
+        )?)
+    }
+
     fn open_route(
         route: dactyl_db::DatastoreRoute,
         access_mode: AccessMode,
@@ -166,11 +205,9 @@ impl DactylBridge {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::backend::LOCAL_DATASTORE_RELATIVE_PATH;
     use crate::core::error::{DecapodError, StorageFailureKind};
     use crate::core::repo_identity::RepositoryIdentity;
     use std::io::Write;
-    use std::path::PathBuf;
     use tempfile::tempdir;
 
     fn no_params() -> Vec<Parameter> {
@@ -271,16 +308,75 @@ mod tests {
 
     #[test]
     fn canonical_local_route_fails_closed_without_second_store() {
-        let route = BackendRoute::Local {
-            path: PathBuf::from(LOCAL_DATASTORE_RELATIVE_PATH),
-        };
+        let tmp = tempdir().expect("temporary canonical store");
+        let sqlite_path = tmp.path().join("canonical.db");
+        let mut sqlite = std::fs::File::create(&sqlite_path).expect("canonical SQLite fixture");
+        sqlite
+            .write_all(b"SQLite format 3\0")
+            .expect("write SQLite header");
+        drop(sqlite);
+        let route = BackendRoute::Local { path: sqlite_path };
         match DactylBridge::from_backend_route(&route, AccessMode::ReadWrite, Some("ignored")) {
-            Err(DecapodError::NotImplemented(message)) => {
-                assert!(message.contains("canonical SQLite"));
-            }
-            Err(other) => panic!("unexpected error: {other}"),
+            Err(error) => assert_eq!(error.storage_failure_kind(), StorageFailureKind::Capability),
             Ok(_) => panic!("canonical SQLite route must not open a second store"),
         }
+    }
+
+    #[test]
+    fn canonical_route_is_dactyl_owned_and_schema_inspection_is_portable() {
+        let tmp = tempdir().expect("temporary canonical data root");
+        let canonical_path = tmp.path().join("decapod.db");
+        std::fs::File::create(&canonical_path).expect("canonical Dactyl snapshot target");
+
+        let bridge = DactylBridge::open_canonical(tmp.path(), AccessMode::ReadWrite)
+            .expect("canonical Dactyl route");
+        bridge
+            .atomic(&[Operation::schema(
+                "CREATE TABLE tasks (id INTEGER PRIMARY KEY, title TEXT NOT NULL)",
+                no_params(),
+            )])
+            .expect("canonical schema");
+
+        assert!(
+            bridge
+                .has_table("tasks")
+                .expect("portable schema inspection")
+        );
+        assert!(canonical_path.exists());
+    }
+
+    #[cfg(feature = "legacy-import")]
+    #[test]
+    fn legacy_sqlite_import_reopens_through_the_snapshot_route() {
+        let tmp = tempdir().expect("temporary legacy store");
+        let sqlite_path = tmp.path().join("decapod.db");
+        let sqlite = rusqlite::Connection::open(&sqlite_path).expect("legacy SQLite store");
+        sqlite
+            .execute_batch(
+                "CREATE TABLE tasks (id INTEGER PRIMARY KEY, title TEXT NOT NULL);\
+                 INSERT INTO tasks (id, title) VALUES (101, 'migrated');",
+            )
+            .expect("seed legacy SQLite store");
+        drop(sqlite);
+
+        let _report = DactylBridge::import_legacy_sqlite(&sqlite_path, &sqlite_path)
+            .expect("import legacy SQLite store");
+        assert!(
+            sqlite_path.with_extension("db.legacy-sqlite").exists(),
+            "same-path import must retain the legacy source backup"
+        );
+
+        let bridge = DactylBridge::open_local_snapshot(&sqlite_path, AccessMode::ReadOnly)
+            .expect("open converted Dactyl snapshot");
+        let rows = bridge
+            .read("SELECT id, title FROM tasks", &no_params())
+            .expect("read converted task");
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows.as_slice()[0].get_int("id").expect("id"), 101);
+        assert_eq!(
+            rows.as_slice()[0].get_str("title").expect("title"),
+            "migrated"
+        );
     }
 
     #[test]

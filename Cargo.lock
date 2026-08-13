@@ -420,10 +420,11 @@ dependencies = [
 
 [[package]]
 name = "dactyl-db"
-version = "0.3.0"
-source = "git+https://github.com/DecapodLabs/dactyl?rev=07fc271a66a391035795495b4d51b221a0af50e0#07fc271a66a391035795495b4d51b221a0af50e0"
+version = "0.7.0"
+source = "git+https://github.com/DecapodLabs/dactyl?rev=74db1a763eca722dd3336fb3cc57bda8b7117a38#74db1a763eca722dd3336fb3cc57bda8b7117a38"
 dependencies = [
  "reqwest",
+ "rusqlite",
  "serde",
  "serde_json",
  "thiserror 1.0.69",

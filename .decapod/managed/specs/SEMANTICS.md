@@ -23,10 +23,10 @@ stateDiagram-v2
 | Read-only projections do not acquire mutation transactions | Runtime | operation-path review and read-path tests |
 
 The local proof covers the Decapod-owned portion of the shared-state contract:
-state-plus-event mutations are atomic before they cross the future Dactyl
-boundary. Dactyl must provide the corresponding atomic operation primitive,
-while Propodus must host compatible ordinary database constraints; neither
-backend decides whether a Decapod transition is valid.
+Decapod decides whether a state-plus-event transition is valid and supplies
+the ordered Dactyl operation batch. Dactyl owns physical atomicity and
+constraint execution; Propodus must host the compatible remote contract.
+Neither backend decides whether a Decapod transition is valid.
 
 ## Event Sourcing Schema
 | Field | Type | Description |
@@ -124,7 +124,7 @@ backend decides whether a Decapod transition is valid.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `652dbab71d79b4ead7bd8a57d8c70afb95e267a44fc851c84c328f633c772f37`
+- Repository signal fingerprint: `9dc9b909f29fad0c8ea86556993d5c9c1c38b9af1de6000197cae86d69081613`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (103 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

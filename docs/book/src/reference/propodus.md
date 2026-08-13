@@ -77,14 +77,14 @@ logical repository scope derived from `origin`; it requires an authenticated
 session bearer, but the bearer is memory-only and is omitted from serialized
 context data.
 
-The Dactyl v0.3.0 bridge forwards the route, versioned context envelope, and
+The Dactyl v0.7.0 bridge forwards the route, versioned context envelope, and
 opaque bearer without interpreting membership or authorization. Propodus remains responsible for resolving the
 authenticated principal, organization membership, and repository access. The
-current Decapod bridge supports explicitly named Dactyl snapshots but
-rejects canonical SQLite through Dactyl as a different format; existing
-SQLite state still requires a Decapod-owned import/migration proof. This
-keeps the canonical SQLite authority singular and prevents cloud operations
-from silently falling back to SQLite. See [Decapod
+current Decapod bridge opens the canonical local `decapod.db` only as a
+Dactyl snapshot and rejects a pre-import SQLite header. Existing SQLite state
+must pass Dactyl's explicit legacy-import boundary before runtime access. This
+keeps one canonical Dactyl authority and prevents cloud operations from
+silently falling back to local storage. See [Decapod
 #1254](https://github.com/DecapodLabs/decapod/issues/1254), [Dactyl
 #64](https://github.com/DecapodLabs/dactyl/issues/64), and [Propodus
 #79](https://github.com/DecapodLabs/propodus/issues/79).
@@ -160,5 +160,5 @@ cloud todo command path, remote-derived repository identity, deployed
 onboarding/session exchange, machine-local refresh, adapter-level command
 proof, and protected command-level live proof without moving hosted
 authentication, repository authorization, persistence, or deployment into
-Decapod. Local mode continues to use SQLite through the same backend-neutral
-todo command boundary.
+Decapod. Local mode continues to use the same backend-neutral todo command
+boundary, with physical canonical storage owned by Dactyl.
