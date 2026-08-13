@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.99.3](https://github.com/DecapodLabs/decapod/compare/v0.99.2...v0.99.3) - 2026-08-13
+
+### Added
+
+- integrate backend cloud through Dactyl ([#1272](https://github.com/DecapodLabs/decapod/pull/1272))
+
 ## [0.99.2](https://github.com/DecapodLabs/decapod/compare/v0.99.1...v0.99.2) - 2026-08-13
 
 ### Other
