@@ -5,10 +5,11 @@
   "task_id": "bugs_01kzy9z7jz0v66zt",
   "original_intent": "Address open Decapod GitHub Issues labeled dactyl and propodus as far as possible, integrate cloud backend selection through Dactyl and Propodus, publish one PR, and update issues.",
   "derived_intent": "Implement the Decapod-side backend=cloud integration against existing Dactyl and Propodus contracts without per-query backend inputs, prove local/mock troubleshooting paths, preserve thin ownership boundaries, and state hosted Neon/Vercel limits honestly.",
-  "current_phase": "validation and publication",
+  "current_phase": "validation",
   "next_transitions": [
     "commit governance receipt inputs and attempt governed publication; hosted/container gates remain explicit",
     "inspect live issues and current code contracts",
+    "publish",
     "refresh governance artifacts, validate, commit, publish one PR"
   ],
   "blockers": [
@@ -33,6 +34,8 @@
     "tests/cloud_cli_boundary.rs"
   ],
   "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
     "docs/book/src/reference/propodus.md",
     "src/decapod/core/dactyl_todo.rs",
     "src/decapod/core/todo.rs",
@@ -44,7 +47,8 @@
     "cargo test --test cloud_cli_boundary=passed",
     "cargo test --test cloud_dactyl_boundary=passed",
     "cargo test --test init_config_behavior init_with_backend_cloud_saves_to_config=passed",
-    "cargo test dactyl_todo --lib=passed"
+    "cargo test dactyl_todo --lib=passed",
+    "decapod validate"
   ],
   "tool_calls": [],
   "checks": [
@@ -54,6 +58,10 @@
     },
     {
       "name": "dactyl_protocol_boundary",
+      "status": "passed"
+    },
+    {
+      "name": "decapod validate",
       "status": "passed"
     },
     {
@@ -81,7 +89,8 @@
     "Cloud CLI tests report backend=dactyl and preserve no-local-SQLite behavior",
     "Dactyl /query wire proof observed bearer, versioned context, and no backend field",
     "decapod validate reports 201 passes and only container_workspace_required failure",
-    "prescribed container remediation retried and failed on missing v0.99.2-debian manifest"
+    "prescribed container remediation retried and failed on missing v0.99.2-debian manifest",
+    "validation epoch ve_1aa6766fc1ae2b1c completed with zero failures"
   ],
   "shortcut_risk_signals": [
     "No direct Propodus /api/todos storage calls remain in the production cloud factory"
@@ -98,7 +107,7 @@
     "shortcut_risk": "caution",
     "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:956563facca11b6f7d47b995f1f74e923f2d541e4d42a718ebd466efb49ba794",
+  "artifact_hash": "sha256:58de85276c4bf2b75c900127179c112d2171383d1318455277ad2dec0a41f3f0",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -144,6 +153,13 @@
       {
         "sequence": 5,
         "event_id": "event:5",
+        "intent_id": "intent:run-20260813-cloud-dactyl-propodus",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:run-20260813-cloud-dactyl-propodus"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
         "intent_id": "intent:run-20260813-cloud-dactyl-propodus",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:run-20260813-cloud-dactyl-propodus"
@@ -211,12 +227,31 @@
               "The image registry may publish the required v0.99.2-debian image after this run; no product change can resolve that external registry state"
             ],
             "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "Decapod repository and its labeled GitHub issue handoff; no direct implementation in Dactyl or Propodus repositories.",
+              "backend=cloud todo command path and related docs/tests"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_1aa6766fc1ae2b1c completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:6"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 5
+    "next_sequence": 6
   }
 }
