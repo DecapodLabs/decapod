@@ -4,71 +4,66 @@
 //! subsystem-specific initialization functions.
 
 use crate::core::broker::DbBroker;
+pub use crate::core::dactyl_db::{
+    Connection, Error, FromSql, IntoParams, MappedRows, OpenFlags, OptionalExtension, Params,
+    Result, Row, Rows, Statement, ToSql, Transaction, Type, params_from_iter, params_from_values,
+    types,
+};
 use crate::core::error;
 use crate::core::schemas; // Import the new schemas module
-use rusqlite::{Connection, OpenFlags};
+pub use crate::params;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-const SQLITE_CONNECT_MAX_RETRIES: u32 = 5;
-const SQLITE_CONNECT_BASE_DELAY_MS: u64 = 50;
-const SQLITE_CONNECT_MAX_DELAY_MS: u64 = 1_000;
-const SQLITE_CONNECT_JITTER_MS: u64 = 37;
+const STORAGE_CONNECT_MAX_RETRIES: u32 = 5;
+const STORAGE_CONNECT_BASE_DELAY_MS: u64 = 50;
+const STORAGE_CONNECT_MAX_DELAY_MS: u64 = 1_000;
+const STORAGE_CONNECT_JITTER_MS: u64 = 37;
 
 const UNSUPPORTED_FS_TYPES: &[&str] = &["nfs", "nfs4", "cifs", "smbfs", "9p", "vboxsf"];
 
-/// Establish a SQLite connection with Decapod's standard configuration.
+/// Establish the canonical local connection through Dactyl.
 ///
-/// Enables:
-/// - WAL (Write-Ahead Logging) mode for better concurrency
-/// - Foreign key constraints
-/// - 5-second busy timeout for lock contention
-///
+/// The path, access policy, and retry policy remain Decapod-owned. Physical
+/// opening, locking, and execution are delegated to Dactyl.
 pub fn db_connect(db_path: &str) -> Result<Connection, error::DecapodError> {
     let db_path = Path::new(db_path);
     ensure_db_parent_dir(db_path)?;
     storage_preflight_for_db(db_path, true)?;
-
-    let conn = open_with_retry(db_path, || Connection::open(db_path), "open")?;
-    conn.busy_timeout(std::time::Duration::from_secs(5))
-        .map_err(|e| db_open_error_with_diagnostics(db_path, "busy_timeout", &e))?;
-    conn.execute("PRAGMA foreign_keys=ON;", [])
-        .map_err(|e| db_open_error_with_diagnostics(db_path, "foreign_keys", &e))?;
-    configure_journal_mode_with_fallback(&conn, db_path)?;
-    Ok(conn)
+    open_with_retry(
+        db_path,
+        || {
+            Connection::open_with_options(
+                db_path,
+                dactyl_db::AccessMode::ReadWrite,
+                Duration::from_secs(5),
+            )
+        },
+        "open",
+    )
 }
 
-/// Establish a read-only SQLite connection for validation probes.
-///
-/// This connection avoids WAL transitions and TMPDIR-dependent temp files by:
-/// - opening read-only
-/// - forcing temp_store=MEMORY
-/// - enabling query_only mode
+/// Establish a read-only connection for validation probes.
 pub fn db_connect_for_validate(db_path: &str) -> Result<Connection, error::DecapodError> {
     let db_path = Path::new(db_path);
     storage_preflight_for_db(db_path, false)?;
-    let flags = OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NO_MUTEX;
     let conn = open_with_retry(
         db_path,
-        || Connection::open_with_flags(db_path, flags),
+        || {
+            Connection::open_with_options(
+                db_path,
+                dactyl_db::AccessMode::ReadOnly,
+                Duration::from_secs(2),
+            )
+        },
         "open_readonly_validate",
     )?;
-    conn.busy_timeout(std::time::Duration::from_secs(2))
-        .map_err(|e| db_open_error_with_diagnostics(db_path, "busy_timeout_validate", &e))?;
-    conn.execute("PRAGMA query_only=ON;", [])
-        .map_err(|e| db_open_error_with_diagnostics(db_path, "query_only_validate", &e))?;
-    conn.execute("PRAGMA temp_store=MEMORY;", [])
-        .map_err(|e| db_open_error_with_diagnostics(db_path, "temp_store_validate", &e))?;
-    conn.execute("PRAGMA foreign_keys=ON;", [])
-        .map_err(|e| db_open_error_with_diagnostics(db_path, "foreign_keys_validate", &e))?;
     Ok(conn)
 }
 
-/// Establish a read-write SQLite connection with configurable busy_timeout, for use by the pool.
-///
-/// Same configuration as `db_connect` but with a caller-specified timeout.
+/// Establish a read-write connection with a caller-specified Dactyl lock timeout.
 pub fn db_connect_pooled(
     db_path: &str,
     busy_timeout_secs: u32,
@@ -77,39 +72,37 @@ pub fn db_connect_pooled(
     ensure_db_parent_dir(db_path)?;
     storage_preflight_for_db(db_path, true)?;
 
-    let conn = open_with_retry(db_path, || Connection::open(db_path), "open")?;
-    conn.busy_timeout(std::time::Duration::from_secs(busy_timeout_secs as u64))
-        .map_err(|e| db_open_error_with_diagnostics(db_path, "busy_timeout", &e))?;
-    conn.execute("PRAGMA foreign_keys=ON;", [])
-        .map_err(|e| db_open_error_with_diagnostics(db_path, "foreign_keys", &e))?;
-    configure_journal_mode_with_fallback(&conn, db_path)?;
-    Ok(conn)
+    open_with_retry(
+        db_path,
+        || {
+            Connection::open_with_options(
+                db_path,
+                dactyl_db::AccessMode::ReadWrite,
+                Duration::from_secs(busy_timeout_secs as u64),
+            )
+        },
+        "open",
+    )
 }
 
-/// Establish a read-only SQLite connection with configurable busy_timeout, for use by the pool.
-///
-/// Enables `query_only` and `temp_store=MEMORY` for safe concurrent reads.
+/// Establish a read-only connection with a caller-specified Dactyl lock timeout.
 pub fn db_connect_read_pooled(
     db_path: &str,
     busy_timeout_secs: u32,
 ) -> Result<Connection, error::DecapodError> {
     let db_path = Path::new(db_path);
     storage_preflight_for_db(db_path, false)?;
-    let flags = OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NO_MUTEX;
-    let conn = open_with_retry(
+    open_with_retry(
         db_path,
-        || Connection::open_with_flags(db_path, flags),
+        || {
+            Connection::open_with_options(
+                db_path,
+                dactyl_db::AccessMode::ReadOnly,
+                Duration::from_secs(busy_timeout_secs as u64),
+            )
+        },
         "open_readonly_pooled",
-    )?;
-    conn.busy_timeout(std::time::Duration::from_secs(busy_timeout_secs as u64))
-        .map_err(|e| db_open_error_with_diagnostics(db_path, "busy_timeout_pooled", &e))?;
-    conn.execute("PRAGMA query_only=ON;", [])
-        .map_err(|e| db_open_error_with_diagnostics(db_path, "query_only_pooled", &e))?;
-    conn.execute("PRAGMA temp_store=MEMORY;", [])
-        .map_err(|e| db_open_error_with_diagnostics(db_path, "temp_store_pooled", &e))?;
-    conn.execute("PRAGMA foreign_keys=ON;", [])
-        .map_err(|e| db_open_error_with_diagnostics(db_path, "foreign_keys_pooled", &e))?;
-    Ok(conn)
+    )
 }
 
 fn ensure_db_parent_dir(db_path: &Path) -> Result<(), error::DecapodError> {
@@ -125,7 +118,7 @@ fn open_with_retry<F>(
     stage: &str,
 ) -> Result<Connection, error::DecapodError>
 where
-    F: FnMut() -> Result<Connection, rusqlite::Error>,
+    F: FnMut() -> Result<Connection>,
 {
     let mut attempt = 0u32;
     loop {
@@ -135,9 +128,9 @@ where
         match open_fn() {
             Ok(conn) => return Ok(conn),
             Err(err) => {
-                if is_retryable_sqlite_open_error(&err) && attempt < SQLITE_CONNECT_MAX_RETRIES {
-                    let delay_ms = ((SQLITE_CONNECT_BASE_DELAY_MS * 2u64.pow(attempt))
-                        .min(SQLITE_CONNECT_MAX_DELAY_MS))
+                if is_retryable_storage_open_error(&err) && attempt < STORAGE_CONNECT_MAX_RETRIES {
+                    let delay_ms = ((STORAGE_CONNECT_BASE_DELAY_MS * 2u64.pow(attempt))
+                        .min(STORAGE_CONNECT_MAX_DELAY_MS))
                         + retry_jitter_ms(attempt);
                     attempt += 1;
                     thread::sleep(Duration::from_millis(delay_ms));
@@ -149,63 +142,23 @@ where
     }
 }
 
-fn is_retryable_sqlite_open_error(err: &rusqlite::Error) -> bool {
-    match err {
-        rusqlite::Error::SqliteFailure(code, msg) => {
-            if matches!(
-                code.code,
-                rusqlite::ErrorCode::DatabaseBusy | rusqlite::ErrorCode::DatabaseLocked
-            ) || code.extended_code == 522
-            {
-                return true;
-            }
-            let lower = msg.as_deref().unwrap_or_default().to_ascii_lowercase();
-            lower.contains("locked") || lower.contains("disk i/o error")
-        }
-        other => {
-            let lower = other.to_string().to_ascii_lowercase();
-            lower.contains("locked") || lower.contains("disk i/o error")
-        }
-    }
-}
-
-fn configure_journal_mode_with_fallback(
-    conn: &Connection,
-    db_path: &Path,
-) -> Result<(), error::DecapodError> {
-    if let Some(injected) = injected_fault("journal_mode_wal", db_path) {
-        return Err(injected);
-    }
-    match conn.query_row("PRAGMA journal_mode=WAL;", [], |_| Ok(())) {
-        Ok(_) => Ok(()),
-        Err(wal_err) => {
-            // WAL can fail on read-only/overlay/network filesystems; DELETE is safer.
-            conn.query_row("PRAGMA journal_mode=DELETE;", [], |_| Ok(()))
-                .map_err(|delete_err| {
-                    error::DecapodError::ValidationError(format!(
-                        "{}; fallback journal_mode=DELETE also failed: {}",
-                        format_db_open_diagnostics(db_path, "journal_mode_wal", &wal_err),
-                        format_db_open_diagnostics(
-                            db_path,
-                            "journal_mode_delete_fallback",
-                            &delete_err
-                        )
-                    ))
-                })?;
-            Ok(())
-        }
-    }
+fn is_retryable_storage_open_error(err: &crate::core::db::Error) -> bool {
+    let lower = err.to_string().to_ascii_lowercase();
+    lower.contains("locked")
+        || lower.contains("busy")
+        || lower.contains("contention")
+        || lower.contains("disk i/o")
 }
 
 fn db_open_error_with_diagnostics(
     db_path: &Path,
     stage: &str,
-    err: &rusqlite::Error,
+    err: &crate::core::db::Error,
 ) -> error::DecapodError {
     error::DecapodError::ValidationError(format_db_open_diagnostics(db_path, stage, err))
 }
 
-fn format_db_open_diagnostics(db_path: &Path, stage: &str, err: &rusqlite::Error) -> String {
+fn format_db_open_diagnostics(db_path: &Path, stage: &str, err: &crate::core::db::Error) -> String {
     let resolved = db_path
         .canonicalize()
         .unwrap_or_else(|_| db_path.to_path_buf())
@@ -239,16 +192,6 @@ fn format_db_open_diagnostics(db_path: &Path, stage: &str, err: &rusqlite::Error
         .map(|m| m.permissions().readonly())
         .unwrap_or(true);
 
-    let sqlite_codes = match err {
-        rusqlite::Error::SqliteFailure(code, msg) => format!(
-            "sqlite_code={:?} extended_code={} message={}",
-            code.code,
-            code.extended_code,
-            msg.clone().unwrap_or_else(|| "<none>".to_string())
-        ),
-        _ => format!("sqlite_error={err}"),
-    };
-
     let mut hints = Vec::new();
     if !parent_exists {
         hints.push(format!(
@@ -277,7 +220,7 @@ fn format_db_open_diagnostics(db_path: &Path, stage: &str, err: &rusqlite::Error
     }
 
     format!(
-        "SQLite open/config failed at stage='{}' path='{}' parent='{}' parent_exists={} parent_writable={} db_exists={} db_writable={} TMPDIR={} temp_dir={} temp_dir_writable={} {}; remediation: {}",
+        "storage open failed at stage='{}' path='{}' parent='{}' parent_exists={} parent_writable={} db_exists={} db_writable={} TMPDIR={} temp_dir={} temp_dir_writable={} storage_error={}; remediation: {}",
         stage,
         resolved,
         parent.display(),
@@ -288,7 +231,7 @@ fn format_db_open_diagnostics(db_path: &Path, stage: &str, err: &rusqlite::Error
         tmp_env,
         tmp_resolved.display(),
         tmp_writable,
-        sqlite_codes,
+        err,
         hints.join("; ")
     )
 }
@@ -298,24 +241,18 @@ fn retry_jitter_ms(attempt: u32) -> u64 {
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_millis() as u64;
-    (now_ms + (attempt as u64 * 13)) % SQLITE_CONNECT_JITTER_MS
+    (now_ms + (attempt as u64 * 13)) % STORAGE_CONNECT_JITTER_MS
 }
 
 fn injected_fault(stage: &str, db_path: &Path) -> Option<error::DecapodError> {
-    let injected = std::env::var("DECAPOD_SQLITE_FAULT_STAGE").ok()?;
+    let injected = std::env::var("DECAPOD_STORAGE_FAULT_STAGE").ok()?;
     if injected != "*" && injected != stage {
         return None;
     }
-    let err = rusqlite::Error::SqliteFailure(
-        rusqlite::ffi::Error {
-            code: rusqlite::ErrorCode::SystemIoFailure,
-            extended_code: 522,
-        },
-        Some(format!("fault injected at stage '{stage}'")),
-    );
     Some(error::DecapodError::ValidationError(format!(
-        "SQLITE_FAULT_INJECTED: {}",
-        format_db_open_diagnostics(db_path, stage, &err)
+        "STORAGE_FAULT_INJECTED: stage='{}' path='{}'",
+        stage,
+        db_path.display()
     )))
 }
 
@@ -336,7 +273,7 @@ pub fn storage_health_preflight(store_root: &Path) -> Result<(), error::DecapodE
         let fs_type_l = fs_type.to_ascii_lowercase();
         if UNSUPPORTED_FS_TYPES.iter().any(|t| *t == fs_type_l) {
             return Err(error::DecapodError::ValidationError(format!(
-                "STORAGE_PREFLIGHT_UNSUPPORTED_FS: path='{}' fs_type='{}' is not supported for Decapod SQLite state. Use a local filesystem (ext4/xfs/apfs) and re-run.",
+                "STORAGE_PREFLIGHT_UNSUPPORTED_FS: path='{}' fs_type='{}' is not supported for Decapod local state. Use a local filesystem (ext4/xfs/apfs) and re-run.",
                 store_root.display(),
                 fs_type
             )));
@@ -358,7 +295,7 @@ fn storage_preflight_for_db(
             let fs_type_l = fs_type.to_ascii_lowercase();
             if UNSUPPORTED_FS_TYPES.iter().any(|t| *t == fs_type_l) {
                 return Err(error::DecapodError::ValidationError(format!(
-                    "STORAGE_PREFLIGHT_UNSUPPORTED_FS: path='{}' fs_type='{}' is not supported for Decapod SQLite state. Use a local filesystem and retry.",
+                    "STORAGE_PREFLIGHT_UNSUPPORTED_FS: path='{}' fs_type='{}' is not supported for Decapod local state. Use a local filesystem and retry.",
                     parent.display(),
                     fs_type
                 )));
@@ -464,25 +401,26 @@ pub fn initialize_knowledge_db(root: &Path) -> Result<(), error::DecapodError> {
 }
 
 /// Migrate existing knowledge tables to add new columns if missing.
-fn ensure_knowledge_columns(conn: &rusqlite::Connection) -> Result<(), rusqlite::Error> {
-    let mut stmt = conn.prepare("PRAGMA table_info(knowledge)")?;
-    let cols_iter = stmt.query_map([], |row| row.get::<_, String>(1))?;
-    let mut cols = std::collections::HashSet::new();
-    for c in cols_iter {
-        cols.insert(c?);
-    }
+fn ensure_knowledge_columns(
+    conn: &crate::core::db::Connection,
+) -> Result<(), crate::core::db::Error> {
+    let cols = conn
+        .columns("knowledge")?
+        .into_iter()
+        .collect::<std::collections::HashSet<_>>();
 
-    let add_col = |name: &str, sql_type: &str, default_expr: &str| -> Result<(), rusqlite::Error> {
-        if !cols.contains(name) {
-            conn.execute(
-                &format!(
-                    "ALTER TABLE knowledge ADD COLUMN {name} {sql_type} DEFAULT {default_expr}"
-                ),
-                [],
-            )?;
-        }
-        Ok(())
-    };
+    let add_col =
+        |name: &str, sql_type: &str, default_expr: &str| -> Result<(), crate::core::db::Error> {
+            if !cols.contains(name) {
+                conn.execute(
+                    &format!(
+                        "ALTER TABLE knowledge ADD COLUMN {name} {sql_type} DEFAULT {default_expr}"
+                    ),
+                    [],
+                )?;
+            }
+            Ok(())
+        };
 
     add_col("status", "TEXT NOT NULL", "'active'")?;
     add_col("merge_key", "TEXT", "''")?;

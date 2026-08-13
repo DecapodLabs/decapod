@@ -1,6 +1,7 @@
 use crate::cli::CloudRuntimeConfig;
 use crate::core::backend::BackendSelection;
 use crate::core::broker::DbBroker;
+use crate::core::db::{Connection, OptionalExtension, Result as SqlResult, params, types::ToSql};
 use crate::core::error;
 use crate::core::external_action::{self, ExternalCapability};
 use crate::core::fleet_coord::{
@@ -20,7 +21,6 @@ use crate::plugins::knowledge;
 use crate::plugins::policy;
 use crate::plugins::verify;
 use clap::{Parser, Subcommand, ValueEnum};
-use rusqlite::{Connection, OptionalExtension, Result as SqlResult, params, types::ToSql};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::collections::HashSet;
@@ -591,7 +591,7 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
             |row| row.get(0),
         )
         .optional()
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
 
     let current_version: u32 = current
         .as_deref()
@@ -603,10 +603,10 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     // Consolidated agents surface (#1129) replaces agent_presence/trust/expertise/category_claims.
     conn.execute(schemas::TODO_DB_SCHEMA_TASKS, [])?;
     conn.execute_batch(schemas::AGENTS_TABLE_SCHEMA)
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     // Task tags junction (#1130); denormalized tasks.tags kept for one-release compat.
     conn.execute_batch(schemas::TODO_DB_SCHEMA_TASK_TAGS)
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     conn.execute(schemas::TODO_DB_SCHEMA_TASK_OWNERS, [])?;
     conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_OWNERS_TASK, [])?;
     // Preserve the first historical claim for each pair before installing the
@@ -768,7 +768,7 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     conn.execute(
         "INSERT INTO meta(namespace, key, value) VALUES(?1, 'schema_version', ?2)
          ON CONFLICT(namespace, key) DO UPDATE SET value=excluded.value",
-        rusqlite::params![
+        crate::core::db::params![
             schemas::TODO_META_NAMESPACE,
             schemas::TODO_SCHEMA_VERSION.to_string()
         ],
@@ -834,7 +834,7 @@ fn seed_default_risk_zones(conn: &Connection) -> Result<(), error::DecapodError>
         conn.execute(
             "INSERT OR IGNORE INTO risk_zones(id, zone_name, description, required_trust_level, requires_approval, created_at)
              VALUES(?1, ?2, ?3, ?4, ?5, ?6)",
-            rusqlite::params![
+            crate::core::db::params![
                 crate::core::ulid::new_ulid(),
                 zone_name,
                 description,
@@ -843,7 +843,7 @@ fn seed_default_risk_zones(conn: &Connection) -> Result<(), error::DecapodError>
                 ts
             ],
         )
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     }
 
     Ok(())
@@ -925,7 +925,7 @@ fn seed_default_categories(conn: &Connection) -> Result<(), error::DecapodError>
         conn.execute(
             "INSERT OR IGNORE INTO categories(id, name, description, keywords, created_at)
              VALUES(?1, ?2, ?3, ?4, ?5)",
-            rusqlite::params![crate::core::ulid::new_ulid(), name, desc, keywords, ts],
+            crate::core::db::params![crate::core::ulid::new_ulid(), name, desc, keywords, ts],
         )?;
     }
     Ok(())
@@ -943,7 +943,7 @@ fn migrate_task_categories(conn: &Connection) -> Result<(), error::DecapodError>
         if let Some(cat) = infer_category(&title, &tags) {
             conn.execute(
                 "UPDATE tasks SET category = ?1 WHERE id = ?2",
-                rusqlite::params![cat, id],
+                crate::core::db::params![cat, id],
             )?;
         }
     }
@@ -959,7 +959,7 @@ fn migrate_existing_category_ownerships(conn: &Connection) -> Result<(), error::
              GROUP BY category, assigned_to
              ORDER BY claimed_at ASC",
         )
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
 
     let rows = stmt
         .query_map([], |row| {
@@ -969,10 +969,10 @@ fn migrate_existing_category_ownerships(conn: &Connection) -> Result<(), error::
                 row.get::<_, String>(2)?,
             ))
         })
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
 
     for row in rows {
-        let (category, agent_id, claimed_at) = row.map_err(error::DecapodError::RusqliteError)?;
+        let (category, agent_id, claimed_at) = row.map_err(error::DecapodError::StorageError)?;
         // Only claim if no owner yet (preserves first-claim-wins from unique category).
         if get_category_owner(conn, &category)?.is_none() {
             claim_category_for_agent(conn, &agent_id, &category, &claimed_at)?;
@@ -994,7 +994,7 @@ fn migrate_task_components(conn: &Connection) -> Result<(), error::DecapodError>
         if let Some(comp) = infer_component(&title, &tags) {
             conn.execute(
                 "UPDATE tasks SET component = ?1 WHERE id = ?2",
-                rusqlite::params![comp, id],
+                crate::core::db::params![comp, id],
             )?;
         }
     }
@@ -1133,7 +1133,7 @@ fn find_similar_active_task(
                AND assigned_to != ''
              ORDER BY created_at ASC",
         )
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     let rows = stmt
         .query_map([], |row| {
             Ok((
@@ -1145,7 +1145,7 @@ fn find_similar_active_task(
                 row.get::<_, String>(5)?,
             ))
         })
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
 
     let mut best: Option<SimilarActiveTask> = None;
     for row in rows {
@@ -1156,7 +1156,7 @@ fn find_similar_active_task(
             candidate_description,
             candidate_tags,
             assigned_to,
-        ) = row.map_err(error::DecapodError::RusqliteError)?;
+        ) = row.map_err(error::DecapodError::StorageError)?;
         if !creating_owner.is_empty() && assigned_to == creating_owner {
             continue;
         }
@@ -1326,7 +1326,7 @@ fn register_agent_categories(
                     |row| row.get(0),
                 )
                 .optional()
-                .map_err(error::DecapodError::RusqliteError)?;
+                .map_err(error::DecapodError::StorageError)?;
 
             if exists.is_none() {
                 return Err(error::DecapodError::ValidationError(format!(
@@ -1366,10 +1366,10 @@ fn list_category_ownerships(
         } else {
             let mut stmt = conn
                 .prepare("SELECT agent_id FROM agents ORDER BY agent_id")
-                .map_err(error::DecapodError::RusqliteError)?;
+                .map_err(error::DecapodError::StorageError)?;
             agent_ids = stmt
                 .query_map([], |row| row.get(0))
-                .map_err(error::DecapodError::RusqliteError)?
+                .map_err(error::DecapodError::StorageError)?
                 .filter_map(|r| r.ok())
                 .collect();
         }
@@ -1427,9 +1427,9 @@ fn ensure_agent_row(
         "INSERT INTO agents(agent_id, last_seen, status, updated_at, trust_level, expertise_json, category_claims_json)
          VALUES(?1, ?2, 'active', ?3, 'basic', '[]', '[]')
          ON CONFLICT(agent_id) DO NOTHING",
-        rusqlite::params![agent_id, ts, ts],
+        crate::core::db::params![agent_id, ts, ts],
     )
-    .map_err(error::DecapodError::RusqliteError)?;
+    .map_err(error::DecapodError::StorageError)?;
     Ok(())
 }
 
@@ -1445,9 +1445,9 @@ fn touch_agent_presence(
            last_seen = excluded.last_seen,
            status = 'active',
            updated_at = excluded.updated_at",
-        rusqlite::params![agent_id, ts, ts],
+        crate::core::db::params![agent_id, ts, ts],
     )
-    .map_err(error::DecapodError::RusqliteError)?;
+    .map_err(error::DecapodError::StorageError)?;
     Ok(())
 }
 
@@ -1460,7 +1460,7 @@ fn load_agent_json_array(
     let raw: Option<String> = conn
         .query_row(&sql, [agent_id], |row| row.get(0))
         .optional()
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     let Some(raw) = raw else {
         return Ok(JsonValue::Array(vec![]));
     };
@@ -1478,13 +1478,13 @@ fn save_agent_json_array(
     let sql = format!("UPDATE agents SET {column} = ?1, updated_at = ?2 WHERE agent_id = ?3");
     conn.execute(
         &sql,
-        rusqlite::params![
+        crate::core::db::params![
             serde_json::to_string(value).unwrap_or_else(|_| "[]".into()),
             ts,
             agent_id
         ],
     )
-    .map_err(error::DecapodError::RusqliteError)?;
+    .map_err(error::DecapodError::StorageError)?;
     Ok(())
 }
 
@@ -1537,10 +1537,10 @@ fn claim_category_for_agent(
     // Remove category from any existing owner.
     let mut stmt = conn
         .prepare("SELECT agent_id FROM agents")
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     let agent_ids: Vec<String> = stmt
         .query_map([], |row| row.get(0))
-        .map_err(error::DecapodError::RusqliteError)?
+        .map_err(error::DecapodError::StorageError)?
         .filter_map(|r| r.ok())
         .collect();
     drop(stmt);
@@ -1598,15 +1598,15 @@ fn sync_task_tags(
 ) -> Result<(), error::DecapodError> {
     conn.execute(
         "DELETE FROM task_tags WHERE task_id = ?1",
-        rusqlite::params![task_id],
+        crate::core::db::params![task_id],
     )
-    .map_err(error::DecapodError::RusqliteError)?;
+    .map_err(error::DecapodError::StorageError)?;
     for tag in parse_tags_csv(tags_csv) {
         conn.execute(
             "INSERT OR IGNORE INTO task_tags(task_id, tag) VALUES(?1, ?2)",
-            rusqlite::params![task_id, tag],
+            crate::core::db::params![task_id, tag],
         )
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     }
     Ok(())
 }
@@ -1619,10 +1619,10 @@ fn load_task_tags(
 ) -> Result<String, error::DecapodError> {
     let mut stmt = conn
         .prepare("SELECT tag FROM task_tags WHERE task_id = ?1 ORDER BY tag")
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     let tags: Vec<String> = stmt
         .query_map([task_id], |row| row.get(0))
-        .map_err(error::DecapodError::RusqliteError)?
+        .map_err(error::DecapodError::StorageError)?
         .filter_map(|r| r.ok())
         .collect();
     if tags.is_empty() {
@@ -1645,7 +1645,7 @@ fn is_agent_stale(
             |row| row.get(0),
         )
         .optional()
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     let Some(last_seen) = last_seen else {
         return Ok(true);
     };
@@ -1677,7 +1677,7 @@ fn record_heartbeat(root: &Path, agent_id: &str) -> Result<serde_json::Value, er
             actor: agent_id.to_string(),
         };
         append_event(conn, &ev)?;
-        insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
+        insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
         Ok(())
     })?;
 
@@ -1722,12 +1722,14 @@ pub fn cleanup_stale_agent_assignments(
                              WHERE assigned_to = ?1
                                AND status NOT IN ('done', 'archived')",
                     )
-                    .map_err(error::DecapodError::RusqliteError)?;
+                    .map_err(error::DecapodError::StorageError)?;
                 let rows = stmt
-                    .query_map(rusqlite::params![agent_id], |row| row.get::<_, String>(0))
-                    .map_err(error::DecapodError::RusqliteError)?;
+                    .query_map(crate::core::db::params![agent_id], |row| {
+                        row.get::<_, String>(0)
+                    })
+                    .map_err(error::DecapodError::StorageError)?;
                 for row in rows {
-                    task_ids.push(row.map_err(error::DecapodError::RusqliteError)?);
+                    task_ids.push(row.map_err(error::DecapodError::StorageError)?);
                 }
             }
 
@@ -1740,15 +1742,15 @@ pub fn cleanup_stale_agent_assignments(
                              WHERE id = ?2
                                AND assigned_to = ?3
                                AND status NOT IN ('done', 'archived')",
-                        rusqlite::params![ts, task_id, agent_id],
+                        crate::core::db::params![ts, task_id, agent_id],
                     )
-                    .map_err(error::DecapodError::RusqliteError)?;
+                    .map_err(error::DecapodError::StorageError)?;
                 if changed > 0 {
                     conn.execute(
                         "DELETE FROM task_owners WHERE task_id = ?1 AND agent_id = ?2",
-                        rusqlite::params![task_id, agent_id],
+                        crate::core::db::params![task_id, agent_id],
                     )
-                    .map_err(error::DecapodError::RusqliteError)?;
+                    .map_err(error::DecapodError::StorageError)?;
                     sync_legacy_owner_column(conn, &task_id)?;
                     released_count += changed;
 
@@ -1766,23 +1768,23 @@ pub fn cleanup_stale_agent_assignments(
                         actor: "decapod".to_string(),
                     };
                     append_event(conn, &ev)?;
-                    insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
+                    insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
                 }
             }
 
             conn.execute(
                 "DELETE FROM task_owners WHERE agent_id = ?1",
-                rusqlite::params![agent_id],
+                crate::core::db::params![agent_id],
             )
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
             clear_agent_category_claims(conn, agent_id, &ts)?;
             conn.execute(
                 "UPDATE agents
                      SET status = 'expired', updated_at = ?1
                      WHERE agent_id = ?2",
-                rusqlite::params![ts, agent_id],
+                crate::core::db::params![ts, agent_id],
             )
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
 
             let ev = TodoEvent {
                 ts: ts.clone(),
@@ -1797,7 +1799,7 @@ pub fn cleanup_stale_agent_assignments(
                 actor: "decapod".to_string(),
             };
             append_event(conn, &ev)?;
-            insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
+            insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
         }
 
         Ok(released_count)
@@ -1838,20 +1840,19 @@ fn list_claimable_tasks_for_agent(
                          END ASC,
                          created_at ASC",
                 )
-                .map_err(error::DecapodError::RusqliteError)?;
+                .map_err(error::DecapodError::StorageError)?;
             let rows = stmt
-                .query_map(rusqlite::params![agent_id], |row| {
+                .query_map(crate::core::db::params![agent_id], |row| {
                     Ok((
                         row.get::<_, String>(0)?,
                         row.get::<_, String>(1)?,
                         row.get::<_, String>(2)?,
                     ))
                 })
-                .map_err(error::DecapodError::RusqliteError)?;
+                .map_err(error::DecapodError::StorageError)?;
             let mut ids = Vec::new();
             for row in rows {
-                let (id, category, assigned_to) =
-                    row.map_err(error::DecapodError::RusqliteError)?;
+                let (id, category, assigned_to) = row.map_err(error::DecapodError::StorageError)?;
                 // Already assigned to this agent, uncategorized, or category owned by agent.
                 let claimable = assigned_to == agent_id
                     || category.is_empty()
@@ -2124,10 +2125,10 @@ fn list_agent_presence(
 
         let mut stmt = conn
             .prepare(&query)
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         let rows = stmt
             .query_map(
-                rusqlite::params_from_iter(params.iter().map(|p| p as &dyn ToSql)),
+                crate::core::db::params_from_iter(params.iter().map(|p| p as &dyn ToSql)),
                 |row| {
                     Ok(AgentPresence {
                         agent_id: row.get(0)?,
@@ -2137,10 +2138,10 @@ fn list_agent_presence(
                     })
                 },
             )
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         let mut out = Vec::new();
         for r in rows {
-            out.push(r.map_err(error::DecapodError::RusqliteError)?);
+            out.push(r.map_err(error::DecapodError::StorageError)?);
         }
         Ok(out)
     })
@@ -2154,7 +2155,7 @@ fn get_agent_trust_level(conn: &Connection, agent_id: &str) -> Result<String, er
             |row| row.get(0),
         )
         .optional()
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     Ok(level.unwrap_or_else(|| "basic".to_string()))
 }
 
@@ -2174,7 +2175,7 @@ fn get_risk_zone_policy(
 ) -> Result<Option<(String, bool)>, error::DecapodError> {
     conn.query_row(
         "SELECT required_trust_level, requires_approval FROM risk_zones WHERE zone_name = ?1",
-        rusqlite::params![zone_name],
+        crate::core::db::params![zone_name],
         |row| {
             let required_trust: String = row.get(0)?;
             let requires_approval: i64 = row.get(1)?;
@@ -2182,7 +2183,7 @@ fn get_risk_zone_policy(
         },
     )
     .optional()
-    .map_err(error::DecapodError::RusqliteError)
+    .map_err(error::DecapodError::StorageError)
 }
 
 fn enforce_operation_policy(
@@ -2419,7 +2420,7 @@ pub fn record_task_event(
             actor: "decapod".to_string(),
         };
         append_event(conn, &ev)?;
-        insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
+        insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
         Ok(())
     })
 }
@@ -2434,16 +2435,16 @@ fn infer_category_from_task(
 
     let mut stmt = conn
         .prepare("SELECT name, keywords FROM categories")
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
 
     let rows = stmt
         .query_map([], |row| {
             Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
         })
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
 
     for row_result in rows {
-        let (category_name, keywords) = row_result.map_err(error::DecapodError::RusqliteError)?;
+        let (category_name, keywords) = row_result.map_err(error::DecapodError::StorageError)?;
         let keywords_list: Vec<&str> = keywords.split(',').map(|k| k.trim()).collect();
 
         for keyword in keywords_list {
@@ -2480,7 +2481,7 @@ fn find_agent_for_category(
             |row| row.get(0),
         )
         .optional()
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
 
     Ok(agent)
 }
@@ -2506,14 +2507,14 @@ fn get_category_owner(
 ) -> Result<Option<String>, error::DecapodError> {
     let mut stmt = conn
         .prepare("SELECT agent_id, category_claims_json FROM agents")
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     let rows = stmt
         .query_map([], |row| {
             Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
         })
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     for row in rows {
-        let (agent_id, claims_json) = row.map_err(error::DecapodError::RusqliteError)?;
+        let (agent_id, claims_json) = row.map_err(error::DecapodError::StorageError)?;
         let claims: Vec<AgentCategoryClaimEntry> =
             serde_json::from_str(&claims_json).unwrap_or_default();
         if claims.iter().any(|c| c.category == category) {
@@ -2566,7 +2567,7 @@ fn load_dependency_readiness(
             |row| row.get(0),
         )
         .optional()
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     let Some(depends_on) = depends_on else {
         return Ok(DependencyReadiness::ready());
     };
@@ -2584,7 +2585,7 @@ fn load_dependency_readiness(
                 |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
             )
             .optional()
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         let node = match row {
             Some((status, validation_status, artifacts_raw)) => {
                 let artifacts = artifacts_raw
@@ -2610,15 +2611,15 @@ fn load_dependency_readiness(
 
     let mut stmt = conn
         .prepare("SELECT id, depends_on FROM tasks ORDER BY id")
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     let rows = stmt
         .query_map([], |row| {
             Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
         })
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     let mut edges = Vec::new();
     for row in rows {
-        let (source_id, raw_dependencies) = row.map_err(error::DecapodError::RusqliteError)?;
+        let (source_id, raw_dependencies) = row.map_err(error::DecapodError::StorageError)?;
         for dependency_id in parse_dependency_ids(&raw_dependencies) {
             edges.push((source_id.clone(), dependency_id));
         }
@@ -2646,27 +2647,27 @@ fn sync_task_dependencies(
 ) -> Result<(), error::DecapodError> {
     conn.execute(
         "DELETE FROM task_dependencies WHERE task_id = ?1",
-        rusqlite::params![task_id],
+        crate::core::db::params![task_id],
     )
-    .map_err(error::DecapodError::RusqliteError)?;
+    .map_err(error::DecapodError::StorageError)?;
 
     for dep_id in parse_dependency_ids(depends_on) {
         let dep_exists: bool = conn
             .query_row(
                 "SELECT EXISTS(SELECT 1 FROM tasks WHERE id = ?1)",
-                rusqlite::params![dep_id],
+                crate::core::db::params![dep_id],
                 |row| row.get(0),
             )
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         if !dep_exists {
             continue;
         }
         conn.execute(
             "INSERT OR IGNORE INTO task_dependencies(id, task_id, depends_on_task_id, created_at)
              VALUES(?1, ?2, ?3, ?4)",
-            rusqlite::params![crate::core::ulid::new_ulid(), task_id, dep_id, ts],
+            crate::core::db::params![crate::core::ulid::new_ulid(), task_id, dep_id, ts],
         )
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     }
     Ok(())
 }
@@ -2674,7 +2675,7 @@ fn sync_task_dependencies(
 fn backfill_task_dependencies(conn: &Connection) -> Result<(), error::DecapodError> {
     let mut stmt = conn
         .prepare("SELECT id, depends_on, created_at FROM tasks")
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     let rows = stmt
         .query_map([], |row| {
             Ok((
@@ -2683,9 +2684,9 @@ fn backfill_task_dependencies(conn: &Connection) -> Result<(), error::DecapodErr
                 row.get::<_, String>(2)?,
             ))
         })
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     for row in rows {
-        let (task_id, depends_on, created_at) = row.map_err(error::DecapodError::RusqliteError)?;
+        let (task_id, depends_on, created_at) = row.map_err(error::DecapodError::StorageError)?;
         sync_task_dependencies(conn, &task_id, &depends_on, &created_at)?;
     }
     Ok(())
@@ -2705,15 +2706,15 @@ fn upsert_task_owner(
          ON CONFLICT(task_id, agent_id) DO UPDATE SET
              claim_type = excluded.claim_type,
              claimed_at = excluded.claimed_at",
-        rusqlite::params![candidate_id, task_id, agent_id, ts, claim_type],
+        crate::core::db::params![candidate_id, task_id, agent_id, ts, claim_type],
     )
-    .map_err(error::DecapodError::RusqliteError)?;
+    .map_err(error::DecapodError::StorageError)?;
     conn.query_row(
         "SELECT id FROM task_owners WHERE task_id = ?1 AND agent_id = ?2",
-        rusqlite::params![task_id, agent_id],
+        crate::core::db::params![task_id, agent_id],
         |row| row.get(0),
     )
-    .map_err(error::DecapodError::RusqliteError)
+    .map_err(error::DecapodError::StorageError)
 }
 
 fn mutation_actor(payload: Option<&JsonValue>) -> String {
@@ -2758,7 +2759,7 @@ fn write_ownership_claim_event(
         actor: claim.actor.to_string(),
     };
     append_event(conn, &ev)?;
-    insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
+    insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
     Ok(())
 }
 
@@ -2770,7 +2771,7 @@ fn fetch_task_owners(
         .prepare(
             "SELECT agent_id, claim_type, claimed_at FROM task_owners WHERE task_id = ? ORDER BY claimed_at",
         )
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     let rows = stmt
         .query_map([task_id], |row| {
             Ok(TaskOwner {
@@ -2779,10 +2780,10 @@ fn fetch_task_owners(
                 claimed_at: row.get(2)?,
             })
         })
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     let mut out = Vec::new();
     for row in rows {
-        out.push(row.map_err(error::DecapodError::RusqliteError)?);
+        out.push(row.map_err(error::DecapodError::StorageError)?);
     }
     Ok(out)
 }
@@ -2800,9 +2801,9 @@ fn sync_legacy_owner_column(conn: &Connection, task_id: &str) -> Result<(), erro
     let primary_owner = primary_owner_from_owners(&owners).unwrap_or_default();
     conn.execute(
         "UPDATE tasks SET owner = ?1 WHERE id = ?2",
-        rusqlite::params![primary_owner, task_id],
+        crate::core::db::params![primary_owner, task_id],
     )
-    .map_err(error::DecapodError::RusqliteError)?;
+    .map_err(error::DecapodError::StorageError)?;
     Ok(())
 }
 
@@ -2831,7 +2832,7 @@ fn fetch_task_comments(
                AND event_type = 'task.comment'
              ORDER BY seq ASC, ts ASC, event_id ASC",
         )
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     let rows = stmt
         .query_map([task_id], |row| {
             let payload: String = row.get(2)?;
@@ -2852,10 +2853,10 @@ fn fetch_task_comments(
                     .to_string(),
             })
         })
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     let mut out = Vec::new();
     for row in rows {
-        out.push(row.map_err(error::DecapodError::RusqliteError)?);
+        out.push(row.map_err(error::DecapodError::StorageError)?);
     }
     Ok(out)
 }
@@ -2888,7 +2889,7 @@ fn write_task_comment_event(
         actor: actor.to_string(),
     };
     append_event(conn, &ev)?;
-    insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
+    insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
     Ok(())
 }
 
@@ -2907,9 +2908,9 @@ fn set_task_owners(
     for removed_agent in existing_agents.difference(&desired_agents) {
         conn.execute(
             "DELETE FROM task_owners WHERE task_id = ?1 AND agent_id = ?2",
-            rusqlite::params![task_id, removed_agent],
+            crate::core::db::params![task_id, removed_agent],
         )
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
         let ev = TodoEvent {
             ts: ts.to_string(),
             event_id: crate::core::ulid::new_ulid(),
@@ -2922,7 +2923,7 @@ fn set_task_owners(
             actor: actor.to_string(),
         };
         append_event(conn, &ev)?;
-        insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
+        insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
     }
 
     for (idx, agent_id) in owners.iter().enumerate() {
@@ -3093,7 +3094,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
         conn.execute(
             "INSERT INTO tasks(id, hash, title, description, tags, owner, due, ref, status, created_at, updated_at, completed_at, closed_at, dir_path, scope, parent_task_id, priority, depends_on, blocks, category, assigned_to, assigned_at, one_shot)
              VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, 'open', ?9, ?10, NULL, NULL, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20)",
-            rusqlite::params![
+            crate::core::db::params![
                 task_id,
                 task_hash,
                 title,
@@ -3159,7 +3160,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
             actor: actor.clone(),
         };
         append_event(conn, &ev)?;
-        insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
+        insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
 
         for (idx, owner_agent) in owner_list.iter().enumerate() {
             let claim_type = if idx == 0 { "primary" } else { "secondary" };
@@ -3290,7 +3291,7 @@ pub fn update_status(
                     |row| Ok((row.get(0)?, row.get(1)?)),
                 )
                 .optional()
-                .map_err(error::DecapodError::RusqliteError)?;
+                .map_err(error::DecapodError::StorageError)?;
             let Some((actual_status, actual_revision)) = current else {
                 return Ok(serde_json::json!({
                     "status": "not_found",
@@ -3317,7 +3318,7 @@ pub fn update_status(
                  completed_at = CASE WHEN ?1 = 'done' THEN ?2 ELSE completed_at END,
                  closed_at = CASE WHEN ?1 = 'archived' THEN ?2 ELSE closed_at END
              WHERE id = ?3 AND status = ?4 AND revision = ?5",
-                rusqlite::params![new_status, ts, id, expected_status, expected_revision],
+                crate::core::db::params![new_status, ts, id, expected_status, expected_revision],
             )?;
             if changed != 1 {
                 return Ok(serde_json::json!({
@@ -3348,7 +3349,7 @@ pub fn update_status(
                 actor: actor.clone(),
             };
             append_event(conn, &ev)?;
-            insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
+            insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
             Ok(serde_json::json!({
                 "status": "ok",
                 "id": id,
@@ -3493,7 +3494,7 @@ fn edit_task(
                     Ok(true)
                 })
                 .optional()
-                .map_err(error::DecapodError::RusqliteError)?
+                .map_err(error::DecapodError::StorageError)?
                 .unwrap_or(false);
             if !valid {
                 return Err(error::DecapodError::ValidationError(format!(
@@ -3528,7 +3529,7 @@ fn edit_task(
         let changed = if updates.is_empty() {
             conn.execute(
                 "UPDATE tasks SET updated_at = ?, revision = revision + 1 WHERE id = ?",
-                rusqlite::params![ts, id],
+                crate::core::db::params![ts, id],
             )?
         } else {
             // Always update updated_at
@@ -3540,7 +3541,7 @@ fn edit_task(
             params.push(Box::new(id.to_string()));
             conn.execute(
                 &sql,
-                rusqlite::params_from_iter(params.iter().map(|p| p.as_ref())),
+                crate::core::db::params_from_iter(params.iter().map(|p| p.as_ref())),
             )?
         };
 
@@ -3569,7 +3570,7 @@ fn edit_task(
             actor: actor.clone(),
         };
         append_event(conn, &ev)?;
-        insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
+        insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
 
         if let Some(o) = owner {
             let owner_list = parse_owners_input(o);
@@ -3651,11 +3652,11 @@ fn claim_status(root: &Path, id: &str) -> Result<serde_json::Value, error::Decap
         let row: Option<(String, String, String)> = conn
             .query_row(
                 "SELECT status, assigned_to, updated_at FROM tasks WHERE id = ?1",
-                rusqlite::params![id],
+                crate::core::db::params![id],
                 |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
             )
             .optional()
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         Ok(row)
     })?;
     if let Some((status, assigned_to, updated_at)) = result {
@@ -3758,7 +3759,7 @@ pub fn claim_task_with_lease(
                 },
             )
             .optional()
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
 
         let mut reclaimed_from: Option<String> = None;
         let dependency_readiness;
@@ -3933,7 +3934,7 @@ pub fn claim_task_with_lease(
                      WHERE id = ?7
                        AND status NOT IN ('done', 'archived')
                        AND (assigned_to = '' OR assigned_to = ?1)",
-                    rusqlite::params![
+                    crate::core::db::params![
                         agent_id,
                         ts,
                         lease_exp,
@@ -3943,16 +3944,16 @@ pub fn claim_task_with_lease(
                         id
                     ],
                 )
-                .map_err(error::DecapodError::RusqliteError)?;
+                .map_err(error::DecapodError::StorageError)?;
             if changed == 0 {
                 let current: Option<(String, String)> = conn
                     .query_row(
                         "SELECT status, assigned_to FROM tasks WHERE id = ?1",
-                        rusqlite::params![id],
+                        crate::core::db::params![id],
                         |row| Ok((row.get(0)?, row.get(1)?)),
                     )
                     .optional()
-                    .map_err(error::DecapodError::RusqliteError)?;
+                    .map_err(error::DecapodError::StorageError)?;
                 return Ok(match current {
                     None => serde_json::json!({
                         "status": "not_found",
@@ -3978,7 +3979,7 @@ pub fn claim_task_with_lease(
                 "UPDATE tasks SET assigned_to = ?, assigned_at = ?, updated_at = ?, revision = revision + 1 WHERE id = ?",
                 [agent_id, &ts, &ts, id],
             )
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         }
 
         let claim_id = upsert_task_owner(conn, id, agent_id, "primary", &ts)?;
@@ -4022,7 +4023,7 @@ pub fn claim_task_with_lease(
             actor: agent_id.to_string(),
         };
         append_event(conn, &ev)?;
-        insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
+        insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
 
         let mut ok = serde_json::json!({
             "status": "ok",
@@ -4091,14 +4092,14 @@ fn force_release_assignment(
          SET assigned_to = '', assigned_at = NULL, lease_expires_at = NULL,
              lease_lifecycle = ?1, updated_at = ?2, revision = revision + 1
          WHERE id = ?3",
-        rusqlite::params![lifecycle.as_str(), ts, task_id],
+        crate::core::db::params![lifecycle.as_str(), ts, task_id],
     )
-    .map_err(error::DecapodError::RusqliteError)?;
+    .map_err(error::DecapodError::StorageError)?;
     conn.execute(
         "DELETE FROM task_owners WHERE task_id = ?1 AND agent_id = ?2",
-        rusqlite::params![task_id, previous_agent],
+        crate::core::db::params![task_id, previous_agent],
     )
-    .map_err(error::DecapodError::RusqliteError)?;
+    .map_err(error::DecapodError::StorageError)?;
     let ev = TodoEvent {
         ts: ts.to_string(),
         event_id: crate::core::ulid::new_ulid(),
@@ -4114,7 +4115,7 @@ fn force_release_assignment(
         actor: actor.to_string(),
     };
     append_event(conn, &ev)?;
-    insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
+    insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
     Ok(())
 }
 
@@ -4154,7 +4155,7 @@ fn list_active_exclusive_claims(
                  OR COALESCE(lease_lifecycle, '') IN ('yielded', 'expired', 'released')
                )",
         )
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
     let rows = stmt
         .query_map([], |row| {
             Ok((
@@ -4170,7 +4171,7 @@ fn list_active_exclusive_claims(
                 row.get::<_, String>(9).unwrap_or_default(),
             ))
         })
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
 
     let mut out = Vec::new();
     for row in rows {
@@ -4185,7 +4186,7 @@ fn list_active_exclusive_claims(
             lease_generation,
             lifecycle_raw,
             intent_anchor,
-        ) = row.map_err(error::DecapodError::RusqliteError)?;
+        ) = row.map_err(error::DecapodError::StorageError)?;
         let lease_state = fleet_coord::lease_state(lease_expires_at.as_deref(), now_ts);
         let lease_lifecycle = LeaseLifecycle::parse(Some(&lifecycle_raw));
         let dependency_readiness = load_dependency_readiness(conn, &task_id)?;
@@ -4245,7 +4246,7 @@ pub fn renew_claim_lease(
                 },
             )
             .optional()
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
 
         match current {
             None => Ok(serde_json::json!({
@@ -4301,7 +4302,7 @@ pub fn renew_claim_lease(
                      SET lease_expires_at = ?1, lease_generation = ?2, lease_lifecycle = ?3,
                          updated_at = ?4, revision = revision + 1
                      WHERE id = ?5",
-                    rusqlite::params![
+                    crate::core::db::params![
                         lease_exp,
                         generation as i64,
                         LeaseLifecycle::Extended.as_str(),
@@ -4309,7 +4310,7 @@ pub fn renew_claim_lease(
                         id
                     ],
                 )
-                .map_err(error::DecapodError::RusqliteError)?;
+                .map_err(error::DecapodError::StorageError)?;
                 let ev = TodoEvent {
                     ts: ts.clone(),
                     event_id: crate::core::ulid::new_ulid(),
@@ -4326,7 +4327,7 @@ pub fn renew_claim_lease(
                     actor: agent_id.to_string(),
                 };
                 append_event(conn, &ev)?;
-                insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
+                insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
                 Ok(serde_json::json!({
                     "status": "ok",
                     "message": format!("Lease for task {} renewed by {}", id, agent_id),
@@ -4383,7 +4384,7 @@ pub fn yield_claim_lease(
                 },
             )
             .optional()
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
 
         match current {
             None => Ok(serde_json::json!({
@@ -4412,14 +4413,14 @@ pub fn yield_claim_lease(
                      SET assigned_to = '', assigned_at = NULL, lease_expires_at = NULL,
                          lease_lifecycle = ?1, updated_at = ?2, revision = revision + 1
                      WHERE id = ?3",
-                    rusqlite::params![LeaseLifecycle::Yielded.as_str(), ts, id],
+                    crate::core::db::params![LeaseLifecycle::Yielded.as_str(), ts, id],
                 )
-                .map_err(error::DecapodError::RusqliteError)?;
+                .map_err(error::DecapodError::StorageError)?;
                 conn.execute(
                     "DELETE FROM task_owners WHERE task_id = ?1 AND agent_id = ?2",
-                    rusqlite::params![id, agent_id],
+                    crate::core::db::params![id, agent_id],
                 )
-                .map_err(error::DecapodError::RusqliteError)?;
+                .map_err(error::DecapodError::StorageError)?;
                 let reason = if reason.trim().is_empty() {
                     "yielded"
                 } else {
@@ -4441,7 +4442,7 @@ pub fn yield_claim_lease(
                     actor: agent_id.to_string(),
                 };
                 append_event(conn, &ev)?;
-                insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
+                insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
                 Ok(serde_json::json!({
                     "status": "ok",
                     "message": format!("Lease for task {} yielded by {}", id, agent_id),
@@ -4487,7 +4488,7 @@ fn exclusive_lease_proof_gate(
                 |row| Ok((row.get(0)?, row.get(1)?)),
             )
             .optional()
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         let Some((assigned_to, lifecycle_raw)) = row else {
             return Ok(None);
         };
@@ -4502,7 +4503,7 @@ fn exclusive_lease_proof_gate(
                 |row| row.get(0),
             )
             .optional()
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         let passed = verified
             .as_deref()
             .map(|s| {
@@ -4698,7 +4699,7 @@ pub fn handoff_task(
                 },
             )
             .optional()
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
 
         let Some(row) = current else {
             return Ok((
@@ -4825,9 +4826,9 @@ pub fn handoff_task(
         if !previous.is_empty() && previous != "unassigned" {
             conn.execute(
                 "DELETE FROM task_owners WHERE task_id = ?1 AND agent_id = ?2",
-                rusqlite::params![id, previous],
+                crate::core::db::params![id, previous],
             )
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         }
 
         conn.execute(
@@ -4837,7 +4838,7 @@ pub fn handoff_task(
                  lease_lifecycle = ?5, intent_anchor = ?6,
                  revision = revision + 1
              WHERE id = ?7",
-            rusqlite::params![
+            crate::core::db::params![
                 to,
                 ts,
                 transfer.lease_expires_at,
@@ -4847,7 +4848,7 @@ pub fn handoff_task(
                 id
             ],
         )
-        .map_err(error::DecapodError::RusqliteError)?;
+        .map_err(error::DecapodError::StorageError)?;
 
         let claim_id = upsert_task_owner(conn, id, to, "primary", &ts)?;
         sync_legacy_owner_column(conn, id)?;
@@ -4876,7 +4877,7 @@ pub fn handoff_task(
             actor: acting_agent.to_string(),
         };
         append_event(conn, &ev)?;
-        insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
+        insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
 
         Ok((
             serde_json::json!({
@@ -4994,7 +4995,7 @@ fn add_task_owner(
                     |row| row.get(0),
                 )
                 .optional()
-                .map_err(error::DecapodError::RusqliteError)?;
+                .map_err(error::DecapodError::StorageError)?;
 
             if let Some(primary_agent) = existing_primary
                 && primary_agent != agent_id {
@@ -5046,7 +5047,7 @@ fn remove_task_owner(
 
         let deleted = conn.execute(
             "DELETE FROM task_owners WHERE task_id = ?1 AND agent_id = ?2",
-            rusqlite::params![task_id, agent_id],
+            crate::core::db::params![task_id, agent_id],
         )?;
 
         if deleted == 0 {
@@ -5187,10 +5188,10 @@ fn list_agent_expertise(
         } else {
             let mut stmt = conn
                 .prepare("SELECT agent_id FROM agents ORDER BY agent_id")
-                .map_err(error::DecapodError::RusqliteError)?;
+                .map_err(error::DecapodError::StorageError)?;
             agent_ids = stmt
                 .query_map([], |row| row.get(0))
-                .map_err(error::DecapodError::RusqliteError)?
+                .map_err(error::DecapodError::StorageError)?
                 .filter_map(|r| r.ok())
                 .collect();
         }
@@ -5238,7 +5239,7 @@ fn release_task(root: &Path, id: &str) -> Result<serde_json::Value, error::Decap
                 row.get(0)
             })
             .optional()
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
 
         if exists.is_none() {
             return Ok(serde_json::json!({
@@ -5260,9 +5261,14 @@ fn release_task(root: &Path, id: &str) -> Result<serde_json::Value, error::Decap
              SET assigned_to = '', assigned_at = NULL, lease_expires_at = NULL,
                  lease_lifecycle = ?1, updated_at = ?2, revision = revision + 1
              WHERE id = ?3 AND assigned_to = ?4",
-                rusqlite::params![LeaseLifecycle::Released.as_str(), ts, id, previous_assignee],
+                crate::core::db::params![
+                    LeaseLifecycle::Released.as_str(),
+                    ts,
+                    id,
+                    previous_assignee
+                ],
             )
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         if changed != 1 {
             return Ok(serde_json::json!({
                 "status": "conflict",
@@ -5273,7 +5279,7 @@ fn release_task(root: &Path, id: &str) -> Result<serde_json::Value, error::Decap
         if !previous_assignee.is_empty() {
             conn.execute(
                 "DELETE FROM task_owners WHERE task_id = ?1 AND agent_id = ?2",
-                rusqlite::params![id, previous_assignee],
+                crate::core::db::params![id, previous_assignee],
             )?;
             sync_legacy_owner_column(conn, id)?;
         }
@@ -5291,7 +5297,7 @@ fn release_task(root: &Path, id: &str) -> Result<serde_json::Value, error::Decap
             actor: actor.clone(),
         };
         append_event(conn, &ev)?;
-        insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
+        insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
 
         Ok(serde_json::json!({
             "status": "ok",
@@ -5325,7 +5331,7 @@ pub fn get_task(root: &Path, id: &str) -> Result<Option<Task>, error::DecapodErr
     broker.with_conn(&db_path, "decapod", None, "todo.get", |conn| {
         ensure_schema(conn)?;
         let mut stmt = conn.prepare("SELECT id,hash,title,description,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks,category,component,assigned_to,assigned_at,one_shot,revision FROM tasks WHERE id = ?1")?;
-        let mut rows = stmt.query(rusqlite::params![id])?;
+        let mut rows = stmt.query(crate::core::db::params![id])?;
         if let Some(row) = rows.next()? {
             let task_id: String = row.get(0)?;
             let owners = fetch_task_owners(conn, &task_id)?;
@@ -5382,11 +5388,11 @@ fn get_work_claim_verification(
             .query_row(
                 "SELECT last_verified_status, verification_artifacts
                  FROM task_verification WHERE todo_id = ?1",
-                rusqlite::params![id],
+                crate::core::db::params![id],
                 |row| Ok((row.get(0)?, row.get(1)?)),
             )
             .optional()
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         let Some((last_verified_status, artifacts)) = row else {
             return Ok(WorkClaimVerification::default());
         };
@@ -5459,7 +5465,7 @@ fn get_task_lease_expires_at(root: &Path, id: &str) -> Result<Option<String>, er
         )
         .optional()
         .map(|opt| opt.flatten())
-        .map_err(error::DecapodError::RusqliteError)
+        .map_err(error::DecapodError::StorageError)
     })
 }
 
@@ -5516,46 +5522,46 @@ pub fn list_tasks(
         let mut stmt = conn.prepare(&query)?;
         let params_as_dyn: Vec<&dyn ToSql> = params.iter().map(|p| p.as_ref()).collect();
         let mut rows = stmt
-            .query(rusqlite::params_from_iter(params_as_dyn.iter().copied()))
-            .map_err(error::DecapodError::RusqliteError)?;
+            .query(crate::core::db::params_from_iter(params_as_dyn.iter().copied()))
+            .map_err(error::DecapodError::StorageError)?;
         let mut out = Vec::new();
-        while let Some(row) = rows.next().map_err(error::DecapodError::RusqliteError)? {
-            let task_id: String = row.get(0).map_err(error::DecapodError::RusqliteError)?;
+        while let Some(row) = rows.next().map_err(error::DecapodError::StorageError)? {
+            let task_id: String = row.get(0).map_err(error::DecapodError::StorageError)?;
             let owners = fetch_task_owners(conn, &task_id)?;
             let comments = fetch_task_comments(conn, &task_id)?;
-            let tags_fallback: String = row.get(4).map_err(error::DecapodError::RusqliteError)?;
+            let tags_fallback: String = row.get(4).map_err(error::DecapodError::StorageError)?;
             let tags = load_task_tags(conn, &task_id, &tags_fallback)?;
             out.push(Task {
                 id: task_id,
-                hash: row.get(1).map_err(error::DecapodError::RusqliteError)?,
-                title: row.get(2).map_err(error::DecapodError::RusqliteError)?,
-                description: row.get(3).map_err(error::DecapodError::RusqliteError)?,
+                hash: row.get(1).map_err(error::DecapodError::StorageError)?,
+                title: row.get(2).map_err(error::DecapodError::StorageError)?,
+                description: row.get(3).map_err(error::DecapodError::StorageError)?,
                 tags,
                 owner: primary_owner_from_owners(&owners).unwrap_or_else(|| row.get(5).unwrap_or_default()),
-                due: row.get(6).map_err(error::DecapodError::RusqliteError)?,
-                r#ref: row.get(7).map_err(error::DecapodError::RusqliteError)?,
-                status: row.get(8).map_err(error::DecapodError::RusqliteError)?,
-                created_at: row.get(9).map_err(error::DecapodError::RusqliteError)?,
-                updated_at: row.get(10).map_err(error::DecapodError::RusqliteError)?,
-                completed_at: row.get(11).map_err(error::DecapodError::RusqliteError)?,
-                closed_at: row.get(12).map_err(error::DecapodError::RusqliteError)?,
-                dir_path: row.get(13).map_err(error::DecapodError::RusqliteError)?,
-                scope: row.get(14).map_err(error::DecapodError::RusqliteError)?,
-                parent_task_id: row.get(15).map_err(error::DecapodError::RusqliteError)?,
-                priority: row.get(16).map_err(error::DecapodError::RusqliteError)?,
-                depends_on: row.get(17).map_err(error::DecapodError::RusqliteError)?,
-                blocks: row.get(18).map_err(error::DecapodError::RusqliteError)?,
-                category: row.get(19).map_err(error::DecapodError::RusqliteError)?,
-                component: row.get(20).map_err(error::DecapodError::RusqliteError)?,
+                due: row.get(6).map_err(error::DecapodError::StorageError)?,
+                r#ref: row.get(7).map_err(error::DecapodError::StorageError)?,
+                status: row.get(8).map_err(error::DecapodError::StorageError)?,
+                created_at: row.get(9).map_err(error::DecapodError::StorageError)?,
+                updated_at: row.get(10).map_err(error::DecapodError::StorageError)?,
+                completed_at: row.get(11).map_err(error::DecapodError::StorageError)?,
+                closed_at: row.get(12).map_err(error::DecapodError::StorageError)?,
+                dir_path: row.get(13).map_err(error::DecapodError::StorageError)?,
+                scope: row.get(14).map_err(error::DecapodError::StorageError)?,
+                parent_task_id: row.get(15).map_err(error::DecapodError::StorageError)?,
+                priority: row.get(16).map_err(error::DecapodError::StorageError)?,
+                depends_on: row.get(17).map_err(error::DecapodError::StorageError)?,
+                blocks: row.get(18).map_err(error::DecapodError::StorageError)?,
+                category: row.get(19).map_err(error::DecapodError::StorageError)?,
+                component: row.get(20).map_err(error::DecapodError::StorageError)?,
                 assigned_to: row
                     .get(21)
-                    .map_err(error::DecapodError::RusqliteError)
+                    .map_err(error::DecapodError::StorageError)
                     .unwrap_or_default(),
-                assigned_at: row.get(22).map_err(error::DecapodError::RusqliteError)?,
+                assigned_at: row.get(22).map_err(error::DecapodError::StorageError)?,
                 owners,
                 comments,
-                one_shot: row.get(23).map_err(error::DecapodError::RusqliteError).unwrap_or(0),
-                revision: row.get(24).map_err(error::DecapodError::RusqliteError).unwrap_or(0),
+                one_shot: row.get(23).map_err(error::DecapodError::StorageError).unwrap_or(0),
+                revision: row.get(24).map_err(error::DecapodError::StorageError).unwrap_or(0),
             });
         }
         Ok(out)
@@ -5737,7 +5743,7 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                     conn.execute(
                         "INSERT OR REPLACE INTO tasks(id,hash,title,description,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks,category,component,assigned_to,assigned_at)
                          VALUES(?1,?2,?3,?4,?5,?6,?7,?8,'open',?9,?10,NULL,NULL,?11,?12,?13,?14,?15,?16,?17,?18,?19,?20)",
-                        rusqlite::params![id, hash, title, description, tags, owner, due, r#ref, ev.ts, ev.ts, dir_path, scope, parent_task_id, priority, depends_on, blocks, category, component, assigned_to, assigned_at],
+                        crate::core::db::params![id, hash, title, description, tags, owner, due, r#ref, ev.ts, ev.ts, dir_path, scope, parent_task_id, priority, depends_on, blocks, category, component, assigned_to, assigned_at],
                     )?;
                     sync_task_tags(conn, &id, &tags)?;
 
@@ -5762,14 +5768,14 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                     let id = ev.task_id.clone().unwrap_or_default();
                     conn.execute(
                         "UPDATE tasks SET status='done', updated_at=?1, completed_at=?1 WHERE id=?2",
-                        rusqlite::params![ev.ts, id],
+                        crate::core::db::params![ev.ts, id],
                     )?;
                 }
                 "task.archive" => {
                     let id = ev.task_id.clone().unwrap_or_default();
                     conn.execute(
                         "UPDATE tasks SET status='archived', updated_at=?1, closed_at=?1 WHERE id=?2",
-                        rusqlite::params![ev.ts, id],
+                        crate::core::db::params![ev.ts, id],
                     )?;
                 }
                 "task.comment" => {}
@@ -5779,69 +5785,69 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                     if let Some(title) = ev.payload.get("title").and_then(|v| v.as_str()) {
                         conn.execute(
                             "UPDATE tasks SET title = ?1, updated_at = ?2 WHERE id = ?3",
-                            rusqlite::params![title, ev.ts, id],
+                            crate::core::db::params![title, ev.ts, id],
                         )?;
                     }
                     if let Some(description) = ev.payload.get("description").and_then(|v| v.as_str()) {
                         conn.execute(
                             "UPDATE tasks SET description = ?1, updated_at = ?2 WHERE id = ?3",
-                            rusqlite::params![description, ev.ts, id],
+                            crate::core::db::params![description, ev.ts, id],
                         )?;
                     }
                     if let Some(owner) = ev.payload.get("owner").and_then(|v| v.as_str()) {
                         conn.execute(
                             "UPDATE tasks SET owner = ?1, updated_at = ?2 WHERE id = ?3",
-                            rusqlite::params![owner, ev.ts, id],
+                            crate::core::db::params![owner, ev.ts, id],
                         )?;
                     }
                     if let Some(tags) = ev.payload.get("tags").and_then(|v| v.as_str()) {
                         conn.execute(
                             "UPDATE tasks SET tags = ?1, updated_at = ?2 WHERE id = ?3",
-                            rusqlite::params![tags, ev.ts, id],
+                            crate::core::db::params![tags, ev.ts, id],
                         )?;
                         sync_task_tags(conn, &id, tags)?;
                     }
                     if let Some(due) = ev.payload.get("due").and_then(|v| v.as_str()) {
                         conn.execute(
                             "UPDATE tasks SET due = ?1, updated_at = ?2 WHERE id = ?3",
-                            rusqlite::params![due, ev.ts, id],
+                            crate::core::db::params![due, ev.ts, id],
                         )?;
                     }
                     if let Some(r#ref) = ev.payload.get("ref").and_then(|v| v.as_str()) {
                         conn.execute(
                             "UPDATE tasks SET ref = ?1, updated_at = ?2 WHERE id = ?3",
-                            rusqlite::params![r#ref, ev.ts, id],
+                            crate::core::db::params![r#ref, ev.ts, id],
                         )?;
                     }
                     if let Some(priority) = ev.payload.get("priority").and_then(|v| v.as_str()) {
                         conn.execute(
                             "UPDATE tasks SET priority = ?1, updated_at = ?2 WHERE id = ?3",
-                            rusqlite::params![priority, ev.ts, id],
+                            crate::core::db::params![priority, ev.ts, id],
                         )?;
                     }
                     if let Some(depends_on) = ev.payload.get("depends_on").and_then(|v| v.as_str()) {
                         conn.execute(
                             "UPDATE tasks SET depends_on = ?1, updated_at = ?2 WHERE id = ?3",
-                            rusqlite::params![depends_on, ev.ts, id],
+                            crate::core::db::params![depends_on, ev.ts, id],
                         )?;
                         sync_task_dependencies(conn, &id, depends_on, &ev.ts)?;
                     }
                     if let Some(blocks) = ev.payload.get("blocks").and_then(|v| v.as_str()) {
                         conn.execute(
                             "UPDATE tasks SET blocks = ?1, updated_at = ?2 WHERE id = ?3",
-                            rusqlite::params![blocks, ev.ts, id],
+                            crate::core::db::params![blocks, ev.ts, id],
                         )?;
                     }
                     if let Some(category) = ev.payload.get("category").and_then(|v| v.as_str()) {
                         conn.execute(
                             "UPDATE tasks SET category = ?1, updated_at = ?2 WHERE id = ?3",
-                            rusqlite::params![category, ev.ts, id],
+                            crate::core::db::params![category, ev.ts, id],
                         )?;
                     }
                     if let Some(component) = ev.payload.get("component").and_then(|v| v.as_str()) {
                         conn.execute(
                             "UPDATE tasks SET component = ?1, updated_at = ?2 WHERE id = ?3",
-                            rusqlite::params![component, ev.ts, id],
+                            crate::core::db::params![component, ev.ts, id],
                         )?;
                     }
                 }
@@ -5854,14 +5860,14 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                         .unwrap_or("");
                     conn.execute(
                         "UPDATE tasks SET assigned_to = ?1, assigned_at = ?2, updated_at = ?2 WHERE id = ?3",
-                        rusqlite::params![assigned_to, ev.ts, id],
+                        crate::core::db::params![assigned_to, ev.ts, id],
                     )?;
                 }
                 "task.release" => {
                     let id = ev.task_id.clone().unwrap_or_default();
                     conn.execute(
                         "UPDATE tasks SET assigned_to = '', assigned_at = NULL, updated_at = ?1 WHERE id = ?2",
-                        rusqlite::params![ev.ts, id],
+                        crate::core::db::params![ev.ts, id],
                     )?;
                 }
                 "task.handoff" => {
@@ -5869,7 +5875,7 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                     let to = ev.payload.get("to").and_then(|v| v.as_str()).unwrap_or("");
                     conn.execute(
                         "UPDATE tasks SET assigned_to = ?1, assigned_at = ?2, updated_at = ?2 WHERE id = ?3",
-                        rusqlite::params![to, ev.ts, id],
+                        crate::core::db::params![to, ev.ts, id],
                     )?;
                 }
 
@@ -5893,15 +5899,15 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                     let existing_id: Option<String> = conn
                         .query_row(
                             "SELECT id FROM task_owners WHERE task_id = ?1 AND agent_id = ?2 ORDER BY claimed_at LIMIT 1",
-                            rusqlite::params![task_id, agent_id],
+                            crate::core::db::params![task_id, agent_id],
                             |row| row.get(0),
                         )
                         .optional()
-                        .map_err(error::DecapodError::RusqliteError)?;
+                        .map_err(error::DecapodError::StorageError)?;
                     if let Some(existing_id) = existing_id {
                         conn.execute(
                             "UPDATE task_owners SET claim_type = ?1, claimed_at = ?2 WHERE id = ?3",
-                            rusqlite::params![claim_type, ev.ts, existing_id],
+                            crate::core::db::params![claim_type, ev.ts, existing_id],
                         )?;
                     } else {
                         let insert_id = if claim_id.is_empty() {
@@ -5912,7 +5918,7 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                         conn.execute(
                             "INSERT INTO task_owners(id, task_id, agent_id, claimed_at, claim_type)
                              VALUES(?1, ?2, ?3, ?4, ?5)",
-                            rusqlite::params![insert_id, task_id, agent_id, ev.ts, claim_type],
+                            crate::core::db::params![insert_id, task_id, agent_id, ev.ts, claim_type],
                         )?;
                     }
                     sync_legacy_owner_column(conn, &task_id)?;
@@ -5922,7 +5928,7 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                     let agent_id = ev.payload.get("agent_id").and_then(|v| v.as_str()).unwrap_or(&ev.actor);
                     conn.execute(
                         "DELETE FROM task_owners WHERE task_id = ?1 AND agent_id = ?2",
-                        rusqlite::params![task_id, agent_id],
+                        crate::core::db::params![task_id, agent_id],
                     )?;
                     sync_legacy_owner_column(conn, &task_id)?;
                 }
@@ -5990,7 +5996,7 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                            last_verified_notes=excluded.last_verified_notes,
                            verification_policy_days=excluded.verification_policy_days,
                            updated_at=excluded.updated_at",
-                        rusqlite::params![
+                        crate::core::db::params![
                             id,
                             serde_json::to_string(&proof_plan).unwrap(),
                             if artifacts.is_null() {
@@ -6014,7 +6020,7 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                     conn.execute("DELETE FROM task_verification WHERE todo_id = ?1", [&id])?;
                     conn.execute(
                         "UPDATE tasks SET status = 'open', completed_at = NULL, updated_at = ?1 WHERE id = ?2",
-                        rusqlite::params![ev.ts, id],
+                        crate::core::db::params![ev.ts, id],
                     )?;
                 }
                 "task.proof.claimed" => {
@@ -6044,7 +6050,7 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                            last_verified_notes=excluded.last_verified_notes,
                            verification_policy_days=excluded.verification_policy_days,
                            updated_at=excluded.updated_at",
-                        rusqlite::params![
+                        crate::core::db::params![
                             id,
                             serde_json::to_string(&proof_plan).unwrap(),
                             ev.ts,
@@ -7067,7 +7073,7 @@ fn mark_todo_claimed_pending_proof(
                    last_verified_status=excluded.last_verified_status,
                    last_verified_notes=excluded.last_verified_notes,
                    updated_at=excluded.updated_at",
-                rusqlite::params![
+                crate::core::db::params![
                     todo_id,
                     "[\"validate_passes\"]",
                     ts,
@@ -7075,7 +7081,7 @@ fn mark_todo_claimed_pending_proof(
                     "Claimed complete; proof hooks not yet verified. Run `decapod qa verify todo <id>`.",
                 ],
             )
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
             Ok(())
         },
     )?;

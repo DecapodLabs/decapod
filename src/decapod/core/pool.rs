@@ -1,14 +1,14 @@
-//! SQLite connection pool with read/write separation and retry logic.
+//! Dactyl-backed storage connection pool with read/write separation and retry logic.
 //!
 //! Replaces the per-DB `Mutex<()>` serialization in `broker.rs` with a pool that:
 //! - Maintains a **write mutex** per DB for serialized write access
-//! - Creates fresh **read connections** per operation (no mutex, concurrent via WAL)
+//! - Creates fresh **read connections** per operation (no mutex, concurrent where the backend permits)
 //! - Uses longer `busy_timeout` values (30s write, 15s read) to handle cross-process contention
 //!
-//! Connections are NOT pooled (opened fresh each time) to avoid WAL/SHM file handle
+//! Connections are NOT pooled (opened fresh each time) to avoid database sidecar file handle
 //! conflicts when the process spawns child subprocesses that access the same databases.
 //!
-//! # Future: `StorageBackend` trait for Supabase
+//! # Future: operation-based cloud storage dispatch
 //!
 //! The current closure-based `with_conn(&Connection)` API cannot abstract over HTTP backends
 //! (closures capture `&Connection` which is SQLite-specific). When Supabase support is needed,
@@ -26,8 +26,8 @@
 //! Until then, the pool fixes contention without touching any call sites.
 
 use crate::core::db;
+use crate::core::db::Connection;
 use crate::core::error::DecapodError;
-use rusqlite::Connection;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock};
@@ -52,16 +52,16 @@ struct PoolEntry {
     db_path: PathBuf,
 }
 
-/// Connection pool providing read/write separation per SQLite database.
+/// Storage pool providing read/write separation per local database.
 ///
 /// - Write operations are serialized through a per-DB mutex with fresh connections.
 /// - Read operations create fresh connections without mutex serialization (WAL concurrent reads).
 /// - Both paths use increased `busy_timeout` for cross-process contention.
-pub struct SqlitePool {
+pub struct StoragePool {
     entries: Mutex<HashMap<PathBuf, &'static PoolEntry>>,
 }
 
-impl SqlitePool {
+impl StoragePool {
     fn new() -> Self {
         Self {
             entries: Mutex::new(HashMap::new()),
@@ -72,7 +72,7 @@ impl SqlitePool {
     fn get_entry(&self, db_path: &Path) -> Result<&'static PoolEntry, DecapodError> {
         let canonical = db_path.to_path_buf();
         let mut entries = self.entries.lock().map_err(|_| {
-            DecapodError::ValidationError("SqlitePool entries lock poisoned".to_string())
+            DecapodError::ValidationError("StoragePool entries lock poisoned".to_string())
         })?;
         if let Some(entry) = entries.get(&canonical) {
             return Ok(*entry);
@@ -105,19 +105,19 @@ impl SqlitePool {
     }
 
     /// Execute a closure with a read connection (no mutex serialization).
-    /// WAL mode allows concurrent readers across threads and processes.
+    /// The backend may allow concurrent readers across threads and processes.
     #[inline]
     pub fn with_read<F, R>(&self, db_path: &Path, f: F) -> Result<R, DecapodError>
     where
         F: FnOnce(&Connection) -> Result<R, DecapodError>,
     {
-        let conn = db::db_connect_pooled(&db_path.to_string_lossy(), READ_BUSY_TIMEOUT_SECS)?;
+        let conn = db::db_connect_read_pooled(&db_path.to_string_lossy(), READ_BUSY_TIMEOUT_SECS)?;
 
         f(&conn)
     }
 }
 
-/// Retry a closure on `SQLITE_BUSY` / `DatabaseBusy` with exponential backoff.
+/// Retry a closure on normalized storage contention with exponential backoff.
 ///
 /// Note: only usable with `FnMut` closures (not the `FnOnce` closures from `with_conn`).
 /// Available for internal pool operations and future `StorageBackend` retry logic.
@@ -140,19 +140,13 @@ where
     }
 }
 
-/// Check if an error is a SQLite busy/locked error that is retryable.
+/// Check if the normalized storage error is a retryable contention result.
 fn is_busy_error(err: &DecapodError) -> bool {
-    match err {
-        DecapodError::RusqliteError(rusqlite::Error::SqliteFailure(code, _)) => matches!(
-            code.code,
-            rusqlite::ErrorCode::DatabaseBusy | rusqlite::ErrorCode::DatabaseLocked
-        ),
-        _ => false,
-    }
+    err.storage_failure_kind().is_contention()
 }
 
 /// Global pool instance (same lifetime as the process).
-pub fn global_pool() -> &'static SqlitePool {
-    static POOL: OnceLock<SqlitePool> = OnceLock::new();
-    POOL.get_or_init(SqlitePool::new)
+pub fn global_pool() -> &'static StoragePool {
+    static POOL: OnceLock<StoragePool> = OnceLock::new();
+    POOL.get_or_init(StoragePool::new)
 }

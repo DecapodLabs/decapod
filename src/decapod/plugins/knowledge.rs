@@ -1,8 +1,8 @@
 use crate::core::broker::DbBroker;
+use crate::core::db::{OptionalExtension, params};
 use crate::core::error;
 use crate::core::events;
 use crate::core::store::Store;
-use rusqlite::{OptionalExtension, params};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
@@ -605,7 +605,7 @@ fn lookup_promotion_event(
             |row| row.get::<_, String>(0),
         )
         .optional()
-        .map_err(error::DecapodError::RusqliteError)
+        .map_err(error::DecapodError::StorageError)
     })?;
     payload
         .map(|raw| {

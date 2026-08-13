@@ -54,7 +54,7 @@ fn completion_dependency_gate_rechecks_proof_readiness() {
     );
 
     let db = root.join(crate::core::schemas::LOCAL_DB_NAME);
-    let conn = rusqlite::Connection::open(db).unwrap();
+    let conn = decapod::core::db::Connection::open(db).unwrap();
     conn.execute(
         "UPDATE tasks SET status = 'done' WHERE id = ?1",
         [&dependency_id],

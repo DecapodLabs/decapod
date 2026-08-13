@@ -1,5 +1,5 @@
+use decapod::core::db::Connection;
 use decapod::core::{db, events, migration, schemas, todo};
-use rusqlite::Connection;
 use tempfile::tempdir;
 
 #[test]
@@ -46,13 +46,7 @@ fn fresh_subsystems_share_one_local_database() {
         "events",
         "originals_index", // LCM still owns this surface
     ] {
-        let exists: bool = conn
-            .query_row(
-                "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name=?1)",
-                [table],
-                |row| row.get(0),
-            )
-            .unwrap();
+        let exists = conn.has_table(table).unwrap();
         assert!(exists, "missing table {table}");
     }
     // Per-stream event tables and folded graph/agent satellites must not bootstrap.
@@ -69,13 +63,7 @@ fn fresh_subsystems_share_one_local_database() {
         "agent_expertise",
         "agent_category_claims",
     ] {
-        let exists: bool = conn
-            .query_row(
-                "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name=?1)",
-                [table],
-                |row| row.get(0),
-            )
-            .unwrap();
+        let exists = conn.has_table(table).unwrap();
         assert!(!exists, "unexpected deprecated table {table}");
     }
 }

@@ -28,11 +28,13 @@ This project's architecture consists of the following key layers/directories:
 - Storage adapter reads or writes data to the underlying persistence layers.
 
 ## Strongest Existing Primitives
-- `core::error::StorageFailureKind` is the application-owned classification seam for contention, storage I/O, constraint, query, value, capability, and unknown failures. The current SQLite mapping is a compatibility adapter; retry and governance callers do not select behavior by backend name.
-- `core::migration` separates version-gated pending-plan selection and applied-ledger recording from migration execution. Backup, restore, legacy import, and schema policy remain Decapod responsibilities while the future dactyl boundary supplies execution.
+- `core::error::StorageFailureKind` is the application-owned classification seam for contention, storage I/O, constraint, query, value, capability, and unknown failures. Retry and governance callers do not select behavior by backend name; Dactyl errors are normalized at this boundary.
+- `core::migration` separates version-gated pending-plan selection and applied-ledger recording from migration execution. Decapod decides when a legacy store may be admitted and copies compatible rows through the Dactyl facade; Dactyl performs physical execution and atomicity, while Decapod retains migration, backup, and recovery policy.
 - `DbBroker::execute_write_sync` returns affected rows. Decapod callers own stable IDs rather than reading ambient connection-generated row IDs.
-- `DbBroker::with_transaction` is the Decapod-owned atomic mutation seam. Material TODO lifecycle, ownership, lease, agent-session, and federation state changes append their canonical event within the same transaction; `events::append_on_conn` composes with caller-owned transactions and uses idempotent event identity plus unique stream sequencing.
+- `DbBroker::with_transaction` is the Decapod-owned atomic mutation seam. The facade keeps a connection-scoped local transaction on Dactyl's physical connection for existing callers, while Dactyl owns the execution and rollback mechanics; cloud callers must use Dactyl's ordered atomic operation contract.
 - `core::backend::BackendSelection` is the provider-neutral route seam: it reads `repo.backend`, uses the Git `origin` remote for cloud repository scope, binds local to `.decapod/data/decapod.db`, and passes a session-supplied cloud URI through as opaque data for Dactyl. Ordinary Decapod persistence does not construct a Propodus, Vercel, or Neon path.
+- `core::dactyl_db` is the single application-facing relational facade for Dactyl v0.8.2. It exposes the narrow query/row/parameter compatibility surface used by existing domain code while keeping Dactyl's connection and result types behind the Decapod boundary. For a new read-write path it seeds only the empty filesystem target required by Dactyl v0.8.2's pre-open header check; Dactyl still owns the connection, validation, and execution. `core::dactyl::DactylBridge` is the explicit route/context seam for operation batches, access mode, typed errors, and portable schema inspection. `open_canonical` opens the ordinary `.decapod/data/decapod.db` file through Dactyl's host runtime; there is no snapshot-format rejection or legacy-import feature in Decapod.
+- `core::backend::StorageContext` is the versioned Decapod-owned handoff between logical selection and physical execution. Local contexts contain only the canonical repository path; remote contexts contain the opaque route, logical repository scope, and an in-memory bearer that is excluded from serialization. Organization membership and repository authorization remain Propodus concerns.
 - Session custody is machine-local for both backend choices: the Decapod agent-session record is stored under the machine config directory, uses `local_`/`cloud_` token prefixes to detect backend changes, and defaults to a four-hour TTL bounded between 30 minutes and six hours. Cloud access and refresh tokens are stored separately under the machine data directory and refreshed before the remaining lifetime falls below 30 minutes.
 
 ## Local-Clone Publication and Store Binding (#1259)
@@ -143,7 +145,7 @@ sequenceDiagram
 - Inbound contracts (CLI/API/events):
 - Outbound dependencies (datastores/queues/external APIs):
 - Data ownership boundaries:
-- Schema evolution + migration policy: Decapod owns migration identity, ordering, version gates, applied-ledger persistence, backup/restore, and legacy-store import. Storage execution is a replaceable boundary.
+- Schema evolution + migration policy: Decapod owns migration identity, ordering, version gates, applied-ledger persistence, backup/restore, and legacy-row translation. Dactyl owns physical execution and normalized results; storage execution remains a replaceable boundary.
 
 ## Current PR Control-Plane Sequence
 1. Bootstrap discovery and diagnostics (`capabilities`, constitution lookup,
@@ -174,7 +176,7 @@ sequenceDiagram
 - Each exact registered directive H3 in `.decapod/OVERRIDE.md` owns a fenced human-authored documentation body. The scaffold uses a four-backtick Markdown source block so headings and nested triple-backtick examples do not render as outer document structure. `core::assets` extracts the wrapper-free body, preserves legacy body bytes during upgrade, and fails the whole overlay on unclosed wrappers, duplicate exact IDs, or non-empty unknown Decapod-namespaced IDs.
 - Context resolution and context capsules carry derived authority evidence: directive ID, source path, source hash, body hash, byte count, and precedence.
 - `core::events` is the semantic read/write boundary for append-only runtime evidence. Callers do not bind to per-stream tables, a future consolidated table, or legacy JSONL.
-- Startup migration reconciles unproven legacy JSONL into canonical `.decapod/data/decapod.db` idempotently before governed consumers run. A successful single-datastore migration is durable proof that its JSONL inputs are retired. If an older binary recreates legacy SQLite stores, startup copies their newer rows forward and removes them before consumers run. Fresh conflicts fail visibly.
+- Startup migration reconciles unproven legacy JSONL and legacy local database rows into the canonical Dactyl-backed store idempotently before governed consumers run. A successful single-datastore migration is durable proof that its JSONL inputs are retired. Legacy database rows are read and written through the Dactyl facade; Decapod owns compatibility, backup, and recovery policy. Fresh conflicts fail visibly.
 
 ## ADR Register
 | ADR | Title | Status | Rationale | Date |
@@ -216,7 +218,7 @@ sequenceDiagram
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8323113c658e1bc9c9215b9397ca3f106ea1f459b971ea0edc12cd460eb4da06`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (102 files), `tests/` (4 files)
+- Repository signal fingerprint: `e887d87ee09cd774e16c328247b89ddd33d46279bd24764f4592b34e75d2e466`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (104 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -9,12 +9,12 @@
 //! - Pattern recognition for auto-detection
 
 use crate::core::broker::DbBroker;
+use crate::core::db::params;
 use crate::core::error;
 use crate::core::schemas;
 use crate::core::store::Store;
 use crate::core::todo;
 use fancy_regex::Regex;
-use rusqlite::params;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -360,8 +360,8 @@ pub fn get_preference(
 
         match result {
             Ok(p) => Ok(Some(p)),
-            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
-            Err(e) => Err(error::DecapodError::RusqliteError(e)),
+            Err(crate::core::db::Error::QueryReturnedNoRows) => Ok(None),
+            Err(e) => Err(error::DecapodError::StorageError(e)),
         }
     })?;
 
@@ -398,15 +398,15 @@ pub fn get_preference_by_id(
 
         match result {
             Ok(p) => Ok(Some(p)),
-            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
-            Err(e) => Err(error::DecapodError::RusqliteError(e)),
+            Err(crate::core::db::Error::QueryReturnedNoRows) => Ok(None),
+            Err(e) => Err(error::DecapodError::StorageError(e)),
         }
     })?;
 
     Ok(pref)
 }
 
-fn row_to_preference(row: &rusqlite::Row) -> Result<Preference, rusqlite::Error> {
+fn row_to_preference(row: &crate::core::db::Row) -> Result<Preference, crate::core::db::Error> {
     Ok(Preference {
         id: row.get(0)?,
         category: row.get(1)?,
@@ -558,9 +558,9 @@ pub fn list_patterns(store: &Store) -> Result<Vec<Pattern>, error::DecapodError>
             let rows = stmt.query_map(params![APTITUDE_META_NS], |row| {
                 let value: String = row.get(0)?;
                 serde_json::from_str::<Pattern>(&value).map_err(|e| {
-                    rusqlite::Error::FromSqlConversionFailure(
+                    crate::core::db::Error::FromSqlConversionFailure(
                         0,
-                        rusqlite::types::Type::Text,
+                        crate::core::db::types::Type::Text,
                         Box::new(e),
                     )
                 })
@@ -659,9 +659,9 @@ pub fn list_pending_observations(
         let rows = stmt.query_map(params![APTITUDE_META_NS], |row| {
             let value: String = row.get(0)?;
             serde_json::from_str::<Observation>(&value).map_err(|e| {
-                rusqlite::Error::FromSqlConversionFailure(
+                crate::core::db::Error::FromSqlConversionFailure(
                     0,
-                    rusqlite::types::Type::Text,
+                    crate::core::db::types::Type::Text,
                     Box::new(e),
                 )
             })
@@ -699,7 +699,7 @@ pub fn mark_observation_processed(store: &Store, id: &str) -> Result<bool, error
                 |row| row.get(0),
             ) {
                 Ok(v) => v,
-                Err(rusqlite::Error::QueryReturnedNoRows) => return Ok(false),
+                Err(crate::core::db::Error::QueryReturnedNoRows) => return Ok(false),
                 Err(e) => return Err(e.into()),
             };
             let mut obs: Observation = serde_json::from_str(&value).map_err(|e| {

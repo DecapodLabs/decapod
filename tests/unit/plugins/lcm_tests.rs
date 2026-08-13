@@ -57,7 +57,7 @@ fn test_validate_catches_tamper() {
     ingest(&store, "good content", "message", "agent", None, None).unwrap();
 
     // Tamper with the canonical append-only event table.
-    let conn = rusqlite::Connection::open(lcm_db_path(&store.root)).unwrap();
+    let conn = decapod::core::db::Connection::open(lcm_db_path(&store.root)).unwrap();
     conn.execute(
         "UPDATE events
          SET payload = replace(payload, ?1, ?2)

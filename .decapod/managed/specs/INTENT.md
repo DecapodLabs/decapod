@@ -26,9 +26,10 @@
 - Reliability is designed, not hoped for. Trust in generated work follows from explicit intent, boundaries, durable state, validation, supported recovery, and evidence rather than generation capability alone.
 
 ## Current Storage Cutover Intent
-- The Decapod-owned portion of the dactyl migration is intentionally incremental: application policy must become backend-neutral before storage execution is replaced.
-- Decapod owns bounded retry/contention policy, stable identifier generation, migration planning, applied-ledger state, backup/restore, and legacy import. A future dactyl implementation owns only the physical storage guarantees behind those contracts.
-- The current PR proves these seams against the existing SQLite implementation without claiming that dactyl's pure-Rust backend contract is complete.
+- The canonical `.decapod/data/decapod.db` path is a Dactyl-backed physical store. Decapod has no direct SQL driver dependency, subprocess connector, backend handle, or second local authority. Every canonical read, write, schema inspection, transaction, migration step, and validation probe crosses the `core::dactyl_db` facade into Dactyl.
+- Decapod owns domain schemas, migration ordering and ledgers, stable identifier generation, bounded retry policy, backup/recovery policy, and the decision to admit legacy rows. Dactyl v0.8.2 owns host-runtime loading, physical execution, access mode, atomicity, normalized results, typed physical errors, and backend-neutral schema inspection. Propodus remains the hosted/authenticated route boundary.
+- This cutover pins Dactyl v0.8.2 (`68555e1`) and removes the old direct SQL-driver, bundled-SQLite, and legacy-import assumptions. New read-write paths receive only the empty filesystem target needed by Dactyl v0.8.2's pre-open header validation; the physical connection remains Dactyl-owned. Existing local database files are opened directly by Dactyl without conversion to a second format; Decapod migration code opens any legacy source through the same facade and owns row translation, ledgers, backup, and recovery policy.
+- The local proof boundary is explicit: host-runtime availability, ordinary close/reopen persistence, read-only enforcement, schema inspection, explicit IDs, atomic rollback, and broker/event routing are local checks. Propodus/Neon deployment, hosted tenancy, credential, and cross-organization concurrency proof remain separate downstream evidence and are not claimed by this local slice.
 - `core::backend::BackendSelection` maps the project `repo.backend` choice to a repository-scoped route. Local resolves to `.decapod/data/decapod.db`; cloud derives `owner/repository` from the Git `origin` remote and accepts an opaque remote URI only after the authenticated/session boundary supplies it. Decapod does not assemble or interpret a provider-specific cloud URI for ordinary state.
 - Local and cloud Decapod agent sessions are machine-local, backend-discriminated (`local_` or `cloud_`), and long-lived enough for an agent run: four hours by default, with a 30-minute minimum and six-hour maximum. Cloud access/refresh credentials remain opaque and are persisted separately from repository state.
 
@@ -36,7 +37,7 @@
 - Material TODO lifecycle mutations are compare-and-swap operations over `(task.id, task.status, task.revision)`. A stale agent receives an explicit conflict and must not create a success event.
 - Decapod increments task revisions for durable task mutations, attributes lifecycle events to the actor supplied by the operation or `DECAPOD_AGENT_ID`, and commits state-plus-event writes atomically through the broker transaction boundary.
 - The local coordination slice applies that same atomicity rule to agent category/expertise registration, heartbeats, stale-session cleanup, lease yield/handoff, and task-owner add/remove; read-only fleet, presence, ownership, and expertise projections remain non-mutating reads.
-- Event stream sequence allocation is idempotent by event identity and protected by a unique `(stream, seq)` invariant. These are Decapod semantics that a future Dactyl/Propodus backend must preserve; they are not Propodus governance rules.
+- Event stream sequence allocation is idempotent by event identity and protected by a unique `(stream, seq)` invariant. These are Decapod semantics that the Dactyl physical operation batch and Propodus hosted route must preserve; they are not Propodus governance rules.
 
 ## Release pin flywheel
 - Master entrypoint/Dockerfile/manifest pins record the Decapod version that generated that tip. Cargo-only releases do not rewrite pins. Release Artifact Sync is removed. The first user/agent PR evaluating a newer installed Decapod must refresh all four entrypoints, the managed Dockerfile pin, and the specs manifest.
@@ -147,7 +148,7 @@ flowchart LR
 - [ ] `cargo fmt --check` passes on the repo
 - [ ] Resolved context proves every applied repository override by directive ID, source, hashes, bytes, and precedence.
 - [ ] A healthy spec-drift gate emits no warning; every remaining warning names an observed condition.
-- [ ] Runtime governance consumers observe canonical SQLite events after legacy JSONL removal.
+- [ ] Runtime governance consumers observe canonical Dactyl events after legacy JSONL removal.
 
 ## Epistemic Custody Fields
 
@@ -213,8 +214,8 @@ flowchart LR
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8323113c658e1bc9c9215b9397ca3f106ea1f459b971ea0edc12cd460eb4da06`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (102 files), `tests/` (4 files)
+- Repository signal fingerprint: `e887d87ee09cd774e16c328247b89ddd33d46279bd24764f4592b34e75d2e466`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (104 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

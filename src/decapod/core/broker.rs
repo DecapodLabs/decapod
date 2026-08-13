@@ -4,13 +4,13 @@
 //! Stateful operations route through this layer to ensure
 //! serialization, auditability, and deterministic replay.
 
+use crate::core::db::Connection;
 use crate::core::error;
 use crate::core::events;
 use crate::core::pool;
 use crate::core::store::find_decapod_project_root;
 use crate::core::time;
 use crate::plugins::policy;
-use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::collections::HashMap;
@@ -94,7 +94,7 @@ impl DbBroker {
 
     /// Execute a write through the queue (synchronous for now) and return its
     /// affected-row count. IDs belong to the caller; this API never reads
-    /// ambient connection state such as `last_insert_rowid`.
+    /// connection-local generated-ID state.
     pub fn execute_write_sync(
         &self,
         db_path: &Path,
@@ -107,11 +107,11 @@ impl DbBroker {
 
         let affected_rows = pool::global_pool().with_write(db_path, |conn| {
             let mut stmt = conn.prepare(&sql)?;
-            let param_vec: Vec<Box<dyn rusqlite::ToSql>> = params
+            let param_vec: Vec<Box<dyn crate::core::db::ToSql>> = params
                 .iter()
-                .map(|v| Box::new(*v) as Box<dyn rusqlite::ToSql>)
+                .map(|v| Box::new(*v) as Box<dyn crate::core::db::ToSql>)
                 .collect();
-            let params_refs: Vec<&dyn rusqlite::ToSql> =
+            let params_refs: Vec<&dyn crate::core::db::ToSql> =
                 param_vec.iter().map(|p| p.as_ref()).collect();
             Ok(stmt.execute(params_refs.as_slice())? as u64)
         })?;

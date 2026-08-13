@@ -1,10 +1,10 @@
 use crate::core::broker::DbBroker;
+use crate::core::db::{Connection, OptionalExtension, params};
 use crate::core::error;
 use crate::core::schemas;
 use crate::core::store::Store;
 use crate::core::todo;
 use clap::{Parser, Subcommand, ValueEnum};
-use rusqlite::{Connection, OptionalExtension, params};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use sha2::{Digest, Sha256};
@@ -705,7 +705,7 @@ pub fn edit_node(
         // Build dynamic update
         let mut sets = vec!["updated_at = ?1".to_string()];
         let mut param_idx = 2u32;
-        let mut param_values: Vec<Box<dyn rusqlite::types::ToSql>> = vec![Box::new(now.clone())];
+        let mut param_values: Vec<Box<dyn crate::core::db::types::ToSql>> = vec![Box::new(now.clone())];
 
         if let Some(t) = title {
             sets.push(format!("title = ?{param_idx}"));
@@ -738,7 +738,7 @@ pub fn edit_node(
         let sql = format!("UPDATE nodes SET {} WHERE id = ?{}", sets.join(", "), param_values.len() + 1);
         param_values.push(Box::new(id.to_string()));
 
-        let params_refs: Vec<&dyn rusqlite::types::ToSql> = param_values.iter().map(|b| b.as_ref()).collect();
+        let params_refs: Vec<&dyn crate::core::db::types::ToSql> = param_values.iter().map(|b| b.as_ref()).collect();
         conn.execute(&sql, params_refs.as_slice())?;
 
         // Record event in DB
@@ -2014,9 +2014,6 @@ pub fn validate_federation(
                     return Ok(results);
                 }
             };
-            tmp_conn
-                .execute("PRAGMA temp_store=MEMORY;", [])
-                .map_err(error::DecapodError::RusqliteError)?;
             if let Err(e) = tmp_conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_META) {
                 results.push((
                     "federation.rebuild_determinism".to_string(),
@@ -2379,7 +2376,7 @@ pub fn run_federation_cli(store: &Store, cli: FederationCli) -> Result<(), error
 
             let nodes = broker.with_conn(&db_path, "decapod", None, "federation.list", |conn| {
                 let mut conditions = vec!["1=1".to_string()];
-                let mut param_values: Vec<Box<dyn rusqlite::types::ToSql>> = vec![];
+                let mut param_values: Vec<Box<dyn crate::core::db::types::ToSql>> = vec![];
                 let mut idx = 1u32;
 
                 if let Some(ref nt) = node_type {
@@ -2412,7 +2409,7 @@ pub fn run_federation_cli(store: &Store, cli: FederationCli) -> Result<(), error
                 );
 
                 let mut stmt = conn.prepare(&sql)?;
-                let params_refs: Vec<&dyn rusqlite::types::ToSql> =
+                let params_refs: Vec<&dyn crate::core::db::types::ToSql> =
                     param_values.iter().map(|b| b.as_ref()).collect();
 
                 let rows = stmt.query_map(params_refs.as_slice(), |row| {
@@ -2470,7 +2467,7 @@ pub fn run_federation_cli(store: &Store, cli: FederationCli) -> Result<(), error
             let nodes =
                 broker.with_conn(&db_path, "decapod", None, "federation.search", |conn| {
                     let q = format!("%{query}%");
-                    let (sql, param_values): (String, Vec<Box<dyn rusqlite::types::ToSql>>) =
+                    let (sql, param_values): (String, Vec<Box<dyn crate::core::db::types::ToSql>>) =
                         if let Some(ref sc) = scope {
                             (
                                 "SELECT id, node_type, status, priority, confidence, title, body, scope, tags,
@@ -2490,7 +2487,7 @@ pub fn run_federation_cli(store: &Store, cli: FederationCli) -> Result<(), error
                         };
 
                     let mut stmt = conn.prepare(&sql)?;
-                    let params_refs: Vec<&dyn rusqlite::types::ToSql> =
+                    let params_refs: Vec<&dyn crate::core::db::types::ToSql> =
                         param_values.iter().map(|b| b.as_ref()).collect();
 
                     let rows = stmt

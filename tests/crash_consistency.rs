@@ -9,7 +9,7 @@ fn test_demonstrate_crash_divergence_risk() {
 
     // Initialize DB
     {
-        let conn = rusqlite::Connection::open(&db_path).unwrap();
+        let conn = decapod::core::db::Connection::open(&db_path).unwrap();
         conn.execute("CREATE TABLE kv (key TEXT PRIMARY KEY, value TEXT)", [])
             .unwrap();
     }
@@ -31,7 +31,7 @@ fn test_demonstrate_crash_divergence_risk() {
 
     // Verify DB has the data
     {
-        let conn = rusqlite::Connection::open(&db_path).unwrap();
+        let conn = decapod::core::db::Connection::open(&db_path).unwrap();
         let val: String = conn
             .query_row("SELECT value FROM kv WHERE key = 'k1'", [], |r| r.get(0))
             .unwrap();

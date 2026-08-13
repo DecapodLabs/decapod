@@ -161,12 +161,22 @@ fn fingerprint_for_payload(surface: &str, release: &str, payload: &str) -> Strin
     fingerprint(&fingerprint_input(surface, release, payload))
 }
 
-pub fn render_entrypoint(surface: &str) -> Option<String> {
+/// Render the canonical entrypoint for an explicit Decapod release.
+///
+/// Commit-history validation uses this to recognize a release-bound rewrite
+/// that was canonical when an earlier Decapod release was installed. The
+/// payload is still sourced from the current canonical template, so changing
+/// the body or inventing a matching fingerprint does not become valid.
+pub fn render_entrypoint_for_release(surface: &str, release: &str) -> Option<String> {
     let payload = canonical_template(surface)?;
-    let expected = expected_fingerprint(surface)?;
+    let expected = fingerprint_for_payload(surface, release, &payload);
     Some(format!(
-        "<!-- decapod-release: {RELEASE_VERSION} -->\n<!-- decapod-fingerprint: {expected} -->\n{payload}"
+        "<!-- decapod-release: {release} -->\n<!-- decapod-fingerprint: {expected} -->\n{payload}"
     ))
+}
+
+pub fn render_entrypoint(surface: &str) -> Option<String> {
+    render_entrypoint_for_release(surface, RELEASE_VERSION)
 }
 
 /// Refresh release-bound entrypoints when they do not match the evaluating binary.

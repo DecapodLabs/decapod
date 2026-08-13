@@ -1,30 +1,32 @@
 {
   "schema_version": "1.0.0",
-  "title": "Close publication deadlock from Decapod #1259",
-  "intent": "Fix the validation.json chicken-and-egg, local-clone publish remote, stale-base snapshot, and workspace-local todo done/artifact binding reported in DecapodLabs/decapod#1259. Document the intended first-PR publication sequence. Work in a git worktree.",
+  "title": "PR #1256 complete Decapod slice for storage and shared-state issues",
+  "intent": "Complete the Decapod-owned portion of PR #1256 for issues #1028, #1110, #1111, #1112, #1120, #1216, #1217, #1220, #1221, #1222, #1223, #1224, #1247, and #1254. Route the canonical repository store through the thin Dactyl operation boundary, preserve Decapod schema/migration/domain/concurrency semantics, add offline compatibility and failure proofs, and keep protected live Propodus/Vercel evidence explicit as an external completion gate.",
   "state": "APPROVED",
   "todo_ids": [
-    "bugs_01kzvshraxt1mtj2"
+    "code_01kzvey011rqf9py",
+    "bugs_01kzt0bq5f269jq6"
   ],
   "proof_hooks": [
+    "cargo fmt --all -- --check",
     "cargo test --lib",
+    "cargo clippy --all-targets --all-features -- -D warnings",
     "decapod validate"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [
-    "Do not force-push or work on protected master."
+    "Do not claim hosted Vercel/Neon, Propodus tenancy, or cross-repository transaction proof from local or mock tests",
+    "Do not move schema, migration ordering, retry policy, or Decapod governance semantics into Dactyl or Propodus"
   ],
   "unresolved_contradictions": [],
-  "deferred_questions": [
-    "Host-vs-container validate stickiness is documented if not fully removed in this slice."
-  ],
+  "deferred_questions": [],
   "constraints": {
     "forbidden_paths": [
-      ".decapod/data"
+      "External credentials, production data, unrelated repository migrations, and direct mutation of .decapod state."
     ],
-    "file_touch_budget": null
+    "file_touch_budget": 120
   },
   "phases": [],
-  "updated_at": "1786565619Z"
+  "updated_at": "1786605419Z"
 }

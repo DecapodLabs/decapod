@@ -1,4 +1,4 @@
-use super::{BackendRoute, BackendSelection, LOCAL_DATASTORE_RELATIVE_PATH};
+use super::{BackendRoute, BackendSelection, LOCAL_DATASTORE_RELATIVE_PATH, StorageContext};
 use crate::cli::BackendType;
 use tempfile::TempDir;
 
@@ -100,6 +100,100 @@ fn local_route_rejects_a_remote_uri() {
     assert!(matches!(
         selection.route(Some("https://datastore.example.test/route")),
         Err(crate::core::error::DecapodError::Config(_))
+    ));
+}
+
+#[test]
+fn local_context_has_no_cloud_scope_or_credential() {
+    let project = TempDir::new().expect("project directory");
+    let selection =
+        BackendSelection::resolve(project.path(), BackendType::Local).expect("local selection");
+    let context = selection
+        .storage_context(None, None)
+        .expect("local context");
+
+    assert_eq!(context.version(), StorageContext::CURRENT_VERSION);
+    assert!(context.is_local());
+    assert!(!context.is_remote());
+    assert_eq!(context.bearer(), None);
+    let encoded = serde_json::to_string(&context).expect("context JSON");
+    assert!(!encoded.contains("organization"));
+    assert!(!encoded.contains("repository"));
+    assert!(!encoded.contains("bearer"));
+}
+
+#[test]
+fn remote_context_requires_opaque_auth_and_excludes_it_from_serialization() {
+    let project = TempDir::new().expect("project directory");
+    std::process::Command::new("git")
+        .args(["init", "-q"])
+        .current_dir(project.path())
+        .status()
+        .expect("git init");
+    std::process::Command::new("git")
+        .args([
+            "remote",
+            "add",
+            "origin",
+            "git@github.com:DecapodLabs/decapod.git",
+        ])
+        .current_dir(project.path())
+        .status()
+        .expect("git remote");
+    let selection =
+        BackendSelection::resolve(project.path(), BackendType::Cloud).expect("cloud selection");
+
+    assert!(matches!(
+        selection.storage_context(Some("https://datastore.example.test/route"), None),
+        Err(crate::core::error::DecapodError::CloudAuth(_))
+    ));
+    let context = selection
+        .storage_context(
+            Some("https://datastore.example.test/route"),
+            Some("opaque-session-token"),
+        )
+        .expect("remote context");
+    assert!(context.is_remote());
+    assert_eq!(context.bearer(), Some("opaque-session-token"));
+    assert_eq!(
+        context
+            .route()
+            .repository_identity()
+            .expect("repository scope")
+            .canonical_name,
+        "DecapodLabs/decapod"
+    );
+    let encoded = serde_json::to_string(&context).expect("context JSON");
+    assert!(!encoded.contains("opaque-session-token"));
+}
+
+#[test]
+fn local_context_rejects_cloud_credentials() {
+    let project = TempDir::new().expect("project directory");
+    let selection =
+        BackendSelection::resolve(project.path(), BackendType::Local).expect("local selection");
+    assert!(matches!(
+        selection.storage_context(None, Some("unexpected-token")),
+        Err(crate::core::error::DecapodError::Config(_))
+    ));
+}
+
+#[test]
+fn future_context_versions_fail_closed_before_driver_use() {
+    let project = TempDir::new().expect("project directory");
+    let selection =
+        BackendSelection::resolve(project.path(), BackendType::Local).expect("local selection");
+    let context = selection
+        .storage_context(None, None)
+        .expect("local context");
+    let mut encoded = serde_json::to_value(&context).expect("context JSON");
+    encoded["version"] = serde_json::json!(2);
+    let future: StorageContext = serde_json::from_value(encoded).expect("future context");
+
+    assert!(matches!(
+        future.validate(),
+        Err(crate::core::error::DecapodError::Config(message))
+            if message.contains("unsupported storage context version")
     ));
 }
 
