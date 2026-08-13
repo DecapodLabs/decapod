@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "title": "Dactyl 0.9 cloud integration and release workflow hardening",
-  "intent": "Upgrade Decapod's backend=cloud todo bridge to Dactyl 0.9.0, preserve the single route-selection boundary, make cloud todo state/event transitions atomic, and repair release-PR and post-release master validation failures. Prove all locally available behavior and publish one reviewable PR. Hosted Neon/Vercel deployment, tenant isolation, and service-side event parity are explicitly outside this PR; do not claim them as stable.",
+  "intent": "Upgrade Decapod's backend=cloud todo bridge to Dactyl 0.9.0, preserve today's backend-neutral operation semantics, compose Dactyl's ambient DATASTORE/ DATASTORE_ROUTE/ DATASTORE_TOKEN values from the binary-owned Propodus Vercel/Neon origin, session bearer, and opaque target org/repo context, make cloud todo state/event transitions atomic, and repair release-PR and post-release master validation failures. Prove all locally available behavior and publish one reviewable PR. Hosted Neon/Vercel deployment, tenant isolation, and service-side event parity are explicitly outside this PR; do not claim them as stable.",
   "state": "APPROVED",
   "todo_ids": [
     "bugs_01kzyg2vd9svbxhs"
@@ -24,5 +24,5 @@
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1786658608Z"
+  "updated_at": "1786659310Z"
 }

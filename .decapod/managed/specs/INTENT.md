@@ -32,7 +32,7 @@
 - The local proof boundary is explicit: host-runtime availability, ordinary close/reopen persistence, read-only enforcement, schema inspection, explicit IDs, atomic rollback, and broker/event routing are local checks. Propodus/Neon deployment, hosted tenancy, credential, and cross-organization concurrency proof remain separate downstream evidence and are not claimed by this local slice.
 - `core::backend::BackendSelection` maps the project `repo.backend` choice to a repository-scoped route. Local resolves to `.decapod/data/decapod.db`; cloud derives `owner/repository` from the Git `origin` remote and accepts an opaque remote URI only after the authenticated/session boundary supplies it. Decapod does not assemble or interpret a provider-specific cloud URI for ordinary state.
 - Local and cloud Decapod agent sessions are machine-local, backend-discriminated (`local_` or `cloud_`), and long-lived enough for an agent run: four hours by default, with a 30-minute minimum and six-hour maximum. Cloud access/refresh credentials remain opaque and are persisted separately from repository state.
-- The explicit cloud todo path authenticates through Propodus, then passes a versioned opaque `StorageContext` to Dactyl. Dactyl owns `/query` and `/batch` transport and chooses the physical backend; Decapod does not add a backend, tenant, provider, or repository query parameter to individual operations.
+- The explicit cloud todo path authenticates through Propodus, then supplies Dactyl's ambient `DATASTORE=neon`, hardcoded Propodus Vercel/Neon `DATASTORE_ROUTE`, and session `DATASTORE_TOKEN` while passing a versioned opaque `StorageContext` containing the target org/repo scope. Dactyl owns `/query` and `/batch` transport and chooses the physical backend; Decapod does not add a backend, tenant, provider, or repository query parameter to individual operations.
 - Cloud todo add, claim, release, and complete are composed from Dactyl 0.9.0 atomic write-plus-event-plus-observation batches and fail closed on zero-row state conflicts. The local fake-Dactyl proof covers rollback when the transition predicate loses; hosted event-stream atomicity, tenancy, schema parity, and live Neon/Vercel behavior remain downstream proof obligations until those services are available.
 
 ## Shared-State Durability Intent
@@ -217,7 +217,7 @@ flowchart LR
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3b27912d481c35bb6a24e2ebbf577dd10ce54958b2997f655eb9e6df51927ab9`
+- Repository signal fingerprint: `17f0db268f4d14e02b0485d5972be8d01b75ca063c111ab5dcfd06283c1c5b43`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (105 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

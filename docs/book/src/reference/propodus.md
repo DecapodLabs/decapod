@@ -8,10 +8,14 @@ local SQLite.
 
 ## Dactyl storage contract
 
-The Decapod client uses Dactyl `dactyl-db` 0.9.0. Dactyl selects the physical
-backend from the route bound during `backend=cloud`; individual SQL operations
-do not receive a backend selector, provider name, tenant argument, or other
-out-of-band query input.
+The Decapod client uses Dactyl `dactyl-db` 0.9.0. Decapod supplies Dactyl's
+ambient route values at connection construction: `DATASTORE=sqlite` or
+`DATASTORE=neon`, `DATASTORE_ROUTE` for the local file or the hardcoded
+Propodus Vercel/Neon origin (`https://project-oqn7i.vercel.app`), and
+`DATASTORE_TOKEN` for the machine session bearer. Dactyl resolves those values
+and runs the same operation contract for either backend; individual SQL
+operations do not receive a backend selector, provider name, tenant argument,
+or other out-of-band query input.
 
 | Operation | Dactyl request | Scope/authentication |
 |---|---|---|
@@ -88,7 +92,10 @@ session bearer, but the bearer is memory-only and is omitted from serialized
 context data.
 
 The Dactyl v0.9.0 bridge forwards the route, versioned context envelope, and
-opaque bearer without interpreting membership or authorization. Propodus remains
+opaque bearer without interpreting membership or authorization. Decapod keeps
+the bearer in Dactyl's ambient `DATASTORE_TOKEN` only while Dactyl captures the
+connection route; the token is restored/removed from the process afterward.
+The versioned context carries the target org/repo scope unchanged. Propodus remains
 responsible for resolving the authenticated principal, organization membership,
 and repository access. The Decapod bridge opens the canonical local
 `decapod.db` directly through Dactyl's local adapter and opens the cloud route
