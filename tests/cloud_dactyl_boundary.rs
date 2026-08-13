@@ -58,6 +58,10 @@ async fn cloud_dactyl_uses_query_with_opaque_context_not_backend_query_inputs() 
         );
         assert_eq!(body["context"]["version"], 1);
         assert!(body["context"].is_object());
+        assert_eq!(
+            body["context"]["payload"]["route"]["Cloud"]["repository"]["canonical_name"],
+            "DecapodLabs/decapod"
+        );
         assert!(body.get("backend").is_none());
         assert!(body["sql"].as_str().unwrap().contains("SELECT"));
 

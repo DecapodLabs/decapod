@@ -9,15 +9,22 @@ use crate::core::error::{CloudAuthDiagnostic, CloudAuthStatus, DecapodError};
 use crate::core::schemas;
 use dactyl_db::{AccessMode, AtomicResult, Connection, OpenOptions, Operation, Parameter, Rows};
 use serde::{Deserialize, Serialize};
+use std::ffi::OsString;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::{Mutex, OnceLock};
 use std::time::Duration;
 
 pub use dactyl_db::{OperationResult, WriteResult};
 
 const DEFAULT_LOCK_TIMEOUT: Duration = Duration::from_millis(250);
+const DATASTORE_ENV: &str = "DATASTORE";
+const DATASTORE_ROUTE_ENV: &str = "DATASTORE_ROUTE";
+const DATASTORE_TOKEN_ENV: &str = "DATASTORE_TOKEN";
 pub const SQLITE_LIBRARY_ENV: &str = "DACTYL_SQLITE_LIBRARY";
 const HOST_RUNTIME_CONFIG_FILE: &str = "runtime.toml";
+
+static AMBIENT_ROUTE_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 struct HostRuntimeConfig {
@@ -299,7 +306,9 @@ impl DactylBridge {
         bearer: Option<&str>,
     ) -> Result<Self, DecapodError> {
         match route {
-            BackendRoute::Local { path } => Self::open_local(path, access_mode),
+            BackendRoute::Local { path } => {
+                Self::open_from_ambient("sqlite", &path.to_string_lossy(), None, access_mode, None)
+            }
             BackendRoute::Cloud { uri, .. } => {
                 let bearer = bearer
                     .map(str::trim)
@@ -311,11 +320,7 @@ impl DactylBridge {
                             "acquire or refresh the cloud session, then retry the command",
                         ))
                     })?;
-                Self::open_route(
-                    dactyl_db::DatastoreRoute::neon(uri.clone(), Some(bearer.to_string())),
-                    access_mode,
-                    None,
-                )
+                Self::open_from_ambient("neon", uri, Some(bearer), access_mode, None)
             }
         }
     }
@@ -341,11 +346,22 @@ impl DactylBridge {
             BackendRoute::Local { .. } => {
                 Self::from_backend_route(context.route(), access_mode, context.bearer())
             }
-            BackendRoute::Cloud { uri, .. } => Self::open_route(
-                dactyl_db::DatastoreRoute::neon(uri.clone(), context.bearer().map(str::to_owned)),
-                access_mode,
-                Some(dactyl_context),
-            ),
+            BackendRoute::Cloud { uri, .. } => {
+                let bearer = context.bearer().ok_or_else(|| {
+                    DecapodError::CloudAuth(CloudAuthDiagnostic::new(
+                        CloudAuthStatus::Missing,
+                        "cloud storage requires a machine-local session credential",
+                        "acquire or refresh the cloud session, then retry the command",
+                    ))
+                })?;
+                Self::open_from_ambient(
+                    "neon",
+                    uri,
+                    Some(bearer),
+                    access_mode,
+                    Some(dactyl_context),
+                )
+            }
         }
     }
 
@@ -390,6 +406,70 @@ impl DactylBridge {
             context,
         )?;
         Ok(Self { connection })
+    }
+
+    /// Let Dactyl resolve its own route from the ambient values supplied by
+    /// Decapod. The values are scoped to connection construction; Dactyl
+    /// captures the route and token in its connection, while Decapod never
+    /// leaks another project's endpoint or credential into the process.
+    fn open_from_ambient(
+        datastore: &str,
+        route: &str,
+        token: Option<&str>,
+        access_mode: AccessMode,
+        context: Option<dactyl_db::StorageContext>,
+    ) -> Result<Self, DecapodError> {
+        let lock = AMBIENT_ROUTE_LOCK.get_or_init(|| Mutex::new(()));
+        let _lock = lock.lock().map_err(|_| {
+            DecapodError::Config("Dactyl ambient route lock was poisoned".to_string())
+        })?;
+        let _environment = AmbientDactylEnvironment::install(datastore, route, token);
+        let resolved = dactyl_db::DatastoreRoute::from_env()?;
+        Self::open_route(resolved, access_mode, context)
+    }
+}
+
+struct AmbientDactylEnvironment {
+    datastore: Option<OsString>,
+    route: Option<OsString>,
+    token: Option<OsString>,
+}
+
+impl AmbientDactylEnvironment {
+    fn install(datastore: &str, route: &str, token: Option<&str>) -> Self {
+        let previous = Self {
+            datastore: std::env::var_os(DATASTORE_ENV),
+            route: std::env::var_os(DATASTORE_ROUTE_ENV),
+            token: std::env::var_os(DATASTORE_TOKEN_ENV),
+        };
+        unsafe {
+            std::env::set_var(DATASTORE_ENV, datastore);
+            std::env::set_var(DATASTORE_ROUTE_ENV, route);
+            match token {
+                Some(token) => std::env::set_var(DATASTORE_TOKEN_ENV, token),
+                None => std::env::remove_var(DATASTORE_TOKEN_ENV),
+            }
+        }
+        previous
+    }
+}
+
+impl Drop for AmbientDactylEnvironment {
+    fn drop(&mut self) {
+        unsafe {
+            restore_env(DATASTORE_ENV, self.datastore.take());
+            restore_env(DATASTORE_ROUTE_ENV, self.route.take());
+            restore_env(DATASTORE_TOKEN_ENV, self.token.take());
+        }
+    }
+}
+
+fn restore_env(name: &str, value: Option<OsString>) {
+    unsafe {
+        match value {
+            Some(value) => std::env::set_var(name, value),
+            None => std::env::remove_var(name),
+        }
     }
 }
 
@@ -635,6 +715,15 @@ mod tests {
         assert_eq!(context.version(), StorageContext::CURRENT_VERSION);
         assert_eq!(context.bearer(), Some("opaque-session-token"));
         assert!(bridge.access_mode() == AccessMode::ReadOnly);
+        assert_eq!(bridge.connection.datastore(), dactyl_db::Datastore::Neon);
+        assert_eq!(
+            bridge.connection.route().route(),
+            "https://example.invalid/api/v1/store"
+        );
+        assert_eq!(
+            bridge.connection.route().token(),
+            Some("opaque-session-token")
+        );
         let forwarded = bridge
             .connection
             .context()
