@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.99.1](https://github.com/DecapodLabs/decapod/compare/v0.99.0...v0.99.1) - 2026-08-13
+
+### Added
+
+- preflight native sqlite for local dactyl
+
+### Other
+
+- record container validation proof
+- record governed validation receipt
+
 ## [0.99.0](https://github.com/DecapodLabs/decapod/compare/v0.98.3...v0.99.0) - 2026-08-13
 
 ### Added
