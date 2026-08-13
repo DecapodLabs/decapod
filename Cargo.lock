@@ -408,9 +408,9 @@ dependencies = [
 
 [[package]]
 name = "dactyl-db"
-version = "0.8.2"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5dd0e2ac8654c6168713ce63026afb9bc28e50260a8b9c043ef003dad2466923"
+checksum = "055131bb2b3d8ef00f4776240c3e7e20c6dd3345d13a85cef10efc4804b5843c"
 dependencies = [
  "libloading",
  "reqwest",
