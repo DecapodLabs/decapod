@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.99.2](https://github.com/DecapodLabs/decapod/compare/v0.99.1...v0.99.2) - 2026-08-13
+
+### Other
+
+- Multi-arch Docker Image
+- Update claims.json for Issue 1269
+- Update governance artifacts
+- Publish multi-arch Docker image for Apple Silicon
+
 ## [0.99.1](https://github.com/DecapodLabs/decapod/compare/v0.99.0...v0.99.1) - 2026-08-13
 
 ### Added
