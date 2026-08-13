@@ -1,32 +1,31 @@
 {
   "schema_version": "1.0.0",
-  "title": "PR #1256 complete Decapod slice for storage and shared-state issues",
-  "intent": "Complete the Decapod-owned portion of PR #1256 for issues #1028, #1110, #1111, #1112, #1120, #1216, #1217, #1220, #1221, #1222, #1223, #1224, #1247, and #1254. Route the canonical repository store through the thin Dactyl operation boundary, preserve Decapod schema/migration/domain/concurrency semantics, add offline compatibility and failure proofs, and keep protected live Propodus/Vercel evidence explicit as an external completion gate.",
+  "title": "Publish Decapod v0.99.0 with registry-backed Dactyl v0.8.2",
+  "intent": "Fix PR #1265 so Decapod v0.99.0 publishes dactyl-db v0.8.2 from crates.io with sqlite and neon features, Nix vendoring succeeds on Ubuntu and macOS, and all governance and living-spec proof artifacts are current.",
   "state": "APPROVED",
   "todo_ids": [
-    "code_01kzvey011rqf9py",
-    "bugs_01kzt0bq5f269jq6"
+    "bugs_01kzx6bbqdz5w768"
   ],
   "proof_hooks": [
     "cargo fmt --all -- --check",
-    "cargo test --lib",
-    "cargo clippy --all-targets --all-features -- -D warnings",
+    "cargo check --all-targets",
+    "cargo package --locked --allow-dirty",
     "decapod validate"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [
-    "Do not claim hosted Vercel/Neon, Propodus tenancy, or cross-repository transaction proof from local or mock tests",
-    "Do not move schema, migration ordering, retry policy, or Decapod governance semantics into Dactyl or Propodus"
+    "Do not change the Decapod package version from 0.99.0.",
+    "Do not claim Nix hosted proof until GitHub CI runs."
   ],
   "unresolved_contradictions": [],
   "deferred_questions": [],
   "constraints": {
     "forbidden_paths": [
-      "External credentials, production data, unrelated repository migrations, and direct mutation of .decapod state."
+      "Do not mutate .decapod state directly; use Decapod CLI."
     ],
-    "file_touch_budget": 120
+    "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1786605419Z"
+  "updated_at": "1786613220Z"
 }
