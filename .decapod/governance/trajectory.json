@@ -1,21 +1,26 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "validation_01KZX4RW1NGS0JVA62YJ9CA4HS",
-  "intent_id": "intent:validation_01KZX4RW1NGS0JVA62YJ9CA4HS",
-  "task_id": "code_01kzvey011rqf9py",
-  "original_intent": "Produce proof artifacts for a repository validation completion.",
-  "derived_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
-  "destination": "validation completion",
+  "run_id": "release_0990_dactyl_1265_01",
+  "intent_id": "intent:release_0990_dactyl_1265_01",
+  "task_id": "bugs_01kzx6bbqdz5w768",
+  "original_intent": "Fix the merged Decapod v0.99.0 release follow-up so dactyl-db v0.8.2 publishes from crates.io and Ubuntu/macOS Nix jobs can vendor it.",
+  "derived_intent": "Replace the Git-only dactyl-db v0.8.2 manifest source with the published crates.io dependency, preserve sqlite/neon features and version 0.99.0, refresh living specs, and produce current governance proof for PR #1265.",
   "current_phase": "validation",
   "next_transitions": [
     "publish"
   ],
   "active_boundaries": [
-    "Repository validation and tracked proof artifacts"
+    "Decapod Cargo release manifest, Cargo.lock, Nix vendoring input, living specs, and governance proof artifacts"
   ],
   "repo_scope": [
+    ".decapod/governance/claims.json",
+    ".decapod/governance/plan.json",
     ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json"
+    ".decapod/governance/validation.json",
+    ".decapod/managed/specs/.manifest.json",
+    ".decapod/managed/specs/ARCHITECTURE.md",
+    "Cargo.lock",
+    "Cargo.toml"
   ],
   "inspected_files": [],
   "modified_files": [
@@ -33,7 +38,7 @@
     }
   ],
   "evidence": [
-    "validation epoch ve_1bcb10727ba79613 completed with zero failures"
+    "validation epoch ve_3b537a65e43e9a38 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -44,22 +49,28 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:8653e6c938aa9d2cdd246fdcfac161928c37fb2ae0f31906c22cbbaaca806c32",
+  "artifact_hash": "sha256:c3168467148dee46d501426f7120b8ea1842f13d077a7b68f640b76ffd6def0f",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:validation_01KZX4RW1NGS0JVA62YJ9CA4HS": {
-        "id": "intent:validation_01KZX4RW1NGS0JVA62YJ9CA4HS",
-        "raw_intent": "Produce proof artifacts for a repository validation completion.",
-        "refined_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
+      "intent:release_0990_dactyl_1265_01": {
+        "id": "intent:release_0990_dactyl_1265_01",
+        "raw_intent": "Fix the merged Decapod v0.99.0 release follow-up so dactyl-db v0.8.2 publishes from crates.io and Ubuntu/macOS Nix jobs can vendor it.",
+        "refined_intent": "Replace the Git-only dactyl-db v0.8.2 manifest source with the published crates.io dependency, preserve sqlite/neon features and version 0.99.0, refresh living specs, and produce current governance proof for PR #1265.",
         "acceptance_criteria": [],
         "constraints": [
+          "Cargo.toml",
+          "Cargo.lock",
+          ".decapod/managed/specs/ARCHITECTURE.md",
+          ".decapod/managed/specs/.manifest.json",
+          ".decapod/governance/plan.json",
+          ".decapod/governance/claims.json",
           ".decapod/governance/trajectory.json",
           ".decapod/governance/validation.json"
         ],
         "assumptions": [],
         "boundaries": [
-          "Repository validation and tracked proof artifacts"
+          "Decapod Cargo release manifest, Cargo.lock, Nix vendoring input, living specs, and governance proof artifacts"
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -72,27 +83,27 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:validation_01KZX4RW1NGS0JVA62YJ9CA4HS",
+        "intent_id": "intent:release_0990_dactyl_1265_01",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:validation_01KZX4RW1NGS0JVA62YJ9CA4HS",
+        "intent_id": "intent:release_0990_dactyl_1265_01",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:validation_01KZX4RW1NGS0JVA62YJ9CA4HS",
+        "intent_id": "intent:release_0990_dactyl_1265_01",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KZX4RW1NGS0JVA62YJ9CA4HS"
+        "detail": "trajectory:release_0990_dactyl_1265_01"
       }
     ],
     "trajectories": {
-      "validation_01KZX4RW1NGS0JVA62YJ9CA4HS": {
-        "id": "validation_01KZX4RW1NGS0JVA62YJ9CA4HS",
-        "intent_id": "intent:validation_01KZX4RW1NGS0JVA62YJ9CA4HS",
+      "release_0990_dactyl_1265_01": {
+        "id": "release_0990_dactyl_1265_01",
+        "intent_id": "intent:release_0990_dactyl_1265_01",
         "evidence_only": true,
         "steps": [
           {
@@ -100,13 +111,19 @@
             "action": "validation",
             "command": "decapod validate",
             "scope": [
+              ".decapod/governance/claims.json",
+              ".decapod/governance/plan.json",
               ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json"
+              ".decapod/governance/validation.json",
+              ".decapod/managed/specs/.manifest.json",
+              ".decapod/managed/specs/ARCHITECTURE.md",
+              "Cargo.lock",
+              "Cargo.toml"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_1bcb10727ba79613 completed with zero failures"
+              "validation epoch ve_3b537a65e43e9a38 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
