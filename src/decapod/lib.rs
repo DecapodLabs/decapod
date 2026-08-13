@@ -2347,6 +2347,12 @@ pub fn run() -> Result<(), error::DecapodError> {
             // For other commands, ensure .decapod exists in the GOVERNANCE root
             let decapod_root_path = governance_root.join(".decapod");
             store_root = decapod_root_path.join("data");
+            let configured_backend = load_project_config_if_present(&workspace_root)?
+                .map(|config| config.repo.effective_backend())
+                .unwrap_or_default();
+            if !configured_backend.is_cloud() {
+                core::dactyl::ensure_local_sqlite_runtime()?;
+            }
             let cloud_todo_command = is_cloud_todo_command(&cli.command, &workspace_root)?;
             // Cloud todo operations use the Propodus machine session/JWT and
             // deliberately bypass the local SQLite-backed agent session. This

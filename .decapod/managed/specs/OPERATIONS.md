@@ -11,6 +11,10 @@
 ## Deployment Model
 Decapod is a daemonless CLI installed as a versioned Rust binary. Each invocation discovers the repository-local governance store and completes bounded work before exiting.
 
+### Native SQLite prerequisite for local Dactyl
+
+Stateful commands in a project configured with `repo.backend = "local"` require a host SQLite shared library for Dactyl's local adapter. The startup preflight first honors `DACTYL_SQLITE_LIBRARY`, then the machine-local `~/.config/decapod/runtime.toml` value. If neither is set, it probes the host and persists a discovered library path in that user-level file so later Decapod projects do not repeat the search. If no runtime is available, the command stops with `LOCAL_SQLITE_RUNTIME_REQUIRED` and gives platform installation commands plus a one-shell `export DACTYL_SQLITE_LIBRARY=...` fallback. Cloud-backed startup does not require or inspect SQLite.
+
 ## Nix packaging support matrix
 
 The repository flake (`flake.nix`) exposes `packages.default` / `packages.decapod` via `flake-utils.lib.eachDefaultSystem`. **Evaluating an output is not the same as supporting a platform.**
@@ -172,7 +176,7 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `11221e49b022a1186ebd1aa5c0fc44c5ecbb7a07f0897960c6c8b0370dd4d21c`
+- Repository signal fingerprint: `490e59efefe436275c821618c58f5d1b7117415e33649be9e7cb7f0e4c6cb7f7`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (104 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

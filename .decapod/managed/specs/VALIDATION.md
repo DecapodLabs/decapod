@@ -152,6 +152,7 @@ flowchart LR
 - A watcher record imported by existing-project init is observed by validation, health, heartbeat, and flight recorder after the source JSONL is removed.
 - Re-running event reconciliation imports zero additional rows; malformed or conflicting fresh records return visible errors, and a proven consolidation receipt prevents retired archives from being reinterpreted.
 - Local Dactyl v0.8.2 conformance covers explicit IDs, atomic rollback, read-only enforcement, ordinary file close/reopen persistence, and backend-neutral schema inspection when the host SQLite runtime is available. A missing host runtime is a typed `sqlite_runtime_unavailable` storage-I/O result and never activates a bundled or second driver; hosted Propodus/Neon and tenancy/concurrency proof remain separate checks.
+- Local startup proof also covers the agent-facing `LOCAL_SQLITE_RUNTIME_REQUIRED` remediation, supported library-name discovery, machine-local runtime configuration serialization, and the cloud-path exclusion from the native SQLite preflight.
 
 ## Promotion Gates
 
@@ -252,7 +253,7 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `11221e49b022a1186ebd1aa5c0fc44c5ecbb7a07f0897960c6c8b0370dd4d21c`
+- Repository signal fingerprint: `490e59efefe436275c821618c58f5d1b7117415e33649be9e7cb7f0e4c6cb7f7`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (104 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

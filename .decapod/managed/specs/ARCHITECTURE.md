@@ -38,6 +38,7 @@ This project's architecture consists of the following key layers/directories:
 - `core::backend::StorageContext` is the versioned Decapod-owned handoff between logical selection and physical execution. Local contexts contain only the canonical repository path; remote contexts contain the opaque route, logical repository scope, and an in-memory bearer that is excluded from serialization. Organization membership and repository authorization remain Propodus concerns.
 - Read-only domain operations skip schema initialization and migration writes; those changes remain owned by the write-side initialization path before a read connection is opened. This keeps Dactyl's read-only enforcement meaningful while allowing validation, RPC, and Markdown primitive reads to use the same facade.
 - Session custody is machine-local for both backend choices: the Decapod agent-session record is stored under the machine config directory, uses `local_`/`cloud_` token prefixes to detect backend changes, and defaults to a four-hour TTL bounded between 30 minutes and six hours. Cloud access and refresh tokens are stored separately under the machine data directory and refreshed before the remaining lifetime falls below 30 minutes.
+- Native local storage readiness is machine-local rather than repository-local. Before stateful commands use Dactyl with `backend=local`, Decapod honors `DACTYL_SQLITE_LIBRARY` or `~/.config/decapod/runtime.toml`, discovers a non-standard host SQLite library only when neither is configured, and persists a discovered path for reuse across projects on that machine. Cloud-backed startup skips this capability entirely.
 
 ## Local-Clone Publication and Store Binding (#1259)
 - A container local-clone under `.decapod/workspaces/*` has its own `.git`
@@ -220,7 +221,7 @@ sequenceDiagram
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `11221e49b022a1186ebd1aa5c0fc44c5ecbb7a07f0897960c6c8b0370dd4d21c`
+- Repository signal fingerprint: `490e59efefe436275c821618c58f5d1b7117415e33649be9e7cb7f0e4c6cb7f7`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (104 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

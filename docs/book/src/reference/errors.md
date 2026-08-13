@@ -69,6 +69,16 @@ enum representation to command-line users.
 - `ContextPackError`: inspect the context pack and its integrity metadata.
 - `SessionError`: run `decapod session acquire`, then retry the operation.
 
+### Local Dactyl SQLite prerequisite
+
+`LOCAL_SQLITE_RUNTIME_REQUIRED` is a targeted agent remediation, not a
+repository corruption report. It means the project selected `backend=local`
+and Dactyl could not load a host SQLite shared library. Install the operating
+system SQLite runtime or set `DACTYL_SQLITE_LIBRARY` once in the current shell
+to an absolute library path. Decapod persists a discovered path in the
+user-level `~/.config/decapod/runtime.toml`, so the setting is reused across
+projects on that machine; cloud-backed commands do not require this runtime.
+
 The wrapped SQLite, I/O, and environment errors remain available through the
 standard `std::error::Error::source` chain, so callers can log the underlying
 cause without parsing the display string.

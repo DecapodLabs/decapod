@@ -31,6 +31,7 @@ Generated interface specs should include:
 | `core::backend::StorageContext` | `BackendSelection`, opaque route, and optional session bearer | Dactyl bridge or future physical driver | Version 1 distinguishes local and remote targets; local has no cloud scope or credential, remote requires an authenticated bearer, credentials are never serialized, and unsupported future versions fail closed before I/O; Propodus owns effective membership/repository authorization |
 | `core::dactyl_db::Connection` | Decapod relational caller, SQL text, typed parameters | Dactyl v0.8.2 local connection | Provides the only application-facing connection facade; it seeds a new empty read-write filesystem target for Dactyl v0.8.2's pre-open validation, while Dactyl owns physical execution, access mode, normalized rows/results, typed errors, schema inspection, and host-runtime availability. No direct SQL-driver dependency or physical handle is exposed |
 | `core::dactyl::DactylBridge` | Backend route, access mode, and optional opaque bearer | Dactyl v0.8.2 operation/context contract | Provides explicit reads, writes, atomic batches, portable schema inspection, access-mode enforcement, and Decapod-normalized errors; local existing files open directly and cloud construction fails closed without a bearer |
+| Local SQLite runtime preflight | Project backend plus `DACTYL_SQLITE_LIBRARY` and `~/.config/decapod/runtime.toml` | Dactyl local adapter startup | Runs only for `backend=local`; an explicit shell/config value is reused without discovery, a discovered host library is persisted at user scope, and a missing runtime returns `LOCAL_SQLITE_RUNTIME_REQUIRED` with installation/export remediation. Cloud startup does not probe SQLite |
 
 Read callers must not invoke schema DDL or migration repair through a read-only connection. Decapod initialization owns that write-side preparation, and the facade exposes the connection access mode so compatibility helpers can avoid prohibited writes before issuing a read.
 | Decapod agent session | Backend selection and machine-local session directory | Canonical Dactyl store or authenticated cloud command path | Machine-local session records use a backend discriminator (`local_` or `cloud_`) and default to a four-hour lifetime, bounded to 30 minutes minimum and six hours maximum; cloud bearer credentials remain separate opaque machine-local material |
@@ -141,7 +142,7 @@ pub enum ApiError {
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `11221e49b022a1186ebd1aa5c0fc44c5ecbb7a07f0897960c6c8b0370dd4d21c`
+- Repository signal fingerprint: `490e59efefe436275c821618c58f5d1b7117415e33649be9e7cb7f0e4c6cb7f7`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (104 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
