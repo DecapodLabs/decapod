@@ -39,7 +39,10 @@ jobs:
           fi
           decapod validate --refresh-specs
       - name: Ensure no spec or entrypoint drift
-        if: github.event_name == 'pull_request'
+        # release-plz PRs intentionally contain only release metadata. Their
+        # repo fingerprint changes before the next governed code PR refreshes
+        # entrypoints/specs, so release PRs must not run spec inspection.
+        if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'release') && !startsWith(github.head_ref, 'release-plz-')
         # validate rewrites generated_at every run; that is not semantic drift.
         # Normalize it to HEAD before the exit-code check so only real content,
         # entrypoint, Dockerfile, or manifest hash drift fails CI.

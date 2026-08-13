@@ -67,8 +67,10 @@ fn post_merge_validate_skips_fingerprint_evaluation() {
         "fingerprint skip must be limited to push/post-merge events"
     );
     assert!(
-        workflow.contains("if: github.event_name == 'pull_request'"),
-        "entrypoint/spec drift gate must remain PR-only"
+        workflow.contains(
+            "if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'release') && !startsWith(github.head_ref, 'release-plz-')",
+        ),
+        "entrypoint/spec drift gate must skip release-plz and release-labelled PRs"
     );
 }
 

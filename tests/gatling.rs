@@ -200,7 +200,7 @@ fn t004_version_command_works() {
 
     let (success, output) = run(&dir, &["system", "version"]);
     assert!(success, "version command should succeed, got:\n{output}");
-    let expected = format!("v{}", env!("CARGO_PKG_VERSION"));
+    let expected = format!("Decapod version: {}", env!("CARGO_PKG_VERSION"));
     assert!(
         output.lines().any(|line| line.trim() == expected),
         "expected exact version line {expected:?} in output:\n{output}"
