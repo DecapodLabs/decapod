@@ -80,7 +80,7 @@ impl BackendSelection {
                             .to_string(),
                     )
                 })?)?;
-                Ok(BackendRoute::Cloud { repository, uri })
+                BackendRoute::cloud(repository, uri)
             }
         }
     }
@@ -114,6 +114,18 @@ pub enum BackendRoute {
 }
 
 impl BackendRoute {
+    /// Construct a validated opaque cloud route after repository identity has
+    /// already been resolved by the backend selector.
+    pub fn cloud(
+        repository: RepositoryIdentity,
+        uri: impl AsRef<str>,
+    ) -> Result<Self, DecapodError> {
+        Ok(Self::Cloud {
+            repository,
+            uri: validate_remote_uri(uri.as_ref())?,
+        })
+    }
+
     pub fn local_path(&self) -> Option<&Path> {
         match self {
             Self::Local { path } => Some(path),

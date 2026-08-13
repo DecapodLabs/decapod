@@ -2354,7 +2354,8 @@ pub fn run() -> Result<(), error::DecapodError> {
                 core::dactyl::ensure_local_sqlite_runtime()?;
             }
             let cloud_todo_command = is_cloud_todo_command(&cli.command, &workspace_root)?;
-            // Cloud todo operations use the Propodus machine session/JWT and
+            // Cloud todo operations use the Propodus machine session/JWT for
+            // authentication, then route physical storage through Dactyl and
             // deliberately bypass the local SQLite-backed agent session. This
             // keeps the cloud path free of local database locks while leaving
             // every local command on its existing governance/session path.

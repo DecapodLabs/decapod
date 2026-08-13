@@ -1,26 +1,33 @@
-# Propodus Todo Boundary
+# Cloud Todo Boundary
 
-Propodus is an optional remote service boundary for repo-scoped todos. It is
-not compiled into Decapod and it does not replace local SQLite by default.
-`repo.backend = "cloud"` selects the cloud backend: todo commands
-use Propodus directly and never silently fall back to local SQLite.
+Propodus is the hosted authentication and authorization boundary; Dactyl is
+the physical storage boundary. They are not interchangeable. `repo.backend =
+"cloud"` selects the cloud backend: Decapod authenticates through Propodus,
+opens Dactyl with a versioned storage context, and never silently falls back to
+local SQLite.
 
-## Contract v1
+## Dactyl storage contract
 
-The Decapod client uses the versioned contract `decapod.propodus.todo/v1`:
+The Decapod client uses Dactyl `dactyl-db` 0.8.2. Dactyl selects the physical
+backend from the route bound during `backend=cloud`; individual SQL operations
+do not receive a backend selector, provider name, tenant argument, or other
+out-of-band query input.
 
-| Operation | Route | Required inputs |
+| Operation | Dactyl request | Scope/authentication |
 |---|---|---|
-| Health | `GET /api/health` | none |
-| List | `GET /api/todos?repo_id=<repo>` | `repo_id` |
-| Create | `POST /api/todos` | `repo_id`, `title` |
-| Claim | `PATCH /api/todos?id=<todo>` | `status=in_progress`, `actor` |
-| Complete | `PATCH /api/todos?id=<todo>` | `status=completed`, `actor` |
+| Read/list | `POST /query` | SQL plus opaque versioned context |
+| Add/claim/complete | `POST /batch` | ordered Dactyl operations plus context |
 
-The checked-in compatibility fixture is
-`tests/fixtures/propodus/todo-contract-v1.json`. Its consumer proof is the
-local `propodus_contract` test, which uses an injectable fake transport and
-never contacts Vercel, Neon, or production data.
+The bearer is sent in the HTTP `Authorization` header by Dactyl. The context
+is forwarded as an opaque JSON object; Propodus resolves its authenticated
+principal and repository authorization. Add, claim, and complete use a
+Dactyl batch containing the state write and a task observation.
+
+The checked-in `tests/cloud_dactyl_boundary.rs` proof verifies `/query`, the
+bearer header, the versioned context, and the absence of a per-query backend
+field without contacting Vercel or Neon. The older Propodus fixture and
+`propodus_contract` test remain compatibility coverage for the legacy
+`/api/todos` client; they are not the active Decapod storage implementation.
 
 The deployed onboarding/session shape is recorded separately in
 `tests/fixtures/propodus/onboarding-contract-v1.json`: Decapod starts with the
@@ -35,7 +42,7 @@ that list, add, claim, and complete are routed through the backend-neutral
 error on the cloud backend.
 
 The production-dispatch proof is `tests/cloud_cli_boundary.rs`; it uses a
-mock Propodus store factory and exercises the same `run_todo_cli` composition
+mock Dactyl store factory and exercises the same `run_todo_cli` composition
 used by the binary. It proves config discovery, canonical-origin validation,
 credential preflight, list/add/get/show/claim/done routing, not-found behavior,
 and the absence of local SQLite initialization for cloud todo commands.
@@ -80,12 +87,13 @@ context data.
 The Dactyl v0.8.2 bridge forwards the route, versioned context envelope, and
 opaque bearer without interpreting membership or authorization. Propodus remains
 responsible for resolving the authenticated principal, organization membership,
-and repository access. The current Decapod bridge opens the canonical local
-`decapod.db` directly through Dactyl's local adapter; it does not create a
-snapshot or bundled compatibility database. Existing SQLite state is inspected
-and migrated by Decapod through the same Dactyl-backed facade. This keeps one
-canonical Dactyl authority and prevents cloud operations from silently falling
-back to local storage. See [Decapod
+and repository access. The Decapod bridge opens the canonical local
+`decapod.db` directly through Dactyl's local adapter and opens the cloud route
+through Dactyl's Neon adapter; it does not create a snapshot or bundled
+compatibility database. Existing SQLite state is inspected and migrated by
+Decapod through the same Dactyl-backed facade. This keeps one canonical Dactyl
+authority and prevents cloud operations from silently falling back to local
+storage. See [Decapod
 #1254](https://github.com/DecapodLabs/decapod/issues/1254), [Dactyl
 #64](https://github.com/DecapodLabs/dactyl/issues/64), and [Propodus
 #79](https://github.com/DecapodLabs/propodus/issues/79).
@@ -130,9 +138,9 @@ From a fresh checkout of the canonical repository:
    next invocation. A controlled `DECAPOD_ACCESS_TOKEN`
    remains available for protected proofs.
 4. Cloud todo commands use the same `TodoStore` command boundary as local
-   todo commands, but compose the Propodus adapter and JWT instead of local
-   SQLite. They do not acquire the local agent session or create/migrate the
-   local todo database. Missing credentials or a canonical
+   todo commands, but compose Dactyl storage with the Propodus-authenticated
+   context instead of local SQLite. They do not acquire the local agent
+   session or create/migrate the local todo database. Missing credentials or a canonical
    GitHub remote fail closed and never fall back to SQLite.
 
 ## Repository identity
@@ -142,10 +150,11 @@ and rejects non-GitHub or ambiguous remotes. Forks remain distinct identities
 and are passed to the provider for authorization; Decapod does not maintain a
 repo allowlist or accept a project-configured repository identifier.
 
-## v1 governance limits
+## Current governance limits
 
-Propodus v1 supports repo-scoped list/create/claim/complete operations. `get`
-and `show` intentionally use list-and-filter because the v1 TodoStore contract
+The cloud Dactyl todo slice supports repo-scoped list/add/claim/complete
+operations. `get` and `show` intentionally use list-and-filter because the
+TodoStore contract
 has no repo-scoped get route; a missing item returns `status = "not_found"`.
 `todo done --validated` is intentionally rejected because v1 has no proof
 capture or verification-artifact contract. This is an explicit unsupported
@@ -155,11 +164,12 @@ see [Decapod issue #1038](https://github.com/DecapodLabs/decapod/issues/1038).
 
 ## Delivery boundary
 
-Wave 1 provided the Decapod-side contract, credential lookup, typed client,
-storage adapter, and deterministic local proof. Wave 2 activates the explicit
-cloud todo command path, remote-derived repository identity, deployed
-onboarding/session exchange, machine-local refresh, adapter-level command
-proof, and protected command-level live proof without moving hosted
-authentication, repository authorization, persistence, or deployment into
-Decapod. Local mode continues to use the same backend-neutral todo command
-boundary, with physical canonical storage owned by Dactyl.
+This Decapod slice activates the explicit cloud todo command path,
+remote-derived repository identity, Propodus onboarding/session exchange,
+machine-local refresh, Dactyl adapter-level command proof, and a wire-level
+`/query` proof without moving hosted authentication, repository authorization,
+persistence, or deployment into Decapod. Local mode continues to use the same
+backend-neutral todo command boundary, with physical canonical storage owned
+by Dactyl. Live Neon/Vercel availability, Propodus/Dactyl service deployment,
+cross-organization isolation, schema/migration parity, and cloud event
+atomicity remain deployment-dependent proof gates.

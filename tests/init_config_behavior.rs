@@ -110,15 +110,17 @@ fn init_with_backend_cloud_saves_to_config() {
     assert_eq!(registration["provider"], "vercel");
     assert_eq!(
         registration["route"],
-        "GET /api/health; GET /api/todos?repo_id=<repo>; POST /api/todos; PATCH /api/todos?id=<todo>",
-        "registration should target the versioned Propodus todo contract"
+        "POST /query for task reads/writes; POST /batch for atomic task operations",
+        "registration should target the Dactyl storage contract"
     );
     assert!(
         registration["writes"]
             .as_array()
             .expect("writes array")
             .iter()
-            .any(|write| write["table"] == "todos" && write["operation"] == "list/create"),
+            .any(|write| {
+                write["table"] == "tasks" && write["operation"] == "Dactyl query list/add"
+            }),
         "registration should model repo-scoped todo access"
     );
 }

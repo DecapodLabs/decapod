@@ -52,9 +52,11 @@ pub struct Decision {
 
 /// Backend-neutral repo-scoped todo boundary.
 ///
-/// Local SQLite is the default implementation. Optional remote adapters, such
-/// as `core::propodus::PropodusTodoStore`, implement this seam without leaking
-/// HTTP or authentication concerns into the local storage kernel.
+/// Local SQLite is the default implementation. Remote adapters implement this
+/// seam without leaking HTTP or authentication concerns into the local storage
+/// kernel. In cloud mode Decapod authenticates at the Propodus boundary and
+/// sends these operations through Dactyl; it does not call a Propodus todo
+/// resource route directly.
 #[async_trait]
 pub trait TodoStore: Send + Sync {
     async fn list_tasks(&self) -> Result<Vec<Task>>;

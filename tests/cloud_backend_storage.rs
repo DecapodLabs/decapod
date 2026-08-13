@@ -103,14 +103,15 @@ fn test_cloud_init_records_opt_in_without_auth_or_repo_credentials() {
     assert_eq!(registration["api_url"], "https://project-oqn7i.vercel.app");
     assert_eq!(
         registration["route"],
-        "GET /api/health; GET /api/todos?repo_id=<repo>; POST /api/todos; PATCH /api/todos?id=<todo>"
+        "POST /query for task reads/writes; POST /batch for atomic task operations"
     );
     assert!(
         registration["writes"]
             .as_array()
             .expect("writes array")
             .iter()
-            .any(|write| write["table"] == "todos" && write["operation"] == "claim/complete"),
+            .any(|write| write["table"] == "tasks"
+                && write["operation"] == "Dactyl batch claim/complete"),
         "registration should model the repo-scoped todo lifecycle"
     );
 }

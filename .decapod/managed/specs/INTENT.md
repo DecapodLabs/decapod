@@ -32,6 +32,8 @@
 - The local proof boundary is explicit: host-runtime availability, ordinary close/reopen persistence, read-only enforcement, schema inspection, explicit IDs, atomic rollback, and broker/event routing are local checks. Propodus/Neon deployment, hosted tenancy, credential, and cross-organization concurrency proof remain separate downstream evidence and are not claimed by this local slice.
 - `core::backend::BackendSelection` maps the project `repo.backend` choice to a repository-scoped route. Local resolves to `.decapod/data/decapod.db`; cloud derives `owner/repository` from the Git `origin` remote and accepts an opaque remote URI only after the authenticated/session boundary supplies it. Decapod does not assemble or interpret a provider-specific cloud URI for ordinary state.
 - Local and cloud Decapod agent sessions are machine-local, backend-discriminated (`local_` or `cloud_`), and long-lived enough for an agent run: four hours by default, with a 30-minute minimum and six-hour maximum. Cloud access/refresh credentials remain opaque and are persisted separately from repository state.
+- The explicit cloud todo path authenticates through Propodus, then passes a versioned opaque `StorageContext` to Dactyl. Dactyl owns `/query` and `/batch` transport and chooses the physical backend; Decapod does not add a backend, tenant, provider, or repository query parameter to individual operations.
+- Cloud todo add, claim, and complete are composed from Dactyl atomic write-plus-observation batches and fail closed on zero-row state conflicts. Cloud event-stream atomicity, hosted tenancy, schema parity, and live Neon/Vercel behavior remain downstream proof obligations until those services are available.
 
 ## Shared-State Durability Intent
 - Material TODO lifecycle mutations are compare-and-swap operations over `(task.id, task.status, task.revision)`. A stale agent receives an explicit conflict and must not create a success event.
@@ -192,6 +194,7 @@ flowchart LR
 - Complete spec verification manifest generation
 - `decapod validate --refresh-specs` passes
 - All promotion gates satisfied with attached evidence
+- Final hosted stability claims require a successful container-workspace validation receipt and independent Neon/Vercel deployment evidence; local protocol proof is intentionally not a substitute.
 
 ## Tradeoffs Register
 | Decision | Benefit | Cost | Review Trigger |
@@ -214,8 +217,8 @@ flowchart LR
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d136fce5009bcc9ee55d5ca12d1e37be97081aafdd5eaf2afb8be49f6bd3f1b4`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (104 files), `tests/` (4 files)
+- Repository signal fingerprint: `a95e2d6b5b67903339be7eb4cc127cd1c87f8fe3893a335eadbdd7e90f399d39`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (105 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

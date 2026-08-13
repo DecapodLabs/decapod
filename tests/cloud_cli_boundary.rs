@@ -247,7 +247,7 @@ fn production_cli_dispatch_uses_remote_store_and_never_local_sqlite() {
     assert!(
         transport_error
             .to_string()
-            .contains("Propodus cloud todo operation failed"),
+            .contains("Dactyl cloud todo operation failed"),
         "unexpected transport error: {transport_error}"
     );
     assert!(

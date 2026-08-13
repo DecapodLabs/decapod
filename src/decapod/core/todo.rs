@@ -1,6 +1,7 @@
 use crate::cli::CloudRuntimeConfig;
-use crate::core::backend::BackendSelection;
+use crate::core::backend::{BackendRoute, BackendSelection, StorageContext};
 use crate::core::broker::DbBroker;
+use crate::core::dactyl_todo::DactylTodoStore;
 use crate::core::db::{Connection, OptionalExtension, Result as SqlResult, params, types::ToSql};
 use crate::core::error;
 use crate::core::external_action::{self, ExternalCapability};
@@ -8,7 +9,9 @@ use crate::core::fleet_coord::{
     self, ActiveClaimView, DEFAULT_CLAIM_LEASE_SECS, DependencyNodeView, DependencyReadiness,
     LeaseLifecycle, MAX_CLAIM_LEASE_SECS,
 };
-use crate::core::propodus::{PropodusClient, PropodusClientError, PropodusTodoStore};
+use crate::core::propodus::{
+    CurlTransport, PropodusClientError, PropodusConfig, ensure_cloud_session,
+};
 use crate::core::repo_identity::RepositoryIdentity;
 use crate::core::schemas; // Import the new schemas module
 use crate::core::storage::{Task as StorageTask, TodoStore};
@@ -6214,7 +6217,7 @@ fn cloud_runtime(
 }
 
 fn cloud_error(error: anyhow::Error) -> error::DecapodError {
-    error::DecapodError::ValidationError(format!("Propodus cloud todo operation failed: {error}"))
+    error::DecapodError::ValidationError(format!("Dactyl cloud todo operation failed: {error}"))
 }
 
 pub trait CloudTodoStoreFactory {
@@ -6225,25 +6228,30 @@ pub trait CloudTodoStoreFactory {
     ) -> Result<Box<dyn TodoStore>, error::DecapodError>;
 }
 
-struct PropodusCloudTodoStoreFactory;
+struct DactylCloudTodoStoreFactory;
 
-impl CloudTodoStoreFactory for PropodusCloudTodoStoreFactory {
+impl CloudTodoStoreFactory for DactylCloudTodoStoreFactory {
     fn build(
         &self,
         config: &CloudRuntimeConfig,
         identity: &RepositoryIdentity,
     ) -> Result<Box<dyn TodoStore>, error::DecapodError> {
-        let client = PropodusClient::from_dogfood_cloud_config(config, identity).map_err(
-            |error| match error {
+        let propodus = PropodusConfig::for_repository(config, identity);
+        let credential = ensure_cloud_session(&propodus, identity, CurlTransport::default())
+            .map_err(|error| match error {
                 PropodusClientError::Authentication(diagnostic) => {
                     error::DecapodError::CloudAuth(diagnostic)
                 }
                 other => error::DecapodError::ValidationError(format!(
-                    "Propodus cloud preflight failed: {other}. Cloud mode never falls back to local SQLite."
+                    "Propodus cloud authentication preflight failed: {other}. Cloud mode never falls back to local SQLite."
                 )),
-            },
-        )?;
-        Ok(Box::new(PropodusTodoStore::new(client)))
+            })?;
+        let route = BackendRoute::cloud(identity.clone(), &config.api_url)?;
+        let context = StorageContext::from_route(route, Some(&credential.token))?;
+        Ok(Box::new(DactylTodoStore::new(
+            context,
+            identity.canonical_name.clone(),
+        )))
     }
 }
 
@@ -6257,13 +6265,14 @@ fn cloud_task_from_command(
     repo_id: &str,
 ) -> StorageTask {
     let now = chrono::Utc::now();
+    let id = make_task_id("todo");
     StorageTask {
-        id: String::new(),
+        hash: task_hash_from_id(&id),
+        id,
         repo_id: repo_id.to_string(),
-        hash: String::new(),
         title: title.trim().to_string(),
         description: (!description.trim().is_empty()).then(|| description.to_string()),
-        status: "pending".to_string(),
+        status: "open".to_string(),
         assignee: None,
         scope: if scope.trim().is_empty() {
             "repo".to_string()
@@ -6287,7 +6296,7 @@ fn cloud_task_from_command(
 
 fn cloud_status_matches(requested: &str, actual: &str) -> bool {
     match requested {
-        "open" => actual == "pending",
+        "open" => actual == "pending" || actual == "open",
         "done" => actual == "completed",
         "all" => true,
         value => value == actual,
@@ -6346,7 +6355,7 @@ async fn run_cloud_todo_command_with_store_async(
                 "cmd": "todo.list",
                 "status": "ok",
                 "root": root.to_string_lossy(),
-                "backend": "propodus",
+                "backend": "dactyl",
                 "items": items,
             })
         }
@@ -6381,7 +6390,7 @@ async fn run_cloud_todo_command_with_store_async(
                 "cmd": "todo.add",
                 "status": "ok",
                 "root": root.to_string_lossy(),
-                "backend": "propodus",
+                "backend": "dactyl",
                 "id": task.id,
                 "item": task,
             })
@@ -6398,7 +6407,7 @@ async fn run_cloud_todo_command_with_store_async(
                 "cmd": "todo.claim",
                 "status": "ok",
                 "root": root.to_string_lossy(),
-                "backend": "propodus",
+                "backend": "dactyl",
                 "id": id,
                 "item": task,
             })
@@ -6411,7 +6420,7 @@ async fn run_cloud_todo_command_with_store_async(
         } => {
             if *validated {
                 return Err(error::DecapodError::NotImplemented(
-                    "cloud todo --validated is intentionally unsupported in Propodus v1: the service has no proof-capture contract. Complete the remote task first, then run a separate local/remote proof workflow; see docs/book/src/reference/propodus.md".to_string(),
+                    "cloud todo --validated is intentionally unsupported until the remote Dactyl storage contract carries proof-capture data. Complete the remote task first, then run a separate local/remote proof workflow; see docs/book/src/reference/propodus.md".to_string(),
                 ));
             }
             let task_id = resolve_task_id_arg(id, id_positional, "todo done")?;
@@ -6424,14 +6433,14 @@ async fn run_cloud_todo_command_with_store_async(
                 "cmd": "todo.done",
                 "status": "ok",
                 "root": root.to_string_lossy(),
-                "backend": "propodus",
+                "backend": "dactyl",
                 "id": task_id,
                 "item": task,
             })
         }
         _ => {
             return Err(error::DecapodError::NotImplemented(
-                "this todo operation is not in the Propodus v1 contract; the cloud backend never falls back to local SQLite".to_string(),
+                "this todo operation is not in the cloud Dactyl contract; the cloud backend never falls back to local SQLite".to_string(),
             ));
         }
     };
@@ -6471,13 +6480,13 @@ async fn cloud_get_task(
         "cmd": "todo.get",
         "status": if item.is_some() { "ok" } else { "not_found" },
         "root": root.to_string_lossy(),
-        "backend": "propodus",
+        "backend": "dactyl",
         "item": item,
     }))
 }
 
 pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodError> {
-    run_todo_cli_with_cloud_factory(store, cli, &PropodusCloudTodoStoreFactory)
+    run_todo_cli_with_cloud_factory(store, cli, &DactylCloudTodoStoreFactory)
 }
 
 pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
