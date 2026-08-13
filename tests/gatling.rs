@@ -262,7 +262,10 @@ fn t010_init_lifecycle() {
         eprintln!("skipping remaining init lifecycle: host SQLite runtime unavailable");
         return;
     }
-    assert!(success, "expected success for `decapod init --all` but got failure:\n{output}");
+    assert!(
+        success,
+        "expected success for `decapod init --all` but got failure:\n{output}"
+    );
     // T014: init --claude
     ok(&dir, &["init", "--claude"]);
     // T015: init --gemini

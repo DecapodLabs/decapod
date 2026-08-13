@@ -76,7 +76,9 @@ pub trait TodoStore: Send + Sync {
     /// The default keeps older adapters source-compatible while making an
     /// unsupported cloud capability explicit instead of falling back locally.
     async fn release_task(&self, _id: &str, _actor: String) -> Result<Task> {
-        Err(anyhow!("todo release is not supported by this storage adapter"))
+        Err(anyhow!(
+            "todo release is not supported by this storage adapter"
+        ))
     }
     async fn complete_task(&self, id: &str, actor: String, resolution: String) -> Result<Task>;
 }
