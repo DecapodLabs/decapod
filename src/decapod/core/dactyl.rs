@@ -11,13 +11,76 @@ use dactyl_db::{AccessMode, AtomicResult, Connection, OpenOptions, Operation, Pa
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::Mutex;
 use std::time::Duration;
 
 pub use dactyl_db::{OperationResult, WriteResult};
 
 const DEFAULT_LOCK_TIMEOUT: Duration = Duration::from_millis(250);
+const DATASTORE_ENV: &str = "DATASTORE";
+const DATASTORE_ROUTE_ENV: &str = "DATASTORE_ROUTE";
+const DATASTORE_TOKEN_ENV: &str = "DATASTORE_TOKEN";
 pub const SQLITE_LIBRARY_ENV: &str = "DACTYL_SQLITE_LIBRARY";
 const HOST_RUNTIME_CONFIG_FILE: &str = "runtime.toml";
+static DACTYL_ENVIRONMENT_LOCK: Mutex<()> = Mutex::new(());
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct DactylEnvironment {
+    datastore: &'static str,
+    route: String,
+    token: Option<String>,
+}
+
+fn dactyl_environment(
+    route: &BackendRoute,
+    bearer: Option<&str>,
+) -> Result<DactylEnvironment, DecapodError> {
+    match route {
+        BackendRoute::Local { path } => Ok(DactylEnvironment {
+            datastore: "sqlite",
+            route: path.to_string_lossy().into_owned(),
+            token: None,
+        }),
+        BackendRoute::Cloud { uri, .. } => {
+            let token = bearer
+                .map(str::trim)
+                .filter(|value| !value.is_empty())
+                .ok_or_else(|| {
+                    DecapodError::CloudAuth(CloudAuthDiagnostic::new(
+                        CloudAuthStatus::Missing,
+                        "cloud storage requires a machine-local session credential",
+                        "acquire or refresh the cloud session, then retry the command",
+                    ))
+                })?;
+            Ok(DactylEnvironment {
+                datastore: "neon",
+                route: uri.clone(),
+                token: Some(token.to_string()),
+            })
+        }
+    }
+}
+
+fn apply_dactyl_environment(environment: &DactylEnvironment) {
+    // Decapod resolves the route before opening a Dactyl connection. The
+    // connection snapshots these values through Dactyl's from_env() parser;
+    // callers must not mutate the process environment while that open is in
+    // progress.
+    unsafe {
+        std::env::set_var(DATASTORE_ENV, environment.datastore);
+        std::env::set_var(DATASTORE_ROUTE_ENV, &environment.route);
+        match &environment.token {
+            Some(token) => std::env::set_var(DATASTORE_TOKEN_ENV, token),
+            None => std::env::remove_var(DATASTORE_TOKEN_ENV),
+        }
+    }
+}
+
+fn bind_dactyl_environment(route: &BackendRoute, bearer: Option<&str>) -> Result<(), DecapodError> {
+    let environment = dactyl_environment(route, bearer)?;
+    apply_dactyl_environment(&environment);
+    Ok(())
+}
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 struct HostRuntimeConfig {
@@ -298,26 +361,7 @@ impl DactylBridge {
         access_mode: AccessMode,
         bearer: Option<&str>,
     ) -> Result<Self, DecapodError> {
-        match route {
-            BackendRoute::Local { path } => Self::open_local(path, access_mode),
-            BackendRoute::Cloud { uri, .. } => {
-                let bearer = bearer
-                    .map(str::trim)
-                    .filter(|value| !value.is_empty())
-                    .ok_or_else(|| {
-                        DecapodError::CloudAuth(CloudAuthDiagnostic::new(
-                            CloudAuthStatus::Missing,
-                            "cloud storage requires a machine-local session credential",
-                            "acquire or refresh the cloud session, then retry the command",
-                        ))
-                    })?;
-                Self::open_route(
-                    dactyl_db::DatastoreRoute::neon(uri.clone(), Some(bearer.to_string())),
-                    access_mode,
-                    None,
-                )
-            }
-        }
+        Self::open_from_environment(route, bearer, access_mode, None)
     }
 
     /// Open the physical driver from a Decapod-owned storage context.
@@ -337,16 +381,12 @@ impl DactylBridge {
             })?,
         )?;
 
-        match context.route() {
-            BackendRoute::Local { .. } => {
-                Self::from_backend_route(context.route(), access_mode, context.bearer())
-            }
-            BackendRoute::Cloud { uri, .. } => Self::open_route(
-                dactyl_db::DatastoreRoute::neon(uri.clone(), context.bearer().map(str::to_owned)),
-                access_mode,
-                Some(dactyl_context),
-            ),
-        }
+        Self::open_from_environment(
+            context.route(),
+            context.bearer(),
+            access_mode,
+            Some(dactyl_context),
+        )
     }
 
     pub fn read(&self, sql: &str, params: &[Parameter]) -> Result<Rows, DecapodError> {
@@ -390,6 +430,23 @@ impl DactylBridge {
             context,
         )?;
         Ok(Self { connection })
+    }
+
+    fn open_from_environment(
+        route: &BackendRoute,
+        bearer: Option<&str>,
+        access_mode: AccessMode,
+        context: Option<dactyl_db::StorageContext>,
+    ) -> Result<Self, DecapodError> {
+        // The public Dactyl contract is intentionally ambient, but process
+        // environments are global. Keep route binding and Dactyl's immediate
+        // environment snapshot together so concurrent Decapod stores cannot
+        // open one another's local files or cloud endpoints.
+        let _guard = DACTYL_ENVIRONMENT_LOCK.lock().map_err(|_| {
+            DecapodError::Config("Dactyl ambient environment lock is poisoned".to_string())
+        })?;
+        bind_dactyl_environment(route, bearer)?;
+        Self::open_route(dactyl_db::DatastoreRoute::from_env()?, access_mode, context)
     }
 }
 
@@ -458,6 +515,38 @@ mod tests {
             decoded.sqlite_library.as_deref(),
             Some("/opt/sqlite/lib/libsqlite3.so")
         );
+    }
+
+    #[test]
+    fn dactyl_environment_maps_local_without_leaking_cloud_credentials() {
+        let path = PathBuf::from("/tmp/decapod-local/decapod.db");
+        let environment = dactyl_environment(&BackendRoute::Local { path }, Some("stale"))
+            .expect("local environment");
+        assert_eq!(environment.datastore, "sqlite");
+        assert_eq!(environment.route, "/tmp/decapod-local/decapod.db");
+        assert_eq!(environment.token, None);
+    }
+
+    #[test]
+    fn dactyl_environment_requires_and_forwards_opaque_cloud_bearer() {
+        let identity = RepositoryIdentity {
+            canonical_name: "DecapodLabs/decapod".to_string(),
+            owner: "DecapodLabs".to_string(),
+            repository: "decapod".to_string(),
+            remote_url: "git@github.com:DecapodLabs/decapod.git".to_string(),
+        };
+        let route = BackendRoute::cloud(identity, "https://propodus.example/api/v1/store")
+            .expect("cloud route");
+
+        let environment =
+            dactyl_environment(&route, Some(" opaque-session-token ")).expect("cloud environment");
+        assert_eq!(environment.datastore, "neon");
+        assert_eq!(environment.route, "https://propodus.example/api/v1/store");
+        assert_eq!(environment.token.as_deref(), Some("opaque-session-token"));
+        assert!(matches!(
+            dactyl_environment(&route, Some("  ")),
+            Err(DecapodError::CloudAuth(_))
+        ));
     }
 
     #[test]
@@ -531,7 +620,10 @@ mod tests {
         let tmp = tempdir().expect("temporary local database directory");
         let database_path = tmp.path().join("decapod.db");
         std::fs::File::create(&database_path).expect("empty local database target");
-        let bridge = DactylBridge::open_local(&database_path, AccessMode::ReadWrite)
+        let route = BackendRoute::Local {
+            path: database_path.clone(),
+        };
+        let bridge = DactylBridge::from_backend_route(&route, AccessMode::ReadWrite, None)
             .expect("Dactyl local database bridge");
         bridge
             .atomic(&[Operation::schema(
@@ -547,7 +639,7 @@ mod tests {
             .expect("local row");
         drop(bridge);
 
-        let reopened = DactylBridge::open_local(&database_path, AccessMode::ReadOnly)
+        let reopened = DactylBridge::from_backend_route(&route, AccessMode::ReadOnly, None)
             .expect("reopen Dactyl local database");
         let rows = reopened
             .read("SELECT id, title FROM tasks", &no_params())
@@ -632,6 +724,18 @@ mod tests {
             .expect("remote context");
         let bridge = DactylBridge::from_storage_context(&context, AccessMode::ReadOnly)
             .expect("constructing cloud route does not perform I/O");
+        assert_eq!(
+            bridge.connection.route().datastore(),
+            dactyl_db::Datastore::Neon
+        );
+        assert_eq!(
+            bridge.connection.route().route(),
+            "https://example.invalid/api/v1/store"
+        );
+        assert_eq!(
+            bridge.connection.route().token(),
+            Some("opaque-session-token")
+        );
         assert_eq!(context.version(), StorageContext::CURRENT_VERSION);
         assert_eq!(context.bearer(), Some("opaque-session-token"));
         assert!(bridge.access_mode() == AccessMode::ReadOnly);

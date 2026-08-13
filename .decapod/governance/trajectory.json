@@ -1,63 +1,125 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "run-20260813-cloud-dactyl-propodus",
-  "intent_id": "intent:run-20260813-cloud-dactyl-propodus",
-  "task_id": "bugs_01kzy9z7jz0v66zt",
-  "original_intent": "Address open Decapod GitHub Issues labeled dactyl and propodus as far as possible, integrate cloud backend selection through Dactyl and Propodus, publish one PR, and update issues.",
-  "derived_intent": "Implement the Decapod-side backend=cloud integration against existing Dactyl and Propodus contracts without per-query backend inputs, prove local/mock troubleshooting paths, preserve thin ownership boundaries, and state hosted Neon/Vercel limits honestly.",
-  "current_phase": "validation",
+  "run_id": "bend-ambient-dactyl-20260813",
+  "intent_id": "intent:bend-ambient-dactyl-20260813",
+  "task_id": "bend_01kzyggs7c7a84dx",
+  "original_intent": "When Decapod users select backend=local or backend=cloud, establish Dactyl ambient runtime variables and let Dactyl resolve the connection without changing its thin execution API; preserve local SQLite and leave hosted parity as a separate proof gate.",
+  "derived_intent": "Implement the Decapod-owned route binding in core/dactyl.rs: local sets DATASTORE=sqlite and clears DATASTORE_TOKEN; cloud sets DATASTORE=neon with the opaque route and bearer; both open through dactyl_db::DatastoreRoute::from_env while forwarding StorageContext unchanged.",
+  "current_phase": "publication",
   "next_transitions": [
-    "commit governance receipt inputs and attempt governed publication; hosted/container gates remain explicit",
-    "inspect live issues and current code contracts",
-    "publish",
-    "refresh governance artifacts, validate, commit, publish one PR"
-  ],
-  "blockers": [
-    "container workspace required for final validation but ghcr.io/decapodlabs/decapod:v0.99.2-debian returns manifest unknown"
+    "commit governed bundle, push branch, publish PR, then wait for hosted checks",
+    "governed validation then publish Decapod PR",
+    "publish"
   ],
   "active_boundaries": [
-    "Decapod owns backend selection, domain semantics, schema/migration policy, retry/governance policy, and local-first correctness; Dactyl owns thin storage execution/routing/binding/transactions/errors; Propodus owns hosted storage/auth/authorization/tenant isolation; no direct Neon/Vercel dependency is assumed.",
-    "Decapod repository only; no Dactyl or Propodus source mutation; no per-query backend inputs; hosted Neon/Vercel proof excluded"
+    "Decapod owns backend selection, route/token injection, and domain semantics; Dactyl owns env parsing and physical execution; Propodus owns hosted auth/tenant/schema/deployment behavior."
   ],
   "repo_scope": [
-    "Decapod repository and its labeled GitHub issue handoff; no direct implementation in Dactyl or Propodus repositories.",
-    "backend=cloud todo command path and related docs/tests"
+    "Decapod core Dactyl bridge, focused tests, living storage documentation, governed proof artifacts; no live service harness and no Dactyl or Propodus code change."
   ],
   "inspected_files": [
+    ".decapod/governance/validation.json",
     "docs/book/src/reference/propodus.md",
     "src/decapod/core/backend.rs",
     "src/decapod/core/dactyl.rs",
-    "src/decapod/core/propodus.rs",
-    "src/decapod/core/storage.rs",
-    "src/decapod/core/todo.rs",
-    "tests/cloud_backend_storage.rs",
-    "tests/cloud_cli_boundary.rs"
-  ],
-  "modified_files": [
-    ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json",
-    "docs/book/src/reference/propodus.md",
     "src/decapod/core/dactyl_todo.rs",
-    "src/decapod/core/todo.rs",
     "tests/cloud_dactyl_boundary.rs"
   ],
+  "modified_files": [
+    ".decapod/governance/claims.json",
+    ".decapod/governance/plan.json",
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
+    ".decapod/managed/Dockerfile.decapod",
+    ".decapod/managed/specs/ARCHITECTURE.md",
+    ".decapod/managed/specs/INTENT.md",
+    ".decapod/managed/specs/INTERFACES.md",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "CODEX.md",
+    "GEMINI.md",
+    "docs/book/src/reference/propodus.md",
+    "src/decapod/core/dactyl.rs"
+  ],
   "declared_commands": [
-    "cargo check --tests=passed",
-    "cargo test --test cloud_backend_storage=passed",
-    "cargo test --test cloud_cli_boundary=passed",
-    "cargo test --test cloud_dactyl_boundary=passed",
-    "cargo test --test init_config_behavior init_with_backend_cloud_saves_to_config=passed",
-    "cargo test dactyl_todo --lib=passed",
-    "decapod validate"
+    "DACTYL_SQLITE_LIBRARY=<host-lib> cargo test --lib",
+    "DACTYL_SQLITE_LIBRARY=<host-lib> cargo test --lib dactyl -- --nocapture",
+    "cargo clippy --all-targets --all-features -- -D warnings",
+    "cargo fmt --all",
+    "cargo test --test cloud_dactyl_boundary -- --nocapture",
+    "decapod rpc --op specs.refresh",
+    "decapod validate",
+    "decapod workspace ensure --container",
+    "podman official Decapod 0.99.3 validator with native SQLite library"
   ],
   "tool_calls": [],
-  "checks": [
+  "loops": [
     {
-      "name": "container_workspace",
-      "status": "unavailable"
+      "intent_id": "intent:bend-ambient-dactyl-20260813",
+      "trajectory_id": "bend-ambient-dactyl-20260813",
+      "loop_id": "implementation-1",
+      "loop_type": "agent",
+      "attempt": 1,
+      "trigger": "human",
+      "grader_result": "pass",
+      "feedback": "Use Decapod-owned ambient handoff; do not add a Dactyl live harness.",
+      "proof_refs": [
+        "cargo test --lib dactyl",
+        "cargo test --test cloud_dactyl_boundary"
+      ],
+      "mutation_proposal": "none",
+      "status": "passed",
+      "custody_event_id": "event:4"
     },
     {
-      "name": "dactyl_protocol_boundary",
+      "intent_id": "intent:bend-ambient-dactyl-20260813",
+      "trajectory_id": "bend-ambient-dactyl-20260813",
+      "loop_id": "verification-1",
+      "loop_type": "verification",
+      "attempt": 1,
+      "trigger": "human",
+      "grader_result": "skipped",
+      "feedback": "Container validation could not execute because image provisioning failed before tests; host proof remains passed.",
+      "proof_refs": [
+        "DACTYL_SQLITE_LIBRARY=<host-lib> cargo test --lib",
+        "cargo clippy --all-targets --all-features -- -D warnings"
+      ],
+      "mutation_proposal": "none",
+      "status": "open",
+      "custody_event_id": "event:5"
+    },
+    {
+      "intent_id": "intent:bend-ambient-dactyl-20260813",
+      "trajectory_id": "bend-ambient-dactyl-20260813",
+      "loop_id": "verification-1",
+      "loop_type": "verification",
+      "attempt": 2,
+      "trigger": "human",
+      "grader_result": "pass",
+      "feedback": "Official container validation status ok; remaining findings are non-blocking warnings to review.",
+      "proof_refs": [
+        "podman decapod:v0.99.3-debian validate --format json --refresh-specs --projections"
+      ],
+      "mutation_proposal": "none",
+      "status": "passed",
+      "custody_event_id": "event:7"
+    }
+  ],
+  "checks": [
+    {
+      "name": "clippy",
+      "status": "passed"
+    },
+    {
+      "name": "cloud_dactyl_wire",
+      "status": "passed"
+    },
+    {
+      "name": "container_validation",
+      "status": "passed"
+    },
+    {
+      "name": "dactyl_unit_and_local",
       "status": "passed"
     },
     {
@@ -66,62 +128,51 @@
     },
     {
       "name": "decapod_validate",
-      "status": "failed"
-    },
-    {
-      "name": "hosted_neon_vercel",
-      "status": "unavailable"
-    },
-    {
-      "name": "live_issue_inventory",
       "status": "passed"
     },
     {
-      "name": "local_cloud_cli_dispatch",
+      "name": "format",
       "status": "passed"
     },
     {
-      "name": "product_tests",
+      "name": "full_lib",
+      "status": "passed"
+    },
+    {
+      "name": "specs_refresh",
       "status": "passed"
     }
   ],
   "evidence": [
-    "Cloud CLI tests report backend=dactyl and preserve no-local-SQLite behavior",
-    "Dactyl /query wire proof observed bearer, versioned context, and no backend field",
-    "decapod validate reports 201 passes and only container_workspace_required failure",
-    "prescribed container remediation retried and failed on missing v0.99.2-debian manifest",
-    "validation epoch ve_1aa6766fc1ae2b1c completed with zero failures"
+    "321 Decapod library tests passed with the native host SQLite shared library; clippy passed; container image provisioning failed before validation execution due Debian package archive rename errors.",
+    "Ambient route mapping tests cover sqlite token clearing and neon opaque bearer requirements; serialized binding prevents concurrent route cross-talk; local and cloud wire proofs pass.",
+    "Official Decapod 0.99.3 container validation completed with status ok and zero failures after mounting the installed Rust 1.96 toolchain and native SQLite library; four non-blocking warnings remain for stale workspaces, missing risk map, watcher audit, and unpushed branch.",
+    "validation epoch ve_46d7acf17b0db14d completed with zero failures"
   ],
-  "shortcut_risk_signals": [
-    "No direct Propodus /api/todos storage calls remain in the production cloud factory"
-  ],
-  "unresolved_assumptions": [
-    "Downstream Dactyl/Propodus agents will provide the compatible hosted /query and /batch service contract",
-    "The image registry may publish the required v0.99.2-debian image after this run; no product change can resolve that external registry state",
-    "Vercel and Neon are intentionally unavailable for this run"
-  ],
-  "proof_status": "failed",
+  "shortcut_risk_signals": [],
+  "unresolved_assumptions": [],
+  "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
-    "shortcut_risk": "caution",
-    "completion_proof": "unsupported"
+    "shortcut_risk": "supported",
+    "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:58de85276c4bf2b75c900127179c112d2171383d1318455277ad2dec0a41f3f0",
+  "artifact_hash": "sha256:153c41a7ca25383ad8c815bcbd65b1b6b3875951a8f7cc733d36997762262d2c",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:run-20260813-cloud-dactyl-propodus": {
-        "id": "intent:run-20260813-cloud-dactyl-propodus",
-        "raw_intent": "Address open Decapod GitHub Issues labeled dactyl and propodus as far as possible, integrate cloud backend selection through Dactyl and Propodus, publish one PR, and update issues.",
-        "refined_intent": "Implement the Decapod-side backend=cloud integration against existing Dactyl and Propodus contracts without per-query backend inputs, prove local/mock troubleshooting paths, preserve thin ownership boundaries, and state hosted Neon/Vercel limits honestly.",
+      "intent:bend-ambient-dactyl-20260813": {
+        "id": "intent:bend-ambient-dactyl-20260813",
+        "raw_intent": "When Decapod users select backend=local or backend=cloud, establish Dactyl ambient runtime variables and let Dactyl resolve the connection without changing its thin execution API; preserve local SQLite and leave hosted parity as a separate proof gate.",
+        "refined_intent": "Implement the Decapod-owned route binding in core/dactyl.rs: local sets DATASTORE=sqlite and clears DATASTORE_TOKEN; cloud sets DATASTORE=neon with the opaque route and bearer; both open through dactyl_db::DatastoreRoute::from_env while forwarding StorageContext unchanged.",
         "acceptance_criteria": [],
         "constraints": [
-          "Decapod repository and its labeled GitHub issue handoff; no direct implementation in Dactyl or Propodus repositories."
+          "Decapod core Dactyl bridge, focused tests, living storage documentation, governed proof artifacts; no live service harness and no Dactyl or Propodus code change."
         ],
         "assumptions": [],
         "boundaries": [
-          "Decapod owns backend selection, domain semantics, schema/migration policy, retry/governance policy, and local-first correctness; Dactyl owns thin storage execution/routing/binding/transactions/errors; Propodus owns hosted storage/auth/authorization/tenant isolation; no direct Neon/Vercel dependency is assumed."
+          "Decapod owns backend selection, route/token injection, and domain semantics; Dactyl owns env parsing and physical execution; Propodus owns hosted auth/tenant/schema/deployment behavior."
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -134,97 +185,79 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:run-20260813-cloud-dactyl-propodus",
+        "intent_id": "intent:bend-ambient-dactyl-20260813",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:run-20260813-cloud-dactyl-propodus",
+        "intent_id": "intent:bend-ambient-dactyl-20260813",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:run-20260813-cloud-dactyl-propodus",
+        "intent_id": "intent:bend-ambient-dactyl-20260813",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run-20260813-cloud-dactyl-propodus"
+        "detail": "trajectory:bend-ambient-dactyl-20260813"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:run-20260813-cloud-dactyl-propodus",
+        "intent_id": "intent:bend-ambient-dactyl-20260813",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run-20260813-cloud-dactyl-propodus"
+        "detail": "trajectory:bend-ambient-dactyl-20260813"
       },
       {
         "sequence": 6,
         "event_id": "event:6",
-        "intent_id": "intent:run-20260813-cloud-dactyl-propodus",
+        "intent_id": "intent:bend-ambient-dactyl-20260813",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run-20260813-cloud-dactyl-propodus"
+        "detail": "trajectory:bend-ambient-dactyl-20260813"
+      },
+      {
+        "sequence": 7,
+        "event_id": "event:7",
+        "intent_id": "intent:bend-ambient-dactyl-20260813",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:bend-ambient-dactyl-20260813"
       }
     ],
     "trajectories": {
-      "run-20260813-cloud-dactyl-propodus": {
-        "id": "run-20260813-cloud-dactyl-propodus",
-        "intent_id": "intent:run-20260813-cloud-dactyl-propodus",
+      "bend-ambient-dactyl-20260813": {
+        "id": "bend-ambient-dactyl-20260813",
+        "intent_id": "intent:bend-ambient-dactyl-20260813",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "cloud todo Dactyl adapter",
-            "command": "cargo check --tests=passed",
+            "action": "loop:implementation-1:1",
             "scope": [
-              "Decapod repository and its labeled GitHub issue handoff; no direct implementation in Dactyl or Propodus repositories."
+              "Decapod core Dactyl bridge, focused tests, living storage documentation, governed proof artifacts; no live service harness and no Dactyl or Propodus code change."
             ],
-            "observations": [
-              "src/decapod/core/backend.rs",
-              "src/decapod/core/dactyl.rs",
-              "src/decapod/core/propodus.rs",
-              "src/decapod/core/storage.rs",
-              "src/decapod/core/todo.rs",
-              "tests/cloud_cli_boundary.rs",
-              "tests/cloud_backend_storage.rs",
-              "docs/book/src/reference/propodus.md",
-              "src/decapod/core/dactyl_todo.rs",
-              "tests/cloud_dactyl_boundary.rs",
-              "src/decapod/core/todo.rs",
-              "docs/book/src/reference/propodus.md",
-              "Dactyl /query wire proof observed bearer, versioned context, and no backend field",
-              "Cloud CLI tests report backend=dactyl and preserve no-local-SQLite behavior"
-            ],
+            "observations": [],
             "proof_refs": [
-              "live_issue_inventory",
-              "dactyl_protocol_boundary",
-              "local_cloud_cli_dispatch",
-              "hosted_neon_vercel"
+              "cargo test --lib dactyl",
+              "cargo test --test cloud_dactyl_boundary"
             ],
             "validation_findings": [
-              "No direct Propodus /api/todos storage calls remain in the production cloud factory",
-              "Downstream Dactyl/Propodus agents will provide the compatible hosted /query and /batch service contract",
-              "Vercel and Neon are intentionally unavailable for this run"
+              "Use Decapod-owned ambient handoff; do not add a Dactyl live harness."
             ],
             "custody_event_id": "event:4"
           },
           {
             "sequence": 5,
-            "action": "validation and publication",
+            "action": "loop:verification-1:1",
             "scope": [
-              "Decapod repository and its labeled GitHub issue handoff; no direct implementation in Dactyl or Propodus repositories.",
-              "backend=cloud todo command path and related docs/tests"
+              "Decapod core Dactyl bridge, focused tests, living storage documentation, governed proof artifacts; no live service harness and no Dactyl or Propodus code change."
             ],
-            "observations": [
-              "decapod validate reports 201 passes and only container_workspace_required failure",
-              "prescribed container remediation retried and failed on missing v0.99.2-debian manifest"
-            ],
+            "observations": [],
             "proof_refs": [
-              "product_tests",
-              "decapod_validate",
-              "container_workspace"
+              "cargo clippy --all-targets --all-features -- -D warnings",
+              "DACTYL_SQLITE_LIBRARY=<host-lib> cargo test --lib"
             ],
             "validation_findings": [
-              "The image registry may publish the required v0.99.2-debian image after this run; no product change can resolve that external registry state"
+              "Container validation could not execute because image provisioning failed before tests; host proof remains passed."
             ],
             "custody_event_id": "event:5"
           },
@@ -233,25 +266,39 @@
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              "Decapod repository and its labeled GitHub issue handoff; no direct implementation in Dactyl or Propodus repositories.",
-              "backend=cloud todo command path and related docs/tests"
+              "Decapod core Dactyl bridge, focused tests, living storage documentation, governed proof artifacts; no live service harness and no Dactyl or Propodus code change."
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_1aa6766fc1ae2b1c completed with zero failures"
+              "validation epoch ve_46d7acf17b0db14d completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
             ],
             "validation_findings": [],
             "custody_event_id": "event:6"
+          },
+          {
+            "sequence": 7,
+            "action": "loop:verification-1:2",
+            "scope": [
+              "Decapod core Dactyl bridge, focused tests, living storage documentation, governed proof artifacts; no live service harness and no Dactyl or Propodus code change."
+            ],
+            "observations": [],
+            "proof_refs": [
+              "podman decapod:v0.99.3-debian validate --format json --refresh-specs --projections"
+            ],
+            "validation_findings": [
+              "Official container validation status ok; remaining findings are non-blocking warnings to review."
+            ],
+            "custody_event_id": "event:7"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 6
+    "next_sequence": 7
   }
 }

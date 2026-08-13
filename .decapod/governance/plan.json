@@ -1,28 +1,28 @@
 {
   "schema_version": "1.0.0",
-  "title": "Decapod cloud integration through Dactyl and Propodus",
-  "intent": "Make backend=cloud a truthful Decapod runtime selection through the existing Dactyl boundary, with no per-query backend inputs, local/mock troubleshooting proof, and a single publishable PR.",
+  "title": "Ambient Decapod backend handoff to Dactyl",
+  "intent": "When Decapod resolves repo.backend=local or cloud, establish Dactyl's ambient DATASTORE, DATASTORE_ROUTE, and DATASTORE_TOKEN process inputs, then construct Dactyl from that ambient route while forwarding the opaque StorageContext unchanged. Keep Dactyl provider-neutral and preserve its minimal execution API; retain hosted Neon/Vercel parity as a separate downstream proof gate.",
   "state": "APPROVED",
   "todo_ids": [
-    "bugs_01kzy9z7jz0v66zt"
+    "bend_01kzyggs7c7a84dx"
   ],
   "proof_hooks": [
-    "focused Rust tests, cargo fmt --check, cargo clippy, decapod validate, hosted PR checks"
+    "cargo fmt --all -- --check; cargo test --lib dactyl; cargo test --test cloud_dactyl_boundary; cargo clippy --all-targets --all-features -- -D warnings; decapod validate"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [
-    "Do not claim live hosted stability or close issues whose proof belongs to Dactyl/Propodus deployment; stop on a Decapod decision gate or contract mismatch."
+    "Do not add provider, tenant, repository, authorization, retry, idempotency, schema, migration, or governance semantics to Dactyl or the Decapod bridge.",
+    "Do not claim hosted parity from local or wire-level tests.",
+    "Keep local backend initialization free of cloud route or bearer state; clear stale cloud ambient variables when selecting local."
   ],
   "unresolved_contradictions": [],
   "deferred_questions": [
-    "Live Neon/Vercel deployment parity and credentials are intentionally unavailable in this run; retain as a downstream proof gate and do not claim hosted stability."
+    "Protected deployed Neon/Vercel parity, cross-organization isolation, and live cleanup remain downstream proof gates requiring operator-selected credentials."
   ],
   "constraints": {
-    "forbidden_paths": [
-      "Do not mutate Dactyl or Propodus repositories; do not add per-query backend parameters; do not hand-edit .decapod generated state; do not work on protected master."
-    ],
-    "file_touch_budget": 50
+    "forbidden_paths": [],
+    "file_touch_budget": 20
   },
   "phases": [
     {
@@ -59,5 +59,5 @@
       "completed_at": null
     }
   ],
-  "updated_at": "1786651969Z"
+  "updated_at": "1786656930Z"
 }
