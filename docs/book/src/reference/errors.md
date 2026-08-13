@@ -57,7 +57,7 @@ enum representation to command-line users.
 
 `DecapodError` currently contains these variants:
 
-- `RusqliteError`: inspect the database path, schema, and lock state.
+- `StorageError`: inspect the Dactyl route, host-runtime availability, schema, and lock state.
 - `IoError`: check the referenced path, permissions, and external process.
 - `DatabaseInitializationError`: inspect repository initialization and schema setup.
 - `PathError`: correct the repository, workspace, or artifact path.

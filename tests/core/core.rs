@@ -1,6 +1,7 @@
 use decapod::core::assets;
 use decapod::core::broker::{self, BrokerEvent, DbBroker};
 use decapod::core::db;
+use decapod::core::db::params;
 use decapod::core::docs_cli::{self, DocsCli, DocsCommand};
 use decapod::core::error::DecapodError;
 use decapod::core::external_action::{self, ExternalCapability};
@@ -14,7 +15,6 @@ use decapod::core::schemas;
 use decapod::core::store::{Store, StoreKind};
 use decapod::core::validate;
 use decapod::core::workspace;
-use rusqlite::params;
 use std::fs;
 use std::process::Command;
 use std::sync::{Arc, Barrier};
@@ -117,10 +117,7 @@ fn db_and_broker_round_trip_and_audit() {
     assert!(db_path.exists());
 
     let conn = db::db_connect(&db_path.to_string_lossy()).expect("db connect");
-    let fk_on: i64 = conn
-        .query_row("PRAGMA foreign_keys;", [], |row| row.get(0))
-        .expect("pragma foreign_keys");
-    assert_eq!(fk_on, 1);
+    assert!(conn.has_table("knowledge").expect("schema inspection"));
 
     let broker = DbBroker::new(root);
     broker
@@ -140,7 +137,7 @@ fn db_and_broker_round_trip_and_audit() {
                     "repo"
                 ],
             )
-            .map_err(DecapodError::RusqliteError)?;
+            .map_err(DecapodError::StorageError)?;
             Ok(())
         })
         .expect("broker success path");
@@ -192,7 +189,7 @@ fn broker_allows_parallel_ops_on_different_databases() {
     let h1 = std::thread::spawn(move || {
         b1.with_conn(&db_a, "tester", None, "parallel.a", |conn| {
             conn.execute("CREATE TABLE IF NOT EXISTS t (id INTEGER)", [])
-                .map_err(DecapodError::RusqliteError)?;
+                .map_err(DecapodError::StorageError)?;
             gate1.wait();
             std::thread::sleep(Duration::from_millis(150));
             Ok(())
@@ -204,7 +201,7 @@ fn broker_allows_parallel_ops_on_different_databases() {
     let h2 = std::thread::spawn(move || {
         b2.with_conn(&db_b, "tester", None, "parallel.b", |conn| {
             conn.execute("CREATE TABLE IF NOT EXISTS t (id INTEGER)", [])
-                .map_err(DecapodError::RusqliteError)?;
+                .map_err(DecapodError::StorageError)?;
             gate2.wait();
             std::thread::sleep(Duration::from_millis(150));
             Ok(())
@@ -264,7 +261,7 @@ fn broker_policy_enforces_trust_tier_on_high_risk_mutator_ops() {
         "federation.rebuild",
         |conn| {
             conn.execute("CREATE TABLE IF NOT EXISTS t (id INTEGER)", [])
-                .map_err(DecapodError::RusqliteError)?;
+                .map_err(DecapodError::StorageError)?;
             Ok(())
         },
     );
@@ -275,7 +272,7 @@ fn broker_policy_enforces_trust_tier_on_high_risk_mutator_ops() {
 
     let allowed = broker.with_conn(&db_path, "decapod", None, "federation.rebuild", |conn| {
         conn.execute("CREATE TABLE IF NOT EXISTS t2 (id INTEGER)", [])
-            .map_err(DecapodError::RusqliteError)?;
+            .map_err(DecapodError::StorageError)?;
         Ok(())
     });
     assert!(allowed.is_ok(), "core actor should pass policy gate");
@@ -428,7 +425,7 @@ fn migration_reconstructs_legacy_events_from_fixture() {
             .join("tests/fixtures/migration/legacy_tasks.sql"),
     )
     .expect("read sql fixture");
-    let conn = rusqlite::Connection::open(data_dir.join("decapod.db")).expect("open db");
+    let conn = decapod::core::db::Connection::open(data_dir.join("decapod.db")).expect("open db");
     conn.execute_batch(&fixture_sql)
         .expect("apply fixture schema");
 
@@ -463,7 +460,7 @@ fn migration_preserves_existing_event_log() {
     fs::create_dir_all(&data_dir).expect("data dir");
 
     // Legacy DB exists but events file is already populated: migration should no-op.
-    let conn = rusqlite::Connection::open(data_dir.join("decapod.db")).expect("open db");
+    let conn = decapod::core::db::Connection::open(data_dir.join("decapod.db")).expect("open db");
     conn.execute_batch(
         "CREATE TABLE tasks (id TEXT PRIMARY KEY, title TEXT, status TEXT, created_at TEXT);",
     )
@@ -489,7 +486,7 @@ fn migration_rewrites_legacy_todo_ids_and_references() {
     let data_dir = decapod_root.join("data");
     fs::create_dir_all(&data_dir).expect("data dir");
 
-    let conn = rusqlite::Connection::open(data_dir.join("decapod.db")).expect("open db");
+    let conn = decapod::core::db::Connection::open(data_dir.join("decapod.db")).expect("open db");
     conn.execute_batch(
         r#"
         CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -559,7 +556,7 @@ fn migration_rewrites_legacy_todo_ids_and_references() {
 
     migration::check_and_migrate(decapod_root).expect("migration");
 
-    let conn = rusqlite::Connection::open(data_dir.join("decapod.db")).expect("reopen db");
+    let conn = decapod::core::db::Connection::open(data_dir.join("decapod.db")).expect("reopen db");
     let ids: Vec<String> = {
         let mut stmt = conn
             .prepare("SELECT id FROM tasks ORDER BY created_at")
@@ -1047,9 +1044,10 @@ fn schemas_errors_and_validate_entrypoint_are_exercised() {
     assert!(matches!(from_env, DecapodError::EnvVarError(_)));
 
     let tmp = tempdir().expect("tempdir");
-    let sqlite_err = rusqlite::Connection::open(tmp.path()).expect_err("opening a directory fails");
+    let sqlite_err =
+        decapod::core::db::Connection::open(tmp.path()).expect_err("opening a directory fails");
     let from_sqlite: DecapodError = sqlite_err.into();
-    assert!(matches!(from_sqlite, DecapodError::RusqliteError(_)));
+    assert!(matches!(from_sqlite, DecapodError::StorageError(_)));
 
     let repo = tempdir().expect("tempdir");
     fs::create_dir_all(repo.path().join(".decapod/managed/specs")).expect("mkdir specs");

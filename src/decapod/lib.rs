@@ -5693,7 +5693,7 @@ fn validate_diagnostics_enabled() -> bool {
 fn classify_validate_failure_reason(message: &str) -> &'static str {
     let lower = message.to_ascii_lowercase();
     if lower.contains("storage contention")
-        || lower.contains("sqlite contention")
+        || lower.contains("storage contention")
         || lower.contains("database is locked")
     {
         return "timeout_acquiring_lock";

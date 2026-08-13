@@ -421,7 +421,7 @@ impl MentorEngine {
             return Ok(candidates);
         }
 
-        let conn = rusqlite::Connection::open(&db_path)?;
+        let conn = crate::core::db::Connection::open(&db_path)?;
 
         let mut stmt = conn.prepare(
             "SELECT id, title, node_type, tags FROM nodes
@@ -474,7 +474,7 @@ impl MentorEngine {
             return Ok(candidates);
         }
 
-        let conn = rusqlite::Connection::open(&db_path)?;
+        let conn = crate::core::db::Connection::open(&db_path)?;
 
         let mut stmt = conn.prepare(
             "SELECT id, title, status, category FROM todos
@@ -519,7 +519,7 @@ impl MentorEngine {
             return Ok(candidates);
         }
 
-        let conn = rusqlite::Connection::open(&db_path)?;
+        let conn = crate::core::db::Connection::open(&db_path)?;
         let mut stmt = conn.prepare(
             "SELECT category, key, value, context, confidence FROM preferences ORDER BY access_count DESC LIMIT 50",
         )?;
@@ -554,7 +554,7 @@ impl MentorEngine {
             return Ok(candidates);
         }
 
-        let conn = rusqlite::Connection::open(&db_path)?;
+        let conn = crate::core::db::Connection::open(&db_path)?;
         let mut stmt = conn.prepare(
             "SELECT id, title, body, tags FROM nodes WHERE node_type = 'lesson' AND status = 'active' ORDER BY created_at DESC LIMIT 20",
         )?;

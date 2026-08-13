@@ -77,14 +77,15 @@ logical repository scope derived from `origin`; it requires an authenticated
 session bearer, but the bearer is memory-only and is omitted from serialized
 context data.
 
-The Dactyl v0.7.0 bridge forwards the route, versioned context envelope, and
-opaque bearer without interpreting membership or authorization. Propodus remains responsible for resolving the
-authenticated principal, organization membership, and repository access. The
-current Decapod bridge opens the canonical local `decapod.db` only as a
-Dactyl snapshot and rejects a pre-import SQLite header. Existing SQLite state
-must pass Dactyl's explicit legacy-import boundary before runtime access. This
-keeps one canonical Dactyl authority and prevents cloud operations from
-silently falling back to local storage. See [Decapod
+The Dactyl v0.8.2 bridge forwards the route, versioned context envelope, and
+opaque bearer without interpreting membership or authorization. Propodus remains
+responsible for resolving the authenticated principal, organization membership,
+and repository access. The current Decapod bridge opens the canonical local
+`decapod.db` directly through Dactyl's local adapter; it does not create a
+snapshot or bundled compatibility database. Existing SQLite state is inspected
+and migrated by Decapod through the same Dactyl-backed facade. This keeps one
+canonical Dactyl authority and prevents cloud operations from silently falling
+back to local storage. See [Decapod
 #1254](https://github.com/DecapodLabs/decapod/issues/1254), [Dactyl
 #64](https://github.com/DecapodLabs/dactyl/issues/64), and [Propodus
 #79](https://github.com/DecapodLabs/propodus/issues/79).

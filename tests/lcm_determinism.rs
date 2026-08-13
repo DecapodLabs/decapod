@@ -1,12 +1,12 @@
 //! Integration tests for LCM (Lossless Context Management) and Map operators.
 
+use decapod::core::db::Connection;
 use decapod::core::store::{Store, StoreKind};
 use decapod::plugins::lcm::{
     ingest, initialize_lcm_db, list_originals, rebuild_index_from_ledger, show_original,
     show_summary, summarize, validate_ledger_integrity,
 };
 use decapod::plugins::map_ops::{map_agentic, map_llm, read_map_events};
-use rusqlite::Connection;
 use tempfile::tempdir;
 
 fn test_store() -> (tempfile::TempDir, Store) {

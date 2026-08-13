@@ -1,10 +1,10 @@
 use crate::core::broker::DbBroker;
+use crate::core::db::params;
 use crate::core::error;
 use crate::core::schemas;
 use crate::core::store::Store;
 use crate::core::todo;
 use clap::{Parser, Subcommand};
-use rusqlite::params;
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -419,9 +419,11 @@ fn list_memory_nodes_by_types(
                  FROM nodes WHERE node_type IN ({placeholders}) ORDER BY updated_at DESC"
             );
             let mut stmt = conn.prepare(&sql)?;
-            let params: Vec<&dyn rusqlite::ToSql> =
-                types.iter().map(|t| t as &dyn rusqlite::ToSql).collect();
-            let rows = stmt.query_map(rusqlite::params_from_iter(params), |row| {
+            let params: Vec<&dyn crate::core::db::ToSql> = types
+                .iter()
+                .map(|t| t as &dyn crate::core::db::ToSql)
+                .collect();
+            let rows = stmt.query_map(crate::core::db::params_from_iter(params), |row| {
                 Ok(MemoryNode {
                     id: row.get(0)?,
                     node_type: row.get(1)?,

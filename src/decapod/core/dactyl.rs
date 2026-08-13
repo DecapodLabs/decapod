@@ -1,12 +1,8 @@
 //! Decapod's narrow boundary to the Dactyl physical storage contract.
 //!
-//! This module deliberately keeps legacy migration explicit. Dactyl's local
-//! route is a versioned snapshot, so opening an existing SQLite
-//! `.decapod/data/decapod.db` without conversion would create a second
-//! authority rather than migrate Decapod safely. The normal runtime therefore
-//! uses only the Dactyl snapshot contract after a separately proven cutover;
-//! the optional `legacy-import` feature exposes Dactyl's one-shot conversion
-//! boundary without making it part of the default runtime.
+//! Dactyl's local route opens the existing SQLite file directly through its
+//! private host-runtime connector. No second format or compatibility database
+//! is introduced.
 
 use crate::core::backend::{BackendRoute, StorageContext};
 use crate::core::error::{CloudAuthDiagnostic, CloudAuthStatus, DecapodError};
@@ -16,9 +12,6 @@ use std::path::Path;
 use std::time::Duration;
 
 pub use dactyl_db::{OperationResult, WriteResult};
-
-#[cfg(feature = "legacy-import")]
-pub use dactyl_db::ImportReport;
 
 const DEFAULT_LOCK_TIMEOUT: Duration = Duration::from_millis(250);
 
@@ -49,13 +42,8 @@ impl DactylBridge {
         )
     }
 
-    /// Open a Dactyl-owned local snapshot with an explicit access mode.
-    ///
-    /// The canonical `.decapod/data/decapod.db` path is now a Dactyl snapshot
-    /// after the explicit Dactyl-owned legacy import has completed. Opening a
-    /// pre-cutover SQLite file fails closed; callers must import it before any
-    /// canonical read or write.
-    pub fn open_local_snapshot(
+    /// Open an existing local SQLite file with an explicit access mode.
+    pub fn open_local(
         path: impl AsRef<Path>,
         access_mode: AccessMode,
     ) -> Result<Self, DecapodError> {
@@ -76,12 +64,12 @@ impl DactylBridge {
         data_root: impl AsRef<Path>,
         access_mode: AccessMode,
     ) -> Result<Self, DecapodError> {
-        Self::open_local_snapshot(data_root.as_ref().join(schemas::LOCAL_DB_NAME), access_mode)
+        Self::open_local(data_root.as_ref().join(schemas::LOCAL_DB_NAME), access_mode)
     }
 
     /// Bind a governed backend route to Dactyl.
     ///
-    /// A local route is always opened as a Dactyl snapshot. Cloud routes
+    /// A local route is always opened through Dactyl. Cloud routes
     /// require a separate machine-local bearer credential and are passed
     /// through as opaque HTTP endpoints; this method never derives provider
     /// URLs or silently falls back to local storage.
@@ -91,7 +79,7 @@ impl DactylBridge {
         bearer: Option<&str>,
     ) -> Result<Self, DecapodError> {
         match route {
-            BackendRoute::Local { path } => Self::open_local_snapshot(path, access_mode),
+            BackendRoute::Local { path } => Self::open_local(path, access_mode),
             BackendRoute::Cloud { uri, .. } => {
                 let bearer = bearer
                     .map(str::trim)
@@ -162,27 +150,10 @@ impl DactylBridge {
         Ok(self.connection.inspect_schema()?)
     }
 
-    /// Return whether a caller-owned table is present without querying a
-    /// backend-specific catalog such as `sqlite_master` or `PRAGMA`.
+    /// Return whether a caller-owned table is present through Dactyl's
+    /// backend-neutral schema inspection contract.
     pub fn has_table(&self, name: &str) -> Result<bool, DecapodError> {
         Ok(self.inspect_schema()?.table(name).is_some())
-    }
-
-    /// Convert an existing SQLite store into a Dactyl snapshot.
-    ///
-    /// This is intentionally opt-in and explicit. Dactyl performs the
-    /// read-only inspection, temporary-output write, atomic replacement, and
-    /// idempotency/divergence checks; Decapod retains ownership of when this
-    /// migration is allowed by its schema and recovery policy.
-    #[cfg(feature = "legacy-import")]
-    pub fn import_legacy_sqlite(
-        source: impl AsRef<Path>,
-        destination: impl AsRef<Path>,
-    ) -> Result<ImportReport, DecapodError> {
-        Ok(dactyl_db::import_sqlite_file(
-            source.as_ref(),
-            destination.as_ref(),
-        )?)
     }
 
     fn open_route(
@@ -207,15 +178,42 @@ mod tests {
     use super::*;
     use crate::core::error::{DecapodError, StorageFailureKind};
     use crate::core::repo_identity::RepositoryIdentity;
-    use std::io::Write;
     use tempfile::tempdir;
 
     fn no_params() -> Vec<Parameter> {
         Vec::new()
     }
 
+    fn local_runtime_available() -> bool {
+        match DactylBridge::open_memory() {
+            Ok(_) => true,
+            Err(DecapodError::DactylError(error))
+                if error.adapter_code() == Some("sqlite_runtime_unavailable") =>
+            {
+                false
+            }
+            Err(error) => panic!("unexpected local Dactyl open failure: {error}"),
+        }
+    }
+
+    #[test]
+    fn missing_local_runtime_is_reported_as_typed_storage_failure() {
+        if let Err(error) = DactylBridge::open_memory() {
+            assert_eq!(error.storage_failure_kind(), StorageFailureKind::Io);
+            assert!(matches!(
+                error,
+                DecapodError::DactylError(error)
+                    if error.adapter_code() == Some("sqlite_runtime_unavailable")
+            ));
+        }
+    }
+
     #[test]
     fn explicit_ids_and_atomic_rollback_are_backend_neutral() {
+        if !local_runtime_available() {
+            eprintln!("skipping local Dactyl conformance: host SQLite runtime unavailable");
+            return;
+        }
         let bridge = DactylBridge::open_memory().expect("memory bridge");
         bridge
             .atomic(&[Operation::schema(
@@ -250,6 +248,10 @@ mod tests {
 
     #[test]
     fn read_only_access_is_rejected_by_physical_driver() {
+        if !local_runtime_available() {
+            eprintln!("skipping local Dactyl conformance: host SQLite runtime unavailable");
+            return;
+        }
         let bridge = DactylBridge::open_memory_with_access_mode(AccessMode::ReadOnly)
             .expect("read-only memory bridge");
         let error = bridge
@@ -259,31 +261,35 @@ mod tests {
     }
 
     #[test]
-    fn local_snapshot_reopens_and_rejects_canonical_sqlite() {
-        let tmp = tempdir().expect("temporary snapshot directory");
-        let snapshot_path = tmp.path().join("decapod.snapshot");
-        std::fs::File::create(&snapshot_path).expect("empty snapshot target");
-        let bridge = DactylBridge::open_local_snapshot(&snapshot_path, AccessMode::ReadWrite)
-            .expect("Dactyl snapshot bridge");
+    fn local_route_reopens_existing_sqlite() {
+        if !local_runtime_available() {
+            eprintln!("skipping local Dactyl conformance: host SQLite runtime unavailable");
+            return;
+        }
+        let tmp = tempdir().expect("temporary local database directory");
+        let database_path = tmp.path().join("decapod.db");
+        std::fs::File::create(&database_path).expect("empty local database target");
+        let bridge = DactylBridge::open_local(&database_path, AccessMode::ReadWrite)
+            .expect("Dactyl local database bridge");
         bridge
             .atomic(&[Operation::schema(
                 "CREATE TABLE tasks (id INTEGER PRIMARY KEY, title TEXT NOT NULL)",
                 no_params(),
             )])
-            .expect("snapshot schema");
+            .expect("local schema");
         bridge
             .write(
                 "INSERT INTO tasks (id, title) VALUES (?, ?)",
                 &[101_i64.into(), "persisted".into()],
             )
-            .expect("snapshot row");
+            .expect("local row");
         drop(bridge);
 
-        let reopened = DactylBridge::open_local_snapshot(&snapshot_path, AccessMode::ReadOnly)
-            .expect("reopen Dactyl snapshot");
+        let reopened = DactylBridge::open_local(&database_path, AccessMode::ReadOnly)
+            .expect("reopen Dactyl local database");
         let rows = reopened
             .read("SELECT id, title FROM tasks", &no_params())
-            .expect("read persisted snapshot");
+            .expect("read persisted local database");
         assert_eq!(rows.len(), 1);
         assert_eq!(rows.as_slice()[0].get_int("id").expect("id"), 101);
         assert_eq!(
@@ -291,42 +297,17 @@ mod tests {
             "persisted"
         );
         drop(reopened);
-
-        let sqlite_path = tmp.path().join("canonical.db");
-        let mut sqlite = std::fs::File::create(&sqlite_path).expect("canonical SQLite fixture");
-        sqlite
-            .write_all(b"SQLite format 3\0")
-            .expect("write SQLite header");
-        drop(sqlite);
-        let error = match DactylBridge::open_local_snapshot(&sqlite_path, AccessMode::ReadWrite) {
-            Err(error) => error,
-            Ok(_) => panic!("canonical SQLite must not be opened as a Dactyl snapshot"),
-        };
-        assert_eq!(error.storage_failure_kind(), StorageFailureKind::Capability);
-        assert!(error.to_string().contains("import into the Dactyl format"));
-    }
-
-    #[test]
-    fn canonical_local_route_fails_closed_without_second_store() {
-        let tmp = tempdir().expect("temporary canonical store");
-        let sqlite_path = tmp.path().join("canonical.db");
-        let mut sqlite = std::fs::File::create(&sqlite_path).expect("canonical SQLite fixture");
-        sqlite
-            .write_all(b"SQLite format 3\0")
-            .expect("write SQLite header");
-        drop(sqlite);
-        let route = BackendRoute::Local { path: sqlite_path };
-        match DactylBridge::from_backend_route(&route, AccessMode::ReadWrite, Some("ignored")) {
-            Err(error) => assert_eq!(error.storage_failure_kind(), StorageFailureKind::Capability),
-            Ok(_) => panic!("canonical SQLite route must not open a second store"),
-        }
     }
 
     #[test]
     fn canonical_route_is_dactyl_owned_and_schema_inspection_is_portable() {
+        if !local_runtime_available() {
+            eprintln!("skipping local Dactyl conformance: host SQLite runtime unavailable");
+            return;
+        }
         let tmp = tempdir().expect("temporary canonical data root");
         let canonical_path = tmp.path().join("decapod.db");
-        std::fs::File::create(&canonical_path).expect("canonical Dactyl snapshot target");
+        std::fs::File::create(&canonical_path).expect("canonical Dactyl database target");
 
         let bridge = DactylBridge::open_canonical(tmp.path(), AccessMode::ReadWrite)
             .expect("canonical Dactyl route");
@@ -343,40 +324,6 @@ mod tests {
                 .expect("portable schema inspection")
         );
         assert!(canonical_path.exists());
-    }
-
-    #[cfg(feature = "legacy-import")]
-    #[test]
-    fn legacy_sqlite_import_reopens_through_the_snapshot_route() {
-        let tmp = tempdir().expect("temporary legacy store");
-        let sqlite_path = tmp.path().join("decapod.db");
-        let sqlite = rusqlite::Connection::open(&sqlite_path).expect("legacy SQLite store");
-        sqlite
-            .execute_batch(
-                "CREATE TABLE tasks (id INTEGER PRIMARY KEY, title TEXT NOT NULL);\
-                 INSERT INTO tasks (id, title) VALUES (101, 'migrated');",
-            )
-            .expect("seed legacy SQLite store");
-        drop(sqlite);
-
-        let _report = DactylBridge::import_legacy_sqlite(&sqlite_path, &sqlite_path)
-            .expect("import legacy SQLite store");
-        assert!(
-            sqlite_path.with_extension("db.legacy-sqlite").exists(),
-            "same-path import must retain the legacy source backup"
-        );
-
-        let bridge = DactylBridge::open_local_snapshot(&sqlite_path, AccessMode::ReadOnly)
-            .expect("open converted Dactyl snapshot");
-        let rows = bridge
-            .read("SELECT id, title FROM tasks", &no_params())
-            .expect("read converted task");
-        assert_eq!(rows.len(), 1);
-        assert_eq!(rows.as_slice()[0].get_int("id").expect("id"), 101);
-        assert_eq!(
-            rows.as_slice()[0].get_str("title").expect("title"),
-            "migrated"
-        );
     }
 
     #[test]

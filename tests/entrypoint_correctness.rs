@@ -337,7 +337,7 @@ fn test_expired_session_releases_assigned_tasks() {
     );
 
     let todo_db = temp_path.join(".decapod").join("data").join("decapod.db");
-    let conn = rusqlite::Connection::open(todo_db).expect("open todo db");
+    let conn = decapod::core::db::Connection::open(todo_db).expect("open todo db");
     let assigned_to: String = conn
         .query_row(
             "SELECT assigned_to FROM tasks WHERE id = ?1",

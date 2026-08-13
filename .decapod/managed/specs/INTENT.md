@@ -26,9 +26,10 @@
 - Reliability is designed, not hoped for. Trust in generated work follows from explicit intent, boundaries, durable state, validation, supported recovery, and evidence rather than generation capability alone.
 
 ## Current Storage Cutover Intent
-- The canonical `.decapod/data/decapod.db` path is a Dactyl-owned physical store. Decapod must not open it with rusqlite, invoke SQLite as a subprocess, or maintain a second local authority. Every canonical read, write, schema operation, transaction, migration/import step, and validation probe crosses the Dactyl API.
-- Decapod owns domain schemas, migration ordering and ledgers, stable identifier generation, bounded retry policy, backup/recovery policy, and the decision to admit a legacy store. Dactyl owns physical storage execution, snapshot durability, atomic batches, access mode, and legacy SQLite import. Propodus remains the hosted/authenticated route boundary.
-- This PR pins the Dactyl #77 implementation head (`v0.7.0`, commit `74db1a7`) and adds the explicit legacy-import feature boundary plus canonical Dactyl path/schema helpers. The event surface is being migrated in stages; the remaining direct connection closures and SQLite-specific queries are known incomplete work and must not be represented as a completed cutover.
+- The canonical `.decapod/data/decapod.db` path is a Dactyl-backed physical store. Decapod has no direct SQL driver dependency, subprocess connector, backend handle, or second local authority. Every canonical read, write, schema inspection, transaction, migration step, and validation probe crosses the `core::dactyl_db` facade into Dactyl.
+- Decapod owns domain schemas, migration ordering and ledgers, stable identifier generation, bounded retry policy, backup/recovery policy, and the decision to admit legacy rows. Dactyl v0.8.2 owns host-runtime loading, physical execution, access mode, atomicity, normalized results, typed physical errors, and backend-neutral schema inspection. Propodus remains the hosted/authenticated route boundary.
+- This cutover pins Dactyl v0.8.2 (`68555e1`) and removes the old direct SQL-driver, bundled-SQLite, and legacy-import assumptions. New read-write paths receive only the empty filesystem target needed by Dactyl v0.8.2's pre-open header validation; the physical connection remains Dactyl-owned. Existing local database files are opened directly by Dactyl without conversion to a second format; Decapod migration code opens any legacy source through the same facade and owns row translation, ledgers, backup, and recovery policy.
+- The local proof boundary is explicit: host-runtime availability, ordinary close/reopen persistence, read-only enforcement, schema inspection, explicit IDs, atomic rollback, and broker/event routing are local checks. Propodus/Neon deployment, hosted tenancy, credential, and cross-organization concurrency proof remain separate downstream evidence and are not claimed by this local slice.
 - `core::backend::BackendSelection` maps the project `repo.backend` choice to a repository-scoped route. Local resolves to `.decapod/data/decapod.db`; cloud derives `owner/repository` from the Git `origin` remote and accepts an opaque remote URI only after the authenticated/session boundary supplies it. Decapod does not assemble or interpret a provider-specific cloud URI for ordinary state.
 - Local and cloud Decapod agent sessions are machine-local, backend-discriminated (`local_` or `cloud_`), and long-lived enough for an agent run: four hours by default, with a 30-minute minimum and six-hour maximum. Cloud access/refresh credentials remain opaque and are persisted separately from repository state.
 
@@ -213,8 +214,8 @@ flowchart LR
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9dc9b909f29fad0c8ea86556993d5c9c1c38b9af1de6000197cae86d69081613`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (103 files), `tests/` (4 files)
+- Repository signal fingerprint: `e887d87ee09cd774e16c328247b89ddd33d46279bd24764f4592b34e75d2e466`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (104 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

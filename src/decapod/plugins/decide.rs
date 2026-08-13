@@ -1,11 +1,11 @@
 use crate::core::broker::DbBroker;
+use crate::core::db::params;
 use crate::core::error;
 use crate::core::schemas;
 use crate::core::store::Store;
 use crate::core::todo;
 use crate::plugins::federation;
 use clap::{Parser, Subcommand};
-use rusqlite::params;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
@@ -1310,7 +1310,7 @@ pub fn list_sessions(
     let db_path = decide_db_path(&store.root);
 
     broker.with_conn(&db_path, "cli", None, "decide.session.list", |conn| {
-        let (sql, params_vec): (String, Vec<Box<dyn rusqlite::types::ToSql>>) =
+        let (sql, params_vec): (String, Vec<Box<dyn crate::core::db::types::ToSql>>) =
             if let Some(status) = status_filter {
                 (
                     "SELECT id, tree_id, title, description, status, federation_node_id, created_at, updated_at, completed_at, actor
@@ -1326,7 +1326,7 @@ pub fn list_sessions(
             };
 
         let mut stmt = conn.prepare(&sql)?;
-        let params_refs: Vec<&dyn rusqlite::types::ToSql> =
+        let params_refs: Vec<&dyn crate::core::db::types::ToSql> =
             params_vec.iter().map(|p| p.as_ref()).collect();
         let sessions: Vec<DecisionSession> = stmt
             .query_map(params_refs.as_slice(), |row| {
@@ -1360,7 +1360,7 @@ pub fn list_decisions(
 
     broker.with_conn(&db_path, "cli", None, "decide.list", |conn| {
         let mut conditions: Vec<String> = vec![];
-        let mut param_values: Vec<Box<dyn rusqlite::types::ToSql>> = vec![];
+        let mut param_values: Vec<Box<dyn crate::core::db::types::ToSql>> = vec![];
 
         if let Some(sid) = session_filter {
             conditions.push(format!("session_id = ?{}", param_values.len() + 1));
@@ -1383,7 +1383,7 @@ pub fn list_decisions(
         );
 
         let mut stmt = conn.prepare(&sql)?;
-        let params_refs: Vec<&dyn rusqlite::types::ToSql> =
+        let params_refs: Vec<&dyn crate::core::db::types::ToSql> =
             param_values.iter().map(|p| p.as_ref()).collect();
         let decisions: Vec<Decision> = stmt
             .query_map(params_refs.as_slice(), |row| {

@@ -151,7 +151,7 @@ flowchart LR
 - A structurally healthy spec-drift fixture increments neither warning nor failure counts.
 - A watcher record imported by existing-project init is observed by validation, health, heartbeat, and flight recorder after the source JSONL is removed.
 - Re-running event reconciliation imports zero additional rows; malformed or conflicting fresh records return visible errors, and a proven consolidation receipt prevents retired archives from being reinterpreted.
-- A legacy SQLite store is imported by Dactyl into the canonical `decapod.db` snapshot, retains the Dactyl-owned legacy backup, reopens through Dactyl, and does not trigger the full-backup loop on the following command.
+- Local Dactyl v0.8.2 conformance covers explicit IDs, atomic rollback, read-only enforcement, ordinary file close/reopen persistence, and backend-neutral schema inspection when the host SQLite runtime is available. A missing host runtime is a typed `sqlite_runtime_unavailable` storage-I/O result and never activates a bundled or second driver; hosted Propodus/Neon and tenancy/concurrency proof remain separate checks.
 
 ## Promotion Gates
 
@@ -252,7 +252,7 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9dc9b909f29fad0c8ea86556993d5c9c1c38b9af1de6000197cae86d69081613`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (103 files), `tests/` (4 files)
+- Repository signal fingerprint: `e887d87ee09cd774e16c328247b89ddd33d46279bd24764f4592b34e75d2e466`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (104 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

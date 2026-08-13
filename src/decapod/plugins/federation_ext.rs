@@ -15,7 +15,7 @@ pub fn list_nodes(
 
     broker.with_conn(&db_path, "decapod", None, "federation.list", |conn| {
         let mut conditions = vec!["1=1".to_string()];
-        let mut param_values: Vec<Box<dyn rusqlite::types::ToSql>> = vec![];
+        let mut param_values: Vec<Box<dyn crate::core::db::types::ToSql>> = vec![];
 
         if let Some(ref nt) = node_type {
             let idx = param_values.len() + 1;
@@ -46,7 +46,7 @@ pub fn list_nodes(
         );
 
         let mut stmt = conn.prepare(&sql)?;
-        let params_refs: Vec<&dyn rusqlite::types::ToSql> =
+        let params_refs: Vec<&dyn crate::core::db::types::ToSql> =
             param_values.iter().map(|b| b.as_ref()).collect();
 
         let rows = stmt.query_map(params_refs.as_slice(), |row| {

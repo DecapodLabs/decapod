@@ -49,7 +49,7 @@ signatures, update protection). Agents publish release-bound changes through
 the code PR, and release automation handles only compilation and publication.
 
 ## Installed-Version Upgrade Path
-After `cargo install decapod`, the next normal governed command runs protected, idempotent schema migration and legacy-event reconciliation before runtime consumers read evidence. Existing-project `decapod init` executes the same reconciliation before regeneration. A prior successful single-datastore migration retires its JSONL inputs through a durable receipt; startup does not rescan them. A legacy SQLite store is admitted only through Dactyl's explicit import/conversion boundary, which owns the read-only inspection, atomic snapshot replacement, backup, and idempotency check. Decapod never opens the canonical path with SQLite. Human-authored `OVERRIDE.md` content is validated but never mechanically rewritten. Fresh import conflicts preserve source artifacts and stop with an actionable error.
+After `cargo install decapod`, the next normal governed command runs protected, idempotent schema migration and legacy-event reconciliation before runtime consumers read evidence. Existing-project `decapod init` executes the same reconciliation before regeneration. A prior successful single-datastore migration retires its JSONL inputs through a durable receipt; startup does not rescan them. Legacy local database sources are opened through the Dactyl v0.8.2 facade, while Decapod owns row translation, schema policy, backup, recovery, and idempotency ledgers. Dactyl opens the canonical path directly through its host runtime; no bundled fallback or second local authority is used. Human-authored `OVERRIDE.md` content is validated but never mechanically rewritten. Fresh migration conflicts preserve source artifacts and stop with an actionable error.
 
 ## Agent-Triggered Migration Runbook
 1. Let the first governed command after installing a new Decapod release run
@@ -172,7 +172,7 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9dc9b909f29fad0c8ea86556993d5c9c1c38b9af1de6000197cae86d69081613`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (103 files), `tests/` (4 files)
+- Repository signal fingerprint: `e887d87ee09cd774e16c328247b89ddd33d46279bd24764f4592b34e75d2e466`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (104 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -1,5 +1,6 @@
 use crate::core::broker::DbBroker;
 use crate::core::completion_evidence;
+use crate::core::db::OptionalExtension;
 use crate::core::error;
 use crate::core::events;
 use crate::core::external_action::{self, ExternalCapability};
@@ -11,7 +12,6 @@ use crate::core::workspace;
 use crate::plugins::federation;
 use clap::{Parser, Subcommand};
 use fancy_regex::Regex;
-use rusqlite::OptionalExtension;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::fs;
@@ -408,7 +408,7 @@ fn load_targets(
             let mut stmt = conn.prepare(
                 "SELECT t.id, t.status, v.proof_plan, v.verification_artifacts, v.last_verified_at, v.last_verified_status, COALESCE(v.verification_policy_days, 90)\n                 FROM tasks t\n                 LEFT JOIN task_verification v ON v.todo_id = t.id\n                 WHERE t.id = ?1",
             )?;
-            let rows = stmt.query_map(rusqlite::params![id], |row| {
+            let rows = stmt.query_map(crate::core::db::params![id], |row| {
                 Ok(VerifyTarget {
                     todo_id: row.get(0)?,
                     status: row.get(1)?,
@@ -463,7 +463,7 @@ fn persist_result(
                     "SELECT proof_plan, verification_artifacts, verification_policy_days
                      FROM task_verification
                      WHERE todo_id = ?1",
-                    rusqlite::params![todo_id],
+                    crate::core::db::params![todo_id],
                     |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
                 )
                 .optional()?;
@@ -481,7 +481,7 @@ fn persist_result(
                    last_verified_notes=excluded.last_verified_notes,
                    verification_policy_days=excluded.verification_policy_days,
                    updated_at=excluded.updated_at",
-                rusqlite::params![
+                crate::core::db::params![
                     todo_id,
                     proof_plan,
                     verification_artifacts,
@@ -914,7 +914,7 @@ pub fn capture_baseline_for_todo(
             let status = conn
                 .query_row(
                     "SELECT status FROM tasks WHERE id = ?1",
-                    rusqlite::params![todo_id],
+                    crate::core::db::params![todo_id],
                     |row| row.get(0),
                 )
                 .optional()?;
@@ -993,7 +993,7 @@ pub fn capture_baseline_for_todo(
     broker.with_conn(&db_path, "decapod", None, "verify.capture.write", |conn| {
         conn.execute(
             "INSERT INTO task_verification(todo_id, proof_plan, verification_artifacts, last_verified_at, last_verified_status, last_verified_notes, verification_policy_days, updated_at)\n             VALUES(?1, ?2, ?3, ?4, ?5, ?6, 90, ?4)\n             ON CONFLICT(todo_id) DO UPDATE SET\n               proof_plan=excluded.proof_plan,\n               verification_artifacts=excluded.verification_artifacts,\n               last_verified_at=excluded.last_verified_at,\n               last_verified_status=excluded.last_verified_status,\n               last_verified_notes=excluded.last_verified_notes,\n               verification_policy_days=excluded.verification_policy_days,\n               updated_at=excluded.updated_at",
-            rusqlite::params![
+            crate::core::db::params![
                 todo_id,
                 proof_plan_json,
                 artifacts_json,
@@ -1113,7 +1113,7 @@ fn refresh_batch_baselines(
                      last_verified_notes = 'baseline recovered from stable batch validation snapshot; awaiting final aggregate verification',
                      updated_at = ?3
                  WHERE todo_id = ?4",
-                rusqlite::params![proof_plan_json, artifacts_json, completed_at, todo_id],
+                crate::core::db::params![proof_plan_json, artifacts_json, completed_at, todo_id],
             )?;
         }
         Ok(())
@@ -1151,7 +1151,7 @@ pub fn prune_verification_for_todo(
         )?;
         conn.execute(
             "UPDATE tasks SET status = 'open', completed_at = NULL, updated_at = ?1 WHERE id = ?2",
-            rusqlite::params![ts, todo_id],
+            crate::core::db::params![ts, todo_id],
         )?;
         Ok(())
     })?;

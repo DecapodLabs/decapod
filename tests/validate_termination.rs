@@ -1,4 +1,4 @@
-use rusqlite::Connection;
+use decapod::core::db::Connection;
 use serde_json::Value;
 use std::collections::hash_map::DefaultHasher;
 use std::fs;

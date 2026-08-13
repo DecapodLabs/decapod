@@ -1,5 +1,5 @@
+use decapod::core::db::Connection;
 use decapod::core::{db, error::DecapodError, pool};
-use rusqlite::Connection;
 use std::sync::{Mutex, OnceLock};
 use tempfile::TempDir;
 
@@ -28,7 +28,7 @@ fn sqlite_pool_write_reports_busy_under_exclusive_lock_and_recovers_after_releas
 
     let blocked = pool::global_pool().with_write(&db_path, |conn| {
         conn.execute("INSERT INTO t(v) VALUES('blocked')", [])
-            .map_err(DecapodError::RusqliteError)?;
+            .map_err(DecapodError::StorageError)?;
         Ok(())
     });
     assert!(blocked.is_err(), "write must fail while lock is held");
@@ -44,7 +44,7 @@ fn sqlite_pool_write_reports_busy_under_exclusive_lock_and_recovers_after_releas
 
     let recovered = pool::global_pool().with_write(&db_path, |conn| {
         conn.execute("INSERT INTO t(v) VALUES('ok')", [])
-            .map_err(DecapodError::RusqliteError)?;
+            .map_err(DecapodError::StorageError)?;
         Ok(())
     });
     assert!(
@@ -66,14 +66,14 @@ fn sqlite_fault_injection_produces_deterministic_io_error_path() {
     let db_path = tmp.path().join("fault.db");
 
     // SAFETY: test-scoped environment mutation is serialized via env_lock.
-    unsafe { std::env::set_var("DECAPOD_SQLITE_FAULT_STAGE", "open") };
+    unsafe { std::env::set_var("DECAPOD_STORAGE_FAULT_STAGE", "open") };
     let err = db::db_connect(db_path.to_string_lossy().as_ref()).expect_err("fault must trigger");
     // SAFETY: test-scoped environment mutation is serialized via env_lock.
-    unsafe { std::env::remove_var("DECAPOD_SQLITE_FAULT_STAGE") };
+    unsafe { std::env::remove_var("DECAPOD_STORAGE_FAULT_STAGE") };
 
     let msg = err.to_string();
-    assert!(msg.contains("SQLITE_FAULT_INJECTED"), "{msg}");
-    assert!(msg.contains("extended_code=522"), "{msg}");
+    assert!(msg.contains("STORAGE_FAULT_INJECTED"), "{msg}");
+    assert!(msg.contains("stage='open'"), "{msg}");
 }
 
 #[cfg(unix)]
@@ -118,7 +118,7 @@ fn sqlite_pool_read_path_remains_available_for_concurrent_queries() {
     let res = pool::global_pool().with_read(&db_path, |conn| {
         let count: i64 = conn
             .query_row("SELECT COUNT(*) FROM t", [], |row| row.get(0))
-            .map_err(DecapodError::RusqliteError)?;
+            .map_err(DecapodError::StorageError)?;
         assert_eq!(count, 0);
         Ok(())
     });

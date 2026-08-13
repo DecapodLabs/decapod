@@ -223,7 +223,7 @@ fn chaos_multi_agent_replay_is_deterministic() {
 
     // Event log integrity: all event IDs must be unique in the canonical events table.
     let db_path = dir.join(".decapod").join("data").join("decapod.db");
-    let conn = rusqlite::Connection::open(db_path).expect("open decapod.db");
+    let conn = decapod::core::db::Connection::open(db_path).expect("open decapod.db");
     let mut stmt = conn
         .prepare("SELECT event_id FROM events WHERE stream = 'todo'")
         .expect("prepare");

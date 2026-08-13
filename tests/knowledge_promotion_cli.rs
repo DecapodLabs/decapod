@@ -90,7 +90,7 @@ fn knowledge_promote_writes_append_only_database_event() {
     assert_eq!(payload["approved_by"], "human/reviewer-1");
 
     let db_path = dir.join(".decapod").join("data").join("decapod.db");
-    let conn = rusqlite::Connection::open(db_path).expect("open canonical datastore");
+    let conn = decapod::core::db::Connection::open(db_path).expect("open canonical datastore");
     let raw: String = conn
         .query_row(
             "SELECT payload FROM events WHERE stream = 'knowledge' AND event_id = ?1",

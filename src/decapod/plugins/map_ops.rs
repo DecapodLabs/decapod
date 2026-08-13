@@ -228,13 +228,13 @@ pub fn read_map_events(root: &Path) -> Result<Vec<MapEvent>, error::DecapodError
         let conn = crate::core::db::db_connect_for_validate(&db_path.to_string_lossy())?;
         let mut stmt = conn
             .prepare("SELECT payload FROM events WHERE stream = 'map' ORDER BY seq ASC")
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         let rows = stmt
             .query_map([], |row| row.get::<_, String>(0))
-            .map_err(error::DecapodError::RusqliteError)?;
+            .map_err(error::DecapodError::StorageError)?;
         let mut out = Vec::new();
         for row in rows {
-            let value = row.map_err(error::DecapodError::RusqliteError)?;
+            let value = row.map_err(error::DecapodError::StorageError)?;
             out.push(
                 serde_json::from_str(&value)
                     .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,

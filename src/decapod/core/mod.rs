@@ -23,6 +23,7 @@ pub mod context_capsule;
 pub mod coplayer;
 pub mod custody;
 pub mod dactyl;
+pub mod dactyl_db;
 pub mod db;
 pub mod dirty_classification;
 pub mod docs;
