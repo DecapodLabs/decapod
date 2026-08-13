@@ -1,63 +1,28 @@
 {
   "schema_version": "1.0.0",
-  "title": "Decapod cloud integration through Dactyl and Propodus",
-  "intent": "Make backend=cloud a truthful Decapod runtime selection through the existing Dactyl boundary, with no per-query backend inputs, local/mock troubleshooting proof, and a single publishable PR.",
+  "title": "Dactyl 0.9 cloud integration and release workflow hardening",
+  "intent": "Upgrade Decapod's backend=cloud todo bridge to Dactyl 0.9.0, preserve the single route-selection boundary, make cloud todo state/event transitions atomic, and repair release-PR and post-release master validation failures. Prove all locally available behavior and publish one reviewable PR. Hosted Neon/Vercel deployment, tenant isolation, and service-side event parity are explicitly outside this PR; do not claim them as stable.",
   "state": "APPROVED",
   "todo_ids": [
-    "bugs_01kzy9z7jz0v66zt"
+    "bugs_01kzyg2vd9svbxhs"
   ],
   "proof_hooks": [
-    "focused Rust tests, cargo fmt --check, cargo clippy, decapod validate, hosted PR checks"
+    "cargo test --locked --test gatling -- --test-threads=4",
+    "cargo test --locked --lib dactyl_todo -- --test-threads=1",
+    "cargo test --locked --test cloud_command_path -- --test-threads=1",
+    "cargo test --locked --test release_workflow_policy -- --test-threads=1"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [
-    "Do not claim live hosted stability or close issues whose proof belongs to Dactyl/Propodus deployment; stop on a Decapod decision gate or contract mismatch."
+    "Do not claim live cloud stability until hosted service proof is available"
   ],
   "unresolved_contradictions": [],
-  "deferred_questions": [
-    "Live Neon/Vercel deployment parity and credentials are intentionally unavailable in this run; retain as a downstream proof gate and do not claim hosted stability."
-  ],
+  "deferred_questions": [],
   "constraints": {
-    "forbidden_paths": [
-      "Do not mutate Dactyl or Propodus repositories; do not add per-query backend parameters; do not hand-edit .decapod generated state; do not work on protected master."
-    ],
-    "file_touch_budget": 50
+    "forbidden_paths": [],
+    "file_touch_budget": null
   },
-  "phases": [
-    {
-      "id": "contract",
-      "name": "Contract and issue reconciliation",
-      "description": "Review live Decapod dactyl/propodus issues and freeze the Dactyl generic query/context boundary.",
-      "entry_gates": [],
-      "exit_gates": [],
-      "entered": false,
-      "completed": false,
-      "entered_at": null,
-      "completed_at": null
-    },
-    {
-      "id": "cloud-todo",
-      "name": "Cloud todo Dactyl adapter",
-      "description": "Route backend=cloud todo commands through Propodus auth and Dactyl query/batch operations with local/protocol proof.",
-      "entry_gates": [],
-      "exit_gates": [],
-      "entered": false,
-      "completed": false,
-      "entered_at": null,
-      "completed_at": null
-    },
-    {
-      "id": "proof",
-      "name": "Validation and publication",
-      "description": "Refresh living specs and governance artifacts, run local checks, publish one PR, and report hosted proof limits.",
-      "entry_gates": [],
-      "exit_gates": [],
-      "entered": false,
-      "completed": false,
-      "entered_at": null,
-      "completed_at": null
-    }
-  ],
-  "updated_at": "1786651969Z"
+  "phases": [],
+  "updated_at": "1786658608Z"
 }

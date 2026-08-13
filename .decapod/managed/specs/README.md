@@ -42,7 +42,7 @@ This change establishes two repository invariants:
   to the migration ledger and requires migration instructions to be reviewed.
 
 ## Canonical `.decapod/` Layout
-- `.decapod/data/`: canonical control-plane state, with `decapod.db` opened and operated through the Dactyl v0.8.2 facade; legacy sources are opened through that same boundary and are never a runtime authority.
+- `.decapod/data/`: canonical control-plane state, with `decapod.db` opened and operated through the Dactyl v0.9.0 facade; legacy sources are opened through that same boundary and are never a runtime authority.
 - `.decapod/managed/Dockerfile.decapod`: Decapod's project-specific execution image; Decapod runs inside it and may add project build dependencies such as Go, Python, or system packages. Glibc is the default; `--image-profile alpine` selects the GHCR `-alpine`-tagged musl image.
 - `.decapod/managed/specs/`: **Living project specs** for humans and agents.
 - `Dockerfile` at the project root remains the product application's container image and is the artifact users package and deploy.
@@ -71,7 +71,7 @@ This change establishes two repository invariants:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a95e2d6b5b67903339be7eb4cc127cd1c87f8fe3893a335eadbdd7e90f399d39`
+- Repository signal fingerprint: `3b27912d481c35bb6a24e2ebbf577dd10ce54958b2997f655eb9e6df51927ab9`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (105 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

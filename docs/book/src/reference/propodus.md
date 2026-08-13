@@ -8,7 +8,7 @@ local SQLite.
 
 ## Dactyl storage contract
 
-The Decapod client uses Dactyl `dactyl-db` 0.8.2. Dactyl selects the physical
+The Decapod client uses Dactyl `dactyl-db` 0.9.0. Dactyl selects the physical
 backend from the route bound during `backend=cloud`; individual SQL operations
 do not receive a backend selector, provider name, tenant argument, or other
 out-of-band query input.
@@ -16,12 +16,15 @@ out-of-band query input.
 | Operation | Dactyl request | Scope/authentication |
 |---|---|---|
 | Read/list | `POST /query` | SQL plus opaque versioned context |
-| Add/claim/complete | `POST /batch` | ordered Dactyl operations plus context |
+| Add/claim/release/complete | `POST /batch` | ordered Dactyl operations plus context |
 
 The bearer is sent in the HTTP `Authorization` header by Dactyl. The context
 is forwarded as an opaque JSON object; Propodus resolves its authenticated
-principal and repository authorization. Add, claim, and complete use a
-Dactyl batch containing the state write and a task observation.
+principal and repository authorization. Add, claim, release, and complete use
+a Dactyl batch containing the conditional state write, the matching event
+write, and a task observation. The event insert is conditioned on the state
+transition marker, so a lost claim or stale completion aborts the entire
+batch instead of committing state without its event.
 
 The checked-in `tests/cloud_dactyl_boundary.rs` proof verifies `/query`, the
 bearer header, the versioned context, and the absence of a per-query backend
@@ -37,9 +40,9 @@ rotates that session through the refresh route. Credentials stay outside the
 repository.
 
 The command boundary is covered by `tests/cloud_command_path.rs`, which proves
-that list, add, claim, and complete are routed through the backend-neutral
-`TodoStore` adapter. Unsupported local-only operations return an explicit
-error on the cloud backend.
+that list, add, get, claim, release, and complete are routed through the
+backend-neutral `TodoStore` adapter. Unsupported local-only operations return
+an explicit error on the cloud backend.
 
 The production-dispatch proof is `tests/cloud_cli_boundary.rs`; it uses a
 mock Dactyl store factory and exercises the same `run_todo_cli` composition
@@ -84,7 +87,7 @@ logical repository scope derived from `origin`; it requires an authenticated
 session bearer, but the bearer is memory-only and is omitted from serialized
 context data.
 
-The Dactyl v0.8.2 bridge forwards the route, versioned context envelope, and
+The Dactyl v0.9.0 bridge forwards the route, versioned context envelope, and
 opaque bearer without interpreting membership or authorization. Propodus remains
 responsible for resolving the authenticated principal, organization membership,
 and repository access. The Decapod bridge opens the canonical local
@@ -152,10 +155,12 @@ repo allowlist or accept a project-configured repository identifier.
 
 ## Current governance limits
 
-The cloud Dactyl todo slice supports repo-scoped list/add/claim/complete
-operations. `get` and `show` intentionally use list-and-filter because the
-TodoStore contract
-has no repo-scoped get route; a missing item returns `status = "not_found"`.
+The cloud Dactyl todo slice supports repo-scoped list/add/get/claim/release/
+complete operations. `get` and `show` use keyed reads through Dactyl rather
+than list-and-filter. Add, claim, release, and complete each use one Dactyl
+atomic batch for the conditional task transition, matching event, and final
+task observation; a stale transition fails before either state or event is
+committed. A missing item returns `status = "not_found"`.
 `todo done --validated` is intentionally rejected because v1 has no proof
 capture or verification-artifact contract. This is an explicit unsupported
 boundary, not full remote governance completion; a future proof-contract issue
@@ -166,10 +171,11 @@ see [Decapod issue #1038](https://github.com/DecapodLabs/decapod/issues/1038).
 
 This Decapod slice activates the explicit cloud todo command path,
 remote-derived repository identity, Propodus onboarding/session exchange,
-machine-local refresh, Dactyl adapter-level command proof, and a wire-level
+machine-local refresh, Dactyl 0.9.0 adapter-level command and event-atomicity proof, and a wire-level
 `/query` proof without moving hosted authentication, repository authorization,
 persistence, or deployment into Decapod. Local mode continues to use the same
 backend-neutral todo command boundary, with physical canonical storage owned
 by Dactyl. Live Neon/Vercel availability, Propodus/Dactyl service deployment,
-cross-organization isolation, schema/migration parity, and cloud event
-atomicity remain deployment-dependent proof gates.
+cross-organization isolation, schema/migration parity, and hosted event
+atomicity remain deployment-dependent proof gates; the client-side batch
+contract and local rollback proof do not claim those hosted properties.
