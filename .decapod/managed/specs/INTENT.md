@@ -40,6 +40,7 @@
 - Decapod increments task revisions for durable task mutations, attributes lifecycle events to the actor supplied by the operation or `DECAPOD_AGENT_ID`, and commits state-plus-event writes atomically through the broker transaction boundary.
 - The local coordination slice applies that same atomicity rule to agent category/expertise registration, heartbeats, stale-session cleanup, lease yield/handoff, and task-owner add/remove; read-only fleet, presence, ownership, and expertise projections remain non-mutating reads.
 - Event stream sequence allocation is idempotent by event identity and protected by a unique `(stream, seq)` invariant. These are Decapod semantics that the Dactyl physical operation batch and Propodus hosted route must preserve; they are not Propodus governance rules.
+- Migration must preserve every non-conflicting legacy event while rebuilding sequence uniqueness atomically; validation must fail within its configured budget without leaving an active worker behind. Large broker histories are valid durable state, so replay validation must bound each physical read without truncating or sampling the audit stream.
 
 ## Release pin flywheel
 - Master entrypoint/Dockerfile/manifest pins record the Decapod version that generated that tip. Cargo-only releases do not rewrite pins. Release Artifact Sync is removed. The first user/agent PR evaluating a newer installed Decapod must refresh all four entrypoints, the managed Dockerfile pin, and the specs manifest.
@@ -217,7 +218,7 @@ flowchart LR
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2ab71a0e639b8c8698de6c9756229dd02490e20b608e9d5d8cd92099a8ac80e2`
+- Repository signal fingerprint: `c2d18ef63de632f51a064d7f8c3392efe5af1683ebfe56a9d5b11dad7a41d2e3`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (105 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

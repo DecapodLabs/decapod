@@ -183,6 +183,11 @@ sequenceDiagram
 - `core::events` is the semantic read/write boundary for append-only runtime evidence. Callers do not bind to per-stream tables, a future consolidated table, or legacy JSONL.
 - Startup migration reconciles unproven legacy JSONL and legacy local database rows into the canonical Dactyl-backed store idempotently before governed consumers run. A successful single-datastore migration is durable proof that its JSONL inputs are retired. Legacy database rows are read and written through the Dactyl facade; Decapod owns compatibility, backup, and recovery policy. Fresh conflicts fail visibly.
 
+## Migration and Validation Liveness (#1280, #1281)
+- Legacy event-table consolidation acquires one immediate transaction, removes any structural unique index on `(stream, seq)` before importing legacy rows, deterministically renumbers each stream, and recreates the canonical index before commit. A failed import or normalization rolls back the transaction, so a transient sequence collision cannot leave a partially retired legacy store.
+- Broker replay retains newest-first semantics while reading an unbounded stream through ascending keyset pages. The Dactyl facade may materialize one result page, but it never receives the entire audit stream as one result set.
+- The validation parent delegates migration and validation to a child process with an explicit deadline. A worker lock preflight uses a short busy budget to surface contention as a typed failure; a slow or wedged worker is killed and reaped so validation cannot strand a database-holding thread or process.
+
 ## ADR Register
 | ADR | Title | Status | Rationale | Date |
 |---|---|---|---|---|
@@ -223,7 +228,7 @@ sequenceDiagram
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2ab71a0e639b8c8698de6c9756229dd02490e20b608e9d5d8cd92099a8ac80e2`
+- Repository signal fingerprint: `c2d18ef63de632f51a064d7f8c3392efe5af1683ebfe56a9d5b11dad7a41d2e3`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (105 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
