@@ -6,8 +6,9 @@
   "original_intent": "Solve GitHub Issues #1280 and #1281 and publish the PR when ready.",
   "derived_intent": "Implement evidence-backed fixes for migration sequence collisions, bounded large-stream replay, and validation process cleanup; prove them with focused tests, full required tests, Decapod validation, and a governed PR.",
   "destination": "GitHub PR for issues #1280 and #1281",
-  "current_phase": "implementation",
+  "current_phase": "validation",
   "next_transitions": [
+    "publish",
     "validation"
   ],
   "active_boundaries": [
@@ -28,6 +29,8 @@
     "tests/validate_termination.rs"
   ],
   "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
     ".decapod/managed/specs/ARCHITECTURE.md",
     ".decapod/managed/specs/INTENT.md",
     ".decapod/managed/specs/INTERFACES.md",
@@ -41,13 +44,18 @@
     "cargo fmt --all -- --check",
     "cargo test --locked",
     "cargo test --locked --test single_datastore -- --test-threads=1",
-    "cargo test --locked --test validate_termination -- --test-threads=1"
+    "cargo test --locked --test validate_termination -- --test-threads=1",
+    "decapod validate"
   ],
   "tool_calls": [
     "Decapod orientation and plan governance",
     "GitHub issue evidence reviewed with gh issue view for #1280 and #1281"
   ],
   "checks": [
+    {
+      "name": "decapod validate",
+      "status": "passed"
+    },
     {
       "name": "format",
       "status": "passed"
@@ -68,7 +76,8 @@
   "evidence": [
     "#1280 regression: legacy stream row sequence collision with alternate unique index is imported and normalized to unique sequences in one transaction",
     "#1281 regression: 4096-event unbounded query returns newest-first through 1024-row keyset pages",
-    "Validation contention regression: 11 termination/diagnostic tests pass serially; child worker is killed and reaped on timeout"
+    "Validation contention regression: 11 termination/diagnostic tests pass serially; child worker is killed and reaped on timeout",
+    "validation epoch ve_f40f57094c662cad completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [
@@ -81,7 +90,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:eaa5903c7efdc5aabb81032ec775d7ae984d0a84a8282811c51e861b721257b3",
+  "artifact_hash": "sha256:1eb42ad736dec9eff64bc35d1749303b79055f770719a13824ca74abde51e83b",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -121,6 +130,13 @@
       {
         "sequence": 4,
         "event_id": "event:4",
+        "intent_id": "intent:run_20260826_issues_1280_1281",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:run_20260826_issues_1280_1281"
+      },
+      {
+        "sequence": 5,
+        "event_id": "event:5",
         "intent_id": "intent:run_20260826_issues_1280_1281",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:run_20260826_issues_1280_1281"
@@ -170,12 +186,31 @@
               "Full cargo test failures are unrelated baseline fixture/environment failures and remain disclosed rather than masked."
             ],
             "custody_event_id": "event:4"
+          },
+          {
+            "sequence": 5,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src/decapod/core/events.rs, src/decapod/core/db.rs, src/decapod/lib.rs, src/decapod/core/validate.rs, tests/single_datastore.rs, living specs, governed artifacts",
+              "src/decapod/core/events.rs, src/decapod/core/migration.rs, src/decapod/lib.rs, src/decapod/core/validate.rs, tests, living specs, governed artifacts"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_f40f57094c662cad completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:5"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 4
+    "next_sequence": 5
   }
 }
