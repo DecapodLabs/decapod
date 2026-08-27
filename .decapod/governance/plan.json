@@ -1,21 +1,20 @@
 {
   "schema_version": "1.0.0",
-  "title": "Dactyl 0.9 cloud integration and release workflow hardening",
-  "intent": "Upgrade Decapod's backend=cloud todo bridge to Dactyl 0.9.0, preserve today's backend-neutral operation semantics, compose Dactyl's ambient DATASTORE/ DATASTORE_ROUTE/ DATASTORE_TOKEN values from the binary-owned Propodus Vercel/Neon origin, session bearer, and opaque target org/repo context, make cloud todo state/event transitions atomic, and repair release-PR and post-release master validation failures. Prove all locally available behavior and publish one reviewable PR. Hosted Neon/Vercel deployment, tenant isolation, and service-side event parity are explicitly outside this PR; do not claim them as stable.",
+  "title": "Vet and solve GitHub Issues #1280 and #1281",
+  "intent": "Fix the evidenced migration sequence-collision path and large broker replay validation path without weakening audit or governance guarantees; publish only after focused tests, the required locked suite evidence, and Decapod validation pass.",
   "state": "APPROVED",
   "todo_ids": [
-    "bugs_01kzyg2vd9svbxhs"
+    "feat_01m0yfhbf11bnaxx"
   ],
   "proof_hooks": [
-    "cargo test --locked --test gatling -- --test-threads=4",
-    "cargo test --locked --lib dactyl_todo -- --test-threads=1",
-    "cargo test --locked --test cloud_command_path -- --test-threads=1",
-    "cargo test --locked --test release_workflow_policy -- --test-threads=1"
+    "cargo fmt --all -- --check",
+    "cargo test --locked --test single_datastore -- --test-threads=1",
+    "cargo test --locked --test validate_termination -- --test-threads=1"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [
-    "Do not claim live cloud stability until hosted service proof is available"
+    "Stop for human review if issue evidence contradicts the repository or if safe migration semantics cannot be proven."
   ],
   "unresolved_contradictions": [],
   "deferred_questions": [],
@@ -24,5 +23,5 @@
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1786659310Z"
+  "updated_at": "1787763009Z"
 }

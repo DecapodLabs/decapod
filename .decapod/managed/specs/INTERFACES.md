@@ -40,6 +40,9 @@ Read callers must not invoke schema DDL or migration repair through a read-only 
 | `todo::update_status` | Decapod lifecycle caller | Dactyl-backed local transaction facade | Requires expected status and revision; returns `ok`, `not_found`, or `conflict` and emits an event only after the conditional update wins |
 | `todo` lease/ownership mutations | Decapod coordination caller | Dactyl-backed local transaction facade | Claim, yield, handoff, owner, heartbeat, cleanup, and expertise state plus their events share the broker transaction boundary; cloud atomic-envelope proof remains downstream |
 | `events::append_on_conn` | Canonical Decapod event writer | Dactyl-backed local transaction facade | Replaying the same event identity is idempotent; divergent content fails with `EVENT_ID_CONFLICT`; Dactyl executes the write while Decapod owns sequence and event policy |
+| `events::query(..., usize::MAX)` | Broker replay and validation | Dactyl-backed read connection | Returns the same newest-first stream contract as a bounded query, but obtains rows with ascending `(seq,event_id)` keyset pages of fixed size and reverses only the accumulated semantic result; no audit rows are discarded |
+| Legacy event reconciliation | Startup migration | Canonical `events` table and unique `(stream,seq)` index | Imports legacy rows and rebuilds sequence uniqueness in one immediate transaction; all structural stream/sequence unique indexes are removed before renumbering and restored only after normalization succeeds |
+| Bounded validation worker | Validation command parent | Child Decapod process | Runs migration plus validation behind the configured deadline, uses a short worker lock budget, emits typed contention/validation results, and is killed and reaped on timeout so no validation thread remains attached to datastore state |
 | Cloud todo mutation | `DactylTodoStore` | Dactyl batch endpoint | State write and committed task observation are one ordered physical operation; hosted event atomicity, server-managed versioning, and tenant isolation require Propodus deployment proof |
 | `workspace::ensure_isolated_workspace_for_projection_mutation` | Git toplevel of the invoking checkout | `refresh_specs_from_codebase`, validate self-heal, `specs.refresh` | Writes `.decapod/managed/specs/*` only when the Git worktree root is a non-protected path under `.decapod/workspaces/*`; protected `main`/`master` fails closed with `workspace_required` and does not touch root files (GitHub #1255) |
 | `workspace::get_main_repo_root` / `host_repo_from_canonical_workspace` | Cwd inside `.decapod/workspaces/*` | Todo store, session, `find_governance_root` | Local-clone workspaces resolve the host checkout so `todo done` sees the claim that created them (GitHub #1259) |
@@ -145,7 +148,7 @@ pub enum ApiError {
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2ab71a0e639b8c8698de6c9756229dd02490e20b608e9d5d8cd92099a8ac80e2`
+- Repository signal fingerprint: `c2d18ef63de632f51a064d7f8c3392efe5af1683ebfe56a9d5b11dad7a41d2e3`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (105 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

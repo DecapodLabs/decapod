@@ -53,6 +53,11 @@ pub const RETIRED_JSONL_DIR: &str = ".retired-jsonl";
 /// Physical table name for every stream after consolidation.
 pub const EVENTS_TABLE: &str = "events";
 
+/// Dactyl materializes every result row before returning it to the facade.
+/// Large audit streams therefore need keyset pagination at this boundary;
+/// otherwise a validation query for `usize::MAX` becomes one unbounded read.
+const QUERY_PAGE_SIZE: usize = 1024;
+
 /// Historical physical table names used only by migration into `events`.
 const LEGACY_STREAM_TABLES: &[(&str, &str)] = &[
     (BROKER, "broker_events"),
@@ -148,6 +153,9 @@ pub fn query(
             "unknown event stream: {stream}"
         )));
     }
+    if limit == usize::MAX {
+        return query_all_paged(root, stream);
+    }
     let path = canonical_db_path(root);
     if !path.exists() {
         return Ok(Vec::new());
@@ -192,6 +200,82 @@ pub fn query(
             actor,
         });
     }
+    Ok(events)
+}
+
+/// Read an entire stream in bounded batches while preserving [`query`]'s
+/// newest-first result order. Dactyl's SQLite adapter owns a complete `Vec` for
+/// each query result, so the batch size is the memory and syscall bound for
+/// large audit streams (#1281).
+fn query_all_paged(root: &Path, stream: &str) -> Result<Vec<StoredEvent>, error::DecapodError> {
+    let path = canonical_db_path(root);
+    if !path.exists() {
+        return Ok(Vec::new());
+    }
+    let conn = db::db_connect_for_validate(&path.to_string_lossy())?;
+    if !conn.has_table("events")? {
+        return Ok(Vec::new());
+    }
+
+    let mut events = Vec::new();
+    let mut cursor: Option<(u64, String)> = None;
+    loop {
+        let (sql, query_params) = if let Some((seq, event_id)) = cursor.as_ref() {
+            (
+                "SELECT event_id, ts, seq, event_type, payload, actor FROM events
+                 WHERE stream = ?1
+                   AND (seq > ?2 OR (seq = ?2 AND event_id > ?3))
+                 ORDER BY seq ASC, event_id ASC LIMIT ?4",
+                params![stream, *seq, event_id, QUERY_PAGE_SIZE],
+            )
+        } else {
+            (
+                "SELECT event_id, ts, seq, event_type, payload, actor FROM events
+                 WHERE stream = ?1
+                 ORDER BY seq ASC, event_id ASC LIMIT ?2",
+                params![stream, QUERY_PAGE_SIZE],
+            )
+        };
+
+        let mut stmt = conn.prepare(sql)?;
+        let rows = stmt.query_map(query_params, |row| {
+            let payload: String = row.get(4)?;
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, u64>(2)?,
+                row.get::<_, String>(3)?,
+                payload,
+                row.get::<_, String>(5)?,
+            ))
+        })?;
+        let mut page = Vec::new();
+        for row in rows {
+            let (event_id, ts, seq, event_type, payload, actor) = row?;
+            let payload = serde_json::from_str(&payload).map_err(|err| {
+                error::DecapodError::ValidationError(format!(
+                    "invalid canonical event payload in {event_id}: {err}"
+                ))
+            })?;
+            page.push(StoredEvent {
+                stream: stream.to_string(),
+                event_id,
+                ts,
+                seq,
+                event_type,
+                payload,
+                actor,
+            });
+        }
+
+        let Some(last) = page.last() else {
+            break;
+        };
+        cursor = Some((last.seq, last.event_id.clone()));
+        events.extend(page);
+    }
+
+    events.reverse();
     Ok(events)
 }
 
@@ -259,80 +343,135 @@ fn column_exists(
 }
 
 fn migrate_legacy_stream_tables_into_events(conn: &Connection) -> Result<(), error::DecapodError> {
-    for &(stream, table) in LEGACY_STREAM_TABLES {
-        if !table_exists_local(conn, table)? {
-            continue;
-        }
-        if table == "federation_events" {
-            let has_node = column_exists(conn, table, "node_id")?;
-            if has_node {
+    let mut legacy_tables_present = false;
+    for &(_, table) in LEGACY_STREAM_TABLES {
+        legacy_tables_present |= table_exists_local(conn, table)?;
+    }
+    legacy_tables_present |= table_exists_local(conn, "task_events")?;
+
+    let owns_transaction = conn.is_autocommit();
+    if owns_transaction {
+        conn.execute_batch("BEGIN IMMEDIATE")?;
+    }
+
+    let result = (|| {
+        let sequence_indexes = stream_sequence_unique_indexes(conn)?;
+        if legacy_tables_present {
+            // Older code used a different index name. Drop every structural
+            // stream/sequence unique index before importing and renumbering;
+            // SQLite may reject an otherwise-valid multi-row renumber while
+            // that index is still enforcing transient values (#1280).
+            for index_name in sequence_indexes {
                 conn.execute(
-                    "INSERT OR IGNORE INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
-                     SELECT event_id, ts, COALESCE(seq, 0), ?1, 'node', node_id, event_type, payload, actor
-                     FROM federation_events",
-                    [stream],
-                )?;
-            } else {
-                conn.execute(
-                    "INSERT OR IGNORE INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
-                     SELECT event_id, ts, COALESCE(seq, 0), ?1, NULL, NULL, event_type, payload, actor
-                     FROM federation_events",
-                    [stream],
+                    &format!(
+                        "DROP INDEX IF EXISTS \"{}\"",
+                        index_name.replace('"', "\"\"")
+                    ),
+                    [],
                 )?;
             }
-        } else {
-            let has_seq = column_exists(conn, table, "seq")?;
+        }
+
+        for &(stream, table) in LEGACY_STREAM_TABLES {
+            if !table_exists_local(conn, table)? {
+                continue;
+            }
+            if table == "federation_events" {
+                let has_node = column_exists(conn, table, "node_id")?;
+                if has_node {
+                    conn.execute(
+                        "INSERT OR IGNORE INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
+                         SELECT event_id, ts, COALESCE(seq, 0), ?1, 'node', node_id, event_type, payload, actor
+                         FROM federation_events",
+                        [stream],
+                    )?;
+                } else {
+                    conn.execute(
+                        "INSERT OR IGNORE INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
+                         SELECT event_id, ts, COALESCE(seq, 0), ?1, NULL, NULL, event_type, payload, actor
+                         FROM federation_events",
+                        [stream],
+                    )?;
+                }
+            } else {
+                let has_seq = column_exists(conn, table, "seq")?;
+                if has_seq {
+                    conn.execute(
+                        &format!(
+                            "INSERT OR IGNORE INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
+                             SELECT event_id, ts, seq, ?1, NULL, NULL, event_type, payload, actor FROM {table}"
+                        ),
+                        [stream],
+                    )?;
+                } else {
+                    conn.execute(
+                        &format!(
+                            "INSERT OR IGNORE INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
+                             SELECT event_id, ts, 0, ?1, NULL, NULL, event_type, payload, actor FROM {table}"
+                        ),
+                        [stream],
+                    )?;
+                }
+            }
+            conn.execute(&format!("DROP TABLE IF EXISTS {table}"), [])?;
+        }
+
+        if table_exists_local(conn, "task_events")? {
+            let has_seq = column_exists(conn, "task_events", "seq")?;
             if has_seq {
                 conn.execute(
-                    &format!(
-                        "INSERT OR IGNORE INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
-                         SELECT event_id, ts, seq, ?1, NULL, NULL, event_type, payload, actor FROM {table}"
-                    ),
-                    [stream],
+                    "INSERT OR IGNORE INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
+                     SELECT event_id, ts, COALESCE(seq, 0), 'todo', 'task', task_id, event_type, payload, actor
+                     FROM task_events",
+                    [],
                 )?;
             } else {
                 conn.execute(
-                    &format!(
-                        "INSERT OR IGNORE INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
-                         SELECT event_id, ts, 0, ?1, NULL, NULL, event_type, payload, actor FROM {table}"
-                    ),
-                    [stream],
+                    "INSERT OR IGNORE INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
+                     SELECT event_id, ts, 0, 'todo', 'task', task_id, event_type, payload, actor
+                     FROM task_events",
+                    [],
                 )?;
             }
+            conn.execute("DROP TABLE IF EXISTS task_events", [])?;
         }
-        conn.execute(&format!("DROP TABLE IF EXISTS {table}"), [])?;
-    }
 
-    if table_exists_local(conn, "task_events")? {
-        let has_seq = column_exists(conn, "task_events", "seq")?;
-        if has_seq {
-            conn.execute(
-                "INSERT OR IGNORE INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
-                 SELECT event_id, ts, COALESCE(seq, 0), 'todo', 'task', task_id, event_type, payload, actor
-                 FROM task_events",
-                [],
-            )?;
-        } else {
-            conn.execute(
-                "INSERT OR IGNORE INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
-                 SELECT event_id, ts, 0, 'todo', 'task', task_id, event_type, payload, actor
-                 FROM task_events",
-                [],
-            )?;
+        let sequence_indexes = stream_sequence_unique_indexes(conn)?;
+        let canonical_index_exists = sequence_indexes
+            .iter()
+            .any(|name| name == "idx_events_stream_seq_unique");
+        if sequence_indexes.is_empty() {
+            normalize_stream_sequences(conn)?;
         }
-        conn.execute("DROP TABLE IF EXISTS task_events", [])?;
-    }
+        if !canonical_index_exists || legacy_tables_present {
+            conn.execute(schemas::EVENTS_TABLE_UNIQUE_STREAM_SEQUENCE_INDEX, [])?;
+        }
+        Ok(())
+    })();
 
-    let sequence_index_exists = conn
+    if !owns_transaction {
+        return result;
+    }
+    match result {
+        Ok(()) => {
+            conn.execute_batch("COMMIT")?;
+            Ok(())
+        }
+        Err(error) => {
+            let _ = conn.execute_batch("ROLLBACK");
+            Err(error)
+        }
+    }
+}
+
+fn stream_sequence_unique_indexes(conn: &Connection) -> Result<Vec<String>, error::DecapodError> {
+    Ok(conn
         .inspect_schema()?
         .indexes
-        .iter()
-        .any(|index| index.name == "idx_events_stream_seq_unique");
-    if !sequence_index_exists {
-        normalize_stream_sequences(conn)?;
-        conn.execute(schemas::EVENTS_TABLE_UNIQUE_STREAM_SEQUENCE_INDEX, [])?;
-    }
-    Ok(())
+        .into_iter()
+        .filter(|index| index.unique && index.columns == ["stream", "seq"])
+        .map(|index| index.name)
+        .collect())
 }
 
 /// Normalize legacy and concurrently-produced sequence values before the

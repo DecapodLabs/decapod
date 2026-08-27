@@ -40,7 +40,6 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
 use std::sync::OnceLock;
-use std::sync::mpsc;
 use std::thread;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -2028,6 +2027,11 @@ pub fn run() -> Result<(), error::DecapodError> {
     let parsed_cli = Cli::parse();
     let command = match parsed_cli.command {
         Command::Eval(eval_cli) => return core::agent_eval::run_agent_eval_cli(eval_cli),
+        Command::Validate(validate_cli)
+            if std::env::var_os("DECAPOD_VALIDATE_WORKER").is_some() =>
+        {
+            return run_validation_worker_command(validate_cli);
+        }
         command => command,
     };
 
@@ -2393,22 +2397,13 @@ pub fn run() -> Result<(), error::DecapodError> {
 
             // Check for version/schema changes and run protected migrations if needed.
             // Backups are auto-created in .decapod/data only when schema upgrades are pending.
-            if !cloud_todo_command {
+            if !cloud_todo_command && !is_validate_cmd {
                 let migration_result = migration::check_and_migrate_with_backup_report(
                     &decapod_root_path,
                     subsystems::initialize_all_dbs,
                 );
                 match migration_result {
                     Ok(report) => announce_migration_notice(&report),
-                    Err(e) if is_validate_cmd => {
-                        let normalized = normalize_validate_error(e);
-                        return Err(attach_validate_diagnostic_if_enabled(
-                            normalized,
-                            &workspace_root,
-                            0,
-                            validate_timeout_secs(),
-                        ));
-                    }
                     Err(e) => return Err(e),
                 }
             }
@@ -2596,7 +2591,8 @@ fn should_auto_clock_in(command: &Command) -> bool {
         | Command::Setup(_)
         | Command::Session(_)
         | Command::Release(_)
-        | Command::System(_) => false,
+        | Command::System(_)
+        | Command::Validate(_) => false,
         _ => true,
     }
 }
@@ -5858,51 +5854,16 @@ fn run_validation_bounded(
 ) -> Result<validate::ValidationReport, error::DecapodError> {
     let timeout_secs = validate_timeout_secs();
     let started = std::time::Instant::now();
-    let (tx, rx) = mpsc::channel::<Result<validate::ValidationReport, error::DecapodError>>();
-    let store_cloned = store.clone();
-    let g_root = governance_root.to_path_buf();
-    let w_root = workspace_root.to_path_buf();
-
-    std::thread::spawn(move || {
-        let mut result = validate::run_validation(
-            &store_cloned,
-            &g_root,
-            &w_root,
-            verbose,
-            refresh_specs,
-            projections,
-        );
-        for attempt in 1..=2 {
-            let should_retry = match &result {
-                Err(err) => is_transient_storage_error(err),
-                _ => false,
-            };
-            if !should_retry {
-                break;
-            }
-            let backoff_ms = 200_u64 * attempt as u64;
-            std::thread::sleep(std::time::Duration::from_millis(backoff_ms));
-            result = validate::run_validation(
-                &store_cloned,
-                &g_root,
-                &w_root,
-                verbose,
-                refresh_specs,
-                false,
-            );
-        }
-        let _ = tx.send(result);
-    });
-
-    let result = match rx.recv_timeout(std::time::Duration::from_secs(timeout_secs)) {
-        Ok(result) => result.map_err(normalize_validate_error),
-        Err(mpsc::RecvTimeoutError::Timeout) => Err(error::DecapodError::ValidationError(format!(
-            "VALIDATE_TIMEOUT_OR_LOCK: validate exceeded timeout ({timeout_secs}s). Terminated to preserve proof-gate liveness."
-        ))),
-        Err(mpsc::RecvTimeoutError::Disconnected) => Err(error::DecapodError::ValidationError(
-            "VALIDATE_TIMEOUT_OR_LOCK: validate worker disconnected unexpectedly.".to_string(),
-        )),
-    };
+    let result = run_validation_in_child_process(
+        store,
+        governance_root,
+        workspace_root,
+        verbose,
+        refresh_specs,
+        projections,
+        std::time::Duration::from_secs(timeout_secs),
+    )
+    .map_err(normalize_validate_error);
     let result = result.map_err(|err| {
         attach_validate_diagnostic_if_enabled(
             err,
@@ -5920,6 +5881,182 @@ fn run_validation_bounded(
         }
         other => other,
     }
+}
+
+/// Run the expensive validation body in a killable child process. A Rust
+/// thread cannot be safely cancelled, so the previous timeout wrapper could
+/// return an error while its worker continued reading the datastore and kept
+/// the process alive (#1280, #1281). The parent owns the timeout and always
+/// reaps or kills the child before returning.
+fn run_validation_in_child_process(
+    store: &Store,
+    governance_root: &Path,
+    workspace_root: &Path,
+    verbose: bool,
+    refresh_specs: bool,
+    projections: bool,
+    timeout: std::time::Duration,
+) -> Result<validate::ValidationReport, error::DecapodError> {
+    let executable = std::env::current_exe().map_err(error::DecapodError::IoError)?;
+    let store_kind = match store.kind {
+        StoreKind::User => "user",
+        StoreKind::Repo => "repo",
+    };
+    let mut command = std::process::Command::new(executable);
+    command
+        .current_dir(workspace_root)
+        .args(["validate", "--store", store_kind, "--format", "json"])
+        .env("DECAPOD_VALIDATE_WORKER", "1")
+        .env(
+            "DECAPOD_VALIDATE_STORE_ROOT",
+            store.root.to_string_lossy().as_ref(),
+        )
+        .env(
+            "DECAPOD_VALIDATE_MAIN_ROOT",
+            governance_root.to_string_lossy().as_ref(),
+        )
+        .env(
+            "DECAPOD_VALIDATE_WORKING_ROOT",
+            workspace_root.to_string_lossy().as_ref(),
+        )
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+    if verbose {
+        command.arg("--verbose");
+    }
+    if refresh_specs {
+        command.arg("--refresh-specs");
+    }
+    if projections {
+        command.arg("--projections");
+    }
+
+    let mut child = command.spawn().map_err(error::DecapodError::IoError)?;
+    let deadline = std::time::Instant::now() + timeout;
+    loop {
+        let status = child.try_wait().map_err(error::DecapodError::IoError)?;
+        if status.is_some() {
+            let output = child
+                .wait_with_output()
+                .map_err(error::DecapodError::IoError)?;
+            return decode_validation_worker_output(&output.stdout, &output.stderr);
+        }
+        if std::time::Instant::now() >= deadline {
+            let _ = child.kill();
+            let _ = child.wait_with_output();
+            return Err(error::DecapodError::ValidationError(format!(
+                "VALIDATE_TIMEOUT_OR_LOCK: validate exceeded timeout ({}s). Terminated to preserve proof-gate liveness.",
+                timeout.as_secs()
+            )));
+        }
+        thread::sleep(std::time::Duration::from_millis(25));
+    }
+}
+
+fn decode_validation_worker_output(
+    stdout: &[u8],
+    stderr: &[u8],
+) -> Result<validate::ValidationReport, error::DecapodError> {
+    let payload: serde_json::Value = serde_json::from_slice(stdout).map_err(|error| {
+        error::DecapodError::ValidationError(format!(
+            "VALIDATE_WORKER_FAILED: invalid worker response ({error}); stderr: {}",
+            String::from_utf8_lossy(stderr).trim()
+        ))
+    })?;
+    match payload.get("status").and_then(serde_json::Value::as_str) {
+        Some("ok") => serde_json::from_value(
+            payload
+                .get("report")
+                .cloned()
+                .unwrap_or(serde_json::Value::Null),
+        )
+        .map_err(|error| {
+            error::DecapodError::ValidationError(format!(
+                "VALIDATE_WORKER_FAILED: invalid validation report ({error})"
+            ))
+        }),
+        Some("error") => Err(error::DecapodError::ValidationError(
+            payload
+                .get("error")
+                .and_then(serde_json::Value::as_str)
+                .unwrap_or("validation worker failed")
+                .to_string(),
+        )),
+        _ => Err(error::DecapodError::ValidationError(format!(
+            "VALIDATE_WORKER_FAILED: unknown worker status; stderr: {}",
+            String::from_utf8_lossy(stderr).trim()
+        ))),
+    }
+}
+
+fn validation_worker_lock_preflight(store: &Store) -> Result<(), error::DecapodError> {
+    if store.kind != StoreKind::Repo {
+        return Ok(());
+    }
+    let db_path = store.root.join("decapod.db");
+    if !db_path.exists() {
+        return Ok(());
+    }
+    let connection = db::db_connect_pooled(&db_path.to_string_lossy(), 0)?;
+    connection
+        .execute_batch("BEGIN IMMEDIATE")
+        .map_err(error::DecapodError::StorageError)?;
+    connection
+        .execute_batch("ROLLBACK")
+        .map_err(error::DecapodError::StorageError)?;
+    Ok(())
+}
+
+fn run_validation_worker_command(validate_cli: ValidateCli) -> Result<(), error::DecapodError> {
+    let required = |name: &str| {
+        std::env::var(name).map_err(|_| {
+            error::DecapodError::ValidationError(format!("VALIDATE_WORKER_FAILED: missing {name}"))
+        })
+    };
+    let store_root = PathBuf::from(required("DECAPOD_VALIDATE_STORE_ROOT")?);
+    let governance_root = PathBuf::from(required("DECAPOD_VALIDATE_MAIN_ROOT")?);
+    let workspace_root = PathBuf::from(required("DECAPOD_VALIDATE_WORKING_ROOT")?);
+    let store = Store {
+        kind: if validate_cli.store == "user" {
+            StoreKind::User
+        } else {
+            StoreKind::Repo
+        },
+        root: store_root,
+    };
+    if let Err(error) = validation_worker_lock_preflight(&store) {
+        println!(
+            "{}",
+            serde_json::json!({"status": "error", "error": error.to_string()})
+        );
+        return Ok(());
+    }
+    if let Err(error) = migration::check_and_migrate_with_backup_report(
+        &governance_root.join(".decapod"),
+        subsystems::initialize_all_dbs,
+    ) {
+        println!(
+            "{}",
+            serde_json::json!({"status": "error", "error": error.to_string()})
+        );
+        return Ok(());
+    }
+    let result = validate::run_validation(
+        &store,
+        &governance_root,
+        &workspace_root,
+        validate_cli.verbose,
+        validate_cli.refresh_specs,
+        validate_cli.projections,
+    );
+    match result {
+        Ok(report) => println!("{}", serde_json::json!({"status": "ok", "report": report})),
+        Err(error) => println!(
+            "{}",
+            serde_json::json!({"status": "error", "error": error.to_string()})
+        ),
+    }
+    Ok(())
 }
 
 /// Every successful validation completion must leave a fresh, bound pair of

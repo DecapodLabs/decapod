@@ -106,6 +106,95 @@ fn legacy_jsonl_is_imported_idempotently_without_new_jsonl_writes() {
 }
 
 #[test]
+fn legacy_stream_sequences_are_normalized_around_existing_unique_index() {
+    let temp = tempdir().unwrap();
+    let decapod_root = temp.path().join(".decapod");
+    let data = decapod_root.join("data");
+    std::fs::create_dir_all(&data).unwrap();
+    let local = data.join(schemas::LOCAL_DB_NAME);
+    let conn = Connection::open(&local).unwrap();
+    conn.execute_batch(schemas::EVENTS_TABLE_SCHEMA).unwrap();
+    conn.execute(
+        "CREATE UNIQUE INDEX events_stream_seq ON events(stream, seq)",
+        [],
+    )
+    .unwrap();
+    conn.execute(
+        "INSERT INTO events(event_id, ts, seq, stream, event_type, payload, actor)
+         VALUES('canonical-1', '2026-01-01T00:00:00Z', 1, 'broker', 'op', '{}', 'test')",
+        [],
+    )
+    .unwrap();
+    conn.execute(
+        "CREATE TABLE broker_events(
+            event_id TEXT PRIMARY KEY,
+            ts TEXT NOT NULL,
+            seq INTEGER NOT NULL,
+            event_type TEXT NOT NULL,
+            payload TEXT NOT NULL,
+            actor TEXT NOT NULL
+        )",
+        [],
+    )
+    .unwrap();
+    conn.execute(
+        "INSERT INTO broker_events(event_id, ts, seq, event_type, payload, actor)
+         VALUES('legacy-1', '2026-01-02T00:00:00Z', 1, 'op', '{}', 'migration')",
+        [],
+    )
+    .unwrap();
+
+    events::ensure_tables(&conn).unwrap();
+
+    let rows = events::query(&data, events::BROKER, usize::MAX).unwrap();
+    assert_eq!(
+        rows.len(),
+        2,
+        "legacy row must not be dropped on seq collision"
+    );
+    let mut seqs = rows.iter().map(|row| row.seq).collect::<Vec<_>>();
+    seqs.sort_unstable();
+    assert_eq!(seqs, vec![1, 2]);
+    let schema = conn.inspect_schema().unwrap();
+    assert!(schema.indexes.iter().any(|index| {
+        index.name == "idx_events_stream_seq_unique"
+            && index.unique
+            && index.columns == ["stream", "seq"]
+    }));
+}
+
+#[test]
+fn unbounded_event_queries_page_large_streams_newest_first() {
+    let temp = tempdir().unwrap();
+    let data = temp.path().join("data");
+    std::fs::create_dir_all(&data).unwrap();
+    let local = data.join(schemas::LOCAL_DB_NAME);
+    let conn = Connection::open(&local).unwrap();
+    events::ensure_tables(&conn).unwrap();
+    conn.execute_batch("BEGIN IMMEDIATE").unwrap();
+    for index in 0..4096 {
+        events::append_on_conn(
+            &conn,
+            events::BROKER,
+            &serde_json::json!({
+                "event_id": format!("broker-{index:04}"),
+                "ts": "2026-01-01T00:00:00Z",
+                "event_type": "test",
+                "payload": {"index": index},
+                "actor": "test"
+            }),
+        )
+        .unwrap();
+    }
+    conn.execute_batch("COMMIT").unwrap();
+
+    let rows = events::query(&data, events::BROKER, usize::MAX).unwrap();
+    assert_eq!(rows.len(), 4096);
+    assert_eq!(rows.first().unwrap().seq, 4096);
+    assert_eq!(rows.last().unwrap().seq, 1);
+}
+
+#[test]
 fn legacy_databases_are_copied_into_the_canonical_database() {
     let temp = tempdir().unwrap();
     let decapod_root = temp.path().join(".decapod");
