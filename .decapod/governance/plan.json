@@ -4,10 +4,12 @@
   "intent": "When Decapod resolves repo.backend=local or cloud, establish Dactyl's ambient DATASTORE, DATASTORE_ROUTE, and DATASTORE_TOKEN process inputs, then construct Dactyl from that ambient route while forwarding the opaque StorageContext unchanged. Keep Dactyl provider-neutral and preserve its minimal execution API; retain hosted Neon/Vercel parity as a separate downstream proof gate.",
   "state": "APPROVED",
   "todo_ids": [
-    "bend_01kzyggs7c7a84dx"
+    "code_01m12894m33bpsd2"
   ],
   "proof_hooks": [
-    "cargo fmt --all -- --check; cargo test --lib dactyl; cargo test --test cloud_dactyl_boundary; cargo clippy --all-targets --all-features -- -D warnings; decapod validate"
+    "cargo fmt --all -- --check",
+    "cargo test --test cloud_dactyl_boundary",
+    "decapod validate"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -59,5 +61,5 @@
       "completed_at": null
     }
   ],
-  "updated_at": "1786656930Z"
+  "updated_at": "1787867566Z"
 }

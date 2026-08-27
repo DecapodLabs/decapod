@@ -330,7 +330,9 @@ pub fn get_preference(
     let db_path = aptitude_db_path(&store.root);
     let now = now_iso();
 
-    let pref = broker.with_conn(&db_path, "decapod", None, "aptitude.get", |conn| {
+    // Lookup updates access metrics, so it must use a write connection. The
+    // operation name deliberately avoids the pure-read `.get` policy suffix.
+    let pref = broker.with_conn(&db_path, "decapod", None, "aptitude.lookup", |conn| {
         // First, update access metrics
         conn.execute(
             "UPDATE preferences SET access_count = access_count + 1, last_accessed_at = ?1

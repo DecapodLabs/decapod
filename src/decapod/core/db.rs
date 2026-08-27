@@ -38,7 +38,7 @@ pub fn db_connect(db_path: &str) -> Result<Connection, error::DecapodError> {
             Connection::open_with_options(
                 db_path,
                 dactyl_db::AccessMode::ReadWrite,
-                Duration::from_secs(5),
+                connection_lock_timeout(Duration::from_secs(5)),
             )
         },
         "open",
@@ -55,7 +55,7 @@ pub fn db_connect_for_validate(db_path: &str) -> Result<Connection, error::Decap
             Connection::open_with_options(
                 db_path,
                 dactyl_db::AccessMode::ReadOnly,
-                Duration::from_secs(2),
+                connection_lock_timeout(Duration::from_secs(2)),
             )
         },
         "open_readonly_validate",
@@ -78,7 +78,7 @@ pub fn db_connect_pooled(
             Connection::open_with_options(
                 db_path,
                 dactyl_db::AccessMode::ReadWrite,
-                Duration::from_secs(busy_timeout_secs as u64),
+                connection_lock_timeout(Duration::from_secs(busy_timeout_secs as u64)),
             )
         },
         "open",
@@ -98,11 +98,22 @@ pub fn db_connect_read_pooled(
             Connection::open_with_options(
                 db_path,
                 dactyl_db::AccessMode::ReadOnly,
-                Duration::from_secs(busy_timeout_secs as u64),
+                connection_lock_timeout(Duration::from_secs(busy_timeout_secs as u64)),
             )
         },
         "open_readonly_pooled",
     )
+}
+
+/// Validation runs in a killable child process. Keep its SQLite busy wait
+/// below the parent deadline so a lock contention is reported as a typed
+/// storage failure instead of looking like an opaque validation timeout.
+fn connection_lock_timeout(default: Duration) -> Duration {
+    if std::env::var_os("DECAPOD_VALIDATE_WORKER").is_some() {
+        Duration::from_millis(250)
+    } else {
+        default
+    }
 }
 
 fn ensure_db_parent_dir(db_path: &Path) -> Result<(), error::DecapodError> {

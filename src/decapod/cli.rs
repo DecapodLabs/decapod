@@ -535,6 +535,11 @@ pub struct CloudRuntimeConfig {
     pub api_url: String,
 }
 
+/// Binary-owned production origin for the Propodus Vercel/Neon service.
+/// Explicit environment overrides remain available to controlled test and
+/// development harnesses, but project configuration never stores this route.
+pub const PROPODUS_VERCEL_NEON_ENTRYPOINT: &str = "https://project-oqn7i.vercel.app";
+
 fn default_cloud_provider() -> String {
     "vercel".to_string()
 }
@@ -543,7 +548,7 @@ fn default_cloud_api_url() -> String {
     std::env::var("DECAPOD_PROPODUS_API_URL")
         .ok()
         .filter(|value| !value.trim().is_empty())
-        .unwrap_or_else(|| "https://project-oqn7i.vercel.app".to_string())
+        .unwrap_or_else(|| PROPODUS_VERCEL_NEON_ENTRYPOINT.to_string())
 }
 
 impl Default for CloudRuntimeConfig {

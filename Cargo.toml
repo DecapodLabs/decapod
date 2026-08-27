@@ -1,6 +1,6 @@
 [package]
 name = "decapod"
-version = "0.99.3"
+version = "0.99.5"
 edition = "2024"
 rust-version = "1.96.1"
 build = "assets/build/compress_constitution.rs"
@@ -52,7 +52,7 @@ flate2 = "1.0"
 
 [dependencies]
 flate2 = "1.0"
-dactyl-db = { version = "0.8.2", features = ["sqlite", "neon"] }
+dactyl-db = { version = "0.9.0", features = ["sqlite", "neon"] }
 fancy-regex = "0.13"
 clap = { version = "4", features = ["derive"] }
 serde = { version = "1.0", features = ["derive"] }

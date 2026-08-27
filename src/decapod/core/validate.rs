@@ -298,7 +298,7 @@ pub struct ValidationCiPrediction {
     pub recommendations: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ValidationReport {
     pub status: String,
     pub validation_epoch: ValidationEpochMetadata,
