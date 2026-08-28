@@ -1,88 +1,91 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "run_20260826_issues_1280_1281",
-  "intent_id": "intent:run_20260826_issues_1280_1281",
-  "task_id": "feat_01m0yfhbf11bnaxx",
-  "original_intent": "Solve GitHub Issues #1280 and #1281 and publish the PR when ready.",
-  "derived_intent": "Implement evidence-backed fixes for migration sequence collisions, bounded large-stream replay, and validation process cleanup; prove them with focused tests, full required tests, Decapod validation, and a governed PR.",
-  "destination": "GitHub PR for issues #1280 and #1281",
-  "current_phase": "validation",
+  "run_id": "run_1274_final_20260827",
+  "intent_id": "intent:run_1274_final_20260827",
+  "task_id": "code_01m12894m33bpsd2",
+  "original_intent": "Fix PR #1274 merge conflicts and push the corrected PR branch.",
+  "derived_intent": "Merge current origin/master into the PR #1274 head, retain the newer Dactyl ambient-route implementation, refresh governed artifacts, verify the corrected tree, and publish the descendant to the original PR head branch.",
+  "current_phase": "final-verification",
   "next_transitions": [
-    "publish",
-    "validation"
+    "install Docker or Podman, rerun decapod validate, then push original PR branch",
+    "validate final receipt and publish original PR branch"
+  ],
+  "blockers": [
+    "Docker is unavailable, so container proof cannot be run in this environment.",
+    "Docker is unavailable, so only host-side validation and tests can be proven; the broad cargo test --lib dactyl filter still includes two unchanged dactyl_todo baseline failures.",
+    "Required container proof is blocked: decapod workspace ensure --container reported No container runtime found (docker/podman)."
   ],
   "active_boundaries": [
-    "Do not discard audit history or weaken governance gates.",
-    "Work only in the Decapod-created isolated worktree; do not mutate root master or hand-edit Decapod-owned state."
+    "Do not change protected master or expand the PR beyond conflict reconciliation and required governed release/spec artifacts."
   ],
   "repo_scope": [
-    "src/decapod/core/events.rs, src/decapod/core/db.rs, src/decapod/lib.rs, src/decapod/core/validate.rs, tests/single_datastore.rs, living specs, governed artifacts",
-    "src/decapod/core/events.rs, src/decapod/core/migration.rs, src/decapod/lib.rs, src/decapod/core/validate.rs, tests, living specs, governed artifacts"
+    "PR #1274 head branch, Dactyl route boundary, related documentation, and required governance artifacts."
   ],
   "inspected_files": [
-    "src/decapod/core/broker.rs",
-    "src/decapod/core/db.rs",
-    "src/decapod/core/events.rs",
-    "src/decapod/core/migration.rs",
-    "src/decapod/core/validate.rs",
-    "src/decapod/lib.rs",
-    "tests/validate_termination.rs"
+    ".decapod/governance/plan.json",
+    ".decapod/managed/specs/INTERFACES.md",
+    "docs/book/src/reference/propodus.md",
+    "src/decapod/core/dactyl.rs",
+    "src/decapod/core/dactyl_todo.rs"
   ],
   "modified_files": [
+    ".decapod/governance/claims.json",
+    ".decapod/governance/plan.json",
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
-    ".decapod/managed/specs/ARCHITECTURE.md",
-    ".decapod/managed/specs/INTENT.md",
     ".decapod/managed/specs/INTERFACES.md",
-    "src/decapod/core/db.rs",
-    "src/decapod/core/events.rs",
-    "src/decapod/core/validate.rs",
-    "src/decapod/lib.rs",
-    "tests/single_datastore.rs"
+    "docs/book/src/reference/propodus.md",
+    "src/decapod/core/dactyl.rs"
   ],
   "declared_commands": [
     "cargo fmt --all -- --check",
-    "cargo test --locked",
+    "cargo test --lib core::dactyl::tests",
     "cargo test --locked --test single_datastore -- --test-threads=1",
-    "cargo test --locked --test validate_termination -- --test-threads=1",
-    "decapod validate"
+    "cargo test --test cloud_dactyl_boundary",
+    "decapod validate --format json",
+    "decapod workspace ensure --container --branch agent/unknown/code_01m12894m33bpsd2-pr1274",
+    "git merge --no-edit origin/master"
   ],
-  "tool_calls": [
-    "Decapod orientation and plan governance",
-    "GitHub issue evidence reviewed with gh issue view for #1280 and #1281"
-  ],
+  "tool_calls": [],
   "checks": [
     {
-      "name": "decapod validate",
+      "name": "cargo_fmt",
       "status": "passed"
     },
     {
-      "name": "format",
+      "name": "cargo_test_cloud_dactyl_boundary",
       "status": "passed"
     },
     {
-      "name": "full_locked_suite",
-      "status": "partial"
-    },
-    {
-      "name": "single_datastore",
+      "name": "cargo_test_core_dactyl",
       "status": "passed"
     },
     {
-      "name": "validate_termination",
+      "name": "cargo_test_single_datastore",
+      "status": "passed"
+    },
+    {
+      "name": "container_workspace",
+      "status": "unavailable"
+    },
+    {
+      "name": "decapod_validate",
+      "status": "passed"
+    },
+    {
+      "name": "merge_origin_master",
       "status": "passed"
     }
   ],
   "evidence": [
-    "#1280 regression: legacy stream row sequence collision with alternate unique index is imported and normalized to unique sequences in one transaction",
-    "#1281 regression: 4096-event unbounded query returns newest-first through 1024-row keyset pages",
-    "Validation contention regression: 11 termination/diagnostic tests pass serially; child worker is killed and reaped on timeout",
-    "validation epoch ve_f40f57094c662cad completed with zero failures"
+    "broad_cargo_test_lib_dactyl_filter_has_two_unchanged_master_dactyl_todo_failures",
+    "cloud_boundary_socket_test_passed_with_host_permissions",
+    "container_remediation=No container runtime found (docker/podman)",
+    "merge_commit=daac1e01",
+    "validation_epoch=ve_dc46ebd76f704156_zero_failures_before_final_trajectory_update"
   ],
   "shortcut_risk_signals": [],
-  "unresolved_assumptions": [
-    "Full cargo test failures are unrelated baseline fixture/environment failures and remain disclosed rather than masked."
-  ],
+  "unresolved_assumptions": [],
   "proof_status": "partial",
   "verdicts": {
     "intent_alignment": "supported",
@@ -90,22 +93,21 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:1eb42ad736dec9eff64bc35d1749303b79055f770719a13824ca74abde51e83b",
+  "artifact_hash": "sha256:12f6fcda6e9486bf42531983f8d2d22cbda670baa7d6360b21112e1854c47b6f",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:run_20260826_issues_1280_1281": {
-        "id": "intent:run_20260826_issues_1280_1281",
-        "raw_intent": "Solve GitHub Issues #1280 and #1281 and publish the PR when ready.",
-        "refined_intent": "Implement evidence-backed fixes for migration sequence collisions, bounded large-stream replay, and validation process cleanup; prove them with focused tests, full required tests, Decapod validation, and a governed PR.",
+      "intent:run_1274_final_20260827": {
+        "id": "intent:run_1274_final_20260827",
+        "raw_intent": "Fix PR #1274 merge conflicts and push the corrected PR branch.",
+        "refined_intent": "Merge current origin/master into the PR #1274 head, retain the newer Dactyl ambient-route implementation, refresh governed artifacts, verify the corrected tree, and publish the descendant to the original PR head branch.",
         "acceptance_criteria": [],
         "constraints": [
-          "src/decapod/core/events.rs, src/decapod/core/migration.rs, src/decapod/lib.rs, src/decapod/core/validate.rs, tests, living specs, governed artifacts"
+          "PR #1274 head branch, Dactyl route boundary, related documentation, and required governance artifacts."
         ],
         "assumptions": [],
         "boundaries": [
-          "Work only in the Decapod-created isolated worktree; do not mutate root master or hand-edit Decapod-owned state.",
-          "Do not discard audit history or weaken governance gates."
+          "Do not change protected master or expand the PR beyond conflict reconciliation and required governed release/spec artifacts."
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -118,90 +120,84 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:run_20260826_issues_1280_1281",
+        "intent_id": "intent:run_1274_final_20260827",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:run_20260826_issues_1280_1281",
+        "intent_id": "intent:run_1274_final_20260827",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:run_20260826_issues_1280_1281",
+        "intent_id": "intent:run_1274_final_20260827",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run_20260826_issues_1280_1281"
+        "detail": "trajectory:run_1274_final_20260827"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:run_20260826_issues_1280_1281",
+        "intent_id": "intent:run_1274_final_20260827",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run_20260826_issues_1280_1281"
+        "detail": "trajectory:run_1274_final_20260827"
       }
     ],
     "trajectories": {
-      "run_20260826_issues_1280_1281": {
-        "id": "run_20260826_issues_1280_1281",
-        "intent_id": "intent:run_20260826_issues_1280_1281",
+      "run_1274_final_20260827": {
+        "id": "run_1274_final_20260827",
+        "intent_id": "intent:run_1274_final_20260827",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "implementation",
-            "tool": "GitHub issue evidence reviewed with gh issue view for #1280 and #1281",
-            "command": "cargo fmt --all -- --check",
+            "action": "final-verification",
+            "command": "git merge --no-edit origin/master",
             "scope": [
-              "src/decapod/core/events.rs, src/decapod/core/migration.rs, src/decapod/lib.rs, src/decapod/core/validate.rs, tests, living specs, governed artifacts"
+              "PR #1274 head branch, Dactyl route boundary, related documentation, and required governance artifacts."
             ],
             "observations": [
-              "src/decapod/core/events.rs",
-              "src/decapod/core/db.rs",
-              "src/decapod/core/broker.rs",
-              "src/decapod/core/migration.rs",
-              "src/decapod/lib.rs",
-              "src/decapod/core/validate.rs",
-              "tests/validate_termination.rs",
-              "src/decapod/core/events.rs",
-              "src/decapod/core/db.rs",
-              "src/decapod/lib.rs",
-              "src/decapod/core/validate.rs",
-              "tests/single_datastore.rs",
-              ".decapod/managed/specs/ARCHITECTURE.md",
-              ".decapod/managed/specs/INTENT.md",
+              "src/decapod/core/dactyl.rs",
+              "src/decapod/core/dactyl_todo.rs",
+              "docs/book/src/reference/propodus.md",
               ".decapod/managed/specs/INTERFACES.md",
-              "#1280 regression: legacy stream row sequence collision with alternate unique index is imported and normalized to unique sequences in one transaction",
-              "#1281 regression: 4096-event unbounded query returns newest-first through 1024-row keyset pages",
-              "Validation contention regression: 11 termination/diagnostic tests pass serially; child worker is killed and reaped on timeout"
+              ".decapod/governance/plan.json",
+              "src/decapod/core/dactyl.rs",
+              "docs/book/src/reference/propodus.md",
+              ".decapod/managed/specs/INTERFACES.md",
+              ".decapod/governance/claims.json",
+              ".decapod/governance/plan.json",
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "merge_commit=daac1e01",
+              "validation_epoch=ve_dc46ebd76f704156_zero_failures_before_final_trajectory_update",
+              "cloud_boundary_socket_test_passed_with_host_permissions",
+              "broad_cargo_test_lib_dactyl_filter_has_two_unchanged_master_dactyl_todo_failures"
             ],
             "proof_refs": [
-              "format",
-              "single_datastore",
-              "validate_termination",
-              "full_locked_suite"
+              "merge_origin_master",
+              "cargo_fmt",
+              "cargo_test_core_dactyl",
+              "cargo_test_cloud_dactyl_boundary",
+              "cargo_test_single_datastore",
+              "decapod_validate"
             ],
-            "validation_findings": [
-              "Full cargo test failures are unrelated baseline fixture/environment failures and remain disclosed rather than masked."
-            ],
+            "validation_findings": [],
             "custody_event_id": "event:4"
           },
           {
             "sequence": 5,
-            "action": "validation",
-            "command": "decapod validate",
+            "action": "final-verification",
+            "command": "decapod workspace ensure --container --branch agent/unknown/code_01m12894m33bpsd2-pr1274",
             "scope": [
-              "src/decapod/core/events.rs, src/decapod/core/db.rs, src/decapod/lib.rs, src/decapod/core/validate.rs, tests/single_datastore.rs, living specs, governed artifacts",
-              "src/decapod/core/events.rs, src/decapod/core/migration.rs, src/decapod/lib.rs, src/decapod/core/validate.rs, tests, living specs, governed artifacts"
+              "PR #1274 head branch, Dactyl route boundary, related documentation, and required governance artifacts."
             ],
             "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_f40f57094c662cad completed with zero failures"
+              "container_remediation=No container runtime found (docker/podman)"
             ],
             "proof_refs": [
-              "decapod validate"
+              "container_workspace"
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"

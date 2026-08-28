@@ -17,6 +17,13 @@ and runs the same operation contract for either backend; individual SQL
 operations do not receive a backend selector, provider name, tenant argument,
 or other out-of-band query input.
 
+At route binding, Decapod establishes Dactyl's ambient process inputs:
+`DATASTORE=sqlite` or `DATASTORE=neon`, the opaque `DATASTORE_ROUTE`, and the
+cloud-only `DATASTORE_TOKEN`. Selecting local clears any stale cloud token.
+Dactyl resolves these values with `DatastoreRoute::from_env()` when Decapod
+opens a connection; no provider-specific route logic or backend selector is
+added to the execution API.
+
 | Operation | Dactyl request | Scope/authentication |
 |---|---|---|
 | Read/list | `POST /query` | SQL plus opaque versioned context |
