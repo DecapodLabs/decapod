@@ -13,9 +13,7 @@
     "cargo test --test validate_termination -- --test-threads=1",
     "decapod validate"
   ],
-  "unknowns": [
-    "The reporter private datastore is unavailable; proof uses a structurally equivalent deterministic fixture and reporter verification remains outstanding."
-  ],
+  "unknowns": [],
   "human_questions": [],
   "stop_conditions": [],
   "unresolved_contradictions": [],
@@ -25,5 +23,5 @@
     "file_touch_budget": 20
   },
   "phases": [],
-  "updated_at": "1787898209Z"
+  "updated_at": "1787899302Z"
 }
