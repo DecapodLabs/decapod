@@ -442,6 +442,7 @@ fn migrate_legacy_stream_tables_into_events(conn: &Connection) -> Result<(), err
             .any(|name| name == "idx_events_stream_seq_unique");
         if sequence_indexes.is_empty() {
             normalize_stream_sequences(conn)?;
+            ensure_stream_sequences_are_unique(conn)?;
         }
         if !canonical_index_exists || legacy_tables_present {
             conn.execute(schemas::EVENTS_TABLE_UNIQUE_STREAM_SEQUENCE_INDEX, [])?;
@@ -480,7 +481,7 @@ fn stream_sequence_unique_indexes(conn: &Connection) -> Result<Vec<String>, erro
 fn normalize_stream_sequences(conn: &Connection) -> Result<(), error::DecapodError> {
     for stream in STREAMS {
         conn.execute(
-            "WITH ordered AS (
+            "WITH ordered AS MATERIALIZED (
                  SELECT event_id,
                         ROW_NUMBER() OVER (ORDER BY seq, ts, event_id) AS next_seq
                  FROM events
@@ -491,6 +492,26 @@ fn normalize_stream_sequences(conn: &Connection) -> Result<(), error::DecapodErr
              WHERE stream = ?1",
             [stream],
         )?;
+    }
+    Ok(())
+}
+
+fn ensure_stream_sequences_are_unique(conn: &Connection) -> Result<(), error::DecapodError> {
+    let duplicate_groups: u64 = conn.query_row(
+        "SELECT COUNT(*)
+         FROM (
+             SELECT stream, seq
+             FROM events
+             GROUP BY stream, seq
+             HAVING COUNT(*) > 1
+         )",
+        [],
+        |row| row.get(0),
+    )?;
+    if duplicate_groups > 0 {
+        return Err(error::DecapodError::ValidationError(format!(
+            "EVENT_SEQUENCE_NORMALIZATION_INCOMPLETE: {duplicate_groups} duplicate (stream, seq) group(s) remain after deterministic normalization; migration aborted before creating idx_events_stream_seq_unique"
+        )));
     }
     Ok(())
 }

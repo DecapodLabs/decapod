@@ -1,5 +1,5 @@
 use decapod::core::db::Connection;
-use decapod::core::{db, events, migration, schemas, todo};
+use decapod::core::{broker::DbBroker, db, events, migration, schemas, todo};
 use tempfile::tempdir;
 
 #[test]
@@ -164,6 +164,129 @@ fn legacy_stream_sequences_are_normalized_around_existing_unique_index() {
 }
 
 #[test]
+fn canonical_duplicate_sequences_are_normalized_without_legacy_tables_or_unique_index() {
+    let temp = tempdir().unwrap();
+    let data = temp.path().join("data");
+    std::fs::create_dir_all(&data).unwrap();
+    let local = data.join(schemas::LOCAL_DB_NAME);
+    let conn = Connection::open(&local).unwrap();
+    conn.execute_batch(schemas::EVENTS_TABLE_SCHEMA).unwrap();
+
+    assert!(!conn.has_table("broker_events").unwrap());
+    assert!(
+        !conn
+            .inspect_schema()
+            .unwrap()
+            .indexes
+            .iter()
+            .any(|index| { index.unique && index.columns == ["stream", "seq"] })
+    );
+
+    // Match the #1280 reporter's canonical-only shape: 17,392 broker rows,
+    // 16,151 distinct sequences, 1,240 duplicate groups, and no legacy table.
+    conn.execute_batch(
+        r#"
+        WITH RECURSIVE base(seq) AS (
+            SELECT 1
+            UNION ALL
+            SELECT seq + 1 FROM base WHERE seq < 16151
+        )
+        INSERT INTO events(event_id, ts, seq, stream, event_type, payload, actor)
+        SELECT printf('base-%05d', seq), printf('178668%05dZ', seq), seq,
+               'broker', 'test', '{}', 'test'
+        FROM base;
+
+        WITH RECURSIVE duplicates(seq) AS (
+            SELECT 10040
+            UNION ALL
+            SELECT seq + 1 FROM duplicates WHERE seq < 11279
+        )
+        INSERT INTO events(event_id, ts, seq, stream, event_type, payload, actor)
+        SELECT printf('duplicate-%05d', seq), printf('178669%05dZ', seq), seq,
+               'broker', 'test', '{}', 'test'
+        FROM duplicates;
+
+        INSERT INTO events(event_id, ts, seq, stream, event_type, payload, actor)
+        VALUES('duplicate-extra', '17866999999Z', 10040, 'broker', 'test', '{}', 'test');
+        "#,
+    )
+    .unwrap();
+
+    let before: (i64, i64, i64) = conn
+        .query_row(
+            "SELECT COUNT(*), COUNT(DISTINCT seq),
+                    (SELECT COUNT(*) FROM (
+                        SELECT seq FROM events WHERE stream = 'broker'
+                        GROUP BY seq HAVING COUNT(*) > 1
+                    ))
+             FROM events WHERE stream = 'broker'",
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+        )
+        .unwrap();
+    assert_eq!(before, (17_392, 16_151, 1_240));
+
+    events::ensure_tables(&conn).unwrap();
+
+    let after: (i64, i64, i64, i64) = conn
+        .query_row(
+            "SELECT COUNT(*), COUNT(DISTINCT seq), MIN(seq), MAX(seq)
+             FROM events WHERE stream = 'broker'",
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+        )
+        .unwrap();
+    assert_eq!(after, (17_392, 17_392, 1, 17_392));
+    assert!(conn.inspect_schema().unwrap().indexes.iter().any(|index| {
+        index.name == "idx_events_stream_seq_unique"
+            && index.unique
+            && index.columns == ["stream", "seq"]
+    }));
+}
+
+#[test]
+fn normalization_reports_residual_duplicates_before_creating_unique_index() {
+    let temp = tempdir().unwrap();
+    let data = temp.path().join("data");
+    std::fs::create_dir_all(&data).unwrap();
+    let local = data.join(schemas::LOCAL_DB_NAME);
+    let conn = Connection::open(&local).unwrap();
+    conn.execute_batch(schemas::EVENTS_TABLE_SCHEMA).unwrap();
+    conn.execute(
+        "INSERT INTO events(event_id, ts, seq, stream, event_type, payload, actor)
+         VALUES('first', '1Z', 1, 'broker', 'test', '{}', 'test'),
+               ('second', '2Z', 1, 'broker', 'test', '{}', 'test')",
+        [],
+    )
+    .unwrap();
+    conn.execute(
+        "CREATE TRIGGER preserve_second_sequence
+         BEFORE UPDATE OF seq ON events
+         WHEN OLD.event_id = 'second'
+         BEGIN
+             SELECT RAISE(IGNORE);
+         END",
+        [],
+    )
+    .unwrap();
+
+    let error = events::ensure_tables(&conn).unwrap_err().to_string();
+    assert!(
+        error.contains("EVENT_SEQUENCE_NORMALIZATION_INCOMPLETE")
+            && error.contains("1 duplicate (stream, seq) group"),
+        "unexpected normalization error: {error}"
+    );
+    assert!(
+        !conn
+            .inspect_schema()
+            .unwrap()
+            .indexes
+            .iter()
+            .any(|index| { index.name == "idx_events_stream_seq_unique" })
+    );
+}
+
+#[test]
 fn unbounded_event_queries_page_large_streams_newest_first() {
     let temp = tempdir().unwrap();
     let data = temp.path().join("data");
@@ -192,6 +315,62 @@ fn unbounded_event_queries_page_large_streams_newest_first() {
     assert_eq!(rows.len(), 4096);
     assert_eq!(rows.first().unwrap().seq, 4096);
     assert_eq!(rows.last().unwrap().seq, 1);
+}
+
+#[test]
+fn broker_replay_handles_the_reported_20384_event_scale() {
+    let temp = tempdir().unwrap();
+    let data = temp.path().join("data");
+    std::fs::create_dir_all(&data).unwrap();
+    let local = data.join(schemas::LOCAL_DB_NAME);
+    let conn = Connection::open(&local).unwrap();
+    events::ensure_tables(&conn).unwrap();
+
+    // Match #1281's 9,785 pending and 10,599 success rows. Every pending
+    // operation is followed by its terminal event; the remaining successes
+    // represent operations whose pending rows predate the retained fixture.
+    conn.execute_batch(
+        r#"
+        WITH RECURSIVE pairs(id) AS (
+            SELECT 1
+            UNION ALL
+            SELECT id + 1 FROM pairs WHERE id < 9785
+        )
+        INSERT INTO events(event_id, ts, seq, stream, event_type, payload, actor)
+        SELECT printf('pending-%05d', id), '1786700000Z', (id * 2) - 1,
+               'broker', 'test.write',
+               printf('{"ts":"1786700000Z","event_id":"pending-%05d","actor":"test","intent_ref":"intent-%05d","op":"test.write","db_id":"decapod.db","status":"pending"}', id, id),
+               'test'
+        FROM pairs
+        UNION ALL
+        SELECT printf('success-%05d', id), '1786700000Z', id * 2,
+               'broker', 'test.write',
+               printf('{"ts":"1786700000Z","event_id":"success-%05d","actor":"test","intent_ref":"intent-%05d","op":"test.write","db_id":"decapod.db","status":"success"}', id, id),
+               'test'
+        FROM pairs;
+
+        WITH RECURSIVE extra_successes(id) AS (
+            SELECT 1
+            UNION ALL
+            SELECT id + 1 FROM extra_successes WHERE id < 814
+        )
+        INSERT INTO events(event_id, ts, seq, stream, event_type, payload, actor)
+        SELECT printf('extra-success-%04d', id), '1786700000Z', 19570 + id,
+               'broker', 'test.write',
+               printf('{"ts":"1786700000Z","event_id":"extra-success-%04d","actor":"test","intent_ref":"extra-intent-%04d","op":"test.write","db_id":"decapod.db","status":"success"}', id, id),
+               'test'
+        FROM extra_successes;
+        "#,
+    )
+    .unwrap();
+
+    let report = DbBroker::new(&data).verify_replay().unwrap();
+    assert_eq!(report.total_events, 20_384);
+    assert!(
+        report.divergences.is_empty(),
+        "paired broker events must replay without divergence: {:?}",
+        report.divergences
+    );
 }
 
 #[test]
