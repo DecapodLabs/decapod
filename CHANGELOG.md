@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.99.7](https://github.com/DecapodLabs/decapod/compare/v0.99.6...v0.99.7) - 2026-08-28
+
+### Fixed
+
+- normalize canonical event sequences deterministically
+
+### Other
+
+- record 0.99.6 container validation
+- refresh Decapod 0.99.6 projections
+- record governed validation
+- resolve validation publication scope
+
 ## [0.99.6](https://github.com/DecapodLabs/decapod/compare/v0.99.5...v0.99.6) - 2026-08-28
 
 ### Other
