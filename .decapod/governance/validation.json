@@ -2,13 +2,13 @@
   "schema_version": "1.0.0",
   "kind": "validation_receipt",
   "decapod_release": "0.99.5",
-  "git_revision": "daac1e01f7c9bd93f38093580a8ea2f29bf56667",
-  "repo_signal_fingerprint": "d6628098d7d294743a5c0ab5e87c21f6997f907b36202df1dc547c55d81f0360",
-  "trajectory_run_id": "run_1274_merge_20260827",
-  "trajectory_artifact_hash": "sha256:25aa7fbe1defd004c1112cbed0a2e94e0ae9207ba5ffc9054e80df00b93717df",
+  "git_revision": "28ebf3de1614a7688247d482aadf9b475eff089e",
+  "repo_signal_fingerprint": "43de86d67f315c1bf8e23bd7db03e1aa2fdf2a5dd60561d5a04551849a0f0caa",
+  "trajectory_run_id": "run_issues1280_1281_fix_20260827",
+  "trajectory_artifact_hash": "sha256:e553efff0931cf6fb6fc9788ad81ca06e08bc2a56fc304395a9ab65f1a02cc57",
   "validation_epoch": {
     "schema_version": "1.0.0",
-    "epoch_id": "ve_dc46ebd76f704156",
+    "epoch_id": "ve_a30ce7e568fb9724",
     "evaluator_identity": "decapod-validate@0.99.5",
     "evaluator_set_hash": "sha256:45ca8d1f34172097b1aaf84382cc1fab259f8e17716798ab7640a008e1601dd4",
     "constitution_version": "embedded-docs@0.99.5",
@@ -17,28 +17,28 @@
     "validation_profile_hash": "sha256:37a8eec1ce19687d132fe29051dca629d164e2c4958ba141d5f4133a33f0688f",
     "proof_rubric": "decapod-validate/current-proof-v1",
     "proof_rubric_hash": "sha256:99e8ef25629da391e9b479db9fff52b82f340224f7a69d8a88d2992ae8e90466",
-    "generated_specs_manifest_hash": "sha256:a6d0300e3fe1ef2a62c824f405899e1cb8604aff7ba7323df4f23707ea72f35e",
-    "generated_specs_fingerprint": "d6628098d7d294743a5c0ab5e87c21f6997f907b36202df1dc547c55d81f0360",
+    "generated_specs_manifest_hash": "sha256:d9e272ae681961a93225e42a103097c4c1061a24786ba774173e0f66753634f4",
+    "generated_specs_fingerprint": "43de86d67f315c1bf8e23bd7db03e1aa2fdf2a5dd60561d5a04551849a0f0caa",
     "material_hashes": {
       "constitution:core/DECAPOD": "sha256:18a7237a218cb86fc7f5cd81b1baf7d6d8c1440c0f3c82c6ea4242398bb569a4",
-      "generated_spec:.decapod/managed/specs/ARCHITECTURE.md": "sha256:a9e52ce82e1f18a842dc81575309786c61a0d3919fff1787487d4e09f25d845c",
-      "generated_spec:.decapod/managed/specs/INTENT.md": "sha256:032e255fe5a266e0a0600285a05d15019fac9337c04bd2cc6f53f5f7f04afd53",
-      "generated_spec:.decapod/managed/specs/INTERFACES.md": "sha256:11b1200bc0b607360a8f9f4a59263f3b7222c58124036e764ec9c4553d4dc7a7",
-      "generated_spec:.decapod/managed/specs/OPERATIONS.md": "sha256:45adc1fef7801a21a678e4da0fa29054c95ce806b17f274eab7b48a8f3945a0e",
-      "generated_spec:.decapod/managed/specs/README.md": "sha256:c8974e959a967a5fde909f843550787bca244dd8768d3545abbafac0b03afa8e",
-      "generated_spec:.decapod/managed/specs/SECURITY.md": "sha256:990e711ed5233497e4287c62c23ef6b1141426249bb7f82e2b3217f58c80b554",
-      "generated_spec:.decapod/managed/specs/SEMANTICS.md": "sha256:1f5ef1fddad3e71bc1ed9461f97710f2ac235d0618dc0816f37f33da57b5fdec",
-      "generated_spec:.decapod/managed/specs/VALIDATION.md": "sha256:f5a65be081416dcc70df53beea3b42ee980b55328a5305e4aa01639fca493ad3",
-      "generated_specs_fingerprint": "d6628098d7d294743a5c0ab5e87c21f6997f907b36202df1dc547c55d81f0360",
-      "generated_specs_manifest": "sha256:a6d0300e3fe1ef2a62c824f405899e1cb8604aff7ba7323df4f23707ea72f35e",
+      "generated_spec:.decapod/managed/specs/ARCHITECTURE.md": "sha256:e1ef8773c931800cf8d664959051ecd89b3b5b7ffebb0a24f5468b03a42d1817",
+      "generated_spec:.decapod/managed/specs/INTENT.md": "sha256:d93bd596b01472ff55a0c100200a2c113d1c1d73a419468cf75b012b6da8b20d",
+      "generated_spec:.decapod/managed/specs/INTERFACES.md": "sha256:ed86f88968fbd891dac3e98c42621c77f811b3a31928835ea294618cd25d682f",
+      "generated_spec:.decapod/managed/specs/OPERATIONS.md": "sha256:ebf09ca5899c1442b7414950790188664df9329b4d6345e22fffc6fb4d4efed3",
+      "generated_spec:.decapod/managed/specs/README.md": "sha256:b553babb81ae199004b3200e581938267558daf9d5dc236ae307e052032f74e7",
+      "generated_spec:.decapod/managed/specs/SECURITY.md": "sha256:b6e1703eaefd28e53f1e38bc024a7100417c0353b40e98f37ce9377b3898e364",
+      "generated_spec:.decapod/managed/specs/SEMANTICS.md": "sha256:61915850768d9d548feac052d6423465c13ade3ac0ed53878aa03a7ea15336ef",
+      "generated_spec:.decapod/managed/specs/VALIDATION.md": "sha256:66bc76e19237954b1ee167336645e30c9556a3662aece731e280b1bd20a224e4",
+      "generated_specs_fingerprint": "43de86d67f315c1bf8e23bd7db03e1aa2fdf2a5dd60561d5a04551849a0f0caa",
+      "generated_specs_manifest": "sha256:d9e272ae681961a93225e42a103097c4c1061a24786ba774173e0f66753634f4",
       "living_spec_material:.decapod/managed/specs/ARCHITECTURE.md": "sha256:c243a046700ab5a5c636fbbc83dfdf94984869b944ce6d05a2490acfc0823093",
       "living_spec_material:.decapod/managed/specs/INTENT.md": "sha256:57ca33c42129dd344f053d392ac50bd04cd344fcede19b8083b7374950053a3a",
       "living_spec_material:.decapod/managed/specs/INTERFACES.md": "sha256:9b7044befcfa17ee8e09e98897de65853e8324f55c5af2534658ca9ce60f1a62",
       "living_spec_material:.decapod/managed/specs/OPERATIONS.md": "sha256:b83246f85ee7b366191dc482082cd8acd1ab61aa218d0ab5fa3f34db7164f42d",
       "living_spec_material:.decapod/managed/specs/README.md": "sha256:f33eddecd121fc801a06678c0af35e11ec89bbf45dad6f44c79d349f6f40efab",
       "living_spec_material:.decapod/managed/specs/SECURITY.md": "sha256:9a58c992d60073d39fe1dd72de224ca7a7608e2d52ded3e28ffcc94fd82161de",
-      "living_spec_material:.decapod/managed/specs/SEMANTICS.md": "sha256:e40d91febf183f222eae7636ae283c672916dd73dd3f3185ed9df254aa6335d4",
-      "living_spec_material:.decapod/managed/specs/VALIDATION.md": "sha256:0291bcd9de63a92c28661f5c68874fa480fb31f7cca681879a19d677d481afbe",
+      "living_spec_material:.decapod/managed/specs/SEMANTICS.md": "sha256:b9ed7481ed96c6c93a39924720efeddb35a7b78058e7363166702c6426b94e6d",
+      "living_spec_material:.decapod/managed/specs/VALIDATION.md": "sha256:4e503680d7ade105cc9982d239ab5456e42e51b5afb1eef4c41461996a51b2e9",
       "proof_rubric": "sha256:99e8ef25629da391e9b479db9fff52b82f340224f7a69d8a88d2992ae8e90466",
       "validation_profile": "sha256:37a8eec1ce19687d132fe29051dca629d164e2c4958ba141d5f4133a33f0688f"
     }
@@ -46,52 +46,57 @@
   "status": "ok",
   "pass_count": 203,
   "fail_count": 0,
-  "warn_count": 3,
-  "elapsed_ms": 910,
+  "warn_count": 4,
+  "elapsed_ms": 1119,
   "drift_findings": [],
   "temporary_artifacts_cleaned": 0,
   "failures": [],
   "warnings": [
+    "Failed to prune stale Decapod images: Validation error: Failed to list container images: Cannot connect to Podman. Please verify your connection to the Linux system using `podman system connection list`, or try `podman machine init` and `podman machine start` to manage a new Linux VM\nError: unable to connect to Podman socket: failed to connect: dial tcp 127.0.0.1:64233: connect: operation not permitted",
     "Risk map missing (run `decapod riskmap init`)",
     "Watcher audit trail missing (run `decapod govern watcher run`)",
-    "Workspace branch 'agent/unknown/code_01m12894m33bpsd2-pr1274' has unpushed commits or does not exist on origin. Run `git push origin agent/unknown/code_01m12894m33bpsd2-pr1274`."
+    "Workspace branch 'agent/unknown/bugs_01m13e7q8r1v57tk-issues1280' has unpushed commits or does not exist on origin. Run `git push origin agent/unknown/bugs_01m13e7q8r1v57tk-issues1280`."
   ],
   "gate_timings": [
     {
       "name": "validate_project_specs_docs",
-      "elapsed_ms": 376
+      "elapsed_ms": 402
     },
     {
       "name": "validate_markdown_primitives_roundtrip_gate",
-      "elapsed_ms": 188
-    },
-    {
-      "name": "validate_git_workspace_context",
-      "elapsed_ms": 56
-    },
-    {
-      "name": "validate_obligations",
-      "elapsed_ms": 41
+      "elapsed_ms": 226
     },
     {
       "name": "validate_stale_workspaces",
-      "elapsed_ms": 39
+      "elapsed_ms": 96
     },
     {
-      "name": "validate_legacy_jsonl_retired",
-      "elapsed_ms": 26
+      "name": "validate_git_workspace_context",
+      "elapsed_ms": 89
+    },
+    {
+      "name": "validate_obligations",
+      "elapsed_ms": 42
+    },
+    {
+      "name": "validate_machine_contract",
+      "elapsed_ms": 33
+    },
+    {
+      "name": "validate_no_legacy_namespaces",
+      "elapsed_ms": 31
     },
     {
       "name": "validate_git_protected_branch",
-      "elapsed_ms": 21
+      "elapsed_ms": 28
+    },
+    {
+      "name": "validate_legacy_jsonl_retired",
+      "elapsed_ms": 25
     },
     {
       "name": "validate_git_push_pr_gate",
       "elapsed_ms": 20
-    },
-    {
-      "name": "validate_machine_contract",
-      "elapsed_ms": 18
     },
     {
       "name": "validate_archive_integrity",
@@ -99,38 +104,34 @@
     },
     {
       "name": "validate_federation_gates",
-      "elapsed_ms": 12
+      "elapsed_ms": 13
     },
     {
       "name": "validate_embedded_self_contained",
       "elapsed_ms": 10
     },
     {
-      "name": "validate_health_purity",
-      "elapsed_ms": 9
-    },
-    {
       "name": "validate_schema_determinism",
-      "elapsed_ms": 7
+      "elapsed_ms": 8
     },
     {
-      "name": "validate_no_legacy_namespaces",
+      "name": "validate_gatekeeper_gate",
       "elapsed_ms": 7
     },
     {
       "name": "validate_generated_artifact_whitelist",
-      "elapsed_ms": 7
-    },
-    {
-      "name": "validate_gatekeeper_gate",
       "elapsed_ms": 6
     },
     {
-      "name": "validate_repomap_determinism",
-      "elapsed_ms": 5
+      "name": "validate_health_purity",
+      "elapsed_ms": 6
     },
     {
       "name": "validate_control_plane_contract",
+      "elapsed_ms": 5
+    },
+    {
+      "name": "validate_repomap_determinism",
       "elapsed_ms": 4
     },
     {
@@ -142,7 +143,15 @@
       "elapsed_ms": 2
     },
     {
+      "name": "validate_state_commit_gate",
+      "elapsed_ms": 2
+    },
+    {
       "name": "validate_lcm_immutability",
+      "elapsed_ms": 1
+    },
+    {
+      "name": "validate_lcm_rebuild_gate",
       "elapsed_ms": 1
     },
     {
@@ -155,10 +164,6 @@
     },
     {
       "name": "validate_override_authority",
-      "elapsed_ms": 1
-    },
-    {
-      "name": "validate_lcm_rebuild_gate",
       "elapsed_ms": 1
     },
     {
@@ -186,11 +191,7 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_research_claims_if_present",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_eval_gate_if_required",
+      "name": "validate_policy_integrity",
       "elapsed_ms": 0
     },
     {
@@ -198,15 +199,11 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_project_config_toml",
+      "name": "validate_research_claims_if_present",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_policy_integrity",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_heartbeat_invocation_gate",
+      "name": "validate_eval_gate_if_required",
       "elapsed_ms": 0
     },
     {
@@ -222,7 +219,11 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_validation_receipt_if_present",
+      "name": "validate_project_config_toml",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_heartbeat_invocation_gate",
       "elapsed_ms": 0
     },
     {
@@ -230,11 +231,11 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_spec_drift",
+      "name": "validate_validation_receipt_if_present",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_state_commit_gate",
+      "name": "validate_spec_drift",
       "elapsed_ms": 0
     },
     {
@@ -254,10 +255,6 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_risk_map",
-      "elapsed_ms": 0
-    },
-    {
       "name": "validate_context_capsules_if_present",
       "elapsed_ms": 0
     },
@@ -267,6 +264,10 @@
     },
     {
       "name": "validate_coplayer_policy_tightening",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_risk_map",
       "elapsed_ms": 0
     },
     {
@@ -283,14 +284,15 @@
     "result": "review",
     "confidence": "medium",
     "reasons": [
+      "Failed to prune stale Decapod images: Validation error: Failed to list container images: Cannot connect to Podman. Please verify your connection to the Linux system using `podman system connection list`, or try `podman machine init` and `podman machine start` to manage a new Linux VM\nError: unable to connect to Podman socket: failed to connect: dial tcp 127.0.0.1:64233: connect: operation not permitted",
       "Risk map missing (run `decapod riskmap init`)",
       "Watcher audit trail missing (run `decapod govern watcher run`)",
-      "Workspace branch 'agent/unknown/code_01m12894m33bpsd2-pr1274' has unpushed commits or does not exist on origin. Run `git push origin agent/unknown/code_01m12894m33bpsd2-pr1274`."
+      "Workspace branch 'agent/unknown/bugs_01m13e7q8r1v57tk-issues1280' has unpushed commits or does not exist on origin. Run `git push origin agent/unknown/bugs_01m13e7q8r1v57tk-issues1280`."
     ],
     "recommendations": [
       "Review the reported validation warnings before relying on the CI result.",
       "Use `decapod validate -v --format json` to inspect the affected gate output."
     ]
   },
-  "receipt_hash": "sha256:cc43b8ac6e3f39822f24caf91a885ea3e3948a4e5038355e75cef0d4b52e0f75"
+  "receipt_hash": "sha256:ff224cf93096f8553d2b8d66893332809136fb797bcb03ceea7301739b3a49c4"
 }

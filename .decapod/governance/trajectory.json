@@ -6,10 +6,11 @@
   "original_intent": "fix it and publish a PR when ready",
   "derived_intent": "Repair canonical event sequence normalization for in-table duplicates, add invariant diagnostics and exact regression coverage, verify bounded broker replay and validation termination, then publish a governed PR.",
   "destination": "GitHub pull request",
-  "current_phase": "verification",
+  "current_phase": "validation",
   "next_transitions": [
     "commit verified implementation and run decapod validate",
-    "implement and run focused tests"
+    "implement and run focused tests",
+    "publish"
   ],
   "active_boundaries": [
     ".decapod/managed/specs/*.md",
@@ -26,6 +27,8 @@
     "tests/validate_termination.rs"
   ],
   "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
     ".decapod/managed/specs/SEMANTICS.md",
     ".decapod/managed/specs/VALIDATION.md",
     "src/decapod/core/events.rs",
@@ -37,12 +40,17 @@
     "cargo test --lib core::events::tests -- --test-threads=1",
     "cargo test --test single_datastore -- --test-threads=1",
     "cargo test --test validate_termination -- --test-threads=1",
+    "decapod validate",
     "git diff --check"
   ],
   "tool_calls": [],
   "checks": [
     {
       "name": "cargo_fmt",
+      "status": "passed"
+    },
+    {
+      "name": "decapod validate",
       "status": "passed"
     },
     {
@@ -69,7 +77,8 @@
   "evidence": [
     "#1280-equivalent fixture normalized 17,392 canonical rows with 1,240 duplicate groups into one contiguous unique sequence without legacy tables or a pre-existing unique index",
     "#1281-equivalent replay verified 20,384 events (9,785 pending and 10,599 success) without divergence",
-    "Initial regression harness trigger creation through execute_batch was rejected as incomplete SQL; trigger creation moved to standalone execute and the complete suite then passed"
+    "Initial regression harness trigger creation through execute_batch was rejected as incomplete SQL; trigger creation moved to standalone execute and the complete suite then passed",
+    "validation epoch ve_a30ce7e568fb9724 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [
@@ -82,7 +91,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:e84d7d69f073b4af34b717806a5ea3c2fadea311a55f11a69c051fb2deb4f97e",
+  "artifact_hash": "sha256:e553efff0931cf6fb6fc9788ad81ca06e08bc2a56fc304395a9ab65f1a02cc57",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -126,6 +135,13 @@
         "intent_id": "intent:run_issues1280_1281_fix_20260827",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:run_issues1280_1281_fix_20260827"
+      },
+      {
+        "sequence": 5,
+        "event_id": "event:5",
+        "intent_id": "intent:run_issues1280_1281_fix_20260827",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:run_issues1280_1281_fix_20260827"
       }
     ],
     "trajectories": {
@@ -166,12 +182,30 @@
               "The reporter private datastore remains unavailable, so reporter-side verification is outstanding; proof uses a structurally equivalent deterministic fixture"
             ],
             "custody_event_id": "event:4"
+          },
+          {
+            "sequence": 5,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "GitHub Issues #1280 and #1281"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_a30ce7e568fb9724 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:5"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 4
+    "next_sequence": 5
   }
 }
