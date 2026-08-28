@@ -39,6 +39,7 @@ Neither backend decides whether a Decapod transition is valid.
 
 ## Replay Semantics
 - Replay order: canonical sequence ascending for replay and timeline construction
+- Canonical sequence repair computes each stream's new `(seq, ts, event_id)` order from one materialized pre-update snapshot. Migration must observe zero duplicate `(stream, seq)` groups after renumbering and before installing the unique index; a residual group aborts and rolls back with `EVENT_SEQUENCE_NORMALIZATION_INCOMPLETE` rather than exposing a raw SQLite constraint failure.
 - Conflict resolution: identical event IDs with equal semantic events are idempotent across fresh legacy and split-envelope storage shapes; different fresh events fail with `LEGACY_EVENT_CONFLICT`. Inputs covered by a successful single-datastore migration are retired evidence and are not re-read.
 - Snapshot cadence:
 - Determinism proof strategy: delete preserved JSONL after import and compare validation, health, heartbeat, and flight-recorder results
@@ -124,7 +125,7 @@ Neither backend decides whether a Decapod transition is valid.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d6628098d7d294743a5c0ab5e87c21f6997f907b36202df1dc547c55d81f0360`
+- Repository signal fingerprint: `43de86d67f315c1bf8e23bd7db03e1aa2fdf2a5dd60561d5a04551849a0f0caa`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (105 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

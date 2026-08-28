@@ -151,6 +151,7 @@ flowchart LR
 - A structurally healthy spec-drift fixture increments neither warning nor failure counts.
 - A watcher record imported by existing-project init is observed by validation, health, heartbeat, and flight recorder after the source JSONL is removed.
 - Re-running event reconciliation imports zero additional rows; malformed or conflicting fresh records return visible errors, and a proven consolidation receipt prevents retired archives from being reinterpreted.
+- Event migration regression proof includes a canonical-only store with 17,392 broker rows, 1,240 duplicate sequence groups, no legacy stream tables, and no structural unique index; it must normalize to a contiguous unique sequence and install the canonical index. A forced residual duplicate must fail with the typed normalization marker before index creation. Broker replay proof separately exercises the reported 20,384-row scale with 9,785 pending and 10,599 terminal events through the paged query path.
 - Local Dactyl v0.9.0 conformance covers explicit IDs, event-atomic todo transitions with rollback, read-only enforcement, ordinary file close/reopen persistence, and backend-neutral schema inspection when the host SQLite runtime is available. A missing host runtime is a typed `sqlite_runtime_unavailable` storage-I/O result and never activates a bundled or second driver; hosted Propodus/Neon and tenancy/concurrency proof remain separate checks.
 - Local startup proof also covers the agent-facing `LOCAL_SQLITE_RUNTIME_REQUIRED` remediation, supported library-name discovery, machine-local runtime configuration serialization, and the cloud-path exclusion from the native SQLite preflight.
 
@@ -253,7 +254,7 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d6628098d7d294743a5c0ab5e87c21f6997f907b36202df1dc547c55d81f0360`
+- Repository signal fingerprint: `43de86d67f315c1bf8e23bd7db03e1aa2fdf2a5dd60561d5a04551849a0f0caa`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (105 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
