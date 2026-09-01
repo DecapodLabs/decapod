@@ -747,6 +747,16 @@ fn normalize_path_for_compare(path: &Path) -> String {
         .to_string()
 }
 
+fn process_is_inside_workspace(process_dir: Option<&Path>, workspace: &Path) -> bool {
+    let Some(process_dir) = process_dir else {
+        return false;
+    };
+    let process_dir =
+        std::fs::canonicalize(process_dir).unwrap_or_else(|_| process_dir.to_path_buf());
+    let workspace = std::fs::canonicalize(workspace).unwrap_or_else(|_| workspace.to_path_buf());
+    process_dir.starts_with(workspace)
+}
+
 /// Build workspace container image
 fn build_workspace_image(workspace_path: &Path, image_tag: &str) -> Result<(), DecapodError> {
     let runtime = container_runtime::find_container_runtime()?;
@@ -2268,6 +2278,15 @@ pub fn prune_workspaces_report(
     repo_root: &Path,
     force: bool,
 ) -> Result<WorkspacePruneReport, DecapodError> {
+    let process_dir = std::env::current_dir().ok();
+    prune_workspaces_report_with_process_dir(repo_root, force, process_dir.as_deref())
+}
+
+fn prune_workspaces_report_with_process_dir(
+    repo_root: &Path,
+    force: bool,
+    process_dir: Option<&Path>,
+) -> Result<WorkspacePruneReport, DecapodError> {
     let main_repo = get_main_repo_root(repo_root)?;
     let workspaces_dir = main_repo.join(".decapod").join("workspaces");
     if !workspaces_dir.is_dir() {
@@ -2341,8 +2360,6 @@ pub fn prune_workspaces_report(
 
     let mut pruned = Vec::new();
     let mut skipped = Vec::new();
-    let process_dir = std::env::current_dir().ok();
-
     // 3) Iterate over the directory entries under .decapod/workspaces/
     for entry in std::fs::read_dir(&workspaces_dir).map_err(DecapodError::IoError)? {
         let entry = entry.map_err(DecapodError::IoError)?;
@@ -2353,10 +2370,13 @@ pub fn prune_workspaces_report(
 
         // Safety safeguard: never prune the workspace containing the process cwd.
         let normalized_dir = normalize_path_for_compare(&dir_path);
-        let process_is_inside_candidate = process_dir
-            .as_ref()
-            .is_some_and(|current| current.starts_with(&dir_path));
+        let process_is_inside_candidate = process_is_inside_workspace(process_dir, &dir_path);
         if process_is_inside_candidate {
+            skipped.push(SkippedWorkspace {
+                path: dir_path.to_string_lossy().to_string(),
+                reason: "current_workspace".to_string(),
+                detail: "workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch".to_string(),
+            });
             continue;
         }
 

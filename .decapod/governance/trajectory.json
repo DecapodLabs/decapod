@@ -1,29 +1,28 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "run_issues1287_1288_20260901",
-  "intent_id": "intent:run_issues1287_1288_20260901",
-  "task_id": "bugs_01m1e5gh70rhggph",
-  "original_intent": "solve GitHub Issue #1287 and #1288 in a single PR",
-  "derived_intent": "Bound stale-workspace validation to Git/workspace metadata, replace invalid verification remediation with a supported deadlock-safe sequence, prove both with regressions, and publish one PR.",
-  "destination": "GitHub pull request",
+  "run_id": "run-issue-1290-20260901",
+  "intent_id": "intent:run-issue-1290-20260901",
+  "task_id": "bugs_01m1fb3wykcc4479",
+  "original_intent": "perfect, now work on this GitHub issue: #1290",
+  "derived_intent": "Fix workspace prune so worktrees created by workspace ensure are visible to cleanup and any safety-preserved current workspace is explicitly reported with recovery guidance.",
   "current_phase": "publication",
   "next_transitions": [
-    "publication",
-    "publish",
-    "push and open PR",
-    "verification"
+    "Commit governed artifacts and publish the workspace PR.",
+    "Publish the validated workspace branch as a pull request.",
+    "publish"
   ],
   "active_boundaries": [
-    ".decapod/managed/specs/*.md",
-    "src/**",
-    "tests/**"
+    "Work only in the Decapod-managed Issue #1290 workspace; do not mutate protected master or root checkout state."
   ],
   "repo_scope": [
-    "GitHub Issues #1287 and #1288"
+    "src/decapod/core/workspace.rs, tests/unit/core/workspace_tests.rs, governed specs and publication artifacts required for this PR."
   ],
   "inspected_files": [
+    ".decapod/managed/specs/ARCHITECTURE.md",
+    ".decapod/managed/specs/INTERFACES.md",
     "src/decapod/core/workspace.rs",
-    "src/decapod/plugins/verify.rs"
+    "tests/unit/core/workspace_tests.rs",
+    "tests/workspace_prune_regression.rs"
   ],
   "modified_files": [
     ".decapod/governance/trajectory.json",
@@ -32,31 +31,32 @@
     ".decapod/managed/specs/INTENT.md",
     ".decapod/managed/specs/INTERFACES.md",
     "src/decapod/core/workspace.rs",
-    "src/decapod/plugins/verify.rs",
-    "tests/unit/core/workspace_tests.rs",
-    "tests/unit/plugins/verify_tests.rs",
-    "tests/workspace_prune_regression.rs"
+    "tests/unit/core/workspace_tests.rs"
   ],
   "declared_commands": [
     "cargo clippy --all-targets --all-features -- -D warnings",
     "cargo fmt --all -- --check",
-    "cargo test --lib -- --test-threads=1",
-    "cargo test --lib stale_epoch_reports_supported_aggregate_deadlock_recovery",
-    "cargo test --lib stale_workspace_dirty_check_collapses_untracked_directories",
-    "cargo test --test validate_termination -- --test-threads=1",
+    "cargo run --quiet -- validate --format json",
+    "cargo test --lib core::workspace::tests::current_workspace_is_reported_as_preserved_during_prune -- --exact",
     "cargo test --test workspace_prune_regression -- --test-threads=1",
-    "cargo test --test workspace_prune_regression test_workspace_prune_non_force_preserves_dirty_and_unregistered_data -- --exact",
-    "decapod validate",
-    "decapod validate --format json in governed Podman workspace"
+    "decapod validate"
   ],
   "tool_calls": [],
   "checks": [
+    {
+      "name": "cargo fmt",
+      "status": "passed"
+    },
     {
       "name": "clippy",
       "status": "passed"
     },
     {
-      "name": "container_validation_precommit",
+      "name": "container workspace proof",
+      "status": "passed"
+    },
+    {
+      "name": "current workspace regression",
       "status": "passed"
     },
     {
@@ -64,69 +64,53 @@
       "status": "passed"
     },
     {
-      "name": "focused_verification_regression",
+      "name": "governed validate",
       "status": "passed"
     },
     {
-      "name": "focused_workspace_regression",
+      "name": "todo done validated",
       "status": "passed"
     },
     {
-      "name": "formatting",
-      "status": "passed"
-    },
-    {
-      "name": "library_suite",
-      "status": "partial"
-    },
-    {
-      "name": "required_issue_proofs",
-      "status": "passed"
-    },
-    {
-      "name": "validate_termination",
-      "status": "passed"
-    },
-    {
-      "name": "workspace_prune_regression",
+      "name": "workspace prune regressions",
       "status": "passed"
     }
   ],
   "evidence": [
-    "After the incremental commit, governed Podman validation passed 204 gates with zero failures; validate_stale_workspaces completed in 159 ms.",
-    "Focused unit and integration regressions passed on Decapod 0.99.7.",
-    "Governed Linux container validation reached all gates; stale workspace gate completed in 98 ms and only commit-often gate failed before the required incremental commit.",
-    "Governed Linux container: 319/321 library tests passed; both failures are inherited Dactyl TODO adapter tests unchanged from origin/master and outside selective PR CI.",
-    "Host: workspace prune 4/4, validate termination 11/11, clippy and formatting passed.",
-    "The required issue-scoped proof plan uses focused unit regressions, all four workspace prune regressions, all 11 validation termination tests, formatting, clippy, and governed container validation.",
-    "validation epoch ve_d1fce4cb8fa2255c completed with zero failures"
+    "Actual supervised Podman container validation passed: fail_count=0, pass_count=200, stale-workspace gate completed in 182 ms; warnings are pre-existing risk-map/watcher gaps, current-workspace preservation, and unpushed branch state.",
+    "Decapod todo done completed bugs_01m1fb3wykcc4479 with --validated and the workspace artifact path.",
+    "Focused host tests pass; governed validator is blocked by container_workspace_required because the supervised image has an incompatible macOS bundled binary and its compiler is older than Rust 2024.",
+    "validation epoch ve_46be713ad610dc83 completed with zero failures"
   ],
-  "shortcut_risk_signals": [],
-  "unresolved_assumptions": [],
-  "proof_status": "partial",
+  "shortcut_risk_signals": [
+    "No direct .decapod state mutation; projections and governance artifacts updated through Decapod commands."
+  ],
+  "unresolved_assumptions": [
+    "The observed omission is caused by the existing current-process safety guard; the fix preserves that guard and exposes its decision in skipped."
+  ],
+  "completion_claim": "Issue #1290 implementation and focused proof are complete; publish the governed workspace PR.",
+  "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
-    "shortcut_risk": "supported",
-    "completion_proof": "caution"
+    "shortcut_risk": "caution",
+    "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:34f826f218f7c86fcf91aa9f1cd72f4f90f9feccb477318821721ccd64add9e4",
+  "artifact_hash": "sha256:fd8036c110c2fca973b1c9ae1b7d73a8ba12cd89f0e02924a7b64fff7120fc5d",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:run_issues1287_1288_20260901": {
-        "id": "intent:run_issues1287_1288_20260901",
-        "raw_intent": "solve GitHub Issue #1287 and #1288 in a single PR",
-        "refined_intent": "Bound stale-workspace validation to Git/workspace metadata, replace invalid verification remediation with a supported deadlock-safe sequence, prove both with regressions, and publish one PR.",
+      "intent:run-issue-1290-20260901": {
+        "id": "intent:run-issue-1290-20260901",
+        "raw_intent": "perfect, now work on this GitHub issue: #1290",
+        "refined_intent": "Fix workspace prune so worktrees created by workspace ensure are visible to cleanup and any safety-preserved current workspace is explicitly reported with recovery guidance.",
         "acceptance_criteria": [],
         "constraints": [
-          "GitHub Issues #1287 and #1288"
+          "src/decapod/core/workspace.rs, tests/unit/core/workspace_tests.rs, governed specs and publication artifacts required for this PR."
         ],
         "assumptions": [],
         "boundaries": [
-          "src/**",
-          "tests/**",
-          ".decapod/managed/specs/*.md"
+          "Work only in the Decapod-managed Issue #1290 workspace; do not mutate protected master or root checkout state."
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -139,114 +123,113 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:run_issues1287_1288_20260901",
+        "intent_id": "intent:run-issue-1290-20260901",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:run_issues1287_1288_20260901",
+        "intent_id": "intent:run-issue-1290-20260901",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:run_issues1287_1288_20260901",
+        "intent_id": "intent:run-issue-1290-20260901",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run_issues1287_1288_20260901"
+        "detail": "trajectory:run-issue-1290-20260901"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:run_issues1287_1288_20260901",
+        "intent_id": "intent:run-issue-1290-20260901",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run_issues1287_1288_20260901"
+        "detail": "trajectory:run-issue-1290-20260901"
       },
       {
         "sequence": 6,
         "event_id": "event:6",
-        "intent_id": "intent:run_issues1287_1288_20260901",
+        "intent_id": "intent:run-issue-1290-20260901",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run_issues1287_1288_20260901"
+        "detail": "trajectory:run-issue-1290-20260901"
       },
       {
         "sequence": 7,
         "event_id": "event:7",
-        "intent_id": "intent:run_issues1287_1288_20260901",
+        "intent_id": "intent:run-issue-1290-20260901",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run_issues1287_1288_20260901"
+        "detail": "trajectory:run-issue-1290-20260901"
       }
     ],
     "trajectories": {
-      "run_issues1287_1288_20260901": {
-        "id": "run_issues1287_1288_20260901",
-        "intent_id": "intent:run_issues1287_1288_20260901",
+      "run-issue-1290-20260901": {
+        "id": "run-issue-1290-20260901",
+        "intent_id": "intent:run-issue-1290-20260901",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "implementation",
-            "command": "cargo test --lib stale_workspace_dirty_check_collapses_untracked_directories",
+            "action": "verification",
+            "command": "cargo fmt --all -- --check",
             "scope": [
-              "GitHub Issues #1287 and #1288"
+              "src/decapod/core/workspace.rs, tests/unit/core/workspace_tests.rs, governed specs and publication artifacts required for this PR."
             ],
             "observations": [
               "src/decapod/core/workspace.rs",
-              "src/decapod/plugins/verify.rs",
-              "src/decapod/core/workspace.rs",
-              "src/decapod/plugins/verify.rs",
-              "tests/unit/core/workspace_tests.rs",
-              "tests/unit/plugins/verify_tests.rs",
               "tests/workspace_prune_regression.rs",
-              ".decapod/managed/specs/INTENT.md",
+              "tests/unit/core/workspace_tests.rs",
               ".decapod/managed/specs/ARCHITECTURE.md",
               ".decapod/managed/specs/INTERFACES.md",
-              "Focused unit and integration regressions passed on Decapod 0.99.7."
+              "src/decapod/core/workspace.rs",
+              "tests/unit/core/workspace_tests.rs",
+              ".decapod/managed/specs/ARCHITECTURE.md",
+              ".decapod/managed/specs/INTENT.md",
+              ".decapod/managed/specs/INTERFACES.md",
+              "Focused host tests pass; governed validator is blocked by container_workspace_required because the supervised image has an incompatible macOS bundled binary and its compiler is older than Rust 2024."
             ],
             "proof_refs": [
-              "focused_workspace_regression",
-              "focused_verification_regression"
+              "cargo fmt",
+              "current workspace regression",
+              "workspace prune regressions",
+              "clippy",
+              "governed validate"
             ],
-            "validation_findings": [],
+            "validation_findings": [
+              "No direct .decapod state mutation; projections and governance artifacts updated through Decapod commands.",
+              "The observed omission is caused by the existing current-process safety guard; the fix preserves that guard and exposes its decision in skipped."
+            ],
             "custody_event_id": "event:4"
           },
           {
             "sequence": 5,
-            "action": "verification",
-            "command": "cargo fmt --all -- --check",
+            "action": "validation",
+            "command": "decapod validate",
             "scope": [
-              "GitHub Issues #1287 and #1288"
+              "src/decapod/core/workspace.rs, tests/unit/core/workspace_tests.rs, governed specs and publication artifacts required for this PR."
             ],
             "observations": [
-              "Host: workspace prune 4/4, validate termination 11/11, clippy and formatting passed.",
-              "Governed Linux container: 319/321 library tests passed; both failures are inherited Dactyl TODO adapter tests unchanged from origin/master and outside selective PR CI.",
-              "Governed Linux container validation reached all gates; stale workspace gate completed in 98 ms and only commit-often gate failed before the required incremental commit."
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_46be713ad610dc83 completed with zero failures"
             ],
             "proof_refs": [
-              "formatting",
-              "workspace_prune_regression",
-              "validate_termination",
-              "clippy",
-              "library_suite",
-              "container_validation_precommit"
+              "decapod validate"
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
           },
           {
             "sequence": 6,
-            "action": "validation",
-            "command": "decapod validate",
+            "action": "validated",
             "scope": [
-              "GitHub Issues #1287 and #1288"
+              "src/decapod/core/workspace.rs, tests/unit/core/workspace_tests.rs, governed specs and publication artifacts required for this PR."
             ],
             "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_d1fce4cb8fa2255c completed with zero failures"
+              "Actual supervised Podman container validation passed: fail_count=0, pass_count=200, stale-workspace gate completed in 182 ms; warnings are pre-existing risk-map/watcher gaps, current-workspace preservation, and unpushed branch state."
             ],
             "proof_refs": [
-              "decapod validate"
+              "governed validate",
+              "container workspace proof"
             ],
             "validation_findings": [],
             "custody_event_id": "event:6"
@@ -255,15 +238,13 @@
             "sequence": 7,
             "action": "publication",
             "scope": [
-              "GitHub Issues #1287 and #1288"
+              "src/decapod/core/workspace.rs, tests/unit/core/workspace_tests.rs, governed specs and publication artifacts required for this PR."
             ],
             "observations": [
-              "After the incremental commit, governed Podman validation passed 204 gates with zero failures; validate_stale_workspaces completed in 159 ms.",
-              "The required issue-scoped proof plan uses focused unit regressions, all four workspace prune regressions, all 11 validation termination tests, formatting, clippy, and governed container validation."
+              "Decapod todo done completed bugs_01m1fb3wykcc4479 with --validated and the workspace artifact path."
             ],
             "proof_refs": [
-              "container_validation_precommit",
-              "required_issue_proofs"
+              "todo done validated"
             ],
             "validation_findings": [],
             "custody_event_id": "event:7"

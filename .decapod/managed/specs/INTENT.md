@@ -152,6 +152,7 @@ flowchart LR
 - [ ] Resolved context proves every applied repository override by directive ID, source, hashes, bytes, and precedence.
 - [ ] A healthy spec-drift gate emits no warning; every remaining warning names an observed condition.
 - [ ] Runtime governance consumers observe canonical Dactyl events after legacy JSONL removal.
+- [ ] `workspace prune` makes every preserved candidate visible in `skipped`, including the current workspace, with a recovery action that releases it safely from the host checkout.
 
 ## Epistemic Custody Fields
 
@@ -222,7 +223,7 @@ Routine validation must classify stale workspaces from workspace count and Git m
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a374e841f3b57cda09578bb26f2a6ee59f92193c9f120a76f1f9aacecc8556aa`
+- Repository signal fingerprint: `88db27e8e169d023716f2e48a2013212758d9c35ed6ffe4c338b677891b5f5f7`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (105 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
