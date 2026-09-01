@@ -204,6 +204,10 @@ sequenceDiagram
 | Contract drift across components | Medium | High | Spec + schema checks in CI |
 | Runtime saturation under peak load | Medium | High | Capacity model + load tests |
 
+## Validation metadata boundary
+
+Stale-workspace cleanup separates Git-state classification from workspace payload size. Dirty detection asks Git for porcelain status with directory-collapsed untracked reporting, so classification remains proportional to repository metadata and top-level untracked entries instead of every nested file.
+
 <!-- decapod:capability-overlay:persistent-state:start -->
 
 ## Persistent State Architecture Overlay
@@ -228,7 +232,7 @@ sequenceDiagram
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `43de86d67f315c1bf8e23bd7db03e1aa2fdf2a5dd60561d5a04551849a0f0caa`
+- Repository signal fingerprint: `a374e841f3b57cda09578bb26f2a6ee59f92193c9f120a76f1f9aacecc8556aa`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (105 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

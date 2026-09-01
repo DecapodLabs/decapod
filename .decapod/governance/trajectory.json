@@ -1,137 +1,115 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "run_issues1280_1281_fix_20260827",
-  "intent_id": "intent:run_issues1280_1281_fix_20260827",
-  "task_id": "bugs_01m13e7q8r1v57tk",
-  "original_intent": "fix it and publish a PR when ready",
-  "derived_intent": "Repair canonical event sequence normalization for in-table duplicates, add invariant diagnostics and exact regression coverage, verify bounded broker replay and validation termination, then publish a governed PR.",
+  "run_id": "run_issues1287_1288_20260901",
+  "intent_id": "intent:run_issues1287_1288_20260901",
+  "task_id": "bugs_01m1e5gh70rhggph",
+  "original_intent": "solve GitHub Issue #1287 and #1288 in a single PR",
+  "derived_intent": "Bound stale-workspace validation to Git/workspace metadata, replace invalid verification remediation with a supported deadlock-safe sequence, prove both with regressions, and publish one PR.",
   "destination": "GitHub pull request",
-  "current_phase": "validation",
+  "current_phase": "verification",
   "next_transitions": [
-    "commit verified implementation and run decapod validate",
-    "implement and run focused tests",
-    "publish",
-    "push 0.99.6 publication bundle and wait for green CI"
+    "publication",
+    "verification"
   ],
   "active_boundaries": [
     ".decapod/managed/specs/*.md",
-    "src/decapod/core/events.rs",
-    "tests/single_datastore.rs"
+    "src/**",
+    "tests/**"
   ],
   "repo_scope": [
-    "GitHub Issues #1280 and #1281"
+    "GitHub Issues #1287 and #1288"
   ],
   "inspected_files": [
-    "src/decapod/core/broker.rs",
-    "src/decapod/core/events.rs",
-    "tests/single_datastore.rs",
-    "tests/validate_termination.rs"
+    "src/decapod/core/workspace.rs",
+    "src/decapod/plugins/verify.rs"
   ],
   "modified_files": [
-    ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json",
-    ".decapod/managed/Dockerfile.decapod",
-    ".decapod/managed/specs/.manifest.json",
-    ".decapod/managed/specs/SEMANTICS.md",
-    ".decapod/managed/specs/VALIDATION.md",
-    "AGENTS.md",
-    "CLAUDE.md",
-    "CODEX.md",
-    "GEMINI.md",
-    "src/decapod/core/events.rs",
-    "tests/single_datastore.rs"
+    ".decapod/managed/specs/ARCHITECTURE.md",
+    ".decapod/managed/specs/INTENT.md",
+    ".decapod/managed/specs/INTERFACES.md",
+    "src/decapod/core/workspace.rs",
+    "src/decapod/plugins/verify.rs",
+    "tests/unit/core/workspace_tests.rs",
+    "tests/unit/plugins/verify_tests.rs",
+    "tests/workspace_prune_regression.rs"
   ],
   "declared_commands": [
-    "./target/debug/decapod init --proof",
-    "./target/debug/decapod workspace ensure --container",
-    "cargo build --bin decapod",
-    "cargo clippy --lib --test single_datastore --all-features -- -D warnings",
+    "cargo clippy --all-targets --all-features -- -D warnings",
     "cargo fmt --all -- --check",
-    "cargo test --lib core::events::tests -- --test-threads=1",
-    "cargo test --test single_datastore -- --test-threads=1",
+    "cargo test --lib -- --test-threads=1",
+    "cargo test --lib stale_epoch_reports_supported_aggregate_deadlock_recovery",
+    "cargo test --lib stale_workspace_dirty_check_collapses_untracked_directories",
     "cargo test --test validate_termination -- --test-threads=1",
-    "decapod v (inside prepared Podman container workspace)",
-    "decapod validate",
-    "git diff --check"
+    "cargo test --test workspace_prune_regression -- --test-threads=1",
+    "cargo test --test workspace_prune_regression test_workspace_prune_non_force_preserves_dirty_and_unregistered_data -- --exact",
+    "decapod validate --format json in governed Podman workspace"
   ],
   "tool_calls": [],
   "checks": [
     {
-      "name": "cargo_fmt",
+      "name": "clippy",
       "status": "passed"
     },
     {
-      "name": "container_workspace_validation",
+      "name": "container_validation_precommit",
+      "status": "failed"
+    },
+    {
+      "name": "focused_verification_regression",
       "status": "passed"
     },
     {
-      "name": "decapod validate",
+      "name": "focused_workspace_regression",
       "status": "passed"
     },
     {
-      "name": "decapod_0_99_6_build",
+      "name": "formatting",
       "status": "passed"
     },
     {
-      "name": "diff_check",
+      "name": "library_suite",
+      "status": "partial"
+    },
+    {
+      "name": "validate_termination",
       "status": "passed"
     },
     {
-      "name": "events_unit_tests",
-      "status": "passed"
-    },
-    {
-      "name": "podman_info",
-      "status": "passed"
-    },
-    {
-      "name": "single_datastore_tests",
-      "status": "passed"
-    },
-    {
-      "name": "targeted_clippy",
-      "status": "passed"
-    },
-    {
-      "name": "validate_termination_tests",
+      "name": "workspace_prune_regression",
       "status": "passed"
     }
   ],
   "evidence": [
-    "#1280-equivalent fixture normalized 17,392 canonical rows with 1,240 duplicate groups into one contiguous unique sequence without legacy tables or a pre-existing unique index",
-    "#1281-equivalent replay verified 20,384 events (9,785 pending and 10,599 success) without divergence",
-    "GitHub CI exposed release-bound drift because the original receipt was generated by Decapod 0.99.5 while the PR merge build is 0.99.6; refreshed all four entrypoints, the managed Dockerfile pin, and the specs manifest using the built 0.99.6 binary",
-    "Initial regression harness trigger creation through execute_batch was rejected as incomplete SQL; trigger creation moved to standalone execute and the complete suite then passed",
-    "Podman 6.1.0 container workspace validation passed 204 gates with zero failures",
-    "validation epoch ve_a30ce7e568fb9724 completed with zero failures"
+    "Focused unit and integration regressions passed on Decapod 0.99.7.",
+    "Governed Linux container validation reached all gates; stale workspace gate completed in 98 ms and only commit-often gate failed before the required incremental commit.",
+    "Governed Linux container: 319/321 library tests passed; both failures are inherited Dactyl TODO adapter tests unchanged from origin/master and outside selective PR CI.",
+    "Host: workspace prune 4/4, validate termination 11/11, clippy and formatting passed."
   ],
   "shortcut_risk_signals": [],
-  "unresolved_assumptions": [
-    "The reporter private datastore remains unavailable, so reporter-side verification is outstanding; proof uses a structurally equivalent deterministic fixture"
-  ],
-  "proof_status": "passed",
+  "unresolved_assumptions": [],
+  "proof_status": "failed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "supported"
+    "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:2327bd0f1e7fbb11a169bd48ba1137f755843396992e7e2e0643f6c56e88c443",
+  "artifact_hash": "sha256:aabde396cd1d8a865d2b8de505726da56625bee32cd4fb71d12435765e314142",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:run_issues1280_1281_fix_20260827": {
-        "id": "intent:run_issues1280_1281_fix_20260827",
-        "raw_intent": "fix it and publish a PR when ready",
-        "refined_intent": "Repair canonical event sequence normalization for in-table duplicates, add invariant diagnostics and exact regression coverage, verify bounded broker replay and validation termination, then publish a governed PR.",
+      "intent:run_issues1287_1288_20260901": {
+        "id": "intent:run_issues1287_1288_20260901",
+        "raw_intent": "solve GitHub Issue #1287 and #1288 in a single PR",
+        "refined_intent": "Bound stale-workspace validation to Git/workspace metadata, replace invalid verification remediation with a supported deadlock-safe sequence, prove both with regressions, and publish one PR.",
         "acceptance_criteria": [],
         "constraints": [
-          "GitHub Issues #1280 and #1281"
+          "GitHub Issues #1287 and #1288"
         ],
         "assumptions": [],
         "boundaries": [
-          "src/decapod/core/events.rs",
-          "tests/single_datastore.rs",
+          "src/**",
+          "tests/**",
           ".decapod/managed/specs/*.md"
         ],
         "out_of_scope": [],
@@ -145,125 +123,91 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:run_issues1280_1281_fix_20260827",
+        "intent_id": "intent:run_issues1287_1288_20260901",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:run_issues1280_1281_fix_20260827",
+        "intent_id": "intent:run_issues1287_1288_20260901",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:run_issues1280_1281_fix_20260827",
+        "intent_id": "intent:run_issues1287_1288_20260901",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run_issues1280_1281_fix_20260827"
+        "detail": "trajectory:run_issues1287_1288_20260901"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:run_issues1280_1281_fix_20260827",
+        "intent_id": "intent:run_issues1287_1288_20260901",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run_issues1280_1281_fix_20260827"
-      },
-      {
-        "sequence": 6,
-        "event_id": "event:6",
-        "intent_id": "intent:run_issues1280_1281_fix_20260827",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run_issues1280_1281_fix_20260827"
+        "detail": "trajectory:run_issues1287_1288_20260901"
       }
     ],
     "trajectories": {
-      "run_issues1280_1281_fix_20260827": {
-        "id": "run_issues1280_1281_fix_20260827",
-        "intent_id": "intent:run_issues1280_1281_fix_20260827",
+      "run_issues1287_1288_20260901": {
+        "id": "run_issues1287_1288_20260901",
+        "intent_id": "intent:run_issues1287_1288_20260901",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "verification",
-            "command": "cargo fmt --all -- --check",
+            "action": "implementation",
+            "command": "cargo test --lib stale_workspace_dirty_check_collapses_untracked_directories",
             "scope": [
-              "GitHub Issues #1280 and #1281"
+              "GitHub Issues #1287 and #1288"
             ],
             "observations": [
-              "src/decapod/core/events.rs",
-              "src/decapod/core/broker.rs",
-              "tests/single_datastore.rs",
-              "tests/validate_termination.rs",
-              "src/decapod/core/events.rs",
-              "tests/single_datastore.rs",
-              ".decapod/managed/specs/SEMANTICS.md",
-              ".decapod/managed/specs/VALIDATION.md",
-              "#1280-equivalent fixture normalized 17,392 canonical rows with 1,240 duplicate groups into one contiguous unique sequence without legacy tables or a pre-existing unique index",
-              "#1281-equivalent replay verified 20,384 events (9,785 pending and 10,599 success) without divergence",
-              "Initial regression harness trigger creation through execute_batch was rejected as incomplete SQL; trigger creation moved to standalone execute and the complete suite then passed"
+              "src/decapod/core/workspace.rs",
+              "src/decapod/plugins/verify.rs",
+              "src/decapod/core/workspace.rs",
+              "src/decapod/plugins/verify.rs",
+              "tests/unit/core/workspace_tests.rs",
+              "tests/unit/plugins/verify_tests.rs",
+              "tests/workspace_prune_regression.rs",
+              ".decapod/managed/specs/INTENT.md",
+              ".decapod/managed/specs/ARCHITECTURE.md",
+              ".decapod/managed/specs/INTERFACES.md",
+              "Focused unit and integration regressions passed on Decapod 0.99.7."
             ],
             "proof_refs": [
-              "cargo_fmt",
-              "events_unit_tests",
-              "single_datastore_tests",
-              "validate_termination_tests",
-              "targeted_clippy",
-              "diff_check"
+              "focused_workspace_regression",
+              "focused_verification_regression"
             ],
-            "validation_findings": [
-              "The reporter private datastore remains unavailable, so reporter-side verification is outstanding; proof uses a structurally equivalent deterministic fixture"
-            ],
+            "validation_findings": [],
             "custody_event_id": "event:4"
           },
           {
             "sequence": 5,
-            "action": "validation",
-            "command": "decapod validate",
+            "action": "verification",
+            "command": "cargo fmt --all -- --check",
             "scope": [
-              "GitHub Issues #1280 and #1281"
+              "GitHub Issues #1287 and #1288"
             ],
             "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_a30ce7e568fb9724 completed with zero failures"
+              "Host: workspace prune 4/4, validate termination 11/11, clippy and formatting passed.",
+              "Governed Linux container: 319/321 library tests passed; both failures are inherited Dactyl TODO adapter tests unchanged from origin/master and outside selective PR CI.",
+              "Governed Linux container validation reached all gates; stale workspace gate completed in 98 ms and only commit-often gate failed before the required incremental commit."
             ],
             "proof_refs": [
-              "decapod validate"
+              "formatting",
+              "workspace_prune_regression",
+              "validate_termination",
+              "clippy",
+              "library_suite",
+              "container_validation_precommit"
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
-          },
-          {
-            "sequence": 6,
-            "action": "validation",
-            "command": "cargo build --bin decapod",
-            "scope": [
-              "GitHub Issues #1280 and #1281"
-            ],
-            "observations": [
-              "AGENTS.md",
-              "CLAUDE.md",
-              "CODEX.md",
-              "GEMINI.md",
-              ".decapod/managed/Dockerfile.decapod",
-              ".decapod/managed/specs/.manifest.json",
-              ".decapod/governance/validation.json",
-              "GitHub CI exposed release-bound drift because the original receipt was generated by Decapod 0.99.5 while the PR merge build is 0.99.6; refreshed all four entrypoints, the managed Dockerfile pin, and the specs manifest using the built 0.99.6 binary",
-              "Podman 6.1.0 container workspace validation passed 204 gates with zero failures"
-            ],
-            "proof_refs": [
-              "decapod_0_99_6_build",
-              "podman_info",
-              "container_workspace_validation"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:6"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 6
+    "next_sequence": 5
   }
 }

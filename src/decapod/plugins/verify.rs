@@ -207,6 +207,16 @@ fn validation_proof_reason(validate_ok: bool, hashes_match: bool, todo_id: &str)
     }
 }
 
+fn validation_epoch_changed_reason(
+    captured_epoch: &str,
+    active_epoch: &str,
+    todo_id: &str,
+) -> String {
+    format!(
+        "validation epoch changed: captured {captured_epoch} but active {active_epoch}. To recover from an aggregate-proof deadlock, run `decapod qa verify prune {todo_id}`, obtain a passing `decapod validate` in the governed container workspace, run `decapod todo claim --id {todo_id}`, then run `decapod todo done --id {todo_id} --validated` there."
+    )
+}
+
 fn normalize_validate_output(raw: &str) -> String {
     let ansi = Regex::new(r"\x1B\[[0-9;]*[A-Za-z]").expect("valid ANSI regex");
     let elapsed_re = Regex::new(r" elapsed=\S+").expect("valid elapsed regex");
@@ -668,9 +678,10 @@ fn verify_target(
                     status: "fail".to_string(),
                     expected_output_hash: expected_hash.clone(),
                     actual_output_hash: None,
-                    reason: Some(format!(
-                        "validation epoch changed: captured {} but active {}. Re-run `decapod todo done --validated` or `decapod qa verify capture --id {}` to recapture current proof evidence.",
-                        captured_epoch.epoch_id, active_epoch.epoch_id, target.todo_id
+                    reason: Some(validation_epoch_changed_reason(
+                        &captured_epoch.epoch_id,
+                        &active_epoch.epoch_id,
+                        &target.todo_id,
                     )),
                 });
                 return Ok(result);
