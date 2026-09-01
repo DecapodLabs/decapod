@@ -36,6 +36,13 @@ fn run_git_cmd(dir: &Path, args: &[&str]) {
     }
 }
 
+fn canonical_path_string(path: &Path) -> String {
+    fs::canonicalize(path)
+        .unwrap_or_else(|_| path.to_path_buf())
+        .to_string_lossy()
+        .to_string()
+}
+
 #[test]
 fn test_workspace_prune() {
     let tmp = tempdir().expect("tempdir");
@@ -225,6 +232,10 @@ fn test_workspace_prune() {
     assert!(wt_c_path.exists());
     assert!(wt_d_path.exists());
     assert!(wt_e_path.exists());
+    let wt_b_report_path = canonical_path_string(&wt_b_path);
+    let wt_c_report_path = canonical_path_string(&wt_c_path);
+    let wt_d_report_path = canonical_path_string(&wt_d_path);
+    let wt_e_report_path = canonical_path_string(&wt_e_path);
 
     // Execute prune!
     let pruned = workspace::prune_workspaces(&main_root, true).expect("prune_workspaces");
@@ -255,19 +266,19 @@ fn test_workspace_prune() {
     assert!(
         pruned
             .iter()
-            .any(|p| p.path == wt_b_path.to_string_lossy() && p.reason == "task_completed")
+            .any(|p| p.path == wt_b_report_path && p.reason == "task_completed")
     );
     assert!(
         pruned
             .iter()
-            .any(|p| p.path == wt_c_path.to_string_lossy() && p.reason == "no_active_claim")
+            .any(|p| p.path == wt_c_report_path && p.reason == "no_active_claim")
     );
-    assert!(pruned.iter().any(|p| p.path == wt_d_path.to_string_lossy()
+    assert!(pruned.iter().any(|p| p.path == wt_d_report_path
         && (p.reason == "branch_deleted" || p.reason == "no_matching_task")));
     assert!(
         pruned
             .iter()
-            .any(|p| p.path == wt_e_path.to_string_lossy() && p.reason == "not_registered")
+            .any(|p| p.path == wt_e_report_path && p.reason == "not_registered")
     );
 }
 
@@ -352,6 +363,7 @@ fn test_workspace_prune_unmerged_prevention() {
         .expect("write divergent file");
     run_git_cmd(&wt_f_path, &["add", "unmerged_file.txt"]);
     run_git_cmd(&wt_f_path, &["commit", "-m", "unmerged work"]);
+    let wt_f_report_path = canonical_path_string(&wt_f_path);
 
     // Execute prune!
     let pruned = workspace::prune_workspaces(&main_root, true).expect("prune_workspaces");
@@ -361,7 +373,7 @@ fn test_workspace_prune_unmerged_prevention() {
         wt_f_path.exists(),
         "Worktree F must not be pruned since its HEAD commit is unmerged"
     );
-    assert!(!pruned.iter().any(|p| p.path == wt_f_path.to_string_lossy()));
+    assert!(!pruned.iter().any(|p| p.path == wt_f_report_path));
 
     // Now, merge wt_f_branch into master
     run_git_cmd(&main_root, &["merge", &wt_f_branch]);
@@ -378,7 +390,7 @@ fn test_workspace_prune_unmerged_prevention() {
     assert!(
         pruned_after_merge
             .iter()
-            .any(|p| p.path == wt_f_path.to_string_lossy() && p.reason == "task_completed")
+            .any(|p| p.path == wt_f_report_path && p.reason == "task_completed")
     );
 }
 
@@ -453,10 +465,29 @@ fn test_workspace_prune_non_force_preserves_dirty_and_unregistered_data() {
         ],
     );
     fs::write(dirty_path.join("uncommitted.txt"), "preserve me").expect("write uncommitted change");
+    let nested_untracked = dirty_path.join("nested-untracked");
+    fs::create_dir_all(nested_untracked.join("a/b/c")).expect("create nested untracked tree");
+    for index in 0..256 {
+        fs::write(
+            nested_untracked
+                .join("a/b/c")
+                .join(format!("payload-{index}")),
+            "payload",
+        )
+        .expect("write nested untracked payload");
+    }
 
     let orphan_path = workspaces_dir.join("orphaned-houseboat-workspace");
     fs::create_dir_all(&orphan_path).expect("create orphan workspace");
     fs::write(orphan_path.join("evidence.txt"), "inspect me").expect("write orphan evidence");
+    let dirty_report_path = fs::canonicalize(&dirty_path)
+        .unwrap_or_else(|_| dirty_path.clone())
+        .to_string_lossy()
+        .to_string();
+    let orphan_report_path = fs::canonicalize(&orphan_path)
+        .unwrap_or_else(|_| orphan_path.clone())
+        .to_string_lossy()
+        .to_string();
 
     let report =
         workspace::prune_workspaces_report(&main_root, false).expect("non-force prune report");
@@ -467,14 +498,15 @@ fn test_workspace_prune_non_force_preserves_dirty_and_unregistered_data() {
         report
             .skipped
             .iter()
-            .any(|workspace| workspace.path == dirty_path.to_string_lossy()
-                && workspace.reason == "dirty_workspace")
+            .any(|workspace| workspace.path == dirty_report_path
+                && workspace.reason == "dirty_workspace"),
+        "dirty workspace classification missing from report: {report:?}"
     );
     assert!(
         report
             .skipped
             .iter()
-            .any(|workspace| workspace.path == orphan_path.to_string_lossy()
+            .any(|workspace| workspace.path == orphan_report_path
                 && workspace.reason == "unregistered_workspace")
     );
 
@@ -488,13 +520,13 @@ fn test_workspace_prune_non_force_preserves_dirty_and_unregistered_data() {
         forced
             .pruned
             .iter()
-            .any(|workspace| workspace.path == dirty_path.to_string_lossy())
+            .any(|workspace| workspace.path == dirty_report_path)
     );
     assert!(
         forced
             .pruned
             .iter()
-            .any(|workspace| workspace.path == orphan_path.to_string_lossy())
+            .any(|workspace| workspace.path == orphan_report_path)
     );
 }
 
@@ -576,6 +608,7 @@ fn test_validate_stale_workspaces_cleanup() {
     run_git_cmd(&wt_path, &["add", "agent-work.txt"]);
     run_git_cmd(&wt_path, &["commit", "-m", "unmerged agent work"]);
     assert!(wt_path.exists());
+    let wt_report_path = canonical_path_string(&wt_path);
 
     // Unmerged completed work remains fail-closed (not pruned).
     let unmerged = workspace::prune_workspaces_report(&main_root, false).expect("unmerged report");
@@ -584,10 +617,7 @@ fn test_validate_stale_workspaces_cleanup() {
         "unmerged completed worktree must be preserved without --force"
     );
     assert!(
-        unmerged
-            .pruned
-            .iter()
-            .all(|p| p.path != wt_path.to_string_lossy()),
+        unmerged.pruned.iter().all(|p| p.path != wt_report_path),
         "unmerged workspace must not appear in pruned list"
     );
 
@@ -639,7 +669,7 @@ fn test_validate_stale_workspaces_cleanup() {
         report
             .pruned
             .iter()
-            .any(|workspace| workspace.path == wt_path.to_string_lossy()),
+            .any(|workspace| workspace.path == wt_report_path),
         "eligible clean stale workspace should be pruned: {report:?}"
     );
     assert!(

@@ -1,27 +1,31 @@
 {
   "schema_version": "1.0.0",
-  "title": "Repair canonical event sequence normalization and prove bounded broker replay",
-  "intent": "Deterministically normalize duplicate sequence values already present in the canonical events table before installing the unique stream-sequence index, fail with an actionable invariant error if duplicates remain, cover the exact no-legacy-table/no-unique-index shape from GitHub Issue #1280, and verify the bounded large broker replay path from Issue #1281.",
+  "title": "Bound stale-workspace validation and repair verification recovery guidance",
+  "intent": "For GitHub Issue #1287, make stale-workspace validation inspect bounded Git/workspace metadata without recursively traversing ignored build or state contents. For GitHub Issue #1288, remove the nonexistent qa verify capture remediation and emit a supported, explicit recovery sequence that avoids recapturing a failing aggregate baseline. Cover both fixes with regressions and publish them in one PR.",
   "state": "APPROVED",
   "todo_ids": [
-    "bugs_01m13e7q8r1v57tk"
+    "bugs_01m1e5gh70rhggph"
   ],
   "proof_hooks": [
     "cargo fmt --all -- --check",
-    "cargo test --lib core::events::tests -- --test-threads=1",
-    "cargo test --test single_datastore -- --test-threads=1",
+    "cargo test --lib stale_workspace_dirty_check_collapses_untracked_directories",
+    "cargo test --lib stale_epoch_reports_supported_aggregate_deadlock_recovery",
+    "cargo test --test workspace_prune_regression -- --test-threads=1",
     "cargo test --test validate_termination -- --test-threads=1",
-    "decapod validate"
+    "cargo clippy --all-targets --all-features -- -D warnings",
+    "./target/debug/decapod validate"
   ],
   "unknowns": [],
   "human_questions": [],
-  "stop_conditions": [],
+  "stop_conditions": [
+    "Stop for human review if the supported recovery state transition cannot preserve existing completed-task evidence without destructive datastore edits."
+  ],
   "unresolved_contradictions": [],
   "deferred_questions": [],
   "constraints": {
     "forbidden_paths": [],
-    "file_touch_budget": 20
+    "file_touch_budget": 32
   },
   "phases": [],
-  "updated_at": "1787899302Z"
+  "updated_at": "1788257061Z"
 }

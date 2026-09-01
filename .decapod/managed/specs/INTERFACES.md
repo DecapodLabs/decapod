@@ -145,11 +145,15 @@ pub enum ApiError {
 - Backward-compatibility guarantees:
 - Deprecation window and removal policy:
 
+## Verification recovery contract
+
+A stale validation epoch reports an executable aggregate-proof recovery sequence: prune the stale verification record with `decapod qa verify prune <ID>`, obtain passing validation in the governed container workspace, reclaim the reopened TODO, and complete it again with `decapod todo done --id <ID> --validated`. Diagnostics must not advertise nonexistent subcommands or recapture a known-failing aggregate baseline.
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `43de86d67f315c1bf8e23bd7db03e1aa2fdf2a5dd60561d5a04551849a0f0caa`
+- Repository signal fingerprint: `a374e841f3b57cda09578bb26f2a6ee59f92193c9f120a76f1f9aacecc8556aa`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (105 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

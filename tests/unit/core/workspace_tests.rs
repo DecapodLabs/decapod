@@ -50,6 +50,18 @@ fn test_extract_task_ids_from_branch() {
 }
 
 #[test]
+fn stale_workspace_dirty_check_collapses_untracked_directories() {
+    assert!(
+        WORKTREE_DIRTY_STATUS_ARGS.contains(&"--untracked-files=normal"),
+        "stale workspace classification must collapse untracked directories"
+    );
+    assert!(
+        !WORKTREE_DIRTY_STATUS_ARGS.contains(&"--untracked-files=all"),
+        "stale workspace classification must not recursively enumerate untracked trees"
+    );
+}
+
+#[test]
 fn detects_remote_default_base_branch() {
     let tmp = tempdir().expect("tempdir");
     git(tmp.path(), &["init", "-q"]);
