@@ -49,6 +49,7 @@ Read callers must not invoke schema DDL or migration repair through a read-only 
 | `workspace::get_main_repo_root` / `host_repo_from_canonical_workspace` | Cwd inside `.decapod/workspaces/*` | Todo store, session, `find_governance_root` | Local-clone workspaces resolve the host checkout so `todo done` sees the claim that created them (GitHub #1259) |
 | `verify::resolve_artifact_path_for_todo` | `--artifact` path plus optional todo id | `todo done --validated` | Resolves first against cwd, then the newest workspace directory matching the todo id |
 | `workspace::resolve_publish_remote` | Workspace remotes, then parent filesystem remotes | `workspace publish` | Inherits a GitHub remote from the local-clone parent as `upstream`; never treats a path `origin` as publication |
+| `workspace::prune_workspaces_report` | Host checkout, Git worktree registry, task state, and current process path | `workspace prune` | Reports stale registered and unregistered candidates; preserves the current workspace for safety and returns it in `skipped` as `current_workspace` with a host-checkout recovery instruction |
 | `validate::governance_paths_updated_vs_base` | `base...HEAD` plus working tree | `GOVERNANCE_PR_UPDATES` | Working-tree and just-written `validation.json` count; the gate does not require `DECAPOD_VALIDATE_SKIP_GIT_GATES` |
 
 ## Event Consumers
@@ -153,7 +154,7 @@ A stale validation epoch reports an executable aggregate-proof recovery sequence
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a374e841f3b57cda09578bb26f2a6ee59f92193c9f120a76f1f9aacecc8556aa`
+- Repository signal fingerprint: `a53b44428182f28fd8351b415c32490f05c451756662723eb2bcaef35351a365`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (105 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

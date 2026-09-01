@@ -69,6 +69,14 @@ This project's architecture consists of the following key layers/directories:
   managed spec files to appear in the same `base...HEAD` diff as the
   code that caused the projection change.
 
+## Workspace Prune Safety (#1290)
+- Stale workspace discovery covers the registered Git worktrees created by
+  `workspace ensure` as well as unregistered workspace directories.
+- Prune never removes the workspace containing its current process, but it
+  records that preserved candidate in the returned `skipped` report with an
+  actionable instruction to rerun from the host checkout. This keeps the
+  safety boundary while making cleanup state visible to lifecycle automation.
+
 ## Publication Bundle Currency Architecture (#1232)
 - `core::validate::validate_publication_bundle_currency` proves presence and
   version-stability at HEAD for the publication bundle. It replaced the
@@ -232,7 +240,7 @@ Stale-workspace cleanup separates Git-state classification from workspace payloa
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a374e841f3b57cda09578bb26f2a6ee59f92193c9f120a76f1f9aacecc8556aa`
+- Repository signal fingerprint: `a53b44428182f28fd8351b415c32490f05c451756662723eb2bcaef35351a365`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (105 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

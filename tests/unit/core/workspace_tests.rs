@@ -62,6 +62,60 @@ fn stale_workspace_dirty_check_collapses_untracked_directories() {
 }
 
 #[test]
+fn current_workspace_is_reported_as_preserved_during_prune() {
+    let tmp = tempdir().expect("tempdir");
+    let main = tmp.path().join("main");
+    std::fs::create_dir_all(&main).expect("create main repo");
+    git(&main, &["init", "-q", "-b", "master"]);
+    git(&main, &["config", "user.email", "test@test.com"]);
+    git(&main, &["config", "user.name", "Test"]);
+    std::fs::write(main.join("README.md"), "base\n").expect("write base");
+    git(&main, &["add", "README.md"]);
+    git(&main, &["commit", "-m", "base"]);
+
+    let store_root = main.join(".decapod").join("data");
+    std::fs::create_dir_all(&store_root).expect("create data");
+    todo::initialize_todo_db(&store_root).expect("initialize todo db");
+
+    let workspace = main
+        .join(".decapod")
+        .join("workspaces")
+        .join("stale-workspace");
+    git(
+        &main,
+        &[
+            "worktree",
+            "add",
+            "-b",
+            "agent/stale-workspace",
+            workspace.to_str().expect("workspace path"),
+        ],
+    );
+
+    let report = prune_workspaces_report_with_process_dir(&main, true, Some(&workspace))
+        .expect("prune report");
+    let workspace_path = std::fs::canonicalize(&workspace)
+        .expect("canonical workspace")
+        .to_string_lossy()
+        .to_string();
+    assert!(workspace.exists(), "current workspace must be preserved");
+    assert!(
+        report
+            .skipped
+            .iter()
+            .any(|candidate| candidate.path == workspace_path
+                && candidate.reason == "current_workspace"),
+        "current workspace must be visible in the prune report: {report:?}"
+    );
+    assert!(
+        report
+            .pruned
+            .iter()
+            .all(|candidate| candidate.path != workspace_path)
+    );
+}
+
+#[test]
 fn detects_remote_default_base_branch() {
     let tmp = tempdir().expect("tempdir");
     git(tmp.path(), &["init", "-q"]);
