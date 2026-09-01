@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.99.9](https://github.com/DecapodLabs/decapod/compare/v0.99.8...v0.99.9) - 2026-09-01
+
+### Fixed
+
+- report current workspace during prune
+- report current workspace during prune
+
+### Other
+
+- align governance projections with master
+
 ## [0.99.8](https://github.com/DecapodLabs/decapod/compare/v0.99.7...v0.99.8) - 2026-09-01
 
 ### Fixed
