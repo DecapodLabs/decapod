@@ -8,7 +8,9 @@
   ],
   "proof_hooks": [
     "cargo fmt --all -- --check",
-    "cargo test --lib",
+    "cargo test --lib stale_workspace_dirty_check_collapses_untracked_directories",
+    "cargo test --lib stale_epoch_reports_supported_aggregate_deadlock_recovery",
+    "cargo test --test workspace_prune_regression -- --test-threads=1",
     "cargo test --test validate_termination -- --test-threads=1",
     "cargo clippy --all-targets --all-features -- -D warnings",
     "./target/debug/decapod validate"
@@ -25,5 +27,5 @@
     "file_touch_budget": 32
   },
   "phases": [],
-  "updated_at": "1788256401Z"
+  "updated_at": "1788257061Z"
 }

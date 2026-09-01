@@ -6,9 +6,11 @@
   "original_intent": "solve GitHub Issue #1287 and #1288 in a single PR",
   "derived_intent": "Bound stale-workspace validation to Git/workspace metadata, replace invalid verification remediation with a supported deadlock-safe sequence, prove both with regressions, and publish one PR.",
   "destination": "GitHub pull request",
-  "current_phase": "verification",
+  "current_phase": "publication",
   "next_transitions": [
     "publication",
+    "publish",
+    "push and open PR",
     "verification"
   ],
   "active_boundaries": [
@@ -24,6 +26,8 @@
     "src/decapod/plugins/verify.rs"
   ],
   "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
     ".decapod/managed/specs/ARCHITECTURE.md",
     ".decapod/managed/specs/INTENT.md",
     ".decapod/managed/specs/INTERFACES.md",
@@ -42,6 +46,7 @@
     "cargo test --test validate_termination -- --test-threads=1",
     "cargo test --test workspace_prune_regression -- --test-threads=1",
     "cargo test --test workspace_prune_regression test_workspace_prune_non_force_preserves_dirty_and_unregistered_data -- --exact",
+    "decapod validate",
     "decapod validate --format json in governed Podman workspace"
   ],
   "tool_calls": [],
@@ -52,7 +57,11 @@
     },
     {
       "name": "container_validation_precommit",
-      "status": "failed"
+      "status": "passed"
+    },
+    {
+      "name": "decapod validate",
+      "status": "passed"
     },
     {
       "name": "focused_verification_regression",
@@ -71,6 +80,10 @@
       "status": "partial"
     },
     {
+      "name": "required_issue_proofs",
+      "status": "passed"
+    },
+    {
       "name": "validate_termination",
       "status": "passed"
     },
@@ -80,21 +93,24 @@
     }
   ],
   "evidence": [
+    "After the incremental commit, governed Podman validation passed 204 gates with zero failures; validate_stale_workspaces completed in 159 ms.",
     "Focused unit and integration regressions passed on Decapod 0.99.7.",
     "Governed Linux container validation reached all gates; stale workspace gate completed in 98 ms and only commit-often gate failed before the required incremental commit.",
     "Governed Linux container: 319/321 library tests passed; both failures are inherited Dactyl TODO adapter tests unchanged from origin/master and outside selective PR CI.",
-    "Host: workspace prune 4/4, validate termination 11/11, clippy and formatting passed."
+    "Host: workspace prune 4/4, validate termination 11/11, clippy and formatting passed.",
+    "The required issue-scoped proof plan uses focused unit regressions, all four workspace prune regressions, all 11 validation termination tests, formatting, clippy, and governed container validation.",
+    "validation epoch ve_d1fce4cb8fa2255c completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
-  "proof_status": "failed",
+  "proof_status": "partial",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "unsupported"
+    "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:aabde396cd1d8a865d2b8de505726da56625bee32cd4fb71d12435765e314142",
+  "artifact_hash": "sha256:34f826f218f7c86fcf91aa9f1cd72f4f90f9feccb477318821721ccd64add9e4",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -142,6 +158,20 @@
       {
         "sequence": 5,
         "event_id": "event:5",
+        "intent_id": "intent:run_issues1287_1288_20260901",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:run_issues1287_1288_20260901"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
+        "intent_id": "intent:run_issues1287_1288_20260901",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:run_issues1287_1288_20260901"
+      },
+      {
+        "sequence": 7,
+        "event_id": "event:7",
         "intent_id": "intent:run_issues1287_1288_20260901",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:run_issues1287_1288_20260901"
@@ -202,12 +232,47 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "GitHub Issues #1287 and #1288"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_d1fce4cb8fa2255c completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:6"
+          },
+          {
+            "sequence": 7,
+            "action": "publication",
+            "scope": [
+              "GitHub Issues #1287 and #1288"
+            ],
+            "observations": [
+              "After the incremental commit, governed Podman validation passed 204 gates with zero failures; validate_stale_workspaces completed in 159 ms.",
+              "The required issue-scoped proof plan uses focused unit regressions, all four workspace prune regressions, all 11 validation termination tests, formatting, clippy, and governed container validation."
+            ],
+            "proof_refs": [
+              "container_validation_precommit",
+              "required_issue_proofs"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:7"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 5
+    "next_sequence": 7
   }
 }
