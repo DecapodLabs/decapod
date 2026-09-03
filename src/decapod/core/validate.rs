@@ -236,16 +236,35 @@ fn is_decapod_isolated_worktree(_main_root: &Path, repo_root: &Path) -> bool {
 /// perform cleanup, projection, or receipt work. They therefore execute in
 /// declaration order; a future gate may only be parallelized after its
 /// read-only and isolation contract is explicit.
+fn record_validation_gate_progress(name: &str, state: &str, elapsed_ms: Option<u64>) {
+    let Some(path) = std::env::var_os("DECAPOD_VALIDATE_PROGRESS_PATH") else {
+        return;
+    };
+    let payload = serde_json::json!({
+        "gate": name,
+        "state": state,
+        "elapsed_ms": elapsed_ms,
+    });
+    // This is best-effort observability for the parent timeout supervisor. A
+    // failed diagnostic write must never change the validation result.
+    if let Ok(bytes) = serde_json::to_vec(&payload) {
+        let _ = fs::write(path, bytes);
+    }
+}
+
 macro_rules! gate {
     ($_scope:expr, $timings:expr, $ctx:expr, $name:literal, $body:expr) => {{
         let _scope = &$_scope;
         let ctx = $ctx;
         let timings = $timings;
         let start = Instant::now();
+        record_validation_gate_progress($name, "running", None);
         if let Err(e) = $body {
             fail(&format!("gate error: {e}"), ctx);
         }
-        timings.lock().unwrap().push(($name, start.elapsed()));
+        let elapsed = start.elapsed();
+        record_validation_gate_progress($name, "completed", Some(elapsed.as_millis() as u64));
+        timings.lock().unwrap().push(($name, elapsed));
     }};
 }
 
@@ -8131,7 +8150,19 @@ fn validate_stale_workspaces(
         }
     }
 
-    if container_runtime::container_runtime_available() {
+    // Image retention is maintenance, not validation proof. Runtime image
+    // queries can block on a stopped Podman VM or Docker socket, consuming the
+    // entire validation budget (#1294, #1297). Keep this gate focused on the
+    // bounded workspace scan; image cleanup remains available through the
+    // explicit prune command.
+    if std::env::var_os("DECAPOD_VALIDATE_SKIP_IMAGE_PRUNE").is_some()
+        || std::env::var_os("DECAPOD_VALIDATE_WORKER").is_some()
+    {
+        skip(
+            "Skipped Decapod image cleanup during validation; run the explicit workspace/image prune command for maintenance",
+            ctx,
+        );
+    } else if container_runtime::container_runtime_available() {
         match container_runtime::prune_decapod_images() {
             Ok(report) => pass(
                 &format!(

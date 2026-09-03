@@ -1,5 +1,14 @@
 # Validation
 
+## Reliability Proof Budget
+
+Validation must remain bounded even when host maintenance services are
+unavailable. The parent supervisor records the active gate and elapsed time
+for timeout diagnostics. Workspace status performs only its direct Git and
+container-context observation; it does not invoke the full validator. Container
+image retention and stale-worktree image cleanup are maintenance operations,
+not required validation proof work.
+
 ## Validation Philosophy
 > Validation is a release gate, not documentation theater.
 
@@ -254,7 +263,7 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `88db27e8e169d023716f2e48a2013212758d9c35ed6ffe4c338b677891b5f5f7`
+- Repository signal fingerprint: `043cd6d5934a45e33a225f6bb8aa3a4684567f5a4172217597df8692e6570677`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (105 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

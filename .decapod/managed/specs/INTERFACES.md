@@ -1,5 +1,14 @@
 # Interfaces
 
+## Worktree and Validation Interface
+
+`workspace status` is an observational, bounded operation and reports
+validation as unavailable until an explicit validation command is requested.
+`infer orientation --task-id`, RPC operations, and workspace creation use the
+same canonical repository store, so a newly created worktree cannot diverge
+into an empty or partial task database. A validation timeout identifies the
+active gate and elapsed time when that evidence is available.
+
 ## Contract Principles
 - Prefer explicit schemas over implicit behavior.
 - Every mutating interface defines idempotency semantics.
@@ -154,7 +163,7 @@ A stale validation epoch reports an executable aggregate-proof recovery sequence
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `88db27e8e169d023716f2e48a2013212758d9c35ed6ffe4c338b677891b5f5f7`
+- Repository signal fingerprint: `043cd6d5934a45e33a225f6bb8aa3a4684567f5a4172217597df8692e6570677`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (105 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

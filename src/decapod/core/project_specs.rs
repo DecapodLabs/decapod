@@ -200,7 +200,10 @@ pub fn config_input_hash(project_root: &Path) -> Result<String, error::DecapodEr
         return Ok(String::new());
     }
     let config = crate::cli::DecapodProjectConfig::load(project_root)?;
-    let canonical = serde_json::to_vec(&config).map_err(|e| {
+    let config_value = serde_json::to_value(&config).map_err(|e| {
+        error::DecapodError::ValidationError(format!("Failed to canonicalize config.toml: {e}"))
+    })?;
+    let canonical = canonical_json_bytes(&config_value).map_err(|e| {
         error::DecapodError::ValidationError(format!("Failed to canonicalize config.toml: {e}"))
     })?;
     let override_content =
@@ -209,6 +212,47 @@ pub fn config_input_hash(project_root: &Path) -> Result<String, error::DecapodEr
     input.push_str("\n-- OVERRIDE.md --\n");
     input.push_str(&override_content);
     Ok(hash_text(&input))
+}
+
+/// Serialize JSON with object keys sorted explicitly. `serde_json::Map` can
+/// preserve insertion order depending on the enabled crate features, so
+/// serializing a deserialized config directly is not a stable hash contract
+/// across builds or platforms (#1296).
+fn canonical_json_bytes(value: &serde_json::Value) -> Result<Vec<u8>, serde_json::Error> {
+    fn write(value: &serde_json::Value, out: &mut Vec<u8>) -> Result<(), serde_json::Error> {
+        match value {
+            serde_json::Value::Object(object) => {
+                out.push(b'{');
+                let mut entries = object.iter().collect::<Vec<_>>();
+                entries.sort_by(|left, right| left.0.cmp(right.0));
+                for (index, (key, value)) in entries.into_iter().enumerate() {
+                    if index > 0 {
+                        out.push(b',');
+                    }
+                    out.extend_from_slice(&serde_json::to_vec(key)?);
+                    out.push(b':');
+                    write(value, out)?;
+                }
+                out.push(b'}');
+            }
+            serde_json::Value::Array(array) => {
+                out.push(b'[');
+                for (index, value) in array.iter().enumerate() {
+                    if index > 0 {
+                        out.push(b',');
+                    }
+                    write(value, out)?;
+                }
+                out.push(b']');
+            }
+            scalar => out.extend_from_slice(&serde_json::to_vec(scalar)?),
+        }
+        Ok(())
+    }
+
+    let mut out = Vec::new();
+    write(value, &mut out)?;
+    Ok(out)
 }
 
 pub fn spec_input_hash(project_root: &Path) -> Result<String, error::DecapodError> {
@@ -330,14 +374,21 @@ fn collect_significant_repo_paths(
 pub fn repo_signal_fingerprint(project_root: &Path) -> Result<String, error::DecapodError> {
     let mut files = Vec::new();
     collect_significant_repo_paths(project_root, project_root, &mut files)?;
-    files.sort();
+    let mut files = files
+        .into_iter()
+        .filter_map(|path| {
+            let relative = path.strip_prefix(project_root).ok()?;
+            let stable_path = relative
+                .components()
+                .map(|component| component.as_os_str().to_string_lossy().into_owned())
+                .collect::<Vec<_>>()
+                .join("/");
+            Some((stable_path, path))
+        })
+        .collect::<Vec<_>>();
+    files.sort_by(|left, right| left.0.cmp(&right.0));
     let mut hasher = Sha256::new();
-    for path in files {
-        let rel = path
-            .strip_prefix(project_root)
-            .unwrap_or(path.as_path())
-            .to_string_lossy()
-            .to_string();
+    for (rel, path) in files {
         hasher.update(rel.as_bytes());
         hasher.update(b"\0");
         if repo_signal_requires_content_hash(&rel) {

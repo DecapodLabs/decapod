@@ -54,6 +54,25 @@ fn repo_signal_fingerprint_changes_when_source_changes() {
 }
 
 #[test]
+fn canonical_json_hash_input_is_independent_of_object_insertion_order() {
+    let first = serde_json::json!({
+        "z": 1,
+        "nested": {"b": true, "a": [3, 2, 1]},
+        "a": "stable"
+    });
+    let second = serde_json::json!({
+        "a": "stable",
+        "nested": {"a": [3, 2, 1], "b": true},
+        "z": 1
+    });
+
+    assert_eq!(
+        hash_text(&String::from_utf8(canonical_json_bytes(&first).unwrap()).unwrap()),
+        hash_text(&String::from_utf8(canonical_json_bytes(&second).unwrap()).unwrap())
+    );
+}
+
+#[test]
 fn codebase_attestation_preserves_authored_spec_content() {
     let body = "# Intent\n\nAuthored product contract.\n";
     let updated = update_codebase_attestation(body, "abc123", "`src/` (2 files)");
