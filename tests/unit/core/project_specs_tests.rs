@@ -54,21 +54,13 @@ fn repo_signal_fingerprint_changes_when_source_changes() {
 }
 
 #[test]
-fn canonical_json_hash_input_is_independent_of_object_insertion_order() {
-    let first = serde_json::json!({
-        "z": 1,
-        "nested": {"b": true, "a": [3, 2, 1]},
-        "a": "stable"
-    });
-    let second = serde_json::json!({
-        "a": "stable",
-        "nested": {"a": [3, 2, 1], "b": true},
-        "z": 1
-    });
+fn config_hash_input_normalizes_line_endings() {
+    let unix = "[repo]\nname = \"decapod\"\n";
+    let windows = "[repo]\r\nname = \"decapod\"\r\n";
 
     assert_eq!(
-        hash_text(&String::from_utf8(canonical_json_bytes(&first).unwrap()).unwrap()),
-        hash_text(&String::from_utf8(canonical_json_bytes(&second).unwrap()).unwrap())
+        normalize_text_for_hash(unix),
+        normalize_text_for_hash(windows)
     );
 }
 

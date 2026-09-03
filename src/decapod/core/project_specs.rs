@@ -173,7 +173,7 @@ pub struct ProjectSpecsManifest {
     pub declared_capabilities: Vec<String>,
     #[serde(default)]
     pub capability_definition_version: String,
-    /// Hash of the canonical, parsed `.decapod/config.toml` input.
+    /// Hash of the normalized `.decapod/config.toml` and override inputs.
     #[serde(default)]
     pub config_input_hash: String,
     /// Hash of the ordered living-spec inputs, excluding this manifest.
@@ -201,66 +201,24 @@ pub fn config_input_hash(project_root: &Path) -> Result<String, error::DecapodEr
     }
     // Hash the declared TOML document rather than a runtime config struct.
     // Deserialization can fill defaults from environment or platform-specific
-    // runtime state, which made identical repositories produce different
-    // config_input_hash values on local and CI evaluators (#1296).
+    // runtime state. Hashing the source text also avoids parser/serializer
+    // differences between evaluators, while newline normalization keeps a
+    // checkout with different line-ending settings equivalent (#1296).
     let config_content = fs::read_to_string(project_root.join(".decapod/config.toml"))
         .map_err(error::DecapodError::IoError)?;
-    let config: toml::Value = toml::from_str(&config_content).map_err(|e| {
+    toml::from_str::<toml::Value>(&config_content).map_err(|e| {
         error::DecapodError::ValidationError(format!("Failed to parse config.toml: {e}"))
-    })?;
-    let config_value = serde_json::to_value(config).map_err(|e| {
-        error::DecapodError::ValidationError(format!("Failed to canonicalize config.toml: {e}"))
-    })?;
-    let canonical = canonical_json_bytes(&config_value).map_err(|e| {
-        error::DecapodError::ValidationError(format!("Failed to canonicalize config.toml: {e}"))
     })?;
     let override_content =
         fs::read_to_string(project_root.join(".decapod/OVERRIDE.md")).unwrap_or_default();
-    let mut input = String::from_utf8_lossy(&canonical).into_owned();
+    let mut input = normalize_text_for_hash(&config_content);
     input.push_str("\n-- OVERRIDE.md --\n");
-    input.push_str(&override_content);
+    input.push_str(&normalize_text_for_hash(&override_content));
     Ok(hash_text(&input))
 }
 
-/// Serialize JSON with object keys sorted explicitly. `serde_json::Map` can
-/// preserve insertion order depending on the enabled crate features, so
-/// serializing a deserialized config directly is not a stable hash contract
-/// across builds or platforms (#1296).
-fn canonical_json_bytes(value: &serde_json::Value) -> Result<Vec<u8>, serde_json::Error> {
-    fn write(value: &serde_json::Value, out: &mut Vec<u8>) -> Result<(), serde_json::Error> {
-        match value {
-            serde_json::Value::Object(object) => {
-                out.push(b'{');
-                let mut entries = object.iter().collect::<Vec<_>>();
-                entries.sort_by(|left, right| left.0.cmp(right.0));
-                for (index, (key, value)) in entries.into_iter().enumerate() {
-                    if index > 0 {
-                        out.push(b',');
-                    }
-                    out.extend_from_slice(&serde_json::to_vec(key)?);
-                    out.push(b':');
-                    write(value, out)?;
-                }
-                out.push(b'}');
-            }
-            serde_json::Value::Array(array) => {
-                out.push(b'[');
-                for (index, value) in array.iter().enumerate() {
-                    if index > 0 {
-                        out.push(b',');
-                    }
-                    write(value, out)?;
-                }
-                out.push(b']');
-            }
-            scalar => out.extend_from_slice(&serde_json::to_vec(scalar)?),
-        }
-        Ok(())
-    }
-
-    let mut out = Vec::new();
-    write(value, &mut out)?;
-    Ok(out)
+fn normalize_text_for_hash(text: &str) -> String {
+    text.replace("\r\n", "\n").replace('\r', "\n")
 }
 
 pub fn spec_input_hash(project_root: &Path) -> Result<String, error::DecapodError> {
