@@ -19,9 +19,10 @@
 
 
 
-ARG DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v0.99.8-debian
+
+ARG DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v0.99.9-debian
 FROM $DECAPOD_IMAGE
-ARG DECAPOD_VERSION=0.99.8
+ARG DECAPOD_VERSION=0.99.9
 ARG DECAPOD_WORKSPACE_PATH=unknown
 ARG DECAPOD_USE_LOCAL_BINARY=0
 LABEL org.opencontainers.image.base.name="$DECAPOD_IMAGE"

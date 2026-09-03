@@ -328,7 +328,20 @@ fn subject_freshness(
     let Some(task_id) = trajectory.task_id.as_deref() else {
         return SemanticFreshness::Unknown;
     };
-    if plan.todo_ids.iter().any(|todo| todo == task_id) && branch.contains(task_id) {
+    let branch_lower = branch.to_ascii_lowercase();
+    let task_matches_branch = plan.todo_ids.iter().any(|todo| {
+        if todo == task_id && branch_lower.contains(&todo.to_ascii_lowercase()) {
+            return true;
+        }
+        // workspace ensure intentionally uses a compact typed hash in branch
+        // names (for example `todo_01m1jq-...`) while the durable task ID can
+        // carry a longer category prefix. Match that generated scope without
+        // weakening the plan/task binding to an arbitrary branch.
+        todo.split_once('_')
+            .and_then(|(_, hash)| hash.get(..6))
+            .is_some_and(|prefix| branch_lower.contains(&prefix.to_ascii_lowercase()))
+    });
+    if task_matches_branch {
         SemanticFreshness::Current
     } else {
         SemanticFreshness::Stale

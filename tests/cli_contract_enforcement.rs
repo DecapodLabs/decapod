@@ -197,6 +197,10 @@ fn test_workspace_command_structure() {
         output.contains("branch") || output.contains("workspace") || output.contains("git"),
         "workspace status should report branch info"
     );
+    assert!(
+        output.contains("\"validation\": null"),
+        "workspace status must remain observational instead of running full validation"
+    );
 }
 
 #[test]

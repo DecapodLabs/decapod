@@ -1,5 +1,17 @@
 # Architecture
 
+## Canonical Worktree Control Plane
+
+Managed worktrees resolve repository-scoped state through the owning main
+repository. Worktree-local `.decapod` paths may contain session or generated
+working files, but task, policy, inference, and validation state is read from
+the canonical repository datastore. Workspace entry points reconcile the
+required schema before performing task or branch lookups.
+
+Validation keeps proof gates bounded: observational status does not launch the
+full validator, and maintenance operations that depend on a live container
+daemon do not consume the validation proof budget.
+
 ## Direction
 cli
 
@@ -240,7 +252,7 @@ Stale-workspace cleanup separates Git-state classification from workspace payloa
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `88db27e8e169d023716f2e48a2013212758d9c35ed6ffe4c338b677891b5f5f7`
+- Repository signal fingerprint: `37a7084346d78f6c9fd5bc9752f5b73256f00b6a8f6b8d6507dc3df87769a6c1`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (105 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

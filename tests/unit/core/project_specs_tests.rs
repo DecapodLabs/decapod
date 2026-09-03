@@ -54,6 +54,17 @@ fn repo_signal_fingerprint_changes_when_source_changes() {
 }
 
 #[test]
+fn config_hash_input_normalizes_line_endings() {
+    let unix = "[repo]\nname = \"decapod\"\n";
+    let windows = "[repo]\r\nname = \"decapod\"\r\n";
+
+    assert_eq!(
+        normalize_text_for_hash(unix),
+        normalize_text_for_hash(windows)
+    );
+}
+
+#[test]
 fn codebase_attestation_preserves_authored_spec_content() {
     let body = "# Intent\n\nAuthored product contract.\n";
     let updated = update_codebase_attestation(body, "abc123", "`src/` (2 files)");

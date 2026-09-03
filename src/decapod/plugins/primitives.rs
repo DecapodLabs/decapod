@@ -1,11 +1,10 @@
 use crate::core::broker::DbBroker;
-use crate::core::db::params;
 use crate::core::error;
 use crate::core::schemas;
 use crate::core::store::Store;
 use crate::core::todo;
 use clap::{Parser, Subcommand};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -47,6 +46,8 @@ struct MemoryNode {
     created_at: String,
     updated_at: String,
 }
+
+type PrimitiveIdSnapshot = (BTreeSet<String>, BTreeSet<(String, String)>);
 
 pub fn run_primitives_cli(store: &Store, cli: PrimitivesCli) -> Result<(), error::DecapodError> {
     match cli.command {
@@ -158,6 +159,7 @@ pub fn validate_roundtrip_gate(store: &Store) -> Result<(), error::DecapodError>
 }
 
 pub fn validate_round_trip(store: &Store, base: &Path) -> Result<(), error::DecapodError> {
+    let (task_ids, memory_node_ids) = primitive_id_snapshot(&store.root)?;
     for (dir, expected_type) in [
         ("tasks", "task"),
         ("projects", "project"),
@@ -186,13 +188,12 @@ pub fn validate_round_trip(store: &Store, base: &Path) -> Result<(), error::Deca
                 ))
             })?;
             if expected_type == "task" {
-                let found = todo::get_task(&store.root, &parsed_id)?;
-                if found.is_none() {
+                if !task_ids.contains(&parsed_id) {
                     return Err(error::DecapodError::ValidationError(format!(
                         "task primitive not found in todo db: {parsed_id}"
                     )));
                 }
-            } else if !memory_node_exists(&store.root, &parsed_id, expected_type)? {
+            } else if !memory_node_ids.contains(&(parsed_id.clone(), expected_type.to_string())) {
                 return Err(error::DecapodError::ValidationError(format!(
                     "{expected_type} primitive not found in federation db: {parsed_id}"
                 )));
@@ -200,6 +201,38 @@ pub fn validate_round_trip(store: &Store, base: &Path) -> Result<(), error::Deca
         }
     }
     Ok(())
+}
+
+/// Read the authoritative IDs once for the whole round-trip. Calling the
+/// broker separately for every markdown file repeatedly acquires SQLite
+/// connections and rechecks policy, which made this proof gate dominate a
+/// validation run on real repositories (#1297).
+fn primitive_id_snapshot(root: &Path) -> Result<PrimitiveIdSnapshot, error::DecapodError> {
+    let db_path = root.join(schemas::LOCAL_DB_NAME);
+    if !db_path.exists() {
+        return Ok((BTreeSet::new(), BTreeSet::new()));
+    }
+    let broker = DbBroker::new(root);
+    broker.with_conn(
+        &db_path,
+        "primitives",
+        None,
+        "primitives.id_snapshot",
+        |conn| {
+            let mut task_ids = BTreeSet::new();
+            let mut tasks = conn.prepare("SELECT id FROM tasks")?;
+            for row in tasks.query_map([], |row| row.get::<_, String>(0))? {
+                task_ids.insert(row?);
+            }
+
+            let mut memory_node_ids = BTreeSet::new();
+            let mut nodes = conn.prepare("SELECT id, node_type FROM nodes")?;
+            for row in nodes.query_map([], |row| Ok((row.get(0)?, row.get(1)?)))? {
+                memory_node_ids.insert(row?);
+            }
+            Ok((task_ids, memory_node_ids))
+        },
+    )
 }
 
 pub fn schema() -> serde_json::Value {
@@ -442,28 +475,6 @@ fn list_memory_nodes_by_types(
                 out.push(row?);
             }
             Ok(out)
-        },
-    )
-}
-
-fn memory_node_exists(root: &Path, id: &str, node_type: &str) -> Result<bool, error::DecapodError> {
-    let db_path = root.join(schemas::LOCAL_DB_NAME);
-    if !db_path.exists() {
-        return Ok(false);
-    }
-    let broker = DbBroker::new(root);
-    broker.with_conn(
-        &db_path,
-        "primitives",
-        None,
-        "primitives.node_exists",
-        |conn| {
-            let count: i64 = conn.query_row(
-                "SELECT COUNT(*) FROM nodes WHERE id = ?1 AND node_type = ?2",
-                params![id, node_type],
-                |row| row.get(0),
-            )?;
-            Ok(count > 0)
         },
     )
 }

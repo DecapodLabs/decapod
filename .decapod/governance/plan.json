@@ -1,17 +1,19 @@
 {
   "schema_version": "1.0.0",
-  "title": "Report and safely preserve active prune candidates",
-  "intent": "For GitHub Issue #1290, make workspace prune account for the Git worktrees created by workspace ensure and make the safety-preserved current workspace visible in the skipped report with actionable host-checkout recovery. Cover the lifecycle behavior with a regression and publish the governed fix.",
+  "title": "Stabilize canonical worktree control-plane storage and validation",
+  "intent": "For GitHub Issues #1294 through #1300, make managed worktree storage canonical and self-healing, keep workspace status and validation bounded, provide active-gate timeout evidence, and make spec fingerprints deterministic.",
   "state": "APPROVED",
   "todo_ids": [
-    "bugs_01m1fb3wykcc4479"
+    "bugs_01m1jqr8x92a1hvq"
   ],
   "proof_hooks": [
     "cargo fmt --all -- --check",
-    "cargo test --lib core::workspace::tests::current_workspace_is_reported_as_preserved_during_prune -- --exact",
-    "cargo test --test workspace_prune_regression -- --test-threads=1",
     "cargo clippy --all-targets --all-features -- -D warnings",
-    "cargo run --quiet -- validate --format json"
+    "cargo test --lib project_specs",
+    "cargo test --test workspace_prune_regression -- --test-threads=1",
+    "target/debug/decapod workspace status",
+    "target/debug/decapod infer orientation --task-id bugs_01m1jqr8x92a1hvq",
+    "target/debug/decapod validate --format json"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -25,5 +27,5 @@
     "file_touch_budget": 32
   },
   "phases": [],
-  "updated_at": "1788296289Z"
+  "updated_at": "1788410608Z"
 }

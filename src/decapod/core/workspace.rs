@@ -500,6 +500,15 @@ pub fn ensure_workspace(
             "AUTOREMEDIABLE_VALIDATION_ERROR code=WORKSPACE_STORAGE_PREFLIGHT_FAILED severity=transient auto_remediable=true audience=agent agent_action=\"verify .decapod/data directory is accessible and has correct permissions; if storage is full, free up space or use a different store root\" user_note=\"Workspace storage preflight failed; the agent should verify storage health or report the concrete blocker.\"\n{e}"
         ))
     })?;
+    // Workspace creation is also an entry point for RPC callers, which may
+    // bypass the normal command migration funnel. Reconcile the canonical
+    // todo/policy schema before any branch/task lookup so a partial datastore
+    // cannot surface an internal `no such table` error (#1295).
+    todo::initialize_todo_db(&store_root).map_err(|e| {
+        DecapodError::ValidationError(format!(
+            "AUTOREMEDIABLE_VALIDATION_ERROR code=WORKSPACE_SCHEMA_REPAIR_FAILED severity=transient auto_remediable=true audience=agent agent_action=\"rerun workspace ensure after confirming .decapod/data is writable\" user_note=\"Decapod could not reconcile the canonical workspace datastore schema.\"\n{e}"
+        ))
+    })?;
 
     let mut status = get_workspace_status(repo_root)?;
     if status.git.is_protected && status.git.has_local_mods && !status.git.in_worktree {
@@ -2591,7 +2600,9 @@ fn prune_workspaces_report_with_process_dir(
                 }
             }
 
-            if container_runtime::container_runtime_available() {
+            if std::env::var_os("DECAPOD_VALIDATE_SKIP_CONTAINER_CLEANUP").is_none()
+                && container_runtime::container_runtime_available()
+            {
                 let _ = container_runtime::remove_workspace_images_for_path(&dir_path);
             }
 

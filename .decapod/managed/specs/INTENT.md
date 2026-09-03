@@ -17,6 +17,14 @@
 
 <!-- decapod:declared-capabilities:end -->
 
+## Reliability Outcome
+
+Issues #1294–#1300 establish a single reliability outcome for Decapod: every
+managed worktree must reach the same canonical control-plane state, and
+diagnostic commands must remain bounded and explain where proof work stopped.
+Validation, inference, and workspace creation are user-facing reliability
+contracts rather than incidental implementation details.
+
 ## Product Outcome
 - Decapod is a repo-native governance kernel for bounded, provable, shippable AI coding work. It turns human intent into durable, proof-backed agent execution that can leave the branch as a reviewable, publishable change—not only agent activity in a session.
 - Living-spec projections are part of that publishable change: when code changes the attestation, Decapod writes `.decapod/managed/specs/*` only inside the claimed isolated workspace so the same PR carries both the code and its specs. Root-checkout generation is a custody failure (GitHub #1255), not a cleanup chore.
@@ -223,7 +231,7 @@ Routine validation must classify stale workspaces from workspace count and Git m
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `88db27e8e169d023716f2e48a2013212758d9c35ed6ffe4c338b677891b5f5f7`
+- Repository signal fingerprint: `37a7084346d78f6c9fd5bc9752f5b73256f00b6a8f6b8d6507dc3df87769a6c1`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (105 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

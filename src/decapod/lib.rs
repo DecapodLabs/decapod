@@ -3318,7 +3318,9 @@ fn cleanup_expired_sessions(
 fn ensure_session_valid() -> Result<(), error::DecapodError> {
     let current_dir = std::env::current_dir()?;
     let project_root = find_decapod_project_root(&current_dir)?;
-    let store_root = project_root.join(".decapod").join("data");
+    let store_root = find_governance_root(&project_root)
+        .join(".decapod")
+        .join("data");
     fs::create_dir_all(&store_root).map_err(error::DecapodError::IoError)?;
     let _ = cleanup_expired_sessions(&project_root, Some(&store_root))?;
 
@@ -3590,7 +3592,9 @@ fn run_session_command(session_cli: SessionCli) -> Result<(), error::DecapodErro
         .repo
         .effective_backend()
         .is_cloud();
-    let store_root = project_root.join(".decapod").join("data");
+    let store_root = find_governance_root(&project_root)
+        .join(".decapod")
+        .join("data");
     if !cloud_backend {
         fs::create_dir_all(&store_root).map_err(error::DecapodError::IoError)?;
     }
@@ -5711,7 +5715,9 @@ fn classify_validate_failure_reason(message: &str) -> &'static str {
 }
 
 fn lock_age_ms(project_root: &Path) -> Option<u64> {
-    let data_dir = project_root.join(".decapod").join("data");
+    let data_dir = find_governance_root(project_root)
+        .join(".decapod")
+        .join("data");
     let entries = fs::read_dir(data_dir).ok()?;
     let now = SystemTime::now();
     let mut max_age_ms: Option<u64> = None;
@@ -5907,6 +5913,8 @@ fn run_validation_in_child_process(
         .current_dir(workspace_root)
         .args(["validate", "--store", store_kind, "--format", "json"])
         .env("DECAPOD_VALIDATE_WORKER", "1")
+        .env("DECAPOD_VALIDATE_SKIP_IMAGE_PRUNE", "1")
+        .env("DECAPOD_VALIDATE_SKIP_CONTAINER_CLEANUP", "1")
         .env(
             "DECAPOD_VALIDATE_STORE_ROOT",
             store.root.to_string_lossy().as_ref(),
@@ -5931,6 +5939,14 @@ fn run_validation_in_child_process(
         command.arg("--projections");
     }
 
+    let progress_path = std::env::temp_dir().join(format!(
+        "decapod-validate-progress-{}.json",
+        crate::core::ulid::new_ulid()
+    ));
+    command.env(
+        "DECAPOD_VALIDATE_PROGRESS_PATH",
+        progress_path.to_string_lossy().as_ref(),
+    );
     let mut child = command.spawn().map_err(error::DecapodError::IoError)?;
     let deadline = std::time::Instant::now() + timeout;
     loop {
@@ -5939,14 +5955,32 @@ fn run_validation_in_child_process(
             let output = child
                 .wait_with_output()
                 .map_err(error::DecapodError::IoError)?;
-            return decode_validation_worker_output(&output.stdout, &output.stderr);
+            let result = decode_validation_worker_output(&output.stdout, &output.stderr);
+            let _ = fs::remove_file(&progress_path);
+            return result;
         }
         if std::time::Instant::now() >= deadline {
+            let progress_hint = fs::read_to_string(&progress_path)
+                .ok()
+                .and_then(|raw| serde_json::from_str::<serde_json::Value>(&raw).ok())
+                .and_then(|value| {
+                    let gate = value.get("gate")?.as_str()?;
+                    let state = value.get("state")?.as_str()?;
+                    let elapsed = value
+                        .get("elapsed_ms")
+                        .and_then(serde_json::Value::as_u64)
+                        .map(|ms| format!(", elapsed {ms}ms"))
+                        .unwrap_or_default();
+                    Some(format!(" Active gate: {gate} ({state}{elapsed})."))
+                })
+                .unwrap_or_default();
             let _ = child.kill();
             let _ = child.wait_with_output();
+            let _ = fs::remove_file(&progress_path);
             return Err(error::DecapodError::ValidationError(format!(
-                "VALIDATE_TIMEOUT_OR_LOCK: validate exceeded timeout ({}s). Terminated to preserve proof-gate liveness.",
-                timeout.as_secs()
+                "VALIDATE_TIMEOUT_OR_LOCK: validate exceeded timeout ({}s). Terminated to preserve proof-gate liveness.{}",
+                timeout.as_secs(),
+                progress_hint
             )));
         }
         thread::sleep(std::time::Duration::from_millis(25));
@@ -7705,36 +7739,17 @@ fn run_workspace_command(
         WorkspaceCommand::Status => {
             let workspace_root = project_root;
             let status = workspace::get_workspace_status(workspace_root)?;
-            let governance_root = find_governance_root(workspace_root);
-
-            let mut report_summary = None;
-            let store_root = governance_root.join(".decapod").join("data");
-            if store_root.exists() {
-                let project_store = Store {
-                    kind: StoreKind::Repo,
-                    root: store_root,
-                };
-                // Status is observational. Refreshing specs here is the GitHub
-                // #1255 failure mode: a protected-root `workspace status`
-                // rewrote `.decapod/managed/specs/*` outside the claimed
-                // worktree. Restore the 0.96.0 read-only validate path.
-                let report = run_validation_bounded(
-                    &project_store,
-                    &governance_root,
-                    workspace_root,
-                    false,
-                    false,
-                    false,
-                )?;
-                report_summary = Some(report);
-            }
 
             println!(
                 "{}",
                 serde_json::to_string_pretty(&serde_json::json!({
                     "status": "ok",
                     "workspace": status,
-                    "validation": report_summary,
+                    // Status is intentionally observational. Full validation
+                    // is an explicit proof operation and can take minutes;
+                    // running it here made status unbounded (#1299) and could
+                    // mutate proof artifacts outside the active worktree.
+                    "validation": null,
                 }))
                 .unwrap()
             );
@@ -9442,9 +9457,10 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
     }
     enforce_constitutional_awareness_for_rpc(&request.op, project_root)?;
 
+    let governance_root = find_governance_root(project_root);
     let project_store = Store {
         kind: StoreKind::Repo,
-        root: project_root.join(".decapod").join("data"),
+        root: governance_root.join(".decapod").join("data"),
     };
 
     let mandates = docs::resolve_mandates(project_root, &request.op);
@@ -10109,7 +10125,9 @@ fn run_infer_orientation(
     };
 
     if let Some(ref id) = cli.task_id {
-        let store_root = project_root.join(".decapod").join("data");
+        let store_root = find_governance_root(project_root)
+            .join(".decapod")
+            .join("data");
         if let Some(task) = todo::get_task(&store_root, id)? {
             packet.user_goal = task.title.clone();
             if !task.description.is_empty() {

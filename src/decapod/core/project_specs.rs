@@ -173,7 +173,7 @@ pub struct ProjectSpecsManifest {
     pub declared_capabilities: Vec<String>,
     #[serde(default)]
     pub capability_definition_version: String,
-    /// Hash of the canonical, parsed `.decapod/config.toml` input.
+    /// Hash of the normalized `.decapod/config.toml` and override inputs.
     #[serde(default)]
     pub config_input_hash: String,
     /// Hash of the ordered living-spec inputs, excluding this manifest.
@@ -199,16 +199,26 @@ pub fn config_input_hash(project_root: &Path) -> Result<String, error::DecapodEr
     if !project_root.join(".decapod/config.toml").exists() {
         return Ok(String::new());
     }
-    let config = crate::cli::DecapodProjectConfig::load(project_root)?;
-    let canonical = serde_json::to_vec(&config).map_err(|e| {
-        error::DecapodError::ValidationError(format!("Failed to canonicalize config.toml: {e}"))
+    // Hash the declared TOML document rather than a runtime config struct.
+    // Deserialization can fill defaults from environment or platform-specific
+    // runtime state. Hashing the source text also avoids parser/serializer
+    // differences between evaluators, while newline normalization keeps a
+    // checkout with different line-ending settings equivalent (#1296).
+    let config_content = fs::read_to_string(project_root.join(".decapod/config.toml"))
+        .map_err(error::DecapodError::IoError)?;
+    toml::from_str::<toml::Value>(&config_content).map_err(|e| {
+        error::DecapodError::ValidationError(format!("Failed to parse config.toml: {e}"))
     })?;
     let override_content =
         fs::read_to_string(project_root.join(".decapod/OVERRIDE.md")).unwrap_or_default();
-    let mut input = String::from_utf8_lossy(&canonical).into_owned();
+    let mut input = normalize_text_for_hash(&config_content);
     input.push_str("\n-- OVERRIDE.md --\n");
-    input.push_str(&override_content);
+    input.push_str(&normalize_text_for_hash(&override_content));
     Ok(hash_text(&input))
+}
+
+fn normalize_text_for_hash(text: &str) -> String {
+    text.replace("\r\n", "\n").replace('\r', "\n")
 }
 
 pub fn spec_input_hash(project_root: &Path) -> Result<String, error::DecapodError> {
@@ -330,14 +340,21 @@ fn collect_significant_repo_paths(
 pub fn repo_signal_fingerprint(project_root: &Path) -> Result<String, error::DecapodError> {
     let mut files = Vec::new();
     collect_significant_repo_paths(project_root, project_root, &mut files)?;
-    files.sort();
+    let mut files = files
+        .into_iter()
+        .filter_map(|path| {
+            let relative = path.strip_prefix(project_root).ok()?;
+            let stable_path = relative
+                .components()
+                .map(|component| component.as_os_str().to_string_lossy().into_owned())
+                .collect::<Vec<_>>()
+                .join("/");
+            Some((stable_path, path))
+        })
+        .collect::<Vec<_>>();
+    files.sort_by(|left, right| left.0.cmp(&right.0));
     let mut hasher = Sha256::new();
-    for path in files {
-        let rel = path
-            .strip_prefix(project_root)
-            .unwrap_or(path.as_path())
-            .to_string_lossy()
-            .to_string();
+    for (rel, path) in files {
         hasher.update(rel.as_bytes());
         hasher.update(b"\0");
         if repo_signal_requires_content_hash(&rel) {
