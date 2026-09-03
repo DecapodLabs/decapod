@@ -252,7 +252,7 @@ Stale-workspace cleanup separates Git-state classification from workspace payloa
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `043cd6d5934a45e33a225f6bb8aa3a4684567f5a4172217597df8692e6570677`
+- Repository signal fingerprint: `1bb00ece35d046d4b0e721746ffae753a32870379c8f621accd4657616b711a1`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (105 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
