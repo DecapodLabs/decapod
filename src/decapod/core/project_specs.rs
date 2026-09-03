@@ -199,8 +199,16 @@ pub fn config_input_hash(project_root: &Path) -> Result<String, error::DecapodEr
     if !project_root.join(".decapod/config.toml").exists() {
         return Ok(String::new());
     }
-    let config = crate::cli::DecapodProjectConfig::load(project_root)?;
-    let config_value = serde_json::to_value(&config).map_err(|e| {
+    // Hash the declared TOML document rather than a runtime config struct.
+    // Deserialization can fill defaults from environment or platform-specific
+    // runtime state, which made identical repositories produce different
+    // config_input_hash values on local and CI evaluators (#1296).
+    let config_content = fs::read_to_string(project_root.join(".decapod/config.toml"))
+        .map_err(error::DecapodError::IoError)?;
+    let config: toml::Value = toml::from_str(&config_content).map_err(|e| {
+        error::DecapodError::ValidationError(format!("Failed to parse config.toml: {e}"))
+    })?;
+    let config_value = serde_json::to_value(config).map_err(|e| {
         error::DecapodError::ValidationError(format!("Failed to canonicalize config.toml: {e}"))
     })?;
     let canonical = canonical_json_bytes(&config_value).map_err(|e| {
