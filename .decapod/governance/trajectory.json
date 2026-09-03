@@ -17,7 +17,9 @@
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json"
   ],
-  "inspected_files": [],
+  "inspected_files": [
+    ".github/workflows/decapod-validate.yml"
+  ],
   "modified_files": [
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json"
@@ -28,7 +30,27 @@
   "tool_calls": [],
   "checks": [
     {
+      "name": "cargo_clippy",
+      "status": "passed"
+    },
+    {
+      "name": "cargo_fmt",
+      "status": "passed"
+    },
+    {
       "name": "decapod validate",
+      "status": "passed"
+    },
+    {
+      "name": "github_ci",
+      "status": "passed"
+    },
+    {
+      "name": "pr_mergeable",
+      "status": "passed"
+    },
+    {
+      "name": "project_specs_tests",
       "status": "passed"
     }
   ],
@@ -44,7 +66,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:3aaaede3f041d71c8179072551e670a0589bee85d29671c7963066f523047a24",
+  "artifact_hash": "sha256:99f56d3f48070da2879d4a8cf2dcf195008b12063604571ca23bb4240bf8fc6e",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -87,6 +109,13 @@
         "intent_id": "intent:validation_01M1JSQPMANQDEKFEEV87NMJJM",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:validation_01M1JSQPMANQDEKFEEV87NMJJM"
+      },
+      {
+        "sequence": 5,
+        "event_id": "event:5",
+        "intent_id": "intent:validation_01M1JSQPMANQDEKFEEV87NMJJM",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01M1JSQPMANQDEKFEEV87NMJJM"
       }
     ],
     "trajectories": {
@@ -113,12 +142,32 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
+          },
+          {
+            "sequence": 5,
+            "action": "trajectory.record",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              ".github/workflows/decapod-validate.yml"
+            ],
+            "proof_refs": [
+              "cargo_fmt",
+              "cargo_clippy",
+              "project_specs_tests",
+              "github_ci",
+              "pr_mergeable"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:5"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 4
+    "next_sequence": 5
   }
 }
