@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "kind": "validation_receipt",
   "decapod_release": "0.99.9",
-  "git_revision": "2263f1e3f33a2dafc5800126632ca066f409b9ca",
+  "git_revision": "04fee48f535de1bf917a88913e8509d41172a7d3",
   "repo_signal_fingerprint": "1bb00ece35d046d4b0e721746ffae753a32870379c8f621accd4657616b711a1",
   "trajectory_run_id": "validation_01M1JSQPMANQDEKFEEV87NMJJM",
   "trajectory_artifact_hash": "sha256:3aaaede3f041d71c8179072551e670a0589bee85d29671c7963066f523047a24",
@@ -47,91 +47,91 @@
   "pass_count": 202,
   "fail_count": 0,
   "warn_count": 4,
-  "elapsed_ms": 2431,
+  "elapsed_ms": 2162,
   "drift_findings": [],
   "temporary_artifacts_cleaned": 0,
   "failures": [],
   "warnings": [
-    "No open pull request found on GitHub for branch 'agent/unknown/todo-01m1jq-1788409038'. Create a pull request to submit changes.",
     "Risk map missing (run `decapod riskmap init`)",
     "Stale workspaces preserved for explicit review: /Users/ahr/src/decapod/.decapod/workspaces/unknown-todo-01m1jq-agent-unknown-todo-01m1jq-1788409038 (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch)",
-    "Watcher audit trail missing (run `decapod govern watcher run`)"
+    "Watcher audit trail missing (run `decapod govern watcher run`)",
+    "Workspace branch 'agent/unknown/todo-01m1jq-1788409038' has unpushed commits or does not exist on origin. Run `git push origin agent/unknown/todo-01m1jq-1788409038`."
   ],
   "gate_timings": [
     {
       "name": "validate_project_specs_docs",
-      "elapsed_ms": 849
+      "elapsed_ms": 628
     },
     {
       "name": "validate_markdown_primitives_roundtrip_gate",
-      "elapsed_ms": 291
-    },
-    {
-      "name": "validate_git_push_pr_gate",
-      "elapsed_ms": 158
+      "elapsed_ms": 300
     },
     {
       "name": "validate_no_legacy_namespaces",
-      "elapsed_ms": 92
+      "elapsed_ms": 142
     },
     {
       "name": "validate_git_workspace_context",
-      "elapsed_ms": 91
+      "elapsed_ms": 99
     },
     {
       "name": "validate_obligations",
-      "elapsed_ms": 83
+      "elapsed_ms": 82
     },
     {
       "name": "validate_stale_workspaces",
-      "elapsed_ms": 58
-    },
-    {
-      "name": "validate_schema_determinism",
-      "elapsed_ms": 57
-    },
-    {
-      "name": "validate_legacy_jsonl_retired",
-      "elapsed_ms": 52
+      "elapsed_ms": 63
     },
     {
       "name": "validate_embedded_self_contained",
+      "elapsed_ms": 60
+    },
+    {
+      "name": "validate_schema_determinism",
+      "elapsed_ms": 59
+    },
+    {
+      "name": "validate_legacy_jsonl_retired",
       "elapsed_ms": 51
     },
     {
-      "name": "validate_federation_gates",
-      "elapsed_ms": 38
+      "name": "validate_git_protected_branch",
+      "elapsed_ms": 37
     },
     {
       "name": "validate_machine_contract",
       "elapsed_ms": 36
     },
     {
-      "name": "validate_git_protected_branch",
-      "elapsed_ms": 34
+      "name": "validate_federation_gates",
+      "elapsed_ms": 36
     },
     {
       "name": "validate_archive_integrity",
-      "elapsed_ms": 31
+      "elapsed_ms": 29
     },
     {
-      "name": "validate_knowledge_integrity",
-      "elapsed_ms": 17
+      "name": "validate_git_push_pr_gate",
+      "elapsed_ms": 28
     },
     {
       "name": "validate_canon_mutation",
-      "elapsed_ms": 17
-    },
-    {
-      "name": "validate_watcher_purity",
       "elapsed_ms": 16
     },
     {
-      "name": "validate_policy_integrity",
+      "name": "validate_knowledge_integrity",
+      "elapsed_ms": 15
+    },
+    {
+      "name": "validate_watcher_purity",
       "elapsed_ms": 14
     },
     {
-      "name": "validate_repomap_determinism",
+      "name": "validate_interface_contract_bootstrap",
+      "elapsed_ms": 14
+    },
+    {
+      "name": "validate_policy_integrity",
       "elapsed_ms": 14
     },
     {
@@ -139,39 +139,43 @@
       "elapsed_ms": 14
     },
     {
-      "name": "validate_lineage_hard_gate",
+      "name": "validate_repomap_determinism",
       "elapsed_ms": 13
     },
     {
-      "name": "validate_interface_contract_bootstrap",
-      "elapsed_ms": 12
+      "name": "validate_health_purity",
+      "elapsed_ms": 10
     },
     {
-      "name": "validate_health_purity",
-      "elapsed_ms": 12
+      "name": "validate_lineage_hard_gate",
+      "elapsed_ms": 9
     },
     {
       "name": "validate_control_plane_contract",
-      "elapsed_ms": 10
+      "elapsed_ms": 9
+    },
+    {
+      "name": "validate_generated_artifact_whitelist",
+      "elapsed_ms": 8
     },
     {
       "name": "validate_gatekeeper_gate",
       "elapsed_ms": 8
     },
     {
-      "name": "validate_generated_artifact_whitelist",
-      "elapsed_ms": 7
+      "name": "validate_repo_map",
+      "elapsed_ms": 4
     },
     {
       "name": "validate_override_authority",
       "elapsed_ms": 4
     },
     {
-      "name": "validate_watcher_audit",
+      "name": "validate_entrypoint_invariants",
       "elapsed_ms": 3
     },
     {
-      "name": "validate_entrypoint_invariants",
+      "name": "validate_watcher_audit",
       "elapsed_ms": 2
     },
     {
@@ -179,19 +183,19 @@
       "elapsed_ms": 2
     },
     {
-      "name": "validate_lcm_rebuild_gate",
-      "elapsed_ms": 1
-    },
-    {
       "name": "validate_knowledge_promotions_if_present",
       "elapsed_ms": 1
     },
     {
-      "name": "validate_research_claims_if_present",
-      "elapsed_ms": 0
+      "name": "validate_lcm_rebuild_gate",
+      "elapsed_ms": 1
     },
     {
-      "name": "validate_repo_map",
+      "name": "validate_research_claims_if_present",
+      "elapsed_ms": 1
+    },
+    {
+      "name": "validate_project_config_toml",
       "elapsed_ms": 0
     },
     {
@@ -203,15 +207,7 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_project_config_toml",
-      "elapsed_ms": 0
-    },
-    {
       "name": "validate_database_schema_versions",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_trajectory_artifacts_if_present",
       "elapsed_ms": 0
     },
     {
@@ -219,11 +215,7 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_state_commit_gate",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_context_capsule_policy_contract",
+      "name": "validate_trajectory_artifacts_if_present",
       "elapsed_ms": 0
     },
     {
@@ -231,15 +223,11 @@
       "elapsed_ms": 0
     },
     {
+      "name": "validate_state_commit_gate",
+      "elapsed_ms": 0
+    },
+    {
       "name": "validate_spec_drift",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_docs_templates_bucket",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_project_scoped_state",
       "elapsed_ms": 0
     },
     {
@@ -247,19 +235,15 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_risk_map",
+      "name": "validate_context_capsule_policy_contract",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_workunit_manifests_if_present",
+      "name": "validate_project_scoped_state",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_root_dockerfile_seed_detection",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_context_capsules_if_present",
+      "name": "validate_docs_templates_bucket",
       "elapsed_ms": 0
     },
     {
@@ -267,11 +251,27 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_tooling_gate",
+      "name": "validate_risk_map",
       "elapsed_ms": 0
     },
     {
       "name": "validate_coplayer_policy_tightening",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_workunit_manifests_if_present",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_tooling_gate",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_context_capsules_if_present",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_root_dockerfile_seed_detection",
       "elapsed_ms": 0
     },
     {
@@ -284,15 +284,15 @@
     "result": "review",
     "confidence": "medium",
     "reasons": [
-      "No open pull request found on GitHub for branch 'agent/unknown/todo-01m1jq-1788409038'. Create a pull request to submit changes.",
       "Risk map missing (run `decapod riskmap init`)",
       "Stale workspaces preserved for explicit review: /Users/ahr/src/decapod/.decapod/workspaces/unknown-todo-01m1jq-agent-unknown-todo-01m1jq-1788409038 (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch)",
-      "Watcher audit trail missing (run `decapod govern watcher run`)"
+      "Watcher audit trail missing (run `decapod govern watcher run`)",
+      "Workspace branch 'agent/unknown/todo-01m1jq-1788409038' has unpushed commits or does not exist on origin. Run `git push origin agent/unknown/todo-01m1jq-1788409038`."
     ],
     "recommendations": [
       "Review the reported validation warnings before relying on the CI result.",
       "Use `decapod validate -v --format json` to inspect the affected gate output."
     ]
   },
-  "receipt_hash": "sha256:95e33be70746f7e4b0876784fe2c75be361e36cb3af4856cd6256347b2812626"
+  "receipt_hash": "sha256:f42c62a0aa69b483d9fb27dd4d31a8e14f2f486c3f53fb0309a625c926b18d8c"
 }
