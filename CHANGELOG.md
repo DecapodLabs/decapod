@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.99.10](https://github.com/DecapodLabs/decapod/compare/v0.99.9...v0.99.10) - 2026-09-03
+
+### Fixed
+
+- make config spec hashing portable
+- hash declared config deterministically
+- recognize compact todo worktree scopes
+- stabilize worktree control plane and validation
+
+### Other
+
+- record final validation proof
+- validate the checked-out decapod binary
+- bind validation receipt to final tip
+- refresh release projections and validation proof
+- record validation proof for issues 1294-1300
+- bind governance artifacts to issues 1294-1300
+
 ## [0.99.9](https://github.com/DecapodLabs/decapod/compare/v0.99.8...v0.99.9) - 2026-09-01
 
 ### Fixed
