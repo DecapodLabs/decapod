@@ -9,6 +9,17 @@ same canonical repository store, so a newly created worktree cannot diverge
 into an empty or partial task database. A validation timeout identifies the
 active gate and elapsed time when that evidence is available.
 
+## Projection and Repository-Map Contracts (#1303, #1304)
+
+`specs.refresh` owns one `decapod:codebase-attestation` slot per managed
+specification. Refresh replaces that slot, removes recognized duplicate or
+orphan generated residue from older releases, preserves authored prose, and
+is byte-stable when the repository signals have not changed.
+
+`repomap` consumes tracked and non-ignored Markdown paths from Git when run in
+a Git repository. Ignored dependency or build output is not a document-graph
+input; a non-Git directory receives the bounded fallback exclusions instead.
+
 ## Contract Principles
 - Prefer explicit schemas over implicit behavior.
 - Every mutating interface defines idempotency semantics.
@@ -163,7 +174,7 @@ A stale validation epoch reports an executable aggregate-proof recovery sequence
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `37a7084346d78f6c9fd5bc9752f5b73256f00b6a8f6b8d6507dc3df87769a6c1`
+- Repository signal fingerprint: `1b36dec45dcb1c640a42db9e30a4ce87c3159cb032b2cc244abccf1c9e28dcba`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (105 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

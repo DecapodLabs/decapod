@@ -1,31 +1,31 @@
 {
   "schema_version": "1.0.0",
-  "title": "Stabilize canonical worktree control-plane storage and validation",
-  "intent": "For GitHub Issues #1294 through #1300, make managed worktree storage canonical and self-healing, keep workspace status and validation bounded, provide active-gate timeout evidence, and make spec fingerprints deterministic.",
+  "title": "Stabilize generated projections and repomap traversal",
+  "intent": "Solve GitHub Issues #1303 and #1304 in one publishable pull request: canonicalize duplicate/orphan codebase attestations and use Git-visible Markdown paths for deterministic bounded repomap generation.",
   "state": "APPROVED",
   "todo_ids": [
-    "bugs_01m1jqr8x92a1hvq"
+    "bugs_01m1nm5vhk7jax43"
   ],
   "proof_hooks": [
-    "cargo fmt --all -- --check",
-    "cargo clippy --all-targets --all-features -- -D warnings",
     "cargo test --lib project_specs",
-    "cargo test --test workspace_prune_regression -- --test-threads=1",
-    "target/debug/decapod workspace status",
-    "target/debug/decapod infer orientation --task-id bugs_01m1jqr8x92a1hvq",
-    "target/debug/decapod validate --format json"
+    "cargo test --lib repomap",
+    "cargo fmt --all -- --check",
+    "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings",
+    "./target/debug/decapod validate --format json"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [
-    "Stop for human review if the supported recovery state transition cannot preserve existing completed-task evidence without destructive datastore edits."
+    "Stop for human review if validation exposes a scoped regression that cannot be repaired without changing unrelated migration or datastore behavior."
   ],
   "unresolved_contradictions": [],
   "deferred_questions": [],
   "constraints": {
-    "forbidden_paths": [],
+    "forbidden_paths": [
+      ".decapod/data"
+    ],
     "file_touch_budget": 32
   },
   "phases": [],
-  "updated_at": "1788410608Z"
+  "updated_at": "1788506810Z"
 }
