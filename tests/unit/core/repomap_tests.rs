@@ -109,3 +109,41 @@ fn test_doc_graph_serialization() {
     assert_eq!(deserialized.nodes.len(), 2);
     assert_eq!(deserialized.edges.len(), 1);
 }
+
+#[test]
+fn doc_graph_uses_git_visible_files_and_skips_ignored_trees() {
+    let tmp = tempfile::tempdir().unwrap();
+    std::fs::write(tmp.path().join(".gitignore"), "ignored/\n").unwrap();
+    std::fs::create_dir_all(tmp.path().join("docs")).unwrap();
+    std::fs::create_dir_all(tmp.path().join("ignored")).unwrap();
+    std::fs::write(
+        tmp.path().join("README.md"),
+        "[visible](docs/visible.md)\n[ignored](ignored/hidden.md)\n",
+    )
+    .unwrap();
+    std::fs::write(tmp.path().join("docs/visible.md"), "Visible\n").unwrap();
+    std::fs::write(tmp.path().join("ignored/hidden.md"), "Hidden\n").unwrap();
+
+    std::process::Command::new("git")
+        .args(["init", "-q"])
+        .current_dir(tmp.path())
+        .status()
+        .unwrap();
+
+    let graph = generate_doc_graph(tmp.path());
+    assert!(graph.nodes.iter().any(|path| path == "README.md"));
+    assert!(graph.nodes.iter().any(|path| path == "docs/visible.md"));
+    assert!(!graph.nodes.iter().any(|path| path == "ignored/hidden.md"));
+    assert!(
+        graph
+            .edges
+            .iter()
+            .any(|(src, dst)| src == "README.md" && dst == "docs/visible.md")
+    );
+    assert!(
+        !graph
+            .edges
+            .iter()
+            .any(|(_, dst)| dst == "ignored/hidden.md")
+    );
+}
