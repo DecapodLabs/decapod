@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.99.11](https://github.com/DecapodLabs/decapod/compare/v0.99.10...v0.99.11) - 2026-09-04
+
+### Fixed
+
+- fix deterministic specs and repomap traversal
+
+### Other
+
+- record validation proof for projection fixes
+- govern deterministic projection fixes
+
 ## [0.99.10](https://github.com/DecapodLabs/decapod/compare/v0.99.9...v0.99.10) - 2026-09-03
 
 ### Fixed
