@@ -12,6 +12,20 @@ Validation keeps proof gates bounded: observational status does not launch the
 full validator, and maintenance operations that depend on a live container
 daemon do not consume the validation proof budget.
 
+## Deterministic Projection and Repository-Map Boundaries (#1303, #1304)
+
+Living-spec refresh treats the codebase attestation as one canonical,
+sentinel-delimited projection. It replaces that slot on every refresh and
+reclaims known legacy headings, duplicate generated blocks, and orphan
+sentinels while preserving surrounding authored guidance. The projection is
+therefore both repairable and idempotent rather than append-only.
+
+The repository map uses Git's tracked and non-ignored Markdown view when the
+repository is available, so ignored dependency and build trees cannot expand
+the document graph or consume the validation liveness budget. Non-Git fixture
+directories use a bounded filesystem fallback with the common dependency and
+build directories excluded.
+
 ## Direction
 cli
 
@@ -252,7 +266,7 @@ Stale-workspace cleanup separates Git-state classification from workspace payloa
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `37a7084346d78f6c9fd5bc9752f5b73256f00b6a8f6b8d6507dc3df87769a6c1`
+- Repository signal fingerprint: `1b36dec45dcb1c640a42db9e30a4ce87c3159cb032b2cc244abccf1c9e28dcba`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (105 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

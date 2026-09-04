@@ -690,19 +690,84 @@ fn update_codebase_attestation(body: &str, fingerprint: &str, surfaces: &str) ->
     let section = format!(
         "{CODEBASE_ATTESTATION_START}\n## Codebase Attestation\n\n- Repository signal fingerprint: `{fingerprint}`\n- Significant implementation surfaces: {surfaces}\n- Refreshed from the current codebase by `decapod specs.refresh`\n{CODEBASE_ATTESTATION_END}"
     );
-    if let Some(start) = body.find(CODEBASE_ATTESTATION_START) {
-        let end = body[start..]
+    let cleaned = canonicalize_codebase_attestation_slots(body);
+    if cleaned.contains(CODEBASE_ATTESTATION_SLOT) {
+        return cleaned.replace(CODEBASE_ATTESTATION_SLOT, &section);
+    }
+    format!("{}\n\n{}\n", cleaned.trim_end(), section)
+}
+
+const CODEBASE_ATTESTATION_SLOT: &str = "\0decapod-codebase-attestation-slot\0";
+
+/// Remove stale attestation output while retaining the first canonical slot.
+///
+/// Older refreshes could leave generated headings and orphan end markers
+/// outside the sentinel pair. Treat those shapes as generated residue so a
+/// current refresh repairs the document in place instead of appending another
+/// copy. Authored prose is preserved because only the known generated lines
+/// following an attestation heading are consumed.
+fn canonicalize_codebase_attestation_slots(body: &str) -> String {
+    let mut content = body.to_string();
+    let mut retained_slot = false;
+
+    while let Some(start) = content.find(CODEBASE_ATTESTATION_START) {
+        let end = content[start..]
             .find(CODEBASE_ATTESTATION_END)
             .map(|offset| start + offset + CODEBASE_ATTESTATION_END.len());
-        if let Some(end) = end {
-            let mut updated = String::with_capacity(body.len());
-            updated.push_str(&body[..start]);
-            updated.push_str(&section);
-            updated.push_str(&body[end..]);
-            return updated;
+        match (retained_slot, end) {
+            (false, Some(end)) => {
+                content.replace_range(start..end, CODEBASE_ATTESTATION_SLOT);
+                retained_slot = true;
+            }
+            (true, Some(end)) => {
+                content = remove_byte_range_preserving_newlines(&content, start, end);
+            }
+            (false, None) => {
+                content.replace_range(
+                    start..start + CODEBASE_ATTESTATION_START.len(),
+                    CODEBASE_ATTESTATION_SLOT,
+                );
+                retained_slot = true;
+            }
+            (true, None) => {
+                content = remove_byte_range_preserving_newlines(
+                    &content,
+                    start,
+                    start + CODEBASE_ATTESTATION_START.len(),
+                );
+            }
         }
     }
-    format!("{}\n\n{}\n", body.trim_end(), section)
+
+    let mut cleaned = String::with_capacity(content.len());
+    let lines = content.split_inclusive('\n').collect::<Vec<_>>();
+    let mut index = 0;
+    while index < lines.len() {
+        let trimmed = lines[index].trim();
+        if trimmed == "## Codebase Attestation" {
+            index += 1;
+            while index < lines.len() && is_generated_attestation_line(lines[index]) {
+                index += 1;
+            }
+            continue;
+        }
+        if trimmed == CODEBASE_ATTESTATION_END || trimmed == CODEBASE_ATTESTATION_START {
+            index += 1;
+            continue;
+        }
+        cleaned.push_str(lines[index]);
+        index += 1;
+    }
+    cleaned
+}
+
+fn is_generated_attestation_line(line: &str) -> bool {
+    let trimmed = line.trim();
+    trimmed.is_empty()
+        || trimmed.starts_with("- Repository signal fingerprint:")
+        || trimmed.starts_with("- Significant implementation surfaces:")
+        || trimmed.starts_with("- Refreshed from the current codebase by")
+        || trimmed == CODEBASE_ATTESTATION_END
 }
 
 /// Re-evaluate existing living specs against the current repository.

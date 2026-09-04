@@ -9,6 +9,13 @@ container-context observation; it does not invoke the full validator. Container
 image retention and stale-worktree image cleanup are maintenance operations,
 not required validation proof work.
 
+Projection reliability is covered by two bounded regressions: an attestation
+fixture containing duplicate blocks and orphan sentinels must collapse to one
+fresh block while retaining authored sections, and a Git repository with an
+ignored Markdown tree must produce a document graph containing visible files
+without traversing or linking the ignored tree. Repeating either refresh path
+must not introduce additional output.
+
 ## Validation Philosophy
 > Validation is a release gate, not documentation theater.
 
@@ -263,7 +270,7 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `37a7084346d78f6c9fd5bc9752f5b73256f00b6a8f6b8d6507dc3df87769a6c1`
+- Repository signal fingerprint: `1b36dec45dcb1c640a42db9e30a4ce87c3159cb032b2cc244abccf1c9e28dcba`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (105 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

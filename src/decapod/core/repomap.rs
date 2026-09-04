@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashSet};
 use std::fs;
 use std::path::Path;
+use std::process::Command;
 
 /// Repository map containing project structure metadata.
 ///
@@ -191,15 +192,75 @@ pub fn generate_doc_graph(root: &Path) -> DocGraph {
 }
 
 fn collect_md_files(root: &Path, dir: &Path, out: &mut Vec<String>) {
+    if dir == root
+        && let Some(visible_files) = git_visible_markdown_files(root)
+    {
+        out.extend(visible_files);
+        return;
+    }
+
+    collect_md_files_from_filesystem(root, dir, out);
+}
+
+/// Return Markdown files represented by Git's tracked/non-ignored view.
+///
+/// Repository maps describe repository structure, so ignored dependency and
+/// build output should not affect the map or its runtime. Using Git's own
+/// exclude engine honors nested and negated `.gitignore` rules without a
+/// second, incomplete ignore implementation. Non-Git fixture directories use
+/// the bounded filesystem fallback below.
+fn git_visible_markdown_files(root: &Path) -> Option<Vec<String>> {
+    let root = root.to_str()?;
+    let output = Command::new("git")
+        .args([
+            "-C",
+            root,
+            "ls-files",
+            "--cached",
+            "--others",
+            "--exclude-standard",
+            "-z",
+        ])
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+
+    let mut files = output
+        .stdout
+        .split(|byte| *byte == 0)
+        .filter(|path| !path.is_empty())
+        .filter_map(|path| String::from_utf8(path.to_vec()).ok())
+        .filter(|path| path != "docs/DOC_MAP.md" && path.ends_with(".md"))
+        .collect::<Vec<_>>();
+    files.sort();
+    files.dedup();
+    Some(files)
+}
+
+fn collect_md_files_from_filesystem(root: &Path, dir: &Path, out: &mut Vec<String>) {
     if let Ok(entries) = fs::read_dir(dir) {
         for entry in entries.flatten() {
             let path = entry.path();
             if path.is_dir() {
                 let name = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
-                if name == ".git" || name == "target" || name == ".decapod" {
+                if matches!(
+                    name,
+                    ".git"
+                        | "target"
+                        | ".decapod"
+                        | "node_modules"
+                        | ".sst"
+                        | ".venv"
+                        | ".mypy_cache"
+                        | ".pytest_cache"
+                        | "build"
+                        | "dist"
+                ) {
                     continue;
                 }
-                collect_md_files(root, &path, out);
+                collect_md_files_from_filesystem(root, &path, out);
             } else if path.is_file()
                 && path.extension().is_some_and(|e| e == "md")
                 && let Ok(rel) = path.strip_prefix(root)

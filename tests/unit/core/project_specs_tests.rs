@@ -73,6 +73,46 @@ fn codebase_attestation_preserves_authored_spec_content() {
 }
 
 #[test]
+fn codebase_attestation_refresh_collapses_legacy_duplicates() {
+    let body = "# Validation\n\nAuthored guidance.\n\n\
+## Codebase Attestation\n\n\
+- Repository signal fingerprint: `old-one`\n\
+- Significant implementation surfaces: `src/` (1 files)\n\
+- Refreshed from the current codebase by `decapod specs.refresh`\n\
+<!-- decapod:codebase-attestation:end -->\n\n\
+<!-- decapod:codebase-attestation:start -->\n\
+## Codebase Attestation\n\n\
+- Repository signal fingerprint: `old-two`\n\
+- Significant implementation surfaces: `src/` (1 files)\n\
+- Refreshed from the current codebase by `decapod specs.refresh`\n\
+<!-- decapod:codebase-attestation:end -->\n\n\
+## Bounded Execution\n\nKeep this authored section.\n";
+
+    let updated = update_codebase_attestation(body, "new-fingerprint", "`src/` (2 files)");
+    assert_eq!(
+        updated.matches(CODEBASE_ATTESTATION_START).count(),
+        1,
+        "refresh must leave one attestation start marker"
+    );
+    assert_eq!(
+        updated.matches(CODEBASE_ATTESTATION_END).count(),
+        1,
+        "refresh must leave one attestation end marker"
+    );
+    assert_eq!(updated.matches("## Codebase Attestation").count(), 1);
+    assert!(updated.contains("Authored guidance."));
+    assert!(updated.contains("## Bounded Execution"));
+    assert!(updated.contains("new-fingerprint"));
+    assert!(!updated.contains("old-one"));
+    assert!(!updated.contains("old-two"));
+    assert_eq!(
+        updated,
+        update_codebase_attestation(&updated, "new-fingerprint", "`src/` (2 files)"),
+        "repeated refresh must be byte-stable"
+    );
+}
+
+#[test]
 fn normalize_markdown_heading_boundaries_repairs_compacted_specs() {
     let compacted = "# Validation## Validation Philosophy\ntext.## Validation Harness\n## Idempotency Contracts| Operation | Key ||---|---|| create | id |\n## Checklist- [ ] verify\n### Nested Heading\n```text\n## keep inline\n```## Invariants\n";
     let normalized = normalize_markdown_heading_boundaries(compacted);
