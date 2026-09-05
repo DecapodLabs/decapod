@@ -2068,11 +2068,6 @@ pub fn scaffold_project_entrypoints(
         let existing_manifest = read_specs_manifest(&opts.target_dir).ok().flatten();
 
         let seed = opts.specs_seed.as_ref();
-        let current_config_hash = if opts.target_dir.join(".decapod/config.toml").exists() {
-            config_input_hash(&opts.target_dir).unwrap_or_default()
-        } else {
-            String::new()
-        };
         let mut specs_files: Vec<(&str, String)> = Vec::new();
         for spec in LOCAL_PROJECT_SPECS {
             let Some(mut content) =
@@ -2096,8 +2091,10 @@ pub fn scaffold_project_entrypoints(
             // If we are regenerating INTENT.md and it already exists, try to preserve the Epistemic Custody Fields section.
             content = preserve_intent_custody(&opts.target_dir, rel_path, content);
 
-            let current_template_hash = project_spec_scaffold_hash(rel_path, opts.diagram_style)
-                .unwrap_or_else(|| hash_text(&content));
+            // Record the actual seeded scaffold, not the generic unseeded
+            // template. Config changes can then update untouched scaffolds
+            // without mistaking a refreshed authored document for a template.
+            let current_template_hash = hash_text(&content);
             let template_hash = if !opts.force {
                 existing_manifest
                     .as_ref()
@@ -2117,9 +2114,6 @@ pub fn scaffold_project_entrypoints(
                 let manifest_entry = existing_manifest
                     .as_ref()
                     .and_then(|m| m.files.iter().find(|f| f.path == rel_path));
-                let scaffold_inputs_changed = existing_manifest
-                    .as_ref()
-                    .is_some_and(|manifest| manifest.config_input_hash != current_config_hash);
                 let reconciled_existing = reconcile_capability_overlays(
                     rel_path,
                     existing_str.clone(),
@@ -2139,8 +2133,7 @@ pub fn scaffold_project_entrypoints(
                         // human edit after the first run refreshed the
                         // manifest.
                         .map(|e| {
-                            existing_hash == e.content_hash
-                                && (e.content_hash == e.template_hash || scaffold_inputs_changed)
+                            existing_hash == e.content_hash && e.content_hash == e.template_hash
                         })
                         .unwrap_or(false);
 

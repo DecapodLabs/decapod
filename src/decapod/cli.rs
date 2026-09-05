@@ -1517,6 +1517,18 @@ pub(crate) enum BrokerCommand {
     Audit,
     /// Verify audit log integrity and detect crash-induced divergence.
     Verify,
+    /// Preview or acknowledge a selected orphan audit entry; never repair database corruption.
+    Repair {
+        /// Pending event ID reported by `data broker verify`.
+        #[clap(long)]
+        event_id: String,
+        /// Why the original writer is known to have stopped; preserved in the audit log.
+        #[clap(long)]
+        reason: String,
+        /// Append an abandonment acknowledgment (default: read-only preview).
+        #[clap(long)]
+        apply: bool,
+    },
 }
 
 #[derive(clap::Args, Debug)]

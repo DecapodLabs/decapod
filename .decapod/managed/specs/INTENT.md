@@ -234,11 +234,26 @@ flowchart LR
 
 Routine validation must classify stale workspaces from workspace count and Git metadata, without recursively enumerating nested untracked payloads. When verification evidence is stale, every emitted recovery instruction must name supported CLI commands and preserve a clear route back to passing, container-backed proof.
 
+### Audit incident recovery and authored evidence preservation
+
+Agents have a governed path to acknowledge an orphaned broker audit entry
+without directly manipulating the datastore. `data broker repair` previews one
+selected pending event and, with `--apply`, appends an abandonment acknowledgment
+that preserves the original evidence and records the actor and reason. The
+underlying mutation outcome remains unknown. Database corruption requires human
+escalation and is not repaired or certified by audit reconciliation.
+
+Authored living-spec obligations, including `Proof Surfaces` bullets, survive
+repeated refreshes, capability reconciliation, and configuration changes. Only
+explicit generated marker pairs confer regeneration ownership. A transformation
+that would lose authored content fails visibly before writing any refreshed spec
+or manifest.
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1b36dec45dcb1c640a42db9e30a4ce87c3159cb032b2cc244abccf1c9e28dcba`
+- Repository signal fingerprint: `8507534eccbc2f5628d60fd11eb125a10dd32d9bed9322e23eb8da730048a7d3`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (105 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -213,6 +213,20 @@ fn query_all_paged(root: &Path, stream: &str) -> Result<Vec<StoredEvent>, error:
         return Ok(Vec::new());
     }
     let conn = db::db_connect_for_validate(&path.to_string_lossy())?;
+    query_all_on_conn(&conn, stream)
+}
+
+/// Read a stream on the caller's connection so audit repair can inspect and
+/// append evidence under the same write transaction, without a stale snapshot.
+pub fn query_all_on_conn(
+    conn: &Connection,
+    stream: &str,
+) -> Result<Vec<StoredEvent>, error::DecapodError> {
+    if !is_known_stream(stream) {
+        return Err(error::DecapodError::ValidationError(format!(
+            "unknown event stream: {stream}"
+        )));
+    }
     if !conn.has_table("events")? {
         return Ok(Vec::new());
     }

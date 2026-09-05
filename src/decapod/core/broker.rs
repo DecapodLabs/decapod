@@ -324,60 +324,194 @@ impl DbBroker {
     /// terminal `success` or `error` event, which indicates a process crash
     /// between the two-phase commit boundaries.
     pub fn verify_replay(&self) -> Result<ReplayReport, error::DecapodError> {
-        let mut pending_map = HashMap::new();
-        let mut total_events = 0usize;
+        let events = events::query(&self.root, events::BROKER, usize::MAX)?;
+        Ok(replay_report(&decode_events(events)?))
+    }
 
-        let events = events::query(&self.root, events::BROKER, usize::MAX)?
-            .into_iter()
-            .rev()
-            .map(|event| {
-                serde_json::from_value::<BrokerEvent>(event.payload).map_err(|e| {
-                    error::DecapodError::ValidationError(format!("Invalid broker event: {e}"))
-                })
-            })
-            .collect::<Result<Vec<_>, _>>()?;
-
-        for ev in events {
-            total_events += 1;
-
-            match ev.status.as_str() {
-                "pending" => {
-                    pending_map.insert(ev.event_id.clone(), ev);
-                }
-                "success" | "error" => {
-                    // Match terminal events to pending events by intent_ref + op + db_id.
-                    // When both have matching intent_ref (including both None), clear the pending.
-                    pending_map.retain(|_, v| {
-                        let intent_match = match (&v.intent_ref, &ev.intent_ref) {
-                            (Some(a), Some(b)) => a == b,
-                            (None, None) => true,
-                            _ => false,
-                        };
-                        !(intent_match && v.op == ev.op && v.db_id == ev.db_id)
-                    });
-                }
-                _ => {}
-            }
+    /// Acknowledge one interrupted audit operation without asserting its data
+    /// mutation failed or undoing it. Applying requires a stopped writer and
+    /// retains the original pending event plus an exactly linked acknowledgment.
+    pub fn repair(
+        &self,
+        event_id: &str,
+        reason: &str,
+        apply: bool,
+        actor: &str,
+    ) -> Result<RepairReport, error::DecapodError> {
+        if event_id.trim().is_empty() || reason.trim().is_empty() {
+            return Err(error::DecapodError::ValidationError(
+                "Broker repair requires a pending event ID and a non-empty reason confirming the original writer has stopped.".into(),
+            ));
         }
-
-        let divergences = pending_map
-            .into_values()
-            .map(|ev| Divergence {
-                event_id: ev.event_id,
-                op: ev.op,
-                db_id: ev.db_id,
-                ts: ev.ts,
-                intent_ref: ev.intent_ref,
-                reason: "Pending event without terminal status (potential crash)".to_string(),
-            })
-            .collect();
-
-        Ok(ReplayReport {
-            ts: time::now_epoch_z(),
-            divergences,
-            total_events,
+        if !apply {
+            let events = decode_events(events::query(&self.root, events::BROKER, usize::MAX)?)?;
+            return prepare_repair(&events, event_id, reason);
+        }
+        let db_path = events::canonical_db_path(&self.root);
+        self.with_transaction(&db_path, actor, None, "broker.repair", |conn| {
+            let events = decode_events(events::query_all_on_conn(conn, events::BROKER)?)?;
+            let mut report = prepare_repair(&events, event_id, reason)?;
+            if report.status == "already_abandoned" {
+                return Ok(report);
+            }
+            let pending = events
+                .iter()
+                .find(|event| event.event_id == event_id)
+                .expect("prepare_repair checked the pending event");
+            let acknowledgment = BrokerEvent {
+                schema_version: default_broker_schema_version(),
+                request_id: time::new_event_id(),
+                event_id: time::new_event_id(),
+                ts: time::now_epoch_z(),
+                actor: actor.to_string(),
+                actor_id: actor.to_string(),
+                session_id: env::var("DECAPOD_SESSION_ID").ok(),
+                correlation_id: pending.correlation_id.clone(),
+                causation_id: Some(event_id.to_string()),
+                idempotency_key: Some(format!("broker.repair:{event_id}")),
+                intent_ref: pending.intent_ref.clone(),
+                op: "broker.repair".into(),
+                db_id: pending.db_id.clone(),
+                status: "abandoned".into(),
+            };
+            let mut payload = serde_json::to_value(&acknowledgment)
+                .map_err(|error| error::DecapodError::ValidationError(error.to_string()))?;
+            payload["reason"] = serde_json::json!(reason);
+            payload["original_op"] = serde_json::json!(pending.op);
+            payload["original_outcome"] = serde_json::json!("unknown");
+            events::append_on_conn(conn, events::BROKER, &payload)?;
+            report.status = "abandoned".into();
+            report.acknowledgment_event_id = Some(acknowledgment.event_id);
+            Ok(report)
         })
     }
+}
+
+fn decode_events(
+    events: Vec<events::StoredEvent>,
+) -> Result<Vec<BrokerEvent>, error::DecapodError> {
+    events
+        .into_iter()
+        .rev()
+        .map(|event| {
+            serde_json::from_value(event.payload).map_err(|error| {
+                error::DecapodError::ValidationError(format!("Invalid broker event: {error}"))
+            })
+        })
+        .collect()
+}
+
+fn replay_report(events: &[BrokerEvent]) -> ReplayReport {
+    let mut pending_map = HashMap::new();
+    let mut total_events = 0usize;
+
+    for ev in events {
+        total_events += 1;
+
+        match ev.status.as_str() {
+            "pending" => {
+                pending_map.insert(ev.event_id.clone(), ev.clone());
+            }
+            "success" | "error" => {
+                // Match terminal events to pending events by intent_ref + op + db_id.
+                // When both have matching intent_ref (including both None), clear the pending.
+                pending_map.retain(|_, v| {
+                    let intent_match = match (&v.intent_ref, &ev.intent_ref) {
+                        (Some(a), Some(b)) => a == b,
+                        (None, None) => true,
+                        _ => false,
+                    };
+                    !(intent_match && v.op == ev.op && v.db_id == ev.db_id)
+                });
+            }
+            "abandoned" if ev.op == "broker.repair" => {
+                if let Some(event_id) = &ev.causation_id {
+                    pending_map.remove(event_id);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    let mut divergences: Vec<_> = pending_map
+        .into_values()
+        .map(|ev| Divergence {
+            event_id: ev.event_id,
+            op: ev.op,
+            db_id: ev.db_id,
+            ts: ev.ts,
+            intent_ref: ev.intent_ref,
+            reason: "Pending event without terminal status (potential crash)".to_string(),
+        })
+        .collect();
+    divergences.sort_by(|a, b| a.event_id.cmp(&b.event_id));
+
+    ReplayReport {
+        ts: time::now_epoch_z(),
+        divergences,
+        total_events,
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct RepairReport {
+    pub status: String,
+    pub event_id: String,
+    pub reason: String,
+    pub original_outcome: String,
+    pub acknowledgment_event_id: Option<String>,
+}
+
+fn prepare_repair(
+    events: &[BrokerEvent],
+    event_id: &str,
+    reason: &str,
+) -> Result<RepairReport, error::DecapodError> {
+    let pending = events.iter().find(|event| event.event_id == event_id && event.status == "pending")
+        .ok_or_else(|| error::DecapodError::ValidationError(format!(
+            "Broker repair target '{event_id}' is not a pending audit event. Run `decapod data broker verify` to select an event."
+        )))?;
+    let acknowledgment = events.iter().find(|event| {
+        event.op == "broker.repair"
+            && event.status == "abandoned"
+            && event.causation_id.as_deref() == Some(event_id)
+    });
+    if acknowledgment.is_none() {
+        if !replay_report(events)
+            .divergences
+            .iter()
+            .any(|event| event.event_id == event_id)
+        {
+            return Err(error::DecapodError::ValidationError(format!(
+                "Broker repair target '{event_id}' already has a terminal status; no abandonment was written."
+            )));
+        }
+        let timestamp = pending.ts.strip_suffix('Z').and_then(|ts| ts.parse::<u64>().ok())
+            .ok_or_else(|| error::DecapodError::ValidationError(
+                "Cannot establish audit event age; stop and escalate to a human/maintainer without directly accessing the database.".into()
+            ))?;
+        let now = time::now_epoch_z()
+            .trim_end_matches('Z')
+            .parse::<u64>()
+            .unwrap_or(0);
+        if now.saturating_sub(timestamp) < 300 {
+            return Err(error::DecapodError::ValidationError(
+                "Audit event is less than 300 seconds old or future-dated and may still be active. Stop the original writer and retry after the safety interval; age alone does not prove abandonment.".into()
+            ));
+        }
+    }
+    Ok(RepairReport {
+        status: if acknowledgment.is_some() {
+            "already_abandoned"
+        } else {
+            "preview"
+        }
+        .into(),
+        event_id: event_id.into(),
+        reason: reason.into(),
+        original_outcome: "unknown".into(),
+        acknowledgment_event_id: acknowledgment.map(|event| event.event_id.clone()),
+    })
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -421,10 +555,12 @@ fn broker_read_cache() -> &'static Mutex<HashMap<String, CacheEntry>> {
 pub fn schema() -> serde_json::Value {
     serde_json::json!({
         "name": "broker",
-        "version": "0.1.0",
+        "version": "0.2.0",
         "description": "State mutation broker (The Thin Waist)",
         "commands": [
-            { "name": "audit", "description": "Show the mutation audit log" }
+            { "name": "audit", "description": "Show the mutation audit log" },
+            { "name": "verify", "description": "Detect pending audit events without terminal evidence; not a SQLite integrity check" },
+            { "name": "repair", "description": "Preview or append an exact-event abandonment acknowledgment; original data outcome remains unknown", "parameters": ["event_id", "reason", "apply"] }
         ],
         "envelope": {
             "schema_version": "1.0.0",

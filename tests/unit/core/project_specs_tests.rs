@@ -73,6 +73,62 @@ fn codebase_attestation_preserves_authored_spec_content() {
 }
 
 #[test]
+fn refresh_preserves_proof_surfaces_and_other_authored_sections_twice() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join(LOCAL_PROJECT_SPECS_VALIDATION);
+    fs::create_dir_all(path.parent().unwrap()).unwrap();
+    let authored = "# Validation\n\n## Proof Surfaces\n\n- Verify the project-specific doc contract.\n\n## Verification Method\n\nKeep dated evidence and exact commands.\n\n## Participant Promotion Proof\n\nEvidence from the project owner.\n";
+    fs::write(&path, authored).unwrap();
+    let capabilities = vec!["persistent-state".to_string(), "public-api".to_string()];
+    refresh_specs_from_codebase(dir.path(), &capabilities).unwrap();
+    let first = fs::read_to_string(&path).unwrap();
+    assert!(first.contains(authored.trim_end()));
+    refresh_specs_from_codebase(dir.path(), &capabilities).unwrap();
+    assert_eq!(first, fs::read_to_string(&path).unwrap());
+}
+
+#[test]
+fn refresh_refuses_generated_ranges_that_swallow_proof_surfaces_before_any_write() {
+    let dir = tempfile::tempdir().unwrap();
+    let intent_path = dir.path().join(LOCAL_PROJECT_SPECS_INTENT);
+    let validation_path = dir.path().join(LOCAL_PROJECT_SPECS_VALIDATION);
+    fs::create_dir_all(intent_path.parent().unwrap()).unwrap();
+    fs::write(&intent_path, "# Intent\n\nPreserve this too.\n").unwrap();
+    let malformed = "# Validation\n\n<!-- decapod:capability-overlay:persistent-state:start -->\n## Proof Surfaces\n\n- Project-specific authored obligation.\n<!-- decapod:capability-overlay:persistent-state:end -->\n\n## Promotion Gates\n\nKeep these gates.\n";
+    fs::write(&validation_path, malformed).unwrap();
+    let error = refresh_specs_from_codebase(dir.path(), &[])
+        .unwrap_err()
+        .to_string();
+    assert!(
+        error.contains("SPEC_REFRESH_AUTHORED_CONTENT_LOSS"),
+        "{error}"
+    );
+    assert!(error.contains("VALIDATION.md"), "{error}");
+    assert_eq!(fs::read_to_string(&validation_path).unwrap(), malformed);
+    assert_eq!(
+        fs::read_to_string(&intent_path).unwrap(),
+        "# Intent\n\nPreserve this too.\n"
+    );
+    assert!(!dir.path().join(LOCAL_PROJECT_SPECS_MANIFEST).exists());
+}
+
+#[test]
+fn refresh_preserves_bullets_adjacent_to_inline_and_consecutive_generated_blocks() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join(LOCAL_PROJECT_SPECS_VALIDATION);
+    fs::create_dir_all(path.parent().unwrap()).unwrap();
+    let body = "# Validation\n\n## Proof Surfaces\n- Authored before.<!-- decapod:capability-overlay:public-api:start -->\nGenerated API obligations.\n<!-- decapod:capability-overlay:public-api:end --> Authored after.\n<!-- decapod:capability-overlay:persistent-state:start -->\nGenerated storage obligations.\n<!-- decapod:capability-overlay:persistent-state:end -->\n\n## Promotion Gates\nKeep the gate.\n";
+    fs::write(&path, body).unwrap();
+    for _ in 0..2 {
+        refresh_specs_from_codebase(dir.path(), &[]).unwrap();
+        let updated = fs::read_to_string(&path).unwrap();
+        assert!(updated.contains("- Authored before."));
+        assert!(updated.contains("Authored after."));
+        assert!(updated.contains("Keep the gate."));
+    }
+}
+
+#[test]
 fn codebase_attestation_refresh_collapses_legacy_duplicates() {
     let body = "# Validation\n\nAuthored guidance.\n\n\
 ## Codebase Attestation\n\n\

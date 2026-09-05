@@ -178,6 +178,44 @@ fn test_config_toml_changes_flow_to_specs() {
 }
 
 #[test]
+fn config_change_after_refresh_does_not_turn_authored_specs_into_templates() {
+    let tmp = TempDir::new().unwrap();
+    let (password, agent_id) = setup_repo(&tmp);
+    let dir = tmp.path();
+    let envs = [
+        ("DECAPOD_AGENT_ID", agent_id.as_str()),
+        ("DECAPOD_SESSION_PASSWORD", password.as_str()),
+    ];
+    let validation = dir.join(".decapod/managed/specs/VALIDATION.md");
+    let authored = fs::read_to_string(&validation).unwrap().replace(
+        "## Proof Surfaces\n",
+        "## Proof Surfaces\n- Project-specific doc-contract obligation.\n",
+    );
+    fs::write(&validation, &authored).unwrap();
+    // A refresh records authored content_hash; this is not evidence that the
+    // file is an untouched template, even if config_input_hash later changes.
+    decapod::core::project_specs::refresh_specs_manifest(dir, &[]).unwrap();
+    let config_path = dir.join(".decapod/config.toml");
+    let config = fs::read_to_string(&config_path)
+        .unwrap()
+        .replace("Original Summary", "Changed summary");
+    fs::write(&config_path, config).unwrap();
+    for _ in 0..2 {
+        let out = run_decapod(dir, &["init", "--force"], &envs);
+        assert!(
+            out.status.success(),
+            "{}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+        let preserved = fs::read_to_string(&validation).unwrap();
+        assert_eq!(
+            decapod::core::project_specs::material_spec_body(&preserved).trim(),
+            decapod::core::project_specs::material_spec_body(&authored).trim(),
+        );
+    }
+}
+
+#[test]
 fn test_override_md_changes_flow_to_specs() {
     let tmp = TempDir::new().unwrap();
     let dir = tmp.path();

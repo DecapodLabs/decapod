@@ -1,17 +1,18 @@
 {
   "schema_version": "1.0.0",
-  "title": "Stabilize generated projections and repomap traversal",
-  "intent": "Solve GitHub Issues #1303 and #1304 in one publishable pull request: canonicalize duplicate/orphan codebase attestations and use Git-visible Markdown paths for deterministic bounded repomap generation.",
+  "title": "Repair orphan audit evidence and preserve authored specs",
+  "intent": "Resolve #1307 with explicit broker audit abandonment and corruption escalation guidance; resolve #1308 by preserving authored named sections through repeated refresh; publish one PR and friendly issue comments",
   "state": "APPROVED",
   "todo_ids": [
-    "bugs_01m1nm5vhk7jax43"
+    "bugs_01m1qvp3jcbg9yby"
   ],
   "proof_hooks": [
-    "cargo test --lib project_specs",
-    "cargo test --lib repomap",
+    "cargo test --test crash_consistency --test substrate_integrity",
+    "cargo test --lib",
+    "cargo test --test core_tests scaffold",
     "cargo fmt --all -- --check",
-    "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings",
-    "./target/debug/decapod validate --format json"
+    "cargo clippy --all-targets --all-features -- -D warnings",
+    "decapod validate --format json"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -21,11 +22,9 @@
   "unresolved_contradictions": [],
   "deferred_questions": [],
   "constraints": {
-    "forbidden_paths": [
-      ".decapod/data"
-    ],
-    "file_touch_budget": 32
+    "forbidden_paths": [],
+    "file_touch_budget": 34
   },
   "phases": [],
-  "updated_at": "1788506810Z"
+  "updated_at": "1788586584Z"
 }

@@ -1131,25 +1131,11 @@ fn apply_capability_declaration(mut content: String, capabilities: &[String]) ->
 }
 
 fn remove_marked_block(mut content: String, start_pos: usize, end_pos: usize) -> String {
-    let line_start = content[..start_pos]
-        .rfind('\n')
-        .map(|position| position + 1)
-        .unwrap_or(start_pos);
-    let line_end = content[end_pos..]
-        .find('\n')
-        .map(|position| end_pos + position + 1)
-        .unwrap_or(end_pos);
-    let remove_start = if line_start > 0 && content[..line_start].ends_with('\n') {
-        line_start - 1
-    } else {
-        line_start
-    };
-    let remove_end = if content[line_end..].starts_with('\n') {
-        line_end + 1
-    } else {
-        line_end
-    };
-    content.replace_range(remove_start..remove_end, "");
+    // Markers delimit ownership, not their containing lines. Expanding to
+    // whole lines can discard an authored bullet beside an inline marker.
+    // Removing both boundary newlines can also join the preceding bullet to
+    // the next generated block, causing its loss on a subsequent removal.
+    content.replace_range(start_pos..end_pos, "");
     content
 }
 

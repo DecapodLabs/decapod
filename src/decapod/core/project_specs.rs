@@ -782,6 +782,7 @@ pub fn refresh_specs_from_codebase(
     crate::core::workspace::ensure_isolated_workspace_for_projection_mutation(project_root)?;
     let fingerprint = repo_signal_fingerprint(project_root)?;
     let surfaces = codebase_surface_summary(project_root)?;
+    let mut updates = Vec::new();
     for spec in LOCAL_PROJECT_SPECS {
         let path = project_root.join(spec.path);
         if !path.exists() {
@@ -791,11 +792,46 @@ pub fn refresh_specs_from_codebase(
         let updated = reconcile_capability_overlays(spec.path, body.clone(), declared_capabilities);
         let updated = update_codebase_attestation(&updated, &fingerprint, &surfaces);
         let updated = normalize_markdown_heading_boundaries(&updated);
+        ensure_authored_refresh_preserved(spec.path, &body, &updated)?;
         if updated != body {
-            fs::write(path, updated).map_err(error::DecapodError::IoError)?;
+            updates.push((path, updated));
         }
     }
+    // Preflight every document before writing any of them. A preservation
+    // failure must be visible and leave the input specs and manifest intact.
+    for (path, updated) in updates {
+        fs::write(path, updated).map_err(error::DecapodError::IoError)?;
+    }
     refresh_specs_manifest(project_root, declared_capabilities)
+}
+
+fn ensure_authored_refresh_preserved(
+    path: &str,
+    before: &str,
+    after: &str,
+) -> Result<(), error::DecapodError> {
+    let authored = |body: &str| {
+        let material = strip_auto_generated_spec_blocks(body);
+        let material = canonicalize_codebase_attestation_slots(&material);
+        normalize_markdown_heading_boundaries(&material)
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .join(" ")
+    };
+    // Older malformed generated ranges can enclose a canonical authored
+    // section. Check that section independently of marker stripping too.
+    let proof_surfaces = |body: &str| {
+        let normalized = normalize_markdown_heading_boundaries(body);
+        let section = normalized.split_once("\n## Proof Surfaces\n")?.1;
+        let section = section.split("\n## ").next().unwrap_or(section);
+        Some(authored(section))
+    };
+    if authored(before) != authored(after) || proof_surfaces(before) != proof_surfaces(after) {
+        return Err(error::DecapodError::ValidationError(format!(
+            "SPEC_REFRESH_AUTHORED_CONTENT_LOSS: refresh would replace authored content in {path} (including any Proof Surfaces obligations). No specs were written by this refresh. Preserve the original document and escalate malformed generated boundaries to a human/maintainer; section headings alone never authorize regeneration."
+        )));
+    }
+    Ok(())
 }
 
 /// Keep Markdown headings structurally separate when repairing older compacted

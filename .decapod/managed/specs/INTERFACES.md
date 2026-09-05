@@ -170,11 +170,27 @@ pub enum ApiError {
 
 A stale validation epoch reports an executable aggregate-proof recovery sequence: prune the stale verification record with `decapod qa verify prune <ID>`, obtain passing validation in the governed container workspace, reclaim the reopened TODO, and complete it again with `decapod todo done --id <ID> --validated`. Diagnostics must not advertise nonexistent subcommands or recapture a known-failing aggregate baseline.
 
+## Orphan audit acknowledgment
+
+`decapod data broker repair --event-id <pending-id> --reason <reason>` returns a
+preview; `--apply` requests the governed mutation. The original writer must be
+known to have stopped. Events younger than 300 seconds, future-dated events,
+unknown event IDs, empty reasons, and normally completed targets are refused.
+Results distinguish `preview`, `abandoned`, and `already_abandoned`, expose the
+acknowledgment event ID, and retain `original_outcome: unknown`. `broker verify`
+checks audit lifecycle evidence, not SQLite integrity. Malformed images and
+unsupported recovery require human escalation without direct database access.
+
+`SPEC_REFRESH_AUTHORED_CONTENT_LOSS` identifies the affected spec and refuses
+the refresh before spec or manifest writes. Ordinary named sections are authored;
+only paired attestation, capability-declaration, and capability-overlay comment
+blocks are generated/non-authorable. Inline marker neighbors remain authored.
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1b36dec45dcb1c640a42db9e30a4ce87c3159cb032b2cc244abccf1c9e28dcba`
+- Repository signal fingerprint: `8507534eccbc2f5628d60fd11eb125a10dd32d9bed9322e23eb8da730048a7d3`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (105 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
