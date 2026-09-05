@@ -226,6 +226,21 @@ Failure mode: `FINGERPRINT_ONLY_SPECS`. Not every living-spec file must change; 
 Proof-completion bindings:
 - Validation epochs record `living_spec_material:<path>` digests of authored prose (excluding auto-generated blocks).- VERIFIED workunits must bind at least one `.decapod/managed/specs/*` path in `spec_refs` when the living-specs surface exists.- Completion evidence verification fails closed when living-spec material digests diverge from the active epoch or when living-spec refs are omitted.
 
+### Audit repair and authored spec regression proof
+
+- `cargo test --test crash_consistency` covers read-only preview, exact-event
+  selection, preserved audit history and committed data, mutation-policy denial,
+  recent/completed/unknown target refusal, concurrent retry, and CLI verification.
+- `cargo test --lib project_specs` covers repeated refresh, preserved named
+  sections, inline and consecutive generated boundaries, and preflight refusal
+  before any spec or manifest write on detected authored loss.
+- `cargo test --test substrate_integrity` verifies config-driven updates still
+  reach untouched scaffolds while authored content survives refreshed manifests.
+- `cargo test --test core_tests scaffold` checks existing scaffold contracts.
+- Formatting and all-target Clippy must pass. The full library suite reproduces
+  four pre-existing failures on baseline `efdb493b`; those failures are recorded
+  separately from the targeted issue proofs.
+
 <!-- decapod:capability-overlay:background-processing:start -->
 
 ## Background Processing Validation Overlay
@@ -270,7 +285,7 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1b36dec45dcb1c640a42db9e30a4ce87c3159cb032b2cc244abccf1c9e28dcba`
+- Repository signal fingerprint: `8507534eccbc2f5628d60fd11eb125a10dd32d9bed9322e23eb8da730048a7d3`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (105 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -242,6 +242,21 @@ sequenceDiagram
 
 Stale-workspace cleanup separates Git-state classification from workspace payload size. Dirty detection asks Git for porcelain status with directory-collapsed untracked reporting, so classification remains proportional to repository metadata and top-level untracked entries instead of every nested file.
 
+## Broker recovery and refresh ownership
+
+Broker repair reads the canonical audit stream and appends its acknowledgment
+within the same immediate write transaction, through the existing broker policy
+boundary. Its causation ID targets exactly one pending event, preserving siblings
+that share intent or correlation identifiers. Repeated and concurrent repairs
+produce one abandonment acknowledgment, while ordinary broker audit records
+remain append-only. Repair neither replays nor rolls back the original mutation.
+
+Capability block removal deletes only the bytes bounded by explicit markers; it
+never expands ownership to the containing lines. Spec refresh checks every
+document before writing any document. Scaffold manifests record the actual
+seeded template hash, and a changed configuration hash cannot establish that an
+authored document is an untouched template.
+
 <!-- decapod:capability-overlay:persistent-state:start -->
 
 ## Persistent State Architecture Overlay
@@ -266,7 +281,7 @@ Stale-workspace cleanup separates Git-state classification from workspace payloa
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1b36dec45dcb1c640a42db9e30a4ce87c3159cb032b2cc244abccf1c9e28dcba`
+- Repository signal fingerprint: `8507534eccbc2f5628d60fd11eb125a10dd32d9bed9322e23eb8da730048a7d3`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (105 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
