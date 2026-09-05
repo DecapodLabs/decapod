@@ -5,7 +5,10 @@
   "task_id": "bugs_01m1qvp3jcbg9yby",
   "original_intent": "Solve issues #1307 and #1308 in one dedicated PR and post friendly issue comments",
   "derived_intent": "Add explicit orphan audit reconciliation without claiming state recovery, preserve authored spec prose on refresh, and prove both with regression tests",
-  "current_phase": "publication",
+  "current_phase": "validation",
+  "next_transitions": [
+    "publish"
+  ],
   "active_boundaries": [
     "No direct control-plane database edits; no modifications to user root checkout content; no merge"
   ],
@@ -16,6 +19,8 @@
     "docs/agent/command-contracts.md"
   ],
   "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
     ".decapod/managed/specs/ARCHITECTURE.md",
     ".decapod/managed/specs/INTENT.md",
     ".decapod/managed/specs/INTERFACES.md",
@@ -27,7 +32,8 @@
   ],
   "declared_commands": [
     "cargo test --manifest-path baseline/Cargo.toml --lib --locked -- --test-threads=1",
-    "cargo test --test crash_consistency --test substrate_integrity --locked"
+    "cargo test --test crash_consistency --test substrate_integrity --locked",
+    "decapod validate"
   ],
   "tool_calls": [],
   "checks": [
@@ -45,6 +51,10 @@
     },
     {
       "name": "clippy",
+      "status": "passed"
+    },
+    {
+      "name": "decapod validate",
       "status": "passed"
     },
     {
@@ -72,7 +82,8 @@
     "cargo test --lib: 324 passed, 4 failures outside edited functions; baseline reproduction in progress",
     "cargo test --test core_tests scaffold: 2 passed",
     "cargo test --test crash_consistency: 6 passed including CLI, concurrent retry, policy, and retained committed data",
-    "cargo test --test substrate_integrity: 6 passed including config-change preservation"
+    "cargo test --test substrate_integrity: 6 passed including config-change preservation",
+    "validation epoch ve_eba468ff18b087b5 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -83,7 +94,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:78f4a8e32e2ebce3dc5199df83e32104e0334d1f22004f0949632c95210b8b5a",
+  "artifact_hash": "sha256:4ccd16d6fac59f83cd7fd2269724658f4da11705d6a81475c344e4471e802e2d",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -136,6 +147,13 @@
       {
         "sequence": 6,
         "event_id": "event:6",
+        "intent_id": "intent:issues-1307-1308",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issues-1307-1308"
+      },
+      {
+        "sequence": 7,
+        "event_id": "event:7",
         "intent_id": "intent:issues-1307-1308",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:issues-1307-1308"
@@ -212,12 +230,30 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:6"
+          },
+          {
+            "sequence": 7,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "Broker CLI, audit events, living spec refresh, docs, regression tests, publication artifacts"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_eba468ff18b087b5 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:7"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 6
+    "next_sequence": 7
   }
 }
