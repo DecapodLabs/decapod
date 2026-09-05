@@ -7192,10 +7192,20 @@ fn run_data_command(
                 println!("{}", serde_json::to_string_pretty(&report).unwrap());
                 if !report.divergences.is_empty() {
                     return Err(error::DecapodError::ValidationError(format!(
-                        "Audit log integrity check failed: {} divergence(s) detected",
+                        "Audit log integrity check failed: {} divergence(s) detected. Inspect the original writer, then preview `decapod data broker repair --event-id <id> --reason <reason>`. For database corruption or unsupported recovery, stop and escalate to a human/maintainer; raw sqlite3, REINDEX, and direct database access are never authorized.",
                         report.divergences.len()
                     )));
                 }
+            }
+            BrokerCommand::Repair {
+                event_id,
+                reason,
+                apply,
+            } => {
+                let broker = core::broker::DbBroker::new(store_root);
+                let actor = std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "cli".into());
+                let report = broker.repair(&event_id, &reason, apply, &actor)?;
+                println!("{}", serde_json::to_string_pretty(&report).unwrap());
             }
         },
         DataCommand::Aptitude(aptitude_cli) => {

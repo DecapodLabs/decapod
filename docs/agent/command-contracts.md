@@ -47,6 +47,26 @@ This document defines the normative operational contracts for the Decapod CLI.
 
 ## `decapod data`
 - **Intent:** Data: archives, knowledge, context, schemas
+- **Broker verify:** Reports incomplete audit lifecycles; does not test SQLite integrity.
+- **Broker repair:** `data broker repair --event-id <pending-id> --reason <reason>`
+  previews a selected orphan acknowledgment; `--apply` appends it through the
+  broker under normal session and policy gates. Confirm the original writer is
+  stopped; a 300-second age guard also refuses recent/future-dated entries.
+  Original evidence stays intact and the original mutation outcome stays unknown.
+  Repeated application is idempotent for the selected acknowledgment. Corruption
+  and unsupported recovery require human escalation, never raw database access.
+
+### Living-spec refresh ownership
+
+`validate --refresh-specs` and RPC `specs.refresh` preserve authored canonical
+spec prose, including `Proof Surfaces` bullets and project-specific evidence.
+Section headings do not confer generation ownership. Only explicit paired
+`decapod:codebase-attestation`, `decapod:declared-capabilities`, and
+`decapod:capability-overlay:<id>` HTML comment blocks are generated/non-authorable;
+put project prose outside those pairs. Refresh may normalize malformed Markdown
+boundaries and clean recognized legacy attestation residue. If its preflight
+detects authored content loss, it returns `SPEC_REFRESH_AUTHORED_CONTENT_LOSS`
+with the affected path before writing specs or their manifest.
 
 ## `decapod auto`
 - **Intent:** Automation: scheduled and event-driven
