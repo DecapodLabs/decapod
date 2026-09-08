@@ -144,6 +144,7 @@ fn canonical_connection_retains_the_cross_process_coordination_lock() {
         .create(true)
         .read(true)
         .write(true)
+        .truncate(false)
         .open(&sidecar)
         .expect("external lock descriptor");
     let blocked = FileExt::try_lock_exclusive(&external)

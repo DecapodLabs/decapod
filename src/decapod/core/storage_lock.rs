@@ -70,6 +70,7 @@ impl StorageLock {
             .create(true)
             .read(true)
             .write(true)
+            .truncate(false)
             .open(&path)
             .map_err(|error| lock_io_error(&path, error))?;
 
@@ -178,6 +179,7 @@ mod tests {
             .create(true)
             .read(true)
             .write(true)
+            .truncate(false)
             .open(&sidecar)
             .expect("external lock descriptor");
         FileExt::try_lock_exclusive(&external).expect("external descriptor lock");

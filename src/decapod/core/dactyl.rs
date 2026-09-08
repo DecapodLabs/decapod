@@ -457,13 +457,12 @@ fn local_storage_lock(
         return Ok(None);
     }
 
-    if access_mode == AccessMode::ReadWrite {
-        if let Some(parent) = path
+    if access_mode == AccessMode::ReadWrite
+        && let Some(parent) = path
             .parent()
             .filter(|parent| !parent.as_os_str().is_empty())
-        {
-            fs::create_dir_all(parent).map_err(DecapodError::IoError)?;
-        }
+    {
+        fs::create_dir_all(parent).map_err(DecapodError::IoError)?;
     }
 
     let mode = if access_mode == AccessMode::ReadOnly {
