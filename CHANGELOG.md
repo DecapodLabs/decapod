@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.99.14](https://github.com/DecapodLabs/decapod/compare/v0.99.13...v0.99.14) - 2026-09-08
+
+### Fixed
+
+- satisfy strict storage lock lint
+- coordinate workspace trajectories and local storage
+
+### Other
+
+- attest final v0.99.13 repository state
+- record v0.99.13 validation receipt
+- refresh v0.99.13 governed entrypoints
+- record trajectory and coordination claims
+
 ## [0.99.13](https://github.com/DecapodLabs/decapod/compare/v0.99.12...v0.99.13) - 2026-09-08
 
 ### Fixed
