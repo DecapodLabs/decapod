@@ -112,12 +112,16 @@ This project's architecture consists of the following key layers/directories:
   store from blocking a repairable spec refresh.
 - events::append is a standalone write boundary and therefore enters the
   shared per-database Dactyl write pool before table preparation and event
-  insertion. This serializes the previously unpooled in-process writer with
-  brokered writes; cross-process locking and physical recovery remain Dactyl
-  responsibilities and are not claimed here.
+  insertion. Canonical local connection factories also retain a bounded
+  `decapod.db.lock` sidecar. The sidecar is deliberately exclusive for all
+  canonical local connection lifetimes, conservatively coordinating reads and
+  writes across host and container Decapod processes without changing the
+  Dactyl physical storage boundary; a lock timeout is typed contention, not a
+  stale-lock repair.
 - Trajectory archive files are additive evidence copies. The legacy cookie
-  continues to determine validation and publication authority until a human
-  selects the durable multi-run contract.
+  remains the one validation/publication authority for the workspace. Separate
+  jobs in one workspace are subagent loops inside that trajectory; Decapod does
+  not select among multiple project-level active runs.
 - Governance serializers normalize local paths at the artifact boundary.
   Absolute paths inside the project are portable relative paths; external
   paths are generic redacted tokens. No operational filesystem lookup uses
@@ -301,7 +305,7 @@ authored document is an untouched template.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `40dec4825bca7ec51499da94e622e58a6487e42da29da3f20be81a39c0f1ad39`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (106 files), `tests/` (4 files)
+- Repository signal fingerprint: `ffd3e2db8b0bdf0a94204bc88d47dddf0a1ca19a911886be35608232dded47fe`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

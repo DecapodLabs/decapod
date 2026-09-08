@@ -11,6 +11,7 @@ pub use crate::core::dactyl_db::{
 };
 use crate::core::error;
 use crate::core::schemas; // Import the new schemas module
+use crate::core::storage_lock::{StorageLock, StorageLockMode};
 pub use crate::params;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -27,7 +28,9 @@ const UNSUPPORTED_FS_TYPES: &[&str] = &["nfs", "nfs4", "cifs", "smbfs", "9p", "v
 /// Establish the canonical local connection through Dactyl.
 ///
 /// The path, access policy, and retry policy remain Decapod-owned. Physical
-/// opening, locking, and execution are delegated to Dactyl.
+/// opening and execution are delegated to Dactyl; Decapod retains a bounded
+/// sidecar lock around canonical local connection lifetimes so cooperating
+/// processes do not overlap access to the same file.
 pub fn db_connect(db_path: &str) -> Result<Connection, error::DecapodError> {
     let db_path = Path::new(db_path);
     ensure_db_parent_dir(db_path)?;
@@ -35,11 +38,18 @@ pub fn db_connect(db_path: &str) -> Result<Connection, error::DecapodError> {
     open_with_retry(
         db_path,
         || {
-            Connection::open_with_options(
+            let storage_lock = StorageLock::acquire(
+                db_path,
+                StorageLockMode::Exclusive,
+                connection_lock_timeout(Duration::from_secs(5)),
+            )?;
+            Connection::open_with_options_and_storage_lock(
                 db_path,
                 dactyl_db::AccessMode::ReadWrite,
                 connection_lock_timeout(Duration::from_secs(5)),
+                Some(storage_lock),
             )
+            .map_err(error::DecapodError::StorageError)
         },
         "open",
     )
@@ -52,11 +62,18 @@ pub fn db_connect_for_validate(db_path: &str) -> Result<Connection, error::Decap
     let conn = open_with_retry(
         db_path,
         || {
-            Connection::open_with_options(
+            let storage_lock = StorageLock::acquire(
+                db_path,
+                StorageLockMode::Shared,
+                connection_lock_timeout(Duration::from_secs(2)),
+            )?;
+            Connection::open_with_options_and_storage_lock(
                 db_path,
                 dactyl_db::AccessMode::ReadOnly,
                 connection_lock_timeout(Duration::from_secs(2)),
+                Some(storage_lock),
             )
+            .map_err(error::DecapodError::StorageError)
         },
         "open_readonly_validate",
     )?;
@@ -75,11 +92,18 @@ pub fn db_connect_pooled(
     open_with_retry(
         db_path,
         || {
-            Connection::open_with_options(
+            let storage_lock = StorageLock::acquire(
+                db_path,
+                StorageLockMode::Exclusive,
+                connection_lock_timeout(Duration::from_secs(busy_timeout_secs as u64)),
+            )?;
+            Connection::open_with_options_and_storage_lock(
                 db_path,
                 dactyl_db::AccessMode::ReadWrite,
                 connection_lock_timeout(Duration::from_secs(busy_timeout_secs as u64)),
+                Some(storage_lock),
             )
+            .map_err(error::DecapodError::StorageError)
         },
         "open",
     )
@@ -95,11 +119,18 @@ pub fn db_connect_read_pooled(
     open_with_retry(
         db_path,
         || {
-            Connection::open_with_options(
+            let storage_lock = StorageLock::acquire(
+                db_path,
+                StorageLockMode::Shared,
+                connection_lock_timeout(Duration::from_secs(busy_timeout_secs as u64)),
+            )?;
+            Connection::open_with_options_and_storage_lock(
                 db_path,
                 dactyl_db::AccessMode::ReadOnly,
                 connection_lock_timeout(Duration::from_secs(busy_timeout_secs as u64)),
+                Some(storage_lock),
             )
+            .map_err(error::DecapodError::StorageError)
         },
         "open_readonly_pooled",
     )
@@ -129,7 +160,7 @@ fn open_with_retry<F>(
     stage: &str,
 ) -> Result<Connection, error::DecapodError>
 where
-    F: FnMut() -> Result<Connection>,
+    F: FnMut() -> Result<Connection, error::DecapodError>,
 {
     let mut attempt = 0u32;
     loop {
@@ -147,13 +178,22 @@ where
                     thread::sleep(Duration::from_millis(delay_ms));
                     continue;
                 }
+                if matches!(err, error::DecapodError::ValidationError(_)) {
+                    return Err(err);
+                }
                 return Err(db_open_error_with_diagnostics(db_path, stage, &err));
             }
         }
     }
 }
 
-fn is_retryable_storage_open_error(err: &crate::core::db::Error) -> bool {
+fn is_retryable_storage_open_error(err: &error::DecapodError) -> bool {
+    if !matches!(
+        err,
+        error::DecapodError::StorageError(_) | error::DecapodError::DactylError(_)
+    ) {
+        return false;
+    }
     let lower = err.to_string().to_ascii_lowercase();
     lower.contains("locked")
         || lower.contains("busy")
@@ -164,12 +204,12 @@ fn is_retryable_storage_open_error(err: &crate::core::db::Error) -> bool {
 fn db_open_error_with_diagnostics(
     db_path: &Path,
     stage: &str,
-    err: &crate::core::db::Error,
+    err: &error::DecapodError,
 ) -> error::DecapodError {
     error::DecapodError::ValidationError(format_db_open_diagnostics(db_path, stage, err))
 }
 
-fn format_db_open_diagnostics(db_path: &Path, stage: &str, err: &crate::core::db::Error) -> String {
+fn format_db_open_diagnostics(db_path: &Path, stage: &str, err: &error::DecapodError) -> String {
     let resolved = db_path
         .canonicalize()
         .unwrap_or_else(|_| db_path.to_path_buf())

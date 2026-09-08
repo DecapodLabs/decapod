@@ -63,11 +63,22 @@ Neither backend decides whether a Decapod transition is valid.
 
 ## Current Governance Artifact Semantics
 ### Trajectory Cookie
-- Cardinality: one file, one canonical object.
+- Cardinality: one current pointer and zero or more hash-checked historical
+  archives per workspace; only the current pointer is validation/publication
+  authority.
 - Replacement: a new run replaces the previous cookie through an atomic
   write; same-run initialization remains a duplicate error for a valid object.
 - Recovery: an explicit new initialization may replace a malformed or appended
   legacy cookie, restoring the single-object invariant.
+- In-workspace jobs: subagent work is recorded as loops on the current
+  trajectory; no project-level multi-run selector is introduced.
+
+### Local datastore coordination
+- All canonical local connections acquire an exclusive sidecar lock for their
+  lifetime. Dactyl's read-only/read-write policy remains unchanged; Decapod's
+  conservative serialization is the cross-process safety primitive.
+- Lock acquisition is bounded. A timeout is contention and never triggers
+  stale-lock deletion, journal-mode changes, dump/reload, or repair.
 - History: the repository commit graph is the history mechanism.
 
 ### Migration Notice
@@ -125,7 +136,7 @@ Neither backend decides whether a Decapod transition is valid.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `40dec4825bca7ec51499da94e622e58a6487e42da29da3f20be81a39c0f1ad39`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (106 files), `tests/` (4 files)
+- Repository signal fingerprint: `ffd3e2db8b0bdf0a94204bc88d47dddf0a1ca19a911886be35608232dded47fe`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

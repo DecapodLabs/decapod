@@ -26,8 +26,9 @@ input; a non-Git directory receives the bounded fallback exclusions instead.
 |---|---|---|
 | rpc --op specs.refresh | Performs the existing filesystem projection after worktree/session checks without unrelated datastore migration, presence, or mandate reads | Projection writes stay workspace-owned; best-effort trace remains non-blocking |
 | data db verify / data database verify | Uses Dactyl's read-only PRAGMA integrity_check through db_connect_for_validate | Emits a typed diagnostic; corruption is reported, never repaired |
-| events::append | Uses StoragePool::with_write before schema preparation and append | Serializes standalone writers within one process; Dactyl remains the physical boundary |
-| trajectory::load_trajectory(project_root, run_id) | Reads the per-run archive when present and falls back to the legacy current cookie | trajectory.json remains the validation/publication pointer |
+| events::append | Uses StoragePool::with_write before schema preparation and append; canonical connection retains an exclusive datastore sidecar lock | Serializes standalone writers in-process and across cooperating Decapod processes; Dactyl remains the physical boundary |
+| db_connect / db_connect_pooled / db_connect_read_pooled | Retain a bounded exclusive `decapod.db.lock` sidecar guard for the connection lifetime | Conservative serialization makes lock timeout typed contention; lock files are never deleted as stale-lock repair |
+| trajectory::load_trajectory(project_root, run_id) | Reads the per-run archive when present and falls back to the legacy current cookie | trajectory.json remains the one workspace validation/publication pointer; subagent jobs use loops |
 | Persisted path fields | Project-internal absolute paths become relative; external absolute paths become <external-path> | JSON field types and trajectory schema remain unchanged |
 
 ## Contract Principles
@@ -152,7 +153,20 @@ pub enum ApiError {
 - Additive archive: each successful write also stores the same hash-checked
   object at .decapod/governance/trajectory-runs/<run_id>.json. This archive
   is directly addressable by run_id; it does not change which artifact
-  validation or publication treats as current.
+  validation or publication treats as current. The archive is historical
+  evidence, not a second active authority.
+
+### Local datastore coordination
+- Local Decapod connection factories retain an exclusive sidecar lock beside
+  the datastore for the connection lifetime. Dactyl still enforces the
+  requested read-only or read-write access mode; Decapod serializes the local
+  physical file conservatively across host/container processes.
+- Acquisition is bounded and reports `STORAGE_LOCK_TIMEOUT` on contention.
+  The operating system releases descriptor-backed locks when the owner exits,
+  so Decapod never removes lock files based on age or guesses at ownership.
+- This is a Decapod coordination contract for cooperating processes. It does
+  not provide arbitrary SQLite-client coordination, restore a corrupt file, or
+  change cloud-route semantics.
 
 ### Migration Notice
 - Trigger: every local command performs the version/ledger check; a previously
@@ -204,7 +218,7 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `40dec4825bca7ec51499da94e622e58a6487e42da29da3f20be81a39c0f1ad39`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (106 files), `tests/` (4 files)
+- Repository signal fingerprint: `ffd3e2db8b0bdf0a94204bc88d47dddf0a1ca19a911886be35608232dded47fe`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

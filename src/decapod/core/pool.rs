@@ -3,7 +3,7 @@
 //! Replaces the per-DB `Mutex<()>` serialization in `broker.rs` with a pool that:
 //! - Maintains a **write mutex** per DB for serialized write access
 //! - Creates fresh **read connections** per operation (no mutex, concurrent where the backend permits)
-//! - Uses longer `busy_timeout` values (30s write, 15s read) to handle cross-process contention
+//! - Retains a Decapod sidecar coordination lock on each canonical local connection
 //!
 //! Connections are NOT pooled (opened fresh each time) to avoid database sidecar file handle
 //! conflicts when the process spawns child subprocesses that access the same databases.
@@ -55,8 +55,9 @@ struct PoolEntry {
 /// Storage pool providing read/write separation per local database.
 ///
 /// - Write operations are serialized through a per-DB mutex with fresh connections.
-/// - Read operations create fresh connections without mutex serialization (WAL concurrent reads).
-/// - Both paths use increased `busy_timeout` for cross-process contention.
+/// - Read operations create fresh connections without pool-mutex serialization.
+/// - Canonical local connections retain a bounded exclusive sidecar lock, so
+///   host/container processes do not overlap access to the same file.
 pub struct StoragePool {
     entries: Mutex<HashMap<PathBuf, &'static PoolEntry>>,
 }
@@ -105,7 +106,8 @@ impl StoragePool {
     }
 
     /// Execute a closure with a read connection (no mutex serialization).
-    /// The backend may allow concurrent readers across threads and processes.
+    /// Same-process readers may proceed through the process-local lock registry;
+    /// separate local processes are conservatively serialized by the sidecar.
     #[inline]
     pub fn with_read<F, R>(&self, db_path: &Path, f: F) -> Result<R, DecapodError>
     where

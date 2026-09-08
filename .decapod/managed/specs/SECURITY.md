@@ -47,6 +47,11 @@ flowchart LR
 - The data db verify diagnostic has read-only access and no repair authority.
   Corruption cannot grant permission for raw SQLite, REINDEX, or dump/reload;
   those actions require a separately approved Dactyl recovery contract.
+- The local datastore sidecar lock is a coordination primitive, not an
+  authorization boundary. Decapod holds it for canonical connection lifetime,
+  reports bounded contention, and never deletes it as stale; OS lock release
+  handles process exit. External clients that ignore the contract remain
+  outside Decapod's corruption-prevention guarantee.
 
 ## Data Classification
 | Data Class | Examples | Storage Rules | Access Rules |
@@ -119,7 +124,7 @@ Describe the security primitives and security controls implemented in this repos
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `40dec4825bca7ec51499da94e622e58a6487e42da29da3f20be81a39c0f1ad39`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (106 files), `tests/` (4 files)
+- Repository signal fingerprint: `ffd3e2db8b0bdf0a94204bc88d47dddf0a1ca19a911886be35608232dded47fe`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

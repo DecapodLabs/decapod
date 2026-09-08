@@ -1,4 +1,4 @@
-use crate::core::db::{Connection, OptionalExtension};
+use crate::core::db::OptionalExtension;
 use crate::core::error;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -454,7 +454,7 @@ pub fn ensure_execute_ready(
     }
 
     let db_path = crate::core::todo::todo_db_path(input.store_root);
-    let conn = Connection::open(&db_path).map_err(error::DecapodError::StorageError)?;
+    let conn = crate::core::db::db_connect(&db_path.to_string_lossy())?;
     let mut found = false;
     for todo_id in &candidate_todo_ids {
         let exists: Option<i64> = conn
@@ -841,7 +841,7 @@ pub fn collect_unverified_done_todos(
     if !db_path.exists() {
         return Ok(Vec::new());
     }
-    let conn = Connection::open(db_path).map_err(error::DecapodError::StorageError)?;
+    let conn = crate::core::db::db_connect(&db_path.to_string_lossy())?;
     let mut stmt = conn
         .prepare(
             "SELECT t.id
@@ -874,7 +874,7 @@ pub fn count_done_todos(store_root: &Path) -> Result<usize, error::DecapodError>
     if !db_path.exists() {
         return Ok(0);
     }
-    let conn = Connection::open(db_path).map_err(error::DecapodError::StorageError)?;
+    let conn = crate::core::db::db_connect(&db_path.to_string_lossy())?;
     let verifying_ids = verifying_todo_ids();
     if !verifying_ids.is_empty() {
         let mut stmt = conn

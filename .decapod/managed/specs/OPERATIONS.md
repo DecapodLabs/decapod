@@ -121,9 +121,14 @@ adapter/runtime failure.
 
 No compatibility command attempts REINDEX, raw SQLite access, dump/reload, or
 replacement of .decapod/data/decapod.db. Automatic recovery requires a
-Dactyl-native backup/restore contract, cross-process coordination semantics,
-and explicit operator authorization. Until that decision is made, preserve
-the database and escalate rather than mutating it outside the governed path.
+Dactyl-native backup/restore contract and explicit operator authorization.
+Canonical Decapod local connections do coordinate through the adjacent
+`decapod.db.lock` sidecar with a bounded exclusive advisory lock. This
+conservatively prevents cooperating host/container Decapod processes from
+overlapping access; it is not a repair mechanism and does not coordinate
+arbitrary external SQLite clients. Until Dactyl defines backup/restore
+semantics, preserve a corrupt database and escalate rather than mutating it
+outside the governed path.
 
 ## Governance Artifact Portability (#1314)
 
@@ -199,7 +204,7 @@ for filesystem work and are not used as the artifact representation.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `40dec4825bca7ec51499da94e622e58a6487e42da29da3f20be81a39c0f1ad39`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (106 files), `tests/` (4 files)
+- Repository signal fingerprint: `ffd3e2db8b0bdf0a94204bc88d47dddf0a1ca19a911886be35608232dded47fe`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

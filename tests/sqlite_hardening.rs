@@ -1,5 +1,7 @@
 use decapod::core::db::Connection;
-use decapod::core::{db, error::DecapodError, pool};
+use decapod::core::{db, error::DecapodError, pool, storage_lock::lock_path};
+use fs2::FileExt;
+use std::fs::OpenOptions;
 use std::sync::{Mutex, OnceLock};
 use tempfile::TempDir;
 
@@ -123,4 +125,34 @@ fn sqlite_pool_read_path_remains_available_for_concurrent_queries() {
         Ok(())
     });
     assert!(res.is_ok(), "read path should succeed: {res:?}");
+}
+
+#[test]
+fn canonical_connection_retains_the_cross_process_coordination_lock() {
+    let tmp = TempDir::new().expect("tempdir");
+    let db_path = tmp.path().join("canonical.db");
+    let setup = Connection::open(&db_path).expect("open setup");
+    setup
+        .execute("CREATE TABLE IF NOT EXISTS t(id INTEGER PRIMARY KEY)", [])
+        .expect("create table");
+    drop(setup);
+
+    let connection =
+        db::db_connect_pooled(&db_path.to_string_lossy(), 0).expect("open canonical connection");
+    let sidecar = lock_path(&db_path);
+    let external = OpenOptions::new()
+        .create(true)
+        .read(true)
+        .write(true)
+        .truncate(false)
+        .open(&sidecar)
+        .expect("external lock descriptor");
+    let blocked = FileExt::try_lock_exclusive(&external)
+        .expect_err("a second process must not acquire the canonical write lock");
+    assert_eq!(blocked.kind(), fs2::lock_contended_error().kind());
+
+    drop(connection);
+    FileExt::try_lock_exclusive(&external)
+        .expect("the coordination lock is released with the canonical connection");
+    FileExt::unlock(&external).expect("release external descriptor");
 }

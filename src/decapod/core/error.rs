@@ -265,7 +265,9 @@ fn classify_storage_error(err: &crate::core::db::Error) -> StorageFailureKind {
 
 fn classify_storage_message(message: &str) -> StorageFailureKind {
     let lower = message.to_ascii_lowercase();
-    if lower.contains("database is locked")
+    if lower.contains("storage_lock_timeout")
+        || lower.contains("storage lock timeout")
+        || lower.contains("database is locked")
         || lower.contains("databasebusy")
         || lower.contains("storage contention")
         || lower.contains("extended_code: 522")
