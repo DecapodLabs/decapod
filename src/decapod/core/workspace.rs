@@ -9,6 +9,7 @@ use crate::core::container_runtime;
 use crate::core::db;
 use crate::core::entrypoint_integrity;
 use crate::core::error::DecapodError;
+use crate::core::path_policy;
 use crate::core::project_specs;
 use crate::core::research_claims;
 use crate::core::rpc::{AllowedOp, Blocker, BlockerKind};
@@ -2250,7 +2251,7 @@ pub fn get_allowed_ops(status: &WorkspaceStatus) -> Vec<AllowedOp> {
 /// Workspace pruned record
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct PrunedWorkspace {
-    /// Absolute path of the pruned workspace
+    /// Stable relative path or redacted external path of the pruned workspace.
     pub path: String,
     /// Reason for pruning: branch_deleted, no_matching_task, task_completed, no_active_claim, not_registered
     pub reason: String,
@@ -2259,7 +2260,7 @@ pub struct PrunedWorkspace {
 /// Workspace that was identified as stale but intentionally preserved.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct SkippedWorkspace {
-    /// Absolute path of the preserved workspace.
+    /// Stable relative path or redacted external path of the preserved workspace.
     pub path: String,
     /// Why automatic cleanup was skipped.
     pub reason: String,
@@ -2376,13 +2377,15 @@ fn prune_workspaces_report_with_process_dir(
         if !dir_path.is_dir() {
             continue;
         }
+        let persisted_path =
+            path_policy::normalize_persisted_path(repo_root, &dir_path.to_string_lossy());
 
         // Safety safeguard: never prune the workspace containing the process cwd.
         let normalized_dir = normalize_path_for_compare(&dir_path);
         let process_is_inside_candidate = process_is_inside_workspace(process_dir, &dir_path);
         if process_is_inside_candidate {
             skipped.push(SkippedWorkspace {
-                path: dir_path.to_string_lossy().to_string(),
+                path: persisted_path.clone(),
                 reason: "current_workspace".to_string(),
                 detail: "workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch".to_string(),
             });
@@ -2531,7 +2534,7 @@ fn prune_workspaces_report_with_process_dir(
             if !force {
                 if matching_wt.is_none() {
                     skipped.push(SkippedWorkspace {
-                        path: dir_path.to_string_lossy().to_string(),
+                        path: persisted_path.clone(),
                         reason: "unregistered_workspace".to_string(),
                         detail: "workspace directory is not registered with git; inspect it and rerun with --force only after preserving any needed files".to_string(),
                     });
@@ -2541,7 +2544,7 @@ fn prune_workspaces_report_with_process_dir(
                 match worktree_is_dirty(&dir_path) {
                     Ok(true) => {
                         skipped.push(SkippedWorkspace {
-                            path: dir_path.to_string_lossy().to_string(),
+                            path: persisted_path.clone(),
                             reason: "dirty_workspace".to_string(),
                             detail: "workspace contains tracked or untracked changes; preserve or review them before rerunning with --force".to_string(),
                         });
@@ -2550,7 +2553,7 @@ fn prune_workspaces_report_with_process_dir(
                     Ok(false) => {}
                     Err(error) => {
                         skipped.push(SkippedWorkspace {
-                            path: dir_path.to_string_lossy().to_string(),
+                            path: persisted_path.clone(),
                             reason: "workspace_status_unavailable".to_string(),
                             detail: format!(
                                 "could not establish that the workspace is clean: {error}; rerun after inspection or use --force deliberately"
@@ -2577,7 +2580,7 @@ fn prune_workspaces_report_with_process_dir(
                     Ok(output) if output.status.success() || force => {}
                     Ok(output) => {
                         skipped.push(SkippedWorkspace {
-                            path: dir_path.to_string_lossy().to_string(),
+                            path: persisted_path.clone(),
                             reason: "git_remove_failed".to_string(),
                             detail: format!(
                                 "git refused worktree removal: {}; no files were deleted",
@@ -2588,7 +2591,7 @@ fn prune_workspaces_report_with_process_dir(
                     }
                     Err(error) if !force => {
                         skipped.push(SkippedWorkspace {
-                            path: dir_path.to_string_lossy().to_string(),
+                            path: persisted_path.clone(),
                             reason: "git_remove_failed".to_string(),
                             detail: format!(
                                 "could not invoke git for worktree removal: {error}; no files were deleted"
@@ -2612,7 +2615,7 @@ fn prune_workspaces_report_with_process_dir(
             }
 
             pruned.push(PrunedWorkspace {
-                path: dir_path.to_string_lossy().to_string(),
+                path: persisted_path,
                 reason: prune_reason,
             });
         }

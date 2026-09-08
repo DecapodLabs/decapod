@@ -94,24 +94,20 @@ fn current_workspace_is_reported_as_preserved_during_prune() {
 
     let report = prune_workspaces_report_with_process_dir(&main, true, Some(&workspace))
         .expect("prune report");
-    let workspace_path = std::fs::canonicalize(&workspace)
-        .expect("canonical workspace")
-        .to_string_lossy()
-        .to_string();
     assert!(workspace.exists(), "current workspace must be preserved");
     assert!(
-        report
-            .skipped
-            .iter()
-            .any(|candidate| candidate.path == workspace_path
-                && candidate.reason == "current_workspace"),
+        report.skipped.iter().any(|candidate| candidate
+            .path
+            .ends_with(".decapod/workspaces/stale-workspace")
+            && !Path::new(&candidate.path).is_absolute()
+            && candidate.reason == "current_workspace"),
         "current workspace must be visible in the prune report: {report:?}"
     );
     assert!(
         report
             .pruned
             .iter()
-            .all(|candidate| candidate.path != workspace_path)
+            .all(|candidate| candidate.reason != "current_workspace")
     );
 }
 

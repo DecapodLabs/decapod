@@ -57,6 +57,13 @@ ordinary ignored dependency installs.
 - Event stream sequence allocation is idempotent by event identity and protected by a unique `(stream, seq)` invariant. These are Decapod semantics that the Dactyl physical operation batch and Propodus hosted route must preserve; they are not Propodus governance rules.
 - Migration must preserve every non-conflicting legacy event while rebuilding sequence uniqueness atomically; validation must fail within its configured budget without leaving an active worker behind. Large broker histories are valid durable state, so replay validation must bound each physical read without truncating or sampling the audit stream.
 
+## Compatibility Slice for Issues #1311–#1314
+- specs.refresh is a filesystem projection operation. It retains worktree, session, and constitutional safety checks but skips unrelated local-database migration, presence clock-in, and mandate-store reads when invoked as the explicit specs.refresh RPC operation. Best-effort trace failure remains non-blocking.
+- Trajectory writes keep .decapod/governance/trajectory.json as the current-run validation/publication pointer and additionally archive each run as .decapod/governance/trajectory-runs/<run_id>.json. Explicit run loads prefer the archive and fall back to the legacy cookie, so prior evidence is not discarded while the final canonical multi-run selection contract remains open.
+- Standalone event appends route through the shared Dactyl-backed write pool. data db verify runs a read-only Dactyl integrity probe and reports ok, missing, corrupt, or unavailable; it never performs REINDEX, dump/reload, or automatic repair.
+- Absolute paths entering trajectory path fields become project-relative paths when inside the project and <external-path> otherwise. Validation prose receives the same final-boundary redaction. Operational code may still use absolute paths locally.
+- The deferred choices are the canonical multi-run trajectory model and Dactyl-native automatic SQLite recovery/coordination semantics. This compatibility slice does not silently decide either contract.
+
 ## Release pin flywheel
 - Master entrypoint/Dockerfile/manifest pins record the Decapod version that generated that tip. Cargo-only releases do not rewrite pins. Release Artifact Sync is removed. The first user/agent PR evaluating a newer installed Decapod must refresh all four entrypoints, the managed Dockerfile pin, and the specs manifest.
 
@@ -253,8 +260,8 @@ or manifest.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8507534eccbc2f5628d60fd11eb125a10dd32d9bed9322e23eb8da730048a7d3`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (105 files), `tests/` (4 files)
+- Repository signal fingerprint: `40dec4825bca7ec51499da94e622e58a6487e42da29da3f20be81a39c0f1ad39`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (106 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

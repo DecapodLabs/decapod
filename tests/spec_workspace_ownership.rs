@@ -200,3 +200,35 @@ fn dirty_master_root_stays_untouched_while_workspace_owns_projections() {
 fn dirty_main_root_stays_untouched_while_workspace_owns_projections() {
     run_dirty_root_case("main");
 }
+
+#[test]
+fn specs_refresh_does_not_depend_on_the_local_database() {
+    let (_tmp, root) = setup_protected_repo("master");
+    let wt = add_isolated_worktree(&root, "agent-issue-1311", "agent/test/master-1311");
+    let db_path = wt.join(".decapod/data/decapod.db");
+    fs::create_dir_all(db_path.parent().unwrap()).expect("create data directory");
+    fs::write(&db_path, b"not a sqlite database").expect("write malformed database");
+
+    let session = run_decapod(
+        &wt,
+        &["session", "acquire"],
+        &[("DECAPOD_AGENT_ID", "unknown")],
+    );
+    assert!(
+        session.status.success(),
+        "session acquisition must remain file-backed: {}",
+        String::from_utf8_lossy(&session.stderr)
+    );
+
+    let refresh = run_decapod(
+        &wt,
+        &["rpc", "--op", "specs.refresh"],
+        &[("DECAPOD_AGENT_ID", "unknown")],
+    );
+    assert!(
+        refresh.status.success(),
+        "specs.refresh must not open the malformed local database: stdout={} stderr={}",
+        String::from_utf8_lossy(&refresh.stdout),
+        String::from_utf8_lossy(&refresh.stderr)
+    );
+}

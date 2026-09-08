@@ -7876,6 +7876,21 @@ pub fn run_validation(
                 &right.observed,
             ))
     });
+    for message in fails
+        .iter_mut()
+        .chain(warns.iter_mut())
+        .chain(notes.iter_mut())
+        .chain(advisories.iter_mut())
+    {
+        *message = crate::core::path_policy::redact_text(working_root, message);
+    }
+    for finding in &mut drift_findings {
+        finding.surface = crate::core::path_policy::redact_text(working_root, &finding.surface);
+        finding.expected = crate::core::path_policy::redact_text(working_root, &finding.expected);
+        finding.observed = crate::core::path_policy::redact_text(working_root, &finding.observed);
+        finding.remediation =
+            crate::core::path_policy::redact_text(working_root, &finding.remediation);
+    }
     let fail_total = (fails.len() as u32).max(fail_count);
     let warn_total = (warns.len() as u32).max(warn_count);
     let ci_prediction = predict_ci_outcome(fail_total, warn_total, &fails, &warns);

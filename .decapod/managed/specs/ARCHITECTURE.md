@@ -103,6 +103,26 @@ This project's architecture consists of the following key layers/directories:
   actionable instruction to rerun from the host checkout. This keeps the
   safety boundary while making cleanup state visible to lifecycle automation.
 
+## Compatibility Boundaries for #1311–#1314
+
+- The explicit specs.refresh RPC is classified as a filesystem-only
+  projection path after the existing worktree and session gates. Startup
+  database migration, presence clock-in, and mandate projection reads are
+  unrelated to this operation and are skipped, avoiding a malformed local
+  store from blocking a repairable spec refresh.
+- events::append is a standalone write boundary and therefore enters the
+  shared per-database Dactyl write pool before table preparation and event
+  insertion. This serializes the previously unpooled in-process writer with
+  brokered writes; cross-process locking and physical recovery remain Dactyl
+  responsibilities and are not claimed here.
+- Trajectory archive files are additive evidence copies. The legacy cookie
+  continues to determine validation and publication authority until a human
+  selects the durable multi-run contract.
+- Governance serializers normalize local paths at the artifact boundary.
+  Absolute paths inside the project are portable relative paths; external
+  paths are generic redacted tokens. No operational filesystem lookup uses
+  these persisted values.
+
 ## Publication Bundle Currency Architecture (#1232)
 - `core::validate::validate_publication_bundle_currency` proves presence and
   version-stability at HEAD for the publication bundle. It replaced the
@@ -281,7 +301,7 @@ authored document is an untouched template.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8507534eccbc2f5628d60fd11eb125a10dd32d9bed9322e23eb8da730048a7d3`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (105 files), `tests/` (4 files)
+- Repository signal fingerprint: `40dec4825bca7ec51499da94e622e58a6487e42da29da3f20be81a39c0f1ad39`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (106 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

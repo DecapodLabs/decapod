@@ -532,9 +532,13 @@ fn ensure_stream_sequences_are_unique(conn: &Connection) -> Result<(), error::De
 
 pub fn append(root: &Path, stream: &str, event: &Value) -> Result<u64, error::DecapodError> {
     let path = canonical_db_path(root);
-    let conn = db::db_connect(&path.to_string_lossy())?;
-    ensure_tables(&conn)?;
-    append_on_conn(&conn, stream, event)
+    // All standalone event writers use the shared per-database write
+    // boundary. This closes the gap where events::append bypassed the
+    // process-local pool and could race brokered writes in the same process.
+    crate::core::pool::global_pool().with_write(&path, |conn| {
+        ensure_tables(conn)?;
+        append_on_conn(conn, stream, event)
+    })
 }
 
 pub fn append_on_conn(

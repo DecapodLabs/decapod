@@ -15,6 +15,10 @@ use std::path::{Path, PathBuf};
 pub const TRAJECTORY_SCHEMA_VERSION: &str = "1.1.0";
 pub const LEGACY_TRAJECTORY_SCHEMA_VERSION: &str = "1.0.0";
 pub const TRAJECTORY_PATH: &str = ".decapod/governance/trajectory.json";
+/// Additive per-run evidence archive. The legacy cookie remains the current
+/// validation/publication pointer until a canonical multi-run contract is
+/// chosen.
+pub const TRAJECTORY_RUNS_PATH: &str = ".decapod/governance/trajectory-runs";
 pub const MAX_LOOP_FEEDBACK_BYTES: usize = 2048;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
@@ -363,6 +367,16 @@ pub fn trajectory_cookie_path(project_root: &Path) -> PathBuf {
     project_root.join(TRAJECTORY_PATH)
 }
 
+pub fn trajectory_run_path(
+    project_root: &Path,
+    run_id: &str,
+) -> Result<PathBuf, error::DecapodError> {
+    validate_run_id(run_id)?;
+    Ok(project_root
+        .join(TRAJECTORY_RUNS_PATH)
+        .join(format!("{run_id}.json")))
+}
+
 pub fn validate_run_id(run_id: &str) -> Result<(), error::DecapodError> {
     if run_id.is_empty()
         || !run_id.chars().all(|character| {
@@ -408,19 +422,20 @@ pub fn init_trajectory(
         blockers,
     } = input;
     let path = trajectory_path(project_root, &run_id)?;
-    if path.exists() {
-        // The cookie is a single replaceable artifact, not an append-only log.
-        // A prior interrupted writer or an older implementation may have left
-        // multiple JSON values in the file. An explicit init for a run must be
-        // able to replace that stale cookie; preserve the same-run guard only
-        // when the existing artifact is valid and identifies the requested run.
-        if let Ok(Some(existing)) = load_trajectory_cookie(project_root)
-            && existing.run_id == run_id
-        {
-            return Err(error::DecapodError::ValidationError(format!(
-                "trajectory '{run_id}' already exists"
-            )));
-        }
+    let run_path = trajectory_run_path(project_root, &run_id)?;
+    // Keep the same-run guard for both the legacy pointer and the additive
+    // archive. A different run may replace the legacy pointer, but its prior
+    // evidence remains available under trajectory-runs/<run_id>.json.
+    if (path.exists() || run_path.exists())
+        && (load_trajectory_from_path(&run_path, &run_id).is_ok()
+            || load_trajectory_cookie(project_root)
+                .ok()
+                .flatten()
+                .is_some_and(|existing| existing.run_id == run_id))
+    {
+        return Err(error::DecapodError::ValidationError(format!(
+            "trajectory '{run_id}' already exists"
+        )));
     }
     if original_intent.trim().is_empty() || derived_intent.trim().is_empty() {
         return Err(error::DecapodError::ValidationError(
@@ -429,12 +444,20 @@ pub fn init_trajectory(
     }
 
     let effective_intent_id = intent_id.unwrap_or_else(|| format!("intent:{run_id}"));
+    let durable_active_boundaries = active_boundaries
+        .iter()
+        .map(|path| crate::core::path_policy::normalize_persisted_path(project_root, path))
+        .collect::<Vec<_>>();
+    let durable_repo_scope = repo_scope
+        .iter()
+        .map(|path| crate::core::path_policy::normalize_persisted_path(project_root, path))
+        .collect::<Vec<_>>();
     let custody = crate::core::custody::bootstrap_intent(
         &effective_intent_id,
         original_intent.clone(),
         derived_intent.clone(),
-        active_boundaries.clone(),
-        repo_scope.clone(),
+        durable_active_boundaries.clone(),
+        durable_repo_scope.clone(),
     )
     .map_err(|e| {
         error::DecapodError::ValidationError(format!("failed to initialize intent custody: {e}"))
@@ -451,8 +474,8 @@ pub fn init_trajectory(
         current_phase,
         next_transitions,
         blockers,
-        active_boundaries,
-        repo_scope,
+        active_boundaries: durable_active_boundaries,
+        repo_scope: durable_repo_scope,
         inspected_files: Vec::new(),
         modified_files: Vec::new(),
         declared_commands: Vec::new(),
@@ -480,14 +503,26 @@ pub fn load_trajectory(
     project_root: &Path,
     run_id: &str,
 ) -> Result<TrajectoryArtifact, error::DecapodError> {
-    let path = trajectory_path(project_root, run_id)?;
+    let run_path = trajectory_run_path(project_root, run_id)?;
+    let path = if run_path.exists() {
+        run_path
+    } else {
+        trajectory_path(project_root, run_id)?
+    };
     if !path.exists() {
         return Err(error::DecapodError::NotFound(format!(
             "trajectory '{run_id}' not found at {}",
             path.display()
         )));
     }
-    let raw = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
+    load_trajectory_from_path(&path, run_id)
+}
+
+fn load_trajectory_from_path(
+    path: &Path,
+    run_id: &str,
+) -> Result<TrajectoryArtifact, error::DecapodError> {
+    let raw = fs::read_to_string(path).map_err(error::DecapodError::IoError)?;
     let artifact: TrajectoryArtifact = serde_json::from_str(&raw).map_err(|e| {
         error::DecapodError::ValidationError(format!(
             "invalid trajectory artifact {}: {e}",
@@ -537,7 +572,10 @@ pub fn load_trajectory_cookie(
             path.display()
         ))
     })?;
-    load_trajectory(project_root, &artifact.run_id).map(Some)
+    // Validate the legacy current pointer itself. An archive copy must never
+    // mask tampering or corruption in the artifact that controls validation
+    // and publication authority.
+    load_trajectory_from_path(&path, &artifact.run_id).map(Some)
 }
 
 pub fn write_trajectory(
@@ -548,6 +586,16 @@ pub fn write_trajectory(
     let mut candidate = artifact.clone();
     if candidate.schema_version == LEGACY_TRAJECTORY_SCHEMA_VERSION {
         candidate.schema_version = TRAJECTORY_SCHEMA_VERSION.to_string();
+    }
+    for paths in [
+        &mut candidate.repo_scope,
+        &mut candidate.inspected_files,
+        &mut candidate.modified_files,
+    ] {
+        *paths = paths
+            .iter()
+            .map(|path| crate::core::path_policy::normalize_persisted_path(project_root, path))
+            .collect();
     }
     let canonical = candidate.with_recomputed_hash().map_err(|e| {
         error::DecapodError::ValidationError(format!(
@@ -564,6 +612,15 @@ pub fn write_trajectory(
             "failed to serialize trajectory artifact: {e}"
         ))
     })?;
+    let run_path = trajectory_run_path(project_root, &canonical.run_id)?;
+    let run_parent = run_path.parent().ok_or_else(|| {
+        error::DecapodError::ValidationError("invalid trajectory archive parent path".to_string())
+    })?;
+    fs::create_dir_all(run_parent).map_err(error::DecapodError::IoError)?;
+    // Write the durable per-run copy before updating the legacy current-run
+    // pointer. A failure cannot erase the prior run's evidence, and existing
+    // consumers continue to read the same trajectory.json contract.
+    crate::core::atomic::write_atomic(&run_path, &bytes).map_err(error::DecapodError::IoError)?;
     crate::core::atomic::write_atomic(&path, &bytes).map_err(error::DecapodError::IoError)?;
     Ok(canonical)
 }
@@ -574,12 +631,38 @@ pub fn record_trajectory(
     update: TrajectoryUpdate,
 ) -> Result<TrajectoryArtifact, error::DecapodError> {
     let mut artifact = load_trajectory(project_root, run_id)?;
+    let normalized_repo_scope = artifact
+        .repo_scope
+        .iter()
+        .map(|path| crate::core::path_policy::normalize_persisted_path(project_root, path))
+        .collect::<Vec<_>>();
+    let normalized_active_boundaries = update
+        .active_boundaries
+        .iter()
+        .map(|path| crate::core::path_policy::normalize_persisted_path(project_root, path))
+        .collect::<Vec<_>>();
+    let normalized_update_repo_scope = update
+        .repo_scope
+        .iter()
+        .map(|path| crate::core::path_policy::normalize_persisted_path(project_root, path))
+        .collect::<Vec<_>>();
+    let normalized_inspected_files = update
+        .inspected_files
+        .iter()
+        .map(|path| crate::core::path_policy::normalize_persisted_path(project_root, path))
+        .collect::<Vec<_>>();
+    let normalized_modified_files = update
+        .modified_files
+        .iter()
+        .map(|path| crate::core::path_policy::normalize_persisted_path(project_root, path))
+        .collect::<Vec<_>>();
+    artifact.repo_scope = normalized_repo_scope;
     let loop_count = update.loops.len();
     let generic_step = if loop_count == 0
         && (!update.declared_commands.is_empty()
             || !update.tool_calls.is_empty()
-            || !update.inspected_files.is_empty()
-            || !update.modified_files.is_empty()
+            || !normalized_inspected_files.is_empty()
+            || !normalized_modified_files.is_empty()
             || !update.checks.is_empty()
             || !update.evidence.is_empty()
             || !update.shortcut_risk_signals.is_empty()
@@ -593,10 +676,9 @@ pub fn record_trajectory(
             tool: update.tool_calls.first().cloned(),
             command: update.declared_commands.first().cloned(),
             scope: artifact.repo_scope.clone(),
-            observations: update
-                .inspected_files
+            observations: normalized_inspected_files
                 .iter()
-                .chain(update.modified_files.iter())
+                .chain(normalized_modified_files.iter())
                 .chain(update.evidence.iter())
                 .cloned()
                 .collect(),
@@ -629,10 +711,12 @@ pub fn record_trajectory(
         artifact.blockers.clear();
     }
     artifact.blockers.extend(update.blockers);
-    artifact.active_boundaries.extend(update.active_boundaries);
-    artifact.repo_scope.extend(update.repo_scope);
-    artifact.inspected_files.extend(update.inspected_files);
-    artifact.modified_files.extend(update.modified_files);
+    artifact
+        .active_boundaries
+        .extend(normalized_active_boundaries);
+    artifact.repo_scope.extend(normalized_update_repo_scope);
+    artifact.inspected_files.extend(normalized_inspected_files);
+    artifact.modified_files.extend(normalized_modified_files);
     artifact.declared_commands.extend(update.declared_commands);
     artifact.tool_calls.extend(update.tool_calls);
     for loop_record in update.loops {

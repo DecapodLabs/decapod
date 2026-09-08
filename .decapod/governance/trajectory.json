@@ -1,114 +1,119 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "issues-1307-1308",
-  "intent_id": "intent:issues-1307-1308",
-  "task_id": "bugs_01m1qvp3jcbg9yby",
-  "original_intent": "Solve issues #1307 and #1308 in one dedicated PR and post friendly issue comments",
-  "derived_intent": "Add explicit orphan audit reconciliation without claiming state recovery, preserve authored spec prose on refresh, and prove both with regression tests",
-  "current_phase": "validation",
+  "run_id": "worldofgeese-1311-1314-20260908",
+  "intent_id": "intent:worldofgeese-1311-1314-20260908",
+  "task_id": "bugs_01m1zna7ef3g0fjp",
+  "original_intent": "Solve the four active GitHub Issues created by worldofgeese in DecapodLabs/decapod.",
+  "derived_intent": "Implement compatible, tested fixes for #1311, #1312, #1313, and #1314 and deliver them through one PR with refreshed governance evidence.",
+  "current_phase": "implementation compatibility slice",
   "next_transitions": [
-    "publish"
+    "await user selection of compatibility strategy"
   ],
   "active_boundaries": [
-    "No direct control-plane database edits; no modifications to user root checkout content; no merge"
+    "Work only in the claimed Decapod worktree; do not hand-edit .decapod state or the shared control-plane database."
   ],
   "repo_scope": [
-    "Broker CLI, audit events, living spec refresh, docs, regression tests, publication artifacts"
+    "Rust runtime, CLI contracts, governance artifact serialization, tests, living specs, and one PR for issues #1311-#1314."
   ],
   "inspected_files": [
-    "docs/agent/command-contracts.md"
+    "assets/schemas/trajectory.schema.json",
+    "src/decapod/cli.rs",
+    "src/decapod/core/atomic.rs",
+    "src/decapod/core/events.rs",
+    "src/decapod/core/pool.rs",
+    "src/decapod/core/project_specs.rs",
+    "src/decapod/core/trajectory.rs",
+    "src/decapod/core/validate.rs",
+    "src/decapod/core/workspace.rs",
+    "src/decapod/lib.rs",
+    "tests/trajectory_cli.rs",
+    "tests/unit/core/trajectory_tests.rs"
   ],
   "modified_files": [
-    ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json",
-    ".decapod/managed/specs/ARCHITECTURE.md",
-    ".decapod/managed/specs/INTENT.md",
-    ".decapod/managed/specs/INTERFACES.md",
-    ".decapod/managed/specs/VALIDATION.md",
-    "src/decapod/core/broker.rs",
-    "src/decapod/core/capabilities.rs",
-    "src/decapod/core/project_specs.rs",
-    "src/decapod/core/scaffold.rs"
+    "src/decapod/cli.rs",
+    "src/decapod/core/events.rs",
+    "src/decapod/core/path_policy.rs",
+    "src/decapod/core/trajectory.rs",
+    "src/decapod/core/validate.rs",
+    "src/decapod/core/workspace.rs",
+    "src/decapod/lib.rs",
+    "tests/spec_workspace_ownership.rs",
+    "tests/unit/core/path_policy_tests.rs",
+    "tests/unit/core/trajectory_tests.rs",
+    "tests/unit/core/workspace_tests.rs"
   ],
   "declared_commands": [
-    "cargo test --manifest-path baseline/Cargo.toml --lib --locked -- --test-threads=1",
-    "cargo test --test crash_consistency --test substrate_integrity --locked",
-    "decapod validate"
+    "cargo clippy --all-targets --all-features -- -D warnings",
+    "cargo fmt --all",
+    "cargo test --lib",
+    "cargo test --test spec_workspace_ownership specs_refresh_does_not_depend_on_the_local_database",
+    "gh issue list --repo DecapodLabs/decapod --author worldofgeese",
+    "rg source paths",
+    "sed source inspection"
   ],
-  "tool_calls": [],
+  "tool_calls": [
+    "Decapod plan check-execute",
+    "GitHub issue enumeration"
+  ],
   "checks": [
     {
-      "name": "authored_specs",
+      "name": "cargo clippy --all-targets --all-features -- -D warnings",
       "status": "passed"
     },
     {
-      "name": "baseline_lib_suite",
-      "status": "failed"
-    },
-    {
-      "name": "broker_regressions",
+      "name": "cargo fmt --all -- --check",
       "status": "passed"
     },
     {
-      "name": "clippy",
-      "status": "passed"
+      "name": "cargo test --lib",
+      "status": "partial"
     },
     {
-      "name": "decapod validate",
-      "status": "passed"
-    },
-    {
-      "name": "full_lib_suite",
-      "status": "failed"
-    },
-    {
-      "name": "scaffold_regressions",
-      "status": "passed"
-    },
-    {
-      "name": "spec_refresh",
-      "status": "passed"
-    },
-    {
-      "name": "substrate_regressions",
+      "name": "focused compatibility tests",
       "status": "passed"
     }
   ],
   "evidence": [
-    "Approved isolated living-spec Markdown edits applied and decapod rpc --op specs.refresh completed with stable fingerprint 8507534eccbc2f5628d60fd11eb125a10dd32d9bed9322e23eb8da730048a7d3",
-    "Committed implementation fd2f2643; host RPC specs.refresh completed without authored content loss",
-    "Untouched master efdb493b: 321 library tests passed, same four failures as implementation (two dactyl_todo, one workspace artifact, one container clone test)",
-    "cargo clippy --all-targets --all-features -- -D warnings: passed",
-    "cargo test --lib: 324 passed, 4 failures outside edited functions; baseline reproduction in progress",
-    "cargo test --test core_tests scaffold: 2 passed",
-    "cargo test --test crash_consistency: 6 passed including CLI, concurrent retry, policy, and retained committed data",
-    "cargo test --test substrate_integrity: 6 passed including config-change preservation",
-    "validation epoch ve_eba468ff18b087b5 completed with zero failures"
+    "Current source mapping: pool write serialization is process-local and events::append opens the database directly.",
+    "Current source mapping: specs refresh itself is filesystem projection code, while command startup, mandate checks, migrations, presence clock-in, and RPC tracing can touch decapod.db.",
+    "Current source mapping: stale workspace report serializes absolute paths into validation warnings.",
+    "Current source mapping: trajectory_path always resolves to .decapod/governance/trajectory.json and init replaces a different run.",
+    "Issue #1311 regression: malformed local decapod.db no longer blocks isolated specs.refresh.",
+    "Issue #1312 compatibility slice: prior run remains loadable from trajectory-runs while trajectory.json remains current pointer.",
+    "Issue #1313 compatibility slice: standalone events use the shared write pool and data db verify is read-only; automatic repair is deferred.",
+    "Issue #1314 regression: absolute trajectory and validation paths are normalized or redacted."
   ],
   "shortcut_risk_signals": [],
-  "unresolved_assumptions": [],
-  "proof_status": "failed",
+  "unresolved_assumptions": [
+    "Atomic rename prevents partial JSON but does not prevent cross-process lost updates to a singleton trajectory cookie.",
+    "Automatic dump/reload recovery requires a Dactyl-native API and explicit human decision.",
+    "The additive archive is evidence retention only; validation and publication continue to trust trajectory.json.",
+    "The full library suite has four pre-existing environment-sensitive failures unrelated to this change.",
+    "The issue reports #1311-#1314 are the four current open issues; #1311's exact failing storage stage is not instrumented in the current code and must be confirmed by a targeted regression test.",
+    "The write pool improves same-process serialization but does not prove cross-process locking."
+  ],
+  "proof_status": "partial",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "unsupported"
+    "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:4ccd16d6fac59f83cd7fd2269724658f4da11705d6a81475c344e4471e802e2d",
+  "artifact_hash": "sha256:dbb8d1625d5b4d0f3d731fac0527e38b88c70589a729aa516bd2b9837b1429d5",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:issues-1307-1308": {
-        "id": "intent:issues-1307-1308",
-        "raw_intent": "Solve issues #1307 and #1308 in one dedicated PR and post friendly issue comments",
-        "refined_intent": "Add explicit orphan audit reconciliation without claiming state recovery, preserve authored spec prose on refresh, and prove both with regression tests",
+      "intent:worldofgeese-1311-1314-20260908": {
+        "id": "intent:worldofgeese-1311-1314-20260908",
+        "raw_intent": "Solve the four active GitHub Issues created by worldofgeese in DecapodLabs/decapod.",
+        "refined_intent": "Implement compatible, tested fixes for #1311, #1312, #1313, and #1314 and deliver them through one PR with refreshed governance evidence.",
         "acceptance_criteria": [],
         "constraints": [
-          "Broker CLI, audit events, living spec refresh, docs, regression tests, publication artifacts"
+          "Rust runtime, CLI contracts, governance artifact serialization, tests, living specs, and one PR for issues #1311-#1314."
         ],
         "assumptions": [],
         "boundaries": [
-          "No direct control-plane database edits; no modifications to user root checkout content; no merge"
+          "Work only in the claimed Decapod worktree; do not hand-edit .decapod state or the shared control-plane database."
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -121,139 +126,118 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:issues-1307-1308",
+        "intent_id": "intent:worldofgeese-1311-1314-20260908",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:issues-1307-1308",
+        "intent_id": "intent:worldofgeese-1311-1314-20260908",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:issues-1307-1308",
+        "intent_id": "intent:worldofgeese-1311-1314-20260908",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issues-1307-1308"
+        "detail": "trajectory:worldofgeese-1311-1314-20260908"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:issues-1307-1308",
+        "intent_id": "intent:worldofgeese-1311-1314-20260908",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issues-1307-1308"
-      },
-      {
-        "sequence": 6,
-        "event_id": "event:6",
-        "intent_id": "intent:issues-1307-1308",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issues-1307-1308"
-      },
-      {
-        "sequence": 7,
-        "event_id": "event:7",
-        "intent_id": "intent:issues-1307-1308",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issues-1307-1308"
+        "detail": "trajectory:worldofgeese-1311-1314-20260908"
       }
     ],
     "trajectories": {
-      "issues-1307-1308": {
-        "id": "issues-1307-1308",
-        "intent_id": "intent:issues-1307-1308",
+      "worldofgeese-1311-1314-20260908": {
+        "id": "worldofgeese-1311-1314-20260908",
+        "intent_id": "intent:worldofgeese-1311-1314-20260908",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "verification",
-            "command": "cargo test --test crash_consistency --test substrate_integrity --locked",
+            "action": "compatibility analysis",
+            "tool": "Decapod plan check-execute",
+            "command": "rg source paths",
             "scope": [
-              "Broker CLI, audit events, living spec refresh, docs, regression tests, publication artifacts"
+              "Rust runtime, CLI contracts, governance artifact serialization, tests, living specs, and one PR for issues #1311-#1314."
             ],
             "observations": [
-              "docs/agent/command-contracts.md",
-              "src/decapod/core/broker.rs",
-              "src/decapod/core/capabilities.rs",
+              "src/decapod/lib.rs",
               "src/decapod/core/project_specs.rs",
-              "src/decapod/core/scaffold.rs",
-              "cargo test --test crash_consistency: 6 passed including CLI, concurrent retry, policy, and retained committed data",
-              "cargo test --test substrate_integrity: 6 passed including config-change preservation",
-              "cargo test --test core_tests scaffold: 2 passed",
-              "cargo test --lib: 324 passed, 4 failures outside edited functions; baseline reproduction in progress"
+              "src/decapod/core/trajectory.rs",
+              "src/decapod/core/atomic.rs",
+              "src/decapod/core/events.rs",
+              "src/decapod/core/pool.rs",
+              "src/decapod/core/workspace.rs",
+              "src/decapod/core/validate.rs",
+              "tests/unit/core/trajectory_tests.rs",
+              "tests/trajectory_cli.rs",
+              "assets/schemas/trajectory.schema.json",
+              "Current source mapping: specs refresh itself is filesystem projection code, while command startup, mandate checks, migrations, presence clock-in, and RPC tracing can touch decapod.db.",
+              "Current source mapping: trajectory_path always resolves to .decapod/governance/trajectory.json and init replaces a different run.",
+              "Current source mapping: pool write serialization is process-local and events::append opens the database directly.",
+              "Current source mapping: stale workspace report serializes absolute paths into validation warnings."
             ],
-            "proof_refs": [
-              "broker_regressions",
-              "substrate_regressions",
-              "scaffold_regressions",
-              "full_lib_suite"
+            "proof_refs": [],
+            "validation_findings": [
+              "The issue reports #1311-#1314 are the four current open issues; #1311's exact failing storage stage is not instrumented in the current code and must be confirmed by a targeted regression test.",
+              "Atomic rename prevents partial JSON but does not prevent cross-process lost updates to a singleton trajectory cookie."
             ],
-            "validation_findings": [],
             "custody_event_id": "event:4"
           },
           {
             "sequence": 5,
-            "action": "trajectory.record",
-            "command": "cargo test --manifest-path baseline/Cargo.toml --lib --locked -- --test-threads=1",
+            "action": "implementation compatibility slice",
+            "command": "cargo fmt --all",
             "scope": [
-              "Broker CLI, audit events, living spec refresh, docs, regression tests, publication artifacts"
+              "Rust runtime, CLI contracts, governance artifact serialization, tests, living specs, and one PR for issues #1311-#1314."
             ],
             "observations": [
-              "cargo clippy --all-targets --all-features -- -D warnings: passed",
-              "Untouched master efdb493b: 321 library tests passed, same four failures as implementation (two dactyl_todo, one workspace artifact, one container clone test)",
-              "Committed implementation fd2f2643; host RPC specs.refresh completed without authored content loss"
+              "src/decapod/core/trajectory.rs",
+              "src/decapod/core/events.rs",
+              "src/decapod/core/pool.rs",
+              "src/decapod/core/validate.rs",
+              "src/decapod/core/workspace.rs",
+              "src/decapod/lib.rs",
+              "src/decapod/cli.rs",
+              "src/decapod/core/path_policy.rs",
+              "src/decapod/core/trajectory.rs",
+              "src/decapod/core/events.rs",
+              "src/decapod/core/validate.rs",
+              "src/decapod/core/workspace.rs",
+              "src/decapod/lib.rs",
+              "src/decapod/cli.rs",
+              "tests/spec_workspace_ownership.rs",
+              "tests/unit/core/path_policy_tests.rs",
+              "tests/unit/core/trajectory_tests.rs",
+              "tests/unit/core/workspace_tests.rs",
+              "Issue #1311 regression: malformed local decapod.db no longer blocks isolated specs.refresh.",
+              "Issue #1312 compatibility slice: prior run remains loadable from trajectory-runs while trajectory.json remains current pointer.",
+              "Issue #1313 compatibility slice: standalone events use the shared write pool and data db verify is read-only; automatic repair is deferred.",
+              "Issue #1314 regression: absolute trajectory and validation paths are normalized or redacted."
             ],
             "proof_refs": [
-              "clippy",
-              "baseline_lib_suite",
-              "spec_refresh"
+              "cargo fmt --all -- --check",
+              "cargo clippy --all-targets --all-features -- -D warnings",
+              "focused compatibility tests",
+              "cargo test --lib"
             ],
-            "validation_findings": [],
+            "validation_findings": [
+              "The additive archive is evidence retention only; validation and publication continue to trust trajectory.json.",
+              "The write pool improves same-process serialization but does not prove cross-process locking.",
+              "Automatic dump/reload recovery requires a Dactyl-native API and explicit human decision.",
+              "The full library suite has four pre-existing environment-sensitive failures unrelated to this change."
+            ],
             "custody_event_id": "event:5"
-          },
-          {
-            "sequence": 6,
-            "action": "publication",
-            "scope": [
-              "Broker CLI, audit events, living spec refresh, docs, regression tests, publication artifacts"
-            ],
-            "observations": [
-              ".decapod/managed/specs/INTENT.md",
-              ".decapod/managed/specs/ARCHITECTURE.md",
-              ".decapod/managed/specs/INTERFACES.md",
-              ".decapod/managed/specs/VALIDATION.md",
-              "Approved isolated living-spec Markdown edits applied and decapod rpc --op specs.refresh completed with stable fingerprint 8507534eccbc2f5628d60fd11eb125a10dd32d9bed9322e23eb8da730048a7d3"
-            ],
-            "proof_refs": [
-              "authored_specs"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:6"
-          },
-          {
-            "sequence": 7,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "Broker CLI, audit events, living spec refresh, docs, regression tests, publication artifacts"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_eba468ff18b087b5 completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:7"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 7
+    "next_sequence": 5
   }
 }
