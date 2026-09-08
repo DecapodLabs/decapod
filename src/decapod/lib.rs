@@ -2397,7 +2397,10 @@ pub fn run() -> Result<(), error::DecapodError> {
 
             // Check for version/schema changes and run protected migrations if needed.
             // Backups are auto-created in .decapod/data only when schema upgrades are pending.
-            if !cloud_todo_command && !is_validate_cmd {
+            if !cloud_todo_command
+                && !is_validate_cmd
+                && !is_storage_independent_command(&cli.command)
+            {
                 let migration_result = migration::check_and_migrate_with_backup_report(
                     &decapod_root_path,
                     subsystems::initialize_all_dbs,
@@ -2422,6 +2425,7 @@ pub fn run() -> Result<(), error::DecapodError> {
             };
 
             if !cloud_todo_command
+                && !is_storage_independent_command(&cli.command)
                 && should_auto_clock_in(&cli.command)
                 && let Err(e) =
                     retry_transient_storage(|| todo::clock_in_agent_presence(&project_store), 4)
@@ -2583,6 +2587,9 @@ fn federation_argv_is_mutating(argv: &[String]) -> bool {
 }
 
 fn should_auto_clock_in(command: &Command) -> bool {
+    if is_storage_independent_command(command) {
+        return false;
+    }
     match command {
         Command::Todo(todo_cli) => !todo::is_heartbeat_command(todo_cli),
         Command::Activate
@@ -2594,6 +2601,19 @@ fn should_auto_clock_in(command: &Command) -> bool {
         | Command::System(_)
         | Command::Validate(_) => false,
         _ => true,
+    }
+}
+
+fn is_storage_independent_command(command: &Command) -> bool {
+    match command {
+        Command::Rpc(rpc_cli) => rpc_cli.op.as_deref() == Some("specs.refresh"),
+        Command::Data(DataCli {
+            command:
+                DataCommand::Database(DatabaseCli {
+                    command: DatabaseCommand::Verify,
+                }),
+        }) => true,
+        _ => false,
     }
 }
 
@@ -6242,6 +6262,7 @@ fn rpc_op_skips_mandate_enforcement(op: &str) -> bool {
             | "context.capsule.query"
             | "constitution.get"
             | "schema.get"
+            | "specs.refresh"
     )
 }
 
@@ -7208,6 +7229,9 @@ fn run_data_command(
                 println!("{}", serde_json::to_string_pretty(&report).unwrap());
             }
         },
+        DataCommand::Database(database_cli) => match database_cli.command {
+            DatabaseCommand::Verify => verify_database_integrity(store_root)?,
+        },
         DataCommand::Aptitude(aptitude_cli) => {
             aptitude::run_aptitude_cli(project_store, aptitude_cli)?;
         }
@@ -7223,6 +7247,69 @@ fn run_data_command(
     }
 
     Ok(())
+}
+
+/// Run a read-only integrity probe through the Dactyl database facade.
+///
+/// This intentionally reports corruption or adapter capability failures
+/// without attempting repair. Recovery requires an explicit Dactyl-native
+/// contract and remains outside this compatibility fix.
+fn verify_database_integrity(store_root: &Path) -> Result<(), error::DecapodError> {
+    let db_path = core::events::canonical_db_path(store_root);
+    if !db_path.exists() {
+        println!(
+            "{}",
+            serde_json::json!({
+                "status": "missing",
+                "database": core::schemas::LOCAL_DB_NAME,
+                "integrity_check": null,
+            })
+        );
+        return Ok(());
+    }
+
+    let conn = db::db_connect_for_validate(&db_path.to_string_lossy())?;
+    match conn.query_row("PRAGMA integrity_check", [], |row| row.get::<_, String>(0)) {
+        Ok(result) if result == "ok" => {
+            println!(
+                "{}",
+                serde_json::json!({
+                    "status": "ok",
+                    "database": core::schemas::LOCAL_DB_NAME,
+                    "integrity_check": result,
+                })
+            );
+            Ok(())
+        }
+        Ok(result) => {
+            println!(
+                "{}",
+                serde_json::json!({
+                    "status": "corrupt",
+                    "database": core::schemas::LOCAL_DB_NAME,
+                    "integrity_check": result,
+                })
+            );
+            Err(error::DecapodError::ValidationError(
+                "database integrity check failed; stop and use the governed recovery decision path"
+                    .to_string(),
+            ))
+        }
+        Err(storage_error) => {
+            let normalized = error::DecapodError::StorageError(storage_error);
+            println!(
+                "{}",
+                serde_json::json!({
+                    "status": "unavailable",
+                    "database": core::schemas::LOCAL_DB_NAME,
+                    "integrity_check": null,
+                    "storage_failure_kind": normalized.storage_failure_kind(),
+                    "message": normalized.to_string(),
+                })
+            );
+            Err(normalized)
+        }
+    }
 }
 
 fn schema_to_markdown(schema: &serde_json::Value) -> String {

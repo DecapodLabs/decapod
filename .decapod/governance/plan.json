@@ -1,15 +1,13 @@
 {
   "schema_version": "1.0.0",
-  "title": "Repair orphan audit evidence and preserve authored specs",
-  "intent": "Resolve #1307 with explicit broker audit abandonment and corruption escalation guidance; resolve #1308 by preserving authored named sections through repeated refresh; publish one PR and friendly issue comments",
+  "title": "Fix worldofgeese issues #1311-#1314",
+  "intent": "Implement the decision-free, additive native fixes for #1311, #1312, #1313, and #1314 in one PR: remove unrelated database coupling from specs.refresh, preserve legacy trajectory behavior while archiving per-run evidence, centralize event writes and add supported integrity diagnostics, and normalize persisted local paths.",
   "state": "APPROVED",
   "todo_ids": [
-    "bugs_01m1qvp3jcbg9yby"
+    "bugs_01m1zna7ef3g0fjp"
   ],
   "proof_hooks": [
-    "cargo test --test crash_consistency --test substrate_integrity",
     "cargo test --lib",
-    "cargo test --test core_tests scaffold",
     "cargo fmt --all -- --check",
     "cargo clippy --all-targets --all-features -- -D warnings",
     "decapod validate --format json"
@@ -17,14 +15,19 @@
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [
-    "Stop for human review if validation exposes a scoped regression that cannot be repaired without changing unrelated migration or datastore behavior."
+    "Stop for human review if a proposed compatibility fix requires changing existing request/response schemas, silently changing validation or publication authority, bypassing the Dactyl storage boundary, or recovering a corrupted database without a supported Dactyl API."
   ],
   "unresolved_contradictions": [],
-  "deferred_questions": [],
+  "deferred_questions": [
+    "Choose the canonical multi-run trajectory contract: sidecar archive with explicit selection, a schema-v2 multi-run map, or per-run canonical artifacts with an index.",
+    "Choose whether Decapod should provide automatic dump-and-reload SQLite repair, including backup/restore and cross-process coordination semantics, through the Dactyl boundary."
+  ],
   "constraints": {
-    "forbidden_paths": [],
-    "file_touch_budget": 34
+    "forbidden_paths": [
+      ".decapod/data/decapod.db"
+    ],
+    "file_touch_budget": 50
   },
   "phases": [],
-  "updated_at": "1788586584Z"
+  "updated_at": "1788891815Z"
 }

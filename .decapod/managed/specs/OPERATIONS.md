@@ -110,6 +110,29 @@ After `cargo install decapod`, the next normal governed command runs protected, 
 ## Logging
 Use `tracing` + `tracing-subscriber` with structured JSON output and request correlation ids.
 
+## Storage Diagnostics and Recovery Boundary (#1313)
+
+Run decapod data db verify when broker verification, validation, or another
+command reports a possible datastore problem. The command is read-only and
+uses the Dactyl facade, so ok proves only that the selected integrity probe
+completed successfully. missing identifies an uninitialized store; corrupt
+identifies a failed integrity result; and unavailable identifies an
+adapter/runtime failure.
+
+No compatibility command attempts REINDEX, raw SQLite access, dump/reload, or
+replacement of .decapod/data/decapod.db. Automatic recovery requires a
+Dactyl-native backup/restore contract, cross-process coordination semantics,
+and explicit operator authorization. Until that decision is made, preserve
+the database and escalate rather than mutating it outside the governed path.
+
+## Governance Artifact Portability (#1314)
+
+Trajectory and validation output may be shared through Git, CI, or issue
+comments. Persisted path fields are normalized at write time: paths inside the
+project are relative with forward slashes, and paths outside it are rendered
+as <external-path>. Absolute paths remain available to the active operation
+for filesystem work and are not used as the artifact representation.
+
 ## Secrets Management
 | Secret | Source | Rotation | Consumer |
 |---|---|---|---|
@@ -176,7 +199,7 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8507534eccbc2f5628d60fd11eb125a10dd32d9bed9322e23eb8da730048a7d3`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (105 files), `tests/` (4 files)
+- Repository signal fingerprint: `40dec4825bca7ec51499da94e622e58a6487e42da29da3f20be81a39c0f1ad39`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (106 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

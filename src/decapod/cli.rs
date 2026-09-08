@@ -1212,6 +1212,10 @@ pub(crate) enum DataCommand {
     /// Audit log access (The Thin Waist)
     Broker(BrokerCli),
 
+    /// Read-only diagnostics for the canonical local datastore
+    #[clap(alias = "db")]
+    Database(DatabaseCli),
+
     /// Aptitude memory and preferences
     #[clap(aliases = ["memory"])]
     Aptitude(aptitude::AptitudeCli),
@@ -1224,6 +1228,18 @@ pub(crate) enum DataCommand {
 
     /// Deterministic map operators — structured parallel processing
     Map(map_ops::MapCli),
+}
+
+#[derive(clap::Args, Debug)]
+pub(crate) struct DatabaseCli {
+    #[clap(subcommand)]
+    pub command: DatabaseCommand,
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum DatabaseCommand {
+    /// Run Dactyl's read-only SQLite integrity check without modifying storage.
+    Verify,
 }
 
 #[derive(clap::Args, Debug)]

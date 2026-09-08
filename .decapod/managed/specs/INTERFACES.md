@@ -20,6 +20,16 @@ is byte-stable when the repository signals have not changed.
 a Git repository. Ignored dependency or build output is not a document-graph
 input; a non-Git directory receives the bounded fallback exclusions instead.
 
+## Compatibility Interfaces (#1311–#1314)
+
+| Interface | Compatibility behavior | Failure/authority boundary |
+|---|---|---|
+| rpc --op specs.refresh | Performs the existing filesystem projection after worktree/session checks without unrelated datastore migration, presence, or mandate reads | Projection writes stay workspace-owned; best-effort trace remains non-blocking |
+| data db verify / data database verify | Uses Dactyl's read-only PRAGMA integrity_check through db_connect_for_validate | Emits a typed diagnostic; corruption is reported, never repaired |
+| events::append | Uses StoragePool::with_write before schema preparation and append | Serializes standalone writers within one process; Dactyl remains the physical boundary |
+| trajectory::load_trajectory(project_root, run_id) | Reads the per-run archive when present and falls back to the legacy current cookie | trajectory.json remains the validation/publication pointer |
+| Persisted path fields | Project-internal absolute paths become relative; external absolute paths become <external-path> | JSON field types and trajectory schema remain unchanged |
+
 ## Contract Principles
 - Prefer explicit schemas over implicit behavior.
 - Every mutating interface defines idempotency semantics.
@@ -139,6 +149,10 @@ pub enum ApiError {
   object is valid; a different or malformed legacy cookie is replaced.
 - Historical semantics: Git commits preserve prior cookies; the file is not an
   append-only JSONL stream.
+- Additive archive: each successful write also stores the same hash-checked
+  object at .decapod/governance/trajectory-runs/<run_id>.json. This archive
+  is directly addressable by run_id; it does not change which artifact
+  validation or publication treats as current.
 
 ### Migration Notice
 - Trigger: every local command performs the version/ledger check; a previously
@@ -190,7 +204,7 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8507534eccbc2f5628d60fd11eb125a10dd32d9bed9322e23eb8da730048a7d3`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (105 files), `tests/` (4 files)
+- Repository signal fingerprint: `40dec4825bca7ec51499da94e622e58a6487e42da29da3f20be81a39c0f1ad39`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (106 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

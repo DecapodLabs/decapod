@@ -32,7 +32,7 @@ fn trajectory_creation_is_inspectable_and_unproven_without_checks() {
 }
 
 #[test]
-fn new_run_replaces_the_single_cookie_but_same_run_is_rejected() {
+fn new_run_replaces_the_cookie_but_archives_prior_evidence() {
     let temp = tempdir().unwrap();
     let init = |run_id: &str| TrajectoryInit {
         run_id: run_id.to_string(),
@@ -51,7 +51,15 @@ fn new_run_replaces_the_single_cookie_but_same_run_is_rejected() {
     init_trajectory(temp.path(), init("run_old")).unwrap();
     let replacement = init_trajectory(temp.path(), init("run_new")).unwrap();
     assert_eq!(replacement.run_id, "run_new");
-    assert!(load_trajectory(temp.path(), "run_old").is_err());
+    assert_eq!(
+        load_trajectory(temp.path(), "run_old").unwrap().run_id,
+        "run_old"
+    );
+    assert!(
+        trajectory_run_path(temp.path(), "run_old")
+            .unwrap()
+            .exists()
+    );
     assert_eq!(
         load_trajectory(temp.path(), "run_new").unwrap(),
         replacement
@@ -59,6 +67,36 @@ fn new_run_replaces_the_single_cookie_but_same_run_is_rejected() {
 
     let same_run = init_trajectory(temp.path(), init("run_new"));
     assert!(same_run.is_err());
+}
+
+#[test]
+fn archive_does_not_mask_a_corrupted_current_cookie() {
+    let temp = tempdir().unwrap();
+    init_trajectory(
+        temp.path(),
+        TrajectoryInit {
+            run_id: "run_current".to_string(),
+            task_id: None,
+            intent_id: None,
+            original_intent: "original".to_string(),
+            derived_intent: "derived".to_string(),
+            active_boundaries: vec!["src/**".to_string()],
+            repo_scope: vec!["src/lib.rs".to_string()],
+            destination: None,
+            current_phase: None,
+            next_transitions: Vec::new(),
+            blockers: Vec::new(),
+        },
+    )
+    .unwrap();
+
+    fs::write(trajectory_cookie_path(temp.path()), b"{\"corrupt\":true}").unwrap();
+
+    assert!(load_trajectory_cookie(temp.path()).is_err());
+    assert_eq!(
+        load_trajectory(temp.path(), "run_current").unwrap().run_id,
+        "run_current"
+    );
 }
 
 #[test]
@@ -92,6 +130,44 @@ fn init_replaces_a_malformed_or_appended_cookie() {
         load_trajectory_cookie(temp.path()).unwrap(),
         Some(replacement)
     );
+}
+
+#[test]
+fn trajectory_persists_portable_paths() {
+    let temp = tempdir().unwrap();
+    init_trajectory(
+        temp.path(),
+        TrajectoryInit {
+            run_id: "run_paths".to_string(),
+            task_id: None,
+            intent_id: None,
+            original_intent: "original".to_string(),
+            derived_intent: "derived".to_string(),
+            active_boundaries: vec!["src/**".to_string()],
+            repo_scope: vec![temp.path().join("src").to_string_lossy().to_string()],
+            destination: None,
+            current_phase: None,
+            next_transitions: Vec::new(),
+            blockers: Vec::new(),
+        },
+    )
+    .unwrap();
+
+    let outside = temp.path().parent().unwrap().join("secret.txt");
+    let artifact = record_trajectory(
+        temp.path(),
+        "run_paths",
+        TrajectoryUpdate {
+            inspected_files: vec![temp.path().join("src/lib.rs").to_string_lossy().to_string()],
+            modified_files: vec![outside.to_string_lossy().to_string()],
+            ..TrajectoryUpdate::default()
+        },
+    )
+    .unwrap();
+
+    assert_eq!(artifact.repo_scope, vec!["src"]);
+    assert_eq!(artifact.inspected_files, vec!["src/lib.rs"]);
+    assert_eq!(artifact.modified_files, vec!["<external-path>"]);
 }
 
 #[test]

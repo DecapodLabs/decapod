@@ -55,6 +55,21 @@ Refresh output requirements:
 ## Stale Specification Recovery
 When validation reports `OUT_OF_SYNC_SPECS` or `STALE_SPECS_FINGERPRINT`, the governed work is incomplete. Inspect the automatically refreshed artifacts (or run `decapod rpc --op specs.refresh` explicitly), then retry validation. A stale-spec error does not justify claiming completion or publishing an unvalidated state.
 
+## Compatibility Regression Proof for #1311–#1314
+
+- A malformed local decapod.db must not prevent an isolated
+  rpc --op specs.refresh from refreshing managed specs.
+- Initializing a second trajectory must leave the first run loadable from its
+  per-run archive while the legacy cookie points to the new current run.
+- Standalone event append paths must execute through the shared write pool,
+  and data db verify must report an intact store through Dactyl without
+  modifying it.
+- Absolute trajectory inputs and validation messages must not persist a home
+  directory or external filesystem path; internal paths remain portable
+  relative values.
+- A failed integrity probe remains a diagnostic result, not proof that an
+  automatic recovery action is safe or supported.
+
 ## Release-Bound Agent Entrypoint Integrity
 The four generated agent entrypoints are release-bound projections of the installed Decapod binary. Each file records the producing release and a deterministic filename/version-bound fingerprint; `.decapod/managed/specs/.manifest.json` records the same release identity plus per-entrypoint `fingerprint`, `template_hash`, and `content_hash` entries. Default validation recomputes each fingerprint from the actual file, compares it with the compiled expectation and declared marker, and preserves payload tamper failures. Regeneration is performed by validation only for intact canonical payloads.
 
@@ -285,7 +300,7 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8507534eccbc2f5628d60fd11eb125a10dd32d9bed9322e23eb8da730048a7d3`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (105 files), `tests/` (4 files)
+- Repository signal fingerprint: `40dec4825bca7ec51499da94e622e58a6487e42da29da3f20be81a39c0f1ad39`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (106 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
