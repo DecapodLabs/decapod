@@ -801,7 +801,7 @@ Run this gate once when the agent starts and again after every new prompt or use
 - Read `.decapod/config.toml` before planning; it captures project name, summary, architecture, primary languages, and entrypoint preferences.
 - Treat `.decapod/config.toml` as human-editable project context. You may update it when user intent or project direction changes.
 - Read `.decapod/OVERRIDE.md` when present; it is the repo-local place for constitution overrides.
-- Do not mutate Decapod-owned state under `.decapod/` directly; use Decapod CLI surfaces for generated specs, data, workspaces, and sessions.
+- Do not mutate machine-owned Decapod state under `.decapod/` directly; use Decapod CLI surfaces for generated attestations, projections, data, workspaces, sessions, governance artifacts, and manifests. The authored semantic prose in `.decapod/managed/specs/*.md` is the narrow exception: edit it directly in the isolated workspace, preserve generated blocks, and refresh with the CLI afterward.
 
 ## Quick Start
 
@@ -832,11 +832,11 @@ decapod data schema --deterministic
 - Use Docker git workspaces and execute in `.decapod/workspaces/*`. Call `decapod workspace status` at startup.
 - Claim a Decapod todo before `decapod workspace ensure`, `decapod workspace ensure --container`, or any container run.
 - request elevated permissions before Docker/container workspace commands.
-- `.decapod files are accessed only via decapod CLI`. Read `.decapod/config.toml` and `.decapod/OVERRIDE.md` for context.
+- Machine-owned `.decapod` state is accessed only via decapod CLI. Agents may read and edit authored semantic prose in `.decapod/managed/specs/*.md` directly from the isolated workspace; generated attestations, overlays, manifests, governance artifacts, data, sessions, workspaces, and other machine-owned state remain CLI-only. Read `.decapod/config.toml` and `.decapod/OVERRIDE.md` for context.
 - `DECAPOD_SESSION_PASSWORD` is required for session-scoped operations.
 - Read canonical router: `decapod constitution get core/DECAPOD`. Reference `docs/PLAYBOOK`, capabilities, or context.scope RPC.
 
-Treat `.decapod/managed/specs/*` as the acting agent's authored interpretation of the repository. Decapod requires and validates the semantic content; refresh only updates supported generated attestations and projections. Correct stale or incorrect prose, revalidate, and continue toward publication.
+Treat `.decapod/managed/specs/*` as the acting agent's authored interpretation of the repository. Agents may edit its authored semantic prose directly in the isolated workspace, but must preserve generated attestations, overlays, manifests, and other machine-owned blocks. Decapod requires and validates the semantic content; refresh only updates supported generated attestations and projections. Correct stale or incorrect prose, revalidate, and continue toward publication.
 
 Stop if requirements are ambiguous or conflicting.
 <!-- decapod-validator-anchors
@@ -924,7 +924,7 @@ decapod constitution search --query "<problem>"
 Agents act. Decapod governs accepted work. One task may span many ephemeral Decapod invocations; durable state lives in the repository. Call Decapod at decision boundaries: ambiguous requests, public impact, unclear proof, todo lifecycle, scope expansion, context loss, validation and recovery, publication, or multi-agent collision risk.
 
 ## Living Specs & Governance
-The files under `.decapod/managed/specs/` are the acting agent's explicit, reviewable interpretation of the repository. The agent authors and maintains their semantic content; Decapod requires and validates it. Update [INTENT.md](.decapod/managed/specs/INTENT.md), [ARCHITECTURE.md](.decapod/managed/specs/ARCHITECTURE.md), and [INTERFACES.md](.decapod/managed/specs/INTERFACES.md) when intent or code changes. `specs.refresh` only refreshes supported fingerprints, attestations, overlays, and manifests. An incorrect or stale spec exposes incomplete governed work before publication; correct the prose and revalidate.
+The files under `.decapod/managed/specs/` are the acting agent's explicit, reviewable interpretation of the repository. The agent authors and maintains their semantic content directly in the isolated workspace; Decapod requires and validates it. Update [INTENT.md](.decapod/managed/specs/INTENT.md), [ARCHITECTURE.md](.decapod/managed/specs/ARCHITECTURE.md), and [INTERFACES.md](.decapod/managed/specs/INTERFACES.md) when intent or code changes. `specs.refresh` only refreshes supported fingerprints, attestations, overlays, and manifests. An incorrect or stale spec exposes incomplete governed work before publication; correct the prose and revalidate.
 
 ## Epistemic Custody
 Preserve the chain between intent, context, assumptions, action, and proof.
@@ -940,7 +940,7 @@ Completion claims never prove completion: `passed`, `failed`, `partial`, `unavai
 ## Invariants (Normative)
 - **INV-DAEMONLESS**: Decapod MUST NOT leave background processes running.
 - **INV-BOUNDED-VALIDATE**: `decapod validate` MUST terminate within bounded time.
-- **INV-STORE-BOUNDARY**: Agents MUST NOT directly mutate `.decapod/*`.
+- **INV-STORE-BOUNDARY**: Agents MUST NOT directly mutate machine-owned `.decapod/*`; authored semantic prose in `.decapod/managed/specs/*.md` is the explicit exception, while generated blocks and all other control-plane state remain CLI/RPC-owned.
 - **INV-SESSION-AUTH**: Mutations require active session.
 - **INV-PROOF-GATED**: `VERIFIED` status requires passed proof-plan gates.
 - **INV-ROOT-ISOLATION**: Agents MUST NOT mutate files in the main repository checkout.
@@ -954,7 +954,7 @@ Completion claims never prove completion: `passed`, `failed`, `partial`, `unavai
 ## Operating Notes
 - Read `.decapod/config.toml` and `.decapod/OVERRIDE.md`.
 - External task managers are allowed, but Decapod todos are still mandatory for workspace isolation.
-- DO NOT mutate `.decapod/` state directly; all access MUST use CLI. Access to `.decapod/` is strictly via decapod CLI.
+- Machine-owned `.decapod` state is accessed only via decapod CLI. Agents may read and edit authored semantic prose in `.decapod/managed/specs/*.md` directly from the isolated workspace; generated attestations, overlays, manifests, governance artifacts, data, sessions, workspaces, and other machine-owned state remain CLI-only.
 - Stop if requirements conflict or intent is ambiguous. Respect the interface abstraction boundary.
 <!-- decapod-validator-anchors
 Strict Dependency: You are strictly bound to the Decapod control plane

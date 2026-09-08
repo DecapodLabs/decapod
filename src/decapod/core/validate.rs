@@ -1231,15 +1231,21 @@ fn validate_entrypoint_invariants(
             all_present = false;
         }
 
-        // Must include explicit jail rule for .decapod access
-        if agent_content.contains(".decapod files are accessed only via decapod CLI") {
+        // Must include an explicit machine-state jail rule while documenting
+        // the narrow direct-edit exception for authored living-spec prose.
+        if agent_content.contains("Machine-owned `.decapod` state is accessed only via decapod CLI")
+        {
             pass(
-                &format!("{agent_file} includes .decapod CLI-only jail rule"),
+                &format!(
+                    "{agent_file} includes the machine-state CLI-only jail and authored-spec exception"
+                ),
                 ctx,
             );
         } else {
             fail(
-                &format!("{agent_file} missing .decapod CLI-only jail rule marker"),
+                &format!(
+                    "{agent_file} missing machine-state CLI-only jail and authored-spec exception marker"
+                ),
                 ctx,
             );
             all_present = false;

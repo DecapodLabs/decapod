@@ -1,5 +1,5 @@
 <!-- decapod-release: 0.99.13 -->
-<!-- decapod-fingerprint: d5adffb99919e34475047cc10752809ec86982462e9ef513202f7a5b60db7b0b -->
+<!-- decapod-fingerprint: 38fb0ca5d57abb8df5da92d878fd47a8291b7621f2d99d555ab27231c9910d00 -->
 # CODEX.md - Agent Entrypoint
 
 You are working in a Decapod-managed repository.
@@ -26,7 +26,7 @@ Run this gate once when the agent starts and again after every new prompt or use
 - Read `.decapod/config.toml` before planning; it captures project name, summary, architecture, primary languages, and entrypoint preferences.
 - Treat `.decapod/config.toml` as human-editable project context. You may update it when user intent or project direction changes.
 - Read `.decapod/OVERRIDE.md` when present; it is the repo-local place for constitution overrides.
-- Do not mutate Decapod-owned state under `.decapod/` directly; use Decapod CLI surfaces for generated specs, data, workspaces, and sessions.
+- Do not mutate machine-owned Decapod state under `.decapod/` directly; use Decapod CLI surfaces for generated attestations, projections, data, workspaces, sessions, governance artifacts, and manifests. The authored semantic prose in `.decapod/managed/specs/*.md` is the narrow exception: edit it directly in the isolated workspace, preserve generated blocks, and refresh with the CLI afterward.
 
 ## Quick Start
 
@@ -57,11 +57,11 @@ decapod data schema --deterministic
 - Use Docker git workspaces and execute in `.decapod/workspaces/*`. Call `decapod workspace status` at startup.
 - Claim a Decapod todo before `decapod workspace ensure`, `decapod workspace ensure --container`, or any container run.
 - request elevated permissions before Docker/container workspace commands.
-- `.decapod files are accessed only via decapod CLI`. Read `.decapod/config.toml` and `.decapod/OVERRIDE.md` for context.
+- Machine-owned `.decapod` state is accessed only via decapod CLI. Agents may read and edit authored semantic prose in `.decapod/managed/specs/*.md` directly from the isolated workspace; generated attestations, overlays, manifests, governance artifacts, data, sessions, workspaces, and other machine-owned state remain CLI-only. Read `.decapod/config.toml` and `.decapod/OVERRIDE.md` for context.
 - `DECAPOD_SESSION_PASSWORD` is required for session-scoped operations.
 - Read canonical router: `decapod constitution get core/DECAPOD`. Reference `docs/PLAYBOOK`, capabilities, or context.scope RPC.
 
-Treat `.decapod/managed/specs/*` as the acting agent's authored interpretation of the repository. Decapod requires and validates the semantic content; refresh only updates supported generated attestations and projections. Correct stale or incorrect prose, revalidate, and continue toward publication.
+Treat `.decapod/managed/specs/*` as the acting agent's authored interpretation of the repository. Agents may edit its authored semantic prose directly in the isolated workspace, but must preserve generated attestations, overlays, manifests, and other machine-owned blocks. Decapod requires and validates the semantic content; refresh only updates supported generated attestations and projections. Correct stale or incorrect prose, revalidate, and continue toward publication.
 
 Stop if requirements are ambiguous or conflicting.
 <!-- decapod-validator-anchors

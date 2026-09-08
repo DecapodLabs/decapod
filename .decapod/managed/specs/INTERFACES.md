@@ -9,6 +9,15 @@ same canonical repository store, so a newly created worktree cannot diverge
 into an empty or partial task database. A validation timeout identifies the
 active gate and elapsed time when that evidence is available.
 
+## Authored Living-Spec Boundary (#1197)
+
+The authored semantic prose in `.decapod/managed/specs/*.md` is maintained
+directly by the acting agent in its isolated workspace. Generated attestation,
+declared-capability, capability-overlay, and manifest blocks remain
+machine-owned and must be refreshed through the Decapod CLI/RPC. All other
+control-plane state, including data, governance, sessions, and workspaces,
+remains CLI/RPC-owned; validation and material-spec proof gates are unchanged.
+
 ## Projection and Repository-Map Contracts (#1303, #1304)
 
 `specs.refresh` owns one `decapod:codebase-attestation` slot per managed
@@ -218,7 +227,7 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ffd3e2db8b0bdf0a94204bc88d47dddf0a1ca19a911886be35608232dded47fe`
+- Repository signal fingerprint: `662031dd191a0a3e5e17979167de9918d676ad788cbd8672e82414867ccfd7e4`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

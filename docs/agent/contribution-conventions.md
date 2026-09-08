@@ -83,6 +83,14 @@ If a spec is wrong, validation has exposed the agent's misunderstanding in a
 reviewable artifact before publication. Correct the prose and revalidate; a
 stale spec normally means the governed work remains incomplete.
 
+The authored portion of these files is a narrow, explicit exception to the
+machine-state mutation boundary: agents may read and edit semantic prose
+directly in an isolated workspace. They must preserve generated attestation,
+declared-capability, capability-overlay, and manifest data, and refresh those
+machine-owned projections through the Decapod CLI/RPC. This does not authorize
+direct edits to `.decapod/data`, governance, sessions, workspaces, or any other
+control-plane state.
+
 
 ## 4. Entrypoint and Dockerfile Pin Discipline
 

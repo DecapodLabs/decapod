@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0.0",
-  "title": "Resolve single-workspace trajectory durability and SQLite safety (#1312/#1313)",
-  "intent": "Implement a maintainable single-workspace solution for #1312 and #1313: retain one authoritative active trajectory per workspace with durable prior-run evidence, and provide safe Dactyl-backed SQLite coordination and diagnostics without project-level multi-run authority or unsupported automatic repair.",
+  "title": "Permit authored living-spec prose without weakening the store boundary (#1197)",
+  "intent": "Implement the narrow compatibility fix for #1197: generated agent instructions must permit agents to read and edit the authored semantic prose of .decapod/managed/specs/*.md, while machine-owned Decapod state, generated attestations, manifests, governance JSON, and databases remain CLI/RPC-only. Preserve the material-spec and proof gates; add no new authority or contract surface.",
   "state": "APPROVED",
   "todo_ids": [
-    "feat_01m21cd0bxsq9evt"
+    "feat_01m21n87eetm9caa"
   ],
   "proof_hooks": [
     "cargo test --lib",
@@ -14,19 +14,15 @@
   ],
   "unknowns": [],
   "human_questions": [],
-  "stop_conditions": [
-    "Stop for human review if a proposed compatibility fix requires changing existing request/response schemas, silently changing validation or publication authority, bypassing the Dactyl storage boundary, or recovering a corrupted database without a supported Dactyl API."
-  ],
+  "stop_conditions": [],
   "unresolved_contradictions": [],
-  "deferred_questions": [
-    "Choose the supported cross-process SQLite coordination and recovery contract through the Dactyl boundary, including locking scope, backup/restore behavior, journal-mode handling, and whether any repair may be automatic."
-  ],
+  "deferred_questions": [],
   "constraints": {
     "forbidden_paths": [
       ".decapod/data/decapod.db"
     ],
-    "file_touch_budget": 50
+    "file_touch_budget": 30
   },
   "phases": [],
-  "updated_at": "1788900494Z"
+  "updated_at": "1788909782Z"
 }
