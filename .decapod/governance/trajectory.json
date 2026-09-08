@@ -6,8 +6,9 @@
   "original_intent": "Solve GitHub issue #1197 in a dedicated PR only if the solution fits the existing Decapod design: daemonless, workspace-isolated, agent-authored living specs, CLI-governed machine state, and proof-gated publication.",
   "derived_intent": "Narrow the generated instruction contract so agents may author semantic prose in .decapod/managed/specs/*.md while all generated attestations, manifests, governance artifacts, and persistent machine state remain CLI/RPC-owned; preserve validation and proof gates.",
   "destination": "dedicated PR for #1197",
-  "current_phase": "verification",
+  "current_phase": "release_refresh",
   "next_transitions": [
+    "commit v0.99.14 generated surfaces and push",
     "inspect template source and reproduce the current wording contradiction",
     "publish",
     "publish dedicated PR and comment on issue #1197",
@@ -37,14 +38,18 @@
     "tests/entrypoint_correctness.rs"
   ],
   "declared_commands": [
+    "DECAPOD_VALIDATE_SKIP_GIT_GATES=1 cargo run --locked --bin decapod -- validate --format json --refresh-specs",
     "cargo check --locked",
     "cargo clippy --locked --all-targets --all-features -- -D warnings",
     "cargo fmt --all",
     "cargo fmt --all -- --check",
+    "cargo run --locked --bin decapod -- rpc --op specs.refresh",
     "cargo run --locked --bin decapod -- validate --format json --refresh-specs",
     "cargo test --locked --lib",
     "cargo test --locked --test entrypoint_correctness",
-    "decapod validate"
+    "decapod validate",
+    "git fetch origin master",
+    "git merge origin/master --no-edit"
   ],
   "tool_calls": [],
   "checks": [
@@ -77,12 +82,25 @@
       "status": "passed"
     },
     {
+      "name": "decapod_validate_ci_mode",
+      "status": "passed"
+    },
+    {
       "name": "entrypoint_contract_tests",
       "status": "partial"
+    },
+    {
+      "name": "host_container_workspace_proof",
+      "status": "unavailable"
+    },
+    {
+      "name": "release_baseline_sync",
+      "status": "passed"
     }
   ],
   "evidence": [
     "Decapod validation passed with fail_count=0; Clippy and formatting passed; library tests have four unrelated existing failures in dactyl_todo, governance artifact fixture setup, and container remote-fixture setup.",
+    "Master advanced to v0.99.14 after PR creation; generated entrypoints, Docker pin, and managed spec manifest were refreshed with the repository binary. CI-mode validation completed with fail_count=0. Host validation remains unavailable only because this workspace is not container-backed.",
     "New boundary regression test passed; three unrelated existing entrypoint-suite failures remain documented in the test output.",
     "validation epoch ve_bb6de00eff770e50 completed with zero failures"
   ],
@@ -95,7 +113,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:8e86e544f6b974784f5d48635f4ffd99c2600f995586c1f259aae297d107b641",
+  "artifact_hash": "sha256:8fb313ab10aeb286d8a74ec8400e715e94312f0bc433eca8159316c90723f618",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -148,6 +166,13 @@
       {
         "sequence": 6,
         "event_id": "event:6",
+        "intent_id": "intent:feat_01m21n87eetm9caa",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:feat_01m21n87eetm9caa"
+      },
+      {
+        "sequence": 7,
+        "event_id": "event:7",
         "intent_id": "intent:feat_01m21n87eetm9caa",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:feat_01m21n87eetm9caa"
@@ -224,12 +249,30 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:6"
+          },
+          {
+            "sequence": 7,
+            "action": "release_refresh",
+            "command": "git fetch origin master",
+            "scope": [
+              "Generated Decapod agent contract/template wording, linked agent documentation, living-spec contract guidance, focused tests, and governed publication artifacts."
+            ],
+            "observations": [
+              "Master advanced to v0.99.14 after PR creation; generated entrypoints, Docker pin, and managed spec manifest were refreshed with the repository binary. CI-mode validation completed with fail_count=0. Host validation remains unavailable only because this workspace is not container-backed."
+            ],
+            "proof_refs": [
+              "release_baseline_sync",
+              "decapod_validate_ci_mode",
+              "host_container_workspace_proof"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:7"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 6
+    "next_sequence": 7
   }
 }
