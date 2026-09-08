@@ -15,9 +15,9 @@ use std::path::{Path, PathBuf};
 pub const TRAJECTORY_SCHEMA_VERSION: &str = "1.1.0";
 pub const LEGACY_TRAJECTORY_SCHEMA_VERSION: &str = "1.0.0";
 pub const TRAJECTORY_PATH: &str = ".decapod/governance/trajectory.json";
-/// Additive per-run evidence archive. The legacy cookie remains the current
-/// validation/publication pointer until a canonical multi-run contract is
-/// chosen.
+/// Additive per-run evidence archive. The legacy cookie remains the one
+/// workspace's current validation/publication pointer; subagent jobs are
+/// represented as loops rather than project-level active runs.
 pub const TRAJECTORY_RUNS_PATH: &str = ".decapod/governance/trajectory-runs";
 pub const MAX_LOOP_FEEDBACK_BYTES: usize = 2048;
 
@@ -424,8 +424,11 @@ pub fn init_trajectory(
     let path = trajectory_path(project_root, &run_id)?;
     let run_path = trajectory_run_path(project_root, &run_id)?;
     // Keep the same-run guard for both the legacy pointer and the additive
-    // archive. A different run may replace the legacy pointer, but its prior
-    // evidence remains available under trajectory-runs/<run_id>.json.
+    // archive. A different run may replace the current pointer for the next
+    // sequential workspace task, but its prior evidence remains available
+    // under trajectory-runs/<run_id>.json. Multiple jobs within one workspace
+    // are represented by loops on the current trajectory instead of multiple
+    // active run authorities.
     if (path.exists() || run_path.exists())
         && (load_trajectory_from_path(&run_path, &run_id).is_ok()
             || load_trajectory_cookie(project_root)

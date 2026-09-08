@@ -7,6 +7,7 @@
 use crate::core::backend::{BackendRoute, StorageContext};
 use crate::core::error::{CloudAuthDiagnostic, CloudAuthStatus, DecapodError};
 use crate::core::schemas;
+use crate::core::storage_lock::{StorageLock, StorageLockMode};
 use dactyl_db::{AccessMode, AtomicResult, Connection, OpenOptions, Operation, Parameter, Rows};
 use serde::{Deserialize, Serialize};
 use std::ffi::OsString;
@@ -247,6 +248,7 @@ fn sqlite_runtime_required_error() -> DecapodError {
 /// than backend-specific handles.
 pub struct DactylBridge {
     connection: Connection,
+    _storage_lock: Option<StorageLock>,
 }
 
 impl DactylBridge {
@@ -257,6 +259,7 @@ impl DactylBridge {
             dactyl_db::DatastoreRoute::sqlite(":memory:"),
             AccessMode::ReadWrite,
             None,
+            None,
         )
     }
 
@@ -265,6 +268,7 @@ impl DactylBridge {
         Self::open_route(
             dactyl_db::DatastoreRoute::sqlite(":memory:"),
             access_mode,
+            None,
             None,
         )
     }
@@ -275,10 +279,12 @@ impl DactylBridge {
         access_mode: AccessMode,
     ) -> Result<Self, DecapodError> {
         let path = path.as_ref();
+        let storage_lock = local_storage_lock(path, access_mode)?;
         Self::open_route(
             dactyl_db::DatastoreRoute::sqlite(path.to_string_lossy().into_owned()),
             access_mode,
             None,
+            storage_lock,
         )
     }
 
@@ -307,7 +313,15 @@ impl DactylBridge {
     ) -> Result<Self, DecapodError> {
         match route {
             BackendRoute::Local { path } => {
-                Self::open_from_ambient("sqlite", &path.to_string_lossy(), None, access_mode, None)
+                let storage_lock = local_storage_lock(path, access_mode)?;
+                Self::open_from_ambient(
+                    "sqlite",
+                    &path.to_string_lossy(),
+                    None,
+                    access_mode,
+                    None,
+                    storage_lock,
+                )
             }
             BackendRoute::Cloud { uri, .. } => {
                 let bearer = bearer
@@ -320,7 +334,7 @@ impl DactylBridge {
                             "acquire or refresh the cloud session, then retry the command",
                         ))
                     })?;
-                Self::open_from_ambient("neon", uri, Some(bearer), access_mode, None)
+                Self::open_from_ambient("neon", uri, Some(bearer), access_mode, None, None)
             }
         }
     }
@@ -360,6 +374,7 @@ impl DactylBridge {
                     Some(bearer),
                     access_mode,
                     Some(dactyl_context),
+                    None,
                 )
             }
         }
@@ -396,6 +411,7 @@ impl DactylBridge {
         route: dactyl_db::DatastoreRoute,
         access_mode: AccessMode,
         context: Option<dactyl_db::StorageContext>,
+        storage_lock: Option<StorageLock>,
     ) -> Result<Self, DecapodError> {
         let connection = Connection::open_with_options_and_context(
             route,
@@ -405,7 +421,10 @@ impl DactylBridge {
             },
             context,
         )?;
-        Ok(Self { connection })
+        Ok(Self {
+            connection,
+            _storage_lock: storage_lock,
+        })
     }
 
     /// Let Dactyl resolve its own route from the ambient values supplied by
@@ -418,6 +437,7 @@ impl DactylBridge {
         token: Option<&str>,
         access_mode: AccessMode,
         context: Option<dactyl_db::StorageContext>,
+        storage_lock: Option<StorageLock>,
     ) -> Result<Self, DecapodError> {
         let lock = AMBIENT_ROUTE_LOCK.get_or_init(|| Mutex::new(()));
         let _lock = lock.lock().map_err(|_| {
@@ -425,8 +445,38 @@ impl DactylBridge {
         })?;
         let _environment = AmbientDactylEnvironment::install(datastore, route, token);
         let resolved = dactyl_db::DatastoreRoute::from_env()?;
-        Self::open_route(resolved, access_mode, context)
+        Self::open_route(resolved, access_mode, context, storage_lock)
     }
+}
+
+fn local_storage_lock(
+    path: &Path,
+    access_mode: AccessMode,
+) -> Result<Option<StorageLock>, DecapodError> {
+    if path == Path::new(":memory:") {
+        return Ok(None);
+    }
+
+    if access_mode == AccessMode::ReadWrite {
+        if let Some(parent) = path
+            .parent()
+            .filter(|parent| !parent.as_os_str().is_empty())
+        {
+            fs::create_dir_all(parent).map_err(DecapodError::IoError)?;
+        }
+    }
+
+    let mode = if access_mode == AccessMode::ReadOnly {
+        StorageLockMode::Shared
+    } else {
+        StorageLockMode::Exclusive
+    };
+    let timeout = if std::env::var_os("DECAPOD_VALIDATE_WORKER").is_some() {
+        Duration::from_millis(250)
+    } else {
+        Duration::from_secs(5)
+    };
+    Ok(Some(StorageLock::acquire(path, mode, timeout)?))
 }
 
 struct AmbientDactylEnvironment {

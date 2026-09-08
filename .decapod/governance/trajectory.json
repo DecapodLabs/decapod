@@ -1,99 +1,71 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "worldofgeese-1311-1314-20260908",
-  "intent_id": "intent:worldofgeese-1311-1314-20260908",
-  "task_id": "bugs_01m1zna7ef3g0fjp",
-  "original_intent": "Solve the four active GitHub Issues created by worldofgeese in DecapodLabs/decapod.",
-  "derived_intent": "Implement compatible, tested fixes for #1311, #1312, #1313, and #1314 and deliver them through one PR with refreshed governance evidence.",
-  "current_phase": "implementation compatibility slice",
+  "run_id": "feat_01m21cd0bxsq9evt",
+  "intent_id": "intent:feat_01m21cd0bxsq9evt",
+  "task_id": "feat_01m21cd0bxsq9evt",
+  "original_intent": "Implement the maintainable single-workspace trajectory and SQLite coordination solution for GitHub issues #1312 and #1313.",
+  "derived_intent": "Preserve one authoritative current trajectory per workspace, archive prior evidence, coordinate canonical local datastore access across cooperating Decapod processes, and document the Dactyl recovery boundary.",
+  "destination": "single PR for issues #1312 and #1313",
+  "current_phase": "implementation",
+  "next_transitions": [
+    "validate"
+  ],
   "active_boundaries": [
-    "Work only in the claimed Decapod worktree; do not hand-edit .decapod state or the shared control-plane database."
+    "canonical local Dactyl datastore coordination",
+    "one active trajectory authority per agent workspace"
   ],
   "repo_scope": [
-    "Rust runtime, CLI contracts, governance artifact serialization, tests, living specs, and one PR for issues #1311-#1314."
-  ],
-  "inspected_files": [
-    "src/decapod/cli.rs",
-    "src/decapod/core/events.rs",
+    ".decapod/managed/specs",
+    "Cargo.lock",
+    "Cargo.toml",
+    "src/decapod/core/dactyl.rs",
+    "src/decapod/core/dactyl_db.rs",
+    "src/decapod/core/db.rs",
     "src/decapod/core/pool.rs",
+    "src/decapod/core/storage_lock.rs",
     "src/decapod/core/trajectory.rs",
-    "src/decapod/core/validate.rs",
-    "src/decapod/core/workspace.rs",
-    "src/decapod/lib.rs"
+    "tests/sqlite_hardening.rs"
   ],
-  "modified_files": [
-    "src/decapod/cli.rs",
-    "src/decapod/core/events.rs",
-    "src/decapod/core/path_policy.rs",
-    "src/decapod/core/trajectory.rs",
-    "src/decapod/core/validate.rs",
-    "src/decapod/core/workspace.rs",
-    "src/decapod/lib.rs",
-    "tests/spec_workspace_ownership.rs",
-    "tests/unit/core/path_policy_tests.rs",
-    "tests/unit/core/trajectory_tests.rs",
-    "tests/unit/core/workspace_tests.rs"
-  ],
-  "declared_commands": [
-    "cargo clippy --all-targets --all-features -- -D warnings",
-    "cargo fmt --all",
-    "cargo test --lib",
-    "cargo test --test spec_workspace_ownership specs_refresh_does_not_depend_on_the_local_database"
-  ],
+  "inspected_files": [],
+  "modified_files": [],
+  "declared_commands": [],
   "tool_calls": [],
-  "checks": [
-    {
-      "name": "cargo clippy --all-targets --all-features -- -D warnings",
-      "status": "passed"
-    },
-    {
-      "name": "cargo fmt --all -- --check",
-      "status": "passed"
-    },
-    {
-      "name": "cargo test --lib",
-      "status": "partial"
-    },
-    {
-      "name": "focused compatibility tests",
-      "status": "passed"
-    }
-  ],
-  "evidence": [
-    "Issue #1311 regression: malformed local decapod.db no longer blocks isolated specs.refresh.",
-    "Issue #1312 compatibility slice: prior run remains loadable from trajectory-runs while trajectory.json remains current pointer.",
-    "Issue #1313 compatibility slice: standalone events use the shared write pool and data db verify is read-only; automatic repair is deferred.",
-    "Issue #1314 regression: absolute trajectory and validation paths are normalized or redacted."
-  ],
+  "checks": [],
+  "evidence": [],
   "shortcut_risk_signals": [],
-  "unresolved_assumptions": [
-    "Automatic dump/reload recovery requires a Dactyl-native API and explicit human decision.",
-    "The additive archive is evidence retention only; validation and publication continue to trust trajectory.json.",
-    "The full library suite has four pre-existing environment-sensitive failures unrelated to this change.",
-    "The write pool improves same-process serialization but does not prove cross-process locking."
-  ],
-  "proof_status": "partial",
+  "unresolved_assumptions": [],
+  "proof_status": "no_checks_run",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "caution"
+    "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:35ecbd68b6bb54f70a5343579532dd609259c2160bd629fc88b7c90eb2c46ecc",
+  "artifact_hash": "sha256:58cde253c51d16f13082023ba5813bd4b8036f9ae457dd070112a832543e07b1",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:worldofgeese-1311-1314-20260908": {
-        "id": "intent:worldofgeese-1311-1314-20260908",
-        "raw_intent": "Solve the four active GitHub Issues created by worldofgeese in DecapodLabs/decapod.",
-        "refined_intent": "Implement compatible, tested fixes for #1311, #1312, #1313, and #1314 and deliver them through one PR with refreshed governance evidence.",
+      "intent:feat_01m21cd0bxsq9evt": {
+        "id": "intent:feat_01m21cd0bxsq9evt",
+        "raw_intent": "Implement the maintainable single-workspace trajectory and SQLite coordination solution for GitHub issues #1312 and #1313.",
+        "refined_intent": "Preserve one authoritative current trajectory per workspace, archive prior evidence, coordinate canonical local datastore access across cooperating Decapod processes, and document the Dactyl recovery boundary.",
         "acceptance_criteria": [],
         "constraints": [
-          "Rust runtime, CLI contracts, governance artifact serialization, tests, living specs, and one PR for issues #1311-#1314."
+          "src/decapod/core/trajectory.rs",
+          "src/decapod/core/storage_lock.rs",
+          "src/decapod/core/db.rs",
+          "src/decapod/core/dactyl.rs",
+          "src/decapod/core/dactyl_db.rs",
+          "src/decapod/core/pool.rs",
+          "tests/sqlite_hardening.rs",
+          ".decapod/managed/specs",
+          "Cargo.toml",
+          "Cargo.lock"
         ],
         "assumptions": [],
         "boundaries": [
-          "Work only in the claimed Decapod worktree; do not hand-edit .decapod state or the shared control-plane database."
+          "one active trajectory authority per agent workspace",
+          "canonical local Dactyl datastore coordination"
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -106,79 +78,19 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:worldofgeese-1311-1314-20260908",
+        "intent_id": "intent:feat_01m21cd0bxsq9evt",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:worldofgeese-1311-1314-20260908",
+        "intent_id": "intent:feat_01m21cd0bxsq9evt",
         "kind": "refined"
-      },
-      {
-        "sequence": 4,
-        "event_id": "event:4",
-        "intent_id": "intent:worldofgeese-1311-1314-20260908",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:worldofgeese-1311-1314-20260908"
       }
     ],
-    "trajectories": {
-      "worldofgeese-1311-1314-20260908": {
-        "id": "worldofgeese-1311-1314-20260908",
-        "intent_id": "intent:worldofgeese-1311-1314-20260908",
-        "evidence_only": true,
-        "steps": [
-          {
-            "sequence": 4,
-            "action": "implementation compatibility slice",
-            "command": "cargo fmt --all",
-            "scope": [
-              "Rust runtime, CLI contracts, governance artifact serialization, tests, living specs, and one PR for issues #1311-#1314."
-            ],
-            "observations": [
-              "src/decapod/core/trajectory.rs",
-              "src/decapod/core/events.rs",
-              "src/decapod/core/pool.rs",
-              "src/decapod/core/validate.rs",
-              "src/decapod/core/workspace.rs",
-              "src/decapod/lib.rs",
-              "src/decapod/cli.rs",
-              "src/decapod/core/path_policy.rs",
-              "src/decapod/core/trajectory.rs",
-              "src/decapod/core/events.rs",
-              "src/decapod/core/validate.rs",
-              "src/decapod/core/workspace.rs",
-              "src/decapod/lib.rs",
-              "src/decapod/cli.rs",
-              "tests/spec_workspace_ownership.rs",
-              "tests/unit/core/path_policy_tests.rs",
-              "tests/unit/core/trajectory_tests.rs",
-              "tests/unit/core/workspace_tests.rs",
-              "Issue #1311 regression: malformed local decapod.db no longer blocks isolated specs.refresh.",
-              "Issue #1312 compatibility slice: prior run remains loadable from trajectory-runs while trajectory.json remains current pointer.",
-              "Issue #1313 compatibility slice: standalone events use the shared write pool and data db verify is read-only; automatic repair is deferred.",
-              "Issue #1314 regression: absolute trajectory and validation paths are normalized or redacted."
-            ],
-            "proof_refs": [
-              "cargo fmt --all -- --check",
-              "cargo clippy --all-targets --all-features -- -D warnings",
-              "focused compatibility tests",
-              "cargo test --lib"
-            ],
-            "validation_findings": [
-              "The additive archive is evidence retention only; validation and publication continue to trust trajectory.json.",
-              "The write pool improves same-process serialization but does not prove cross-process locking.",
-              "Automatic dump/reload recovery requires a Dactyl-native API and explicit human decision.",
-              "The full library suite has four pre-existing environment-sensitive failures unrelated to this change."
-            ],
-            "custody_event_id": "event:4"
-          }
-        ]
-      }
-    },
+    "trajectories": {},
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 4
+    "next_sequence": 3
   }
 }

@@ -343,6 +343,10 @@ impl std::ops::BitOr for OpenFlags {
 pub struct Connection {
     driver: Rc<dactyl_db::Connection>,
     transaction_state: Rc<Cell<bool>>,
+    // The optional guard is supplied by canonical Decapod connection
+    // factories. Raw facade opens remain available for compatibility tests
+    // and non-canonical isolated stores.
+    _storage_lock: Option<crate::core::storage_lock::StorageLock>,
 }
 
 impl fmt::Debug for Connection {
@@ -365,6 +369,20 @@ impl Connection {
         access_mode: AccessMode,
         lock_timeout: Duration,
     ) -> Result<Self> {
+        Self::open_with_options_and_storage_lock(path, access_mode, lock_timeout, None)
+    }
+
+    /// Open a connection while retaining a Decapod-owned cross-process lock.
+    ///
+    /// Dactyl still owns the physical route and database execution. The lock
+    /// is only coordination between cooperating Decapod processes that can
+    /// otherwise share a local file through a host/container boundary.
+    pub fn open_with_options_and_storage_lock(
+        path: impl AsRef<Path>,
+        access_mode: AccessMode,
+        lock_timeout: Duration,
+        storage_lock: Option<crate::core::storage_lock::StorageLock>,
+    ) -> Result<Self> {
         // Dactyl v0.8.2 validates an existing local file header before it
         // reaches SQLite's CREATE flag. Seed the empty file for a new
         // read-write datastore so the Dactyl open remains the authority for
@@ -380,6 +398,7 @@ impl Connection {
         Ok(Self {
             driver: Rc::new(driver),
             transaction_state: Rc::new(Cell::new(false)),
+            _storage_lock: storage_lock,
         })
     }
 

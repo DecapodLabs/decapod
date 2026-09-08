@@ -35,8 +35,10 @@ contract but do not replace authored prose.
 
 ## Current PR Contract
 This change establishes two repository invariants:
-- The governance trajectory path is one valid, replaceable trajectory object.
-  Git history, not appended JSON values, preserves prior runs.
+- Each agent workspace has one authoritative current trajectory pointer. A
+  completed or superseded run is retained as a hash-checked archive, while
+  subagent jobs are represented as loops inside that workspace trajectory;
+  Decapod does not create project-level multi-run authority.
 - Every local Decapod command checks the installed-version ledger. A version
   transition or applied migration produces an agent-facing notice that points
   to the migration ledger and requires migration instructions to be reviewed.
@@ -50,7 +52,8 @@ This change establishes two repository invariants:
 - `.decapod/managed/policy/`: ignored, current-run JIT context policy material; use `.decapod/policy/` for a durable override.
 - `.decapod/managed/artifacts/`: ignored, current-run provenance/custody/inventory/diagnostic outputs.
 - `.decapod/governance/validation.json`: tracked per-commit validation receipt, overwritten after successful validation.
-- `.decapod/governance/trajectory.json`: the single tracked run cookie; Git history preserves prior merged cookies.
+- `.decapod/governance/trajectory.json`: the current workspace run pointer;
+  `.decapod/governance/trajectory-runs/`: durable per-run evidence archives.
 - `.decapod/managed/artifacts/inventory/`: deterministic release inventory.
 - `.decapod/managed/artifacts/diagnostics/`: opt-in diagnostics artifacts.
 - `.decapod/workspaces/`: isolated todo-scoped git worktrees.
@@ -71,7 +74,7 @@ This change establishes two repository invariants:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `40dec4825bca7ec51499da94e622e58a6487e42da29da3f20be81a39c0f1ad39`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (106 files), `tests/` (4 files)
+- Repository signal fingerprint: `ab6a8487bf4683e5db92bdf160e2dd524e139ece96f172b91d0f55f1b28c9c68`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
