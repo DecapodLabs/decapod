@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.99.15](https://github.com/DecapodLabs/decapod/compare/v0.99.14...v0.99.15) - 2026-09-09
+
+### Fixed
+
+- clarify authored living-spec boundary ([#1319](https://github.com/DecapodLabs/decapod/pull/1319))
+
 ## [0.99.14](https://github.com/DecapodLabs/decapod/compare/v0.99.13...v0.99.14) - 2026-09-08
 
 ### Fixed
