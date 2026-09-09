@@ -13747,7 +13747,7 @@
         "concepts": [
           "INV-DAEMONLESS: Decapod must not leave background processes running.",
           "INV-BOUNDED-VALIDATE: decapod validate must terminate within bounded time (30s).",
-          "INV-STORE-BOUNDARY: Agents must not directly mutate files under .decapod/* without using the CLI.",
+          "INV-STORE-BOUNDARY: Agents must not directly mutate machine-owned files under .decapod/* without using the CLI; authored semantic prose in .decapod/managed/specs/*.md is the explicit exception, while generated blocks and all other control-plane state remain CLI/RPC-owned.",
           "INV-SESSION-AUTH: Mutations require an active local session authenticated via DECAPOD_SESSION_PASSWORD.",
           "INV-PROOF-GATED: VERIFIED status requires passing all registered proof-plan gates.",
           "INV-ROOT-ISOLATION: Agents must not mutate files in the main repository checkout directly.",

@@ -260,7 +260,7 @@ or manifest.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ffd3e2db8b0bdf0a94204bc88d47dddf0a1ca19a911886be35608232dded47fe`
+- Repository signal fingerprint: `67c0fcc22db2ab73b44093790c397ca08216ccf5395754291cc846fcb82b8188`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

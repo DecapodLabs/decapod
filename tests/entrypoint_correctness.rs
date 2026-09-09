@@ -101,6 +101,27 @@ fn test_init_creates_all_entrypoints() {
 }
 
 #[test]
+fn generated_entrypoints_distinguish_authored_specs_from_machine_state() {
+    for file in ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md"] {
+        let content = assets::canonical_template(file).expect("canonical entrypoint template");
+        assert!(
+            content.contains("Machine-owned `.decapod` state is accessed only via decapod CLI"),
+            "{file} must retain the machine-state CLI boundary"
+        );
+        assert!(
+            content.contains(
+                "Agents may read and edit authored semantic prose in `.decapod/managed/specs/*.md`"
+            ),
+            "{file} must document the authored living-spec exception"
+        );
+        assert!(
+            content.contains("generated attestations, overlays, manifests"),
+            "{file} must keep generated projections machine-owned"
+        );
+    }
+}
+
+#[test]
 fn test_validate_passes_after_init() {
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
     let temp_path = temp_dir.path().to_path_buf();
