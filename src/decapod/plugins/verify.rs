@@ -340,7 +340,24 @@ fn run_validate_and_hash(
         &exe_str,
         &["validate", "--format", "json"],
         repo_root,
-    );
+    )?;
+    // A successful validation persists its trajectory and receipt after the
+    // worker report is produced. Run the same read-only proof once more before
+    // hashing so the baseline represents the settled post-validation state;
+    // otherwise the first capture hashes two artifact gates as skips and every
+    // replay observes them as passes.
+    let output = if output.status.success() {
+        external_action::execute(
+            store_root,
+            ExternalCapability::VerificationExec,
+            "verify.validate_passes",
+            &exe_str,
+            &["validate", "--format", "json"],
+            repo_root,
+        )?
+    } else {
+        output
+    };
     if let Some(old_val) = old_verifying_todo {
         unsafe {
             if old_val.is_empty() {
@@ -350,8 +367,6 @@ fn run_validate_and_hash(
             }
         }
     }
-    let output = output?;
-
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();
     if let Ok(value) = serde_json::from_str::<serde_json::Value>(&stdout) {
         let normalized = normalize_json_value(&value);

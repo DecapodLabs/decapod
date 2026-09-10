@@ -241,10 +241,14 @@ fn clean_checkout_activation_path_is_bounded_and_proof_gated() {
     );
     let workspace_path =
         PathBuf::from(workspace["worktree_path"].as_str().expect("workspace path"));
+    let canonical_workspace_root =
+        fs::canonicalize(root.join(".decapod").join("workspaces")).expect("workspace root");
+    let canonical_workspace_path =
+        fs::canonicalize(&workspace_path).expect("workspace path should exist");
     observations.push(Observation {
         id: "workspace_custody",
         passed: workspace["status"] == "ok"
-            && workspace_path.starts_with(root.join(".decapod").join("workspaces")),
+            && canonical_workspace_path.starts_with(canonical_workspace_root),
         evidence: workspace_path.display().to_string(),
     });
 
@@ -286,6 +290,22 @@ fn clean_checkout_activation_path_is_bounded_and_proof_gated() {
         Some(&password),
     );
     require_success(&workunit_init, "workunit init");
+    require_success(
+        &run_decapod(
+            &workspace_path,
+            &[
+                "govern",
+                "workunit",
+                "attach-spec",
+                "--task-id",
+                &task_id,
+                "--ref",
+                ".decapod/managed/specs/INTENT.md",
+            ],
+            Some(&password),
+        ),
+        "workunit attach-spec",
+    );
     require_success(
         &run_decapod(
             &workspace_path,

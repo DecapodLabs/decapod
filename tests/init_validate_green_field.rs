@@ -148,7 +148,10 @@ fn existing_project_init_migrates_watcher_before_runtime_reads() {
     assert_eq!(count, 1);
     drop(conn);
 
-    fs::remove_file(&legacy).expect("remove legacy input after migration");
+    assert!(
+        !legacy.exists(),
+        "successful initialization must retire the migrated legacy input"
+    );
     let validate = run_decapod_with_password(
         dir,
         &["validate"],

@@ -8,7 +8,7 @@ local SQLite.
 
 ## Dactyl storage contract
 
-The Decapod client uses Dactyl `dactyl-db` 0.9.0. Decapod supplies Dactyl's
+The Decapod client uses Dactyl `dactyl-db` 0.10.0. Decapod supplies Dactyl's
 ambient route values at connection construction: `DATASTORE=sqlite` or
 `DATASTORE=neon`, `DATASTORE_ROUTE` for the local file or the hardcoded
 Propodus Vercel/Neon origin (`https://project-oqn7i.vercel.app`), and
@@ -98,7 +98,7 @@ logical repository scope derived from `origin`; it requires an authenticated
 session bearer, but the bearer is memory-only and is omitted from serialized
 context data.
 
-The Dactyl v0.9.0 bridge forwards the route, versioned context envelope, and
+The Dactyl v0.10.0 bridge forwards the route, versioned context envelope, and
 opaque bearer without interpreting membership or authorization. Decapod keeps
 the bearer in Dactyl's ambient `DATASTORE_TOKEN` only while Dactyl captures the
 connection route; the token is restored/removed from the process afterward.
@@ -183,9 +183,40 @@ see [Decapod issue #1038](https://github.com/DecapodLabs/decapod/issues/1038).
 
 ## Delivery boundary
 
+## Local SQLite maintenance
+
+Local operators can inspect and maintain the canonical store explicitly:
+
+```text
+decapod data db verify
+decapod data db backup --destination /same-directory-or-approved-backup/decapod.backup.db
+decapod data db recover --preserve-original-at /same-directory/decapod.before-recovery.db
+```
+
+`verify` is read-only and calls Dactyl v0.10.0's typed native integrity
+verification. `backup` uses Dactyl's SQLite online-backup contract, including
+WAL/SHM correctness, and publishes a standalone destination after verification.
+`recover` is an explicit operator action only: it invokes Dactyl's logical
+dump/reload workflow, preserves the original at the requested unused sibling
+path, and atomically replaces the active database only after the replacement
+passes verification. Dactyl reports rollback or recovery failures without
+silently repairing the store. The recovered database uses DELETE journal mode
+and preserves application rows, schema, `user_version`, and `application_id`.
+
+The canonical Decapod sidecar lock is held for each operation. Recovery also
+requires all cooperating Decapod writers and same-process Dactyl connections
+to be quiesced; backup requires normal cooperating-client coordination. The
+archive must not already exist and must be on the same filesystem where Dactyl
+can perform its atomic replacement. The sidecar does not coordinate arbitrary
+external SQLite writers or make unreliable network/container mounts safe.
+Lock contention, unavailable runtimes, malformed/corrupt stores, unsupported
+capabilities, and recovery/rollback failures remain explicit diagnostic
+outcomes. Decapod never runs repair during startup, validation, event append,
+or connection creation.
+
 This Decapod slice activates the explicit cloud todo command path,
 remote-derived repository identity, Propodus onboarding/session exchange,
-machine-local refresh, Dactyl 0.9.0 adapter-level command and event-atomicity proof, and a wire-level
+machine-local refresh, Dactyl 0.10.0 adapter-level command and event-atomicity proof, and a wire-level
 `/query` proof without moving hosted authentication, repository authorization,
 persistence, or deployment into Decapod. Local mode continues to use the same
 backend-neutral todo command boundary, with physical canonical storage owned

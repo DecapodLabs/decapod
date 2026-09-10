@@ -572,7 +572,7 @@ fn validate_fails_on_invalid_knowledge_promotion_ledger_if_present() {
 
     let validate = run_decapod(
         &dir,
-        &["validate"],
+        &["validate", "--verbose"],
         &[
             ("DECAPOD_AGENT_ID", "unknown"),
             ("DECAPOD_SESSION_PASSWORD", &password),

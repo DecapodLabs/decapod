@@ -216,6 +216,9 @@ Agents consult it, cite claims, follow gates, and produce proof.
 Judgment remains human. Authority is explicit:
 baseline constitution, project override, task-scoped projection.
 
+The canonical router is the embedded [`assets/constitution.json`](assets/constitution.json)
+section `core/DECAPOD`, queried with `decapod constitution get core/DECAPOD`.
+
 ---
 
 ## Guarantees

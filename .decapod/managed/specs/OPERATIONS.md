@@ -53,7 +53,7 @@ signatures, update protection). Agents publish release-bound changes through
 the code PR, and release automation handles only compilation and publication.
 
 ## Installed-Version Upgrade Path
-After `cargo install decapod`, the next normal governed command runs protected, idempotent schema migration and legacy-event reconciliation before runtime consumers read evidence. Existing-project `decapod init` executes the same reconciliation before regeneration. A prior successful single-datastore migration retires its JSONL inputs through a durable receipt; startup does not rescan them. Legacy local database sources are opened through the Dactyl v0.9.0 facade, while Decapod owns row translation, schema policy, backup, recovery, and idempotency ledgers. Dactyl opens the canonical path directly through its host runtime; no bundled fallback or second local authority is used. Human-authored `OVERRIDE.md` content is validated but never mechanically rewritten. Fresh migration conflicts preserve source artifacts and stop with an actionable error.
+After `cargo install decapod`, the next normal governed command runs protected, idempotent schema migration and legacy-event reconciliation before runtime consumers read evidence. Existing-project `decapod init` executes the same reconciliation before regeneration. A prior successful single-datastore migration retires its JSONL inputs through a durable receipt; startup does not rescan them. Legacy local database sources are opened through the Dactyl v0.10.0 facade, while Decapod owns row translation, schema policy, the explicit maintenance command policy, and idempotency ledgers. Dactyl opens the canonical path directly through its host runtime and owns the physical backup/recovery contract; no bundled fallback or second local authority is used. Human-authored `OVERRIDE.md` content is validated but never mechanically rewritten. Fresh migration conflicts preserve source artifacts and stop with an actionable error.
 
 ## Agent-Triggered Migration Runbook
 1. Let the first governed command after installing a new Decapod release run
@@ -112,23 +112,34 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 
 ## Storage Diagnostics and Recovery Boundary (#1313)
 
-Run decapod data db verify when broker verification, validation, or another
-command reports a possible datastore problem. The command is read-only and
-uses the Dactyl facade, so ok proves only that the selected integrity probe
-completed successfully. missing identifies an uninitialized store; corrupt
-identifies a failed integrity result; and unavailable identifies an
-adapter/runtime failure.
+The operator workflow for the canonical local store is:
 
-No compatibility command attempts REINDEX, raw SQLite access, dump/reload, or
-replacement of .decapod/data/decapod.db. Automatic recovery requires a
-Dactyl-native backup/restore contract and explicit operator authorization.
-Canonical Decapod local connections do coordinate through the adjacent
-`decapod.db.lock` sidecar with a bounded exclusive advisory lock. This
-conservatively prevents cooperating host/container Decapod processes from
-overlapping access; it is not a repair mechanism and does not coordinate
-arbitrary external SQLite clients. Until Dactyl defines backup/restore
-semantics, preserve a corrupt database and escalate rather than mutating it
-outside the governed path.
+```text
+decapod data db verify
+decapod data db backup --destination <unused-database-path>
+decapod data db recover --preserve-original-at <unused-sibling-archive-path>
+```
+
+`verify` is read-only and uses Dactyl v0.10.0's native typed integrity API.
+`backup` uses Dactyl's SQLite online backup, including WAL/SHM correctness,
+then verifies and atomically publishes the standalone destination. `recover`
+is never implicit: it invokes Dactyl's logical dump/reload recovery, preserves
+the original and sidecars at the operator-selected unused sibling path, and
+atomically replaces the active database only after verification. Dactyl
+reports rollback and recovery failures; Decapod does not silently repair a
+store during startup, ordinary validation, event append, or connection
+creation. Successful recovery preserves application data, schema,
+`user_version`, and `application_id`, and activates DELETE journal mode.
+
+The canonical Decapod connection holds the adjacent `decapod.db.lock` sidecar
+with bounded exclusive advisory coordination. Recovery additionally requires
+writer quiescence and no same-process Dactyl connection to the target.
+Contention, unavailable runtime/storage, corrupt or malformed databases,
+unsupported capabilities, and recovery/rollback failure are distinct JSON
+diagnostics; Dactyl's `failure_code` remains available for detail. The sidecar
+only coordinates cooperating Decapod processes. Arbitrary external SQLite
+writers, unreliable filesystems, and network/container mounts remain outside
+the guarantee, and filesystem/path limitations from Dactyl must be respected.
 
 ## Governance Artifact Portability (#1314)
 
@@ -204,7 +215,7 @@ for filesystem work and are not used as the artifact representation.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `67c0fcc22db2ab73b44093790c397ca08216ccf5395754291cc846fcb82b8188`
+- Repository signal fingerprint: `14501ca08e28dbfcfa12ffdd5ed3534dae5b6d37e84241b1bd290d55c77f1ee4`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

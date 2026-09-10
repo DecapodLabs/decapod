@@ -423,6 +423,15 @@ impl MentorEngine {
 
         let conn = crate::core::db::db_connect(&db_path.to_string_lossy())?;
 
+        // The canonical event store can exist before the optional knowledge
+        // projections are initialized (for example after the first
+        // assurance attestation). Treat that as an empty candidate source;
+        // mentor reads must not turn a valid, partially initialized store
+        // into a missing-table failure.
+        if !conn.has_table("nodes")? {
+            return Ok(candidates);
+        }
+
         let mut stmt = conn.prepare(
             "SELECT id, title, node_type, tags FROM nodes
                  WHERE status = 'active'
@@ -475,6 +484,9 @@ impl MentorEngine {
         }
 
         let conn = crate::core::db::db_connect(&db_path.to_string_lossy())?;
+        if !conn.has_table("todos")? {
+            return Ok(candidates);
+        }
 
         let mut stmt = conn.prepare(
             "SELECT id, title, status, category FROM todos
@@ -520,6 +532,9 @@ impl MentorEngine {
         }
 
         let conn = crate::core::db::db_connect(&db_path.to_string_lossy())?;
+        if !conn.has_table("preferences")? {
+            return Ok(candidates);
+        }
         let mut stmt = conn.prepare(
             "SELECT category, key, value, context, confidence FROM preferences ORDER BY access_count DESC LIMIT 50",
         )?;
@@ -555,6 +570,9 @@ impl MentorEngine {
         }
 
         let conn = crate::core::db::db_connect(&db_path.to_string_lossy())?;
+        if !conn.has_table("nodes")? {
+            return Ok(candidates);
+        }
         let mut stmt = conn.prepare(
             "SELECT id, title, body, tags FROM nodes WHERE node_type = 'lesson' AND status = 'active' ORDER BY created_at DESC LIMIT 20",
         )?;
