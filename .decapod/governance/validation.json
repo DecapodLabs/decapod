@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "kind": "validation_receipt",
   "decapod_release": "0.99.15",
-  "git_revision": "d40eee9564c3c70421d4a07f4bdd465a9a719c61",
+  "git_revision": "b2dd66f8711494d5dab5275175942107a880ae40",
   "repo_signal_fingerprint": "14501ca08e28dbfcfa12ffdd5ed3534dae5b6d37e84241b1bd290d55c77f1ee4",
   "trajectory_run_id": "validation_01M25J5Y6DN9M8909A0GQ3HAKJ",
   "trajectory_artifact_hash": "sha256:0fdf747fbaf0a4b1c49b2f3949345c6c60708b1b44a32a885587ec19b71afa1b",
@@ -44,105 +44,123 @@
     }
   },
   "status": "ok",
-  "pass_count": 190,
+  "pass_count": 202,
   "fail_count": 0,
-  "warn_count": 2,
-  "elapsed_ms": 1955,
+  "warn_count": 4,
+  "elapsed_ms": 2246,
   "drift_findings": [],
   "temporary_artifacts_cleaned": 0,
   "failures": [],
   "warnings": [
     "Risk map missing (run `decapod riskmap init`)",
-    "Watcher audit trail missing (run `decapod govern watcher run`)"
+    "Stale workspaces preserved for explicit review: <external-path> (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force)",
+    "Watcher audit trail missing (run `decapod govern watcher run`)",
+    "Workspace branch 'agent/unknown/todo-01m24v-1789017037' has unpushed commits or does not exist on origin. Run `git push origin agent/unknown/todo-01m24v-1789017037`."
   ],
   "gate_timings": [
     {
-      "name": "validate_markdown_primitives_roundtrip_gate",
-      "elapsed_ms": 260
-    },
-    {
       "name": "validate_project_specs_docs",
-      "elapsed_ms": 259
+      "elapsed_ms": 580
     },
     {
-      "name": "validate_machine_contract",
-      "elapsed_ms": 255
+      "name": "validate_markdown_primitives_roundtrip_gate",
+      "elapsed_ms": 252
     },
     {
-      "name": "validate_no_legacy_namespaces",
-      "elapsed_ms": 93
+      "name": "validate_stale_workspaces",
+      "elapsed_ms": 168
     },
     {
       "name": "validate_obligations",
-      "elapsed_ms": 78
+      "elapsed_ms": 77
+    },
+    {
+      "name": "validate_git_workspace_context",
+      "elapsed_ms": 77
+    },
+    {
+      "name": "validate_no_legacy_namespaces",
+      "elapsed_ms": 57
     },
     {
       "name": "validate_schema_determinism",
       "elapsed_ms": 56
     },
     {
-      "name": "validate_legacy_jsonl_retired",
-      "elapsed_ms": 54
-    },
-    {
       "name": "validate_embedded_self_contained",
       "elapsed_ms": 50
     },
     {
+      "name": "validate_legacy_jsonl_retired",
+      "elapsed_ms": 50
+    },
+    {
       "name": "validate_federation_gates",
-      "elapsed_ms": 43
+      "elapsed_ms": 35
+    },
+    {
+      "name": "validate_machine_contract",
+      "elapsed_ms": 35
+    },
+    {
+      "name": "validate_git_protected_branch",
+      "elapsed_ms": 28
     },
     {
       "name": "validate_archive_integrity",
-      "elapsed_ms": 25
+      "elapsed_ms": 26
     },
     {
       "name": "validate_canon_mutation",
       "elapsed_ms": 25
     },
     {
-      "name": "validate_knowledge_integrity",
-      "elapsed_ms": 24
+      "name": "validate_watcher_purity",
+      "elapsed_ms": 25
     },
     {
-      "name": "validate_watcher_purity",
-      "elapsed_ms": 24
+      "name": "validate_knowledge_integrity",
+      "elapsed_ms": 25
     },
     {
       "name": "validate_policy_integrity",
-      "elapsed_ms": 23
-    },
-    {
-      "name": "validate_repomap_determinism",
-      "elapsed_ms": 23
+      "elapsed_ms": 24
     },
     {
       "name": "validate_risk_map_violations",
       "elapsed_ms": 23
     },
     {
+      "name": "validate_repomap_determinism",
+      "elapsed_ms": 21
+    },
+    {
+      "name": "validate_git_push_pr_gate",
+      "elapsed_ms": 20
+    },
+    {
       "name": "validate_lineage_hard_gate",
-      "elapsed_ms": 14
+      "elapsed_ms": 13
     },
     {
       "name": "validate_interface_contract_bootstrap",
-      "elapsed_ms": 12
-    },
-    {
-      "name": "validate_health_purity",
-      "elapsed_ms": 9
-    },
-    {
-      "name": "validate_generated_artifact_whitelist",
-      "elapsed_ms": 8
-    },
-    {
-      "name": "validate_gatekeeper_gate",
-      "elapsed_ms": 8
+      "elapsed_ms": 11
     },
     {
       "name": "validate_control_plane_contract",
       "elapsed_ms": 8
+    },
+    {
+      "name": "validate_generated_artifact_whitelist",
+      "elapsed_ms": 7
+    },
+    {
+      "name": "validate_gatekeeper_gate",
+      "elapsed_ms": 7
+    },
+    {
+      "name": "validate_health_purity",
+      "elapsed_ms": 4
     },
     {
       "name": "validate_override_authority",
@@ -157,11 +175,11 @@
       "elapsed_ms": 2
     },
     {
-      "name": "validate_lcm_immutability",
+      "name": "validate_knowledge_promotions_if_present",
       "elapsed_ms": 2
     },
     {
-      "name": "validate_knowledge_promotions_if_present",
+      "name": "validate_lcm_immutability",
       "elapsed_ms": 1
     },
     {
@@ -170,18 +188,6 @@
     },
     {
       "name": "validate_research_claims_if_present",
-      "elapsed_ms": 1
-    },
-    {
-      "name": "validate_state_commit_gate",
-      "elapsed_ms": 1
-    },
-    {
-      "name": "validate_validation_receipt_if_present",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_trajectory_artifacts_if_present",
       "elapsed_ms": 0
     },
     {
@@ -197,7 +203,19 @@
       "elapsed_ms": 0
     },
     {
+      "name": "validate_trajectory_artifacts_if_present",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_validation_receipt_if_present",
+      "elapsed_ms": 0
+    },
+    {
       "name": "validate_project_config_toml",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_plan_governed_execution_gate",
       "elapsed_ms": 0
     },
     {
@@ -213,15 +231,7 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_workunit_manifests_if_present",
-      "elapsed_ms": 0
-    },
-    {
       "name": "validate_project_scoped_state",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_internalization_artifacts_if_present",
       "elapsed_ms": 0
     },
     {
@@ -229,7 +239,31 @@
       "elapsed_ms": 0
     },
     {
+      "name": "validate_state_commit_gate",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_workunit_manifests_if_present",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_root_dockerfile_seed_detection",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_risk_map",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_coplayer_policy_tightening",
+      "elapsed_ms": 0
+    },
+    {
       "name": "validate_eval_gate_if_required",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_internalization_artifacts_if_present",
       "elapsed_ms": 0
     },
     {
@@ -241,39 +275,7 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_coplayer_policy_tightening",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_plan_governed_execution_gate",
-      "elapsed_ms": 0
-    },
-    {
       "name": "validate_tooling_gate",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_risk_map",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_git_workspace_context",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_root_dockerfile_seed_detection",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_stale_workspaces",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_git_protected_branch",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_git_push_pr_gate",
       "elapsed_ms": 0
     }
   ],
@@ -283,12 +285,14 @@
     "confidence": "medium",
     "reasons": [
       "Risk map missing (run `decapod riskmap init`)",
-      "Watcher audit trail missing (run `decapod govern watcher run`)"
+      "Stale workspaces preserved for explicit review: <external-path> (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force)",
+      "Watcher audit trail missing (run `decapod govern watcher run`)",
+      "Workspace branch 'agent/unknown/todo-01m24v-1789017037' has unpushed commits or does not exist on origin. Run `git push origin agent/unknown/todo-01m24v-1789017037`."
     ],
     "recommendations": [
       "Review the reported validation warnings before relying on the CI result.",
       "Use `decapod validate -v --format json` to inspect the affected gate output."
     ]
   },
-  "receipt_hash": "sha256:398ab24178865824916d4c02f663682c4ab50b9f38f58a9f31bf67d261d6b683"
+  "receipt_hash": "sha256:0289c542e3704f31c632ffdf9f49278fd42b42f0ec5573f9a6c1df6aa3ca0f18"
 }
