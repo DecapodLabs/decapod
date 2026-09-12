@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.100.0](https://github.com/DecapodLabs/decapod/compare/v0.99.15...v0.100.0) - 2026-09-12
+
+### Added
+
+- *(storage)* consume Dactyl v0.10 SQLite maintenance contract ([#1321](https://github.com/DecapodLabs/decapod/pull/1321))
+
 ## [0.99.15](https://github.com/DecapodLabs/decapod/compare/v0.99.14...v0.99.15) - 2026-09-09
 
 ### Fixed
