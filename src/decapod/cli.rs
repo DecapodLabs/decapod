@@ -1212,7 +1212,7 @@ pub(crate) enum DataCommand {
     /// Audit log access (The Thin Waist)
     Broker(BrokerCli),
 
-    /// Read-only diagnostics for the canonical local datastore
+    /// Explicit maintenance workflows for the canonical local datastore
     #[clap(alias = "db")]
     Database(DatabaseCli),
 
@@ -1240,6 +1240,18 @@ pub(crate) struct DatabaseCli {
 pub(crate) enum DatabaseCommand {
     /// Run Dactyl's read-only SQLite integrity check without modifying storage.
     Verify,
+    /// Create a Dactyl online-backup snapshot at an operator-selected path.
+    Backup {
+        /// Destination database path. It must not already exist.
+        #[clap(long)]
+        destination: PathBuf,
+    },
+    /// Explicitly recover via Dactyl's verified logical dump/reload workflow.
+    Recover {
+        /// Archive path for the original database and any WAL/SHM sidecars.
+        #[clap(long = "preserve-original-at")]
+        preserve_original_at: PathBuf,
+    },
 }
 
 #[derive(clap::Args, Debug)]

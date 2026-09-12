@@ -37,10 +37,13 @@ fn run_git_cmd(dir: &Path, args: &[&str]) {
 }
 
 fn canonical_path_string(path: &Path) -> String {
-    fs::canonicalize(path)
-        .unwrap_or_else(|_| path.to_path_buf())
-        .to_string_lossy()
-        .to_string()
+    let canonical = fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf());
+    let project_root = path
+        .parent()
+        .and_then(Path::parent)
+        .and_then(Path::parent)
+        .expect("workspace path should be under .decapod/workspaces");
+    decapod::core::path_policy::normalize_persisted_path(project_root, &canonical.to_string_lossy())
 }
 
 #[test]
@@ -480,14 +483,8 @@ fn test_workspace_prune_non_force_preserves_dirty_and_unregistered_data() {
     let orphan_path = workspaces_dir.join("orphaned-houseboat-workspace");
     fs::create_dir_all(&orphan_path).expect("create orphan workspace");
     fs::write(orphan_path.join("evidence.txt"), "inspect me").expect("write orphan evidence");
-    let dirty_report_path = fs::canonicalize(&dirty_path)
-        .unwrap_or_else(|_| dirty_path.clone())
-        .to_string_lossy()
-        .to_string();
-    let orphan_report_path = fs::canonicalize(&orphan_path)
-        .unwrap_or_else(|_| orphan_path.clone())
-        .to_string_lossy()
-        .to_string();
+    let dirty_report_path = canonical_path_string(&dirty_path);
+    let orphan_report_path = canonical_path_string(&orphan_path);
 
     let report =
         workspace::prune_workspaces_report(&main_root, false).expect("non-force prune report");

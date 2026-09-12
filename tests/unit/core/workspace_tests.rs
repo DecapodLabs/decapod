@@ -372,7 +372,7 @@ fn validation_artifact_publish_gate_requires_trajectory_and_receipt() {
 #[test]
 fn required_governance_artifacts_must_be_present_and_valid() {
     let tmp = tempdir().expect("tempdir");
-    git(tmp.path(), &["init", "-q"]);
+    git(tmp.path(), &["init", "-q", "-b", "master"]);
     git(tmp.path(), &["config", "user.email", "test@test.com"]);
     git(tmp.path(), &["config", "user.name", "Test"]);
     std::fs::write(tmp.path().join("README.md"), "base\n").expect("write base");

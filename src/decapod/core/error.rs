@@ -59,6 +59,7 @@ impl CloudAuthDiagnostic {
 pub enum StorageFailureKind {
     Contention,
     Io,
+    Corrupt,
     Constraint,
     Query,
     Value,
@@ -219,6 +220,7 @@ fn classify_dactyl_error(err: &dactyl_db::DactylError) -> StorageFailureKind {
             AdapterErrorKind::Storage
             | AdapterErrorKind::Transport
             | AdapterErrorKind::Unavailable => StorageFailureKind::Io,
+            AdapterErrorKind::Corrupt => StorageFailureKind::Corrupt,
             AdapterErrorKind::Constraint
             | AdapterErrorKind::Conflict
             | AdapterErrorKind::VersionConflict

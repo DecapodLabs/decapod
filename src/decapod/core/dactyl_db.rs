@@ -383,7 +383,7 @@ impl Connection {
         lock_timeout: Duration,
         storage_lock: Option<crate::core::storage_lock::StorageLock>,
     ) -> Result<Self> {
-        // Dactyl v0.8.2 validates an existing local file header before it
+        // Dactyl v0.10.0 validates an existing local file header before it
         // reaches SQLite's CREATE flag. Seed the empty file for a new
         // read-write datastore so the Dactyl open remains the authority for
         // the actual connection and header validation.

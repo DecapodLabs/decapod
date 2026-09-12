@@ -2056,9 +2056,21 @@ pub fn run() -> Result<(), error::DecapodError> {
             }
             return Ok(());
         }
-        Command::System(SystemCli {
+        command @ Command::System(SystemCli {
             command: SystemCommand::Version,
-        }) => return show_version_info(),
+        }) => {
+            // Keep `system version` usable before project initialization, but
+            // let an initialized project observe the normal migration notice
+            // exactly once when its release counter changes.
+            let in_project = std::env::current_dir()
+                .ok()
+                .is_some_and(|dir| find_decapod_project_root(&dir).is_ok());
+            if in_project {
+                command
+            } else {
+                return show_version_info();
+            }
+        }
         Command::System(SystemCli {
             command: SystemCommand::Capabilities(cap_cli),
         }) => return run_capabilities_command(cap_cli),
@@ -2313,6 +2325,16 @@ pub fn run() -> Result<(), error::DecapodError> {
             let target_dir = run_init_apply(&init_with, &current_dir, &repo_ctx)?;
             let config = config_from_init_with(&init_with, repo_ctx);
             write_project_config(&target_dir, &config, init_with.dry_run)?;
+            // The scaffold writes project specs before the final config is
+            // persisted. Refresh the manifest after that write so its
+            // config/spec input hashes describe the actual initialized
+            // project, including capabilities supplied by the caller.
+            if !init_with.dry_run && init_with.specs {
+                core::project_specs::refresh_specs_manifest(
+                    &target_dir,
+                    &config.repo.capabilities,
+                )?;
+            }
             record_cloud_init_registration(&target_dir, &config, init_with.dry_run)?;
             seed_init_generated_state(&target_dir, init_with.dry_run)?;
             if !init_with.dry_run
@@ -2607,11 +2629,11 @@ fn should_auto_clock_in(command: &Command) -> bool {
 fn is_storage_independent_command(command: &Command) -> bool {
     match command {
         Command::Rpc(rpc_cli) => rpc_cli.op.as_deref() == Some("specs.refresh"),
+        // Maintenance commands operate on the canonical store through the
+        // Dactyl contract and must not run startup migrations or presence
+        // clock-in before they acquire their own bounded coordination lock.
         Command::Data(DataCli {
-            command:
-                DataCommand::Database(DatabaseCli {
-                    command: DatabaseCommand::Verify,
-                }),
+            command: DataCommand::Database(_),
         }) => true,
         _ => false,
     }
@@ -5306,14 +5328,7 @@ fn heal_release_bound_entrypoints(
     };
     if updated == 0 && !manifest_needs_refresh {
         // Explicit no-op success path: pins already match evaluating release.
-        return Ok(Some(ValidationHealAction {
-            action: "heal_release_bound_entrypoints".to_string(),
-            outcome: "verified".to_string(),
-            detail: format!(
-                "Entrypoint pins already match evaluating Decapod {} (matching={matching}); no fingerprint bump required.",
-                core::entrypoint_integrity::RELEASE_VERSION
-            ),
-        }));
+        return Ok(None);
     }
 
     // Spec projections belong to the claimed worktree. A protected-root
@@ -7231,6 +7246,12 @@ fn run_data_command(
         },
         DataCommand::Database(database_cli) => match database_cli.command {
             DatabaseCommand::Verify => verify_database_integrity(store_root)?,
+            DatabaseCommand::Backup { destination } => {
+                backup_database_with_dactyl(store_root, &destination)?
+            }
+            DatabaseCommand::Recover {
+                preserve_original_at,
+            } => recover_database_with_dactyl(store_root, &preserve_original_at)?,
         },
         DataCommand::Aptitude(aptitude_cli) => {
             aptitude::run_aptitude_cli(project_store, aptitude_cli)?;
@@ -7249,11 +7270,11 @@ fn run_data_command(
     Ok(())
 }
 
-/// Run a read-only integrity probe through the Dactyl database facade.
+/// Run a read-only integrity probe through Dactyl's native maintenance API.
 ///
-/// This intentionally reports corruption or adapter capability failures
-/// without attempting repair. Recovery requires an explicit Dactyl-native
-/// contract and remains outside this compatibility fix.
+/// This command intentionally reports corruption or adapter capability
+/// failures without attempting repair. Recovery is a separate explicit
+/// operator command.
 fn verify_database_integrity(store_root: &Path) -> Result<(), error::DecapodError> {
     let db_path = core::events::canonical_db_path(store_root);
     if !db_path.exists() {
@@ -7261,56 +7282,222 @@ fn verify_database_integrity(store_root: &Path) -> Result<(), error::DecapodErro
             "{}",
             serde_json::json!({
                 "status": "missing",
+                "diagnostic_status": "unavailable",
                 "database": core::schemas::LOCAL_DB_NAME,
                 "integrity_check": null,
+                "automatic_repair": false,
             })
         );
         return Ok(());
     }
 
-    let conn = db::db_connect_for_validate(&db_path.to_string_lossy())?;
-    match conn.query_row("PRAGMA integrity_check", [], |row| row.get::<_, String>(0)) {
-        Ok(result) if result == "ok" => {
+    let bridge = match core::dactyl::DactylBridge::open_canonical(
+        store_root,
+        dactyl_db::AccessMode::ReadOnly,
+    ) {
+        Ok(bridge) => bridge,
+        Err(error) => return report_database_failure("verify", error),
+    };
+    match bridge.verify_integrity() {
+        Ok(report) => {
             println!(
                 "{}",
                 serde_json::json!({
                     "status": "ok",
+                    "diagnostic_status": "healthy",
                     "database": core::schemas::LOCAL_DB_NAME,
-                    "integrity_check": result,
+                    "integrity_check": "ok",
+                    "journal_mode": report.journal_mode,
+                    "user_version": report.user_version,
+                    "application_id": report.application_id,
+                    "automatic_repair": false,
                 })
             );
             Ok(())
         }
-        Ok(result) => {
-            println!(
-                "{}",
-                serde_json::json!({
-                    "status": "corrupt",
-                    "database": core::schemas::LOCAL_DB_NAME,
-                    "integrity_check": result,
-                })
-            );
-            Err(error::DecapodError::ValidationError(
-                "database integrity check failed; stop and use the governed recovery decision path"
-                    .to_string(),
-            ))
-        }
-        Err(storage_error) => {
-            let normalized = error::DecapodError::StorageError(storage_error);
-            println!(
-                "{}",
-                serde_json::json!({
-                    "status": "unavailable",
-                    "database": core::schemas::LOCAL_DB_NAME,
-                    "integrity_check": null,
-                    "storage_failure_kind": normalized.storage_failure_kind(),
-                    "message": normalized.to_string(),
-                })
-            );
-            Err(normalized)
-        }
+        Err(error) => report_database_failure("verify", error),
     }
 }
+
+/// Create an explicit Dactyl online-backup snapshot. The canonical bridge
+/// holds Decapod's bounded coordination lock while Dactyl reads the source.
+fn backup_database_with_dactyl(
+    store_root: &Path,
+    destination: &Path,
+) -> Result<(), error::DecapodError> {
+    let bridge = match core::dactyl::DactylBridge::open_canonical(
+        store_root,
+        dactyl_db::AccessMode::ReadOnly,
+    ) {
+        Ok(bridge) => bridge,
+        Err(error) => return report_database_failure("backup", error),
+    };
+    match bridge.backup(destination) {
+        Ok(report) => {
+            println!(
+                "{}",
+                serde_json::json!({
+                    "status": "ok",
+                    "diagnostic_status": "healthy",
+                    "operation": "backup",
+                    "database": core::schemas::LOCAL_DB_NAME,
+                    "backup": report,
+                    "automatic_repair": false,
+                })
+            );
+            Ok(())
+        }
+        Err(error) => report_database_failure("backup", error),
+    }
+}
+
+/// Invoke Dactyl's explicit, verified logical dump/reload replacement. This
+/// is the only Decapod path that asks Dactyl to replace the active database.
+fn recover_database_with_dactyl(
+    store_root: &Path,
+    preserve_original_at: &Path,
+) -> Result<(), error::DecapodError> {
+    let mut bridge = match core::dactyl::DactylBridge::open_canonical(
+        store_root,
+        dactyl_db::AccessMode::ReadWrite,
+    ) {
+        Ok(bridge) => bridge,
+        Err(error) => return report_database_failure("recovery", error),
+    };
+    match bridge.recover_from_dump_reload(preserve_original_at) {
+        Ok(report) => {
+            println!(
+                "{}",
+                serde_json::json!({
+                    "status": "ok",
+                    "diagnostic_status": "healthy",
+                    "operation": "recovery",
+                    "database": core::schemas::LOCAL_DB_NAME,
+                    "recovery": report,
+                    "automatic_repair": false,
+                })
+            );
+            Ok(())
+        }
+        Err(error) => report_database_failure("recovery", error),
+    }
+}
+
+/// Preserve the legacy verify status values while adding an explicit
+/// Decapod diagnostic class for operators and scripts.
+fn report_database_failure(
+    operation: &str,
+    error: error::DecapodError,
+) -> Result<(), error::DecapodError> {
+    let diagnostic_status = database_diagnostic_status(&error);
+    let status = match diagnostic_status {
+        "corrupt" => "corrupt",
+        "unsupported" => "unsupported",
+        "conflict" => "conflict",
+        "recovery_failed" | "recovery_rollback_failed" => "recovery_failed",
+        // Existing `data db verify` consumers receive `unavailable` for both
+        // an unavailable runtime and bounded lock contention.
+        "locked" | "unavailable" => "unavailable",
+        _ => "unavailable",
+    };
+    let failure_code = database_failure_code(&error);
+    println!(
+        "{}",
+        serde_json::json!({
+            "status": status,
+            "diagnostic_status": diagnostic_status,
+            "operation": operation,
+            "database": core::schemas::LOCAL_DB_NAME,
+            "integrity_check": null,
+            "storage_failure_kind": error.storage_failure_kind(),
+            "failure_code": failure_code,
+            "message": error.to_string(),
+            "automatic_repair": false,
+            "operator_action_required": true,
+        })
+    );
+    Err(error)
+}
+
+fn database_diagnostic_status(error: &error::DecapodError) -> &'static str {
+    let Some(dactyl_error) = dactyl_error_from_decapod(error) else {
+        return match error {
+            error::DecapodError::ValidationError(message)
+                if message
+                    .to_ascii_lowercase()
+                    .contains("storage_lock_timeout")
+                    || message.to_ascii_lowercase().contains("database is locked") =>
+            {
+                "locked"
+            }
+            error::DecapodError::IoError(_) => "unavailable",
+            _ => "unavailable",
+        };
+    };
+
+    match dactyl_error {
+        dactyl_db::DactylError::Adapter { kind, code, .. } => {
+            if code.as_deref() == Some("recovery_rollback_failed") {
+                return "recovery_rollback_failed";
+            }
+            if code
+                .as_deref()
+                .is_some_and(|code| code.starts_with("recovery_"))
+            {
+                return "recovery_failed";
+            }
+            match kind {
+                dactyl_db::AdapterErrorKind::Corrupt => "corrupt",
+                dactyl_db::AdapterErrorKind::Busy
+                | dactyl_db::AdapterErrorKind::Locked
+                | dactyl_db::AdapterErrorKind::Timeout => "locked",
+                dactyl_db::AdapterErrorKind::Conflict
+                    if code.as_deref() == Some("open_connections") =>
+                {
+                    "locked"
+                }
+                dactyl_db::AdapterErrorKind::Conflict => "conflict",
+                dactyl_db::AdapterErrorKind::Capability | dactyl_db::AdapterErrorKind::ReadOnly => {
+                    "unsupported"
+                }
+                dactyl_db::AdapterErrorKind::Unavailable
+                | dactyl_db::AdapterErrorKind::Storage
+                | dactyl_db::AdapterErrorKind::Transport => "unavailable",
+                _ => "unavailable",
+            }
+        }
+        dactyl_db::DactylError::UnsupportedOperation(_) | dactyl_db::DactylError::Config(_) => {
+            "unsupported"
+        }
+        _ => "unavailable",
+    }
+}
+
+fn dactyl_error_from_decapod(error: &error::DecapodError) -> Option<&dactyl_db::DactylError> {
+    match error {
+        error::DecapodError::DactylError(error) => Some(error),
+        error::DecapodError::StorageError(db::Error::Dactyl(error)) => Some(error),
+        _ => None,
+    }
+}
+
+fn database_failure_code(error: &error::DecapodError) -> Option<String> {
+    if let Some(dactyl_error) = dactyl_error_from_decapod(error) {
+        return dactyl_error.adapter_code().map(ToOwned::to_owned);
+    }
+    if error
+        .to_string()
+        .to_ascii_lowercase()
+        .contains("storage_lock_timeout")
+    {
+        return Some("storage_lock_timeout".to_string());
+    }
+    None
+}
+
+#[cfg(test)]
+#[path = "../../tests/unit/lib_database_maintenance_diagnostic_tests.rs"]
+mod database_maintenance_diagnostic_tests;
 
 fn schema_to_markdown(schema: &serde_json::Value) -> String {
     fn render_value(v: &serde_json::Value) -> String {

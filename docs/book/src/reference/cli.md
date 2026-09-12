@@ -40,6 +40,34 @@ storage or change the local SQLite default.
 - `cloud status`: report credential availability and source without printing a
   token.
 
+### Local database maintenance
+
+These commands apply only to the canonical local `.decapod/data/decapod.db`
+store and are explicit operator workflows:
+
+```text
+decapod data db verify
+decapod data db backup --destination <unused-database-path>
+decapod data db recover --preserve-original-at <unused-sibling-archive-path>
+```
+
+`verify` is read-only and reports Dactyl v0.10.0 integrity metadata. `backup`
+uses Dactyl's online SQLite backup, so a WAL source is captured without
+copying live `-wal`/`-shm` files into the destination. `recover` performs the
+verified logical dump/reload only when explicitly requested; it preserves the
+original, atomically publishes the replacement, rolls back on failure when
+possible, and reports rollback failure distinctly. Recovery returns DELETE
+journal mode while retaining application data and relevant SQLite metadata.
+
+Do not run recovery while writers or same-process Dactyl connections are open.
+The Decapod sidecar lock bounds contention between cooperating Decapod
+processes, but it cannot coordinate arbitrary external SQLite writers or
+unreliable filesystems/mounted storage. No command repairs a store
+automatically, including startup, validation, event append, or connection
+creation. JSON diagnostics distinguish `healthy`, `unavailable`, `locked`,
+`corrupt`, `unsupported`, `recovery_failed`, and
+`recovery_rollback_failed`; inspect `failure_code` for Dactyl's precise code.
+
 ---
 
 ## Workspace Management (alias: `w`)

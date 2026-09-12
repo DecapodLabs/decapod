@@ -234,7 +234,6 @@ pub fn refresh_entrypoint_metadata(project_root: &Path) -> Result<usize, error::
             continue;
         }
 
-        let expected = expected_fingerprint(surface).unwrap_or("");
         let declared_fingerprint = marker_value(second, FINGERPRINT_MARKER)
             .and_then(|result| result.ok())
             .unwrap_or_default();
@@ -243,19 +242,17 @@ pub fn refresh_entrypoint_metadata(project_root: &Path) -> Result<usize, error::
         let legacy_binary_marker =
             matches!(marker_value(second, LEGACY_BINARY_MARKER), Some(Ok(_)));
         let release_mismatch = declared_release != RELEASE_VERSION;
-        let fingerprint_mismatch =
-            !declared_fingerprint.is_empty() && declared_fingerprint != expected;
 
         // Rewrite when on-disk pin is stale relative to the evaluating binary:
         // - release pin differs (project upgraded / CI evaluates newer Decapod), or
-        // - fingerprint is stale for the current release, or
         // - legacy binary marker still present, or
         // - declared fingerprint is consistent with the declared (older) release
         //   so a pure header migration to the evaluating release is safe.
-        let should_rewrite = release_mismatch
-            || fingerprint_mismatch
-            || legacy_binary_marker
-            || fingerprint_valid_for_declared;
+        // A mismatched fingerprint for the evaluating release is deliberately
+        // not auto-healed: it is an operator edit/tamper and must remain
+        // visible to validate_entrypoint.
+        let should_rewrite =
+            release_mismatch || legacy_binary_marker || fingerprint_valid_for_declared;
         if !should_rewrite {
             continue;
         }

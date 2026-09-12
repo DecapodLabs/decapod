@@ -504,7 +504,14 @@ fn prepare_workspace_clone_inherits_parent_github_remote_and_remote_tip() {
     let parent = tmp.path().join("parent");
     git(
         tmp.path(),
-        &["init", "--bare", "-q", origin.to_str().unwrap()],
+        &[
+            "init",
+            "--bare",
+            "--initial-branch",
+            "master",
+            "-q",
+            origin.to_str().unwrap(),
+        ],
     );
 
     fs::create_dir_all(&parent).expect("parent");

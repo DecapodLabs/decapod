@@ -1,20 +1,25 @@
 {
   "schema_version": "1.0.0",
-  "title": "Permit authored living-spec prose without weakening the store boundary (#1197)",
-  "intent": "Implement the narrow compatibility fix for #1197: generated agent instructions must permit agents to read and edit the authored semantic prose of .decapod/managed/specs/*.md, while machine-owned Decapod state, generated attestations, manifests, governance JSON, and databases remain CLI/RPC-only. Preserve the material-spec and proof gates; add no new authority or contract surface.",
+  "title": "Consume Dactyl v0.10.0 SQLite maintenance contract for Issue #1313",
+  "intent": "Integrate Dactyl v0.10.0 native integrity verification, online backup, and explicit dump/reload recovery into Decapod's existing canonical local datastore boundary. Preserve typed health, unavailable/locked, corrupt/malformed, unsupported-capability, and recovery/rollback outcomes; require bounded cooperating-client coordination and writer quiescence; never auto-repair or expose raw SQLite behavior.",
   "state": "APPROVED",
   "todo_ids": [
-    "feat_01m21n87eetm9caa"
+    "bugs_01m24vjvppbbc30e"
   ],
   "proof_hooks": [
     "cargo test --lib",
+    "cargo test --test sqlite_maintenance",
     "cargo fmt --all -- --check",
     "cargo clippy --all-targets --all-features -- -D warnings",
     "decapod validate --format json"
   ],
   "unknowns": [],
   "human_questions": [],
-  "stop_conditions": [],
+  "stop_conditions": [
+    "Do not modify Dactyl or implement raw SQLite recovery/shell-outs.",
+    "Do not trigger backup or recovery during startup, validation, append, or connection creation.",
+    "Do not add multi-run/workspace orchestration or expose raw SQLite handles/PRAGMAs."
+  ],
   "unresolved_contradictions": [],
   "deferred_questions": [],
   "constraints": {
@@ -24,5 +29,5 @@
     "file_touch_budget": 30
   },
   "phases": [],
-  "updated_at": "1788909782Z"
+  "updated_at": "1789019738Z"
 }

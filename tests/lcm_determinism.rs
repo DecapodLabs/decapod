@@ -241,9 +241,9 @@ fn test_lcm_immutability_gate_catches_tampered_hash() {
     let db_path = store.root.join("decapod.db");
     let conn = Connection::open(db_path).unwrap();
     conn.execute(
-        "UPDATE lcm_events
+        "UPDATE events
          SET payload = replace(payload, 'authentic content', 'tampered content')
-         WHERE payload LIKE '%authentic content%'",
+         WHERE stream = 'lcm' AND payload LIKE '%authentic content%'",
         [],
     )
     .unwrap();

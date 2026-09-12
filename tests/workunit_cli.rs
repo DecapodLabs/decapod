@@ -419,6 +419,24 @@ fn workunit_record_proof_and_transition_happy_path() {
         ],
         &envs,
     );
+    let attach_spec = run_decapod(
+        &dir,
+        &[
+            "govern",
+            "workunit",
+            "attach-spec",
+            "--task-id",
+            "test_007",
+            "--ref",
+            ".decapod/managed/specs/INTENT.md",
+        ],
+        &envs,
+    );
+    assert!(
+        attach_spec.status.success(),
+        "attach-spec failed: {}",
+        String::from_utf8_lossy(&attach_spec.stderr)
+    );
 
     for to in ["executing", "claimed"] {
         let step = run_decapod(

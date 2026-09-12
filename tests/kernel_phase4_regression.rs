@@ -79,6 +79,25 @@ fn phase4_kernel_surfaces_work_together() {
         String::from_utf8_lossy(&init_workunit.stderr)
     );
 
+    let spec = run_decapod(
+        &dir,
+        &[
+            "govern",
+            "workunit",
+            "attach-spec",
+            "--task-id",
+            "R_PHASE4",
+            "--ref",
+            ".decapod/managed/specs/INTENT.md",
+        ],
+        &auth,
+    );
+    assert!(
+        spec.status.success(),
+        "attach-spec failed: {}",
+        String::from_utf8_lossy(&spec.stderr)
+    );
+
     let proof_plan = run_decapod(
         &dir,
         &[

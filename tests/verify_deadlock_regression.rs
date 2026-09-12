@@ -373,7 +373,6 @@ fn test_verify_replay_excludes_target_from_missing_plan_gate() {
         String::from_utf8_lossy(&regen.stdout),
         String::from_utf8_lossy(&regen.stderr)
     );
-
     let verify = run_cmd(&wt_path, &["qa", "verify", "todo", &todo_id], &[]);
     assert!(
         verify.status.success(),

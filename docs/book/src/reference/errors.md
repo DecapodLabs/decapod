@@ -82,3 +82,24 @@ projects on that machine; cloud-backed commands do not require this runtime.
 The wrapped SQLite, I/O, and environment errors remain available through the
 standard `std::error::Error::source` chain, so callers can log the underlying
 cause without parsing the display string.
+
+### Local database maintenance diagnostics
+
+`data db verify`, `backup`, and `recover` emit JSON before returning a failure.
+The `diagnostic_status` field is the stable operator classification:
+
+- `healthy`: Dactyl completed the requested operation and its verification.
+- `unavailable`: the SQLite runtime or storage is unavailable.
+- `locked`: bounded coordination or SQLite lock contention prevented progress.
+- `corrupt`: Dactyl found a malformed database or failed integrity verification;
+  `failure_code` distinguishes details such as `malformed_database` and
+  `corrupt_database`.
+- `unsupported`: the selected Dactyl capability or access mode is unsupported.
+- `recovery_failed`: recovery failed after it was explicitly requested.
+- `recovery_rollback_failed`: recovery and rollback both failed and require
+  human review.
+
+`automatic_repair` is always `false`. A failed diagnostic does not trigger
+REINDEX, dump/reload, replacement, or any other repair. Recovery is an
+operator-only command and requires writer quiescence; Dactyl owns WAL/SHM
+handling, atomic replacement, rollback, and DELETE journal-mode activation.

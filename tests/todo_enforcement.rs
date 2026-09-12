@@ -38,13 +38,6 @@ fn setup_workspace() -> (TempDir, std::path::PathBuf, String) {
         .output()
         .expect("git commit");
 
-    // Create a feature branch to pass workspace protection
-    Command::new("git")
-        .args(["checkout", "-b", "feat/test-enforcement"])
-        .current_dir(&dir)
-        .output()
-        .expect("git checkout");
-
     // Init decapod
     let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .args(["init", "--force"])
@@ -52,6 +45,26 @@ fn setup_workspace() -> (TempDir, std::path::PathBuf, String) {
         .output()
         .expect("decapod init");
     assert!(out.status.success(), "decapod init failed");
+
+    // Commit the initialized control plane on the protected base before
+    // creating the feature branch. Workspace ensure intentionally starts new
+    // worktrees from that base, so the fixture must model a repository whose
+    // Decapod config and release-bound surfaces are available there.
+    Command::new("git")
+        .args(["add", "-A"])
+        .current_dir(&dir)
+        .output()
+        .expect("git add decapod init");
+    Command::new("git")
+        .args(["commit", "-m", "decapod init"])
+        .current_dir(&dir)
+        .output()
+        .expect("git commit decapod init");
+    Command::new("git")
+        .args(["checkout", "-b", "feat/test-enforcement"])
+        .current_dir(&dir)
+        .output()
+        .expect("git checkout");
 
     // Acquire session
     // We need to set DECAPOD_AGENT_ID to match what we use later, or use default.

@@ -2,7 +2,8 @@
 //!
 //! Replaces the per-DB `Mutex<()>` serialization in `broker.rs` with a pool that:
 //! - Maintains a **write mutex** per DB for serialized write access
-//! - Creates fresh **read connections** per operation (no mutex, concurrent where the backend permits)
+//! - Creates fresh **read connections** per operation while sharing the per-DB
+//!   operation mutex with writers
 //! - Retains a Decapod sidecar coordination lock on each canonical local connection
 //!
 //! Connections are NOT pooled (opened fresh each time) to avoid database sidecar file handle
@@ -55,7 +56,10 @@ struct PoolEntry {
 /// Storage pool providing read/write separation per local database.
 ///
 /// - Write operations are serialized through a per-DB mutex with fresh connections.
-/// - Read operations create fresh connections without pool-mutex serialization.
+/// - Read operations create fresh connections under the same per-DB operation
+///   mutex as writers. This keeps Dactyl's short-lived connection lifecycle
+///   bounded on filesystems where concurrent SQLite lock transitions surface as
+///   I/O errors rather than retryable busy/locked results.
 /// - Canonical local connections retain a bounded exclusive sidecar lock, so
 ///   host/container processes do not overlap access to the same file.
 pub struct StoragePool {
@@ -105,15 +109,22 @@ impl StoragePool {
         f(&conn)
     }
 
-    /// Execute a closure with a read connection (no mutex serialization).
-    /// Same-process readers may proceed through the process-local lock registry;
-    /// separate local processes are conservatively serialized by the sidecar.
+    /// Execute a closure with a serialized read connection.
+    ///
+    /// The sidecar coordinates cooperating processes, while this per-database
+    /// operation lock also prevents a burst of same-process readers from
+    /// overlapping SQLite lock transitions with a writer.
     #[inline]
     pub fn with_read<F, R>(&self, db_path: &Path, f: F) -> Result<R, DecapodError>
     where
         F: FnOnce(&Connection) -> Result<R, DecapodError>,
     {
-        let conn = db::db_connect_read_pooled(&db_path.to_string_lossy(), READ_BUSY_TIMEOUT_SECS)?;
+        let entry = self.get_entry(db_path)?;
+        let _guard = entry.write_lock.lock().map_err(|_| {
+            DecapodError::ValidationError("Pool operation lock poisoned".to_string())
+        })?;
+        let conn =
+            db::db_connect_read_pooled(&entry.db_path.to_string_lossy(), READ_BUSY_TIMEOUT_SECS)?;
 
         f(&conn)
     }
