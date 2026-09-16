@@ -1,28 +1,34 @@
 {
   "schema_version": "1.0.0",
-  "title": "Fix federation rebuild and supersede policy gate (#1323)",
-  "intent": "Make federation.rebuild and federation.supersede policy decisions consistent with configured approval_categories and governed approvals, so the documented projection-repair workflow is reachable without weakening approval controls. Preserve risk classification, approval auditability, container/workspace constraints, and clear operator-facing errors; add focused regression coverage and update living specs.",
+  "title": "Fix GitHub Issues #1324-#1327 in one PR",
+  "intent": "Deliver one focused PR for GitHub Issues #1324, #1325, #1326, and #1327: preserve hand-trimmed override scaffolds across init, surface stale validation evidence instead of silently accepting a changed epoch, provide explicit semantics-preserving claims-ledger compaction and size visibility, and refresh config_input_hash when config authority changes. Keep existing override precedence and research-claims schema semantics, use CLI-owned governance state, add focused regression coverage, refresh living specs, validate in the isolated container workspace, and publish the PR when the proof bundle is current.",
   "state": "APPROVED",
   "todo_ids": [
-    "feat_01m2kbaxqcnqtfmf"
+    "bugs_01m2kbchkg3f62s7"
   ],
   "proof_hooks": [
     "cargo test --lib",
+    "cargo test --test governance_artifacts",
     "cargo fmt --all -- --check",
     "cargo clippy --all-targets --all-features -- -D warnings",
     "decapod validate --format json"
   ],
   "unknowns": [],
   "human_questions": [],
-  "stop_conditions": [],
+  "stop_conditions": [
+    "Do not alter established override precedence or research-claims schema semantics.",
+    "A changed validation epoch must fail visibly and require a new trajectory run; never silently rebind or pair a new receipt with old trajectory evidence.",
+    "Claims compaction is explicit, schema-preserving, and never removes semantic claims.",
+    "Do not bypass Decapod-owned state boundaries or directly mutate machine-owned control-plane artifacts."
+  ],
   "unresolved_contradictions": [],
   "deferred_questions": [],
   "constraints": {
     "forbidden_paths": [
       ".decapod/data/decapod.db"
     ],
-    "file_touch_budget": 20
+    "file_touch_budget": 40
   },
   "phases": [],
-  "updated_at": "1789504049Z"
+  "updated_at": "1789585152Z"
 }

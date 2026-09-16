@@ -18,6 +18,15 @@ machine-owned and must be refreshed through the Decapod CLI/RPC. All other
 control-plane state, including data, governance, sessions, and workspaces,
 remains CLI/RPC-owned; validation and material-spec proof gates are unchanged.
 
+## Governance Evidence Interfaces (#1093, #1163, #1325, #1326, #1327)
+
+| Interface | Owner and semantics | Recovery/error boundary |
+|---|---|---|
+| `govern artifacts inventory --compact` | Decapod CLI owns validation, canonical serialization, and explicit compaction of `.decapod/governance/claims.json`; the operation is idempotent and schema-preserving | Invalid or oversized ledgers remain visible; restore a valid governed ledger or use the documented `--claims-note` path rather than editing machine state by hand |
+| Research claims ledger vs Health Engine claims | Research claims live in `.decapod/governance/claims.json`; Health Engine runtime claims live in `.decapod/data/decapod.db` and use `govern health claim/proof` | The two ledgers are not interchangeable and are never silently merged |
+| Specs input authority | `config.toml` and `OVERRIDE.md` feed the manifest `config_input_hash` | Authority drift is refreshed in the isolated workspace; the non-refresh validation branch reports `STALE_CONFIG_INPUT_HASH` |
+| Validation epoch binding | A successful `decapod validate` records the active epoch in the bound trajectory and receipt | If the active epoch changes, `STALE_VALIDATION_EVIDENCE` preserves prior evidence and requires explicit `govern trajectory init` before revalidation |
+
 ## Projection and Repository-Map Contracts (#1303, #1304)
 
 `specs.refresh` owns one `decapod:codebase-attestation` slot per managed

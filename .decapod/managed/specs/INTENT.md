@@ -78,6 +78,25 @@ ordinary ignored dependency installs.
   Decapod version transition reports the previous/current release, applied
   migrations, and the ledger/catalog paths the agent must inspect.
 
+## Governance Issue Resolution Contract (#1093, #1163, #1219, #1324–#1327)
+- The human-facing `.decapod/README.md` is a short orientation to project
+  authority: `config.toml`, `OVERRIDE.md`, the control-plane hierarchy, the
+  canonical datastore, and the official documentation. Agent operating
+  commands belong in the generated entrypoints and official docs, not in this
+  human scaffold.
+- A hand-trimmed `.decapod/OVERRIDE.md` is a valid minimal scaffold. Re-init
+  upgrades selected legacy directive bodies but does not re-expand omitted
+  sections or erase authored meaning.
+- `.decapod/governance/claims.json` is the append-only research claims ledger;
+  Health Engine claims are separate runtime records in the consolidated
+  `.decapod/data/decapod.db`. Ledger compaction is explicit, schema-preserving,
+  and auditable; no command silently invents, deletes, or supersedes claims.
+- Validation input authority includes both `.decapod/config.toml` and
+  `.decapod/OVERRIDE.md`. A changed authority refreshes the specs manifest, but
+  a bound trajectory may not silently adopt a new validation epoch. The old
+  receipt and trajectory remain auditable and recovery requires an explicit new
+  trajectory run.
+
 ## First-PR Publication Sequence (#1259)
 - Agents do not need `DECAPOD_VALIDATE_SKIP_GIT_GATES` to emit a validation
   receipt. After plan, claims, and trajectory appear in the feature-branch

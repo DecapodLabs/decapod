@@ -65,6 +65,28 @@ fn config_hash_input_normalizes_line_endings() {
 }
 
 #[test]
+fn config_hash_tracks_both_project_authority_inputs() {
+    let dir = tempfile::tempdir().unwrap();
+    let decapod = dir.path().join(".decapod");
+    fs::create_dir_all(&decapod).unwrap();
+    fs::write(decapod.join("config.toml"), "[repo]\nname = \"decapod\"\n").unwrap();
+    fs::write(decapod.join("OVERRIDE.md"), "# override\n").unwrap();
+
+    let before = config_input_hash(dir.path()).unwrap();
+    fs::write(decapod.join("OVERRIDE.md"), "# changed override\n").unwrap();
+    let after_override = config_input_hash(dir.path()).unwrap();
+    assert_ne!(before, after_override);
+
+    fs::write(
+        decapod.join("config.toml"),
+        "[repo]\nname = \"different\"\n",
+    )
+    .unwrap();
+    let after_config = config_input_hash(dir.path()).unwrap();
+    assert_ne!(after_override, after_config);
+}
+
+#[test]
 fn codebase_attestation_preserves_authored_spec_content() {
     let body = "# Intent\n\nAuthored product contract.\n";
     let updated = update_codebase_attestation(body, "abc123", "`src/` (2 files)");

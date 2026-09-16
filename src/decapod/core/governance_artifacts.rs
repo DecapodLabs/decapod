@@ -2,7 +2,7 @@
 //!
 //! This is the authoritative read-only substrate consumed by later readiness
 //! diagnostics. It deliberately keeps repository research claims separate from
-//! Health Engine claims stored in `health.db`.
+//! Health Engine claims stored in the consolidated `decapod.db`.
 
 use crate::core::{dirty_classification, research_claims, trajectory, validate};
 use crate::plan_governance;
@@ -67,6 +67,7 @@ pub struct GovernanceArtifactInventory {
     pub workspace_sha: Option<String>,
     pub dirty: dirty_classification::DirtyClassification,
     pub claims_source: String,
+    pub claims_ledger_bytes: Option<u64>,
     pub repair_command: String,
 }
 
@@ -81,7 +82,7 @@ pub fn inventory(
     base_branch: Option<&str>,
     repair: bool,
 ) -> Result<GovernanceArtifactInventory, crate::core::error::DecapodError> {
-    inventory_with_claims_note(repo_root, base_branch, repair, None)
+    inventory_with_options(repo_root, base_branch, repair, None, false)
 }
 
 pub fn inventory_with_claims_note(
@@ -90,8 +91,21 @@ pub fn inventory_with_claims_note(
     repair: bool,
     claims_note: Option<&str>,
 ) -> Result<GovernanceArtifactInventory, crate::core::error::DecapodError> {
+    inventory_with_options(repo_root, base_branch, repair, claims_note, false)
+}
+
+pub fn inventory_with_options(
+    repo_root: &Path,
+    base_branch: Option<&str>,
+    repair: bool,
+    claims_note: Option<&str>,
+    compact_claims: bool,
+) -> Result<GovernanceArtifactInventory, crate::core::error::DecapodError> {
     if repair {
         let _ = research_claims::ensure_template(repo_root, false)?;
+    }
+    if compact_claims {
+        let _ = research_claims::compact(repo_root)?;
     }
     if let Some(note) = claims_note {
         let _ = research_claims::append_change_note(repo_root, note)?;
@@ -190,6 +204,7 @@ pub fn inventory_with_claims_note(
     let all_semantically_current = artifacts
         .iter()
         .all(|item| item.semantic_freshness == SemanticFreshness::Current);
+    let claims_ledger_bytes = research_claims::ledger_size_bytes(repo_root)?;
     Ok(GovernanceArtifactInventory {
         schema_version: INVENTORY_SCHEMA_VERSION.to_string(),
         kind: "governance_artifact_inventory".to_string(),
@@ -205,6 +220,7 @@ pub fn inventory_with_claims_note(
         dirty: dirty_classification::classify(repo_root, commit_often_limit())
             .map_err(crate::core::error::DecapodError::IoError)?,
         claims_source: ".decapod/governance/claims.json; Health Engine claims remain in .decapod/data/decapod.db".to_string(),
+        claims_ledger_bytes,
         repair_command: format!("{INVENTORY_COMMAND} --repair"),
     })
 }
@@ -215,7 +231,18 @@ pub fn run_inventory(
     repair: bool,
     claims_note: Option<&str>,
 ) -> Result<(), crate::core::error::DecapodError> {
-    let report = inventory_with_claims_note(repo_root, base_branch, repair, claims_note)?;
+    run_inventory_with_options(repo_root, base_branch, repair, claims_note, false)
+}
+
+pub fn run_inventory_with_options(
+    repo_root: &Path,
+    base_branch: Option<&str>,
+    repair: bool,
+    claims_note: Option<&str>,
+    compact_claims: bool,
+) -> Result<(), crate::core::error::DecapodError> {
+    let report =
+        inventory_with_options(repo_root, base_branch, repair, claims_note, compact_claims)?;
     println!(
         "{}",
         serde_json::to_string_pretty(&report).map_err(|error| {

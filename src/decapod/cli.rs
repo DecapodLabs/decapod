@@ -808,6 +808,9 @@ pub(crate) enum ArtifactsCommand {
         /// Append an issue-scoped note to the claims change policy atomically
         #[clap(long)]
         claims_note: Option<String>,
+        /// Compact the valid research claims ledger without changing its semantics
+        #[clap(long)]
+        compact: bool,
     },
 }
 

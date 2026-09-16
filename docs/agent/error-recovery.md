@@ -65,6 +65,19 @@ output when a caller must distinguish failure kinds.
 
 ## General Strategy
 
+### Invalid or oversized research claims ledger
+
+`.decapod/governance/claims.json` is a repository-owned research ledger, not
+the Health Engine store. Health Engine claims and proof events remain in the
+consolidated `.decapod/data/decapod.db`. Do not repair either file by hand.
+
+For an otherwise valid ledger that is too large to review comfortably, run
+`decapod govern artifacts inventory --compact`; this is an explicit,
+semantics-preserving formatting operation. For a hand-edit or schema failure,
+restore the last governed ledger, then use
+`decapod govern artifacts inventory --claims-note "..."` for any intentional
+change and rerun `decapod validate`.
+
 ### Orphan broker audit entries (`data broker verify`)
 
 `data broker verify` checks audit lifecycle evidence, not SQLite structural

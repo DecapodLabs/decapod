@@ -1827,7 +1827,7 @@ pub fn cleanup_legacy_entrypoint_backups(target_dir: &Path) -> Result<(), error:
     Ok(())
 }
 
-/// Blend new constitution sections into existing OVERRIDE.md.
+/// Normalize existing OVERRIDE.md bodies without adding omitted directives.
 pub fn blend_overrides(
     target_dir: &Path,
     dry_run: bool,

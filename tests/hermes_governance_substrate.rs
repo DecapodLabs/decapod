@@ -60,6 +60,10 @@ fn dirty_classification_is_deterministic_and_groups_governance_files() {
         DirtyFileClass::DeterministicProjection
     );
     assert_eq!(
+        dirty_classification::classify_path(".decapod/README.md", &[]),
+        DirtyFileClass::DeterministicProjection
+    );
+    assert_eq!(
         dirty_classification::classify_path(".decapod/unknown.json", &[]),
         DirtyFileClass::Unknown
     );
