@@ -1,9 +1,21 @@
 use decapod::core::store::{Store, StoreKind};
 use decapod::plugins::policy::{
-    RiskLevel, RiskMap, RiskZone, approve_action, check_approval, derive_fingerprint, eval_risk,
-    initialize_policy_db, is_high_risk,
+    RiskLevel, RiskMap, RiskZone, approve_action, check_approval, derive_fingerprint,
+    enforce_broker_mutation_policy, eval_risk, initialize_policy_db, is_high_risk,
 };
+use std::fs;
 use tempfile::tempdir;
+
+fn write_project_config(root: &std::path::Path, approval_categories: &str) {
+    fs::create_dir_all(root.join(".decapod")).unwrap();
+    fs::write(
+        root.join(".decapod/config.toml"),
+        format!(
+            "schema_version = \"1.0.0\"\n\n[init]\nspecs = true\nci = true\ndiagram_style = \"mermaid\"\nentrypoints = []\n\n[repo]\nproduct_name = \"policy-test\"\n\n[governance]\napproval_categories = {approval_categories}\n"
+        ),
+    )
+    .unwrap();
+}
 
 #[test]
 fn test_eval_risk() {
@@ -43,6 +55,15 @@ fn test_eval_risk_commands() {
 
     // Purge commands
     let (level, _) = eval_risk("purge", None, &risk_map);
+    assert_eq!(level, RiskLevel::HIGH);
+
+    // Federation projection mutations use the same high-risk classification
+    // as the broker's operation policy.
+    let (level, reqs) = eval_risk("federation.rebuild", None, &risk_map);
+    assert_eq!(level, RiskLevel::HIGH);
+    assert!(reqs.iter().any(|req| req.contains("approval")));
+
+    let (level, _) = eval_risk("federation.supersede", None, &risk_map);
     assert_eq!(level, RiskLevel::HIGH);
 }
 
@@ -167,4 +188,49 @@ fn test_approval_different_scopes() {
 
     // Different scope should NOT work (exact fingerprint match)
     assert!(!check_approval(&store, cmd, path, "docs").unwrap());
+}
+
+#[test]
+fn federation_operations_honor_exact_configured_approvals() {
+    let tmp = tempdir().unwrap();
+    write_project_config(tmp.path(), "[\"destructive_operations\"]");
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: tmp.path().to_path_buf(),
+    };
+    initialize_policy_db(&store.root).unwrap();
+
+    for operation in ["federation.rebuild", "federation.supersede"] {
+        assert!(
+            enforce_broker_mutation_policy(&store.root, "decapod", operation).is_err(),
+            "{operation} must require its configured approval"
+        );
+        approve_action(&store, operation, None, "operator", "global").unwrap();
+        assert!(check_approval(&store, operation, None, "global").unwrap());
+        enforce_broker_mutation_policy(&store.root, "decapod", operation).unwrap();
+    }
+}
+
+#[test]
+fn empty_approval_categories_do_not_gate_federation_operations() {
+    let tmp = tempdir().unwrap();
+    write_project_config(tmp.path(), "[]");
+
+    for operation in ["federation.rebuild", "federation.supersede"] {
+        enforce_broker_mutation_policy(tmp.path(), "decapod", operation).unwrap();
+    }
+}
+
+#[test]
+fn policy_approval_accepts_eval_fingerprint() {
+    let tmp = tempdir().unwrap();
+    let store = Store {
+        kind: StoreKind::User,
+        root: tmp.path().to_path_buf(),
+    };
+    initialize_policy_db(&store.root).unwrap();
+
+    let fingerprint = derive_fingerprint("federation.rebuild", None, "global");
+    approve_action(&store, &fingerprint, None, "operator", "global").unwrap();
+    assert!(check_approval(&store, "federation.rebuild", None, "global").unwrap());
 }

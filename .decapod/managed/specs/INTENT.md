@@ -176,6 +176,22 @@ flowchart LR
 - [ ] Runtime governance consumers observe canonical Dactyl events after legacy JSONL removal.
 - [ ] `workspace prune` makes every preserved candidate visible in `skipped`, including the current workspace, with a recovery action that releases it safely from the host checkout.
 
+## Federation Policy Gate Intent (#1323)
+
+Federation projection mutations retain their verified-trust requirement and
+must remain auditable. When `governance.approval_categories` includes
+`destructive_operations`, `federation.rebuild` and `federation.supersede`
+require an approval for that exact operation identity; the approval command,
+fingerprint shown by policy evaluation, and broker check must address the same
+action. An empty approval-category list means that this configuration-driven
+approval gate is not enabled; it does not remove trust or any independently
+configured risk-zone policy.
+
+Policy evaluation reports the same federation operation risk classification and
+configured approval requirement used by the broker. This slice does not broaden
+approval scope, bypass zone-level controls, or change federation state
+transitions.
+
 ## Epistemic Custody Fields
 
 ### Active Assumptions
@@ -260,7 +276,7 @@ or manifest.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `14501ca08e28dbfcfa12ffdd5ed3534dae5b6d37e84241b1bd290d55c77f1ee4`
+- Repository signal fingerprint: `9089e875bec2fd10df65499794769ef2817d186f0a249faef2998277a9d0d65d`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

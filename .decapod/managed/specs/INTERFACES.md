@@ -47,6 +47,21 @@ input; a non-Git directory receives the bounded fallback exclusions instead.
 - Every mutating interface defines idempotency semantics.
 - Every failure path maps to a typed, documented error code.
 
+## Federation Policy Approval Contract (#1323)
+
+`federation.rebuild` and `federation.supersede` enter the broker as their
+operation names and retain the verified-trust check. The configured
+`destructive_operations` classifier, when enabled in `.decapod/config.toml`,
+uses that exact operation name as its approval target. `govern policy approve
+--id <operation>` and the fingerprint printed by `govern policy eval` both
+produce an approval record that the corresponding broker check can consume.
+
+The configured category gate and risk-zone policy are independent interfaces:
+an empty `approval_categories` list disables only the category-driven check,
+while a risk zone with `requires_approval` still controls its own zone-keyed
+approval. A denied operation remains a typed policy validation error, and no
+approval path weakens trust, audit, or transaction boundaries.
+
 ## Generated Contract Depth
 Generated interface specs should include:
 - API/CLI contracts with request/response schemas.
@@ -229,7 +244,7 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `14501ca08e28dbfcfa12ffdd5ed3534dae5b6d37e84241b1bd290d55c77f1ee4`
+- Repository signal fingerprint: `9089e875bec2fd10df65499794769ef2817d186f0a249faef2998277a9d0d65d`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

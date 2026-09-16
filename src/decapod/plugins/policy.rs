@@ -59,9 +59,21 @@ pub fn run_policy_cli(store: &Store, cli: PolicyCli) -> Result<(), error::Decapo
             } else {
                 RiskMap { zones: vec![] }
             };
-            let (level, requirements) = eval_risk(&command, path.as_deref(), &risk_map);
+            let (level, mut requirements) = eval_risk(&command, path.as_deref(), &risk_map);
+            let configured_categories = configured_approval_categories(&store.root)?;
+            let approval_required_by_policy = !configured_categories.is_empty()
+                && configured_approval_required(&configured_categories, &command);
+            if approval_required_by_policy
+                && !requirements
+                    .iter()
+                    .any(|requirement| requirement.contains("approval"))
+            {
+                requirements
+                    .push("Configured approval category requires human approval".to_string());
+            }
             let fingerprint = derive_fingerprint(&command, path.as_deref(), "global");
-            let hitl_required = human_in_loop_required(store, "global", level, is_high_risk(level));
+            let hitl_required =
+                human_in_loop_required(store, "global", level, approval_required_by_policy);
             println!("Risk Level: {level:?}");
             println!("Fingerprint: {fingerprint}");
             println!("Requirements: {requirements:?}");
@@ -183,6 +195,16 @@ pub fn derive_fingerprint(command: &str, target_path: Option<&str>, scope: &str)
     format!("{:x}", hasher.finalize())
 }
 
+fn approval_fingerprint(command: &str, target_path: Option<&str>, scope: &str) -> String {
+    if target_path.is_none()
+        && command.len() == 64
+        && command.bytes().all(|byte| byte.is_ascii_hexdigit())
+    {
+        return command.to_ascii_lowercase();
+    }
+    derive_fingerprint(command, target_path, scope)
+}
+
 pub fn eval_risk(
     command: &str,
     target_path: Option<&str>,
@@ -211,7 +233,18 @@ pub fn eval_risk(
     let mut requirements = Vec::new();
 
     // Command-based risk
-    if command.contains("delete") || command.contains("archive") || command.contains("purge") {
+    if [
+        "delete",
+        "archive",
+        "purge",
+        "rebuild",
+        "supersede",
+        "dispute",
+        "deprecate",
+    ]
+    .iter()
+    .any(|term| command.contains(term))
+    {
         level = RiskLevel::HIGH;
         requirements.push("Operator Approval Required (Irreversible)".to_string());
     }
@@ -643,7 +676,7 @@ pub fn enforce_broker_mutation_policy(
             kind: crate::core::store::StoreKind::Repo,
             root: root.to_path_buf(),
         };
-        if !check_approval(&store, zone_name, None, "global")? {
+        if !check_approval(&store, op_name, None, "global")? {
             return Err(error::DecapodError::ValidationError(format!(
                 "Policy gate denied for '{op_name}': configured approval category requires human approval"
             )));
@@ -684,7 +717,7 @@ pub fn approve_action(
     let broker = DbBroker::new(&store.root);
     let db_path = policy_db_path(&store.root);
     let approval_id = crate::core::ulid::new_ulid();
-    let fingerprint = derive_fingerprint(command, target_path, scope);
+    let fingerprint = approval_fingerprint(command, target_path, scope);
     let now = now_iso();
 
     broker.with_conn(&db_path, actor, None, "policy.approve", |conn| {
@@ -706,7 +739,7 @@ pub fn check_approval(
 ) -> Result<bool, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = policy_db_path(&store.root);
-    let fingerprint = derive_fingerprint(command, target_path, scope);
+    let fingerprint = approval_fingerprint(command, target_path, scope);
 
     broker.with_conn(&db_path, "decapod", None, "policy.check", |conn| {
         let count: i64 = conn.query_row(
@@ -730,7 +763,7 @@ pub fn check_approval_on_conn(
     target_path: Option<&str>,
     scope: &str,
 ) -> Result<bool, error::DecapodError> {
-    let fingerprint = derive_fingerprint(command, target_path, scope);
+    let fingerprint = approval_fingerprint(command, target_path, scope);
     let count: i64 = conn
         .query_row(
             "SELECT COUNT(*) FROM approvals WHERE action_fingerprint = ?1",
