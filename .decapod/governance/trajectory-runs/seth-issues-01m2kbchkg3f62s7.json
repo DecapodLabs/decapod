@@ -29,6 +29,8 @@
   ],
   "modified_files": [
     ".decapod/README.md",
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
     ".decapod/managed/specs/ARCHITECTURE.md",
     ".decapod/managed/specs/INTENT.md",
     ".decapod/managed/specs/INTERFACES.md",
@@ -50,7 +52,8 @@
     "cargo test --lib",
     "cargo test --test core_tests -- --skip broker_allows_parallel_ops_on_different_databases",
     "cargo test --test governance_artifacts",
-    "cargo test --test init_validate_green_field"
+    "cargo test --test init_validate_green_field",
+    "decapod validate"
   ],
   "tool_calls": [],
   "checks": [
@@ -67,12 +70,17 @@
       "status": "passed"
     },
     {
+      "name": "decapod validate",
+      "status": "passed"
+    },
+    {
       "name": "focused core_tests",
       "status": "passed"
     }
   ],
   "evidence": [
-    "Focused regression suites pass; the full core target was not used as a completion check because its pre-existing parallel-database test did not terminate in the local run."
+    "Focused regression suites pass; the full core target was not used as a completion check because its pre-existing parallel-database test did not terminate in the local run.",
+    "validation epoch ve_5d09accccfec990a completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -83,7 +91,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:0be7185f562888253ae80b0bb8817d7776bb919cadeb61a1e91bea687f334b7b",
+  "artifact_hash": "sha256:2dde08728465d5917641fda142a3c4c5699e6771fed4f045215a102288b437ae",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -123,6 +131,13 @@
       {
         "sequence": 4,
         "event_id": "event:4",
+        "intent_id": "intent:seth-issues-01m2kbchkg3f62s7",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:seth-issues-01m2kbchkg3f62s7"
+      },
+      {
+        "sequence": 5,
+        "event_id": "event:5",
         "intent_id": "intent:seth-issues-01m2kbchkg3f62s7",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:seth-issues-01m2kbchkg3f62s7"
@@ -177,12 +192,30 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
+          },
+          {
+            "sequence": 5,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/README.md; .decapod/OVERRIDE.md scaffolding; claims/Health Engine docs and inventory; specs config-input hash; validation epoch proof; living specs and regression tests"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_5d09accccfec990a completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:5"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 4
+    "next_sequence": 5
   }
 }
