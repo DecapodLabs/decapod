@@ -1,39 +1,39 @@
 {
   "schema_version": "1.0.0",
   "kind": "validation_receipt",
-  "decapod_release": "0.99.15",
-  "git_revision": "b2dd66f8711494d5dab5275175942107a880ae40",
-  "repo_signal_fingerprint": "14501ca08e28dbfcfa12ffdd5ed3534dae5b6d37e84241b1bd290d55c77f1ee4",
-  "trajectory_run_id": "validation_01M25J5Y6DN9M8909A0GQ3HAKJ",
-  "trajectory_artifact_hash": "sha256:0fdf747fbaf0a4b1c49b2f3949345c6c60708b1b44a32a885587ec19b71afa1b",
+  "decapod_release": "0.100.0",
+  "git_revision": "c2ebccf7c54d9d4c4a03bb40d61e58ef1237b1fa",
+  "repo_signal_fingerprint": "9089e875bec2fd10df65499794769ef2817d186f0a249faef2998277a9d0d65d",
+  "trajectory_run_id": "issue-1323-20260915",
+  "trajectory_artifact_hash": "sha256:4f217d5fbdc30e4124e8f0c175d479ef249e524bbe26d352c6434dca50a94943",
   "validation_epoch": {
     "schema_version": "1.0.0",
-    "epoch_id": "ve_6a58210d2a55ccd0",
-    "evaluator_identity": "decapod-validate@0.99.15",
-    "evaluator_set_hash": "sha256:c53e7005241f6be5c33e3e5946eae037a4de869326d6e3bf5f9feca2c6c04134",
-    "constitution_version": "embedded-docs@0.99.15",
-    "constitution_hash": "sha256:59a7b5c927603142e085440b00400bbce3264adcd7a11c5c64c6a75621959236",
+    "epoch_id": "ve_e3a7f34c71ba25d6",
+    "evaluator_identity": "decapod-validate@0.100.0",
+    "evaluator_set_hash": "sha256:e492f5eea52a15c4bd8a33f4110ac49ab61c4ee8dc877dcca37e0b25cda1f1a4",
+    "constitution_version": "embedded-docs@0.100.0",
+    "constitution_hash": "sha256:9f566be3f5e110c496ea0fb6fee4eb10be9ba870356c51e8d099a9a9161f0f60",
     "validation_profile": "default",
     "validation_profile_hash": "sha256:37a8eec1ce19687d132fe29051dca629d164e2c4958ba141d5f4133a33f0688f",
     "proof_rubric": "decapod-validate/current-proof-v1",
     "proof_rubric_hash": "sha256:99e8ef25629da391e9b479db9fff52b82f340224f7a69d8a88d2992ae8e90466",
-    "generated_specs_manifest_hash": "sha256:b311bd9b2cf9345855617e9d5e930636e28cf7a15c86acd89aef8005cbafa0fd",
-    "generated_specs_fingerprint": "14501ca08e28dbfcfa12ffdd5ed3534dae5b6d37e84241b1bd290d55c77f1ee4",
+    "generated_specs_manifest_hash": "sha256:aeaea44b4906776360da9fe88c7210afba98b083af08b8924423dc20e65eb53c",
+    "generated_specs_fingerprint": "9089e875bec2fd10df65499794769ef2817d186f0a249faef2998277a9d0d65d",
     "material_hashes": {
-      "constitution:core/DECAPOD": "sha256:59a7b5c927603142e085440b00400bbce3264adcd7a11c5c64c6a75621959236",
-      "generated_spec:.decapod/managed/specs/ARCHITECTURE.md": "sha256:c97c0ca8e5570861d2879404a33da2a9d1aa570af0749a7ff8a4f377bae31dc6",
-      "generated_spec:.decapod/managed/specs/INTENT.md": "sha256:db6d12506f59a1856afed454ebc55e1fe1911fd8e1578eacd0f6dd7958c77a75",
-      "generated_spec:.decapod/managed/specs/INTERFACES.md": "sha256:9e162b2954b188048f7ee5b27b2ca161ecc9e90d8819bb33993ab8bd57b7c65c",
-      "generated_spec:.decapod/managed/specs/OPERATIONS.md": "sha256:77de00d994e14f4a79b6b6424274c2257972e42e91752285777dd8ba18d156c5",
-      "generated_spec:.decapod/managed/specs/README.md": "sha256:92fabf13f4196b0f8fe094c14feb01ff64663ec0eca72c6c754231cbd7127850",
-      "generated_spec:.decapod/managed/specs/SECURITY.md": "sha256:8d53e21b7529ab99708baf385777459dc5715d204b7b61a3db6d123ab3f37df2",
-      "generated_spec:.decapod/managed/specs/SEMANTICS.md": "sha256:5652a28b81dd8c4a71343caf8cd7580fd2f60d20b246158e82387248ab6c2135",
-      "generated_spec:.decapod/managed/specs/VALIDATION.md": "sha256:4ba0370e774d96fcfaae5e4fbddb35c4bdcfddf739d5415d51547bd8322ebf2b",
-      "generated_specs_fingerprint": "14501ca08e28dbfcfa12ffdd5ed3534dae5b6d37e84241b1bd290d55c77f1ee4",
-      "generated_specs_manifest": "sha256:b311bd9b2cf9345855617e9d5e930636e28cf7a15c86acd89aef8005cbafa0fd",
-      "living_spec_material:.decapod/managed/specs/ARCHITECTURE.md": "sha256:d3872540ba95109052bbc882b668eb7dd3287d1229bf5a395f84fbf5da6403a0",
-      "living_spec_material:.decapod/managed/specs/INTENT.md": "sha256:aed3268b963b88c07dd55e0a92c7ce490e35402a6bd996e0b613ba3f871df65b",
-      "living_spec_material:.decapod/managed/specs/INTERFACES.md": "sha256:31bd12f84a352f1a2c6e5a7425eb506a7569d461df2d0b5cf34d51c185a8c972",
+      "constitution:core/DECAPOD": "sha256:9f566be3f5e110c496ea0fb6fee4eb10be9ba870356c51e8d099a9a9161f0f60",
+      "generated_spec:.decapod/managed/specs/ARCHITECTURE.md": "sha256:be72af4a222d7876b33443e8410cd665f32e5d0aeca69f2750634fb9a05e77f5",
+      "generated_spec:.decapod/managed/specs/INTENT.md": "sha256:1698d7524fc5824dae06ae89e1a7979d4b8a1c29a977b08877be5444c5c5864d",
+      "generated_spec:.decapod/managed/specs/INTERFACES.md": "sha256:de38e9110fabc21c3702896d61b35ff2dbf885d761208e87cd58900258afe008",
+      "generated_spec:.decapod/managed/specs/OPERATIONS.md": "sha256:b047324200dfcc4b7a61ba0b53dd4c517aa4da032dc8daa7754ac7a295d86f58",
+      "generated_spec:.decapod/managed/specs/README.md": "sha256:30a320aa2c411e15ae91dd69dc71288116ffe9ff4595a976b94f88bc8626a1e8",
+      "generated_spec:.decapod/managed/specs/SECURITY.md": "sha256:10c0a7282c7edd88742f6ea595c22faa262ac7f619fb87940207c5c694ffe156",
+      "generated_spec:.decapod/managed/specs/SEMANTICS.md": "sha256:aefe3bdf03f19cdc858c34525779daf9954df0eec83c450b17abe7020ef9620b",
+      "generated_spec:.decapod/managed/specs/VALIDATION.md": "sha256:9bdcc477c5ce2f5e8e562ec3be36d0fdde10a677b86d63f722205bd72d329580",
+      "generated_specs_fingerprint": "9089e875bec2fd10df65499794769ef2817d186f0a249faef2998277a9d0d65d",
+      "generated_specs_manifest": "sha256:aeaea44b4906776360da9fe88c7210afba98b083af08b8924423dc20e65eb53c",
+      "living_spec_material:.decapod/managed/specs/ARCHITECTURE.md": "sha256:0d4d5cd968a690a55f0c3e1fa7b1a5ee0cc4a3f0025ebe2f2d2b310d5e41dc07",
+      "living_spec_material:.decapod/managed/specs/INTENT.md": "sha256:b103607cf4a2978c19b776649a4974fb35def9ce8179c46581baf85a8e326971",
+      "living_spec_material:.decapod/managed/specs/INTERFACES.md": "sha256:0329b02dcccba26128c6cf3a17bdde68a95de9d41d8e00814018c08a2a5c7ec4",
       "living_spec_material:.decapod/managed/specs/OPERATIONS.md": "sha256:3b028a664157d89df2f414a9ae4b679b0391c8f31022ff5215d5549b84636647",
       "living_spec_material:.decapod/managed/specs/README.md": "sha256:b8cd9ed115e6e51234455f30f8560286c928746eb8e0645a2fba088e128234ae",
       "living_spec_material:.decapod/managed/specs/SECURITY.md": "sha256:ae66846e5f8f1cccff6c88cfbcb2f43b796f287c53580e4e05a7baf529ce5979",
@@ -44,162 +44,154 @@
     }
   },
   "status": "ok",
-  "pass_count": 202,
+  "pass_count": 200,
   "fail_count": 0,
   "warn_count": 4,
-  "elapsed_ms": 2246,
+  "elapsed_ms": 3978,
   "drift_findings": [],
   "temporary_artifacts_cleaned": 0,
   "failures": [],
   "warnings": [
     "Risk map missing (run `decapod riskmap init`)",
-    "Stale workspaces preserved for explicit review: <external-path> (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force)",
+    "Stale workspaces preserved for explicit review: <external-path> (unregistered_workspace: workspace directory is not registered with git; inspect it and rerun with --force only after preserving any needed files), <external-path> (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force)",
     "Watcher audit trail missing (run `decapod govern watcher run`)",
-    "Workspace branch 'agent/unknown/todo-01m24v-1789017037' has unpushed commits or does not exist on origin. Run `git push origin agent/unknown/todo-01m24v-1789017037`."
+    "Workspace branch 'agent/unknown/feat_01m2kbaxqcnqtfmf-issue-1323' has unpushed commits or does not exist on origin. Run `git push origin agent/unknown/feat_01m2kbaxqcnqtfmf-issue-1323`."
   ],
   "gate_timings": [
     {
-      "name": "validate_project_specs_docs",
-      "elapsed_ms": 580
-    },
-    {
       "name": "validate_markdown_primitives_roundtrip_gate",
-      "elapsed_ms": 252
+      "elapsed_ms": 1374
     },
     {
       "name": "validate_stale_workspaces",
-      "elapsed_ms": 168
+      "elapsed_ms": 482
     },
     {
       "name": "validate_obligations",
-      "elapsed_ms": 77
-    },
-    {
-      "name": "validate_git_workspace_context",
-      "elapsed_ms": 77
-    },
-    {
-      "name": "validate_no_legacy_namespaces",
-      "elapsed_ms": 57
-    },
-    {
-      "name": "validate_schema_determinism",
-      "elapsed_ms": 56
-    },
-    {
-      "name": "validate_embedded_self_contained",
-      "elapsed_ms": 50
+      "elapsed_ms": 425
     },
     {
       "name": "validate_legacy_jsonl_retired",
-      "elapsed_ms": 50
-    },
-    {
-      "name": "validate_federation_gates",
-      "elapsed_ms": 35
+      "elapsed_ms": 292
     },
     {
       "name": "validate_machine_contract",
-      "elapsed_ms": 35
+      "elapsed_ms": 261
     },
     {
-      "name": "validate_git_protected_branch",
-      "elapsed_ms": 28
+      "name": "validate_project_specs_docs",
+      "elapsed_ms": 177
     },
     {
       "name": "validate_archive_integrity",
-      "elapsed_ms": 26
+      "elapsed_ms": 151
     },
     {
-      "name": "validate_canon_mutation",
-      "elapsed_ms": 25
-    },
-    {
-      "name": "validate_watcher_purity",
-      "elapsed_ms": 25
-    },
-    {
-      "name": "validate_knowledge_integrity",
-      "elapsed_ms": 25
-    },
-    {
-      "name": "validate_policy_integrity",
-      "elapsed_ms": 24
-    },
-    {
-      "name": "validate_risk_map_violations",
-      "elapsed_ms": 23
-    },
-    {
-      "name": "validate_repomap_determinism",
-      "elapsed_ms": 21
-    },
-    {
-      "name": "validate_git_push_pr_gate",
-      "elapsed_ms": 20
-    },
-    {
-      "name": "validate_lineage_hard_gate",
-      "elapsed_ms": 13
-    },
-    {
-      "name": "validate_interface_contract_bootstrap",
-      "elapsed_ms": 11
+      "name": "validate_federation_gates",
+      "elapsed_ms": 129
     },
     {
       "name": "validate_control_plane_contract",
+      "elapsed_ms": 100
+    },
+    {
+      "name": "validate_git_workspace_context",
+      "elapsed_ms": 95
+    },
+    {
+      "name": "validate_no_legacy_namespaces",
+      "elapsed_ms": 53
+    },
+    {
+      "name": "validate_lineage_hard_gate",
+      "elapsed_ms": 48
+    },
+    {
+      "name": "validate_repomap_determinism",
+      "elapsed_ms": 29
+    },
+    {
+      "name": "validate_watcher_audit",
+      "elapsed_ms": 22
+    },
+    {
+      "name": "validate_knowledge_promotions_if_present",
+      "elapsed_ms": 22
+    },
+    {
+      "name": "validate_lcm_immutability",
+      "elapsed_ms": 21
+    },
+    {
+      "name": "validate_lcm_rebuild_gate",
+      "elapsed_ms": 20
+    },
+    {
+      "name": "validate_health_purity",
+      "elapsed_ms": 14
+    },
+    {
+      "name": "validate_git_protected_branch",
+      "elapsed_ms": 14
+    },
+    {
+      "name": "validate_embedded_self_contained",
       "elapsed_ms": 8
     },
     {
-      "name": "validate_generated_artifact_whitelist",
+      "name": "validate_git_push_pr_gate",
+      "elapsed_ms": 8
+    },
+    {
+      "name": "validate_schema_determinism",
       "elapsed_ms": 7
     },
     {
       "name": "validate_gatekeeper_gate",
-      "elapsed_ms": 7
+      "elapsed_ms": 5
     },
     {
-      "name": "validate_health_purity",
-      "elapsed_ms": 4
+      "name": "validate_knowledge_integrity",
+      "elapsed_ms": 3
     },
     {
-      "name": "validate_override_authority",
-      "elapsed_ms": 4
+      "name": "validate_context_capsules_if_present",
+      "elapsed_ms": 3
     },
     {
-      "name": "validate_entrypoint_invariants",
+      "name": "validate_interface_contract_bootstrap",
       "elapsed_ms": 2
     },
     {
-      "name": "validate_watcher_audit",
+      "name": "validate_generated_artifact_whitelist",
       "elapsed_ms": 2
     },
     {
-      "name": "validate_knowledge_promotions_if_present",
+      "name": "validate_plan_governed_execution_gate",
       "elapsed_ms": 2
-    },
-    {
-      "name": "validate_lcm_immutability",
-      "elapsed_ms": 1
-    },
-    {
-      "name": "validate_lcm_rebuild_gate",
-      "elapsed_ms": 1
-    },
-    {
-      "name": "validate_research_claims_if_present",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_heartbeat_invocation_gate",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_repo_map",
-      "elapsed_ms": 0
     },
     {
       "name": "validate_database_schema_versions",
+      "elapsed_ms": 2
+    },
+    {
+      "name": "validate_entrypoint_invariants",
+      "elapsed_ms": 1
+    },
+    {
+      "name": "validate_policy_integrity",
+      "elapsed_ms": 1
+    },
+    {
+      "name": "validate_health_cache_integrity",
+      "elapsed_ms": 1
+    },
+    {
+      "name": "validate_canon_mutation",
+      "elapsed_ms": 1
+    },
+    {
+      "name": "validate_watcher_purity",
       "elapsed_ms": 0
     },
     {
@@ -207,7 +199,11 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_validation_receipt_if_present",
+      "name": "validate_override_authority",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_risk_map_violations",
       "elapsed_ms": 0
     },
     {
@@ -215,27 +211,15 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_plan_governed_execution_gate",
+      "name": "validate_research_claims_if_present",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_health_cache_integrity",
+      "name": "validate_validation_receipt_if_present",
       "elapsed_ms": 0
     },
     {
       "name": "validate_spec_drift",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_context_capsule_policy_contract",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_project_scoped_state",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_docs_templates_bucket",
       "elapsed_ms": 0
     },
     {
@@ -247,19 +231,23 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_root_dockerfile_seed_detection",
+      "name": "validate_context_capsule_policy_contract",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_risk_map",
+      "name": "validate_heartbeat_invocation_gate",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_coplayer_policy_tightening",
+      "name": "validate_project_scoped_state",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_eval_gate_if_required",
+      "name": "validate_docs_templates_bucket",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_repo_map",
       "elapsed_ms": 0
     },
     {
@@ -271,7 +259,19 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_context_capsules_if_present",
+      "name": "validate_risk_map",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_eval_gate_if_required",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_root_dockerfile_seed_detection",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_coplayer_policy_tightening",
       "elapsed_ms": 0
     },
     {
@@ -285,14 +285,14 @@
     "confidence": "medium",
     "reasons": [
       "Risk map missing (run `decapod riskmap init`)",
-      "Stale workspaces preserved for explicit review: <external-path> (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force)",
+      "Stale workspaces preserved for explicit review: <external-path> (unregistered_workspace: workspace directory is not registered with git; inspect it and rerun with --force only after preserving any needed files), <external-path> (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force)",
       "Watcher audit trail missing (run `decapod govern watcher run`)",
-      "Workspace branch 'agent/unknown/todo-01m24v-1789017037' has unpushed commits or does not exist on origin. Run `git push origin agent/unknown/todo-01m24v-1789017037`."
+      "Workspace branch 'agent/unknown/feat_01m2kbaxqcnqtfmf-issue-1323' has unpushed commits or does not exist on origin. Run `git push origin agent/unknown/feat_01m2kbaxqcnqtfmf-issue-1323`."
     ],
     "recommendations": [
       "Review the reported validation warnings before relying on the CI result.",
       "Use `decapod validate -v --format json` to inspect the affected gate output."
     ]
   },
-  "receipt_hash": "sha256:0289c542e3704f31c632ffdf9f49278fd42b42f0ec5573f9a6c1df6aa3ca0f18"
+  "receipt_hash": "sha256:81c0836d9c589231f57c88aa18b5f1b54bd92c658a829f9793c57ff1227b5ebd"
 }

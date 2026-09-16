@@ -192,6 +192,17 @@ sequenceDiagram
 - Core execution + persistence:
 - Verification and artifact emission:
 
+### Federation Mutation Policy Boundary (#1323)
+
+`DbBroker` is the policy boundary for federation mutations. It first enforces
+the actor trust tier, then evaluates the configured operation classifier and
+the independently stored risk-zone policy before the domain mutation opens its
+canonical write path. Category approvals are keyed by the exact operation
+name, whereas zone approvals remain keyed by the zone name; keeping those
+names distinct prevents an approval for one contract from being mistaken for
+an approval for another. The empty configured-category set intentionally skips
+only the category check.
+
 ## Concurrency and Runtime Model
 - Execution model:
 - Isolation boundaries:
@@ -305,7 +316,7 @@ authored document is an untouched template.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `14501ca08e28dbfcfa12ffdd5ed3534dae5b6d37e84241b1bd290d55c77f1ee4`
+- Repository signal fingerprint: `9089e875bec2fd10df65499794769ef2817d186f0a249faef2998277a9d0d65d`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
