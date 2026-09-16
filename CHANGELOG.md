@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.100.1](https://github.com/DecapodLabs/decapod/compare/v0.100.0...v0.100.1) - 2026-09-16
+
+### Other
+
+- Fix federation policy gate for rebuild and supersede ([#1323](https://github.com/DecapodLabs/decapod/pull/1323))
+- Fix federation policy gate for rebuild and supersede ([#1323](https://github.com/DecapodLabs/decapod/pull/1323))
+
 ## [0.100.0](https://github.com/DecapodLabs/decapod/compare/v0.99.15...v0.100.0) - 2026-09-12
 
 ### Added
