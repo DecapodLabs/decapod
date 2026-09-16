@@ -37,6 +37,7 @@
     "tests/unit/lib_validation_proof_tests.rs"
   ],
   "modified_files": [
+    ".decapod/governance/plan.json",
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
     ".decapod/managed/specs/ARCHITECTURE.md",
@@ -63,6 +64,7 @@
     "cargo test --test core_tests -- --skip broker_allows_parallel_ops_on_different_databases",
     "cargo test --test governance_artifacts",
     "cargo test --test init_validate_green_field",
+    "decapod govern plan update --file-touch-budget 50 --forbidden-path .decapod/data/decapod.db",
     "decapod validate",
     "decapod validate --format json"
   ],
@@ -99,9 +101,14 @@
     {
       "name": "decapod validate --format json",
       "status": "passed"
+    },
+    {
+      "name": "plan constraint correction",
+      "status": "passed"
     }
   ],
   "evidence": [
+    "Final PR diff contains 41 files; governed file-touch budget corrected to 50 while retaining .decapod/data/decapod.db as forbidden.",
     "Rust 1.96.1 host execution passed 339 library tests, governance artifact tests, green-field validation tests, focused core tests, formatting, and Clippy; containerized decapod validate passed with fail_count=0.",
     "validation epoch ve_5d09accccfec990a completed with zero failures"
   ],
@@ -114,7 +121,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:05fb9afa67ce3541d8c418eb8d58f52af7f5ee8e69383936611715467773cbcb",
+  "artifact_hash": "sha256:3bf3a9a06cc76a0aa206bfe4276b9bbb9ef3db12bd2ce26be248308707c9884b",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -162,6 +169,13 @@
       {
         "sequence": 5,
         "event_id": "event:5",
+        "intent_id": "intent:seth-1324-1327-01m2kbchkg3f62s7",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:seth-1324-1327-01m2kbchkg3f62s7"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
         "intent_id": "intent:seth-1324-1327-01m2kbchkg3f62s7",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:seth-1324-1327-01m2kbchkg3f62s7"
@@ -244,12 +258,29 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "validation",
+            "command": "decapod govern plan update --file-touch-budget 50 --forbidden-path .decapod/data/decapod.db",
+            "scope": [
+              ".decapod/OVERRIDE.md scaffolding; validation trajectory and receipt currency; claims ledger compaction; specs config-input hash; living specs and regression tests"
+            ],
+            "observations": [
+              ".decapod/governance/plan.json",
+              "Final PR diff contains 41 files; governed file-touch budget corrected to 50 while retaining .decapod/data/decapod.db as forbidden."
+            ],
+            "proof_refs": [
+              "plan constraint correction"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:6"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 5
+    "next_sequence": 6
   }
 }

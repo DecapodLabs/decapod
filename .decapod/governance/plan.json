@@ -27,8 +27,8 @@
     "forbidden_paths": [
       ".decapod/data/decapod.db"
     ],
-    "file_touch_budget": 40
+    "file_touch_budget": 50
   },
   "phases": [],
-  "updated_at": "1789585152Z"
+  "updated_at": "1789586120Z"
 }
