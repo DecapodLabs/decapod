@@ -19,12 +19,15 @@
     ".decapod/OVERRIDE.md scaffolding; validation trajectory and receipt currency; claims ledger compaction; specs config-input hash; living specs and regression tests"
   ],
   "inspected_files": [
+    ".config/deny.toml",
     ".decapod/governance/validation.json",
+    ".decapod/managed/Dockerfile.decapod",
     ".decapod/managed/specs/.manifest.json",
     ".decapod/managed/specs/ARCHITECTURE.md",
     ".decapod/managed/specs/INTENT.md",
     ".decapod/managed/specs/INTERFACES.md",
     ".decapod/managed/specs/VALIDATION.md",
+    "Cargo.lock",
     "src/decapod/cli.rs",
     "src/decapod/core/assets.rs",
     "src/decapod/core/governance_artifacts.rs",
@@ -42,11 +45,17 @@
     ".decapod/governance/plan.json",
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
+    ".decapod/managed/Dockerfile.decapod",
     ".decapod/managed/specs/.manifest.json",
     ".decapod/managed/specs/ARCHITECTURE.md",
     ".decapod/managed/specs/INTENT.md",
     ".decapod/managed/specs/INTERFACES.md",
     ".decapod/managed/specs/VALIDATION.md",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "CODEX.md",
+    "Cargo.lock",
+    "GEMINI.md",
     "src/decapod/cli.rs",
     "src/decapod/core/assets.rs",
     "src/decapod/core/governance_artifacts.rs",
@@ -62,11 +71,19 @@
   ],
   "declared_commands": [
     "cargo clippy --all-targets --all-features -- -D warnings",
+    "cargo clippy --locked --all-targets --all-features -- -D warnings",
+    "cargo deny --config .config/deny.toml check",
     "cargo fmt --all -- --check",
+    "cargo machete",
     "cargo test --lib",
+    "cargo test --locked --lib",
+    "cargo test --locked --test core_tests -- --skip broker_allows_parallel_ops_on_different_databases",
+    "cargo test --locked --test governance_artifacts",
+    "cargo test --locked --test init_validate_green_field",
     "cargo test --test core_tests -- --skip broker_allows_parallel_ops_on_different_databases",
     "cargo test --test governance_artifacts",
     "cargo test --test init_validate_green_field",
+    "cargo update -p rustls --precise 0.23.45",
     "decapod govern plan update --file-touch-budget 50 --forbidden-path .decapod/data/decapod.db",
     "decapod rpc --op specs.refresh",
     "decapod validate",
@@ -85,11 +102,19 @@
       "status": "passed"
     },
     {
+      "name": "cargo deny",
+      "status": "passed"
+    },
+    {
       "name": "cargo fmt",
       "status": "passed"
     },
     {
       "name": "cargo fmt --all -- --check",
+      "status": "passed"
+    },
+    {
+      "name": "cargo machete",
       "status": "passed"
     },
     {
@@ -121,11 +146,23 @@
       "status": "passed"
     },
     {
+      "name": "locked Rust tests",
+      "status": "passed"
+    },
+    {
       "name": "plan constraint correction",
       "status": "passed"
     },
     {
       "name": "rebase onto origin/master",
+      "status": "passed"
+    },
+    {
+      "name": "release-bound projections",
+      "status": "passed"
+    },
+    {
+      "name": "rustls advisory remediation",
       "status": "passed"
     },
     {
@@ -135,8 +172,10 @@
   ],
   "evidence": [
     "Containerized Decapod validation passed: status=ok, fail_count=0, pass_count=202, warn_count=5, validation_epoch=ve_be1fb843fe09fbef.",
+    "Current Decapod 0.100.1 validation regenerated all four entrypoint fingerprints, the managed Dockerfile pin, and the specs manifest.",
     "Final PR diff contains 41 files; governed file-touch budget corrected to 50 while retaining .decapod/data/decapod.db as forbidden.",
     "Rebased feature branch onto origin/master at 6dd89524; resolved only governance/spec projection conflicts while preserving upstream issue #1323 changes.",
+    "Remediated RUSTSEC-2026-0285 by updating rustls from 0.23.43 to patched 0.23.45.",
     "Rust 1.96.1 host execution passed 339 library tests, governance artifact tests, green-field validation tests, focused core tests, formatting, and Clippy; containerized decapod validate passed with fail_count=0.",
     "validation epoch ve_5d09accccfec990a completed with zero failures"
   ],
@@ -149,7 +188,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:f19393ff3eedf84d0da516ee4c01750b30e5e2eab20fbdc633053258e86d7940",
+  "artifact_hash": "sha256:294a5c6615c12cd95fb3b1cccc05581f5e549fe1ffdf281700c3051a3ca73224",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -211,6 +250,13 @@
       {
         "sequence": 7,
         "event_id": "event:7",
+        "intent_id": "intent:seth-1324-1327-01m2kbchkg3f62s7",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:seth-1324-1327-01m2kbchkg3f62s7"
+      },
+      {
+        "sequence": 8,
+        "event_id": "event:8",
         "intent_id": "intent:seth-1324-1327-01m2kbchkg3f62s7",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:seth-1324-1327-01m2kbchkg3f62s7"
@@ -336,12 +382,45 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:7"
+          },
+          {
+            "sequence": 8,
+            "action": "validation",
+            "command": "cargo update -p rustls --precise 0.23.45",
+            "scope": [
+              ".decapod/OVERRIDE.md scaffolding; validation trajectory and receipt currency; claims ledger compaction; specs config-input hash; living specs and regression tests"
+            ],
+            "observations": [
+              "Cargo.lock",
+              ".config/deny.toml",
+              ".decapod/managed/Dockerfile.decapod",
+              "Cargo.lock",
+              "AGENTS.md",
+              "CLAUDE.md",
+              "CODEX.md",
+              "GEMINI.md",
+              ".decapod/managed/Dockerfile.decapod",
+              ".decapod/managed/specs/.manifest.json",
+              "Remediated RUSTSEC-2026-0285 by updating rustls from 0.23.43 to patched 0.23.45.",
+              "Current Decapod 0.100.1 validation regenerated all four entrypoint fingerprints, the managed Dockerfile pin, and the specs manifest."
+            ],
+            "proof_refs": [
+              "rustls advisory remediation",
+              "cargo machete",
+              "cargo deny",
+              "locked Rust tests",
+              "cargo fmt",
+              "cargo clippy",
+              "release-bound projections"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:8"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 7
+    "next_sequence": 8
   }
 }
