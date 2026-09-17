@@ -26,7 +26,9 @@
     ".decapod/managed/specs/ARCHITECTURE.md",
     ".decapod/managed/specs/INTENT.md",
     ".decapod/managed/specs/INTERFACES.md",
+    ".decapod/managed/specs/OPERATIONS.md",
     ".decapod/managed/specs/VALIDATION.md",
+    ".github/workflows/release.yml",
     "Cargo.lock",
     "src/decapod/cli.rs",
     "src/decapod/core/assets.rs",
@@ -142,6 +144,10 @@
       "status": "passed"
     },
     {
+      "name": "container_validation",
+      "status": "unavailable"
+    },
+    {
       "name": "decapod validate",
       "status": "passed"
     },
@@ -163,6 +169,10 @@
     },
     {
       "name": "release-bound projections",
+      "status": "passed"
+    },
+    {
+      "name": "release_workflow_yaml",
       "status": "passed"
     },
     {
@@ -190,14 +200,14 @@
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
-  "proof_status": "passed",
+  "proof_status": "partial",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "supported"
+    "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:4383bfa9125d5dab9d8263089a1438f9441699c65ccf711987e6d1d62a4968df",
+  "artifact_hash": "sha256:05634203af267eb6a1d8b9ec27bbe0e34e4fa9b3869ed770c31c590b77c79998",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -273,6 +283,13 @@
       {
         "sequence": 9,
         "event_id": "event:9",
+        "intent_id": "intent:seth-1324-1327-01m2kbchkg3f62s7",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:seth-1324-1327-01m2kbchkg3f62s7"
+      },
+      {
+        "sequence": 10,
+        "event_id": "event:10",
         "intent_id": "intent:seth-1324-1327-01m2kbchkg3f62s7",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:seth-1324-1327-01m2kbchkg3f62s7"
@@ -457,12 +474,29 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:9"
+          },
+          {
+            "sequence": 10,
+            "action": "trajectory.record",
+            "scope": [
+              ".decapod/OVERRIDE.md scaffolding; validation trajectory and receipt currency; claims ledger compaction; specs config-input hash; living specs and regression tests"
+            ],
+            "observations": [
+              ".github/workflows/release.yml",
+              ".decapod/managed/specs/OPERATIONS.md"
+            ],
+            "proof_refs": [
+              "release_workflow_yaml",
+              "container_validation"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:10"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 9
+    "next_sequence": 10
   }
 }

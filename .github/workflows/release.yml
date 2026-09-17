@@ -222,7 +222,13 @@ jobs:
       # Typically there will be:
       # - 1 "global" task that builds universal installers
       # - N "local" tasks that build each platform's binaries and platform-specific installers
-      matrix: ${{ fromJson(needs.plan.outputs.val).ci.github.artifacts_matrix }}
+      # GitHub/Buildkite validate a matrix before applying the job-level `if`.
+      # A pull-request plan therefore still needs a valid matrix even though
+      # this job is skipped. Keep the cargo-dist matrix for real releases and
+      # upload-mode PRs, but use an inert scalar-only entry for plan-only runs;
+      # the latter avoids expanding cargo-dist's nested target arrays on a job
+      # that cannot run anyway.
+      matrix: ${{ (needs.plan.outputs.publishing == 'true' || fromJson(needs.plan.outputs.val).ci.github.pr_run_mode == 'upload') && fromJson(needs.plan.outputs.val).ci.github.artifacts_matrix || fromJson('{"include":[{"runner":"ubuntu-24.04","targets":"skipped","install_dist":"true","packages_install":"true","dist_args":""}]}') }}
     runs-on: ${{ matrix.runner }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
