@@ -196,7 +196,8 @@
     "Refreshed the managed specs attestation and manifest after the rustls lockfile update; repository fingerprint is now eeb8cdd1ee2c9af1798d3f5b09bd2abe55e8c90b8555cfc3a4f00885074a8dee.",
     "Remediated RUSTSEC-2026-0285 by updating rustls from 0.23.43 to patched 0.23.45.",
     "Rust 1.96.1 host execution passed 339 library tests, governance artifact tests, green-field validation tests, focused core tests, formatting, and Clippy; containerized decapod validate passed with fail_count=0.",
-    "validation epoch ve_5d09accccfec990a completed with zero failures"
+    "validation epoch ve_5d09accccfec990a completed with zero failures",
+    "validation epoch ve_644e27d3e055fa14 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -207,7 +208,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:05634203af267eb6a1d8b9ec27bbe0e34e4fa9b3869ed770c31c590b77c79998",
+  "artifact_hash": "sha256:93ca2b265b329e657e6bf124308505a4ddf83535dcd68398635d3a904aee07e1",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -290,6 +291,13 @@
       {
         "sequence": 10,
         "event_id": "event:10",
+        "intent_id": "intent:seth-1324-1327-01m2kbchkg3f62s7",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:seth-1324-1327-01m2kbchkg3f62s7"
+      },
+      {
+        "sequence": 11,
+        "event_id": "event:11",
         "intent_id": "intent:seth-1324-1327-01m2kbchkg3f62s7",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:seth-1324-1327-01m2kbchkg3f62s7"
@@ -491,12 +499,30 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:10"
+          },
+          {
+            "sequence": 11,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/OVERRIDE.md scaffolding; validation trajectory and receipt currency; claims ledger compaction; specs config-input hash; living specs and regression tests"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_644e27d3e055fa14 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:11"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 10
+    "next_sequence": 11
   }
 }
