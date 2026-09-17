@@ -205,28 +205,43 @@ jobs:
 
   # Build and packages all the platform-specific things
   build-local-artifacts:
-    name: build-local-artifacts (${{ join(matrix.targets, ', ') }})
+    name: build-local-artifacts (${{ matrix.targets }})
     # Let the initial task tell us to not run (currently very blunt)
     needs:
       - plan
     if: ${{ fromJson(needs.plan.outputs.val).ci.github.artifacts_matrix.include != null && (needs.plan.outputs.publishing == 'true' || fromJson(needs.plan.outputs.val).ci.github.pr_run_mode == 'upload') }}
     strategy:
       fail-fast: false
-      # Target platforms/runners are computed by cargo-dist in create-release.
-      # Each member of the matrix has the following arguments:
-      #
-      # - runner: the github runner
-      # - dist-args: cli flags to pass to cargo dist
-      # - install-dist: expression to run to install cargo-dist on the runner
-      #
-      # Typically there will be:
-      # - 1 "global" task that builds universal installers
-      # - N "local" tasks that build each platform's binaries and platform-specific installers
-      matrix: ${{ fromJson(needs.plan.outputs.val).ci.github.artifacts_matrix }}
+      # Buildkite validates workflow matrices before applying the job-level
+      # `if`, and cannot expand cargo-dist's runtime object on plan-only runs.
+      # Keep the four targets declared in workspace.metadata.dist explicit so
+      # skipped plan checks validate while real tag/upload builds remain stable.
+      matrix:
+        include:
+          - targets: aarch64-apple-darwin
+            runner: macos-14
+            install_dist: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.22.1/cargo-dist-installer.sh | sh"
+            packages_install: "true"
+            dist_args: "--artifacts=local --target=aarch64-apple-darwin"
+          - targets: aarch64-unknown-linux-gnu
+            runner: ubuntu-24.04
+            install_dist: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.22.1/cargo-dist-installer.sh | sh"
+            packages_install: "true"
+            dist_args: "--artifacts=local --target=aarch64-unknown-linux-gnu"
+          - targets: x86_64-apple-darwin
+            runner: macos-14
+            install_dist: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.22.1/cargo-dist-installer.sh | sh"
+            packages_install: "true"
+            dist_args: "--artifacts=local --target=x86_64-apple-darwin"
+          - targets: x86_64-unknown-linux-gnu
+            runner: ubuntu-24.04
+            install_dist: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.22.1/cargo-dist-installer.sh | sh"
+            packages_install: "true"
+            dist_args: "--artifacts=local --target=x86_64-unknown-linux-gnu"
     runs-on: ${{ matrix.runner }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      BUILD_MANIFEST_NAME: target/distrib/${{ join(matrix.targets, '-') }}-dist-manifest.json
+      BUILD_MANIFEST_NAME: target/distrib/${{ matrix.targets }}-dist-manifest.json
       CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
     steps:
       - name: enable windows longpaths
@@ -248,7 +263,7 @@ jobs:
         run: |
           ${{ matrix.packages_install }}
       - name: Install aarch64 Linux cross compiler
-        if: ${{ runner.os == 'Linux' && contains(join(matrix.targets, ','), 'aarch64-unknown-linux-gnu') }}
+        if: ${{ runner.os == 'Linux' && contains(matrix.targets, 'aarch64-unknown-linux-gnu') }}
         run: |
           sudo apt-get update
           sudo apt-get install -y gcc-aarch64-linux-gnu
@@ -273,7 +288,7 @@ jobs:
       - name: "Upload artifacts"
         uses: actions/upload-artifact@v4
         with:
-          name: artifacts-build-local-${{ join(matrix.targets, '_') }}
+          name: artifacts-build-local-${{ matrix.targets }}
           path: |
             ${{ steps.cargo-dist.outputs.paths }}
             ${{ env.BUILD_MANIFEST_NAME }}

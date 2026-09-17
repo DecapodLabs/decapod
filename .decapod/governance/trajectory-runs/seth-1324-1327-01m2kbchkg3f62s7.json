@@ -26,7 +26,9 @@
     ".decapod/managed/specs/ARCHITECTURE.md",
     ".decapod/managed/specs/INTENT.md",
     ".decapod/managed/specs/INTERFACES.md",
+    ".decapod/managed/specs/OPERATIONS.md",
     ".decapod/managed/specs/VALIDATION.md",
+    ".github/workflows/release.yml",
     "Cargo.lock",
     "src/decapod/cli.rs",
     "src/decapod/core/assets.rs",
@@ -98,6 +100,10 @@
   "tool_calls": [],
   "checks": [
     {
+      "name": "buildkite_matrix_static",
+      "status": "passed"
+    },
+    {
       "name": "cargo clippy",
       "status": "passed"
     },
@@ -142,6 +148,10 @@
       "status": "passed"
     },
     {
+      "name": "container_validation",
+      "status": "unavailable"
+    },
+    {
       "name": "decapod validate",
       "status": "passed"
     },
@@ -166,6 +176,10 @@
       "status": "passed"
     },
     {
+      "name": "release_workflow_yaml",
+      "status": "passed"
+    },
+    {
       "name": "rustls advisory remediation",
       "status": "passed"
     },
@@ -186,18 +200,20 @@
     "Refreshed the managed specs attestation and manifest after the rustls lockfile update; repository fingerprint is now eeb8cdd1ee2c9af1798d3f5b09bd2abe55e8c90b8555cfc3a4f00885074a8dee.",
     "Remediated RUSTSEC-2026-0285 by updating rustls from 0.23.43 to patched 0.23.45.",
     "Rust 1.96.1 host execution passed 339 library tests, governance artifact tests, green-field validation tests, focused core tests, formatting, and Clippy; containerized decapod validate passed with fail_count=0.",
-    "validation epoch ve_5d09accccfec990a completed with zero failures"
+    "validation epoch ve_5d09accccfec990a completed with zero failures",
+    "validation epoch ve_644e27d3e055fa14 completed with zero failures",
+    "validation epoch ve_a244fe0e8aad2e06 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
-  "proof_status": "passed",
+  "proof_status": "partial",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "supported"
+    "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:4383bfa9125d5dab9d8263089a1438f9441699c65ccf711987e6d1d62a4968df",
+  "artifact_hash": "sha256:878cfbc9901fe95af820fba22011a1bd7e571f5b67da72c48bd59b41bb932d7d",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -273,6 +289,34 @@
       {
         "sequence": 9,
         "event_id": "event:9",
+        "intent_id": "intent:seth-1324-1327-01m2kbchkg3f62s7",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:seth-1324-1327-01m2kbchkg3f62s7"
+      },
+      {
+        "sequence": 10,
+        "event_id": "event:10",
+        "intent_id": "intent:seth-1324-1327-01m2kbchkg3f62s7",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:seth-1324-1327-01m2kbchkg3f62s7"
+      },
+      {
+        "sequence": 11,
+        "event_id": "event:11",
+        "intent_id": "intent:seth-1324-1327-01m2kbchkg3f62s7",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:seth-1324-1327-01m2kbchkg3f62s7"
+      },
+      {
+        "sequence": 12,
+        "event_id": "event:12",
+        "intent_id": "intent:seth-1324-1327-01m2kbchkg3f62s7",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:seth-1324-1327-01m2kbchkg3f62s7"
+      },
+      {
+        "sequence": 13,
+        "event_id": "event:13",
         "intent_id": "intent:seth-1324-1327-01m2kbchkg3f62s7",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:seth-1324-1327-01m2kbchkg3f62s7"
@@ -457,12 +501,82 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:9"
+          },
+          {
+            "sequence": 10,
+            "action": "trajectory.record",
+            "scope": [
+              ".decapod/OVERRIDE.md scaffolding; validation trajectory and receipt currency; claims ledger compaction; specs config-input hash; living specs and regression tests"
+            ],
+            "observations": [
+              ".github/workflows/release.yml",
+              ".decapod/managed/specs/OPERATIONS.md"
+            ],
+            "proof_refs": [
+              "release_workflow_yaml",
+              "container_validation"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:10"
+          },
+          {
+            "sequence": 11,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/OVERRIDE.md scaffolding; validation trajectory and receipt currency; claims ledger compaction; specs config-input hash; living specs and regression tests"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_644e27d3e055fa14 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:11"
+          },
+          {
+            "sequence": 12,
+            "action": "trajectory.record",
+            "scope": [
+              ".decapod/OVERRIDE.md scaffolding; validation trajectory and receipt currency; claims ledger compaction; specs config-input hash; living specs and regression tests"
+            ],
+            "observations": [
+              ".github/workflows/release.yml",
+              ".decapod/managed/specs/OPERATIONS.md"
+            ],
+            "proof_refs": [
+              "buildkite_matrix_static",
+              "release_workflow_yaml"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:12"
+          },
+          {
+            "sequence": 13,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/OVERRIDE.md scaffolding; validation trajectory and receipt currency; claims ledger compaction; specs config-input hash; living specs and regression tests"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_a244fe0e8aad2e06 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:13"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 9
+    "next_sequence": 13
   }
 }
