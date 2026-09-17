@@ -52,12 +52,13 @@ PR.
 signatures, update protection). Agents publish release-bound changes through
 the code PR, and release automation handles only compilation and publication.
 
-**Release matrix safety:** the release workflow keeps cargo-dist's computed
-artifact matrix for publishing and upload-mode runs. Plan-only runs still
-produce a valid inert matrix because GitHub Actions and Buildkite validate a
-job matrix before applying the job-level skip condition; this prevents a
-non-publishing check from expanding nested target arrays for a job that cannot
-run while leaving tag builds unchanged.
+**Release matrix safety:** the release workflow declares the four targets from
+`workspace.metadata.dist.targets` as an explicit artifact matrix. Plan-only
+runs therefore validate without runtime matrix expansion because GitHub Actions
+and Buildkite validate a job matrix before applying the job-level skip
+condition. Publishing and upload-mode runs still build the same cargo-dist
+targets, while changes to the target list require an intentional workflow and
+spec update.
 
 ## Installed-Version Upgrade Path
 After `cargo install decapod`, the next normal governed command runs protected, idempotent schema migration and legacy-event reconciliation before runtime consumers read evidence. Existing-project `decapod init` executes the same reconciliation before regeneration. A prior successful single-datastore migration retires its JSONL inputs through a durable receipt; startup does not rescan them. Legacy local database sources are opened through the Dactyl v0.10.0 facade, while Decapod owns row translation, schema policy, the explicit maintenance command policy, and idempotency ledgers. Dactyl opens the canonical path directly through its host runtime and owns the physical backup/recovery contract; no bundled fallback or second local authority is used. Human-authored `OVERRIDE.md` content is validated but never mechanically rewritten. Fresh migration conflicts preserve source artifacts and stop with an actionable error.
@@ -222,7 +223,7 @@ for filesystem work and are not used as the artifact representation.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `cc63f49364319325ec08f5489ef899cd34cdbaddd61a37415db1013ba2d0d159`
+- Repository signal fingerprint: `efa5836653cc90f67a2540a204c962a0b740f544e93d0da745a791fdec89068e`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -100,6 +100,10 @@
   "tool_calls": [],
   "checks": [
     {
+      "name": "buildkite_matrix_static",
+      "status": "passed"
+    },
+    {
       "name": "cargo clippy",
       "status": "passed"
     },
@@ -208,7 +212,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:93ca2b265b329e657e6bf124308505a4ddf83535dcd68398635d3a904aee07e1",
+  "artifact_hash": "sha256:fbeeac0f48ba99f1811bc3bcdcbf76f53c5c19281771bda11831f4eeaeece0f0",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -298,6 +302,13 @@
       {
         "sequence": 11,
         "event_id": "event:11",
+        "intent_id": "intent:seth-1324-1327-01m2kbchkg3f62s7",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:seth-1324-1327-01m2kbchkg3f62s7"
+      },
+      {
+        "sequence": 12,
+        "event_id": "event:12",
         "intent_id": "intent:seth-1324-1327-01m2kbchkg3f62s7",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:seth-1324-1327-01m2kbchkg3f62s7"
@@ -517,12 +528,29 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:11"
+          },
+          {
+            "sequence": 12,
+            "action": "trajectory.record",
+            "scope": [
+              ".decapod/OVERRIDE.md scaffolding; validation trajectory and receipt currency; claims ledger compaction; specs config-input hash; living specs and regression tests"
+            ],
+            "observations": [
+              ".github/workflows/release.yml",
+              ".decapod/managed/specs/OPERATIONS.md"
+            ],
+            "proof_refs": [
+              "buildkite_matrix_static",
+              "release_workflow_yaml"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:12"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 11
+    "next_sequence": 12
   }
 }
