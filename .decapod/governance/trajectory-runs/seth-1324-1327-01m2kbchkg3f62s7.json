@@ -201,7 +201,8 @@
     "Remediated RUSTSEC-2026-0285 by updating rustls from 0.23.43 to patched 0.23.45.",
     "Rust 1.96.1 host execution passed 339 library tests, governance artifact tests, green-field validation tests, focused core tests, formatting, and Clippy; containerized decapod validate passed with fail_count=0.",
     "validation epoch ve_5d09accccfec990a completed with zero failures",
-    "validation epoch ve_644e27d3e055fa14 completed with zero failures"
+    "validation epoch ve_644e27d3e055fa14 completed with zero failures",
+    "validation epoch ve_a244fe0e8aad2e06 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -212,7 +213,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:fbeeac0f48ba99f1811bc3bcdcbf76f53c5c19281771bda11831f4eeaeece0f0",
+  "artifact_hash": "sha256:878cfbc9901fe95af820fba22011a1bd7e571f5b67da72c48bd59b41bb932d7d",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -309,6 +310,13 @@
       {
         "sequence": 12,
         "event_id": "event:12",
+        "intent_id": "intent:seth-1324-1327-01m2kbchkg3f62s7",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:seth-1324-1327-01m2kbchkg3f62s7"
+      },
+      {
+        "sequence": 13,
+        "event_id": "event:13",
         "intent_id": "intent:seth-1324-1327-01m2kbchkg3f62s7",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:seth-1324-1327-01m2kbchkg3f62s7"
@@ -545,12 +553,30 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:12"
+          },
+          {
+            "sequence": 13,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/OVERRIDE.md scaffolding; validation trajectory and receipt currency; claims ledger compaction; specs config-input hash; living specs and regression tests"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_a244fe0e8aad2e06 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:13"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 12
+    "next_sequence": 13
   }
 }
