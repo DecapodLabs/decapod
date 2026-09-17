@@ -132,9 +132,10 @@ pub fn validate_override_structure(repo_root: &Path) -> Result<(), error::Decapo
     resolved_override_evidence(repo_root).map(|_| ())
 }
 
-/// Render the current scaffold contract while preserving every resolved body.
+/// Render an existing override while preserving its selected directives.
 /// Legacy unfenced sections are upgraded into non-rendering fenced source
-/// areas; their extracted bytes remain unchanged.
+/// areas; their extracted bytes remain unchanged. Omitted sections are a
+/// supported minimal scaffold and are intentionally not reintroduced.
 pub fn render_fenced_override_upgrade(
     override_content: &str,
 ) -> Result<String, error::DecapodError> {
@@ -155,15 +156,8 @@ pub fn render_fenced_override_upgrade(
 
     #[derive(Debug, Clone)]
     enum DocElement {
-        CategoryHeader {
-            name: String,
-            text: String,
-        },
-        Directive {
-            id: String,
-            heading: String,
-            body: String,
-        },
+        CategoryHeader { text: String },
+        Directive { heading: String, body: String },
         CommentOrText(String),
     }
 
@@ -197,9 +191,8 @@ pub fn render_fenced_override_upgrade(
 
         if is_category {
             active_directive_id = None;
-            if let Some(cat_name) = extract_category_name(line) {
+            if extract_category_name(line).is_some() {
                 elements.push(DocElement::CategoryHeader {
-                    name: cat_name,
                     text: line.to_string(),
                 });
             } else {
@@ -213,7 +206,6 @@ pub fn render_fenced_override_upgrade(
                     .map(|p| p.content.clone())
                     .unwrap_or_default();
                 elements.push(DocElement::Directive {
-                    id: canonical_id.clone(),
                     heading: line.to_string(),
                     body,
                 });
@@ -234,101 +226,16 @@ pub fn render_fenced_override_upgrade(
         }
     }
 
-    let mut present_ids = HashSet::new();
-    for el in &elements {
-        if let DocElement::Directive { id, .. } = el {
-            present_ids.insert(id.clone());
-        }
-    }
-
-    let cat_order = [
-        "core",
-        "specs",
-        "interfaces",
-        "methodology",
-        "architecture",
-        "data",
-        "plugins",
-        "docs",
-        "metadata",
-    ];
-
-    let template_categories = template_category_directives();
-
-    for cat_name in &cat_order {
-        let template_dirs = template_categories
-            .get(*cat_name)
-            .cloned()
-            .unwrap_or_default();
-        if template_dirs.is_empty() {
-            continue;
-        }
-
-        let mut missing_dirs = Vec::new();
-        for id in &template_dirs {
-            if !present_ids.contains(id) {
-                missing_dirs.push(id.clone());
-            }
-        }
-
-        let category_header_pos = elements.iter().position(
-            |el| matches!(el, DocElement::CategoryHeader { name, .. } if name == *cat_name),
-        );
-
-        if let Some(pos) = category_header_pos {
-            let mut insert_pos = pos + 1;
-            while insert_pos < elements.len() {
-                match &elements[insert_pos] {
-                    DocElement::CategoryHeader { .. } => break,
-                    DocElement::CommentOrText(text) if text.trim() == "---" => break,
-                    _ => {
-                        insert_pos += 1;
-                    }
-                }
-            }
-
-            for id in missing_dirs {
-                elements.insert(
-                    insert_pos,
-                    DocElement::Directive {
-                        id: id.clone(),
-                        heading: format!("### {id}"),
-                        body: String::new(),
-                    },
-                );
-                insert_pos += 1;
-            }
-        } else {
-            if !missing_dirs.is_empty() {
-                elements.push(DocElement::CategoryHeader {
-                    name: cat_name.to_string(),
-                    text: format!("## {} Overrides", cat_name.to_uppercase()),
-                });
-                elements.push(DocElement::CommentOrText(String::new()));
-                for id in missing_dirs {
-                    elements.push(DocElement::Directive {
-                        heading: format!("### {id}"),
-                        id: id.clone(),
-                        body: String::new(),
-                    });
-                }
-                elements.push(DocElement::CommentOrText(String::new()));
-                elements.push(DocElement::CommentOrText("---".to_string()));
-                elements.push(DocElement::CommentOrText(String::new()));
-            }
-        }
-    }
-
     let mut rendered = String::new();
     rendered.push_str(above_boundary);
 
     for el in elements {
         match el {
-            DocElement::CategoryHeader { text, .. } => {
+            DocElement::CategoryHeader { text } => {
                 rendered.push_str(&text);
                 rendered.push('\n');
             }
-            DocElement::Directive { heading, body, .. } => {
+            DocElement::Directive { heading, body } => {
                 rendered.push_str(&heading);
                 rendered.push('\n');
 
@@ -369,40 +276,6 @@ fn extract_category_name(header: &str) -> Option<String> {
         .trim()
         .to_lowercase();
     Some(name)
-}
-
-fn template_category_directives() -> BTreeMap<String, Vec<String>> {
-    let mut categories: BTreeMap<String, Vec<String>> = BTreeMap::new();
-    let mut ids = list_docs();
-    for spec in [
-        "specs/README.md",
-        "specs/INTENT.md",
-        "specs/ARCHITECTURE.md",
-        "specs/INTERFACES.md",
-        "specs/VALIDATION.md",
-        "specs/SEMANTICS.md",
-        "specs/OPERATIONS.md",
-        "specs/SECURITY.md",
-    ] {
-        if !ids.iter().any(|id| {
-            doc_id_candidates(id)
-                .into_iter()
-                .any(|candidate| candidate == spec)
-        }) {
-            ids.push(spec.to_string());
-        }
-    }
-    ids.sort();
-    ids.dedup();
-
-    for id in ids {
-        if let Some((cat, _, _)) = get_metadata(&id) {
-            categories.entry(cat.to_lowercase()).or_default().push(id);
-        } else if id.starts_with("specs/") {
-            categories.entry("specs".to_string()).or_default().push(id);
-        }
-    }
-    categories
 }
 
 /// List component override section headings from .decapod/OVERRIDE.md.
@@ -990,81 +863,34 @@ pub fn canonical_template(name: &str) -> Option<String> {
 fn template_readme() -> String {
     r#"# .decapod - Decapod Control Plane
 
-Decapod is a repo-native governance kernel for AI coding agents. It turns human intent into bounded, durable, and proof-backed agent work. Its layer is explicit: models produce intelligence, agents perform work, repositories preserve state, and Decapod governs the transition from intent to proof. Reliability is designed, not hoped for. Agents invoke it at decision, validation, recovery, and publication boundaries; it does not perform the agent's work.
+This directory is the repository-local control plane for Decapod. It keeps
+project policy, durable execution state, generated projections, proof artifacts,
+and isolated workspaces separate from product source.
 
-GitHub: https://github.com/DecapodLabs/decapod
-Canonical Contract: `assets/constitution.json` section `core/DECAPOD`
+Project configuration lives in [`config.toml`](config.toml). Project-specific
+policy overlays live in [`OVERRIDE.md`](OVERRIDE.md); keep them minimal,
+explicit, and committed. Omitted override sections are valid when a project
+does not need to customize those directives.
 
-## What This Directory Is
+The authority hierarchy is embedded constitution, project override, then task
+policy. Configuration selects repository behavior; living specs explain the
+project contract; generated projections and proof artifacts report the governed
+state.
 
-This `.decapod/` directory is the durable execution surface for governed work in this repository. It keeps authored specifications, Decapod-owned state, generated projections and evidence, and isolated workspaces separate from product source.
+For the human documentation and operating model, see the
+[official Decapod docs](https://decapodlabs.github.io/decapod/). The source and
+issue tracker are on [GitHub](https://github.com/DecapodLabs/decapod).
 
-`OVERRIDE.md` and `README.md` intentionally stay at this top level.
+## Directory Map
 
-## Quick Start
-
-1. `decapod init --proof`
-2. `decapod validate`
-3. `decapod constitution get core/DECAPOD`
-4. `decapod session acquire`
-5. `decapod rpc --op agent.init`
-6. `decapod workspace status`
-7. `decapod todo add \"<task>\" && decapod todo claim --id <task-id>`
-8. `decapod workspace ensure`
-
-## Migrating Custom Agent Files
-
-If you have existing files like `SOUL.md` or `MEMORY.md` that were used for agent instructions, you can migrate them into the Decapod governance layer.
-
-After running `decapod init`, simply ask your agent to **"consolidate my [FILE.md] content into the .decapod/OVERRIDE.md substrate"**. This ensures your project-specific intent is merged into the correct constitutional sections while allowing Decapod to manage the primary entrypoints.
-
-## Aptitude Memory
-
-Decapod aptitude remains for preferences and behavior recall:
-
-```bash
-# Record a preference
-decapod data aptitude add --category git --key branch_prefix --value "feature/" --confidence 90
-
-# Get contextual prompts
-decapod data aptitude prompt --query "commit"
-
-# Record an observation
-decapod data aptitude observe --category code_style --content "Team prefers async/await over tokio::spawn"
-```
-
-## Canonical Layout
-
-- `README.md`: operator onboarding and control-plane map.
-- `OVERRIDE.md`: project-local override layer for embedded constitution directives.
-- `data/`: canonical control-plane state (SQLite + ledgers).
-- `managed/specs/`: agent-authored living project specs; only fresh initialization scaffolds their starting structure.
-- `managed/context/`: generated deterministic context projections.
-- `managed/artifacts/provenance/`: promotion manifests and convergence checklist.
-- `managed/artifacts/inventory/`: deterministic release inventory artifacts.
-- `managed/artifacts/diagnostics/`: opt-in diagnostics artifacts.
-- `workspaces/`: isolated todo-scoped git worktrees for implementation.
-
-## How It Works
-
-Each Decapod process is ephemeral. The repository preserves the durable state that lets one task span many invocations, processes, models, and harnesses.
-
-1. **Intent and Boundaries**: The agent records its interpretation and accepts a governed task scope.
-2. **Execution**: The agent performs the work in an isolated workspace and maintains living specifications.
-3. **Validation and Recovery**: Decapod evaluates invariants. The agent follows supported remediation and revalidates.
-4. **Publication and Proof**: Publication remains blocked until required validation and evidence are satisfied.
-
-## Why Teams Use This
-
-- Agent-first interface with explicit governance.
-- Local-first execution without daemon overhead.
-- Integrated TODO, claims, context, validation, and proof in one harness.
-- Cleaner repos: Decapod concerns stay in `.decapod/`.
-
-## Override Workflow
-
-Edit `.decapod/OVERRIDE.md` to add project-specific policy overlays without forking Decapod.
-Keep overrides minimal, explicit, and committed.
+- `config.toml`: repository configuration and declared capabilities.
+- `OVERRIDE.md`: project-local policy overlays.
+- `data/`: canonical local control-plane state, including `decapod.db`.
+- `governance/`: plans, claims, trajectories, and validation receipts.
+- `managed/specs/`: authored living specs plus generated attestations.
+- `managed/context/`: generated context projections.
+- `managed/artifacts/`: generated provenance, inventory, and diagnostics.
+- `workspaces/`: isolated todo-scoped git worktrees.
 "#
     .to_string()
 }

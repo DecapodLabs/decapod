@@ -118,6 +118,132 @@ fn fresh_init_validate_comes_back_green() {
 }
 
 #[test]
+fn authority_change_cannot_leave_specs_manifest_config_hash_stale() {
+    let tmp = TempDir::new().expect("tmpdir");
+    let dir = tmp.path();
+    let password = setup_initialized_repo(&tmp);
+
+    let initial = run_decapod_with_password(
+        dir,
+        &["validate"],
+        &password,
+        &[("DECAPOD_VALIDATE_TIMEOUT_SECS", "120")],
+    );
+    assert!(
+        initial.status.success(),
+        "initial validation should succeed: {}",
+        String::from_utf8_lossy(&initial.stderr)
+    );
+
+    let override_path = dir.join(".decapod/OVERRIDE.md");
+    let original = fs::read_to_string(&override_path).expect("override");
+    fs::write(
+        &override_path,
+        format!("<!-- authority changed -->\n{original}"),
+    )
+    .expect("change override authority");
+    let manifest: serde_json::Value = serde_json::from_str(
+        &fs::read_to_string(dir.join(".decapod/managed/specs/.manifest.json"))
+            .expect("specs manifest"),
+    )
+    .expect("manifest JSON");
+    assert_ne!(
+        manifest["config_input_hash"],
+        serde_json::Value::String(
+            decapod::core::project_specs::config_input_hash(dir).expect("current config hash"),
+        )
+    );
+
+    let stale = run_decapod_with_password(
+        dir,
+        &["validate"],
+        &password,
+        &[("DECAPOD_VALIDATE_TIMEOUT_SECS", "120")],
+    );
+    let output = format!(
+        "{}{}",
+        String::from_utf8_lossy(&stale.stdout),
+        String::from_utf8_lossy(&stale.stderr)
+    );
+    assert!(
+        !stale.status.success(),
+        "stale authority must fail: {output}"
+    );
+    assert!(
+        output.contains("STALE_VALIDATION_EVIDENCE"),
+        "validation must reject the old bound proof after refreshing the manifest: {output}"
+    );
+    let refreshed_manifest: serde_json::Value = serde_json::from_str(
+        &fs::read_to_string(dir.join(".decapod/managed/specs/.manifest.json"))
+            .expect("refreshed specs manifest"),
+    )
+    .expect("refreshed manifest JSON");
+    assert_eq!(
+        refreshed_manifest["config_input_hash"],
+        serde_json::Value::String(
+            decapod::core::project_specs::config_input_hash(dir).expect("current config hash"),
+        ),
+        "validation must refresh the manifest before rejecting stale proof"
+    );
+}
+
+#[test]
+fn changed_validation_epoch_preserves_bound_proof_and_requires_new_run() {
+    let tmp = TempDir::new().expect("tmpdir");
+    let dir = tmp.path();
+    let password = setup_initialized_repo(&tmp);
+
+    let initial = run_decapod_with_password(
+        dir,
+        &["validate"],
+        &password,
+        &[("DECAPOD_VALIDATE_TIMEOUT_SECS", "120")],
+    );
+    assert!(
+        initial.status.success(),
+        "initial validation should succeed: {}",
+        String::from_utf8_lossy(&initial.stderr)
+    );
+    let trajectory_path = dir.join(".decapod/governance/trajectory.json");
+    let receipt_path = dir.join(".decapod/governance/validation.json");
+    let trajectory_before = fs::read(&trajectory_path).expect("trajectory");
+    let receipt_before = fs::read(&receipt_path).expect("receipt");
+
+    let changed_epoch = run_decapod_with_password(
+        dir,
+        &["validate"],
+        &password,
+        &[
+            ("DECAPOD_VALIDATE_TIMEOUT_SECS", "120"),
+            ("DECAPOD_VALIDATION_PROFILE", "changed-profile"),
+        ],
+    );
+    let output = format!(
+        "{}{}",
+        String::from_utf8_lossy(&changed_epoch.stdout),
+        String::from_utf8_lossy(&changed_epoch.stderr)
+    );
+    assert!(
+        !changed_epoch.status.success(),
+        "changed epoch must fail: {output}"
+    );
+    assert!(
+        output.contains("STALE_VALIDATION_EVIDENCE"),
+        "validation must provide trajectory recovery: {output}"
+    );
+    assert_eq!(
+        fs::read(&trajectory_path).expect("trajectory after stale validation"),
+        trajectory_before,
+        "bound trajectory evidence must remain unchanged"
+    );
+    assert_eq!(
+        fs::read(&receipt_path).expect("receipt after stale validation"),
+        receipt_before,
+        "receipt must not be rebound to a changed epoch"
+    );
+}
+
+#[test]
 fn existing_project_init_migrates_watcher_before_runtime_reads() {
     let tmp = TempDir::new().expect("tmpdir");
     let dir = tmp.path();
@@ -229,12 +355,32 @@ fn re_init_preserves_validation_green() {
         "first validate failed: {}",
         String::from_utf8_lossy(&validate1.stderr)
     );
+    let before_config = fs::read(dir.join(".decapod/config.toml")).expect("config before reinit");
+    let before_manifest = fs::read(dir.join(".decapod/managed/specs/.manifest.json"))
+        .expect("manifest before reinit");
+    let before_specs =
+        fs::read(dir.join(".decapod/managed/specs/INTENT.md")).expect("spec before reinit");
 
     let reinit = run_decapod_with_password(dir, &["init", "--force"], &password, &[]);
     assert!(
         reinit.status.success(),
         "re-init failed: {}",
         String::from_utf8_lossy(&reinit.stderr)
+    );
+    assert_eq!(
+        before_config,
+        fs::read(dir.join(".decapod/config.toml")).expect("config after reinit"),
+        "force re-init must preserve project config authority"
+    );
+    assert_eq!(
+        before_manifest,
+        fs::read(dir.join(".decapod/managed/specs/.manifest.json")).expect("manifest after reinit"),
+        "force re-init must preserve the specs manifest"
+    );
+    assert_eq!(
+        before_specs,
+        fs::read(dir.join(".decapod/managed/specs/INTENT.md")).expect("spec after reinit"),
+        "force re-init must preserve authored living specs"
     );
 
     let validate2 = run_decapod_with_password(

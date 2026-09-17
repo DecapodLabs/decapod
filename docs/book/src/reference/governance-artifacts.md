@@ -15,10 +15,10 @@ receipts, projections, custody, and publication state. See the
 [governed execution model](../../../architecture/governed-execution.md) for the
 full ownership and lifecycle map.
 
-The research claims ledger is distinct from Health Engine claims in
-`.decapod/data/health.db`. Health Engine claims record operational health and
-proof events; `claims.json` records falsifiable, repository-owned research
-claims and is part of the PR proof surface.
+The research claims ledger is distinct from Health Engine claims in the
+consolidated `.decapod/data/decapod.db`. Health Engine claims record
+operational health and proof events; `claims.json` records falsifiable,
+repository-owned research claims and is part of the PR proof surface.
 
 ## Coherent bundle (publication invariant)
 
@@ -74,6 +74,12 @@ all four paths in the PR delta for project PRs. `validation.json` is the one
 file produced *by* a successful validate: when it is the only missing path,
 validate writes it and counts the working-tree file. `DECAPOD_VALIDATE_SKIP_GIT_GATES`
 is a test/debug escape hatch, not the agent publication sequence.
+
+For an explicit, semantics-preserving reduction of the research ledger's JSON
+format, use `decapod govern artifacts inventory --compact`. This does not
+delete, supersede, or invent claims. Health Engine mutations use
+`decapod govern health claim` and `decapod govern health proof` against the
+consolidated datastore instead.
 
 An external tracker such as GitHub Issues, Jira, Linear, or Beads may remain the
 organizational system of record. Decapod's todo and claim state governs the

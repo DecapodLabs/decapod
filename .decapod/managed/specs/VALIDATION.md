@@ -19,6 +19,30 @@ must not introduce additional output.
 ## Validation Philosophy
 > Validation is a release gate, not documentation theater.
 
+## Governance Input and Proof Currency (#1325, #1327)
+The specs manifest hashes both project authority inputs: `.decapod/config.toml`
+and `.decapod/OVERRIDE.md`. A mismatch is not ignored. The normal bounded
+validation path refreshes the manifest in the claimed workspace, then checks
+whether the active validation epoch is still represented in the bound
+trajectory. The non-refresh validation branch reports `STALE_CONFIG_INPUT_HASH`
+and names `decapod rpc --op specs.refresh` as the supported repair.
+
+An epoch change is intentional proof invalidation, not a receipt rewrite. If a
+trajectory already contains successful validation for another epoch, validation
+returns `STALE_VALIDATION_EVIDENCE`, leaves `.decapod/governance/trajectory.json`
+and `validation.json` unchanged, and instructs the operator to initialize a new
+run before retrying. Same-epoch validation remains idempotent. Force re-init is
+allowed to stay green only when it preserves existing config authority,
+manifest state, and authored living specs.
+
+## Claims Ledger Size and Ownership (#1093, #1163, #1326)
+The research claims ledger is an append-only governance artifact, not the Health
+Engine runtime claims store. Its valid JSON schema is unchanged by compaction.
+`decapod govern artifacts inventory --compact` is the explicit maintenance
+surface: it canonicalizes the valid ledger, reports `claims_ledger_bytes`, and
+is idempotent. It does not prune claims, rewrite their meaning, or touch Health
+Engine records in `.decapod/data/decapod.db`.
+
 ## Validation Harness
 Define the test and verification harness used by this project.
 Key features:
@@ -304,7 +328,7 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9089e875bec2fd10df65499794769ef2817d186f0a249faef2998277a9d0d65d`
+- Repository signal fingerprint: `eeb8cdd1ee2c9af1798d3f5b09bd2abe55e8c90b8555cfc3a4f00885074a8dee`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

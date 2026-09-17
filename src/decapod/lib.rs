@@ -331,10 +331,12 @@ fn infer_repo_context(target_dir: &Path) -> Result<RepoContext, error::DecapodEr
         ctx.detected_surfaces.push("backend".to_string());
     }
 
-    if ctx.detected_surfaces.iter().any(|s| s == "frontend") {
-        ctx.product_type = Some("application".to_string());
-    } else if !ctx.detected_surfaces.is_empty() || !ctx.primary_languages.is_empty() {
-        ctx.product_type = Some("service_or_library".to_string());
+    if ctx.product_type.is_none() {
+        if ctx.detected_surfaces.iter().any(|s| s == "frontend") {
+            ctx.product_type = Some("application".to_string());
+        } else if !ctx.detected_surfaces.is_empty() || !ctx.primary_languages.is_empty() {
+            ctx.product_type = Some("service_or_library".to_string());
+        }
     }
 
     let intent_path = target_dir.join(core::project_specs::LOCAL_PROJECT_SPECS_INTENT);
@@ -401,8 +403,12 @@ fn infer_repo_context(target_dir: &Path) -> Result<RepoContext, error::DecapodEr
     ctx.detected_surfaces.sort();
     ctx.detected_surfaces.dedup();
 
-    // Load declared capabilities from config.toml
+    // Load declared capabilities from config.toml. An existing empty list is
+    // intentional project authority; do not infer capabilities from generated
+    // Decapod prose on a later init, because that would change config.toml
+    // during a supposedly idempotent refresh.
     let config_path = target_dir.join(".decapod/config.toml");
+    let has_config = config_path.exists();
     if config_path.exists()
         && let Ok(content) = fs::read_to_string(&config_path)
         && let Ok(config) = toml::from_str::<crate::cli::DecapodProjectConfig>(&content)
@@ -413,7 +419,7 @@ fn infer_repo_context(target_dir: &Path) -> Result<RepoContext, error::DecapodEr
     }
 
     // If no declared capabilities, infer from repository evidence
-    if ctx.capabilities.is_empty() {
+    if ctx.capabilities.is_empty() && !has_config {
         let inferred = core::capabilities::infer_capabilities(target_dir)?;
         ctx.capabilities = inferred.iter().map(|i| i.capability_id.clone()).collect();
         ctx.capabilities.sort();
@@ -655,6 +661,18 @@ fn apply_repo_context_cli_overrides(ctx: &mut RepoContext, init_with: &InitWithC
             .map(|s| s.trim().to_string())
             .filter(|s| !s.is_empty())
             .collect();
+    }
+    if ctx.product_type.is_none()
+        && (!ctx.detected_surfaces.is_empty() || !ctx.primary_languages.is_empty())
+    {
+        ctx.product_type = Some(
+            if ctx.detected_surfaces.iter().any(|s| s == "frontend") {
+                "application"
+            } else {
+                "service_or_library"
+            }
+            .to_string(),
+        );
     }
     ctx.container_workspaces = init_with.container_workspaces;
     ctx.set_backend(init_with.backend);
@@ -1895,11 +1913,14 @@ fn run_init_apply(
         agent_files_to_generate.push("AGENTS.md".to_string());
     }
 
+    // Living specs are project-authored state. Force refreshes the generated
+    // entrypoints and README, but an existing specs directory is never
+    // replaced by scaffolding; use the explicit specs refresh path to update
+    // its generated projections without changing authored material.
     let generate_specs = init_with.specs
-        && (init_with.force
-            || !target_dir
-                .join(core::project_specs::LOCAL_PROJECT_SPECS_DIR)
-                .exists());
+        && !target_dir
+            .join(core::project_specs::LOCAL_PROJECT_SPECS_DIR)
+            .exists();
     let scaffold_summary = scaffold::scaffold_project_entrypoints(&scaffold::ScaffoldOptions {
         target_dir: target_dir.clone(),
         force: init_with.force,
@@ -6172,17 +6193,30 @@ fn record_validation_proof(
     } else {
         let existing =
             existing.expect("existing trajectory is present when a fresh one is not required");
-        if existing.checks.iter().any(|check| {
+        let has_successful_validation = existing.checks.iter().any(|check| {
             check.name == "decapod validate"
                 && matches!(
                     check.status,
                     core::trajectory::TrajectoryCheckStatus::Passed
                 )
-        }) && existing.task_id == task_id
-        {
-            // Do not re-record a duplicate successful validate: that would
-            // change the trajectory hash and force a receipt rewrite (#1259).
-            return Ok(existing);
+        });
+        if has_successful_validation && existing.task_id == task_id {
+            if trajectory_has_validation_epoch(
+                &existing.evidence,
+                &report.validation_epoch.epoch_id,
+            ) {
+                // Do not re-record a duplicate successful validate: that would
+                // change the trajectory hash and force a receipt rewrite (#1259).
+                return Ok(existing);
+            }
+            let task_recovery = task_id
+                .as_deref()
+                .map(|id| format!(" --task-id {id}"))
+                .unwrap_or_default();
+            return Err(error::DecapodError::ValidationError(format!(
+                "STALE_VALIDATION_EVIDENCE: active validation epoch '{}' is not recorded in bound trajectory '{}'. Existing proof is preserved for audit. Start a new run with `decapod govern trajectory init --run-id <new-run-id>{task_recovery}`, then rerun `decapod validate`.",
+                report.validation_epoch.epoch_id, existing.run_id
+            )));
         }
         existing
     };
@@ -6203,14 +6237,24 @@ fn record_validation_proof(
                 name: "decapod validate".to_string(),
                 status: core::trajectory::TrajectoryCheckStatus::Passed,
             }],
-            evidence: vec![format!(
-                "validation epoch {} completed with zero failures",
-                report.validation_epoch.epoch_id
-            )],
+            evidence: vec![validation_epoch_evidence(&report.validation_epoch.epoch_id)],
             ..Default::default()
         },
     )
 }
+
+fn validation_epoch_evidence(epoch_id: &str) -> String {
+    format!("validation epoch {epoch_id} completed with zero failures")
+}
+
+fn trajectory_has_validation_epoch(evidence: &[String], epoch_id: &str) -> bool {
+    let expected = validation_epoch_evidence(epoch_id);
+    evidence.iter().any(|evidence| evidence == &expected)
+}
+
+#[cfg(test)]
+#[path = "../../tests/unit/lib_validation_proof_tests.rs"]
+mod validation_proof_tests;
 
 fn write_validation_receipt(
     project_root: &Path,
@@ -6437,11 +6481,13 @@ fn run_govern_command(
                 base_branch,
                 repair,
                 claims_note,
-            } => core::governance_artifacts::run_inventory(
+                compact,
+            } => core::governance_artifacts::run_inventory_with_options(
                 workspace_root,
                 base_branch.as_deref(),
                 repair,
                 claims_note.as_deref(),
+                compact,
             )?,
         },
         GovernCommand::Plan(plan_cli) => run_plan_command(plan_cli, project_store, workspace_root)?,

@@ -17,6 +17,7 @@ pub const CLAIMS_SCHEMA_VERSION: &str = "1.0.0";
 pub const CLAIMS_KIND: &str = "research_claims_ledger";
 pub const CLAIMS_SCHEMA_URI: &str =
     "https://decapod.dev/schemas/research-claims-ledger-1.0.0.schema.json";
+pub const CLAIMS_COMPACT_COMMAND: &str = "decapod govern artifacts inventory --compact";
 const CLAIMS_SCHEMA_DOCUMENT: &str = include_str!("../../../assets/schemas/claims.schema.json");
 const CLAIMS_TEMPLATE: &str = include_str!("../../../assets/templates/claims.json");
 
@@ -387,6 +388,17 @@ pub fn load_and_validate(repo_root: &Path) -> Result<Option<ClaimsLedger>, Decap
     Ok(Some(ledger))
 }
 
+/// Return the on-disk size of the repository research claims ledger.
+pub fn ledger_size_bytes(repo_root: &Path) -> Result<Option<u64>, DecapodError> {
+    let path = repo_root.join(CLAIMS_PATH);
+    if !path.exists() {
+        return Ok(None);
+    }
+    fs::metadata(path)
+        .map(|metadata| Some(metadata.len()))
+        .map_err(DecapodError::IoError)
+}
+
 /// Create the deterministic repository claims template when a project does
 /// not yet have a research ledger. Existing content is never overwritten.
 pub fn ensure_template(repo_root: &Path, dry_run: bool) -> Result<bool, DecapodError> {
@@ -401,6 +413,38 @@ pub fn ensure_template(repo_root: &Path, dry_run: bool) -> Result<bool, DecapodE
     load_and_validate(repo_root)?.ok_or_else(|| {
         DecapodError::ValidationError(format!(
             "claims template was written but could not be loaded: {}",
+            path.display()
+        ))
+    })?;
+    Ok(true)
+}
+
+/// Compact a valid research claims ledger without changing its JSON value.
+/// This is explicit because formatting is part of the review surface: no
+/// claims are inferred, removed, archived, or superseded by this operation.
+pub fn compact(repo_root: &Path) -> Result<bool, DecapodError> {
+    let path = repo_root.join(CLAIMS_PATH);
+    let raw = fs::read_to_string(&path).map_err(DecapodError::IoError)?;
+    load_and_validate(repo_root)?.ok_or_else(|| {
+        DecapodError::ValidationError(format!("claims ledger is missing: {}", path.display()))
+    })?;
+    let value: Value = serde_json::from_str(&raw).map_err(|error| {
+        DecapodError::ValidationError(format!(
+            "invalid research claims ledger {}: {error}",
+            path.display()
+        ))
+    })?;
+    let mut compacted = serde_json::to_vec(&value).map_err(|error| {
+        DecapodError::ValidationError(format!("claims ledger compaction failed: {error}"))
+    })?;
+    compacted.push(b'\n');
+    if raw.as_bytes() == compacted {
+        return Ok(false);
+    }
+    atomic::write_atomic(&path, &compacted).map_err(DecapodError::IoError)?;
+    load_and_validate(repo_root)?.ok_or_else(|| {
+        DecapodError::ValidationError(format!(
+            "claims ledger was compacted but could not be loaded: {}",
             path.display()
         ))
     })?;
@@ -425,41 +469,51 @@ pub fn append_change_note(repo_root: &Path, note: &str) -> Result<bool, DecapodE
     if ledger.authority.change_policy.contains(note) {
         return Ok(false);
     }
-    let marker = "\"change_policy\":";
-    let marker_start = raw.find(marker).ok_or_else(|| {
+    // Replace only the encoded string token for the one closed-schema field.
+    // This keeps an explicit compact ledger compact and leaves a pretty or
+    // hand-wrapped ledger's formatting untouched; only `--compact` changes
+    // formatting by design.
+    let key = "\"change_policy\"";
+    let key_start = raw.find(key).ok_or_else(|| {
         DecapodError::ValidationError(
             "research claims ledger authority.change_policy is missing".to_string(),
         )
     })?;
-    let line_end = raw[marker_start..]
-        .find('\n')
-        .map_or(raw.len(), |index| marker_start + index);
-    let colon = raw[marker_start..line_end]
-        .find(':')
-        .map_or(marker_start, |index| marker_start + index);
-    let value_start = raw[colon + 1..line_end]
-        .find('"')
-        .map_or(line_end, |index| colon + 1 + index);
-    let value_end = raw[..line_end].rfind('"').unwrap_or(value_start);
-    let encoded_note = serde_json::to_string(note).map_err(|error| {
-        DecapodError::ValidationError(format!("claims note serialization failed: {error}"))
+    let after_key = &raw[key_start + key.len()..];
+    let colon = after_key.find(':').ok_or_else(|| {
+        DecapodError::ValidationError(
+            "research claims ledger authority.change_policy is malformed".to_string(),
+        )
     })?;
-    let encoded_policy = serde_json::to_string(&format!(
+    let value_start = after_key[colon + 1..]
+        .char_indices()
+        .find_map(|(offset, character)| (!character.is_whitespace()).then_some(offset))
+        .map(|offset| key_start + key.len() + colon + 1 + offset)
+        .ok_or_else(|| {
+            DecapodError::ValidationError(
+                "research claims ledger authority.change_policy has no value".to_string(),
+            )
+        })?;
+    let encoded_old = serde_json::to_string(&ledger.authority.change_policy).map_err(|error| {
+        DecapodError::ValidationError(format!("claims policy serialization failed: {error}"))
+    })?;
+    let encoded_new = serde_json::to_string(&format!(
         "{} {}",
-        ledger.authority.change_policy,
-        encoded_note.trim_matches('"')
+        ledger.authority.change_policy, note
     ))
     .map_err(|error| {
         DecapodError::ValidationError(format!("claims policy serialization failed: {error}"))
     })?;
-    let updated = format!(
-        "{}{}{}{}",
-        &raw[..value_start],
-        encoded_policy,
-        &raw[value_end + 1..line_end],
-        &raw[line_end..]
-    );
-    atomic::write_atomic(&path, updated.as_bytes()).map_err(DecapodError::IoError)?;
+    if !raw[value_start..].starts_with(&encoded_old) {
+        return Err(DecapodError::ValidationError(
+            "research claims ledger authority.change_policy value is malformed".to_string(),
+        ));
+    }
+    let mut updated = Vec::with_capacity(raw.len() + encoded_new.len());
+    updated.extend_from_slice(&raw.as_bytes()[..value_start]);
+    updated.extend_from_slice(encoded_new.as_bytes());
+    updated.extend_from_slice(&raw.as_bytes()[value_start + encoded_old.len()..]);
+    atomic::write_atomic(&path, &updated).map_err(DecapodError::IoError)?;
     load_and_validate(repo_root)?.ok_or_else(|| {
         DecapodError::ValidationError(format!(
             "claims ledger was updated but could not be loaded: {}",

@@ -430,6 +430,20 @@ fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
                 }
             }
         }
+
+        writeln!(file, "\n# Governance Artifact Ownership\n")?;
+        writeln!(
+            file,
+            "`.decapod/governance/claims.json` is the repository-owned, append-only research claims ledger. It is separate from Health Engine operational claims, which live in the consolidated `.decapod/data/decapod.db`."
+        )?;
+        writeln!(
+            file,
+            "Use `decapod govern artifacts inventory --claims-note \"...\"` for an issue-scoped ledger change note; use `decapod govern health claim` and `decapod govern health proof` for Health Engine state. Do not hand-edit either control-plane store."
+        )?;
+        writeln!(
+            file,
+            "`decapod govern artifacts inventory --compact` is the explicit, semantics-preserving format compaction path for an oversized research ledger. If a hand edit makes `claims.json` invalid, restore it through the normal governed workflow and rerun inventory/validation; do not repair it with direct file edits."
+        )?;
     }
 
     if update_schema {

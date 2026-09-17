@@ -1521,7 +1521,7 @@ fn legacy_empty_spec_alias_sections_do_not_create_duplicate_authority() {
 }
 
 #[test]
-fn override_blend_preserves_custom_comments_and_splices_new_directives() {
+fn override_blend_preserves_custom_comments_and_omits_unselected_directives() {
     let input = r#"<!-- CHANGES ARE NOT PERMITTED ABOVE THIS LINE -->
 ## CORE Overrides
 
@@ -1541,6 +1541,37 @@ Custom override body.
     // Assert existing override body is preserved
     assert!(upgraded.contains("Custom override body."));
 
-    // Assert new directives (like core/DECAPOD) are spliced in
-    assert!(upgraded.contains("### core/DECAPOD"));
+    // A hand-trimmed override is a supported minimal scaffold. Init upgrades
+    // selected legacy sections but does not silently re-expand the template.
+    assert!(!upgraded.contains("### core/DECAPOD"));
+}
+
+#[test]
+fn override_blend_is_idempotent_for_a_hand_trimmed_scaffold() {
+    let tmp = tempdir().expect("tempdir");
+    fs::create_dir_all(tmp.path().join(".decapod")).expect("mkdir .decapod");
+    let input = r#"# OVERRIDE.md
+
+<!-- CHANGES ARE NOT PERMITTED ABOVE THIS LINE -->
+## CORE Overrides
+
+### core/DEMANDS
+````markdown
+Keep this selected policy.
+````
+
+---
+"#;
+    fs::write(tmp.path().join(".decapod/OVERRIDE.md"), input).expect("write override");
+
+    blend_overrides(tmp.path(), false).expect("first blend");
+    let first =
+        fs::read_to_string(tmp.path().join(".decapod/OVERRIDE.md")).expect("read first blend");
+    blend_overrides(tmp.path(), false).expect("second blend");
+    let second =
+        fs::read_to_string(tmp.path().join(".decapod/OVERRIDE.md")).expect("read second blend");
+
+    assert_eq!(first, second);
+    assert_eq!(first.matches("### ").count(), 1);
+    assert!(assets::resolved_override_evidence(tmp.path()).is_ok());
 }

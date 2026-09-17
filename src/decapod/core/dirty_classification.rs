@@ -143,6 +143,9 @@ pub fn classify_path(path: &str, pre_existing: &[String]) -> DirtyFileClass {
     if path.starts_with(".decapod/managed/") || path.starts_with(".decapod/generated/") {
         return DirtyFileClass::DeterministicProjection;
     }
+    if path == ".decapod/README.md" {
+        return DirtyFileClass::DeterministicProjection;
+    }
     if path.starts_with(".decapod/data/") || path.starts_with(".decapod/workspaces/") {
         return DirtyFileClass::RuntimeEphemeral;
     }

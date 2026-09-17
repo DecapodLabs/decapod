@@ -26,6 +26,25 @@ the document graph or consume the validation liveness budget. Non-Git fixture
 directories use a bounded filesystem fallback with the common dependency and
 build directories excluded.
 
+## Governance Artifact Ownership and Epoch Currency (#1093, #1163, #1325, #1326, #1327)
+Decapod keeps governance evidence in distinct ownership domains. The research
+claims ledger at `.decapod/governance/claims.json` is a validated append-only
+JSON artifact maintained through governed inventory operations. Health Engine
+claims belong to the canonical runtime datastore at
+`.decapod/data/decapod.db`; they are not entries in the research ledger and do
+not share its compaction semantics. `inventory --compact` is an explicit,
+semantics-preserving serialization operation that reports ledger size without
+changing the closed schema or claim meaning.
+
+The specs manifest records the input authority of both `config.toml` and
+`OVERRIDE.md`. Validation may refresh that projection in the claimed workspace,
+but proof currency is epoch-scoped: a changed active epoch cannot be paired
+with an old trajectory or receipt. The existing evidence remains intact for
+audit and validation returns executable new-trajectory recovery. Re-init is
+deterministic when it is only a refresh; project authority, authored specs, and
+their manifest are not rewritten merely because generated repository prose
+creates new inference signals.
+
 ## Direction
 cli
 
@@ -316,7 +335,7 @@ authored document is an untouched template.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9089e875bec2fd10df65499794769ef2817d186f0a249faef2998277a9d0d65d`
+- Repository signal fingerprint: `eeb8cdd1ee2c9af1798d3f5b09bd2abe55e8c90b8555cfc3a4f00885074a8dee`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

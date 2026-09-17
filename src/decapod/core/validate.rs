@@ -2199,6 +2199,36 @@ fn validate_project_specs_docs(
             );
         }
 
+        let current_config_hash = config_input_hash(repo_root)?;
+        if current_config_hash == manifest.config_input_hash {
+            pass("Project specs manifest config input hash is current", ctx);
+        } else if specs_refreshed {
+            pass(
+                "Project specs config input hash refreshed after codebase re-evaluation",
+                ctx,
+            );
+        } else if refresh_specs {
+            let config = crate::cli::DecapodProjectConfig::load(repo_root).unwrap_or_default();
+            let _ = crate::core::project_specs::refresh_specs_from_codebase(
+                repo_root,
+                &config.repo.capabilities,
+            )?;
+            specs_refreshed = true;
+            pass(
+                "Project specs config input hash refreshed after configuration change",
+                ctx,
+            );
+        } else {
+            fail(
+                &auto_remediable_validation_message(
+                    "STALE_CONFIG_INPUT_HASH",
+                    "STALE_CONFIG_INPUT_HASH: .decapod/config.toml or .decapod/OVERRIDE.md changed since the last specs manifest refresh.",
+                    "Run `decapod rpc --op specs.refresh` in the isolated workspace, then rerun validation.",
+                ),
+                ctx,
+            );
+        }
+
         if untouched_templates.is_empty() {
             pass(
                 "Project specs are not raw scaffold templates (content evolved)",

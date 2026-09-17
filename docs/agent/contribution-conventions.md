@@ -58,6 +58,24 @@ See [governance-artifacts.md](../book/src/reference/governance-artifacts.md).
 If a PR advances no *new* research claim body, still update `claims.json` at the
 PR tip (e.g. an issue-scoped `change_policy` note); do not invent a fake claim.
 
+### Research claims versus Health Engine claims
+
+These are different authorities with different lifecycles:
+
+- `.decapod/governance/claims.json` is the append-only, repository-owned ledger
+  of falsifiable research claims. It is validated as a closed schema and is
+  changed through the governed artifact surface.
+- `.decapod/data/decapod.db` is the consolidated local datastore. Its Health
+  Engine tables hold operational claims and proof events; those are not entries
+  in the research ledger.
+
+Use `decapod govern artifacts inventory --claims-note "..."` for an explicit
+issue-scoped research-ledger note, and `decapod govern health claim` or
+`decapod govern health proof` for Health Engine state. Never hand-edit either
+control-plane store. If the research ledger needs byte-size reduction, use the
+explicit `decapod govern artifacts inventory --compact` path; compaction changes
+format only and does not invent, delete, or supersede claims.
+
 ## 3b. Material Living-Spec Rewrites Per PR
 
 Every non-release PR MUST include a **material** change under `.decapod/managed/specs/*.md` — authored prose that reflects the change under review. Enforced by:

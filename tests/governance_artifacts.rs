@@ -70,6 +70,35 @@ fn claims_note_update_is_atomic_semantic_and_idempotent() {
 }
 
 #[test]
+fn claims_compaction_is_explicit_semantic_and_idempotent() {
+    let temp = TempDir::new().expect("tempdir");
+    let init = run_decapod(
+        temp.path(),
+        &["init", "--proof", "--no-container-workspaces"],
+    );
+    assert!(init.status.success(), "initialization failed");
+    let claims_path = temp.path().join(research_claims::CLAIMS_PATH);
+    let before = fs::read_to_string(&claims_path).expect("claims template");
+
+    assert!(research_claims::compact(temp.path()).expect("compact claims"));
+    let compacted = fs::read_to_string(&claims_path).expect("compacted claims");
+    assert!(compacted.len() < before.len());
+    assert!(compacted.ends_with('\n'));
+    assert_eq!(compacted.trim_end().matches('\n').count(), 0);
+    research_claims::load_and_validate(temp.path()).expect("compacted claims remain valid");
+    assert!(!research_claims::compact(temp.path()).expect("idempotent compaction"));
+
+    let note = "Compaction remains compatible with governed notes.";
+    assert!(research_claims::append_change_note(temp.path(), note).expect("append note"));
+    assert!(
+        fs::read_to_string(&claims_path)
+            .expect("noted claims")
+            .contains(note)
+    );
+    research_claims::load_and_validate(temp.path()).expect("noted claims remain valid");
+}
+
+#[test]
 fn inventory_distinguishes_health_claims_and_reports_pr_diff() {
     let temp = TempDir::new().expect("tempdir");
     let init = run_decapod(
@@ -100,6 +129,7 @@ fn inventory_distinguishes_health_claims_and_reports_pr_diff() {
     assert!(!claims.in_pr_diff);
     assert!(inventory.claims_source.contains("decapod.db"));
     assert!(!inventory.claims_source.contains("health.db"));
+    assert!(inventory.claims_ledger_bytes.is_some());
     assert!(!inventory.all_in_pr_diff);
 }
 

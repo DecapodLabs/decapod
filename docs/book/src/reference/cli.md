@@ -123,9 +123,13 @@ Inspect the four required publication artifacts and their PR-diff presence.
   then `main`.
 - `--repair`: create the schema-valid claims ledger template only when
   `.decapod/governance/claims.json` is absent.
+- `--claims-note "..."`: append an explicit issue-scoped note to the research
+  ledger's change policy through the governed CLI.
+- `--compact`: rewrite a valid research ledger in compact JSON without changing
+  claims or schema semantics.
 
-This research claims ledger is separate from Health Engine claims in
-`.decapod/data/health.db`.
+This research claims ledger is separate from Health Engine claims in the
+consolidated `.decapod/data/decapod.db`.
 
 ### `govern capsule query`
 Perform a deterministic query over the embedded constitution.
