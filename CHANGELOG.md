@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.101.0](https://github.com/DecapodLabs/decapod/compare/v0.100.1...v0.101.0) - 2026-09-17
+
+### Fixed
+
+- refresh specs after dependency remediation
+- refresh release surfaces and patch rustls
+- address governance and scaffolding issue bundle
+
+### Other
+
+- refresh proof after master rebase
+- refresh governed validation receipt
+- bind final validation proof
+
 ## [0.100.1](https://github.com/DecapodLabs/decapod/compare/v0.100.0...v0.100.1) - 2026-09-16
 
 ### Other
