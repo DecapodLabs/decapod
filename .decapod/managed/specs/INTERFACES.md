@@ -48,7 +48,7 @@ input; a non-Git directory receives the bounded fallback exclusions instead.
 | data db recover | Uses Dactyl v0.10.0 logical dump/reload with an operator-selected archive path | Requires explicit invocation and writer quiescence; atomic replacement, rollback, archive, and DELETE journal mode remain Dactyl-owned |
 | events::append | Uses StoragePool::with_write before schema preparation and append; canonical connection retains an exclusive datastore sidecar lock | Serializes standalone writers in-process and across cooperating Decapod processes; Dactyl remains the physical boundary |
 | db_connect / db_connect_pooled / db_connect_read_pooled | Retain a bounded exclusive `decapod.db.lock` sidecar guard for the connection lifetime | Conservative serialization makes lock timeout typed contention; lock files are never deleted as stale-lock repair |
-| trajectory::load_trajectory(project_root, run_id) | Reads the per-run archive when present and falls back to the legacy current cookie | trajectory.json remains the one workspace validation/publication pointer; subagent jobs use loops |
+| trajectory::load_trajectory(project_root, run_id) | Reads and validates the single current trajectory cookie | trajectory.json is the sole workspace validation/publication artifact; Git history provides prior committed context and subagent jobs use loops |
 | Persisted path fields | Project-internal absolute paths become relative; external absolute paths become <external-path> | JSON field types and trajectory schema remain unchanged |
 
 ## Contract Principles
@@ -185,11 +185,10 @@ pub enum ApiError {
   object is valid; a different or malformed legacy cookie is replaced.
 - Historical semantics: Git commits preserve prior cookies; the file is not an
   append-only JSONL stream.
-- Additive archive: each successful write also stores the same hash-checked
-  object at .decapod/governance/trajectory-runs/<run_id>.json. This archive
-  is directly addressable by run_id; it does not change which artifact
-  validation or publication treats as current. The archive is historical
-  evidence, not a second active authority.
+- Historical lookup: agents use the PR or commit SHA and Git tooling such as
+  `git show <sha>:.decapod/governance/trajectory.json` to recover prior
+  committed context. Decapod does not create a second trajectory history
+  surface inside the repository.
 
 ### Local datastore coordination
 - Local Decapod connection factories retain an exclusive sidecar lock beside
@@ -253,7 +252,7 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `efa5836653cc90f67a2540a204c962a0b740f544e93d0da745a791fdec89068e`
+- Repository signal fingerprint: `50f3854a8138f70718e8e21cb88cb7a552795a240384d5b71778ec7acff246be`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

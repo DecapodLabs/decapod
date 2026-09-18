@@ -1,25 +1,23 @@
 {
   "schema_version": "1.0.0",
-  "title": "Fix GitHub Issues #1324-#1327 in one PR",
-  "intent": "Deliver one focused PR for GitHub Issues #1324, #1325, #1326, and #1327: preserve hand-trimmed override scaffolds across init, surface stale validation evidence instead of silently accepting a changed epoch, provide explicit semantics-preserving claims-ledger compaction and size visibility, and refresh config_input_hash when config authority changes. Keep existing override precedence and research-claims schema semantics, use CLI-owned governance state, add focused regression coverage, refresh living specs, validate in the isolated container workspace, and publish the PR when the proof bundle is current.",
+  "title": "Keep trajectory.json as the sole trajectory artifact",
+  "intent": "Remove durable trajectory-runs archive writes and loaders. Keep .decapod/governance/trajectory.json as the sole current and committed trajectory artifact, with Git commit, branch, issue, and PR history providing historical context. Preserve atomic replacement, same-run protection, proof binding, path normalization, and agent-facing contracts.",
   "state": "APPROVED",
   "todo_ids": [
-    "bugs_01m2kbchkg3f62s7"
+    "arch_01m2s1grnxqe5py0"
   ],
   "proof_hooks": [
-    "cargo test --lib",
-    "cargo test --test governance_artifacts",
+    "cargo test --locked --lib",
     "cargo fmt --all -- --check",
-    "cargo clippy --all-targets --all-features -- -D warnings",
+    "cargo clippy --locked --all-targets --all-features -- -D warnings",
     "decapod validate --format json"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [
-    "Do not alter established override precedence or research-claims schema semantics.",
-    "A changed validation epoch must fail visibly and require a new trajectory run; never silently rebind or pair a new receipt with old trajectory evidence.",
-    "Claims compaction is explicit, schema-preserving, and never removes semantic claims.",
-    "Do not bypass Decapod-owned state boundaries or directly mutate machine-owned control-plane artifacts."
+    "trajectory.json remains the only trajectory artifact written or loaded by runtime code",
+    "Git history and linked issue or PR context remain the historical lookup mechanism",
+    "Do not bypass Decapod-owned state boundaries or directly mutate machine-owned control-plane artifacts"
   ],
   "unresolved_contradictions": [],
   "deferred_questions": [],
@@ -27,8 +25,8 @@
     "forbidden_paths": [
       ".decapod/data/decapod.db"
     ],
-    "file_touch_budget": 50
+    "file_touch_budget": 40
   },
   "phases": [],
-  "updated_at": "1789627070Z"
+  "updated_at": "1789704482Z"
 }

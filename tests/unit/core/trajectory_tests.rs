@@ -32,7 +32,7 @@ fn trajectory_creation_is_inspectable_and_unproven_without_checks() {
 }
 
 #[test]
-fn new_run_replaces_the_cookie_but_archives_prior_evidence() {
+fn new_run_replaces_the_cookie_and_git_preserves_prior_history() {
     let temp = tempdir().unwrap();
     let init = |run_id: &str| TrajectoryInit {
         run_id: run_id.to_string(),
@@ -51,15 +51,10 @@ fn new_run_replaces_the_cookie_but_archives_prior_evidence() {
     init_trajectory(temp.path(), init("run_old")).unwrap();
     let replacement = init_trajectory(temp.path(), init("run_new")).unwrap();
     assert_eq!(replacement.run_id, "run_new");
-    assert_eq!(
-        load_trajectory(temp.path(), "run_old").unwrap().run_id,
-        "run_old"
-    );
-    assert!(
-        trajectory_run_path(temp.path(), "run_old")
-            .unwrap()
-            .exists()
-    );
+    assert!(load_trajectory(temp.path(), "run_old").is_err());
+    let cookie_path = trajectory_cookie_path(temp.path());
+    let governance_dir = cookie_path.parent().unwrap();
+    assert_eq!(fs::read_dir(governance_dir).unwrap().count(), 1);
     assert_eq!(
         load_trajectory(temp.path(), "run_new").unwrap(),
         replacement
@@ -70,7 +65,7 @@ fn new_run_replaces_the_cookie_but_archives_prior_evidence() {
 }
 
 #[test]
-fn archive_does_not_mask_a_corrupted_current_cookie() {
+fn corrupted_current_cookie_is_not_masked_by_secondary_state() {
     let temp = tempdir().unwrap();
     init_trajectory(
         temp.path(),
@@ -93,10 +88,7 @@ fn archive_does_not_mask_a_corrupted_current_cookie() {
     fs::write(trajectory_cookie_path(temp.path()), b"{\"corrupt\":true}").unwrap();
 
     assert!(load_trajectory_cookie(temp.path()).is_err());
-    assert_eq!(
-        load_trajectory(temp.path(), "run_current").unwrap().run_id,
-        "run_current"
-    );
+    assert!(load_trajectory(temp.path(), "run_current").is_err());
 }
 
 #[test]
