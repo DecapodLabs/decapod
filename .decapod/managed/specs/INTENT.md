@@ -59,7 +59,7 @@ ordinary ignored dependency installs.
 
 ## Compatibility Slice for Issues #1311–#1314
 - specs.refresh is a filesystem projection operation. It retains worktree, session, and constitutional safety checks but skips unrelated local-database migration, presence clock-in, and mandate-store reads when invoked as the explicit specs.refresh RPC operation. Best-effort trace failure remains non-blocking.
-- Trajectory writes keep .decapod/governance/trajectory.json as the one current-run validation/publication pointer and additionally archive each run as .decapod/governance/trajectory-runs/<run_id>.json. A workspace has one active agent authority; subagent jobs are loops within that trajectory, not project-level concurrent runs. Explicit run loads prefer the archive and fall back to the legacy cookie, so prior evidence is not discarded.
+- Trajectory writes keep .decapod/governance/trajectory.json as the sole current-run validation/publication artifact. A workspace has one active agent authority; subagent jobs are loops within that trajectory, not project-level concurrent runs. Prior committed trajectory versions are recovered from Git history and the linked issue or PR rather than repository-side per-run archives.
 - Standalone event appends route through the shared Dactyl-backed write pool. Canonical local Dactyl connections retain a bounded exclusive sidecar advisory lock (`decapod.db.lock`), conservatively serializing read and write connection lifetimes so cooperating host/container Decapod processes do not overlap access to the same file. `data db verify` uses Dactyl v0.10.0's read-only integrity API; explicit `data db backup` and `data db recover` expose Dactyl's online backup and verified logical dump/reload contract. Diagnostics distinguish healthy, unavailable/locked, corrupt/malformed, unsupported, and recovery/rollback failure. None performs automatic repair.
 - Absolute paths entering trajectory path fields become project-relative paths when inside the project and <external-path> otherwise. Validation prose receives the same final-boundary redaction. Operational code may still use absolute paths locally.
 - The maintenance boundary is intentionally explicit rather than automatic: recovery requires writer quiescence, an unused same-filesystem archive path, and Dactyl's atomic replacement/rollback contract. The single-workspace trajectory authority and Decapod-side coordination lock are settled here; the lock coordinates cooperating Decapod processes but does not certify arbitrary external SQLite writers or unreliable filesystems or repair corruption silently.
@@ -295,7 +295,7 @@ or manifest.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `efa5836653cc90f67a2540a204c962a0b740f544e93d0da745a791fdec89068e`
+- Repository signal fingerprint: `50f3854a8138f70718e8e21cb88cb7a552795a240384d5b71778ec7acff246be`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

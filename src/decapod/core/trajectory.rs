@@ -15,10 +15,6 @@ use std::path::{Path, PathBuf};
 pub const TRAJECTORY_SCHEMA_VERSION: &str = "1.1.0";
 pub const LEGACY_TRAJECTORY_SCHEMA_VERSION: &str = "1.0.0";
 pub const TRAJECTORY_PATH: &str = ".decapod/governance/trajectory.json";
-/// Additive per-run evidence archive. The legacy cookie remains the one
-/// workspace's current validation/publication pointer; subagent jobs are
-/// represented as loops rather than project-level active runs.
-pub const TRAJECTORY_RUNS_PATH: &str = ".decapod/governance/trajectory-runs";
 pub const MAX_LOOP_FEEDBACK_BYTES: usize = 2048;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
@@ -367,16 +363,6 @@ pub fn trajectory_cookie_path(project_root: &Path) -> PathBuf {
     project_root.join(TRAJECTORY_PATH)
 }
 
-pub fn trajectory_run_path(
-    project_root: &Path,
-    run_id: &str,
-) -> Result<PathBuf, error::DecapodError> {
-    validate_run_id(run_id)?;
-    Ok(project_root
-        .join(TRAJECTORY_RUNS_PATH)
-        .join(format!("{run_id}.json")))
-}
-
 pub fn validate_run_id(run_id: &str) -> Result<(), error::DecapodError> {
     if run_id.is_empty()
         || !run_id.chars().all(|character| {
@@ -422,19 +408,14 @@ pub fn init_trajectory(
         blockers,
     } = input;
     let path = trajectory_path(project_root, &run_id)?;
-    let run_path = trajectory_run_path(project_root, &run_id)?;
-    // Keep the same-run guard for both the legacy pointer and the additive
-    // archive. A different run may replace the current pointer for the next
-    // sequential workspace task, but its prior evidence remains available
-    // under trajectory-runs/<run_id>.json. Multiple jobs within one workspace
-    // are represented by loops on the current trajectory instead of multiple
-    // active run authorities.
-    if (path.exists() || run_path.exists())
-        && (load_trajectory_from_path(&run_path, &run_id).is_ok()
-            || load_trajectory_cookie(project_root)
-                .ok()
-                .flatten()
-                .is_some_and(|existing| existing.run_id == run_id))
+    // A different run replaces the current cookie. Git history preserves the
+    // prior committed artifact, while loops retain multiple jobs within one
+    // active workspace run.
+    if path.exists()
+        && load_trajectory_cookie(project_root)
+            .ok()
+            .flatten()
+            .is_some_and(|existing| existing.run_id == run_id)
     {
         return Err(error::DecapodError::ValidationError(format!(
             "trajectory '{run_id}' already exists"
@@ -506,12 +487,7 @@ pub fn load_trajectory(
     project_root: &Path,
     run_id: &str,
 ) -> Result<TrajectoryArtifact, error::DecapodError> {
-    let run_path = trajectory_run_path(project_root, run_id)?;
-    let path = if run_path.exists() {
-        run_path
-    } else {
-        trajectory_path(project_root, run_id)?
-    };
+    let path = trajectory_path(project_root, run_id)?;
     if !path.exists() {
         return Err(error::DecapodError::NotFound(format!(
             "trajectory '{run_id}' not found at {}",
@@ -575,9 +551,8 @@ pub fn load_trajectory_cookie(
             path.display()
         ))
     })?;
-    // Validate the legacy current pointer itself. An archive copy must never
-    // mask tampering or corruption in the artifact that controls validation
-    // and publication authority.
+    // Validate the current artifact that controls validation and publication
+    // authority. There is no secondary archive that can mask corruption.
     load_trajectory_from_path(&path, &artifact.run_id).map(Some)
 }
 
@@ -615,15 +590,8 @@ pub fn write_trajectory(
             "failed to serialize trajectory artifact: {e}"
         ))
     })?;
-    let run_path = trajectory_run_path(project_root, &canonical.run_id)?;
-    let run_parent = run_path.parent().ok_or_else(|| {
-        error::DecapodError::ValidationError("invalid trajectory archive parent path".to_string())
-    })?;
-    fs::create_dir_all(run_parent).map_err(error::DecapodError::IoError)?;
-    // Write the durable per-run copy before updating the legacy current-run
-    // pointer. A failure cannot erase the prior run's evidence, and existing
-    // consumers continue to read the same trajectory.json contract.
-    crate::core::atomic::write_atomic(&run_path, &bytes).map_err(error::DecapodError::IoError)?;
+    // The single tracked cookie is atomically replaced. Prior committed
+    // versions remain available through Git history and PR commit SHAs.
     crate::core::atomic::write_atomic(&path, &bytes).map_err(error::DecapodError::IoError)?;
     Ok(canonical)
 }
