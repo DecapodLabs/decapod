@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.101.1](https://github.com/DecapodLabs/decapod/compare/v0.101.0...v0.101.1) - 2026-09-17
+
+### Fixed
+
+- *(ci)* use explicit release target matrix
+- *(ci)* guard release matrix on plan-only runs
+
+### Other
+
+- record final validation for explicit release matrix
+- refresh validation proof for release workflow fix
+
 ## [0.101.0](https://github.com/DecapodLabs/decapod/compare/v0.100.1...v0.101.0) - 2026-09-17
 
 ### Fixed
