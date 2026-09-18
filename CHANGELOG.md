@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.102.0](https://github.com/DecapodLabs/decapod/compare/v0.101.1...v0.102.0) - 2026-09-18
+
+### Other
+
+- Revert durable trajectory archives
+
 ## [0.101.1](https://github.com/DecapodLabs/decapod/compare/v0.101.0...v0.101.1) - 2026-09-17
 
 ### Fixed
