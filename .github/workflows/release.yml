@@ -112,14 +112,16 @@ jobs:
         with:
           name: cargo-dist-cache
           path: ~/.cargo/bin/cargo-dist
-      # sure would be cool if github gave us proper conditionals...
-      # so here's a doubly-nested ternary-via-truthiness to try to provide the best possible
-      # functionality based on whether this is a pull_request, and whether it's from a fork.
-      # (PRs run on the *source* but secrets are usually on the *target* -- that's *good*
-      # but also really annoying to build CI around when it needs secrets to work right.)
+      # Keep PR planning and tag publishing explicit in shell so the Buildkite
+      # adapter does not have to evaluate a nested expression over event objects.
       - id: plan
         run: |
-          cargo dist ${{ (!github.event.pull_request && format('host --steps=create --tag={0}', github.ref_name)) || 'plan' }} --output-format=json > plan-dist-manifest.json
+          set -euo pipefail
+          if [ "${GITHUB_EVENT_NAME:-}" = "pull_request" ]; then
+            cargo dist plan --output-format=json > plan-dist-manifest.json
+          else
+            cargo dist host --steps=create --tag="${GITHUB_REF_NAME}" --output-format=json > plan-dist-manifest.json
+          fi
           echo "cargo dist ran successfully"
           cat plan-dist-manifest.json
           echo "manifest=$(jq -c "." plan-dist-manifest.json)" >> "$GITHUB_OUTPUT"
