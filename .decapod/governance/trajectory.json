@@ -1,46 +1,34 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "unknown-podman-headless-01m2w18ts5chnn6k",
-  "intent_id": "intent:unknown-podman-headless-01m2w18ts5chnn6k",
-  "task_id": "feat_01m2w18ts5chnn6k",
-  "original_intent": "in a dedicated git workspace git worktree and PR, podman must startup quietly, no ui.",
-  "derived_intent": "Add automatic headless Podman machine recovery for macOS and Windows container preflight, using quiet non-interactive machine startup, then retry runtime access; preserve Docker/Linux behavior and publish a dedicated PR.",
+  "run_id": "buildkite-native-1340-20260919-publish",
+  "intent_id": "intent:buildkite-native-1340-20260919-publish",
+  "task_id": "feat_01m2w66zrndcjyxz",
+  "original_intent": "Complete the remaining Buildkite migration and fix Buildkite failures reported on merge commit bf98ec2e8320400964a1e84af0cc50210ac2fa6c.",
+  "derived_intent": "Publish a native .buildkite/pipeline.yml with explicit Buildkite event, dependency, and changed-path gates; replace unsupported GitHub Actions adapter semantics with direct commands; document agent and secret prerequisites; preserve existing GitHub workflow files unless activation requires external configuration.",
   "current_phase": "validation",
   "next_transitions": [
-    "publication",
-    "publish",
-    "validation"
+    "publish"
   ],
   "active_boundaries": [
-    "Only the claimed isolated git worktree may be mutated; do not launch Podman Desktop or alter the protected root; do not hand-edit machine-owned .decapod state."
+    "Do not modify protected master; do not change GitHub Actions workflows unless required; do not commit secrets; external Buildkite pipeline activation remains an explicit configuration dependency."
   ],
   "repo_scope": [
-    "src/decapod/plugins/container.rs, tests/unit/plugins/container_tests.rs, .decapod/managed/specs/OPERATIONS.md, .decapod/managed/specs/INTERFACES.md"
+    "Native Buildkite pipeline definition, Buildkite runbook, operational living spec, and required governance artifacts."
   ],
   "inspected_files": [
-    ".decapod/managed/specs/INTERFACES.md",
+    ".buildkite/README.md",
+    ".buildkite/pipeline.yml",
     ".decapod/managed/specs/OPERATIONS.md",
-    ".github/workflows/docs_sync.yml",
-    "src/decapod/plugins/container.rs",
-    "tests/unit/plugins/container_tests.rs"
+    ".github/workflows/ci.yml",
+    ".github/workflows/docs.yml",
+    ".github/workflows/release.yml"
   ],
   "modified_files": [
-    ".decapod/governance/plan.json",
     ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json",
-    ".decapod/managed/specs/.manifest.json",
-    ".decapod/managed/specs/INTERFACES.md",
-    ".decapod/managed/specs/OPERATIONS.md",
-    ".github/workflows/docs_sync.yml",
-    "src/decapod/plugins/container.rs",
-    "tests/unit/plugins/container_tests.rs"
+    ".decapod/governance/validation.json"
   ],
   "declared_commands": [
-    "cargo clippy --locked --all-targets --all-features -- -D warnings",
-    "cargo fmt --all -- --check",
-    "cargo test --locked --lib",
-    "decapod validate",
-    "podman run --rm ... decapod validate --format json"
+    "decapod validate"
   ],
   "tool_calls": [],
   "checks": [
@@ -49,11 +37,7 @@
       "status": "passed"
     },
     {
-      "name": "cargo_deny",
-      "status": "passed"
-    },
-    {
-      "name": "cargo_fmt_check",
+      "name": "cargo_fmt",
       "status": "passed"
     },
     {
@@ -65,58 +49,57 @@
       "status": "passed"
     },
     {
-      "name": "container_validation",
-      "status": "passed"
-    },
-    {
       "name": "decapod validate",
       "status": "passed"
     },
     {
-      "name": "governance_inventory",
+      "name": "git_diff_check",
       "status": "passed"
     },
     {
-      "name": "host_validation",
-      "status": "partial"
+      "name": "mdbook_build",
+      "status": "passed"
     },
     {
-      "name": "podman_machine_start_test",
+      "name": "native_yaml",
       "status": "passed"
     }
   ],
   "evidence": [
-    "Focused tests prove quiet/headless Podman arguments, null stdin, and captured output; cargo lib tests 341 passed; clippy and fmt passed; host validation reached 199 passes but was blocked only by container_workspace_required; non-interactive container validation passed with fail_count=0 and pass_count=200.",
-    "container validation status=ok with fail_count=0; local tests 341 passed; clippy, fmt, cargo machete, and cargo deny passed; docs sync checkout no longer uses unsupported explicit ref",
-    "validation epoch ve_27d6a3e64dbaf6f3 completed with zero failures",
-    "validation epoch ve_6e99740351becd12 completed with zero failures"
+    "Bazelisk was unavailable in the local container; the native pipeline documents it as an agent-image prerequisite",
+    "Buildkite #56 check-runs for bf98ec2e reported failures in setup, deps-lint, docs build, and release publish without command annotations",
+    "cargo deny was unavailable in the local container because the cargo subcommand was not installed; the native pipeline installs it when absent",
+    "cargo test --locked --lib reported 341 passed and 0 failed",
+    "validation epoch ve_0451c9e70cb9344a completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [
-    "Buildkite adapter checks are the authoritative external proof for workflow compatibility after push"
+    "Buildkite agent upload must use .buildkite/pipeline.yml with BUILDKITE_FETCH_DIFF_BASE=true",
+    "Buildkite agents must provide Bazelisk, Rust, Git, Python3, curl, Docker Buildx, and agent artifact/runtime commands",
+    "Buildkite secrets, GitHub Pages gh-pages configuration, and registry access remain external prerequisites"
   ],
-  "proof_status": "partial",
+  "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "caution"
+    "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:ec42a207f9cc1fcdb4d895e932cfb082ec83bfb79bc4ef70fcf5bce9544e423a",
+  "artifact_hash": "sha256:db32a29cc198959752474c8e62a1d2a5cfe9ab40166e512ec6094f1911394132",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:unknown-podman-headless-01m2w18ts5chnn6k": {
-        "id": "intent:unknown-podman-headless-01m2w18ts5chnn6k",
-        "raw_intent": "in a dedicated git workspace git worktree and PR, podman must startup quietly, no ui.",
-        "refined_intent": "Add automatic headless Podman machine recovery for macOS and Windows container preflight, using quiet non-interactive machine startup, then retry runtime access; preserve Docker/Linux behavior and publish a dedicated PR.",
+      "intent:buildkite-native-1340-20260919-publish": {
+        "id": "intent:buildkite-native-1340-20260919-publish",
+        "raw_intent": "Complete the remaining Buildkite migration and fix Buildkite failures reported on merge commit bf98ec2e8320400964a1e84af0cc50210ac2fa6c.",
+        "refined_intent": "Publish a native .buildkite/pipeline.yml with explicit Buildkite event, dependency, and changed-path gates; replace unsupported GitHub Actions adapter semantics with direct commands; document agent and secret prerequisites; preserve existing GitHub workflow files unless activation requires external configuration.",
         "acceptance_criteria": [],
         "constraints": [
-          "src/decapod/plugins/container.rs, tests/unit/plugins/container_tests.rs, .decapod/managed/specs/OPERATIONS.md, .decapod/managed/specs/INTERFACES.md"
+          "Native Buildkite pipeline definition, Buildkite runbook, operational living spec, and required governance artifacts."
         ],
         "assumptions": [],
         "boundaries": [
-          "Only the claimed isolated git worktree may be mutated; do not launch Podman Desktop or alter the protected root; do not hand-edit machine-owned .decapod state."
+          "Do not modify protected master; do not change GitHub Actions workflows unless required; do not commit secrets; external Buildkite pipeline activation remains an explicit configuration dependency."
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -129,150 +112,93 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:unknown-podman-headless-01m2w18ts5chnn6k",
+        "intent_id": "intent:buildkite-native-1340-20260919-publish",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:unknown-podman-headless-01m2w18ts5chnn6k",
+        "intent_id": "intent:buildkite-native-1340-20260919-publish",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:unknown-podman-headless-01m2w18ts5chnn6k",
+        "intent_id": "intent:buildkite-native-1340-20260919-publish",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:unknown-podman-headless-01m2w18ts5chnn6k"
+        "detail": "trajectory:buildkite-native-1340-20260919-publish"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:unknown-podman-headless-01m2w18ts5chnn6k",
+        "intent_id": "intent:buildkite-native-1340-20260919-publish",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:unknown-podman-headless-01m2w18ts5chnn6k"
-      },
-      {
-        "sequence": 6,
-        "event_id": "event:6",
-        "intent_id": "intent:unknown-podman-headless-01m2w18ts5chnn6k",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:unknown-podman-headless-01m2w18ts5chnn6k"
-      },
-      {
-        "sequence": 7,
-        "event_id": "event:7",
-        "intent_id": "intent:unknown-podman-headless-01m2w18ts5chnn6k",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:unknown-podman-headless-01m2w18ts5chnn6k"
+        "detail": "trajectory:buildkite-native-1340-20260919-publish"
       }
     ],
     "trajectories": {
-      "unknown-podman-headless-01m2w18ts5chnn6k": {
-        "id": "unknown-podman-headless-01m2w18ts5chnn6k",
-        "intent_id": "intent:unknown-podman-headless-01m2w18ts5chnn6k",
+      "buildkite-native-1340-20260919-publish": {
+        "id": "buildkite-native-1340-20260919-publish",
+        "intent_id": "intent:buildkite-native-1340-20260919-publish",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "validation",
-            "command": "decapod validate",
+            "action": "trajectory.record",
             "scope": [
-              "src/decapod/plugins/container.rs, tests/unit/plugins/container_tests.rs, .decapod/managed/specs/OPERATIONS.md, .decapod/managed/specs/INTERFACES.md"
+              "Native Buildkite pipeline definition, Buildkite runbook, operational living spec, and required governance artifacts."
             ],
             "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_6e99740351becd12 completed with zero failures"
+              ".buildkite/pipeline.yml",
+              ".buildkite/README.md",
+              ".decapod/managed/specs/OPERATIONS.md",
+              ".github/workflows/ci.yml",
+              ".github/workflows/docs.yml",
+              ".github/workflows/release.yml",
+              "Buildkite #56 check-runs for bf98ec2e reported failures in setup, deps-lint, docs build, and release publish without command annotations",
+              "cargo test --locked --lib reported 341 passed and 0 failed",
+              "cargo deny was unavailable in the local container because the cargo subcommand was not installed; the native pipeline installs it when absent",
+              "Bazelisk was unavailable in the local container; the native pipeline documents it as an agent-image prerequisite"
             ],
             "proof_refs": [
-              "decapod validate"
+              "native_yaml",
+              "git_diff_check",
+              "cargo_test_lib",
+              "cargo_clippy",
+              "cargo_fmt",
+              "mdbook_build",
+              "cargo_machete"
             ],
-            "validation_findings": [],
+            "validation_findings": [
+              "Buildkite agent upload must use .buildkite/pipeline.yml with BUILDKITE_FETCH_DIFF_BASE=true",
+              "Buildkite agents must provide Bazelisk, Rust, Git, Python3, curl, Docker Buildx, and agent artifact/runtime commands",
+              "Buildkite secrets, GitHub Pages gh-pages configuration, and registry access remain external prerequisites"
+            ],
             "custody_event_id": "event:4"
           },
           {
             "sequence": 5,
             "action": "validation",
-            "command": "cargo test --locked --lib",
-            "scope": [
-              "src/decapod/plugins/container.rs, tests/unit/plugins/container_tests.rs, .decapod/managed/specs/OPERATIONS.md, .decapod/managed/specs/INTERFACES.md"
-            ],
-            "observations": [
-              "src/decapod/plugins/container.rs",
-              "tests/unit/plugins/container_tests.rs",
-              ".decapod/managed/specs/OPERATIONS.md",
-              ".decapod/managed/specs/INTERFACES.md",
-              "src/decapod/plugins/container.rs",
-              "tests/unit/plugins/container_tests.rs",
-              ".decapod/managed/specs/OPERATIONS.md",
-              ".decapod/managed/specs/INTERFACES.md",
-              ".decapod/governance/plan.json",
-              ".decapod/governance/trajectory.json",
-              ".decapod/managed/specs/.manifest.json",
-              "Focused tests prove quiet/headless Podman arguments, null stdin, and captured output; cargo lib tests 341 passed; clippy and fmt passed; host validation reached 199 passes but was blocked only by container_workspace_required; non-interactive container validation passed with fail_count=0 and pass_count=200."
-            ],
-            "proof_refs": [
-              "podman_machine_start_test",
-              "cargo_test_lib",
-              "cargo_clippy",
-              "cargo_fmt_check",
-              "host_validation",
-              "container_validation"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:5"
-          },
-          {
-            "sequence": 6,
-            "action": "validation",
             "command": "decapod validate",
             "scope": [
-              "src/decapod/plugins/container.rs, tests/unit/plugins/container_tests.rs, .decapod/managed/specs/OPERATIONS.md, .decapod/managed/specs/INTERFACES.md"
+              "Native Buildkite pipeline definition, Buildkite runbook, operational living spec, and required governance artifacts."
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_27d6a3e64dbaf6f3 completed with zero failures"
+              "validation epoch ve_0451c9e70cb9344a completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
             ],
             "validation_findings": [],
-            "custody_event_id": "event:6"
-          },
-          {
-            "sequence": 7,
-            "action": "trajectory.record",
-            "command": "podman run --rm ... decapod validate --format json",
-            "scope": [
-              "src/decapod/plugins/container.rs, tests/unit/plugins/container_tests.rs, .decapod/managed/specs/OPERATIONS.md, .decapod/managed/specs/INTERFACES.md"
-            ],
-            "observations": [
-              ".github/workflows/docs_sync.yml",
-              ".github/workflows/docs_sync.yml",
-              "container validation status=ok with fail_count=0; local tests 341 passed; clippy, fmt, cargo machete, and cargo deny passed; docs sync checkout no longer uses unsupported explicit ref"
-            ],
-            "proof_refs": [
-              "cargo_test_lib",
-              "cargo_clippy",
-              "cargo_fmt_check",
-              "cargo_machete",
-              "cargo_deny",
-              "host_validation",
-              "container_validation",
-              "governance_inventory"
-            ],
-            "validation_findings": [
-              "Buildkite adapter checks are the authoritative external proof for workflow compatibility after push"
-            ],
-            "custody_event_id": "event:7"
+            "custody_event_id": "event:5"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 7
+    "next_sequence": 5
   }
 }

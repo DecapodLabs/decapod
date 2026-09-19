@@ -70,25 +70,34 @@ condition. Publishing and upload-mode runs still build the same cargo-dist
 targets, while changes to the target list require an intentional workflow and
 spec update.
 
-## Buildkite Adapter Compatibility
+## Native Buildkite Pipeline Contract (#1340)
 
-The repository is validated by both GitHub Actions and a Buildkite adapter that
-interprets the workflow files. The adapter is part of the delivery surface, so
-workflow features that GitHub accepts are not automatically portable to the
-adapter. Push and pull-request triggers must not use `paths` or `paths-ignore`
-filters: the adapter cannot safely evaluate those filters against its checkout
-event and reports a failed pipeline before a job starts. The workflows therefore
-run the relevant validation jobs for every matching branch or pull request, and
-job-level conditions remain responsible for opt-in work such as live proofs.
+Buildkite is migrating from GitHub Actions workflow ingestion to the native
+`.buildkite/pipeline.yml` definition. GitHub Actions describes an event/job/
+action runtime, while Buildkite natively executes command steps and evaluates
+its own `if`, `depends_on`, and agent-uploaded `if_changed` fields. Translating
+the former into the latter is not a faithful source of truth: merge commit
+`bf98ec2e8320400964a1e84af0cc50210ac2fa6c` produced Buildkite #56 failures in
+setup, dependency lint, documentation build, and release publication before
+useful command output, while the equivalent GitHub jobs passed.
 
-Release checkout uses the default GitHub token with credentials persistence
-disabled. The release-plz step receives its elevated GitHub App token explicitly
-through its environment, while the checkout action avoids the unsupported
-explicit `token` input used by the Buildkite adapter. GitHub environment names
-referenced by workflows must exist in repository settings; deployment-branch
-policies must not be attached to the Pages environment because the adapter cannot
-interpret that protection rule. The workflow's master-only deployment condition
-remains the repository-level deployment boundary.
+The native pipeline therefore owns event and path selection. The initial
+Buildkite upload must use an agent version that supports `if_changed` and must
+refresh the pull-request diff base before upload. Release-plz pull
+requests run planning only; ordinary pull requests run governance, living-spec,
+lint, test, validation, and documentation gates selected by changed paths;
+master pushes run the full source/release chain; and tags run cargo-dist and
+container publication. The Buildkite pipeline must upload the repository file,
+because `if_changed` is applied by the agent during upload rather than by a
+pipeline definition stored only in the UI.
+
+Native Buildkite steps call Bazelisk, Cargo, mdBook, release-plz, cargo-dist,
+and Docker directly. Tool installation actions and GitHub artifact handoffs are
+not portable dependencies. Buildkite agent images must carry the toolchain
+contract, and Buildkite secrets must provide GitHub/Cargo credentials only to
+publishing steps. Documentation deployment uses the `gh-pages` branch and must
+be selected in the repository's GitHub Pages settings; this removes the
+GitHub-Actions-only Pages artifact/OIDC assumption.
 
 ## Installed-Version Upgrade Path
 After `cargo install decapod`, the next normal governed command runs protected, idempotent schema migration and legacy-event reconciliation before runtime consumers read evidence. Existing-project `decapod init` executes the same reconciliation before regeneration. A prior successful single-datastore migration retires its JSONL inputs through a durable receipt; startup does not rescan them. Legacy local database sources are opened through the Dactyl v0.10.0 facade, while Decapod owns row translation, schema policy, the explicit maintenance command policy, and idempotency ledgers. Dactyl opens the canonical path directly through its host runtime and owns the physical backup/recovery contract; no bundled fallback or second local authority is used. Human-authored `OVERRIDE.md` content is validated but never mechanically rewritten. Fresh migration conflicts preserve source artifacts and stop with an actionable error.
@@ -253,7 +262,7 @@ for filesystem work and are not used as the artifact representation.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `088b4a60510b085a3c485a09d77d2be9372c8576740776783320d361679bcc37`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
+- Repository signal fingerprint: `d0bdb17635f1a0358b17a7f76bb72ab4544f80b5b0c9a201319a1f6539e64710`
+- Significant implementation surfaces: `.buildkite/` (1 files), `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

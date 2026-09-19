@@ -1,12 +1,13 @@
 {
   "schema_version": "1.0.0",
-  "title": "Make Podman machine startup quiet and headless",
-  "intent": "When Decapod starts a local Podman machine for container workspace or proof operations, use a non-interactive headless startup path that does not launch or surface a UI, while preserving actionable errors and existing machine lifecycle semantics; add regression coverage and publish the change in a dedicated worktree PR.",
+  "title": "Migrate CI and release automation to native Buildkite pipeline-as-code",
+  "intent": "Add a canonical .buildkite/pipeline.yml that explicitly models pull-request, master-push, release-PR, and tag-release behavior, preserves file-sensitive gates, and resolves the native Buildkite failures observed on merge commit bf98ec2e8320400964a1e84af0cc50210ac2fa6c without broad GitHub Actions workflow redesign.",
   "state": "APPROVED",
   "todo_ids": [
-    "feat_01m2w18ts5chnn6k"
+    "feat_01m2w66zrndcjyxz"
   ],
   "proof_hooks": [
+    "buildkite pipeline YAML parse and structural validation",
     "cargo fmt --all -- --check",
     "cargo test --locked --lib",
     "cargo clippy --locked --all-targets --all-features -- -D warnings",
@@ -25,5 +26,5 @@
     "file_touch_budget": 30
   },
   "phases": [],
-  "updated_at": "1789796972Z"
+  "updated_at": "1789800128Z"
 }
