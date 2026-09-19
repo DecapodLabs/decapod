@@ -5,9 +5,11 @@
   "task_id": "bugs_01m2t80vyxygr6h7",
   "original_intent": "Make recurring Buildkite pipelines green for standard PRs, release PRs, pushes, and merges to master; document each failure in one GitHub Issue and publish the fix PR.",
   "derived_intent": "Resolve the smallest proven adapter/configuration incompatibilities first, change workflows only when necessary, preserve security gates, verify locally and in GitHub, and publish one issue plus one PR.",
-  "current_phase": "research-and-minimal-fix",
+  "current_phase": "local-proof-complete",
   "next_transitions": [
-    "Run local proof gates, publish issue, push PR, inspect Buildkite rerun"
+    "Commit validation receipt, push branch, inspect Buildkite checks, update issue and PR",
+    "Run local proof gates, publish issue, push PR, inspect Buildkite rerun",
+    "publish"
   ],
   "active_boundaries": [
     "Repository workflow and GitHub repository configuration only; no unrelated product changes."
@@ -25,18 +27,41 @@
     ".github/workflows/release.yml"
   ],
   "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
     ".decapod/managed/specs/OPERATIONS.md",
     ".github/workflows/ci.yml",
     ".github/workflows/constitution-sync.yml",
     ".github/workflows/release.yml"
   ],
   "declared_commands": [
+    "decapod validate",
     "decapod validate --refresh-specs",
     "gh api repository environments",
     "gh pr checks 1334/1335 and historical PR checks"
   ],
   "tool_calls": [],
   "checks": [
+    {
+      "name": "cargo-clippy",
+      "status": "passed"
+    },
+    {
+      "name": "cargo-fmt",
+      "status": "passed"
+    },
+    {
+      "name": "cargo-test-lib",
+      "status": "passed"
+    },
+    {
+      "name": "decapod validate",
+      "status": "passed"
+    },
+    {
+      "name": "decapod-validate",
+      "status": "passed"
+    },
     {
       "name": "environment-configuration",
       "status": "passed"
@@ -51,9 +76,12 @@
     }
   ],
   "evidence": [
-    "GitHub Actions passed on PR 1335 while Buildkite build 39 failed only on adapter-sensitive jobs; recurring summaries identify path filters, environment metadata, and checkout token incompatibilities."
+    "GitHub Actions passed on PR 1335 while Buildkite build 39 failed only on adapter-sensitive jobs; recurring summaries identify path filters, environment metadata, and checkout token incompatibilities.",
+    "decapod validate --refresh-specs passed with 203 invariants and zero failures; cargo fmt passed; cargo test --locked --lib passed with 339 tests; cargo clippy --locked --all-targets --all-features -- -D warnings passed.",
+    "validation epoch ve_a22373c2296389cc completed with zero failures"
   ],
   "shortcut_risk_signals": [
+    "Buildkite checks remain the required external proof; local checks do not establish adapter compatibility.",
     "Do not treat GitHub Actions success as sufficient; wait for Buildkite checks on the published PR."
   ],
   "unresolved_assumptions": [
@@ -66,7 +94,7 @@
     "shortcut_risk": "caution",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:8a923b492932fb23c32d9218143ab006f5a990ae34cd40d5e166aab6a86e9cc8",
+  "artifact_hash": "sha256:0c139f3df1609f0008e71184ba53fd25f824bf2ae8213ad1c6346b1834c161da",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -105,6 +133,20 @@
       {
         "sequence": 4,
         "event_id": "event:4",
+        "intent_id": "intent:bugs_01m2t80vyxygr6h7-buildkite-green",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:bugs_01m2t80vyxygr6h7-buildkite-green"
+      },
+      {
+        "sequence": 5,
+        "event_id": "event:5",
+        "intent_id": "intent:bugs_01m2t80vyxygr6h7-buildkite-green",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:bugs_01m2t80vyxygr6h7-buildkite-green"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
         "intent_id": "intent:bugs_01m2t80vyxygr6h7-buildkite-green",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:bugs_01m2t80vyxygr6h7-buildkite-green"
@@ -147,12 +189,50 @@
               "The Buildkite adapter is external and its job logs are not available through the repository; exact post-push check results are the final proof."
             ],
             "custody_event_id": "event:4"
+          },
+          {
+            "sequence": 5,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "Decapod repository CI, release, docs, environment, and Buildkite adapter compatibility surfaces."
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_a22373c2296389cc completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "local-proof-complete",
+            "scope": [
+              "Decapod repository CI, release, docs, environment, and Buildkite adapter compatibility surfaces."
+            ],
+            "observations": [
+              "decapod validate --refresh-specs passed with 203 invariants and zero failures; cargo fmt passed; cargo test --locked --lib passed with 339 tests; cargo clippy --locked --all-targets --all-features -- -D warnings passed."
+            ],
+            "proof_refs": [
+              "decapod-validate",
+              "cargo-fmt",
+              "cargo-test-lib",
+              "cargo-clippy"
+            ],
+            "validation_findings": [
+              "Buildkite checks remain the required external proof; local checks do not establish adapter compatibility."
+            ],
+            "custody_event_id": "event:6"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 4
+    "next_sequence": 6
   }
 }

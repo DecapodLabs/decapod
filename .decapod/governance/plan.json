@@ -13,9 +13,7 @@
     "cargo clippy --locked --all-targets --all-features -- -D warnings",
     "GitHub checks for the published PR"
   ],
-  "unknowns": [
-    "Buildkite job logs for setup, deps-lint, release plan, and docs build are not available through the unauthenticated API; reproduce locally and use post-push check evidence."
-  ],
+  "unknowns": [],
   "human_questions": [],
   "stop_conditions": [
     "Do not alter GitHub Action workflows unless the recorded Buildkite failure cannot be resolved through repository or GitHub configuration.",
@@ -31,5 +29,5 @@
     "file_touch_budget": 40
   },
   "phases": [],
-  "updated_at": "1789749634Z"
+  "updated_at": "1789787009Z"
 }
