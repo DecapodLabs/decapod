@@ -161,6 +161,30 @@ again. Not every failure is recoverable; unresolved decision gates and
 contradictions remain visible for human judgment. Publication is a governed
 state transition, and agent-reported completion is not proof that it occurred.
 
+### Optional Jev decision observations
+
+Decapod can optionally use [Jev](https://docs.typesafe.ai/introduction) as a
+structured decision provider during `assurance.evaluate`. Jev answers one
+bounded question: how likely the current proposed trajectory is to satisfy the
+declared intent given the reconstructed governance and repository context. The
+result is a typed probability, not prose and not an approval.
+
+The provider is disabled by default and normal local Decapod operation does not
+need Jev, a network connection, or an API key. To opt in:
+
+```toml
+[decision]
+provider = "jev"
+```
+
+Set `TYPESAFE_API_KEY` in the machine environment; do not commit credentials to
+`.decapod/config.toml`. Jev uses TypeSafe's documented
+[System One endpoint](https://docs.typesafe.ai/api). If Jev is unavailable,
+unconfigured, times out, or returns an invalid response, Decapod records
+`no_observation` and keeps its existing governance and proof rules unchanged.
+Decapod remains the authority for boundaries, interlocks, policy, and
+completion.
+
 ---
 
 ## Capabilities

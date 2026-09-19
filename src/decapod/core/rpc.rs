@@ -665,6 +665,10 @@ pub struct Advisory {
     pub loop_signal: Option<LoopSignal>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub notes: Option<Vec<String>>,
+    /// External probabilistic input. This is an observation only; it is not a
+    /// policy decision and cannot clear an interlock or prove completion.
+    #[serde(default)]
+    pub decision_observation: crate::core::decision_provider::DecisionObservationResult,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

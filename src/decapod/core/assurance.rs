@@ -1,3 +1,7 @@
+use crate::core::decision_provider::{
+    DecisionContext, DecisionObservationResult, GovernanceContext, GovernanceObligation,
+    TrajectoryContext, WorkspaceContext,
+};
 use crate::core::error::DecapodError;
 use crate::core::events;
 use crate::core::mentor::{MentorEngine, Obligation, ObligationKind, ObligationsContext};
@@ -158,6 +162,7 @@ impl AssuranceEngine {
             verification_plan,
             loop_signal,
             notes: Some(env_notes),
+            decision_observation: self.observe_decision(input, &obligations, &workspace_status),
         };
 
         let attestation = self.write_attestation(input, interlock.as_ref())?;
@@ -166,6 +171,82 @@ impl AssuranceEngine {
             advisory,
             attestation,
         })
+    }
+
+    fn observe_decision(
+        &self,
+        input: &AssuranceEvaluateInput,
+        obligations: &crate::core::mentor::Obligations,
+        status: &workspace::WorkspaceStatus,
+    ) -> DecisionObservationResult {
+        let plan = crate::plan_governance::load_plan(&self.repo_root)
+            .ok()
+            .flatten();
+        let context = DecisionContext {
+            declared_intent: plan.as_ref().map(|plan| plan.intent.clone()),
+            trajectory: TrajectoryContext {
+                operation: input.op.clone(),
+                touched_paths: input.touched_paths.clone(),
+                diff_summary: input.diff_summary.clone(),
+            },
+            governance: GovernanceContext {
+                must_obligations: obligations
+                    .must
+                    .iter()
+                    .map(|obligation| Self::decision_obligation(obligation, true))
+                    .collect(),
+                recommended_obligations: obligations
+                    .recommended
+                    .iter()
+                    .map(|obligation| Self::decision_obligation(obligation, false))
+                    .collect(),
+                contradictions: obligations
+                    .contradictions
+                    .iter()
+                    .map(|contradiction| contradiction.description.clone())
+                    .collect(),
+                proof_hooks: plan
+                    .as_ref()
+                    .map(|plan| plan.proof_hooks.clone())
+                    .unwrap_or_default(),
+                forbidden_paths: plan
+                    .as_ref()
+                    .map(|plan| plan.constraints.forbidden_paths.clone())
+                    .unwrap_or_default(),
+                file_touch_budget: plan
+                    .as_ref()
+                    .and_then(|plan| plan.constraints.file_touch_budget),
+                workspace: WorkspaceContext {
+                    branch: status.git.current_branch.clone(),
+                    is_protected: status.git.is_protected,
+                    is_isolated: status.git.in_worktree && !status.git.is_main_repo,
+                    can_work: status.can_work,
+                },
+            },
+        };
+
+        let provider_kind = match crate::cli::DecapodProjectConfig::load(&self.repo_root) {
+            Ok(config) => config.decision.provider,
+            Err(DecapodError::NotFound(_)) => {
+                crate::core::decision_provider::DecisionProviderKind::None
+            }
+            Err(_) => {
+                return DecisionObservationResult::no_observation(
+                    "config",
+                    crate::core::decision_provider::NoObservationReason::Configuration,
+                );
+            }
+        };
+        crate::core::decision_provider::configured(provider_kind).observe(&context)
+    }
+
+    fn decision_obligation(obligation: &Obligation, required: bool) -> GovernanceObligation {
+        GovernanceObligation {
+            kind: format!("{:?}", obligation.kind),
+            reference: obligation.ref_path.clone(),
+            title: obligation.title.clone(),
+            required,
+        }
     }
 
     fn resolve_interlock(

@@ -39,6 +39,16 @@ ordinary ignored dependency installs.
 - Reliable convergence is the outcome: the agent preserves accepted intent, stays within explicit boundaries, maintains durable state, responds to validation, remediates supported failures, and produces evidence before completion.
 - Product ontology: models produce intelligence; agents perform work; repositories preserve state; Decapod governs the transition from intent to proof.
 - Reliability is designed, not hoped for. Trust in generated work follows from explicit intent, boundaries, durable state, validation, supported recovery, and evidence rather than generation capability alone.
+- Optional external intelligence may inform a Decapod assurance result through a typed Jev observation, while Decapod remains the sole authority for policy, boundaries, interlocks, proof requirements, and completion.
+
+## Optional Decision-Provider Intent
+
+The first probabilistic seam is intentionally narrow. After governance context
+reconstruction, an optional provider may report the probability that the
+proposed trajectory satisfies the declared intent. Jev is the first adapter;
+`provider = "none"` remains the default. Provider absence or failure must
+produce no observation rather than implicit approval, and no provider may
+mutate intent, claims, trajectory, validation state, or boundaries.
 
 ## Current Storage Cutover Intent
 - The canonical `.decapod/data/decapod.db` path is a Dactyl-backed physical store. Decapod has no direct SQL driver dependency, subprocess connector, backend handle, or second local authority. Every canonical read, write, schema inspection, transaction, migration step, and validation probe crosses the `core::dactyl_db` facade into Dactyl.
@@ -295,8 +305,8 @@ or manifest.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d0bdb17635f1a0358b17a7f76bb72ab4544f80b5b0c9a201319a1f6539e64710`
-- Significant implementation surfaces: `.buildkite/` (1 files), `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
+- Repository signal fingerprint: `41fbd9434a268a855beddc380ed65b1de55f57037cae4b895f06466642686751`
+- Significant implementation surfaces: `.buildkite/` (1 files), `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (108 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

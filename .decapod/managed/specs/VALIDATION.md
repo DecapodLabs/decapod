@@ -19,6 +19,15 @@ must not introduce additional output.
 ## Validation Philosophy
 > Validation is a release gate, not documentation theater.
 
+## Decision-Provider Proof
+
+The provider seam is covered by focused tests for disabled operation, a typed
+Jev observation, unavailable transport, malformed/invalid responses, and
+missing credentials. The assurance harness verifies that the default local
+path surfaces `no_observation` without changing the existing policy interlock.
+The proof does not claim that a live Jev service is available; live credentials
+and network behavior remain external integration evidence.
+
 ## Governance Input and Proof Currency (#1325, #1327)
 The specs manifest hashes both project authority inputs: `.decapod/config.toml`
 and `.decapod/OVERRIDE.md`. A mismatch is not ignored. The normal bounded
@@ -328,7 +337,7 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d0bdb17635f1a0358b17a7f76bb72ab4544f80b5b0c9a201319a1f6539e64710`
-- Significant implementation surfaces: `.buildkite/` (1 files), `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
+- Repository signal fingerprint: `41fbd9434a268a855beddc380ed65b1de55f57037cae4b895f06466642686751`
+- Significant implementation surfaces: `.buildkite/` (1 files), `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (108 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

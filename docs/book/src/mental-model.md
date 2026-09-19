@@ -33,6 +33,28 @@ intent → interpretation → bounded execution → validation
 
 A validation failure is not completion. When remediation is supported, the agent inspects the result, identifies the violated invariant, performs the sanctioned remediation, updates the relevant artifact, re-runs validation, and continues toward publication. Some failures require human judgment or cannot be recovered automatically; Decapod keeps those blockers visible.
 
+## Optional probabilistic observations
+
+Decapod may be configured with the optional `jev` decision provider at the
+assurance boundary. Jev receives the declared intent, proposed trajectory, and
+reconstructed governance context, then returns one typed `noul` probability for
+the observation `trajectory_satisfies_intent`. This is an observation for
+Decapod to retain—not a threshold, approval, policy waiver, boundary change,
+or completion claim. Decapod's existing interlocks and proof gates remain
+authoritative.
+
+The default is local and provider-free:
+
+```toml
+[decision]
+provider = "none"
+```
+
+Selecting `provider = "jev"` requires `TYPESAFE_API_KEY` in the machine
+environment. Missing credentials, network failure, timeout, or malformed data
+produces an explicit `no_observation` result and cannot authorize work. See
+[Configuration](reference/config-toml.md) and the [TypeSafe API reference](https://docs.typesafe.ai/api).
+
 ## Epistemic Custody
 
 A central concept in Decapod is **Epistemic Custody**. This is the preserved, auditable chain between the initial human intent, the context provided to the model, the assumptions made during implementation, and the final proof of completion. Decapod keeps that chain in governed repo state, making agent work fully falsifiable and transparent even after the original session has ended (see [Artifact Reference](reference/artifacts.md)).

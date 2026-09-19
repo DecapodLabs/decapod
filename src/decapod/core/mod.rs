@@ -26,6 +26,7 @@ pub mod dactyl;
 pub mod dactyl_db;
 pub mod dactyl_todo;
 pub mod db;
+pub mod decision_provider;
 pub mod dirty_classification;
 pub mod docs;
 pub mod docs_cli;

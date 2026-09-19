@@ -1,4 +1,5 @@
 use decapod::core::assurance::{AssuranceEngine, AssuranceEvaluateInput, AssurancePhase};
+use decapod::core::decision_provider::{DecisionObservationResult, NoObservationReason};
 use std::fs;
 use std::path::Path;
 use std::process::Command;
@@ -205,6 +206,39 @@ fn protected_branch_or_workspace_state_triggers_workspace_interlock() {
         .expect("eval");
     assert_eq!(
         out.interlock.as_ref().map(|i| i.code.as_str()),
+        Some("workspace_required")
+    );
+}
+
+#[test]
+fn default_assurance_surfaces_no_observation_without_changing_policy() {
+    let tmp = tempdir().expect("temp");
+    init_repo(tmp.path(), "feature/x");
+    seed_docs(tmp.path());
+
+    let out = AssuranceEngine::new(tmp.path())
+        .evaluate(&AssuranceEvaluateInput {
+            op: "build".to_string(),
+            params: serde_json::json!({}),
+            touched_paths: vec!["src/lib.rs".to_string()],
+            diff_summary: Some("small change".to_string()),
+            session_id: None,
+            phase: Some(AssurancePhase::Build),
+            time_budget_s: Some(10),
+        })
+        .expect("eval");
+
+    assert_eq!(
+        out.advisory.decision_observation,
+        DecisionObservationResult::NoObservation {
+            provider: "none".to_string(),
+            reason: NoObservationReason::Disabled,
+        }
+    );
+    assert_eq!(
+        out.interlock
+            .as_ref()
+            .map(|interlock| interlock.code.as_str()),
         Some("workspace_required")
     );
 }
