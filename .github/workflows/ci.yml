@@ -4,10 +4,6 @@ on:
   # Keep the complete PR check suite attached to every pull-request update.
   push:
     branches: [ master ]
-    paths-ignore:
-      - 'CHANGELOG.md'
-      - 'Cargo.toml'
-      - 'Cargo.lock'
   pull_request:
     branches: [ master ]
   workflow_dispatch:

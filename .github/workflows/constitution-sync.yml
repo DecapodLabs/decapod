@@ -2,13 +2,7 @@ name: Constitution Sync and Validation
 
 on:
   push:
-    paths:
-      - 'assets/constitution.json'
-      - 'assets/schemas/constitution.schema.json'
   pull_request:
-    paths:
-      - 'assets/constitution.json'
-      - 'assets/schemas/constitution.schema.json'
 
 jobs:
   validate-constitution:
