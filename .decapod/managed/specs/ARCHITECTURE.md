@@ -349,7 +349,7 @@ authored document is an untouched template.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `41fbd9434a268a855beddc380ed65b1de55f57037cae4b895f06466642686751`
+- Repository signal fingerprint: `f2c30fe3aa559b2dc55f42ef45dc951e5f42b2f54d98f197979a031b3b58582b`
 - Significant implementation surfaces: `.buildkite/` (1 files), `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (108 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
