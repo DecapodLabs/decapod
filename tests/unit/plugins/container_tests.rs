@@ -149,6 +149,61 @@ fn podman_spec_does_not_force_host_uid_mapping() {
 }
 
 #[test]
+fn podman_machine_start_is_quiet_headless_and_noninteractive() {
+    assert_eq!(
+        podman_machine_start_args(),
+        [
+            "machine",
+            "start",
+            "--quiet",
+            "--no-info",
+            "--update-connection=false"
+        ]
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn podman_machine_start_captures_output_without_reading_terminal_input() {
+    use std::os::unix::fs::PermissionsExt;
+
+    let root = tempdir().expect("tempdir");
+    let args_file = root.path().join("args");
+    let fake_runtime = root.path().join("podman");
+    fs::write(
+        &fake_runtime,
+        format!(
+            "#!/bin/sh\nprintf '%s\\n' \"$@\" > '{}'\nif IFS= read -r line; then exit 42; fi\nprintf 'captured\\n'\n",
+            args_file.display()
+        ),
+    )
+    .expect("write fake podman");
+    let mut permissions = fs::metadata(&fake_runtime)
+        .expect("fake podman metadata")
+        .permissions();
+    permissions.set_mode(0o755);
+    fs::set_permissions(&fake_runtime, permissions).expect("chmod fake podman");
+
+    let output = start_podman_machine_quietly(fake_runtime.to_str().expect("runtime path"))
+        .expect("start fake podman");
+    assert!(output.status.success(), "stdin must be non-interactive");
+    assert_eq!(String::from_utf8_lossy(&output.stdout), "captured\n");
+    assert_eq!(
+        fs::read_to_string(args_file)
+            .expect("read arguments")
+            .lines()
+            .collect::<Vec<_>>(),
+        vec![
+            "machine",
+            "start",
+            "--quiet",
+            "--no-info",
+            "--update-connection=false"
+        ]
+    );
+}
+
+#[test]
 fn sanitize_name_normalizes_agent_identifiers() {
     assert_eq!(sanitize_name("Agent_One"), "agent-one");
     assert_eq!(sanitize_name("  team/a  "), "team-a");

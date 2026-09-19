@@ -1,44 +1,71 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "bugs_01m2t80vyxygr6h7-buildkite-plan-fix",
-  "intent_id": "intent:bugs_01m2t80vyxygr6h7-buildkite-plan-fix",
-  "task_id": "bugs_01m2t80vyxygr6h7",
-  "original_intent": "Make recurring Buildkite pipelines green for standard PRs, release PRs, pushes, and merges to master; document each failure in one GitHub Issue and publish the fix PR.",
-  "derived_intent": "Resolve the remaining Buildkite Release/plan adapter failure with the smallest proven workflow change while preserving GitHub Actions release semantics, then refresh proof and confirm the PR checks.",
-  "current_phase": "buildkite-proof-complete",
+  "run_id": "unknown-podman-headless-01m2w18ts5chnn6k",
+  "intent_id": "intent:unknown-podman-headless-01m2w18ts5chnn6k",
+  "task_id": "feat_01m2w18ts5chnn6k",
+  "original_intent": "in a dedicated git workspace git worktree and PR, podman must startup quietly, no ui.",
+  "derived_intent": "Add automatic headless Podman machine recovery for macOS and Windows container preflight, using quiet non-interactive machine startup, then retry runtime access; preserve Docker/Linux behavior and publish a dedicated PR.",
+  "current_phase": "validation",
   "next_transitions": [
-    "Refresh validation receipt after this trajectory record, commit, push PR update, and inspect Buildkite",
-    "Run governed validation, commit, push PR update, and inspect Buildkite rerun",
-    "Update the single failure issue with final evidence and hand off the published PR",
-    "publish"
+    "publication",
+    "publish",
+    "validation"
   ],
   "active_boundaries": [
-    "Repository workflow and GitHub repository configuration only; no unrelated product changes."
+    "Only the claimed isolated git worktree may be mutated; do not launch Podman Desktop or alter the protected root; do not hand-edit machine-owned .decapod state."
   ],
   "repo_scope": [
-    "Decapod release workflow plan evaluation and governed proof artifacts."
+    "src/decapod/plugins/container.rs, tests/unit/plugins/container_tests.rs, .decapod/managed/specs/OPERATIONS.md, .decapod/managed/specs/INTERFACES.md"
   ],
   "inspected_files": [
-    ".github/workflows/release.yml"
+    ".decapod/managed/specs/INTERFACES.md",
+    ".decapod/managed/specs/OPERATIONS.md",
+    ".github/workflows/docs_sync.yml",
+    "src/decapod/plugins/container.rs",
+    "tests/unit/plugins/container_tests.rs"
   ],
   "modified_files": [
+    ".decapod/governance/plan.json",
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
-    ".github/workflows/release.yml"
+    ".decapod/managed/specs/.manifest.json",
+    ".decapod/managed/specs/INTERFACES.md",
+    ".decapod/managed/specs/OPERATIONS.md",
+    ".github/workflows/docs_sync.yml",
+    "src/decapod/plugins/container.rs",
+    "tests/unit/plugins/container_tests.rs"
   ],
   "declared_commands": [
+    "cargo clippy --locked --all-targets --all-features -- -D warnings",
+    "cargo fmt --all -- --check",
+    "cargo test --locked --lib",
     "decapod validate",
-    "gh api repos/DecapodLabs/decapod/check-runs/105830341316",
-    "gh pr checks 1337 --required=false"
+    "podman run --rm ... decapod validate --format json"
   ],
   "tool_calls": [],
   "checks": [
     {
-      "name": "buildkite-43-ci",
+      "name": "cargo_clippy",
       "status": "passed"
     },
     {
-      "name": "buildkite-43-decapod",
+      "name": "cargo_deny",
+      "status": "passed"
+    },
+    {
+      "name": "cargo_fmt_check",
+      "status": "passed"
+    },
+    {
+      "name": "cargo_machete",
+      "status": "passed"
+    },
+    {
+      "name": "cargo_test_lib",
+      "status": "passed"
+    },
+    {
+      "name": "container_validation",
       "status": "passed"
     },
     {
@@ -46,58 +73,50 @@
       "status": "passed"
     },
     {
-      "name": "decapod-validate",
+      "name": "governance_inventory",
       "status": "passed"
     },
     {
-      "name": "git-diff-check",
-      "status": "passed"
+      "name": "host_validation",
+      "status": "partial"
     },
     {
-      "name": "github-actions-pr",
-      "status": "passed"
-    },
-    {
-      "name": "release-plan",
+      "name": "podman_machine_start_test",
       "status": "passed"
     }
   ],
   "evidence": [
-    "Buildkite build 42 passed the prior trigger, environment, docs, release-publish, and release-artifact cases; Release / plan alone exited in one second with no log payload. The job now selects cargo dist plan for pull requests and cargo dist host for tags using shell environment variables.",
-    "Buildkite build 43 passed both aggregate pipelines; Release/plan and all previously failing adapter-sensitive jobs passed. GitHub Actions PR run 35421740781 passed all non-skipped jobs, including setup, dependencies, tests, validation, and governance.",
-    "decapod validate --refresh-specs passed with 203 invariants and zero failures; git diff --check passed. Rust source is unchanged from the prior proof: cargo fmt, cargo test --locked --lib (339 passed), and clippy passed.",
-    "validation epoch ve_d200885ea8eace15 completed with zero failures"
+    "Focused tests prove quiet/headless Podman arguments, null stdin, and captured output; cargo lib tests 341 passed; clippy and fmt passed; host validation reached 199 passes but was blocked only by container_workspace_required; non-interactive container validation passed with fail_count=0 and pass_count=200.",
+    "container validation status=ok with fail_count=0; local tests 341 passed; clippy, fmt, cargo machete, and cargo deny passed; docs sync checkout no longer uses unsupported explicit ref",
+    "validation epoch ve_27d6a3e64dbaf6f3 completed with zero failures",
+    "validation epoch ve_6e99740351becd12 completed with zero failures"
   ],
-  "shortcut_risk_signals": [
-    "Do not claim completion from GitHub Actions or local validation; require the new Buildkite run.",
-    "No workflow redesign; only the observed adapter compatibility fixes were retained.",
-    "The release-plan adapter fix still requires Buildkite proof after push."
-  ],
+  "shortcut_risk_signals": [],
   "unresolved_assumptions": [
-    "The one-second empty-log failure is an adapter evaluation issue; the post-push Buildkite result is required to confirm the fix."
+    "Buildkite adapter checks are the authoritative external proof for workflow compatibility after push"
   ],
-  "proof_status": "passed",
+  "proof_status": "partial",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
-    "shortcut_risk": "caution",
-    "completion_proof": "supported"
+    "shortcut_risk": "supported",
+    "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:fc75ba97c62873d5f18ed0a4b9e34fec1551c5fc374947e6e4dd5012dd88a2dc",
+  "artifact_hash": "sha256:ec42a207f9cc1fcdb4d895e932cfb082ec83bfb79bc4ef70fcf5bce9544e423a",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:bugs_01m2t80vyxygr6h7-buildkite-plan-fix": {
-        "id": "intent:bugs_01m2t80vyxygr6h7-buildkite-plan-fix",
-        "raw_intent": "Make recurring Buildkite pipelines green for standard PRs, release PRs, pushes, and merges to master; document each failure in one GitHub Issue and publish the fix PR.",
-        "refined_intent": "Resolve the remaining Buildkite Release/plan adapter failure with the smallest proven workflow change while preserving GitHub Actions release semantics, then refresh proof and confirm the PR checks.",
+      "intent:unknown-podman-headless-01m2w18ts5chnn6k": {
+        "id": "intent:unknown-podman-headless-01m2w18ts5chnn6k",
+        "raw_intent": "in a dedicated git workspace git worktree and PR, podman must startup quietly, no ui.",
+        "refined_intent": "Add automatic headless Podman machine recovery for macOS and Windows container preflight, using quiet non-interactive machine startup, then retry runtime access; preserve Docker/Linux behavior and publish a dedicated PR.",
         "acceptance_criteria": [],
         "constraints": [
-          "Decapod release workflow plan evaluation and governed proof artifacts."
+          "src/decapod/plugins/container.rs, tests/unit/plugins/container_tests.rs, .decapod/managed/specs/OPERATIONS.md, .decapod/managed/specs/INTERFACES.md"
         ],
         "assumptions": [],
         "boundaries": [
-          "Repository workflow and GitHub repository configuration only; no unrelated product changes."
+          "Only the claimed isolated git worktree may be mutated; do not launch Podman Desktop or alter the protected root; do not hand-edit machine-owned .decapod state."
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -110,122 +129,142 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:bugs_01m2t80vyxygr6h7-buildkite-plan-fix",
+        "intent_id": "intent:unknown-podman-headless-01m2w18ts5chnn6k",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:bugs_01m2t80vyxygr6h7-buildkite-plan-fix",
+        "intent_id": "intent:unknown-podman-headless-01m2w18ts5chnn6k",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:bugs_01m2t80vyxygr6h7-buildkite-plan-fix",
+        "intent_id": "intent:unknown-podman-headless-01m2w18ts5chnn6k",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:bugs_01m2t80vyxygr6h7-buildkite-plan-fix"
+        "detail": "trajectory:unknown-podman-headless-01m2w18ts5chnn6k"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:bugs_01m2t80vyxygr6h7-buildkite-plan-fix",
+        "intent_id": "intent:unknown-podman-headless-01m2w18ts5chnn6k",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:bugs_01m2t80vyxygr6h7-buildkite-plan-fix"
+        "detail": "trajectory:unknown-podman-headless-01m2w18ts5chnn6k"
       },
       {
         "sequence": 6,
         "event_id": "event:6",
-        "intent_id": "intent:bugs_01m2t80vyxygr6h7-buildkite-plan-fix",
+        "intent_id": "intent:unknown-podman-headless-01m2w18ts5chnn6k",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:bugs_01m2t80vyxygr6h7-buildkite-plan-fix"
+        "detail": "trajectory:unknown-podman-headless-01m2w18ts5chnn6k"
       },
       {
         "sequence": 7,
         "event_id": "event:7",
-        "intent_id": "intent:bugs_01m2t80vyxygr6h7-buildkite-plan-fix",
+        "intent_id": "intent:unknown-podman-headless-01m2w18ts5chnn6k",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:bugs_01m2t80vyxygr6h7-buildkite-plan-fix"
+        "detail": "trajectory:unknown-podman-headless-01m2w18ts5chnn6k"
       }
     ],
     "trajectories": {
-      "bugs_01m2t80vyxygr6h7-buildkite-plan-fix": {
-        "id": "bugs_01m2t80vyxygr6h7-buildkite-plan-fix",
-        "intent_id": "intent:bugs_01m2t80vyxygr6h7-buildkite-plan-fix",
+      "unknown-podman-headless-01m2w18ts5chnn6k": {
+        "id": "unknown-podman-headless-01m2w18ts5chnn6k",
+        "intent_id": "intent:unknown-podman-headless-01m2w18ts5chnn6k",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "buildkite-plan-fix",
-            "command": "gh pr checks 1337 --required=false",
+            "action": "validation",
+            "command": "decapod validate",
             "scope": [
-              "Decapod release workflow plan evaluation and governed proof artifacts."
+              "src/decapod/plugins/container.rs, tests/unit/plugins/container_tests.rs, .decapod/managed/specs/OPERATIONS.md, .decapod/managed/specs/INTERFACES.md"
             ],
             "observations": [
-              ".github/workflows/release.yml",
-              ".github/workflows/release.yml",
-              "Buildkite build 42 passed the prior trigger, environment, docs, release-publish, and release-artifact cases; Release / plan alone exited in one second with no log payload. The job now selects cargo dist plan for pull requests and cargo dist host for tags using shell environment variables."
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_6e99740351becd12 completed with zero failures"
             ],
-            "proof_refs": [],
-            "validation_findings": [
-              "Do not claim completion from GitHub Actions or local validation; require the new Buildkite run.",
-              "The one-second empty-log failure is an adapter evaluation issue; the post-push Buildkite result is required to confirm the fix."
+            "proof_refs": [
+              "decapod validate"
             ],
+            "validation_findings": [],
             "custody_event_id": "event:4"
           },
           {
             "sequence": 5,
             "action": "validation",
-            "command": "decapod validate",
+            "command": "cargo test --locked --lib",
             "scope": [
-              "Decapod release workflow plan evaluation and governed proof artifacts."
+              "src/decapod/plugins/container.rs, tests/unit/plugins/container_tests.rs, .decapod/managed/specs/OPERATIONS.md, .decapod/managed/specs/INTERFACES.md"
             ],
             "observations": [
+              "src/decapod/plugins/container.rs",
+              "tests/unit/plugins/container_tests.rs",
+              ".decapod/managed/specs/OPERATIONS.md",
+              ".decapod/managed/specs/INTERFACES.md",
+              "src/decapod/plugins/container.rs",
+              "tests/unit/plugins/container_tests.rs",
+              ".decapod/managed/specs/OPERATIONS.md",
+              ".decapod/managed/specs/INTERFACES.md",
+              ".decapod/governance/plan.json",
               ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_d200885ea8eace15 completed with zero failures"
+              ".decapod/managed/specs/.manifest.json",
+              "Focused tests prove quiet/headless Podman arguments, null stdin, and captured output; cargo lib tests 341 passed; clippy and fmt passed; host validation reached 199 passes but was blocked only by container_workspace_required; non-interactive container validation passed with fail_count=0 and pass_count=200."
             ],
             "proof_refs": [
-              "decapod validate"
+              "podman_machine_start_test",
+              "cargo_test_lib",
+              "cargo_clippy",
+              "cargo_fmt_check",
+              "host_validation",
+              "container_validation"
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
           },
           {
             "sequence": 6,
-            "action": "local-proof-complete",
+            "action": "validation",
+            "command": "decapod validate",
             "scope": [
-              "Decapod release workflow plan evaluation and governed proof artifacts."
+              "src/decapod/plugins/container.rs, tests/unit/plugins/container_tests.rs, .decapod/managed/specs/OPERATIONS.md, .decapod/managed/specs/INTERFACES.md"
             ],
             "observations": [
-              "decapod validate --refresh-specs passed with 203 invariants and zero failures; git diff --check passed. Rust source is unchanged from the prior proof: cargo fmt, cargo test --locked --lib (339 passed), and clippy passed."
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_27d6a3e64dbaf6f3 completed with zero failures"
             ],
             "proof_refs": [
-              "decapod-validate",
-              "git-diff-check"
+              "decapod validate"
             ],
-            "validation_findings": [
-              "The release-plan adapter fix still requires Buildkite proof after push."
-            ],
+            "validation_findings": [],
             "custody_event_id": "event:6"
           },
           {
             "sequence": 7,
-            "action": "buildkite-proof-complete",
+            "action": "trajectory.record",
+            "command": "podman run --rm ... decapod validate --format json",
             "scope": [
-              "Decapod release workflow plan evaluation and governed proof artifacts."
+              "src/decapod/plugins/container.rs, tests/unit/plugins/container_tests.rs, .decapod/managed/specs/OPERATIONS.md, .decapod/managed/specs/INTERFACES.md"
             ],
             "observations": [
-              "Buildkite build 43 passed both aggregate pipelines; Release/plan and all previously failing adapter-sensitive jobs passed. GitHub Actions PR run 35421740781 passed all non-skipped jobs, including setup, dependencies, tests, validation, and governance."
+              ".github/workflows/docs_sync.yml",
+              ".github/workflows/docs_sync.yml",
+              "container validation status=ok with fail_count=0; local tests 341 passed; clippy, fmt, cargo machete, and cargo deny passed; docs sync checkout no longer uses unsupported explicit ref"
             ],
             "proof_refs": [
-              "buildkite-43-ci",
-              "buildkite-43-decapod",
-              "release-plan",
-              "github-actions-pr"
+              "cargo_test_lib",
+              "cargo_clippy",
+              "cargo_fmt_check",
+              "cargo_machete",
+              "cargo_deny",
+              "host_validation",
+              "container_validation",
+              "governance_inventory"
             ],
             "validation_findings": [
-              "No workflow redesign; only the observed adapter compatibility fixes were retained."
+              "Buildkite adapter checks are the authoritative external proof for workflow compatibility after push"
             ],
             "custody_event_id": "event:7"
           }
