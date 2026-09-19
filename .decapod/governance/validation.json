@@ -2,10 +2,10 @@
   "schema_version": "1.0.0",
   "kind": "validation_receipt",
   "decapod_release": "0.102.2",
-  "git_revision": "484c38b23483bb46c9d13bd059422fe07ff7af7e",
+  "git_revision": "7dcb5dc631b0e83fe27eae4f1e8f9845e164597c",
   "repo_signal_fingerprint": "41fbd9434a268a855beddc380ed65b1de55f57037cae4b895f06466642686751",
-  "trajectory_run_id": "validation_01M2XT9EEX79FT34RG4G2E057K",
-  "trajectory_artifact_hash": "sha256:68985bae90ff1d2a2a2e5f1b96a9307870ca7c72d70b0bac3ef5c6f8756de20a",
+  "trajectory_run_id": "jev-decision-provider-publish-01M2XW7V9C",
+  "trajectory_artifact_hash": "sha256:0037d63a4cc8c4c3f55cba021cc54ee6167f3d67a2bd5ac003a6ca52f6ce6f3b",
   "validation_epoch": {
     "schema_version": "1.0.0",
     "epoch_id": "ve_584851b11a3f4315",
@@ -47,80 +47,76 @@
   "pass_count": 203,
   "fail_count": 0,
   "warn_count": 5,
-  "elapsed_ms": 4257,
+  "elapsed_ms": 4778,
   "drift_findings": [],
   "temporary_artifacts_cleaned": 0,
   "failures": [],
   "warnings": [
     "Audit log contains 1 potential crash divergence(s); historical pending entries detected. Run `decapod data broker verify` for details.",
+    "No open pull request found on GitHub for branch 'agent/unknown/jev-decision-provider-cicd_01m2xrx9fg5mgdx8'. Create a pull request to submit changes.",
     "Risk map missing (run `decapod riskmap init`)",
     "Stale workspaces preserved for explicit review: <external-path> (unregistered_workspace: workspace directory is not registered with git; inspect it and rerun with --force only after preserving any needed files), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force)",
-    "Watcher audit trail missing (run `decapod govern watcher run`)",
-    "Workspace branch 'agent/unknown/jev-decision-provider-cicd_01m2xrx9fg5mgdx8' has unpushed commits or does not exist on origin. Run `git push origin agent/unknown/jev-decision-provider-cicd_01m2xrx9fg5mgdx8`."
+    "Watcher audit trail missing (run `decapod govern watcher run`)"
   ],
   "gate_timings": [
     {
       "name": "validate_markdown_primitives_roundtrip_gate",
-      "elapsed_ms": 1379
+      "elapsed_ms": 1403
     },
     {
       "name": "validate_stale_workspaces",
-      "elapsed_ms": 636
+      "elapsed_ms": 949
     },
     {
       "name": "validate_obligations",
-      "elapsed_ms": 459
-    },
-    {
-      "name": "validate_project_specs_docs",
-      "elapsed_ms": 313
-    },
-    {
-      "name": "validate_legacy_jsonl_retired",
-      "elapsed_ms": 280
+      "elapsed_ms": 446
     },
     {
       "name": "validate_machine_contract",
-      "elapsed_ms": 212
+      "elapsed_ms": 341
+    },
+    {
+      "name": "validate_project_specs_docs",
+      "elapsed_ms": 320
+    },
+    {
+      "name": "validate_legacy_jsonl_retired",
+      "elapsed_ms": 313
     },
     {
       "name": "validate_archive_integrity",
-      "elapsed_ms": 147
+      "elapsed_ms": 153
     },
     {
       "name": "validate_control_plane_contract",
-      "elapsed_ms": 107
+      "elapsed_ms": 115
     },
     {
       "name": "validate_git_workspace_context",
-      "elapsed_ms": 89
+      "elapsed_ms": 96
     },
     {
       "name": "validate_lineage_hard_gate",
-      "elapsed_ms": 61
+      "elapsed_ms": 60
     },
     {
       "name": "validate_no_legacy_namespaces",
-      "elapsed_ms": 58
+      "elapsed_ms": 59
     },
     {
       "name": "validate_repomap_determinism",
       "elapsed_ms": 28
     },
     {
-      "name": "validate_federation_gates",
-      "elapsed_ms": 25
-    },
-    {
-      "name": "validate_lcm_rebuild_gate",
-      "elapsed_ms": 24
+      "name": "validate_watcher_audit",
+      "elapsed_ms": 27
     },
     {
       "name": "validate_knowledge_promotions_if_present",
       "elapsed_ms": 24
     },
     {
-      "name": "validate_watcher_audit",
+      "name": "validate_federation_gates",
       "elapsed_ms": 24
     },
     {
@@ -128,11 +124,15 @@
       "elapsed_ms": 24
     },
     {
-      "name": "validate_health_purity",
-      "elapsed_ms": 16
+      "name": "validate_lcm_rebuild_gate",
+      "elapsed_ms": 23
     },
     {
       "name": "validate_git_protected_branch",
+      "elapsed_ms": 15
+    },
+    {
+      "name": "validate_health_purity",
       "elapsed_ms": 15
     },
     {
@@ -149,18 +149,18 @@
     },
     {
       "name": "validate_gatekeeper_gate",
-      "elapsed_ms": 5
+      "elapsed_ms": 4
     },
     {
       "name": "validate_knowledge_integrity",
-      "elapsed_ms": 3
+      "elapsed_ms": 4
     },
     {
-      "name": "validate_plan_governed_execution_gate",
+      "name": "validate_spec_drift",
       "elapsed_ms": 2
     },
     {
-      "name": "validate_interface_contract_bootstrap",
+      "name": "validate_plan_governed_execution_gate",
       "elapsed_ms": 2
     },
     {
@@ -168,7 +168,7 @@
       "elapsed_ms": 2
     },
     {
-      "name": "validate_context_capsule_policy_contract",
+      "name": "validate_interface_contract_bootstrap",
       "elapsed_ms": 2
     },
     {
@@ -188,7 +188,7 @@
       "elapsed_ms": 1
     },
     {
-      "name": "validate_validation_receipt_if_present",
+      "name": "validate_watcher_purity",
       "elapsed_ms": 1
     },
     {
@@ -196,23 +196,15 @@
       "elapsed_ms": 1
     },
     {
-      "name": "validate_watcher_purity",
-      "elapsed_ms": 1
-    },
-    {
       "name": "validate_risk_map_violations",
       "elapsed_ms": 1
-    },
-    {
-      "name": "validate_trajectory_artifacts_if_present",
-      "elapsed_ms": 0
     },
     {
       "name": "validate_override_authority",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_spec_drift",
+      "name": "validate_trajectory_artifacts_if_present",
       "elapsed_ms": 0
     },
     {
@@ -224,6 +216,22 @@
       "elapsed_ms": 0
     },
     {
+      "name": "validate_context_capsule_policy_contract",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_state_commit_gate",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_recursive_improvement_passes_if_present",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_validation_receipt_if_present",
+      "elapsed_ms": 0
+    },
+    {
       "name": "validate_project_scoped_state",
       "elapsed_ms": 0
     },
@@ -232,15 +240,7 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_state_commit_gate",
-      "elapsed_ms": 0
-    },
-    {
       "name": "validate_docs_templates_bucket",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_repo_map",
       "elapsed_ms": 0
     },
     {
@@ -248,11 +248,15 @@
       "elapsed_ms": 0
     },
     {
+      "name": "validate_repo_map",
+      "elapsed_ms": 0
+    },
+    {
       "name": "validate_context_capsules_if_present",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_recursive_improvement_passes_if_present",
+      "name": "validate_root_dockerfile_seed_detection",
       "elapsed_ms": 0
     },
     {
@@ -264,19 +268,15 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_root_dockerfile_seed_detection",
-      "elapsed_ms": 0
-    },
-    {
       "name": "validate_eval_gate_if_required",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_coplayer_policy_tightening",
+      "name": "validate_tooling_gate",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_tooling_gate",
+      "name": "validate_coplayer_policy_tightening",
       "elapsed_ms": 0
     }
   ],
@@ -286,15 +286,15 @@
     "confidence": "medium",
     "reasons": [
       "Audit log contains 1 potential crash divergence(s); historical pending entries detected. Run `decapod data broker verify` for details.",
+      "No open pull request found on GitHub for branch 'agent/unknown/jev-decision-provider-cicd_01m2xrx9fg5mgdx8'. Create a pull request to submit changes.",
       "Risk map missing (run `decapod riskmap init`)",
       "Stale workspaces preserved for explicit review: <external-path> (unregistered_workspace: workspace directory is not registered with git; inspect it and rerun with --force only after preserving any needed files), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force)",
-      "Watcher audit trail missing (run `decapod govern watcher run`)",
-      "Workspace branch 'agent/unknown/jev-decision-provider-cicd_01m2xrx9fg5mgdx8' has unpushed commits or does not exist on origin. Run `git push origin agent/unknown/jev-decision-provider-cicd_01m2xrx9fg5mgdx8`."
+      "Watcher audit trail missing (run `decapod govern watcher run`)"
     ],
     "recommendations": [
       "Review the reported validation warnings before relying on the CI result.",
       "Use `decapod validate -v --format json` to inspect the affected gate output."
     ]
   },
-  "receipt_hash": "sha256:1d762060d69951b2033e170005c3d74c62cbab29d67518066f37a32d8cc21b4b"
+  "receipt_hash": "sha256:85e1007f792e9aa2f1cca6f202216196a3676141dcb6355e78dd0bf072d03ff9"
 }
