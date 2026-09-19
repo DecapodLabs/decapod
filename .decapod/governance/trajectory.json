@@ -5,10 +5,11 @@
   "task_id": "bugs_01m2t80vyxygr6h7",
   "original_intent": "Make recurring Buildkite pipelines green for standard PRs, release PRs, pushes, and merges to master; document each failure in one GitHub Issue and publish the fix PR.",
   "derived_intent": "Resolve the remaining Buildkite Release/plan adapter failure with the smallest proven workflow change while preserving GitHub Actions release semantics, then refresh proof and confirm the PR checks.",
-  "current_phase": "local-proof-complete",
+  "current_phase": "buildkite-proof-complete",
   "next_transitions": [
     "Refresh validation receipt after this trajectory record, commit, push PR update, and inspect Buildkite",
     "Run governed validation, commit, push PR update, and inspect Buildkite rerun",
+    "Update the single failure issue with final evidence and hand off the published PR",
     "publish"
   ],
   "active_boundaries": [
@@ -33,6 +34,14 @@
   "tool_calls": [],
   "checks": [
     {
+      "name": "buildkite-43-ci",
+      "status": "passed"
+    },
+    {
+      "name": "buildkite-43-decapod",
+      "status": "passed"
+    },
+    {
       "name": "decapod validate",
       "status": "passed"
     },
@@ -43,15 +52,25 @@
     {
       "name": "git-diff-check",
       "status": "passed"
+    },
+    {
+      "name": "github-actions-pr",
+      "status": "passed"
+    },
+    {
+      "name": "release-plan",
+      "status": "passed"
     }
   ],
   "evidence": [
     "Buildkite build 42 passed the prior trigger, environment, docs, release-publish, and release-artifact cases; Release / plan alone exited in one second with no log payload. The job now selects cargo dist plan for pull requests and cargo dist host for tags using shell environment variables.",
+    "Buildkite build 43 passed both aggregate pipelines; Release/plan and all previously failing adapter-sensitive jobs passed. GitHub Actions PR run 35421740781 passed all non-skipped jobs, including setup, dependencies, tests, validation, and governance.",
     "decapod validate --refresh-specs passed with 203 invariants and zero failures; git diff --check passed. Rust source is unchanged from the prior proof: cargo fmt, cargo test --locked --lib (339 passed), and clippy passed.",
     "validation epoch ve_d200885ea8eace15 completed with zero failures"
   ],
   "shortcut_risk_signals": [
     "Do not claim completion from GitHub Actions or local validation; require the new Buildkite run.",
+    "No workflow redesign; only the observed adapter compatibility fixes were retained.",
     "The release-plan adapter fix still requires Buildkite proof after push."
   ],
   "unresolved_assumptions": [
@@ -64,7 +83,7 @@
     "shortcut_risk": "caution",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:9676cd2c0b275cb8a6184b245688c91434e3853d0f5a951dc51fe25e73f7ce91",
+  "artifact_hash": "sha256:fc75ba97c62873d5f18ed0a4b9e34fec1551c5fc374947e6e4dd5012dd88a2dc",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -117,6 +136,13 @@
       {
         "sequence": 6,
         "event_id": "event:6",
+        "intent_id": "intent:bugs_01m2t80vyxygr6h7-buildkite-plan-fix",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:bugs_01m2t80vyxygr6h7-buildkite-plan-fix"
+      },
+      {
+        "sequence": 7,
+        "event_id": "event:7",
         "intent_id": "intent:bugs_01m2t80vyxygr6h7-buildkite-plan-fix",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:bugs_01m2t80vyxygr6h7-buildkite-plan-fix"
@@ -182,12 +208,32 @@
               "The release-plan adapter fix still requires Buildkite proof after push."
             ],
             "custody_event_id": "event:6"
+          },
+          {
+            "sequence": 7,
+            "action": "buildkite-proof-complete",
+            "scope": [
+              "Decapod release workflow plan evaluation and governed proof artifacts."
+            ],
+            "observations": [
+              "Buildkite build 43 passed both aggregate pipelines; Release/plan and all previously failing adapter-sensitive jobs passed. GitHub Actions PR run 35421740781 passed all non-skipped jobs, including setup, dependencies, tests, validation, and governance."
+            ],
+            "proof_refs": [
+              "buildkite-43-ci",
+              "buildkite-43-decapod",
+              "release-plan",
+              "github-actions-pr"
+            ],
+            "validation_findings": [
+              "No workflow redesign; only the observed adapter compatibility fixes were retained."
+            ],
+            "custody_event_id": "event:7"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 6
+    "next_sequence": 7
   }
 }
