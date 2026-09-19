@@ -11,7 +11,7 @@
     "cargo test --locked --lib",
     "cargo clippy --locked --all-targets --all-features -- -D warnings",
     "decapod validate --format json",
-    "GitHub checks for the published PR"
+    "GitHub and Buildkite checks for the published PR"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -25,5 +25,5 @@
     "file_touch_budget": 30
   },
   "phases": [],
-  "updated_at": "1789795292Z"
+  "updated_at": "1789796972Z"
 }
