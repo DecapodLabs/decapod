@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.102.2](https://github.com/DecapodLabs/decapod/compare/v0.102.1...v0.102.2) - 2026-09-19
+
+### Other
+
+- refresh Decapod 0.102.1 release pins
+- Migrate CI to native Buildkite pipeline-as-code
+
 ## [0.102.1](https://github.com/DecapodLabs/decapod/compare/v0.102.0...v0.102.1) - 2026-09-19
 
 ### Fixed
