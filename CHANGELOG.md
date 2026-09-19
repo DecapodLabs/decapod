@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.102.1](https://github.com/DecapodLabs/decapod/compare/v0.102.0...v0.102.1) - 2026-09-19
+
+### Fixed
+
+- *(ci)* make docs sync checkout adapter-safe
+- *(container)* start Podman machines quietly
+- *(ci)* make release planning adapter-safe
+- *(ci)* restore Buildkite workflow compatibility
+
+### Other
+
+- *(governance)* record Buildkite proof
+- *(governance)* bind final validation evidence
+- *(governance)* record Buildkite failure issue
+
 ## [0.102.0](https://github.com/DecapodLabs/decapod/compare/v0.101.1...v0.102.0) - 2026-09-18
 
 ### Other
