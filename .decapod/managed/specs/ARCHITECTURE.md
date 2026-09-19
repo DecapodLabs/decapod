@@ -335,7 +335,7 @@ authored document is an untouched template.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `50f3854a8138f70718e8e21cb88cb7a552795a240384d5b71778ec7acff246be`
+- Repository signal fingerprint: `f0689ac8b4eef6630896d76d69963008424db897d6a9cd977bc2cdb474389364`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

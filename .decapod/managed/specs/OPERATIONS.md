@@ -60,6 +60,26 @@ condition. Publishing and upload-mode runs still build the same cargo-dist
 targets, while changes to the target list require an intentional workflow and
 spec update.
 
+## Buildkite Adapter Compatibility
+
+The repository is validated by both GitHub Actions and a Buildkite adapter that
+interprets the workflow files. The adapter is part of the delivery surface, so
+workflow features that GitHub accepts are not automatically portable to the
+adapter. Push and pull-request triggers must not use `paths` or `paths-ignore`
+filters: the adapter cannot safely evaluate those filters against its checkout
+event and reports a failed pipeline before a job starts. The workflows therefore
+run the relevant validation jobs for every matching branch or pull request, and
+job-level conditions remain responsible for opt-in work such as live proofs.
+
+Release checkout uses the default GitHub token with credentials persistence
+disabled. The release-plz step receives its elevated GitHub App token explicitly
+through its environment, while the checkout action avoids the unsupported
+explicit `token` input used by the Buildkite adapter. GitHub environment names
+referenced by workflows must exist in repository settings; deployment-branch
+policies must not be attached to the Pages environment because the adapter cannot
+interpret that protection rule. The workflow's master-only deployment condition
+remains the repository-level deployment boundary.
+
 ## Installed-Version Upgrade Path
 After `cargo install decapod`, the next normal governed command runs protected, idempotent schema migration and legacy-event reconciliation before runtime consumers read evidence. Existing-project `decapod init` executes the same reconciliation before regeneration. A prior successful single-datastore migration retires its JSONL inputs through a durable receipt; startup does not rescan them. Legacy local database sources are opened through the Dactyl v0.10.0 facade, while Decapod owns row translation, schema policy, the explicit maintenance command policy, and idempotency ledgers. Dactyl opens the canonical path directly through its host runtime and owns the physical backup/recovery contract; no bundled fallback or second local authority is used. Human-authored `OVERRIDE.md` content is validated but never mechanically rewritten. Fresh migration conflicts preserve source artifacts and stop with an actionable error.
 
@@ -223,7 +243,7 @@ for filesystem work and are not used as the artifact representation.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `50f3854a8138f70718e8e21cb88cb7a552795a240384d5b71778ec7acff246be`
+- Repository signal fingerprint: `f0689ac8b4eef6630896d76d69963008424db897d6a9cd977bc2cdb474389364`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
