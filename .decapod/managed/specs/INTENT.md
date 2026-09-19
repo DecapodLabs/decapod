@@ -291,11 +291,23 @@ explicit generated marker pairs confer regeneration ownership. A transformation
 that would lose authored content fails visibly before writing any refreshed spec
 or manifest.
 
+## Buildkite-only CI authority after release merge
+
+The native Buildkite pipeline is the intended long-term CI and release
+authority. Post-merge checks remain meaningful: the full `gatling` suite catches
+regressions, and Decapod validation proves that release-bound projections match
+the evaluator that generated the branch. The first governed PR after a release
+refreshes those projections. The old adapter failures are migration evidence;
+they are resolved by uploading `.buildkite/pipeline.yml`, not by disabling the
+underlying setup, documentation, release, or test gates. GitHub Actions files
+remain unchanged until Buildkite is configured as the required execution path
+and the Actions workflows can be retired deliberately.
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d0bdb17635f1a0358b17a7f76bb72ab4544f80b5b0c9a201319a1f6539e64710`
+- Repository signal fingerprint: `d5ee39dc429b69a301f187c0bb632934a956d6656482a8742f2d18ddb5e90a02`
 - Significant implementation surfaces: `.buildkite/` (1 files), `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

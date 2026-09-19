@@ -221,6 +221,28 @@ for filesystem work and are not used as the artifact representation.
 - [ ] Dependency vulnerability scan reviewed.
 - [ ] No unresolved critical/high security findings.
 
+### Post-release merge verification and Buildkite authority
+
+The `v0.102.2` release merge (`5b3bcb625c77cb8af30d8d97799182ff3b2b5bf7`)
+separated repository defects from migration evidence. The full master test
+gate is intentional: the 49-case `//:gatling` harness repeatedly reached
+Bazel's default 300-second timeout on clean runners while its individual cases
+continued to complete. Native Buildkite keeps that gate and sets the bounded
+test timeout to 600 seconds. The Decapod validation gate is also intentional:
+release-only merges advance Cargo metadata without rewriting the projections
+that the prior Decapod release generated, so the first governed PR after a
+release must refresh those projections.
+
+Buildkite #64's failures in `CI / setup`, `CI / deps-lint`, `Deploy Docs /
+build`, and `Release / release-publish` belong to the legacy GitHub-Actions
+adapter boundary, not to a missing reason for those checks to run. The native
+`.buildkite/pipeline.yml` replaces those action-specific handoffs with direct
+commands and preserves their event and changed-path gates. After the external
+pipeline uploads that file with a current diff base, Buildkite is the sole
+execution authority; GitHub Actions YAML is not changed to compensate for the
+adapter and can be retired after the Buildkite required checks and secrets are
+enabled.
+
 <!-- decapod:capability-overlay:background-processing:start -->
 
 ## Background Processing Operations Overlay
@@ -262,7 +284,7 @@ for filesystem work and are not used as the artifact representation.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d0bdb17635f1a0358b17a7f76bb72ab4544f80b5b0c9a201319a1f6539e64710`
+- Repository signal fingerprint: `d5ee39dc429b69a301f187c0bb632934a956d6656482a8742f2d18ddb5e90a02`
 - Significant implementation surfaces: `.buildkite/` (1 files), `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

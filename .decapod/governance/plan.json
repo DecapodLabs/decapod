@@ -1,18 +1,15 @@
 {
   "schema_version": "1.0.0",
-  "title": "Migrate CI and release automation to native Buildkite pipeline-as-code",
-  "intent": "Add a canonical .buildkite/pipeline.yml that explicitly models pull-request, master-push, release-PR, and tag-release behavior, preserves file-sensitive gates, and resolves the native Buildkite failures observed on merge commit bf98ec2e8320400964a1e84af0cc50210ac2fa6c without broad GitHub Actions workflow redesign.",
+  "title": "Repair post-release CI and Buildkite activation",
+  "intent": "Diagnose the failed checks on master merge 5b3bcb625c77cb8af30d8d97799182ff3b2b5bf7, refresh repository-owned Decapod release-bound artifacts for v0.102.2, preserve intentional full post-merge tests, and document the external Buildkite adapter cutover required for native path-sensitive execution.",
   "state": "APPROVED",
   "todo_ids": [
-    "feat_01m2w66zrndcjyxz"
+    "bugs_01m2xry8q2fkjevz"
   ],
   "proof_hooks": [
-    "buildkite pipeline YAML parse and structural validation",
-    "cargo fmt --all -- --check",
-    "cargo test --locked --lib",
-    "cargo clippy --locked --all-targets --all-features -- -D warnings",
-    "decapod validate --format json",
-    "GitHub and Buildkite checks for the published PR"
+    "release-bound artifacts validate against Decapod 0.102.2",
+    "native Buildkite YAML structural and changed-path gate validation",
+    "published PR checks and master-merge failure classification"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -26,5 +23,5 @@
     "file_touch_budget": 30
   },
   "phases": [],
-  "updated_at": "1789800128Z"
+  "updated_at": "1789853214Z"
 }

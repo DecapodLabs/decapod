@@ -311,6 +311,17 @@ document before writing any document. Scaffold manifests record the actual
 seeded template hash, and a changed configuration hash cannot establish that an
 authored document is an untouched template.
 
+## CI execution authority
+
+CI has an explicit migration boundary: `.buildkite/pipeline.yml` models the
+event, dependency, and changed-path graph that the native Buildkite agent
+executes, while `.github/workflows/` is retained as an unchanged legacy
+surface until the external required-check cutover is complete. The native
+pipeline owns the full master test, validation, documentation, release, and
+tagged-artifact paths; it does not rely on GitHub Actions setup or artifact
+handoffs. This keeps the eventual Buildkite-only topology faithful to the
+existing gate intent instead of making the gates disappear during migration.
+
 <!-- decapod:capability-overlay:persistent-state:start -->
 
 ## Persistent State Architecture Overlay
@@ -335,7 +346,7 @@ authored document is an untouched template.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d0bdb17635f1a0358b17a7f76bb72ab4544f80b5b0c9a201319a1f6539e64710`
+- Repository signal fingerprint: `d5ee39dc429b69a301f187c0bb632934a956d6656482a8742f2d18ddb5e90a02`
 - Significant implementation surfaces: `.buildkite/` (1 files), `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

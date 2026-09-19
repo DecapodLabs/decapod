@@ -249,11 +249,21 @@ the refresh before spec or manifest writes. Ordinary named sections are authored
 only paired attestation, capability-declaration, and capability-overlay comment
 blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
+## Native Buildkite interface
+
+The repository exposes `.buildkite/pipeline.yml` as the CI interface for the
+Buildkite-only target topology. Consumers must upload that file through a
+Buildkite agent with a current pull-request diff base so its `if`, `depends_on`,
+and `if_changed` gates are evaluated by Buildkite. The interface includes the
+full master test and validation gates; it does not require GitHub Actions
+artifacts or action-token handoffs. GitHub Actions remains a legacy compatibility
+surface only until external required checks are switched to this interface.
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d0bdb17635f1a0358b17a7f76bb72ab4544f80b5b0c9a201319a1f6539e64710`
+- Repository signal fingerprint: `d5ee39dc429b69a301f187c0bb632934a956d6656482a8742f2d18ddb5e90a02`
 - Significant implementation surfaces: `.buildkite/` (1 files), `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

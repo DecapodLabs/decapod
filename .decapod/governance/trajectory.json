@@ -1,47 +1,69 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "buildkite-native-1340-20260919-publish",
-  "intent_id": "intent:buildkite-native-1340-20260919-publish",
-  "task_id": "feat_01m2w66zrndcjyxz",
-  "original_intent": "Complete the remaining Buildkite migration and fix Buildkite failures reported on merge commit bf98ec2e8320400964a1e84af0cc50210ac2fa6c.",
-  "derived_intent": "Publish a native .buildkite/pipeline.yml with explicit Buildkite event, dependency, and changed-path gates; replace unsupported GitHub Actions adapter semantics with direct commands; document agent and secret prerequisites; preserve existing GitHub workflow files unless activation requires external configuration.",
+  "run_id": "master-ci-5b3bcb-20260919-buildkite-fix",
+  "intent_id": "intent:master-ci-5b3bcb-20260919-buildkite-fix",
+  "task_id": "bugs_01m2xry8q2fkjevz",
+  "original_intent": "Look at the recent master merge, determine whether failed actions should run or need fixes, and publish a PR; ultimately make the repository execute purely through native Buildkite.",
+  "derived_intent": "Keep intentional post-merge validation and full tests in native Buildkite, fix the recurring gatling timeout with a bounded 600-second test allowance, refresh Decapod 0.102.2 release-bound projections, and document the external legacy-adapter cutover without changing GitHub Actions workflows.",
   "current_phase": "validation",
   "next_transitions": [
     "publish"
   ],
   "active_boundaries": [
-    "Do not modify protected master; do not change GitHub Actions workflows unless required; do not commit secrets; external Buildkite pipeline activation remains an explicit configuration dependency."
+    "Do not modify protected master; do not change GitHub Actions workflows unless repository evidence proves it necessary; native Buildkite is the target execution authority; no secrets."
   ],
   "repo_scope": [
-    "Native Buildkite pipeline definition, Buildkite runbook, operational living spec, and required governance artifacts."
+    "Native Buildkite pipeline timeout, release-bound governance projections, operational and living-spec documentation, and proof artifacts."
   ],
   "inspected_files": [
     ".buildkite/README.md",
     ".buildkite/pipeline.yml",
     ".decapod/managed/specs/OPERATIONS.md",
     ".github/workflows/ci.yml",
+    ".github/workflows/decapod-validate.yml",
     ".github/workflows/docs.yml",
-    ".github/workflows/release.yml"
+    ".github/workflows/release.yml",
+    "tests/gatling.rs"
   ],
   "modified_files": [
+    ".buildkite/README.md",
+    ".buildkite/pipeline.yml",
+    ".decapod/governance/claims.json",
+    ".decapod/governance/plan.json",
     ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json"
+    ".decapod/governance/validation.json",
+    ".decapod/managed/Dockerfile.decapod",
+    ".decapod/managed/specs/.manifest.json",
+    ".decapod/managed/specs/ARCHITECTURE.md",
+    ".decapod/managed/specs/INTENT.md",
+    ".decapod/managed/specs/INTERFACES.md",
+    ".decapod/managed/specs/OPERATIONS.md",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "CODEX.md",
+    "GEMINI.md"
   ],
   "declared_commands": [
-    "decapod validate"
+    "CLIPPY_CONF_DIR=.config cargo clippy --locked --all-targets --all-features -- -D warnings",
+    "cargo fmt --all -- --check",
+    "cargo test --locked --lib",
+    "cargo test --locked --test gatling -- --test-threads=4",
+    "decapod validate",
+    "decapod validate --format json",
+    "ruby native Buildkite YAML parse"
   ],
   "tool_calls": [],
   "checks": [
+    {
+      "name": "bazelisk_native",
+      "status": "unavailable"
+    },
     {
       "name": "cargo_clippy",
       "status": "passed"
     },
     {
       "name": "cargo_fmt",
-      "status": "passed"
-    },
-    {
-      "name": "cargo_machete",
       "status": "passed"
     },
     {
@@ -53,53 +75,56 @@
       "status": "passed"
     },
     {
-      "name": "git_diff_check",
+      "name": "decapod_validate",
       "status": "passed"
     },
     {
-      "name": "mdbook_build",
+      "name": "external_buildkite_activation",
+      "status": "unavailable"
+    },
+    {
+      "name": "gatling_underlying_harness",
       "status": "passed"
     },
     {
-      "name": "native_yaml",
+      "name": "native_buildkite_yaml",
       "status": "passed"
     }
   ],
   "evidence": [
-    "Bazelisk was unavailable in the local container; the native pipeline documents it as an agent-image prerequisite",
-    "Buildkite #56 check-runs for bf98ec2e reported failures in setup, deps-lint, docs build, and release publish without command annotations",
-    "cargo deny was unavailable in the local container because the cargo subcommand was not installed; the native pipeline installs it when absent",
-    "cargo test --locked --lib reported 341 passed and 0 failed",
-    "validation epoch ve_0451c9e70cb9344a completed with zero failures"
+    "Buildkite #64 setup, deps-lint, docs-build, and release-publish failures are legacy adapter boundaries replaced by direct native pipeline steps; external upload activation remains outside the PR.",
+    "Decapod 0.102.2 validation passed with zero failures after refreshing release-bound projections.",
+    "GitHub Actions YAML was left unchanged; it is a legacy bridge while Buildkite becomes the sole execution authority.",
+    "The 49-case gatling harness passed 48 active tests and ignored one in 76.08 seconds under cargo; the recurring GitHub/Bazel failure was the 300-second Bazel timeout, not an individual test assertion.",
+    "The native Buildkite test-master step now preserves the full gate with --test_timeout=600.",
+    "validation epoch ve_bb172b71962ebc81 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [
-    "Buildkite agent upload must use .buildkite/pipeline.yml with BUILDKITE_FETCH_DIFF_BASE=true",
-    "Buildkite agents must provide Bazelisk, Rust, Git, Python3, curl, Docker Buildx, and agent artifact/runtime commands",
-    "Buildkite secrets, GitHub Pages gh-pages configuration, and registry access remain external prerequisites"
+    "Buildkite external pipeline configuration, agent image, secrets, GitHub Pages branch, and required-check settings are outside repository PR scope."
   ],
-  "proof_status": "passed",
+  "proof_status": "partial",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "supported"
+    "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:db32a29cc198959752474c8e62a1d2a5cfe9ab40166e512ec6094f1911394132",
+  "artifact_hash": "sha256:9d90e498143abeea87d36e36af3057c7913f159c7ae2bbe6933084e57cab5ba7",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:buildkite-native-1340-20260919-publish": {
-        "id": "intent:buildkite-native-1340-20260919-publish",
-        "raw_intent": "Complete the remaining Buildkite migration and fix Buildkite failures reported on merge commit bf98ec2e8320400964a1e84af0cc50210ac2fa6c.",
-        "refined_intent": "Publish a native .buildkite/pipeline.yml with explicit Buildkite event, dependency, and changed-path gates; replace unsupported GitHub Actions adapter semantics with direct commands; document agent and secret prerequisites; preserve existing GitHub workflow files unless activation requires external configuration.",
+      "intent:master-ci-5b3bcb-20260919-buildkite-fix": {
+        "id": "intent:master-ci-5b3bcb-20260919-buildkite-fix",
+        "raw_intent": "Look at the recent master merge, determine whether failed actions should run or need fixes, and publish a PR; ultimately make the repository execute purely through native Buildkite.",
+        "refined_intent": "Keep intentional post-merge validation and full tests in native Buildkite, fix the recurring gatling timeout with a bounded 600-second test allowance, refresh Decapod 0.102.2 release-bound projections, and document the external legacy-adapter cutover without changing GitHub Actions workflows.",
         "acceptance_criteria": [],
         "constraints": [
-          "Native Buildkite pipeline definition, Buildkite runbook, operational living spec, and required governance artifacts."
+          "Native Buildkite pipeline timeout, release-bound governance projections, operational and living-spec documentation, and proof artifacts."
         ],
         "assumptions": [],
         "boundaries": [
-          "Do not modify protected master; do not change GitHub Actions workflows unless required; do not commit secrets; external Buildkite pipeline activation remains an explicit configuration dependency."
+          "Do not modify protected master; do not change GitHub Actions workflows unless repository evidence proves it necessary; native Buildkite is the target execution authority; no secrets."
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -112,67 +137,86 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:buildkite-native-1340-20260919-publish",
+        "intent_id": "intent:master-ci-5b3bcb-20260919-buildkite-fix",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:buildkite-native-1340-20260919-publish",
+        "intent_id": "intent:master-ci-5b3bcb-20260919-buildkite-fix",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:buildkite-native-1340-20260919-publish",
+        "intent_id": "intent:master-ci-5b3bcb-20260919-buildkite-fix",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:buildkite-native-1340-20260919-publish"
+        "detail": "trajectory:master-ci-5b3bcb-20260919-buildkite-fix"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:buildkite-native-1340-20260919-publish",
+        "intent_id": "intent:master-ci-5b3bcb-20260919-buildkite-fix",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:buildkite-native-1340-20260919-publish"
+        "detail": "trajectory:master-ci-5b3bcb-20260919-buildkite-fix"
       }
     ],
     "trajectories": {
-      "buildkite-native-1340-20260919-publish": {
-        "id": "buildkite-native-1340-20260919-publish",
-        "intent_id": "intent:buildkite-native-1340-20260919-publish",
+      "master-ci-5b3bcb-20260919-buildkite-fix": {
+        "id": "master-ci-5b3bcb-20260919-buildkite-fix",
+        "intent_id": "intent:master-ci-5b3bcb-20260919-buildkite-fix",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "trajectory.record",
+            "action": "validation",
+            "command": "cargo fmt --all -- --check",
             "scope": [
-              "Native Buildkite pipeline definition, Buildkite runbook, operational living spec, and required governance artifacts."
+              "Native Buildkite pipeline timeout, release-bound governance projections, operational and living-spec documentation, and proof artifacts."
             ],
             "observations": [
               ".buildkite/pipeline.yml",
               ".buildkite/README.md",
-              ".decapod/managed/specs/OPERATIONS.md",
               ".github/workflows/ci.yml",
+              ".github/workflows/decapod-validate.yml",
               ".github/workflows/docs.yml",
               ".github/workflows/release.yml",
-              "Buildkite #56 check-runs for bf98ec2e reported failures in setup, deps-lint, docs build, and release publish without command annotations",
-              "cargo test --locked --lib reported 341 passed and 0 failed",
-              "cargo deny was unavailable in the local container because the cargo subcommand was not installed; the native pipeline installs it when absent",
-              "Bazelisk was unavailable in the local container; the native pipeline documents it as an agent-image prerequisite"
+              ".decapod/managed/specs/OPERATIONS.md",
+              "tests/gatling.rs",
+              ".buildkite/pipeline.yml",
+              ".buildkite/README.md",
+              ".decapod/governance/claims.json",
+              ".decapod/governance/plan.json",
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              ".decapod/managed/Dockerfile.decapod",
+              ".decapod/managed/specs/.manifest.json",
+              ".decapod/managed/specs/ARCHITECTURE.md",
+              ".decapod/managed/specs/INTENT.md",
+              ".decapod/managed/specs/INTERFACES.md",
+              ".decapod/managed/specs/OPERATIONS.md",
+              "AGENTS.md",
+              "CLAUDE.md",
+              "CODEX.md",
+              "GEMINI.md",
+              "The 49-case gatling harness passed 48 active tests and ignored one in 76.08 seconds under cargo; the recurring GitHub/Bazel failure was the 300-second Bazel timeout, not an individual test assertion.",
+              "The native Buildkite test-master step now preserves the full gate with --test_timeout=600.",
+              "Decapod 0.102.2 validation passed with zero failures after refreshing release-bound projections.",
+              "GitHub Actions YAML was left unchanged; it is a legacy bridge while Buildkite becomes the sole execution authority.",
+              "Buildkite #64 setup, deps-lint, docs-build, and release-publish failures are legacy adapter boundaries replaced by direct native pipeline steps; external upload activation remains outside the PR."
             ],
             "proof_refs": [
-              "native_yaml",
-              "git_diff_check",
+              "cargo_fmt",
               "cargo_test_lib",
               "cargo_clippy",
-              "cargo_fmt",
-              "mdbook_build",
-              "cargo_machete"
+              "gatling_underlying_harness",
+              "native_buildkite_yaml",
+              "decapod_validate",
+              "bazelisk_native",
+              "external_buildkite_activation"
             ],
             "validation_findings": [
-              "Buildkite agent upload must use .buildkite/pipeline.yml with BUILDKITE_FETCH_DIFF_BASE=true",
-              "Buildkite agents must provide Bazelisk, Rust, Git, Python3, curl, Docker Buildx, and agent artifact/runtime commands",
-              "Buildkite secrets, GitHub Pages gh-pages configuration, and registry access remain external prerequisites"
+              "Buildkite external pipeline configuration, agent image, secrets, GitHub Pages branch, and required-check settings are outside repository PR scope."
             ],
             "custody_event_id": "event:4"
           },
@@ -181,12 +225,12 @@
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              "Native Buildkite pipeline definition, Buildkite runbook, operational living spec, and required governance artifacts."
+              "Native Buildkite pipeline timeout, release-bound governance projections, operational and living-spec documentation, and proof artifacts."
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_0451c9e70cb9344a completed with zero failures"
+              "validation epoch ve_bb172b71962ebc81 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
