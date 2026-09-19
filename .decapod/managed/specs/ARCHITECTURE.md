@@ -16,10 +16,12 @@ daemon do not consume the validation proof budget.
 
 `core::assurance::AssuranceEngine` reconstructs obligations and workspace state
 before it invokes the Decapod-owned `core::decision_provider::DecisionProvider`
-seam. The seam returns either a typed `DecisionObservation` or an explicit
-`NoObservation` result. The Jev adapter owns its HTTP endpoint, request and
-response schemas, credential, and transport; the rest of Decapod sees only the
-provider-neutral result.
+seam. The provider receives the current RPC trajectory plus explicitly labeled
+snapshots of the existing plan, claims, trajectory, and validation artifacts;
+missing and invalid artifacts remain distinct. The seam returns either a typed
+`DecisionObservation` or an explicit `NoObservation` result. The Jev adapter owns
+its HTTP endpoint, request and response schemas, credential, and transport; the
+rest of Decapod sees only the provider-neutral result.
 
 The observation is attached to the assurance advisory. It is intentionally
 outside `resolve_interlock`, completion proof evaluation, boundary evaluation,
@@ -349,7 +351,7 @@ authored document is an untouched template.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f2c30fe3aa559b2dc55f42ef45dc951e5f42b2f54d98f197979a031b3b58582b`
+- Repository signal fingerprint: `7e9f8794b3a0fd0c4040df3a9f049b371d4fe114c2f68c01879e0c5adf98d4a7`
 - Significant implementation surfaces: `.buildkite/` (1 files), `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (108 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

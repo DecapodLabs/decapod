@@ -1,15 +1,17 @@
 use crate::core::decision_provider::{
-    DecisionContext, DecisionObservationResult, GovernanceContext, GovernanceObligation,
-    TrajectoryContext, WorkspaceContext,
+    DecisionContext, DecisionObservationResult, DurableGovernanceContext, GovernanceArtifactState,
+    GovernanceContext, GovernanceObligation, TrajectoryContext, WorkspaceContext,
 };
 use crate::core::error::DecapodError;
 use crate::core::events;
 use crate::core::mentor::{MentorEngine, Obligation, ObligationKind, ObligationsContext};
 use crate::core::rpc::{Advisory, Attestation, Interlock, LoopSignal, ReconciliationPointer};
 use crate::core::workspace;
+use crate::core::{research_claims, trajectory, validate};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
+use std::fs;
 use std::path::{Path, PathBuf};
 
 pub const INTERLOCK_WORKSPACE_REQUIRED: &str = "workspace_required";
@@ -223,6 +225,7 @@ impl AssuranceEngine {
                     can_work: status.can_work,
                 },
             },
+            durable_governance: Self::durable_governance_context(&self.repo_root),
         };
 
         let provider_kind = match crate::cli::DecapodProjectConfig::load(&self.repo_root) {
@@ -247,6 +250,71 @@ impl AssuranceEngine {
             title: obligation.title.clone(),
             required,
         }
+    }
+
+    fn durable_governance_context(repo_root: &Path) -> DurableGovernanceContext {
+        DurableGovernanceContext {
+            plan: Self::validated_artifact_state(
+                crate::plan_governance::load_plan(repo_root),
+                repo_root,
+                crate::plan_governance::PLAN_PATH,
+            ),
+            claims: match research_claims::load_and_validate(repo_root) {
+                Ok(Some(_)) => Self::read_artifact_state(repo_root, research_claims::CLAIMS_PATH),
+                Ok(None) => GovernanceArtifactState::Missing,
+                Err(_) => GovernanceArtifactState::Invalid,
+            },
+            trajectory: Self::validated_artifact_state(
+                trajectory::load_trajectory_cookie(repo_root),
+                repo_root,
+                trajectory::TRAJECTORY_PATH,
+            ),
+            validation: Self::validation_artifact_state(repo_root),
+        }
+    }
+
+    fn validated_artifact_state<T: Serialize>(
+        loaded: Result<Option<T>, DecapodError>,
+        repo_root: &Path,
+        path: &str,
+    ) -> GovernanceArtifactState {
+        match loaded {
+            Ok(Some(_)) => Self::read_artifact_state(repo_root, path),
+            Ok(None) => GovernanceArtifactState::Missing,
+            Err(_) => GovernanceArtifactState::Invalid,
+        }
+    }
+
+    fn validation_artifact_state(repo_root: &Path) -> GovernanceArtifactState {
+        let path = repo_root.join(validate::VALIDATION_RECEIPT_PATH);
+        if !path.is_file() {
+            return GovernanceArtifactState::Missing;
+        }
+        let raw = match fs::read_to_string(&path) {
+            Ok(raw) => raw,
+            Err(_) => return GovernanceArtifactState::Invalid,
+        };
+        let receipt = match serde_json::from_str::<validate::ValidationReceipt>(&raw) {
+            Ok(receipt) if receipt.validate_integrity().is_ok() => receipt,
+            _ => return GovernanceArtifactState::Invalid,
+        };
+        serde_json::to_value(receipt)
+            .map(GovernanceArtifactState::Present)
+            .unwrap_or(GovernanceArtifactState::Invalid)
+    }
+
+    fn read_artifact_state(repo_root: &Path, relative_path: &str) -> GovernanceArtifactState {
+        let path = repo_root.join(relative_path);
+        if !path.is_file() {
+            return GovernanceArtifactState::Missing;
+        }
+        let raw = match fs::read_to_string(path) {
+            Ok(raw) => raw,
+            Err(_) => return GovernanceArtifactState::Invalid,
+        };
+        serde_json::from_str(&raw)
+            .map(GovernanceArtifactState::Present)
+            .unwrap_or(GovernanceArtifactState::Invalid)
     }
 
     fn resolve_interlock(

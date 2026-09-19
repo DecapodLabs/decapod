@@ -21,12 +21,16 @@ must not introduce additional output.
 
 ## Decision-Provider Proof
 
-The provider seam is covered by focused tests for disabled operation, a typed
-Jev observation, unavailable transport, malformed/invalid responses, and
-missing credentials. The assurance harness verifies that the default local
-path surfaces `no_observation` without changing the existing policy interlock.
-The proof does not claim that a live Jev service is available; live credentials
-and network behavior remain external integration evidence.
+The provider seam is covered by focused tests for disabled operation, typed
+boundary probabilities, labeled governance-state serialization, unavailable
+transport, non-success responses, malformed/invalid responses, and missing
+credentials. The assurance harness verifies that the default local path
+surfaces `no_observation` without changing the existing policy interlock. The
+ignored `decision_provider_live` corpus covers clearly aligned and violating
+trajectories, partial/missing proof, wrong-target proof, contradictions,
+ambiguity, boundary violations, adversarial state text, and degraded state. It
+emits comparison-ready JSON records only when explicitly enabled with a Jev key;
+it does not define a production threshold or claim live evidence by default.
 
 ## Governance Input and Proof Currency (#1325, #1327)
 The specs manifest hashes both project authority inputs: `.decapod/config.toml`
@@ -337,7 +341,7 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f2c30fe3aa559b2dc55f42ef45dc951e5f42b2f54d98f197979a031b3b58582b`
+- Repository signal fingerprint: `7e9f8794b3a0fd0c4040df3a9f049b371d4fe114c2f68c01879e0c5adf98d4a7`
 - Significant implementation surfaces: `.buildkite/` (1 files), `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (108 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

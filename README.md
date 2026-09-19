@@ -185,6 +185,18 @@ unconfigured, times out, or returns an invalid response, Decapod records
 Decapod remains the authority for boundaries, interlocks, policy, and
 completion.
 
+For developer-only semantic evaluation, the ignored corpus can be run with an
+explicit opt-in and credential:
+
+```bash
+DECAPOD_RUN_JEV_EVAL=1 TYPESAFE_API_KEY=... \
+  cargo test --test decision_provider_live -- --ignored --nocapture
+```
+
+It emits one machine-readable JSON record per case with the human expectation,
+observation status, probability, latency, and TypeSafe token usage when
+available. It does not assert a threshold or affect ordinary tests or CI.
+
 ---
 
 ## Capabilities

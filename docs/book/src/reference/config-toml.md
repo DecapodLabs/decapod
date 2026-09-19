@@ -49,6 +49,11 @@ file. Jev uses TypeSafe's documented
 service, timeout, or malformed response yields `no_observation`; it never
 clears an interlock or satisfies a proof gate.
 
+The live semantic corpus is separate from normal validation and must be enabled
+explicitly with `DECAPOD_RUN_JEV_EVAL=1`; it emits machine-readable observations
+for comparison and does not interpret them as policy. See the repository README
+for the exact command and corpus scope.
+
 ## Schema Versioning
 
 Decapod uses a `schema_version` key at the root to ensure forward and backward compatibility as the governance kernel evolves.

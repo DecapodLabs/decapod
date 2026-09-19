@@ -1,68 +1,121 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "jev-decision-provider-ci-fix-01M2Y0CICIFIX",
-  "intent_id": "intent:jev-decision-provider-ci-fix-01M2Y0CICIFIX",
+  "run_id": "jev-decision-provider-evaluation-01M2Z9EVAL",
+  "intent_id": "intent:jev-decision-provider-evaluation-01M2Z9EVAL",
   "task_id": "cicd_01m2xrx9fg5mgdx8",
-  "original_intent": "Implement the smallest optional Jev-backed probabilistic decision-provider seam and position Decapod using Jev in README/docs; repair the affected CI workflow check.",
-  "derived_intent": "Keep Decapod authoritative, preserve none/default behavior and fail closed for Jev, and make the docs-sync workflow compatible with the repository Buildkite/GitHub validation boundary without changing its explicit App-token fetch or push.",
+  "original_intent": "Evaluate whether the optional Jev trajectory_satisfies_intent observation is useful without granting it governance authority.",
+  "derived_intent": "Preserve durable governance distinctions in the DecisionProvider input, add deterministic contract coverage and an opt-in live corpus, document the evidence boundary, and validate the default path.",
   "current_phase": "validation",
   "next_transitions": [
     "publish"
   ],
   "active_boundaries": [
-    "Only the claimed isolated worktree; external intelligence may not mutate intent, claims, trajectory, validation, boundaries, proof requirements, policy, or completion; no Propodus or Dactyl changes."
+    "Do not add thresholds, approval/completion semantics, retries, provider routing, cloud persistence, Propodus/Dactyl integration, or live CI dependencies; Jev may only return typed advisory data."
   ],
   "repo_scope": [
-    "Decision-provider implementation, Jev adapter/tests, README/docs, living specs, governed proof artifacts, and the minimal docs-sync workflow compatibility fix."
+    "src/decapod/core/decision_provider.rs, src/decapod/core/assurance.rs, tests/unit/core/decision_provider_tests.rs, tests/decision_provider_live.rs, README.md, .decapod/managed/specs/*.md"
   ],
   "inspected_files": [
-    ".github/workflows/docs_sync.yml"
+    ".decapod/managed/specs/ARCHITECTURE.md",
+    ".decapod/managed/specs/INTERFACES.md",
+    ".decapod/managed/specs/VALIDATION.md",
+    "README.md",
+    "src/decapod/core/assurance.rs",
+    "src/decapod/core/decision_provider.rs",
+    "src/decapod/core/research_claims.rs",
+    "src/decapod/core/rpc.rs",
+    "src/decapod/core/trajectory.rs",
+    "src/decapod/core/validate.rs"
   ],
   "modified_files": [
     ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json"
+    ".decapod/governance/validation.json",
+    "README.md",
+    "src/decapod/core/assurance.rs",
+    "src/decapod/core/decision_provider.rs",
+    "tests/decision_provider_live.rs",
+    "tests/unit/core/decision_provider_tests.rs"
   ],
   "declared_commands": [
-    "decapod validate"
+    "cargo clippy --locked --all-targets --all-features -- -D warnings",
+    "cargo fmt --all -- --check",
+    "cargo test --locked --all-targets",
+    "cargo test --locked --lib",
+    "cargo test --locked --test assurance_harness",
+    "cargo test --locked --test cli_contract_enforcement test_validate_command_works -- --exact --nocapture",
+    "decapod validate",
+    "decapod validate --refresh-specs",
+    "mdbook build docs/book"
   ],
   "tool_calls": [],
   "checks": [
+    {
+      "name": "assurance_harness",
+      "status": "passed"
+    },
+    {
+      "name": "cargo_all_targets",
+      "status": "partial"
+    },
+    {
+      "name": "cargo_fmt",
+      "status": "passed"
+    },
+    {
+      "name": "cargo_lib",
+      "status": "passed"
+    },
+    {
+      "name": "cli_contract_validate_retry",
+      "status": "passed"
+    },
+    {
+      "name": "clippy_warnings_denied",
+      "status": "passed"
+    },
     {
       "name": "decapod validate",
       "status": "passed"
     },
     {
-      "name": "decapod-validate",
+      "name": "decapod_validate",
+      "status": "passed"
+    },
+    {
+      "name": "docs_build",
       "status": "passed"
     }
   ],
   "evidence": [
-    "validation epoch ve_388ec508d1d92a85 completed with zero failures"
+    "Deterministic corpus covers disabled, typed success, boundary probabilities, malformed/missing/wrong-type responses, non-success HTTP, timeout, connection failure, missing credentials, labeled governance state, and credential exclusion from request state.",
+    "Live corpus is prepared but not run because TYPESAFE_API_KEY is absent; no semantic live result is claimed.",
+    "The broad all-targets run reached test_validate_command_works but encountered shared Decapod storage contention from another active validation process; the isolated failing test was rerun and passed in 11.77s. This is not claimed as a clean all-targets pass.",
+    "validation epoch ve_6491c02e09bc146b completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
-  "proof_status": "passed",
+  "proof_status": "partial",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "supported"
+    "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:9f2e1672b26a9dd684b47fd2d7f7c44bed93bd30a23fb39c43a75466bb6253c2",
+  "artifact_hash": "sha256:801dca2a7d5a3ae071f2b6e5264620ba7daa22e81a70356814597bb1c1594653",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:jev-decision-provider-ci-fix-01M2Y0CICIFIX": {
-        "id": "intent:jev-decision-provider-ci-fix-01M2Y0CICIFIX",
-        "raw_intent": "Implement the smallest optional Jev-backed probabilistic decision-provider seam and position Decapod using Jev in README/docs; repair the affected CI workflow check.",
-        "refined_intent": "Keep Decapod authoritative, preserve none/default behavior and fail closed for Jev, and make the docs-sync workflow compatible with the repository Buildkite/GitHub validation boundary without changing its explicit App-token fetch or push.",
+      "intent:jev-decision-provider-evaluation-01M2Z9EVAL": {
+        "id": "intent:jev-decision-provider-evaluation-01M2Z9EVAL",
+        "raw_intent": "Evaluate whether the optional Jev trajectory_satisfies_intent observation is useful without granting it governance authority.",
+        "refined_intent": "Preserve durable governance distinctions in the DecisionProvider input, add deterministic contract coverage and an opt-in live corpus, document the evidence boundary, and validate the default path.",
         "acceptance_criteria": [],
         "constraints": [
-          "Decision-provider implementation, Jev adapter/tests, README/docs, living specs, governed proof artifacts, and the minimal docs-sync workflow compatibility fix."
+          "src/decapod/core/decision_provider.rs, src/decapod/core/assurance.rs, tests/unit/core/decision_provider_tests.rs, tests/decision_provider_live.rs, README.md, .decapod/managed/specs/*.md"
         ],
         "assumptions": [],
         "boundaries": [
-          "Only the claimed isolated worktree; external intelligence may not mutate intent, claims, trajectory, validation, boundaries, proof requirements, policy, or completion; no Propodus or Dactyl changes."
+          "Do not add thresholds, approval/completion semantics, retries, provider routing, cloud persistence, Propodus/Dactyl integration, or live CI dependencies; Jev may only return typed advisory data."
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -75,34 +128,41 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:jev-decision-provider-ci-fix-01M2Y0CICIFIX",
+        "intent_id": "intent:jev-decision-provider-evaluation-01M2Z9EVAL",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:jev-decision-provider-ci-fix-01M2Y0CICIFIX",
+        "intent_id": "intent:jev-decision-provider-evaluation-01M2Z9EVAL",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:jev-decision-provider-ci-fix-01M2Y0CICIFIX",
+        "intent_id": "intent:jev-decision-provider-evaluation-01M2Z9EVAL",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:jev-decision-provider-ci-fix-01M2Y0CICIFIX"
+        "detail": "trajectory:jev-decision-provider-evaluation-01M2Z9EVAL"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:jev-decision-provider-ci-fix-01M2Y0CICIFIX",
+        "intent_id": "intent:jev-decision-provider-evaluation-01M2Z9EVAL",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:jev-decision-provider-ci-fix-01M2Y0CICIFIX"
+        "detail": "trajectory:jev-decision-provider-evaluation-01M2Z9EVAL"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
+        "intent_id": "intent:jev-decision-provider-evaluation-01M2Z9EVAL",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:jev-decision-provider-evaluation-01M2Z9EVAL"
       }
     ],
     "trajectories": {
-      "jev-decision-provider-ci-fix-01M2Y0CICIFIX": {
-        "id": "jev-decision-provider-ci-fix-01M2Y0CICIFIX",
-        "intent_id": "intent:jev-decision-provider-ci-fix-01M2Y0CICIFIX",
+      "jev-decision-provider-evaluation-01M2Z9EVAL": {
+        "id": "jev-decision-provider-evaluation-01M2Z9EVAL",
+        "intent_id": "intent:jev-decision-provider-evaluation-01M2Z9EVAL",
         "evidence_only": true,
         "steps": [
           {
@@ -110,12 +170,12 @@
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              "Decision-provider implementation, Jev adapter/tests, README/docs, living specs, governed proof artifacts, and the minimal docs-sync workflow compatibility fix."
+              "src/decapod/core/decision_provider.rs, src/decapod/core/assurance.rs, tests/unit/core/decision_provider_tests.rs, tests/decision_provider_live.rs, README.md, .decapod/managed/specs/*.md"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_388ec508d1d92a85 completed with zero failures"
+              "validation epoch ve_6491c02e09bc146b completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
@@ -126,23 +186,62 @@
           {
             "sequence": 5,
             "action": "trajectory.record",
+            "command": "cargo fmt --all -- --check",
             "scope": [
-              "Decision-provider implementation, Jev adapter/tests, README/docs, living specs, governed proof artifacts, and the minimal docs-sync workflow compatibility fix."
+              "src/decapod/core/decision_provider.rs, src/decapod/core/assurance.rs, tests/unit/core/decision_provider_tests.rs, tests/decision_provider_live.rs, README.md, .decapod/managed/specs/*.md"
             ],
             "observations": [
-              ".github/workflows/docs_sync.yml"
+              "src/decapod/core/decision_provider.rs",
+              "src/decapod/core/assurance.rs",
+              "src/decapod/core/rpc.rs",
+              "src/decapod/core/trajectory.rs",
+              "src/decapod/core/research_claims.rs",
+              "src/decapod/core/validate.rs",
+              "README.md",
+              ".decapod/managed/specs/ARCHITECTURE.md",
+              ".decapod/managed/specs/INTERFACES.md",
+              ".decapod/managed/specs/VALIDATION.md",
+              "src/decapod/core/decision_provider.rs",
+              "src/decapod/core/assurance.rs",
+              "tests/unit/core/decision_provider_tests.rs",
+              "tests/decision_provider_live.rs",
+              "README.md",
+              "Deterministic corpus covers disabled, typed success, boundary probabilities, malformed/missing/wrong-type responses, non-success HTTP, timeout, connection failure, missing credentials, labeled governance state, and credential exclusion from request state.",
+              "Live corpus is prepared but not run because TYPESAFE_API_KEY is absent; no semantic live result is claimed."
             ],
             "proof_refs": [
-              "decapod-validate"
+              "cargo_fmt",
+              "cargo_lib",
+              "assurance_harness",
+              "clippy_warnings_denied",
+              "docs_build",
+              "decapod_validate"
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "trajectory.record",
+            "command": "cargo test --locked --all-targets",
+            "scope": [
+              "src/decapod/core/decision_provider.rs, src/decapod/core/assurance.rs, tests/unit/core/decision_provider_tests.rs, tests/decision_provider_live.rs, README.md, .decapod/managed/specs/*.md"
+            ],
+            "observations": [
+              "The broad all-targets run reached test_validate_command_works but encountered shared Decapod storage contention from another active validation process; the isolated failing test was rerun and passed in 11.77s. This is not claimed as a clean all-targets pass."
+            ],
+            "proof_refs": [
+              "cargo_all_targets",
+              "cli_contract_validate_retry"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:6"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 5
+    "next_sequence": 6
   }
 }
