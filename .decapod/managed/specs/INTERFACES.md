@@ -101,6 +101,7 @@ Generated interface specs should include:
 | `core::dactyl_todo::DactylTodoStore` | Cloud `TodoStore` command boundary plus versioned storage context | Dactyl `/query` and `/batch` handlers | Lists canonical task columns; keyed get uses a direct query; add/claim/release/complete use conditional SQL write, matching event, and row observation in one batch; zero affected rows are conflicts; no per-query backend, tenant, provider, or repository input is accepted |
 | Propodus cloud session boundary | Cloud runtime config, Git-derived repository identity, machine-local credential | `StorageContext` bearer and opaque Dactyl route | Propodus authenticates and authorizes the principal/repository; authentication failures are surfaced as cloud diagnostics; bearer material is never serialized into repository state |
 | Local SQLite runtime preflight | Project backend plus `DACTYL_SQLITE_LIBRARY` and `~/.config/decapod/runtime.toml` | Dactyl local adapter startup | Runs only for `backend=local`; an explicit shell/config value is reused without discovery, a discovered host library is persisted at user scope, and a missing runtime returns `LOCAL_SQLITE_RUNTIME_REQUIRED` with installation/export remediation. Cloud startup does not probe SQLite |
+| Container runtime preflight | Docker/Podman executable and runtime access | Container workspace startup | Docker and Linux Podman retain direct `info` probing; macOS/Windows Podman may recover a stopped machine with the captured, non-interactive `machine start --quiet --no-info --update-connection=false` path and then retry `info` |
 
 Read callers must not invoke schema DDL or migration repair through a read-only connection. Decapod initialization owns that write-side preparation, and the facade exposes the connection access mode so compatibility helpers can avoid prohibited writes before issuing a read.
 | Decapod agent session | Backend selection and machine-local session directory | Canonical Dactyl store or authenticated cloud command path | Machine-local session records use a backend discriminator (`local_` or `cloud_`) and default to a four-hour lifetime, bounded to 30 minutes minimum and six hours maximum; cloud bearer credentials remain separate opaque machine-local material |
@@ -252,7 +253,7 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f0689ac8b4eef6630896d76d69963008424db897d6a9cd977bc2cdb474389364`
+- Repository signal fingerprint: `b9b127090af313910e62194ffedfa5f76551de21fe2c8f7a863fdd5a9379ba80`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

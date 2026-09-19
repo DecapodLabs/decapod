@@ -15,6 +15,16 @@ Decapod is a daemonless CLI installed as a versioned Rust binary. Each invocatio
 
 Stateful commands in a project configured with `repo.backend = "local"` require a host SQLite shared library for Dactyl's local adapter. The startup preflight first honors `DACTYL_SQLITE_LIBRARY`, then the machine-local `~/.config/decapod/runtime.toml` value. If neither is set, it probes the host and persists a discovered library path in that user-level file so later Decapod projects do not repeat the search. If no runtime is available, the command stops with `LOCAL_SQLITE_RUNTIME_REQUIRED` and gives platform installation commands plus a one-shell `export DACTYL_SQLITE_LIBRARY=...` fallback. Cloud-backed startup does not require or inspect SQLite.
 
+### Headless Podman machine startup
+
+When container preflight detects Podman on macOS or Windows but `podman info`
+cannot reach the service, Decapod attempts the standard machine recovery command
+with `podman machine start --quiet --no-info --update-connection=false`. The
+startup process receives no terminal input, and its output is captured for a
+failure diagnostic rather than shown as an interactive UI. Decapod does not
+launch Podman Desktop or change the default connection; it retries `podman info`
+after the machine command and leaves Docker and Linux Podman behavior unchanged.
+
 ## Nix packaging support matrix
 
 The repository flake (`flake.nix`) exposes `packages.default` / `packages.decapod` via `flake-utils.lib.eachDefaultSystem`. **Evaluating an output is not the same as supporting a platform.**
@@ -243,7 +253,7 @@ for filesystem work and are not used as the artifact representation.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f0689ac8b4eef6630896d76d69963008424db897d6a9cd977bc2cdb474389364`
+- Repository signal fingerprint: `b9b127090af313910e62194ffedfa5f76551de21fe2c8f7a863fdd5a9379ba80`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

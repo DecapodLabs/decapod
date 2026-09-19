@@ -1,33 +1,29 @@
 {
   "schema_version": "1.0.0",
-  "title": "Make recurring Buildkite adapter checks green without workflow redesign",
-  "intent": "Fix the recurring Buildkite adapter failures across standard PR, push, release PR, and master-merge paths while preserving GitHub Actions semantics and protections wherever possible; document each observed failure and exact resolution in one GitHub Issue, then publish a PR.",
+  "title": "Make Podman machine startup quiet and headless",
+  "intent": "When Decapod starts a local Podman machine for container workspace or proof operations, use a non-interactive headless startup path that does not launch or surface a UI, while preserving actionable errors and existing machine lifecycle semantics; add regression coverage and publish the change in a dedicated worktree PR.",
   "state": "APPROVED",
   "todo_ids": [
-    "bugs_01m2t80vyxygr6h7"
+    "feat_01m2w18ts5chnn6k"
   ],
   "proof_hooks": [
-    "decapod validate --format json",
     "cargo fmt --all -- --check",
     "cargo test --locked --lib",
     "cargo clippy --locked --all-targets --all-features -- -D warnings",
+    "decapod validate --format json",
     "GitHub checks for the published PR"
   ],
   "unknowns": [],
   "human_questions": [],
-  "stop_conditions": [
-    "Do not alter GitHub Action workflows unless the recorded Buildkite failure cannot be resolved through repository or GitHub configuration.",
-    "Do not weaken release or live-environment protections; preserve existing environment gates or stop for human review.",
-    "Publish only after the single issue documents every observed failure case and the PR checks are green or an external Buildkite limitation is explicitly evidenced."
-  ],
+  "stop_conditions": [],
   "unresolved_contradictions": [],
   "deferred_questions": [],
   "constraints": {
     "forbidden_paths": [
       ".decapod/data/decapod.db"
     ],
-    "file_touch_budget": 40
+    "file_touch_budget": 30
   },
   "phases": [],
-  "updated_at": "1789787009Z"
+  "updated_at": "1789795292Z"
 }

@@ -580,12 +580,28 @@ fn repo_root_from_store(store: &Store) -> Result<PathBuf, error::DecapodError> {
 }
 
 fn ensure_container_runtime_access(runtime: &str) -> Result<(), error::DecapodError> {
-    let output = Command::new(runtime)
+    let mut output = Command::new(runtime)
         .arg("info")
         .output()
         .map_err(error::DecapodError::IoError)?;
     if output.status.success() {
         return Ok(());
+    }
+
+    let mut machine_start_output = None;
+    if runtime == "podman" && podman_machine_start_supported() {
+        let started = start_podman_machine_quietly(runtime)?;
+        machine_start_output = Some(started);
+
+        // `podman machine start` reports an error when the machine is already
+        // running. The info retry is authoritative and also handles that case.
+        output = Command::new(runtime)
+            .arg("info")
+            .output()
+            .map_err(error::DecapodError::IoError)?;
+        if output.status.success() {
+            return Ok(());
+        }
     }
 
     let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
@@ -622,11 +638,61 @@ probe: `{}`\n\
 {}\n\
 context: {}, DOCKER_HOST={}, XDG_RUNTIME_DIR={}\n\
 stderr:\n{}\n\
-stdout:\n{}",
-            runtime, "info", remediation, uid, docker_host, xdg_runtime_dir, stderr, stdout
+stdout:\n{}{}",
+            runtime,
+            "info",
+            remediation,
+            uid,
+            docker_host,
+            xdg_runtime_dir,
+            stderr,
+            stdout,
+            format_machine_start_diagnostic(machine_start_output.as_ref())
         ),
         "Agent: inspect runtime preflight output; if a host service or permission change is required, ask the user for that exact action.",
     ))
+}
+
+fn podman_machine_start_supported() -> bool {
+    cfg!(any(target_os = "macos", target_os = "windows"))
+}
+
+fn podman_machine_start_args() -> [&'static str; 5] {
+    [
+        "machine",
+        "start",
+        "--quiet",
+        "--no-info",
+        "--update-connection=false",
+    ]
+}
+
+fn start_podman_machine_quietly(
+    runtime: &str,
+) -> Result<std::process::Output, error::DecapodError> {
+    Command::new(runtime)
+        .args(podman_machine_start_args())
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .output()
+        .map_err(error::DecapodError::IoError)
+}
+
+fn format_machine_start_diagnostic(output: Option<&std::process::Output>) -> String {
+    let Some(output) = output else {
+        return String::new();
+    };
+
+    format!(
+        "\n\npodman machine start (headless):\n{}{}",
+        String::from_utf8_lossy(&output.stderr).trim(),
+        if output.stdout.is_empty() {
+            String::new()
+        } else {
+            format!("\n{}", String::from_utf8_lossy(&output.stdout).trim())
+        }
+    )
 }
 
 fn push_branch_to_origin(repo: &Path, branch: &str) -> Result<(), error::DecapodError> {
