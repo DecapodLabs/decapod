@@ -295,8 +295,8 @@ or manifest.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `088b4a60510b085a3c485a09d77d2be9372c8576740776783320d361679bcc37`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
+- Repository signal fingerprint: `d0bdb17635f1a0358b17a7f76bb72ab4544f80b5b0c9a201319a1f6539e64710`
+- Significant implementation surfaces: `.buildkite/` (1 files), `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

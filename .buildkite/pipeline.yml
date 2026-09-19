@@ -1,0 +1,386 @@
+# Native Buildkite pipeline definition.
+#
+# The Buildkite pipeline command must be configured as:
+#   buildkite-agent pipeline upload .buildkite/pipeline.yml
+#
+# This file is intentionally independent of GitHub Actions syntax. Buildkite
+# evaluates `if` and `if_changed` while uploading this file, so event and path
+# gates remain visible and do not depend on a workflow adapter.
+
+env:
+  RUST_BACKTRACE: "1"
+  CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+  GIT_TERMINAL_PROMPT: "0"
+  MDBOOK_VERSION: "0.4.40"
+  CARGO_DIST_VERSION: "0.22.1"
+
+steps:
+  - label: ":pipeline: Validate native pipeline contract"
+    key: pipeline-contract
+    command: |
+      set -euo pipefail
+      test -f .buildkite/pipeline.yml
+      test -f Cargo.toml
+      test -f .github/release.toml
+      test -f rust-toolchain.toml
+      echo "Buildkite source: .buildkite/pipeline.yml"
+      echo "Build: ${BUILDKITE_BUILD_NUMBER:-unknown}"
+      echo "Commit: ${BUILDKITE_COMMIT:-unknown}"
+      echo "Branch: ${BUILDKITE_BRANCH:-unknown}"
+      echo "Pull request: ${BUILDKITE_PULL_REQUEST:-false}"
+      echo "Tag: ${BUILDKITE_TAG:-}"
+
+  - label: ":git: Commit lint"
+    key: commit-lint
+    if: 'build.pull_request.id != null && build.branch !~ /^release-plz-/'
+    command: |
+      set -euo pipefail
+      base_branch="${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-master}"
+      git fetch --no-tags --prune origin "$base_branch"
+      git log --format=%B "origin/$base_branch"...HEAD | while read -r message; do
+        [ -z "$message" ] && continue
+        if printf '%s\n' "$message" | grep -qiE '^(wip|fixup|squash)'; then
+          echo "WIP/fixup/squash commit found: $message"
+          exit 1
+        fi
+      done
+      echo "Commit messages look good"
+
+  - label: ":decapod: Governance artifacts"
+    key: governance-artifacts
+    if: 'build.pull_request.id != null && build.branch !~ /^release-plz-/'
+    command: |
+      set -euo pipefail
+      base_branch="${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-master}"
+      git fetch --no-tags --prune origin "$base_branch"
+      changed="$(git diff --name-only "origin/$base_branch"...HEAD)"
+      missing=()
+      for path in \
+        .decapod/governance/claims.json \
+        .decapod/governance/trajectory.json \
+        .decapod/governance/validation.json \
+        .decapod/governance/plan.json; do
+        if [ ! -f "$path" ]; then
+          echo "Missing from checkout: $path"
+          missing+=("$path")
+          continue
+        fi
+        python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$path"
+        if ! grep -Fxq "$path" <<<"$changed"; then
+          echo "Not updated in pull request: $path"
+          missing+=("$path")
+        else
+          echo "Present, parseable, and updated: $path"
+        fi
+      done
+      if (( ${#missing[@]} > 0 )); then
+        printf 'Governance artifacts missing or unchanged: %s\n' "${missing[*]}"
+        exit 1
+      fi
+
+  - label: ":memo: Material living specs"
+    key: material-specs
+    if: 'build.pull_request.id != null && build.branch !~ /^release-plz-/'
+    command: |
+      set -euo pipefail
+      base_branch="${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-master}"
+      git fetch --no-tags --prune origin "$base_branch"
+      python3 - "$base_branch" <<'PY'
+      import re
+      import subprocess
+      import sys
+      from pathlib import Path
+
+      base_branch = sys.argv[1]
+      specs_dir = Path('.decapod/managed/specs')
+      names = (
+          'INTENT.md', 'ARCHITECTURE.md', 'INTERFACES.md', 'VALIDATION.md',
+          'SEMANTICS.md', 'OPERATIONS.md', 'SECURITY.md', 'README.md',
+      )
+      generated = (
+          re.compile(r'<!-- decapod:codebase-attestation:start -->.*?<!-- decapod:codebase-attestation:end -->', re.S),
+          re.compile(r'<!-- decapod:declared-capabilities:start -->.*?<!-- decapod:declared-capabilities:end -->', re.S),
+          re.compile(r'<!-- decapod:capability-overlay:[^:]+:start -->.*?<!-- decapod:capability-overlay:[^:]+:end -->', re.S),
+      )
+
+      def material(text):
+          for pattern in generated:
+              text = pattern.sub('', text)
+          return text
+
+      def base_text(path):
+          result = subprocess.run(
+              ['git', 'show', f'origin/{base_branch}:{path}'],
+              capture_output=True,
+              text=True,
+              check=False,
+          )
+          return result.stdout if result.returncode == 0 else ''
+
+      changed = []
+      for name in names:
+          path = specs_dir / name
+          if path.is_file() and material(base_text(path.as_posix())) != material(path.read_text()):
+              changed.append(path.as_posix())
+      if not changed:
+          raise SystemExit('FINGERPRINT_ONLY_SPECS: no material living-spec rewrite')
+      print('Material living-spec changes: ' + ', '.join(changed))
+      PY
+
+  - label: ":rust: Setup and build"
+    key: setup
+    if: 'build.tag == null && (build.pull_request.id == null || build.branch !~ /^release-plz-/)'
+    if_changed: "src/**,tests/**,Cargo.toml,Cargo.lock,BUILD.bazel,MODULE.bazel,MODULE.bazel.lock,.bazelrc,.config/**,rust-toolchain.toml,.buildkite/**"
+    command: |
+      set -euo pipefail
+      command -v bazelisk >/dev/null || {
+        echo "Bazelisk is required on native Buildkite agents; install it in the agent image."
+        exit 1
+      }
+      bazelisk build //:decapod
+
+  - label: ":rust: Format"
+    key: fmt
+    if: 'build.tag == null && (build.pull_request.id == null || build.branch !~ /^release-plz-/)'
+    if_changed: "src/**,tests/**,Cargo.toml,Cargo.lock,BUILD.bazel,MODULE.bazel,MODULE.bazel.lock,.config/**,rust-toolchain.toml,.buildkite/**"
+    command: cargo fmt --all -- --check
+
+  - label: ":rust: Clippy"
+    key: clippy
+    if: 'build.tag == null && (build.pull_request.id == null || build.branch !~ /^release-plz-/)'
+    if_changed: "src/**,tests/**,Cargo.toml,Cargo.lock,.config/**,rust-toolchain.toml,.buildkite/**"
+    command: |
+      set -euo pipefail
+      CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings
+
+  - label: ":mag: Dependency lint"
+    key: deps-lint
+    if: 'build.tag == null && (build.pull_request.id == null || build.branch !~ /^release-plz-/)'
+    if_changed: "src/**,tests/**,Cargo.toml,Cargo.lock,.config/**,.buildkite/**"
+    command: |
+      set -euo pipefail
+      if ! command -v cargo-machete >/dev/null; then
+        cargo install cargo-machete --locked
+      fi
+      if ! command -v cargo-deny >/dev/null; then
+        cargo install cargo-deny --locked
+      fi
+      cargo machete
+      cargo deny --config .config/deny.toml check
+
+  - label: ":decapod: Validate"
+    key: health
+    depends_on: setup
+    if: 'build.tag == null && (build.pull_request.id == null || build.branch !~ /^release-plz-/)'
+    if_changed: "src/**,tests/**,Cargo.toml,Cargo.lock,.decapod/**,.config/**,.buildkite/**"
+    command: |
+      set -euo pipefail
+      bazelisk run //:decapod -- validate --refresh-specs
+      bazelisk run //:decapod -- govern watcher run
+      bazelisk run //:decapod -- govern health summary
+
+  - label: ":bazel: Core tests"
+    key: test-core
+    depends_on: setup
+    if: 'build.tag == null && (build.pull_request.id == null || build.branch !~ /^release-plz-/)'
+    if_changed: "src/decapod/core/**,tests/**,Cargo.toml,Cargo.lock,.buildkite/**"
+    command: |
+      set -euo pipefail
+      bazelisk test //:todo_enforcement //:validate_termination //:workspace_interlock //:workunit_cli //:context_capsule_cli --test_arg=--test-threads=4
+
+  - label: ":bazel: Plugin tests"
+    key: test-plugins
+    depends_on: setup
+    if: 'build.tag == null && (build.pull_request.id == null || build.branch !~ /^release-plz-/)'
+    if_changed: "src/decapod/plugins/**,tests/**,Cargo.toml,Cargo.lock,.buildkite/**"
+    command: |
+      set -euo pipefail
+      bazelisk test //:plugins_todo_tests //:plugins_policy_tests //:plugins_health_tests //:plugins_aptitude_tests //:plugins_internalize_tests //:plugins_federation_tests //:plugins_decide_tests //:plugins_obligation_tests --test_arg=--test-threads=4
+
+  - label: ":bazel: CLI tests"
+    key: test-cli
+    depends_on: setup
+    if: 'build.tag == null && (build.pull_request.id == null || build.branch !~ /^release-plz-/)'
+    if_changed: "src/decapod/cli/**,src/main.rs,src/lib.rs,tests/**,Cargo.toml,Cargo.lock,.buildkite/**"
+    command: |
+      set -euo pipefail
+      bazelisk test //:cli_contract_enforcement //:entrypoint_correctness //:cli_contracts --test_arg=--test-threads=4
+
+  - label: ":bazel: Contract tests"
+    key: test-contracts
+    depends_on: setup
+    if: 'build.tag == null && (build.pull_request.id == null || build.branch !~ /^release-plz-/)'
+    if_changed: "src/**,tests/**,docs/**,.decapod/**,Cargo.toml,Cargo.lock,.buildkite/**"
+    command: |
+      set -euo pipefail
+      bazelisk test //:contract_conformance //:constitution_claims //:spec_conformance //:substrate_integrity --test_arg=--test-threads=4
+
+  - label: ":arrows_counterclockwise: RPC suite"
+    key: test-rpc-suite
+    depends_on: setup
+    if: 'build.tag == null && (build.pull_request.id == null || build.branch !~ /^release-plz-/)'
+    if_changed: "src/**,tests/**,Cargo.toml,Cargo.lock,.buildkite/**"
+    command: bazelisk test //:agent_rpc_suite --test_arg=--test-threads=1
+
+  - label: ":recycle: Chaos replay"
+    key: chaos-replay
+    depends_on: setup
+    if: 'build.tag == null && (build.pull_request.id == null || build.branch !~ /^release-plz-/)'
+    if_changed: "src/**,tests/**,Cargo.toml,Cargo.lock,.buildkite/**"
+    command: bazelisk test //:chaos_replay --test_arg=--test-threads=1
+
+  - label: ":no_entry_sign: Daemonless lifecycle"
+    key: daemonless-lifecycle
+    depends_on: setup
+    if: 'build.tag == null && (build.pull_request.id == null || build.branch !~ /^release-plz-/)'
+    if_changed: "src/**,tests/**,Cargo.toml,Cargo.lock,.buildkite/**"
+    command: bazelisk test //:daemonless_lifecycle --test_arg=--test-threads=1
+
+  - label: ":database: Migration tests"
+    key: migration-tests
+    depends_on: setup
+    if: 'build.pull_request.id != null && build.branch !~ /^release-plz-/'
+    if_changed: "src/decapod/core/sql/**,src/decapod/core/migration/**,tests/**,.buildkite/**"
+    command: bazelisk test //:core_tests --test_arg=migration_ --test_arg=--ignored --test_arg=--test-threads=1
+
+  - label: ":book: Build documentation"
+    key: docs-build
+    if: 'build.pull_request.id != null || (build.branch == "master" && build.tag == null)'
+    if_changed: "docs/**,src/**,Cargo.toml,Cargo.lock,.buildkite/**"
+    command: |
+      set -euo pipefail
+      if ! command -v mdbook >/dev/null; then
+        cargo install mdbook --version "$MDBOOK_VERSION" --locked
+      fi
+      mdbook build docs/book
+
+  - label: ":book: Deploy documentation"
+    key: docs-deploy
+    depends_on: docs-build
+    if: 'build.branch == "master" && build.pull_request.id == null && build.tag == null'
+    if_changed: "docs/**,src/**,Cargo.toml,Cargo.lock"
+    command: |
+      set -euo pipefail
+      : "${GITHUB_TOKEN:?Configure GITHUB_TOKEN as a Buildkite secret for Pages deployment}"
+      if ! command -v mdbook >/dev/null; then
+        cargo install mdbook --version "$MDBOOK_VERSION" --locked
+      fi
+      mdbook build docs/book
+      deploy_dir="$(mktemp -d)"
+      trap 'rm -rf "$deploy_dir"' EXIT
+      remote="https://x-access-token:${GITHUB_TOKEN}@github.com/${BUILDKITE_REPO_SLUG}.git"
+      if ! git clone --depth 1 --branch gh-pages "$remote" "$deploy_dir"; then
+        git clone --depth 1 "$remote" "$deploy_dir"
+        git -C "$deploy_dir" checkout --orphan gh-pages
+        git -C "$deploy_dir" rm -rf . || true
+      fi
+      find "$deploy_dir" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+      cp -R docs/book/book/. "$deploy_dir/"
+      touch "$deploy_dir/.nojekyll"
+      git -C "$deploy_dir" config user.name "buildkite[bot]"
+      git -C "$deploy_dir" config user.email "buildkite[bot]@users.noreply.github.com"
+      git -C "$deploy_dir" add --all
+      if git -C "$deploy_dir" diff --cached --quiet; then
+        echo "Documentation is already current on gh-pages"
+      else
+        git -C "$deploy_dir" commit -m "docs: publish ${BUILDKITE_COMMIT:0:7}"
+        git -C "$deploy_dir" push origin gh-pages
+      fi
+
+  - label: ":cargo: Release plan"
+    key: release-plan
+    if: 'build.pull_request.id != null || build.tag != null'
+    command: |
+      set -euo pipefail
+      export PATH="$HOME/.cargo/bin:$PATH"
+      if ! command -v cargo-dist >/dev/null; then
+        curl --proto '=https' --tlsv1.2 -LsSf "https://github.com/axodotdev/cargo-dist/releases/download/v${CARGO_DIST_VERSION}/cargo-dist-installer.sh" | sh
+      fi
+      if [ "${BUILDKITE_PULL_REQUEST:-false}" != "false" ]; then
+        cargo dist plan --output-format=json > plan-dist-manifest.json
+      else
+        cargo dist host --steps=create --tag="$BUILDKITE_TAG" --output-format=json > plan-dist-manifest.json
+      fi
+      cat plan-dist-manifest.json
+
+  - label: ":rocket: Publish release"
+    key: release-publish
+    if: 'build.branch == "master" && build.pull_request.id == null && build.tag == null'
+    command: |
+      set -euo pipefail
+      : "${GITHUB_TOKEN:?Configure GITHUB_TOKEN as a Buildkite secret for release-plz}"
+      : "${CARGO_REGISTRY_TOKEN:?Configure CARGO_REGISTRY_TOKEN as a Buildkite secret for crates.io publishing}"
+      if ! command -v release-plz >/dev/null; then
+        cargo install --locked release-plz
+      fi
+      release-plz release --config .github/release.toml
+
+  - label: ":package: Publish tagged artifacts"
+    key: tagged-artifacts
+    if: 'build.tag != null'
+    command: |
+      set -euo pipefail
+      : "${GITHUB_TOKEN:?Configure GITHUB_TOKEN as a Buildkite secret for tagged release publication}"
+      export PATH="$HOME/.cargo/bin:$PATH"
+      if ! command -v cargo-dist >/dev/null; then
+        curl --proto '=https' --tlsv1.2 -LsSf "https://github.com/axodotdev/cargo-dist/releases/download/v${CARGO_DIST_VERSION}/cargo-dist-installer.sh" | sh
+      fi
+      cargo dist host --steps=upload --steps=release --tag="$BUILDKITE_TAG" --output-format=json
+
+  - label: ":docker: Publish tagged container images"
+    key: tagged-images
+    if: 'build.tag != null'
+    command: |
+      set -euo pipefail
+      : "${GITHUB_TOKEN:?Configure GITHUB_TOKEN as a Buildkite secret for GHCR publishing}"
+      : "${BUILDKITE_REPO_SLUG:?Buildkite repository slug is required}"
+      echo "$GITHUB_TOKEN" | docker login ghcr.io --username "${GITHUB_ACTOR:-buildkite[bot]}" --password-stdin
+      for variant in debian alpine; do
+        case "$variant" in
+          debian)
+            build_image='rust:1.96.1-slim-bookworm'
+            runtime_image='debian:bookworm-slim'
+            ;;
+          alpine)
+            build_image='rust:1.96.1-alpine'
+            runtime_image='alpine:3.20'
+            ;;
+        esac
+        docker buildx build \
+          --platform linux/amd64,linux/arm64 \
+          --file assets/Dockerfile.workspace \
+          --build-arg DECAPOD_VERSION="$BUILDKITE_TAG" \
+          --build-arg DECAPOD_REVISION="${BUILDKITE_COMMIT:0:7}" \
+          --build-arg DECAPOD_BUILD_IMAGE="$build_image" \
+          --build-arg DECAPOD_RUNTIME_IMAGE="$runtime_image" \
+          --tag "ghcr.io/decapodlabs/decapod:${BUILDKITE_TAG}-${variant}" \
+          --push .
+      done
+
+  - label: ":test_tube: Full master test suite"
+    key: test-master
+    depends_on:
+      - setup
+      - fmt
+      - clippy
+      - deps-lint
+      - health
+      - test-core
+      - test-plugins
+      - test-cli
+      - test-contracts
+      - test-rpc-suite
+      - chaos-replay
+      - daemonless-lifecycle
+    if: 'build.branch == "master" && build.pull_request.id == null && build.tag == null'
+    if_changed: "src/**,tests/**,Cargo.toml,Cargo.lock,BUILD.bazel,MODULE.bazel,MODULE.bazel.lock,.config/**,rust-toolchain.toml,.buildkite/**"
+    command: bazelisk test //:gatling --test_arg=--test-threads=4
+
+  - label: ":rocket: Release build"
+    key: release-build
+    depends_on:
+      - test-master
+      - release-publish
+    if: 'build.branch == "master" && build.pull_request.id == null && build.tag == null'
+    if_changed: "src/**,Cargo.toml,Cargo.lock,BUILD.bazel,MODULE.bazel,MODULE.bazel.lock,.config/**,.buildkite/**"
+    command: bazelisk build -c opt //:decapod
