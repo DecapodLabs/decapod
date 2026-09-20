@@ -53,6 +53,12 @@ project file. Jev uses TypeSafe's documented
 service, timeout, or malformed response yields `no_observation`; it never
 clears an interlock or satisfies a proof gate.
 
+For an initialized project, `decapod init --refresh` reopens the interactive
+initialization questionnaire with the current configuration as each default.
+Pressing Enter preserves a setting; selecting another option can enable or
+disable it, including the decision provider. The refresh path preserves the
+existing repository setup and does not require `--force`.
+
 With an active trajectory run, every Jev attempt is retained in the
 schema-versioned `.decapod/governance/jev.json` ledger. A new trajectory run
 resets that working-tree ledger, while committed prior ledgers remain

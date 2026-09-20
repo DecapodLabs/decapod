@@ -21,7 +21,10 @@ machine-local `~/.local/share/decapod/secrets.json` file, and uses bounded HTTP
 timeouts; the key is never persisted in repository state. Initialization with
 `decapod init --decision-provider jev` stores an explicitly supplied environment
 key in that file with restrictive permissions and preserves the provider choice
-on refresh.
+on non-interactive refresh. `decapod init --refresh` reopens the initialization
+questionnaire for an existing project, using current values as defaults and
+keeping the refresh non-destructive; Enter preserves a setting while another
+choice can enable or disable it.
 
 Operationally, Jev is an advisory dependency, not a readiness dependency. If it
 is absent, unavailable, times out, or returns malformed data, the assurance
@@ -285,7 +288,7 @@ for filesystem work and are not used as the artifact representation.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fc52cdd1f44f431ff6b7f9133830f49e45277fb2e2cb96b57b383c2186b9e93b`
+- Repository signal fingerprint: `50b59962f590deaa75043035077bd633f1b290cabc89cb63bee7f0c6c5e20f55`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

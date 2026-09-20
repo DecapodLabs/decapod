@@ -193,7 +193,7 @@ fn init_refresh_preserves_decision_provider_without_explicit_override() {
         String::from_utf8_lossy(&first.stderr)
     );
 
-    let refresh = run_decapod(project.path(), &["init", "--force"]);
+    let refresh = run_decapod(project.path(), &["init", "--refresh"]);
     assert!(
         refresh.status.success(),
         "refresh init failed: {}",
@@ -202,6 +202,18 @@ fn init_refresh_preserves_decision_provider_without_explicit_override() {
     let config = fs::read_to_string(project.path().join(".decapod/config.toml"))
         .expect("read refreshed project config");
     assert!(config.contains("[decision]\nprovider = \"jev\""));
+}
+
+#[test]
+fn init_refresh_requires_an_existing_project() {
+    let project = tempdir().expect("project tempdir");
+    let refresh = run_decapod(project.path(), &["init", "--refresh"]);
+    assert!(!refresh.status.success());
+    let stderr = String::from_utf8_lossy(&refresh.stderr);
+    assert!(
+        stderr.contains("Cannot refresh an uninitialized project"),
+        "{stderr}"
+    );
 }
 
 #[test]

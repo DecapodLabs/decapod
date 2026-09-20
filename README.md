@@ -189,9 +189,18 @@ unconfigured, times out, or returns an invalid response, Decapod records
 Decapod remains the authority for boundaries, interlocks, policy, and
 completion.
 
-Initialization preserves an existing decision-provider selection during refresh;
-use `--decision-provider none` to explicitly disable it. A missing machine key
-does not make initialization fail because Jev remains optional.
+To revisit an initialized setup without replacing it, run `decapod init
+--refresh` from a terminal. Decapod reopens the initialization questionnaire
+with the current configuration as the defaults; press Enter to keep a value,
+or choose a different option to enable/disable it. This includes the optional
+decision provider. The refresh path preserves repository state and does not
+require `--force`; it requires an existing `.decapod` setup. In a non-terminal
+environment, `--refresh` keeps the current configuration without prompting.
+
+Initialization also preserves an existing decision-provider selection during
+non-interactive refreshes; use `--decision-provider none` to explicitly disable
+it. A missing machine key does not make initialization fail because Jev remains
+optional.
 
 When Jev is enabled and a trajectory run is active, each assurance call also
 appends its typed Jev result (including explicit `no_observation` failures) to

@@ -143,6 +143,9 @@ pub(crate) struct InitGroupCli {
     /// Overwrite existing files by archiving them under `<dir>/.decapod_archive/`.
     #[clap(long)]
     pub force: bool,
+    /// Re-open the existing initialization questionnaire while preserving current settings as defaults.
+    #[clap(long)]
+    pub refresh: bool,
     /// Show what would change without writing files.
     #[clap(long)]
     pub dry_run: bool,
@@ -275,6 +278,9 @@ pub(crate) struct InitWithCli {
     /// Overwrite existing files by archiving them under `<dir>/.decapod_archive/`.
     #[clap(long)]
     pub force: bool,
+    /// Internal refresh marker used by the top-level interactive init flow.
+    #[clap(skip)]
+    pub refresh: bool,
     /// Show what would change without writing files.
     #[clap(long)]
     pub dry_run: bool,

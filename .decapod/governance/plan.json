@@ -1,16 +1,17 @@
 {
   "schema_version": "1.0.0",
-  "title": "Initialize Jev provider configuration safely",
-  "intent": "Preserve the optional Jev provider across Decapod initialization and refreshes, resolve its API key from a machine-local secret store without repository leakage, and retain Decapod as the sole governance authority.",
+  "title": "Refresh initialized Decapod setup safely",
+  "intent": "Preserve an initialized Decapod project while allowing a human to re-open configuration prompts, keep current settings as defaults, and enable or disable optional features such as Jev without requiring destructive force refreshes.",
   "state": "APPROVED",
   "todo_ids": [
-    "cicd_01m2ygzwcmamy8xq"
+    "feat_01m2yn3etwb8pytv"
   ],
   "proof_hooks": [
-    "cargo test --locked --lib",
-    "cargo test --locked --test init_decision_provider",
+    "cargo test --locked --test init_config_behavior",
+    "cargo test --locked --lib init_prompt_tests",
     "cargo clippy --locked --all-targets --all-features -- -D warnings",
-    "decapod validate --format json"
+    "mdbook build docs/book",
+    "decapod validate --refresh-specs --format json"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -24,5 +25,5 @@
     "file_touch_budget": 30
   },
   "phases": [],
-  "updated_at": "1789878371Z"
+  "updated_at": "1789882670Z"
 }
