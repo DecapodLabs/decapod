@@ -135,50 +135,10 @@ jobs:
           name: cargo-dist-cache
           path: ~/.cargo/bin/cargo-dist
       # Keep PR planning and tag publishing explicit in shell so the Buildkite
-      # adapter does not have to evaluate a nested expression over event objects.
+      # adapter does not have to interpolate runtime shell variables while it
+      # uploads the imported workflow.
       - id: plan
-        run: |
-          set -euo pipefail
-          # Use the runner-native event context at runtime. GitHub Actions
-          # supplies GITHUB_EVENT_NAME/GITHUB_REF_NAME; Buildkite supplies
-          # BUILDKITE_GITHUB_EVENT/BUILDKITE_TAG/BUILDKITE_BRANCH. Keeping the
-          # branch selection in shell avoids depending on event expressions
-          # being re-interpolated inside an imported run block.
-          event_name="${BUILDKITE_GITHUB_EVENT:-${GITHUB_EVENT_NAME:-}}"
-          if [ -z "$event_name" ] && [ -n "${BUILDKITE_PULL_REQUEST:-}" ] && [ "${BUILDKITE_PULL_REQUEST}" != "false" ]; then
-            event_name="pull_request"
-          fi
-          : "${event_name:?Unable to determine the GitHub event for cargo-dist planning}"
-
-          if [ -n "${BUILDKITE_TAG:-}" ]; then
-            ref_name="$BUILDKITE_TAG"
-          else
-            ref_name="${GITHUB_REF_NAME:-${BUILDKITE_BRANCH:-}}"
-          fi
-
-          if [ "$event_name" = "pull_request" ]; then
-            cargo dist plan --output-format=json > plan-dist-manifest.json
-          else
-            : "${ref_name:?Unable to determine the ref for cargo-dist hosting}"
-            cargo dist host --steps=create --tag="$ref_name" --output-format=json > plan-dist-manifest.json
-          fi
-          echo "cargo dist ran successfully"
-          cat plan-dist-manifest.json
-          if [ "$event_name" = "pull_request" ]; then
-            tag=""
-            tag_flag=""
-            publishing="false"
-          else
-            tag="$ref_name"
-            tag_flag="--tag=$ref_name"
-            publishing="true"
-          fi
-          {
-            echo "manifest=$(jq -c . plan-dist-manifest.json)"
-            echo "tag=${tag}"
-            echo "tag_flag=${tag_flag}"
-            echo "publishing=${publishing}"
-          } >> "$GITHUB_OUTPUT"
+        run: bash .github/scripts/release-plan.sh
       - name: "Upload dist-manifest.json"
         uses: actions/upload-artifact@v4
         with:

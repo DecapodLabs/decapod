@@ -1,13 +1,14 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "buildkite-release-pr-1353-20260920",
-  "intent_id": "intent:buildkite-release-pr-1353-20260920",
+  "run_id": "buildkite-release-pr-1353-20260920-script",
+  "intent_id": "intent:buildkite-release-pr-1353-20260920-script",
   "task_id": "bugs_01m2yvaze1csf51f",
-  "original_intent": "Fix the Buildkite failure in release PR #1353 and push the fix directly to its PR branch.",
-  "derived_intent": "Preserve .github/workflows/release.yml as the workflow source of truth while making release planning resolve event and ref context correctly in both GitHub Actions and Buildkite.",
+  "original_intent": "Fix the remaining Buildkite failure in release PR #1353 and push the verified fix directly to its PR branch.",
+  "derived_intent": "Keep .github/workflows/release.yml as the source of truth while moving runtime release-plan shell expansion into a checked-in script that survives Buildkite upload interpolation.",
   "destination": "PR #1353",
   "current_phase": "validation",
   "next_transitions": [
+    "publication",
     "publish",
     "validation"
   ],
@@ -15,36 +16,36 @@
     "Only the release planning compatibility path and required governed proof artifacts; do not add a second native Buildkite workflow."
   ],
   "repo_scope": [
-    ".github/workflows/release.yml and related governed documentation/proof artifacts"
+    ".github/workflows/release.yml, .github/scripts/release-plan.sh, and related governed documentation/proof artifacts"
   ],
   "inspected_files": [
-    ".decapod/managed/specs/OPERATIONS.md",
-    ".github/release.toml",
-    ".github/workflows/release.yml",
-    "Cargo.toml"
+    ".github/scripts/release-plan.sh",
+    ".github/workflows/release.yml"
   ],
   "modified_files": [
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
-    ".decapod/managed/specs/OPERATIONS.md",
+    ".github/scripts/release-plan.sh",
     ".github/workflows/release.yml"
   ],
   "declared_commands": [
-    "cargo dist plan --output-format=json",
+    "bash -n .github/scripts/release-plan.sh",
     "decapod validate",
-    "gh pr checks 1353",
-    "gh pr view 1353 --json headRefOid,headRefName,statusCheckRollup"
+    "decapod validate --refresh-specs",
+    "ruby -e YAML.load_file(.github/workflows/release.yml)"
   ],
-  "tool_calls": [
-    "Buildkite check metadata and official Buildkite migration compatibility documentation"
-  ],
+  "tool_calls": [],
   "checks": [
     {
       "name": "buildkite-release-plan",
-      "status": "failed"
+      "status": "unavailable"
     },
     {
       "name": "decapod validate",
+      "status": "passed"
+    },
+    {
+      "name": "decapod-validate",
       "status": "passed"
     },
     {
@@ -52,7 +53,7 @@
       "status": "passed"
     },
     {
-      "name": "release-plan-shell",
+      "name": "release-plan-script-syntax",
       "status": "passed"
     },
     {
@@ -61,31 +62,31 @@
     }
   ],
   "evidence": [
-    "Buildkite Release / plan failed in build 143 in 2s while native GitHub Actions plan passed in 16s; local pinned cargo-dist PR plan succeeds without a token when event context is supplied by runner-native variables.",
-    "validation epoch ve_5ae2346b0a87ce0f completed with zero failures"
+    "Container validation passed with 204 checks and zero failures after moving the runtime release-plan logic into a checked-in script. The native GitHub Actions plan remained green; Buildkite hosted proof is pending the next PR commit.",
+    "validation epoch ve_3622978f6e9cc026 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [
-    "The failure is caused by imported shell event/ref interpolation rather than cargo-dist plan semantics; the pushed PR build will be the authoritative hosted proof."
+    "The Buildkite GitHub Actions runtime provides GITHUB_OUTPUT, as demonstrated by existing workflow output steps already exercised in this repository."
   ],
-  "proof_status": "failed",
+  "proof_status": "partial",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "unsupported"
+    "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:0e72e1f6029d8525ee67d50e8f1bace1fd8b6859ea1b634f2222767d6e997903",
+  "artifact_hash": "sha256:cd953eed0555f35020d35c50924f938783c808743edceee95b1f91f713b3cac3",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:buildkite-release-pr-1353-20260920": {
-        "id": "intent:buildkite-release-pr-1353-20260920",
-        "raw_intent": "Fix the Buildkite failure in release PR #1353 and push the fix directly to its PR branch.",
-        "refined_intent": "Preserve .github/workflows/release.yml as the workflow source of truth while making release planning resolve event and ref context correctly in both GitHub Actions and Buildkite.",
+      "intent:buildkite-release-pr-1353-20260920-script": {
+        "id": "intent:buildkite-release-pr-1353-20260920-script",
+        "raw_intent": "Fix the remaining Buildkite failure in release PR #1353 and push the verified fix directly to its PR branch.",
+        "refined_intent": "Keep .github/workflows/release.yml as the source of truth while moving runtime release-plan shell expansion into a checked-in script that survives Buildkite upload interpolation.",
         "acceptance_criteria": [],
         "constraints": [
-          ".github/workflows/release.yml and related governed documentation/proof artifacts"
+          ".github/workflows/release.yml, .github/scripts/release-plan.sh, and related governed documentation/proof artifacts"
         ],
         "assumptions": [],
         "boundaries": [
@@ -102,80 +103,79 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:buildkite-release-pr-1353-20260920",
+        "intent_id": "intent:buildkite-release-pr-1353-20260920-script",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:buildkite-release-pr-1353-20260920",
+        "intent_id": "intent:buildkite-release-pr-1353-20260920-script",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:buildkite-release-pr-1353-20260920",
+        "intent_id": "intent:buildkite-release-pr-1353-20260920-script",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:buildkite-release-pr-1353-20260920"
+        "detail": "trajectory:buildkite-release-pr-1353-20260920-script"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:buildkite-release-pr-1353-20260920",
+        "intent_id": "intent:buildkite-release-pr-1353-20260920-script",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:buildkite-release-pr-1353-20260920"
+        "detail": "trajectory:buildkite-release-pr-1353-20260920-script"
       }
     ],
     "trajectories": {
-      "buildkite-release-pr-1353-20260920": {
-        "id": "buildkite-release-pr-1353-20260920",
-        "intent_id": "intent:buildkite-release-pr-1353-20260920",
+      "buildkite-release-pr-1353-20260920-script": {
+        "id": "buildkite-release-pr-1353-20260920-script",
+        "intent_id": "intent:buildkite-release-pr-1353-20260920-script",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "diagnosis",
-            "tool": "Buildkite check metadata and official Buildkite migration compatibility documentation",
-            "command": "gh pr view 1353 --json headRefOid,headRefName,statusCheckRollup",
-            "scope": [
-              ".github/workflows/release.yml and related governed documentation/proof artifacts"
-            ],
-            "observations": [
-              ".github/workflows/release.yml",
-              "Cargo.toml",
-              ".github/release.toml",
-              ".decapod/managed/specs/OPERATIONS.md",
-              ".github/workflows/release.yml",
-              ".decapod/managed/specs/OPERATIONS.md",
-              "Buildkite Release / plan failed in build 143 in 2s while native GitHub Actions plan passed in 16s; local pinned cargo-dist PR plan succeeds without a token when event context is supplied by runner-native variables."
-            ],
-            "proof_refs": [
-              "buildkite-release-plan",
-              "native-github-plan",
-              "workflow-yaml",
-              "release-plan-shell"
-            ],
-            "validation_findings": [
-              "The failure is caused by imported shell event/ref interpolation rather than cargo-dist plan semantics; the pushed PR build will be the authoritative hosted proof."
-            ],
-            "custody_event_id": "event:4"
-          },
-          {
-            "sequence": 5,
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              ".github/workflows/release.yml and related governed documentation/proof artifacts"
+              ".github/workflows/release.yml, .github/scripts/release-plan.sh, and related governed documentation/proof artifacts"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_5ae2346b0a87ce0f completed with zero failures"
+              "validation epoch ve_3622978f6e9cc026 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
             ],
             "validation_findings": [],
+            "custody_event_id": "event:4"
+          },
+          {
+            "sequence": 5,
+            "action": "validation",
+            "command": "decapod validate --refresh-specs",
+            "scope": [
+              ".github/workflows/release.yml, .github/scripts/release-plan.sh, and related governed documentation/proof artifacts"
+            ],
+            "observations": [
+              ".github/workflows/release.yml",
+              ".github/scripts/release-plan.sh",
+              ".github/workflows/release.yml",
+              ".github/scripts/release-plan.sh",
+              ".decapod/governance/validation.json",
+              "Container validation passed with 204 checks and zero failures after moving the runtime release-plan logic into a checked-in script. The native GitHub Actions plan remained green; Buildkite hosted proof is pending the next PR commit."
+            ],
+            "proof_refs": [
+              "decapod-validate",
+              "workflow-yaml",
+              "release-plan-script-syntax",
+              "native-github-plan",
+              "buildkite-release-plan"
+            ],
+            "validation_findings": [
+              "The Buildkite GitHub Actions runtime provides GITHUB_OUTPUT, as demonstrated by existing workflow output steps already exercised in this repository."
+            ],
             "custody_event_id": "event:5"
           }
         ]
