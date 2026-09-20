@@ -1,23 +1,22 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "validation_01M2YNQ7HXY8JK53R97X4HZKCG",
-  "intent_id": "intent:validation_01M2YNQ7HXY8JK53R97X4HZKCG",
+  "run_id": "buildkite-gha-compat-20260919-merge-resolution",
+  "intent_id": "intent:buildkite-gha-compat-20260919-merge-resolution",
   "task_id": "bugs_01m2ygbqqwzq8p3q",
-  "original_intent": "Produce proof artifacts for a repository validation completion.",
-  "derived_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
+  "original_intent": "Resolve PR #1350 merge conflicts and keep Buildkite-backed CI validation green",
+  "derived_intent": "Reconcile generated governance artifacts after merging master, preserve the workflow compatibility fix, and prove the merged tree validates",
   "destination": "PR #1350",
   "current_phase": "validation",
   "next_transitions": [
     "publish"
   ],
   "active_boundaries": [
-    "CI workflow compatibility and governed validation artifacts",
-    "Repository validation and tracked proof artifacts"
+    "PR merge resolution and governed CI validation artifacts"
   ],
   "repo_scope": [
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
-    ".decapod/managed/specs/OPERATIONS.md",
+    ".decapod/managed/specs",
     ".github/workflows/ci.yml",
     ".github/workflows/decapod-validate.yml"
   ],
@@ -29,14 +28,18 @@
   "modified_files": [
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
-    ".decapod/managed/specs/OPERATIONS.md",
-    ".github/workflows/ci.yml",
-    ".github/workflows/decapod-validate.yml"
+    ".decapod/managed/specs",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "CODEX.md",
+    "GEMINI.md"
   ],
   "declared_commands": [
+    "cargo build --locked --quiet",
     "decapod validate",
     "decapod validate --format json",
     "git diff --check",
+    "git merge origin/master",
     "ruby YAML parse for CI workflow files"
   ],
   "tool_calls": [],
@@ -54,14 +57,18 @@
       "status": "passed"
     },
     {
+      "name": "merge_conflicts",
+      "status": "passed"
+    },
+    {
       "name": "workflow_yaml",
       "status": "passed"
     }
   ],
   "evidence": [
-    "Local decapod validate returned status=ok and fail_count=0.",
-    "Native validation run showed manifest repo_signal_fingerprint drift after validate --refresh-specs; CI now normalizes generated_at and repo_signal_fingerprint before semantic drift comparison.",
-    "validation epoch ve_740113da0a0316a0 completed with zero failures"
+    "Fresh validation epoch ve_0abf68cacedadfbd completed with status=ok and fail_count=0.",
+    "Merged current origin/master into PR #1350 and removed all conflict markers.",
+    "validation epoch ve_0abf68cacedadfbd completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -72,22 +79,25 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:d69abcb6a43c9ce425dc2219ff076eb7480a424136e10f6c63ca0080205f10a3",
+  "artifact_hash": "sha256:59e924f682adda79bcedfb344e3c06ad99c993d5d471bd8613f2644c36a5a918",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:validation_01M2YNQ7HXY8JK53R97X4HZKCG": {
-        "id": "intent:validation_01M2YNQ7HXY8JK53R97X4HZKCG",
-        "raw_intent": "Produce proof artifacts for a repository validation completion.",
-        "refined_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
+      "intent:buildkite-gha-compat-20260919-merge-resolution": {
+        "id": "intent:buildkite-gha-compat-20260919-merge-resolution",
+        "raw_intent": "Resolve PR #1350 merge conflicts and keep Buildkite-backed CI validation green",
+        "refined_intent": "Reconcile generated governance artifacts after merging master, preserve the workflow compatibility fix, and prove the merged tree validates",
         "acceptance_criteria": [],
         "constraints": [
+          ".github/workflows/ci.yml",
+          ".github/workflows/decapod-validate.yml",
           ".decapod/governance/trajectory.json",
-          ".decapod/governance/validation.json"
+          ".decapod/governance/validation.json",
+          ".decapod/managed/specs"
         ],
         "assumptions": [],
         "boundaries": [
-          "Repository validation and tracked proof artifacts"
+          "PR merge resolution and governed CI validation artifacts"
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -100,34 +110,34 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:validation_01M2YNQ7HXY8JK53R97X4HZKCG",
+        "intent_id": "intent:buildkite-gha-compat-20260919-merge-resolution",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:validation_01M2YNQ7HXY8JK53R97X4HZKCG",
+        "intent_id": "intent:buildkite-gha-compat-20260919-merge-resolution",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:validation_01M2YNQ7HXY8JK53R97X4HZKCG",
+        "intent_id": "intent:buildkite-gha-compat-20260919-merge-resolution",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01M2YNQ7HXY8JK53R97X4HZKCG"
+        "detail": "trajectory:buildkite-gha-compat-20260919-merge-resolution"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:validation_01M2YNQ7HXY8JK53R97X4HZKCG",
+        "intent_id": "intent:buildkite-gha-compat-20260919-merge-resolution",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01M2YNQ7HXY8JK53R97X4HZKCG"
+        "detail": "trajectory:buildkite-gha-compat-20260919-merge-resolution"
       }
     ],
     "trajectories": {
-      "validation_01M2YNQ7HXY8JK53R97X4HZKCG": {
-        "id": "validation_01M2YNQ7HXY8JK53R97X4HZKCG",
-        "intent_id": "intent:validation_01M2YNQ7HXY8JK53R97X4HZKCG",
+      "buildkite-gha-compat-20260919-merge-resolution": {
+        "id": "buildkite-gha-compat-20260919-merge-resolution",
+        "intent_id": "intent:buildkite-gha-compat-20260919-merge-resolution",
         "evidence_only": true,
         "steps": [
           {
@@ -136,12 +146,15 @@
             "command": "decapod validate",
             "scope": [
               ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json"
+              ".decapod/governance/validation.json",
+              ".decapod/managed/specs",
+              ".github/workflows/ci.yml",
+              ".github/workflows/decapod-validate.yml"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_740113da0a0316a0 completed with zero failures"
+              "validation epoch ve_0abf68cacedadfbd completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
@@ -152,27 +165,33 @@
           {
             "sequence": 5,
             "action": "validation",
-            "command": "ruby YAML parse for CI workflow files",
+            "command": "git merge origin/master",
             "scope": [
               ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json"
+              ".decapod/governance/validation.json",
+              ".decapod/managed/specs",
+              ".github/workflows/ci.yml",
+              ".github/workflows/decapod-validate.yml"
             ],
             "observations": [
               ".github/workflows/ci.yml",
               ".github/workflows/decapod-validate.yml",
               ".decapod/managed/specs/OPERATIONS.md",
-              ".github/workflows/ci.yml",
-              ".github/workflows/decapod-validate.yml",
-              ".decapod/managed/specs/OPERATIONS.md",
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "Native validation run showed manifest repo_signal_fingerprint drift after validate --refresh-specs; CI now normalizes generated_at and repo_signal_fingerprint before semantic drift comparison.",
-              "Local decapod validate returned status=ok and fail_count=0."
+              ".decapod/managed/specs",
+              "AGENTS.md",
+              "CLAUDE.md",
+              "CODEX.md",
+              "GEMINI.md",
+              "Merged current origin/master into PR #1350 and removed all conflict markers.",
+              "Fresh validation epoch ve_0abf68cacedadfbd completed with status=ok and fail_count=0."
             ],
             "proof_refs": [
+              "merge_conflicts",
+              "decapod_validate",
               "workflow_yaml",
-              "diff_check",
-              "decapod_validate"
+              "diff_check"
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
