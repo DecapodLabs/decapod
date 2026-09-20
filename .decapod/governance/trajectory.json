@@ -14,6 +14,7 @@
   "inspected_files": [
     ".buildkite/README.md",
     ".buildkite/pipeline.yml",
+    ".decapod/governance/validation.json",
     ".decapod/managed/specs/OPERATIONS.md",
     ".github/workflows/ci.yml",
     ".github/workflows/docs.yml",
@@ -23,6 +24,14 @@
   "declared_commands": [],
   "tool_calls": [],
   "checks": [
+    {
+      "name": "buildkite_ci_90",
+      "status": "failed"
+    },
+    {
+      "name": "buildkite_dec_apod_88",
+      "status": "passed"
+    },
     {
       "name": "buildkite_directory_removal",
       "status": "passed"
@@ -36,23 +45,28 @@
       "status": "passed"
     },
     {
+      "name": "validate_constitution",
+      "status": "passed"
+    },
+    {
       "name": "workflow_files_preserved",
       "status": "passed"
     }
   ],
   "evidence": [
+    "Latest PR #1344 checks: buildkite/decapod passed in Buildkite #88; validate-constitution passed; external buildkite/ci Build #90 failed after 1 second. Public Buildkite logs require authentication, so the adapter/configuration failure remains externally unlocalized.",
     "Merged current master v0.103.0 into PR #1344; generated governance and projections were resolved to current master, the two obsolete .buildkite files were deleted, and .github/workflows files were not authored by this change."
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
-  "proof_status": "passed",
+  "proof_status": "failed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "supported"
+    "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:85237c4c4cee8cc9c857e1987595246a74eb8efbeb71ff7a3f9b07846612069b",
+  "artifact_hash": "sha256:2045ec22c588e8652b554dc34902033a78a69a86308c057bf2fd7505f64a3976",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -94,6 +108,13 @@
         "intent_id": "intent:buildkite-gha-migration-20260919",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:buildkite-gha-migration-20260919"
+      },
+      {
+        "sequence": 5,
+        "event_id": "event:5",
+        "intent_id": "intent:buildkite-gha-migration-20260919",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:buildkite-gha-migration-20260919"
       }
     ],
     "trajectories": {
@@ -125,12 +146,30 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
+          },
+          {
+            "sequence": 5,
+            "action": "trajectory.record",
+            "scope": [
+              "PR #1344 merge resolution, .buildkite removal, governed specs, plan, trajectory, and issue/PR narrative"
+            ],
+            "observations": [
+              ".decapod/governance/validation.json",
+              "Latest PR #1344 checks: buildkite/decapod passed in Buildkite #88; validate-constitution passed; external buildkite/ci Build #90 failed after 1 second. Public Buildkite logs require authentication, so the adapter/configuration failure remains externally unlocalized."
+            ],
+            "proof_refs": [
+              "buildkite_ci_90",
+              "buildkite_dec_apod_88",
+              "validate_constitution"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:5"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 4
+    "next_sequence": 5
   }
 }
