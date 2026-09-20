@@ -74,7 +74,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:5babb933874af63726fac1db039875312c8118378783700285d2218c313af3cb",
+  "artifact_hash": "sha256:7ee5a245dae88b3ce94ce5353bc3f4503b5123faf53b2d99a30574f9cdcfd8a3",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -134,6 +134,13 @@
       {
         "sequence": 7,
         "event_id": "event:7",
+        "intent_id": "intent:jev-history-01m2y81nnzgyw1p8",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:jev-history-01m2y81nnzgyw1p8"
+      },
+      {
+        "sequence": 8,
+        "event_id": "event:8",
         "intent_id": "intent:jev-history-01m2y81nnzgyw1p8",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:jev-history-01m2y81nnzgyw1p8"
@@ -231,12 +238,30 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:7"
+          },
+          {
+            "sequence": 8,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src/decapod/core/jev_history.rs,src/decapod/core/assurance.rs,src/decapod/core/trajectory.rs,assets/schemas/jev-observations.schema.json,tests,README.md,docs,.decapod/managed/specs"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_c67f99f43507b846 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:8"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 7
+    "next_sequence": 8
   }
 }
