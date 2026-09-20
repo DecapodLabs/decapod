@@ -2,10 +2,10 @@
   "schema_version": "1.0.0",
   "kind": "validation_receipt",
   "decapod_release": "0.104.2",
-  "git_revision": "25313da2f572956dad370818a4bd8b218f85d7aa",
+  "git_revision": "aca3b85e81ae3f7b80e0ae4d12da760339a782d9",
   "repo_signal_fingerprint": "2a8aeb18ea02f8431fad4818139bcceb6fedaf631e6b4b1896a98e807b916e51",
   "trajectory_run_id": "buildkite-workflow-compat-pr-20260920",
-  "trajectory_artifact_hash": "sha256:f8645b23aa5645d59ca74dec075be0e1b352e0a65ba596f6ac349386239ecb3f",
+  "trajectory_artifact_hash": "sha256:093e68388579e6473e7175cb66d7124bc586550d340412a7e55c74dc0beca200",
   "validation_epoch": {
     "schema_version": "1.0.0",
     "epoch_id": "ve_42fe40ccc39534a4",
@@ -44,47 +44,43 @@
     }
   },
   "status": "ok",
-  "pass_count": 201,
+  "pass_count": 204,
   "fail_count": 0,
   "warn_count": 4,
-  "elapsed_ms": 5116,
+  "elapsed_ms": 5477,
   "drift_findings": [],
   "temporary_artifacts_cleaned": 0,
   "failures": [],
   "warnings": [
     "Audit log contains 3 potential crash divergence(s); historical pending entries detected. Run `decapod data broker verify` for details.",
+    "No open pull request found on GitHub for branch 'agent/unknown/workflow-compat/bugs_01m2ygbqqwzq8p3q'. Create a pull request to submit changes.",
     "Risk map missing (run `decapod riskmap init`)",
-    "Stale workspaces preserved for explicit review: <external-path> (unregistered_workspace: workspace directory is not registered with git; inspect it and rerun with --force only after preserving any needed files), <external-path> (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force)",
-    "Workspace branch 'agent/unknown/workflow-compat/bugs_01m2ygbqqwzq8p3q' has unpushed commits or does not exist on origin. Run `git push origin agent/unknown/workflow-compat/bugs_01m2ygbqqwzq8p3q`."
+    "Stale workspaces preserved for explicit review: <external-path> (unregistered_workspace: workspace directory is not registered with git; inspect it and rerun with --force only after preserving any needed files), <external-path> (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force)"
   ],
   "gate_timings": [
     {
       "name": "validate_markdown_primitives_roundtrip_gate",
-      "elapsed_ms": 1522
+      "elapsed_ms": 1533
     },
     {
       "name": "validate_stale_workspaces",
-      "elapsed_ms": 884
-    },
-    {
-      "name": "validate_obligations",
-      "elapsed_ms": 478
+      "elapsed_ms": 889
     },
     {
       "name": "validate_machine_contract",
-      "elapsed_ms": 405
+      "elapsed_ms": 807
+    },
+    {
+      "name": "validate_obligations",
+      "elapsed_ms": 496
     },
     {
       "name": "validate_legacy_jsonl_retired",
-      "elapsed_ms": 327
-    },
-    {
-      "name": "validate_federation_gates",
-      "elapsed_ms": 201
+      "elapsed_ms": 335
     },
     {
       "name": "validate_project_specs_docs",
-      "elapsed_ms": 168
+      "elapsed_ms": 275
     },
     {
       "name": "validate_archive_integrity",
@@ -92,11 +88,11 @@
     },
     {
       "name": "validate_control_plane_contract",
-      "elapsed_ms": 127
+      "elapsed_ms": 126
     },
     {
       "name": "validate_git_workspace_context",
-      "elapsed_ms": 90
+      "elapsed_ms": 79
     },
     {
       "name": "validate_lineage_hard_gate",
@@ -104,14 +100,18 @@
     },
     {
       "name": "validate_no_legacy_namespaces",
-      "elapsed_ms": 59
+      "elapsed_ms": 56
     },
     {
-      "name": "validate_repomap_determinism",
-      "elapsed_ms": 32
+      "name": "validate_federation_gates",
+      "elapsed_ms": 29
     },
     {
-      "name": "validate_knowledge_promotions_if_present",
+      "name": "validate_lcm_immutability",
+      "elapsed_ms": 29
+    },
+    {
+      "name": "validate_lcm_rebuild_gate",
       "elapsed_ms": 29
     },
     {
@@ -119,11 +119,11 @@
       "elapsed_ms": 28
     },
     {
-      "name": "validate_lcm_immutability",
+      "name": "validate_repomap_determinism",
       "elapsed_ms": 28
     },
     {
-      "name": "validate_lcm_rebuild_gate",
+      "name": "validate_knowledge_promotions_if_present",
       "elapsed_ms": 28
     },
     {
@@ -132,7 +132,7 @@
     },
     {
       "name": "validate_git_protected_branch",
-      "elapsed_ms": 15
+      "elapsed_ms": 16
     },
     {
       "name": "validate_git_push_pr_gate",
@@ -156,7 +156,7 @@
     },
     {
       "name": "validate_plan_governed_execution_gate",
-      "elapsed_ms": 2
+      "elapsed_ms": 3
     },
     {
       "name": "validate_generated_artifact_whitelist",
@@ -175,10 +175,6 @@
       "elapsed_ms": 2
     },
     {
-      "name": "validate_trajectory_artifacts_if_present",
-      "elapsed_ms": 2
-    },
-    {
       "name": "validate_canon_mutation",
       "elapsed_ms": 1
     },
@@ -191,6 +187,10 @@
       "elapsed_ms": 1
     },
     {
+      "name": "validate_trajectory_artifacts_if_present",
+      "elapsed_ms": 1
+    },
+    {
       "name": "validate_risk_map_violations",
       "elapsed_ms": 1
     },
@@ -199,7 +199,7 @@
       "elapsed_ms": 1
     },
     {
-      "name": "validate_context_capsule_policy_contract",
+      "name": "validate_override_authority",
       "elapsed_ms": 0
     },
     {
@@ -207,11 +207,7 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_override_authority",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_spec_drift",
+      "name": "validate_workunit_manifests_if_present",
       "elapsed_ms": 0
     },
     {
@@ -219,19 +215,15 @@
       "elapsed_ms": 0
     },
     {
+      "name": "validate_spec_drift",
+      "elapsed_ms": 0
+    },
+    {
       "name": "validate_project_config_toml",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_project_scoped_state",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_workunit_manifests_if_present",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_jev_history_if_present",
+      "name": "validate_context_capsule_policy_contract",
       "elapsed_ms": 0
     },
     {
@@ -239,15 +231,11 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_state_commit_gate",
+      "name": "validate_project_scoped_state",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_context_capsules_if_present",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_repo_map",
+      "name": "validate_coplayer_policy_tightening",
       "elapsed_ms": 0
     },
     {
@@ -255,15 +243,31 @@
       "elapsed_ms": 0
     },
     {
+      "name": "validate_repo_map",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_state_commit_gate",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_jev_history_if_present",
+      "elapsed_ms": 0
+    },
+    {
       "name": "validate_recursive_improvement_passes_if_present",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_eval_gate_if_required",
+      "name": "validate_internalization_artifacts_if_present",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_internalization_artifacts_if_present",
+      "name": "validate_context_capsules_if_present",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_eval_gate_if_required",
       "elapsed_ms": 0
     },
     {
@@ -272,10 +276,6 @@
     },
     {
       "name": "validate_root_dockerfile_seed_detection",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_coplayer_policy_tightening",
       "elapsed_ms": 0
     },
     {
@@ -289,14 +289,14 @@
     "confidence": "medium",
     "reasons": [
       "Audit log contains 3 potential crash divergence(s); historical pending entries detected. Run `decapod data broker verify` for details.",
+      "No open pull request found on GitHub for branch 'agent/unknown/workflow-compat/bugs_01m2ygbqqwzq8p3q'. Create a pull request to submit changes.",
       "Risk map missing (run `decapod riskmap init`)",
-      "Stale workspaces preserved for explicit review: <external-path> (unregistered_workspace: workspace directory is not registered with git; inspect it and rerun with --force only after preserving any needed files), <external-path> (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force)",
-      "Workspace branch 'agent/unknown/workflow-compat/bugs_01m2ygbqqwzq8p3q' has unpushed commits or does not exist on origin. Run `git push origin agent/unknown/workflow-compat/bugs_01m2ygbqqwzq8p3q`."
+      "Stale workspaces preserved for explicit review: <external-path> (unregistered_workspace: workspace directory is not registered with git; inspect it and rerun with --force only after preserving any needed files), <external-path> (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force)"
     ],
     "recommendations": [
       "Review the reported validation warnings before relying on the CI result.",
       "Use `decapod validate -v --format json` to inspect the affected gate output."
     ]
   },
-  "receipt_hash": "sha256:05f207f45c4579a0df55c867584f701c19ab60c74e653f6549af377285ac8d12"
+  "receipt_hash": "sha256:e3d8c3498845c44346497e77fdb8947068e48b20282cd03fc2c3349f266dff85"
 }

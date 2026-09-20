@@ -7,7 +7,8 @@
     "bugs_01m2ygbqqwzq8p3q"
   ],
   "proof_hooks": [
-    "Buildkite GHA checks for PR, master, release, docs, and tag contexts"
+    "Dedicated Buildkite compatibility PR checks pass for docs push, release publication push, and release planning pull request paths",
+    "decapod validate passes"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -26,5 +27,5 @@
     "file_touch_budget": 30
   },
   "phases": [],
-  "updated_at": "1789879561Z"
+  "updated_at": "1789934709Z"
 }

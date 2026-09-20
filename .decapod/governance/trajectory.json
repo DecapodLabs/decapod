@@ -20,6 +20,9 @@
     ".github/workflows/docs.yml, .github/workflows/release.yml, .github/scripts/release-plan.sh, and related governed documentation/proof artifacts"
   ],
   "inspected_files": [
+    ".decapod/governance/claims.json",
+    ".decapod/governance/plan.json",
+    ".decapod/governance/validation.json",
     ".decapod/managed/specs/OPERATIONS.md",
     ".github/scripts/release-plan.sh",
     ".github/workflows/docs.yml",
@@ -55,6 +58,22 @@
       "status": "unavailable"
     },
     {
+      "name": "governance-artifacts",
+      "status": "passed"
+    },
+    {
+      "name": "hosted-buildkite-docs-push",
+      "status": "unavailable"
+    },
+    {
+      "name": "hosted-buildkite-release-plan-pull-request",
+      "status": "unavailable"
+    },
+    {
+      "name": "hosted-buildkite-release-publish-push",
+      "status": "unavailable"
+    },
+    {
       "name": "release-plan-pull-request-failure",
       "status": "unavailable"
     },
@@ -87,7 +106,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:093e68388579e6473e7175cb66d7124bc586550d340412a7e55c74dc0beca200",
+  "artifact_hash": "sha256:9a63b86c4144be2e7f1f60eea9fcf9f9fa8b6d9b5e17f0b203d2c768c88ee8ca",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -140,6 +159,13 @@
       {
         "sequence": 6,
         "event_id": "event:6",
+        "intent_id": "intent:buildkite-workflow-compat-pr-20260920",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:buildkite-workflow-compat-pr-20260920"
+      },
+      {
+        "sequence": 7,
+        "event_id": "event:7",
         "intent_id": "intent:buildkite-workflow-compat-pr-20260920",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:buildkite-workflow-compat-pr-20260920"
@@ -226,12 +252,35 @@
               "The Buildkite pipeline has a CARGO_REGISTRY_TOKEN secret available to the release job; the workflow now declares it so missing access is surfaced by the adapter rather than silently producing an empty environment."
             ],
             "custody_event_id": "event:6"
+          },
+          {
+            "sequence": 7,
+            "action": "trajectory.record",
+            "scope": [
+              ".github/workflows/docs.yml, .github/workflows/release.yml, .github/scripts/release-plan.sh, and related governed documentation/proof artifacts"
+            ],
+            "observations": [
+              ".decapod/governance/claims.json",
+              ".decapod/governance/plan.json",
+              ".decapod/governance/validation.json"
+            ],
+            "proof_refs": [
+              "decapod-validate",
+              "governance-artifacts",
+              "workflow-yaml",
+              "release-plan-script-syntax",
+              "hosted-buildkite-docs-push",
+              "hosted-buildkite-release-publish-push",
+              "hosted-buildkite-release-plan-pull-request"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:7"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 6
+    "next_sequence": 7
   }
 }
