@@ -1977,6 +1977,22 @@ pub fn verify_validation_artifacts_for_publish(repo_root: &Path) -> Result<(), D
             )));
         }
     }
+    if repo_root
+        .join(crate::core::jev_history::JEV_HISTORY_PATH)
+        .is_file()
+    {
+        let ledger = crate::core::jev_history::load_and_validate(repo_root)?.ok_or_else(|| {
+            DecapodError::ValidationError(
+                "Jev ledger disappeared during publish verification".to_string(),
+            )
+        })?;
+        if ledger.trajectory_run_id != trajectory.run_id {
+            return Err(DecapodError::ValidationError(
+                "Cannot publish: Jev observation ledger is not bound to the current trajectory."
+                    .to_string(),
+            ));
+        }
+    }
     Ok(())
 }
 
@@ -1998,6 +2014,26 @@ fn ensure_validation_artifacts_staged(repo_root: &Path) -> Result<(), DecapodErr
         if !output.status.success() {
             return Err(DecapodError::ValidationError(format!(
                 "Cannot publish: required validation artifact was not staged: {path}"
+            )));
+        }
+    }
+    let jev_path = crate::core::jev_history::JEV_HISTORY_PATH;
+    if repo_root.join(jev_path).is_file() {
+        let output = Command::new("git")
+            .args([
+                "-C",
+                dir,
+                "ls-files",
+                "--cached",
+                "--error-unmatch",
+                "--",
+                jev_path,
+            ])
+            .output()
+            .map_err(DecapodError::IoError)?;
+        if !output.status.success() {
+            return Err(DecapodError::ValidationError(format!(
+                "Cannot publish: Jev observation ledger was not staged: {jev_path}"
             )));
         }
     }
@@ -2081,6 +2117,18 @@ pub fn ensure_required_governance_artifacts_in_pr(
             "Cannot publish: required governance artifacts are not included in the PR diff against '{base_ref}': {}. Every project PR must update all four (plan, claims, trajectory, validation). Intermediate commits need not each touch them.",
             missing.join(", ")
         )));
+    }
+
+    if repo_root
+        .join(crate::core::jev_history::JEV_HISTORY_PATH)
+        .is_file()
+    {
+        let jev_path = crate::core::jev_history::JEV_HISTORY_PATH;
+        if !changed.contains(jev_path) {
+            return Err(DecapodError::ValidationError(format!(
+                "Cannot publish: Jev observation ledger is present but not included in the PR diff against '{base_ref}': {jev_path}. Commit the ledger so all Jev results remain recoverable through Git history."
+            )));
+        }
     }
 
     Ok(())

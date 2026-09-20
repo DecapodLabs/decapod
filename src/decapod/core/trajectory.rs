@@ -480,7 +480,9 @@ pub fn init_trajectory(
         artifact_hash: String::new(),
         custody,
     };
-    write_trajectory(project_root, &artifact)
+    let written = write_trajectory(project_root, &artifact)?;
+    crate::core::jev_history::reset_for_trajectory(project_root, &written.run_id)?;
+    Ok(written)
 }
 
 pub fn load_trajectory(

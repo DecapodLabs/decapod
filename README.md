@@ -185,6 +185,13 @@ unconfigured, times out, or returns an invalid response, Decapod records
 Decapod remains the authority for boundaries, interlocks, policy, and
 completion.
 
+When Jev is enabled and a trajectory run is active, each assurance call also
+appends its typed Jev result (including explicit `no_observation` failures) to
+`.decapod/governance/jev.json`. The ledger is keyed by the active trajectory
+run, validated before publication, and committed with the PR so the complete
+observation history is recoverable through Git. Starting a new trajectory run
+removes the prior working-tree ledger; its committed history remains in Git.
+
 For developer-only semantic evaluation, the ignored corpus can be run with an
 explicit opt-in and credential:
 

@@ -9,6 +9,7 @@ artifacts:
 | `.decapod/governance/claims.json` | Agent or researcher through the sanctioned claims surface | Authoritative falsifiable-claims ledger | Connects a claim to its baseline, observable condition, failure mode, measurement, and proof gate. It is not proof by itself. |
 | `.decapod/governance/trajectory.json` | Agent through `decapod govern trajectory` | Evidentiary custody record | Records run intent, boundaries, inspected and modified files, commands, assumptions, checks, and evidence over time. |
 | `.decapod/governance/validation.json` | `decapod validate` | Generated validation receipt | Records the validation result for identified repository state and supports the publication gate. |
+| `.decapod/governance/jev.json` | `assurance.evaluate` when `provider = "jev"` | Optional advisory observation ledger | Records every typed Jev result for the active trajectory run; it is not a policy or proof artifact. |
 
 These artifacts work with todos, assignments, living specifications, evidence,
 receipts, projections, custody, and publication state. See the
@@ -39,6 +40,12 @@ move on every project PR**.
 Inventory **evaluates and reports**; it does not auto-regenerate the four files
 as one command. Agents refresh each surface via `govern plan`, `govern trajectory`,
 `govern artifacts inventory --claims-note`, and `decapod validate`.
+
+The Jev ledger is optional and is created only when Jev is attempted. When it
+exists, validation checks its strict schema and active-trajectory binding, and
+publication requires it to be staged and present in the PR diff. A new
+trajectory run resets the working-tree ledger; committed prior ledgers remain
+recoverable through Git history.
 
 ## Release pin flywheel
 

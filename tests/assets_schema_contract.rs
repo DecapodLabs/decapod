@@ -43,6 +43,11 @@ fn governed_schemas_are_grouped_and_strict() {
             &["schema_version", "kind", "validation_epoch"][..],
         ),
         (
+            "assets/schemas/jev-observations.schema.json",
+            "https://decapod.dev/schemas/jev-observations-1.0.0.schema.json",
+            &["schema_version", "kind", "trajectory_run_id", "runs"][..],
+        ),
+        (
             "assets/schemas/constitution.schema.json",
             "",
             &["$schema"][..],

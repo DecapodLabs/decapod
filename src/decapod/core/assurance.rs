@@ -4,6 +4,7 @@ use crate::core::decision_provider::{
 };
 use crate::core::error::DecapodError;
 use crate::core::events;
+use crate::core::jev_history;
 use crate::core::mentor::{MentorEngine, Obligation, ObligationKind, ObligationsContext};
 use crate::core::rpc::{Advisory, Attestation, Interlock, LoopSignal, ReconciliationPointer};
 use crate::core::workspace;
@@ -240,7 +241,40 @@ impl AssuranceEngine {
                 );
             }
         };
-        crate::core::decision_provider::configured(provider_kind).observe(&context)
+        if provider_kind != crate::core::decision_provider::DecisionProviderKind::Jev {
+            return crate::core::decision_provider::configured(provider_kind).observe(&context);
+        }
+
+        let trajectory_run_id = match trajectory::load_trajectory_cookie(&self.repo_root) {
+            Ok(Some(trajectory)) => trajectory.run_id,
+            Ok(None) => {
+                return DecisionObservationResult::no_observation(
+                    "jev",
+                    crate::core::decision_provider::NoObservationReason::MissingTrajectory,
+                );
+            }
+            Err(_) => {
+                return DecisionObservationResult::no_observation(
+                    "jev",
+                    crate::core::decision_provider::NoObservationReason::Configuration,
+                );
+            }
+        };
+        let result = crate::core::decision_provider::configured(provider_kind).observe(&context);
+        match jev_history::append(
+            &self.repo_root,
+            &trajectory_run_id,
+            &input.op,
+            &input.touched_paths,
+            input.diff_summary.as_deref(),
+            result.clone(),
+        ) {
+            Ok(()) => result,
+            Err(_) => DecisionObservationResult::no_observation(
+                "jev",
+                crate::core::decision_provider::NoObservationReason::Persistence,
+            ),
+        }
     }
 
     fn decision_obligation(obligation: &Obligation, required: bool) -> GovernanceObligation {

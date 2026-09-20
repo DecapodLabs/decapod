@@ -9,6 +9,7 @@ use crate::core::capsule_policy::{self, POLICY_SCHEMA_VERSION};
 use crate::core::context_capsule::DeterministicContextCapsule;
 use crate::core::error;
 use crate::core::events;
+use crate::core::jev_history;
 use crate::core::migration;
 use crate::core::output;
 use crate::core::project_specs::{
@@ -3148,6 +3149,26 @@ fn validate_publication_bundle_currency(
         Err(error) => failures.push(format!(".decapod/governance/trajectory.json: {error}")),
         Ok(Some(_)) => {}
     }
+    if repo_root.join(jev_history::JEV_HISTORY_PATH).is_file() {
+        match jev_history::load_and_validate(repo_root) {
+            Ok(Some(ledger)) => match trajectory::load_trajectory_cookie(repo_root) {
+                Ok(Some(trajectory)) if ledger.trajectory_run_id == trajectory.run_id => {}
+                Ok(Some(trajectory)) => failures.push(format!(
+                    "{}: trajectory_run_id '{}' does not match active trajectory '{}'",
+                    jev_history::JEV_HISTORY_PATH,
+                    ledger.trajectory_run_id,
+                    trajectory.run_id
+                )),
+                Ok(None) => failures.push(format!(
+                    "{}: active trajectory is missing",
+                    jev_history::JEV_HISTORY_PATH
+                )),
+                Err(error) => failures.push(format!("{}: {error}", jev_history::JEV_HISTORY_PATH)),
+            },
+            Ok(None) => failures.push(format!("{}: missing ledger", jev_history::JEV_HISTORY_PATH)),
+            Err(error) => failures.push(format!("{}: {error}", jev_history::JEV_HISTORY_PATH)),
+        }
+    }
     match load_validation_receipt_for_currency(repo_root) {
         Ok(()) => {}
         Err(error) => failures.push(format!(".decapod/governance/validation.json: {error}")),
@@ -3696,6 +3717,42 @@ fn validate_trajectory_artifacts_if_present(
 
     pass(
         "Trajectory cookie schema check passed for trajectory.json",
+        ctx,
+    );
+    Ok(())
+}
+
+fn validate_jev_history_if_present(
+    ctx: &ValidationContext,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Jev Observation Ledger Gate", ctx);
+    if !repo_root.join(jev_history::JEV_HISTORY_PATH).exists() {
+        skip(
+            "No Jev observation ledger found; skipping optional Jev history gate",
+            ctx,
+        );
+        return Ok(());
+    }
+    let ledger = jev_history::load_and_validate(repo_root)?.ok_or_else(|| {
+        error::DecapodError::ValidationError(format!(
+            "Jev observation ledger disappeared during validation: {}",
+            repo_root.join(jev_history::JEV_HISTORY_PATH).display()
+        ))
+    })?;
+    let trajectory = trajectory::load_trajectory_cookie(repo_root)?.ok_or_else(|| {
+        error::DecapodError::ValidationError(
+            "Jev observation ledger requires an active trajectory cookie".to_string(),
+        )
+    })?;
+    if ledger.trajectory_run_id != trajectory.run_id {
+        return Err(error::DecapodError::ValidationError(format!(
+            "Jev observation ledger run '{}' does not match active trajectory '{}'",
+            ledger.trajectory_run_id, trajectory.run_id
+        )));
+    }
+    pass(
+        "Jev observation ledger schema and trajectory binding are valid",
         ctx,
     );
     Ok(())
@@ -7598,6 +7655,13 @@ pub fn run_validation(
             ctx,
             "validate_trajectory_artifacts_if_present",
             validate_trajectory_artifacts_if_present(ctx, working_root)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_jev_history_if_present",
+            validate_jev_history_if_present(ctx, working_root)
         );
         gate!(
             s,

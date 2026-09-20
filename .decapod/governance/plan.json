@@ -1,18 +1,18 @@
 {
   "schema_version": "1.0.0",
   "title": "Introduce optional Jev decision-provider seam",
-  "intent": "Add the smallest optional Jev-backed probabilistic decision-provider seam after governance context reconstruction, with a none/default path, one typed trajectory-satisfaction observation, fail-safe unavailable behavior, tests, and README/docs positioning; preserve Decapod as the sole policy and governance authority.",
+  "intent": "Persist every Jev trajectory-satisfaction result as a schema-validated, per-trajectory governance artifact that is recoverable through Git history and reset when a fresh trajectory run begins, while preserving Decapod as the sole policy and governance authority.",
   "state": "APPROVED",
   "todo_ids": [
-    "cicd_01m2xrx9fg5mgdx8"
+    "code_01m2y81nnzgyw1p8"
   ],
   "proof_hooks": [
-    "cargo fmt --all -- --check",
     "cargo test --locked --lib",
+    "cargo test --locked --test decision_provider_live --no-run",
+    "cargo test --locked --test trajectory_cli",
     "cargo clippy --locked --all-targets --all-features -- -D warnings",
     "decapod validate --format json",
-    "focused decision-provider tests",
-    "README and documentation consistency checks"
+    "Jev history schema and reset tests"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -26,5 +26,5 @@
     "file_touch_budget": 30
   },
   "phases": [],
-  "updated_at": "1789853170Z"
+  "updated_at": "1789869229Z"
 }

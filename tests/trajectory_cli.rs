@@ -1,4 +1,5 @@
 use serde_json::Value;
+use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
@@ -166,6 +167,19 @@ fn trajectory_cli_replaces_a_legacy_appended_cookie() {
         .expect("open trajectory cookie");
     file.write_all(b"\n{\"legacy\":true}\n")
         .expect("append legacy value");
+    fs::create_dir_all(root.join(".decapod/governance")).expect("governance dir");
+    fs::write(
+        root.join(".decapod/governance/jev.json"),
+        serde_json::json!({
+            "$schema": "https://decapod.dev/schemas/jev-observations-1.0.0.schema.json",
+            "schema_version": "1.0.0",
+            "kind": "jev_observation_ledger",
+            "trajectory_run_id": "run_cli_old",
+            "runs": {}
+        })
+        .to_string(),
+    )
+    .expect("write Jev ledger");
 
     let replacement = run_decapod(
         &root,
@@ -188,6 +202,10 @@ fn trajectory_cli_replaces_a_legacy_appended_cookie() {
     let parsed: Value = serde_json::from_str(&raw).expect("cookie is one JSON value");
     assert_eq!(parsed["run_id"], "run_cli_new");
     assert!(!raw.contains("\"legacy\":true"));
+    assert!(
+        !root.join(".decapod/governance/jev.json").exists(),
+        "new trajectory must reset prior Jev history"
+    );
 }
 
 #[test]
