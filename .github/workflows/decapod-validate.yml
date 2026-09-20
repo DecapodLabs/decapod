@@ -50,9 +50,9 @@ jobs:
         # repo fingerprint changes before the next governed code PR refreshes
         # entrypoints/specs, so release PRs must not run spec inspection.
         if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'release') && !startsWith(github.head_ref, 'release-plz-')
-        # validate rewrites generated_at every run; that is not semantic drift.
-        # Normalize it to HEAD before the exit-code check so only real content,
-        # entrypoint, Dockerfile, or manifest hash drift fails CI.
+        # validate rewrites generated metadata every run; that is not semantic
+        # drift. Normalize it to HEAD before the exit-code check so only real
+        # content, entrypoint, Dockerfile, or manifest hash drift fails CI.
         run: |
           set -euo pipefail
           MANIFEST=".decapod/managed/specs/.manifest.json"
@@ -60,6 +60,10 @@ jobs:
             OLD=$(git show "HEAD:${MANIFEST}" | sed -n 's/.*"generated_at": "\([^"]*\)".*/\1/p' | head -1)
             if [ -n "${OLD}" ]; then
               sed -i "s/\"generated_at\": \"[^\"]*\"/\"generated_at\": \"${OLD}\"/" "${MANIFEST}"
+            fi
+            OLD_SIGNAL=$(git show "HEAD:${MANIFEST}" | sed -n 's/.*"repo_signal_fingerprint": "\([^"]*\)".*/\1/p' | head -1)
+            if [ -n "${OLD_SIGNAL}" ]; then
+              sed -i "s/\"repo_signal_fingerprint\": \"[^\"]*\"/\"repo_signal_fingerprint\": \"${OLD_SIGNAL}\"/" "${MANIFEST}"
             fi
           fi
           if ! git diff --exit-code -- . ':!.decapod/governance/'; then

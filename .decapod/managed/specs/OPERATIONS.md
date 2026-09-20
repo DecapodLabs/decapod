@@ -127,6 +127,7 @@ following compatibility decisions:
 | Documentation | `actions/upload-pages-artifact` failed on a master push | Keep the GitHub Pages action for native GitHub Actions; upload the site with `buildkite-agent artifact upload` in Buildkite. Pages deployment remains a service capability gap and is explicitly skipped there. |
 | Release publication | `release-publish` lacked the GitHub App token and registry credentials in Buildkite | Keep the App-token/action path for GitHub; use the release-plz CLI with named static Buildkite `GITHUB_TOKEN` and `CARGO_REGISTRY_TOKEN` secrets. Missing secrets fail with an actionable message. |
 | GHCR image publication | tag-only Docker setup actions were scheduled on the master push and failed in Buildkite | Use a simple tag-event condition and the Docker CLI/buildx path in Buildkite; retain the Docker actions for native GitHub Actions. |
+| Validation in detached CI checkouts | The validator's worktree guard cannot establish an agent workspace from a hosted checkout, and `validate --refresh-specs` refreshes generated manifest metadata on every run | CI initializes a run cookie with `DECAPOD_VALIDATE_SKIP_GIT_GATES=1` while retaining the validation gates; the drift check compares semantic projections and normalizes only `generated_at` and `repo_signal_fingerprint` generated metadata. |
 
 These changes do not claim that Buildkite supplies GitHub's environments,
 Pages deployment records, GitHub App token exchange, or Docker action setup.
@@ -298,7 +299,7 @@ for filesystem work and are not used as the artifact representation.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `65205f1e85d7ce4a47ccef8897eb2e7347ad85b93c17b36a12ebd47ea6e04b72`
+- Repository signal fingerprint: `e41a7906f191795ae575033446b73d8f179250502f192ad77a5008da1de76cbe`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `bazel-unknown-todo-01m2yg-agent-unknown-bugs_01m2ygbqqwzq8p3q-buildkite-migration/` (775 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

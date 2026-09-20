@@ -1,20 +1,22 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "buildkite-gha-compat-20260919-ci-fix",
-  "intent_id": "intent:buildkite-gha-compat-20260919-ci-fix",
+  "run_id": "validation_01M2YNQ7HXY8JK53R97X4HZKCG",
+  "intent_id": "intent:validation_01M2YNQ7HXY8JK53R97X4HZKCG",
   "task_id": "bugs_01m2ygbqqwzq8p3q",
-  "original_intent": "Get Buildkite CI setup and Decapod validation green in PR #1350",
-  "derived_intent": "Bootstrap CI validation safely in detached checkouts and upload Bazel artifacts through regular workspace files",
-  "destination": "PR #1350 and Issue #1349",
+  "original_intent": "Produce proof artifacts for a repository validation completion.",
+  "derived_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
+  "destination": "PR #1350",
   "current_phase": "validation",
   "next_transitions": [
     "publish"
   ],
   "active_boundaries": [
-    "Keep .github/workflows/*.yml canonical; preserve validation and release gates; no native .buildkite pipeline"
+    "CI workflow compatibility and governed validation artifacts",
+    "Repository validation and tracked proof artifacts"
   ],
   "repo_scope": [
-    ".decapod/governance/*.json",
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
     ".decapod/managed/specs/OPERATIONS.md",
     ".github/workflows/ci.yml",
     ".github/workflows/decapod-validate.yml"
@@ -32,7 +34,10 @@
     ".github/workflows/decapod-validate.yml"
   ],
   "declared_commands": [
-    "decapod validate"
+    "decapod validate",
+    "decapod validate --format json",
+    "git diff --check",
+    "ruby YAML parse for CI workflow files"
   ],
   "tool_calls": [],
   "checks": [
@@ -41,25 +46,22 @@
       "status": "passed"
     },
     {
-      "name": "decapod-validate",
+      "name": "decapod_validate",
       "status": "passed"
     },
     {
-      "name": "detached-trajectory-bootstrap",
+      "name": "diff_check",
       "status": "passed"
     },
     {
-      "name": "git-diff-check",
-      "status": "passed"
-    },
-    {
-      "name": "workflow-yaml",
+      "name": "workflow_yaml",
       "status": "passed"
     }
   ],
   "evidence": [
-    "Detached checkout trajectory init succeeds when the CI-only DECAPOD_VALIDATE_SKIP_GIT_GATES bypass is set; decapod validate returned status ok with zero failures.",
-    "validation epoch ve_caa38fe84f08084b completed with zero failures"
+    "Local decapod validate returned status=ok and fail_count=0.",
+    "Native validation run showed manifest repo_signal_fingerprint drift after validate --refresh-specs; CI now normalizes generated_at and repo_signal_fingerprint before semantic drift comparison.",
+    "validation epoch ve_740113da0a0316a0 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -70,24 +72,22 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:9e03356f0b213c932b2d6f0523522b475f5fbf3e8921b831363c72937e97cb7b",
+  "artifact_hash": "sha256:d69abcb6a43c9ce425dc2219ff076eb7480a424136e10f6c63ca0080205f10a3",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:buildkite-gha-compat-20260919-ci-fix": {
-        "id": "intent:buildkite-gha-compat-20260919-ci-fix",
-        "raw_intent": "Get Buildkite CI setup and Decapod validation green in PR #1350",
-        "refined_intent": "Bootstrap CI validation safely in detached checkouts and upload Bazel artifacts through regular workspace files",
+      "intent:validation_01M2YNQ7HXY8JK53R97X4HZKCG": {
+        "id": "intent:validation_01M2YNQ7HXY8JK53R97X4HZKCG",
+        "raw_intent": "Produce proof artifacts for a repository validation completion.",
+        "refined_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
         "acceptance_criteria": [],
         "constraints": [
-          ".github/workflows/ci.yml",
-          ".github/workflows/decapod-validate.yml",
-          ".decapod/governance/*.json",
-          ".decapod/managed/specs/OPERATIONS.md"
+          ".decapod/governance/trajectory.json",
+          ".decapod/governance/validation.json"
         ],
         "assumptions": [],
         "boundaries": [
-          "Keep .github/workflows/*.yml canonical; preserve validation and release gates; no native .buildkite pipeline"
+          "Repository validation and tracked proof artifacts"
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -100,34 +100,34 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:buildkite-gha-compat-20260919-ci-fix",
+        "intent_id": "intent:validation_01M2YNQ7HXY8JK53R97X4HZKCG",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:buildkite-gha-compat-20260919-ci-fix",
+        "intent_id": "intent:validation_01M2YNQ7HXY8JK53R97X4HZKCG",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:buildkite-gha-compat-20260919-ci-fix",
+        "intent_id": "intent:validation_01M2YNQ7HXY8JK53R97X4HZKCG",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:buildkite-gha-compat-20260919-ci-fix"
+        "detail": "trajectory:validation_01M2YNQ7HXY8JK53R97X4HZKCG"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:buildkite-gha-compat-20260919-ci-fix",
+        "intent_id": "intent:validation_01M2YNQ7HXY8JK53R97X4HZKCG",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:buildkite-gha-compat-20260919-ci-fix"
+        "detail": "trajectory:validation_01M2YNQ7HXY8JK53R97X4HZKCG"
       }
     ],
     "trajectories": {
-      "buildkite-gha-compat-20260919-ci-fix": {
-        "id": "buildkite-gha-compat-20260919-ci-fix",
-        "intent_id": "intent:buildkite-gha-compat-20260919-ci-fix",
+      "validation_01M2YNQ7HXY8JK53R97X4HZKCG": {
+        "id": "validation_01M2YNQ7HXY8JK53R97X4HZKCG",
+        "intent_id": "intent:validation_01M2YNQ7HXY8JK53R97X4HZKCG",
         "evidence_only": true,
         "steps": [
           {
@@ -135,15 +135,13 @@
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              ".decapod/governance/*.json",
-              ".decapod/managed/specs/OPERATIONS.md",
-              ".github/workflows/ci.yml",
-              ".github/workflows/decapod-validate.yml"
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_caa38fe84f08084b completed with zero failures"
+              "validation epoch ve_740113da0a0316a0 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
@@ -153,12 +151,11 @@
           },
           {
             "sequence": 5,
-            "action": "trajectory.record",
+            "action": "validation",
+            "command": "ruby YAML parse for CI workflow files",
             "scope": [
-              ".decapod/governance/*.json",
-              ".decapod/managed/specs/OPERATIONS.md",
-              ".github/workflows/ci.yml",
-              ".github/workflows/decapod-validate.yml"
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
             ],
             "observations": [
               ".github/workflows/ci.yml",
@@ -167,13 +164,15 @@
               ".github/workflows/ci.yml",
               ".github/workflows/decapod-validate.yml",
               ".decapod/managed/specs/OPERATIONS.md",
-              "Detached checkout trajectory init succeeds when the CI-only DECAPOD_VALIDATE_SKIP_GIT_GATES bypass is set; decapod validate returned status ok with zero failures."
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "Native validation run showed manifest repo_signal_fingerprint drift after validate --refresh-specs; CI now normalizes generated_at and repo_signal_fingerprint before semantic drift comparison.",
+              "Local decapod validate returned status=ok and fail_count=0."
             ],
             "proof_refs": [
-              "workflow-yaml",
-              "git-diff-check",
-              "decapod-validate",
-              "detached-trajectory-bootstrap"
+              "workflow_yaml",
+              "diff_check",
+              "decapod_validate"
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
