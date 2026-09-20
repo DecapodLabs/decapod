@@ -788,6 +788,11 @@ const DIAGRAM_NOTATION_DESCRIPTIONS: &[&str] = &[
     "ASCII/text blocks readable in terminals and plain Markdown",
     "Mermaid diagrams rendered by GitHub Markdown from readable text source",
 ];
+const DECISION_PROVIDER_OPTIONS: &[&str] = &["none", "jev"];
+const DECISION_PROVIDER_DESCRIPTIONS: &[&str] = &[
+    "Local-only operation; do not request external observations",
+    "Optional advisory trajectory observation through Jev",
+];
 const SELECTOR_VISIBLE_OPTIONS: usize = 10;
 
 fn normalize_language(input: &str) -> String {
@@ -1127,6 +1132,18 @@ fn prompt_language_choice(
     recommendation: &[String],
 ) -> Result<Vec<String>, error::DecapodError> {
     use crate::core::ansi::AnsiExt;
+    if current.is_empty() && recommendation.is_empty() {
+        return prompt_csv_default("Primary language(s)", "");
+    }
+    let current_is_selector_safe = current.len() <= 1
+        && current.first().is_none_or(|language| {
+            LANGUAGES
+                .iter()
+                .any(|option| option.eq_ignore_ascii_case(language))
+        });
+    if !current.is_empty() && !current_is_selector_safe {
+        return prompt_csv_default("Primary language(s)", &current.join(","));
+    }
     let inferred = if current.is_empty() {
         "None".to_string()
     } else {
@@ -1239,6 +1256,15 @@ fn prompt_architecture_choice(
     current: Option<&str>,
 ) -> Result<Option<String>, error::DecapodError> {
     use crate::core::ansi::AnsiExt;
+    if let Some(current) = current {
+        let current_matches_common = ARCH_DIRECTIONS
+            .iter()
+            .any(|(arch, _)| current.eq_ignore_ascii_case(arch));
+        if !current_matches_common {
+            let choice = prompt_line_default("Architecture direction", current)?;
+            return Ok(Some(choice));
+        }
+    }
     let inferred = current.unwrap_or("None");
     let current_matches_common = current.is_some_and(|c| {
         ARCH_DIRECTIONS
@@ -1473,6 +1499,45 @@ fn prompt_diagram_style(
     parse_diagram_style_choice(&choice, default_style)
 }
 
+fn decision_provider_choice(
+    provider: crate::core::decision_provider::DecisionProviderKind,
+) -> Result<crate::core::decision_provider::DecisionProviderKind, error::DecapodError> {
+    print_init_block(
+        "Decision Provider",
+        "Choose whether Decapod may request optional advisory observations.",
+    );
+    println!(
+        "    current selection/default: {}",
+        match provider {
+            crate::core::decision_provider::DecisionProviderKind::None => "none",
+            crate::core::decision_provider::DecisionProviderKind::Jev => "jev",
+        }
+        .bright_white()
+    );
+    println!("    options: up/down, type name or number");
+    let default = vec![
+        match provider {
+            crate::core::decision_provider::DecisionProviderKind::None => "none",
+            crate::core::decision_provider::DecisionProviderKind::Jev => "jev",
+        }
+        .to_string(),
+    ];
+    let choice = prompt_terminal_selector(
+        DECISION_PROVIDER_OPTIONS,
+        Some(DECISION_PROVIDER_DESCRIPTIONS),
+        &default,
+        "    choice: ",
+    )?
+    .unwrap_or_else(|| default[0].clone());
+    match choice.to_ascii_lowercase().as_str() {
+        "none" => Ok(crate::core::decision_provider::DecisionProviderKind::None),
+        "jev" => Ok(crate::core::decision_provider::DecisionProviderKind::Jev),
+        _ => Err(error::DecapodError::ValidationError(
+            "Invalid decision provider; expected none or jev".to_string(),
+        )),
+    }
+}
+
 fn init_with_from_config(
     config: &DecapodProjectConfig,
     target_dir: PathBuf,
@@ -1486,6 +1551,7 @@ fn init_with_from_config(
         dir: Some(target_dir),
         project_dir: None,
         force,
+        refresh: false,
         proof: false,
         dry_run,
         all: all_entrypoints,
@@ -1524,6 +1590,7 @@ fn init_with_from_config(
         } else {
             crate::cli::BackendType::Local
         },
+        decision_provider: Some(config.decision.provider),
         git: false,
         no_git: false,
     }
@@ -1620,7 +1687,11 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
         context: DeclaredContextConfig {
             declared_sources: declared_context_sources,
         },
-        decision: DecisionConfig::default(),
+        decision: DecisionConfig {
+            provider: init
+                .decision_provider
+                .unwrap_or(crate::core::decision_provider::DecisionProviderKind::None),
+        },
     }
 }
 
@@ -1718,13 +1789,13 @@ fn enrich_repo_context_interactive(
 
     let use_external_tracker = prompt_yes_no(
         "Use an external task tracker (e.g. Beads) instead of Decapod todos?",
-        false,
+        repo.external_tracker,
     )?;
     repo.external_tracker = use_external_tracker;
 
     let enable_container_workspaces = prompt_yes_no(
         "Enable container workspaces? (Required for multi-agent concurrent runs. Disable only for single-agent workflows.)",
-        true,
+        repo.container_workspaces,
     )?;
     repo.container_workspaces = enable_container_workspaces;
 
@@ -1803,6 +1874,11 @@ fn enrich_repo_context_interactive(
 
     let enable_ci = prompt_yes_no("Scaffold GitHub Action for decapod validate?", init.ci)?;
     init.ci = enable_ci;
+
+    init.decision_provider = Some(decision_provider_choice(
+        init.decision_provider
+            .unwrap_or(crate::core::decision_provider::DecisionProviderKind::None),
+    )?);
 
     Ok(())
 }
@@ -2136,6 +2212,12 @@ pub fn run() -> Result<(), error::DecapodError> {
                         resolve_existing_init_dir(&current_dir)?
                     };
                     let maybe_cfg = load_project_config_if_present(&target)?;
+                    if init_group.refresh && maybe_cfg.is_none() {
+                        return Err(error::DecapodError::ValidationError(
+                            "Cannot refresh an uninitialized project; run `decapod init` first."
+                                .to_string(),
+                        ));
+                    }
                     if let Some(cfg) = maybe_cfg {
                         // REFRESH FLOW: Sidestep manual entries if .decapod already exists
                         let mut with = init_with_from_config(
@@ -2226,6 +2308,10 @@ pub fn run() -> Result<(), error::DecapodError> {
                         if !init_group.proof_commands.is_empty() {
                             with.proof_commands = init_group.proof_commands.clone();
                         }
+                        if init_group.decision_provider.is_some() {
+                            with.decision_provider = init_group.decision_provider;
+                        }
+                        with.refresh = init_group.refresh;
                         with
                     } else {
                         let diagram_style = if io::stdin().is_terminal() && !init_group.proof {
@@ -2237,6 +2323,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             dir: Some(target),
                             project_dir: None,
                             force: init_group.force,
+                            refresh: false,
                             proof: init_group.proof,
                             dry_run: init_group.dry_run,
                             all: init_group.all,
@@ -2265,6 +2352,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             declared_context_sources: init_group.declared_context_sources.clone(),
                             proof_commands: init_group.proof_commands.clone(),
                             backend: init_group.backend,
+                            decision_provider: init_group.decision_provider,
                             git: init_group.git,
                             no_git: init_group.no_git,
                         }
@@ -2289,6 +2377,10 @@ pub fn run() -> Result<(), error::DecapodError> {
             let mut init_with = init_with;
             init_with.dir = Some(init_target.clone());
             init_with.project_dir = None;
+            if init_with.decision_provider.is_none() {
+                init_with.decision_provider = load_project_config_if_present(&init_target)?
+                    .map(|config| config.decision.provider);
+            }
             let mut repo_ctx = infer_repo_context(&init_target)?;
             if configured_base_branch.is_some() {
                 repo_ctx.base_branch = configured_base_branch;
@@ -2339,14 +2431,25 @@ pub fn run() -> Result<(), error::DecapodError> {
                 }
             }
 
-            // Only do full TUI experience if not refreshing an existing project
-            if base_init_invocation && io::stdin().is_terminal() && !is_refresh && !init_with.proof
+            // Existing projects normally refresh non-interactively. Explicit
+            // `init --refresh` reopens the questionnaire with current values
+            // as defaults while keeping the non-destructive refresh path.
+            if base_init_invocation
+                && io::stdin().is_terminal()
+                && (init_with.refresh || !is_refresh)
+                && !init_with.proof
             {
                 enrich_repo_context_interactive(&mut repo_ctx, &mut init_with)?;
             }
             let target_dir = run_init_apply(&init_with, &current_dir, &repo_ctx)?;
             let config = config_from_init_with(&init_with, repo_ctx);
             write_project_config(&target_dir, &config, init_with.dry_run)?;
+            if !init_with.dry_run
+                && config.decision.provider
+                    == crate::core::decision_provider::DecisionProviderKind::Jev
+            {
+                auth::persist_typesafe_api_key_from_environment()?;
+            }
             // The scaffold writes project specs before the final config is
             // persisted. Refresh the manifest after that write so its
             // config/spec input hashes describe the actual initialized

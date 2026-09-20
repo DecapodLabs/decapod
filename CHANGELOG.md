@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.104.2](https://github.com/DecapodLabs/decapod/compare/v0.104.1...v0.104.2) - 2026-09-20
+
+### Other
+
+- record refresh validation evidence
+- add interactive initialization refresh
+- record final Jev initialization validation
+- record validated Jev initialization
+- record Jev initialization governance context
+- persist Jev credentials during initialization
+
 ## [0.104.1](https://github.com/DecapodLabs/decapod/compare/v0.104.0...v0.104.1) - 2026-09-20
 
 ### Fixed

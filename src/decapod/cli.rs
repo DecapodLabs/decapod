@@ -143,6 +143,9 @@ pub(crate) struct InitGroupCli {
     /// Overwrite existing files by archiving them under `<dir>/.decapod_archive/`.
     #[clap(long)]
     pub force: bool,
+    /// Re-open the existing initialization questionnaire while preserving current settings as defaults.
+    #[clap(long)]
+    pub refresh: bool,
     /// Show what would change without writing files.
     #[clap(long)]
     pub dry_run: bool,
@@ -240,6 +243,9 @@ pub(crate) struct InitGroupCli {
     /// It does not perform login, provisioning, or sync during init.
     #[clap(long, value_enum, default_value_t = BackendType::Local)]
     pub backend: BackendType,
+    /// Configure the optional decision provider. Jev remains advisory and credentials stay machine-local.
+    #[clap(long = "decision-provider", value_enum)]
+    pub decision_provider: Option<crate::core::decision_provider::DecisionProviderKind>,
     /// Explicitly request local Git repository initialization (the default unless --no-git is set).
     #[clap(long = "git", action = clap::ArgAction::SetTrue)]
     pub git: bool,
@@ -272,6 +278,9 @@ pub(crate) struct InitWithCli {
     /// Overwrite existing files by archiving them under `<dir>/.decapod_archive/`.
     #[clap(long)]
     pub force: bool,
+    /// Internal refresh marker used by the top-level interactive init flow.
+    #[clap(skip)]
+    pub refresh: bool,
     /// Show what would change without writing files.
     #[clap(long)]
     pub dry_run: bool,
@@ -369,6 +378,9 @@ pub(crate) struct InitWithCli {
     /// It does not perform login, provisioning, or sync during init.
     #[clap(long, value_enum, default_value_t = BackendType::Local)]
     pub backend: BackendType,
+    /// Configure the optional decision provider. Jev remains advisory and credentials stay machine-local.
+    #[clap(long = "decision-provider", value_enum)]
+    pub decision_provider: Option<crate::core::decision_provider::DecisionProviderKind>,
     /// Explicitly request local Git repository initialization (the default unless --no-git is set).
     #[clap(long = "git", action = clap::ArgAction::SetTrue)]
     pub git: bool,
