@@ -305,8 +305,8 @@ or manifest.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e029f48711c3fb262c3c536df5c93c12b7ec9eb1e13bc95fa3347b07ebdc1333`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `bazel-unknown-todo-01m2yg-agent-unknown-bugs_01m2ygbqqwzq8p3q-buildkite-migration/` (847 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
+- Repository signal fingerprint: `2a8aeb18ea02f8431fad4818139bcceb6fedaf631e6b4b1896a98e807b916e51`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
