@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
-  "title": "Introduce optional Jev decision-provider seam",
-  "intent": "Persist every Jev trajectory-satisfaction result as a schema-validated, per-trajectory governance artifact that is recoverable through Git history and reset when a fresh trajectory run begins, while preserving Decapod as the sole policy and governance authority.",
+  "title": "Use Buildkite GitHub Actions migration without repository-native pipeline files",
+  "intent": "Treat .github/workflows/*.yml as the sole repository workflow contract and rely on Buildkite's implemented GitHub Actions migration for execution; remove the obsolete .buildkite directory and preserve all workflow gates and semantics.",
   "state": "APPROVED",
   "todo_ids": [
     "code_01m2y81nnzgyw1p8"
@@ -16,9 +16,13 @@
   ],
   "unknowns": [],
   "human_questions": [],
-  "stop_conditions": [],
+  "stop_conditions": [
+    "Do not add a second native Buildkite workflow source or delete any .github/workflows/*.yml gate while verifying Buildkite's migration parity."
+  ],
   "unresolved_contradictions": [],
-  "deferred_questions": [],
+  "deferred_questions": [
+    "After Buildkite migration parity is verified for pull requests, master, releases, docs, and tags, decide when to disable the GitHub Actions service."
+  ],
   "constraints": {
     "forbidden_paths": [
       ".decapod/data/decapod.db"
@@ -26,5 +30,5 @@
     "file_touch_budget": 30
   },
   "phases": [],
-  "updated_at": "1789869229Z"
+  "updated_at": "1789875313Z"
 }
