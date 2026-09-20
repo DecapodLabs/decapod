@@ -506,10 +506,10 @@ jobs:
   test:
     name: Tests (${{ matrix.target }})
     runs-on: ubuntu-latest
-    needs: setup
     if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
+      max-parallel: 4
       matrix:
         target: [core, plugins, cli, integration]
     steps:
@@ -563,40 +563,48 @@ jobs:
           case "${{ matrix.target }}" in
             core)
               if echo "$CHANGED" | grep -qE 'src/decapod/core/(todo|validate|workspace|workunit|obligation|docs|capsule|rpc|migration|gateway)'; then
-                bazelisk test //:todo_enforcement --test_arg=--test-threads=4
-                bazelisk test //:validate_termination --test_arg=--test-threads=4
-                bazelisk test //:workspace_interlock --test_arg=--test-threads=4
-                bazelisk test //:workunit_cli --test_arg=--test-threads=4
-                bazelisk test //:context_capsule_cli --test_arg=--test-threads=4
+                bazelisk test \
+                  //:todo_enforcement \
+                  //:validate_termination \
+                  //:workspace_interlock \
+                  //:workunit_cli \
+                  //:context_capsule_cli \
+                  --test_arg=--test-threads=4
               elif echo "$CHANGED" | grep -qE 'src/decapod/core/'; then
                 bazelisk test //:entrypoint_correctness --test_arg=--test-threads=4
               fi
               ;;
             plugins)
               if echo "$CHANGED" | grep -qE 'src/decapod/plugins/'; then
-                bazelisk test //:plugins_todo_tests --test_arg=--test-threads=4
-                bazelisk test //:plugins_policy_tests --test_arg=--test-threads=4
-                bazelisk test //:plugins_health_tests --test_arg=--test-threads=4
-                bazelisk test //:plugins_aptitude_tests --test_arg=--test-threads=4
-                bazelisk test //:plugins_internalize_tests --test_arg=--test-threads=4
-                bazelisk test //:plugins_federation_tests --test_arg=--test-threads=4
-                bazelisk test //:plugins_decide_tests --test_arg=--test-threads=4
-                bazelisk test //:plugins_obligation_tests --test_arg=--test-threads=4
+                bazelisk test \
+                  //:plugins_todo_tests \
+                  //:plugins_policy_tests \
+                  //:plugins_health_tests \
+                  //:plugins_aptitude_tests \
+                  //:plugins_internalize_tests \
+                  //:plugins_federation_tests \
+                  //:plugins_decide_tests \
+                  //:plugins_obligation_tests \
+                  --test_arg=--test-threads=4
               fi
               ;;
             cli)
               if echo "$CHANGED" | grep -qE 'src/(decapod/(cli|lib)|main)'; then
-                bazelisk test //:cli_contract_enforcement --test_arg=--test-threads=4
-                bazelisk test //:entrypoint_correctness --test_arg=--test-threads=4
-                bazelisk test //:cli_contracts --test_arg=--test-threads=4
+                bazelisk test \
+                  //:cli_contract_enforcement \
+                  //:entrypoint_correctness \
+                  //:cli_contracts \
+                  --test_arg=--test-threads=4
               fi
               ;;
             integration)
               if echo "$CHANGED" | grep -qE 'src/'; then
-                bazelisk test //:contract_conformance --test_arg=--test-threads=4
-                bazelisk test //:constitution_claims --test_arg=--test-threads=4
-                bazelisk test //:spec_conformance --test_arg=--test-threads=4
-                bazelisk test //:substrate_integrity --test_arg=--test-threads=4
+                bazelisk test \
+                  //:contract_conformance \
+                  //:constitution_claims \
+                  //:spec_conformance \
+                  //:substrate_integrity \
+                  --test_arg=--test-threads=4
               fi
               ;;
           esac
@@ -606,7 +614,6 @@ jobs:
   test-master:
     name: Tests (Full)
     runs-on: ubuntu-latest
-    needs: setup
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v4
@@ -633,7 +640,6 @@ jobs:
   test-rpc-suite:
     name: Tests (RPC Suite)
     runs-on: ubuntu-latest
-    needs: setup
     steps:
       - uses: actions/checkout@v4
         with:
@@ -659,7 +665,6 @@ jobs:
   chaos-replay:
     name: Chaos Replay Gate
     runs-on: ubuntu-latest
-    needs: setup
     steps:
       - uses: actions/checkout@v4
         with:
@@ -685,7 +690,6 @@ jobs:
   daemonless-lifecycle:
     name: Daemonless Lifecycle Gate
     runs-on: ubuntu-latest
-    needs: setup
     steps:
       - uses: actions/checkout@v4
         with:
@@ -711,7 +715,6 @@ jobs:
   contracts:
     name: Contract Conformance
     runs-on: ubuntu-latest
-    needs: setup
     steps:
       - uses: actions/checkout@v4
         with:
@@ -741,7 +744,7 @@ jobs:
   migration-script-tests:
     name: Migration Script Tests
     runs-on: ubuntu-latest
-    needs: [setup, detect-migration-script-changes]
+    needs: detect-migration-script-changes
     if: (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && needs.detect-migration-script-changes.outputs.changed == 'true'
     steps:
       - uses: actions/checkout@v4

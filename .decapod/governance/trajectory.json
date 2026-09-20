@@ -1,10 +1,10 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "buildkite-gha-compat-20260920-test-matrix-v2",
-  "intent_id": "intent:buildkite-gha-compat-20260920-test-matrix-v2",
+  "run_id": "buildkite-gha-compat-20260920-test-throughput",
+  "intent_id": "intent:buildkite-gha-compat-20260920-test-throughput",
   "task_id": "bugs_01m2ygbqqwzq8p3q",
-  "original_intent": "Fix the four Buildkite test matrix failures on PR #1350",
-  "derived_intent": "Provide full PR history to selective test jobs and preserve bounded local diff fallbacks when the migrated checkout cannot fetch the base ref",
+  "original_intent": "Fix Buildkite test failures and reduce PR CI latency on PR #1350",
+  "derived_intent": "Preserve selective test coverage while removing unnecessary setup serialization and sharing Bazel analysis per target group",
   "destination": "PR #1350",
   "current_phase": "validation",
   "next_transitions": [
@@ -12,7 +12,7 @@
     "validation"
   ],
   "active_boundaries": [
-    "CI workflow compatibility and governed validation artifacts"
+    "CI test workflow throughput and governed validation artifacts"
   ],
   "repo_scope": [
     ".decapod/governance/trajectory.json",
@@ -60,9 +60,10 @@
     }
   ],
   "evidence": [
-    "Buildkite build 110 showed the full-tree fallback caused unrelated test suites to execute and fail; the fix restores path-based selection by requesting full checkout history and using only locally available base/parent diffs.",
+    "Buildkite build 117 passed setup and all four selective test matrix checks after the full-history checkout fix.",
     "Local validation returned status=ok and fail_count=0.",
-    "validation epoch ve_c23dcf40b3e156c6 completed with zero failures"
+    "The throughput change removes setup as a prerequisite for independent test gates, batches target labels per matrix group, and declares max-parallel: 4.",
+    "validation epoch ve_9f88b86feab74b12 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -73,14 +74,14 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:54020c3953bed3c10f93e50290ca6b20b596304e4e6a1b3deef7e92455c2c000",
+  "artifact_hash": "sha256:18a1cc6f76ec2b8d7929245356c891447f595bd23dfcec7ecf32a4cc7dd7a758",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:buildkite-gha-compat-20260920-test-matrix-v2": {
-        "id": "intent:buildkite-gha-compat-20260920-test-matrix-v2",
-        "raw_intent": "Fix the four Buildkite test matrix failures on PR #1350",
-        "refined_intent": "Provide full PR history to selective test jobs and preserve bounded local diff fallbacks when the migrated checkout cannot fetch the base ref",
+      "intent:buildkite-gha-compat-20260920-test-throughput": {
+        "id": "intent:buildkite-gha-compat-20260920-test-throughput",
+        "raw_intent": "Fix Buildkite test failures and reduce PR CI latency on PR #1350",
+        "refined_intent": "Preserve selective test coverage while removing unnecessary setup serialization and sharing Bazel analysis per target group",
         "acceptance_criteria": [],
         "constraints": [
           ".github/workflows/ci.yml",
@@ -90,7 +91,7 @@
         ],
         "assumptions": [],
         "boundaries": [
-          "CI workflow compatibility and governed validation artifacts"
+          "CI test workflow throughput and governed validation artifacts"
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -103,34 +104,34 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:buildkite-gha-compat-20260920-test-matrix-v2",
+        "intent_id": "intent:buildkite-gha-compat-20260920-test-throughput",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:buildkite-gha-compat-20260920-test-matrix-v2",
+        "intent_id": "intent:buildkite-gha-compat-20260920-test-throughput",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:buildkite-gha-compat-20260920-test-matrix-v2",
+        "intent_id": "intent:buildkite-gha-compat-20260920-test-throughput",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:buildkite-gha-compat-20260920-test-matrix-v2"
+        "detail": "trajectory:buildkite-gha-compat-20260920-test-throughput"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:buildkite-gha-compat-20260920-test-matrix-v2",
+        "intent_id": "intent:buildkite-gha-compat-20260920-test-throughput",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:buildkite-gha-compat-20260920-test-matrix-v2"
+        "detail": "trajectory:buildkite-gha-compat-20260920-test-throughput"
       }
     ],
     "trajectories": {
-      "buildkite-gha-compat-20260920-test-matrix-v2": {
-        "id": "buildkite-gha-compat-20260920-test-matrix-v2",
-        "intent_id": "intent:buildkite-gha-compat-20260920-test-matrix-v2",
+      "buildkite-gha-compat-20260920-test-throughput": {
+        "id": "buildkite-gha-compat-20260920-test-throughput",
+        "intent_id": "intent:buildkite-gha-compat-20260920-test-throughput",
         "evidence_only": true,
         "steps": [
           {
@@ -146,7 +147,7 @@
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_c23dcf40b3e156c6 completed with zero failures"
+              "validation epoch ve_9f88b86feab74b12 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
@@ -171,7 +172,8 @@
               ".decapod/managed/specs/OPERATIONS.md",
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "Buildkite build 110 showed the full-tree fallback caused unrelated test suites to execute and fail; the fix restores path-based selection by requesting full checkout history and using only locally available base/parent diffs.",
+              "Buildkite build 117 passed setup and all four selective test matrix checks after the full-history checkout fix.",
+              "The throughput change removes setup as a prerequisite for independent test gates, batches target labels per matrix group, and declares max-parallel: 4.",
               "Local validation returned status=ok and fail_count=0."
             ],
             "proof_refs": [

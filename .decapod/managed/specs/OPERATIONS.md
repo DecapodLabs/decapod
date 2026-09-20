@@ -129,6 +129,7 @@ following compatibility decisions:
 | GHCR image publication | tag-only Docker setup actions were scheduled on the master push and failed in Buildkite | Use a simple tag-event condition and the Docker CLI/buildx path in Buildkite; retain the Docker actions for native GitHub Actions. |
 | Validation in detached CI checkouts | The validator's worktree guard cannot establish an agent workspace from a hosted checkout, and `validate --refresh-specs` refreshes generated manifest metadata on every run | CI initializes a run cookie with `DECAPOD_VALIDATE_SKIP_GIT_GATES=1` while retaining the validation gates; the drift check compares semantic projections and normalizes only `generated_at` and `repo_signal_fingerprint` generated metadata. |
 | Selective test diff base | Buildkite's migrated PR checkout honored the workflow's shallow `fetch-depth: 1`, so every matrix target exited before selecting tests | Request `fetch-depth: 0` for the test job, prefer `BUILDKITE_PULL_REQUEST_BASE_BRANCH`, and fall back only to refs or the parent already present locally; preserve the original path-based selection instead of running unrelated suites. |
+| Test matrix throughput | The four target jobs waited on the unrelated shared-binary setup and each ran several Bazel targets sequentially, multiplying cold analysis and extending feedback time | Let independent test gates start without `setup`, batch each target group's Bazel labels into one invocation so analysis is shared and tests execute in parallel, and cap the four-way matrix with `strategy.max-parallel: 4`. |
 
 These changes do not claim that Buildkite supplies GitHub's environments,
 Pages deployment records, GitHub App token exchange, or Docker action setup.
@@ -300,7 +301,7 @@ for filesystem work and are not used as the artifact representation.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a607a30b6e442cbb0828fc8f02b74984f97cf6e990c7ac0991f56438a5c5af50`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `bazel-unknown-todo-01m2yg-agent-unknown-bugs_01m2ygbqqwzq8p3q-buildkite-migration/` (775 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
+- Repository signal fingerprint: `e029f48711c3fb262c3c536df5c93c12b7ec9eb1e13bc95fa3347b07ebdc1333`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `bazel-unknown-todo-01m2yg-agent-unknown-bugs_01m2ygbqqwzq8p3q-buildkite-migration/` (847 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
