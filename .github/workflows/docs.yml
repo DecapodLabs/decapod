@@ -46,9 +46,9 @@ jobs:
           buildkite-agent artifact upload "docs/book/book/**/*"
 
   deploy:
-    # Buildkite can retain the site artifact, but it cannot currently execute
-    # the GitHub Pages deployment action or its deployment-record protocol.
-    if: github.ref == 'refs/heads/master' && env.BUILDKITE_BUILD_ID == ''
+    # Keep the event gate in a GitHub context: Buildkite does not expose env in
+    # job-level conditions. The step-level split below handles the runtime.
+    if: github.ref == 'refs/heads/master'
     needs: build
     runs-on: ubuntu-latest
     environment:
@@ -57,4 +57,13 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
+        if: env.BUILDKITE_BUILD_ID == ''
         uses: actions/deploy-pages@v4
+
+      - name: Retain Buildkite docs artifact
+        if: env.BUILDKITE_BUILD_ID != ''
+        run: |
+          set -euo pipefail
+          command -v buildkite-agent >/dev/null 2>&1
+          echo "GitHub Pages deployment is unavailable in the Buildkite GHA runtime."
+          echo "The built site is retained by the build job as a Buildkite artifact."
