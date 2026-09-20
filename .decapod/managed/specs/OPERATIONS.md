@@ -122,7 +122,7 @@ following compatibility decisions:
 |---|---|---|
 | CI dependency lint | `deps-lint` exited before producing useful Buildkite output while the native job passed | Install the pinned Rust toolchain first, then install `cargo-machete`, `cargo-deny`, and `cargo-audit` with shell commands instead of adapter-sensitive installer actions. |
 | Bazel setup and shared binary | `setup` exited after the Bazel build when the artifact path was represented by Bazel's `bazel-bin` symlink | Install the pinned Bazelisk launcher in each job, stage the binary as a regular workspace file, and use the audited `upload-artifact`/`download-artifact` v4 pair. |
-| Release plan | `Release / plan` failed on release PR #1353 in Buildkite while the native GitHub Actions plan passed; embedding `github.event_name` and `github.ref_name` inside the imported shell made event/ref selection depend on adapter interpolation | Run cargo-dist planning only for `release-plz-*` PRs and tags, use `ubuntu-latest`, resolve the event/ref from the runner-native GitHub or Buildkite environment (`GITHUB_EVENT_NAME`, `GITHUB_REF_NAME`, `BUILDKITE_GITHUB_EVENT`, `BUILDKITE_TAG`, and `BUILDKITE_BRANCH`), fail clearly when required context is absent, and emit manifest/tag/publishing outputs from one shell step. |
+| Release plan | `plan` exited during PR and master/tag compilation; nested event-object outputs were not dependable and the runtime event env was not sufficient for branch selection | Run cargo-dist planning only for `release-plz-*` PRs and tags, use `ubuntu-latest`, inject the compiler-resolved event/ref into the shell, and emit manifest/tag/publishing outputs from one shell step. |
 | Nix packaging | Linux and macOS jobs appeared on an open PR even though the workflow was `pull_request: closed` and release-merge gated | Trigger from the durable master push, then gate the matrix in shell on a release merge commit or explicit dispatch. |
 | Documentation | `actions/upload-pages-artifact` failed on a master push | Keep the GitHub Pages action for native GitHub Actions; upload the site with `buildkite-agent artifact upload` in Buildkite. Pages deployment remains a service capability gap and is explicitly skipped there. |
 | Release publication | `release-publish` lacked the GitHub App token and registry credentials in Buildkite | Keep the App-token/action path for GitHub; use the release-plz CLI with named static Buildkite `GITHUB_TOKEN` and `CARGO_REGISTRY_TOKEN` secrets. Missing secrets fail with an actionable message. |
@@ -301,7 +301,7 @@ for filesystem work and are not used as the artifact representation.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2d257e5058ecc35c1940cf5d9ddcc5f85b055b6055760c9e3939b037dcc8258d`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
+- Repository signal fingerprint: `e029f48711c3fb262c3c536df5c93c12b7ec9eb1e13bc95fa3347b07ebdc1333`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `bazel-unknown-todo-01m2yg-agent-unknown-bugs_01m2ygbqqwzq8p3q-buildkite-migration/` (847 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
