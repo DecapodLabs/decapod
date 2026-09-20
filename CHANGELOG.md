@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.103.0](https://github.com/DecapodLabs/decapod/compare/v0.102.2...v0.103.0) - 2026-09-20
+
+### Other
+
+- refresh validation receipt
+- evaluate Jev trajectory observation
+- make docs sync checkout adapter-compatible
+- Add optional Jev decision provider seam
+- Record governed validation for decision provider
+- Record decision-provider governance boundary
+- Add optional Jev decision provider seam
+
 ## [0.102.2](https://github.com/DecapodLabs/decapod/compare/v0.102.1...v0.102.2) - 2026-09-19
 
 ### Other
