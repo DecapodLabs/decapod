@@ -24,6 +24,12 @@ is absent, unavailable, times out, or returns malformed data, the assurance
 result records `no_observation` and Decapod continues to enforce its ordinary
 interlocks and proof gates. There is no background provider process.
 
+Successful and unsuccessful Jev attempts are retained in the current run's
+`.decapod/governance/jev.json` file. The file is validated as a strict,
+trajectory-bound artifact before publication. It is created only when Jev is
+actually attempted, reset by a new trajectory initialization, and never stores
+the `TYPESAFE_API_KEY`.
+
 ### Native SQLite prerequisite for local Dactyl
 
 Stateful commands in a project configured with `repo.backend = "local"` require a host SQLite shared library for Dactyl's local adapter. The startup preflight first honors `DACTYL_SQLITE_LIBRARY`, then the machine-local `~/.config/decapod/runtime.toml` value. If neither is set, it probes the host and persists a discovered library path in that user-level file so later Decapod projects do not repeat the search. If no runtime is available, the command stops with `LOCAL_SQLITE_RUNTIME_REQUIRED` and gives platform installation commands plus a one-shell `export DACTYL_SQLITE_LIBRARY=...` fallback. Cloud-backed startup does not require or inspect SQLite.
@@ -275,7 +281,7 @@ for filesystem work and are not used as the artifact representation.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7e9f8794b3a0fd0c4040df3a9f049b371d4fe114c2f68c01879e0c5adf98d4a7`
+- Repository signal fingerprint: `d00a13dc2e0d2243ce4eaf93fe648e7072ecd06d1d71da420845267c2316ce38`
 - Significant implementation surfaces: `.buildkite/` (1 files), `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (108 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

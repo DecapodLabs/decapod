@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://decapod.dev/schemas/jev-observations-1.0.0.schema.json",
+  "title": "Decapod Jev Observation Ledger",
+  "description": "Advisory Jev results recorded for one active Decapod trajectory run.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schema_version", "kind", "trajectory_run_id", "runs"],
+  "properties": {
+    "$schema": { "const": "https://decapod.dev/schemas/jev-observations-1.0.0.schema.json" },
+    "schema_version": { "const": "1.0.0" },
+    "kind": { "const": "jev_observation_ledger" },
+    "trajectory_run_id": { "type": "string", "minLength": 1 },
+    "runs": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/run" }
+    }
+  },
+  "$defs": {
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "sequence", "recorded_at", "operation", "touched_paths", "result"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "sequence": { "type": "integer", "minimum": 1 },
+        "recorded_at": { "type": "string", "minLength": 1 },
+        "operation": { "type": "string" },
+        "touched_paths": { "type": "array", "items": { "type": "string" } },
+        "diff_summary": { "type": "string" },
+        "result": {
+          "oneOf": [
+            { "$ref": "#/$defs/observed" },
+            { "$ref": "#/$defs/no_observation" }
+          ]
+        }
+      }
+    },
+    "observed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "observation"],
+      "properties": {
+        "status": { "const": "observed" },
+        "observation": { "$ref": "#/$defs/observation" }
+      }
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "probability", "provider", "model"],
+      "properties": {
+        "kind": { "const": "trajectory_satisfies_intent" },
+        "probability": { "type": "number", "minimum": 0, "maximum": 1 },
+        "provider": { "const": "jev" },
+        "model": { "type": ["string", "null"] },
+        "usage": { "$ref": "#/$defs/usage" }
+      }
+    },
+    "usage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input_tokens", "output_tokens"],
+      "properties": {
+        "input_tokens": { "type": "integer", "minimum": 0 },
+        "output_tokens": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "no_observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "provider", "reason"],
+      "properties": {
+        "status": { "const": "no_observation" },
+        "provider": { "const": "jev" },
+        "reason": {
+          "enum": [
+            "unconfigured",
+            "missing_intent",
+            "missing_trajectory",
+            "unavailable",
+            "malformed_response",
+            "invalid_observation",
+            "configuration",
+            "persistence"
+          ]
+        }
+      }
+    }
+  }
+}
