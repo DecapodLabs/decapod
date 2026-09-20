@@ -1,49 +1,48 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "buildkite-gha-compat-20260919-merge-resolution",
-  "intent_id": "intent:buildkite-gha-compat-20260919-merge-resolution",
+  "run_id": "buildkite-gha-compat-20260920-test-matrix",
+  "intent_id": "intent:buildkite-gha-compat-20260920-test-matrix",
   "task_id": "bugs_01m2ygbqqwzq8p3q",
-  "original_intent": "Resolve PR #1350 merge conflicts and keep Buildkite-backed CI validation green",
-  "derived_intent": "Reconcile generated governance artifacts after merging master, preserve the workflow compatibility fix, and prove the merged tree validates",
+  "original_intent": "Fix the four Buildkite test matrix failures on PR #1350",
+  "derived_intent": "Make selective test diff detection resilient when the migrated Buildkite checkout cannot fetch the pull request base ref",
   "destination": "PR #1350",
   "current_phase": "validation",
   "next_transitions": [
-    "publish"
+    "publish",
+    "validation"
   ],
   "active_boundaries": [
-    "PR merge resolution and governed CI validation artifacts"
+    "CI workflow compatibility and governed validation artifacts"
   ],
   "repo_scope": [
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
-    ".decapod/managed/specs",
-    ".github/workflows/ci.yml",
-    ".github/workflows/decapod-validate.yml"
+    ".decapod/managed/specs/OPERATIONS.md",
+    ".github/workflows/ci.yml"
   ],
   "inspected_files": [
     ".decapod/managed/specs/OPERATIONS.md",
-    ".github/workflows/ci.yml",
-    ".github/workflows/decapod-validate.yml"
+    ".github/workflows/ci.yml"
   ],
   "modified_files": [
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
-    ".decapod/managed/specs",
-    "AGENTS.md",
-    "CLAUDE.md",
-    "CODEX.md",
-    "GEMINI.md"
+    ".decapod/managed/specs/OPERATIONS.md",
+    ".github/workflows/ci.yml"
   ],
   "declared_commands": [
-    "cargo build --locked --quiet",
+    "Buildkite hosted workflow validation",
     "decapod validate",
     "decapod validate --format json",
-    "git diff --check",
-    "git merge origin/master",
-    "ruby YAML parse for CI workflow files"
+    "ruby YAML parse for .github/workflows/ci.yml",
+    "simulate unavailable PR base ref fallback"
   ],
   "tool_calls": [],
   "checks": [
+    {
+      "name": "buildkite_workflow_compile",
+      "status": "partial"
+    },
     {
       "name": "decapod validate",
       "status": "passed"
@@ -53,11 +52,7 @@
       "status": "passed"
     },
     {
-      "name": "diff_check",
-      "status": "passed"
-    },
-    {
-      "name": "merge_conflicts",
+      "name": "test_matrix_fallback",
       "status": "passed"
     },
     {
@@ -66,38 +61,38 @@
     }
   ],
   "evidence": [
-    "Fresh validation epoch ve_0abf68cacedadfbd completed with status=ok and fail_count=0.",
-    "Merged current origin/master into PR #1350 and removed all conflict markers.",
-    "validation epoch ve_0abf68cacedadfbd completed with zero failures"
+    "Buildkite build 103 failed only CI test matrix targets; all setup, dependency lint, validation, release, docs, and native test checks passed.",
+    "Local validation returned status=ok and fail_count=0.",
+    "The guarded fetch fallback selected all four test targets when the PR base ref was unavailable.",
+    "validation epoch ve_638a9a46c108f97a completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
-  "proof_status": "passed",
+  "proof_status": "partial",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "supported"
+    "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:59e924f682adda79bcedfb344e3c06ad99c993d5d471bd8613f2644c36a5a918",
+  "artifact_hash": "sha256:dbf1a0ab4a565da091c4143abd6c7fb4810b55717b891dfad7b970800d3eb07c",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:buildkite-gha-compat-20260919-merge-resolution": {
-        "id": "intent:buildkite-gha-compat-20260919-merge-resolution",
-        "raw_intent": "Resolve PR #1350 merge conflicts and keep Buildkite-backed CI validation green",
-        "refined_intent": "Reconcile generated governance artifacts after merging master, preserve the workflow compatibility fix, and prove the merged tree validates",
+      "intent:buildkite-gha-compat-20260920-test-matrix": {
+        "id": "intent:buildkite-gha-compat-20260920-test-matrix",
+        "raw_intent": "Fix the four Buildkite test matrix failures on PR #1350",
+        "refined_intent": "Make selective test diff detection resilient when the migrated Buildkite checkout cannot fetch the pull request base ref",
         "acceptance_criteria": [],
         "constraints": [
           ".github/workflows/ci.yml",
-          ".github/workflows/decapod-validate.yml",
+          ".decapod/managed/specs/OPERATIONS.md",
           ".decapod/governance/trajectory.json",
-          ".decapod/governance/validation.json",
-          ".decapod/managed/specs"
+          ".decapod/governance/validation.json"
         ],
         "assumptions": [],
         "boundaries": [
-          "PR merge resolution and governed CI validation artifacts"
+          "CI workflow compatibility and governed validation artifacts"
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -110,34 +105,34 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:buildkite-gha-compat-20260919-merge-resolution",
+        "intent_id": "intent:buildkite-gha-compat-20260920-test-matrix",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:buildkite-gha-compat-20260919-merge-resolution",
+        "intent_id": "intent:buildkite-gha-compat-20260920-test-matrix",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:buildkite-gha-compat-20260919-merge-resolution",
+        "intent_id": "intent:buildkite-gha-compat-20260920-test-matrix",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:buildkite-gha-compat-20260919-merge-resolution"
+        "detail": "trajectory:buildkite-gha-compat-20260920-test-matrix"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:buildkite-gha-compat-20260919-merge-resolution",
+        "intent_id": "intent:buildkite-gha-compat-20260920-test-matrix",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:buildkite-gha-compat-20260919-merge-resolution"
+        "detail": "trajectory:buildkite-gha-compat-20260920-test-matrix"
       }
     ],
     "trajectories": {
-      "buildkite-gha-compat-20260919-merge-resolution": {
-        "id": "buildkite-gha-compat-20260919-merge-resolution",
-        "intent_id": "intent:buildkite-gha-compat-20260919-merge-resolution",
+      "buildkite-gha-compat-20260920-test-matrix": {
+        "id": "buildkite-gha-compat-20260920-test-matrix",
+        "intent_id": "intent:buildkite-gha-compat-20260920-test-matrix",
         "evidence_only": true,
         "steps": [
           {
@@ -147,14 +142,13 @@
             "scope": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              ".decapod/managed/specs",
-              ".github/workflows/ci.yml",
-              ".github/workflows/decapod-validate.yml"
+              ".decapod/managed/specs/OPERATIONS.md",
+              ".github/workflows/ci.yml"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_0abf68cacedadfbd completed with zero failures"
+              "validation epoch ve_638a9a46c108f97a completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
@@ -165,33 +159,29 @@
           {
             "sequence": 5,
             "action": "validation",
-            "command": "git merge origin/master",
+            "command": "ruby YAML parse for .github/workflows/ci.yml",
             "scope": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              ".decapod/managed/specs",
-              ".github/workflows/ci.yml",
-              ".github/workflows/decapod-validate.yml"
+              ".decapod/managed/specs/OPERATIONS.md",
+              ".github/workflows/ci.yml"
             ],
             "observations": [
               ".github/workflows/ci.yml",
-              ".github/workflows/decapod-validate.yml",
+              ".decapod/managed/specs/OPERATIONS.md",
+              ".github/workflows/ci.yml",
               ".decapod/managed/specs/OPERATIONS.md",
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              ".decapod/managed/specs",
-              "AGENTS.md",
-              "CLAUDE.md",
-              "CODEX.md",
-              "GEMINI.md",
-              "Merged current origin/master into PR #1350 and removed all conflict markers.",
-              "Fresh validation epoch ve_0abf68cacedadfbd completed with status=ok and fail_count=0."
+              "Buildkite build 103 failed only CI test matrix targets; all setup, dependency lint, validation, release, docs, and native test checks passed.",
+              "The guarded fetch fallback selected all four test targets when the PR base ref was unavailable.",
+              "Local validation returned status=ok and fail_count=0."
             ],
             "proof_refs": [
-              "merge_conflicts",
-              "decapod_validate",
               "workflow_yaml",
-              "diff_check"
+              "test_matrix_fallback",
+              "decapod_validate",
+              "buildkite_workflow_compile"
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
