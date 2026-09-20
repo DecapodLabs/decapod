@@ -89,7 +89,7 @@
     "shortcut_risk": "caution",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:afbff75757ac2ec5daf8db73233de825ae2addae49f8cd8996b76fcdce9ed619",
+  "artifact_hash": "sha256:83f33a40c433aa53e8e209b9d5f4b0effb13a1f718eb51c0adcd709007db213c",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -135,6 +135,13 @@
       {
         "sequence": 5,
         "event_id": "event:5",
+        "intent_id": "intent:jev-init-secrets-01m2ygzwcmamy8xq",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:jev-init-secrets-01m2ygzwcmamy8xq"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
         "intent_id": "intent:jev-init-secrets-01m2ygzwcmamy8xq",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:jev-init-secrets-01m2ygzwcmamy8xq"
@@ -201,12 +208,30 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "Decapod init configuration, machine-local secret custody, Jev credential resolution, documentation, and tests"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_69ea911f2639cdc0 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:6"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 5
+    "next_sequence": 6
   }
 }
