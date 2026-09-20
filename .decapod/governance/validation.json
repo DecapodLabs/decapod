@@ -2,10 +2,10 @@
   "schema_version": "1.0.0",
   "kind": "validation_receipt",
   "decapod_release": "0.103.0",
-  "git_revision": "df0d1ff74147a0902101e881c260861179a5cbaf",
+  "git_revision": "73cf7ca0e5e53785370244e702ca08b3a13fc1c5",
   "repo_signal_fingerprint": "7764066f9ff80459af01378f776a160c374dbe460ee08e1c03364b93791e7a6c",
   "trajectory_run_id": "jev-history-01m2y81nnzgyw1p8",
-  "trajectory_artifact_hash": "sha256:a65e9604cab9a587d3d6c65ae8d60cf370f6f40349e61699813816cf981bf4ae",
+  "trajectory_artifact_hash": "sha256:5babb933874af63726fac1db039875312c8118378783700285d2218c313af3cb",
   "validation_epoch": {
     "schema_version": "1.0.0",
     "epoch_id": "ve_c67f99f43507b846",
@@ -47,32 +47,36 @@
   "pass_count": 203,
   "fail_count": 0,
   "warn_count": 4,
-  "elapsed_ms": 4376,
+  "elapsed_ms": 6990,
   "drift_findings": [],
   "temporary_artifacts_cleaned": 0,
   "failures": [],
   "warnings": [
     "Audit log contains 2 potential crash divergence(s); historical pending entries detected. Run `decapod data broker verify` for details.",
+    "No open pull request found on GitHub for branch 'agent/unknown/jev-governance-history_01m2y81nnzgyw1p8'. Create a pull request to submit changes.",
     "Risk map missing (run `decapod riskmap init`)",
-    "Stale workspaces preserved for explicit review: <external-path> (unregistered_workspace: workspace directory is not registered with git; inspect it and rerun with --force only after preserving any needed files), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force)",
-    "Workspace branch 'agent/unknown/jev-governance-history_01m2y81nnzgyw1p8' has unpushed commits or does not exist on origin. Run `git push origin agent/unknown/jev-governance-history_01m2y81nnzgyw1p8`."
+    "Stale workspaces preserved for explicit review: <external-path> (unregistered_workspace: workspace directory is not registered with git; inspect it and rerun with --force only after preserving any needed files), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force)"
   ],
   "gate_timings": [
     {
-      "name": "validate_machine_contract",
-      "elapsed_ms": 1254
+      "name": "validate_git_push_pr_gate",
+      "elapsed_ms": 3276
     },
     {
       "name": "validate_project_specs_docs",
-      "elapsed_ms": 1196
+      "elapsed_ms": 1206
     },
     {
       "name": "validate_stale_workspaces",
-      "elapsed_ms": 658
+      "elapsed_ms": 650
+    },
+    {
+      "name": "validate_machine_contract",
+      "elapsed_ms": 619
     },
     {
       "name": "validate_markdown_primitives_roundtrip_gate",
-      "elapsed_ms": 257
+      "elapsed_ms": 259
     },
     {
       "name": "validate_git_workspace_context",
@@ -80,59 +84,55 @@
     },
     {
       "name": "validate_git_protected_branch",
-      "elapsed_ms": 88
-    },
-    {
-      "name": "validate_federation_gates",
-      "elapsed_ms": 73
+      "elapsed_ms": 83
     },
     {
       "name": "validate_obligations",
-      "elapsed_ms": 69
+      "elapsed_ms": 82
     },
     {
-      "name": "validate_git_push_pr_gate",
-      "elapsed_ms": 67
+      "name": "validate_federation_gates",
+      "elapsed_ms": 77
     },
     {
       "name": "validate_legacy_jsonl_retired",
-      "elapsed_ms": 54
+      "elapsed_ms": 69
     },
     {
       "name": "validate_schema_determinism",
-      "elapsed_ms": 40
+      "elapsed_ms": 41
     },
     {
       "name": "validate_repomap_determinism",
-      "elapsed_ms": 34
+      "elapsed_ms": 36
     },
     {
       "name": "validate_archive_integrity",
-      "elapsed_ms": 23
+      "elapsed_ms": 22
     },
     {
       "name": "validate_gatekeeper_gate",
-      "elapsed_ms": 21
+      "elapsed_ms": 20
     },
     {
       "name": "validate_generated_artifact_whitelist",
-      "elapsed_ms": 19
-    },
-    {
-      "name": "validate_control_plane_contract",
-      "elapsed_ms": 11
+      "elapsed_ms": 20
     },
     {
       "name": "validate_lineage_hard_gate",
-      "elapsed_ms": 11
+      "elapsed_ms": 10
     },
     {
       "name": "validate_embedded_self_contained",
       "elapsed_ms": 10
     },
     {
+      "name": "validate_control_plane_contract",
+      "elapsed_ms": 9
+    },
+    {
       "name": "validate_no_legacy_namespaces",
-      "elapsed_ms": 8
+      "elapsed_ms": 9
     },
     {
       "name": "validate_health_purity",
@@ -143,6 +143,14 @@
       "elapsed_ms": 4
     },
     {
+      "name": "validate_knowledge_promotions_if_present",
+      "elapsed_ms": 2
+    },
+    {
+      "name": "validate_risk_map_violations",
+      "elapsed_ms": 2
+    },
+    {
       "name": "validate_project_config_toml",
       "elapsed_ms": 2
     },
@@ -151,19 +159,11 @@
       "elapsed_ms": 2
     },
     {
-      "name": "validate_knowledge_integrity",
-      "elapsed_ms": 2
-    },
-    {
       "name": "validate_lcm_immutability",
       "elapsed_ms": 2
     },
     {
-      "name": "validate_risk_map_violations",
-      "elapsed_ms": 2
-    },
-    {
-      "name": "validate_knowledge_promotions_if_present",
+      "name": "validate_knowledge_integrity",
       "elapsed_ms": 2
     },
     {
@@ -171,11 +171,11 @@
       "elapsed_ms": 2
     },
     {
-      "name": "validate_watcher_purity",
+      "name": "validate_canon_mutation",
       "elapsed_ms": 1
     },
     {
-      "name": "validate_canon_mutation",
+      "name": "validate_watcher_purity",
       "elapsed_ms": 1
     },
     {
@@ -187,11 +187,15 @@
       "elapsed_ms": 1
     },
     {
+      "name": "validate_research_claims_if_present",
+      "elapsed_ms": 1
+    },
+    {
       "name": "validate_repo_map",
       "elapsed_ms": 1
     },
     {
-      "name": "validate_research_claims_if_present",
+      "name": "validate_context_capsule_policy_contract",
       "elapsed_ms": 0
     },
     {
@@ -199,35 +203,7 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_plan_governed_execution_gate",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_context_capsule_policy_contract",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_health_cache_integrity",
-      "elapsed_ms": 0
-    },
-    {
       "name": "validate_trajectory_artifacts_if_present",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_entrypoint_invariants",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_validation_receipt_if_present",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_tooling_gate",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_heartbeat_invocation_gate",
       "elapsed_ms": 0
     },
     {
@@ -235,7 +211,19 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_spec_drift",
+      "name": "validate_plan_governed_execution_gate",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_health_cache_integrity",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_validation_receipt_if_present",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_entrypoint_invariants",
       "elapsed_ms": 0
     },
     {
@@ -243,19 +231,11 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_project_scoped_state",
+      "name": "validate_heartbeat_invocation_gate",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_recursive_improvement_passes_if_present",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_context_capsules_if_present",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_coplayer_policy_tightening",
+      "name": "validate_spec_drift",
       "elapsed_ms": 0
     },
     {
@@ -263,7 +243,23 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_internalization_artifacts_if_present",
+      "name": "validate_tooling_gate",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_recursive_improvement_passes_if_present",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_project_scoped_state",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_context_capsules_if_present",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_risk_map",
       "elapsed_ms": 0
     },
     {
@@ -271,11 +267,15 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_eval_gate_if_required",
+      "name": "validate_internalization_artifacts_if_present",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_risk_map",
+      "name": "validate_coplayer_policy_tightening",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_eval_gate_if_required",
       "elapsed_ms": 0
     }
   ],
@@ -285,14 +285,14 @@
     "confidence": "medium",
     "reasons": [
       "Audit log contains 2 potential crash divergence(s); historical pending entries detected. Run `decapod data broker verify` for details.",
+      "No open pull request found on GitHub for branch 'agent/unknown/jev-governance-history_01m2y81nnzgyw1p8'. Create a pull request to submit changes.",
       "Risk map missing (run `decapod riskmap init`)",
-      "Stale workspaces preserved for explicit review: <external-path> (unregistered_workspace: workspace directory is not registered with git; inspect it and rerun with --force only after preserving any needed files), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force)",
-      "Workspace branch 'agent/unknown/jev-governance-history_01m2y81nnzgyw1p8' has unpushed commits or does not exist on origin. Run `git push origin agent/unknown/jev-governance-history_01m2y81nnzgyw1p8`."
+      "Stale workspaces preserved for explicit review: <external-path> (unregistered_workspace: workspace directory is not registered with git; inspect it and rerun with --force only after preserving any needed files), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force), <external-path> (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch), <external-path> (dirty_workspace: workspace contains tracked or untracked changes; preserve or review them before rerunning with --force)"
     ],
     "recommendations": [
       "Review the reported validation warnings before relying on the CI result.",
       "Use `decapod validate -v --format json` to inspect the affected gate output."
     ]
   },
-  "receipt_hash": "sha256:e5fd7686718070236d9a661299969e5d0a34a97251625af95ac8055f4bc78c4b"
+  "receipt_hash": "sha256:fbad6125a1040d4bfa1ec55cf8a44230bafee3221e4b3f5130682f8a599e184f"
 }
