@@ -374,10 +374,7 @@ steps:
       - daemonless-lifecycle
     if: 'build.branch == "master" && build.pull_request.id == null && build.tag == null'
     if_changed: "src/**,tests/**,Cargo.toml,Cargo.lock,BUILD.bazel,MODULE.bazel,MODULE.bazel.lock,.config/**,rust-toolchain.toml,.buildkite/**"
-    # The 49-case gatling harness routinely exceeds Bazel's 300s default on
-    # clean agents while individual tests continue making progress. Keep the
-    # post-merge gate enabled with a bounded allowance for that known CI load.
-    command: bazelisk test //:gatling --test_arg=--test-threads=4 --test_timeout=600
+    command: bazelisk test //:gatling --test_arg=--test-threads=4
 
   - label: ":rocket: Release build"
     key: release-build

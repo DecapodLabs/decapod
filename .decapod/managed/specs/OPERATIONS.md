@@ -221,27 +221,32 @@ for filesystem work and are not used as the artifact representation.
 - [ ] Dependency vulnerability scan reviewed.
 - [ ] No unresolved critical/high security findings.
 
-### Post-release merge verification and Buildkite authority
+### Post-release merge verification and adapter escalation
 
 The `v0.102.2` release merge (`5b3bcb625c77cb8af30d8d97799182ff3b2b5bf7`)
-separated repository defects from migration evidence. The full master test
-gate is intentional: the 49-case `//:gatling` harness repeatedly reached
-Bazel's default 300-second timeout on clean runners while its individual cases
-continued to complete. Native Buildkite keeps that gate and sets the bounded
-test timeout to 600 seconds. The Decapod validation gate is also intentional:
+separated repository defects from adapter evidence. The full master test gate
+is intentional: the 49-case `//:gatling` harness repeatedly reached Bazel's
+default 300-second timeout on clean runners while its individual cases
+continued to complete. The Decapod validation gate is also intentional:
 release-only merges advance Cargo metadata without rewriting the projections
 that the prior Decapod release generated, so the first governed PR after a
 release must refresh those projections.
 
-Buildkite #64's failures in `CI / setup`, `CI / deps-lint`, `Deploy Docs /
-build`, and `Release / release-publish` belong to the legacy GitHub-Actions
-adapter boundary, not to a missing reason for those checks to run. The native
-`.buildkite/pipeline.yml` replaces those action-specific handoffs with direct
-commands and preserves their event and changed-path gates. After the external
-pipeline uploads that file with a current diff base, Buildkite is the sole
-execution authority; GitHub Actions YAML is not changed to compensate for the
-adapter and can be retired after the Buildkite required checks and secrets are
-enabled.
+The adapter path has both working and broken surfaces. Buildkite build #70
+completed the adapter-backed format, clippy, governance, health, contract,
+daemonless, migration, test, docs, and artifact checks, while `CI / setup`,
+`CI / deps-lint`, and `Release / plan` failed. Earlier build #56 also failed
+`Deploy Docs / build` and `Release / release-publish`. These failures are
+tracked as compatibility cases for Buildkite engineering; the workflow gates
+remain enabled and `.github/workflows/*.yml` remains canonical.
+
+The escalation packet must include the exact workflow, failing job and commit,
+Buildkite agent/plugin versions, complete logs, and whether the boundary is
+action setup, artifacts, expressions/matrices, GitHub App/OIDC permissions,
+environment secrets, or timeout behavior. Do not switch to the native pipeline
+or rewrite the workflow solely to hide an adapter failure. The GitHub Actions
+service may be disabled only after Buildkite adapter parity is demonstrated for
+PR, master, release, docs, and tagged-publication paths.
 
 <!-- decapod:capability-overlay:background-processing:start -->
 

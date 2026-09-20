@@ -1,29 +1,27 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "master-ci-5b3bcb-20260919-buildkite-fix",
-  "intent_id": "intent:master-ci-5b3bcb-20260919-buildkite-fix",
+  "run_id": "buildkite-adapter-evidence-20260919",
+  "intent_id": "intent:buildkite-adapter-evidence-20260919",
   "task_id": "bugs_01m2xry8q2fkjevz",
-  "original_intent": "Look at the recent master merge, determine whether failed actions should run or need fixes, and publish a PR; ultimately make the repository execute purely through native Buildkite.",
-  "derived_intent": "Keep intentional post-merge validation and full tests in native Buildkite, fix the recurring gatling timeout with a bounded 600-second test allowance, refresh Decapod 0.102.2 release-bound projections, and document the external legacy-adapter cutover without changing GitHub Actions workflows.",
+  "original_intent": "Keep GitHub Actions workflow YAML as the canonical CI and release contract, execute it through Buildkite, and document the adapter failures and working paths for escalation to Buildkite engineering.",
+  "derived_intent": "Update PR #1344 and Issue #1340 to preserve the github-actions adapter, defer native pipeline migration, separate repository and adapter failures, and record the exact compatibility work required before retiring GitHub Actions.",
   "current_phase": "validation",
   "next_transitions": [
     "publish"
   ],
   "active_boundaries": [
-    "Do not modify protected master; do not change GitHub Actions workflows unless repository evidence proves it necessary; native Buildkite is the target execution authority; no secrets."
+    "Do not change .github/workflows/*.yml; preserve the Buildkite github-actions adapter; do not disable workflow gates; do not merge the native pipeline rewrite."
   ],
   "repo_scope": [
-    "Native Buildkite pipeline timeout, release-bound governance projections, operational and living-spec documentation, and proof artifacts."
+    "PR #1344, Issue #1340, Buildkite adapter evidence, .buildkite README, living specs, and governance artifacts"
   ],
   "inspected_files": [
     ".buildkite/README.md",
     ".buildkite/pipeline.yml",
-    ".decapod/managed/specs/OPERATIONS.md",
+    ".decapod/managed/Dockerfile.decapod",
     ".github/workflows/ci.yml",
-    ".github/workflows/decapod-validate.yml",
     ".github/workflows/docs.yml",
-    ".github/workflows/release.yml",
-    "tests/gatling.rs"
+    ".github/workflows/release.yml"
   ],
   "modified_files": [
     ".buildkite/README.md",
@@ -32,77 +30,65 @@
     ".decapod/governance/plan.json",
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
-    ".decapod/managed/Dockerfile.decapod",
-    ".decapod/managed/specs/.manifest.json",
     ".decapod/managed/specs/ARCHITECTURE.md",
     ".decapod/managed/specs/INTENT.md",
     ".decapod/managed/specs/INTERFACES.md",
-    ".decapod/managed/specs/OPERATIONS.md",
-    "AGENTS.md",
-    "CLAUDE.md",
-    "CODEX.md",
-    "GEMINI.md"
+    ".decapod/managed/specs/OPERATIONS.md"
   ],
   "declared_commands": [
-    "CLIPPY_CONF_DIR=.config cargo clippy --locked --all-targets --all-features -- -D warnings",
-    "cargo fmt --all -- --check",
-    "cargo test --locked --lib",
-    "cargo test --locked --test gatling -- --test-threads=4",
-    "decapod validate",
-    "decapod validate --format json",
-    "ruby native Buildkite YAML parse"
+    "Buildkite build #70 evidence review",
+    "decapod govern artifacts inventory",
+    "decapod govern plan update",
+    "decapod rpc --op specs.refresh",
+    "decapod validate --format json --refresh-specs --projections"
   ],
   "tool_calls": [],
   "checks": [
     {
-      "name": "bazelisk_native",
+      "name": "adapter_build_70",
+      "status": "partial"
+    },
+    {
+      "name": "container_validation",
       "status": "unavailable"
     },
     {
-      "name": "cargo_clippy",
+      "name": "git_diff_check",
       "status": "passed"
     },
     {
-      "name": "cargo_fmt",
+      "name": "host_rust_checks",
       "status": "passed"
     },
     {
-      "name": "cargo_test_lib",
-      "status": "passed"
-    },
-    {
-      "name": "decapod validate",
-      "status": "passed"
-    },
-    {
-      "name": "decapod_validate",
-      "status": "passed"
-    },
-    {
-      "name": "external_buildkite_activation",
+      "name": "host_validation",
       "status": "unavailable"
     },
     {
-      "name": "gatling_underlying_harness",
-      "status": "passed"
+      "name": "native_migration",
+      "status": "partial"
     },
     {
-      "name": "native_buildkite_yaml",
+      "name": "rust_edition_proof",
+      "status": "partial"
+    },
+    {
+      "name": "specs_refresh",
       "status": "passed"
     }
   ],
   "evidence": [
-    "Buildkite #64 setup, deps-lint, docs-build, and release-publish failures are legacy adapter boundaries replaced by direct native pipeline steps; external upload activation remains outside the PR.",
-    "Decapod 0.102.2 validation passed with zero failures after refreshing release-bound projections.",
-    "GitHub Actions YAML was left unchanged; it is a legacy bridge while Buildkite becomes the sole execution authority.",
-    "The 49-case gatling harness passed 48 active tests and ignored one in 76.08 seconds under cargo; the recurring GitHub/Bazel failure was the 300-second Bazel timeout, not an individual test assertion.",
-    "The native Buildkite test-master step now preserves the full gate with --test_timeout=600.",
-    "validation epoch ve_bb172b71962ebc81 completed with zero failures"
+    "Build #56 also failed Deploy Docs/build and Release/release-publish under the adapter.",
+    "Build #70 adapter-backed format, clippy, governance, health, contract, daemonless, migration, test, docs, and artifact checks passed; setup, deps-lint, and Release/plan failed.",
+    "Host decapod validate refreshed release-bound projections to 0.103.0 but requires a real container workspace; the managed image's Cargo 1.65 cannot parse edition 2024, and the temporary Rust 1.96 image build was not completed.",
+    "The native .buildkite/pipeline.yml upload experiment is deferred; .github/workflows/*.yml remains canonical.",
+    "The prepared Decapod validation container provides cargo 1.65.0, which cannot parse Cargo edition 2024; configured migration proof exits 101 before tests."
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [
-    "Buildkite external pipeline configuration, agent image, secrets, GitHub Pages branch, and required-check settings are outside repository PR scope."
+    "Buildkite engineering can diagnose adapter compatibility from complete workflow logs, plugin/agent versions, and failing commits without requiring workflow rewrites."
   ],
+  "completion_claim": "PR #1344 and Issue #1340 now describe the adapter-first decision, working paths, broken paths, local validation limitation, and next escalation work.",
   "proof_status": "partial",
   "verdicts": {
     "intent_alignment": "supported",
@@ -110,21 +96,21 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:9d90e498143abeea87d36e36af3057c7913f159c7ae2bbe6933084e57cab5ba7",
+  "artifact_hash": "sha256:772c5099abddef1bc56e73ca3752e9eaa4519f682643a2c89bffb9c74105a06a",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:master-ci-5b3bcb-20260919-buildkite-fix": {
-        "id": "intent:master-ci-5b3bcb-20260919-buildkite-fix",
-        "raw_intent": "Look at the recent master merge, determine whether failed actions should run or need fixes, and publish a PR; ultimately make the repository execute purely through native Buildkite.",
-        "refined_intent": "Keep intentional post-merge validation and full tests in native Buildkite, fix the recurring gatling timeout with a bounded 600-second test allowance, refresh Decapod 0.102.2 release-bound projections, and document the external legacy-adapter cutover without changing GitHub Actions workflows.",
+      "intent:buildkite-adapter-evidence-20260919": {
+        "id": "intent:buildkite-adapter-evidence-20260919",
+        "raw_intent": "Keep GitHub Actions workflow YAML as the canonical CI and release contract, execute it through Buildkite, and document the adapter failures and working paths for escalation to Buildkite engineering.",
+        "refined_intent": "Update PR #1344 and Issue #1340 to preserve the github-actions adapter, defer native pipeline migration, separate repository and adapter failures, and record the exact compatibility work required before retiring GitHub Actions.",
         "acceptance_criteria": [],
         "constraints": [
-          "Native Buildkite pipeline timeout, release-bound governance projections, operational and living-spec documentation, and proof artifacts."
+          "PR #1344, Issue #1340, Buildkite adapter evidence, .buildkite README, living specs, and governance artifacts"
         ],
         "assumptions": [],
         "boundaries": [
-          "Do not modify protected master; do not change GitHub Actions workflows unless repository evidence proves it necessary; native Buildkite is the target execution authority; no secrets."
+          "Do not change .github/workflows/*.yml; preserve the Buildkite github-actions adapter; do not disable workflow gates; do not merge the native pipeline rewrite."
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -137,103 +123,93 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:master-ci-5b3bcb-20260919-buildkite-fix",
+        "intent_id": "intent:buildkite-adapter-evidence-20260919",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:master-ci-5b3bcb-20260919-buildkite-fix",
+        "intent_id": "intent:buildkite-adapter-evidence-20260919",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:master-ci-5b3bcb-20260919-buildkite-fix",
+        "intent_id": "intent:buildkite-adapter-evidence-20260919",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:master-ci-5b3bcb-20260919-buildkite-fix"
+        "detail": "trajectory:buildkite-adapter-evidence-20260919"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:master-ci-5b3bcb-20260919-buildkite-fix",
+        "intent_id": "intent:buildkite-adapter-evidence-20260919",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:master-ci-5b3bcb-20260919-buildkite-fix"
+        "detail": "trajectory:buildkite-adapter-evidence-20260919"
       }
     ],
     "trajectories": {
-      "master-ci-5b3bcb-20260919-buildkite-fix": {
-        "id": "master-ci-5b3bcb-20260919-buildkite-fix",
-        "intent_id": "intent:master-ci-5b3bcb-20260919-buildkite-fix",
+      "buildkite-adapter-evidence-20260919": {
+        "id": "buildkite-adapter-evidence-20260919",
+        "intent_id": "intent:buildkite-adapter-evidence-20260919",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
             "action": "validation",
-            "command": "cargo fmt --all -- --check",
+            "command": "decapod rpc --op specs.refresh",
             "scope": [
-              "Native Buildkite pipeline timeout, release-bound governance projections, operational and living-spec documentation, and proof artifacts."
+              "PR #1344, Issue #1340, Buildkite adapter evidence, .buildkite README, living specs, and governance artifacts"
             ],
             "observations": [
-              ".buildkite/pipeline.yml",
               ".buildkite/README.md",
+              ".buildkite/pipeline.yml",
               ".github/workflows/ci.yml",
-              ".github/workflows/decapod-validate.yml",
-              ".github/workflows/docs.yml",
               ".github/workflows/release.yml",
-              ".decapod/managed/specs/OPERATIONS.md",
-              "tests/gatling.rs",
-              ".buildkite/pipeline.yml",
-              ".buildkite/README.md",
-              ".decapod/governance/claims.json",
-              ".decapod/governance/plan.json",
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
+              ".github/workflows/docs.yml",
               ".decapod/managed/Dockerfile.decapod",
-              ".decapod/managed/specs/.manifest.json",
+              ".buildkite/README.md",
+              ".buildkite/pipeline.yml",
               ".decapod/managed/specs/ARCHITECTURE.md",
               ".decapod/managed/specs/INTENT.md",
               ".decapod/managed/specs/INTERFACES.md",
               ".decapod/managed/specs/OPERATIONS.md",
-              "AGENTS.md",
-              "CLAUDE.md",
-              "CODEX.md",
-              "GEMINI.md",
-              "The 49-case gatling harness passed 48 active tests and ignored one in 76.08 seconds under cargo; the recurring GitHub/Bazel failure was the 300-second Bazel timeout, not an individual test assertion.",
-              "The native Buildkite test-master step now preserves the full gate with --test_timeout=600.",
-              "Decapod 0.102.2 validation passed with zero failures after refreshing release-bound projections.",
-              "GitHub Actions YAML was left unchanged; it is a legacy bridge while Buildkite becomes the sole execution authority.",
-              "Buildkite #64 setup, deps-lint, docs-build, and release-publish failures are legacy adapter boundaries replaced by direct native pipeline steps; external upload activation remains outside the PR."
+              ".decapod/governance/claims.json",
+              ".decapod/governance/plan.json",
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "Build #70 adapter-backed format, clippy, governance, health, contract, daemonless, migration, test, docs, and artifact checks passed; setup, deps-lint, and Release/plan failed.",
+              "Build #56 also failed Deploy Docs/build and Release/release-publish under the adapter.",
+              "The native .buildkite/pipeline.yml upload experiment is deferred; .github/workflows/*.yml remains canonical.",
+              "The prepared Decapod validation container provides cargo 1.65.0, which cannot parse Cargo edition 2024; configured migration proof exits 101 before tests."
             ],
             "proof_refs": [
-              "cargo_fmt",
-              "cargo_test_lib",
-              "cargo_clippy",
-              "gatling_underlying_harness",
-              "native_buildkite_yaml",
-              "decapod_validate",
-              "bazelisk_native",
-              "external_buildkite_activation"
+              "git_diff_check",
+              "specs_refresh",
+              "host_rust_checks",
+              "adapter_build_70",
+              "container_validation",
+              "native_migration"
             ],
             "validation_findings": [
-              "Buildkite external pipeline configuration, agent image, secrets, GitHub Pages branch, and required-check settings are outside repository PR scope."
+              "Buildkite engineering can diagnose adapter compatibility from complete workflow logs, plugin/agent versions, and failing commits without requiring workflow rewrites."
             ],
             "custody_event_id": "event:4"
           },
           {
             "sequence": 5,
-            "action": "validation",
-            "command": "decapod validate",
+            "action": "trajectory.record",
             "scope": [
-              "Native Buildkite pipeline timeout, release-bound governance projections, operational and living-spec documentation, and proof artifacts."
+              "PR #1344, Issue #1340, Buildkite adapter evidence, .buildkite README, living specs, and governance artifacts"
             ],
             "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_bb172b71962ebc81 completed with zero failures"
+              ".buildkite/README.md",
+              ".decapod/managed/Dockerfile.decapod",
+              "Host decapod validate refreshed release-bound projections to 0.103.0 but requires a real container workspace; the managed image's Cargo 1.65 cannot parse edition 2024, and the temporary Rust 1.96 image build was not completed."
             ],
             "proof_refs": [
-              "decapod validate"
+              "container_validation",
+              "host_validation",
+              "rust_edition_proof"
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"

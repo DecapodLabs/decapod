@@ -249,15 +249,16 @@ the refresh before spec or manifest writes. Ordinary named sections are authored
 only paired attestation, capability-declaration, and capability-overlay comment
 blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
-## Native Buildkite interface
+## Buildkite workflow-adapter interface
 
-The repository exposes `.buildkite/pipeline.yml` as the CI interface for the
-Buildkite-only target topology. Consumers must upload that file through a
-Buildkite agent with a current pull-request diff base so its `if`, `depends_on`,
-and `if_changed` gates are evaluated by Buildkite. The interface includes the
-full master test and validation gates; it does not require GitHub Actions
-artifacts or action-token handoffs. GitHub Actions remains a legacy compatibility
-surface only until external required checks are switched to this interface.
+The repository exposes `.github/workflows/*.yml` as the canonical CI interface.
+The Buildkite `decapod` pipeline invokes `.github/workflows/ci.yml` through the
+`github-actions#latest` plugin and must preserve the workflow's event, path,
+matrix, dependency, artifact, token, and permission behavior. The native
+`.buildkite/pipeline.yml` file is a deferred reference implementation, not the
+active interface for this migration. Adapter failures must remain visible and
+be reported with the workflow, commit, agent/plugin version, and Buildkite
+logs before changing the workflow contract.
 
 <!-- decapod:codebase-attestation:start -->
 

@@ -291,17 +291,19 @@ explicit generated marker pairs confer regeneration ownership. A transformation
 that would lose authored content fails visibly before writing any refreshed spec
 or manifest.
 
-## Buildkite-only CI authority after release merge
+## Buildkite adapter authority after release merge
 
-The native Buildkite pipeline is the intended long-term CI and release
-authority. Post-merge checks remain meaningful: the full `gatling` suite catches
-regressions, and Decapod validation proves that release-bound projections match
-the evaluator that generated the branch. The first governed PR after a release
-refreshes those projections. The old adapter failures are migration evidence;
-they are resolved by uploading `.buildkite/pipeline.yml`, not by disabling the
-underlying setup, documentation, release, or test gates. GitHub Actions files
-remain unchanged until Buildkite is configured as the required execution path
-and the Actions workflows can be retired deliberately.
+The existing GitHub Actions workflow files remain the canonical CI and release
+intent, while Buildkite is the execution authority through its
+`github-actions#latest` adapter. Post-merge checks remain meaningful: the full
+`gatling` suite catches regressions, and Decapod validation proves that
+release-bound projections match the evaluator that generated the branch. The
+first governed PR after a release refreshes those projections. The recurring
+adapter failures are compatibility evidence to escalate to Buildkite
+engineering, not reasons to disable gates or create a second unsustainable
+workflow source. GitHub Actions workflow files may only be retired as a
+service after adapter parity is demonstrated across PR, master, release, docs,
+and tag-publication paths.
 
 <!-- decapod:codebase-attestation:start -->
 

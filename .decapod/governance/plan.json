@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
-  "title": "Repair post-release CI and Buildkite activation",
-  "intent": "Diagnose the failed checks on master merge 5b3bcb625c77cb8af30d8d97799182ff3b2b5bf7, refresh repository-owned Decapod release-bound artifacts for v0.102.2, preserve intentional full post-merge tests, and document the external Buildkite adapter cutover required for native path-sensitive execution.",
+  "title": "Document Buildkite adapter compatibility and preserve GitHub Actions workflows",
+  "intent": "Keep .github/workflows/*.yml as the canonical CI and release contract, execute it through the Buildkite github-actions adapter, record the passing and failing paths from the v0.102.2 post-release evidence, and prepare a precise escalation packet for Buildkite engineering without introducing a second native workflow source.",
   "state": "APPROVED",
   "todo_ids": [
     "bugs_01m2xry8q2fkjevz"
@@ -13,9 +13,13 @@
   ],
   "unknowns": [],
   "human_questions": [],
-  "stop_conditions": [],
+  "stop_conditions": [
+    "Do not merge a native Buildkite rewrite or disable workflow gates until Buildkite engineering has diagnosed the adapter failures and the adapter-backed required checks are green."
+  ],
   "unresolved_contradictions": [],
-  "deferred_questions": [],
+  "deferred_questions": [
+    "After adapter parity is proven across PR, master, release, docs, and tag-publication paths, decide when to disable the GitHub Actions service."
+  ],
   "constraints": {
     "forbidden_paths": [
       ".decapod/data/decapod.db"
@@ -23,5 +27,5 @@
     "file_touch_budget": 30
   },
   "phases": [],
-  "updated_at": "1789853214Z"
+  "updated_at": "1789860539Z"
 }

@@ -1,91 +1,88 @@
-# Native Buildkite pipeline
+# Buildkite execution and workflow compatibility
 
-`.buildkite/pipeline.yml` is the repository's native Buildkite definition. It
-must be uploaded by the Buildkite pipeline command:
+The current operating model keeps `.github/workflows/*.yml` as the canonical
+workflow contract and runs it through Buildkite's `github-actions` plugin. The
+Buildkite `decapod` pipeline should retain this adapter while its compatibility
+gaps are investigated with Buildkite engineering:
 
-```bash
-BUILDKITE_FETCH_DIFF_BASE=true buildkite-agent pipeline upload .buildkite/pipeline.yml
+```yaml
+steps:
+  - label: ":github: CI"
+    key: ci
+    plugins:
+      - github-actions#latest:
+          workflows:
+            - .github/workflows/ci.yml
 ```
 
-The current GitHub Actions-to-Buildkite adapter must be removed from the
-pipeline configuration when this definition is enabled. `if_changed` is
-evaluated by the Buildkite agent during pipeline upload, so uploading this file
-from the repository is required; configuring the same steps only in the
-Buildkite UI does not preserve path-sensitive behavior.
+The native `.buildkite/pipeline.yml` definition remains in the repository as a
+deferred experiment and reference. It is not the execution source for this
+PR, and this PR does not ask reviewers to migrate away from the GitHub Actions
+workflow files. The purpose of this record is to make the adapter's exact
+compatibility gaps observable and actionable.
 
-## Event and path contract
+## Workflow contract
 
-| Event | Native behavior |
+| Event | Workflow behavior |
 | --- | --- |
-| Pull request | Runs commit/governance/spec checks, source checks selected by `if_changed`, docs build, and release planning. `release-plz-*` pull requests run release planning but skip normal source validation. |
-| Push to `master` | Runs the source gates selected by `if_changed`, documentation build/deploy when documentation-affecting paths changed, release-plz publication, and the full master test/release build chain. |
-| Version tag | Runs cargo-dist planning, tagged artifact publication, and multi-architecture GHCR image publication. |
+| Pull request | Runs the checks selected by `.github/workflows/ci.yml`, including governance, validation, lint, tests, and release planning. |
+| Push to `master` | Runs the post-merge tests, validation, documentation, release, and artifact paths defined by the existing workflow files. |
+| Version tag | Runs the tagged artifact and container publication workflows defined in `.github/workflows/release.yml`. |
 
-The source patterns are deliberately explicit. A release metadata-only pull
-request does not spend a normal CI build on source checks, while a change to
-source, tests, toolchain configuration, governance, or this pipeline selects
-the relevant gates.
+The workflow files remain the source of truth for event, path, matrix,
+dependency, artifact, token, and permission semantics. Buildkite is the
+execution surface; it must preserve those semantics before GitHub Actions can
+be disabled as a service.
 
-## Agent and secret prerequisites
+## Adapter prerequisites and open questions
 
-The Buildkite agent image must provide Rust from `rust-toolchain.toml`,
-Bazelisk, Git, Python 3, curl, Docker Buildx for tagged image builds, and the
-Buildkite agent artifact/runtime commands. The pipeline installs the versioned
-mdBook, cargo-machete, and cargo-deny tools only when they are absent. The
-agent running the upload must be Buildkite agent 3.103 or newer (3.109 or
-newer for list/include/exclude forms); `BUILDKITE_FETCH_DIFF_BASE=true` keeps
-the pull-request base ref current before `if_changed` is evaluated.
-
-The following values belong in Buildkite's secret environment configuration;
-none are committed in this repository:
-
-- `GITHUB_TOKEN`: GitHub App or fine-grained token with repository contents,
-  pull-request, Pages branch, release, and package-write permissions as
-  appropriate for the step.
-- `CARGO_REGISTRY_TOKEN`: crates.io publish token, exposed only to
-  `release-publish`.
-
-GitHub Pages must be configured to publish the `gh-pages` branch. This native
-deployment replaces the GitHub Actions Pages artifact/OIDC boundary, which
-Buildkite cannot obtain from GitHub's Actions environment.
+Buildkite engineering needs to confirm support for the workflow features that
+failed under the adapter: `bazel-contrib/setup-bazel`, artifact upload/download
+handoffs, `taiki-e/install-action`, dynamic expressions and matrices in the
+release workflow, GitHub App token creation, Pages/OIDC deployment, and the
+release environment and secret boundary. These are compatibility questions,
+not reasons to delete or simplify the workflow files.
 
 ## Failure mapping from merge `bf98ec2e`
 
 Buildkite build #56 exposed four failed check-runs with no command output in
 the GitHub status payload, and the Buildkite UI logs require credentials that
-were not available during this investigation. At that commit the active
-Buildkite path was the GitHub Actions adapter. The failures map to the
-following unsupported boundaries and their native replacements:
+were not available during the initial investigation. At that commit the
+active Buildkite path was the GitHub Actions adapter. The failures are the
+following compatibility cases to reproduce and escalate:
 
-- `CI / setup`: the `setup-bazel` action and upload-artifact handoff are not
-  native Buildkite steps. The native `setup` step runs Bazelisk directly.
-- `CI / deps-lint`: action-based tool installation is replaced by direct
-  cargo-machete and cargo-deny installation/check commands.
-- `Deploy Docs / build`: mdBook installation and Pages artifact upload are
-  replaced by a direct mdBook build; deployment is a separate branch-push
-  step.
-- `Release / release-publish`: GitHub App-token/action semantics are replaced
-  by a direct `release-plz release` command with Buildkite-managed secrets.
+- `CI / setup`: the workflow uses `bazel-contrib/setup-bazel@0.13.0` and an
+  `actions/upload-artifact` handoff. Determine which action setup, cache, and
+  artifact semantics the adapter does not reproduce.
+- `CI / deps-lint`: the workflow uses `taiki-e/install-action@cargo-machete`
+  and installs `cargo-deny`. Determine whether the action runtime or tool
+  installation is the failing boundary.
+- `Deploy Docs / build`: the workflow uses Pages artifact and deployment
+  actions. Determine support for Pages artifacts, OIDC, environments, and
+  deployment permissions.
+- `Release / release-publish`: the workflow uses `actions/create-github-app-token`
+  and `release-plz/action`. Determine support for GitHub App tokens, release
+  environments, permissions, and action outputs.
 
-This mapping is based on the failed check names and the adapter/native
-boundary, not on unavailable Buildkite step logs. The repository-side direct
-commands are covered by the validation evidence recorded in Issue #1340; the
-remaining deployment prerequisites are the Buildkite upload command, agent
-image, secrets, GitHub Pages branch setting, and Docker registry access.
+This mapping is based on the failed check names and the adapter boundary, not
+on unavailable Buildkite step logs. The next step is to provide these exact
+workflows, logs, agent/plugin versions, and failing commits to Sam Cochran for
+adapter-level diagnosis. No underlying workflow gate should be removed until
+the corresponding adapter behavior is understood.
 
 ## Post-release merge verification (`5b3bcb625c77cb8af30d8d97799182ff3b2b5bf7`)
 
 The `v0.102.2` release merge exposed three different classes of result. They
 must not be treated as one reason to disable CI:
 
-| Observation | Decision | Repository/native Buildkite action |
+| Observation | Decision | Adapter-first action |
 | --- | --- | --- |
-| GitHub `Tests (Full)` timed out in `//:gatling` after running the 49-case harness; the same timeout recurred on earlier master merges. | Keep the full post-merge gate. | The native `test-master` step uses `--test_timeout=600`, preserving a bounded timeout while allowing the known clean-agent workload to finish. |
+| GitHub `Tests (Full)` timed out in `//:gatling` after running the 49-case harness; the same timeout recurred on earlier master merges. | Keep the full post-merge gate. | Preserve the workflow gate and ask Buildkite whether the adapter exposes a configurable command timeout; do not silently remove the test. |
 | GitHub `Decapod Validate` ran the `v0.102.2` evaluator against projections still generated by `v0.102.1`. | Keep validation and refresh the projections in the first governed PR after a release. | This PR refreshes the entrypoints, managed Dockerfile, manifest, and spec attestations to `v0.102.2`. |
-| Buildkite #64 failed `CI / setup`, `CI / deps-lint`, `Deploy Docs / build`, and `Release / release-publish` under the old GitHub-Actions adapter. | Do not disable the corresponding gates. | Activate the repository-native upload command above; its direct Buildkite steps replace unsupported action setup, artifact handoffs, Pages artifacts, and App-token action semantics. |
+| Buildkite #70 failed `CI / setup`, `CI / deps-lint`, and `Release / plan` under the GitHub-Actions adapter. Earlier Buildkite #56 also failed `Deploy Docs / build` and `Release / release-publish`. | Do not disable the corresponding gates. | Escalate each adapter boundary with its workflow, logs, commit, and plugin/agent versions; keep the workflow definitions unchanged while Buildkite investigates. |
 
-Once the external pipeline is configured to upload this file, Buildkite is the
-execution authority for these gates. GitHub Actions workflow files remain
-unchanged in this migration so the cutover does not silently alter their
-semantics; they can be disabled after the native Buildkite required checks and
-publishing prerequisites are enabled.
+Buildkite can become the required execution authority while the GitHub Actions
+YAML remains canonical. The GitHub Actions service should only be disabled
+after the adapter has demonstrated parity for PR, master, release, docs, and
+tagged-publication paths. The native YAML upload experiment is not a
+prerequisite for that adapter-first plan.

@@ -313,14 +313,13 @@ authored document is an untouched template.
 
 ## CI execution authority
 
-CI has an explicit migration boundary: `.buildkite/pipeline.yml` models the
-event, dependency, and changed-path graph that the native Buildkite agent
-executes, while `.github/workflows/` is retained as an unchanged legacy
-surface until the external required-check cutover is complete. The native
-pipeline owns the full master test, validation, documentation, release, and
-tagged-artifact paths; it does not rely on GitHub Actions setup or artifact
-handoffs. This keeps the eventual Buildkite-only topology faithful to the
-existing gate intent instead of making the gates disappear during migration.
+The repository preserves `.github/workflows/*.yml` as the canonical CI and
+release contract. Buildkite executes those workflows through its
+`github-actions#latest` adapter, so workflow event, path, matrix, dependency,
+artifact, token, and permission semantics remain reviewable in one place. The
+native `.buildkite/pipeline.yml` definition is retained as a deferred
+experiment, not as the active execution source. Adapter compatibility gaps are
+tracked and escalated before any workflow gate is removed or rewritten.
 
 <!-- decapod:capability-overlay:persistent-state:start -->
 
