@@ -1,23 +1,19 @@
 {
   "schema_version": "1.0.0",
-  "title": "Use Buildkite GitHub Actions migration without repository-native pipeline files",
-  "intent": "Treat .github/workflows/*.yml as the sole repository workflow contract and rely on Buildkite's implemented GitHub Actions migration for execution; remove the obsolete .buildkite directory and preserve all workflow gates and semantics.",
+  "title": "Make canonical GitHub Actions workflows portable through Buildkite migration",
+  "intent": "Keep .github/workflows/*.yml as the sole workflow contract while adding explicit, documented compatibility paths for Buildkite GHA execution. Preserve native GitHub Actions behavior, preserve event and release gates, and make adapter limitations observable through workflow diagnostics rather than adding a second native Buildkite pipeline.",
   "state": "APPROVED",
   "todo_ids": [
-    "code_01m2y81nnzgyw1p8"
+    "bugs_01m2ygbqqwzq8p3q"
   ],
   "proof_hooks": [
-    "cargo test --locked --lib",
-    "cargo test --locked --test decision_provider_live --no-run",
-    "cargo test --locked --test trajectory_cli",
-    "cargo clippy --locked --all-targets --all-features -- -D warnings",
-    "decapod validate --format json",
-    "Jev history schema and reset tests"
+    "Buildkite GHA checks for PR, master, release, docs, and tag contexts"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [
-    "Do not add a second native Buildkite workflow source or delete any .github/workflows/*.yml gate while verifying Buildkite's migration parity."
+    "Do not add a second native Buildkite workflow source or remove any existing .github/workflows/*.yml gate.",
+    "Do not weaken release, publish, docs, or security gates; compatibility branches must fail with actionable diagnostics when required Buildkite inputs are missing."
   ],
   "unresolved_contradictions": [],
   "deferred_questions": [
@@ -30,5 +26,5 @@
     "file_touch_budget": 30
   },
   "phases": [],
-  "updated_at": "1789875313Z"
+  "updated_at": "1789879561Z"
 }
