@@ -5,6 +5,10 @@
   "task_id": "bugs_01m2xry8q2fkjevz",
   "original_intent": "Resolve PR #1344 conflicts against current master and remove obsolete repository-native Buildkite files now that Buildkite's GitHub Actions migration is implemented.",
   "derived_intent": "Keep all .github/workflows/*.yml unchanged as the sole workflow contract, remove .buildkite, preserve current v0.104.0 master, and document the service-owned Buildkite boundary.",
+  "current_phase": "validation",
+  "next_transitions": [
+    "publish"
+  ],
   "active_boundaries": [
     "Do not modify or delete .github/workflows/*.yml; do not add a second pipeline source; resolve conflicts against current master; remove only obsolete .buildkite files."
   ],
@@ -12,18 +16,45 @@
     "PR #1344 v0.104.0 merge resolution, .buildkite removal, governed specs, plan, trajectory, and issue/PR narrative"
   ],
   "inspected_files": [
+    ".decapod/governance/claims.json",
+    ".decapod/governance/validation.json",
     ".decapod/managed/specs/OPERATIONS.md",
     ".github/workflows/ci.yml",
     ".github/workflows/docs.yml",
     ".github/workflows/release.yml"
   ],
-  "modified_files": [],
-  "declared_commands": [],
+  "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json"
+  ],
+  "declared_commands": [
+    "decapod validate"
+  ],
   "tool_calls": [],
   "checks": [
     {
+      "name": "buildkite_ci_92",
+      "status": "failed"
+    },
+    {
+      "name": "buildkite_dec_apod_90",
+      "status": "passed"
+    },
+    {
       "name": "buildkite_directory_removal",
       "status": "passed"
+    },
+    {
+      "name": "decapod validate",
+      "status": "passed"
+    },
+    {
+      "name": "decapod_validate",
+      "status": "passed"
+    },
+    {
+      "name": "governance_inventory",
+      "status": "partial"
     },
     {
       "name": "merge_conflicts",
@@ -39,18 +70,20 @@
     }
   ],
   "evidence": [
-    "Merged current v0.104.0 master into PR #1344, retained all current master source/workflow files, deleted the two obsolete .buildkite files, and refreshed the governed specs."
+    "DECAPOD_VALIDATE_SKIP_GIT_GATES=1 decapod validate --format json --refresh-specs --projections completed with status ok and zero failures; warnings were historical audit divergence and missing risk map. Latest external Buildkite ci #92 failed after 1 second while decapod #90 passed. Claims note refreshed the research ledger for the v0.104.0 merge resolution.",
+    "Merged current v0.104.0 master into PR #1344, retained all current master source/workflow files, deleted the two obsolete .buildkite files, and refreshed the governed specs.",
+    "validation epoch ve_e20c1438120fc1a1 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
-  "proof_status": "passed",
+  "proof_status": "failed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "supported"
+    "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:b01fc964a9fc50189acdb87a6d763cf0db00213b9cfb88a92f8213a766f07398",
+  "artifact_hash": "sha256:d665d4175459cceb1b6f464ee0977333a1fbe8fe79901829923bfc15ceeb0fb4",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -92,6 +125,20 @@
         "intent_id": "intent:buildkite-gha-migration-20260920",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:buildkite-gha-migration-20260920"
+      },
+      {
+        "sequence": 5,
+        "event_id": "event:5",
+        "intent_id": "intent:buildkite-gha-migration-20260920",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:buildkite-gha-migration-20260920"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
+        "intent_id": "intent:buildkite-gha-migration-20260920",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:buildkite-gha-migration-20260920"
       }
     ],
     "trajectories": {
@@ -121,12 +168,50 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
+          },
+          {
+            "sequence": 5,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "PR #1344 v0.104.0 merge resolution, .buildkite removal, governed specs, plan, trajectory, and issue/PR narrative"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_e20c1438120fc1a1 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "trajectory.record",
+            "scope": [
+              "PR #1344 v0.104.0 merge resolution, .buildkite removal, governed specs, plan, trajectory, and issue/PR narrative"
+            ],
+            "observations": [
+              ".decapod/governance/claims.json",
+              ".decapod/governance/validation.json",
+              "DECAPOD_VALIDATE_SKIP_GIT_GATES=1 decapod validate --format json --refresh-specs --projections completed with status ok and zero failures; warnings were historical audit divergence and missing risk map. Latest external Buildkite ci #92 failed after 1 second while decapod #90 passed. Claims note refreshed the research ledger for the v0.104.0 merge resolution."
+            ],
+            "proof_refs": [
+              "decapod_validate",
+              "buildkite_ci_92",
+              "buildkite_dec_apod_90",
+              "governance_inventory"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:6"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 4
+    "next_sequence": 6
   }
 }
