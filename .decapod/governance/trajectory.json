@@ -1,116 +1,72 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "buildkite-adapter-evidence-20260919",
-  "intent_id": "intent:buildkite-adapter-evidence-20260919",
+  "run_id": "buildkite-gha-migration-20260919",
+  "intent_id": "intent:buildkite-gha-migration-20260919",
   "task_id": "bugs_01m2xry8q2fkjevz",
-  "original_intent": "Keep GitHub Actions workflow YAML as the canonical CI and release contract, execute it through Buildkite, and document the adapter failures and working paths for escalation to Buildkite engineering.",
-  "derived_intent": "Update PR #1344 and Issue #1340 to preserve the github-actions adapter, defer native pipeline migration, separate repository and adapter failures, and record the exact compatibility work required before retiring GitHub Actions.",
-  "current_phase": "validation",
-  "next_transitions": [
-    "publish"
-  ],
+  "original_intent": "Resolve PR #1344 merge conflicts and remove obsolete repository-native Buildkite files now that Buildkite's GitHub Actions migration is implemented.",
+  "derived_intent": "Keep all .github/workflows/*.yml unchanged as the sole workflow contract, remove .buildkite, preserve current master changes, and document the service-owned Buildkite migration boundary.",
   "active_boundaries": [
-    "Do not change .github/workflows/*.yml; preserve the Buildkite github-actions adapter; do not disable workflow gates; do not merge the native pipeline rewrite."
+    "Do not modify or delete .github/workflows/*.yml; do not add a second pipeline source; resolve conflicts against current master; remove only obsolete .buildkite files."
   ],
   "repo_scope": [
-    "PR #1344, Issue #1340, Buildkite adapter evidence, .buildkite README, living specs, and governance artifacts"
+    "PR #1344 merge resolution, .buildkite removal, governed specs, plan, trajectory, and issue/PR narrative"
   ],
   "inspected_files": [
     ".buildkite/README.md",
     ".buildkite/pipeline.yml",
-    ".decapod/managed/Dockerfile.decapod",
+    ".decapod/managed/specs/OPERATIONS.md",
     ".github/workflows/ci.yml",
     ".github/workflows/docs.yml",
     ".github/workflows/release.yml"
   ],
-  "modified_files": [
-    ".buildkite/README.md",
-    ".buildkite/pipeline.yml",
-    ".decapod/governance/claims.json",
-    ".decapod/governance/plan.json",
-    ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json",
-    ".decapod/managed/specs/ARCHITECTURE.md",
-    ".decapod/managed/specs/INTENT.md",
-    ".decapod/managed/specs/INTERFACES.md",
-    ".decapod/managed/specs/OPERATIONS.md"
-  ],
-  "declared_commands": [
-    "Buildkite build #70 evidence review",
-    "decapod govern artifacts inventory",
-    "decapod govern plan update",
-    "decapod rpc --op specs.refresh",
-    "decapod validate --format json --refresh-specs --projections"
-  ],
+  "modified_files": [],
+  "declared_commands": [],
   "tool_calls": [],
   "checks": [
     {
-      "name": "adapter_build_70",
-      "status": "partial"
-    },
-    {
-      "name": "container_validation",
-      "status": "unavailable"
-    },
-    {
-      "name": "git_diff_check",
+      "name": "buildkite_directory_removal",
       "status": "passed"
     },
     {
-      "name": "host_rust_checks",
+      "name": "merge_conflicts",
       "status": "passed"
-    },
-    {
-      "name": "host_validation",
-      "status": "unavailable"
-    },
-    {
-      "name": "native_migration",
-      "status": "partial"
-    },
-    {
-      "name": "rust_edition_proof",
-      "status": "partial"
     },
     {
       "name": "specs_refresh",
       "status": "passed"
+    },
+    {
+      "name": "workflow_files_preserved",
+      "status": "passed"
     }
   ],
   "evidence": [
-    "Build #56 also failed Deploy Docs/build and Release/release-publish under the adapter.",
-    "Build #70 adapter-backed format, clippy, governance, health, contract, daemonless, migration, test, docs, and artifact checks passed; setup, deps-lint, and Release/plan failed.",
-    "Host decapod validate refreshed release-bound projections to 0.103.0 but requires a real container workspace; the managed image's Cargo 1.65 cannot parse edition 2024, and the temporary Rust 1.96 image build was not completed.",
-    "The native .buildkite/pipeline.yml upload experiment is deferred; .github/workflows/*.yml remains canonical.",
-    "The prepared Decapod validation container provides cargo 1.65.0, which cannot parse Cargo edition 2024; configured migration proof exits 101 before tests."
+    "Merged current master v0.103.0 into PR #1344; generated governance and projections were resolved to current master, the two obsolete .buildkite files were deleted, and .github/workflows files were not authored by this change."
   ],
   "shortcut_risk_signals": [],
-  "unresolved_assumptions": [
-    "Buildkite engineering can diagnose adapter compatibility from complete workflow logs, plugin/agent versions, and failing commits without requiring workflow rewrites."
-  ],
-  "completion_claim": "PR #1344 and Issue #1340 now describe the adapter-first decision, working paths, broken paths, local validation limitation, and next escalation work.",
-  "proof_status": "partial",
+  "unresolved_assumptions": [],
+  "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "caution"
+    "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:772c5099abddef1bc56e73ca3752e9eaa4519f682643a2c89bffb9c74105a06a",
+  "artifact_hash": "sha256:85237c4c4cee8cc9c857e1987595246a74eb8efbeb71ff7a3f9b07846612069b",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:buildkite-adapter-evidence-20260919": {
-        "id": "intent:buildkite-adapter-evidence-20260919",
-        "raw_intent": "Keep GitHub Actions workflow YAML as the canonical CI and release contract, execute it through Buildkite, and document the adapter failures and working paths for escalation to Buildkite engineering.",
-        "refined_intent": "Update PR #1344 and Issue #1340 to preserve the github-actions adapter, defer native pipeline migration, separate repository and adapter failures, and record the exact compatibility work required before retiring GitHub Actions.",
+      "intent:buildkite-gha-migration-20260919": {
+        "id": "intent:buildkite-gha-migration-20260919",
+        "raw_intent": "Resolve PR #1344 merge conflicts and remove obsolete repository-native Buildkite files now that Buildkite's GitHub Actions migration is implemented.",
+        "refined_intent": "Keep all .github/workflows/*.yml unchanged as the sole workflow contract, remove .buildkite, preserve current master changes, and document the service-owned Buildkite migration boundary.",
         "acceptance_criteria": [],
         "constraints": [
-          "PR #1344, Issue #1340, Buildkite adapter evidence, .buildkite README, living specs, and governance artifacts"
+          "PR #1344 merge resolution, .buildkite removal, governed specs, plan, trajectory, and issue/PR narrative"
         ],
         "assumptions": [],
         "boundaries": [
-          "Do not change .github/workflows/*.yml; preserve the Buildkite github-actions adapter; do not disable workflow gates; do not merge the native pipeline rewrite."
+          "Do not modify or delete .github/workflows/*.yml; do not add a second pipeline source; resolve conflicts against current master; remove only obsolete .buildkite files."
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -123,102 +79,58 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:buildkite-adapter-evidence-20260919",
+        "intent_id": "intent:buildkite-gha-migration-20260919",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:buildkite-adapter-evidence-20260919",
+        "intent_id": "intent:buildkite-gha-migration-20260919",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:buildkite-adapter-evidence-20260919",
+        "intent_id": "intent:buildkite-gha-migration-20260919",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:buildkite-adapter-evidence-20260919"
-      },
-      {
-        "sequence": 5,
-        "event_id": "event:5",
-        "intent_id": "intent:buildkite-adapter-evidence-20260919",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:buildkite-adapter-evidence-20260919"
+        "detail": "trajectory:buildkite-gha-migration-20260919"
       }
     ],
     "trajectories": {
-      "buildkite-adapter-evidence-20260919": {
-        "id": "buildkite-adapter-evidence-20260919",
-        "intent_id": "intent:buildkite-adapter-evidence-20260919",
+      "buildkite-gha-migration-20260919": {
+        "id": "buildkite-gha-migration-20260919",
+        "intent_id": "intent:buildkite-gha-migration-20260919",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "validation",
-            "command": "decapod rpc --op specs.refresh",
+            "action": "trajectory.record",
             "scope": [
-              "PR #1344, Issue #1340, Buildkite adapter evidence, .buildkite README, living specs, and governance artifacts"
+              "PR #1344 merge resolution, .buildkite removal, governed specs, plan, trajectory, and issue/PR narrative"
             ],
             "observations": [
-              ".buildkite/README.md",
-              ".buildkite/pipeline.yml",
               ".github/workflows/ci.yml",
               ".github/workflows/release.yml",
               ".github/workflows/docs.yml",
-              ".decapod/managed/Dockerfile.decapod",
               ".buildkite/README.md",
               ".buildkite/pipeline.yml",
-              ".decapod/managed/specs/ARCHITECTURE.md",
-              ".decapod/managed/specs/INTENT.md",
-              ".decapod/managed/specs/INTERFACES.md",
               ".decapod/managed/specs/OPERATIONS.md",
-              ".decapod/governance/claims.json",
-              ".decapod/governance/plan.json",
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "Build #70 adapter-backed format, clippy, governance, health, contract, daemonless, migration, test, docs, and artifact checks passed; setup, deps-lint, and Release/plan failed.",
-              "Build #56 also failed Deploy Docs/build and Release/release-publish under the adapter.",
-              "The native .buildkite/pipeline.yml upload experiment is deferred; .github/workflows/*.yml remains canonical.",
-              "The prepared Decapod validation container provides cargo 1.65.0, which cannot parse Cargo edition 2024; configured migration proof exits 101 before tests."
+              "Merged current master v0.103.0 into PR #1344; generated governance and projections were resolved to current master, the two obsolete .buildkite files were deleted, and .github/workflows files were not authored by this change."
             ],
             "proof_refs": [
-              "git_diff_check",
-              "specs_refresh",
-              "host_rust_checks",
-              "adapter_build_70",
-              "container_validation",
-              "native_migration"
-            ],
-            "validation_findings": [
-              "Buildkite engineering can diagnose adapter compatibility from complete workflow logs, plugin/agent versions, and failing commits without requiring workflow rewrites."
-            ],
-            "custody_event_id": "event:4"
-          },
-          {
-            "sequence": 5,
-            "action": "trajectory.record",
-            "scope": [
-              "PR #1344, Issue #1340, Buildkite adapter evidence, .buildkite README, living specs, and governance artifacts"
-            ],
-            "observations": [
-              ".buildkite/README.md",
-              ".decapod/managed/Dockerfile.decapod",
-              "Host decapod validate refreshed release-bound projections to 0.103.0 but requires a real container workspace; the managed image's Cargo 1.65 cannot parse edition 2024, and the temporary Rust 1.96 image build was not completed."
-            ],
-            "proof_refs": [
-              "container_validation",
-              "host_validation",
-              "rust_edition_proof"
+              "merge_conflicts",
+              "buildkite_directory_removal",
+              "workflow_files_preserved",
+              "specs_refresh"
             ],
             "validation_findings": [],
-            "custody_event_id": "event:5"
+            "custody_event_id": "event:4"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 5
+    "next_sequence": 4
   }
 }

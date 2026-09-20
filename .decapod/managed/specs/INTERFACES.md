@@ -9,6 +9,14 @@ same canonical repository store, so a newly created worktree cannot diverge
 into an empty or partial task database. A validation timeout identifies the
 active gate and elapsed time when that evidence is available.
 
+## Decision-Provider Interface
+
+| Interface | Owner and semantics | Failure/authority boundary |
+|---|---|---|
+| `DecisionProvider::observe` | Decapod supplies declared intent, current trajectory, reconstructed obligations, proof hooks, constraints, workspace context, and labeled plan/claims/trajectory/validation artifact snapshots; the provider returns a typed `trajectory_satisfies_intent` probability or `NoObservation` | The result is advisory data only. It cannot clear `resolve_interlock`, alter claims/trajectory/validation/boundaries, satisfy proof, or declare completion |
+| `provider = "none"` | Default local implementation; performs no external call | Returns `no_observation` with `disabled`; normal Decapod operation remains provider-independent |
+| `provider = "jev"` | Jev adapter calls TypeSafe System One with `TYPESAFE_API_KEY` from the machine environment | Missing credentials, transport/service failure, timeout, malformed response, or invalid probability returns `no_observation`; no failure is converted to approval |
+
 ## Authored Living-Spec Boundary (#1197)
 
 The authored semantic prose in `.decapod/managed/specs/*.md` is maintained
@@ -249,22 +257,11 @@ the refresh before spec or manifest writes. Ordinary named sections are authored
 only paired attestation, capability-declaration, and capability-overlay comment
 blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
-## Buildkite workflow-adapter interface
-
-The repository exposes `.github/workflows/*.yml` as the canonical CI interface.
-The Buildkite `decapod` pipeline invokes `.github/workflows/ci.yml` through the
-`github-actions#latest` plugin and must preserve the workflow's event, path,
-matrix, dependency, artifact, token, and permission behavior. The native
-`.buildkite/pipeline.yml` file is a deferred reference implementation, not the
-active interface for this migration. Adapter failures must remain visible and
-be reported with the workflow, commit, agent/plugin version, and Buildkite
-logs before changing the workflow contract.
-
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d5ee39dc429b69a301f187c0bb632934a956d6656482a8742f2d18ddb5e90a02`
-- Significant implementation surfaces: `.buildkite/` (1 files), `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
+- Repository signal fingerprint: `82c28602b3b21baa4c98f318dc1d312c40197a69866593069f4eabfb6de5f458`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (108 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

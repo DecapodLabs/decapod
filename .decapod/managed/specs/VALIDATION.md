@@ -19,6 +19,19 @@ must not introduce additional output.
 ## Validation Philosophy
 > Validation is a release gate, not documentation theater.
 
+## Decision-Provider Proof
+
+The provider seam is covered by focused tests for disabled operation, typed
+boundary probabilities, labeled governance-state serialization, unavailable
+transport, non-success responses, malformed/invalid responses, and missing
+credentials. The assurance harness verifies that the default local path
+surfaces `no_observation` without changing the existing policy interlock. The
+ignored `decision_provider_live` corpus covers clearly aligned and violating
+trajectories, partial/missing proof, wrong-target proof, contradictions,
+ambiguity, boundary violations, adversarial state text, and degraded state. It
+emits comparison-ready JSON records only when explicitly enabled with a Jev key;
+it does not define a production threshold or claim live evidence by default.
+
 ## Governance Input and Proof Currency (#1325, #1327)
 The specs manifest hashes both project authority inputs: `.decapod/config.toml`
 and `.decapod/OVERRIDE.md`. A mismatch is not ignored. The normal bounded
@@ -328,7 +341,7 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d5ee39dc429b69a301f187c0bb632934a956d6656482a8742f2d18ddb5e90a02`
-- Significant implementation surfaces: `.buildkite/` (1 files), `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
+- Repository signal fingerprint: `82c28602b3b21baa4c98f318dc1d312c40197a69866593069f4eabfb6de5f458`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (108 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

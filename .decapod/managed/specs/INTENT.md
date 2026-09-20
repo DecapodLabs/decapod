@@ -39,6 +39,16 @@ ordinary ignored dependency installs.
 - Reliable convergence is the outcome: the agent preserves accepted intent, stays within explicit boundaries, maintains durable state, responds to validation, remediates supported failures, and produces evidence before completion.
 - Product ontology: models produce intelligence; agents perform work; repositories preserve state; Decapod governs the transition from intent to proof.
 - Reliability is designed, not hoped for. Trust in generated work follows from explicit intent, boundaries, durable state, validation, supported recovery, and evidence rather than generation capability alone.
+- Optional external intelligence may inform a Decapod assurance result through a typed Jev observation, while Decapod remains the sole authority for policy, boundaries, interlocks, proof requirements, and completion.
+
+## Optional Decision-Provider Intent
+
+The first probabilistic seam is intentionally narrow. After governance context
+reconstruction, an optional provider may report the probability that the
+proposed trajectory satisfies the declared intent. Jev is the first adapter;
+`provider = "none"` remains the default. Provider absence or failure must
+produce no observation rather than implicit approval, and no provider may
+mutate intent, claims, trajectory, validation state, or boundaries.
 
 ## Current Storage Cutover Intent
 - The canonical `.decapod/data/decapod.db` path is a Dactyl-backed physical store. Decapod has no direct SQL driver dependency, subprocess connector, backend handle, or second local authority. Every canonical read, write, schema inspection, transaction, migration step, and validation probe crosses the `core::dactyl_db` facade into Dactyl.
@@ -291,26 +301,12 @@ explicit generated marker pairs confer regeneration ownership. A transformation
 that would lose authored content fails visibly before writing any refreshed spec
 or manifest.
 
-## Buildkite adapter authority after release merge
-
-The existing GitHub Actions workflow files remain the canonical CI and release
-intent, while Buildkite is the execution authority through its
-`github-actions#latest` adapter. Post-merge checks remain meaningful: the full
-`gatling` suite catches regressions, and Decapod validation proves that
-release-bound projections match the evaluator that generated the branch. The
-first governed PR after a release refreshes those projections. The recurring
-adapter failures are compatibility evidence to escalate to Buildkite
-engineering, not reasons to disable gates or create a second unsustainable
-workflow source. GitHub Actions workflow files may only be retired as a
-service after adapter parity is demonstrated across PR, master, release, docs,
-and tag-publication paths.
-
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d5ee39dc429b69a301f187c0bb632934a956d6656482a8742f2d18ddb5e90a02`
-- Significant implementation surfaces: `.buildkite/` (1 files), `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
+- Repository signal fingerprint: `82c28602b3b21baa4c98f318dc1d312c40197a69866593069f4eabfb6de5f458`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (108 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

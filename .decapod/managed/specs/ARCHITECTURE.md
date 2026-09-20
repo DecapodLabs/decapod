@@ -12,6 +12,22 @@ Validation keeps proof gates bounded: observational status does not launch the
 full validator, and maintenance operations that depend on a live container
 daemon do not consume the validation proof budget.
 
+## Optional Decision-Provider Boundary
+
+`core::assurance::AssuranceEngine` reconstructs obligations and workspace state
+before it invokes the Decapod-owned `core::decision_provider::DecisionProvider`
+seam. The provider receives the current RPC trajectory plus explicitly labeled
+snapshots of the existing plan, claims, trajectory, and validation artifacts;
+missing and invalid artifacts remain distinct. The seam returns either a typed
+`DecisionObservation` or an explicit `NoObservation` result. The Jev adapter owns
+its HTTP endpoint, request and response schemas, credential, and transport; the
+rest of Decapod sees only the provider-neutral result.
+
+The observation is attached to the assurance advisory. It is intentionally
+outside `resolve_interlock`, completion proof evaluation, boundary evaluation,
+and governance artifact mutation. A Jev probability therefore cannot authorize
+work, waive an obligation, change a boundary, or declare completion.
+
 ## Deterministic Projection and Repository-Map Boundaries (#1303, #1304)
 
 Living-spec refresh treats the codebase attestation as one canonical,
@@ -311,16 +327,6 @@ document before writing any document. Scaffold manifests record the actual
 seeded template hash, and a changed configuration hash cannot establish that an
 authored document is an untouched template.
 
-## CI execution authority
-
-The repository preserves `.github/workflows/*.yml` as the canonical CI and
-release contract. Buildkite executes those workflows through its
-`github-actions#latest` adapter, so workflow event, path, matrix, dependency,
-artifact, token, and permission semantics remain reviewable in one place. The
-native `.buildkite/pipeline.yml` definition is retained as a deferred
-experiment, not as the active execution source. Adapter compatibility gaps are
-tracked and escalated before any workflow gate is removed or rewritten.
-
 <!-- decapod:capability-overlay:persistent-state:start -->
 
 ## Persistent State Architecture Overlay
@@ -345,7 +351,7 @@ tracked and escalated before any workflow gate is removed or rewritten.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d5ee39dc429b69a301f187c0bb632934a956d6656482a8742f2d18ddb5e90a02`
-- Significant implementation surfaces: `.buildkite/` (1 files), `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
+- Repository signal fingerprint: `82c28602b3b21baa4c98f318dc1d312c40197a69866593069f4eabfb6de5f458`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (108 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

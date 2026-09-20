@@ -1,11 +1,17 @@
+use crate::core::decision_provider::{
+    DecisionContext, DecisionObservationResult, DurableGovernanceContext, GovernanceArtifactState,
+    GovernanceContext, GovernanceObligation, TrajectoryContext, WorkspaceContext,
+};
 use crate::core::error::DecapodError;
 use crate::core::events;
 use crate::core::mentor::{MentorEngine, Obligation, ObligationKind, ObligationsContext};
 use crate::core::rpc::{Advisory, Attestation, Interlock, LoopSignal, ReconciliationPointer};
 use crate::core::workspace;
+use crate::core::{research_claims, trajectory, validate};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
+use std::fs;
 use std::path::{Path, PathBuf};
 
 pub const INTERLOCK_WORKSPACE_REQUIRED: &str = "workspace_required";
@@ -158,6 +164,7 @@ impl AssuranceEngine {
             verification_plan,
             loop_signal,
             notes: Some(env_notes),
+            decision_observation: self.observe_decision(input, &obligations, &workspace_status),
         };
 
         let attestation = self.write_attestation(input, interlock.as_ref())?;
@@ -166,6 +173,148 @@ impl AssuranceEngine {
             advisory,
             attestation,
         })
+    }
+
+    fn observe_decision(
+        &self,
+        input: &AssuranceEvaluateInput,
+        obligations: &crate::core::mentor::Obligations,
+        status: &workspace::WorkspaceStatus,
+    ) -> DecisionObservationResult {
+        let plan = crate::plan_governance::load_plan(&self.repo_root)
+            .ok()
+            .flatten();
+        let context = DecisionContext {
+            declared_intent: plan.as_ref().map(|plan| plan.intent.clone()),
+            trajectory: TrajectoryContext {
+                operation: input.op.clone(),
+                touched_paths: input.touched_paths.clone(),
+                diff_summary: input.diff_summary.clone(),
+            },
+            governance: GovernanceContext {
+                must_obligations: obligations
+                    .must
+                    .iter()
+                    .map(|obligation| Self::decision_obligation(obligation, true))
+                    .collect(),
+                recommended_obligations: obligations
+                    .recommended
+                    .iter()
+                    .map(|obligation| Self::decision_obligation(obligation, false))
+                    .collect(),
+                contradictions: obligations
+                    .contradictions
+                    .iter()
+                    .map(|contradiction| contradiction.description.clone())
+                    .collect(),
+                proof_hooks: plan
+                    .as_ref()
+                    .map(|plan| plan.proof_hooks.clone())
+                    .unwrap_or_default(),
+                forbidden_paths: plan
+                    .as_ref()
+                    .map(|plan| plan.constraints.forbidden_paths.clone())
+                    .unwrap_or_default(),
+                file_touch_budget: plan
+                    .as_ref()
+                    .and_then(|plan| plan.constraints.file_touch_budget),
+                workspace: WorkspaceContext {
+                    branch: status.git.current_branch.clone(),
+                    is_protected: status.git.is_protected,
+                    is_isolated: status.git.in_worktree && !status.git.is_main_repo,
+                    can_work: status.can_work,
+                },
+            },
+            durable_governance: Self::durable_governance_context(&self.repo_root),
+        };
+
+        let provider_kind = match crate::cli::DecapodProjectConfig::load(&self.repo_root) {
+            Ok(config) => config.decision.provider,
+            Err(DecapodError::NotFound(_)) => {
+                crate::core::decision_provider::DecisionProviderKind::None
+            }
+            Err(_) => {
+                return DecisionObservationResult::no_observation(
+                    "config",
+                    crate::core::decision_provider::NoObservationReason::Configuration,
+                );
+            }
+        };
+        crate::core::decision_provider::configured(provider_kind).observe(&context)
+    }
+
+    fn decision_obligation(obligation: &Obligation, required: bool) -> GovernanceObligation {
+        GovernanceObligation {
+            kind: format!("{:?}", obligation.kind),
+            reference: obligation.ref_path.clone(),
+            title: obligation.title.clone(),
+            required,
+        }
+    }
+
+    fn durable_governance_context(repo_root: &Path) -> DurableGovernanceContext {
+        DurableGovernanceContext {
+            plan: Self::validated_artifact_state(
+                crate::plan_governance::load_plan(repo_root),
+                repo_root,
+                crate::plan_governance::PLAN_PATH,
+            ),
+            claims: match research_claims::load_and_validate(repo_root) {
+                Ok(Some(_)) => Self::read_artifact_state(repo_root, research_claims::CLAIMS_PATH),
+                Ok(None) => GovernanceArtifactState::Missing,
+                Err(_) => GovernanceArtifactState::Invalid,
+            },
+            trajectory: Self::validated_artifact_state(
+                trajectory::load_trajectory_cookie(repo_root),
+                repo_root,
+                trajectory::TRAJECTORY_PATH,
+            ),
+            validation: Self::validation_artifact_state(repo_root),
+        }
+    }
+
+    fn validated_artifact_state<T: Serialize>(
+        loaded: Result<Option<T>, DecapodError>,
+        repo_root: &Path,
+        path: &str,
+    ) -> GovernanceArtifactState {
+        match loaded {
+            Ok(Some(_)) => Self::read_artifact_state(repo_root, path),
+            Ok(None) => GovernanceArtifactState::Missing,
+            Err(_) => GovernanceArtifactState::Invalid,
+        }
+    }
+
+    fn validation_artifact_state(repo_root: &Path) -> GovernanceArtifactState {
+        let path = repo_root.join(validate::VALIDATION_RECEIPT_PATH);
+        if !path.is_file() {
+            return GovernanceArtifactState::Missing;
+        }
+        let raw = match fs::read_to_string(&path) {
+            Ok(raw) => raw,
+            Err(_) => return GovernanceArtifactState::Invalid,
+        };
+        let receipt = match serde_json::from_str::<validate::ValidationReceipt>(&raw) {
+            Ok(receipt) if receipt.validate_integrity().is_ok() => receipt,
+            _ => return GovernanceArtifactState::Invalid,
+        };
+        serde_json::to_value(receipt)
+            .map(GovernanceArtifactState::Present)
+            .unwrap_or(GovernanceArtifactState::Invalid)
+    }
+
+    fn read_artifact_state(repo_root: &Path, relative_path: &str) -> GovernanceArtifactState {
+        let path = repo_root.join(relative_path);
+        if !path.is_file() {
+            return GovernanceArtifactState::Missing;
+        }
+        let raw = match fs::read_to_string(path) {
+            Ok(raw) => raw,
+            Err(_) => return GovernanceArtifactState::Invalid,
+        };
+        serde_json::from_str(&raw)
+            .map(GovernanceArtifactState::Present)
+            .unwrap_or(GovernanceArtifactState::Invalid)
     }
 
     fn resolve_interlock(

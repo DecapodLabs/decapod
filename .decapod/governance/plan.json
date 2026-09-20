@@ -1,24 +1,27 @@
 {
   "schema_version": "1.0.0",
-  "title": "Document Buildkite adapter compatibility and preserve GitHub Actions workflows",
-  "intent": "Keep .github/workflows/*.yml as the canonical CI and release contract, execute it through the Buildkite github-actions adapter, record the passing and failing paths from the v0.102.2 post-release evidence, and prepare a precise escalation packet for Buildkite engineering without introducing a second native workflow source.",
+  "title": "Use Buildkite GitHub Actions migration without repository-native pipeline files",
+  "intent": "Treat .github/workflows/*.yml as the sole repository workflow contract and rely on Buildkite's implemented GitHub Actions migration for execution; remove the obsolete .buildkite directory and preserve all workflow gates and semantics.",
   "state": "APPROVED",
   "todo_ids": [
-    "bugs_01m2xry8q2fkjevz"
+    "cicd_01m2xrx9fg5mgdx8"
   ],
   "proof_hooks": [
-    "release-bound artifacts validate against Decapod 0.102.2",
-    "native Buildkite YAML structural and changed-path gate validation",
-    "published PR checks and master-merge failure classification"
+    "cargo fmt --all -- --check",
+    "cargo test --locked --lib",
+    "cargo clippy --locked --all-targets --all-features -- -D warnings",
+    "decapod validate --format json",
+    "focused decision-provider tests",
+    "README and documentation consistency checks"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [
-    "Do not merge a native Buildkite rewrite or disable workflow gates until Buildkite engineering has diagnosed the adapter failures and the adapter-backed required checks are green."
+    "Do not add a second native Buildkite workflow source or delete any .github/workflows/*.yml gate while verifying Buildkite's migration parity."
   ],
   "unresolved_contradictions": [],
   "deferred_questions": [
-    "After adapter parity is proven across PR, master, release, docs, and tag-publication paths, decide when to disable the GitHub Actions service."
+    "After Buildkite migration parity is verified for pull requests, master, releases, docs, and tags, decide when to disable the GitHub Actions service."
   ],
   "constraints": {
     "forbidden_paths": [
@@ -27,5 +30,5 @@
     "file_touch_budget": 30
   },
   "phases": [],
-  "updated_at": "1789860539Z"
+  "updated_at": "1789873884Z"
 }
