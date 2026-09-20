@@ -27,6 +27,7 @@
   "modified_files": [
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
+    ".decapod/managed/specs/OPERATIONS.md",
     "README.md",
     "docs/agent/state-model.md",
     "docs/book/src/mental-model.md",
@@ -35,7 +36,8 @@
     "src/decapod/cli.rs",
     "src/decapod/core/auth.rs",
     "src/decapod/core/decision_provider.rs",
-    "src/decapod/lib.rs"
+    "src/decapod/lib.rs",
+    "tests/init_config_behavior.rs"
   ],
   "declared_commands": [
     "cargo clippy --locked --all-targets --all-features -- -D warnings",
@@ -48,11 +50,31 @@
   "tool_calls": [],
   "checks": [
     {
+      "name": "cargo clippy --locked --all-targets --all-features -- -D warnings",
+      "status": "passed"
+    },
+    {
+      "name": "cargo fmt --all -- --check",
+      "status": "passed"
+    },
+    {
+      "name": "cargo test --locked --lib",
+      "status": "passed"
+    },
+    {
+      "name": "cargo test --locked --test init_config_behavior",
+      "status": "passed"
+    },
+    {
       "name": "clippy",
       "status": "passed"
     },
     {
       "name": "decapod validate",
+      "status": "passed"
+    },
+    {
+      "name": "decapod validate --refresh-specs --format json",
       "status": "passed"
     },
     {
@@ -70,10 +92,15 @@
     {
       "name": "library_tests",
       "status": "passed"
+    },
+    {
+      "name": "mdbook build docs/book",
+      "status": "passed"
     }
   ],
   "evidence": [
     "Initialization integration tests verify env key migration to XDG_DATA_HOME/decapod/secrets.json with 0600 permissions and no project-config leakage; refresh tests verify provider preservation.",
+    "validation epoch ve_39fd0148420352ef completed with zero failures",
     "validation epoch ve_69ea911f2639cdc0 completed with zero failures"
   ],
   "shortcut_risk_signals": [
@@ -89,7 +116,7 @@
     "shortcut_risk": "caution",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:83f33a40c433aa53e8e209b9d5f4b0effb13a1f718eb51c0adcd709007db213c",
+  "artifact_hash": "sha256:f9c3f8783811b9afdddf2044d5877bc506b9e80ca7075e035d7a29ec7f4ee3f9",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -142,6 +169,20 @@
       {
         "sequence": 6,
         "event_id": "event:6",
+        "intent_id": "intent:jev-init-secrets-01m2ygzwcmamy8xq",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:jev-init-secrets-01m2ygzwcmamy8xq"
+      },
+      {
+        "sequence": 7,
+        "event_id": "event:7",
+        "intent_id": "intent:jev-init-secrets-01m2ygzwcmamy8xq",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:jev-init-secrets-01m2ygzwcmamy8xq"
+      },
+      {
+        "sequence": 8,
+        "event_id": "event:8",
         "intent_id": "intent:jev-init-secrets-01m2ygzwcmamy8xq",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:jev-init-secrets-01m2ygzwcmamy8xq"
@@ -226,12 +267,57 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:6"
+          },
+          {
+            "sequence": 7,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "Decapod init configuration, machine-local secret custody, Jev credential resolution, documentation, and tests"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_39fd0148420352ef completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:7"
+          },
+          {
+            "sequence": 8,
+            "action": "validation",
+            "scope": [
+              "Decapod init configuration, machine-local secret custody, Jev credential resolution, documentation, and tests"
+            ],
+            "observations": [
+              "src/decapod/cli.rs",
+              "src/decapod/lib.rs",
+              "tests/init_config_behavior.rs",
+              "README.md",
+              "docs/book/src/mental-model.md",
+              "docs/book/src/reference/cli.md",
+              "docs/book/src/reference/config-toml.md",
+              ".decapod/managed/specs/OPERATIONS.md"
+            ],
+            "proof_refs": [
+              "cargo fmt --all -- --check",
+              "cargo clippy --locked --all-targets --all-features -- -D warnings",
+              "cargo test --locked --lib",
+              "cargo test --locked --test init_config_behavior",
+              "mdbook build docs/book",
+              "decapod validate --refresh-specs --format json"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:8"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 6
+    "next_sequence": 8
   }
 }
