@@ -15,5 +15,7 @@ pub struct DecapodProjectConfig {
     pub tracker: TrackerConfig,
     #[serde(default)]
     pub context: DeclaredContextConfig,
+    #[serde(default)]
+    pub decision: DecisionConfig,
 }
 ```

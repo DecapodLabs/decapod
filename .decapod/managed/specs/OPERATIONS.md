@@ -11,6 +11,19 @@
 ## Deployment Model
 Decapod is a daemonless CLI installed as a versioned Rust binary. Each invocation discovers the repository-local governance store and completes bounded work before exiting.
 
+### Optional Jev provider operation
+
+The `[decision] provider` setting only changes whether `assurance.evaluate`
+attempts the bounded `trajectory_satisfies_intent` observation. `none` is the
+safe default and requires no network or service startup. `jev` reads
+`TYPESAFE_API_KEY` from the machine environment and uses bounded HTTP timeouts;
+the key is never persisted in repository state.
+
+Operationally, Jev is an advisory dependency, not a readiness dependency. If it
+is absent, unavailable, times out, or returns malformed data, the assurance
+result records `no_observation` and Decapod continues to enforce its ordinary
+interlocks and proof gates. There is no background provider process.
+
 ### Native SQLite prerequisite for local Dactyl
 
 Stateful commands in a project configured with `repo.backend = "local"` require a host SQLite shared library for Dactyl's local adapter. The startup preflight first honors `DACTYL_SQLITE_LIBRARY`, then the machine-local `~/.config/decapod/runtime.toml` value. If neither is set, it probes the host and persists a discovered library path in that user-level file so later Decapod projects do not repeat the search. If no runtime is available, the command stops with `LOCAL_SQLITE_RUNTIME_REQUIRED` and gives platform installation commands plus a one-shell `export DACTYL_SQLITE_LIBRARY=...` fallback. Cloud-backed startup does not require or inspect SQLite.
@@ -262,7 +275,7 @@ for filesystem work and are not used as the artifact representation.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d0bdb17635f1a0358b17a7f76bb72ab4544f80b5b0c9a201319a1f6539e64710`
-- Significant implementation surfaces: `.buildkite/` (1 files), `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
+- Repository signal fingerprint: `7e9f8794b3a0fd0c4040df3a9f049b371d4fe114c2f68c01879e0c5adf98d4a7`
+- Significant implementation surfaces: `.buildkite/` (1 files), `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (108 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

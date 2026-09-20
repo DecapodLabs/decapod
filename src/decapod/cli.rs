@@ -399,6 +399,8 @@ pub struct DecapodProjectConfig {
     pub tracker: TrackerConfig,
     #[serde(default)]
     pub context: DeclaredContextConfig,
+    #[serde(default)]
+    pub decision: DecisionConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -482,6 +484,13 @@ impl Default for TrackerConfig {
 pub struct DeclaredContextConfig {
     #[serde(default)]
     pub declared_sources: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub struct DecisionConfig {
+    #[serde(default)]
+    pub provider: crate::core::decision_provider::DecisionProviderKind,
 }
 
 /// Canonicalize a repository-relative path used by governance configuration.
@@ -671,6 +680,7 @@ impl Default for DecapodProjectConfig {
             custody: CustodyConfig::default(),
             tracker: TrackerConfig::default(),
             context: DeclaredContextConfig::default(),
+            decision: DecisionConfig::default(),
         }
     }
 }

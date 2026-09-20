@@ -133,6 +133,10 @@ fn init_with_backend_local_is_default() {
     let config_path = tmp.path().join(".decapod/config.toml");
     let config = fs::read_to_string(config_path).expect("read config.toml");
     assert!(config.contains("backend = \"local\""));
+    assert!(
+        config.contains("[decision]\nprovider = \"none\""),
+        "decision provider must default to the local disabled path: {config}"
+    );
     assert!(!config.contains("mode = \"local\""));
     assert!(
         !config.contains("[cloud]"),

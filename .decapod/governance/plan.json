@@ -1,18 +1,18 @@
 {
   "schema_version": "1.0.0",
-  "title": "Migrate CI and release automation to native Buildkite pipeline-as-code",
-  "intent": "Add a canonical .buildkite/pipeline.yml that explicitly models pull-request, master-push, release-PR, and tag-release behavior, preserves file-sensitive gates, and resolves the native Buildkite failures observed on merge commit bf98ec2e8320400964a1e84af0cc50210ac2fa6c without broad GitHub Actions workflow redesign.",
+  "title": "Introduce optional Jev decision-provider seam",
+  "intent": "Add the smallest optional Jev-backed probabilistic decision-provider seam after governance context reconstruction, with a none/default path, one typed trajectory-satisfaction observation, fail-safe unavailable behavior, tests, and README/docs positioning; preserve Decapod as the sole policy and governance authority.",
   "state": "APPROVED",
   "todo_ids": [
-    "feat_01m2w66zrndcjyxz"
+    "cicd_01m2xrx9fg5mgdx8"
   ],
   "proof_hooks": [
-    "buildkite pipeline YAML parse and structural validation",
     "cargo fmt --all -- --check",
     "cargo test --locked --lib",
     "cargo clippy --locked --all-targets --all-features -- -D warnings",
     "decapod validate --format json",
-    "GitHub and Buildkite checks for the published PR"
+    "focused decision-provider tests",
+    "README and documentation consistency checks"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -26,5 +26,5 @@
     "file_touch_budget": 30
   },
   "phases": [],
-  "updated_at": "1789800128Z"
+  "updated_at": "1789853170Z"
 }

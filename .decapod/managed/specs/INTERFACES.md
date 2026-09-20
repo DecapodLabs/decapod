@@ -9,6 +9,14 @@ same canonical repository store, so a newly created worktree cannot diverge
 into an empty or partial task database. A validation timeout identifies the
 active gate and elapsed time when that evidence is available.
 
+## Decision-Provider Interface
+
+| Interface | Owner and semantics | Failure/authority boundary |
+|---|---|---|
+| `DecisionProvider::observe` | Decapod supplies declared intent, current trajectory, reconstructed obligations, proof hooks, constraints, workspace context, and labeled plan/claims/trajectory/validation artifact snapshots; the provider returns a typed `trajectory_satisfies_intent` probability or `NoObservation` | The result is advisory data only. It cannot clear `resolve_interlock`, alter claims/trajectory/validation/boundaries, satisfy proof, or declare completion |
+| `provider = "none"` | Default local implementation; performs no external call | Returns `no_observation` with `disabled`; normal Decapod operation remains provider-independent |
+| `provider = "jev"` | Jev adapter calls TypeSafe System One with `TYPESAFE_API_KEY` from the machine environment | Missing credentials, transport/service failure, timeout, malformed response, or invalid probability returns `no_observation`; no failure is converted to approval |
+
 ## Authored Living-Spec Boundary (#1197)
 
 The authored semantic prose in `.decapod/managed/specs/*.md` is maintained
@@ -253,7 +261,7 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d0bdb17635f1a0358b17a7f76bb72ab4544f80b5b0c9a201319a1f6539e64710`
-- Significant implementation surfaces: `.buildkite/` (1 files), `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
+- Repository signal fingerprint: `7e9f8794b3a0fd0c4040df3a9f049b371d4fe114c2f68c01879e0c5adf98d4a7`
+- Significant implementation surfaces: `.buildkite/` (1 files), `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (108 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

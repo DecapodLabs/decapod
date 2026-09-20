@@ -12,6 +12,22 @@ Validation keeps proof gates bounded: observational status does not launch the
 full validator, and maintenance operations that depend on a live container
 daemon do not consume the validation proof budget.
 
+## Optional Decision-Provider Boundary
+
+`core::assurance::AssuranceEngine` reconstructs obligations and workspace state
+before it invokes the Decapod-owned `core::decision_provider::DecisionProvider`
+seam. The provider receives the current RPC trajectory plus explicitly labeled
+snapshots of the existing plan, claims, trajectory, and validation artifacts;
+missing and invalid artifacts remain distinct. The seam returns either a typed
+`DecisionObservation` or an explicit `NoObservation` result. The Jev adapter owns
+its HTTP endpoint, request and response schemas, credential, and transport; the
+rest of Decapod sees only the provider-neutral result.
+
+The observation is attached to the assurance advisory. It is intentionally
+outside `resolve_interlock`, completion proof evaluation, boundary evaluation,
+and governance artifact mutation. A Jev probability therefore cannot authorize
+work, waive an obligation, change a boundary, or declare completion.
+
 ## Deterministic Projection and Repository-Map Boundaries (#1303, #1304)
 
 Living-spec refresh treats the codebase attestation as one canonical,
@@ -335,7 +351,7 @@ authored document is an untouched template.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d0bdb17635f1a0358b17a7f76bb72ab4544f80b5b0c9a201319a1f6539e64710`
-- Significant implementation surfaces: `.buildkite/` (1 files), `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (107 files), `tests/` (4 files)
+- Repository signal fingerprint: `7e9f8794b3a0fd0c4040df3a9f049b371d4fe114c2f68c01879e0c5adf98d4a7`
+- Significant implementation surfaces: `.buildkite/` (1 files), `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (108 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

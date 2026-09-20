@@ -1620,6 +1620,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
         context: DeclaredContextConfig {
             declared_sources: declared_context_sources,
         },
+        decision: DecisionConfig::default(),
     }
 }
 
