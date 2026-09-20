@@ -5,6 +5,10 @@
   "task_id": "code_01m2y81nnzgyw1p8",
   "original_intent": "Persist all Jev insights in repository governance history without giving Jev policy authority.",
   "derived_intent": "Append schema-validated typed Jev results per active trajectory, reset on fresh trajectory initialization, and preserve fail-closed behavior.",
+  "current_phase": "validation",
+  "next_transitions": [
+    "publish"
+  ],
   "active_boundaries": [
     "Jev output is advisory evidence; it cannot approve, waive proof, mutate governance, or declare completion."
   ],
@@ -19,6 +23,8 @@
     "src/decapod/core/workspace.rs"
   ],
   "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
     "README.md",
     "assets/schemas/jev-observations.schema.json",
     "docs/book/src/reference/governance-artifacts.md",
@@ -29,7 +35,8 @@
   "declared_commands": [
     "cargo clippy --locked --all-targets --all-features -- -D warnings",
     "cargo fmt --all -- --check",
-    "cargo test --locked --lib"
+    "cargo test --locked --lib",
+    "decapod validate"
   ],
   "tool_calls": [],
   "checks": [
@@ -44,12 +51,17 @@
     {
       "name": "cargo_test_lib",
       "status": "passed"
+    },
+    {
+      "name": "decapod validate",
+      "status": "passed"
     }
   ],
   "evidence": [
     "assets/schemas/jev-observations.schema.json",
     "tests/trajectory_cli.rs",
-    "tests/unit/core/jev_history_tests.rs"
+    "tests/unit/core/jev_history_tests.rs",
+    "validation epoch ve_c67f99f43507b846 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [
@@ -62,7 +74,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:ee0605f2469b62435a326fd83dcf35796482f6ffbb07a8184baac31f445c9f04",
+  "artifact_hash": "sha256:9c16ae35b0791d94132da24126c9aaad23a5531e4c33c68a0298c60d7313deea",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -101,6 +113,13 @@
       {
         "sequence": 4,
         "event_id": "event:4",
+        "intent_id": "intent:jev-history-01m2y81nnzgyw1p8",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:jev-history-01m2y81nnzgyw1p8"
+      },
+      {
+        "sequence": 5,
+        "event_id": "event:5",
         "intent_id": "intent:jev-history-01m2y81nnzgyw1p8",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:jev-history-01m2y81nnzgyw1p8"
@@ -144,12 +163,30 @@
               "Git history remains the recovery surface for committed prior Jev ledgers"
             ],
             "custody_event_id": "event:4"
+          },
+          {
+            "sequence": 5,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src/decapod/core/jev_history.rs,src/decapod/core/assurance.rs,src/decapod/core/trajectory.rs,assets/schemas/jev-observations.schema.json,tests,README.md,docs,.decapod/managed/specs"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_c67f99f43507b846 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:5"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 4
+    "next_sequence": 5
   }
 }
