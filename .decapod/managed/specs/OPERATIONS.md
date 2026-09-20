@@ -122,7 +122,7 @@ following compatibility decisions:
 |---|---|---|
 | CI dependency lint | `deps-lint` exited before producing useful Buildkite output while the native job passed | Install the pinned Rust toolchain first, then install `cargo-machete`, `cargo-deny`, and `cargo-audit` with shell commands instead of adapter-sensitive installer actions. |
 | Bazel setup and shared binary | `setup` exited after the Bazel build when the artifact path was represented by Bazel's `bazel-bin` symlink | Install the pinned Bazelisk launcher in each job, stage the binary as a regular workspace file, and use the audited `upload-artifact`/`download-artifact` v4 pair. |
-| Release plan | `Release / plan` failed on release PR #1353 in Buildkite while the native GitHub Actions plan passed; the imported `run` block was subject to Buildkite pipeline interpolation before its runtime environment existed | Run cargo-dist planning only for `release-plz-*` PRs and tags, keep the runtime event/ref selection in the checked-in `.github/scripts/release-plan.sh` script so the workflow command contains no interpolated shell variables, resolve from the runner-native GitHub or Buildkite environment (`GITHUB_EVENT_NAME`, `GITHUB_REF_NAME`, `BUILDKITE_GITHUB_EVENT`, `BUILDKITE_TAG`, and `BUILDKITE_BRANCH`), fail clearly when required context is absent, and emit manifest/tag/publishing outputs from one shell step. |
+| Release plan | `Release / plan` failed on release PR #1353 in Buildkite while the native GitHub Actions plan passed; embedding `github.event_name` and `github.ref_name` inside the imported shell made event/ref selection depend on adapter interpolation | Run cargo-dist planning only for `release-plz-*` PRs and tags, use `ubuntu-latest`, resolve the event/ref from the runner-native GitHub or Buildkite environment (`GITHUB_EVENT_NAME`, `GITHUB_REF_NAME`, `BUILDKITE_GITHUB_EVENT`, `BUILDKITE_TAG`, and `BUILDKITE_BRANCH`), fail clearly when required context is absent, and emit manifest/tag/publishing outputs from one shell step. |
 | Nix packaging | Linux and macOS jobs appeared on an open PR even though the workflow was `pull_request: closed` and release-merge gated | Trigger from the durable master push, then gate the matrix in shell on a release merge commit or explicit dispatch. |
 | Documentation | `actions/upload-pages-artifact` failed on a master push | Keep the GitHub Pages action for native GitHub Actions; upload the site with `buildkite-agent artifact upload` in Buildkite. Pages deployment remains a service capability gap and is explicitly skipped there. |
 | Release publication | `release-publish` lacked the GitHub App token and registry credentials in Buildkite | Keep the App-token/action path for GitHub; use the release-plz CLI with named static Buildkite `GITHUB_TOKEN` and `CARGO_REGISTRY_TOKEN` secrets. Missing secrets fail with an actionable message. |
@@ -301,7 +301,7 @@ for filesystem work and are not used as the artifact representation.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `58861927311eb0f636e2323006171594eff6b0b773516b8f3348b79711117b83`
+- Repository signal fingerprint: `bc06acdc1bc934fea485ef670be7e21dc25432889d181b445a328a723f3c3d03`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
