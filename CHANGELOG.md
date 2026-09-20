@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.104.3](https://github.com/DecapodLabs/decapod/compare/v0.104.2...v0.104.3) - 2026-09-20
+
+### Fixed
+
+- *(ci)* preserve selective tests with full checkout history
+- *(ci)* tolerate missing PR diff base in Buildkite
+- *(ci)* ignore generated validation metadata drift
+- *(ci)* stabilize validation and Bazel artifacts
+- *(ci)* make Buildkite PR validation deterministic
+- *(ci)* keep Buildkite env checks at step scope
+- *(ci)* make GitHub Actions portable in Buildkite
+
+### Other
+
+- *(ci)* parallelize Bazel test execution
+- *(governance)* refresh after master merge
+- *(governance)* record Buildkite compatibility proof
+- *(governance)* record Buildkite migration compatibility
+
 ## [0.104.2](https://github.com/DecapodLabs/decapod/compare/v0.104.1...v0.104.2) - 2026-09-20
 
 ### Other
