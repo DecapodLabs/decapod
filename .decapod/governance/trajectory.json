@@ -5,9 +5,10 @@
   "task_id": "bugs_01m2ygbqqwzq8p3q",
   "original_intent": "Make the canonical GitHub Actions workflows work through Buildkite GHA without adding a native .buildkite pipeline, while preserving native GitHub Actions behavior and documenting adapter gaps.",
   "derived_intent": "Replace adapter-sensitive installer, artifact, event-condition, Pages, release-token, and Docker setup paths with explicit workflow compatibility branches and publish a dedicated issue and PR.",
-  "current_phase": "implementation",
+  "current_phase": "verification",
   "next_transitions": [
-    "Validate workflow syntax and run local proof gates; then publish the dedicated issue-linked PR for Buildkite execution evidence."
+    "Validate workflow syntax and run local proof gates; then publish the dedicated issue-linked PR for Buildkite execution evidence.",
+    "publish"
   ],
   "active_boundaries": [
     "Do not add a second native Buildkite pipeline; do not weaken release, docs, security, governance, or publish gates; keep .github/workflows/*.yml canonical."
@@ -25,6 +26,8 @@
     ".github/workflows/security-audit.yml"
   ],
   "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
     ".decapod/managed/specs/OPERATIONS.md",
     ".github/workflows/ci.yml",
     ".github/workflows/docs.yml",
@@ -33,10 +36,23 @@
     ".github/workflows/security-audit.yml"
   ],
   "declared_commands": [
+    "decapod validate",
     "ruby -e YAML.load_file(.github/workflows/*)"
   ],
   "tool_calls": [],
   "checks": [
+    {
+      "name": "cargo-test-lib",
+      "status": "passed"
+    },
+    {
+      "name": "decapod validate",
+      "status": "passed"
+    },
+    {
+      "name": "decapod-validate",
+      "status": "passed"
+    },
     {
       "name": "git-diff-check",
       "status": "passed"
@@ -47,8 +63,11 @@
     }
   ],
   "evidence": [
+    "DECAPOD_VALIDATE_SKIP_GIT_GATES=1 decapod validate --format json returned status ok with zero failures.",
     "Issue #1340 records the earlier migration context.",
-    "Issue #1349 records the observed failures and the workflow-side compatibility mapping."
+    "Issue #1349 records the observed failures and the workflow-side compatibility mapping.",
+    "cargo test --locked --lib: 352 passed, 0 failed, 0 ignored.",
+    "validation epoch ve_16ecf380295b4fac completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [
@@ -62,7 +81,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:cc5b5e71abce92f6b7bc7623e4b1415697a528676ed8626dee51ef343b872ad2",
+  "artifact_hash": "sha256:8128405de0a728f6f1d3806e156b8c7107fcec280e399030e6315347d4470193",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -101,6 +120,27 @@
       {
         "sequence": 4,
         "event_id": "event:4",
+        "intent_id": "intent:buildkite-gha-compat-20260919",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:buildkite-gha-compat-20260919"
+      },
+      {
+        "sequence": 5,
+        "event_id": "event:5",
+        "intent_id": "intent:buildkite-gha-compat-20260919",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:buildkite-gha-compat-20260919"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
+        "intent_id": "intent:buildkite-gha-compat-20260919",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:buildkite-gha-compat-20260919"
+      },
+      {
+        "sequence": 7,
+        "event_id": "event:7",
         "intent_id": "intent:buildkite-gha-compat-20260919",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:buildkite-gha-compat-20260919"
@@ -144,12 +184,65 @@
               "Buildkite static secrets are configured separately from GitHub environment secrets; verify on the published PR."
             ],
             "custody_event_id": "event:4"
+          },
+          {
+            "sequence": 5,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".github/workflows/*.yml and governed publication bundle",
+              ".github/workflows/*.yml, .decapod/managed/specs/OPERATIONS.md, governance artifacts, issue/PR documentation"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_16ecf380295b4fac completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "verification",
+            "scope": [
+              ".github/workflows/*.yml and governed publication bundle",
+              ".github/workflows/*.yml, .decapod/managed/specs/OPERATIONS.md, governance artifacts, issue/PR documentation"
+            ],
+            "observations": [
+              "DECAPOD_VALIDATE_SKIP_GIT_GATES=1 decapod validate --format json returned status ok with zero failures."
+            ],
+            "proof_refs": [
+              "decapod-validate",
+              "workflow-yaml",
+              "git-diff-check"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:6"
+          },
+          {
+            "sequence": 7,
+            "action": "verification",
+            "scope": [
+              ".github/workflows/*.yml and governed publication bundle",
+              ".github/workflows/*.yml, .decapod/managed/specs/OPERATIONS.md, governance artifacts, issue/PR documentation"
+            ],
+            "observations": [
+              "cargo test --locked --lib: 352 passed, 0 failed, 0 ignored."
+            ],
+            "proof_refs": [
+              "cargo-test-lib"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:7"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 4
+    "next_sequence": 7
   }
 }
