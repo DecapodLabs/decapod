@@ -1,24 +1,20 @@
 {
   "schema_version": "1.0.0",
-  "title": "Make canonical GitHub Actions workflows portable through Buildkite migration",
-  "intent": "Keep .github/workflows/*.yml as the sole workflow contract while adding explicit, documented compatibility paths for Buildkite GHA execution. Preserve native GitHub Actions behavior, preserve event and release gates, and make adapter limitations observable through workflow diagnostics rather than adding a second native Buildkite pipeline.",
+  "title": "Enable Jev for the Decapod repository",
+  "intent": "Enable the optional Jev decision provider in this initialized Decapod repository, preserve all existing setup, keep the API credential machine-local, and publish only the governed provider configuration without committing secrets.",
   "state": "APPROVED",
   "todo_ids": [
-    "bugs_01m2ygbqqwzq8p3q"
+    "code_01m2ypaz7gc3k6sa"
   ],
   "proof_hooks": [
-    "Buildkite GHA checks for PR, master, release, docs, and tag contexts"
+    "decapod validate --refresh-specs --format json",
+    "decapod govern artifacts inventory"
   ],
   "unknowns": [],
   "human_questions": [],
-  "stop_conditions": [
-    "Do not add a second native Buildkite workflow source or remove any existing .github/workflows/*.yml gate.",
-    "Do not weaken release, publish, docs, or security gates; compatibility branches must fail with actionable diagnostics when required Buildkite inputs are missing."
-  ],
+  "stop_conditions": [],
   "unresolved_contradictions": [],
-  "deferred_questions": [
-    "After Buildkite migration parity is verified for pull requests, master, releases, docs, and tags, decide when to disable the GitHub Actions service."
-  ],
+  "deferred_questions": [],
   "constraints": {
     "forbidden_paths": [
       ".decapod/data/decapod.db"
@@ -26,5 +22,5 @@
     "file_touch_budget": 30
   },
   "phases": [],
-  "updated_at": "1789879561Z"
+  "updated_at": "1789883985Z"
 }

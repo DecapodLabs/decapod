@@ -67,4 +67,7 @@ isolation = "container"
 provider = "decapod"
 
 [context]
-declared_sources = []
+declared_sources = ["AGENTS.md"]
+
+[decision]
+provider = "jev"
