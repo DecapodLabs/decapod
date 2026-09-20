@@ -121,7 +121,7 @@ following compatibility decisions:
 | Workflow surface | Observed Buildkite symptom | Workflow-side compatibility path |
 |---|---|---|
 | CI dependency lint | `deps-lint` exited before producing useful Buildkite output while the native job passed | Install the pinned Rust toolchain first, then install `cargo-machete`, `cargo-deny`, and `cargo-audit` with shell commands instead of adapter-sensitive installer actions. |
-| Bazel setup and shared binary | `setup` exited immediately and downstream validation could not receive the binary | Install the pinned Bazelisk launcher in each job, and use the audited `upload-artifact`/`download-artifact` v4 pair. |
+| Bazel setup and shared binary | `setup` exited after the Bazel build when the artifact path was represented by Bazel's `bazel-bin` symlink | Install the pinned Bazelisk launcher in each job, stage the binary as a regular workspace file, and use the audited `upload-artifact`/`download-artifact` v4 pair. |
 | Release plan | `plan` exited during PR and master/tag compilation; nested event-object outputs were not dependable and the runtime event env was not sufficient for branch selection | Run cargo-dist planning only for `release-plz-*` PRs and tags, use `ubuntu-latest`, inject the compiler-resolved event/ref into the shell, and emit manifest/tag/publishing outputs from one shell step. |
 | Nix packaging | Linux and macOS jobs appeared on an open PR even though the workflow was `pull_request: closed` and release-merge gated | Trigger from the durable master push, then gate the matrix in shell on a release merge commit or explicit dispatch. |
 | Documentation | `actions/upload-pages-artifact` failed on a master push | Keep the GitHub Pages action for native GitHub Actions; upload the site with `buildkite-agent artifact upload` in Buildkite. Pages deployment remains a service capability gap and is explicitly skipped there. |
@@ -298,7 +298,7 @@ for filesystem work and are not used as the artifact representation.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b59638c9d23ca9a31d6d4330f4ce766751c68c92bd71bdd216cd4405bc330b40`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
+- Repository signal fingerprint: `65205f1e85d7ce4a47ccef8897eb2e7347ad85b93c17b36a12ebd47ea6e04b72`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `bazel-unknown-todo-01m2yg-agent-unknown-bugs_01m2ygbqqwzq8p3q-buildkite-migration/` (775 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -16,6 +16,11 @@ jobs:
       - name: Build Decapod from checkout
         run: cargo build --locked --quiet
       - name: Start validation trajectory
+        env:
+          # CI checkouts are detached and are not Decapod agent worktrees.
+          # Keep the normal validation gates enabled, but allow this ephemeral
+          # proof bootstrap to write its run cookie in the checkout.
+          DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
         run: |
           set -euo pipefail
           run_id="ci-decapod-validate-${GITHUB_RUN_ID:-${BUILDKITE_BUILD_ID:-local}}"

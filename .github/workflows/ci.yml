@@ -321,6 +321,11 @@ jobs:
           chmod +x target/debug/decapod
           echo "$PWD/target/debug" >> "$GITHUB_PATH"
       - name: Start validation trajectory
+        env:
+          # CI checkouts are detached and are not Decapod agent worktrees.
+          # Keep the normal validation gates enabled, but allow this ephemeral
+          # proof bootstrap to write its run cookie in the checkout.
+          DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
         run: |
           set -euo pipefail
           run_id="ci-health-${GITHUB_RUN_ID:-${BUILDKITE_BUILD_ID:-local}}"
@@ -476,11 +481,19 @@ jobs:
           echo "PATH=$bazelisk_dir:$PATH" >> "$GITHUB_ENV"
       - name: Compile shared decapod binary
         run: bazelisk build //:decapod
+      - name: Stage shared decapod binary
+        run: |
+          set -euo pipefail
+          mkdir -p target/buildkite-artifacts
+          cp -L bazel-bin/decapod target/buildkite-artifacts/decapod
+          test -x target/buildkite-artifacts/decapod
       - name: Upload shared decapod binary
         uses: actions/upload-artifact@v4
         with:
           name: decapod-debug-linux-${{ github.sha }}
-          path: bazel-bin/decapod
+          # Upload a regular workspace file: Bazel's bazel-bin path is a
+          # symlink, and Buildkite's artifact adapter rejects symlink roots.
+          path: target/buildkite-artifacts/decapod
           retention-days: 1
           compression-level: 0
 

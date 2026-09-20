@@ -1,53 +1,51 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "buildkite-gha-compat-20260919-followup",
-  "intent_id": "intent:buildkite-gha-compat-20260919-followup",
+  "run_id": "buildkite-gha-compat-20260919-ci-fix",
+  "intent_id": "intent:buildkite-gha-compat-20260919-ci-fix",
   "task_id": "bugs_01m2ygbqqwzq8p3q",
-  "original_intent": "Make the canonical GitHub Actions workflows execute green through Buildkite GHA",
-  "derived_intent": "Correct Buildkite runtime prerequisites, validation trajectory bootstrap, and release-plan applicability while preserving native GitHub Actions behavior",
+  "original_intent": "Get Buildkite CI setup and Decapod validation green in PR #1350",
+  "derived_intent": "Bootstrap CI validation safely in detached checkouts and upload Bazel artifacts through regular workspace files",
   "destination": "PR #1350 and Issue #1349",
   "current_phase": "validation",
   "next_transitions": [
     "publish"
   ],
   "active_boundaries": [
-    "Keep .github/workflows/*.yml canonical; do not add a native .buildkite pipeline; preserve release and validation gates"
+    "Keep .github/workflows/*.yml canonical; preserve validation and release gates; no native .buildkite pipeline"
   ],
   "repo_scope": [
     ".decapod/governance/*.json",
     ".decapod/managed/specs/OPERATIONS.md",
-    ".github/workflows/*.yml"
+    ".github/workflows/ci.yml",
+    ".github/workflows/decapod-validate.yml"
   ],
   "inspected_files": [
     ".decapod/managed/specs/OPERATIONS.md",
     ".github/workflows/ci.yml",
-    ".github/workflows/decapod-validate.yml",
-    ".github/workflows/release.yml"
+    ".github/workflows/decapod-validate.yml"
   ],
   "modified_files": [
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
     ".decapod/managed/specs/OPERATIONS.md",
     ".github/workflows/ci.yml",
-    ".github/workflows/decapod-validate.yml",
-    ".github/workflows/release.yml"
+    ".github/workflows/decapod-validate.yml"
   ],
   "declared_commands": [
-    "buildkite-gha validate --profile hosted --event pull_request",
     "decapod validate"
   ],
   "tool_calls": [],
   "checks": [
-    {
-      "name": "buildkite-gha-validate",
-      "status": "passed"
-    },
     {
       "name": "decapod validate",
       "status": "passed"
     },
     {
       "name": "decapod-validate",
+      "status": "passed"
+    },
+    {
+      "name": "detached-trajectory-bootstrap",
       "status": "passed"
     },
     {
@@ -60,8 +58,8 @@
     }
   ],
   "evidence": [
-    "Buildkite public validator admitted decapod-validate.yml and compiled CI/release workflow jobs; local decapod validate returned status ok with zero failures.",
-    "validation epoch ve_780404adb2cc2817 completed with zero failures"
+    "Detached checkout trajectory init succeeds when the CI-only DECAPOD_VALIDATE_SKIP_GIT_GATES bypass is set; decapod validate returned status ok with zero failures.",
+    "validation epoch ve_caa38fe84f08084b completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -72,23 +70,24 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:5f678970509622bc065912e2a8a56b85a8a420467ae00a28a25bc8da8a4dcb38",
+  "artifact_hash": "sha256:9e03356f0b213c932b2d6f0523522b475f5fbf3e8921b831363c72937e97cb7b",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:buildkite-gha-compat-20260919-followup": {
-        "id": "intent:buildkite-gha-compat-20260919-followup",
-        "raw_intent": "Make the canonical GitHub Actions workflows execute green through Buildkite GHA",
-        "refined_intent": "Correct Buildkite runtime prerequisites, validation trajectory bootstrap, and release-plan applicability while preserving native GitHub Actions behavior",
+      "intent:buildkite-gha-compat-20260919-ci-fix": {
+        "id": "intent:buildkite-gha-compat-20260919-ci-fix",
+        "raw_intent": "Get Buildkite CI setup and Decapod validation green in PR #1350",
+        "refined_intent": "Bootstrap CI validation safely in detached checkouts and upload Bazel artifacts through regular workspace files",
         "acceptance_criteria": [],
         "constraints": [
-          ".github/workflows/*.yml",
-          ".decapod/managed/specs/OPERATIONS.md",
-          ".decapod/governance/*.json"
+          ".github/workflows/ci.yml",
+          ".github/workflows/decapod-validate.yml",
+          ".decapod/governance/*.json",
+          ".decapod/managed/specs/OPERATIONS.md"
         ],
         "assumptions": [],
         "boundaries": [
-          "Keep .github/workflows/*.yml canonical; do not add a native .buildkite pipeline; preserve release and validation gates"
+          "Keep .github/workflows/*.yml canonical; preserve validation and release gates; no native .buildkite pipeline"
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -101,34 +100,34 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:buildkite-gha-compat-20260919-followup",
+        "intent_id": "intent:buildkite-gha-compat-20260919-ci-fix",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:buildkite-gha-compat-20260919-followup",
+        "intent_id": "intent:buildkite-gha-compat-20260919-ci-fix",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:buildkite-gha-compat-20260919-followup",
+        "intent_id": "intent:buildkite-gha-compat-20260919-ci-fix",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:buildkite-gha-compat-20260919-followup"
+        "detail": "trajectory:buildkite-gha-compat-20260919-ci-fix"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:buildkite-gha-compat-20260919-followup",
+        "intent_id": "intent:buildkite-gha-compat-20260919-ci-fix",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:buildkite-gha-compat-20260919-followup"
+        "detail": "trajectory:buildkite-gha-compat-20260919-ci-fix"
       }
     ],
     "trajectories": {
-      "buildkite-gha-compat-20260919-followup": {
-        "id": "buildkite-gha-compat-20260919-followup",
-        "intent_id": "intent:buildkite-gha-compat-20260919-followup",
+      "buildkite-gha-compat-20260919-ci-fix": {
+        "id": "buildkite-gha-compat-20260919-ci-fix",
+        "intent_id": "intent:buildkite-gha-compat-20260919-ci-fix",
         "evidence_only": true,
         "steps": [
           {
@@ -138,12 +137,13 @@
             "scope": [
               ".decapod/governance/*.json",
               ".decapod/managed/specs/OPERATIONS.md",
-              ".github/workflows/*.yml"
+              ".github/workflows/ci.yml",
+              ".github/workflows/decapod-validate.yml"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_780404adb2cc2817 completed with zero failures"
+              "validation epoch ve_caa38fe84f08084b completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
@@ -154,28 +154,26 @@
           {
             "sequence": 5,
             "action": "trajectory.record",
-            "command": "buildkite-gha validate --profile hosted --event pull_request",
             "scope": [
               ".decapod/governance/*.json",
               ".decapod/managed/specs/OPERATIONS.md",
-              ".github/workflows/*.yml"
+              ".github/workflows/ci.yml",
+              ".github/workflows/decapod-validate.yml"
             ],
             "observations": [
               ".github/workflows/ci.yml",
               ".github/workflows/decapod-validate.yml",
-              ".github/workflows/release.yml",
               ".decapod/managed/specs/OPERATIONS.md",
               ".github/workflows/ci.yml",
               ".github/workflows/decapod-validate.yml",
-              ".github/workflows/release.yml",
               ".decapod/managed/specs/OPERATIONS.md",
-              "Buildkite public validator admitted decapod-validate.yml and compiled CI/release workflow jobs; local decapod validate returned status ok with zero failures."
+              "Detached checkout trajectory init succeeds when the CI-only DECAPOD_VALIDATE_SKIP_GIT_GATES bypass is set; decapod validate returned status ok with zero failures."
             ],
             "proof_refs": [
               "workflow-yaml",
               "git-diff-check",
-              "buildkite-gha-validate",
-              "decapod-validate"
+              "decapod-validate",
+              "detached-trajectory-bootstrap"
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
