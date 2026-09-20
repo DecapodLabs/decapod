@@ -128,7 +128,7 @@ following compatibility decisions:
 | Release publication | `release-publish` lacked the GitHub App token and registry credentials in Buildkite | Keep the App-token/action path for GitHub; use the release-plz CLI with named static Buildkite `GITHUB_TOKEN` and `CARGO_REGISTRY_TOKEN` secrets. Missing secrets fail with an actionable message. |
 | GHCR image publication | tag-only Docker setup actions were scheduled on the master push and failed in Buildkite | Use a simple tag-event condition and the Docker CLI/buildx path in Buildkite; retain the Docker actions for native GitHub Actions. |
 | Validation in detached CI checkouts | The validator's worktree guard cannot establish an agent workspace from a hosted checkout, and `validate --refresh-specs` refreshes generated manifest metadata on every run | CI initializes a run cookie with `DECAPOD_VALIDATE_SKIP_GIT_GATES=1` while retaining the validation gates; the drift check compares semantic projections and normalizes only `generated_at` and `repo_signal_fingerprint` generated metadata. |
-| Selective test diff base | Buildkite's migrated PR checkout may not expose `origin/<base>` or credentials to fetch it, so every matrix target exited before selecting tests | Prefer `BUILDKITE_PULL_REQUEST_BASE_BRANCH` when present; if the base fetch/diff is unavailable, select from the complete checked-out tree so the target suite still runs and cannot silently skip code coverage. |
+| Selective test diff base | Buildkite's migrated PR checkout honored the workflow's shallow `fetch-depth: 1`, so every matrix target exited before selecting tests | Request `fetch-depth: 0` for the test job, prefer `BUILDKITE_PULL_REQUEST_BASE_BRANCH`, and fall back only to refs or the parent already present locally; preserve the original path-based selection instead of running unrelated suites. |
 
 These changes do not claim that Buildkite supplies GitHub's environments,
 Pages deployment records, GitHub App token exchange, or Docker action setup.
@@ -300,7 +300,7 @@ for filesystem work and are not used as the artifact representation.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `27646882770e5b300cc012bd787aca9e9962da98a5704238530f1672f1a07ba9`
+- Repository signal fingerprint: `a607a30b6e442cbb0828fc8f02b74984f97cf6e990c7ac0991f56438a5c5af50`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `bazel-unknown-todo-01m2yg-agent-unknown-bugs_01m2ygbqqwzq8p3q-buildkite-migration/` (775 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

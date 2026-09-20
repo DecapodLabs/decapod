@@ -515,7 +515,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          # Selective tests need the PR base commit. Buildkite's migrated
+          # checkout honors the full-history mode, while GitHub Actions keeps
+          # the same diff semantics with a complete local history.
+          fetch-depth: 0
           persist-credentials: false
       - name: Install Bazelisk
         run: |
@@ -538,15 +541,17 @@ jobs:
           if [ -n "${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-}" ]; then
             base_ref="$BUILDKITE_PULL_REQUEST_BASE_BRANCH"
           fi
-          if git fetch --no-tags --prune origin "$base_ref" \
-            && chg=$(git diff --name-only "origin/$base_ref"...HEAD | tr '\n' ',' | sed 's/,$//'); then
-            :
+          if ! git fetch --no-tags --prune origin "$base_ref"; then
+            echo "::warning::PR base fetch unavailable; using refs already present in the full checkout."
+          fi
+          if base_commit=$(git rev-parse --verify "origin/$base_ref^{commit}" 2>/dev/null); then
+            chg=$(git diff --name-only "$base_commit"...HEAD | tr '\n' ',' | sed 's/,$//')
+          elif base_commit=$(git rev-parse --verify HEAD^ 2>/dev/null); then
+            echo "::warning::PR base ref unavailable; using the checked-out commit parent for selective test detection."
+            chg=$(git diff --name-only "$base_commit"...HEAD | tr '\n' ',' | sed 's/,$//')
           else
-            # Buildkite's migrated checkout may not expose the PR base ref or
-            # credentials for fetching it. Run the target suite against the
-            # full checked-out tree rather than failing before test selection.
-            echo "::warning::PR base ref unavailable; running the selected test suite for all checked-out files."
-            chg=$(git ls-tree -r --name-only HEAD | tr '\n' ',' | sed 's/,$//')
+            echo "::error::No PR base or commit parent is available for selective test detection."
+            exit 1
           fi
           echo "changed=$chg" >> "$GITHUB_OUTPUT"
       - name: Run selective tests

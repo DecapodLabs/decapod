@@ -351,7 +351,7 @@ authored document is an untouched template.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `27646882770e5b300cc012bd787aca9e9962da98a5704238530f1672f1a07ba9`
+- Repository signal fingerprint: `a607a30b6e442cbb0828fc8f02b74984f97cf6e990c7ac0991f56438a5c5af50`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `bazel-unknown-todo-01m2yg-agent-unknown-bugs_01m2ygbqqwzq8p3q-buildkite-migration/` (775 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

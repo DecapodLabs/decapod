@@ -1,10 +1,10 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "buildkite-gha-compat-20260920-test-matrix",
-  "intent_id": "intent:buildkite-gha-compat-20260920-test-matrix",
+  "run_id": "buildkite-gha-compat-20260920-test-matrix-v2",
+  "intent_id": "intent:buildkite-gha-compat-20260920-test-matrix-v2",
   "task_id": "bugs_01m2ygbqqwzq8p3q",
   "original_intent": "Fix the four Buildkite test matrix failures on PR #1350",
-  "derived_intent": "Make selective test diff detection resilient when the migrated Buildkite checkout cannot fetch the pull request base ref",
+  "derived_intent": "Provide full PR history to selective test jobs and preserve bounded local diff fallbacks when the migrated checkout cannot fetch the base ref",
   "destination": "PR #1350",
   "current_phase": "validation",
   "next_transitions": [
@@ -34,8 +34,7 @@
     "Buildkite hosted workflow validation",
     "decapod validate",
     "decapod validate --format json",
-    "ruby YAML parse for .github/workflows/ci.yml",
-    "simulate unavailable PR base ref fallback"
+    "ruby YAML parse for .github/workflows/ci.yml"
   ],
   "tool_calls": [],
   "checks": [
@@ -52,7 +51,7 @@
       "status": "passed"
     },
     {
-      "name": "test_matrix_fallback",
+      "name": "diff_check",
       "status": "passed"
     },
     {
@@ -61,10 +60,9 @@
     }
   ],
   "evidence": [
-    "Buildkite build 103 failed only CI test matrix targets; all setup, dependency lint, validation, release, docs, and native test checks passed.",
+    "Buildkite build 110 showed the full-tree fallback caused unrelated test suites to execute and fail; the fix restores path-based selection by requesting full checkout history and using only locally available base/parent diffs.",
     "Local validation returned status=ok and fail_count=0.",
-    "The guarded fetch fallback selected all four test targets when the PR base ref was unavailable.",
-    "validation epoch ve_638a9a46c108f97a completed with zero failures"
+    "validation epoch ve_c23dcf40b3e156c6 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -75,14 +73,14 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:dbf1a0ab4a565da091c4143abd6c7fb4810b55717b891dfad7b970800d3eb07c",
+  "artifact_hash": "sha256:54020c3953bed3c10f93e50290ca6b20b596304e4e6a1b3deef7e92455c2c000",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:buildkite-gha-compat-20260920-test-matrix": {
-        "id": "intent:buildkite-gha-compat-20260920-test-matrix",
+      "intent:buildkite-gha-compat-20260920-test-matrix-v2": {
+        "id": "intent:buildkite-gha-compat-20260920-test-matrix-v2",
         "raw_intent": "Fix the four Buildkite test matrix failures on PR #1350",
-        "refined_intent": "Make selective test diff detection resilient when the migrated Buildkite checkout cannot fetch the pull request base ref",
+        "refined_intent": "Provide full PR history to selective test jobs and preserve bounded local diff fallbacks when the migrated checkout cannot fetch the base ref",
         "acceptance_criteria": [],
         "constraints": [
           ".github/workflows/ci.yml",
@@ -105,34 +103,34 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:buildkite-gha-compat-20260920-test-matrix",
+        "intent_id": "intent:buildkite-gha-compat-20260920-test-matrix-v2",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:buildkite-gha-compat-20260920-test-matrix",
+        "intent_id": "intent:buildkite-gha-compat-20260920-test-matrix-v2",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:buildkite-gha-compat-20260920-test-matrix",
+        "intent_id": "intent:buildkite-gha-compat-20260920-test-matrix-v2",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:buildkite-gha-compat-20260920-test-matrix"
+        "detail": "trajectory:buildkite-gha-compat-20260920-test-matrix-v2"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:buildkite-gha-compat-20260920-test-matrix",
+        "intent_id": "intent:buildkite-gha-compat-20260920-test-matrix-v2",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:buildkite-gha-compat-20260920-test-matrix"
+        "detail": "trajectory:buildkite-gha-compat-20260920-test-matrix-v2"
       }
     ],
     "trajectories": {
-      "buildkite-gha-compat-20260920-test-matrix": {
-        "id": "buildkite-gha-compat-20260920-test-matrix",
-        "intent_id": "intent:buildkite-gha-compat-20260920-test-matrix",
+      "buildkite-gha-compat-20260920-test-matrix-v2": {
+        "id": "buildkite-gha-compat-20260920-test-matrix-v2",
+        "intent_id": "intent:buildkite-gha-compat-20260920-test-matrix-v2",
         "evidence_only": true,
         "steps": [
           {
@@ -148,7 +146,7 @@
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_638a9a46c108f97a completed with zero failures"
+              "validation epoch ve_c23dcf40b3e156c6 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
@@ -173,13 +171,12 @@
               ".decapod/managed/specs/OPERATIONS.md",
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "Buildkite build 103 failed only CI test matrix targets; all setup, dependency lint, validation, release, docs, and native test checks passed.",
-              "The guarded fetch fallback selected all four test targets when the PR base ref was unavailable.",
+              "Buildkite build 110 showed the full-tree fallback caused unrelated test suites to execute and fail; the fix restores path-based selection by requesting full checkout history and using only locally available base/parent diffs.",
               "Local validation returned status=ok and fail_count=0."
             ],
             "proof_refs": [
               "workflow_yaml",
-              "test_matrix_fallback",
+              "diff_check",
               "decapod_validate",
               "buildkite_workflow_compile"
             ],
