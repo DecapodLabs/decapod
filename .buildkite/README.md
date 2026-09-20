@@ -66,9 +66,9 @@ following compatibility cases to reproduce and escalate:
 
 This mapping is based on the failed check names and the adapter boundary, not
 on unavailable Buildkite step logs. The next step is to provide these exact
-workflows, logs, agent/plugin versions, and failing commits to Sam Cochran for
-adapter-level diagnosis. No underlying workflow gate should be removed until
-the corresponding adapter behavior is understood.
+workflows, logs, agent/plugin versions, and failing commits to the Buildkite
+engineering team for adapter-level diagnosis. No underlying workflow gate
+should be removed until the corresponding adapter behavior is understood.
 
 ## Post-release merge verification (`5b3bcb625c77cb8af30d8d97799182ff3b2b5bf7`)
 
