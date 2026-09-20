@@ -261,7 +261,7 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e029f48711c3fb262c3c536df5c93c12b7ec9eb1e13bc95fa3347b07ebdc1333`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `bazel-unknown-todo-01m2yg-agent-unknown-bugs_01m2ygbqqwzq8p3q-buildkite-migration/` (847 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
+- Repository signal fingerprint: `db3f11c007ed0c84b09cdf6fe9f2fe55cefedf70849c40a90467b7929c237d8e`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
