@@ -28,13 +28,26 @@ jobs:
       - name: Build with mdBook
         run: mdbook build docs/book
 
-      - name: Upload artifact
-        if: github.ref == 'refs/heads/master'
+      # upload-pages-artifact is GitHub Pages-specific and is not implemented
+      # by the Buildkite GHA runtime. Keep it for native GitHub Actions.
+      - name: Upload artifact (GitHub Pages)
+        if: github.ref == 'refs/heads/master' && env.BUILDKITE_BUILD_ID == ''
         uses: actions/upload-pages-artifact@v3
         with:
           path: docs/book/book
 
+      # Preserve the built site as a Buildkite artifact so the build remains
+      # useful while the Pages deployment action is unavailable there.
+      - name: Upload artifact (Buildkite)
+        if: github.ref == 'refs/heads/master' && env.BUILDKITE_BUILD_ID != ''
+        run: |
+          set -euo pipefail
+          command -v buildkite-agent >/dev/null 2>&1
+          buildkite-agent artifact upload "docs/book/book/**/*"
+
   deploy:
+    # Keep the event gate in a GitHub context: Buildkite does not expose env in
+    # job-level conditions. The step-level split below handles the runtime.
     if: github.ref == 'refs/heads/master'
     needs: build
     runs-on: ubuntu-latest
@@ -44,4 +57,13 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
+        if: env.BUILDKITE_BUILD_ID == ''
         uses: actions/deploy-pages@v4
+
+      - name: Retain Buildkite docs artifact
+        if: env.BUILDKITE_BUILD_ID != ''
+        run: |
+          set -euo pipefail
+          command -v buildkite-agent >/dev/null 2>&1
+          echo "GitHub Pages deployment is unavailable in the Buildkite GHA runtime."
+          echo "The built site is retained by the build job as a Buildkite artifact."

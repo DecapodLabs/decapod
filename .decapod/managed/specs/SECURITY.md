@@ -62,11 +62,6 @@ flowchart LR
 | Sensitive | tokens, PII, secrets | encrypted | least privilege |
 
 ## Sensitive Data Handling
-- TypeSafe API credentials are resolved from the process environment or the
-  machine-local `~/.local/share/decapod/secrets.json` file. Initialization may
-  persist an explicitly supplied environment key there with restrictive file
-  permissions; credentials never enter `.decapod/config.toml`, governance
-  artifacts, logs, or Git history.
 - Encryption at rest:
 - Encryption in transit:
 - Redaction in logs:
@@ -130,7 +125,7 @@ Describe the security primitives and security controls implemented in this repos
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `50b59962f590deaa75043035077bd633f1b290cabc89cb63bee7f0c6c5e20f55`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
+- Repository signal fingerprint: `e029f48711c3fb262c3c536df5c93c12b7ec9eb1e13bc95fa3347b07ebdc1333`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `bazel-unknown-todo-01m2yg-agent-unknown-bugs_01m2ygbqqwzq8p3q-buildkite-migration/` (847 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

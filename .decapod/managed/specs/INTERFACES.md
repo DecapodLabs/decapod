@@ -15,7 +15,7 @@ active gate and elapsed time when that evidence is available.
 |---|---|---|
 | `DecisionProvider::observe` | Decapod supplies declared intent, current trajectory, reconstructed obligations, proof hooks, constraints, workspace context, and labeled plan/claims/trajectory/validation artifact snapshots; the provider returns a typed `trajectory_satisfies_intent` probability or `NoObservation` | The result is advisory data only. It cannot clear `resolve_interlock`, alter claims/trajectory/validation/boundaries, satisfy proof, or declare completion |
 | `provider = "none"` | Default local implementation; performs no external call | Returns `no_observation` with `disabled`; normal Decapod operation remains provider-independent |
-| `provider = "jev"` | Jev adapter calls TypeSafe System One with `TYPESAFE_API_KEY` from the machine environment or machine-local `~/.local/share/decapod/secrets.json`; `decapod init --decision-provider jev` persists an explicitly supplied environment key | Missing credentials, transport/service failure, timeout, malformed response, or invalid probability returns `no_observation`; no failure is converted to approval; the key never enters repository state |
+| `provider = "jev"` | Jev adapter calls TypeSafe System One with `TYPESAFE_API_KEY` from the machine environment | Missing credentials, transport/service failure, timeout, malformed response, or invalid probability returns `no_observation`; no failure is converted to approval |
 
 ## Authored Living-Spec Boundary (#1197)
 
@@ -261,7 +261,7 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `50b59962f590deaa75043035077bd633f1b290cabc89cb63bee7f0c6c5e20f55`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
+- Repository signal fingerprint: `e029f48711c3fb262c3c536df5c93c12b7ec9eb1e13bc95fa3347b07ebdc1333`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `bazel-unknown-todo-01m2yg-agent-unknown-bugs_01m2ygbqqwzq8p3q-buildkite-migration/` (847 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

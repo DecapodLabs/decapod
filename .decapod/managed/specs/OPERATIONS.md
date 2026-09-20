@@ -16,15 +16,8 @@ Decapod is a daemonless CLI installed as a versioned Rust binary. Each invocatio
 The `[decision] provider` setting only changes whether `assurance.evaluate`
 attempts the bounded `trajectory_satisfies_intent` observation. `none` is the
 safe default and requires no network or service startup. `jev` reads
-`TYPESAFE_API_KEY` from the machine environment, falling back to the
-machine-local `~/.local/share/decapod/secrets.json` file, and uses bounded HTTP
-timeouts; the key is never persisted in repository state. Initialization with
-`decapod init --decision-provider jev` stores an explicitly supplied environment
-key in that file with restrictive permissions and preserves the provider choice
-on non-interactive refresh. `decapod init --refresh` reopens the initialization
-questionnaire for an existing project, using current values as defaults and
-keeping the refresh non-destructive; Enter preserves a setting while another
-choice can enable or disable it.
+`TYPESAFE_API_KEY` from the machine environment and uses bounded HTTP timeouts;
+the key is never persisted in repository state.
 
 Operationally, Jev is an advisory dependency, not a readiness dependency. If it
 is absent, unavailable, times out, or returns malformed data, the assurance
@@ -96,34 +89,54 @@ condition. Publishing and upload-mode runs still build the same cargo-dist
 targets, while changes to the target list require an intentional workflow and
 spec update.
 
-## Native Buildkite Pipeline Contract (#1340)
+## Buildkite GitHub Actions Migration Contract (#1340, #1344)
 
-Buildkite is migrating from GitHub Actions workflow ingestion to the native
-`.buildkite/pipeline.yml` definition. GitHub Actions describes an event/job/
-action runtime, while Buildkite natively executes command steps and evaluates
-its own `if`, `depends_on`, and agent-uploaded `if_changed` fields. Translating
-the former into the latter is not a faithful source of truth: merge commit
-`bf98ec2e8320400964a1e84af0cc50210ac2fa6c` produced Buildkite #56 failures in
-setup, dependency lint, documentation build, and release publication before
-useful command output, while the equivalent GitHub jobs passed.
+The repository keeps `.github/workflows/*.yml` as the sole workflow contract.
+Buildkite's implemented GitHub Actions migration executes those files without
+requiring a second repository-native pipeline definition. Event triggers,
+changed-path filters, matrices, dependencies, artifacts, permissions, tokens,
+Pages/OIDC behavior, release environments, and publishing gates therefore
+remain authored and reviewed in the GitHub workflow files. Historical adapter
+failures from merge `bf98ec2e8320400964a1e84af0cc50210ac2fa6c` remain
+compatibility evidence, not reasons to remove workflow gates.
 
-The native pipeline therefore owns event and path selection. The initial
-Buildkite upload must use an agent version that supports `if_changed` and must
-refresh the pull-request diff base before upload. Release-plz pull
-requests run planning only; ordinary pull requests run governance, living-spec,
-lint, test, validation, and documentation gates selected by changed paths;
-master pushes run the full source/release chain; and tags run cargo-dist and
-container publication. The Buildkite pipeline must upload the repository file,
-because `if_changed` is applied by the agent during upload rather than by a
-pipeline definition stored only in the UI.
+The obsolete `.buildkite/` directory is not part of the repository contract.
+Buildkite service configuration owns adapter selection; repository users should
+not maintain a parallel `.buildkite/pipeline.yml` translation. When a migrated
+Buildkite step fails, capture the workflow path and job, commit, adapter/plugin
+and agent versions, complete logs, and environment or permission context.
+Classify the fix as migration support, service configuration, agent image,
+secret/permission setup, or workflow behavior before changing
+`.github/workflows/*.yml`. Verify pull requests, master pushes, release pull
+requests, documentation deployment, and tagged publication independently
+before disabling the GitHub Actions service.
 
-Native Buildkite steps call Bazelisk, Cargo, mdBook, release-plz, cargo-dist,
-and Docker directly. Tool installation actions and GitHub artifact handoffs are
-not portable dependencies. Buildkite agent images must carry the toolchain
-contract, and Buildkite secrets must provide GitHub/Cargo credentials only to
-publishing steps. Documentation deployment uses the `gh-pages` branch and must
-be selected in the repository's GitHub Pages settings; this removes the
-GitHub-Actions-only Pages artifact/OIDC assumption.
+### Current migration compatibility cases
+
+The workflow files intentionally retain their native GitHub Actions paths and
+add a Buildkite branch only where the imported runtime cannot provide the
+GitHub-hosted behavior. The current branch is the executable record of the
+following compatibility decisions:
+
+| Workflow surface | Observed Buildkite symptom | Workflow-side compatibility path |
+|---|---|---|
+| CI dependency lint | `deps-lint` exited before producing useful Buildkite output while the native job passed | Install the pinned Rust toolchain first, then install `cargo-machete`, `cargo-deny`, and `cargo-audit` with shell commands instead of adapter-sensitive installer actions. |
+| Bazel setup and shared binary | `setup` exited after the Bazel build when the artifact path was represented by Bazel's `bazel-bin` symlink | Install the pinned Bazelisk launcher in each job, stage the binary as a regular workspace file, and use the audited `upload-artifact`/`download-artifact` v4 pair. |
+| Release plan | `plan` exited during PR and master/tag compilation; nested event-object outputs were not dependable and the runtime event env was not sufficient for branch selection | Run cargo-dist planning only for `release-plz-*` PRs and tags, use `ubuntu-latest`, inject the compiler-resolved event/ref into the shell, and emit manifest/tag/publishing outputs from one shell step. |
+| Nix packaging | Linux and macOS jobs appeared on an open PR even though the workflow was `pull_request: closed` and release-merge gated | Trigger from the durable master push, then gate the matrix in shell on a release merge commit or explicit dispatch. |
+| Documentation | `actions/upload-pages-artifact` failed on a master push | Keep the GitHub Pages action for native GitHub Actions; upload the site with `buildkite-agent artifact upload` in Buildkite. Pages deployment remains a service capability gap and is explicitly skipped there. |
+| Release publication | `release-publish` lacked the GitHub App token and registry credentials in Buildkite | Keep the App-token/action path for GitHub; use the release-plz CLI with named static Buildkite `GITHUB_TOKEN` and `CARGO_REGISTRY_TOKEN` secrets. Missing secrets fail with an actionable message. |
+| GHCR image publication | tag-only Docker setup actions were scheduled on the master push and failed in Buildkite | Use a simple tag-event condition and the Docker CLI/buildx path in Buildkite; retain the Docker actions for native GitHub Actions. |
+| Validation in detached CI checkouts | The validator's worktree guard cannot establish an agent workspace from a hosted checkout, and `validate --refresh-specs` refreshes generated manifest metadata on every run | CI initializes a run cookie with `DECAPOD_VALIDATE_SKIP_GIT_GATES=1` while retaining the validation gates; the drift check compares semantic projections and normalizes only `generated_at` and `repo_signal_fingerprint` generated metadata. |
+| Selective test diff base | Buildkite's migrated PR checkout honored the workflow's shallow `fetch-depth: 1`, so every matrix target exited before selecting tests | Request `fetch-depth: 0` for the test job, prefer `BUILDKITE_PULL_REQUEST_BASE_BRANCH`, and fall back only to refs or the parent already present locally; preserve the original path-based selection instead of running unrelated suites. |
+| Test matrix throughput | The four target jobs waited on the unrelated shared-binary setup and each ran several Bazel targets sequentially, multiplying cold analysis and extending feedback time | Let independent test gates start without `setup`, batch each target group's Bazel labels into one invocation so analysis is shared and tests execute in parallel, and cap the four-way matrix with `strategy.max-parallel: 4`. |
+
+These changes do not claim that Buildkite supplies GitHub's environments,
+Pages deployment records, GitHub App token exchange, or Docker action setup.
+Those are explicit adapter/service inputs. A green Buildkite check means the
+workflow reached the supported execution path; release secrets, Docker
+privileges, artifact storage, runner mappings, and Pages publication still
+need independent Buildkite configuration proof.
 
 ## Installed-Version Upgrade Path
 After `cargo install decapod`, the next normal governed command runs protected, idempotent schema migration and legacy-event reconciliation before runtime consumers read evidence. Existing-project `decapod init` executes the same reconciliation before regeneration. A prior successful single-datastore migration retires its JSONL inputs through a durable receipt; startup does not rescan them. Legacy local database sources are opened through the Dactyl v0.10.0 facade, while Decapod owns row translation, schema policy, the explicit maintenance command policy, and idempotency ledgers. Dactyl opens the canonical path directly through its host runtime and owns the physical backup/recovery contract; no bundled fallback or second local authority is used. Human-authored `OVERRIDE.md` content is validated but never mechanically rewritten. Fresh migration conflicts preserve source artifacts and stop with an actionable error.
@@ -288,7 +301,7 @@ for filesystem work and are not used as the artifact representation.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `50b59962f590deaa75043035077bd633f1b290cabc89cb63bee7f0c6c5e20f55`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
+- Repository signal fingerprint: `e029f48711c3fb262c3c536df5c93c12b7ec9eb1e13bc95fa3347b07ebdc1333`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `bazel-unknown-todo-01m2yg-agent-unknown-bugs_01m2ygbqqwzq8p3q-buildkite-migration/` (847 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

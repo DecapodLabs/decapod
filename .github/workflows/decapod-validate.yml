@@ -15,6 +15,25 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
       - name: Build Decapod from checkout
         run: cargo build --locked --quiet
+      - name: Start validation trajectory
+        env:
+          # CI checkouts are detached and are not Decapod agent worktrees.
+          # Keep the normal validation gates enabled, but allow this ephemeral
+          # proof bootstrap to write its run cookie in the checkout.
+          DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
+        run: |
+          set -euo pipefail
+          run_id="ci-decapod-validate-${GITHUB_RUN_ID:-${BUILDKITE_BUILD_ID:-local}}"
+          ./target/debug/decapod govern trajectory init \
+            --run-id "$run_id" \
+            --original-intent "Validate the checked-out Decapod repository" \
+            --derived-intent "Run the bounded repository validation gates and bind the receipt to this CI run" \
+            --boundary "Repository validation and tracked proof artifacts" \
+            --scope ".decapod/governance/trajectory.json" \
+            --scope ".decapod/governance/validation.json" \
+            --destination "CI validation" \
+            --phase validation \
+            --next-transition publish
       - name: Decapod Validate
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
@@ -31,9 +50,9 @@ jobs:
         # repo fingerprint changes before the next governed code PR refreshes
         # entrypoints/specs, so release PRs must not run spec inspection.
         if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'release') && !startsWith(github.head_ref, 'release-plz-')
-        # validate rewrites generated_at every run; that is not semantic drift.
-        # Normalize it to HEAD before the exit-code check so only real content,
-        # entrypoint, Dockerfile, or manifest hash drift fails CI.
+        # validate rewrites generated metadata every run; that is not semantic
+        # drift. Normalize it to HEAD before the exit-code check so only real
+        # content, entrypoint, Dockerfile, or manifest hash drift fails CI.
         run: |
           set -euo pipefail
           MANIFEST=".decapod/managed/specs/.manifest.json"
@@ -41,6 +60,10 @@ jobs:
             OLD=$(git show "HEAD:${MANIFEST}" | sed -n 's/.*"generated_at": "\([^"]*\)".*/\1/p' | head -1)
             if [ -n "${OLD}" ]; then
               sed -i "s/\"generated_at\": \"[^\"]*\"/\"generated_at\": \"${OLD}\"/" "${MANIFEST}"
+            fi
+            OLD_SIGNAL=$(git show "HEAD:${MANIFEST}" | sed -n 's/.*"repo_signal_fingerprint": "\([^"]*\)".*/\1/p' | head -1)
+            if [ -n "${OLD_SIGNAL}" ]; then
+              sed -i "s/\"repo_signal_fingerprint\": \"[^\"]*\"/\"repo_signal_fingerprint\": \"${OLD_SIGNAL}\"/" "${MANIFEST}"
             fi
           fi
           if ! git diff --exit-code -- . ':!.decapod/governance/'; then

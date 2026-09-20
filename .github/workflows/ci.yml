@@ -281,12 +281,25 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.96.1
       - name: Install cargo-machete
-        uses: taiki-e/install-action@cargo-machete
+        run: |
+          set -euo pipefail
+          if ! command -v cargo-machete >/dev/null 2>&1; then
+            cargo install --locked cargo-machete
+          fi
       - name: Run cargo-machete check
         run: cargo machete
       - name: Check license and duplicate dependencies
-        run: cargo install cargo-deny && cargo deny --config .config/deny.toml check
+        run: |
+          set -euo pipefail
+          if ! command -v cargo-deny >/dev/null 2>&1; then
+            cargo install --locked cargo-deny
+          fi
+          cargo deny --config .config/deny.toml check
 
   # VALIDATE: fan-out from the shared decapod binary built by setup
   health:
@@ -299,7 +312,7 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
       - name: Download shared decapod binary
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@v4
         with:
           name: decapod-debug-linux-${{ github.sha }}
           path: target/debug
@@ -307,6 +320,25 @@ jobs:
         run: |
           chmod +x target/debug/decapod
           echo "$PWD/target/debug" >> "$GITHUB_PATH"
+      - name: Start validation trajectory
+        env:
+          # CI checkouts are detached and are not Decapod agent worktrees.
+          # Keep the normal validation gates enabled, but allow this ephemeral
+          # proof bootstrap to write its run cookie in the checkout.
+          DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
+        run: |
+          set -euo pipefail
+          run_id="ci-health-${GITHUB_RUN_ID:-${BUILDKITE_BUILD_ID:-local}}"
+          decapod govern trajectory init \
+            --run-id "$run_id" \
+            --original-intent "Validate the checked-out Decapod repository" \
+            --derived-intent "Run the bounded repository validation gates and bind the receipt to this CI run" \
+            --boundary "Repository validation and tracked proof artifacts" \
+            --scope ".decapod/governance/trajectory.json" \
+            --scope ".decapod/governance/validation.json" \
+            --destination "CI health validation" \
+            --phase validation \
+            --next-transition publish
       - name: Initialize Decapod
         # Do not re-init an existing tree: init can invent non-idempotent churn
         # that the drift gate below would treat as a packaging failure.
@@ -327,7 +359,8 @@ jobs:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
           DECAPOD_VALIDATE_TIMEOUT_SECS: "120"
       - name: Ensure no spec or entrypoint drift
-        # validate rewrites generated_at every run; that is not semantic drift.
+        # validate rewrites generated metadata every run; that is not semantic
+        # drift. Normalize it to HEAD before the exit-code check.
         # Release-bound projections must be refreshed by the agent and committed
         # with the code PR. release-plz PRs skip drift; pins advance on the next user/agent PR (Release Artifact Sync removed).
         if: github.event_name != 'pull_request' || (!contains(github.event.pull_request.labels.*.name, 'release') && !startsWith(github.head_ref, 'release-plz-'))
@@ -338,6 +371,10 @@ jobs:
             OLD=$(git show "HEAD:${MANIFEST}" | sed -n 's/.*"generated_at": "\([^"]*\)".*/\1/p' | head -1)
             if [ -n "${OLD}" ]; then
               sed -i "s/\"generated_at\": \"[^\"]*\"/\"generated_at\": \"${OLD}\"/" "${MANIFEST}"
+            fi
+            OLD_SIGNAL=$(git show "HEAD:${MANIFEST}" | sed -n 's/.*"repo_signal_fingerprint": "\([^"]*\)".*/\1/p' | head -1)
+            if [ -n "${OLD_SIGNAL}" ]; then
+              sed -i "s/\"repo_signal_fingerprint\": \"[^\"]*\"/\"repo_signal_fingerprint\": \"${OLD_SIGNAL}\"/" "${MANIFEST}"
             fi
           fi
           if ! git diff --exit-code -- . ':!.decapod/governance/'; then
@@ -431,19 +468,37 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.13.0
-        with:
-          bazelisk-cache: true
-          disk-cache: ${{ github.workflow }}
-          repository-cache: true
+      # Buildkite's GHA runtime does not provide the setup-bazel action's
+      # cache/setup contract. Install the pinned launcher in the workflow so
+      # native GitHub Actions and Buildkite execute the same command.
+      - name: Install Bazelisk
+        run: |
+          set -euo pipefail
+          bazelisk_dir="${HOME}/.local/bin"
+          mkdir -p "$bazelisk_dir"
+          if ! command -v bazelisk >/dev/null 2>&1; then
+            curl --fail --silent --show-error --location \
+              "https://github.com/bazelbuild/bazelisk/releases/download/v1.26.0/bazelisk-linux-amd64" \
+              --output "$bazelisk_dir/bazelisk"
+            chmod +x "$bazelisk_dir/bazelisk"
+          fi
+          echo "$bazelisk_dir" >> "$GITHUB_PATH"
+          echo "PATH=$bazelisk_dir:$PATH" >> "$GITHUB_ENV"
       - name: Compile shared decapod binary
         run: bazelisk build //:decapod
+      - name: Stage shared decapod binary
+        run: |
+          set -euo pipefail
+          mkdir -p target/buildkite-artifacts
+          cp -L bazel-bin/decapod target/buildkite-artifacts/decapod
+          test -x target/buildkite-artifacts/decapod
       - name: Upload shared decapod binary
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: decapod-debug-linux-${{ github.sha }}
-          path: bazel-bin/decapod
+          # Upload a regular workspace file: Bazel's bazel-bin path is a
+          # symlink, and Buildkite's artifact adapter rejects symlink roots.
+          path: target/buildkite-artifacts/decapod
           retention-days: 1
           compression-level: 0
 
@@ -451,29 +506,53 @@ jobs:
   test:
     name: Tests (${{ matrix.target }})
     runs-on: ubuntu-latest
-    needs: setup
     if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
+      max-parallel: 4
       matrix:
         target: [core, plugins, cli, integration]
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          # Selective tests need the PR base commit. Buildkite's migrated
+          # checkout honors the full-history mode, while GitHub Actions keeps
+          # the same diff semantics with a complete local history.
+          fetch-depth: 0
           persist-credentials: false
-      - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.13.0
-        with:
-          bazelisk-cache: true
-          disk-cache: ${{ github.workflow }}
-          repository-cache: true
+      - name: Install Bazelisk
+        run: |
+          set -euo pipefail
+          bazelisk_dir="${HOME}/.local/bin"
+          mkdir -p "$bazelisk_dir"
+          if ! command -v bazelisk >/dev/null 2>&1; then
+            curl --fail --silent --show-error --location \
+              "https://github.com/bazelbuild/bazelisk/releases/download/v1.26.0/bazelisk-linux-amd64" \
+              --output "$bazelisk_dir/bazelisk"
+            chmod +x "$bazelisk_dir/bazelisk"
+          fi
+          echo "$bazelisk_dir" >> "$GITHUB_PATH"
+          echo "PATH=$bazelisk_dir:$PATH" >> "$GITHUB_ENV"
       - name: Detect changed files
         id: changed
         run: |
+          set -euo pipefail
           base_ref="${{ github.base_ref || 'master' }}"
-          git fetch --no-tags --prune origin "$base_ref"
-          chg=$(git diff --name-only "origin/$base_ref"...HEAD | tr '\n' ',' | sed 's/,$//')
+          if [ -n "${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-}" ]; then
+            base_ref="$BUILDKITE_PULL_REQUEST_BASE_BRANCH"
+          fi
+          if ! git fetch --no-tags --prune origin "$base_ref"; then
+            echo "::warning::PR base fetch unavailable; using refs already present in the full checkout."
+          fi
+          if base_commit=$(git rev-parse --verify "origin/$base_ref^{commit}" 2>/dev/null); then
+            chg=$(git diff --name-only "$base_commit"...HEAD | tr '\n' ',' | sed 's/,$//')
+          elif base_commit=$(git rev-parse --verify HEAD^ 2>/dev/null); then
+            echo "::warning::PR base ref unavailable; using the checked-out commit parent for selective test detection."
+            chg=$(git diff --name-only "$base_commit"...HEAD | tr '\n' ',' | sed 's/,$//')
+          else
+            echo "::error::No PR base or commit parent is available for selective test detection."
+            exit 1
+          fi
           echo "changed=$chg" >> "$GITHUB_OUTPUT"
       - name: Run selective tests
         run: |
@@ -484,40 +563,48 @@ jobs:
           case "${{ matrix.target }}" in
             core)
               if echo "$CHANGED" | grep -qE 'src/decapod/core/(todo|validate|workspace|workunit|obligation|docs|capsule|rpc|migration|gateway)'; then
-                bazelisk test //:todo_enforcement --test_arg=--test-threads=4
-                bazelisk test //:validate_termination --test_arg=--test-threads=4
-                bazelisk test //:workspace_interlock --test_arg=--test-threads=4
-                bazelisk test //:workunit_cli --test_arg=--test-threads=4
-                bazelisk test //:context_capsule_cli --test_arg=--test-threads=4
+                bazelisk test \
+                  //:todo_enforcement \
+                  //:validate_termination \
+                  //:workspace_interlock \
+                  //:workunit_cli \
+                  //:context_capsule_cli \
+                  --test_arg=--test-threads=4
               elif echo "$CHANGED" | grep -qE 'src/decapod/core/'; then
                 bazelisk test //:entrypoint_correctness --test_arg=--test-threads=4
               fi
               ;;
             plugins)
               if echo "$CHANGED" | grep -qE 'src/decapod/plugins/'; then
-                bazelisk test //:plugins_todo_tests --test_arg=--test-threads=4
-                bazelisk test //:plugins_policy_tests --test_arg=--test-threads=4
-                bazelisk test //:plugins_health_tests --test_arg=--test-threads=4
-                bazelisk test //:plugins_aptitude_tests --test_arg=--test-threads=4
-                bazelisk test //:plugins_internalize_tests --test_arg=--test-threads=4
-                bazelisk test //:plugins_federation_tests --test_arg=--test-threads=4
-                bazelisk test //:plugins_decide_tests --test_arg=--test-threads=4
-                bazelisk test //:plugins_obligation_tests --test_arg=--test-threads=4
+                bazelisk test \
+                  //:plugins_todo_tests \
+                  //:plugins_policy_tests \
+                  //:plugins_health_tests \
+                  //:plugins_aptitude_tests \
+                  //:plugins_internalize_tests \
+                  //:plugins_federation_tests \
+                  //:plugins_decide_tests \
+                  //:plugins_obligation_tests \
+                  --test_arg=--test-threads=4
               fi
               ;;
             cli)
               if echo "$CHANGED" | grep -qE 'src/(decapod/(cli|lib)|main)'; then
-                bazelisk test //:cli_contract_enforcement --test_arg=--test-threads=4
-                bazelisk test //:entrypoint_correctness --test_arg=--test-threads=4
-                bazelisk test //:cli_contracts --test_arg=--test-threads=4
+                bazelisk test \
+                  //:cli_contract_enforcement \
+                  //:entrypoint_correctness \
+                  //:cli_contracts \
+                  --test_arg=--test-threads=4
               fi
               ;;
             integration)
               if echo "$CHANGED" | grep -qE 'src/'; then
-                bazelisk test //:contract_conformance --test_arg=--test-threads=4
-                bazelisk test //:constitution_claims --test_arg=--test-threads=4
-                bazelisk test //:spec_conformance --test_arg=--test-threads=4
-                bazelisk test //:substrate_integrity --test_arg=--test-threads=4
+                bazelisk test \
+                  //:contract_conformance \
+                  //:constitution_claims \
+                  //:spec_conformance \
+                  //:substrate_integrity \
+                  --test_arg=--test-threads=4
               fi
               ;;
           esac
@@ -527,19 +614,25 @@ jobs:
   test-master:
     name: Tests (Full)
     runs-on: ubuntu-latest
-    needs: setup
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
           persist-credentials: false
-      - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.13.0
-        with:
-          bazelisk-cache: true
-          disk-cache: ${{ github.workflow }}
-          repository-cache: true
+      - name: Install Bazelisk
+        run: |
+          set -euo pipefail
+          bazelisk_dir="${HOME}/.local/bin"
+          mkdir -p "$bazelisk_dir"
+          if ! command -v bazelisk >/dev/null 2>&1; then
+            curl --fail --silent --show-error --location \
+              "https://github.com/bazelbuild/bazelisk/releases/download/v1.26.0/bazelisk-linux-amd64" \
+              --output "$bazelisk_dir/bazelisk"
+            chmod +x "$bazelisk_dir/bazelisk"
+          fi
+          echo "$bazelisk_dir" >> "$GITHUB_PATH"
+          echo "PATH=$bazelisk_dir:$PATH" >> "$GITHUB_ENV"
       - name: Run all tests
         run: bazelisk test //:gatling --test_arg=--test-threads=4
 
@@ -547,18 +640,24 @@ jobs:
   test-rpc-suite:
     name: Tests (RPC Suite)
     runs-on: ubuntu-latest
-    needs: setup
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
           persist-credentials: false
-      - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.13.0
-        with:
-          bazelisk-cache: true
-          disk-cache: ${{ github.workflow }}
-          repository-cache: true
+      - name: Install Bazelisk
+        run: |
+          set -euo pipefail
+          bazelisk_dir="${HOME}/.local/bin"
+          mkdir -p "$bazelisk_dir"
+          if ! command -v bazelisk >/dev/null 2>&1; then
+            curl --fail --silent --show-error --location \
+              "https://github.com/bazelbuild/bazelisk/releases/download/v1.26.0/bazelisk-linux-amd64" \
+              --output "$bazelisk_dir/bazelisk"
+            chmod +x "$bazelisk_dir/bazelisk"
+          fi
+          echo "$bazelisk_dir" >> "$GITHUB_PATH"
+          echo "PATH=$bazelisk_dir:$PATH" >> "$GITHUB_ENV"
       - name: Run RPC suite
         run: bazelisk test //:agent_rpc_suite --test_arg=--test-threads=1
 
@@ -566,18 +665,24 @@ jobs:
   chaos-replay:
     name: Chaos Replay Gate
     runs-on: ubuntu-latest
-    needs: setup
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
           persist-credentials: false
-      - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.13.0
-        with:
-          bazelisk-cache: true
-          disk-cache: ${{ github.workflow }}
-          repository-cache: true
+      - name: Install Bazelisk
+        run: |
+          set -euo pipefail
+          bazelisk_dir="${HOME}/.local/bin"
+          mkdir -p "$bazelisk_dir"
+          if ! command -v bazelisk >/dev/null 2>&1; then
+            curl --fail --silent --show-error --location \
+              "https://github.com/bazelbuild/bazelisk/releases/download/v1.26.0/bazelisk-linux-amd64" \
+              --output "$bazelisk_dir/bazelisk"
+            chmod +x "$bazelisk_dir/bazelisk"
+          fi
+          echo "$bazelisk_dir" >> "$GITHUB_PATH"
+          echo "PATH=$bazelisk_dir:$PATH" >> "$GITHUB_ENV"
       - name: Run chaos replay determinism test
         run: bazelisk test //:chaos_replay --test_arg=--test-threads=1
 
@@ -585,18 +690,24 @@ jobs:
   daemonless-lifecycle:
     name: Daemonless Lifecycle Gate
     runs-on: ubuntu-latest
-    needs: setup
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
           persist-credentials: false
-      - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.13.0
-        with:
-          bazelisk-cache: true
-          disk-cache: ${{ github.workflow }}
-          repository-cache: true
+      - name: Install Bazelisk
+        run: |
+          set -euo pipefail
+          bazelisk_dir="${HOME}/.local/bin"
+          mkdir -p "$bazelisk_dir"
+          if ! command -v bazelisk >/dev/null 2>&1; then
+            curl --fail --silent --show-error --location \
+              "https://github.com/bazelbuild/bazelisk/releases/download/v1.26.0/bazelisk-linux-amd64" \
+              --output "$bazelisk_dir/bazelisk"
+            chmod +x "$bazelisk_dir/bazelisk"
+          fi
+          echo "$bazelisk_dir" >> "$GITHUB_PATH"
+          echo "PATH=$bazelisk_dir:$PATH" >> "$GITHUB_ENV"
       - name: Run daemonless lifecycle test
         run: bazelisk test //:daemonless_lifecycle --test_arg=--test-threads=1
 
@@ -604,18 +715,24 @@ jobs:
   contracts:
     name: Contract Conformance
     runs-on: ubuntu-latest
-    needs: setup
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
           persist-credentials: false
-      - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.13.0
-        with:
-          bazelisk-cache: true
-          disk-cache: ${{ github.workflow }}
-          repository-cache: true
+      - name: Install Bazelisk
+        run: |
+          set -euo pipefail
+          bazelisk_dir="${HOME}/.local/bin"
+          mkdir -p "$bazelisk_dir"
+          if ! command -v bazelisk >/dev/null 2>&1; then
+            curl --fail --silent --show-error --location \
+              "https://github.com/bazelbuild/bazelisk/releases/download/v1.26.0/bazelisk-linux-amd64" \
+              --output "$bazelisk_dir/bazelisk"
+            chmod +x "$bazelisk_dir/bazelisk"
+          fi
+          echo "$bazelisk_dir" >> "$GITHUB_PATH"
+          echo "PATH=$bazelisk_dir:$PATH" >> "$GITHUB_ENV"
       - name: Run contract conformance tests
         run: |
           bazelisk test //:contract_conformance --test_arg=--test-threads=1
@@ -627,19 +744,26 @@ jobs:
   migration-script-tests:
     name: Migration Script Tests
     runs-on: ubuntu-latest
-    needs: [setup, detect-migration-script-changes]
+    needs: detect-migration-script-changes
     if: (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && needs.detect-migration-script-changes.outputs.changed == 'true'
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
           persist-credentials: false
-      - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.13.0
-        with:
-          bazelisk-cache: true
-          disk-cache: ${{ github.workflow }}
-          repository-cache: true
+      - name: Install Bazelisk
+        run: |
+          set -euo pipefail
+          bazelisk_dir="${HOME}/.local/bin"
+          mkdir -p "$bazelisk_dir"
+          if ! command -v bazelisk >/dev/null 2>&1; then
+            curl --fail --silent --show-error --location \
+              "https://github.com/bazelbuild/bazelisk/releases/download/v1.26.0/bazelisk-linux-amd64" \
+              --output "$bazelisk_dir/bazelisk"
+            chmod +x "$bazelisk_dir/bazelisk"
+          fi
+          echo "$bazelisk_dir" >> "$GITHUB_PATH"
+          echo "PATH=$bazelisk_dir:$PATH" >> "$GITHUB_ENV"
       - name: Run migration tests
         run: bazelisk test //:core_tests --test_arg=migration_ --test_arg=--ignored --test_arg=--test-threads=1
 
@@ -654,16 +778,23 @@ jobs:
         with:
           fetch-depth: 1
           persist-credentials: false
-      - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.13.0
-        with:
-          bazelisk-cache: true
-          disk-cache: ${{ github.workflow }}-release
-          repository-cache: true
+      - name: Install Bazelisk
+        run: |
+          set -euo pipefail
+          bazelisk_dir="${HOME}/.local/bin"
+          mkdir -p "$bazelisk_dir"
+          if ! command -v bazelisk >/dev/null 2>&1; then
+            curl --fail --silent --show-error --location \
+              "https://github.com/bazelbuild/bazelisk/releases/download/v1.26.0/bazelisk-linux-amd64" \
+              --output "$bazelisk_dir/bazelisk"
+            chmod +x "$bazelisk_dir/bazelisk"
+          fi
+          echo "$bazelisk_dir" >> "$GITHUB_PATH"
+          echo "PATH=$bazelisk_dir:$PATH" >> "$GITHUB_ENV"
       - name: Build release
         run: bazelisk build -c opt //:decapod
       - name: Upload binary
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: decapod-${{ github.sha }}
           path: bazel-bin/decapod

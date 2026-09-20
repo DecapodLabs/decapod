@@ -17,6 +17,10 @@ jobs:
         with:
           fetch-depth: 1
       - name: Install cargo-audit
-        uses: taiki-e/install-action@cargo-audit
+        run: |
+          set -euo pipefail
+          if ! command -v cargo-audit >/dev/null 2>&1; then
+            cargo install --locked cargo-audit
+          fi
       - name: Run security audit
         run: cargo audit

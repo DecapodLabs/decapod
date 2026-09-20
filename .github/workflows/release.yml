@@ -57,7 +57,8 @@ jobs:
     environment: release
     if: github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch'
     steps:
-      - name: Generate GitHub App token
+      - name: Generate GitHub App token (GitHub Actions)
+        if: env.BUILDKITE_BUILD_ID == ''
         uses: actions/create-github-app-token@v2
         id: generate-token
         with:
@@ -73,13 +74,31 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Run release-plz
+      - name: Run release-plz (GitHub Actions)
+        if: env.BUILDKITE_BUILD_ID == ''
         uses: release-plz/action@v0.5
         with:
           config: .github/release.toml
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+
+      # Buildkite provides static job secrets, not the GitHub App token action's
+      # short-lived output. Keep the GitHub path above unchanged and use the
+      # documented release-plz CLI contract when this workflow is imported.
+      - name: Run release-plz (Buildkite)
+        if: env.BUILDKITE_BUILD_ID != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          : "${GITHUB_TOKEN:?Configure GITHUB_TOKEN as a Buildkite secret for release-plz}"
+          : "${CARGO_REGISTRY_TOKEN:?Configure CARGO_REGISTRY_TOKEN as a Buildkite secret for release-plz}"
+          if ! command -v release-plz >/dev/null 2>&1; then
+            cargo install --locked release-plz
+          fi
+          release-plz release --config .github/release.toml
+        env:
           CARGO_NET_GIT_FETCH_WITH_CLI: "true"
 
       # Intentionally NO post-release-plz entrypoint/fingerprint heal and no
@@ -89,13 +108,16 @@ jobs:
 
   # Run 'cargo dist plan' (or host) to determine what tasks we need to do
   plan:
-    runs-on: "ubuntu-24.04"
-    if: github.event_name == 'pull_request' || startsWith(github.ref, 'refs/tags/')
+    runs-on: "ubuntu-latest"
+    # Cargo-dist planning is useful for release-plz PRs and tags, not every
+    # code PR. Keeping the job scoped to those release surfaces prevents a
+    # normal PR from acquiring a release-plan check it cannot publish.
+    if: (github.event_name == 'pull_request' && startsWith(github.head_ref, 'release-plz-')) || (github.event_name == 'push' && github.ref != 'refs/heads/master')
     outputs:
       val: ${{ steps.plan.outputs.manifest }}
-      tag: ${{ !github.event.pull_request && github.ref_name || '' }}
-      tag-flag: ${{ !github.event.pull_request && format('--tag={0}', github.ref_name) || '' }}
-      publishing: ${{ !github.event.pull_request }}
+      tag: ${{ steps.plan.outputs.tag }}
+      tag-flag: ${{ steps.plan.outputs.tag_flag }}
+      publishing: ${{ steps.plan.outputs.publishing }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -117,14 +139,34 @@ jobs:
       - id: plan
         run: |
           set -euo pipefail
-          if [ "${GITHUB_EVENT_NAME:-}" = "pull_request" ]; then
+          # Buildkite selects the event while compiling the workflow, but its
+          # runtime does not guarantee the GitHub event env mirror. Inject the
+          # compiler-resolved event into the shell so PR plans never fall into
+          # the tag-hosting branch just because GITHUB_EVENT_NAME is unset.
+          event_name="${{ github.event_name }}"
+          ref_name="${{ github.ref_name }}"
+          if [ "$event_name" = "pull_request" ]; then
             cargo dist plan --output-format=json > plan-dist-manifest.json
           else
-            cargo dist host --steps=create --tag="${GITHUB_REF_NAME}" --output-format=json > plan-dist-manifest.json
+            cargo dist host --steps=create --tag="$ref_name" --output-format=json > plan-dist-manifest.json
           fi
           echo "cargo dist ran successfully"
           cat plan-dist-manifest.json
-          echo "manifest=$(jq -c "." plan-dist-manifest.json)" >> "$GITHUB_OUTPUT"
+          if [ "$event_name" = "pull_request" ]; then
+            tag=""
+            tag_flag=""
+            publishing="false"
+          else
+            tag="$ref_name"
+            tag_flag="--tag=$ref_name"
+            publishing="true"
+          fi
+          {
+            echo "manifest=$(jq -c . plan-dist-manifest.json)"
+            echo "tag=${tag}"
+            echo "tag_flag=${tag_flag}"
+            echo "publishing=${publishing}"
+          } >> "$GITHUB_OUTPUT"
       - name: "Upload dist-manifest.json"
         uses: actions/upload-artifact@v4
         with:
@@ -133,8 +175,8 @@ jobs:
 
   publish-decapod-image:
     name: Publish Decapod GHCR Image (${{ matrix.variant }})
-    runs-on: ubuntu-24.04
-    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref != 'refs/heads/master'
     permissions:
       contents: read
       packages: write
@@ -154,28 +196,34 @@ jobs:
             runtime_image: alpine:3.20
     steps:
       - uses: actions/checkout@v4
-      - name: Set up QEMU
+      - name: Set up QEMU (GitHub Actions)
+        if: env.BUILDKITE_BUILD_ID == ''
         uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
+      - name: Set up Docker Buildx (GitHub Actions)
+        if: env.BUILDKITE_BUILD_ID == ''
         uses: docker/setup-buildx-action@v3
-      - name: Log in to GHCR
+      - name: Log in to GHCR (GitHub Actions)
+        if: env.BUILDKITE_BUILD_ID == ''
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Compute short SHA
+      - name: Compute short SHA (GitHub Actions)
+        if: env.BUILDKITE_BUILD_ID == ''
         id: commit
         shell: bash
         run: echo "sha_short=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
-      - name: Extract image metadata
+      - name: Extract image metadata (GitHub Actions)
+        if: env.BUILDKITE_BUILD_ID == ''
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/decapodlabs/decapod
           tags: |
             type=raw,value=${{ github.ref_name }}${{ matrix.tag_suffix }}
-      - name: Build and push Decapod image
+      - name: Build and push Decapod image (GitHub Actions)
+        if: env.BUILDKITE_BUILD_ID == ''
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -189,6 +237,36 @@ jobs:
             DECAPOD_REVISION=${{ steps.commit.outputs.sha_short }}
             DECAPOD_BUILD_IMAGE=${{ matrix.build_image }}
             DECAPOD_RUNTIME_IMAGE=${{ matrix.runtime_image }}
+      # The Buildkite runtime does not emulate the Docker setup actions. Keep
+      # the native GitHub Actions path above and perform the same build with
+      # the Docker CLI when this job is imported into Buildkite.
+      - name: Build and push Decapod image (Buildkite)
+        if: env.BUILDKITE_BUILD_ID != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          : "${GITHUB_TOKEN:?Configure GITHUB_TOKEN as a Buildkite secret for GHCR publishing}"
+          : "${GITHUB_REF_NAME:?Buildkite GHA must provide GITHUB_REF_NAME for tag publishing}"
+          short_sha="${GITHUB_SHA:-${BUILDKITE_COMMIT:-}}"
+          short_sha="${short_sha:0:7}"
+          docker run --privileged --rm tonistiigi/binfmt:qemu-v9.2.0 --install all
+          if ! docker buildx inspect decapod-builder >/dev/null 2>&1; then
+            docker buildx create --name decapod-builder --driver docker-container --use
+          else
+            docker buildx use decapod-builder
+          fi
+          docker buildx inspect --bootstrap
+          printf '%s' "$GITHUB_TOKEN" | docker login ghcr.io --username "${GITHUB_ACTOR:-github-actions[bot]}" --password-stdin
+          docker buildx build \
+            --context . \
+            --file assets/Dockerfile.workspace \
+            --platform linux/amd64,linux/arm64 \
+            --push \
+            --tag "ghcr.io/decapodlabs/decapod:${GITHUB_REF_NAME}${{ matrix.tag_suffix }}" \
+            --build-arg "DECAPOD_VERSION=${GITHUB_REF_NAME}" \
+            --build-arg "DECAPOD_REVISION=${short_sha}" \
+            --build-arg "DECAPOD_BUILD_IMAGE=${{ matrix.build_image }}" \
+            --build-arg "DECAPOD_RUNTIME_IMAGE=${{ matrix.runtime_image }}"
       - name: Verify anonymous GHCR pull
         env:
           IMAGE_TAG: ${{ github.ref_name }}${{ matrix.tag_suffix }}
@@ -220,22 +298,22 @@ jobs:
       matrix:
         include:
           - targets: aarch64-apple-darwin
-            runner: macos-14
+            runner: macos-latest
             install_dist: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.22.1/cargo-dist-installer.sh | sh"
             packages_install: "true"
             dist_args: "--artifacts=local --target=aarch64-apple-darwin"
           - targets: aarch64-unknown-linux-gnu
-            runner: ubuntu-24.04
+            runner: ubuntu-latest
             install_dist: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.22.1/cargo-dist-installer.sh | sh"
             packages_install: "true"
             dist_args: "--artifacts=local --target=aarch64-unknown-linux-gnu"
           - targets: x86_64-apple-darwin
-            runner: macos-14
+            runner: macos-latest
             install_dist: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.22.1/cargo-dist-installer.sh | sh"
             packages_install: "true"
             dist_args: "--artifacts=local --target=x86_64-apple-darwin"
           - targets: x86_64-unknown-linux-gnu
-            runner: ubuntu-24.04
+            runner: ubuntu-latest
             install_dist: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.22.1/cargo-dist-installer.sh | sh"
             packages_install: "true"
             dist_args: "--artifacts=local --target=x86_64-unknown-linux-gnu"
@@ -299,7 +377,7 @@ jobs:
     needs:
       - plan
       - build-local-artifacts
-    runs-on: "ubuntu-24.04"
+    runs-on: "ubuntu-latest"
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BUILD_MANIFEST_NAME: target/distrib/global-dist-manifest.json
@@ -349,7 +427,7 @@ jobs:
     if: ${{ always() && needs.plan.outputs.publishing == 'true' && (needs.build-global-artifacts.result == 'skipped' || needs.build-global-artifacts.result == 'success') && (needs.build-local-artifacts.result == 'skipped' || needs.build-local-artifacts.result == 'success') }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    runs-on: "ubuntu-24.04"
+    runs-on: "ubuntu-latest"
     outputs:
       val: ${{ steps.host.outputs.manifest }}
     steps:
@@ -419,7 +497,7 @@ jobs:
     # still allowing individual publish jobs to skip themselves (for prereleases).
     # "host" however must run to completion, no skipping allowed!
     if: ${{ always() && needs.host.result == 'success' }}
-    runs-on: "ubuntu-24.04"
+    runs-on: "ubuntu-latest"
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
