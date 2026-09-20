@@ -1,47 +1,72 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "buildkite-gha-migration-20260920",
-  "intent_id": "intent:buildkite-gha-migration-20260920",
-  "task_id": "bugs_01m2xry8q2fkjevz",
-  "original_intent": "Resolve PR #1344 conflicts against current master and remove obsolete repository-native Buildkite files now that Buildkite's GitHub Actions migration is implemented.",
-  "derived_intent": "Keep all .github/workflows/*.yml unchanged as the sole workflow contract, remove .buildkite, preserve current v0.104.0 master, and document the service-owned Buildkite boundary.",
+  "run_id": "jev-init-secrets-01m2ygzwcmamy8xq",
+  "intent_id": "intent:jev-init-secrets-01m2ygzwcmamy8xq",
+  "task_id": "cicd_01m2ygzwcmamy8xq",
+  "original_intent": "Preserve optional Jev configuration across Decapod initialization without storing credentials in repository state",
+  "derived_intent": "Persist TYPESAFE_API_KEY in the existing machine-local auth data area during Jev-enabled initialization, preserve provider selection on refresh, and keep missing or broken Jev fail-closed",
   "current_phase": "validation",
   "next_transitions": [
-    "publish"
+    "publish",
+    "validation"
   ],
   "active_boundaries": [
-    "Do not modify or delete .github/workflows/*.yml; do not add a second pipeline source; resolve conflicts against current master; remove only obsolete .buildkite files."
+    "Jev remains advisory; it cannot alter intent, claims, boundaries, proof requirements, policy, or completion"
   ],
   "repo_scope": [
-    "PR #1344 v0.104.0 merge resolution, .buildkite removal, governed specs, plan, trajectory, and issue/PR narrative"
+    "Decapod init configuration, machine-local secret custody, Jev credential resolution, documentation, and tests"
   ],
   "inspected_files": [
-    ".decapod/governance/claims.json",
-    ".decapod/governance/validation.json",
-    ".decapod/managed/specs/OPERATIONS.md",
-    ".github/workflows/ci.yml",
-    ".github/workflows/docs.yml",
-    ".github/workflows/release.yml"
+    "src/decapod/cli.rs",
+    "src/decapod/core/auth.rs",
+    "src/decapod/core/decision_provider.rs",
+    "src/decapod/lib.rs",
+    "tests/init_config_behavior.rs",
+    "tests/unit/core/auth_tests.rs"
   ],
   "modified_files": [
     ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json"
+    ".decapod/governance/validation.json",
+    ".decapod/managed/specs/OPERATIONS.md",
+    "README.md",
+    "docs/agent/state-model.md",
+    "docs/book/src/mental-model.md",
+    "docs/book/src/reference/cli.md",
+    "docs/book/src/reference/config-toml.md",
+    "src/decapod/cli.rs",
+    "src/decapod/core/auth.rs",
+    "src/decapod/core/decision_provider.rs",
+    "src/decapod/lib.rs",
+    "tests/init_config_behavior.rs"
   ],
   "declared_commands": [
-    "decapod validate"
+    "cargo clippy --locked --all-targets --all-features -- -D warnings",
+    "cargo fmt --all -- --check",
+    "cargo test --locked --lib",
+    "cargo test --locked --test init_config_behavior",
+    "decapod validate",
+    "mdbook build docs/book"
   ],
   "tool_calls": [],
   "checks": [
     {
-      "name": "buildkite_ci_92",
-      "status": "failed"
-    },
-    {
-      "name": "buildkite_dec_apod_90",
+      "name": "cargo clippy --locked --all-targets --all-features -- -D warnings",
       "status": "passed"
     },
     {
-      "name": "buildkite_directory_removal",
+      "name": "cargo fmt --all -- --check",
+      "status": "passed"
+    },
+    {
+      "name": "cargo test --locked --lib",
+      "status": "passed"
+    },
+    {
+      "name": "cargo test --locked --test init_config_behavior",
+      "status": "passed"
+    },
+    {
+      "name": "clippy",
       "status": "passed"
     },
     {
@@ -49,55 +74,63 @@
       "status": "passed"
     },
     {
-      "name": "decapod_validate",
+      "name": "decapod validate --refresh-specs --format json",
       "status": "passed"
     },
     {
-      "name": "governance_inventory",
-      "status": "partial"
-    },
-    {
-      "name": "merge_conflicts",
+      "name": "docs",
       "status": "passed"
     },
     {
-      "name": "specs_refresh",
+      "name": "format",
       "status": "passed"
     },
     {
-      "name": "workflow_files_preserved",
+      "name": "init_config_behavior",
+      "status": "passed"
+    },
+    {
+      "name": "library_tests",
+      "status": "passed"
+    },
+    {
+      "name": "mdbook build docs/book",
       "status": "passed"
     }
   ],
   "evidence": [
-    "DECAPOD_VALIDATE_SKIP_GIT_GATES=1 decapod validate --format json --refresh-specs --projections completed with status ok and zero failures; warnings were historical audit divergence and missing risk map. Latest external Buildkite ci #92 failed after 1 second while decapod #90 passed. Claims note refreshed the research ledger for the v0.104.0 merge resolution.",
-    "Merged current v0.104.0 master into PR #1344, retained all current master source/workflow files, deleted the two obsolete .buildkite files, and refreshed the governed specs.",
-    "validation epoch ve_e20c1438120fc1a1 completed with zero failures"
+    "Initialization integration tests verify env key migration to XDG_DATA_HOME/decapod/secrets.json with 0600 permissions and no project-config leakage; refresh tests verify provider preservation.",
+    "validation epoch ve_39fd0148420352ef completed with zero failures",
+    "validation epoch ve_69ea911f2639cdc0 completed with zero failures"
   ],
-  "shortcut_risk_signals": [],
-  "unresolved_assumptions": [],
-  "proof_status": "failed",
+  "shortcut_risk_signals": [
+    "No provider threshold or policy semantics were added; Jev remains advisory and optional."
+  ],
+  "unresolved_assumptions": [
+    "The existing auth machine-data directory is the correct custody boundary for provider credentials; Propodus session_token.json remains cloud-only."
+  ],
+  "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
-    "shortcut_risk": "supported",
-    "completion_proof": "unsupported"
+    "shortcut_risk": "caution",
+    "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:d665d4175459cceb1b6f464ee0977333a1fbe8fe79901829923bfc15ceeb0fb4",
+  "artifact_hash": "sha256:f9c3f8783811b9afdddf2044d5877bc506b9e80ca7075e035d7a29ec7f4ee3f9",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:buildkite-gha-migration-20260920": {
-        "id": "intent:buildkite-gha-migration-20260920",
-        "raw_intent": "Resolve PR #1344 conflicts against current master and remove obsolete repository-native Buildkite files now that Buildkite's GitHub Actions migration is implemented.",
-        "refined_intent": "Keep all .github/workflows/*.yml unchanged as the sole workflow contract, remove .buildkite, preserve current v0.104.0 master, and document the service-owned Buildkite boundary.",
+      "intent:jev-init-secrets-01m2ygzwcmamy8xq": {
+        "id": "intent:jev-init-secrets-01m2ygzwcmamy8xq",
+        "raw_intent": "Preserve optional Jev configuration across Decapod initialization without storing credentials in repository state",
+        "refined_intent": "Persist TYPESAFE_API_KEY in the existing machine-local auth data area during Jev-enabled initialization, preserve provider selection on refresh, and keep missing or broken Jev fail-closed",
         "acceptance_criteria": [],
         "constraints": [
-          "PR #1344 v0.104.0 merge resolution, .buildkite removal, governed specs, plan, trajectory, and issue/PR narrative"
+          "Decapod init configuration, machine-local secret custody, Jev credential resolution, documentation, and tests"
         ],
         "assumptions": [],
         "boundaries": [
-          "Do not modify or delete .github/workflows/*.yml; do not add a second pipeline source; resolve conflicts against current master; remove only obsolete .buildkite files."
+          "Jev remains advisory; it cannot alter intent, claims, boundaries, proof requirements, policy, or completion"
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -110,63 +143,93 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:buildkite-gha-migration-20260920",
+        "intent_id": "intent:jev-init-secrets-01m2ygzwcmamy8xq",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:buildkite-gha-migration-20260920",
+        "intent_id": "intent:jev-init-secrets-01m2ygzwcmamy8xq",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:buildkite-gha-migration-20260920",
+        "intent_id": "intent:jev-init-secrets-01m2ygzwcmamy8xq",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:buildkite-gha-migration-20260920"
+        "detail": "trajectory:jev-init-secrets-01m2ygzwcmamy8xq"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:buildkite-gha-migration-20260920",
+        "intent_id": "intent:jev-init-secrets-01m2ygzwcmamy8xq",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:buildkite-gha-migration-20260920"
+        "detail": "trajectory:jev-init-secrets-01m2ygzwcmamy8xq"
       },
       {
         "sequence": 6,
         "event_id": "event:6",
-        "intent_id": "intent:buildkite-gha-migration-20260920",
+        "intent_id": "intent:jev-init-secrets-01m2ygzwcmamy8xq",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:buildkite-gha-migration-20260920"
+        "detail": "trajectory:jev-init-secrets-01m2ygzwcmamy8xq"
+      },
+      {
+        "sequence": 7,
+        "event_id": "event:7",
+        "intent_id": "intent:jev-init-secrets-01m2ygzwcmamy8xq",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:jev-init-secrets-01m2ygzwcmamy8xq"
+      },
+      {
+        "sequence": 8,
+        "event_id": "event:8",
+        "intent_id": "intent:jev-init-secrets-01m2ygzwcmamy8xq",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:jev-init-secrets-01m2ygzwcmamy8xq"
       }
     ],
     "trajectories": {
-      "buildkite-gha-migration-20260920": {
-        "id": "buildkite-gha-migration-20260920",
-        "intent_id": "intent:buildkite-gha-migration-20260920",
+      "jev-init-secrets-01m2ygzwcmamy8xq": {
+        "id": "jev-init-secrets-01m2ygzwcmamy8xq",
+        "intent_id": "intent:jev-init-secrets-01m2ygzwcmamy8xq",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "trajectory.record",
+            "action": "validation",
+            "command": "cargo fmt --all -- --check",
             "scope": [
-              "PR #1344 v0.104.0 merge resolution, .buildkite removal, governed specs, plan, trajectory, and issue/PR narrative"
+              "Decapod init configuration, machine-local secret custody, Jev credential resolution, documentation, and tests"
             ],
             "observations": [
-              ".github/workflows/ci.yml",
-              ".github/workflows/release.yml",
-              ".github/workflows/docs.yml",
-              ".decapod/managed/specs/OPERATIONS.md",
-              "Merged current v0.104.0 master into PR #1344, retained all current master source/workflow files, deleted the two obsolete .buildkite files, and refreshed the governed specs."
+              "src/decapod/core/auth.rs",
+              "src/decapod/core/decision_provider.rs",
+              "src/decapod/cli.rs",
+              "src/decapod/lib.rs",
+              "tests/init_config_behavior.rs",
+              "tests/unit/core/auth_tests.rs",
+              "src/decapod/core/auth.rs",
+              "src/decapod/core/decision_provider.rs",
+              "src/decapod/cli.rs",
+              "src/decapod/lib.rs",
+              "README.md",
+              "docs/book/src/reference/config-toml.md",
+              "docs/book/src/reference/cli.md",
+              "docs/book/src/mental-model.md",
+              "docs/agent/state-model.md",
+              "Initialization integration tests verify env key migration to XDG_DATA_HOME/decapod/secrets.json with 0600 permissions and no project-config leakage; refresh tests verify provider preservation."
             ],
             "proof_refs": [
-              "merge_conflicts",
-              "buildkite_directory_removal",
-              "workflow_files_preserved",
-              "specs_refresh"
+              "format",
+              "clippy",
+              "library_tests",
+              "init_config_behavior",
+              "docs"
             ],
-            "validation_findings": [],
+            "validation_findings": [
+              "No provider threshold or policy semantics were added; Jev remains advisory and optional.",
+              "The existing auth machine-data directory is the correct custody boundary for provider credentials; Propodus session_token.json remains cloud-only."
+            ],
             "custody_event_id": "event:4"
           },
           {
@@ -174,12 +237,12 @@
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              "PR #1344 v0.104.0 merge resolution, .buildkite removal, governed specs, plan, trajectory, and issue/PR narrative"
+              "Decapod init configuration, machine-local secret custody, Jev credential resolution, documentation, and tests"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_e20c1438120fc1a1 completed with zero failures"
+              "validation epoch ve_69ea911f2639cdc0 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
@@ -189,29 +252,72 @@
           },
           {
             "sequence": 6,
-            "action": "trajectory.record",
+            "action": "validation",
+            "command": "decapod validate",
             "scope": [
-              "PR #1344 v0.104.0 merge resolution, .buildkite removal, governed specs, plan, trajectory, and issue/PR narrative"
+              "Decapod init configuration, machine-local secret custody, Jev credential resolution, documentation, and tests"
             ],
             "observations": [
-              ".decapod/governance/claims.json",
+              ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "DECAPOD_VALIDATE_SKIP_GIT_GATES=1 decapod validate --format json --refresh-specs --projections completed with status ok and zero failures; warnings were historical audit divergence and missing risk map. Latest external Buildkite ci #92 failed after 1 second while decapod #90 passed. Claims note refreshed the research ledger for the v0.104.0 merge resolution."
+              "validation epoch ve_69ea911f2639cdc0 completed with zero failures"
             ],
             "proof_refs": [
-              "decapod_validate",
-              "buildkite_ci_92",
-              "buildkite_dec_apod_90",
-              "governance_inventory"
+              "decapod validate"
             ],
             "validation_findings": [],
             "custody_event_id": "event:6"
+          },
+          {
+            "sequence": 7,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "Decapod init configuration, machine-local secret custody, Jev credential resolution, documentation, and tests"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_39fd0148420352ef completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:7"
+          },
+          {
+            "sequence": 8,
+            "action": "validation",
+            "scope": [
+              "Decapod init configuration, machine-local secret custody, Jev credential resolution, documentation, and tests"
+            ],
+            "observations": [
+              "src/decapod/cli.rs",
+              "src/decapod/lib.rs",
+              "tests/init_config_behavior.rs",
+              "README.md",
+              "docs/book/src/mental-model.md",
+              "docs/book/src/reference/cli.md",
+              "docs/book/src/reference/config-toml.md",
+              ".decapod/managed/specs/OPERATIONS.md"
+            ],
+            "proof_refs": [
+              "cargo fmt --all -- --check",
+              "cargo clippy --locked --all-targets --all-features -- -D warnings",
+              "cargo test --locked --lib",
+              "cargo test --locked --test init_config_behavior",
+              "mdbook build docs/book",
+              "decapod validate --refresh-specs --format json"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:8"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 6
+    "next_sequence": 8
   }
 }

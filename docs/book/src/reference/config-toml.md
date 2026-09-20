@@ -43,11 +43,21 @@ assurance result. It does not make policy decisions or replace governance.
 | `provider` | enum | `"none"` | `"none"` keeps operation local; `"jev"` enables the bounded Jev trajectory-satisfaction observation. |
 
 When Jev is enabled, Decapod reads the API credential from the machine
-environment variable `TYPESAFE_API_KEY`. Credentials are never written to this
-file. Jev uses TypeSafe's documented
+environment variable `TYPESAFE_API_KEY`, falling back to the machine-local
+`~/.local/share/decapod/secrets.json` file (or the `XDG_DATA_HOME` equivalent).
+Running `decapod init --decision-provider jev` persists an explicitly supplied
+environment key to that file with restrictive permissions. The file is separate
+from the Propodus `session_token.json`; credentials are never written to this
+project file. Jev uses TypeSafe's documented
 [System One API](https://docs.typesafe.ai/api). A missing credential, unavailable
 service, timeout, or malformed response yields `no_observation`; it never
 clears an interlock or satisfies a proof gate.
+
+For an initialized project, `decapod init --refresh` reopens the interactive
+initialization questionnaire with the current configuration as each default.
+Pressing Enter preserves a setting; selecting another option can enable or
+disable it, including the decision provider. The refresh path preserves the
+existing repository setup and does not require `--force`.
 
 With an active trajectory run, every Jev attempt is retained in the
 schema-versioned `.decapod/governance/jev.json` ledger. A new trajectory run

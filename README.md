@@ -178,12 +178,29 @@ provider = "jev"
 ```
 
 Set `TYPESAFE_API_KEY` in the machine environment; do not commit credentials to
-`.decapod/config.toml`. Jev uses TypeSafe's documented
+`.decapod/config.toml`. When initializing with
+`decapod init --decision-provider jev`, an explicitly supplied environment key
+is copied into the machine-local `~/.local/share/decapod/secrets.json` file
+(or the `XDG_DATA_HOME` equivalent) with restrictive permissions. The file is
+separate from the Propodus `session_token.json` and is never committed. Jev uses TypeSafe's documented
 [System One endpoint](https://docs.typesafe.ai/api). If Jev is unavailable,
 unconfigured, times out, or returns an invalid response, Decapod records
 `no_observation` and keeps its existing governance and proof rules unchanged.
 Decapod remains the authority for boundaries, interlocks, policy, and
 completion.
+
+To revisit an initialized setup without replacing it, run `decapod init
+--refresh` from a terminal. Decapod reopens the initialization questionnaire
+with the current configuration as the defaults; press Enter to keep a value,
+or choose a different option to enable/disable it. This includes the optional
+decision provider. The refresh path preserves repository state and does not
+require `--force`; it requires an existing `.decapod` setup. In a non-terminal
+environment, `--refresh` keeps the current configuration without prompting.
+
+Initialization also preserves an existing decision-provider selection during
+non-interactive refreshes; use `--decision-provider none` to explicitly disable
+it. A missing machine key does not make initialization fail because Jev remains
+optional.
 
 When Jev is enabled and a trajectory run is active, each assurance call also
 appends its typed Jev result (including explicit `no_observation` failures) to

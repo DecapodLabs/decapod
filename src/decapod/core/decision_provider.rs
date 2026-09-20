@@ -12,10 +12,9 @@ pub const TRAJECTORY_SATISFIES_INTENT: &str = "trajectory_satisfies_intent";
 const JEV_QUESTION_ID: &str = "trajectory_satisfies_intent";
 const JEV_API_URL: &str = "https://api.typesafe.ai/v1/systemone";
 const JEV_MODEL: &str = "jev-latest";
-const JEV_API_KEY_ENV: &str = "TYPESAFE_API_KEY";
 
 /// The configured provider. `none` is the safe local default.
-#[derive(Debug, Clone, Copy, Default, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, Deserialize, Serialize, PartialEq, Eq, clap::ValueEnum)]
 #[serde(rename_all = "lowercase")]
 pub enum DecisionProviderKind {
     #[default]
@@ -264,9 +263,7 @@ pub(crate) struct JevDecisionProvider<T = JevCurlTransport> {
 impl JevDecisionProvider<JevCurlTransport> {
     fn from_env() -> Self {
         Self {
-            api_key: std::env::var(JEV_API_KEY_ENV)
-                .ok()
-                .filter(|key| !key.trim().is_empty()),
+            api_key: crate::core::auth::load_typesafe_api_key().ok().flatten(),
             transport: JevCurlTransport,
         }
     }

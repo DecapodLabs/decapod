@@ -1,28 +1,23 @@
 {
   "schema_version": "1.0.0",
-  "title": "Use Buildkite GitHub Actions migration without repository-native pipeline files",
-  "intent": "Treat .github/workflows/*.yml as the sole repository workflow contract and rely on Buildkite's implemented GitHub Actions migration for execution; remove the obsolete .buildkite directory and preserve all workflow gates and semantics.",
+  "title": "Refresh initialized Decapod setup safely",
+  "intent": "Preserve an initialized Decapod project while allowing a human to re-open configuration prompts, keep current settings as defaults, and enable or disable optional features such as Jev without requiring destructive force refreshes.",
   "state": "APPROVED",
   "todo_ids": [
-    "code_01m2y81nnzgyw1p8"
+    "feat_01m2yn3etwb8pytv"
   ],
   "proof_hooks": [
-    "cargo test --locked --lib",
-    "cargo test --locked --test decision_provider_live --no-run",
-    "cargo test --locked --test trajectory_cli",
+    "cargo test --locked --test init_config_behavior",
+    "cargo test --locked --lib init_prompt_tests",
     "cargo clippy --locked --all-targets --all-features -- -D warnings",
-    "decapod validate --format json",
-    "Jev history schema and reset tests"
+    "mdbook build docs/book",
+    "decapod validate --refresh-specs --format json"
   ],
   "unknowns": [],
   "human_questions": [],
-  "stop_conditions": [
-    "Do not add a second native Buildkite workflow source or delete any .github/workflows/*.yml gate while verifying Buildkite's migration parity."
-  ],
+  "stop_conditions": [],
   "unresolved_contradictions": [],
-  "deferred_questions": [
-    "After Buildkite migration parity is verified for pull requests, master, releases, docs, and tags, decide when to disable the GitHub Actions service."
-  ],
+  "deferred_questions": [],
   "constraints": {
     "forbidden_paths": [
       ".decapod/data/decapod.db"
@@ -30,5 +25,5 @@
     "file_touch_budget": 30
   },
   "phases": [],
-  "updated_at": "1789875313Z"
+  "updated_at": "1789882670Z"
 }

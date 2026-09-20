@@ -27,6 +27,13 @@ Perform methodology compliance checks.
 Bootstrap or manage the Decapod lifecycle.
 - `with`: Apply explicit options (non-interactive).
 - `clean`: Remove all Decapod state from the directory.
+- `--refresh`: Re-open the interactive initialization questionnaire for an
+  existing project, preserving current values as defaults and keeping the
+  refresh non-destructive. In non-interactive environments it preserves the
+  current configuration without prompting.
+- `--decision-provider <none|jev>`: Configure the optional advisory provider;
+  when `jev` is selected, an explicitly supplied `TYPESAFE_API_KEY` is stored
+  in the machine-local Decapod secret file, never in project configuration.
 
 ### `capabilities`
 Discover the features supported by the current Decapod binary.
