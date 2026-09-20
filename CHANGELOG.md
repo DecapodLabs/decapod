@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.104.0](https://github.com/DecapodLabs/decapod/compare/v0.103.0...v0.104.0) - 2026-09-20
+
+### Other
+
+- record validated Jev history task completion
+- record published Jev history validation
+- record final Jev history validation
+- record passing Jev history validation
+- record Jev history governance evidence
+- refresh managed specs for Jev history
+- persist Jev observations in trajectory history
+
 ## [0.103.0](https://github.com/DecapodLabs/decapod/compare/v0.102.2...v0.103.0) - 2026-09-20
 
 ### Other
