@@ -28,14 +28,27 @@ jobs:
       - name: Build with mdBook
         run: mdbook build docs/book
 
-      - name: Upload artifact
-        if: github.ref == 'refs/heads/master'
+      # upload-pages-artifact is GitHub Pages-specific and is not implemented
+      # by the Buildkite GHA runtime. Keep it for native GitHub Actions.
+      - name: Upload artifact (GitHub Pages)
+        if: github.ref == 'refs/heads/master' && env.BUILDKITE_BUILD_ID == ''
         uses: actions/upload-pages-artifact@v3
         with:
           path: docs/book/book
 
+      # Preserve the built site as a Buildkite artifact so the build remains
+      # useful while the Pages deployment action is unavailable there.
+      - name: Upload artifact (Buildkite)
+        if: github.ref == 'refs/heads/master' && env.BUILDKITE_BUILD_ID != ''
+        run: |
+          set -euo pipefail
+          command -v buildkite-agent >/dev/null 2>&1
+          buildkite-agent artifact upload "docs/book/book/**/*"
+
   deploy:
-    if: github.ref == 'refs/heads/master'
+    # Buildkite can retain the site artifact, but it cannot currently execute
+    # the GitHub Pages deployment action or its deployment-record protocol.
+    if: github.ref == 'refs/heads/master' && env.BUILDKITE_BUILD_ID == ''
     needs: build
     runs-on: ubuntu-latest
     environment:

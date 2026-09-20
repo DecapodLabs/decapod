@@ -111,6 +111,30 @@ secret/permission setup, or workflow behavior before changing
 requests, documentation deployment, and tagged publication independently
 before disabling the GitHub Actions service.
 
+### Current migration compatibility cases
+
+The workflow files intentionally retain their native GitHub Actions paths and
+add a Buildkite branch only where the imported runtime cannot provide the
+GitHub-hosted behavior. The current branch is the executable record of the
+following compatibility decisions:
+
+| Workflow surface | Observed Buildkite symptom | Workflow-side compatibility path |
+|---|---|---|
+| CI dependency lint | `deps-lint` exited before producing useful Buildkite output while the native job passed | Install `cargo-machete`, `cargo-deny`, and `cargo-audit` with shell commands instead of adapter-sensitive installer actions. |
+| Bazel setup and shared binary | `setup` exited immediately and downstream validation could not receive the binary | Install the pinned Bazelisk launcher in each job, and use the audited `upload-artifact`/`download-artifact` v4 pair. |
+| Release plan | `plan` exited during PR and master/tag compilation; nested event-object outputs were not dependable | Use `ubuntu-latest`, simple event/ref conditions, and emit manifest/tag/publishing outputs from one shell step. |
+| Nix packaging | Linux and macOS jobs appeared on an open PR even though the workflow was `pull_request: closed` and release-merge gated | Trigger from the durable master push, then gate the matrix in shell on a release merge commit or explicit dispatch. |
+| Documentation | `actions/upload-pages-artifact` failed on a master push | Keep the GitHub Pages action for native GitHub Actions; upload the site with `buildkite-agent artifact upload` in Buildkite. Pages deployment remains a service capability gap and is explicitly skipped there. |
+| Release publication | `release-publish` lacked the GitHub App token and registry credentials in Buildkite | Keep the App-token/action path for GitHub; use the release-plz CLI with named static Buildkite `GITHUB_TOKEN` and `CARGO_REGISTRY_TOKEN` secrets. Missing secrets fail with an actionable message. |
+| GHCR image publication | tag-only Docker setup actions were scheduled on the master push and failed in Buildkite | Use a simple tag-event condition and the Docker CLI/buildx path in Buildkite; retain the Docker actions for native GitHub Actions. |
+
+These changes do not claim that Buildkite supplies GitHub's environments,
+Pages deployment records, GitHub App token exchange, or Docker action setup.
+Those are explicit adapter/service inputs. A green Buildkite check means the
+workflow reached the supported execution path; release secrets, Docker
+privileges, artifact storage, runner mappings, and Pages publication still
+need independent Buildkite configuration proof.
+
 ## Installed-Version Upgrade Path
 After `cargo install decapod`, the next normal governed command runs protected, idempotent schema migration and legacy-event reconciliation before runtime consumers read evidence. Existing-project `decapod init` executes the same reconciliation before regeneration. A prior successful single-datastore migration retires its JSONL inputs through a durable receipt; startup does not rescan them. Legacy local database sources are opened through the Dactyl v0.10.0 facade, while Decapod owns row translation, schema policy, the explicit maintenance command policy, and idempotency ledgers. Dactyl opens the canonical path directly through its host runtime and owns the physical backup/recovery contract; no bundled fallback or second local authority is used. Human-authored `OVERRIDE.md` content is validated but never mechanically rewritten. Fresh migration conflicts preserve source artifacts and stop with an actionable error.
 
@@ -274,7 +298,7 @@ for filesystem work and are not used as the artifact representation.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e59b8e55da3ce1166e41ef25383832f42ef5d2135abce957888950bc89df0e32`
+- Repository signal fingerprint: `cd5d4ab52c46b53b84b4a14b55a8a9242922101ea416f69d36c1b823e15265df`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

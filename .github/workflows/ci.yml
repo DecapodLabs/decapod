@@ -282,11 +282,20 @@ jobs:
         with:
           fetch-depth: 1
       - name: Install cargo-machete
-        uses: taiki-e/install-action@cargo-machete
+        run: |
+          set -euo pipefail
+          if ! command -v cargo-machete >/dev/null 2>&1; then
+            cargo install --locked cargo-machete
+          fi
       - name: Run cargo-machete check
         run: cargo machete
       - name: Check license and duplicate dependencies
-        run: cargo install cargo-deny && cargo deny --config .config/deny.toml check
+        run: |
+          set -euo pipefail
+          if ! command -v cargo-deny >/dev/null 2>&1; then
+            cargo install --locked cargo-deny
+          fi
+          cargo deny --config .config/deny.toml check
 
   # VALIDATE: fan-out from the shared decapod binary built by setup
   health:
@@ -299,7 +308,7 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
       - name: Download shared decapod binary
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@v4
         with:
           name: decapod-debug-linux-${{ github.sha }}
           path: target/debug
@@ -431,16 +440,25 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.13.0
-        with:
-          bazelisk-cache: true
-          disk-cache: ${{ github.workflow }}
-          repository-cache: true
+      # Buildkite's GHA runtime does not provide the setup-bazel action's
+      # cache/setup contract. Install the pinned launcher in the workflow so
+      # native GitHub Actions and Buildkite execute the same command.
+      - name: Install Bazelisk
+        run: |
+          set -euo pipefail
+          bazelisk_dir="${HOME}/.local/bin"
+          mkdir -p "$bazelisk_dir"
+          if ! command -v bazelisk >/dev/null 2>&1; then
+            curl --fail --silent --show-error --location \
+              "https://github.com/bazelbuild/bazelisk/releases/download/v1.26.0/bazelisk-linux-amd64" \
+              --output "$bazelisk_dir/bazelisk"
+            chmod +x "$bazelisk_dir/bazelisk"
+          fi
+          echo "$bazelisk_dir" >> "$GITHUB_PATH"
       - name: Compile shared decapod binary
         run: bazelisk build //:decapod
       - name: Upload shared decapod binary
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: decapod-debug-linux-${{ github.sha }}
           path: bazel-bin/decapod
@@ -462,12 +480,18 @@ jobs:
         with:
           fetch-depth: 1
           persist-credentials: false
-      - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.13.0
-        with:
-          bazelisk-cache: true
-          disk-cache: ${{ github.workflow }}
-          repository-cache: true
+      - name: Install Bazelisk
+        run: |
+          set -euo pipefail
+          bazelisk_dir="${HOME}/.local/bin"
+          mkdir -p "$bazelisk_dir"
+          if ! command -v bazelisk >/dev/null 2>&1; then
+            curl --fail --silent --show-error --location \
+              "https://github.com/bazelbuild/bazelisk/releases/download/v1.26.0/bazelisk-linux-amd64" \
+              --output "$bazelisk_dir/bazelisk"
+            chmod +x "$bazelisk_dir/bazelisk"
+          fi
+          echo "$bazelisk_dir" >> "$GITHUB_PATH"
       - name: Detect changed files
         id: changed
         run: |
@@ -534,12 +558,18 @@ jobs:
         with:
           fetch-depth: 1
           persist-credentials: false
-      - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.13.0
-        with:
-          bazelisk-cache: true
-          disk-cache: ${{ github.workflow }}
-          repository-cache: true
+      - name: Install Bazelisk
+        run: |
+          set -euo pipefail
+          bazelisk_dir="${HOME}/.local/bin"
+          mkdir -p "$bazelisk_dir"
+          if ! command -v bazelisk >/dev/null 2>&1; then
+            curl --fail --silent --show-error --location \
+              "https://github.com/bazelbuild/bazelisk/releases/download/v1.26.0/bazelisk-linux-amd64" \
+              --output "$bazelisk_dir/bazelisk"
+            chmod +x "$bazelisk_dir/bazelisk"
+          fi
+          echo "$bazelisk_dir" >> "$GITHUB_PATH"
       - name: Run all tests
         run: bazelisk test //:gatling --test_arg=--test-threads=4
 
@@ -553,12 +583,18 @@ jobs:
         with:
           fetch-depth: 1
           persist-credentials: false
-      - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.13.0
-        with:
-          bazelisk-cache: true
-          disk-cache: ${{ github.workflow }}
-          repository-cache: true
+      - name: Install Bazelisk
+        run: |
+          set -euo pipefail
+          bazelisk_dir="${HOME}/.local/bin"
+          mkdir -p "$bazelisk_dir"
+          if ! command -v bazelisk >/dev/null 2>&1; then
+            curl --fail --silent --show-error --location \
+              "https://github.com/bazelbuild/bazelisk/releases/download/v1.26.0/bazelisk-linux-amd64" \
+              --output "$bazelisk_dir/bazelisk"
+            chmod +x "$bazelisk_dir/bazelisk"
+          fi
+          echo "$bazelisk_dir" >> "$GITHUB_PATH"
       - name: Run RPC suite
         run: bazelisk test //:agent_rpc_suite --test_arg=--test-threads=1
 
@@ -572,12 +608,18 @@ jobs:
         with:
           fetch-depth: 1
           persist-credentials: false
-      - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.13.0
-        with:
-          bazelisk-cache: true
-          disk-cache: ${{ github.workflow }}
-          repository-cache: true
+      - name: Install Bazelisk
+        run: |
+          set -euo pipefail
+          bazelisk_dir="${HOME}/.local/bin"
+          mkdir -p "$bazelisk_dir"
+          if ! command -v bazelisk >/dev/null 2>&1; then
+            curl --fail --silent --show-error --location \
+              "https://github.com/bazelbuild/bazelisk/releases/download/v1.26.0/bazelisk-linux-amd64" \
+              --output "$bazelisk_dir/bazelisk"
+            chmod +x "$bazelisk_dir/bazelisk"
+          fi
+          echo "$bazelisk_dir" >> "$GITHUB_PATH"
       - name: Run chaos replay determinism test
         run: bazelisk test //:chaos_replay --test_arg=--test-threads=1
 
@@ -591,12 +633,18 @@ jobs:
         with:
           fetch-depth: 1
           persist-credentials: false
-      - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.13.0
-        with:
-          bazelisk-cache: true
-          disk-cache: ${{ github.workflow }}
-          repository-cache: true
+      - name: Install Bazelisk
+        run: |
+          set -euo pipefail
+          bazelisk_dir="${HOME}/.local/bin"
+          mkdir -p "$bazelisk_dir"
+          if ! command -v bazelisk >/dev/null 2>&1; then
+            curl --fail --silent --show-error --location \
+              "https://github.com/bazelbuild/bazelisk/releases/download/v1.26.0/bazelisk-linux-amd64" \
+              --output "$bazelisk_dir/bazelisk"
+            chmod +x "$bazelisk_dir/bazelisk"
+          fi
+          echo "$bazelisk_dir" >> "$GITHUB_PATH"
       - name: Run daemonless lifecycle test
         run: bazelisk test //:daemonless_lifecycle --test_arg=--test-threads=1
 
@@ -610,12 +658,18 @@ jobs:
         with:
           fetch-depth: 1
           persist-credentials: false
-      - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.13.0
-        with:
-          bazelisk-cache: true
-          disk-cache: ${{ github.workflow }}
-          repository-cache: true
+      - name: Install Bazelisk
+        run: |
+          set -euo pipefail
+          bazelisk_dir="${HOME}/.local/bin"
+          mkdir -p "$bazelisk_dir"
+          if ! command -v bazelisk >/dev/null 2>&1; then
+            curl --fail --silent --show-error --location \
+              "https://github.com/bazelbuild/bazelisk/releases/download/v1.26.0/bazelisk-linux-amd64" \
+              --output "$bazelisk_dir/bazelisk"
+            chmod +x "$bazelisk_dir/bazelisk"
+          fi
+          echo "$bazelisk_dir" >> "$GITHUB_PATH"
       - name: Run contract conformance tests
         run: |
           bazelisk test //:contract_conformance --test_arg=--test-threads=1
@@ -634,12 +688,18 @@ jobs:
         with:
           fetch-depth: 1
           persist-credentials: false
-      - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.13.0
-        with:
-          bazelisk-cache: true
-          disk-cache: ${{ github.workflow }}
-          repository-cache: true
+      - name: Install Bazelisk
+        run: |
+          set -euo pipefail
+          bazelisk_dir="${HOME}/.local/bin"
+          mkdir -p "$bazelisk_dir"
+          if ! command -v bazelisk >/dev/null 2>&1; then
+            curl --fail --silent --show-error --location \
+              "https://github.com/bazelbuild/bazelisk/releases/download/v1.26.0/bazelisk-linux-amd64" \
+              --output "$bazelisk_dir/bazelisk"
+            chmod +x "$bazelisk_dir/bazelisk"
+          fi
+          echo "$bazelisk_dir" >> "$GITHUB_PATH"
       - name: Run migration tests
         run: bazelisk test //:core_tests --test_arg=migration_ --test_arg=--ignored --test_arg=--test-threads=1
 
@@ -654,16 +714,22 @@ jobs:
         with:
           fetch-depth: 1
           persist-credentials: false
-      - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.13.0
-        with:
-          bazelisk-cache: true
-          disk-cache: ${{ github.workflow }}-release
-          repository-cache: true
+      - name: Install Bazelisk
+        run: |
+          set -euo pipefail
+          bazelisk_dir="${HOME}/.local/bin"
+          mkdir -p "$bazelisk_dir"
+          if ! command -v bazelisk >/dev/null 2>&1; then
+            curl --fail --silent --show-error --location \
+              "https://github.com/bazelbuild/bazelisk/releases/download/v1.26.0/bazelisk-linux-amd64" \
+              --output "$bazelisk_dir/bazelisk"
+            chmod +x "$bazelisk_dir/bazelisk"
+          fi
+          echo "$bazelisk_dir" >> "$GITHUB_PATH"
       - name: Build release
         run: bazelisk build -c opt //:decapod
       - name: Upload binary
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: decapod-${{ github.sha }}
           path: bazel-bin/decapod

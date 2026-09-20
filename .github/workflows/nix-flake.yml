@@ -1,9 +1,12 @@
 name: Nix Flake
 
 on:
-  pull_request:
-    types: [closed]
+  # Buildkite GHA currently schedules this workflow for open pull requests
+  # despite the closed-only filter. A master push is the durable merge event;
+  # the shell gate below retains the release-merge-only behavior.
+  push:
     branches: [ master ]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -18,12 +21,7 @@ jobs:
   # repository-pinned Rust channel. Fail closed; CI never mutates flake.lock.
   build:
     name: nix (${{ matrix.os }})
-    if: >
-      github.event.pull_request.merged == true &&
-      (
-        contains(github.event.pull_request.labels.*.name, 'release') ||
-        startsWith(github.event.pull_request.head.ref, 'release-plz-')
-      )
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -39,10 +37,37 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Gate to release merge
+        id: release-gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_EVENT_NAME:-}" = "workflow_dispatch" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          parents=( $(git rev-list --parents -n 1 "$GITHUB_SHA") )
+          if [ "${#parents[@]}" -lt 3 ]; then
+            echo "Not a merge commit; skipping Nix packaging proof."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          second_parent="${parents[2]}"
+          subject="$(git log -1 --format=%s "$second_parent")"
+          if [[ "$subject" == chore:\ release\ v* ]]; then
+            echo "Release merge detected: $subject"
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Not a release-plz merge commit: $subject"
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Install Nix
+        if: steps.release-gate.outputs.run == 'true'
         uses: cachix/install-nix-action@v31
 
       - name: Print native system and Nix version
+        if: steps.release-gate.outputs.run == 'true'
         run: |
           set -euo pipefail
           nix --version
@@ -54,6 +79,7 @@ jobs:
           fi
 
       - name: Verify repository Rust toolchain via locked rust-overlay
+        if: steps.release-gate.outputs.run == 'true'
         run: |
           set -euo pipefail
           set +e
@@ -76,7 +102,9 @@ jobs:
           cat ./result
 
       - name: Build packages.default
+        if: steps.release-gate.outputs.run == 'true'
         run: nix build --print-build-logs
 
       - name: Smoke-check the built binary
+        if: steps.release-gate.outputs.run == 'true'
         run: ./result/bin/decapod system version
