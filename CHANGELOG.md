@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.104.1](https://github.com/DecapodLabs/decapod/compare/v0.104.0...v0.104.1) - 2026-09-20
+
+### Fixed
+
+- preserve current master files in conflict resolution
+- *(buildkite)* make post-release gates native and bounded
+
+### Other
+
+- *(governance)* refresh current validation bundle
+- Merge master and refresh Buildkite migration cleanup
+- *(governance)* record latest Buildkite migration result
+- Merge master and remove obsolete Buildkite pipeline files
+- *(buildkite)* generalize escalation guidance
+- *(buildkite)* document adapter-first migration path
+
 ## [0.104.0](https://github.com/DecapodLabs/decapod/compare/v0.103.0...v0.104.0) - 2026-09-20
 
 ### Other
