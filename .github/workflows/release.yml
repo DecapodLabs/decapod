@@ -139,15 +139,27 @@ jobs:
       - id: plan
         run: |
           set -euo pipefail
-          # Buildkite selects the event while compiling the workflow, but its
-          # runtime does not guarantee the GitHub event env mirror. Inject the
-          # compiler-resolved event into the shell so PR plans never fall into
-          # the tag-hosting branch just because GITHUB_EVENT_NAME is unset.
-          event_name="${{ github.event_name }}"
-          ref_name="${{ github.ref_name }}"
+          # Use the runner-native event context at runtime. GitHub Actions
+          # supplies GITHUB_EVENT_NAME/GITHUB_REF_NAME; Buildkite supplies
+          # BUILDKITE_GITHUB_EVENT/BUILDKITE_TAG/BUILDKITE_BRANCH. Keeping the
+          # branch selection in shell avoids depending on event expressions
+          # being re-interpolated inside an imported run block.
+          event_name="${BUILDKITE_GITHUB_EVENT:-${GITHUB_EVENT_NAME:-}}"
+          if [ -z "$event_name" ] && [ -n "${BUILDKITE_PULL_REQUEST:-}" ] && [ "${BUILDKITE_PULL_REQUEST}" != "false" ]; then
+            event_name="pull_request"
+          fi
+          : "${event_name:?Unable to determine the GitHub event for cargo-dist planning}"
+
+          if [ -n "${BUILDKITE_TAG:-}" ]; then
+            ref_name="$BUILDKITE_TAG"
+          else
+            ref_name="${GITHUB_REF_NAME:-${BUILDKITE_BRANCH:-}}"
+          fi
+
           if [ "$event_name" = "pull_request" ]; then
             cargo dist plan --output-format=json > plan-dist-manifest.json
           else
+            : "${ref_name:?Unable to determine the ref for cargo-dist hosting}"
             cargo dist host --steps=create --tag="$ref_name" --output-format=json > plan-dist-manifest.json
           fi
           echo "cargo dist ran successfully"

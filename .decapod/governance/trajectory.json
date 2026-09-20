@@ -1,97 +1,86 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "buildkite-gha-compat-20260920-test-throughput",
-  "intent_id": "intent:buildkite-gha-compat-20260920-test-throughput",
-  "task_id": "bugs_01m2ygbqqwzq8p3q",
-  "original_intent": "Fix Buildkite test failures and reduce PR CI latency on PR #1350",
-  "derived_intent": "Preserve selective test coverage while removing unnecessary setup serialization and sharing Bazel analysis per target group",
-  "destination": "PR #1350",
-  "current_phase": "validation",
+  "run_id": "buildkite-release-pr-1353-20260920",
+  "intent_id": "intent:buildkite-release-pr-1353-20260920",
+  "task_id": "bugs_01m2yvaze1csf51f",
+  "original_intent": "Fix the Buildkite failure in release PR #1353 and push the fix directly to its PR branch.",
+  "derived_intent": "Preserve .github/workflows/release.yml as the workflow source of truth while making release planning resolve event and ref context correctly in both GitHub Actions and Buildkite.",
+  "destination": "PR #1353",
+  "current_phase": "diagnosis",
   "next_transitions": [
-    "publish",
     "validation"
   ],
   "active_boundaries": [
-    "CI test workflow throughput and governed validation artifacts"
+    "Only the release planning compatibility path and required governed proof artifacts; do not add a second native Buildkite workflow."
   ],
   "repo_scope": [
-    ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json",
-    ".decapod/managed/specs/OPERATIONS.md",
-    ".github/workflows/ci.yml"
+    ".github/workflows/release.yml and related governed documentation/proof artifacts"
   ],
   "inspected_files": [
     ".decapod/managed/specs/OPERATIONS.md",
-    ".github/workflows/ci.yml"
+    ".github/release.toml",
+    ".github/workflows/release.yml",
+    "Cargo.toml"
   ],
   "modified_files": [
-    ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json",
     ".decapod/managed/specs/OPERATIONS.md",
-    ".github/workflows/ci.yml"
+    ".github/workflows/release.yml"
   ],
   "declared_commands": [
-    "Buildkite hosted workflow validation",
-    "decapod validate",
-    "decapod validate --format json",
-    "ruby YAML parse for .github/workflows/ci.yml"
+    "cargo dist plan --output-format=json",
+    "gh pr checks 1353",
+    "gh pr view 1353 --json headRefOid,headRefName,statusCheckRollup"
   ],
-  "tool_calls": [],
+  "tool_calls": [
+    "Buildkite check metadata and official Buildkite migration compatibility documentation"
+  ],
   "checks": [
     {
-      "name": "buildkite_workflow_compile",
-      "status": "partial"
+      "name": "buildkite-release-plan",
+      "status": "failed"
     },
     {
-      "name": "decapod validate",
+      "name": "native-github-plan",
       "status": "passed"
     },
     {
-      "name": "decapod_validate",
+      "name": "release-plan-shell",
       "status": "passed"
     },
     {
-      "name": "diff_check",
-      "status": "passed"
-    },
-    {
-      "name": "workflow_yaml",
+      "name": "workflow-yaml",
       "status": "passed"
     }
   ],
   "evidence": [
-    "Buildkite build 117 passed setup and all four selective test matrix checks after the full-history checkout fix.",
-    "Local validation returned status=ok and fail_count=0.",
-    "The throughput change removes setup as a prerequisite for independent test gates, batches target labels per matrix group, and declares max-parallel: 4.",
-    "validation epoch ve_9f88b86feab74b12 completed with zero failures"
+    "Buildkite Release / plan failed in build 143 in 2s while native GitHub Actions plan passed in 16s; local pinned cargo-dist PR plan succeeds without a token when event context is supplied by runner-native variables."
   ],
   "shortcut_risk_signals": [],
-  "unresolved_assumptions": [],
-  "proof_status": "partial",
+  "unresolved_assumptions": [
+    "The failure is caused by imported shell event/ref interpolation rather than cargo-dist plan semantics; the pushed PR build will be the authoritative hosted proof."
+  ],
+  "proof_status": "failed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "caution"
+    "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:18a1cc6f76ec2b8d7929245356c891447f595bd23dfcec7ecf32a4cc7dd7a758",
+  "artifact_hash": "sha256:cae3d7f7ab223908bec2414c1d10fff5c3b54a47a8c56aeb02499a58d93e5d30",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:buildkite-gha-compat-20260920-test-throughput": {
-        "id": "intent:buildkite-gha-compat-20260920-test-throughput",
-        "raw_intent": "Fix Buildkite test failures and reduce PR CI latency on PR #1350",
-        "refined_intent": "Preserve selective test coverage while removing unnecessary setup serialization and sharing Bazel analysis per target group",
+      "intent:buildkite-release-pr-1353-20260920": {
+        "id": "intent:buildkite-release-pr-1353-20260920",
+        "raw_intent": "Fix the Buildkite failure in release PR #1353 and push the fix directly to its PR branch.",
+        "refined_intent": "Preserve .github/workflows/release.yml as the workflow source of truth while making release planning resolve event and ref context correctly in both GitHub Actions and Buildkite.",
         "acceptance_criteria": [],
         "constraints": [
-          ".github/workflows/ci.yml",
-          ".decapod/managed/specs/OPERATIONS.md",
-          ".decapod/governance/trajectory.json",
-          ".decapod/governance/validation.json"
+          ".github/workflows/release.yml and related governed documentation/proof artifacts"
         ],
         "assumptions": [],
         "boundaries": [
-          "CI test workflow throughput and governed validation artifacts"
+          "Only the release planning compatibility path and required governed proof artifacts; do not add a second native Buildkite workflow."
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -104,92 +93,62 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:buildkite-gha-compat-20260920-test-throughput",
+        "intent_id": "intent:buildkite-release-pr-1353-20260920",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:buildkite-gha-compat-20260920-test-throughput",
+        "intent_id": "intent:buildkite-release-pr-1353-20260920",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:buildkite-gha-compat-20260920-test-throughput",
+        "intent_id": "intent:buildkite-release-pr-1353-20260920",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:buildkite-gha-compat-20260920-test-throughput"
-      },
-      {
-        "sequence": 5,
-        "event_id": "event:5",
-        "intent_id": "intent:buildkite-gha-compat-20260920-test-throughput",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:buildkite-gha-compat-20260920-test-throughput"
+        "detail": "trajectory:buildkite-release-pr-1353-20260920"
       }
     ],
     "trajectories": {
-      "buildkite-gha-compat-20260920-test-throughput": {
-        "id": "buildkite-gha-compat-20260920-test-throughput",
-        "intent_id": "intent:buildkite-gha-compat-20260920-test-throughput",
+      "buildkite-release-pr-1353-20260920": {
+        "id": "buildkite-release-pr-1353-20260920",
+        "intent_id": "intent:buildkite-release-pr-1353-20260920",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "validation",
-            "command": "decapod validate",
+            "action": "diagnosis",
+            "tool": "Buildkite check metadata and official Buildkite migration compatibility documentation",
+            "command": "gh pr view 1353 --json headRefOid,headRefName,statusCheckRollup",
             "scope": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              ".decapod/managed/specs/OPERATIONS.md",
-              ".github/workflows/ci.yml"
+              ".github/workflows/release.yml and related governed documentation/proof artifacts"
             ],
             "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_9f88b86feab74b12 completed with zero failures"
+              ".github/workflows/release.yml",
+              "Cargo.toml",
+              ".github/release.toml",
+              ".decapod/managed/specs/OPERATIONS.md",
+              ".github/workflows/release.yml",
+              ".decapod/managed/specs/OPERATIONS.md",
+              "Buildkite Release / plan failed in build 143 in 2s while native GitHub Actions plan passed in 16s; local pinned cargo-dist PR plan succeeds without a token when event context is supplied by runner-native variables."
             ],
             "proof_refs": [
-              "decapod validate"
+              "buildkite-release-plan",
+              "native-github-plan",
+              "workflow-yaml",
+              "release-plan-shell"
             ],
-            "validation_findings": [],
+            "validation_findings": [
+              "The failure is caused by imported shell event/ref interpolation rather than cargo-dist plan semantics; the pushed PR build will be the authoritative hosted proof."
+            ],
             "custody_event_id": "event:4"
-          },
-          {
-            "sequence": 5,
-            "action": "validation",
-            "command": "ruby YAML parse for .github/workflows/ci.yml",
-            "scope": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              ".decapod/managed/specs/OPERATIONS.md",
-              ".github/workflows/ci.yml"
-            ],
-            "observations": [
-              ".github/workflows/ci.yml",
-              ".decapod/managed/specs/OPERATIONS.md",
-              ".github/workflows/ci.yml",
-              ".decapod/managed/specs/OPERATIONS.md",
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "Buildkite build 117 passed setup and all four selective test matrix checks after the full-history checkout fix.",
-              "The throughput change removes setup as a prerequisite for independent test gates, batches target labels per matrix group, and declares max-parallel: 4.",
-              "Local validation returned status=ok and fail_count=0."
-            ],
-            "proof_refs": [
-              "workflow_yaml",
-              "diff_check",
-              "decapod_validate",
-              "buildkite_workflow_compile"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:5"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 5
+    "next_sequence": 4
   }
 }
