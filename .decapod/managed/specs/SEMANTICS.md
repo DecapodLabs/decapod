@@ -73,6 +73,20 @@ Neither backend decides whether a Decapod transition is valid.
 - In-workspace jobs: subagent work is recorded as loops on the current
   trajectory; no project-level multi-run selector is introduced.
 
+### Jev Observation Ledger
+- Cardinality: zero or one current `.decapod/governance/jev.json` ledger per
+  active trajectory run, with many keyed `runs` entries for repeated assurance
+  calls in that PR.
+- Binding: `trajectory_run_id` must equal the current trajectory cookie, and
+  each stored observed result must remain the typed
+  `trajectory_satisfies_intent` Jev observation.
+- Reset: initializing a different trajectory run removes the prior working-tree
+  ledger before new Jev results are appended. Committed prior files remain
+  recoverable through Git history.
+- Failure: malformed history or an atomic persistence failure produces an
+  explicit `no_observation`; it never becomes approval, completion, proof, or a
+  policy override.
+
 ### Local datastore coordination
 - All canonical local connections acquire an exclusive sidecar lock for their
   lifetime. Dactyl's read-only/read-write policy remains unchanged; Decapod's
@@ -136,7 +150,7 @@ Neither backend decides whether a Decapod transition is valid.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `82c28602b3b21baa4c98f318dc1d312c40197a69866593069f4eabfb6de5f458`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (108 files), `tests/` (4 files)
+- Repository signal fingerprint: `e59b8e55da3ce1166e41ef25383832f42ef5d2135abce957888950bc89df0e32`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

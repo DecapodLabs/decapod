@@ -4,15 +4,15 @@
   "intent": "Treat .github/workflows/*.yml as the sole repository workflow contract and rely on Buildkite's implemented GitHub Actions migration for execution; remove the obsolete .buildkite directory and preserve all workflow gates and semantics.",
   "state": "APPROVED",
   "todo_ids": [
-    "cicd_01m2xrx9fg5mgdx8"
+    "code_01m2y81nnzgyw1p8"
   ],
   "proof_hooks": [
-    "cargo fmt --all -- --check",
     "cargo test --locked --lib",
+    "cargo test --locked --test decision_provider_live --no-run",
+    "cargo test --locked --test trajectory_cli",
     "cargo clippy --locked --all-targets --all-features -- -D warnings",
     "decapod validate --format json",
-    "focused decision-provider tests",
-    "README and documentation consistency checks"
+    "Jev history schema and reset tests"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -30,5 +30,5 @@
     "file_touch_budget": 30
   },
   "phases": [],
-  "updated_at": "1789873884Z"
+  "updated_at": "1789875313Z"
 }

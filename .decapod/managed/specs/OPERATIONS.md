@@ -24,6 +24,12 @@ is absent, unavailable, times out, or returns malformed data, the assurance
 result records `no_observation` and Decapod continues to enforce its ordinary
 interlocks and proof gates. There is no background provider process.
 
+Successful and unsuccessful Jev attempts are retained in the current run's
+`.decapod/governance/jev.json` file. The file is validated as a strict,
+trajectory-bound artifact before publication. It is created only when Jev is
+actually attempted, reset by a new trajectory initialization, and never stores
+the `TYPESAFE_API_KEY`.
+
 ### Native SQLite prerequisite for local Dactyl
 
 Stateful commands in a project configured with `repo.backend = "local"` require a host SQLite shared library for Dactyl's local adapter. The startup preflight first honors `DACTYL_SQLITE_LIBRARY`, then the machine-local `~/.config/decapod/runtime.toml` value. If neither is set, it probes the host and persists a discovered library path in that user-level file so later Decapod projects do not repeat the search. If no runtime is available, the command stops with `LOCAL_SQLITE_RUNTIME_REQUIRED` and gives platform installation commands plus a one-shell `export DACTYL_SQLITE_LIBRARY=...` fallback. Cloud-backed startup does not require or inspect SQLite.
@@ -268,7 +274,7 @@ for filesystem work and are not used as the artifact representation.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `82c28602b3b21baa4c98f318dc1d312c40197a69866593069f4eabfb6de5f458`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (108 files), `tests/` (4 files)
+- Repository signal fingerprint: `e59b8e55da3ce1166e41ef25383832f42ef5d2135abce957888950bc89df0e32`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -1,20 +1,17 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "buildkite-gha-migration-20260919",
-  "intent_id": "intent:buildkite-gha-migration-20260919",
+  "run_id": "buildkite-gha-migration-20260920",
+  "intent_id": "intent:buildkite-gha-migration-20260920",
   "task_id": "bugs_01m2xry8q2fkjevz",
-  "original_intent": "Resolve PR #1344 merge conflicts and remove obsolete repository-native Buildkite files now that Buildkite's GitHub Actions migration is implemented.",
-  "derived_intent": "Keep all .github/workflows/*.yml unchanged as the sole workflow contract, remove .buildkite, preserve current master changes, and document the service-owned Buildkite migration boundary.",
+  "original_intent": "Resolve PR #1344 conflicts against current master and remove obsolete repository-native Buildkite files now that Buildkite's GitHub Actions migration is implemented.",
+  "derived_intent": "Keep all .github/workflows/*.yml unchanged as the sole workflow contract, remove .buildkite, preserve current v0.104.0 master, and document the service-owned Buildkite boundary.",
   "active_boundaries": [
     "Do not modify or delete .github/workflows/*.yml; do not add a second pipeline source; resolve conflicts against current master; remove only obsolete .buildkite files."
   ],
   "repo_scope": [
-    "PR #1344 merge resolution, .buildkite removal, governed specs, plan, trajectory, and issue/PR narrative"
+    "PR #1344 v0.104.0 merge resolution, .buildkite removal, governed specs, plan, trajectory, and issue/PR narrative"
   ],
   "inspected_files": [
-    ".buildkite/README.md",
-    ".buildkite/pipeline.yml",
-    ".decapod/governance/validation.json",
     ".decapod/managed/specs/OPERATIONS.md",
     ".github/workflows/ci.yml",
     ".github/workflows/docs.yml",
@@ -24,14 +21,6 @@
   "declared_commands": [],
   "tool_calls": [],
   "checks": [
-    {
-      "name": "buildkite_ci_90",
-      "status": "failed"
-    },
-    {
-      "name": "buildkite_dec_apod_88",
-      "status": "passed"
-    },
     {
       "name": "buildkite_directory_removal",
       "status": "passed"
@@ -45,38 +34,33 @@
       "status": "passed"
     },
     {
-      "name": "validate_constitution",
-      "status": "passed"
-    },
-    {
       "name": "workflow_files_preserved",
       "status": "passed"
     }
   ],
   "evidence": [
-    "Latest PR #1344 checks: buildkite/decapod passed in Buildkite #88; validate-constitution passed; external buildkite/ci Build #90 failed after 1 second. Public Buildkite logs require authentication, so the adapter/configuration failure remains externally unlocalized.",
-    "Merged current master v0.103.0 into PR #1344; generated governance and projections were resolved to current master, the two obsolete .buildkite files were deleted, and .github/workflows files were not authored by this change."
+    "Merged current v0.104.0 master into PR #1344, retained all current master source/workflow files, deleted the two obsolete .buildkite files, and refreshed the governed specs."
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
-  "proof_status": "failed",
+  "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "unsupported"
+    "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:2045ec22c588e8652b554dc34902033a78a69a86308c057bf2fd7505f64a3976",
+  "artifact_hash": "sha256:b01fc964a9fc50189acdb87a6d763cf0db00213b9cfb88a92f8213a766f07398",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:buildkite-gha-migration-20260919": {
-        "id": "intent:buildkite-gha-migration-20260919",
-        "raw_intent": "Resolve PR #1344 merge conflicts and remove obsolete repository-native Buildkite files now that Buildkite's GitHub Actions migration is implemented.",
-        "refined_intent": "Keep all .github/workflows/*.yml unchanged as the sole workflow contract, remove .buildkite, preserve current master changes, and document the service-owned Buildkite migration boundary.",
+      "intent:buildkite-gha-migration-20260920": {
+        "id": "intent:buildkite-gha-migration-20260920",
+        "raw_intent": "Resolve PR #1344 conflicts against current master and remove obsolete repository-native Buildkite files now that Buildkite's GitHub Actions migration is implemented.",
+        "refined_intent": "Keep all .github/workflows/*.yml unchanged as the sole workflow contract, remove .buildkite, preserve current v0.104.0 master, and document the service-owned Buildkite boundary.",
         "acceptance_criteria": [],
         "constraints": [
-          "PR #1344 merge resolution, .buildkite removal, governed specs, plan, trajectory, and issue/PR narrative"
+          "PR #1344 v0.104.0 merge resolution, .buildkite removal, governed specs, plan, trajectory, and issue/PR narrative"
         ],
         "assumptions": [],
         "boundaries": [
@@ -93,50 +77,41 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:buildkite-gha-migration-20260919",
+        "intent_id": "intent:buildkite-gha-migration-20260920",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:buildkite-gha-migration-20260919",
+        "intent_id": "intent:buildkite-gha-migration-20260920",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:buildkite-gha-migration-20260919",
+        "intent_id": "intent:buildkite-gha-migration-20260920",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:buildkite-gha-migration-20260919"
-      },
-      {
-        "sequence": 5,
-        "event_id": "event:5",
-        "intent_id": "intent:buildkite-gha-migration-20260919",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:buildkite-gha-migration-20260919"
+        "detail": "trajectory:buildkite-gha-migration-20260920"
       }
     ],
     "trajectories": {
-      "buildkite-gha-migration-20260919": {
-        "id": "buildkite-gha-migration-20260919",
-        "intent_id": "intent:buildkite-gha-migration-20260919",
+      "buildkite-gha-migration-20260920": {
+        "id": "buildkite-gha-migration-20260920",
+        "intent_id": "intent:buildkite-gha-migration-20260920",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
             "action": "trajectory.record",
             "scope": [
-              "PR #1344 merge resolution, .buildkite removal, governed specs, plan, trajectory, and issue/PR narrative"
+              "PR #1344 v0.104.0 merge resolution, .buildkite removal, governed specs, plan, trajectory, and issue/PR narrative"
             ],
             "observations": [
               ".github/workflows/ci.yml",
               ".github/workflows/release.yml",
               ".github/workflows/docs.yml",
-              ".buildkite/README.md",
-              ".buildkite/pipeline.yml",
               ".decapod/managed/specs/OPERATIONS.md",
-              "Merged current master v0.103.0 into PR #1344; generated governance and projections were resolved to current master, the two obsolete .buildkite files were deleted, and .github/workflows files were not authored by this change."
+              "Merged current v0.104.0 master into PR #1344, retained all current master source/workflow files, deleted the two obsolete .buildkite files, and refreshed the governed specs."
             ],
             "proof_refs": [
               "merge_conflicts",
@@ -146,30 +121,12 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
-          },
-          {
-            "sequence": 5,
-            "action": "trajectory.record",
-            "scope": [
-              "PR #1344 merge resolution, .buildkite removal, governed specs, plan, trajectory, and issue/PR narrative"
-            ],
-            "observations": [
-              ".decapod/governance/validation.json",
-              "Latest PR #1344 checks: buildkite/decapod passed in Buildkite #88; validate-constitution passed; external buildkite/ci Build #90 failed after 1 second. Public Buildkite logs require authentication, so the adapter/configuration failure remains externally unlocalized."
-            ],
-            "proof_refs": [
-              "buildkite_ci_90",
-              "buildkite_dec_apod_88",
-              "validate_constitution"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:5"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 5
+    "next_sequence": 4
   }
 }
