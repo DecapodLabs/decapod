@@ -1,28 +1,22 @@
 {
   "schema_version": "1.0.0",
-  "title": "Use Buildkite GitHub Actions migration without repository-native pipeline files",
-  "intent": "Treat .github/workflows/*.yml as the sole repository workflow contract and rely on Buildkite's implemented GitHub Actions migration for execution; remove the obsolete .buildkite directory and preserve all workflow gates and semantics.",
+  "title": "Initialize Jev provider configuration safely",
+  "intent": "Preserve the optional Jev provider across Decapod initialization and refreshes, resolve its API key from a machine-local secret store without repository leakage, and retain Decapod as the sole governance authority.",
   "state": "APPROVED",
   "todo_ids": [
-    "code_01m2y81nnzgyw1p8"
+    "cicd_01m2ygzwcmamy8xq"
   ],
   "proof_hooks": [
     "cargo test --locked --lib",
-    "cargo test --locked --test decision_provider_live --no-run",
-    "cargo test --locked --test trajectory_cli",
+    "cargo test --locked --test init_decision_provider",
     "cargo clippy --locked --all-targets --all-features -- -D warnings",
-    "decapod validate --format json",
-    "Jev history schema and reset tests"
+    "decapod validate --format json"
   ],
   "unknowns": [],
   "human_questions": [],
-  "stop_conditions": [
-    "Do not add a second native Buildkite workflow source or delete any .github/workflows/*.yml gate while verifying Buildkite's migration parity."
-  ],
+  "stop_conditions": [],
   "unresolved_contradictions": [],
-  "deferred_questions": [
-    "After Buildkite migration parity is verified for pull requests, master, releases, docs, and tags, decide when to disable the GitHub Actions service."
-  ],
+  "deferred_questions": [],
   "constraints": {
     "forbidden_paths": [
       ".decapod/data/decapod.db"
@@ -30,5 +24,5 @@
     "file_touch_budget": 30
   },
   "phases": [],
-  "updated_at": "1789875313Z"
+  "updated_at": "1789878371Z"
 }

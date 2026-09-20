@@ -26,6 +26,7 @@ Authentication and identity verification tokens.
 - **Dual-Token Architecture:**
   - **Local Agent Sessions:** Ephemeral, short-lived tokens generated on-the-fly via `session acquire`. Stored machine-locally under `~/.config/decapod/sessions/<project-hash>/<agent-id>.json` when available, with secure workspace-local fallback under `.decapod/managed/sessions/<agent-id>.json` when machine-local storage is unusable. Gates local coordination, TODO subsystem access, and database locking in the workspace (verified using the process-local or environment-provided `DECAPOD_SESSION_PASSWORD`).
   - **Cloud Session Token:** Long-lived global OAuth identity token stored as JSON (`{"token": "..."}`) under `~/.local/share/decapod/session_token.json`. Used to authenticate the user's client with the Propodus cloud backend when cloud storage modes are enabled.
+  - **Optional Jev Credential:** TypeSafe API credentials are stored separately as `typesafe_api_key` in machine-local `~/.local/share/decapod/secrets.json` when `decapod init --decision-provider jev` is given an environment key. This file is never repository state and is not the Propodus session-token file.
 - **Lifecycle:** Local sessions are acquired via `session acquire` and released via `session release`.
 - **Restriction:** Most repository mutation commands (e.g., `todo add`, `workspace ensure`) require an active local session.
 

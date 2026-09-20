@@ -1524,6 +1524,7 @@ fn init_with_from_config(
         } else {
             crate::cli::BackendType::Local
         },
+        decision_provider: Some(config.decision.provider),
         git: false,
         no_git: false,
     }
@@ -1620,7 +1621,11 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
         context: DeclaredContextConfig {
             declared_sources: declared_context_sources,
         },
-        decision: DecisionConfig::default(),
+        decision: DecisionConfig {
+            provider: init
+                .decision_provider
+                .unwrap_or(crate::core::decision_provider::DecisionProviderKind::None),
+        },
     }
 }
 
@@ -2226,6 +2231,9 @@ pub fn run() -> Result<(), error::DecapodError> {
                         if !init_group.proof_commands.is_empty() {
                             with.proof_commands = init_group.proof_commands.clone();
                         }
+                        if init_group.decision_provider.is_some() {
+                            with.decision_provider = init_group.decision_provider;
+                        }
                         with
                     } else {
                         let diagram_style = if io::stdin().is_terminal() && !init_group.proof {
@@ -2265,6 +2273,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             declared_context_sources: init_group.declared_context_sources.clone(),
                             proof_commands: init_group.proof_commands.clone(),
                             backend: init_group.backend,
+                            decision_provider: init_group.decision_provider,
                             git: init_group.git,
                             no_git: init_group.no_git,
                         }
@@ -2289,6 +2298,10 @@ pub fn run() -> Result<(), error::DecapodError> {
             let mut init_with = init_with;
             init_with.dir = Some(init_target.clone());
             init_with.project_dir = None;
+            if init_with.decision_provider.is_none() {
+                init_with.decision_provider = load_project_config_if_present(&init_target)?
+                    .map(|config| config.decision.provider);
+            }
             let mut repo_ctx = infer_repo_context(&init_target)?;
             if configured_base_branch.is_some() {
                 repo_ctx.base_branch = configured_base_branch;
@@ -2347,6 +2360,12 @@ pub fn run() -> Result<(), error::DecapodError> {
             let target_dir = run_init_apply(&init_with, &current_dir, &repo_ctx)?;
             let config = config_from_init_with(&init_with, repo_ctx);
             write_project_config(&target_dir, &config, init_with.dry_run)?;
+            if !init_with.dry_run
+                && config.decision.provider
+                    == crate::core::decision_provider::DecisionProviderKind::Jev
+            {
+                auth::persist_typesafe_api_key_from_environment()?;
+            }
             // The scaffold writes project specs before the final config is
             // persisted. Refresh the manifest after that write so its
             // config/spec input hashes describe the actual initialized

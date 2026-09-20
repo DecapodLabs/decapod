@@ -52,9 +52,12 @@ The default is local and provider-free:
 provider = "none"
 ```
 
-Selecting `provider = "jev"` requires `TYPESAFE_API_KEY` in the machine
-environment. Missing credentials, network failure, timeout, or malformed data
-produces an explicit `no_observation` result and cannot authorize work. See
+Selecting `provider = "jev"` uses `TYPESAFE_API_KEY` from the machine
+environment, falling back to the machine-local
+`~/.local/share/decapod/secrets.json` file. `decapod init
+--decision-provider jev` stores an explicitly supplied environment key there;
+missing credentials, network failure, timeout, or malformed data produces an
+explicit `no_observation` result and cannot authorize work. See
 [Configuration](reference/config-toml.md) and the [TypeSafe API reference](https://docs.typesafe.ai/api).
 
 Each Jev attempt is also appended to the active trajectory's

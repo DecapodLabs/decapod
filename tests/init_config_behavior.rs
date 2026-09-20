@@ -145,6 +145,66 @@ fn init_with_backend_local_is_default() {
 }
 
 #[test]
+fn init_jev_persists_machine_key_without_repository_leakage() {
+    let project = tempdir().expect("project tempdir");
+    let data_home = tempdir().expect("data tempdir");
+    let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["init", "with", "--force", "--decision-provider", "jev"])
+        .current_dir(project.path())
+        .env("XDG_DATA_HOME", data_home.path())
+        .env("TYPESAFE_API_KEY", "jev-test-key")
+        .output()
+        .expect("run decapod");
+    assert!(
+        output.status.success(),
+        "jev init failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let config = fs::read_to_string(project.path().join(".decapod/config.toml"))
+        .expect("read project config");
+    assert!(config.contains("[decision]\nprovider = \"jev\""));
+    assert!(!config.contains("jev-test-key"));
+
+    let secret_path = data_home.path().join("decapod/secrets.json");
+    let secret = fs::read_to_string(&secret_path).expect("read machine secret file");
+    let secret: serde_json::Value = serde_json::from_str(&secret).expect("parse secret file");
+    assert_eq!(secret["typesafe_api_key"], "jev-test-key");
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        assert_eq!(
+            fs::metadata(secret_path).unwrap().permissions().mode() & 0o777,
+            0o600
+        );
+    }
+}
+
+#[test]
+fn init_refresh_preserves_decision_provider_without_explicit_override() {
+    let project = tempdir().expect("project tempdir");
+    let first = run_decapod(
+        project.path(),
+        &["init", "with", "--force", "--decision-provider", "jev"],
+    );
+    assert!(
+        first.status.success(),
+        "initial jev init failed: {}",
+        String::from_utf8_lossy(&first.stderr)
+    );
+
+    let refresh = run_decapod(project.path(), &["init", "--force"]);
+    assert!(
+        refresh.status.success(),
+        "refresh init failed: {}",
+        String::from_utf8_lossy(&refresh.stderr)
+    );
+    let config = fs::read_to_string(project.path().join(".decapod/config.toml"))
+        .expect("read refreshed project config");
+    assert!(config.contains("[decision]\nprovider = \"jev\""));
+}
+
+#[test]
 fn init_cloud_opt_in_does_not_store_secret_environment_values() {
     let tmp = tempdir().expect("tempdir");
     let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
