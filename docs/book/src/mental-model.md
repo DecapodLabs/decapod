@@ -57,6 +57,12 @@ environment. Missing credentials, network failure, timeout, or malformed data
 produces an explicit `no_observation` result and cannot authorize work. See
 [Configuration](reference/config-toml.md) and the [TypeSafe API reference](https://docs.typesafe.ai/api).
 
+Each Jev attempt is also appended to the active trajectory's
+`.decapod/governance/jev.json` ledger. The ledger is a per-run evidence bundle:
+it can contain many keyed results in one PR, is schema-validated, and is reset
+when `trajectory init` begins a fresh run. Git history, not the working-tree
+file, preserves previous runs.
+
 The developer-only evaluation corpus is opt-in and never runs as an ordinary
 test or CI dependency. With a TypeSafe credential, run:
 

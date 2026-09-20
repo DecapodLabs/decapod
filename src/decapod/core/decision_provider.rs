@@ -133,10 +133,12 @@ pub enum NoObservationReason {
     Disabled,
     Unconfigured,
     MissingIntent,
+    MissingTrajectory,
     Unavailable,
     MalformedResponse,
     InvalidObservation,
     Configuration,
+    Persistence,
 }
 
 /// The provider result is explicit so provider failure cannot be mistaken for

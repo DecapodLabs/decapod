@@ -41,6 +41,7 @@ pub mod governance_artifacts;
 pub mod group_broker;
 pub mod http_transport;
 pub mod interview;
+pub mod jev_history;
 pub mod mentor;
 pub mod migration;
 pub mod obligation;

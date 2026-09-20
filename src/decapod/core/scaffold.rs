@@ -456,6 +456,7 @@ These files are the project-local contract for humans and agents.
 - `.decapod/managed/artifacts/`: ignored, current-run provenance/custody/inventory/diagnostic outputs.
 - `.decapod/governance/validation.json`: tracked per-commit validation receipt, overwritten after successful validation.
 - `.decapod/governance/trajectory.json`: the single tracked run cookie; Git history preserves prior merged cookies.
+- `.decapod/governance/jev.json`: optional schema-validated Jev observation ledger for the active trajectory run; Git history preserves prior committed ledgers.
 - `.decapod/managed/artifacts/inventory/`: deterministic release inventory.
 - `.decapod/managed/artifacts/diagnostics/`: opt-in diagnostics artifacts.
 - `.decapod/workspaces/`: isolated todo-scoped git worktrees.
