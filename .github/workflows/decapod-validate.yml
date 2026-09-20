@@ -15,6 +15,20 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
       - name: Build Decapod from checkout
         run: cargo build --locked --quiet
+      - name: Start validation trajectory
+        run: |
+          set -euo pipefail
+          run_id="ci-decapod-validate-${GITHUB_RUN_ID:-${BUILDKITE_BUILD_ID:-local}}"
+          ./target/debug/decapod govern trajectory init \
+            --run-id "$run_id" \
+            --original-intent "Validate the checked-out Decapod repository" \
+            --derived-intent "Run the bounded repository validation gates and bind the receipt to this CI run" \
+            --boundary "Repository validation and tracked proof artifacts" \
+            --scope ".decapod/governance/trajectory.json" \
+            --scope ".decapod/governance/validation.json" \
+            --destination "CI validation" \
+            --phase validation \
+            --next-transition publish
       - name: Decapod Validate
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: 1

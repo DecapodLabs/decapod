@@ -109,10 +109,10 @@ jobs:
   # Run 'cargo dist plan' (or host) to determine what tasks we need to do
   plan:
     runs-on: "ubuntu-latest"
-    # The importer does not reliably evaluate startsWith() over refs. The
-    # release workflow only accepts pull requests, master pushes, and tags, so
-    # this equivalent simple condition excludes the non-release master push.
-    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref != 'refs/heads/master')
+    # Cargo-dist planning is useful for release-plz PRs and tags, not every
+    # code PR. Keeping the job scoped to those release surfaces prevents a
+    # normal PR from acquiring a release-plan check it cannot publish.
+    if: (github.event_name == 'pull_request' && startsWith(github.head_ref, 'release-plz-')) || (github.event_name == 'push' && github.ref != 'refs/heads/master')
     outputs:
       val: ${{ steps.plan.outputs.manifest }}
       tag: ${{ steps.plan.outputs.tag }}
@@ -139,20 +139,26 @@ jobs:
       - id: plan
         run: |
           set -euo pipefail
-          if [ "${GITHUB_EVENT_NAME:-}" = "pull_request" ]; then
+          # Buildkite selects the event while compiling the workflow, but its
+          # runtime does not guarantee the GitHub event env mirror. Inject the
+          # compiler-resolved event into the shell so PR plans never fall into
+          # the tag-hosting branch just because GITHUB_EVENT_NAME is unset.
+          event_name="${{ github.event_name }}"
+          ref_name="${{ github.ref_name }}"
+          if [ "$event_name" = "pull_request" ]; then
             cargo dist plan --output-format=json > plan-dist-manifest.json
           else
-            cargo dist host --steps=create --tag="${GITHUB_REF_NAME}" --output-format=json > plan-dist-manifest.json
+            cargo dist host --steps=create --tag="$ref_name" --output-format=json > plan-dist-manifest.json
           fi
           echo "cargo dist ran successfully"
           cat plan-dist-manifest.json
-          if [ "${GITHUB_EVENT_NAME:-}" = "pull_request" ]; then
+          if [ "$event_name" = "pull_request" ]; then
             tag=""
             tag_flag=""
             publishing="false"
           else
-            tag="${GITHUB_REF_NAME}"
-            tag_flag="--tag=${GITHUB_REF_NAME}"
+            tag="$ref_name"
+            tag_flag="--tag=$ref_name"
             publishing="true"
           fi
           {
@@ -292,7 +298,7 @@ jobs:
       matrix:
         include:
           - targets: aarch64-apple-darwin
-            runner: macos-14
+            runner: macos-latest
             install_dist: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.22.1/cargo-dist-installer.sh | sh"
             packages_install: "true"
             dist_args: "--artifacts=local --target=aarch64-apple-darwin"
@@ -302,7 +308,7 @@ jobs:
             packages_install: "true"
             dist_args: "--artifacts=local --target=aarch64-unknown-linux-gnu"
           - targets: x86_64-apple-darwin
-            runner: macos-14
+            runner: macos-latest
             install_dist: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.22.1/cargo-dist-installer.sh | sh"
             packages_install: "true"
             dist_args: "--artifacts=local --target=x86_64-apple-darwin"
