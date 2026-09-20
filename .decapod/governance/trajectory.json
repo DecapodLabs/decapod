@@ -1,10 +1,10 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "buildkite-release-pr-1353-20260920-script",
-  "intent_id": "intent:buildkite-release-pr-1353-20260920-script",
+  "run_id": "buildkite-release-pr-1353-20260920-fallback",
+  "intent_id": "intent:buildkite-release-pr-1353-20260920-fallback",
   "task_id": "bugs_01m2yvaze1csf51f",
   "original_intent": "Fix the remaining Buildkite failure in release PR #1353 and push the verified fix directly to its PR branch.",
-  "derived_intent": "Keep .github/workflows/release.yml as the source of truth while moving runtime release-plan shell expansion into a checked-in script that survives Buildkite upload interpolation.",
+  "derived_intent": "Keep .github/workflows/release.yml as the source of truth, use a checked-in runtime script, and infer non-publishing plan mode when the imported Buildkite job lacks event metadata.",
   "destination": "PR #1353",
   "current_phase": "validation",
   "next_transitions": [
@@ -38,7 +38,7 @@
   "checks": [
     {
       "name": "buildkite-release-plan",
-      "status": "unavailable"
+      "status": "failed"
     },
     {
       "name": "decapod validate",
@@ -62,28 +62,28 @@
     }
   ],
   "evidence": [
-    "Container validation passed with 204 checks and zero failures after moving the runtime release-plan logic into a checked-in script. The native GitHub Actions plan remained green; Buildkite hosted proof is pending the next PR commit.",
-    "validation epoch ve_3622978f6e9cc026 completed with zero failures"
+    "Buildkite build 157 still failed Release / plan in one second while every other Release job passed. The remaining early-exit path was the required event/PR metadata guard; the new script now uses explicit tag presence as the only host/publish signal and defaults otherwise to a non-publishing plan. Container validation passed with 204 checks and zero failures.",
+    "validation epoch ve_9290464f24252af8 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [
     "The Buildkite GitHub Actions runtime provides GITHUB_OUTPUT, as demonstrated by existing workflow output steps already exercised in this repository."
   ],
-  "proof_status": "partial",
+  "proof_status": "failed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "caution"
+    "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:cd953eed0555f35020d35c50924f938783c808743edceee95b1f91f713b3cac3",
+  "artifact_hash": "sha256:44a12e6f0a4b960e9d00e1d2c6cc72785503731fd95cbfc5af6947ab0eb93ec6",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:buildkite-release-pr-1353-20260920-script": {
-        "id": "intent:buildkite-release-pr-1353-20260920-script",
+      "intent:buildkite-release-pr-1353-20260920-fallback": {
+        "id": "intent:buildkite-release-pr-1353-20260920-fallback",
         "raw_intent": "Fix the remaining Buildkite failure in release PR #1353 and push the verified fix directly to its PR branch.",
-        "refined_intent": "Keep .github/workflows/release.yml as the source of truth while moving runtime release-plan shell expansion into a checked-in script that survives Buildkite upload interpolation.",
+        "refined_intent": "Keep .github/workflows/release.yml as the source of truth, use a checked-in runtime script, and infer non-publishing plan mode when the imported Buildkite job lacks event metadata.",
         "acceptance_criteria": [],
         "constraints": [
           ".github/workflows/release.yml, .github/scripts/release-plan.sh, and related governed documentation/proof artifacts"
@@ -103,34 +103,34 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:buildkite-release-pr-1353-20260920-script",
+        "intent_id": "intent:buildkite-release-pr-1353-20260920-fallback",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:buildkite-release-pr-1353-20260920-script",
+        "intent_id": "intent:buildkite-release-pr-1353-20260920-fallback",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:buildkite-release-pr-1353-20260920-script",
+        "intent_id": "intent:buildkite-release-pr-1353-20260920-fallback",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:buildkite-release-pr-1353-20260920-script"
+        "detail": "trajectory:buildkite-release-pr-1353-20260920-fallback"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:buildkite-release-pr-1353-20260920-script",
+        "intent_id": "intent:buildkite-release-pr-1353-20260920-fallback",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:buildkite-release-pr-1353-20260920-script"
+        "detail": "trajectory:buildkite-release-pr-1353-20260920-fallback"
       }
     ],
     "trajectories": {
-      "buildkite-release-pr-1353-20260920-script": {
-        "id": "buildkite-release-pr-1353-20260920-script",
-        "intent_id": "intent:buildkite-release-pr-1353-20260920-script",
+      "buildkite-release-pr-1353-20260920-fallback": {
+        "id": "buildkite-release-pr-1353-20260920-fallback",
+        "intent_id": "intent:buildkite-release-pr-1353-20260920-fallback",
         "evidence_only": true,
         "steps": [
           {
@@ -143,7 +143,7 @@
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_3622978f6e9cc026 completed with zero failures"
+              "validation epoch ve_9290464f24252af8 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
@@ -164,7 +164,7 @@
               ".github/workflows/release.yml",
               ".github/scripts/release-plan.sh",
               ".decapod/governance/validation.json",
-              "Container validation passed with 204 checks and zero failures after moving the runtime release-plan logic into a checked-in script. The native GitHub Actions plan remained green; Buildkite hosted proof is pending the next PR commit."
+              "Buildkite build 157 still failed Release / plan in one second while every other Release job passed. The remaining early-exit path was the required event/PR metadata guard; the new script now uses explicit tag presence as the only host/publish signal and defaults otherwise to a non-publishing plan. Container validation passed with 204 checks and zero failures."
             ],
             "proof_refs": [
               "decapod-validate",

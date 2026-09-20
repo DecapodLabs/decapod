@@ -5,19 +5,20 @@ set -euo pipefail
 # Buildkite upload. The imported workflow command is interpolated while the
 # pipeline is uploaded; this script is read by the agent only when the step
 # runs.
-event_name="${BUILDKITE_GITHUB_EVENT:-${GITHUB_EVENT_NAME:-}}"
-if [ -z "$event_name" ] && [ -n "${BUILDKITE_PULL_REQUEST:-}" ] && [ "${BUILDKITE_PULL_REQUEST}" != "false" ]; then
-  event_name="pull_request"
-fi
-: "${event_name:?Unable to determine the GitHub event for cargo-dist planning}"
+event_name="${GITHUB_EVENT_NAME:-${BUILDKITE_GITHUB_EVENT:-unknown}}"
+ref_name="${GITHUB_REF_NAME:-${BUILDKITE_TAG:-${BUILDKITE_BRANCH:-}}}"
 
-if [ -n "${BUILDKITE_TAG:-}" ]; then
-  ref_name="$BUILDKITE_TAG"
+# The imported Buildkite job does not reliably expose a usable event or PR
+# marker at runtime. A tag is the only context that authorizes cargo-dist
+# hosting; every other invocation is a non-publishing plan.
+if [ -n "${BUILDKITE_TAG:-}" ] || [ "${GITHUB_REF_TYPE:-}" = "tag" ]; then
+  mode="host"
 else
-  ref_name="${GITHUB_REF_NAME:-${BUILDKITE_BRANCH:-}}"
+  mode="plan"
 fi
+echo "cargo-dist mode=$mode event=$event_name ref=${ref_name:-unknown}"
 
-if [ "$event_name" = "pull_request" ]; then
+if [ "$mode" = "plan" ]; then
   cargo dist plan --output-format=json > plan-dist-manifest.json
 else
   : "${ref_name:?Unable to determine the ref for cargo-dist hosting}"
@@ -27,7 +28,7 @@ fi
 echo "cargo dist ran successfully"
 cat plan-dist-manifest.json
 
-if [ "$event_name" = "pull_request" ]; then
+if [ "$mode" = "plan" ]; then
   tag=""
   tag_flag=""
   publishing="false"
