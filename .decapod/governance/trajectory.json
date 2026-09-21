@@ -1,29 +1,22 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "buildkite-governance-followup-20260920",
-  "intent_id": "intent:buildkite-governance-followup-20260920",
-  "task_id": "cicd_01m3103fhbevqacw",
-  "original_intent": "Create a dedicated governance follow-up PR for the merged Buildkite workflow compatibility work without modifying PR #1354.",
-  "derived_intent": "Record the four-artifact governance proof and the operational boundary of the merged Buildkite compatibility change in a standalone follow-up PR.",
-  "destination": "dedicated governance follow-up PR",
+  "run_id": "01m30a-rebased-publish",
+  "intent_id": "intent:01m30a-rebased-publish",
+  "task_id": "todo_01m30a",
+  "original_intent": "Fix the failed Release / plan check associated with PR #1355 and publish a new corrective PR.",
+  "derived_intent": "Ensure the release plan step finds cargo-dist after the installer step, preserve release semantics, and publish the corrective PR with bound proof.",
+  "destination": "corrective PR publication",
   "current_phase": "validation",
   "next_transitions": [
-    "publish",
-    "validation"
+    "publish"
   ],
   "active_boundaries": [
-    "Governance artifacts and authored operations documentation only; do not modify workflow implementation or PR #1354."
+    "Buildkite release-plan compatibility only; no release-policy expansion"
   ],
   "repo_scope": [
-    ".decapod/governance/claims.json, .decapod/governance/plan.json, .decapod/governance/trajectory.json, .decapod/governance/validation.json, and .decapod/managed/specs/OPERATIONS.md"
+    "release-plan script, regression test, living spec, and governed proof artifacts"
   ],
-  "inspected_files": [
-    ".decapod/governance/claims.json",
-    ".decapod/governance/plan.json",
-    ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json",
-    ".decapod/managed/specs/OPERATIONS.md"
-  ],
+  "inspected_files": [],
   "modified_files": [
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json"
@@ -36,55 +29,35 @@
     {
       "name": "decapod validate",
       "status": "passed"
-    },
-    {
-      "name": "decapod-validate",
-      "status": "passed"
-    },
-    {
-      "name": "dedicated-governance-scope",
-      "status": "passed"
-    },
-    {
-      "name": "governance-artifacts",
-      "status": "passed"
-    },
-    {
-      "name": "hosted-pr-checks",
-      "status": "unavailable"
-    },
-    {
-      "name": "workflow-implementation-unchanged",
-      "status": "passed"
     }
   ],
   "evidence": [
-    "validation epoch ve_d2bc133289dd148e completed with zero failures"
+    "validation epoch ve_86979d7aa7d8aa40 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
-  "proof_status": "partial",
+  "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "caution"
+    "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:aa740e97b5700be696c98dbea61a9484ba18933053e3ff8dcb6025432ec28271",
+  "artifact_hash": "sha256:c99b7bfb6d215d44c02b8b1efcf06ab6d322072fc974b9b9bd4aaefe47d4dc7c",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:buildkite-governance-followup-20260920": {
-        "id": "intent:buildkite-governance-followup-20260920",
-        "raw_intent": "Create a dedicated governance follow-up PR for the merged Buildkite workflow compatibility work without modifying PR #1354.",
-        "refined_intent": "Record the four-artifact governance proof and the operational boundary of the merged Buildkite compatibility change in a standalone follow-up PR.",
+      "intent:01m30a-rebased-publish": {
+        "id": "intent:01m30a-rebased-publish",
+        "raw_intent": "Fix the failed Release / plan check associated with PR #1355 and publish a new corrective PR.",
+        "refined_intent": "Ensure the release plan step finds cargo-dist after the installer step, preserve release semantics, and publish the corrective PR with bound proof.",
         "acceptance_criteria": [],
         "constraints": [
-          ".decapod/governance/claims.json, .decapod/governance/plan.json, .decapod/governance/trajectory.json, .decapod/governance/validation.json, and .decapod/managed/specs/OPERATIONS.md"
+          "release-plan script, regression test, living spec, and governed proof artifacts"
         ],
         "assumptions": [],
         "boundaries": [
-          "Governance artifacts and authored operations documentation only; do not modify workflow implementation or PR #1354."
+          "Buildkite release-plan compatibility only; no release-policy expansion"
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -97,110 +70,52 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:buildkite-governance-followup-20260920",
+        "intent_id": "intent:01m30a-rebased-publish",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:buildkite-governance-followup-20260920",
+        "intent_id": "intent:01m30a-rebased-publish",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:buildkite-governance-followup-20260920",
+        "intent_id": "intent:01m30a-rebased-publish",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:buildkite-governance-followup-20260920"
-      },
-      {
-        "sequence": 5,
-        "event_id": "event:5",
-        "intent_id": "intent:buildkite-governance-followup-20260920",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:buildkite-governance-followup-20260920"
-      },
-      {
-        "sequence": 6,
-        "event_id": "event:6",
-        "intent_id": "intent:buildkite-governance-followup-20260920",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:buildkite-governance-followup-20260920"
+        "detail": "trajectory:01m30a-rebased-publish"
       }
     ],
     "trajectories": {
-      "buildkite-governance-followup-20260920": {
-        "id": "buildkite-governance-followup-20260920",
-        "intent_id": "intent:buildkite-governance-followup-20260920",
+      "01m30a-rebased-publish": {
+        "id": "01m30a-rebased-publish",
+        "intent_id": "intent:01m30a-rebased-publish",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "trajectory.record",
-            "scope": [
-              ".decapod/governance/claims.json, .decapod/governance/plan.json, .decapod/governance/trajectory.json, .decapod/governance/validation.json, and .decapod/managed/specs/OPERATIONS.md"
-            ],
-            "observations": [
-              ".decapod/governance/claims.json",
-              ".decapod/governance/plan.json",
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              ".decapod/managed/specs/OPERATIONS.md"
-            ],
-            "proof_refs": [
-              "workflow-implementation-unchanged",
-              "dedicated-governance-scope",
-              "governance-artifacts"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:4"
-          },
-          {
-            "sequence": 5,
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              ".decapod/governance/claims.json, .decapod/governance/plan.json, .decapod/governance/trajectory.json, .decapod/governance/validation.json, and .decapod/managed/specs/OPERATIONS.md"
+              "release-plan script, regression test, living spec, and governed proof artifacts"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_d2bc133289dd148e completed with zero failures"
+              "validation epoch ve_86979d7aa7d8aa40 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
             ],
             "validation_findings": [],
-            "custody_event_id": "event:5"
-          },
-          {
-            "sequence": 6,
-            "action": "trajectory.record",
-            "scope": [
-              ".decapod/governance/claims.json, .decapod/governance/plan.json, .decapod/governance/trajectory.json, .decapod/governance/validation.json, and .decapod/managed/specs/OPERATIONS.md"
-            ],
-            "observations": [
-              ".decapod/governance/claims.json",
-              ".decapod/governance/plan.json",
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              ".decapod/managed/specs/OPERATIONS.md"
-            ],
-            "proof_refs": [
-              "decapod-validate",
-              "governance-artifacts",
-              "workflow-implementation-unchanged",
-              "dedicated-governance-scope",
-              "hosted-pr-checks"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:6"
+            "custody_event_id": "event:4"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 6
+    "next_sequence": 4
   }
 }
