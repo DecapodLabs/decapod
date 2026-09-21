@@ -4,10 +4,11 @@
   "intent": "Keep .github/workflows/*.yml as the sole workflow contract while adding explicit, documented compatibility paths for Buildkite GHA execution. Preserve native GitHub Actions behavior, preserve event and release gates, and make adapter limitations observable through workflow diagnostics rather than adding a second native Buildkite pipeline.",
   "state": "APPROVED",
   "todo_ids": [
-    "bugs_01m2ygbqqwzq8p3q"
+    "cicd_01m3103fhbevqacw"
   ],
   "proof_hooks": [
-    "Dedicated Buildkite compatibility PR checks pass for docs push, release publication push, and release planning pull request paths",
+    "Dedicated governance follow-up PR records the merged Buildkite compatibility evidence without changing workflow behavior",
+    "All four governance artifacts are updated and valid in the dedicated PR",
     "decapod validate passes"
   ],
   "unknowns": [],
@@ -27,5 +28,5 @@
     "file_touch_budget": 30
   },
   "phases": [],
-  "updated_at": "1789934709Z"
+  "updated_at": "1789961378Z"
 }

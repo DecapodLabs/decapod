@@ -138,6 +138,18 @@ workflow reached the supported execution path; release secrets, Docker
 privileges, artifact storage, runner mappings, and Pages publication still
 need independent Buildkite configuration proof.
 
+### Dedicated governance follow-up boundary
+
+PR #1354 is the merged implementation reference for the Buildkite workflow
+compatibility changes. This follow-up is intentionally governance-only: it
+records the operational context and proof for that merged change without
+editing workflow behavior or reopening the implementation PR. The four files
+under `.decapod/governance/` remain one coordinated review unit; a dedicated
+governance PR must update `claims.json`, `plan.json`, `trajectory.json`, and
+`validation.json` through Decapod, then run bounded validation before
+publication. This separation keeps adapter behavior in the workflow PR while
+keeping the machine-facing proof contract independently reviewable.
+
 ## Installed-Version Upgrade Path
 After `cargo install decapod`, the next normal governed command runs protected, idempotent schema migration and legacy-event reconciliation before runtime consumers read evidence. Existing-project `decapod init` executes the same reconciliation before regeneration. A prior successful single-datastore migration retires its JSONL inputs through a durable receipt; startup does not rescan them. Legacy local database sources are opened through the Dactyl v0.10.0 facade, while Decapod owns row translation, schema policy, the explicit maintenance command policy, and idempotency ledgers. Dactyl opens the canonical path directly through its host runtime and owns the physical backup/recovery contract; no bundled fallback or second local authority is used. Human-authored `OVERRIDE.md` content is validated but never mechanically rewritten. Fresh migration conflicts preserve source artifacts and stop with an actionable error.
 
