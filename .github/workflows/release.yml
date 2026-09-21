@@ -124,8 +124,9 @@ jobs:
       tag: ${{ steps.plan.outputs.tag }}
       tag-flag: ${{ steps.plan.outputs.tag_flag }}
       publishing: ${{ steps.plan.outputs.publishing }}
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # Planning is local and non-publishing. Do not bind secrets.GITHUB_TOKEN
+    # here: Buildkite treats that reference as a workflow-token request before
+    # the job starts, while release-plan.sh only invokes cargo-dist locally.
     steps:
       - uses: actions/checkout@v4
         with:
