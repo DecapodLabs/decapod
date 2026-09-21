@@ -135,11 +135,20 @@ jobs:
         # failing. otherwise `sh` won't catch that `curl` returned non-0
         shell: bash
         run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.22.1/cargo-dist-installer.sh | sh"
+      - name: Stage cargo-dist cache
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p target/cargo-dist-cache
+          install -m 0755 "$HOME/.cargo/bin/cargo-dist" \
+            target/cargo-dist-cache/cargo-dist
       - name: Cache cargo-dist
         uses: actions/upload-artifact@v4
         with:
           name: cargo-dist-cache
-          path: ~/.cargo/bin/cargo-dist
+          # Buildkite's artifact adapter accepts workspace-relative paths;
+          # restore the binary into $HOME only in the consuming shell job.
+          path: target/cargo-dist-cache
       # Keep PR planning and tag publishing explicit in shell so the Buildkite
       # adapter does not have to interpolate runtime shell variables while it
       # uploads the imported workflow.
@@ -367,8 +376,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: cargo-dist-cache
-          path: ~/.cargo/bin/
-      - run: chmod +x ~/.cargo/bin/cargo-dist
+          path: target/cargo-dist-cache
+      - name: Put cargo-dist on PATH
+        shell: bash
+        run: |
+          set -euo pipefail
+          install -d "$HOME/.cargo/bin"
+          install -m 0755 target/cargo-dist-cache/cargo-dist \
+            "$HOME/.cargo/bin/cargo-dist"
       # Get all the local artifacts for the global tasks to use (for e.g. checksums)
       - name: Fetch local artifacts
         uses: actions/download-artifact@v4
@@ -416,8 +431,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: cargo-dist-cache
-          path: ~/.cargo/bin/
-      - run: chmod +x ~/.cargo/bin/cargo-dist
+          path: target/cargo-dist-cache
+      - name: Put cargo-dist on PATH
+        shell: bash
+        run: |
+          set -euo pipefail
+          install -d "$HOME/.cargo/bin"
+          install -m 0755 target/cargo-dist-cache/cargo-dist \
+            "$HOME/.cargo/bin/cargo-dist"
       # Fetch artifacts from scratch-storage
       - name: Fetch artifacts
         uses: actions/download-artifact@v4
