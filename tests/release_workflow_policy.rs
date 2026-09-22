@@ -1,5 +1,10 @@
 use std::fs;
 use std::path::Path;
+#[cfg(unix)]
+use std::process::Command;
+
+#[cfg(unix)]
+use tempfile::tempdir;
 
 #[test]
 fn release_workflow_lets_release_plz_update_the_manifest() {
@@ -17,6 +22,65 @@ fn release_workflow_lets_release_plz_update_the_manifest() {
     assert!(
         !workflow.contains("command: release"),
         "release-plz must not be forced into release-only mode; default mode creates the release PR that updates Cargo.toml before publishing"
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn release_plan_restores_cargo_dist_path_after_installer_step() {
+    use std::os::unix::fs::PermissionsExt;
+
+    let temp = tempdir().expect("create temporary home");
+    let cargo_bin = temp.path().join(".cargo/bin");
+    fs::create_dir_all(&cargo_bin).expect("create cargo bin directory");
+    let cargo_dist = cargo_bin.join("cargo-dist");
+    fs::write(&cargo_dist, "#!/bin/sh\nprintf '%s\\n' '{\"ci\":{}}'\n")
+        .expect("write cargo-dist fixture");
+    fs::set_permissions(&cargo_dist, fs::Permissions::from_mode(0o755))
+        .expect("make cargo-dist fixture executable");
+
+    let github_output = temp.path().join("github-output");
+    let script = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/scripts/release-plan.sh");
+    let output = Command::new("/bin/bash")
+        .current_dir(env!("CARGO_MANIFEST_DIR"))
+        .env("HOME", temp.path())
+        .env("CARGO_HOME", temp.path().join(".cargo"))
+        .env("GITHUB_EVENT_NAME", "pull_request")
+        .env("GITHUB_REF_NAME", "release-plz-test")
+        .env("GITHUB_REF_TYPE", "branch")
+        .env("GITHUB_OUTPUT", &github_output)
+        .arg(script)
+        .output()
+        .expect("run release plan script");
+
+    assert!(
+        output.status.success(),
+        "release plan should find cargo-dist in CARGO_HOME/bin; stderr:\n{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let outputs = fs::read_to_string(github_output).expect("read workflow outputs");
+    assert!(outputs.contains("publishing=false"));
+    assert!(outputs.contains("manifest={\"ci\":{}}"));
+}
+
+#[test]
+fn release_plan_does_not_request_a_github_workflow_token() {
+    let workflow_path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/workflows/release.yml");
+    let workflow = fs::read_to_string(workflow_path).expect("read release workflow");
+    let plan_start = workflow.find("\n  plan:\n").expect("find release plan job");
+    let plan_end = workflow[plan_start + 1..]
+        .find("\n  publish-decapod-image:\n")
+        .map(|offset| plan_start + 1 + offset)
+        .expect("find job after release plan");
+    let plan = &workflow[plan_start..plan_end];
+
+    assert!(
+        !plan.contains("GH_TOKEN: ${{") && !plan.contains("GITHUB_TOKEN: ${{"),
+        "non-publishing release planning must not request a Buildkite workflow token"
+    );
+    assert!(
+        plan.contains("run: bash .github/scripts/release-plan.sh"),
+        "release planning must remain delegated to the checked-in helper"
     );
 }
 

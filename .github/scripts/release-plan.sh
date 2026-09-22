@@ -18,6 +18,21 @@ else
 fi
 echo "cargo-dist mode=$mode event=$event_name ref=${ref_name:-unknown}"
 
+# The installer runs in the preceding workflow step. GitHub-hosted runners
+# already expose this directory on PATH, but the Buildkite compatibility
+# runtime starts each step in a fresh non-login shell. Restore the installer
+# location explicitly so the plan step does not depend on shell-profile
+# mutation crossing the step boundary.
+cargo_dist_bin="${CARGO_HOME:-${HOME}/.cargo}/bin"
+if [ -x "$cargo_dist_bin/cargo-dist" ]; then
+  PATH="$cargo_dist_bin:$PATH"
+  export PATH
+fi
+if ! command -v cargo-dist >/dev/null 2>&1; then
+  echo "cargo-dist is unavailable; expected the pinned installer at $cargo_dist_bin/cargo-dist" >&2
+  exit 1
+fi
+
 if [ "$mode" = "plan" ]; then
   cargo dist plan --output-format=json > plan-dist-manifest.json
 else
