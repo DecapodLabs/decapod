@@ -62,6 +62,14 @@ Neither backend decides whether a Decapod transition is valid.
 | async enqueue | event_id | ignore duplicate enqueue |
 
 ## Current Governance Artifact Semantics
+### Policy Approvals (#1361)
+- A gate uses its most specific available target when deriving an approval
+  fingerprint and may fall back to an action-wide approval for compatibility.
+- Expired approvals never authorize an action; CLI-created approvals default
+  to a 900-second lifetime.
+- Revocation addresses one approval by its approval ID and leaves unrelated
+  approvals unchanged.
+
 ### Trajectory Cookie
 - Cardinality: one current pointer and zero or more hash-checked historical
   archives per workspace; only the current pointer is validation/publication
@@ -150,7 +158,7 @@ Neither backend decides whether a Decapod transition is valid.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3cabb7c460bd22e7d7bab2069909674be2311d929959d07a9a08e8ddf14fc963`
+- Repository signal fingerprint: `8bebfbd43f083d79b3675a16211737f820233c91d8277a4eb2ebb7fc444cc141`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

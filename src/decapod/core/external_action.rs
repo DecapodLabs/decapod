@@ -146,11 +146,12 @@ fn require_external_approval(
         return Ok(());
     }
     policy::initialize_policy_db(store_root)?;
-    if !policy::check_approval(&store, &approval_scope, None, "global")? {
+    if !policy::check_approval(&store, &approval_scope, Some(&approval_scope), "global")? {
         return Err(error::DecapodError::ValidationError(format!(
-            "External action denied: capability '{}' scope '{}' requires approval. Run: decapod govern policy approve --id '{}' --scope global",
+            "External action denied: capability '{}' scope '{}' requires approval. Run `decapod govern policy eval --command '{}' --path '{}'` to get the approval command.",
             capability.as_str(),
             scope,
+            approval_scope,
             approval_scope
         )));
     }

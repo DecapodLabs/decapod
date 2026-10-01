@@ -227,16 +227,17 @@ sequenceDiagram
 - Core execution + persistence:
 - Verification and artifact emission:
 
-### Federation Mutation Policy Boundary (#1323)
+### Mutation Policy Approval Boundary (#1361)
 
 `DbBroker` is the policy boundary for federation mutations. It first enforces
 the actor trust tier, then evaluates the configured operation classifier and
 the independently stored risk-zone policy before the domain mutation opens its
-canonical write path. Category approvals are keyed by the exact operation
-name, whereas zone approvals remain keyed by the zone name; keeping those
-names distinct prevents an approval for one contract from being mistaken for
-an approval for another. The empty configured-category set intentionally skips
-only the category check.
+canonical write path. Gates pass their most specific available target into
+approval lookup. Todo lifecycle changes bind approvals to the todo ID; broker
+operations and risk zones bind to their operation or zone key. An unexpired
+target-specific approval takes priority, while an unexpired action-wide
+approval remains a compatibility fallback. CLI-created approvals have a
+bounded default lifetime and can be revoked by approval ID.
 
 ## Concurrency and Runtime Model
 - Execution model:
@@ -351,7 +352,7 @@ authored document is an untouched template.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3cabb7c460bd22e7d7bab2069909674be2311d929959d07a9a08e8ddf14fc963`
+- Repository signal fingerprint: `8bebfbd43f083d79b3675a16211737f820233c91d8277a4eb2ebb7fc444cc141`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
