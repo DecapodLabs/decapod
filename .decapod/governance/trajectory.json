@@ -1,111 +1,71 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "run-20261001-federation-todo-final",
-  "intent_id": "intent:run-20261001-federation-todo-final",
+  "run_id": "run-20261001-pr1359-refresh",
+  "intent_id": "intent:run-20261001-pr1359-refresh",
   "task_id": "todo_01m3v4",
-  "original_intent": "Implement critical GitHub issues #1213 and #952 while leaving Buildkite unchanged.",
-  "derived_intent": "Repair legacy federation node.create identity projections and bound todo claim waits on local operation locks with actionable contention diagnostics.",
-  "current_phase": "complete",
+  "original_intent": "Repair the GitHub Actions validation failure for PR 1359",
+  "derived_intent": "Refresh release-bound entrypoints and living-spec projections with Decapod 0.104.3 after updating from master, then prove validation",
+  "destination": "PR 1359",
+  "current_phase": "validation",
   "next_transitions": [
-    "Hand off the committed branch for review; no Buildkite work is required.",
-    "Run the final container validation and hand off the committed branch.",
     "publish"
   ],
   "active_boundaries": [
-    "Only the isolated task workspace and governed artifacts are in scope; Buildkite workflow behavior is out of scope."
+    "PR 1359 branch and governed release-bound projections; Buildkite remains out of scope"
   ],
   "repo_scope": [
-    "Federation replay repair, storage-pool lock timeout, broker audit path, todo claim regression coverage, living specs, and validation proof."
+    ".decapod/managed/specs",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "CODEX.md",
+    "GEMINI.md"
   ],
-  "inspected_files": [
-    "src/decapod/core/broker.rs",
-    "src/decapod/core/events.rs",
-    "src/decapod/core/pool.rs",
-    "src/decapod/plugins/federation.rs",
-    "tests/plugins/federation.rs",
-    "tests/plugins/todo.rs"
-  ],
+  "inspected_files": [],
   "modified_files": [
     ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json",
-    ".decapod/managed/specs/ARCHITECTURE.md",
-    "src/decapod/core/broker.rs",
-    "src/decapod/core/error.rs",
-    "src/decapod/core/events.rs",
-    "src/decapod/core/pool.rs",
-    "src/decapod/plugins/federation.rs",
-    "tests/plugins/federation.rs",
-    "tests/plugins/todo.rs",
-    "tests/unit/core/events_tests.rs",
-    "tests/unit/core/pool_tests.rs"
+    ".decapod/governance/validation.json"
   ],
   "declared_commands": [
-    "cargo test --locked --lib core::pool::tests::operation_lock_timeout_is_bounded -- --nocapture",
-    "cargo test --locked --test plugins_federation_tests -- --nocapture",
-    "cargo test --locked --test plugins_todo_tests -- --nocapture --test-threads=1",
-    "decapod validate",
-    "decapod validate --refresh-specs --format json"
+    "decapod validate"
   ],
   "tool_calls": [],
   "checks": [
     {
       "name": "decapod validate",
       "status": "passed"
-    },
-    {
-      "name": "federation_replay",
-      "status": "passed"
-    },
-    {
-      "name": "governed_validate",
-      "status": "passed"
-    },
-    {
-      "name": "storage_pool_timeout",
-      "status": "passed"
-    },
-    {
-      "name": "todo_claim_timeout",
-      "status": "passed"
-    },
-    {
-      "name": "todo_suite",
-      "status": "passed"
     }
   ],
   "evidence": [
-    "Focused federation, todo, and pool tests passed; final container validation completed with fail_count=0 and current validation epoch ve_0fb269ac259bcf27. CI prediction is review-only because of historical audit warnings, missing risk map, stale-workspace warnings, and the unpushed task branch.",
-    "validation epoch ve_0fb269ac259bcf27 completed with zero failures"
+    "validation epoch ve_67b707bb11cb9822 completed with zero failures"
   ],
-  "shortcut_risk_signals": [
-    "Buildkite intentionally out of scope per user instruction."
-  ],
-  "unresolved_assumptions": [
-    "The task branch is intentionally left unpushed for review."
-  ],
-  "completion_claim": "Issues #1213 and #952 are implemented and proof-tested in commit 6c87c4f2; Buildkite remains intentionally out of scope.",
+  "shortcut_risk_signals": [],
+  "unresolved_assumptions": [],
   "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
-    "shortcut_risk": "caution",
+    "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:278b30fbfd55c7b39be2c1fd748f81d180a43eafb9f6a7b33506f6a3ba8730cd",
+  "artifact_hash": "sha256:e51c746647157e94f1db67e3d52f25fbae2473e854152f599bc9c66cd1955d44",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:run-20261001-federation-todo-final": {
-        "id": "intent:run-20261001-federation-todo-final",
-        "raw_intent": "Implement critical GitHub issues #1213 and #952 while leaving Buildkite unchanged.",
-        "refined_intent": "Repair legacy federation node.create identity projections and bound todo claim waits on local operation locks with actionable contention diagnostics.",
+      "intent:run-20261001-pr1359-refresh": {
+        "id": "intent:run-20261001-pr1359-refresh",
+        "raw_intent": "Repair the GitHub Actions validation failure for PR 1359",
+        "refined_intent": "Refresh release-bound entrypoints and living-spec projections with Decapod 0.104.3 after updating from master, then prove validation",
         "acceptance_criteria": [],
         "constraints": [
-          "Federation replay repair, storage-pool lock timeout, broker audit path, todo claim regression coverage, living specs, and validation proof."
+          ".decapod/managed/specs",
+          "AGENTS.md",
+          "CLAUDE.md",
+          "CODEX.md",
+          "GEMINI.md"
         ],
         "assumptions": [],
         "boundaries": [
-          "Only the isolated task workspace and governed artifacts are in scope; Buildkite workflow behavior is out of scope."
+          "PR 1359 branch and governed release-bound projections; Buildkite remains out of scope"
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -118,34 +78,27 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:run-20261001-federation-todo-final",
+        "intent_id": "intent:run-20261001-pr1359-refresh",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:run-20261001-federation-todo-final",
+        "intent_id": "intent:run-20261001-pr1359-refresh",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:run-20261001-federation-todo-final",
+        "intent_id": "intent:run-20261001-pr1359-refresh",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run-20261001-federation-todo-final"
-      },
-      {
-        "sequence": 5,
-        "event_id": "event:5",
-        "intent_id": "intent:run-20261001-federation-todo-final",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run-20261001-federation-todo-final"
+        "detail": "trajectory:run-20261001-pr1359-refresh"
       }
     ],
     "trajectories": {
-      "run-20261001-federation-todo-final": {
-        "id": "run-20261001-federation-todo-final",
-        "intent_id": "intent:run-20261001-federation-todo-final",
+      "run-20261001-pr1359-refresh": {
+        "id": "run-20261001-pr1359-refresh",
+        "intent_id": "intent:run-20261001-pr1359-refresh",
         "evidence_only": true,
         "steps": [
           {
@@ -153,63 +106,28 @@
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              "Federation replay repair, storage-pool lock timeout, broker audit path, todo claim regression coverage, living specs, and validation proof."
+              ".decapod/managed/specs",
+              "AGENTS.md",
+              "CLAUDE.md",
+              "CODEX.md",
+              "GEMINI.md"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_0fb269ac259bcf27 completed with zero failures"
+              "validation epoch ve_67b707bb11cb9822 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
-          },
-          {
-            "sequence": 5,
-            "action": "complete",
-            "command": "cargo test --locked --test plugins_federation_tests -- --nocapture",
-            "scope": [
-              "Federation replay repair, storage-pool lock timeout, broker audit path, todo claim regression coverage, living specs, and validation proof."
-            ],
-            "observations": [
-              "src/decapod/core/events.rs",
-              "src/decapod/plugins/federation.rs",
-              "src/decapod/core/pool.rs",
-              "src/decapod/core/broker.rs",
-              "tests/plugins/federation.rs",
-              "tests/plugins/todo.rs",
-              "src/decapod/core/events.rs",
-              "src/decapod/plugins/federation.rs",
-              "src/decapod/core/pool.rs",
-              "src/decapod/core/broker.rs",
-              "src/decapod/core/error.rs",
-              "tests/plugins/federation.rs",
-              "tests/plugins/todo.rs",
-              "tests/unit/core/events_tests.rs",
-              "tests/unit/core/pool_tests.rs",
-              ".decapod/managed/specs/ARCHITECTURE.md",
-              "Focused federation, todo, and pool tests passed; final container validation completed with fail_count=0 and current validation epoch ve_0fb269ac259bcf27. CI prediction is review-only because of historical audit warnings, missing risk map, stale-workspace warnings, and the unpushed task branch."
-            ],
-            "proof_refs": [
-              "federation_replay",
-              "todo_claim_timeout",
-              "storage_pool_timeout",
-              "todo_suite",
-              "governed_validate"
-            ],
-            "validation_findings": [
-              "Buildkite intentionally out of scope per user instruction.",
-              "The task branch is intentionally left unpushed for review."
-            ],
-            "custody_event_id": "event:5"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 5
+    "next_sequence": 4
   }
 }
