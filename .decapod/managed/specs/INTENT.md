@@ -59,6 +59,7 @@ mutate intent, claims, trajectory, validation state, or boundaries.
 - Local and cloud Decapod agent sessions are machine-local, backend-discriminated (`local_` or `cloud_`), and long-lived enough for an agent run: four hours by default, with a 30-minute minimum and six-hour maximum. Cloud access/refresh credentials remain opaque and are persisted separately from repository state.
 - The explicit cloud todo path authenticates through Propodus, then supplies Dactyl's ambient `DATASTORE=neon`, hardcoded Propodus Vercel/Neon `DATASTORE_ROUTE`, and session `DATASTORE_TOKEN` while passing a versioned opaque `StorageContext` containing the target org/repo scope. Dactyl owns `/query` and `/batch` transport and chooses the physical backend; Decapod does not add a backend, tenant, provider, or repository query parameter to individual operations.
 - Cloud todo add, claim, release, and complete are composed from Dactyl 0.10.0 atomic write-plus-event-plus-observation batches and fail closed on zero-row state conflicts. The local fake-Dactyl proof covers rollback when the transition predicate loses; hosted event-stream atomicity, tenancy, schema parity, and live Neon/Vercel behavior remain downstream proof obligations until those services are available.
+- Host and VM processes must not open the same SQLite WAL database through a shared virtiofs, FUSE, 9p, or network mount. Container workspace launch takes a verified Dactyl online backup on the host, mounts that snapshot read-only, and seeds a container-local tmpfs at the canonical data path. Container-side changes remain isolated and ephemeral; a failed or corrupt backup prevents the container from starting (Issue #1360).
 
 ## Shared-State Durability Intent
 - Material TODO lifecycle mutations are compare-and-swap operations over `(task.id, task.status, task.revision)`. A stale agent receives an explicit conflict and must not create a success event.
@@ -305,7 +306,7 @@ or manifest.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3cabb7c460bd22e7d7bab2069909674be2311d929959d07a9a08e8ddf14fc963`
+- Repository signal fingerprint: `fb4c04774a1a39318707cd0c2b8a1d5dfb8243dd3cd25a177a6e572c2d446656`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

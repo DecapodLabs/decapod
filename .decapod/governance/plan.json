@@ -1,16 +1,15 @@
 {
   "schema_version": "1.0.0",
-  "title": "Fix Buildkite release-plan token admission",
-  "intent": "Make the non-publishing Release / plan job tokenless and reliably find the pinned cargo-dist binary in Buildkite while preserving native GitHub Actions behavior, explicit-tag-only hosting, and credentialed publishing paths.",
+  "title": "Isolate container workspace Decapod state from host SQLite WAL",
+  "intent": "Prevent container workspace Decapod processes from opening the host SQLite WAL store across host/VM shared filesystems. Seed a container-local tmpfs store from a Dactyl online backup and reject unsupported shared mounts before SQLite opens them.",
   "state": "APPROVED",
   "todo_ids": [
-    "fend_01m31btbrqqy22dz"
+    "bugs_01m3vmyw1npwaa74"
   ],
   "proof_hooks": [
-    "bash -n .github/scripts/release-plan.sh",
-    "cargo test --locked --test release_workflow_policy",
-    "decapod validate --refresh-specs --format json",
-    "Buildkite Release / plan passes on PR #1355 after the tokenless plan change"
+    "Decapod validation passes in the dedicated workspace using the container-local data snapshot.",
+    "The container launch hint uses the canonical Dactyl online backup and mounts the SQLite store on container-local tmpfs.",
+    "Filesystem preflight rejects virtiofs and FUSE before any SQLite connection opens, with actionable WAL-specific guidance."
   ],
   "unknowns": [],
   "human_questions": [],
@@ -24,5 +23,5 @@
     "file_touch_budget": 30
   },
   "phases": [],
-  "updated_at": "1789977029Z"
+  "updated_at": "1790857221Z"
 }

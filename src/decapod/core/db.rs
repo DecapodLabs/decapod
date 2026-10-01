@@ -23,7 +23,9 @@ const STORAGE_CONNECT_BASE_DELAY_MS: u64 = 50;
 const STORAGE_CONNECT_MAX_DELAY_MS: u64 = 1_000;
 const STORAGE_CONNECT_JITTER_MS: u64 = 37;
 
-const UNSUPPORTED_FS_TYPES: &[&str] = &["nfs", "nfs4", "cifs", "smbfs", "9p", "vboxsf"];
+const UNSUPPORTED_FS_TYPES: &[&str] = &[
+    "nfs", "nfs4", "cifs", "smbfs", "9p", "virtiofs", "fuse", "fuseblk", "vboxsf",
+];
 
 /// Establish the canonical local connection through Dactyl.
 ///
@@ -322,9 +324,9 @@ pub fn storage_health_preflight(store_root: &Path) -> Result<(), error::DecapodE
     }
     if let Some(fs_type) = detect_fs_type(store_root) {
         let fs_type_l = fs_type.to_ascii_lowercase();
-        if UNSUPPORTED_FS_TYPES.iter().any(|t| *t == fs_type_l) {
+        if is_unsupported_fs_type(&fs_type_l) {
             return Err(error::DecapodError::ValidationError(format!(
-                "STORAGE_PREFLIGHT_UNSUPPORTED_FS: path='{}' fs_type='{}' is not supported for Decapod local state. Use a local filesystem (ext4/xfs/apfs) and re-run.",
+                "STORAGE_PREFLIGHT_UNSUPPORTED_FS: path='{}' fs_type='{}' is not supported for Decapod SQLite state. WAL needs reliable shared-memory coordination, which network, FUSE, and host/VM shared filesystems do not provide. Use a local filesystem or an isolated local data mount, then re-run.",
                 store_root.display(),
                 fs_type
             )));
@@ -344,9 +346,9 @@ fn storage_preflight_for_db(
     } else {
         if let Some(fs_type) = detect_fs_type(parent) {
             let fs_type_l = fs_type.to_ascii_lowercase();
-            if UNSUPPORTED_FS_TYPES.iter().any(|t| *t == fs_type_l) {
+            if is_unsupported_fs_type(&fs_type_l) {
                 return Err(error::DecapodError::ValidationError(format!(
-                    "STORAGE_PREFLIGHT_UNSUPPORTED_FS: path='{}' fs_type='{}' is not supported for Decapod local state. Use a local filesystem and retry.",
+                    "STORAGE_PREFLIGHT_UNSUPPORTED_FS: path='{}' fs_type='{}' is not supported for Decapod SQLite state. WAL needs reliable shared-memory coordination, which network, FUSE, and host/VM shared filesystems do not provide. Use a local filesystem or an isolated local data mount, then retry.",
                     parent.display(),
                     fs_type
                 )));
@@ -422,6 +424,44 @@ fn detect_fs_type(path: &Path) -> Option<String> {
         }
     }
     best.map(|(_, fs)| fs)
+}
+
+fn is_unsupported_fs_type(fs_type: &str) -> bool {
+    UNSUPPORTED_FS_TYPES.iter().any(|unsupported| {
+        fs_type == *unsupported || (*unsupported == "fuse" && fs_type.starts_with("fuse."))
+    })
+}
+
+#[cfg(test)]
+mod storage_filesystem_tests {
+    use super::is_unsupported_fs_type;
+
+    #[test]
+    fn shared_and_fuse_filesystems_are_rejected_case_insensitively() {
+        for fs_type in [
+            "virtiofs",
+            "9p",
+            "nfs4",
+            "fuse",
+            "fuse.sshfs",
+            "FUSE.rclone",
+        ] {
+            assert!(
+                is_unsupported_fs_type(&fs_type.to_ascii_lowercase()),
+                "expected unsupported filesystem: {fs_type}"
+            );
+        }
+    }
+
+    #[test]
+    fn local_filesystems_remain_supported() {
+        for fs_type in ["apfs", "ext4", "xfs", "tmpfs"] {
+            assert!(
+                !is_unsupported_fs_type(fs_type),
+                "expected supported filesystem: {fs_type}"
+            );
+        }
+    }
 }
 
 pub fn knowledge_db_path(root: &Path) -> PathBuf {

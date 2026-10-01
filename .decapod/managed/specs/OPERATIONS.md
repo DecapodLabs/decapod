@@ -239,6 +239,14 @@ only coordinates cooperating Decapod processes. Arbitrary external SQLite
 writers, unreliable filesystems, and network/container mounts remain outside
 the guarantee, and filesystem/path limitations from Dactyl must be respected.
 
+For container workspaces on hosts that share repository files with a Linux VM,
+the workspace launch command first creates and verifies a Dactyl online backup
+in the worktree, then mounts it read-only and seeds a tmpfs-backed canonical
+store inside the container. Do not mount the host `.decapod/data` directory as
+live SQLite state. A backup or integrity failure stops launch before the
+container can open the store; container-side mutations are ephemeral and are
+not copied back to the host.
+
 ## Governance Artifact Portability (#1314)
 
 Trajectory and validation output may be shared through Git, CI, or issue
@@ -313,7 +321,7 @@ for filesystem work and are not used as the artifact representation.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3cabb7c460bd22e7d7bab2069909674be2311d929959d07a9a08e8ddf14fc963`
+- Repository signal fingerprint: `fb4c04774a1a39318707cd0c2b8a1d5dfb8243dd3cd25a177a6e572c2d446656`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

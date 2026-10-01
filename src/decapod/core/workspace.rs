@@ -621,16 +621,40 @@ pub fn ensure_workspace(
         // We re-read status but override the blocker/container info
         let runtime = container_runtime::find_container_runtime()?;
         status = get_workspace_status(&worktree_path)?;
+        let store_root = main_repo.join(".decapod").join("data");
+        let snapshot_id = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos();
+        let snapshot_path = worktree_path.join("target").join(format!(
+            "decapod-container-store-{}-{}-{snapshot_id}.db",
+            sanitize_agent_id(agent_id),
+            std::process::id(),
+        ));
+        let snapshot_path = snapshot_path.to_string_lossy().to_string();
+        let store_root = store_root.to_string_lossy().to_string();
+        let workspace_path = worktree_path.to_string_lossy().to_string();
+        let main_repo_path = main_repo.to_string_lossy().to_string();
+        let container_command = format!(
+            "cd {workspace} && mkdir -p target && decapod data database backup --destination {snapshot} && {runtime} run -it -e DECAPOD_CONTAINER=1 -v {repo}:{repo} --mount {snapshot_mount} --tmpfs {store_tmpfs} -w {workspace} {image} sh -lc {seed_command}; result_code=$?; rm -f -- {snapshot}; exit $result_code",
+            workspace = shell_quote(&workspace_path),
+            snapshot = shell_quote(&snapshot_path),
+            runtime = shell_quote(&runtime),
+            repo = shell_quote(&main_repo_path),
+            snapshot_mount = shell_quote(&format!(
+                "type=bind,src={snapshot_path},dst=/tmp/decapod-store.db,ro"
+            )),
+            store_tmpfs = shell_quote(&format!("{store_root}:rw,nosuid,nodev")),
+            image = shell_quote(&image_tag),
+            seed_command = shell_quote(&format!(
+                "cp -- /tmp/decapod-store.db {store_root}/decapod.db && exec bash",
+                store_root = shell_quote(&store_root),
+            )),
+        );
         status.blockers.push(Blocker {
             kind: BlockerKind::WorkspaceRequired,
-            message: "Container environment prepared.".to_string(),
-            resolve_hint: format!(
-                "{} run -it -e DECAPOD_CONTAINER=1 -v {main_repo}:{main_repo} -w {} {} bash",
-                runtime,
-                worktree_path.display(),
-                image_tag,
-                main_repo = main_repo.display(),
-            ),
+            message: "Container environment prepared; its launch command will seed a private local data-store snapshot.".to_string(),
+            resolve_hint: container_command,
         });
         status
             .required_actions
@@ -806,6 +830,10 @@ fn build_workspace_image(workspace_path: &Path, image_tag: &str) -> Result<(), D
     }
 
     Ok(())
+}
+
+fn shell_quote(value: &str) -> String {
+    format!("'{}'", value.replace('\'', "'\\''"))
 }
 
 fn env_bool(name: &str, default_value: bool) -> bool {

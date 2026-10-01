@@ -150,9 +150,14 @@ This project's architecture consists of the following key layers/directories:
   insertion. Canonical local connection factories also retain a bounded
   `decapod.db.lock` sidecar. The sidecar is deliberately exclusive for all
   canonical local connection lifetimes, conservatively coordinating reads and
-  writes across host and container Decapod processes without changing the
-  Dactyl physical storage boundary; a lock timeout is typed contention, not a
-  stale-lock repair.
+  writes across cooperating Decapod processes on a supported local filesystem
+  without changing the Dactyl physical storage boundary; a lock timeout is
+  typed contention, not a stale-lock repair. This lock does not make SQLite
+  WAL safe when a host and VM access the same file through a shared mount.
+  Container launch takes a Dactyl online backup and seeds a container-local
+  tmpfs at the canonical data path, so host and container processes use
+  separate databases. Filesystem preflight also fails closed for network,
+  FUSE, 9p, and virtiofs stores before SQLite opens the database.
 - Trajectory archive files are additive evidence copies. The legacy cookie
   remains the one validation/publication authority for the workspace. Separate
   jobs in one workspace are subagent loops inside that trajectory; Decapod does
@@ -351,7 +356,7 @@ authored document is an untouched template.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3cabb7c460bd22e7d7bab2069909674be2311d929959d07a9a08e8ddf14fc963`
+- Repository signal fingerprint: `fb4c04774a1a39318707cd0c2b8a1d5dfb8243dd3cd25a177a6e572c2d446656`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

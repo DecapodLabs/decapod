@@ -203,7 +203,18 @@ pub enum ApiError {
 - Local Decapod connection factories retain an exclusive sidecar lock beside
   the datastore for the connection lifetime. Dactyl still enforces the
   requested read-only or read-write access mode; Decapod serializes the local
-  physical file conservatively across host/container processes.
+  physical file across cooperating processes on a supported local filesystem.
+- The sidecar lock does not coordinate SQLite WAL safely across host/VM shared
+  filesystems. Before opening a store, filesystem preflight rejects network,
+  FUSE, 9p, and virtiofs mounts with `STORAGE_PREFLIGHT_UNSUPPORTED_FS` so a
+  container validation process cannot proceed against the host database on an
+  unsupported shared mount.
+- The container launch hint runs `decapod data database backup` on the host,
+  mounts that snapshot read-only, then overlays `.decapod/data` with a
+  container-local tmpfs and seeds its `decapod.db` before starting the shell.
+  The temporary snapshot is removed when the container command exits; state
+  written to the container copy is ephemeral and is not folded back into the
+  host datastore.
 - Acquisition is bounded and reports `STORAGE_LOCK_TIMEOUT` on contention.
   The operating system releases descriptor-backed locks when the owner exits,
   so Decapod never removes lock files based on age or guesses at ownership.
@@ -261,7 +272,7 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3cabb7c460bd22e7d7bab2069909674be2311d929959d07a9a08e8ddf14fc963`
+- Repository signal fingerprint: `fb4c04774a1a39318707cd0c2b8a1d5dfb8243dd3cd25a177a6e572c2d446656`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
