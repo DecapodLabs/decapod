@@ -535,6 +535,10 @@ fn run_cmd(repo_root: &Path, args: &[&str]) -> Value {
         .args(args)
         .stdin(std::process::Stdio::null())
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
+        .env("GIT_AUTHOR_NAME", "Decapod Test")
+        .env("GIT_AUTHOR_EMAIL", "decapod-test@example.com")
+        .env("GIT_COMMITTER_NAME", "Decapod Test")
+        .env("GIT_COMMITTER_EMAIL", "decapod-test@example.com")
         .output()
         .expect("run decapod");
     assert!(
@@ -554,6 +558,10 @@ fn run_raw(repo_root: &Path, args: &[&str]) -> std::process::Output {
         .args(args)
         .stdin(std::process::Stdio::null())
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
+        .env("GIT_AUTHOR_NAME", "Decapod Test")
+        .env("GIT_AUTHOR_EMAIL", "decapod-test@example.com")
+        .env("GIT_COMMITTER_NAME", "Decapod Test")
+        .env("GIT_COMMITTER_EMAIL", "decapod-test@example.com")
         .output()
         .expect("run decapod")
 }

@@ -569,9 +569,9 @@ jobs:
                   //:workspace_interlock \
                   //:workunit_cli \
                   //:context_capsule_cli \
-                  --test_arg=--test-threads=4
+                  --test_arg=--test-threads=1
               elif echo "$CHANGED" | grep -qE 'src/decapod/core/'; then
-                bazelisk test //:entrypoint_correctness --test_arg=--test-threads=4
+                bazelisk test //:entrypoint_correctness --test_arg=--test-threads=1
               fi
               ;;
             plugins)
@@ -598,7 +598,7 @@ jobs:
                   //:cli_contract_enforcement \
                   //:entrypoint_correctness \
                   //:cli_contracts \
-                  --test_arg=--test-threads=4
+                  --test_arg=--test-threads=1
               fi
               ;;
             integration)
@@ -608,7 +608,7 @@ jobs:
                   //:constitution_claims \
                   //:spec_conformance \
                   //:substrate_integrity \
-                  --test_arg=--test-threads=4
+                  --test_arg=--test-threads=1
               fi
               ;;
           esac

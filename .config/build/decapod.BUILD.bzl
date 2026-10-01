@@ -95,6 +95,10 @@ def decapod_targets():
                 "CODEX.md",
                 "GEMINI.md",
                 "README.md",
+                "SECURITY.md",
+                "assets/constitution.json",
+                "src/decapod/cli.rs",
+                "src/decapod/lib.rs",
             ] + native.glob([
                 # Runtime state is intentionally absent from a clean checkout;
                 # tests create the managed surfaces they need at runtime.

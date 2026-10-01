@@ -35,6 +35,20 @@ fn resolve_decapod_bin() -> PathBuf {
     PathBuf::from(cargo_bin)
 }
 
+fn resolve_repo_root() -> PathBuf {
+    let cargo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    if cargo_root.join("AGENTS.md").is_file() {
+        return cargo_root;
+    }
+    if let Ok(runfiles_dir) = std::env::var("RUNFILES_DIR") {
+        let runfiles_root = std::path::Path::new(&runfiles_dir).join("_main");
+        if runfiles_root.join("AGENTS.md").is_file() {
+            return runfiles_root;
+        }
+    }
+    cargo_root
+}
+
 /// Helper to run decapod command in a temp directory
 fn run_decapod(temp_dir: &PathBuf, args: &[&str]) -> (bool, String) {
     run_decapod_with_env(temp_dir, args, &[("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")])
@@ -581,7 +595,7 @@ fn test_agents_entrypoint_scopes_decapod_invocation() {
 
 #[test]
 fn test_root_entrypoints_match_scaffold_generators() {
-    let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let repo_root = resolve_repo_root();
     for file in ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md"] {
         let root_path = repo_root.join(file);
         let root_content =
@@ -861,7 +875,7 @@ fn test_validate_rejects_entrypoint_symlink() {
 
 #[test]
 fn test_agent_entrypoints_are_consistent_except_header() {
-    let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let repo_root = resolve_repo_root();
 
     let root_claude = fs::read_to_string(repo_root.join("CLAUDE.md")).expect("read CLAUDE.md");
     let root_gemini = fs::read_to_string(repo_root.join("GEMINI.md")).expect("read GEMINI.md");
@@ -903,7 +917,7 @@ fn test_agent_entrypoints_are_consistent_except_header() {
 
 #[test]
 fn test_entrypoints_use_embedded_docs_paths_only() {
-    let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let repo_root = resolve_repo_root();
     for file in ["CLAUDE.md", "GEMINI.md", "CODEX.md"] {
         let content =
             fs::read_to_string(repo_root.join(file)).unwrap_or_else(|_| panic!("read {file}"));
@@ -936,7 +950,7 @@ fn test_entrypoints_use_embedded_docs_paths_only() {
 
 #[test]
 fn test_top_level_docs_avoid_direct_constitution_file_links() {
-    let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let repo_root = resolve_repo_root();
     let readme = fs::read_to_string(repo_root.join("README.md")).expect("read README.md");
     let security = fs::read_to_string(repo_root.join("SECURITY.md")).expect("read SECURITY.md");
 
@@ -958,7 +972,7 @@ fn test_top_level_docs_avoid_direct_constitution_file_links() {
 #[test]
 #[ignore = "Broken by constitution densification PR"]
 fn test_intent_context_spec_contract_alignment() {
-    let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let repo_root = resolve_repo_root();
     let readme = fs::read_to_string(repo_root.join("README.md")).expect("read README.md");
     let output = Command::new(resolve_decapod_bin())
         .args([
@@ -997,7 +1011,7 @@ fn test_intent_context_spec_contract_alignment() {
 #[test]
 #[ignore = "Broken by constitution densification PR"]
 fn test_core_decapod_routes_without_competing_with_agents() {
-    let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let repo_root = resolve_repo_root();
     let asset = fs::read_to_string(repo_root.join("assets/constitution.json"))
         .expect("read assets/constitution.json");
     let graph: serde_json::Value = serde_json::from_str(&asset).expect("parse constitution asset");
