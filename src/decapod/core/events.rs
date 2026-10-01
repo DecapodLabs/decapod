@@ -709,6 +709,22 @@ pub fn looks_like_event_envelope(value: &Value) -> bool {
     obj.contains_key("event_type") && obj.get("payload").map(|p| p.is_object()).unwrap_or(false)
 }
 
+/// Recover the federation subject from legacy payload shapes.
+///
+/// Older consolidated stores may have lost the `events.subject_id` projection
+/// while retaining the identity in either the event envelope or its nested
+/// payload. Replay can safely restore that projection because the event stream
+/// remains the authority for the node identity.
+pub fn federation_subject_id_from_payload(payload: &Value) -> Option<String> {
+    payload
+        .get("node_id")
+        .or_else(|| payload.pointer("/payload/node_id"))
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(ToString::to_string)
+}
+
 /// Normalize a stored or incoming federation payload into the canonical inner
 /// domain object. Accepts:
 /// - canonical inner payloads (returned as-is)
@@ -812,6 +828,7 @@ fn validate_envelope_against_row(
 pub struct FederationPayloadRepairReport {
     pub candidates: usize,
     pub normalized: usize,
+    pub subjects_repaired: usize,
     pub unchanged: usize,
 }
 
@@ -849,7 +866,7 @@ pub fn repair_double_wrapped_federation_payloads(
             .collect::<Result<Vec<_>, _>>()?;
 
         let mut report = FederationPayloadRepairReport::default();
-        let mut updates: Vec<(String, String)> = Vec::new();
+        let mut updates: Vec<(String, String, Option<String>)> = Vec::new();
 
         for (event_id, event_type, subject_id, actor, ts, payload_raw) in rows {
             let payload: Value = serde_json::from_str(&payload_raw).map_err(|e| {
@@ -857,15 +874,23 @@ pub fn repair_double_wrapped_federation_payloads(
                     "LEGACY_EVENT_PAYLOAD: event '{event_id}' has invalid JSON payload: {e}"
                 ))
             })?;
-            if !looks_like_event_envelope(&payload) {
+            let recovered_subject_id = subject_id
+                .as_deref()
+                .filter(|value| !value.trim().is_empty())
+                .map(ToString::to_string)
+                .or_else(|| federation_subject_id_from_payload(&payload));
+            let subject_repaired = subject_id != recovered_subject_id;
+            if !looks_like_event_envelope(&payload) && !subject_repaired {
                 report.unchanged += 1;
                 continue;
             }
-            report.candidates += 1;
+            if looks_like_event_envelope(&payload) {
+                report.candidates += 1;
+            }
             let inner = normalize_event_payload(
                 &event_id,
                 &event_type,
-                subject_id.as_deref(),
+                recovered_subject_id.as_deref(),
                 &actor,
                 &ts,
                 &payload,
@@ -875,18 +900,28 @@ pub fn repair_double_wrapped_federation_payloads(
                     "LEGACY_EVENT_PAYLOAD: failed to serialize repaired payload for '{event_id}': {e}"
                 ))
             })?;
-            if inner_raw != payload_raw {
-                updates.push((event_id, inner_raw));
-                report.normalized += 1;
+            let payload_repaired = inner_raw != payload_raw;
+            if payload_repaired || subject_repaired {
+                updates.push((event_id, inner_raw, recovered_subject_id));
+                if subject_repaired {
+                    report.subjects_repaired += 1;
+                }
+                if payload_repaired {
+                    report.normalized += 1;
+                }
             } else {
                 report.unchanged += 1;
             }
         }
 
-        for (event_id, inner_raw) in updates {
+        for (event_id, inner_raw, subject_id) in updates {
             conn.execute(
-                "UPDATE events SET payload = ?1 WHERE stream = 'federation' AND event_id = ?2",
-                params![inner_raw, event_id],
+                "UPDATE events
+                 SET payload = ?1,
+                     subject_kind = CASE WHEN ?2 IS NOT NULL THEN 'node' ELSE subject_kind END,
+                     subject_id = COALESCE(?2, subject_id)
+                 WHERE stream = 'federation' AND event_id = ?3",
+                params![inner_raw, subject_id, event_id],
             )?;
         }
         Ok(report)
@@ -897,8 +932,11 @@ pub fn repair_double_wrapped_federation_payloads(
             conn.execute_batch("COMMIT")?;
             if report.normalized > 0 {
                 eprintln!(
-                    "federation payload repair: candidates={} normalized={} unchanged={}",
-                    report.candidates, report.normalized, report.unchanged
+                    "federation payload repair: candidates={} normalized={} subjects_repaired={} unchanged={}",
+                    report.candidates,
+                    report.normalized,
+                    report.subjects_repaired,
+                    report.unchanged
                 );
             }
             Ok(report)
