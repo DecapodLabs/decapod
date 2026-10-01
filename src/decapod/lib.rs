@@ -1990,14 +1990,14 @@ fn run_init_apply(
         agent_files_to_generate.push("AGENTS.md".to_string());
     }
 
-    // Living specs are project-authored state. Force refreshes the generated
-    // entrypoints and README, but an existing specs directory is never
-    // replaced by scaffolding; use the explicit specs refresh path to update
-    // its generated projections without changing authored material.
+    // Living specs are project-authored state. A forced init may reconcile
+    // untouched scaffold files with current config/override inputs, while the
+    // scaffold layer preserves authored material using manifest provenance.
     let generate_specs = init_with.specs
-        && !target_dir
+        && (!target_dir
             .join(core::project_specs::LOCAL_PROJECT_SPECS_DIR)
-            .exists();
+            .exists()
+            || init_with.force);
     let scaffold_summary = scaffold::scaffold_project_entrypoints(&scaffold::ScaffoldOptions {
         target_dir: target_dir.clone(),
         force: init_with.force,

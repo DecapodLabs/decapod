@@ -12,11 +12,34 @@ use decapod::core::todo::{
 };
 use decapod::plugins::policy;
 use serde_json::Value;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::{Arc, Barrier};
 use std::time::{Duration, Instant};
 use tempfile::tempdir;
+
+fn resolve_decapod_bin() -> PathBuf {
+    let cargo_bin = env!("CARGO_BIN_EXE_decapod");
+    if let Ok(path) = Path::new(cargo_bin).canonicalize() {
+        return path;
+    }
+    if let Ok(runfiles_dir) = std::env::var("RUNFILES_DIR") {
+        let path = Path::new(&runfiles_dir).join("_main").join("decapod");
+        if path.exists() {
+            return path;
+        }
+    }
+    if let Some(parent) = std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(|path| path.to_path_buf()))
+    {
+        let path = parent.join("decapod");
+        if path.exists() {
+            return path;
+        }
+    }
+    PathBuf::from(cargo_bin)
+}
 
 fn assert_typed_todo_id(id: &str) {
     let (task_type, body) = id
@@ -507,7 +530,7 @@ fn test_trust_level_hierarchy() {
 }
 
 fn run_cmd(repo_root: &Path, args: &[&str]) -> Value {
-    let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let output = Command::new(resolve_decapod_bin())
         .current_dir(repo_root)
         .args(args)
         .stdin(std::process::Stdio::null())
@@ -526,7 +549,7 @@ fn run_cmd(repo_root: &Path, args: &[&str]) -> Value {
 }
 
 fn run_raw(repo_root: &Path, args: &[&str]) -> std::process::Output {
-    Command::new(env!("CARGO_BIN_EXE_decapod"))
+    Command::new(resolve_decapod_bin())
         .current_dir(repo_root)
         .args(args)
         .stdin(std::process::Stdio::null())

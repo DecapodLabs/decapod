@@ -7,7 +7,26 @@ use std::process::Command;
 use tempfile::TempDir;
 
 fn decapod_bin() -> String {
-    env!("CARGO_BIN_EXE_decapod").to_string()
+    let cargo_bin = env!("CARGO_BIN_EXE_decapod");
+    if let Ok(path) = Path::new(cargo_bin).canonicalize() {
+        return path.to_string_lossy().into_owned();
+    }
+    if let Ok(runfiles_dir) = std::env::var("RUNFILES_DIR") {
+        let path = Path::new(&runfiles_dir).join("_main").join("decapod");
+        if path.exists() {
+            return path.to_string_lossy().into_owned();
+        }
+    }
+    if let Some(parent) = std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(|path| path.to_path_buf()))
+    {
+        let path = parent.join("decapod");
+        if path.exists() {
+            return path.to_string_lossy().into_owned();
+        }
+    }
+    cargo_bin.to_string()
 }
 
 fn setup_project() -> (TempDir, PathBuf) {
@@ -120,7 +139,7 @@ fn test_schema_files_exist_and_parse() {
 
     for file in files {
         let params = format!(r#"{{"section":"{}"}}"#, file);
-        let output = std::process::Command::new(env!("CARGO_BIN_EXE_decapod"))
+        let output = std::process::Command::new(decapod_bin())
             .args(["rpc", "--op", "constitution.get", "--params", &params])
             .output()
             .expect("run decapod rpc constitution.get");

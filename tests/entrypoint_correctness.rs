@@ -10,6 +10,31 @@ use std::path::PathBuf;
 use std::process::{Command, Output};
 use tempfile::TempDir;
 
+fn resolve_decapod_bin() -> PathBuf {
+    let cargo_bin = env!("CARGO_BIN_EXE_decapod");
+    if let Ok(path) = std::path::Path::new(cargo_bin).canonicalize() {
+        return path;
+    }
+    if let Ok(runfiles_dir) = std::env::var("RUNFILES_DIR") {
+        let path = std::path::Path::new(&runfiles_dir)
+            .join("_main")
+            .join("decapod");
+        if path.exists() {
+            return path;
+        }
+    }
+    if let Some(parent) = std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(|path| path.to_path_buf()))
+    {
+        let path = parent.join("decapod");
+        if path.exists() {
+            return path;
+        }
+    }
+    PathBuf::from(cargo_bin)
+}
+
 /// Helper to run decapod command in a temp directory
 fn run_decapod(temp_dir: &PathBuf, args: &[&str]) -> (bool, String) {
     run_decapod_with_env(temp_dir, args, &[("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")])
@@ -20,7 +45,7 @@ fn run_decapod_with_env(
     args: &[&str],
     envs: &[(&str, &str)],
 ) -> (bool, String) {
-    let mut cmd = Command::new(env!("CARGO_BIN_EXE_decapod"));
+    let mut cmd = Command::new(resolve_decapod_bin());
     cmd.current_dir(temp_dir).args(args);
     let mut has_xdg = false;
     for (k, v) in envs {
@@ -42,7 +67,7 @@ fn run_decapod_with_env(
 }
 
 fn run_raw(temp_dir: &PathBuf, args: &[&str], envs: &[(&str, &str)]) -> Output {
-    let mut cmd = Command::new(env!("CARGO_BIN_EXE_decapod"));
+    let mut cmd = Command::new(resolve_decapod_bin());
     cmd.current_dir(temp_dir).args(args);
     let mut has_xdg = false;
     for (k, v) in envs {
@@ -935,7 +960,7 @@ fn test_top_level_docs_avoid_direct_constitution_file_links() {
 fn test_intent_context_spec_contract_alignment() {
     let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let readme = fs::read_to_string(repo_root.join("README.md")).expect("read README.md");
-    let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let output = Command::new(resolve_decapod_bin())
         .args([
             "rpc",
             "--op",

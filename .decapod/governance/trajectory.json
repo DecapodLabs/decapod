@@ -1,42 +1,78 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "run-20261001-pr1359-refresh",
-  "intent_id": "intent:run-20261001-pr1359-refresh",
+  "run_id": "run-20261001-pr1359-ci-failures",
+  "intent_id": "intent:run-20261001-pr1359-ci-failures",
   "task_id": "todo_01m3v4",
-  "original_intent": "Repair the GitHub Actions validation failure for PR 1359",
-  "derived_intent": "Refresh release-bound entrypoints and living-spec projections with Decapod 0.104.3 after updating from master, then prove validation",
-  "destination": "PR 1359",
+  "original_intent": "Repair the failed GitHub Actions checks for PR 1359 while leaving Buildkite behavior out of scope",
+  "derived_intent": "Restore Bazel test binary/runfiles resolution, preserve repository fixtures, serialize the contended todo suite, and reconcile untouched specs during forced init",
   "current_phase": "validation",
   "next_transitions": [
     "publish"
   ],
   "active_boundaries": [
-    "PR 1359 branch and governed release-bound projections; Buildkite remains out of scope"
+    "Do not modify Buildkite workflows or machine-owned Decapod state directly"
   ],
   "repo_scope": [
-    ".decapod/managed/specs",
-    "AGENTS.md",
-    "CLAUDE.md",
-    "CODEX.md",
-    "GEMINI.md"
+    "GitHub Actions test harness, affected Rust tests, forced-init spec reconciliation, governed validation and publication"
   ],
-  "inspected_files": [],
+  "inspected_files": [
+    ".config/build/decapod.BUILD.bzl",
+    ".github/workflows/ci.yml",
+    "src/decapod/lib.rs",
+    "tests/entrypoint_correctness.rs",
+    "tests/plugins/aptitude.rs",
+    "tests/plugins/internalize.rs",
+    "tests/plugins/todo.rs",
+    "tests/spec_conformance.rs",
+    "tests/substrate_integrity.rs"
+  ],
   "modified_files": [
+    ".config/build/decapod.BUILD.bzl",
     ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json"
+    ".decapod/governance/validation.json",
+    ".github/workflows/ci.yml",
+    "src/decapod/lib.rs",
+    "tests/entrypoint_correctness.rs",
+    "tests/plugins/aptitude.rs",
+    "tests/plugins/internalize.rs",
+    "tests/plugins/todo.rs",
+    "tests/spec_conformance.rs",
+    "tests/substrate_integrity.rs"
   ],
   "declared_commands": [
-    "decapod validate"
+    "cargo build --locked --quiet",
+    "cargo fmt --all -- --check",
+    "cargo test --locked --test entrypoint_correctness --test spec_conformance --test substrate_integrity --test plugins_aptitude_tests --test plugins_internalize_tests -- --test-threads=1",
+    "cargo test --locked --test plugins_todo_tests -- --nocapture --test-threads=1",
+    "decapod validate",
+    "decapod validate --refresh-specs --format json"
   ],
   "tool_calls": [],
   "checks": [
     {
+      "name": "affected Cargo test suites",
+      "status": "passed"
+    },
+    {
+      "name": "cargo build",
+      "status": "passed"
+    },
+    {
+      "name": "cargo fmt",
+      "status": "passed"
+    },
+    {
       "name": "decapod validate",
+      "status": "passed"
+    },
+    {
+      "name": "plugins todo serialized suite",
       "status": "passed"
     }
   ],
   "evidence": [
-    "validation epoch ve_67b707bb11cb9822 completed with zero failures"
+    "Affected GitHub test targets pass under Cargo; validation epoch ve_7859035e983d567f completed with zero failures",
+    "validation epoch ve_7859035e983d567f completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -47,25 +83,21 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:e51c746647157e94f1db67e3d52f25fbae2473e854152f599bc9c66cd1955d44",
+  "artifact_hash": "sha256:172fb3040e8181acbbcc9f468023ae8c367a9eec622031a09e124d00b2efc793",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:run-20261001-pr1359-refresh": {
-        "id": "intent:run-20261001-pr1359-refresh",
-        "raw_intent": "Repair the GitHub Actions validation failure for PR 1359",
-        "refined_intent": "Refresh release-bound entrypoints and living-spec projections with Decapod 0.104.3 after updating from master, then prove validation",
+      "intent:run-20261001-pr1359-ci-failures": {
+        "id": "intent:run-20261001-pr1359-ci-failures",
+        "raw_intent": "Repair the failed GitHub Actions checks for PR 1359 while leaving Buildkite behavior out of scope",
+        "refined_intent": "Restore Bazel test binary/runfiles resolution, preserve repository fixtures, serialize the contended todo suite, and reconcile untouched specs during forced init",
         "acceptance_criteria": [],
         "constraints": [
-          ".decapod/managed/specs",
-          "AGENTS.md",
-          "CLAUDE.md",
-          "CODEX.md",
-          "GEMINI.md"
+          "GitHub Actions test harness, affected Rust tests, forced-init spec reconciliation, governed validation and publication"
         ],
         "assumptions": [],
         "boundaries": [
-          "PR 1359 branch and governed release-bound projections; Buildkite remains out of scope"
+          "Do not modify Buildkite workflows or machine-owned Decapod state directly"
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -78,27 +110,34 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:run-20261001-pr1359-refresh",
+        "intent_id": "intent:run-20261001-pr1359-ci-failures",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:run-20261001-pr1359-refresh",
+        "intent_id": "intent:run-20261001-pr1359-ci-failures",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:run-20261001-pr1359-refresh",
+        "intent_id": "intent:run-20261001-pr1359-ci-failures",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run-20261001-pr1359-refresh"
+        "detail": "trajectory:run-20261001-pr1359-ci-failures"
+      },
+      {
+        "sequence": 5,
+        "event_id": "event:5",
+        "intent_id": "intent:run-20261001-pr1359-ci-failures",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:run-20261001-pr1359-ci-failures"
       }
     ],
     "trajectories": {
-      "run-20261001-pr1359-refresh": {
-        "id": "run-20261001-pr1359-refresh",
-        "intent_id": "intent:run-20261001-pr1359-refresh",
+      "run-20261001-pr1359-ci-failures": {
+        "id": "run-20261001-pr1359-ci-failures",
+        "intent_id": "intent:run-20261001-pr1359-ci-failures",
         "evidence_only": true,
         "steps": [
           {
@@ -106,28 +145,62 @@
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              ".decapod/managed/specs",
-              "AGENTS.md",
-              "CLAUDE.md",
-              "CODEX.md",
-              "GEMINI.md"
+              "GitHub Actions test harness, affected Rust tests, forced-init spec reconciliation, governed validation and publication"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_67b707bb11cb9822 completed with zero failures"
+              "validation epoch ve_7859035e983d567f completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
+          },
+          {
+            "sequence": 5,
+            "action": "validation",
+            "command": "cargo fmt --all -- --check",
+            "scope": [
+              "GitHub Actions test harness, affected Rust tests, forced-init spec reconciliation, governed validation and publication"
+            ],
+            "observations": [
+              ".config/build/decapod.BUILD.bzl",
+              ".github/workflows/ci.yml",
+              "src/decapod/lib.rs",
+              "tests/entrypoint_correctness.rs",
+              "tests/spec_conformance.rs",
+              "tests/substrate_integrity.rs",
+              "tests/plugins/aptitude.rs",
+              "tests/plugins/internalize.rs",
+              "tests/plugins/todo.rs",
+              ".config/build/decapod.BUILD.bzl",
+              ".github/workflows/ci.yml",
+              "src/decapod/lib.rs",
+              "tests/entrypoint_correctness.rs",
+              "tests/spec_conformance.rs",
+              "tests/substrate_integrity.rs",
+              "tests/plugins/aptitude.rs",
+              "tests/plugins/internalize.rs",
+              "tests/plugins/todo.rs",
+              "Affected GitHub test targets pass under Cargo; validation epoch ve_7859035e983d567f completed with zero failures"
+            ],
+            "proof_refs": [
+              "cargo fmt",
+              "affected Cargo test suites",
+              "plugins todo serialized suite",
+              "cargo build",
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:5"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 4
+    "next_sequence": 5
   }
 }
