@@ -1,5 +1,29 @@
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use tempfile::TempDir;
+
+fn resolve_decapod_bin() -> PathBuf {
+    let cargo_bin = env!("CARGO_BIN_EXE_decapod");
+    if let Ok(path) = Path::new(cargo_bin).canonicalize() {
+        return path;
+    }
+    if let Ok(runfiles_dir) = std::env::var("RUNFILES_DIR") {
+        let path = Path::new(&runfiles_dir).join("_main").join("decapod");
+        if path.exists() {
+            return path;
+        }
+    }
+    if let Some(parent) = std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(Path::to_path_buf))
+    {
+        let path = parent.join("decapod");
+        if path.exists() {
+            return path;
+        }
+    }
+    PathBuf::from(cargo_bin)
+}
 
 #[test]
 fn workspace_ensure_blocks_on_protected_branch_with_local_mods() {
@@ -34,7 +58,7 @@ fn workspace_ensure_blocks_on_protected_branch_with_local_mods() {
         .status()
         .expect("git commit");
 
-    let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let init_out = Command::new(resolve_decapod_bin())
         .args(["init", "--force"])
         .current_dir(dir)
         .output()
@@ -44,7 +68,7 @@ fn workspace_ensure_blocks_on_protected_branch_with_local_mods() {
     // Dirty the protected branch checkout.
     std::fs::write(dir.join("README.md"), "# changed\n").expect("mutate readme");
 
-    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let out = Command::new(resolve_decapod_bin())
         .args(["workspace", "ensure"])
         .current_dir(dir)
         .output()

@@ -1,10 +1,10 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "run-20261001-pr1359-ci-failures-2",
-  "intent_id": "intent:run-20261001-pr1359-ci-failures-2",
+  "run_id": "run-20261001-pr1359-ci-failures-3",
+  "intent_id": "intent:run-20261001-pr1359-ci-failures-3",
   "task_id": "todo_01m3v4",
   "original_intent": "Repair the remaining GitHub Actions test failures for PR 1359 while leaving Buildkite behavior out of scope",
-  "derived_intent": "Resolve Bazel runfiles repository-root access, serialize all shared-datastore selective suites, provide deterministic test Git identity, and return bounded status contention as structured conflict",
+  "derived_intent": "Resolve Bazel runfiles binary lookup in all core CLI test harnesses and keep validation-profile tests aligned with governed proof recovery",
   "current_phase": "validation",
   "next_transitions": [
     "publish"
@@ -13,57 +13,47 @@
     "Do not modify Buildkite workflows or machine-owned Decapod state directly"
   ],
   "repo_scope": [
-    "GitHub Actions test harness, shared Rust test scheduling, todo contention behavior, governed validation and publication"
+    "Core GitHub Actions test harnesses, governed validation recovery, and publication proof"
   ],
   "inspected_files": [
-    ".config/build/decapod.BUILD.bzl",
-    ".github/workflows/ci.yml",
-    "src/decapod/core/todo.rs",
-    "tests/entrypoint_correctness.rs",
-    "tests/plugins/todo.rs"
+    "tests/context_capsule_cli.rs",
+    "tests/todo_enforcement.rs",
+    "tests/validate_termination.rs",
+    "tests/workspace_interlock.rs",
+    "tests/workunit_cli.rs"
   ],
   "modified_files": [
-    ".config/build/decapod.BUILD.bzl",
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
-    ".github/workflows/ci.yml",
-    "src/decapod/core/todo.rs",
-    "tests/entrypoint_correctness.rs",
-    "tests/plugins/todo.rs"
+    "tests/context_capsule_cli.rs",
+    "tests/todo_enforcement.rs",
+    "tests/validate_termination.rs",
+    "tests/workspace_interlock.rs",
+    "tests/workunit_cli.rs"
   ],
   "declared_commands": [
     "cargo build --locked --quiet",
-    "cargo fmt --all -- --check",
-    "cargo test --locked --test entrypoint_correctness --test spec_conformance --test substrate_integrity --test plugins_aptitude_tests --test plugins_internalize_tests -- --test-threads=1",
-    "cargo test --locked --test plugins_todo_tests -- --nocapture --test-threads=1",
-    "decapod validate",
-    "decapod validate --refresh-specs --format json"
+    "cargo test --locked --test validate_termination --test context_capsule_cli --test todo_enforcement --test workspace_interlock --test workunit_cli -- --test-threads=1",
+    "decapod validate"
   ],
   "tool_calls": [],
   "checks": [
     {
-      "name": "affected non-todo suites",
+      "name": "cargo build --locked",
       "status": "passed"
     },
     {
-      "name": "cargo build",
-      "status": "passed"
-    },
-    {
-      "name": "cargo fmt",
+      "name": "cargo test core harnesses",
       "status": "passed"
     },
     {
       "name": "decapod validate",
       "status": "passed"
-    },
-    {
-      "name": "plugins todo suite",
-      "status": "passed"
     }
   ],
   "evidence": [
-    "GitHub failure reproductions pass locally; plugin todo suite 23/23; validation epoch ve_9181dae5cf3850fb completed with zero failures",
+    "28 targeted core tests passed",
+    "cargo build completed successfully",
     "validation epoch ve_9181dae5cf3850fb completed with zero failures"
   ],
   "shortcut_risk_signals": [],
@@ -75,17 +65,17 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:42efaf1ca12be90d9b30499f2a60d9abca48af97269a9c48ba132336e8699797",
+  "artifact_hash": "sha256:94c79249fb495cce45593a11f685a024aa5145e5ca3dbadb9a4b9412b3975bad",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:run-20261001-pr1359-ci-failures-2": {
-        "id": "intent:run-20261001-pr1359-ci-failures-2",
+      "intent:run-20261001-pr1359-ci-failures-3": {
+        "id": "intent:run-20261001-pr1359-ci-failures-3",
         "raw_intent": "Repair the remaining GitHub Actions test failures for PR 1359 while leaving Buildkite behavior out of scope",
-        "refined_intent": "Resolve Bazel runfiles repository-root access, serialize all shared-datastore selective suites, provide deterministic test Git identity, and return bounded status contention as structured conflict",
+        "refined_intent": "Resolve Bazel runfiles binary lookup in all core CLI test harnesses and keep validation-profile tests aligned with governed proof recovery",
         "acceptance_criteria": [],
         "constraints": [
-          "GitHub Actions test harness, shared Rust test scheduling, todo contention behavior, governed validation and publication"
+          "Core GitHub Actions test harnesses, governed validation recovery, and publication proof"
         ],
         "assumptions": [],
         "boundaries": [
@@ -102,34 +92,41 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:run-20261001-pr1359-ci-failures-2",
+        "intent_id": "intent:run-20261001-pr1359-ci-failures-3",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:run-20261001-pr1359-ci-failures-2",
+        "intent_id": "intent:run-20261001-pr1359-ci-failures-3",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:run-20261001-pr1359-ci-failures-2",
+        "intent_id": "intent:run-20261001-pr1359-ci-failures-3",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run-20261001-pr1359-ci-failures-2"
+        "detail": "trajectory:run-20261001-pr1359-ci-failures-3"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:run-20261001-pr1359-ci-failures-2",
+        "intent_id": "intent:run-20261001-pr1359-ci-failures-3",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run-20261001-pr1359-ci-failures-2"
+        "detail": "trajectory:run-20261001-pr1359-ci-failures-3"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
+        "intent_id": "intent:run-20261001-pr1359-ci-failures-3",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:run-20261001-pr1359-ci-failures-3"
       }
     ],
     "trajectories": {
-      "run-20261001-pr1359-ci-failures-2": {
-        "id": "run-20261001-pr1359-ci-failures-2",
-        "intent_id": "intent:run-20261001-pr1359-ci-failures-2",
+      "run-20261001-pr1359-ci-failures-3": {
+        "id": "run-20261001-pr1359-ci-failures-3",
+        "intent_id": "intent:run-20261001-pr1359-ci-failures-3",
         "evidence_only": true,
         "steps": [
           {
@@ -137,7 +134,7 @@
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              "GitHub Actions test harness, shared Rust test scheduling, todo contention behavior, governed validation and publication"
+              "Core GitHub Actions test harnesses, governed validation recovery, and publication proof"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
@@ -152,39 +149,50 @@
           },
           {
             "sequence": 5,
-            "action": "validation",
-            "command": "cargo fmt --all -- --check",
+            "action": "trajectory.record",
             "scope": [
-              "GitHub Actions test harness, shared Rust test scheduling, todo contention behavior, governed validation and publication"
+              "Core GitHub Actions test harnesses, governed validation recovery, and publication proof"
             ],
             "observations": [
-              ".config/build/decapod.BUILD.bzl",
-              ".github/workflows/ci.yml",
-              "src/decapod/core/todo.rs",
-              "tests/entrypoint_correctness.rs",
-              "tests/plugins/todo.rs",
-              ".config/build/decapod.BUILD.bzl",
-              ".github/workflows/ci.yml",
-              "src/decapod/core/todo.rs",
-              "tests/entrypoint_correctness.rs",
-              "tests/plugins/todo.rs",
-              "GitHub failure reproductions pass locally; plugin todo suite 23/23; validation epoch ve_9181dae5cf3850fb completed with zero failures"
+              "tests/context_capsule_cli.rs",
+              "tests/todo_enforcement.rs",
+              "tests/validate_termination.rs",
+              "tests/workspace_interlock.rs",
+              "tests/workunit_cli.rs"
             ],
             "proof_refs": [
-              "cargo fmt",
-              "affected non-todo suites",
-              "plugins todo suite",
-              "cargo build",
+              "cargo test core harnesses",
+              "cargo build --locked",
               "decapod validate"
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "trajectory.record",
+            "command": "cargo test --locked --test validate_termination --test context_capsule_cli --test todo_enforcement --test workspace_interlock --test workunit_cli -- --test-threads=1",
+            "scope": [
+              "Core GitHub Actions test harnesses, governed validation recovery, and publication proof"
+            ],
+            "observations": [
+              "tests/context_capsule_cli.rs",
+              "tests/todo_enforcement.rs",
+              "tests/validate_termination.rs",
+              "tests/workspace_interlock.rs",
+              "tests/workunit_cli.rs",
+              "28 targeted core tests passed",
+              "cargo build completed successfully"
+            ],
+            "proof_refs": [],
+            "validation_findings": [],
+            "custody_event_id": "event:6"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 5
+    "next_sequence": 6
   }
 }

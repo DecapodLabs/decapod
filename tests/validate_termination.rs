@@ -8,8 +8,31 @@ use std::process::Command;
 use std::time::Instant;
 use tempfile::TempDir;
 
+fn resolve_decapod_bin() -> PathBuf {
+    let cargo_bin = env!("CARGO_BIN_EXE_decapod");
+    if let Ok(path) = Path::new(cargo_bin).canonicalize() {
+        return path;
+    }
+    if let Ok(runfiles_dir) = std::env::var("RUNFILES_DIR") {
+        let path = Path::new(&runfiles_dir).join("_main").join("decapod");
+        if path.exists() {
+            return path;
+        }
+    }
+    if let Some(parent) = std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(Path::to_path_buf))
+    {
+        let path = parent.join("decapod");
+        if path.exists() {
+            return path;
+        }
+    }
+    PathBuf::from(cargo_bin)
+}
+
 fn run_decapod(dir: &Path, args: &[&str], envs: &[(&str, &str)]) -> std::process::Output {
-    let mut cmd = Command::new(env!("CARGO_BIN_EXE_decapod"));
+    let mut cmd = Command::new(resolve_decapod_bin());
     cmd.current_dir(dir).args(args);
     for (k, v) in envs {
         cmd.env(k, v);
@@ -485,6 +508,38 @@ fn validation_profile_changes_validation_epoch() {
         default_validate.status.success(),
         "default validate failed: {}",
         String::from_utf8_lossy(&default_validate.stderr)
+    );
+
+    // A changed validation profile creates a new proof epoch. Start a fresh
+    // trajectory before validating it so the test follows the same recovery
+    // path required for a real governed run.
+    let recovery = run_decapod(
+        &dir,
+        &[
+            "govern",
+            "trajectory",
+            "init",
+            "--run-id",
+            "validation_profile_change_recovery",
+            "--original-intent",
+            "exercise validation profile changes",
+            "--derived-intent",
+            "bind the alternate profile to a fresh proof run",
+            "--boundary",
+            "validation test fixture",
+            "--scope",
+            "validation epoch behavior",
+        ],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        recovery.status.success(),
+        "trajectory recovery failed: {}",
+        String::from_utf8_lossy(&recovery.stderr)
     );
 
     let alternate_validate = run_decapod(
