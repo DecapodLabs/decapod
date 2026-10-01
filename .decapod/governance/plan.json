@@ -1,16 +1,18 @@
 {
   "schema_version": "1.0.0",
-  "title": "Fix Buildkite release-plan token admission",
-  "intent": "Make the non-publishing Release / plan job tokenless and reliably find the pinned cargo-dist binary in Buildkite while preserving native GitHub Actions behavior, explicit-tag-only hosting, and credentialed publishing paths.",
+  "title": "Honor target-scoped policy approvals",
+  "intent": "Fix GitHub Issue #1361: high-risk gates evaluate approvals against the most specific available target while accepting valid action-wide approvals; CLI approvals expire after a bounded default lifetime, support revocation, and policy eval reports the exact approval command. Preserve the policy boundary across todo archive, policy operations, and external actions.",
   "state": "APPROVED",
   "todo_ids": [
-    "fend_01m31btbrqqy22dz"
+    "bugs_01m3vnha76j17kfn"
   ],
   "proof_hooks": [
-    "bash -n .github/scripts/release-plan.sh",
-    "cargo test --locked --test release_workflow_policy",
+    "cargo check --locked",
+    "cargo fmt --all",
+    "git diff --check",
     "decapod validate --refresh-specs --format json",
-    "Buildkite Release / plan passes on PR #1355 after the tokenless plan change"
+    "decapod workspace publish creates a PR",
+    "Issue #1361 comment thanks worldofgeese and summarizes the solution"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -18,11 +20,9 @@
   "unresolved_contradictions": [],
   "deferred_questions": [],
   "constraints": {
-    "forbidden_paths": [
-      ".decapod/data/decapod.db"
-    ],
+    "forbidden_paths": [],
     "file_touch_budget": 30
   },
   "phases": [],
-  "updated_at": "1789977029Z"
+  "updated_at": "1790856626Z"
 }
