@@ -269,6 +269,8 @@ fn classify_storage_message(message: &str) -> StorageFailureKind {
     let lower = message.to_ascii_lowercase();
     if lower.contains("storage_lock_timeout")
         || lower.contains("storage lock timeout")
+        || lower.contains("storage_pool_lock_timeout")
+        || lower.contains("storage pool lock timeout")
         || lower.contains("database is locked")
         || lower.contains("databasebusy")
         || lower.contains("storage contention")

@@ -31,9 +31,9 @@ use crate::core::db::Connection;
 use crate::core::error::DecapodError;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::{Mutex, OnceLock};
+use std::sync::{Mutex, MutexGuard, OnceLock, TryLockError};
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 /// Maximum retry attempts for busy/locked errors.
 const MAX_RETRIES: u32 = 5;
@@ -46,6 +46,8 @@ const MAX_DELAY_MS: u64 = 5_000;
 const WRITE_BUSY_TIMEOUT_SECS: u32 = 5;
 /// Read connection busy_timeout in seconds.
 const READ_BUSY_TIMEOUT_SECS: u32 = 5;
+/// Bound time spent waiting for another operation in this process.
+const OPERATION_LOCK_TIMEOUT_SECS: u64 = 5;
 
 /// Per-database entry holding a write mutex for serialized write access.
 struct PoolEntry {
@@ -98,10 +100,7 @@ impl StoragePool {
         F: FnOnce(&Connection) -> Result<R, DecapodError>,
     {
         let entry = self.get_entry(db_path)?;
-        let _guard = entry
-            .write_lock
-            .lock()
-            .map_err(|_| DecapodError::ValidationError("Pool write lock poisoned".to_string()))?;
+        let _guard = operation_guard(entry, "write")?;
 
         let conn =
             db::db_connect_pooled(&entry.db_path.to_string_lossy(), WRITE_BUSY_TIMEOUT_SECS)?;
@@ -120,13 +119,39 @@ impl StoragePool {
         F: FnOnce(&Connection) -> Result<R, DecapodError>,
     {
         let entry = self.get_entry(db_path)?;
-        let _guard = entry.write_lock.lock().map_err(|_| {
-            DecapodError::ValidationError("Pool operation lock poisoned".to_string())
-        })?;
+        let _guard = operation_guard(entry, "read")?;
         let conn =
             db::db_connect_read_pooled(&entry.db_path.to_string_lossy(), READ_BUSY_TIMEOUT_SECS)?;
 
         f(&conn)
+    }
+}
+
+fn operation_guard(
+    entry: &'static PoolEntry,
+    mode: &str,
+) -> Result<MutexGuard<'static, ()>, DecapodError> {
+    let timeout = Duration::from_secs(OPERATION_LOCK_TIMEOUT_SECS);
+    let started = Instant::now();
+    loop {
+        match entry.write_lock.try_lock() {
+            Ok(guard) => return Ok(guard),
+            Err(TryLockError::Poisoned(_)) => {
+                return Err(DecapodError::ValidationError(format!(
+                    "STORAGE_POOL_LOCK_POISONED: local datastore {mode} operation lock is poisoned; restart the Decapod process before retrying."
+                )));
+            }
+            Err(TryLockError::WouldBlock) if started.elapsed() >= timeout => {
+                return Err(DecapodError::ValidationError(format!(
+                    "STORAGE_POOL_LOCK_TIMEOUT: could not acquire the local datastore {mode} operation lock within {}ms. Another Decapod operation in this process is still running; retry after it exits.",
+                    timeout.as_millis()
+                )));
+            }
+            Err(TryLockError::WouldBlock) => {
+                let remaining = timeout.saturating_sub(started.elapsed());
+                thread::sleep(Duration::from_millis(25).min(remaining));
+            }
+        }
     }
 }
 
@@ -163,3 +188,7 @@ pub fn global_pool() -> &'static StoragePool {
     static POOL: OnceLock<StoragePool> = OnceLock::new();
     POOL.get_or_init(StoragePool::new)
 }
+
+#[cfg(test)]
+#[path = "../../../tests/unit/core/pool_tests.rs"]
+mod tests;

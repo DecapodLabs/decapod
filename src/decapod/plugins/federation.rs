@@ -1484,6 +1484,8 @@ fn load_federation_events(conn: &Connection) -> Result<Vec<FederationEvent>, err
         })?;
         // Single normalization boundary for replay and determinism: accept
         // canonical inner payloads and known legacy double-wrapped envelopes.
+        let node_id = node_id
+            .or_else(|| crate::core::events::federation_subject_id_from_payload(&raw_payload));
         let payload = crate::core::events::normalize_event_payload(
             &event_id,
             &event_type,

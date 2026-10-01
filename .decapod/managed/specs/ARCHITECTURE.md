@@ -153,6 +153,25 @@ This project's architecture consists of the following key layers/directories:
   writes across host and container Decapod processes without changing the
   Dactyl physical storage boundary; a lock timeout is typed contention, not a
   stale-lock repair.
+
+## Federation Replay and Bounded Claim Contention
+
+Federation replay treats the event stream as the authority for node identity.
+When a legacy `node.create` row has a missing subject projection but retains
+`node_id` in its envelope or nested payload, normalization derives the subject
+deterministically and repairs the projection transactionally before replay.
+This keeps migrated stores replayable without inventing identity or silently
+discarding an otherwise recoverable event.
+
+The per-database operation lock is bounded. A todo claim that encounters a
+same-process operation already holding the local lock returns a typed
+`STORAGE_POOL_LOCK_TIMEOUT` contention error with retry guidance; it does not
+wait indefinitely or mutate the open task partially. Broker pending and
+terminal audit records use the acquired write connection, avoiding a second
+attempt to acquire the same process lock. Cross-agent lease and conflict
+semantics remain enforced by the existing database transaction and compare-
+and-set transition.
+
 - Trajectory archive files are additive evidence copies. The legacy cookie
   remains the one validation/publication authority for the workspace. Separate
   jobs in one workspace are subagent loops inside that trajectory; Decapod does
@@ -351,7 +370,7 @@ authored document is an untouched template.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3cabb7c460bd22e7d7bab2069909674be2311d929959d07a9a08e8ddf14fc963`
+- Repository signal fingerprint: `5161e976ae3f6045e884da94a54c904c24830a01d3843377f04c9ec959040fab`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -286,6 +286,7 @@ fn repair_unwraps_double_wrapped_payloads_transactionally_and_idempotently() {
     let report = repair_double_wrapped_federation_payloads(&conn).unwrap();
     assert_eq!(report.candidates, 1);
     assert_eq!(report.normalized, 1);
+    assert_eq!(report.subjects_repaired, 0);
 
     let repaired: String = conn
         .query_row(
@@ -325,6 +326,42 @@ fn repair_unwraps_double_wrapped_payloads_transactionally_and_idempotently() {
     let report2 = repair_double_wrapped_federation_payloads(&conn).unwrap();
     assert_eq!(report2.candidates, 0);
     assert_eq!(report2.normalized, 0);
+}
+
+#[test]
+fn repair_recovers_missing_federation_subject_from_legacy_payload() {
+    let dir = tempdir().unwrap();
+    let conn = Connection::open(dir.path().join("decapod.db")).unwrap();
+    ensure_tables(&conn).unwrap();
+
+    let envelope = serde_json::json!({
+        "actor": "decapod",
+        "event_id": "e-missing-subject",
+        "event_type": "node.create",
+        "node_id": "F_recovered_subject",
+        "payload": {"node_type": "lesson", "title": "Recovered"},
+        "ts": "1779198477Z"
+    });
+    conn.execute(
+        "INSERT INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
+         VALUES('e-missing-subject', '1779198477Z', 1, 'federation', NULL, NULL, 'node.create', ?1, 'decapod')",
+        params![envelope.to_string()],
+    )
+    .unwrap();
+
+    let report = repair_double_wrapped_federation_payloads(&conn).unwrap();
+    assert_eq!(report.candidates, 1);
+    assert_eq!(report.normalized, 1);
+    assert_eq!(report.subjects_repaired, 1);
+
+    let subject: Option<String> = conn
+        .query_row(
+            "SELECT subject_id FROM events WHERE event_id = 'e-missing-subject'",
+            [],
+            |row| row.get(0),
+        )
+        .unwrap();
+    assert_eq!(subject.as_deref(), Some("F_recovered_subject"));
 }
 
 #[test]

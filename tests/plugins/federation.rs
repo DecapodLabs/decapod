@@ -984,6 +984,62 @@ fn test_legacy_wrapped_rebuild_preserves_fields_sources_and_is_idempotent() {
 }
 
 #[test]
+fn test_rebuild_recovers_missing_subject_from_legacy_payload() {
+    use decapod::core::db;
+    use decapod::core::db::params;
+    use decapod::core::schemas;
+
+    let (_tmp, store) = test_store();
+    let db_path = store.root.join(schemas::LOCAL_DB_NAME);
+    let conn = db::db_connect(&db_path.to_string_lossy()).unwrap();
+    let envelope = serde_json::json!({
+        "actor": "decapod",
+        "event_id": "e-rebuild-missing-subject",
+        "event_type": "node.create",
+        "node_id": "F_rebuild_recovered",
+        "payload": {
+            "node_type": "lesson",
+            "title": "Rebuilt legacy node",
+            "body": "recovered from event payload"
+        },
+        "ts": "1779198477Z"
+    });
+    conn.execute(
+        "INSERT INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
+         VALUES('e-rebuild-missing-subject', '1779198477Z', 1, 'federation', NULL, NULL, 'node.create', ?1, 'decapod')",
+        params![envelope.to_string()],
+    )
+    .unwrap();
+    drop(conn);
+
+    assert_eq!(rebuild_from_events(&store.root).unwrap(), 1);
+
+    let conn = db::db_connect(&db_path.to_string_lossy()).unwrap();
+    let node: (String, String) = conn
+        .query_row(
+            "SELECT id, title FROM nodes WHERE id = 'F_rebuild_recovered'",
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )
+        .unwrap();
+    assert_eq!(
+        node,
+        (
+            "F_rebuild_recovered".to_string(),
+            "Rebuilt legacy node".to_string()
+        )
+    );
+    let subject: Option<String> = conn
+        .query_row(
+            "SELECT subject_id FROM events WHERE event_id = 'e-rebuild-missing-subject'",
+            [],
+            |row| row.get(0),
+        )
+        .unwrap();
+    assert_eq!(subject.as_deref(), Some("F_rebuild_recovered"));
+}
+
+#[test]
 fn test_rebuild_fails_closed_on_malformed_edge_without_replacing_projection() {
     use decapod::core::db;
     use decapod::core::db::params;

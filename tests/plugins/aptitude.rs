@@ -6,8 +6,32 @@ use decapod::plugins::aptitude::{
     get_prompts_for_context, initialize_aptitude_db, list_preferences, match_patterns,
     record_observation,
 };
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use tempfile::tempdir;
+
+fn resolve_decapod_bin() -> PathBuf {
+    let cargo_bin = env!("CARGO_BIN_EXE_decapod");
+    if let Ok(path) = Path::new(cargo_bin).canonicalize() {
+        return path;
+    }
+    if let Ok(runfiles_dir) = std::env::var("RUNFILES_DIR") {
+        let path = Path::new(&runfiles_dir).join("_main").join("decapod");
+        if path.exists() {
+            return path;
+        }
+    }
+    if let Some(parent) = std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(|path| path.to_path_buf()))
+    {
+        let path = parent.join("decapod");
+        if path.exists() {
+            return path;
+        }
+    }
+    PathBuf::from(cargo_bin)
+}
 
 #[test]
 fn test_preference_lifecycle() {
@@ -198,7 +222,7 @@ fn test_cli_has_no_skill_subcommand() {
         .expect("git init");
     assert!(init.status.success(), "git init failed");
 
-    let decapod_init = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let decapod_init = Command::new(resolve_decapod_bin())
         .current_dir(dir)
         .args(["init", "--force"])
         .output()
@@ -210,7 +234,7 @@ fn test_cli_has_no_skill_subcommand() {
         String::from_utf8_lossy(&decapod_init.stderr)
     );
 
-    let help = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let help = Command::new(resolve_decapod_bin())
         .current_dir(dir)
         .args(["data", "aptitude", "--help"])
         .output()
@@ -226,7 +250,7 @@ fn test_cli_has_no_skill_subcommand() {
         "aptitude help should not expose skill commands:\n{help_text}"
     );
 
-    let removed = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let removed = Command::new(resolve_decapod_bin())
         .current_dir(dir)
         .args(["data", "aptitude", "skill"])
         .output()
