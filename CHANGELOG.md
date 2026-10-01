@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.105.0](https://github.com/DecapodLabs/decapod/compare/v0.104.3...v0.105.0) - 2026-10-01
+
+### Fixed
+
+- make cli contract harness bazel-safe
+- resolve core test binaries under bazel
+- stabilize remaining GitHub test suites
+- repair GitHub Actions test harness
+- bound todo claims and repair federation replay
+
+### Other
+
+- refresh governed projections for v0.104.3
+- record governed validation proof
+
 ## [0.104.3](https://github.com/DecapodLabs/decapod/compare/v0.104.2...v0.104.3) - 2026-09-22
 
 ### Fixed
