@@ -11,12 +11,26 @@
   "repo_scope": [
     "policy, todo, external action, tests, living specs and required generated artifacts"
   ],
-  "inspected_files": [],
-  "modified_files": [],
-  "declared_commands": [],
-  "tool_calls": [],
+  "inspected_files": [
+    "src/decapod/core/todo.rs",
+    "src/decapod/plugins/policy.rs"
+  ],
+  "modified_files": [
+    "src/decapod/core/todo.rs",
+    "src/decapod/plugins/policy.rs",
+    "tests/plugins/policy.rs",
+    "tests/plugins/todo.rs"
+  ],
+  "declared_commands": [
+    "cargo test --locked --test plugins_policy_tests --test plugins_todo_tests"
+  ],
+  "tool_calls": [
+    "GitHub PR reviews, inline comments, and conversation comments are empty on #1362 and #1364; issue bodies and all comments read"
+  ],
   "checks": [],
-  "evidence": [],
+  "evidence": [
+    "Previous local worktree has empty Git object a5f5328c; preserved and continued in Decapod-created local clone with upstream remote"
+  ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
   "proof_status": "no_checks_run",
@@ -26,7 +40,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:2520b2e40cc0396f2d0bc1bc282786429d9066251d045fc81ef159fe2278c7f9",
+  "artifact_hash": "sha256:99b7f41692fe16d33217519b10fbe8ba394548d8cb93de2ba2227d8730e0c14e",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -61,11 +75,47 @@
         "event_id": "event:3",
         "intent_id": "intent:resume-1361-20261007",
         "kind": "refined"
+      },
+      {
+        "sequence": 4,
+        "event_id": "event:4",
+        "intent_id": "intent:resume-1361-20261007",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:resume-1361-20261007"
       }
     ],
-    "trajectories": {},
+    "trajectories": {
+      "resume-1361-20261007": {
+        "id": "resume-1361-20261007",
+        "intent_id": "intent:resume-1361-20261007",
+        "evidence_only": true,
+        "steps": [
+          {
+            "sequence": 4,
+            "action": "trajectory.record",
+            "tool": "GitHub PR reviews, inline comments, and conversation comments are empty on #1362 and #1364; issue bodies and all comments read",
+            "command": "cargo test --locked --test plugins_policy_tests --test plugins_todo_tests",
+            "scope": [
+              "policy, todo, external action, tests, living specs and required generated artifacts"
+            ],
+            "observations": [
+              "src/decapod/plugins/policy.rs",
+              "src/decapod/core/todo.rs",
+              "src/decapod/plugins/policy.rs",
+              "src/decapod/core/todo.rs",
+              "tests/plugins/policy.rs",
+              "tests/plugins/todo.rs",
+              "Previous local worktree has empty Git object a5f5328c; preserved and continued in Decapod-created local clone with upstream remote"
+            ],
+            "proof_refs": [],
+            "validation_findings": [],
+            "custody_event_id": "event:4"
+          }
+        ]
+      }
+    },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 3
+    "next_sequence": 4
   }
 }

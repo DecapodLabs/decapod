@@ -1448,3 +1448,48 @@ fn dependency_cycle_fails_closed_before_claim() {
         serde_json::json!([first_id, second_id, first_id])
     );
 }
+
+#[test]
+fn archive_eval_fingerprint_authorizes_only_the_named_todo() {
+    let tmp = tempdir().unwrap();
+    let root = tmp.path();
+    initialize_todo_db(root).unwrap();
+    policy::initialize_policy_db(root).unwrap();
+    let alpha = add_scoped_task(
+        root,
+        "Approval target alpha",
+        "root",
+        root.to_str().unwrap(),
+    );
+    let beta = add_scoped_task(
+        root,
+        "Separate archive target beta",
+        "root",
+        root.to_str().unwrap(),
+    );
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: root.to_path_buf(),
+    };
+    let archive = |id: &str| {
+        let task = get_task(root, id).unwrap().unwrap();
+        update_status(
+            &store,
+            id,
+            task.revision,
+            &task.status,
+            "archived",
+            "task.archive",
+            serde_json::json!({}),
+        )
+    };
+    assert!(archive(&alpha).is_err());
+    let fingerprint = policy::derive_fingerprint("task.archive", Some(&alpha), "global");
+    let grant = policy::approve_action(&store, &fingerprint, None, "operator", "global").unwrap();
+    assert!(archive(&beta).is_err());
+    assert_eq!(get_task(root, &beta).unwrap().unwrap().status, "open");
+    assert_eq!(archive(&alpha).unwrap()["status"], "ok");
+    assert_eq!(get_task(root, &alpha).unwrap().unwrap().status, "archived");
+    policy::revoke_approval(&store, &grant).unwrap();
+    assert!(archive(&alpha).is_err());
+}

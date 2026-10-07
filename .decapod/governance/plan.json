@@ -7,9 +7,8 @@
     "bugs_01m4c42yt0x30qxj"
   ],
   "proof_hooks": [
-    "cargo test --locked --test plugins policy",
-    "cargo test --locked --test policy_approval_cli",
-    "decapod validate --refresh-specs --format json"
+    "cargo test --locked --test plugins_policy_tests --test plugins_todo_tests",
+    "cargo clippy --locked --all-targets -- -D warnings"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -21,5 +20,5 @@
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1791412707Z"
+  "updated_at": "1791412838Z"
 }
