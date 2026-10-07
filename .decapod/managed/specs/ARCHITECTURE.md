@@ -153,6 +153,25 @@ This project's architecture consists of the following key layers/directories:
   writes across host and container Decapod processes without changing the
   Dactyl physical storage boundary; a lock timeout is typed contention, not a
   stale-lock repair.
+
+## Federation Replay and Bounded Claim Contention
+
+Federation replay treats the event stream as the authority for node identity.
+When a legacy `node.create` row has a missing subject projection but retains
+`node_id` in its envelope or nested payload, normalization derives the subject
+deterministically and repairs the projection transactionally before replay.
+This keeps migrated stores replayable without inventing identity or silently
+discarding an otherwise recoverable event.
+
+The per-database operation lock is bounded. A todo claim that encounters a
+same-process operation already holding the local lock returns a typed
+`STORAGE_POOL_LOCK_TIMEOUT` contention error with retry guidance; it does not
+wait indefinitely or mutate the open task partially. Broker pending and
+terminal audit records use the acquired write connection, avoiding a second
+attempt to acquire the same process lock. Cross-agent lease and conflict
+semantics remain enforced by the existing database transaction and compare-
+and-set transition.
+
 - Trajectory archive files are additive evidence copies. The legacy cookie
   remains the one validation/publication authority for the workspace. Separate
   jobs in one workspace are subagent loops inside that trajectory; Decapod does
@@ -227,17 +246,16 @@ sequenceDiagram
 - Core execution + persistence:
 - Verification and artifact emission:
 
-### Mutation Policy Approval Boundary (#1361)
+### Federation Mutation Policy Boundary (#1323)
 
 `DbBroker` is the policy boundary for federation mutations. It first enforces
 the actor trust tier, then evaluates the configured operation classifier and
 the independently stored risk-zone policy before the domain mutation opens its
-canonical write path. Gates pass their most specific available target into
-approval lookup. Todo lifecycle changes bind approvals to the todo ID; broker
-operations and risk zones bind to their operation or zone key. An unexpired
-target-specific approval takes priority, while an unexpired action-wide
-approval remains a compatibility fallback. CLI-created approvals have a
-bounded default lifetime and can be revoked by approval ID.
+canonical write path. Category approvals are keyed by the exact operation
+name, whereas zone approvals remain keyed by the zone name; keeping those
+names distinct prevents an approval for one contract from being mistaken for
+an approval for another. The empty configured-category set intentionally skips
+only the category check.
 
 ## Concurrency and Runtime Model
 - Execution model:
@@ -352,7 +370,11 @@ authored document is an untouched template.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8bebfbd43f083d79b3675a16211737f820233c91d8277a4eb2ebb7fc444cc141`
+- Repository signal fingerprint: `5161e976ae3f6045e884da94a54c904c24830a01d3843377f04c9ec959040fab`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Target approval correction (#1361)
+
+Policy reads use the caller-owned transaction connection for claim, lease renewal, yield, and handoff. Those gates bind the todo ID; archive binds the same ID. Broker operations with no resource key bind their operation or zone name. External actions retain their capability and scope key.

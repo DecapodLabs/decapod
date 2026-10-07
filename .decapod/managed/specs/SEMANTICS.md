@@ -62,14 +62,6 @@ Neither backend decides whether a Decapod transition is valid.
 | async enqueue | event_id | ignore duplicate enqueue |
 
 ## Current Governance Artifact Semantics
-### Policy Approvals (#1361)
-- A gate uses its most specific available target when deriving an approval
-  fingerprint and may fall back to an action-wide approval for compatibility.
-- Expired approvals never authorize an action; CLI-created approvals default
-  to a 900-second lifetime.
-- Revocation addresses one approval by its approval ID and leaves unrelated
-  approvals unchanged.
-
 ### Trajectory Cookie
 - Cardinality: one current pointer and zero or more hash-checked historical
   archives per workspace; only the current pointer is validation/publication
@@ -158,7 +150,11 @@ Neither backend decides whether a Decapod transition is valid.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8bebfbd43f083d79b3675a16211737f820233c91d8277a4eb2ebb7fc444cc141`
+- Repository signal fingerprint: `5161e976ae3f6045e884da94a54c904c24830a01d3843377f04c9ec959040fab`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Target approval correction (#1361)
+
+Expiry accepts epoch seconds with trailing Z and RFC3339 timestamps, including UTC Z and explicit offsets. Authorization requires expiry strictly later than the check time. Target-specific and action-wide fingerprints remain distinct; a target-specific grant cannot authorize another target or an action-wide request.

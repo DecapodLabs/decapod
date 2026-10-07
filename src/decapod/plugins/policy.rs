@@ -99,7 +99,8 @@ pub fn run_policy_cli(store: &Store, cli: PolicyCli) -> Result<(), error::Decapo
             let expires_at = expiry_after_seconds(expires_in_seconds)?;
             let approval_id =
                 approve_action_with_expiry(store, &id, None, &actor, &scope, Some(&expires_at))?;
-            println!("Action Approved (ID: {approval_id}, ExpiresAt: {expires_at})");
+            println!("Action Approved (ID: {approval_id})");
+            println!("ExpiresAt: {expires_at}");
         }
         PolicyCommand::Revoke { id } => {
             if revoke_approval(store, &id)? {
@@ -803,8 +804,10 @@ fn expiry_after_seconds(seconds: u64) -> Result<String, error::DecapodError> {
 }
 
 fn parse_expiry(value: &str) -> Option<i64> {
-    if let Some(epoch) = value.strip_suffix('Z') {
-        return epoch.parse().ok();
+    if let Some(epoch) = value.strip_suffix('Z')
+        && let Ok(seconds) = epoch.parse()
+    {
+        return Some(seconds);
     }
     chrono::DateTime::parse_from_rfc3339(value)
         .ok()
@@ -892,7 +895,7 @@ pub fn list_approvals(store: &Store) -> Result<Vec<Approval>, error::DecapodErro
 
     broker.with_conn(&db_path, "decapod", None, "policy.list", |conn| {
         let mut stmt = conn.prepare(
-            "SELECT approval_id, action_id, actor, ts, scope, expires_at FROM approvals",
+            "SELECT approval_id, action_fingerprint, actor, ts, scope, expires_at FROM approvals",
         )?;
         let rows = stmt.query_map([], |row| {
             Ok(Approval {
@@ -923,8 +926,8 @@ pub fn schema() -> serde_json::Value {
         "description": "Risk classification and approval engine",
         "commands": [
             { "name": "eval", "parameters": ["command", "path"] },
-            { "name": "approve", "parameters": ["action_id", "actor", "scope", "expires_in_seconds"] },
-            { "name": "revoke", "parameters": ["approval_id"] }
+            { "name": "approve", "parameters": ["id", "actor", "scope", "expires_in_seconds"] },
+            { "name": "revoke", "parameters": ["id"] }
         ],
         "storage": ["decapod.db", "RISKMAP.json"]
     })

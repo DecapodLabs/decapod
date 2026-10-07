@@ -64,23 +64,6 @@ input; a non-Git directory receives the bounded fallback exclusions instead.
 - Every mutating interface defines idempotency semantics.
 - Every failure path maps to a typed, documented error code.
 
-## Targeted Policy Approval Contract (#1361)
-
-`govern policy eval --command <command> --path <target>` fingerprints both
-the command and target and prints the exact `govern policy approve` invocation
-for that fingerprint. A gate that knows its mutation target checks that
-target-specific approval first and also accepts the legacy action-wide
-fingerprint, preserving existing approvals. Todo lifecycle gates use the todo
-ID as the target; risk-zone and broker-operation gates use their zone or
-operation key when no finer target is available.
-
-CLI-created approvals expire after 900 seconds by default. The approval table's
-`expires_at` is authoritative: expired approvals never satisfy a gate. Operators
-may choose another positive lifetime with `--expires-in-seconds` and revoke an
-approval by its returned approval ID with `govern policy revoke --id <id>`.
-Approval lookup and revocation use the canonical policy store and broker; a
-missing revoke target is reported without changing other approvals.
-
 ## Federation Policy Approval Contract (#1323)
 
 `federation.rebuild` and `federation.supersede` enter the broker as their
@@ -94,9 +77,7 @@ The configured category gate and risk-zone policy are independent interfaces:
 an empty `approval_categories` list disables only the category-driven check,
 while a risk zone with `requires_approval` still controls its own zone-keyed
 approval. A denied operation remains a typed policy validation error, and no
-approval path weakens trust, audit, or transaction boundaries. Category and
-zone checks accept an unexpired exact-key approval or an unexpired action-wide
-approval.
+approval path weakens trust, audit, or transaction boundaries.
 
 ## Generated Contract Depth
 Generated interface specs should include:
@@ -280,7 +261,11 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8bebfbd43f083d79b3675a16211737f820233c91d8277a4eb2ebb7fc444cc141`
+- Repository signal fingerprint: `5161e976ae3f6045e884da94a54c904c24830a01d3843377f04c9ec959040fab`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Target approval correction (#1361)
+
+`govern policy eval --command <action> --path <target>` prints a matching approval command. `approve --id <fingerprint> --expires-in-seconds <seconds>` defaults to 900 seconds and preserves `Action Approved (ID: <approval-id>)` on its own line, followed by `ExpiresAt`. `revoke --id <approval-id>` removes that grant. Invalid, expired, or revoked grants do not authorize actions; legacy grants without expiry remain valid until revoked.

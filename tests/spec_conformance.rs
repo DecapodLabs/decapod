@@ -5,8 +5,31 @@ use tempfile::TempDir;
 
 static SHARED_REPO: OnceLock<(TempDir, PathBuf)> = OnceLock::new();
 
+fn resolve_decapod_bin() -> PathBuf {
+    let cargo_bin = env!("CARGO_BIN_EXE_decapod");
+    if let Ok(path) = Path::new(cargo_bin).canonicalize() {
+        return path;
+    }
+    if let Ok(runfiles_dir) = std::env::var("RUNFILES_DIR") {
+        let path = Path::new(&runfiles_dir).join("_main").join("decapod");
+        if path.exists() {
+            return path;
+        }
+    }
+    if let Some(parent) = std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(|path| path.to_path_buf()))
+    {
+        let path = parent.join("decapod");
+        if path.exists() {
+            return path;
+        }
+    }
+    PathBuf::from(cargo_bin)
+}
+
 fn run_decapod(dir: &Path, args: &[&str]) -> std::process::Output {
-    Command::new(env!("CARGO_BIN_EXE_decapod"))
+    Command::new(resolve_decapod_bin())
         .current_dir(dir)
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
         .args(args)

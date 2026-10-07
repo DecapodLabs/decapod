@@ -35,9 +35,6 @@
 
 
 
-
-
-
 ARG DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v0.104.3-debian
 FROM $DECAPOD_IMAGE
 ARG DECAPOD_VERSION=0.104.3

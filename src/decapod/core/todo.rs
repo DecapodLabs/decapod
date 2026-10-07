@@ -2204,6 +2204,7 @@ fn enforce_operation_policy(
     conn: &Connection,
     zone_name: &str,
     agent_id: &str,
+    target_id: &str,
 ) -> Result<(), error::DecapodError> {
     let Some((required_trust, requires_approval)) = get_risk_zone_policy(conn, zone_name)? else {
         return Ok(());
@@ -2225,9 +2226,9 @@ fn enforce_operation_policy(
         if !policy::human_in_loop_required(&store, zone_name, level, true) {
             return Ok(());
         }
-        if !policy::check_approval_on_conn(conn, zone_name, Some(zone_name), "global")? {
+        if !policy::check_approval_on_conn(conn, zone_name, Some(target_id), "global")? {
             return Err(error::DecapodError::ValidationError(format!(
-                "Policy gate denied for {zone_name}: missing approval"
+                "Policy gate denied for {zone_name} on {target_id}: missing approval. Run `decapod govern policy eval --command '{zone_name}' --path '{target_id}'` to get the approval command."
             )));
         }
     }
@@ -3294,7 +3295,7 @@ pub fn update_status(
     }
 
     let result =
-        broker.with_transaction(&db_path, &actor, Some(&intent_ref), event_type, |conn| {
+        match broker.with_transaction(&db_path, &actor, Some(&intent_ref), event_type, |conn| {
             ensure_schema(conn)?;
 
             let current: Option<(String, i64)> = conn
@@ -3368,7 +3369,21 @@ pub fn update_status(
                 "id": id,
                 "revision": new_revision,
             }))
-        })?;
+        }) {
+            Ok(result) => result,
+            Err(error::DecapodError::ValidationError(message))
+                if message.starts_with("STORAGE_POOL_LOCK_TIMEOUT:") =>
+            {
+                serde_json::json!({
+                    "status": "conflict",
+                    "reason": "storage_contention",
+                    "id": id,
+                    "expected_status": expected_status,
+                    "expected_revision": expected_revision,
+                })
+            }
+            Err(error) => return Err(error),
+        };
 
     let changed = result.get("status").and_then(|v| v.as_str()) == Some("ok");
     if changed {
@@ -3741,7 +3756,7 @@ pub fn claim_task_with_lease(
         } else {
             "todo.claim.exclusive"
         };
-        enforce_operation_policy(root, conn, claim_zone, agent_id)?;
+        enforce_operation_policy(root, conn, claim_zone, agent_id, id)?;
 
         // status, assigned_to, category, scope, dir_path, lease_expires_at, lease_generation
         struct ClaimLeaseRow {
@@ -4240,7 +4255,7 @@ pub fn renew_claim_lease(
     let result = broker.with_transaction(&db_path, "decapod", None, "todo.renew", |conn| {
         ensure_schema(conn)?;
         touch_agent_presence(conn, agent_id, &ts)?;
-        enforce_operation_policy(root, conn, "todo.claim.exclusive", agent_id)?;
+        enforce_operation_policy(root, conn, "todo.claim.exclusive", agent_id, id)?;
 
         let current: Option<(String, String, Option<String>, u32, String)> = conn
             .query_row(
@@ -4378,7 +4393,7 @@ pub fn yield_claim_lease(
     let result = broker.with_transaction(&db_path, "decapod", None, "todo.yield", |conn| {
         ensure_schema(conn)?;
         touch_agent_presence(conn, agent_id, &ts)?;
-        enforce_operation_policy(root, conn, "todo.claim.exclusive", agent_id)?;
+        enforce_operation_policy(root, conn, "todo.claim.exclusive", agent_id, id)?;
 
         let current: Option<(String, String, u32, String, String)> = conn
             .query_row(
@@ -4676,7 +4691,7 @@ pub fn handoff_task(
     let result = broker.with_transaction(&db_path, "decapod", None, "todo.handoff", |conn| {
         ensure_schema(conn)?;
         let acting_agent = from.unwrap_or("unknown");
-        enforce_operation_policy(root, conn, "todo.handoff", acting_agent)?;
+        enforce_operation_policy(root, conn, "todo.handoff", acting_agent, id)?;
         touch_agent_presence(conn, to, &ts)?;
 
         struct HandoffRow {

@@ -161,20 +161,32 @@ impl DbBroker {
             self.log_event(actor, effective_intent.as_deref(), op_name, &db_id, status)?;
             result
         } else {
-            // Write path: use pooled write connection with two-phase audit logging
-            self.log_event(
-                actor,
-                effective_intent.as_deref(),
-                op_name,
-                &db_id,
-                "pending",
-            )?;
+            // Write path: acquire the operation lock once and keep the two-phase
+            // audit record on the same connection. Logging the pending event
+            // through `events::append` before acquiring this connection used to
+            // make a contended claim wait through two independent lock timeouts.
+            pool::global_pool().with_write(db_path, |conn| {
+                self.log_event_on_conn(
+                    conn,
+                    actor,
+                    effective_intent.as_deref(),
+                    op_name,
+                    &db_id,
+                    "pending",
+                )?;
 
-            let result = pool::global_pool().with_write(db_path, f);
-
-            let status = if result.is_ok() { "success" } else { "error" };
-            self.log_event(actor, effective_intent.as_deref(), op_name, &db_id, status)?;
-            result
+                let result = f(conn);
+                let status = if result.is_ok() { "success" } else { "error" };
+                self.log_event_on_conn(
+                    conn,
+                    actor,
+                    effective_intent.as_deref(),
+                    op_name,
+                    &db_id,
+                    status,
+                )?;
+                result
+            })
         }
     }
 
@@ -220,6 +232,53 @@ impl DbBroker {
         db_id: &str,
         status: &str,
     ) -> Result<(), error::DecapodError> {
+        let ev = self.build_event(actor, intent_ref, op, db_id, status)?;
+        let audit_lock = get_audit_lock();
+        let _audit_guard = audit_lock
+            .lock()
+            .map_err(|_| error::DecapodError::ValidationError("Audit lock poisoned".into()))?;
+
+        events::append(
+            &self.root,
+            events::BROKER,
+            &serde_json::to_value(ev)
+                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
+        )?;
+        Ok(())
+    }
+
+    fn log_event_on_conn(
+        &self,
+        conn: &Connection,
+        actor: &str,
+        intent_ref: Option<&str>,
+        op: &str,
+        db_id: &str,
+        status: &str,
+    ) -> Result<(), error::DecapodError> {
+        let ev = self.build_event(actor, intent_ref, op, db_id, status)?;
+        let audit_lock = get_audit_lock();
+        let _audit_guard = audit_lock
+            .lock()
+            .map_err(|_| error::DecapodError::ValidationError("Audit lock poisoned".into()))?;
+        events::ensure_tables(conn)?;
+        events::append_on_conn(
+            conn,
+            events::BROKER,
+            &serde_json::to_value(ev)
+                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
+        )?;
+        Ok(())
+    }
+
+    fn build_event(
+        &self,
+        actor: &str,
+        intent_ref: Option<&str>,
+        op: &str,
+        db_id: &str,
+        status: &str,
+    ) -> Result<BrokerEvent, error::DecapodError> {
         let ts = time::now_epoch_z();
         let request_id = time::new_event_id();
         let event_id = time::new_event_id();
@@ -230,7 +289,7 @@ impl DbBroker {
         let causation_id = env::var("DECAPOD_CAUSATION_ID").ok();
         let idempotency_key = env::var("DECAPOD_IDEMPOTENCY_KEY").ok();
 
-        let ev = BrokerEvent {
+        Ok(BrokerEvent {
             schema_version: default_broker_schema_version(),
             request_id,
             ts,
@@ -245,20 +304,7 @@ impl DbBroker {
             op: op.to_string(),
             db_id: db_id.to_string(),
             status: status.to_string(),
-        };
-
-        let audit_lock = get_audit_lock();
-        let _audit_guard = audit_lock
-            .lock()
-            .map_err(|_| error::DecapodError::ValidationError("Audit lock poisoned".into()))?;
-
-        events::append(
-            &self.root,
-            events::BROKER,
-            &serde_json::to_value(ev)
-                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
-        )?;
-        Ok(())
+        })
     }
 
     fn cache_compound_key(db_path: &Path, scope: &str, key: &str) -> String {

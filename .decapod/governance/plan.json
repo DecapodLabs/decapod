@@ -1,18 +1,15 @@
 {
   "schema_version": "1.0.0",
-  "title": "Honor target-scoped policy approvals",
-  "intent": "Fix GitHub Issue #1361: high-risk gates evaluate approvals against the most specific available target while accepting valid action-wide approvals; CLI approvals expire after a bounded default lifetime, support revocation, and policy eval reports the exact approval command. Preserve the policy boundary across todo archive, policy operations, and external actions.",
+  "title": "Correct target approvals in PR #1362",
+  "intent": "Preserve per-target and explicit action-wide approvals; enforce expiry and revocation; prove todo archive isolation and CLI compatibility.",
   "state": "APPROVED",
   "todo_ids": [
-    "bugs_01m3vnha76j17kfn"
+    "bugs_01m4c42yt0x30qxj"
   ],
   "proof_hooks": [
-    "cargo check --locked",
-    "cargo fmt --all",
-    "git diff --check",
-    "decapod validate --refresh-specs --format json",
-    "decapod workspace publish creates a PR",
-    "Issue #1361 comment thanks worldofgeese and summarizes the solution"
+    "cargo test --locked --test plugins policy",
+    "cargo test --locked --test policy_approval_cli",
+    "decapod validate --refresh-specs --format json"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -21,8 +18,8 @@
   "deferred_questions": [],
   "constraints": {
     "forbidden_paths": [],
-    "file_touch_budget": 30
+    "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1790856626Z"
+  "updated_at": "1791412707Z"
 }

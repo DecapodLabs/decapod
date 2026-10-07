@@ -1,6 +1,7 @@
 use decapod::core::broker::DbBroker;
 use decapod::core::db::Connection;
 use decapod::core::events;
+use decapod::core::pool::global_pool;
 use decapod::core::schemas;
 use decapod::core::store::Store;
 use decapod::core::store::StoreKind;
@@ -11,10 +12,34 @@ use decapod::core::todo::{
 };
 use decapod::plugins::policy;
 use serde_json::Value;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::{Arc, Barrier};
+use std::time::{Duration, Instant};
 use tempfile::tempdir;
+
+fn resolve_decapod_bin() -> PathBuf {
+    let cargo_bin = env!("CARGO_BIN_EXE_decapod");
+    if let Ok(path) = Path::new(cargo_bin).canonicalize() {
+        return path;
+    }
+    if let Ok(runfiles_dir) = std::env::var("RUNFILES_DIR") {
+        let path = Path::new(&runfiles_dir).join("_main").join("decapod");
+        if path.exists() {
+            return path;
+        }
+    }
+    if let Some(parent) = std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(|path| path.to_path_buf()))
+    {
+        let path = parent.join("decapod");
+        if path.exists() {
+            return path;
+        }
+    }
+    PathBuf::from(cargo_bin)
+}
 
 fn assert_typed_todo_id(id: &str) {
     let (task_type, body) = id
@@ -106,6 +131,50 @@ fn test_todo_lifecycle() {
     let tasks = list_tasks(&root, Some("done".to_string()), None, None, None, None).unwrap();
     assert_eq!(tasks.len(), 1);
     assert_eq!(tasks[0].id, task_id);
+}
+
+#[test]
+fn claim_returns_bounded_error_when_local_operation_lock_is_busy() {
+    let tmp = tempdir().unwrap();
+    let root = tmp.path().to_path_buf();
+    initialize_todo_db(&root).unwrap();
+    let task_id = add_scoped_task(
+        &root,
+        "Bounded claim lock regression",
+        "architecture",
+        root.to_str().unwrap(),
+    );
+    let db_path = root.join(schemas::LOCAL_DB_NAME);
+    let entered = Arc::new(Barrier::new(2));
+    let release = Arc::new(Barrier::new(2));
+    let holder_entered = Arc::clone(&entered);
+    let holder_release = Arc::clone(&release);
+    let holder_path = db_path.clone();
+    let holder = std::thread::spawn(move || {
+        global_pool().with_write(&holder_path, |_conn| {
+            holder_entered.wait();
+            holder_release.wait();
+            Ok::<_, decapod::core::error::DecapodError>(())
+        })
+    });
+
+    entered.wait();
+    let started = Instant::now();
+    let result = claim_task(&root, &task_id, "agent-lock-timeout", ClaimMode::Exclusive);
+    let elapsed = started.elapsed();
+    assert!(result.is_err(), "claim must report the busy operation lock");
+    let message = result.unwrap_err().to_string();
+    assert!(message.contains("STORAGE_POOL_LOCK_TIMEOUT"), "{message}");
+    assert!(
+        elapsed < Duration::from_secs(12),
+        "claim exceeded the bounded lock interval: {elapsed:?}"
+    );
+
+    release.wait();
+    holder
+        .join()
+        .expect("holder thread")
+        .expect("holder operation");
 }
 
 #[test]
@@ -461,11 +530,15 @@ fn test_trust_level_hierarchy() {
 }
 
 fn run_cmd(repo_root: &Path, args: &[&str]) -> Value {
-    let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let output = Command::new(resolve_decapod_bin())
         .current_dir(repo_root)
         .args(args)
         .stdin(std::process::Stdio::null())
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
+        .env("GIT_AUTHOR_NAME", "Decapod Test")
+        .env("GIT_AUTHOR_EMAIL", "decapod-test@example.com")
+        .env("GIT_COMMITTER_NAME", "Decapod Test")
+        .env("GIT_COMMITTER_EMAIL", "decapod-test@example.com")
         .output()
         .expect("run decapod");
     assert!(
@@ -480,11 +553,15 @@ fn run_cmd(repo_root: &Path, args: &[&str]) -> Value {
 }
 
 fn run_raw(repo_root: &Path, args: &[&str]) -> std::process::Output {
-    Command::new(env!("CARGO_BIN_EXE_decapod"))
+    Command::new(resolve_decapod_bin())
         .current_dir(repo_root)
         .args(args)
         .stdin(std::process::Stdio::null())
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
+        .env("GIT_AUTHOR_NAME", "Decapod Test")
+        .env("GIT_AUTHOR_EMAIL", "decapod-test@example.com")
+        .env("GIT_COMMITTER_NAME", "Decapod Test")
+        .env("GIT_COMMITTER_EMAIL", "decapod-test@example.com")
         .output()
         .expect("run decapod")
 }
