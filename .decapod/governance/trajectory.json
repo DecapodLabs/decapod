@@ -5,6 +5,10 @@
   "task_id": "data_01m4gz0f9y5dfsez",
   "original_intent": "Do #1364 first, adjust the code if necessary for whatever reasons you deem, then push. The database share is by design.",
   "derived_intent": "Preserve intended shared database behavior. Reconcile master and harden the original manual workspace snapshot launcher cleanup, argument parsing, and existing filesystem matching.",
+  "current_phase": "validation",
+  "next_transitions": [
+    "publish"
+  ],
   "active_boundaries": [
     "No merge or deployment, no new automatic-run restriction, no expansion of filesystem preflight into other Dactyl routes. Real Docker/Podman execution is unavailable."
   ],
@@ -16,11 +20,15 @@
     "src/decapod/core/workspace.rs"
   ],
   "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
     "src/decapod/core/db.rs",
     "src/decapod/core/workspace.rs",
     "tests/unit/core/workspace_tests.rs"
   ],
-  "declared_commands": [],
+  "declared_commands": [
+    "decapod validate"
+  ],
   "tool_calls": [],
   "checks": [
     {
@@ -46,6 +54,14 @@
     {
       "name": "cargo test --locked --offline --lib with serial test scheduling",
       "status": "passed"
+    },
+    {
+      "name": "decapod validate",
+      "status": "passed"
+    },
+    {
+      "name": "decapod validate --refresh-specs --format json",
+      "status": "passed"
     }
   ],
   "evidence": [
@@ -53,7 +69,9 @@
     "Fresh independent review confirms only mountinfo parsing, explicit manual snapshot launcher, their tests and required authored/generated artifacts differ from master. Original filesystem denylist and intentional shared routes remain unchanged.",
     "Latest design direction preserves shared database topology. Removed the proposed automatic-run restriction, Dactyl preflight expansion, and new blanket virtiofs/FUSE denylist additions. Existing master storage restrictions and actual I/O failures remain unchanged.",
     "Snapshot regression coverage includes repeated launches, backup failure, runtime failure, TERM143 cleanup, shell-quoted paths, and mount syntax rejection. Mountinfo tests preserve the existing filesystem denylist and validate escaped and nested paths.",
-    "The supported workspace ensure --container command reports no Docker/Podman runtime. Source and shell mock checks do not prove actual VM mounts."
+    "The supported workspace ensure --container command reports no Docker/Podman runtime. Source and shell mock checks do not prove actual VM mounts.",
+    "Validated source tree 421de50002082997079d26d8fd1512ab9638fc50 against source commit 232cfd7f6f1d60edb265ebcf63ed71cda989288e: 203 checks passed, 11 skipped, zero failures. Runtime and test source bytes are identical to the reviewed 363-library/106-integration test candidate. The clean-tree validation does not establish actual container execution.",
+    "validation epoch ve_7f65b78c1c3dc688 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -64,7 +82,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:74f56356a857761056e5534e6b3388c112889599db51da72c84abdd8d1a2a515",
+  "artifact_hash": "sha256:fcb9131913c8e4046123185688d0a29dcc593919bf69a4a3653492db48c38d79",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -117,6 +135,20 @@
       {
         "sequence": 6,
         "event_id": "event:6",
+        "intent_id": "intent:pr1364-sharing-20261009",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:pr1364-sharing-20261009"
+      },
+      {
+        "sequence": 7,
+        "event_id": "event:7",
+        "intent_id": "intent:pr1364-sharing-20261009",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:pr1364-sharing-20261009"
+      },
+      {
+        "sequence": 8,
+        "event_id": "event:8",
         "intent_id": "intent:pr1364-sharing-20261009",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:pr1364-sharing-20261009"
@@ -181,12 +213,45 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:6"
+          },
+          {
+            "sequence": 7,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src/decapod/core/db.rs; src/decapod/core/workspace.rs; launcher unit tests; living specifications; required generated artifacts"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_7f65b78c1c3dc688 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:7"
+          },
+          {
+            "sequence": 8,
+            "action": "trajectory.record",
+            "scope": [
+              "src/decapod/core/db.rs; src/decapod/core/workspace.rs; launcher unit tests; living specifications; required generated artifacts"
+            ],
+            "observations": [
+              "Validated source tree 421de50002082997079d26d8fd1512ab9638fc50 against source commit 232cfd7f6f1d60edb265ebcf63ed71cda989288e: 203 checks passed, 11 skipped, zero failures. Runtime and test source bytes are identical to the reviewed 363-library/106-integration test candidate. The clean-tree validation does not establish actual container execution."
+            ],
+            "proof_refs": [
+              "decapod validate --refresh-specs --format json"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:8"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 6
+    "next_sequence": 8
   }
 }
