@@ -392,6 +392,10 @@ fn write_probe(dir: &Path) -> Result<(), error::DecapodError> {
 fn detect_fs_type(path: &Path) -> Option<String> {
     let canon = path.canonicalize().ok()?;
     let text = fs::read_to_string("/proc/self/mountinfo").ok()?;
+    fs_type_from_mountinfo(&canon, &text)
+}
+
+fn fs_type_from_mountinfo(path: &Path, text: &str) -> Option<String> {
     let mut best: Option<(usize, String)> = None;
     for line in text.lines() {
         let mut parts = line.split(" - ");
@@ -405,9 +409,15 @@ fn detect_fs_type(path: &Path) -> Option<String> {
         if left_parts.len() < 5 {
             continue;
         }
-        let mount_point = left_parts[4].replace("\\040", " ");
+        // Decode backslash last so a literal \040 encoded as \134040
+        // remains literal rather than being decoded twice.
+        let mount_point = left_parts[4]
+            .replace("\\040", " ")
+            .replace("\\011", "\t")
+            .replace("\\012", "\n")
+            .replace("\\134", "\\");
         let mount_point_path = Path::new(&mount_point);
-        if !canon.starts_with(mount_point_path) {
+        if !path.starts_with(mount_point_path) {
             continue;
         }
         let right_parts: Vec<&str> = right.split_whitespace().collect();
@@ -507,3 +517,47 @@ pub fn initialize_decide_db(root: &Path) -> Result<(), error::DecapodError> {
 
 // Subsystems own their schemas and initialization. Avoid generic "plugin DB" APIs until
 // a real extension mechanism exists.
+
+#[cfg(test)]
+mod storage_filesystem_tests {
+    use super::{UNSUPPORTED_FS_TYPES, fs_type_from_mountinfo};
+    use std::path::Path;
+
+    #[test]
+    fn intentional_shared_filesystems_remain_outside_the_existing_denylist() {
+        for fs_type in ["virtiofs", "fuse", "fuseblk", "fuse.sshfs"] {
+            assert!(!UNSUPPORTED_FS_TYPES.contains(&fs_type));
+        }
+    }
+
+    #[test]
+    fn mountinfo_uses_deepest_component_boundary_and_decodes_escapes() {
+        let mounts = concat!(
+            "20 1 0:1 / / rw - ext4 /dev/root rw\n",
+            "21 20 0:2 / /repo rw - virtiofs shared rw\n",
+            "22 21 0:3 / /repo/.decapod/data rw - tmpfs tmpfs rw\n",
+            "23 20 0:4 / /space\\040tab\\011line\\012slash\\134040 rw - fuse.sshfs shared rw\n",
+        );
+        for (path, expected) in [
+            ("/repo/.decapod/data", "tmpfs"),
+            ("/repo/.decapod/data/decapod.db", "tmpfs"),
+            ("/repo/.decapod/data-other", "virtiofs"),
+            ("/repository", "ext4"),
+            ("/space tab\tline\nslash\\040/db", "fuse.sshfs"),
+        ] {
+            assert_eq!(
+                fs_type_from_mountinfo(Path::new(path), mounts).as_deref(),
+                Some(expected)
+            );
+        }
+    }
+
+    #[test]
+    fn malformed_mountinfo_does_not_hide_valid_entries() {
+        let mounts = "bad line\n1 0 0:1 / / rw - ext4 /dev/root rw\n2 1 0:2 / /repo rw - \n";
+        assert_eq!(
+            fs_type_from_mountinfo(Path::new("/repo"), mounts).as_deref(),
+            Some("ext4")
+        );
+    }
+}

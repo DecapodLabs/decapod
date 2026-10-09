@@ -1,19 +1,18 @@
 {
   "schema_version": "1.0.0",
-  "title": "Fix federation replay repair and bounded todo claim",
-  "intent": "Repair federation replay and bounded todo claims, then restore the shared Bazel test harness so GitHub Actions exercises the PR reliably",
+  "title": "Finish PR 1364 while preserving intended sharing",
+  "intent": "Preserve intended shared-database topology, including virtiofs and FUSE routes. Reconcile master and harden the explicit manual workspace snapshot launch ownership, cleanup, quoting and mountinfo matching. No new blanket filesystem ban, automatic-run restriction, merge or deployment.",
   "state": "APPROVED",
   "todo_ids": [
-    "todo_01m3v4"
+    "data_01m4gz0f9y5dfsez"
   ],
   "proof_hooks": [
-    "bazelisk test //:entrypoint_correctness --test_arg=--test-threads=1",
-    "bazelisk test //:spec_conformance //:substrate_integrity --test_arg=--test-threads=1",
-    "bazelisk test //:plugins_todo_tests //:plugins_aptitude_tests //:plugins_internalize_tests --test_arg=--test-threads=1"
+    "cargo test --locked --lib",
+    "cargo clippy --locked --all-targets --all-features -- -D warnings",
+    "Focused workspace and integration test targets",
+    "decapod validate --refresh-specs --format json"
   ],
-  "unknowns": [
-    "Bazel sandbox runfiles must expose the decapod binary and repository entrypoint fixtures to Rust integration tests"
-  ],
+  "unknowns": [],
   "human_questions": [],
   "stop_conditions": [],
   "unresolved_contradictions": [],
@@ -22,8 +21,8 @@
     "forbidden_paths": [
       ".decapod/data/decapod.db"
     ],
-    "file_touch_budget": 40
+    "file_touch_budget": 30
   },
   "phases": [],
-  "updated_at": "1790854252Z"
+  "updated_at": "1791571861Z"
 }

@@ -257,11 +257,28 @@ the refresh before spec or manifest writes. Ordinary named sections are authored
 only paired attestation, capability-declaration, and capability-overlay comment
 blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
+## Snapshot-Backed Workspace Launch
+
+- The `workspace ensure --container` hint runs `decapod data database backup`
+  on the host, mounts the verified snapshot read-only, overlays the canonical
+  data path with container-local tmpfs, and seeds `decapod.db` before the shell.
+- Every execution owns a fresh private directory under the worktree target
+  directory. A subshell trap removes only that invocation's snapshot and
+  preserves backup/runtime exit status, including handled termination signals.
+  Reusing the hint cannot delete a pre-existing snapshot.
+- Colons, commas, double quotes, control characters, and non-UTF-8 mount paths
+  are rejected when constructing this hint because runtime mount parsers
+  interpret those characters independently of shell quoting.
+- Linux mountinfo matching decodes escaped whitespace and backslashes and
+  selects the most specific component-boundary mount. Existing filesystem
+  restrictions and write/read-only errors remain in effect; virtiofs, FUSE,
+  and automatic-run shared stores are not newly banned by this change.
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5161e976ae3f6045e884da94a54c904c24830a01d3843377f04c9ec959040fab`
+- Repository signal fingerprint: `d6603b370f1e7716d2ed07f015aad7f81e5ca75ab51fb4f5514b11f9ecfae714`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

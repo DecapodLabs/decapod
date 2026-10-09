@@ -621,16 +621,12 @@ pub fn ensure_workspace(
         // We re-read status but override the blocker/container info
         let runtime = container_runtime::find_container_runtime()?;
         status = get_workspace_status(&worktree_path)?;
+        let container_command =
+            container_workspace_launch_command(&main_repo, &worktree_path, &runtime, &image_tag)?;
         status.blockers.push(Blocker {
             kind: BlockerKind::WorkspaceRequired,
-            message: "Container environment prepared.".to_string(),
-            resolve_hint: format!(
-                "{} run -it -e DECAPOD_CONTAINER=1 -v {main_repo}:{main_repo} -w {} {} bash",
-                runtime,
-                worktree_path.display(),
-                image_tag,
-                main_repo = main_repo.display(),
-            ),
+            message: "Container environment prepared; its launch command will seed a private local data-store snapshot.".to_string(),
+            resolve_hint: container_command,
         });
         status
             .required_actions
@@ -806,6 +802,56 @@ fn build_workspace_image(workspace_path: &Path, image_tag: &str) -> Result<(), D
     }
 
     Ok(())
+}
+
+/// Build a repeatable launch hint without opening the host's live WAL in the VM.
+/// Shell quoting and runtime mount parsing are separate boundaries: reject path
+/// delimiters that Docker/Podman would otherwise reinterpret inside mount flags.
+fn container_workspace_launch_command(
+    main_repo: &Path,
+    worktree: &Path,
+    runtime: &str,
+    image_tag: &str,
+) -> Result<String, DecapodError> {
+    fn mount_path(path: &Path) -> Result<&str, DecapodError> {
+        path.to_str()
+            .filter(|value| {
+                path.is_absolute()
+                    && !value.chars().any(|c| c.is_control() || matches!(c, ':' | ',' | '"'))
+            })
+            .ok_or_else(|| DecapodError::ValidationError(format!(
+                "CONTAINER_STORE_PATH_UNSUPPORTED: '{}' must be an absolute UTF-8 path without colons, commas, double quotes, or control characters. Use a repository path supported by Docker/Podman mount arguments and retry.",
+                path.display()
+            )))
+    }
+
+    let repo = mount_path(main_repo)?;
+    let workspace = mount_path(worktree)?;
+    let store_root = main_repo.join(".decapod").join("data");
+    let store_root = mount_path(&store_root)?;
+    // mktemp runs when the hint is executed, not when it is printed. Each
+    // invocation owns a fresh directory, even if the same hint is run twice.
+    let snapshot_template = worktree.join("target/decapod-container-store.XXXXXX");
+    let snapshot_template = mount_path(&snapshot_template)?;
+    let cleanup = "result_code=$?; trap - EXIT; rm -f -- \"$snapshot_dir/decapod.db\"; rmdir -- \"$snapshot_dir\"; exit \"$result_code\"";
+    Ok(format!(
+        "( cd {workspace} && mkdir -p target || exit; snapshot_dir=$(mktemp -d {snapshot_template}) || exit; trap {cleanup} EXIT; trap 'exit 129' HUP; trap 'exit 130' INT; trap 'exit 143' TERM; decapod data database backup --destination \"$snapshot_dir/decapod.db\" && {runtime} run --rm -it -e DECAPOD_CONTAINER=1 -v {repo_mount} --mount \"type=bind,src=$snapshot_dir/decapod.db,dst=/tmp/decapod-store.db,readonly\" --tmpfs {store_tmpfs} -w {workspace} {image} sh -lc {seed_command} )",
+        workspace = shell_quote(workspace),
+        snapshot_template = shell_quote(snapshot_template),
+        cleanup = shell_quote(cleanup),
+        runtime = shell_quote(runtime),
+        repo_mount = shell_quote(&format!("{repo}:{repo}")),
+        store_tmpfs = shell_quote(&format!("{store_root}:rw,nosuid,nodev,mode=0700")),
+        image = shell_quote(image_tag),
+        seed_command = shell_quote(&format!(
+            "cp -- /tmp/decapod-store.db {store_root}/decapod.db && exec bash",
+            store_root = shell_quote(store_root),
+        )),
+    ))
+}
+
+fn shell_quote(value: &str) -> String {
+    format!("'{}'", value.replace('\'', "'\\''"))
 }
 
 fn env_bool(name: &str, default_value: bool) -> bool {

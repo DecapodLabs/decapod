@@ -272,6 +272,20 @@ for filesystem work and are not used as the artifact representation.
 - [ ] Dependency vulnerability scan reviewed.
 - [ ] No unresolved critical/high security findings.
 
+## Explicit Container Workspace Snapshots
+
+Use the launch hint from `decapod workspace ensure --container` for an isolated
+point-in-time store. The hint creates a verified Dactyl online backup in its own
+private temporary directory, mounts it read-only, and seeds container-local
+tmpfs. Backup failure stops launch. Snapshot cleanup preserves the command's
+exit status and never removes another invocation's snapshot. State written
+to this container copy is ephemeral and is not folded back into the host.
+
+Existing automatic container-run database sharing remains available by design.
+The snapshot hint does not disable those routes or add a blanket virtiofs/FUSE
+ban. Actual storage errors, including read-only mounts and failed write probes,
+continue to be surfaced through the existing storage checks.
+
 <!-- decapod:capability-overlay:background-processing:start -->
 
 ## Background Processing Operations Overlay
@@ -313,7 +327,7 @@ for filesystem work and are not used as the artifact representation.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5161e976ae3f6045e884da94a54c904c24830a01d3843377f04c9ec959040fab`
+- Repository signal fingerprint: `d6603b370f1e7716d2ed07f015aad7f81e5ca75ab51fb4f5514b11f9ecfae714`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

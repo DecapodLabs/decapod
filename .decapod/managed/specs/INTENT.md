@@ -301,11 +301,20 @@ explicit generated marker pairs confer regeneration ownership. A transformation
 that would lose authored content fails visibly before writing any refreshed spec
 or manifest.
 
+## Workspace Snapshot Intent
+
+Provide an explicit snapshot-backed container workspace launch through
+`workspace ensure --container`, while preserving intentional database sharing
+on existing automatic-run and local routes. A backup failure prevents this
+snapshot launch, and container-copy changes remain ephemeral. Improve snapshot
+ownership, cleanup, quoting, and mount matching without introducing a new
+policy ban based solely on virtiofs or FUSE filesystem identity.
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5161e976ae3f6045e884da94a54c904c24830a01d3843377f04c9ec959040fab`
+- Repository signal fingerprint: `d6603b370f1e7716d2ed07f015aad7f81e5ca75ab51fb4f5514b11f9ecfae714`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
