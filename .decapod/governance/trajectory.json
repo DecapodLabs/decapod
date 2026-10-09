@@ -5,25 +5,38 @@
   "task_id": "bugs_01m4fzch5ec8swpc",
   "original_intent": "Implement uncovered issue 1370 work alongside 1369 after checking issue and PR overlap",
   "derived_intent": "Add conservative contextual classification and regression coverage without weakening production publication checks",
+  "current_phase": "validation",
+  "next_transitions": [
+    "publish"
+  ],
   "blockers": [
     "Known pre-existing Jev test asserts ULID map iteration order; recorded without duplicating unrelated consumer-candidate test fix",
+    "PR 1371 conflicts with current master as reported by GitHub; no merge or conflict resolution performed in this proof-only follow-up",
     "Production Gatekeeper findings and container proof remain unresolved",
     "Required container custody proof unavailable",
     "Required container runtime is unavailable; no installation authorized"
   ],
   "active_boundaries": [
     "Never exempt files or credentials by fixture path, token spelling, or token length",
-    "Never substitute experimental evaluator for production gates"
+    "Never substitute experimental evaluator for production gates",
+    "Proof-record-only follow-up: preserve runtime source, tests, workflows, policy, and authored specification prose from published commit 2656599d5bab2429cfe14514161164bd822c8c5f"
   ],
   "repo_scope": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
+    ".decapod/managed/specs/",
     "src/decapod/core/gatekeeper.rs",
     "tests/unit/core/gatekeeper_tests.rs"
   ],
   "inspected_files": [
     "src/decapod/core/gatekeeper.rs",
+    "src/decapod/core/gatekeeper/rust_context.rs",
     "tests/unit/core/gatekeeper_tests.rs"
   ],
   "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
+    ".decapod/managed/specs/.manifest.json",
     ".decapod/managed/specs/SECURITY.md",
     "Cargo.lock",
     "Cargo.toml",
@@ -34,7 +47,11 @@
   "declared_commands": [
     "cargo clippy --offline --locked --lib -- -D warnings",
     "cargo test --offline --locked --lib",
-    "cargo test --offline --locked --lib core::gatekeeper"
+    "cargo test --offline --locked --lib core::gatekeeper",
+    "decapod validate",
+    "decapod validate --format json",
+    "decapod workspace ensure --branch agent/proof-refresh/bugs_01m4fzch5ec8swpc-validation",
+    "git diff --quiet 2656599d5bab2429cfe14514161164bd822c8c5f -- src tests Cargo.toml Cargo.lock .github"
   ],
   "tool_calls": [],
   "checks": [
@@ -43,8 +60,16 @@
       "status": "passed"
     },
     {
+      "name": "decapod validate",
+      "status": "passed"
+    },
+    {
       "name": "diff-whitespace",
       "status": "passed"
+    },
+    {
+      "name": "dirty-governance-json-validation",
+      "status": "failed"
     },
     {
       "name": "focused-gatekeeper",
@@ -52,6 +77,10 @@
     },
     {
       "name": "formatting",
+      "status": "passed"
+    },
+    {
+      "name": "host-non-code-validation",
       "status": "passed"
     },
     {
@@ -67,18 +96,29 @@
       "status": "failed"
     },
     {
+      "name": "published-source-byte-identity",
+      "status": "passed"
+    },
+    {
       "name": "real-container-custody",
       "status": "unavailable"
     }
   ],
   "evidence": [
+    "After adding the explicit proof-only qualification, a second ordinary validate returned 203 passed, 1 failed, 10 skipped and 4 warnings: container_workspace_required. Decapod 0.105.0 classifies dirty governance JSON outside its non-code relaxation. The successful receipt from the preceding generated-spec-only state is not proof for this later trajectory state; a committed clean-tree validation is still required.",
+    "GitHub Actions run https://github.com/DecapodLabs/decapod/actions/runs/37981382657 tested 2656599d5bab2429cfe14514161164bd822c8c5f: all executed jobs except Governance Artifacts passed; that job failed solely because validation.json was unchanged in the PR diff.",
+    "Installed Decapod 0.105.0 ordinary validate --format json returned 203 passed, 0 failed, 11 skipped, 4 warnings with no DECAPOD_VALIDATE_SKIP variables. The supported host non-code relaxation is not real container-custody proof and does not resolve the historical production scan findings.",
     "Installed Decapod 0.105.0 scan: 22 existing paths verified individually, 108 findings",
+    "Proof-only follow-up starts at existing remote commit 2656599d5bab2429cfe14514161164bd822c8c5f, tree 25043f88146c64e729afacc5f3fa14b73605dd18. Runtime source, tests, Cargo manifests and GitHub workflows remain byte-identical to that commit.",
     "cargo clippy --offline --locked --lib -- -D warnings: passed",
     "cargo test --offline --locked --lib core::gatekeeper: 23 passed; final exact reviewed source",
-    "cargo test --offline --locked --lib: 374 passed and unchanged Jev ULID-ordering test failed twice; targeted rerun passed"
+    "cargo test --offline --locked --lib: 374 passed and unchanged Jev ULID-ordering test failed twice; targeted rerun passed",
+    "validation epoch ve_e06bfa10e649eca5 completed with zero failures",
+    "workspace ensure refreshed only generated repository-signal attestations and the specs manifest; authored specification prose remains unchanged."
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [
+    "A successful proof-only host validation receipt does not establish full issue 1370 acceptance or production publication readiness; SQL/captured-variable/embedded-shell cases and real container custody remain open.",
     "Only explicit runtime source evidence can exclude a password replacement field; unknown provenance and SQL/shell contexts remain findings"
   ],
   "proof_status": "failed",
@@ -88,7 +128,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:b015ad4ea32f8f1744cca321819b7f6db0fe1e3c2cbe0b294f1e6cf83e1b1c78",
+  "artifact_hash": "sha256:fee6b12828402c1cd88126abae6a7315ae5365981f82555e5f081f900c832922",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -136,6 +176,27 @@
       {
         "sequence": 5,
         "event_id": "event:5",
+        "intent_id": "intent:issue1370-context-20261009",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue1370-context-20261009"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
+        "intent_id": "intent:issue1370-context-20261009",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue1370-context-20261009"
+      },
+      {
+        "sequence": 7,
+        "event_id": "event:7",
+        "intent_id": "intent:issue1370-context-20261009",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue1370-context-20261009"
+      },
+      {
+        "sequence": 8,
+        "event_id": "event:8",
         "intent_id": "intent:issue1370-context-20261009",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:issue1370-context-20261009"
@@ -199,12 +260,76 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src/decapod/core/gatekeeper.rs",
+              "tests/unit/core/gatekeeper_tests.rs"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_e06bfa10e649eca5 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:6"
+          },
+          {
+            "sequence": 7,
+            "action": "validation",
+            "command": "decapod workspace ensure --branch agent/proof-refresh/bugs_01m4fzch5ec8swpc-validation",
+            "scope": [
+              "src/decapod/core/gatekeeper.rs",
+              "tests/unit/core/gatekeeper_tests.rs"
+            ],
+            "observations": [
+              "src/decapod/core/gatekeeper/rust_context.rs",
+              ".decapod/managed/specs/.manifest.json",
+              "Proof-only follow-up starts at existing remote commit 2656599d5bab2429cfe14514161164bd822c8c5f, tree 25043f88146c64e729afacc5f3fa14b73605dd18. Runtime source, tests, Cargo manifests and GitHub workflows remain byte-identical to that commit.",
+              "Installed Decapod 0.105.0 ordinary validate --format json returned 203 passed, 0 failed, 11 skipped, 4 warnings with no DECAPOD_VALIDATE_SKIP variables. The supported host non-code relaxation is not real container-custody proof and does not resolve the historical production scan findings.",
+              "workspace ensure refreshed only generated repository-signal attestations and the specs manifest; authored specification prose remains unchanged.",
+              "GitHub Actions run https://github.com/DecapodLabs/decapod/actions/runs/37981382657 tested 2656599d5bab2429cfe14514161164bd822c8c5f: all executed jobs except Governance Artifacts passed; that job failed solely because validation.json was unchanged in the PR diff."
+            ],
+            "proof_refs": [
+              "published-source-byte-identity",
+              "host-non-code-validation",
+              "real-container-custody"
+            ],
+            "validation_findings": [
+              "A successful proof-only host validation receipt does not establish full issue 1370 acceptance or production publication readiness; SQL/captured-variable/embedded-shell cases and real container custody remain open."
+            ],
+            "custody_event_id": "event:7"
+          },
+          {
+            "sequence": 8,
+            "action": "trajectory.record",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              ".decapod/managed/specs/",
+              "src/decapod/core/gatekeeper.rs",
+              "tests/unit/core/gatekeeper_tests.rs"
+            ],
+            "observations": [
+              "After adding the explicit proof-only qualification, a second ordinary validate returned 203 passed, 1 failed, 10 skipped and 4 warnings: container_workspace_required. Decapod 0.105.0 classifies dirty governance JSON outside its non-code relaxation. The successful receipt from the preceding generated-spec-only state is not proof for this later trajectory state; a committed clean-tree validation is still required."
+            ],
+            "proof_refs": [
+              "dirty-governance-json-validation"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:8"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 5
+    "next_sequence": 8
   }
 }
