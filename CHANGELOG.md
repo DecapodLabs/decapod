@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.106.1](https://github.com/DecapodLabs/decapod/compare/v0.106.0...v0.106.1) - 2026-10-09
+
+### Fixed
+
+- make span-locations dependency use explicit
+- classify explicit runtime password formatting ([#1370](https://github.com/DecapodLabs/decapod/pull/1370))
+
+### Other
+
+- refresh current release scanner validation proof
+- Merge current master into bounded scanner review ([#1370](https://github.com/DecapodLabs/decapod/pull/1370))
+- bind validation receipt to proof checkpoint ([#1370](https://github.com/DecapodLabs/decapod/pull/1370))
+- record bounded host proof refresh ([#1370](https://github.com/DecapodLabs/decapod/pull/1370))
+
 ## [0.106.0](https://github.com/DecapodLabs/decapod/compare/v0.105.1...v0.106.0) - 2026-10-09
 
 ### Fixed
