@@ -32,6 +32,14 @@ pub enum PolicyCommand {
         actor: String,
         #[clap(long, default_value = "global")]
         scope: String,
+        /// Approval lifetime in seconds (defaults to 900 seconds).
+        #[clap(long, default_value_t = 900)]
+        expires_in_seconds: u64,
+    },
+    /// Revoke a previously granted approval by its approval ID.
+    Revoke {
+        #[clap(long)]
+        id: String,
     },
     /// Manage the risk map (blast-radius zones).
     Riskmap {
@@ -76,12 +84,32 @@ pub fn run_policy_cli(store: &Store, cli: PolicyCli) -> Result<(), error::Decapo
                 human_in_loop_required(store, "global", level, approval_required_by_policy);
             println!("Risk Level: {level:?}");
             println!("Fingerprint: {fingerprint}");
+            println!(
+                "Approval Command: decapod govern policy approve --id {fingerprint} --scope global"
+            );
             println!("Requirements: {requirements:?}");
             println!("Human-in-the-loop Required: {hitl_required}");
         }
-        PolicyCommand::Approve { id, actor, scope } => {
-            let approval_id = approve_action(store, &id, None, &actor, &scope)?;
+        PolicyCommand::Approve {
+            id,
+            actor,
+            scope,
+            expires_in_seconds,
+        } => {
+            let expires_at = expiry_after_seconds(expires_in_seconds)?;
+            let approval_id =
+                approve_action_with_expiry(store, &id, None, &actor, &scope, Some(&expires_at))?;
             println!("Action Approved (ID: {approval_id})");
+            println!("ExpiresAt: {expires_at}");
+        }
+        PolicyCommand::Revoke { id } => {
+            if revoke_approval(store, &id)? {
+                println!("Approval Revoked (ID: {id})");
+            } else {
+                return Err(error::DecapodError::ValidationError(format!(
+                    "Approval '{id}' was not found"
+                )));
+            }
         }
         PolicyCommand::Riskmap { command } => {
             let risk_map_path = store.root.join("RISKMAP.json");
@@ -653,6 +681,17 @@ pub fn enforce_broker_mutation_policy(
     actor: &str,
     op_name: &str,
 ) -> Result<(), error::DecapodError> {
+    enforce_broker_mutation_policy_for_target(root, actor, op_name, None)
+}
+
+/// Enforce broker policy using the most specific resource target available.
+/// Compatibility fallbacks apply only when the caller has no resource target.
+pub fn enforce_broker_mutation_policy_for_target(
+    root: &Path,
+    actor: &str,
+    op_name: &str,
+    target: Option<&str>,
+) -> Result<(), error::DecapodError> {
     if is_read_only_operation(op_name) {
         return Ok(());
     }
@@ -676,7 +715,7 @@ pub fn enforce_broker_mutation_policy(
             kind: crate::core::store::StoreKind::Repo,
             root: root.to_path_buf(),
         };
-        if !check_approval(&store, op_name, None, "global")? {
+        if !check_approval(&store, op_name, target.or(Some(op_name)), "global")? {
             return Err(error::DecapodError::ValidationError(format!(
                 "Policy gate denied for '{op_name}': configured approval category requires human approval"
             )));
@@ -695,7 +734,7 @@ pub fn enforce_broker_mutation_policy(
             };
             let high = matches!(risk, RiskLevel::HIGH | RiskLevel::CRITICAL);
             if human_in_loop_required(&store, zone_name, risk, high)
-                && !check_approval(&store, zone_name, None, "global")?
+                && !check_approval(&store, zone_name, target.or(Some(zone_name)), "global")?
             {
                 return Err(error::DecapodError::ValidationError(format!(
                     "Policy gate denied for '{op_name}': zone '{zone_name}' requires approval"
@@ -714,21 +753,88 @@ pub fn approve_action(
     actor: &str,
     scope: &str,
 ) -> Result<String, error::DecapodError> {
+    approve_action_with_expiry(store, command, target_path, actor, scope, None)
+}
+
+pub fn approve_action_with_expiry(
+    store: &Store,
+    command: &str,
+    target_path: Option<&str>,
+    actor: &str,
+    scope: &str,
+    expires_at: Option<&str>,
+) -> Result<String, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = policy_db_path(&store.root);
     let approval_id = crate::core::ulid::new_ulid();
     let fingerprint = approval_fingerprint(command, target_path, scope);
     let now = now_iso();
 
+    if let Some(expires_at) = expires_at {
+        let expiry = parse_expiry(expires_at).ok_or_else(|| {
+            error::DecapodError::ValidationError(
+                "Approval expiry must be RFC3339 or epoch seconds with a trailing Z".to_string(),
+            )
+        })?;
+        let now_secs = now.trim_end_matches('Z').parse::<i64>().unwrap_or_default();
+        if expiry <= now_secs {
+            return Err(error::DecapodError::ValidationError(
+                "Approval expiry must be in the future".to_string(),
+            ));
+        }
+    }
+
     broker.with_conn(&db_path, actor, None, "policy.approve", |conn| {
         conn.execute(
-            "INSERT INTO approvals(approval_id, action_fingerprint, actor, ts, scope) VALUES(?1, ?2, ?3, ?4, ?5)",
-            params![approval_id, fingerprint, actor, now, scope],
+            "INSERT INTO approvals(approval_id, action_fingerprint, actor, ts, scope, expires_at) VALUES(?1, ?2, ?3, ?4, ?5, ?6)",
+            params![approval_id, fingerprint, actor, now, scope, expires_at],
         )?;
         Ok(())
     })?;
 
     Ok(approval_id)
+}
+
+fn expiry_after_seconds(seconds: u64) -> Result<String, error::DecapodError> {
+    if seconds == 0 {
+        return Err(error::DecapodError::ValidationError(
+            "Approval lifetime must be greater than zero seconds".to_string(),
+        ));
+    }
+    let now_secs = now_iso()
+        .trim_end_matches('Z')
+        .parse::<u64>()
+        .unwrap_or_default();
+    let expires_at = now_secs
+        .checked_add(seconds)
+        .filter(|expires_at| i64::try_from(*expires_at).is_ok())
+        .ok_or_else(|| {
+            error::DecapodError::ValidationError("Approval lifetime is too large".to_string())
+        })?;
+    Ok(format!("{expires_at}Z"))
+}
+
+fn parse_expiry(value: &str) -> Option<i64> {
+    if let Some(epoch) = value.strip_suffix('Z')
+        && let Ok(seconds) = epoch.parse()
+    {
+        return Some(seconds);
+    }
+    chrono::DateTime::parse_from_rfc3339(value)
+        .ok()
+        .map(|timestamp| timestamp.timestamp())
+}
+
+pub fn revoke_approval(store: &Store, approval_id: &str) -> Result<bool, error::DecapodError> {
+    let broker = DbBroker::new(&store.root);
+    let db_path = policy_db_path(&store.root);
+    broker.with_conn(&db_path, "operator", None, "policy.revoke", |conn| {
+        let changed = conn.execute(
+            "DELETE FROM approvals WHERE approval_id = ?1",
+            params![approval_id],
+        )?;
+        Ok(changed > 0)
+    })
 }
 
 pub fn check_approval(
@@ -742,12 +848,7 @@ pub fn check_approval(
     let fingerprint = approval_fingerprint(command, target_path, scope);
 
     broker.with_conn(&db_path, "decapod", None, "policy.check", |conn| {
-        let count: i64 = conn.query_row(
-            "SELECT COUNT(*) FROM approvals WHERE action_fingerprint = ?1",
-            params![fingerprint],
-            |row| row.get(0),
-        )?;
-        Ok(count > 0)
+        approval_matches(conn, &fingerprint, command, target_path, scope)
     })
 }
 
@@ -764,14 +865,40 @@ pub fn check_approval_on_conn(
     scope: &str,
 ) -> Result<bool, error::DecapodError> {
     let fingerprint = approval_fingerprint(command, target_path, scope);
-    let count: i64 = conn
-        .query_row(
-            "SELECT COUNT(*) FROM approvals WHERE action_fingerprint = ?1",
-            params![fingerprint],
-            |row| row.get(0),
-        )
-        .map_err(error::DecapodError::StorageError)?;
-    Ok(count > 0)
+    approval_matches(conn, &fingerprint, command, target_path, scope)
+}
+
+fn approval_matches(
+    conn: &Connection,
+    fingerprint: &str,
+    command: &str,
+    target_path: Option<&str>,
+    scope: &str,
+) -> Result<bool, error::DecapodError> {
+    let general_fingerprint = derive_fingerprint(command, None, scope);
+    let now = now_iso();
+    let now_secs = now.trim_end_matches('Z').parse::<i64>().unwrap_or_default();
+    let mut stmt = conn.prepare(
+        "SELECT expires_at FROM approvals WHERE scope = ?3 AND (action_fingerprint = ?1 OR (?2 IS NOT NULL AND action_fingerprint = ?2))",
+    )?;
+    let rows = stmt.query_map(
+        params![
+            fingerprint,
+            target_path.map(|_| general_fingerprint.as_str()),
+            scope
+        ],
+        |row| row.get::<_, Option<String>>(0),
+    )?;
+    for row in rows {
+        match row? {
+            None => return Ok(true),
+            Some(expiry) if parse_expiry(&expiry).is_some_and(|expiry| expiry > now_secs) => {
+                return Ok(true);
+            }
+            Some(_) => {}
+        }
+    }
+    Ok(false)
 }
 
 pub fn list_approvals(store: &Store) -> Result<Vec<Approval>, error::DecapodError> {
@@ -780,7 +907,7 @@ pub fn list_approvals(store: &Store) -> Result<Vec<Approval>, error::DecapodErro
 
     broker.with_conn(&db_path, "decapod", None, "policy.list", |conn| {
         let mut stmt = conn.prepare(
-            "SELECT approval_id, action_id, actor, ts, scope, expires_at FROM approvals",
+            "SELECT approval_id, action_fingerprint, actor, ts, scope, expires_at FROM approvals",
         )?;
         let rows = stmt.query_map([], |row| {
             Ok(Approval {
@@ -811,7 +938,8 @@ pub fn schema() -> serde_json::Value {
         "description": "Risk classification and approval engine",
         "commands": [
             { "name": "eval", "parameters": ["command", "path"] },
-            { "name": "approve", "parameters": ["action_id", "actor", "scope"] }
+            { "name": "approve", "parameters": ["id", "actor", "scope", "expires_in_seconds"] },
+            { "name": "revoke", "parameters": ["id"] }
         ],
         "storage": ["decapod.db", "RISKMAP.json"]
     })

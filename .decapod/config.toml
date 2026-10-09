@@ -68,3 +68,6 @@ provider = "decapod"
 
 [context]
 declared_sources = []
+
+[decision]
+provider = "none"

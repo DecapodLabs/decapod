@@ -285,7 +285,9 @@ fn concurrent_repair_appends_one_acknowledgment() {
 fn test_demonstrate_crash_divergence_risk() {
     let tmp = tempfile::tempdir().unwrap();
     let root = tmp.path();
-    let db_path = root.join("test.db");
+    // Broker writes and replay verification share the canonical datastore.
+    decapod::core::todo::initialize_todo_db(root).unwrap();
+    let db_path = events::canonical_db_path(root);
 
     // Initialize DB
     {

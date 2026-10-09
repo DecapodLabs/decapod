@@ -1,15 +1,16 @@
 {
   "schema_version": "1.0.0",
-  "title": "Finish PR 1364 while preserving intended sharing",
-  "intent": "Preserve intended shared-database topology, including virtiofs and FUSE routes. Reconcile master and harden the explicit manual workspace snapshot launch ownership, cleanup, quoting and mountinfo matching. No new blanket filesystem ban, automatic-run restriction, merge or deployment.",
+  "title": "Prepare target-scoped approvals for merge",
+  "intent": "Reconcile PR1362 with release v0.105.1; enforce exact approval targets across todo and broker boundaries; verify expiry and revocation; diagnose bounded validation runtime. Preserve shared database topology. No merge or deployment.",
   "state": "APPROVED",
   "todo_ids": [
-    "data_01m4gz0f9y5dfsez"
+    "code_01m4h5k2wtztzc99"
   ],
   "proof_hooks": [
     "cargo test --locked --lib",
+    "Configured target-scoped approval regressions",
+    "cargo test --locked --test validate_termination",
     "cargo clippy --locked --all-targets --all-features -- -D warnings",
-    "Focused workspace and integration test targets",
     "decapod validate --refresh-specs --format json"
   ],
   "unknowns": [],
@@ -21,8 +22,8 @@
     "forbidden_paths": [
       ".decapod/data/decapod.db"
     ],
-    "file_touch_budget": 30
+    "file_touch_budget": 35
   },
   "phases": [],
-  "updated_at": "1791571861Z"
+  "updated_at": "1791577776Z"
 }

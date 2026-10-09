@@ -25,6 +25,7 @@ use std::time::{Duration, Instant};
 /// It provides read/write access with proper locking and full audit trail.
 pub struct DbBroker {
     root: PathBuf,
+    approval_target: Option<String>,
 }
 
 #[derive(Clone)]
@@ -80,7 +81,16 @@ impl DbBroker {
     pub fn new(root: &Path) -> Self {
         Self {
             root: root.to_path_buf(),
+            approval_target: None,
         }
+    }
+
+    /// Bind policy checks for every operation on this instance to one resource.
+    /// Use a fresh broker for a different resource. Operation/zone-name
+    /// compatibility fallback is reserved for brokers without a target.
+    pub fn with_target(mut self, target: &str) -> Self {
+        self.approval_target = Some(target.to_string());
+        self
     }
 
     pub fn is_cloud(&self) -> bool {
@@ -145,7 +155,12 @@ impl DbBroker {
         };
 
         if !is_read {
-            policy::enforce_broker_mutation_policy(&self.root, actor, op_name)?;
+            policy::enforce_broker_mutation_policy_for_target(
+                &self.root,
+                actor,
+                op_name,
+                self.approval_target.as_deref(),
+            )?;
         }
 
         let db_id = db_path

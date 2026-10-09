@@ -1448,3 +1448,93 @@ fn dependency_cycle_fails_closed_before_claim() {
         serde_json::json!([first_id, second_id, first_id])
     );
 }
+
+#[test]
+fn archive_eval_fingerprint_authorizes_only_the_named_todo() {
+    let tmp = tempdir().unwrap();
+    assert!(
+        Command::new("git")
+            .args(["init", "-q"])
+            .current_dir(tmp.path())
+            .status()
+            .unwrap()
+            .success()
+    );
+    let data_root = tmp.path().join(".decapod/data");
+    std::fs::create_dir_all(&data_root).unwrap();
+    std::fs::write(
+        tmp.path().join(".decapod/config.toml"),
+        r#"schema_version = "1.0.0"
+[init]
+specs = true
+ci = true
+diagram_style = "mermaid"
+entrypoints = []
+[repo]
+product_name = "approval-test"
+[governance]
+approval_categories = ["destructive_operations"]
+"#,
+    )
+    .unwrap();
+    let root = data_root.as_path();
+    initialize_todo_db(root).unwrap();
+    policy::initialize_policy_db(root).unwrap();
+    let alpha = add_scoped_task(
+        root,
+        "Approval target alpha",
+        "root",
+        root.to_str().unwrap(),
+    );
+    let beta = add_scoped_task(
+        root,
+        "Separate archive target beta",
+        "root",
+        root.to_str().unwrap(),
+    );
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: root.to_path_buf(),
+    };
+    let archive = |id: &str| {
+        let task = get_task(root, id).unwrap().unwrap();
+        update_status(
+            &store,
+            id,
+            task.revision,
+            &task.status,
+            "archived",
+            "task.archive",
+            serde_json::json!({}),
+        )
+    };
+    assert!(archive(&alpha).is_err());
+    let fingerprint = policy::derive_fingerprint("task.archive", Some(&alpha), "global");
+    let grant = policy::approve_action(&store, &fingerprint, None, "operator", "global").unwrap();
+    assert!(archive(&beta).is_err());
+    assert_eq!(get_task(root, &beta).unwrap().unwrap().status, "open");
+    assert_eq!(archive(&alpha).unwrap()["status"], "ok");
+    assert_eq!(get_task(root, &alpha).unwrap().unwrap().status, "archived");
+    policy::revoke_approval(&store, &grant).unwrap();
+    assert!(archive(&alpha).is_err());
+
+    let expired = policy::approve_action(&store, &fingerprint, None, "operator", "global").unwrap();
+    let db = Connection::open(policy::policy_db_path(root)).unwrap();
+    db.execute(
+        "UPDATE approvals SET expires_at = '1Z' WHERE approval_id = ?1",
+        [expired.as_str()],
+    )
+    .unwrap();
+    assert!(
+        archive(&alpha).is_err(),
+        "expired resource approval must stay denied"
+    );
+    assert_eq!(get_task(root, &beta).unwrap().unwrap().status, "open");
+
+    // An intentional action-wide approval retains compatibility at both gates.
+    let general =
+        policy::approve_action(&store, "task.archive", None, "operator", "global").unwrap();
+    assert_eq!(archive(&beta).unwrap()["status"], "ok");
+    policy::revoke_approval(&store, &general).unwrap();
+    assert!(archive(&beta).is_err());
+}

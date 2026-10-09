@@ -234,3 +234,299 @@ fn policy_approval_accepts_eval_fingerprint() {
     approve_action(&store, &fingerprint, None, "operator", "global").unwrap();
     assert!(check_approval(&store, "federation.rebuild", None, "global").unwrap());
 }
+
+#[test]
+fn targeted_grants_do_not_authorize_other_targets_or_scopes() {
+    use decapod::plugins::policy::{check_approval_on_conn, revoke_approval};
+    let tmp = tempdir().unwrap();
+    let store = Store {
+        kind: StoreKind::User,
+        root: tmp.path().to_path_buf(),
+    };
+    initialize_policy_db(&store.root).unwrap();
+    let fingerprint = derive_fingerprint("task.archive", Some("todo-alpha"), "global");
+    let grant = approve_action(&store, &fingerprint, None, "operator", "global").unwrap();
+    assert!(check_approval(&store, "task.archive", Some("todo-alpha"), "global").unwrap());
+    assert!(!check_approval(&store, "task.archive", Some("todo-beta"), "global").unwrap());
+    assert!(!check_approval(&store, "task.archive", None, "global").unwrap());
+    assert!(!check_approval(&store, "task.archive", Some("todo-alpha"), "repo").unwrap());
+    let conn =
+        decapod::core::db::Connection::open(decapod::plugins::policy::policy_db_path(&store.root))
+            .unwrap();
+    assert!(check_approval_on_conn(&conn, "task.archive", Some("todo-alpha"), "global").unwrap());
+    assert!(!check_approval_on_conn(&conn, "task.archive", Some("todo-beta"), "global").unwrap());
+    assert!(revoke_approval(&store, &grant).unwrap());
+    assert!(!check_approval_on_conn(&conn, "task.archive", Some("todo-alpha"), "global").unwrap());
+    assert!(!revoke_approval(&store, &grant).unwrap());
+    approve_action(&store, "task.archive", None, "operator", "global").unwrap();
+    assert!(check_approval(&store, "task.archive", Some("todo-beta"), "global").unwrap());
+}
+
+#[test]
+fn expiry_accepts_utc_and_offsets_and_rejects_invalid_or_elapsed_grants() {
+    use decapod::core::db::{Connection, params};
+    use decapod::plugins::policy::{
+        approve_action_with_expiry, check_approval_on_conn, policy_db_path, revoke_approval,
+    };
+    let tmp = tempdir().unwrap();
+    let store = Store {
+        kind: StoreKind::User,
+        root: tmp.path().to_path_buf(),
+    };
+    initialize_policy_db(&store.root).unwrap();
+    for expiry in [
+        "2099-01-01T00:00:00Z",
+        "2099-01-01T01:00:00+01:00",
+        "4070908800Z",
+    ] {
+        let grant = approve_action_with_expiry(
+            &store,
+            "task.archive",
+            Some("alpha"),
+            "operator",
+            "global",
+            Some(expiry),
+        )
+        .unwrap();
+        assert!(check_approval(&store, "task.archive", Some("alpha"), "global").unwrap());
+        revoke_approval(&store, &grant).unwrap();
+    }
+    for expiry in ["2000-01-01T00:00:00Z", "1Z", "invalid"] {
+        assert!(
+            approve_action_with_expiry(
+                &store,
+                "task.archive",
+                Some("alpha"),
+                "operator",
+                "global",
+                Some(expiry)
+            )
+            .is_err()
+        );
+    }
+    let grant =
+        approve_action(&store, "task.archive", Some("alpha"), "operator", "global").unwrap();
+    let conn = Connection::open(policy_db_path(&store.root)).unwrap();
+    let now = decapod::core::time::now_epoch_z();
+    for expiry in ["2000-01-01T00:00:00Z", "invalid", now.as_str()] {
+        conn.execute(
+            "UPDATE approvals SET expires_at = ?1 WHERE approval_id = ?2",
+            params![expiry, grant],
+        )
+        .unwrap();
+        assert!(!check_approval(&store, "task.archive", Some("alpha"), "global").unwrap());
+        assert!(!check_approval_on_conn(&conn, "task.archive", Some("alpha"), "global").unwrap());
+    }
+}
+
+#[test]
+fn cli_grants_have_bounded_lifetime_and_can_be_listed_and_revoked() {
+    use clap::Parser;
+    use decapod::plugins::policy::{PolicyCli, list_approvals, run_policy_cli};
+    let tmp = tempdir().unwrap();
+    let store = Store {
+        kind: StoreKind::User,
+        root: tmp.path().to_path_buf(),
+    };
+    let fingerprint = derive_fingerprint("task.archive", Some("alpha"), "global");
+    let start = decapod::core::time::now_epoch_z()
+        .trim_end_matches('Z')
+        .parse::<i64>()
+        .unwrap();
+    run_policy_cli(
+        &store,
+        PolicyCli::try_parse_from(["policy", "approve", "--id", &fingerprint]).unwrap(),
+    )
+    .unwrap();
+    let grants = list_approvals(&store).unwrap();
+    assert_eq!(grants.len(), 1);
+    assert_eq!(grants[0].action_id, fingerprint);
+    let expiry = grants[0]
+        .expires_at
+        .as_ref()
+        .unwrap()
+        .trim_end_matches('Z')
+        .parse::<i64>()
+        .unwrap();
+    let end = decapod::core::time::now_epoch_z()
+        .trim_end_matches('Z')
+        .parse::<i64>()
+        .unwrap();
+    assert!((start + 900..=end + 900).contains(&expiry));
+    run_policy_cli(
+        &store,
+        PolicyCli::try_parse_from(["policy", "revoke", "--id", &grants[0].approval_id]).unwrap(),
+    )
+    .unwrap();
+    assert!(!check_approval(&store, "task.archive", Some("alpha"), "global").unwrap());
+    for seconds in ["0", "18446744073709551615"] {
+        assert!(
+            run_policy_cli(
+                &store,
+                PolicyCli::try_parse_from([
+                    "policy",
+                    "approve",
+                    "--id",
+                    &fingerprint,
+                    "--expires-in-seconds",
+                    seconds
+                ])
+                .unwrap()
+            )
+            .is_err()
+        );
+    }
+}
+
+#[test]
+fn broker_preserves_resource_targets_without_operation_name_fallback() {
+    use decapod::core::broker::DbBroker;
+    use decapod::plugins::policy::{policy_db_path, revoke_approval};
+
+    let tmp = tempdir().unwrap();
+    write_project_config(tmp.path(), "[\"destructive_operations\"]");
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: tmp.path().to_path_buf(),
+    };
+    initialize_policy_db(&store.root).unwrap();
+    let broker = DbBroker::new(&store.root);
+    let db_path = policy_db_path(&store.root);
+    let run = |target: Option<&str>| {
+        let scoped = match target {
+            Some(target) => DbBroker::new(&store.root).with_target(target),
+            None => DbBroker::new(&store.root),
+        };
+        scoped.with_transaction(&db_path, "decapod", None, "task.archive", |_| Ok(()))
+    };
+    assert!(run(Some("alpha")).is_err());
+    let grant =
+        approve_action(&store, "task.archive", Some("alpha"), "operator", "global").unwrap();
+    run(Some("alpha")).unwrap();
+    assert!(run(Some("beta")).is_err());
+    assert!(run(None).is_err());
+    revoke_approval(&store, &grant).unwrap();
+
+    let operation_grant = approve_action(
+        &store,
+        "task.archive",
+        Some("task.archive"),
+        "operator",
+        "global",
+    )
+    .unwrap();
+    // Only callers that truly lack a resource target may use this legacy grant.
+    broker
+        .with_transaction(&db_path, "decapod", None, "task.archive", |_| Ok(()))
+        .unwrap();
+    assert!(run(Some("alpha")).is_err());
+    revoke_approval(&store, &operation_grant).unwrap();
+    assert!(run(None).is_err());
+
+    let general = approve_action(&store, "task.archive", None, "operator", "global").unwrap();
+    run(Some("beta")).unwrap();
+    let db = decapod::core::db::Connection::open(&db_path).unwrap();
+    db.execute(
+        "UPDATE approvals SET expires_at = '1Z' WHERE approval_id = ?1",
+        [general.as_str()],
+    )
+    .unwrap();
+    assert!(
+        run(Some("beta")).is_err(),
+        "expired action-wide grants must stay denied"
+    );
+}
+
+#[test]
+fn raw_fingerprint_grants_cannot_escape_their_stored_scope() {
+    use decapod::core::db::Connection;
+    use decapod::plugins::policy::{check_approval_on_conn, policy_db_path, revoke_approval};
+
+    let tmp = tempdir().unwrap();
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: tmp.path().to_path_buf(),
+    };
+    initialize_policy_db(&store.root).unwrap();
+    let global_fingerprint = derive_fingerprint("task.archive", Some("alpha"), "global");
+    let mismatched = approve_action(&store, &global_fingerprint, None, "operator", "repo").unwrap();
+    let conn = Connection::open(policy_db_path(&store.root)).unwrap();
+    assert!(!check_approval(&store, "task.archive", Some("alpha"), "global").unwrap());
+    assert!(!check_approval_on_conn(&conn, "task.archive", Some("alpha"), "global").unwrap());
+    assert!(!check_approval(&store, "task.archive", Some("alpha"), "repo").unwrap());
+    revoke_approval(&store, &mismatched).unwrap();
+
+    for scope in ["repo", "global"] {
+        let fingerprint = derive_fingerprint("task.archive", Some("alpha"), scope);
+        let grant = approve_action(&store, &fingerprint, None, "operator", scope).unwrap();
+        assert!(check_approval(&store, "task.archive", Some("alpha"), scope).unwrap());
+        assert!(check_approval_on_conn(&conn, "task.archive", Some("alpha"), scope).unwrap());
+        revoke_approval(&store, &grant).unwrap();
+    }
+}
+
+#[test]
+fn broker_zone_approvals_preserve_the_resource_target_and_trust_gate() {
+    use decapod::core::broker::DbBroker;
+    use decapod::core::db::Connection;
+    use decapod::plugins::policy::{policy_db_path, revoke_approval};
+
+    let tmp = tempdir().unwrap();
+    write_project_config(tmp.path(), "[]");
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: tmp.path().to_path_buf(),
+    };
+    initialize_policy_db(&store.root).unwrap();
+    let db_path = policy_db_path(&store.root);
+    let db = Connection::open(&db_path).unwrap();
+    db.execute(
+        "INSERT INTO risk_zones(id, zone_name, required_trust_level, requires_approval, created_at) VALUES('target-zone', 'control.mutate', 'core', 1, '1Z')",
+        [],
+    ).unwrap();
+    let run = |actor, target: Option<&str>| {
+        let scoped = match target {
+            Some(target) => DbBroker::new(&store.root).with_target(target),
+            None => DbBroker::new(&store.root),
+        };
+        scoped.with_transaction(&db_path, actor, None, "task.archive", |_| Ok(()))
+    };
+    assert!(run("decapod", Some("alpha")).is_err());
+    let grant = approve_action(
+        &store,
+        "control.mutate",
+        Some("alpha"),
+        "operator",
+        "global",
+    )
+    .unwrap();
+    run("decapod", Some("alpha")).unwrap();
+    assert!(run("untrusted-agent", Some("alpha")).is_err());
+    db.execute(
+        "INSERT INTO agents(agent_id, last_seen, status, updated_at, trust_level, expertise_json, category_claims_json) VALUES('verified-agent', '1Z', 'active', '1Z', 'verified', '[]', '[]')",
+        [],
+    ).unwrap();
+    // This actor passes the operation's verified threshold, but not the zone's core threshold.
+    let denied = run("verified-agent", Some("alpha"))
+        .unwrap_err()
+        .to_string();
+    assert!(
+        denied.contains("zone 'control.mutate' requires trust 'core'"),
+        "{denied}"
+    );
+    assert!(run("decapod", Some("beta")).is_err());
+    assert!(run("decapod", None).is_err());
+    revoke_approval(&store, &grant).unwrap();
+
+    let legacy = approve_action(
+        &store,
+        "control.mutate",
+        Some("control.mutate"),
+        "operator",
+        "global",
+    )
+    .unwrap();
+    run("decapod", None).unwrap();
+    assert!(run("decapod", Some("alpha")).is_err());
+    revoke_approval(&store, &legacy).unwrap();
+}
