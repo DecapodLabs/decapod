@@ -1,29 +1,31 @@
 {
   "schema_version": "1.0.0",
-  "title": "Prepare target-scoped approvals for merge",
-  "intent": "Reconcile PR1362 with release v0.105.1; enforce exact approval targets across todo and broker boundaries; verify expiry and revocation; diagnose bounded validation runtime. Preserve shared database topology. No merge or deployment.",
+  "title": "Prepare bounded Gatekeeper scanner PR 1371",
+  "intent": "Merge current master and release into the bounded issue 1370 scanner fix, retain database sharing and approval boundaries, preserve unresolved provenance findings, and prepare existing draft for review with exact-head GitHub Actions evidence",
   "state": "APPROVED",
   "todo_ids": [
-    "code_01m4h5k2wtztzc99"
+    "code_01m4hascghp2tfc0"
   ],
   "proof_hooks": [
-    "cargo test --locked --lib",
-    "Configured target-scoped approval regressions",
-    "cargo test --locked --test validate_termination",
-    "cargo clippy --locked --all-targets --all-features -- -D warnings",
-    "decapod validate --refresh-specs --format json"
+    "cargo test --offline --locked --lib",
+    "cargo clippy --offline --locked --lib -- -D warnings",
+    "cargo fmt --all -- --check",
+    "decapod validate"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [],
   "unresolved_contradictions": [],
-  "deferred_questions": [],
+  "deferred_questions": [
+    "SQL parameters, captured variable provenance, ambiguous embedded shell and credential-shaped fixtures remain findings; issue 1370 remains partial",
+    "Real container custody remains unverified in this host environment"
+  ],
   "constraints": {
     "forbidden_paths": [
       ".decapod/data/decapod.db"
     ],
-    "file_touch_budget": 35
+    "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1791577776Z"
+  "updated_at": "1791583259Z"
 }

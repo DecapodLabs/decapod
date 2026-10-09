@@ -10,6 +10,9 @@ use crate::core::error;
 use fancy_regex::Regex;
 use std::path::{Path, PathBuf};
 
+mod rust_context;
+use rust_context::{PasswordContext, RustContext};
+
 /// Gatekeeper configuration
 #[derive(Debug, Clone)]
 pub struct GatekeeperConfig {
@@ -175,17 +178,53 @@ fn scan_for_secrets(
             Err(_) => continue,
         };
 
-        for (line_num, line) in content.lines().enumerate() {
+        // Parse at most once, and only if a password-value candidate needs
+        // context. Other secret families retain their independent matching.
+        let mut context = None;
+        let mut offset = 0;
+        for (line_num, source_line) in content.split_inclusive('\n').enumerate() {
+            let line = source_line.trim_end_matches(['\r', '\n']);
             for pattern in &patterns {
-                if pattern.is_match(line).unwrap_or(false) {
+                // Evaluate every occurrence independently: a runtime field
+                // cannot suppress a literal credential on the same line.
+                let mut unresolved_format = false;
+                let finding = pattern.captures_iter(line).any(|captures| {
+                    let Ok(captures) = captures else {
+                        return false;
+                    };
+                    let Some(value) = captures.name("password_value") else {
+                        return true;
+                    };
+                    let context = context.get_or_insert_with(|| {
+                        if path.extension().is_some_and(|ext| ext == "rs") {
+                            RustContext::parse(&content)
+                        } else {
+                            RustContext::default()
+                        }
+                    });
+                    match context.password_value(offset + value.start()..offset + value.end()) {
+                        PasswordContext::RuntimeEnvironment => false,
+                        PasswordContext::UnresolvedFormat => {
+                            unresolved_format = true;
+                            true
+                        }
+                        PasswordContext::LiteralOrUnknown => true,
+                    }
+                });
+                if finding {
                     violations.push(Violation {
                         kind: ViolationKind::SecretDetected,
                         path: path.clone(),
                         line: Some(line_num + 1),
-                        message: format!("Potential secret detected: {pattern}"),
+                        message: if unresolved_format {
+                            format!("Potential secret detected: {pattern}; format interpolation has unresolved credential provenance")
+                        } else {
+                            format!("Potential secret detected: {pattern}")
+                        },
                     });
                 }
             }
+            offset += source_line.len();
         }
     }
 
@@ -245,12 +284,15 @@ fn secret_patterns() -> Vec<Regex> {
         Regex::new(r#"(?i)aws(.{0,20})?['"][0-9a-zA-Z/+=]{40}['"]"#).unwrap(),
         // Generic API key patterns
         Regex::new(r#"(?i)(api[_-]?key|apikey|api_secret|secret[_-]?key)['"]?\s*[:=]\s*['"]?[a-zA-Z0-9_\-]{20,}['"]?"#).unwrap(),
-        // Bearer tokens
-        Regex::new(r#"(?i)bearer\s+[a-zA-Z0-9_\-\.]+"#).unwrap(),
+        // Bearer values start an authentication scheme, rather than appearing
+        // as an arbitrary word inside prose. Preserve header/assignment,
+        // quoted value, and standalone/comment forms, including short values.
+        // Do not infer safety from a token's spelling, entropy, or file path.
+        Regex::new(r#"(?i)(?:[:=]\s*["'`]?\s*|["'`]\s*|(?://[/!]?|/\*+)\s*|^\s*(?:[#*]\s*)?)bearer[ \t]+[a-zA-Z0-9_~+./-]+=*"#).unwrap(),
         // GitHub tokens
         Regex::new(r#"(ghp|gho|ghu|ghs|ghr)_[a-zA-Z0-9_]{36,255}"#).unwrap(),
         // Generic secrets
-        Regex::new(r#"(?i)(password|passwd|pwd)['"]?\s*[:=]\s*['"]?[^\s'"]{8,}['"]?"#).unwrap(),
+        Regex::new(r#"(?i)(password|passwd|pwd)['"]?\s*[:=]\s*['"]?(?P<password_value>[^\s'"]{8,})['"]?"#).unwrap(),
         // Private keys
         Regex::new(r#"-----BEGIN (RSA |DSA |EC |OPENSSH )?PRIVATE KEY-----"#).unwrap(),
         // Connection strings
