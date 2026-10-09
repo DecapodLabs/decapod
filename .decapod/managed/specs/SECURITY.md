@@ -73,6 +73,48 @@ flowchart LR
 - Signed artifact/provenance strategy:
 
 ## Secrets Management
+Gatekeeper recognizes literal bearer credentials after header/assignment
+delimiters, at the start of quoted or backticked values (with optional leading
+whitespace), at the start of line/block comments, and on standalone scheme
+lines. The word bearer inside an ordinary sentence is not
+itself authentication-scheme syntax. Short values and dictionary words in
+explicit credential syntax remain findings; token spelling, entropy, test
+filenames, and synthetic-fixture labels do not grant an exemption. Secret
+scanning remains line-based and heuristic rather than a complete parser or
+dataflow analysis: a value described only in arbitrary prose is outside this
+bearer-scheme recognizer. A quoted value beginning with a newline is covered
+when the scheme and credential occupy the same subsequent line; concatenated
+values or schemes split from their credentials across lines are not covered.
+
+Rust password-value candidates additionally use conservative, byte-span-bound
+formatting context. A complete basic named replacement field is excluded from
+hardcoded-password findings only when an absolute standard formatting macro
+receives that named argument directly from `::std::env::var` with a literal key,
+optionally through parentheses and at most one `?` or argument-free `unwrap`
+extraction. Further methods could be custom extension traits. This is runtime
+source evidence, not an exemption based on the credential's spelling. Every
+other match on the same line, including the environment-key literal, is still
+scanned. Arguments with literal defaults, unknown calls, or captured-variable
+provenance remain findings; a recognized unresolved replacement field receives
+a specific diagnostic rather than a safety waiver.
+
+This deliberately partial Rust classifier does not expand macros or resolve
+whole-program dataflow. Unqualified macros do not grant exemptions. Opaque
+macro bodies, ambiguous standard-library namespaces, transforming attributes,
+malformed source, cooked string escapes, unsupported format grammar, BOMs, and
+shebangs retain the ordinary findings. Absolute standard paths assume the
+standard extern-prelude names; local bindings visible in the scanned file fail
+closed. Dependencies or parent modules that redefine those names are outside
+this file-local source model. Raw and multiline strings use original byte
+locations; a mismatch in source mapping never grants an exemption.
+
+Connection-string, key, and dangerous-pattern rules remain independent. SQL-
+looking strings and embedded shell inputs remain findings: a SQL-looking string
+can be passed indirectly to a shell, so extensions and nearby keywords cannot
+prove it harmless. Synthetic credential-shaped fixtures remain detectable.
+Missing container custody and other publication evidence remain independent
+blocking requirements.
+
 | Secret | Source | Rotation | Consumer |
 |---|---|---|---|
 | External service auth material | managed runtime configuration | periodic | runtime services |
@@ -125,7 +167,7 @@ Describe the security primitives and security controls implemented in this repos
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5161e976ae3f6045e884da94a54c904c24830a01d3843377f04c9ec959040fab`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
+- Repository signal fingerprint: `15e764e62775d5d18ed676187d5fc876aad4a04b02b10ebfca2b5f5adc16a10e`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (110 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
