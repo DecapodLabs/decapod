@@ -178,7 +178,9 @@ impl<'ast> Visit<'ast> for ContextVisitor<'_> {
         let Lit::Str(literal) = &literal.lit else {
             return;
         };
-        let span = literal.token().span().byte_range();
+        // The direct proc-macro2 dependency enables its span-locations API.
+        let span: proc_macro2::Span = literal.token().span();
+        let span = span.byte_range();
         let Some(original) = self.source.get(span.clone()) else {
             return;
         };
