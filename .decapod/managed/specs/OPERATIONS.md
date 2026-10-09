@@ -239,14 +239,6 @@ only coordinates cooperating Decapod processes. Arbitrary external SQLite
 writers, unreliable filesystems, and network/container mounts remain outside
 the guarantee, and filesystem/path limitations from Dactyl must be respected.
 
-For container workspaces on hosts that share repository files with a Linux VM,
-the workspace launch command first creates and verifies a Dactyl online backup
-in the worktree, then mounts it read-only and seeds a tmpfs-backed canonical
-store inside the container. Do not mount the host `.decapod/data` directory as
-live SQLite state. A backup or integrity failure stops launch before the
-container can open the store; container-side mutations are ephemeral and are
-not copied back to the host.
-
 ## Governance Artifact Portability (#1314)
 
 Trajectory and validation output may be shared through Git, CI, or issue
@@ -279,6 +271,20 @@ for filesystem work and are not used as the artifact representation.
 - [ ] Auth/authz tests pass.
 - [ ] Dependency vulnerability scan reviewed.
 - [ ] No unresolved critical/high security findings.
+
+## Explicit Container Workspace Snapshots
+
+Use the launch hint from `decapod workspace ensure --container` for an isolated
+point-in-time store. The hint creates a verified Dactyl online backup in its own
+private temporary directory, mounts it read-only, and seeds container-local
+tmpfs. Backup failure stops launch. Snapshot cleanup preserves the command's
+exit status and never removes another invocation's snapshot. State written
+to this container copy is ephemeral and is not folded back into the host.
+
+Existing automatic container-run database sharing remains available by design.
+The snapshot hint does not disable those routes or add a blanket virtiofs/FUSE
+ban. Actual storage errors, including read-only mounts and failed write probes,
+continue to be surfaced through the existing storage checks.
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -321,7 +327,7 @@ for filesystem work and are not used as the artifact representation.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fb4c04774a1a39318707cd0c2b8a1d5dfb8243dd3cd25a177a6e572c2d446656`
+- Repository signal fingerprint: `d6603b370f1e7716d2ed07f015aad7f81e5ca75ab51fb4f5514b11f9ecfae714`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

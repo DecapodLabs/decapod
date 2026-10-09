@@ -23,9 +23,7 @@ const STORAGE_CONNECT_BASE_DELAY_MS: u64 = 50;
 const STORAGE_CONNECT_MAX_DELAY_MS: u64 = 1_000;
 const STORAGE_CONNECT_JITTER_MS: u64 = 37;
 
-const UNSUPPORTED_FS_TYPES: &[&str] = &[
-    "nfs", "nfs4", "cifs", "smbfs", "9p", "virtiofs", "fuse", "fuseblk", "vboxsf",
-];
+const UNSUPPORTED_FS_TYPES: &[&str] = &["nfs", "nfs4", "cifs", "smbfs", "9p", "vboxsf"];
 
 /// Establish the canonical local connection through Dactyl.
 ///
@@ -324,9 +322,9 @@ pub fn storage_health_preflight(store_root: &Path) -> Result<(), error::DecapodE
     }
     if let Some(fs_type) = detect_fs_type(store_root) {
         let fs_type_l = fs_type.to_ascii_lowercase();
-        if is_unsupported_fs_type(&fs_type_l) {
+        if UNSUPPORTED_FS_TYPES.iter().any(|t| *t == fs_type_l) {
             return Err(error::DecapodError::ValidationError(format!(
-                "STORAGE_PREFLIGHT_UNSUPPORTED_FS: path='{}' fs_type='{}' is not supported for Decapod SQLite state. WAL needs reliable shared-memory coordination, which network, FUSE, and host/VM shared filesystems do not provide. Use a local filesystem or an isolated local data mount, then re-run.",
+                "STORAGE_PREFLIGHT_UNSUPPORTED_FS: path='{}' fs_type='{}' is not supported for Decapod local state. Use a local filesystem (ext4/xfs/apfs) and re-run.",
                 store_root.display(),
                 fs_type
             )));
@@ -346,9 +344,9 @@ fn storage_preflight_for_db(
     } else {
         if let Some(fs_type) = detect_fs_type(parent) {
             let fs_type_l = fs_type.to_ascii_lowercase();
-            if is_unsupported_fs_type(&fs_type_l) {
+            if UNSUPPORTED_FS_TYPES.iter().any(|t| *t == fs_type_l) {
                 return Err(error::DecapodError::ValidationError(format!(
-                    "STORAGE_PREFLIGHT_UNSUPPORTED_FS: path='{}' fs_type='{}' is not supported for Decapod SQLite state. WAL needs reliable shared-memory coordination, which network, FUSE, and host/VM shared filesystems do not provide. Use a local filesystem or an isolated local data mount, then retry.",
+                    "STORAGE_PREFLIGHT_UNSUPPORTED_FS: path='{}' fs_type='{}' is not supported for Decapod local state. Use a local filesystem and retry.",
                     parent.display(),
                     fs_type
                 )));
@@ -394,6 +392,10 @@ fn write_probe(dir: &Path) -> Result<(), error::DecapodError> {
 fn detect_fs_type(path: &Path) -> Option<String> {
     let canon = path.canonicalize().ok()?;
     let text = fs::read_to_string("/proc/self/mountinfo").ok()?;
+    fs_type_from_mountinfo(&canon, &text)
+}
+
+fn fs_type_from_mountinfo(path: &Path, text: &str) -> Option<String> {
     let mut best: Option<(usize, String)> = None;
     for line in text.lines() {
         let mut parts = line.split(" - ");
@@ -407,9 +409,15 @@ fn detect_fs_type(path: &Path) -> Option<String> {
         if left_parts.len() < 5 {
             continue;
         }
-        let mount_point = left_parts[4].replace("\\040", " ");
+        // Decode backslash last so a literal \040 encoded as \134040
+        // remains literal rather than being decoded twice.
+        let mount_point = left_parts[4]
+            .replace("\\040", " ")
+            .replace("\\011", "\t")
+            .replace("\\012", "\n")
+            .replace("\\134", "\\");
         let mount_point_path = Path::new(&mount_point);
-        if !canon.starts_with(mount_point_path) {
+        if !path.starts_with(mount_point_path) {
             continue;
         }
         let right_parts: Vec<&str> = right.split_whitespace().collect();
@@ -424,44 +432,6 @@ fn detect_fs_type(path: &Path) -> Option<String> {
         }
     }
     best.map(|(_, fs)| fs)
-}
-
-fn is_unsupported_fs_type(fs_type: &str) -> bool {
-    UNSUPPORTED_FS_TYPES.iter().any(|unsupported| {
-        fs_type == *unsupported || (*unsupported == "fuse" && fs_type.starts_with("fuse."))
-    })
-}
-
-#[cfg(test)]
-mod storage_filesystem_tests {
-    use super::is_unsupported_fs_type;
-
-    #[test]
-    fn shared_and_fuse_filesystems_are_rejected_case_insensitively() {
-        for fs_type in [
-            "virtiofs",
-            "9p",
-            "nfs4",
-            "fuse",
-            "fuse.sshfs",
-            "FUSE.rclone",
-        ] {
-            assert!(
-                is_unsupported_fs_type(&fs_type.to_ascii_lowercase()),
-                "expected unsupported filesystem: {fs_type}"
-            );
-        }
-    }
-
-    #[test]
-    fn local_filesystems_remain_supported() {
-        for fs_type in ["apfs", "ext4", "xfs", "tmpfs"] {
-            assert!(
-                !is_unsupported_fs_type(fs_type),
-                "expected supported filesystem: {fs_type}"
-            );
-        }
-    }
 }
 
 pub fn knowledge_db_path(root: &Path) -> PathBuf {
@@ -547,3 +517,47 @@ pub fn initialize_decide_db(root: &Path) -> Result<(), error::DecapodError> {
 
 // Subsystems own their schemas and initialization. Avoid generic "plugin DB" APIs until
 // a real extension mechanism exists.
+
+#[cfg(test)]
+mod storage_filesystem_tests {
+    use super::{UNSUPPORTED_FS_TYPES, fs_type_from_mountinfo};
+    use std::path::Path;
+
+    #[test]
+    fn intentional_shared_filesystems_remain_outside_the_existing_denylist() {
+        for fs_type in ["virtiofs", "fuse", "fuseblk", "fuse.sshfs"] {
+            assert!(!UNSUPPORTED_FS_TYPES.contains(&fs_type));
+        }
+    }
+
+    #[test]
+    fn mountinfo_uses_deepest_component_boundary_and_decodes_escapes() {
+        let mounts = concat!(
+            "20 1 0:1 / / rw - ext4 /dev/root rw\n",
+            "21 20 0:2 / /repo rw - virtiofs shared rw\n",
+            "22 21 0:3 / /repo/.decapod/data rw - tmpfs tmpfs rw\n",
+            "23 20 0:4 / /space\\040tab\\011line\\012slash\\134040 rw - fuse.sshfs shared rw\n",
+        );
+        for (path, expected) in [
+            ("/repo/.decapod/data", "tmpfs"),
+            ("/repo/.decapod/data/decapod.db", "tmpfs"),
+            ("/repo/.decapod/data-other", "virtiofs"),
+            ("/repository", "ext4"),
+            ("/space tab\tline\nslash\\040/db", "fuse.sshfs"),
+        ] {
+            assert_eq!(
+                fs_type_from_mountinfo(Path::new(path), mounts).as_deref(),
+                Some(expected)
+            );
+        }
+    }
+
+    #[test]
+    fn malformed_mountinfo_does_not_hide_valid_entries() {
+        let mounts = "bad line\n1 0 0:1 / / rw - ext4 /dev/root rw\n2 1 0:2 / /repo rw - \n";
+        assert_eq!(
+            fs_type_from_mountinfo(Path::new("/repo"), mounts).as_deref(),
+            Some("ext4")
+        );
+    }
+}

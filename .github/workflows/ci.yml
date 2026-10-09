@@ -569,13 +569,17 @@ jobs:
                   //:workspace_interlock \
                   //:workunit_cli \
                   //:context_capsule_cli \
-                  --test_arg=--test-threads=4
+                  --test_arg=--test-threads=1
               elif echo "$CHANGED" | grep -qE 'src/decapod/core/'; then
-                bazelisk test //:entrypoint_correctness --test_arg=--test-threads=4
+                bazelisk test //:entrypoint_correctness --test_arg=--test-threads=1
               fi
               ;;
             plugins)
               if echo "$CHANGED" | grep -qE 'src/decapod/plugins/'; then
+                # Todo tests exercise a process-global storage pool and
+                # already spawn their own contention workers. Keep the
+                # outer Rust test scheduler serial so unrelated fixtures
+                # cannot starve bounded lock assertions.
                 bazelisk test \
                   //:plugins_todo_tests \
                   //:plugins_policy_tests \
@@ -585,7 +589,7 @@ jobs:
                   //:plugins_federation_tests \
                   //:plugins_decide_tests \
                   //:plugins_obligation_tests \
-                  --test_arg=--test-threads=4
+                  --test_arg=--test-threads=1
               fi
               ;;
             cli)
@@ -594,7 +598,7 @@ jobs:
                   //:cli_contract_enforcement \
                   //:entrypoint_correctness \
                   //:cli_contracts \
-                  --test_arg=--test-threads=4
+                  --test_arg=--test-threads=1
               fi
               ;;
             integration)
@@ -604,7 +608,7 @@ jobs:
                   //:constitution_claims \
                   //:spec_conformance \
                   //:substrate_integrity \
-                  --test_arg=--test-threads=4
+                  --test_arg=--test-threads=1
               fi
               ;;
           esac

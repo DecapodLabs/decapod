@@ -600,3 +600,164 @@ fn code_pr_without_managed_specs_fails_projection_inventory() {
         "{message}"
     );
 }
+
+#[test]
+fn container_launch_rejects_ambiguous_runtime_mount_paths() {
+    for path in [
+        "/repo:other",
+        "/repo,other",
+        "/repo\"other",
+        "/repo\nother",
+        "relative",
+    ] {
+        assert!(
+            container_workspace_launch_command(
+                Path::new(path),
+                Path::new("/workspace"),
+                "docker",
+                "image"
+            )
+            .unwrap_err()
+            .to_string()
+            .contains("CONTAINER_STORE_PATH_UNSUPPORTED")
+        );
+        assert!(
+            container_workspace_launch_command(
+                Path::new("/repo"),
+                Path::new(path),
+                "podman",
+                "image"
+            )
+            .is_err()
+        );
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn container_launch_rejects_non_utf8_paths() {
+    use std::os::unix::ffi::OsStrExt;
+    let path = Path::new(std::ffi::OsStr::from_bytes(b"/repo\xff"));
+    assert!(
+        container_workspace_launch_command(path, Path::new("/workspace"), "docker", "image")
+            .is_err()
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn container_launch_snapshot_lifecycle_is_repeatable_and_failure_safe() {
+    use std::os::unix::fs::PermissionsExt;
+    let tmp = tempdir().expect("tempdir");
+    let repo = tmp.path().join("repo 'quoted' $literal `literal` \\path");
+    let workspace = repo.join(".decapod/workspaces/test");
+    let bin = tmp.path().join("bin");
+    std::fs::create_dir_all(&workspace).unwrap();
+    std::fs::create_dir_all(&bin).unwrap();
+    let log = tmp.path().join("snapshots");
+    let args_log = tmp.path().join("runtime-args");
+    for (name, script) in [
+        (
+            "decapod",
+            r##"#!/bin/sh
+set -eu
+[ "$1 $2 $3 $4" = "data database backup --destination" ]
+printf '%s\n' "$5" >> "$SNAPSHOT_LOG"
+printf 'verified snapshot' > "$5"
+exit "$BACKUP_EXIT"
+"##,
+        ),
+        (
+            "mock-runtime",
+            r##"#!/bin/sh
+set -eu
+printf '%s\n' "$@" > "$ARGS_LOG"
+while [ "$#" -gt 0 ]; do
+  if [ "$1" = '--mount' ]; then
+    shift
+    snapshot=${1#type=bind,src=}
+    snapshot=${snapshot%,dst=/tmp/decapod-store.db,readonly}
+    [ "$(cat -- "$snapshot")" = 'verified snapshot' ]
+  fi
+  shift
+done
+if [ "$RUNTIME_EXIT" = 143 ]; then
+  kill -TERM "$PPID"
+  exit 0
+fi
+exit "$RUNTIME_EXIT"
+"##,
+        ),
+    ] {
+        let path = bin.join(name);
+        std::fs::write(&path, script).unwrap();
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o700)).unwrap();
+    }
+    let command = container_workspace_launch_command(
+        &repo,
+        &workspace,
+        bin.join("mock-runtime").to_str().unwrap(),
+        "test-image",
+    )
+    .unwrap();
+    let target = workspace.join("target");
+    std::fs::create_dir_all(&target).unwrap();
+    let unrelated = target.join("decapod-container-store-existing.db");
+    std::fs::write(&unrelated, "keep me").unwrap();
+    for (backup_exit, runtime_exit, expected) in
+        [(0, 0, 0), (0, 37, 37), (23, 0, 23), (0, 143, 143)]
+    {
+        if args_log.exists() {
+            std::fs::remove_file(&args_log).unwrap();
+        }
+        let output = Command::new("sh")
+            .args(["-c", &command])
+            .env(
+                "PATH",
+                format!(
+                    "{}:{}",
+                    bin.display(),
+                    std::env::var("PATH").unwrap_or_default()
+                ),
+            )
+            .env("SNAPSHOT_LOG", &log)
+            .env("ARGS_LOG", &args_log)
+            .env("BACKUP_EXIT", backup_exit.to_string())
+            .env("RUNTIME_EXIT", runtime_exit.to_string())
+            .output()
+            .unwrap();
+        assert_eq!(
+            output.status.code(),
+            Some(expected),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert_eq!(std::fs::read_to_string(&unrelated).unwrap(), "keep me");
+        assert_eq!(
+            std::fs::read_dir(&target).unwrap().count(),
+            1,
+            "only the unrelated snapshot remains"
+        );
+        if backup_exit != 0 {
+            assert!(
+                !args_log.exists(),
+                "failed backup must prevent runtime execution"
+            );
+        } else {
+            let args = std::fs::read_to_string(&args_log).unwrap();
+            assert!(args.contains(&format!("-v\n{}:{}\n", repo.display(), repo.display())));
+            assert!(args.contains(&format!(
+                "--tmpfs\n{}/.decapod/data:rw,nosuid,nodev,mode=0700\n",
+                repo.display()
+            )));
+            assert!(args.contains(",dst=/tmp/decapod-store.db,readonly\n"));
+            assert!(args.contains("run\n--rm\n-it\n-e\nDECAPOD_CONTAINER=1\n"));
+            assert!(args.contains("cp -- /tmp/decapod-store.db "));
+            assert!(args.contains("/decapod.db && exec bash"));
+        }
+    }
+    let snapshots = std::fs::read_to_string(&log).unwrap();
+    let paths: std::collections::HashSet<_> = snapshots.lines().collect();
+    assert_eq!(paths.len(), 4, "every invocation owns a fresh snapshot");
+    assert!(paths.iter().all(|path| !Path::new(path).exists()));
+}

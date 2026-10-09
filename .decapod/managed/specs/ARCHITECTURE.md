@@ -150,14 +150,28 @@ This project's architecture consists of the following key layers/directories:
   insertion. Canonical local connection factories also retain a bounded
   `decapod.db.lock` sidecar. The sidecar is deliberately exclusive for all
   canonical local connection lifetimes, conservatively coordinating reads and
-  writes across cooperating Decapod processes on a supported local filesystem
-  without changing the Dactyl physical storage boundary; a lock timeout is
-  typed contention, not a stale-lock repair. This lock does not make SQLite
-  WAL safe when a host and VM access the same file through a shared mount.
-  Container launch takes a Dactyl online backup and seeds a container-local
-  tmpfs at the canonical data path, so host and container processes use
-  separate databases. Filesystem preflight also fails closed for network,
-  FUSE, 9p, and virtiofs stores before SQLite opens the database.
+  writes across host and container Decapod processes without changing the
+  Dactyl physical storage boundary; a lock timeout is typed contention, not a
+  stale-lock repair.
+
+## Federation Replay and Bounded Claim Contention
+
+Federation replay treats the event stream as the authority for node identity.
+When a legacy `node.create` row has a missing subject projection but retains
+`node_id` in its envelope or nested payload, normalization derives the subject
+deterministically and repairs the projection transactionally before replay.
+This keeps migrated stores replayable without inventing identity or silently
+discarding an otherwise recoverable event.
+
+The per-database operation lock is bounded. A todo claim that encounters a
+same-process operation already holding the local lock returns a typed
+`STORAGE_POOL_LOCK_TIMEOUT` contention error with retry guidance; it does not
+wait indefinitely or mutate the open task partially. Broker pending and
+terminal audit records use the acquired write connection, avoiding a second
+attempt to acquire the same process lock. Cross-agent lease and conflict
+semantics remain enforced by the existing database transaction and compare-
+and-set transition.
+
 - Trajectory archive files are additive evidence copies. The legacy cookie
   remains the one validation/publication authority for the workspace. Separate
   jobs in one workspace are subagent loops inside that trajectory; Decapod does
@@ -332,6 +346,16 @@ document before writing any document. Scaffold manifests record the actual
 seeded template hash, and a changed configuration hash cannot establish that an
 authored document is an untouched template.
 
+## Explicit Workspace Snapshot Launch
+
+The `workspace ensure --container` launch hint obtains a verified Dactyl online
+backup on the host, mounts that snapshot read-only, and seeds a private tmpfs
+at the canonical data path before opening the container shell. This explicit
+workspace launch mode has isolated, ephemeral database state. Existing
+automatic-run shared-control-plane mounts and Dactyl local routes retain
+their intended shared-store behavior; this change does not add a blanket
+virtiofs/FUSE filesystem prohibition.
+
 <!-- decapod:capability-overlay:persistent-state:start -->
 
 ## Persistent State Architecture Overlay
@@ -356,7 +380,7 @@ authored document is an untouched template.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fb4c04774a1a39318707cd0c2b8a1d5dfb8243dd3cd25a177a6e572c2d446656`
+- Repository signal fingerprint: `d6603b370f1e7716d2ed07f015aad7f81e5ca75ab51fb4f5514b11f9ecfae714`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -3294,7 +3294,7 @@ pub fn update_status(
     }
 
     let result =
-        broker.with_transaction(&db_path, &actor, Some(&intent_ref), event_type, |conn| {
+        match broker.with_transaction(&db_path, &actor, Some(&intent_ref), event_type, |conn| {
             ensure_schema(conn)?;
 
             let current: Option<(String, i64)> = conn
@@ -3368,7 +3368,21 @@ pub fn update_status(
                 "id": id,
                 "revision": new_revision,
             }))
-        })?;
+        }) {
+            Ok(result) => result,
+            Err(error::DecapodError::ValidationError(message))
+                if message.starts_with("STORAGE_POOL_LOCK_TIMEOUT:") =>
+            {
+                serde_json::json!({
+                    "status": "conflict",
+                    "reason": "storage_contention",
+                    "id": id,
+                    "expected_status": expected_status,
+                    "expected_revision": expected_revision,
+                })
+            }
+            Err(error) => return Err(error),
+        };
 
     let changed = result.get("status").and_then(|v| v.as_str()) == Some("ok");
     if changed {

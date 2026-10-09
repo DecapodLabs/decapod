@@ -1,15 +1,16 @@
 {
   "schema_version": "1.0.0",
-  "title": "Isolate container workspace Decapod state from host SQLite WAL",
-  "intent": "Prevent container workspace Decapod processes from opening the host SQLite WAL store across host/VM shared filesystems. Seed a container-local tmpfs store from a Dactyl online backup and reject unsupported shared mounts before SQLite opens them.",
+  "title": "Finish PR 1364 while preserving intended sharing",
+  "intent": "Preserve intended shared-database topology, including virtiofs and FUSE routes. Reconcile master and harden the explicit manual workspace snapshot launch ownership, cleanup, quoting and mountinfo matching. No new blanket filesystem ban, automatic-run restriction, merge or deployment.",
   "state": "APPROVED",
   "todo_ids": [
-    "bugs_01m3vmyw1npwaa74"
+    "data_01m4gz0f9y5dfsez"
   ],
   "proof_hooks": [
-    "Decapod validation passes in the dedicated workspace using the container-local data snapshot.",
-    "The container launch hint uses the canonical Dactyl online backup and mounts the SQLite store on container-local tmpfs.",
-    "Filesystem preflight rejects virtiofs and FUSE before any SQLite connection opens, with actionable WAL-specific guidance."
+    "cargo test --locked --lib",
+    "cargo clippy --locked --all-targets --all-features -- -D warnings",
+    "Focused workspace and integration test targets",
+    "decapod validate --refresh-specs --format json"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -23,5 +24,5 @@
     "file_touch_budget": 30
   },
   "phases": [],
-  "updated_at": "1790857221Z"
+  "updated_at": "1791571861Z"
 }

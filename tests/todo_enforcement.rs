@@ -1,8 +1,32 @@
 use serde_json::Value;
 use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use tempfile::TempDir;
+
+fn resolve_decapod_bin() -> PathBuf {
+    let cargo_bin = env!("CARGO_BIN_EXE_decapod");
+    if let Ok(path) = Path::new(cargo_bin).canonicalize() {
+        return path;
+    }
+    if let Ok(runfiles_dir) = std::env::var("RUNFILES_DIR") {
+        let path = Path::new(&runfiles_dir).join("_main").join("decapod");
+        if path.exists() {
+            return path;
+        }
+    }
+    if let Some(parent) = std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(Path::to_path_buf))
+    {
+        let path = parent.join("decapod");
+        if path.exists() {
+            return path;
+        }
+    }
+    PathBuf::from(cargo_bin)
+}
 
 fn setup_workspace() -> (TempDir, std::path::PathBuf, String) {
     let tmp = TempDir::new().expect("tempdir");
@@ -39,7 +63,7 @@ fn setup_workspace() -> (TempDir, std::path::PathBuf, String) {
         .expect("git commit");
 
     // Init decapod
-    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let out = Command::new(resolve_decapod_bin())
         .args(["init", "--force"])
         .current_dir(&dir)
         .output()
@@ -70,7 +94,7 @@ fn setup_workspace() -> (TempDir, std::path::PathBuf, String) {
     // We need to set DECAPOD_AGENT_ID to match what we use later, or use default.
     // Let's use "test-agent-enforce".
     let agent_id = "test-agent-enforce";
-    let session = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let session = Command::new(resolve_decapod_bin())
         .args(["session", "acquire"])
         .env("DECAPOD_AGENT_ID", agent_id)
         .current_dir(&dir)
@@ -98,7 +122,7 @@ fn setup_workspace() -> (TempDir, std::path::PathBuf, String) {
 }
 
 fn run_rpc(dir: &std::path::Path, request: Value, agent_id: &str) -> Value {
-    let mut child = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let mut child = Command::new(resolve_decapod_bin())
         .args(["rpc", "--stdin"])
         .current_dir(dir)
         .env("DECAPOD_AGENT_ID", agent_id)
@@ -142,7 +166,7 @@ fn add_and_claim_task(
     password: &str,
     title: &str,
 ) -> (String, String) {
-    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let out = Command::new(resolve_decapod_bin())
         .args([
             "todo", "add", title, "--owner", agent_id, "--format", "json",
         ])
@@ -161,7 +185,7 @@ fn add_and_claim_task(
     let task_id = add_json["id"].as_str().expect("task id").to_string();
     let task_hash = add_json["hash"].as_str().expect("task hash").to_string();
 
-    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let out = Command::new(resolve_decapod_bin())
         .args(["todo", "claim", "--id", &task_id, "--agent", agent_id])
         .current_dir(dir)
         .env("DECAPOD_AGENT_ID", agent_id)
@@ -196,7 +220,7 @@ fn test_agent_init_and_todo_claim_lifecycle() {
     );
 
     // 2. Add a task for this agent
-    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let out = Command::new(resolve_decapod_bin())
         .args([
             "todo",
             "add",
@@ -221,7 +245,7 @@ fn test_agent_init_and_todo_claim_lifecycle() {
     let task_id = add_json["id"].as_str().expect("task id").to_string();
 
     // 3. Claim the task
-    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let out = Command::new(resolve_decapod_bin())
         .args(["todo", "claim", "--id", &task_id, "--agent", agent_id])
         .current_dir(&dir)
         .env("DECAPOD_AGENT_ID", agent_id)
@@ -238,7 +262,7 @@ fn test_agent_init_and_todo_claim_lifecycle() {
 
     println!("Task ID: {task_id}");
     // DEBUG: Check task state
-    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let out = Command::new(resolve_decapod_bin())
         .args(["todo", "get", "--id", &task_id, "--format", "json"])
         .current_dir(&dir)
         .env("DECAPOD_AGENT_ID", agent_id)
@@ -288,7 +312,7 @@ fn test_workspace_ensure_requires_claimed_todo_and_scopes_naming() {
     let (_tmp, dir, password) = setup_workspace();
     let agent_id = "test-agent-enforce";
 
-    let auto_todo = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let auto_todo = Command::new(resolve_decapod_bin())
         .args(["workspace", "ensure"])
         .current_dir(&dir)
         .env("DECAPOD_AGENT_ID", agent_id)
@@ -307,7 +331,7 @@ fn test_workspace_ensure_requires_claimed_todo_and_scopes_naming() {
     let auto_json: serde_json::Value =
         serde_json::from_slice(&auto_todo.stdout).expect("workspace ensure json");
     let auto_branch = auto_json["branch"].as_str().expect("branch");
-    let tasks = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let tasks = Command::new(resolve_decapod_bin())
         .args(["todo", "--format", "json", "list", "--status", "open"])
         .current_dir(&dir)
         .env("DECAPOD_AGENT_ID", agent_id)
@@ -361,7 +385,7 @@ fn test_workspace_ensure_requires_claimed_todo_and_scopes_naming() {
 
     // A second agent auto-creating a coordination todo on the same repo dir
     // collides with the first exclusive claim (path_overlap). Runtime fails closed.
-    let no_todo_again = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let no_todo_again = Command::new(resolve_decapod_bin())
         .args(["workspace", "ensure"])
         .current_dir(&dir)
         .env("DECAPOD_AGENT_ID", "other-agent")
@@ -382,7 +406,7 @@ fn test_workspace_ensure_requires_claimed_todo_and_scopes_naming() {
 
     let (task_id, task_hash) =
         add_and_claim_task(&dir, agent_id, &password, "Workspace Scoped Task");
-    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let out = Command::new(resolve_decapod_bin())
         .args(["workspace", "ensure"])
         .current_dir(&dir)
         .env("DECAPOD_AGENT_ID", agent_id)
@@ -431,7 +455,7 @@ fn test_workspace_ensure_reuses_external_todo_ref_for_exclusive_claims() {
     let (_tmp, dir, password) = setup_workspace();
     let external_ref = "bd-568";
 
-    let first = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let first = Command::new(resolve_decapod_bin())
         .args(["workspace", "ensure"])
         .current_dir(&dir)
         .env("DECAPOD_AGENT_ID", "external-agent-one")
@@ -445,7 +469,7 @@ fn test_workspace_ensure_reuses_external_todo_ref_for_exclusive_claims() {
         String::from_utf8_lossy(&first.stderr)
     );
 
-    let second = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let second = Command::new(resolve_decapod_bin())
         .args(["workspace", "ensure"])
         .current_dir(&dir)
         .env("DECAPOD_AGENT_ID", "external-agent-two")
@@ -494,7 +518,7 @@ fn test_workspace_ensure_container_creates_coordination_todo() {
     paths.extend(std::env::split_paths(&path));
     let fake_path = std::env::join_paths(paths).expect("join PATH");
 
-    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let out = Command::new(resolve_decapod_bin())
         .args(["workspace", "ensure", "--container"])
         .current_dir(&dir)
         .env("PATH", fake_path)
@@ -520,7 +544,7 @@ fn test_workspace_ensure_container_creates_coordination_todo() {
         serde_json::from_slice(&out.stdout).expect("workspace ensure --container json");
     let branch = json["branch"].as_str().expect("branch");
     let worktree_path = json["worktree_path"].as_str().expect("worktree_path");
-    let tasks = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let tasks = Command::new(resolve_decapod_bin())
         .args(["todo", "--format", "json", "list", "--status", "open"])
         .current_dir(&dir)
         .env("DECAPOD_AGENT_ID", agent_id)
