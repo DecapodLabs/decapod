@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.106.0](https://github.com/DecapodLabs/decapod/compare/v0.105.1...v0.106.0) - 2026-10-09
+
+### Fixed
+
+- preserve resource approval boundaries and isolate runtime proof
+- *(policy)* merge current base and correct approval expiry and targets
+
+### Other
+
+- refresh authentic approval validation proof
+- *(governance)* record approval regression and container proof
+- *(policy)* prove target isolation expiry and revocation
+- Refresh Decapod 0.104.3 managed pins
+- Fix target-scoped policy approvals ([#1361](https://github.com/DecapodLabs/decapod/pull/1361))
+- Fix target-scoped policy approvals
+
 ## [0.105.1](https://github.com/DecapodLabs/decapod/compare/v0.105.0...v0.105.1) - 2026-10-09
 
 ### Fixed
