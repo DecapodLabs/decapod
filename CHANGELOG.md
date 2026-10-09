@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.105.1](https://github.com/DecapodLabs/decapod/compare/v0.105.0...v0.105.1) - 2026-10-09
+
+### Fixed
+
+- harden workspace snapshots while preserving shared stores
+
+### Other
+
+- record snapshot launcher validation evidence
+- Isolate container SQLite state on shared VM filesystems
+- Isolate container SQLite state on shared VM filesystems
+
 ## [0.105.0](https://github.com/DecapodLabs/decapod/compare/v0.104.3...v0.105.0) - 2026-10-01
 
 ### Fixed

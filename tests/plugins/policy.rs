@@ -377,3 +377,156 @@ fn cli_grants_have_bounded_lifetime_and_can_be_listed_and_revoked() {
         );
     }
 }
+
+#[test]
+fn broker_preserves_resource_targets_without_operation_name_fallback() {
+    use decapod::core::broker::DbBroker;
+    use decapod::plugins::policy::{policy_db_path, revoke_approval};
+
+    let tmp = tempdir().unwrap();
+    write_project_config(tmp.path(), "[\"destructive_operations\"]");
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: tmp.path().to_path_buf(),
+    };
+    initialize_policy_db(&store.root).unwrap();
+    let broker = DbBroker::new(&store.root);
+    let db_path = policy_db_path(&store.root);
+    let run = |target: Option<&str>| {
+        let scoped = match target {
+            Some(target) => DbBroker::new(&store.root).with_target(target),
+            None => DbBroker::new(&store.root),
+        };
+        scoped.with_transaction(&db_path, "decapod", None, "task.archive", |_| Ok(()))
+    };
+    assert!(run(Some("alpha")).is_err());
+    let grant =
+        approve_action(&store, "task.archive", Some("alpha"), "operator", "global").unwrap();
+    run(Some("alpha")).unwrap();
+    assert!(run(Some("beta")).is_err());
+    assert!(run(None).is_err());
+    revoke_approval(&store, &grant).unwrap();
+
+    let operation_grant = approve_action(
+        &store,
+        "task.archive",
+        Some("task.archive"),
+        "operator",
+        "global",
+    )
+    .unwrap();
+    // Only callers that truly lack a resource target may use this legacy grant.
+    broker
+        .with_transaction(&db_path, "decapod", None, "task.archive", |_| Ok(()))
+        .unwrap();
+    assert!(run(Some("alpha")).is_err());
+    revoke_approval(&store, &operation_grant).unwrap();
+    assert!(run(None).is_err());
+
+    let general = approve_action(&store, "task.archive", None, "operator", "global").unwrap();
+    run(Some("beta")).unwrap();
+    let db = decapod::core::db::Connection::open(&db_path).unwrap();
+    db.execute(
+        "UPDATE approvals SET expires_at = '1Z' WHERE approval_id = ?1",
+        [general.as_str()],
+    )
+    .unwrap();
+    assert!(
+        run(Some("beta")).is_err(),
+        "expired action-wide grants must stay denied"
+    );
+}
+
+#[test]
+fn raw_fingerprint_grants_cannot_escape_their_stored_scope() {
+    use decapod::core::db::Connection;
+    use decapod::plugins::policy::{check_approval_on_conn, policy_db_path, revoke_approval};
+
+    let tmp = tempdir().unwrap();
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: tmp.path().to_path_buf(),
+    };
+    initialize_policy_db(&store.root).unwrap();
+    let global_fingerprint = derive_fingerprint("task.archive", Some("alpha"), "global");
+    let mismatched = approve_action(&store, &global_fingerprint, None, "operator", "repo").unwrap();
+    let conn = Connection::open(policy_db_path(&store.root)).unwrap();
+    assert!(!check_approval(&store, "task.archive", Some("alpha"), "global").unwrap());
+    assert!(!check_approval_on_conn(&conn, "task.archive", Some("alpha"), "global").unwrap());
+    assert!(!check_approval(&store, "task.archive", Some("alpha"), "repo").unwrap());
+    revoke_approval(&store, &mismatched).unwrap();
+
+    for scope in ["repo", "global"] {
+        let fingerprint = derive_fingerprint("task.archive", Some("alpha"), scope);
+        let grant = approve_action(&store, &fingerprint, None, "operator", scope).unwrap();
+        assert!(check_approval(&store, "task.archive", Some("alpha"), scope).unwrap());
+        assert!(check_approval_on_conn(&conn, "task.archive", Some("alpha"), scope).unwrap());
+        revoke_approval(&store, &grant).unwrap();
+    }
+}
+
+#[test]
+fn broker_zone_approvals_preserve_the_resource_target_and_trust_gate() {
+    use decapod::core::broker::DbBroker;
+    use decapod::core::db::Connection;
+    use decapod::plugins::policy::{policy_db_path, revoke_approval};
+
+    let tmp = tempdir().unwrap();
+    write_project_config(tmp.path(), "[]");
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: tmp.path().to_path_buf(),
+    };
+    initialize_policy_db(&store.root).unwrap();
+    let db_path = policy_db_path(&store.root);
+    let db = Connection::open(&db_path).unwrap();
+    db.execute(
+        "INSERT INTO risk_zones(id, zone_name, required_trust_level, requires_approval, created_at) VALUES('target-zone', 'control.mutate', 'core', 1, '1Z')",
+        [],
+    ).unwrap();
+    let run = |actor, target: Option<&str>| {
+        let scoped = match target {
+            Some(target) => DbBroker::new(&store.root).with_target(target),
+            None => DbBroker::new(&store.root),
+        };
+        scoped.with_transaction(&db_path, actor, None, "task.archive", |_| Ok(()))
+    };
+    assert!(run("decapod", Some("alpha")).is_err());
+    let grant = approve_action(
+        &store,
+        "control.mutate",
+        Some("alpha"),
+        "operator",
+        "global",
+    )
+    .unwrap();
+    run("decapod", Some("alpha")).unwrap();
+    assert!(run("untrusted-agent", Some("alpha")).is_err());
+    db.execute(
+        "INSERT INTO agents(agent_id, last_seen, status, updated_at, trust_level, expertise_json, category_claims_json) VALUES('verified-agent', '1Z', 'active', '1Z', 'verified', '[]', '[]')",
+        [],
+    ).unwrap();
+    // This actor passes the operation's verified threshold, but not the zone's core threshold.
+    let denied = run("verified-agent", Some("alpha"))
+        .unwrap_err()
+        .to_string();
+    assert!(
+        denied.contains("zone 'control.mutate' requires trust 'core'"),
+        "{denied}"
+    );
+    assert!(run("decapod", Some("beta")).is_err());
+    assert!(run("decapod", None).is_err());
+    revoke_approval(&store, &grant).unwrap();
+
+    let legacy = approve_action(
+        &store,
+        "control.mutate",
+        Some("control.mutate"),
+        "operator",
+        "global",
+    )
+    .unwrap();
+    run("decapod", None).unwrap();
+    assert!(run("decapod", Some("alpha")).is_err());
+    revoke_approval(&store, &legacy).unwrap();
+}

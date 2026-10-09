@@ -1,14 +1,17 @@
 {
   "schema_version": "1.0.0",
-  "title": "Correct target approvals in PR #1362",
-  "intent": "Preserve per-target and explicit action-wide approvals; enforce expiry and revocation; prove todo archive isolation and CLI compatibility.",
+  "title": "Prepare target-scoped approvals for merge",
+  "intent": "Reconcile PR1362 with release v0.105.1; enforce exact approval targets across todo and broker boundaries; verify expiry and revocation; diagnose bounded validation runtime. Preserve shared database topology. No merge or deployment.",
   "state": "APPROVED",
   "todo_ids": [
-    "bugs_01m4c42yt0x30qxj"
+    "code_01m4h5k2wtztzc99"
   ],
   "proof_hooks": [
-    "cargo test --locked --test plugins_policy_tests --test plugins_todo_tests",
-    "cargo clippy --locked --all-targets -- -D warnings"
+    "cargo test --locked --lib",
+    "Configured target-scoped approval regressions",
+    "cargo test --locked --test validate_termination",
+    "cargo clippy --locked --all-targets --all-features -- -D warnings",
+    "decapod validate --refresh-specs --format json"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -16,9 +19,11 @@
   "unresolved_contradictions": [],
   "deferred_questions": [],
   "constraints": {
-    "forbidden_paths": [],
-    "file_touch_budget": null
+    "forbidden_paths": [
+      ".decapod/data/decapod.db"
+    ],
+    "file_touch_budget": 35
   },
   "phases": [],
-  "updated_at": "1791412838Z"
+  "updated_at": "1791577776Z"
 }

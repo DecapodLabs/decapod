@@ -889,11 +889,11 @@ fn validate_smoke_runtime_is_bounded_without_contention() {
     let (_tmp, dir, password) = setup_repo();
     let mut durations_ms = Vec::new();
 
-    for _ in 0..3 {
+    for iteration in 1..=3 {
         let start = Instant::now();
         let output = run_decapod(
             &dir,
-            &["validate"],
+            &["validate", "--format", "json"],
             &[
                 ("DECAPOD_AGENT_ID", "unknown"),
                 ("DECAPOD_SESSION_PASSWORD", &password),
@@ -903,20 +903,28 @@ fn validate_smoke_runtime_is_bounded_without_contention() {
         );
         let elapsed = start.elapsed().as_millis() as u64;
         durations_ms.push(elapsed);
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        if let Ok(payload) = serde_json::from_slice::<Value>(&output.stdout) {
+            let report = &payload["report"];
+            eprintln!(
+                "validate iteration {iteration}: wall={elapsed}ms report={}ms gate_timings={}",
+                report["elapsed_ms"], report["gate_timings"]
+            );
+        }
         assert!(
             output.status.success(),
-            "validate should pass without forced contention; stderr:\n{}",
-            String::from_utf8_lossy(&output.stderr)
+            "validate should pass without forced contention; stdout:\n{stdout}\nstderr:\n{stderr}"
         );
         assert!(
             elapsed < 10_000,
-            "validate runtime exceeded bounded smoke threshold: {elapsed}ms"
+            "validate iteration {iteration} exceeded bounded smoke threshold: {elapsed}ms; stdout:\n{stdout}\nstderr:\n{stderr}"
         );
     }
 
     let total: u64 = durations_ms.iter().sum();
     assert!(
         total < 20_000,
-        "three sequential validates should stay within bounded aggregate runtime; got {total}ms"
+        "three sequential validates should stay within bounded aggregate runtime; got {total}ms, per-run {durations_ms:?}"
     );
 }

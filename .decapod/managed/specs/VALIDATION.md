@@ -341,7 +341,25 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `191adaacf1daad465f20dd09bc300282b8430c515ea4e7a03f449b3039d805e1`
+- Repository signal fingerprint: `893b3979766940d91971e4d0a21e9152131f159fa7ae38789a3504df0beec189`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Approval and bounded-runtime regression proof (#1361)
+
+Approval regressions exercise a Git repository with destructive-operation approval
+policy enabled, so domain and broker checks must both accept the same resource
+fingerprint. Cross-target, cross-scope, expired, and revoked grants remain denied;
+intentional action-wide grants retain their compatibility behavior.
+
+The validation termination suite keeps its 10-second individual and 20-second
+aggregate smoke budgets. Bazel schedules this suite exclusively after other build
+and test work. The GitHub Actions core test command additionally sets
+`--test-threads=1` to serialize tests within the Rust harness. JSON reports
+record worker gate timings alongside full process wall time, allowing budget
+failures to distinguish gate execution from startup and receipt overhead.
+
+Broker crash-replay fixtures use the canonical datastore for both writes and
+verification. Observation-ledger tests validate explicit sequence numbers and
+their associated operations; ULID-key iteration order is not append order.

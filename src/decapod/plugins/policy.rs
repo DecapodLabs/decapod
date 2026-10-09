@@ -681,6 +681,17 @@ pub fn enforce_broker_mutation_policy(
     actor: &str,
     op_name: &str,
 ) -> Result<(), error::DecapodError> {
+    enforce_broker_mutation_policy_for_target(root, actor, op_name, None)
+}
+
+/// Enforce broker policy using the most specific resource target available.
+/// Compatibility fallbacks apply only when the caller has no resource target.
+pub fn enforce_broker_mutation_policy_for_target(
+    root: &Path,
+    actor: &str,
+    op_name: &str,
+    target: Option<&str>,
+) -> Result<(), error::DecapodError> {
     if is_read_only_operation(op_name) {
         return Ok(());
     }
@@ -704,7 +715,7 @@ pub fn enforce_broker_mutation_policy(
             kind: crate::core::store::StoreKind::Repo,
             root: root.to_path_buf(),
         };
-        if !check_approval(&store, op_name, Some(op_name), "global")? {
+        if !check_approval(&store, op_name, target.or(Some(op_name)), "global")? {
             return Err(error::DecapodError::ValidationError(format!(
                 "Policy gate denied for '{op_name}': configured approval category requires human approval"
             )));
@@ -723,7 +734,7 @@ pub fn enforce_broker_mutation_policy(
             };
             let high = matches!(risk, RiskLevel::HIGH | RiskLevel::CRITICAL);
             if human_in_loop_required(&store, zone_name, risk, high)
-                && !check_approval(&store, zone_name, Some(zone_name), "global")?
+                && !check_approval(&store, zone_name, target.or(Some(zone_name)), "global")?
             {
                 return Err(error::DecapodError::ValidationError(format!(
                     "Policy gate denied for '{op_name}': zone '{zone_name}' requires approval"
@@ -868,12 +879,13 @@ fn approval_matches(
     let now = now_iso();
     let now_secs = now.trim_end_matches('Z').parse::<i64>().unwrap_or_default();
     let mut stmt = conn.prepare(
-        "SELECT expires_at FROM approvals WHERE action_fingerprint = ?1 OR (?2 IS NOT NULL AND action_fingerprint = ?2)",
+        "SELECT expires_at FROM approvals WHERE scope = ?3 AND (action_fingerprint = ?1 OR (?2 IS NOT NULL AND action_fingerprint = ?2))",
     )?;
     let rows = stmt.query_map(
         params![
             fingerprint,
-            target_path.map(|_| general_fingerprint.as_str())
+            target_path.map(|_| general_fingerprint.as_str()),
+            scope
         ],
         |row| row.get::<_, Option<String>>(0),
     )?;

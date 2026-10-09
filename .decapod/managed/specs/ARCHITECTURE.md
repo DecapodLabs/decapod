@@ -346,6 +346,16 @@ document before writing any document. Scaffold manifests record the actual
 seeded template hash, and a changed configuration hash cannot establish that an
 authored document is an untouched template.
 
+## Explicit Workspace Snapshot Launch
+
+The `workspace ensure --container` launch hint obtains a verified Dactyl online
+backup on the host, mounts that snapshot read-only, and seeds a private tmpfs
+at the canonical data path before opening the container shell. This explicit
+workspace launch mode has isolated, ephemeral database state. Existing
+automatic-run shared-control-plane mounts and Dactyl local routes retain
+their intended shared-store behavior; this change does not add a blanket
+virtiofs/FUSE filesystem prohibition.
+
 <!-- decapod:capability-overlay:persistent-state:start -->
 
 ## Persistent State Architecture Overlay
@@ -370,11 +380,11 @@ authored document is an untouched template.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `191adaacf1daad465f20dd09bc300282b8430c515ea4e7a03f449b3039d805e1`
+- Repository signal fingerprint: `893b3979766940d91971e4d0a21e9152131f159fa7ae38789a3504df0beec189`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
 ## Target approval correction (#1361)
 
-Policy reads use the caller-owned transaction connection for claim, lease renewal, yield, and handoff. Those gates bind the todo ID; archive binds the same ID. Broker operations with no resource key bind their operation or zone name. External actions retain their capability and scope key.
+Policy reads use the caller-owned transaction connection for claim, lease renewal, yield, handoff, and archive. Those gates bind the todo ID. Archive checks its approval after acquiring the transaction, so waiting cannot retain a revoked or expired grant. Target-aware broker entrypoints preserve that resource key through configured approval and risk-zone gates; operation or zone-name fallback applies only when callers have no resource key. External actions retain their capability and scope key.

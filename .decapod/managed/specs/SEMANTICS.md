@@ -150,11 +150,11 @@ Neither backend decides whether a Decapod transition is valid.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `191adaacf1daad465f20dd09bc300282b8430c515ea4e7a03f449b3039d805e1`
+- Repository signal fingerprint: `893b3979766940d91971e4d0a21e9152131f159fa7ae38789a3504df0beec189`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (109 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
 ## Target approval correction (#1361)
 
-Expiry accepts epoch seconds with trailing Z and RFC3339 timestamps, including UTC Z and explicit offsets. Authorization requires expiry strictly later than the check time. Target-specific and action-wide fingerprints remain distinct; a target-specific grant cannot authorize another target or an action-wide request.
+Expiry accepts epoch seconds with trailing Z and RFC3339 timestamps, including UTC Z and explicit offsets. Authorization requires expiry strictly later than the check time. Target-specific and action-wide fingerprints remain distinct; a target-specific grant cannot authorize another target or an action-wide request. The stored scope must also match the requested scope, including for raw eval fingerprints; contradictory fingerprint/scope grants fail closed.

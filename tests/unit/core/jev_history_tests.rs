@@ -51,14 +51,16 @@ fn appends_multiple_typed_results_to_one_trajectory_ledger() {
         .expect("ledger present");
     assert_eq!(ledger.trajectory_run_id, "trajectory_new");
     assert_eq!(ledger.runs.len(), 2);
+    // The map is keyed by ULID. IDs generated in the same millisecond can
+    // have either suffix order; sequence is the explicit append-order field.
+    let mut runs = ledger.runs.values().collect::<Vec<_>>();
+    runs.sort_unstable_by_key(|run| run.sequence);
     assert_eq!(
-        ledger
-            .runs
-            .values()
-            .map(|run| run.sequence)
-            .collect::<Vec<_>>(),
+        runs.iter().map(|run| run.sequence).collect::<Vec<_>>(),
         vec![1, 2]
     );
+    assert_eq!(runs[0].operation, "build");
+    assert_eq!(runs[1].operation, "verify");
     assert!(
         ledger
             .runs

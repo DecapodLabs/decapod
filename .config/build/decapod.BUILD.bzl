@@ -80,6 +80,9 @@ def decapod_targets():
     [
         rust_test(
             name = path[6:-3],  # strip "tests/" and ".rs"
+            # This suite asserts uncontended process wall-clock budgets. Rust's
+            # test-threads flag alone does not isolate concurrent Bazel targets.
+            tags = ["exclusive"] if path == "tests/validate_termination.rs" else [],
             srcs = [path],
             edition = "2024",
             rustc_env_files = [":cargo_pkg_env"],

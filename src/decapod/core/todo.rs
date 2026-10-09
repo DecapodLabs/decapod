@@ -3257,7 +3257,7 @@ pub fn update_status(
     let ts = now_iso();
     let intent_ref = format!("intent:{}:{}", event_type, crate::core::ulid::new_ulid());
     let root = &store.root;
-    let broker = DbBroker::new(root);
+    let broker = DbBroker::new(root).with_target(id);
     let db_path = todo_db_path(root);
 
     // Risk Check
@@ -3271,11 +3271,6 @@ pub fn update_status(
     let (level, _) = policy::eval_risk(event_type, None, &risk_map);
     let requires_human =
         policy::human_in_loop_required(store, "global", level, policy::is_high_risk(level));
-    if requires_human && !policy::check_approval(store, event_type, Some(id), "global")? {
-        return Err(error::DecapodError::ValidationError(format!(
-            "Action '{event_type}' on '{id}' is high risk and lacks approval. Run `decapod govern policy eval --command '{event_type}' --path '{id}'` to get the approval command."
-        )));
-    }
 
     let actor = mutation_actor(Some(&payload));
     let mut payload = payload;
@@ -3297,6 +3292,14 @@ pub fn update_status(
     let result =
         match broker.with_transaction(&db_path, &actor, Some(&intent_ref), event_type, |conn| {
             ensure_schema(conn)?;
+            // Check after acquiring the transaction so a grant revoked or
+            // expired while waiting cannot authorize this mutation. Reuse the
+            // held connection rather than opening another broker connection.
+            if requires_human && !policy::check_approval_on_conn(conn, event_type, Some(id), "global")? {
+                return Err(error::DecapodError::ValidationError(format!(
+                    "Action '{event_type}' on '{id}' is high risk and lacks approval. Run `decapod govern policy eval --command '{event_type}' --path '{id}'` to get the approval command."
+                )));
+            }
 
             let current: Option<(String, i64)> = conn
                 .query_row(
