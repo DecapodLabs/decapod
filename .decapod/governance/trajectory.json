@@ -5,7 +5,10 @@
   "task_id": "bugs_01m4jdaambn944vm",
   "original_intent": "Fix the five selected critical issues in one draft PR",
   "derived_intent": "Resolve the remaining real-socket claim preparation regression timeout and verify GitHub Actions on the exact published head",
-  "current_phase": "verification",
+  "current_phase": "validation",
+  "next_transitions": [
+    "publish"
+  ],
   "active_boundaries": [
     "Preserve automatic container launch, intentional shared storage, committed claim identity, and dedicated lifecycle coverage"
   ],
@@ -13,8 +16,13 @@
     "PR 1383 selected five-issue fixes and their regressions"
   ],
   "inspected_files": [],
-  "modified_files": [],
-  "declared_commands": [],
+  "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json"
+  ],
+  "declared_commands": [
+    "decapod validate"
+  ],
   "tool_calls": [],
   "checks": [
     {
@@ -23,6 +31,10 @@
     },
     {
       "name": "bounded_claim_harness",
+      "status": "passed"
+    },
+    {
+      "name": "decapod validate",
       "status": "passed"
     },
     {
@@ -48,7 +60,8 @@
   ],
   "evidence": [
     "Focused all-feature Clippy with warnings denied passed. Cargo group_broker target passed 8 tests in 63.89 seconds; seven real-socket paths were capability-limited and the direct autorun responsiveness regression ran successfully. Workflow YAML parsed. Independent review confirms bounded owned-child cleanup and unchanged claim assertions.",
-    "GitHub Actions head 92c264928678753b571fb66ba7360fd53d4eabea: CI run 38068932095, Docker job 114262253743 ran the real interruption recovery test with 1 passed, 0 failed, 0 ignored. Core job 114262254781 passed 9 targets; group_broker timed out at 300 seconds in committed_claim_preparation_does_not_hold_broker_or_repeat_on_retry. All other CI groups passed or intentionally skipped."
+    "GitHub Actions head 92c264928678753b571fb66ba7360fd53d4eabea: CI run 38068932095, Docker job 114262253743 ran the real interruption recovery test with 1 passed, 0 failed, 0 ignored. Core job 114262254781 passed 9 targets; group_broker timed out at 300 seconds in committed_claim_preparation_does_not_hold_broker_or_repeat_on_retry. All other CI groups passed or intentionally skipped.",
+    "validation epoch ve_88e22cdc69918633 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [
@@ -61,7 +74,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:f732f22d8efa6a90024446da282a47a9cede67be07c6f53f404333d0a40c503b",
+  "artifact_hash": "sha256:058c483c87f6ceb2067c8df4d80e89397c66355538d10bd4e287992415f23c52",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -110,6 +123,13 @@
         "intent_id": "intent:five-critical-broker-ci-20261010",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:five-critical-broker-ci-20261010"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
+        "intent_id": "intent:five-critical-broker-ci-20261010",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:five-critical-broker-ci-20261010"
       }
     ],
     "trajectories": {
@@ -154,12 +174,30 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "PR 1383 selected five-issue fixes and their regressions"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_88e22cdc69918633 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:6"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 5
+    "next_sequence": 6
   }
 }
