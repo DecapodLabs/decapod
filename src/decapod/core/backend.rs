@@ -162,11 +162,11 @@ impl BackendRoute {
 }
 
 /// Physical cloud capability, independent of `repo.backend` and service hosting.
-/// The default preserves the existing Neon HTTP route. Neither variant is a DSN.
+/// Cloud defaults to Supabase; Neon remains an explicit alternative. Neither is a DSN.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum CloudDatastore {
-    #[default]
     Neon,
+    #[default]
     Supabase,
 }
 

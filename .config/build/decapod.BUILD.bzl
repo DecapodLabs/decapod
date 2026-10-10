@@ -37,8 +37,15 @@ def decapod_targets():
         srcs = native.glob(["src/**/*.rs"], exclude = ["src/main.rs", "src/bin/*.rs"]),
         compile_data = native.glob(["src/**/*.sql"])
         + native.glob(["assets/schemas/*.schema.json"])
-        + ["assets/templates/claims.json"],
+        + [
+            "assets/templates/claims.json",
+            "src/decapod/hooks/commit-msg.sh",
+            "src/decapod/plugins/container/Dockerfile.template",
+            "src/decapod/plugins/container/startup.sh",
+            "src/decapod/plugins/container/host-control-plane.sh",
+        ],
         edition = "2024",
+        crate_features = ["supabase-cloud"],
         crate_name = "decapod",
         # Keep Bazel's release identity aligned with Cargo.toml instead of
         # duplicating the package version in this BUILD file.
@@ -53,6 +60,7 @@ def decapod_targets():
         name = "decapod",
         srcs = ["src/main.rs"],
         edition = "2024",
+        crate_features = ["supabase-cloud"],
         deps = [
             ":decapod_lib",
         ] + all_crate_deps(normal = True),
@@ -63,6 +71,7 @@ def decapod_targets():
         name = "core_tests",
         srcs = ["tests/core/core.rs"],
         edition = "2024",
+        crate_features = ["supabase-cloud"],
         rustc_env_files = [":cargo_pkg_env"],
         rustc_env = {
             "CARGO_BIN_EXE_decapod": "./$(rootpath //:decapod)",
@@ -85,6 +94,7 @@ def decapod_targets():
             tags = ["exclusive"] if path == "tests/validate_termination.rs" else [],
             srcs = [path],
             edition = "2024",
+            crate_features = ["supabase-cloud"],
             rustc_env_files = [":cargo_pkg_env"],
             rustc_env = {
                 "CARGO_BIN_EXE_decapod": "./$(rootpath //:decapod)",
@@ -122,6 +132,7 @@ def decapod_targets():
             name = "plugins_" + path[14:-3] + "_tests",  # e.g., plugins_todo_tests
             srcs = [path],
             edition = "2024",
+            crate_features = ["supabase-cloud"],
             rustc_env_files = [":cargo_pkg_env"],
             rustc_env = {
                 "CARGO_BIN_EXE_decapod": "./$(rootpath //:decapod)",

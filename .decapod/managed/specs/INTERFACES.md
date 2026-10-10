@@ -19,9 +19,11 @@ command-substitution and dangerous-operation findings.
 
 ## Supabase preview contract (#1369)
 
-`DECAPOD_CLOUD_DATASTORE=neon|supabase` is an explicit machine-runtime selector;
-Neon remains the default. Supabase requires the `supabase-cloud` build feature
-and an explicit `DECAPOD_PROPODUS_API_URL` pointing to a compatible authenticated
+`repo.backend = "cloud"` selects Supabase through Dactyl when the optional
+machine-runtime selector `DECAPOD_CLOUD_DATASTORE` is omitted. An explicit
+`neon` value preserves the Neon alternative. Standard builds enable the
+`supabase-cloud` feature by default; builds that disable it fail closed for
+Supabase. Supabase requires an explicit `DECAPOD_PROPODUS_API_URL` pointing to a compatible authenticated
 service. It is not a Supabase REST URL or a PostgreSQL DSN. The ordinary
 onboarding/session flow supplies user credentials outside the repository.
 Unknown selectors, unsupported builds and missing explicit preview routes
@@ -315,7 +317,7 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1d8c50df18ccf6e945ff8129319be43777512462c516616aeb9754e33fee05f7`
+- Repository signal fingerprint: `c7bdbebfb346baefe0c9c0d59001b8fe58ae3ddc2b6977be0c6fde625a5319b1`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (119 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -29,8 +29,12 @@ whole-program compilation, or dependency authenticity verification.
 
 ## Supabase routing boundary (#1369)
 
-The runtime cloud datastore selector is separate from the logical project
-backend and the service's hosting provider. `StorageContext` carries the
+The cloud backend defaults to Supabase through Dactyl. The optional runtime
+datastore selector can choose Neon explicitly and is separate from the logical
+project backend and the service's hosting provider. Local SQLite is unchanged.
+The Supabase client capability is enabled in standard builds; a missing
+authenticated service endpoint fails closed instead of reusing the legacy
+Neon origin. `StorageContext` carries the
 validated physical selector only within the client. The Dactyl bridge maps
 that selector to an explicit Dactyl HTTP route and passes the existing opaque
 repository context and user bearer. Route construction does not mutate
@@ -418,7 +422,7 @@ virtiofs/FUSE filesystem prohibition.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1d8c50df18ccf6e945ff8129319be43777512462c516616aeb9754e33fee05f7`
+- Repository signal fingerprint: `c7bdbebfb346baefe0c9c0d59001b8fe58ae3ddc2b6977be0c6fde625a5319b1`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (119 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

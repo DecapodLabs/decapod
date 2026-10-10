@@ -327,6 +327,21 @@ impl CloudSessionStore {
     }
 }
 
+/// Read credentials for the selected runtime route without refreshing or onboarding.
+/// Legacy callers can continue using load_cloud_credential explicitly.
+pub fn load_selected_cloud_credential(
+    explicit: Option<&str>,
+) -> Result<CloudCredential, DecapodError> {
+    let cloud = crate::cli::CloudRuntimeConfig::default();
+    let store = match cloud.validate_datastore()? {
+        crate::core::backend::CloudDatastore::Neon => CloudSessionStore::legacy()?,
+        crate::core::backend::CloudDatastore::Supabase => {
+            CloudSessionStore::for_service(&cloud.api_url)?
+        }
+    };
+    store.load_credential(explicit)
+}
+
 pub fn load_cloud_credential(explicit: Option<&str>) -> Result<CloudCredential, DecapodError> {
     let environment = env::var(CLOUD_ACCESS_TOKEN_ENV).ok();
     if explicit.is_some() || environment.is_some() {
@@ -478,7 +493,7 @@ pub fn clear_pending_cloud_onboarding() -> Result<(), DecapodError> {
 }
 
 pub fn is_token_valid(_target_dir: &Path) -> bool {
-    load_cloud_credential(None).is_ok()
+    load_selected_cloud_credential(None).is_ok()
 }
 
 pub trait CloudAuthGate: Send + Sync {

@@ -8,19 +8,22 @@ local SQLite.
 
 ## Dactyl storage contract
 
-The Decapod bridge constructs explicit Dactyl SQLite or Neon HTTP routes.
+The Decapod bridge constructs local Dactyl SQLite or cloud Supabase HTTP
+routes by default; Neon HTTP remains an explicitly selected alternative.
 It does not set or trust ambient `DATASTORE`, `DATASTORE_ROUTE`, or
 `DATASTORE_TOKEN` during connection construction. The cloud route receives
 an opaque machine-session bearer and the versioned repository context.
 Individual SQL operations do not select a provider or interpret authorization.
 
-The additive, feature-gated Supabase HTTP preview is described in
+The Git-pinned Supabase HTTP preview, enabled in standard builds, is described in
 [Supabase consumer validation](supabase-validation.md). It depends on
 [Dactyl #91](https://github.com/DecapodLabs/dactyl/issues/91) and pins reviewed
 remote commit `62a616e409cbc4c68ca63668c0132a8deffb555c` from
 [Dactyl #92](https://github.com/DecapodLabs/dactyl/pull/92). This Git dependency
 is not a published registry release or hosted proof.
-The default route and local SQLite behavior remain unchanged.
+Cloud selects Supabase unless `DECAPOD_CLOUD_DATASTORE=neon` is set. Local
+SQLite behavior is unchanged. Supabase still requires a configured compatible
+authenticated service endpoint; no production deployment is implied.
 
 | Operation | Dactyl request | Scope/authentication |
 |---|---|---|
@@ -105,7 +108,7 @@ The versioned context carries the target org/repo scope unchanged. Propodus rema
 responsible for resolving the authenticated principal, organization membership,
 and repository access. The Decapod bridge opens the canonical local
 `decapod.db` directly through Dactyl's local adapter and opens the cloud route
-through Dactyl's Neon adapter; it does not create a snapshot or bundled
+through Dactyl's Supabase adapter by default (or explicit Neon); it does not create a snapshot or bundled
 compatibility database. Existing SQLite state is inspected and migrated by
 Decapod through the same Dactyl-backed facade. This keeps one canonical Dactyl
 authority and prevents cloud operations from silently falling back to local
@@ -120,7 +123,10 @@ Credentials are never read from `.decapod/config.toml`. Lookup precedence is:
 
 1. an explicit client credential;
 2. `DECAPOD_ACCESS_TOKEN` for controlled development and CI use;
-3. the machine-local `~/.local/share/decapod/session_token.json`.
+3. the selected endpoint-scoped machine session for Supabase, or the legacy
+   `~/.local/share/decapod/session_token.json` only for explicit Neon.
+
+`cloud status` checks the same selected session store without network I/O.
 
 Run `decapod init --backend cloud` as the only human-facing cloud setup step.
 It starts or resumes the repository-bound browser handoff through Decapod's

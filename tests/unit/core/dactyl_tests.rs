@@ -211,13 +211,20 @@ fn cloud_route_requires_explicit_bearer_and_keeps_repository_scope() {
     };
     assert!(matches!(missing, DecapodError::CloudAuth(_)));
 
-    let bridge = DactylBridge::from_backend_route(
+    let result = DactylBridge::from_backend_route(
         &route,
         AccessMode::ReadOnly,
         Some("opaque-session-token"),
-    )
-    .expect("constructing a cloud route does not perform I/O");
-    assert_eq!(bridge.access_mode(), AccessMode::ReadOnly);
+    );
+    #[cfg(feature = "supabase-cloud")]
+    assert_eq!(
+        result
+            .expect("cloud route construction does not perform I/O")
+            .access_mode(),
+        AccessMode::ReadOnly
+    );
+    #[cfg(not(feature = "supabase-cloud"))]
+    assert!(matches!(result, Err(DecapodError::Config(_))));
 }
 
 #[test]
@@ -234,11 +241,21 @@ fn storage_context_binds_the_opaque_bearer_without_serializing_it() {
     };
     let context =
         StorageContext::from_route(route, Some("opaque-session-token")).expect("remote context");
+    #[cfg(not(feature = "supabase-cloud"))]
+    let context = context
+        .with_cloud_datastore(crate::core::backend::CloudDatastore::Neon)
+        .expect("explicit Neon remains available without the Supabase feature");
     let bridge = DactylBridge::from_storage_context(&context, AccessMode::ReadOnly)
         .expect("constructing cloud route does not perform I/O");
     assert_eq!(context.version(), StorageContext::CURRENT_VERSION);
     assert_eq!(context.bearer(), Some("opaque-session-token"));
     assert!(bridge.access_mode() == AccessMode::ReadOnly);
+    #[cfg(feature = "supabase-cloud")]
+    assert_eq!(
+        bridge.connection.datastore(),
+        dactyl_db::Datastore::Supabase
+    );
+    #[cfg(not(feature = "supabase-cloud"))]
     assert_eq!(bridge.connection.datastore(), dactyl_db::Datastore::Neon);
     assert_eq!(
         bridge.connection.route().route(),

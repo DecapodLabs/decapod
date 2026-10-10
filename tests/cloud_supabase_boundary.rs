@@ -42,6 +42,16 @@ fn command_with_args(
     token: Option<&str>,
     args: &[&str],
 ) -> Output {
+    command_with_optional_datastore(root, Some(selector), endpoint, token, args)
+}
+
+fn command_with_optional_datastore(
+    root: &Path,
+    selector: Option<&str>,
+    endpoint: &str,
+    token: Option<&str>,
+    args: &[&str],
+) -> Output {
     let mut command = Command::new(
         std::fs::canonicalize(env!("CARGO_BIN_EXE_decapod"))
             .expect("resolve decapod binary before changing working directory"),
@@ -58,9 +68,12 @@ fn command_with_args(
         .env("DECAPOD_AGENT_ID", "supabase-proof")
         .env_remove("DECAPOD_CLOUD_AUTH_MODE")
         .env_remove("DECAPOD_VALIDATE_SKIP_GIT_GATES")
-        .env("DECAPOD_CLOUD_DATASTORE", selector)
+        .env_remove("DECAPOD_CLOUD_DATASTORE")
         .env("DECAPOD_PROPODUS_API_URL", endpoint)
         .env_remove("DECAPOD_ACCESS_TOKEN");
+    if let Some(selector) = selector {
+        command.env("DECAPOD_CLOUD_DATASTORE", selector);
+    }
     if let Some(token) = token {
         command.env("DECAPOD_ACCESS_TOKEN", token);
     }
@@ -101,6 +114,76 @@ fn feature_disabled_supabase_fails_before_remote_or_local_io() {
     );
     assert!(!output.status.success());
     assert!(String::from_utf8_lossy(&output.stderr).contains("supabase-cloud"));
+    assert_no_fallback(root.path());
+}
+
+#[test]
+fn cloud_runtime_deserialization_uses_its_selected_datastore() {
+    const CHILD: &str = "DECAPOD_TEST_CLOUD_CONFIG_CHILD";
+    if std::env::var_os(CHILD).is_some() {
+        use decapod::CloudRuntimeConfig;
+        const PROPODUS_VERCEL_NEON_ENTRYPOINT: &str = "https://project-oqn7i.vercel.app";
+        let neon: CloudRuntimeConfig = serde_json::from_str(r#"{"datastore":"neon"}"#).unwrap();
+        assert_eq!(neon.datastore, "neon");
+        assert_eq!(neon.api_url, PROPODUS_VERCEL_NEON_ENTRYPOINT);
+        assert!(neon.validate_datastore().is_ok());
+        let supabase: CloudRuntimeConfig =
+            serde_json::from_str(r#"{"datastore":"supabase"}"#).unwrap();
+        assert_eq!(supabase.datastore, "supabase");
+        assert!(supabase.api_url.is_empty());
+        assert!(supabase.validate_datastore().is_err());
+        let implicit: CloudRuntimeConfig = serde_json::from_str("{}").unwrap();
+        assert_eq!(implicit, CloudRuntimeConfig::default());
+        assert_eq!(
+            implicit.datastore,
+            std::env::var("DECAPOD_CLOUD_DATASTORE").unwrap_or_else(|_| "supabase".into())
+        );
+        return;
+    }
+    for ambient in [None, Some("neon"), Some("supabase")] {
+        let mut child = Command::new(std::env::current_exe().unwrap());
+        child
+            .args([
+                "--exact",
+                "cloud_runtime_deserialization_uses_its_selected_datastore",
+                "--nocapture",
+            ])
+            .env(CHILD, "1")
+            .env_remove("DECAPOD_PROPODUS_API_URL")
+            .env_remove("DECAPOD_CLOUD_DATASTORE");
+        if let Some(value) = ambient {
+            child.env("DECAPOD_CLOUD_DATASTORE", value);
+        }
+        let output = child.output().unwrap();
+        assert!(
+            output.status.success(),
+            "{}{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+}
+
+#[test]
+fn default_cloud_requires_service_endpoint_without_local_fallback() {
+    let root = project();
+    let output = command_with_optional_datastore(
+        root.path(),
+        None,
+        "",
+        Some("synthetic-bearer-secret"),
+        &["list"],
+    );
+    assert!(!output.status.success());
+    let error = String::from_utf8_lossy(&output.stderr);
+    #[cfg(feature = "supabase-cloud")]
+    assert!(
+        error.contains("explicit authenticated service endpoint"),
+        "{error}"
+    );
+    #[cfg(not(feature = "supabase-cloud"))]
+    assert!(error.contains("supabase-cloud"), "{error}");
+    assert!(!error.contains("synthetic-bearer-secret"));
     assert_no_fallback(root.path());
 }
 
@@ -230,6 +313,122 @@ mod enabled {
         assert!(!diagnostic.contains("private database details"));
         assert!(!diagnostic.contains("Supabase command fixture"));
         assert_no_fallback(root);
+    }
+
+    #[test]
+    fn cloud_status_uses_the_selected_endpoint_session_without_network_io() {
+        use sha2::{Digest, Sha256};
+        const CHILD: &str = "DECAPOD_TEST_CLOUD_STATUS_CHILD";
+        if let Ok(expected) = std::env::var(CHILD) {
+            assert_eq!(
+                decapod::core::auth::is_token_valid(Path::new(".")),
+                expected == "configured"
+            );
+            return;
+        }
+        let root = project();
+        let data = root.path().join("data/decapod");
+        std::fs::create_dir_all(&data).unwrap();
+        std::fs::write(
+            data.join("session_token.json"),
+            r#"{"token":"synthetic-neon-status-token"}"#,
+        )
+        .unwrap();
+        let endpoint = "https://selected.example.test";
+        let status = |selector: Option<&str>, endpoint: &str| {
+            let mut command =
+                Command::new(std::fs::canonicalize(env!("CARGO_BIN_EXE_decapod")).unwrap());
+            command
+                .args(["cloud", "status"])
+                .current_dir(root.path())
+                .env("HOME", root.path())
+                .env("XDG_DATA_HOME", root.path().join("data"))
+                .env("XDG_CONFIG_HOME", root.path().join("config"))
+                .env_remove("DECAPOD_ACCESS_TOKEN")
+                .env_remove("DECAPOD_CLOUD_DATASTORE")
+                .env("DECAPOD_PROPODUS_API_URL", endpoint);
+            if let Some(selector) = selector {
+                command.env("DECAPOD_CLOUD_DATASTORE", selector);
+            }
+            let output = command.output().unwrap();
+            assert!(
+                output.status.success(),
+                "{}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+            let text = String::from_utf8(output.stdout).unwrap();
+            let mut gate = Command::new(std::env::current_exe().unwrap());
+            gate.args([
+                "--exact",
+                "enabled::cloud_status_uses_the_selected_endpoint_session_without_network_io",
+                "--nocapture",
+            ])
+            .current_dir(root.path())
+            .env(
+                CHILD,
+                if text.contains("bearer configured") {
+                    "configured"
+                } else {
+                    "unavailable"
+                },
+            )
+            .env("HOME", root.path())
+            .env("XDG_DATA_HOME", root.path().join("data"))
+            .env_remove("DECAPOD_ACCESS_TOKEN")
+            .env_remove("DECAPOD_CLOUD_DATASTORE")
+            .env("DECAPOD_PROPODUS_API_URL", endpoint);
+            if let Some(selector) = selector {
+                gate.env("DECAPOD_CLOUD_DATASTORE", selector);
+            }
+            let gate_output = gate.output().unwrap();
+            assert!(
+                gate_output.status.success(),
+                "{}{}",
+                String::from_utf8_lossy(&gate_output.stdout),
+                String::from_utf8_lossy(&gate_output.stderr)
+            );
+            assert!(!text.contains("synthetic-") && !text.contains("selected.example.test"));
+            text
+        };
+        assert!(
+            status(None, endpoint).contains("unavailable"),
+            "Supabase must ignore the legacy Neon session"
+        );
+        let scoped = data
+            .join("services")
+            .join(format!("{:x}", Sha256::digest(endpoint.as_bytes())));
+        std::fs::create_dir_all(&scoped).unwrap();
+        std::fs::write(
+            scoped.join("session_token.json"),
+            r#"{"token":"synthetic-supabase-status-token"}"#,
+        )
+        .unwrap();
+        assert!(status(None, endpoint).contains("bearer configured"));
+        assert!(status(None, "https://other.example.test").contains("unavailable"));
+        assert!(status(Some("neon"), "").contains("bearer configured"));
+        assert_no_fallback(root.path());
+    }
+
+    #[test]
+    fn backend_cloud_without_datastore_override_uses_supabase() {
+        let root = project();
+        let (endpoint, server) =
+            server(200, json!({"columns": [], "rows": [], "affected_rows": 0}));
+        let output = command_with_optional_datastore(
+            root.path(),
+            None,
+            &endpoint,
+            Some("synthetic-bearer-secret"),
+            &["list"],
+        );
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let request = server.join().unwrap();
+        assert_context(&request);
+        assert_no_fallback(root.path());
     }
 
     #[test]
