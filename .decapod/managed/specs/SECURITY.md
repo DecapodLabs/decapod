@@ -47,7 +47,7 @@ flowchart LR
 - The data db verify diagnostic has read-only access and no repair authority.
   Corruption cannot grant permission for raw SQLite, REINDEX, or dump/reload;
   recovery is available only through the explicit, authenticated Decapod
-  operator command backed by Dactyl v0.10.0's supported contract.
+  operator command backed by Dactyl v0.11.1's supported contract.
 - The local datastore sidecar lock is a coordination primitive, not an
   authorization boundary. Decapod holds it for canonical connection lifetime,
   reports bounded contention, and never deletes it as stale; OS lock release
@@ -167,9 +167,9 @@ Describe the security primitives and security controls implemented in this repos
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5e522c585e055cae81578f96df9ab41a4f21f6fde8c73b68ca9d0f2be05870d4`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (124 files), `tests/` (162 files)
-- Refreshed from the current codebase by `decapod specs.refresh`
+- Repository signal fingerprint: `ff0e704a1389577bb72bd8d97fc1f5f7d0e567779df8ad00b96ab8d2bf46557e`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (125 files), `tests/` (167 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
 ## Storage filesystem permission boundary
@@ -181,8 +181,27 @@ installation. Explicit trusted-group datastore sharing is bounded to the
 storage directory's group; machine credentials and sessions remain private.
 Atomic and migration copies use the same owned-state creation boundary.
 Online-backup temporaries are confined to a private staging directory before
-safe final publication. Pinned Dactyl recovery cannot select private staging,
-so shared-directory recovery is explicitly unsupported; private-directory
-recovery preserves the original safe mode on its new rebuilt inode. Unix
-mode checks are not Windows ACL enforcement. `docs/storage-permissions.md`
+safe final publication. Published Dactyl 0.11.1 owns private recovery staging
+and preserves source owner, group and mode before atomic activation, so the
+explicit trusted-group recovery path is supported on Linux and Android under
+the constraints below. Unix mode checks are not Windows ACL enforcement. `docs/storage-permissions.md`
 defines the supported boundary, operator recovery and subprocess-umask proof.
+
+## Secure shared-directory recovery
+
+The explicit recovery command uses the published Dactyl 0.11.1 primitive.
+On Linux and Android it supports an intentionally shared 0660 database beneath
+2770 group storage, subject to Decapod's existing opt-in and ancestry policy.
+Dactyl confines new rebuild, rollback-journal and retained failure artifacts in
+same-filesystem private staging, preserves the original inode in an unused
+archive, restores the original owner/group/safe mode on the new inode, and
+activates without clobbering a competing destination. Decapod does not chmod
+the active database after replacement or change the shared parent directory.
+
+Unsupported platform, ownership and extended-metadata conditions fail closed
+with their original typed codes. Capability and conflict refusals remain
+distinct from a recovery that ran and failed. Recovery requires all connection,
+filesystem-name, content and metadata writers to be quiesced. Process failure
+can leave private diagnostics; blocked rollback may leave the preserved original
+at its archive path. Operators inspect those paths before resuming. Ordinary
+open, read, write and backup never automatically trigger recovery.

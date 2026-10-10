@@ -97,14 +97,26 @@ directories use a bounded filesystem fallback with the common dependency and
 build directories excluded.
 
 ## Governance Artifact Ownership and Epoch Currency (#1093, #1163, #1325, #1326, #1327)
-Decapod keeps governance evidence in distinct ownership domains. The research
-claims ledger at `.decapod/governance/claims.json` is a validated append-only
-JSON artifact maintained through governed inventory operations. Health Engine
-claims belong to the canonical runtime datastore at
-`.decapod/data/decapod.db`; they are not entries in the research ledger and do
-not share its compaction semantics. `inventory --compact` is an explicit,
-semantics-preserving serialization operation that reports ledger size without
-changing the closed schema or claim meaning.
+Decapod stores tracked governance in one versioned `.decapod/governance.json`.
+Its compact baseline carries accepted state and explicit unresolved obligations;
+the active change carries only this PR's claims and cumulative proof checkpoints.
+Accepted historical claims remain in Git rather than an ever-growing catalog.
+Merge acceptance and release provenance are separate facts. Starting a new PR
+is an explicit lifecycle transition, with base binding and preservation of
+unresolved obligations, rather than an automatic reset on any new commit.
+
+The shared store normalizes repeated intent and validation-epoch values while
+preserving logical plan, trajectory, validation, and optional Jev interfaces.
+Evidence hashes bind semantic inputs and immutable Git material, excluding the
+receipt itself. Related logical section changes commit in one transaction, and
+unchanged content does not rewrite the document. Agent guidance follows the
+input dependencies from intent/scope through planned checks, work/evidence, and
+validation, while preserving durable intermediate work boundaries. Writers lock
+the complete read-modify-write operation; migration reads legacy artifacts without mutating them and new writes retire only verified
+legacy inputs. Conflicting authorities fail closed. Transient workunits belong
+under `.decapod/data/workunits`, outside the tracked governance document.
+Health Engine claims remain independent runtime records in
+`.decapod/data/decapod.db`.
 
 The specs manifest records the input authority of both `config.toml` and
 `OVERRIDE.md`. Validation may refresh that projection in the claimed workspace,
@@ -148,8 +160,8 @@ This project's architecture consists of the following key layers/directories:
 - `DbBroker::execute_write_sync` returns affected rows. Decapod callers own stable IDs rather than reading ambient connection-generated row IDs.
 - `DbBroker::with_transaction` is the Decapod-owned atomic mutation seam. The facade keeps a connection-scoped local transaction on Dactyl's physical connection for existing callers, while Dactyl owns the execution and rollback mechanics; cloud callers must use Dactyl's ordered atomic operation contract.
 - `core::backend::BackendSelection` is the provider-neutral route seam: it reads `repo.backend`, uses the Git `origin` remote for cloud repository scope, binds local to `.decapod/data/decapod.db`, and passes a session-supplied cloud URI through as opaque data for Dactyl. Ordinary Decapod persistence does not construct a Propodus, Vercel, or Neon path.
-- `core::dactyl_db` is the single application-facing relational facade for Dactyl v0.10.0. It exposes the narrow query/row/parameter compatibility surface used by existing domain code while keeping Dactyl's connection and result types behind the Decapod boundary. For a new read-write path it seeds only the empty filesystem target required by Dactyl's pre-open header check; Dactyl still owns the connection, validation, execution, and physical maintenance. `core::dactyl::DactylBridge` is the explicit route/context seam for operation batches, access mode, typed errors, portable schema inspection, integrity verification, online backup, and logical recovery. `open_canonical` opens the ordinary `.decapod/data/decapod.db` file through Dactyl's host runtime; there is no Decapod raw SQLite handle, PRAGMA maintenance API, or shell connector.
-- The existing SQLite and Neon consumer contracts remain compatible with Dactyl v0.10.0. The Supabase preview consumes the additive Dactyl capability at reviewed Git commit `62a616e409cbc4c68ca63668c0132a8deffb555c`. This remotely resolvable pin is not a registry release. Cloud route selection remains bound once at `backend=cloud`; Decapod constructs an explicit Dactyl route while individual operations carry no backend, tenant, provider, or repository selector.
+- `core::dactyl_db` is the single application-facing relational facade for Dactyl v0.11.1. It exposes the narrow query/row/parameter compatibility surface used by existing domain code while keeping Dactyl's connection and result types behind the Decapod boundary. For a new read-write path it seeds only the empty filesystem target required by Dactyl's pre-open header check; Dactyl still owns the connection, validation, execution, and physical maintenance. `core::dactyl::DactylBridge` is the explicit route/context seam for operation batches, access mode, typed errors, portable schema inspection, integrity verification, online backup, and logical recovery. `open_canonical` opens the ordinary `.decapod/data/decapod.db` file through Dactyl's host runtime; there is no Decapod raw SQLite handle, PRAGMA maintenance API, or shell connector.
+- The existing SQLite and Neon consumer contracts remain compatible with Dactyl v0.11.1. The Supabase client consumes the additive capability from the published `dactyl-db` 0.11.1 registry release. Cargo.lock pins the registry source and checksum; there is no Git dependency override. Hosted PostgreSQL, authorization and connection-mode proof remain separate from local client regressions. Cloud route selection remains bound once at `backend=cloud`; Decapod constructs an explicit Dactyl route while individual operations carry no backend, tenant, provider, or repository selector.
 - `core::backend::StorageContext` is the versioned Decapod-owned handoff between logical selection and physical execution. Local contexts contain only the canonical repository path; remote contexts contain the opaque route, logical repository scope, and an in-memory bearer that is excluded from serialization. Organization membership and repository authorization remain Propodus concerns.
 - Cloud todo composition is deliberately layered: `backend=cloud` and Git `origin` select the repository-scoped route; Propodus resolves the machine session and authorization; `core::dactyl::DactylBridge` opens Dactyl with the context; `core::dactyl_todo::DactylTodoStore` issues backend-neutral SQL through Dactyl `/query` and `/batch`. No cloud todo code calls the legacy Propodus `/api/todos` resource route.
 - The cloud todo adapter reopens the non-thread-safe Dactyl connection per operation while retaining only the route/context in the `Send + Sync` store object. Decapod constructs the selected Dactyl route directly from its validated context and supplies the endpoint and credential as explicit arguments. It neither installs nor restores ambient Dactyl route variables. The opaque context carries target org/repo scope. Each add, claim, release, and complete mutation requests one physical batch containing the conditional task write, matching event insert, and committed row observation; the service must bind the event to a preceding task write that affected one row and roll back both on failure. A timestamp marker alone cannot authorize an event after a stale mutation. Remote event schema, server-side tenancy/version assignment, and deployed Neon parity are owned by the hosted Dactyl/Propodus implementation and are not inferred locally.
@@ -327,7 +339,7 @@ only the category check.
 - Inbound contracts (CLI/API/events):
 - Outbound dependencies (datastores/queues/external APIs):
 - Data ownership boundaries:
-- Schema evolution + migration policy: Decapod owns migration identity, ordering, version gates, applied-ledger persistence, migration-artifact backup/restore, and legacy-row translation. Dactyl v0.10.0 owns physical execution and normalized results plus active-store integrity verification, online backup, logical recovery, atomic replacement, and rollback; storage execution remains a replaceable boundary.
+- Schema evolution + migration policy: Decapod owns migration identity, ordering, version gates, applied-ledger persistence, migration-artifact backup/restore, and legacy-row translation. Dactyl v0.11.1 owns physical execution and normalized results plus active-store integrity verification, online backup, logical recovery, atomic replacement, and rollback; storage execution remains a replaceable boundary.
 
 ## Current PR Control-Plane Sequence
 1. Bootstrap discovery and diagnostics (`capabilities`, constitution lookup,
@@ -434,9 +446,9 @@ virtiofs/FUSE filesystem prohibition.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5e522c585e055cae81578f96df9ab41a4f21f6fde8c73b68ca9d0f2be05870d4`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (124 files), `tests/` (162 files)
-- Refreshed from the current codebase by `decapod specs.refresh`
+- Repository signal fingerprint: `ff0e704a1389577bb72bd8d97fc1f5f7d0e567779df8ad00b96ab8d2bf46557e`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (125 files), `tests/` (167 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
 ## Target approval correction (#1361)

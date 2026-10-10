@@ -194,7 +194,9 @@ pub fn classify_path(path: &str, pre_existing: &[String]) -> DirtyFileClass {
     {
         return DirtyFileClass::BackupTemporary;
     }
-    if path.starts_with(".decapod/governance/") {
+    if path == crate::core::governance_document::GOVERNANCE_PATH
+        || path.starts_with(".decapod/governance/")
+    {
         return DirtyFileClass::GovernanceTracked;
     }
     if path.starts_with(".decapod/managed/") || path.starts_with(".decapod/generated/") {
@@ -227,4 +229,33 @@ fn parse_status_line(line: &str) -> Option<(String, String)> {
         .unwrap_or(raw_path);
     let path = path.trim_matches('"');
     (!path.is_empty()).then(|| (status, path.to_string()))
+}
+
+#[cfg(test)]
+mod normalized_governance_tests {
+    use super::*;
+
+    #[test]
+    fn canonical_governance_is_tracked_without_broadening_runtime_paths() {
+        assert_eq!(
+            classify_path(".decapod/governance.json", &[]),
+            DirtyFileClass::GovernanceTracked
+        );
+        assert_eq!(
+            classify_path(".decapod/governance/plan.json", &[]),
+            DirtyFileClass::GovernanceTracked
+        );
+        assert_eq!(
+            classify_path(".decapod/data/workunits/current.json", &[]),
+            DirtyFileClass::RuntimeEphemeral
+        );
+        assert_eq!(
+            classify_path(".decapod/governance.json.tmp", &[]),
+            DirtyFileClass::BackupTemporary
+        );
+        assert_eq!(
+            classify_path(".decapod/governance.json.extra", &[]),
+            DirtyFileClass::Unknown
+        );
+    }
 }

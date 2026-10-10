@@ -136,11 +136,20 @@ fn trajectory_cli_records_scope_actions_checks_and_verdicts() {
     assert_eq!(status_json["proof_status"], "passed");
     assert_eq!(status_json["motion_state"], "blocked");
     assert_eq!(status_json["blockers"][0], "awaiting proof");
-    assert!(root.join(".decapod/governance/trajectory.json").exists());
+    assert!(
+        root.join(decapod::core::governance_document::GOVERNANCE_PATH)
+            .exists()
+    );
+    assert!(
+        decapod::core::governance_document::read_section(&root, "trajectory")
+            .unwrap()
+            .is_some()
+    );
+    assert!(!root.join(".decapod/governance/trajectory.json").exists());
 }
 
 #[test]
-fn trajectory_cli_replaces_a_legacy_appended_cookie() {
+fn trajectory_cli_replaces_current_section_and_resets_only_prior_jev_history() {
     let (_temp, root, password) = setup_repo();
     let env_password = Some(password.as_str());
     let init = run_decapod(
@@ -160,26 +169,20 @@ fn trajectory_cli_replaces_a_legacy_appended_cookie() {
     );
     json(&init, "old trajectory init");
 
-    let cookie = root.join(".decapod/governance/trajectory.json");
-    let mut file = std::fs::OpenOptions::new()
-        .append(true)
-        .open(&cookie)
-        .expect("open trajectory cookie");
-    file.write_all(b"\n{\"legacy\":true}\n")
-        .expect("append legacy value");
-    fs::create_dir_all(root.join(".decapod/governance")).expect("governance dir");
-    fs::write(
-        root.join(".decapod/governance/jev.json"),
-        serde_json::json!({
+    let plan_before = decapod::core::governance_document::read_section(&root, "plan").unwrap();
+    let claims_before = decapod::core::governance_document::read_section(&root, "claims").unwrap();
+    decapod::core::governance_document::write_section(
+        &root,
+        "jev",
+        &serde_json::json!({
             "$schema": "https://decapod.dev/schemas/jev-observations-1.0.0.schema.json",
             "schema_version": "1.0.0",
             "kind": "jev_observation_ledger",
             "trajectory_run_id": "run_cli_old",
             "runs": {}
-        })
-        .to_string(),
+        }),
     )
-    .expect("write Jev ledger");
+    .expect("record Jev logical section");
 
     let replacement = run_decapod(
         &root,
@@ -198,13 +201,65 @@ fn trajectory_cli_replaces_a_legacy_appended_cookie() {
     );
     json(&replacement, "new trajectory init");
 
-    let raw = std::fs::read_to_string(cookie).expect("read replaced trajectory cookie");
-    let parsed: Value = serde_json::from_str(&raw).expect("cookie is one JSON value");
-    assert_eq!(parsed["run_id"], "run_cli_new");
-    assert!(!raw.contains("\"legacy\":true"));
+    let raw =
+        std::fs::read_to_string(root.join(decapod::core::governance_document::GOVERNANCE_PATH))
+            .expect("read normalized governance");
+    let _: Value = serde_json::from_str(&raw).expect("governance is one JSON value");
+    let trajectory = decapod::core::governance_document::read_section(&root, "trajectory")
+        .unwrap()
+        .unwrap();
+    assert_eq!(trajectory["run_id"], "run_cli_new");
     assert!(
-        !root.join(".decapod/governance/jev.json").exists(),
+        decapod::core::governance_document::read_section(&root, "jev")
+            .unwrap()
+            .is_none(),
         "new trajectory must reset prior Jev history"
+    );
+    assert_eq!(
+        decapod::core::governance_document::read_section(&root, "plan").unwrap(),
+        plan_before
+    );
+    assert_eq!(
+        decapod::core::governance_document::read_section(&root, "claims").unwrap(),
+        claims_before
+    );
+}
+
+#[test]
+fn trajectory_cli_refuses_to_overwrite_corrupted_shared_governance() {
+    let (_temp, root, password) = setup_repo();
+    let path = root.join(decapod::core::governance_document::GOVERNANCE_PATH);
+    let mut file = std::fs::OpenOptions::new()
+        .append(true)
+        .open(&path)
+        .unwrap();
+    file.write_all(b"\n{\"unexpected_append\":true}\n").unwrap();
+    let damaged = fs::read(&path).unwrap();
+    let replacement = run_decapod(
+        &root,
+        &[
+            "govern",
+            "trajectory",
+            "init",
+            "--run-id",
+            "must-not-overwrite",
+            "--original-intent",
+            "Preserve all evidence",
+            "--derived-intent",
+            "Refuse invalid shared state",
+        ],
+        Some(&password),
+    );
+    assert!(!replacement.status.success(), "corruption must fail closed");
+    assert!(
+        String::from_utf8_lossy(&replacement.stderr).contains("Invalid governance document"),
+        "{}",
+        String::from_utf8_lossy(&replacement.stderr)
+    );
+    assert_eq!(
+        fs::read(path).unwrap(),
+        damaged,
+        "trajectory init must not discard shared evidence to repair corruption"
     );
 }
 

@@ -66,7 +66,7 @@ setting; selecting another option enables or disables it. The refresh is
 non-destructive and requires an existing `.decapod` directory.
 
 Each Jev attempt is also appended to the active trajectory's
-`.decapod/governance/jev.json` ledger. The ledger is a per-run evidence bundle:
+`jev` section of `.decapod/governance.json`. The ledger is a per-run evidence bundle:
 it can contain many keyed results in one PR, is schema-validated, and is reset
 when `trajectory init` begins a fresh run. Git history, not the working-tree
 file, preserves previous runs.

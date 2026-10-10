@@ -380,28 +380,25 @@ fn required_governance_artifacts_must_be_present_and_valid() {
     git(tmp.path(), &["commit", "-m", "base"]);
     git(tmp.path(), &["checkout", "-q", "-b", "feature"]);
 
-    for path in REQUIRED_PR_GOVERNANCE_ARTIFACTS {
-        if *path == ".decapod/governance/claims.json" {
-            continue;
-        }
-        let artifact = tmp.path().join(path);
-        std::fs::create_dir_all(artifact.parent().expect("artifact parent"))
-            .expect("create artifact parent");
-        std::fs::write(artifact, "{}\n").expect("write artifact");
-    }
-    git(tmp.path(), &["add", "."]);
+    crate::core::governance_document::migrate(tmp.path())
+        .expect("initialize empty canonical document");
     git(
         tmp.path(),
-        &["commit", "-m", "proof artifacts without claims"],
+        &["add", crate::core::governance_document::GOVERNANCE_PATH],
+    );
+    git(
+        tmp.path(),
+        &[
+            "commit",
+            "-m",
+            "governance document missing required sections",
+        ],
     );
 
     let error = ensure_required_governance_artifacts_in_pr(tmp.path(), "master")
-        .expect_err("publication must reject a PR missing claims.json");
+        .expect_err("publication must reject incomplete governance sections");
     let message = error.to_string();
-    assert!(
-        message.contains(".decapod/governance/claims.json"),
-        "{message}"
-    );
+    assert!(message.contains(".decapod/governance.json"), "{message}");
     assert!(
         message.contains("missing") || message.contains("invalid"),
         "{message}"
@@ -409,24 +406,22 @@ fn required_governance_artifacts_must_be_present_and_valid() {
 }
 
 #[test]
-fn project_pr_must_update_all_four_governance_artifacts_vs_base() {
-    // Three-tier contract: every project PR must update the four governance
-    // JSON files in the base...HEAD delta. Intermediate commits need not each
-    // touch them, but app-only PRs without governance updates must fail publish.
+fn project_pr_must_update_normalized_governance_vs_base() {
+    // Inherited governance cannot establish the new PR boundary or provide
+    // checkpoint coverage of newly authored work.
     let tmp = tempdir().expect("tempdir");
     git(tmp.path(), &["init", "-q", "-b", "master"]);
     git(tmp.path(), &["config", "user.email", "test@test.com"]);
     git(tmp.path(), &["config", "user.name", "Test"]);
 
-    for path in REQUIRED_PR_GOVERNANCE_ARTIFACTS {
-        let artifact = tmp.path().join(path);
-        std::fs::create_dir_all(artifact.parent().expect("artifact parent"))
-            .expect("create artifact parent");
-        std::fs::write(&artifact, "{}\n").expect("write artifact");
-    }
     std::fs::write(tmp.path().join("README.md"), "base\n").expect("write base");
+    std::fs::write(tmp.path().join(".gitignore"), ".decapod/data/\n").expect("ignore runtime");
     git(tmp.path(), &["add", "."]);
-    git(tmp.path(), &["commit", "-m", "base with governance"]);
+    git(tmp.path(), &["commit", "-m", "initial base"]);
+    let receipt = publication::tests::current_receipt_fixture(tmp.path());
+    publication::tests::save_receipt(tmp.path(), &receipt);
+    git(tmp.path(), &["add", "."]);
+    git(tmp.path(), &["commit", "-m", "base with valid governance"]);
     git(tmp.path(), &["checkout", "-q", "-b", "feature"]);
 
     std::fs::write(tmp.path().join("app.txt"), "feature work\n").expect("write app");
@@ -436,13 +431,7 @@ fn project_pr_must_update_all_four_governance_artifacts_vs_base() {
     let error = ensure_required_governance_artifacts_in_pr(tmp.path(), "master")
         .expect_err("app-only PR without governance updates must fail");
     let message = error.to_string();
-    assert!(
-        message.contains("not included in the PR diff")
-            || message.contains("must update all four")
-            || message.contains("missing")
-            || message.contains("invalid"),
-        "{message}"
-    );
+    assert!(message.contains("not included in the PR diff"), "{message}");
 }
 
 #[test]

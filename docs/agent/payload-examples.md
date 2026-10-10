@@ -70,6 +70,48 @@ decapod workspace publish --title "Feat: Rate Limiting" --description "Implement
 decapod workspace prune --force
 ```
 
+## Trajectory Record
+
+Use an active session in your claimed workspace. This minimal example records an
+inspection whose verification is unavailable; it does not claim a passing check
+or completed work. Replace the run ID, intent, and paths with your actual task.
+Only record a passing check after running it and retaining its evidence.
+
+<!-- trajectory-record-example -->
+```bash
+decapod govern trajectory init \
+  --run-id run_docs_example \
+  --original-intent "Inspect the trajectory documentation" \
+  --derived-intent "Record an inspection while verification is unavailable" \
+  --boundary "docs/agent/**" \
+  --scope "docs/agent/command-contracts.md"
+
+decapod govern trajectory record \
+  --run-id run_docs_example \
+  --inspected-file "docs/agent/command-contracts.md" \
+  --check "trajectory_docs=unavailable" \
+  --loop-json '{
+    "intent_id": "intent:run_docs_example",
+    "trajectory_id": "run_docs_example",
+    "loop_id": "inspect_docs",
+    "loop_type": "agent",
+    "attempt": 1,
+    "trigger": "human",
+    "grader_result": "skipped",
+    "mutation_proposal": "none",
+    "status": "open"
+  }'
+```
+<!-- /trajectory-record-example -->
+
+The JSON object contains exactly the required loop fields. The default intent
+boundary is `intent:<run-id>`; use the explicit `--intent-id` value instead if you
+set one when initializing the run. See the
+[trajectory record contract](command-contracts.md#decapod-govern-trajectory-record)
+for all exact enums, check aliases, retry rules, and verification evidence
+requirements. `grader_result: "pass"` and `status: "passed"` are different fields
+with different vocabularies.
+
 ## Smart Bootstrap
 
 Efficiently install and initialize Decapod only when updates are available.

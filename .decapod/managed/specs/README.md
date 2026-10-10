@@ -44,17 +44,18 @@ This change establishes two repository invariants:
   to the migration ledger and requires migration instructions to be reviewed.
 
 ## Canonical `.decapod/` Layout
-- `.decapod/data/`: canonical control-plane state, with `decapod.db` opened and operated through the Dactyl v0.10.0 facade; legacy sources are opened through that same boundary and are never a runtime authority.
+- `.decapod/data/`: canonical control-plane state, with `decapod.db` opened and operated through the Dactyl v0.11.1 facade; legacy sources are opened through that same boundary and are never a runtime authority.
 - `.decapod/managed/Dockerfile.decapod`: Decapod's project-specific execution image; Decapod runs inside it and may add project build dependencies such as Go, Python, or system packages. Glibc is the default; `--image-profile alpine` selects the GHCR `-alpine`-tagged musl image.
 - `.decapod/managed/specs/`: **Living project specs** for humans and agents.
 - `Dockerfile` at the project root remains the product application's container image and is the artifact users package and deploy.
 - `.decapod/managed/context/`: ignored, current-run deterministic context capsules.
 - `.decapod/managed/policy/`: ignored, current-run JIT context policy material; use `.decapod/policy/` for a durable override.
 - `.decapod/managed/artifacts/`: ignored, current-run provenance/custody/inventory/diagnostic outputs.
-- `.decapod/governance/validation.json`: tracked per-commit validation receipt, overwritten after successful validation.
-- `.decapod/governance/trajectory.json`: the sole current workspace trajectory
-  artifact; prior committed versions are recovered from Git history and PR
-  commit SHAs.
+- `.decapod/governance.json`: the sole tracked governance document, with a
+  compact accepted baseline, explicit unresolved obligations, current-PR claims,
+  cumulative checkpoints, and normalized plan/trajectory/validation sections.
+  Git retains prior accepted PR evidence.
+- `.decapod/data/workunits/`: ignored transient execution manifests.
 - `.decapod/managed/artifacts/inventory/`: deterministic release inventory.
 - `.decapod/managed/artifacts/diagnostics/`: opt-in diagnostics artifacts.
 - `.decapod/workspaces/`: isolated todo-scoped git worktrees.
@@ -75,7 +76,7 @@ This change establishes two repository invariants:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5e522c585e055cae81578f96df9ab41a4f21f6fde8c73b68ca9d0f2be05870d4`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (124 files), `tests/` (162 files)
-- Refreshed from the current codebase by `decapod specs.refresh`
+- Repository signal fingerprint: `ff0e704a1389577bb72bd8d97fc1f5f7d0e567779df8ad00b96ab8d2bf46557e`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (125 files), `tests/` (167 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

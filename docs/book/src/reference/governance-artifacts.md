@@ -1,51 +1,66 @@
 # Governance Artifact Inventory
 
-Publication-ready Decapod changes carry four repository-native governance
-artifacts:
+`.decapod/governance.json` is the sole tracked governance authority. It holds a
+compact baseline, current-PR identity and claims, cumulative checkpoints, explicit
+unresolved obligations, and normalized logical sections:
 
-| Artifact | Updated by | Classification | Purpose |
-| --- | --- | --- | --- |
-| `.decapod/governance/plan.json` | Agent through `decapod govern plan`; approved through the governed surface | Governed execution state | Records refined intent, scope, phases, decisions, and proof hooks as the plan changes. |
-| `.decapod/governance/claims.json` | Agent or researcher through the sanctioned claims surface | Authoritative falsifiable-claims ledger | Connects a claim to its baseline, observable condition, failure mode, measurement, and proof gate. It is not proof by itself. |
-| `.decapod/governance/trajectory.json` | Agent through `decapod govern trajectory` | Evidentiary custody record | Records run intent, boundaries, inspected and modified files, commands, assumptions, checks, and evidence over time. |
-| `.decapod/governance/validation.json` | `decapod validate` | Generated validation receipt | Records the validation result for identified repository state and supports the publication gate. |
-| `.decapod/governance/jev.json` | `assurance.evaluate` when `provider = "jev"` | Optional advisory observation ledger | Records every typed Jev result for the active trajectory run; it is not a policy or proof artifact. |
+| Section | Writer | Purpose |
+| --- | --- | --- |
+| Plan | `decapod govern plan` | Refined intent, scope, phases, decisions, and proof hooks |
+| Claims | `decapod govern artifacts claim` | Current-PR falsifiable claims; support requires proof |
+| Trajectory | `decapod govern trajectory` | Intent custody, scope, actions, assumptions, checks, and evidence |
+| Validation | `decapod validate` | Receipt bound to current repository inputs and trajectory |
+| Jev (optional) | `assurance.evaluate` with Jev enabled | Advisory observations for the active trajectory |
 
-These artifacts work with todos, assignments, living specifications, evidence,
-receipts, projections, custody, and publication state. See the
-[governed execution model](../../../architecture/governed-execution.md) for the
-full ownership and lifecycle map.
+Health Engine claims remain in `.decapod/data/decapod.db`, and runtime workunit
+manifests in `.decapod/data/workunits/`. Neither is a second tracked research ledger.
+See the [governed execution model](../../../architecture/governed-execution.md).
 
-The research claims ledger is distinct from Health Engine claims in the
-consolidated `.decapod/data/decapod.db`. Health Engine claims record
-operational health and proof events; `claims.json` records falsifiable,
-repository-owned research claims and is part of the PR proof surface.
+## Explicit PR lifecycle and publication invariant
 
-## Coherent bundle (publication invariant)
+Use `decapod govern artifacts migrate` to import valid legacy split files
+losslessly. Read operations never write. Conflicting or malformed authority
+fails closed instead of being silently repaired. `begin-pr --id <change>
+--base-branch <branch>` starts the explicit boundary only when discarded state
+is recoverable from Git. Accepted completed claims stay in Git history;
+explicit unresolved obligations carry forward. Resolve an obligation with
+`resolve-obligation --id <id> --resolution <text> --proof-ref <evidence>`.
 
-The four files are a **single publication unit**. Project PRs treat them as one
-bundle even though agents refresh them through separate CLI surfaces.
+Before each authored commit, finish the relevant plan, trajectory, claim, spec,
+and validation work; stage authored files; record a unique checkpoint; then
+stage the governance document and commit:
 
-| Layer | What it enforces |
-| --- | --- |
-| **Inventory** (`decapod govern artifacts inventory`) | All four present, schema-valid, and semantically current |
-| **Validate** (`GOVERNANCE_PR_UPDATES`) | Feature-branch `base...HEAD` must include all four paths |
-| **Publish** / **CI** | Same PR-level participation |
+```bash
+git add <authored-paths>
+decapod govern artifacts checkpoint --id <unique-id> --summary "What changed and was checked" --proof-ref <evidence>
+git add .decapod/governance.json
+git commit -m "Describe the governed change"
+```
 
-This is **not** per-commit publication-bundle churn (#1232 / #1233). Release-bound
-entrypoints and the managed Dockerfile pin prove currency at HEAD and may be
-inherited when the Decapod version is unchanged. Governance JSON still **must
-move on every project PR**.
+Checkpoints are cumulative within the current PR. Publication and CI verify
+exact immutable material at every authored commit, including merges, and reject
+erased or rewritten checkpoints. A valid file only at the PR tip is insufficient.
+Pre-adoption legacy history is not retroactively represented as verified proof.
+A new trajectory resets only its current Jev observations; committed prior
+observations remain recoverable through Git.
 
-Inventory **evaluates and reports**; it does not auto-regenerate the four files
-as one command. Agents refresh each surface via `govern plan`, `govern trajectory`,
-`govern artifacts inventory --claims-note`, and `decapod validate`.
+## Population order and write boundaries
 
-The Jev ledger is optional and is created only when Jev is attempted. When it
-exists, validation checks its strict schema and active-trajectory binding, and
-publication requires it to be staged and present in the PR diff. A new
-trajectory run resets the working-tree ledger; committed prior ledgers remain
-recoverable through Git history.
+Use the existing commands in dependency order:
+
+1. Begin one stable PR identity with `govern artifacts begin-pr`.
+2. Populate intent, todo binding, and scope with `govern plan init` or `update`.
+3. Record actual current-PR claims with falsifiers and planned checks/proof hooks;
+   do not create placeholder claims or claim support before evidence exists.
+4. Perform the work and record its inspected/modified paths, checks, evidence,
+   and unresolved assumptions with `govern trajectory init` and `record`.
+5. Run `decapod validate` against the current completed batch.
+6. Stage material, record a unique checkpoint, stage governance.json, and commit.
+
+Persist meaningful intent, scope, evidence, and commit boundaries throughout the
+work instead of reconstructing them only at the end. Combine related updates at
+one boundary, and skip repeated unchanged content. A new claim or changed scope
+returns to the affected earlier step; it does not restart the PR identity.
 
 ## Release pin flywheel
 
@@ -72,21 +87,15 @@ decapod govern artifacts inventory --base-branch master
 decapod govern artifacts inventory --repair
 ```
 
-Repair creates `.decapod/governance/claims.json` only when it is absent. It
-never overwrites project-specific claim content.
+Repair initializes absent empty claims and preserves existing evidence. Inventory
+reports each logical section's schema and semantic currency; it does not invent
+claims or replace plan, trajectory, or validation work.
 
-Inventory fails closed when any artifact is missing, schema-invalid, or not
-semantically current. Publication and `decapod validate` additionally require
-all four paths in the PR delta for project PRs. `validation.json` is the one
-file produced *by* a successful validate: when it is the only missing path,
-validate writes it and counts the working-tree file. `DECAPOD_VALIDATE_SKIP_GIT_GATES`
-is a test/debug escape hatch, not the agent publication sequence.
-
-For an explicit, semantics-preserving reduction of the research ledger's JSON
-format, use `decapod govern artifacts inventory --compact`. This does not
-delete, supersede, or invent claims. Health Engine mutations use
-`decapod govern health claim` and `decapod govern health proof` against the
-consolidated datastore instead.
+`inventory --claims-note "..."` records a current-PR checkpoint without inventing
+a research claim. `inventory --compact` performs lossless legacy normalization.
+Successful validation writes the logical validation section without a
+self-referential hash cycle. Do not use `DECAPOD_VALIDATE_SKIP_GIT_GATES` as an
+agent publication shortcut. Stage and checkpoint the final material before committing.
 
 An external tracker such as GitHub Issues, Jira, Linear, or Beads may remain the
 organizational system of record. Decapod's todo and claim state governs the
@@ -130,10 +139,11 @@ approval. Existing 1.0 plans remain readable; recording reviews writes plan 1.1.
 
 After review, refresh supported projections and run validation. The validation
 epoch binds the plan (including review evidence), claims, authored and generated
-spec content, entrypoints, and managed Dockerfile. It excludes validation.json
+spec content, entrypoints, and managed Dockerfile. It excludes the logical validation section
 itself so committing a receipt does not create a self-referential commit loop.
-Plan and trajectory must name the same current todo. Required governance files
-must be valid, match the committed bytes, and participate in the PR's diff.
+Plan and trajectory must name the same current todo. Required logical sections
+must be valid, and the normalized document must match committed bytes and participate
+in the PR diff. Checkpoints bind every authored commit to its exact material.
 
 Publication pushes the captured commit to the captured push URL, reads the exact
 remote head and base back, fetches those immutable objects, and checks their

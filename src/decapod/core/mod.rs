@@ -41,6 +41,7 @@ pub mod flight_recorder;
 pub mod fs_permissions;
 pub mod gatekeeper;
 pub mod governance_artifacts;
+pub mod governance_document;
 pub mod group_broker;
 pub mod http_transport;
 pub mod interview;

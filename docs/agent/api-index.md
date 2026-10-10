@@ -19,6 +19,29 @@ feedback, and gathers evidence. Decapod maintains governance state, validates
 invariants, refreshes supported projections, and blocks publication when
 required conditions are unsatisfied.
 
+### Request Context and Workspace State
+
+Keep three authorities separate:
+
+- **Agent-held request context:** the incoming prompt, conversation, explicit
+  user clarifications, and currently held task context establish request meaning.
+- **Workspace isolation:** the detached repository/filesystem is where mutations
+  and proofs run. Entering it does not discard or invalidate the agent's prompt.
+- **Todo coordination state:** todos preserve ownership, collision avoidance,
+  lifecycle, and durable handoff metadata. They are not the sole authority for
+  request meaning.
+
+When intent, scope, and proof expectations are clear, the original prompt and
+current agent context remain sufficient to understand the work. Preserve that
+context in durable evidence for later agents; do not ask the human to repeat an
+unambiguous request merely because a workspace-local todo lookup fails.
+`TODO_PROJECTION_MISSING` identifies a coordination-state absence, not lost
+intent or execution permission. Follow [the recovery path](error-recovery.md#todo_projection_missing),
+record the discrepancy in trajectory/proof evidence, and continue work whose
+coordination and execution gates are satisfied. Missing state never establishes
+ownership or proves that no collision exists. Real ambiguity, conflicts, and
+unsatisfied execution or publication gates still require resolution.
+
 ### Before Any Agent Action
 
 Run the side-effect-free prompt safety gate before repository reads, tool calls, or any other Decapod operation, once at agent startup and after every new prompt:

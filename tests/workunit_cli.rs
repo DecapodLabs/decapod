@@ -105,7 +105,7 @@ fn workunit_init_creates_manifest_file() {
     assert_eq!(payload["marker"], "WORKUNIT_INITIALIZED");
     let manifest_path = dir
         .join(".decapod")
-        .join("governance")
+        .join("data")
         .join("workunits")
         .join("test_001.json");
     assert!(manifest_path.exists(), "manifest file should exist");

@@ -25,14 +25,14 @@ result records `no_observation` and Decapod continues to enforce its ordinary
 interlocks and proof gates. There is no background provider process.
 
 Successful and unsuccessful Jev attempts are retained in the current run's
-`.decapod/governance/jev.json` file. The file is validated as a strict,
+`jev` section in `.decapod/governance.json`. The section is validated as a strict,
 trajectory-bound artifact before publication. It is created only when Jev is
 actually attempted, reset by a new trajectory initialization, and never stores
 the `TYPESAFE_API_KEY`.
 
 ### Published Dactyl dependency
 
-Decapod consumes `dactyl-db` 0.11.0 from crates.io with the registry source and
+Decapod consumes `dactyl-db` 0.11.1 from crates.io with the registry source and
 checksum committed in `Cargo.lock`. Nix vendors that same locked package
 without a Git-source hash. Release preparation must verify `cargo package
 --locked` and `cargo publish --locked --dry-run`; a Git-only dependency lacking
@@ -154,15 +154,14 @@ need independent Buildkite configuration proof.
 PR #1354 is the merged implementation reference for the Buildkite workflow
 compatibility changes. This follow-up is intentionally governance-only: it
 records the operational context and proof for that merged change without
-editing workflow behavior or reopening the implementation PR. The four files
-under `.decapod/governance/` remain one coordinated review unit; a dedicated
-governance PR must update `claims.json`, `plan.json`, `trajectory.json`, and
-`validation.json` through Decapod, then run bounded validation before
-publication. This separation keeps adapter behavior in the workflow PR while
+editing workflow behavior or reopening the implementation PR. The logical governance sections
+now share `.decapod/governance.json`; a dedicated governance PR updates its
+current claims, plan, trajectory, validation, and staged-material checkpoints
+through Decapod before publication. This separation keeps adapter behavior in the workflow PR while
 keeping the machine-facing proof contract independently reviewable.
 
 ## Installed-Version Upgrade Path
-After `cargo install decapod`, the next normal governed command runs protected, idempotent schema migration and legacy-event reconciliation before runtime consumers read evidence. Existing-project `decapod init` executes the same reconciliation before regeneration. A prior successful single-datastore migration retires its JSONL inputs through a durable receipt; startup does not rescan them. Legacy local database sources are opened through the Dactyl v0.10.0 facade, while Decapod owns row translation, schema policy, the explicit maintenance command policy, and idempotency ledgers. Dactyl opens the canonical path directly through its host runtime and owns the physical backup/recovery contract; no bundled fallback or second local authority is used. Human-authored `OVERRIDE.md` content is validated but never mechanically rewritten. Fresh migration conflicts preserve source artifacts and stop with an actionable error.
+After `cargo install decapod`, the next normal governed command runs protected, idempotent schema migration and legacy-event reconciliation before runtime consumers read evidence. Existing-project `decapod init` executes the same reconciliation before regeneration. A prior successful single-datastore migration retires its JSONL inputs through a durable receipt; startup does not rescan them. Legacy local database sources are opened through the Dactyl v0.11.1 facade, while Decapod owns row translation, schema policy, the explicit maintenance command policy, and idempotency ledgers. Dactyl opens the canonical path directly through its host runtime and owns the physical backup/recovery contract; no bundled fallback or second local authority is used. Human-authored `OVERRIDE.md` content is validated but never mechanically rewritten. Fresh migration conflicts preserve source artifacts and stop with an actionable error.
 
 ## Agent-Triggered Migration Runbook
 1. Let the first governed command after installing a new Decapod release run
@@ -229,7 +228,7 @@ decapod data db backup --destination <unused-database-path>
 decapod data db recover --preserve-original-at <unused-sibling-archive-path>
 ```
 
-`verify` is read-only and uses Dactyl v0.10.0's native typed integrity API.
+`verify` is read-only and uses Dactyl v0.11.1's native typed integrity API.
 `backup` uses Dactyl's SQLite online backup, including WAL/SHM correctness,
 then verifies and atomically publishes the standalone destination. `recover`
 is never implicit: it invokes Dactyl's logical dump/reload recovery, preserves
@@ -338,9 +337,9 @@ continue to be surfaced through the existing storage checks.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5e522c585e055cae81578f96df9ab41a4f21f6fde8c73b68ca9d0f2be05870d4`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (124 files), `tests/` (162 files)
-- Refreshed from the current codebase by `decapod specs.refresh`
+- Repository signal fingerprint: `ff0e704a1389577bb72bd8d97fc1f5f7d0e567779df8ad00b96ab8d2bf46557e`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (125 files), `tests/` (167 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
 ## Conservative workspace recovery

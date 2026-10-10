@@ -82,17 +82,11 @@ pub struct GitStatus {
     pub has_local_mods: bool,
 }
 
-/// Governance artifacts that must be present and valid for every published PR.
-///
-/// These are intentionally kept as one canonical set so presence, staging,
-/// and currency checks cannot drift apart. Every artifact participates in the
-/// complete PR delta; intermediate commits need not each touch every artifact.
-pub const REQUIRED_PR_GOVERNANCE_ARTIFACTS: &[&str] = &[
-    plan_governance::PLAN_PATH,
-    research_claims::CLAIMS_PATH,
-    trajectory::TRAJECTORY_PATH,
-    crate::core::validate::VALIDATION_RECEIPT_PATH,
-];
+/// The single tracked governance authority required for every published PR.
+/// Logical sections are validated independently; authored commits are covered by
+/// cumulative current-PR checkpoints, not by duplicated physical artifacts.
+pub const REQUIRED_PR_GOVERNANCE_ARTIFACTS: &[&str] =
+    &[crate::core::governance_document::GOVERNANCE_PATH];
 
 /// Container/Docker status
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -1920,6 +1914,10 @@ pub fn publish_workspace(
             ));
         }
 
+        // Refuse before creating history: a later checkpoint cannot repair an
+        // already-authored commit that never recorded its own proof.
+        crate::core::governance_document::verify_staged_checkpoint(repo_root)?;
+
         let commit_msg = title
             .as_deref()
             .unwrap_or("decapod: publish workspace changes");
@@ -2142,21 +2140,19 @@ pub fn verify_validation_artifacts_for_publish(repo_root: &Path) -> Result<(), D
             trajectory::trajectory_cookie_path(repo_root).display()
         ))
     })?;
-    let receipt_path = repo_root.join(crate::core::validate::VALIDATION_RECEIPT_PATH);
-    if !receipt_path.exists() {
-        return Err(DecapodError::ValidationError(format!(
-            "Cannot publish: missing validation receipt at {}.",
-            receipt_path.display()
-        )));
-    }
-    let raw = std::fs::read_to_string(&receipt_path).map_err(DecapodError::IoError)?;
-    let receipt: crate::core::validate::ValidationReceipt =
-        serde_json::from_str(&raw).map_err(|error| {
-            DecapodError::ValidationError(format!(
-                "Cannot publish: invalid validation receipt {}: {error}",
-                receipt_path.display()
-            ))
+    let receipt_value = crate::core::governance_document::read_section(repo_root, "validation")?
+        .ok_or_else(|| {
+            DecapodError::ValidationError(
+                "Cannot publish: missing governance validation section; rerun `decapod validate`."
+                    .into(),
+            )
         })?;
+    let receipt: crate::core::validate::ValidationReceipt = serde_json::from_value(receipt_value)
+        .map_err(|error| {
+        DecapodError::ValidationError(format!(
+            "Cannot publish: invalid governance validation section: {error}"
+        ))
+    })?;
     receipt.validate_integrity()?;
     let active_epoch = crate::core::validation_epoch::active_validation_epoch(repo_root)?;
     if receipt.validation_epoch != active_epoch
@@ -2207,11 +2203,11 @@ pub fn verify_validation_artifacts_for_publish(repo_root: &Path) -> Result<(), D
     }
     for (path, present) in [
         (
-            plan_governance::PLAN_PATH,
+            ".decapod/governance.json#/sections/plan",
             plan_governance::load_plan(repo_root)?.is_some(),
         ),
         (
-            research_claims::CLAIMS_PATH,
+            ".decapod/governance.json#/claims",
             research_claims::load_and_validate(repo_root)?.is_some(),
         ),
     ] {
@@ -2221,10 +2217,7 @@ pub fn verify_validation_artifacts_for_publish(repo_root: &Path) -> Result<(), D
             )));
         }
     }
-    if repo_root
-        .join(crate::core::jev_history::JEV_HISTORY_PATH)
-        .is_file()
-    {
+    if crate::core::governance_document::read_section(repo_root, "jev")?.is_some() {
         let ledger = crate::core::jev_history::load_and_validate(repo_root)?.ok_or_else(|| {
             DecapodError::ValidationError(
                 "Jev ledger disappeared during publish verification".to_string(),
@@ -2293,14 +2286,9 @@ fn ensure_validation_artifacts_staged(repo_root: &Path) -> Result<(), DecapodErr
     Ok(())
 }
 
-/// Require every governance artifact to be present, valid, and updated in the PR.
-///
-/// Project PRs must always carry the four governance JSON files in the
-/// `base...HEAD` delta (claims, plan, trajectory, validation). That is a
-/// **PR-level** requirement (GitHub #1234 / three-tier contract), not a
-/// per-commit path-participation mandate (#1232 / #1233). Intermediate
-/// commits need not each touch them; the published tip must. Receipt↔trajectory
-/// binding is enforced by [`verify_validation_artifacts_for_publish`].
+/// Require the normalized document in the PR delta and a valid checkpoint for
+/// every authored commit. Receipt/trajectory binding is checked independently by
+/// [`verify_validation_artifacts_for_publish`].
 pub fn ensure_required_governance_artifacts_in_pr(
     repo_root: &Path,
     base_branch: &str,
@@ -2333,8 +2321,8 @@ pub fn ensure_required_governance_artifacts_in_pr(
         )));
     }
 
-    // PR-level participation: every project PR must update all four governance
-    // JSON files vs base (not each intermediate commit).
+    // The document participates once in the PR delta. Checkpoint verification
+    // below separately proves each authored commit, including intermediate work.
     let dir = repo_root.to_str().unwrap_or(".");
     let output = Command::new("git")
         .args([
@@ -2367,22 +2355,17 @@ pub fn ensure_required_governance_artifacts_in_pr(
         .collect();
     if !missing.is_empty() {
         return Err(DecapodError::ValidationError(format!(
-            "Cannot publish: required governance artifacts are not included in the PR diff against '{base_ref}': {}. Every project PR must update all four (plan, claims, trajectory, validation). Intermediate commits need not each touch them.",
+            "Cannot publish: required governance artifacts are not included in the PR diff against '{base_ref}': {}. Every project PR must update the normalized governance document and preserve checkpoint coverage of each authored commit.",
             missing.join(", ")
         )));
     }
 
-    if repo_root
-        .join(crate::core::jev_history::JEV_HISTORY_PATH)
-        .is_file()
-    {
-        let jev_path = crate::core::jev_history::JEV_HISTORY_PATH;
-        if !changed.contains(jev_path) {
-            return Err(DecapodError::ValidationError(format!(
-                "Cannot publish: Jev observation ledger is present but not included in the PR diff against '{base_ref}': {jev_path}. Commit the ledger so all Jev results remain recoverable through Git history."
-            )));
-        }
-    }
+    crate::core::governance_document::verify_pr_checkpoints_for_target(
+        repo_root,
+        &base_ref,
+        "HEAD",
+        base_branch,
+    )?;
 
     Ok(())
 }

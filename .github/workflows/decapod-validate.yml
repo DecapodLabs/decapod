@@ -29,8 +29,7 @@ jobs:
             --original-intent "Validate the checked-out Decapod repository" \
             --derived-intent "Run the bounded repository validation gates and bind the receipt to this CI run" \
             --boundary "Repository validation and tracked proof artifacts" \
-            --scope ".decapod/governance/trajectory.json" \
-            --scope ".decapod/governance/validation.json" \
+            --scope ".decapod/governance.json" \
             --destination "CI validation" \
             --phase validation \
             --next-transition publish
@@ -66,7 +65,7 @@ jobs:
               sed -i "s/\"repo_signal_fingerprint\": \"[^\"]*\"/\"repo_signal_fingerprint\": \"${OLD_SIGNAL}\"/" "${MANIFEST}"
             fi
           fi
-          if ! git diff --exit-code -- . ':!.decapod/governance/'; then
+          if ! git diff --exit-code -- . ':!.decapod/governance.json'; then
             echo "::error::Release-bound or living-spec drift after validate --refresh-specs."
             echo "Commit regenerated entrypoints and .decapod/managed/specs from the evaluating binary."
             exit 1

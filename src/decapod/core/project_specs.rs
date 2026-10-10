@@ -739,7 +739,7 @@ fn codebase_surface_summary(project_root: &Path) -> Result<String, error::Decapo
 
 fn update_codebase_attestation(body: &str, fingerprint: &str, surfaces: &str) -> String {
     let section = format!(
-        "{CODEBASE_ATTESTATION_START}\n## Codebase Attestation\n\n- Repository signal fingerprint: `{fingerprint}`\n- Significant implementation surfaces: {surfaces}\n- Refreshed from the current codebase by `decapod specs.refresh`\n{CODEBASE_ATTESTATION_END}"
+        "{CODEBASE_ATTESTATION_START}\n## Codebase Attestation\n\n- Repository signal fingerprint: `{fingerprint}`\n- Significant implementation surfaces: {surfaces}\n- Refreshed from the current codebase by `decapod rpc --op specs.refresh`\n{CODEBASE_ATTESTATION_END}"
     );
     let cleaned = canonicalize_codebase_attestation_slots(body);
     if cleaned.contains(CODEBASE_ATTESTATION_SLOT) {

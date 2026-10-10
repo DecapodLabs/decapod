@@ -21,23 +21,28 @@ fn repo() -> TempDir {
         &["config", "user.email", "test@example.invalid"],
     );
     write(dir.path(), "README.md", "base\n");
+    write(dir.path(), ".gitignore", ".decapod/data/\n");
     git(dir.path(), &["add", "."]);
     git(dir.path(), &["commit", "-qm", "base"]);
     git(dir.path(), &["checkout", "-qb", "feature"]);
     dir
 }
 fn bundle(repo: &Path) {
-    for path in REQUIRED_PR_GOVERNANCE_ARTIFACTS {
-        write(repo, path, "{\"test\":true}\n");
-    }
-    write(
+    crate::core::governance_document::begin_pr(repo, "publication-test", "master").unwrap();
+    let receipt = current_receipt_fixture(repo);
+    save_receipt(repo, &receipt);
+    git(repo, &["add", "."]);
+    crate::core::governance_document::checkpoint(
         repo,
-        ".decapod/managed/specs/INTERFACES.md",
-        "# Current interfaces\nPublication reads remote proof.\n",
-    );
+        "bundle",
+        "Initial publication proof",
+        vec!["test:publication".into()],
+    )
+    .unwrap();
     git(repo, &["add", "."]);
     git(repo, &["commit", "-qm", "bundle"]);
 }
+
 fn proof() -> RemoteProof {
     RemoteProof {
         head: "a".repeat(40),
@@ -500,7 +505,7 @@ fn legacy_plan_loads_without_reviews() {
     let mut value = serde_json::to_value(plan).unwrap();
     value.as_object_mut().unwrap().remove("spec_reviews");
     value["schema_version"] = "1.0.0".into();
-    write(dir.path(), plan_governance::PLAN_PATH, &value.to_string());
+    crate::core::governance_document::write_section(dir.path(), "plan", &value).unwrap();
     assert!(
         plan_governance::load_plan(dir.path())
             .unwrap()
@@ -514,14 +519,11 @@ fn legacy_plan_loads_without_reviews() {
 fn epoch_excludes_receipt_but_binds_plan_claims_and_code_content() {
     use crate::core::validation_epoch::active_validation_epoch;
     let dir = repo();
-    plan_fixture(dir.path());
+    crate::core::governance_document::begin_pr(dir.path(), "epoch-test", "master").unwrap();
     write(dir.path(), "api/contract.go", "contract v1");
+    let receipt = current_receipt_fixture(dir.path());
     let first = active_validation_epoch(dir.path()).unwrap();
-    write(
-        dir.path(),
-        crate::core::validate::VALIDATION_RECEIPT_PATH,
-        "receipt written after validation",
-    );
+    save_receipt(dir.path(), &receipt);
     assert_eq!(first, active_validation_epoch(dir.path()).unwrap());
     write(dir.path(), "api/contract.go", "contract v2");
     assert_ne!(first, active_validation_epoch(dir.path()).unwrap());
@@ -530,7 +532,15 @@ fn epoch_excludes_receipt_but_binds_plan_claims_and_code_content() {
     review_all(dir.path());
     assert_ne!(first, active_validation_epoch(dir.path()).unwrap());
     let reviewed = active_validation_epoch(dir.path()).unwrap();
-    write(dir.path(), research_claims::CLAIMS_PATH, "changed claims");
+    crate::core::governance_document::record_claim(
+        dir.path(),
+        "epoch-claim",
+        "The epoch binds claims",
+        "Changing a claim leaves the epoch unchanged",
+        "open",
+        vec![],
+    )
+    .unwrap();
     assert_ne!(reviewed, active_validation_epoch(dir.path()).unwrap());
 }
 
@@ -567,27 +577,30 @@ fn explicit_human_resolution_preserves_provenance_and_unchanged_bytes() {
     );
 }
 
-fn current_receipt_fixture(repo: &Path) -> crate::core::validate::ValidationReceipt {
+pub(crate) fn current_receipt_fixture(repo: &Path) -> crate::core::validate::ValidationReceipt {
     use crate::core::validate::ValidationReceipt;
     plan_fixture(repo);
     research_claims::ensure_template(repo, false).unwrap();
-    let run = trajectory::init_trajectory(
-        repo,
-        trajectory::TrajectoryInit {
-            run_id: "publication-proof".into(),
-            task_id: Some("bugs_current".into()),
-            intent_id: None,
-            original_intent: "test publication".into(),
-            derived_intent: "test current proof".into(),
-            active_boundaries: vec![],
-            repo_scope: vec![".".into()],
-            destination: None,
-            current_phase: None,
-            next_transitions: vec![],
-            blockers: vec![],
-        },
-    )
-    .unwrap();
+    let run = match trajectory::load_trajectory_cookie(repo).unwrap() {
+        Some(run) if run.run_id == "publication-proof" => run,
+        _ => trajectory::init_trajectory(
+            repo,
+            trajectory::TrajectoryInit {
+                run_id: "publication-proof".into(),
+                task_id: Some("bugs_current".into()),
+                intent_id: None,
+                original_intent: "test publication".into(),
+                derived_intent: "test current proof".into(),
+                active_boundaries: vec![],
+                repo_scope: vec![".".into()],
+                destination: None,
+                current_phase: None,
+                next_transitions: vec![],
+                blockers: vec![],
+            },
+        )
+        .unwrap(),
+    };
     ValidationReceipt {
         schema_version: "1.0.0".into(),
         kind: "validation_receipt".into(),
@@ -614,12 +627,13 @@ fn current_receipt_fixture(repo: &Path) -> crate::core::validate::ValidationRece
     .with_recomputed_hash()
     .unwrap()
 }
-fn save_receipt(repo: &Path, receipt: &crate::core::validate::ValidationReceipt) {
-    write(
+pub(crate) fn save_receipt(repo: &Path, receipt: &crate::core::validate::ValidationReceipt) {
+    crate::core::governance_document::write_section(
         repo,
-        crate::core::validate::VALIDATION_RECEIPT_PATH,
-        &serde_json::to_string_pretty(receipt).unwrap(),
-    );
+        "validation",
+        &serde_json::to_value(receipt).unwrap(),
+    )
+    .unwrap();
 }
 
 #[test]
@@ -672,8 +686,18 @@ fn current_receipt_accepts_proof_commit_but_rejects_stale_code_epoch_task_and_re
 #[test]
 fn invalid_and_missing_artifacts_fail_real_publication_gate() {
     let dir = repo();
+    crate::core::governance_document::begin_pr(dir.path(), "invalid-artifact-test", "master")
+        .unwrap();
     let receipt = current_receipt_fixture(dir.path());
     save_receipt(dir.path(), &receipt);
+    git(dir.path(), &["add", "."]);
+    crate::core::governance_document::checkpoint(
+        dir.path(),
+        "valid-bundle",
+        "Valid current proof",
+        vec!["test:publication".into()],
+    )
+    .unwrap();
     git(dir.path(), &["add", "."]);
     git(dir.path(), &["commit", "-qm", "valid bundle"]);
     ensure_required_governance_artifacts_in_pr(dir.path(), "master").unwrap();
@@ -833,4 +857,74 @@ fn unconfirmed_push_never_claims_rejection_or_rollback() {
         assert!(message.contains("git ls-remote"));
         assert!(!message.contains("remote branch has diverged"));
     }
+}
+
+#[test]
+fn remote_publication_rejects_uncheckpointed_intermediate_work_even_with_valid_tip() {
+    let dir = repo();
+    bundle(dir.path());
+    write(dir.path(), "main.go", "package main\nfunc main() {}\n");
+    git(dir.path(), &["add", "."]);
+    git(
+        dir.path(),
+        &["commit", "-qm", "authored work without checkpoint"],
+    );
+    let unproved = git(dir.path(), &["rev-parse", "HEAD"]);
+    let receipt = current_receipt_fixture(dir.path());
+    save_receipt(dir.path(), &receipt);
+    git(dir.path(), &["add", "."]);
+    crate::core::governance_document::checkpoint(
+        dir.path(),
+        "later-proof",
+        "Proof recorded only after the authored commit",
+        vec!["test:publication".into()],
+    )
+    .unwrap();
+    git(dir.path(), &["add", "."]);
+    git(
+        dir.path(),
+        &["commit", "-qm", "later proof cannot repair historical gap"],
+    );
+    let head = git(dir.path(), &["rev-parse", "HEAD"]);
+    let remote = tempfile::tempdir().unwrap();
+    git(remote.path(), &["init", "--bare", "-q"]);
+    let target = remote.path().to_str().unwrap();
+    git(dir.path(), &["push", target, "master", "feature"]);
+    let error = verify_remote(dir.path(), target, "feature", "master", &head)
+        .expect_err("a valid document at the PR tip must not cover missing historical proof")
+        .to_string();
+    assert!(error.contains("CHECKPOINT"), "{error}");
+    assert!(error.contains(&unproved), "{error}");
+}
+
+#[test]
+fn staged_publication_requires_fresh_checkpoint_before_creating_history() {
+    let dir = repo();
+    bundle(dir.path());
+    let original_head = git(dir.path(), &["rev-parse", "HEAD"]);
+    write(dir.path(), "main.go", "package main\nfunc main() {}\n");
+    git(dir.path(), &["add", "."]);
+    let error = crate::core::governance_document::verify_staged_checkpoint(dir.path())
+        .expect_err("staged authored work requires a new checkpoint before auto-commit")
+        .to_string();
+    assert!(error.contains("checkpoint"), "{error}");
+    assert_eq!(git(dir.path(), &["rev-parse", "HEAD"]), original_head);
+    crate::core::governance_document::checkpoint(
+        dir.path(),
+        "staged-publication",
+        "Staged implementation proof",
+        vec!["test:publication".into()],
+    )
+    .unwrap();
+    git(dir.path(), &["add", "."]);
+    crate::core::governance_document::verify_staged_checkpoint(dir.path()).unwrap();
+    assert_eq!(git(dir.path(), &["rev-parse", "HEAD"]), original_head);
+    git(dir.path(), &["commit", "-qm", "checkpointed publication"]);
+    crate::core::governance_document::verify_pr_checkpoints_for_target(
+        dir.path(),
+        "master",
+        "HEAD",
+        "master",
+    )
+    .unwrap();
 }
