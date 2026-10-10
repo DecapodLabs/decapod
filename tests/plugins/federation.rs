@@ -1178,3 +1178,64 @@ fn test_rebuild_fails_closed_on_contradictory_wrapped_payload() {
         .unwrap();
     assert_eq!(title, "Keep me");
 }
+
+#[cfg(unix)]
+#[test]
+fn test_validate_confines_and_cleans_temporary_rebuild_in_sticky_temp_root() {
+    use std::os::unix::fs::PermissionsExt;
+    if std::env::var_os("DECAPOD_FEDERATION_PRIVATE_TEMP_CHILD").is_none() {
+        let temporary_root = tempdir().unwrap();
+        // Reproduce an ordinary Unix /tmp without modifying the system's /tmp.
+        fs::set_permissions(temporary_root.path(), fs::Permissions::from_mode(0o1777)).unwrap();
+        let output = std::process::Command::new(std::env::current_exe().unwrap())
+            .args([
+                "--exact",
+                "test_validate_confines_and_cleans_temporary_rebuild_in_sticky_temp_root",
+                "--nocapture",
+            ])
+            .env("DECAPOD_FEDERATION_PRIVATE_TEMP_CHILD", "1")
+            .env("TMPDIR", temporary_root.path())
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{}\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert_eq!(fs::read_dir(temporary_root.path()).unwrap().count(), 0);
+        return;
+    }
+
+    let (_directory, store) = test_store();
+    add_node(
+        &store,
+        "Private rebuild",
+        "lesson",
+        "notable",
+        "agent_inferred",
+        "Rebuild proof in a private temporary directory",
+        "",
+        "",
+        "repo",
+        None,
+        "decapod",
+    )
+    .unwrap();
+    build_derived(&store);
+    for _ in 0..2 {
+        let results = validate_federation(&store.root).unwrap();
+        let (_, passed, message) = results
+            .iter()
+            .find(|(name, _, _)| name == "federation.rebuild_determinism")
+            .unwrap();
+        assert!(passed, "{message}");
+        assert!(!fs::read_dir(std::env::temp_dir()).unwrap().any(|entry| {
+            entry
+                .unwrap()
+                .file_name()
+                .to_string_lossy()
+                .starts_with("decapod_federation_validate_")
+        }));
+    }
+}

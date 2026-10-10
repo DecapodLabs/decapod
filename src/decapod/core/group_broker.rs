@@ -57,6 +57,7 @@ pub fn is_internal_invocation() -> bool {
 pub fn maybe_route_mutation(
     broker_root: &Path,
     argv: &[String],
+    finish: &mut dyn FnMut(&str, &str) -> String,
 ) -> Result<bool, error::DecapodError> {
     if std::env::var(BROKER_DISABLE_ENV)
         .map(|v| v == "1")
@@ -70,7 +71,7 @@ pub fn maybe_route_mutation(
 
     #[cfg(unix)]
     {
-        match run_unix_broker(broker_root, argv) {
+        match run_unix_broker(broker_root, argv, finish) {
             Ok(()) => Ok(true),
             // Some constrained sandboxes disallow AF_UNIX sockets, and deeply nested
             // Decapod worktrees can exceed platform socket path limits. Fall back to
@@ -87,7 +88,7 @@ pub fn maybe_route_mutation(
     #[cfg(not(unix))]
     {
         let _ = broker_root;
-        let _ = argv;
+        let _ = (argv, finish);
         Ok(false)
     }
 }
@@ -101,7 +102,11 @@ fn broker_io_error_allows_direct_fallback(kind: std::io::ErrorKind) -> bool {
 }
 
 #[cfg(unix)]
-fn run_unix_broker(broker_root: &Path, argv: &[String]) -> Result<(), error::DecapodError> {
+fn run_unix_broker(
+    broker_root: &Path,
+    argv: &[String],
+    finish: &mut dyn FnMut(&str, &str) -> String,
+) -> Result<(), error::DecapodError> {
     crate::core::fs_permissions::ensure_storage_dir(broker_root)
         .map_err(error::DecapodError::IoError)?;
     let socket_path = broker_socket_path(broker_root);
@@ -117,7 +122,7 @@ fn run_unix_broker(broker_root: &Path, argv: &[String]) -> Result<(), error::Dec
     };
 
     match send_request(&socket_path, &request) {
-        Ok(resp) => return apply_response(resp),
+        Ok(resp) => return apply_response(resp, &request.request_id, finish),
         Err(error::DecapodError::ValidationError(msg))
             if msg.contains("BROKER_PROTOCOL_MISMATCH") =>
         {
@@ -133,11 +138,11 @@ fn run_unix_broker(broker_root: &Path, argv: &[String]) -> Result<(), error::Dec
             match try_acquire_lock(&lock_path)? {
                 Some(lease) => {
                     let resp = run_as_leader(lease, broker_root, &socket_path, request.clone())?;
-                    return apply_response(resp);
+                    return apply_response(resp, &request.request_id, finish);
                 }
                 None => {
                     match send_request(&socket_path, &request) {
-                        Ok(resp) => return apply_response(resp),
+                        Ok(resp) => return apply_response(resp, &request.request_id, finish),
                         Err(error::DecapodError::ValidationError(msg))
                             if msg.contains("BROKER_PROTOCOL_MISMATCH") =>
                         {
@@ -188,6 +193,13 @@ fn run_as_leader(
 
     emit_phase_hook("queued", &local_request.request_id);
     let local_response = execute_request(broker_root, &local_request)?;
+    // A claim's client-side preparation must not wait for an idle period under
+    // sustained traffic. Release this election immediately after its durable ack.
+    if response_has_claim_followup(&local_response) {
+        drop(listener);
+        let _ = fs::remove_file(socket_path);
+        return Ok(local_response);
+    }
 
     let idle_timeout = Duration::from_secs(
         std::env::var(BROKER_IDLE_SECS_ENV)
@@ -340,10 +352,13 @@ fn execute_request(
         .next()
         .ok_or_else(|| error::DecapodError::ValidationError("BROKER_EXEC_PATH_MISSING".into()))?;
     emit_phase_hook("pre_exec", &request.request_id);
-    let timeout = if request.argv.windows(2).any(|args| {
-        (args[0] == "todo" && args[1] == "claim")
-            || (args[0] == "workspace" && matches!(args[1].as_str(), "status" | "prune"))
-    }) {
+    let claim_request = request.argv.iter().any(|arg| arg == "todo")
+        && request.argv.iter().any(|arg| arg == "claim");
+    let timeout = if claim_request
+        || request.argv.windows(2).any(|args| {
+            (args[0] == "todo" && args[1] == "claim")
+                || (args[0] == "workspace" && matches!(args[1].as_str(), "status" | "prune"))
+        }) {
         CONTROL_TIMEOUT
     } else {
         BUILD_TIMEOUT
@@ -410,7 +425,23 @@ fn execute_request(
     Ok(response)
 }
 
-fn apply_response(resp: BrokerResponse) -> Result<(), error::DecapodError> {
+fn response_has_claim_followup(response: &BrokerResponse) -> bool {
+    response.status == "COMMITTED"
+        && response.result_envelope["stdout"]
+            .as_str()
+            .and_then(|stdout| serde_json::from_str::<serde_json::Value>(stdout).ok())
+            .is_some_and(|out| {
+                out["cmd"] == "todo.claim"
+                    && out["status"] == "ok"
+                    && out["container"]["code"] == "claim_container_followup"
+            })
+}
+
+fn apply_response(
+    resp: BrokerResponse,
+    request_id: &str,
+    finish: &mut dyn FnMut(&str, &str) -> String,
+) -> Result<(), error::DecapodError> {
     let stdout = resp
         .result_envelope
         .get("stdout")
@@ -422,7 +453,11 @@ fn apply_response(resp: BrokerResponse) -> Result<(), error::DecapodError> {
         .and_then(|v| v.as_str())
         .unwrap_or("");
     if !stdout.is_empty() {
-        print!("{stdout}");
+        if resp.status == "COMMITTED" {
+            print!("{}", finish(stdout, request_id));
+        } else {
+            print!("{stdout}");
+        }
     }
     if !stderr.is_empty() {
         eprint!("{stderr}");
@@ -641,16 +676,17 @@ fn try_acquire_lock(lock_path: &Path) -> Result<Option<BrokerLease>, error::Deca
         Err(err) if err.kind() == std::io::ErrorKind::WouldBlock => return Ok(None),
         Err(err) => return Err(error::DecapodError::IoError(err)),
     }
+    let lease = BrokerLease {
+        path: lock_path.to_path_buf(),
+        _file: election,
+    };
     let mut marker = crate::core::fs_permissions::open_storage_file(
         lock_path,
         OpenOptions::new().create(true).write(true).truncate(true),
     )
     .map_err(error::DecapodError::IoError)?;
     writeln!(marker, "{}", std::process::id()).map_err(error::DecapodError::IoError)?;
-    Ok(Some(BrokerLease {
-        path: lock_path.to_path_buf(),
-        _file: election,
-    }))
+    Ok(Some(lease))
 }
 
 fn jitter_ms(max_exclusive: u64) -> u64 {
@@ -672,6 +708,7 @@ struct BrokerLease {
 impl Drop for BrokerLease {
     fn drop(&mut self) {
         let _ = fs::remove_file(&self.path);
+        let _ = FileExt::unlock(&self._file);
     }
 }
 #[cfg(all(test, unix))]

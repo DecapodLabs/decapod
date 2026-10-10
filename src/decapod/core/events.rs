@@ -20,6 +20,8 @@ use std::io::{BufRead, BufReader, Read};
 use std::path::{Path, PathBuf};
 
 pub const BROKER: &str = "broker";
+/// Workspace invocation ownership receipts, separate from BrokerEvent audit payloads.
+pub const WORKSPACE_LIFECYCLE: &str = "workspace_lifecycle";
 pub const TODO: &str = "todo";
 pub const FEDERATION: &str = "federation";
 pub const EXTERNAL_ACTIONS: &str = "external_actions";
@@ -35,6 +37,7 @@ pub const ASSURANCE: &str = "assurance";
 /// Known event stream names. All streams share the single `events` table (#1127).
 pub const STREAMS: &[&str] = &[
     BROKER,
+    WORKSPACE_LIFECYCLE,
     TODO,
     FEDERATION,
     EXTERNAL_ACTIONS,

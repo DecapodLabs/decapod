@@ -422,7 +422,7 @@ virtiofs/FUSE filesystem prohibition.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `34647bb8f923292a6788fce97bf591b7da81244f2daed9693986e988f9457e5b`
+- Repository signal fingerprint: `c60a91077200b9e05578ac6e32646771cbc3e73cde13cca031d4073bfba268b0`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (124 files), `tests/` (161 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -452,3 +452,7 @@ and event authority. Replay first reconciles an immutable authorized creation
 event, preserving unknown outcomes until there is evidence of completion. The
 remote atomic operation remains the source of truth. Publication then verifies
 current local proof and the exact remote branch/PR state as separate transitions.
+
+### Lifecycle backend provenance and event typing
+
+Workspace lifecycle receipts use their own typed stream within the canonical events table; they do not enter the broker mutation-audit stream. A container invocation records only a validated Docker or Podman identity before launch. Recovery targets that recorded engine, even when runtime preference changes, and preserves container-profile paths whose creating engine is unknown. Owned advisory locks are explicitly unlocked on release so unrelated forked processes cannot prolong their lifetime through an inherited descriptor. Federation rebuild validation confines its temporary database and sidecars to a private, automatically cleaned directory.

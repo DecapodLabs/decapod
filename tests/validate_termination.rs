@@ -323,6 +323,27 @@ fn validate_timeout_does_not_strand_db_for_followup_commands() {
 #[test]
 fn validate_json_reports_self_heal_and_structured_summary() {
     let (_tmp, dir, password) = setup_repo();
+    // Receipt reuse requires a resolved HEAD; an unborn fixture intentionally
+    // produces UNRESOLVED receipts and cannot exercise byte-stable reuse.
+    let initial_commit = Command::new("git")
+        .current_dir(&dir)
+        .args([
+            "-c",
+            "user.name=Validation Fixture",
+            "-c",
+            "user.email=validation@example.invalid",
+            "commit",
+            "--allow-empty",
+            "-m",
+            "initialize validation fixture",
+        ])
+        .output()
+        .expect("initialize fixture HEAD");
+    assert!(
+        initial_commit.status.success(),
+        "fixture commit failed: {}",
+        String::from_utf8_lossy(&initial_commit.stderr)
+    );
     let dockerfile_path = dir.join(".decapod/managed/Dockerfile.decapod");
     fs::write(&dockerfile_path, "FROM rust:1.91.1-alpine\n").expect("write stale Dockerfile");
 
@@ -463,6 +484,67 @@ fn validate_json_reports_self_heal_and_structured_summary() {
         + "RUN echo project workspace mutation\n";
     fs::write(&dockerfile_path, mutated).expect("write mutated Dockerfile");
 
+    // The managed Dockerfile is validation-epoch material. Repairing the old
+    // release pin must preserve the authored RUN line, so this is genuinely a
+    // new epoch, not permission to relabel an earlier successful proof.
+    let prior_receipt = fs::read(&validation_receipt).expect("prior receipt bytes");
+    let prior_trajectory = fs::read(&trajectory_path).expect("prior trajectory bytes");
+    let stale_validate = run_decapod(
+        &dir,
+        &["validate", "--format", "json"],
+        &[
+            ("DECAPOD_CONTAINER", "1"),
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        !stale_validate.status.success(),
+        "changed Dockerfile material cannot reuse the previous validation epoch"
+    );
+    assert!(
+        String::from_utf8_lossy(&stale_validate.stderr).contains("STALE_VALIDATION_EVIDENCE"),
+        "expected stale-proof recovery, got: {}",
+        String::from_utf8_lossy(&stale_validate.stderr)
+    );
+    assert!(
+        fs::read(&validation_receipt).expect("preserved receipt") == prior_receipt,
+        "stale validation must not overwrite the previously successful receipt"
+    );
+    assert!(
+        fs::read(&trajectory_path).expect("preserved trajectory") == prior_trajectory,
+        "stale validation must not add the new epoch to the previous trajectory"
+    );
+    let recovery = run_decapod(
+        &dir,
+        &[
+            "govern",
+            "trajectory",
+            "init",
+            "--run-id",
+            "validation_dockerfile_change_recovery",
+            "--original-intent",
+            "validate the authored workspace Dockerfile mutation",
+            "--derived-intent",
+            "bind repaired Dockerfile content to a fresh proof run",
+            "--boundary",
+            "validation test fixture",
+            "--scope",
+            "managed Dockerfile and validation epoch",
+        ],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        recovery.status.success(),
+        "supported trajectory recovery failed: {}",
+        String::from_utf8_lossy(&recovery.stderr)
+    );
+
     let second_validate = run_decapod(
         &dir,
         &["validate", "--format", "json"],
@@ -488,6 +570,55 @@ fn validate_json_reports_self_heal_and_structured_summary() {
         env!("CARGO_PKG_VERSION")
     )));
     assert!(maintained.contains("RUN echo project workspace mutation"));
+
+    let second_payload: Value =
+        serde_json::from_slice(&second_validate.stdout).expect("recovered validation JSON");
+    let second_receipt_bytes = fs::read(&validation_receipt).expect("recovered receipt bytes");
+    let second_trajectory_bytes = fs::read(&trajectory_path).expect("recovered trajectory bytes");
+    let second_receipt: Value = serde_json::from_slice(&second_receipt_bytes).unwrap();
+    let second_trajectory: Value = serde_json::from_slice(&second_trajectory_bytes).unwrap();
+    assert_ne!(
+        second_receipt["validation_epoch"]["epoch_id"],
+        epoch["epoch_id"]
+    );
+    assert_eq!(
+        second_receipt["validation_epoch"],
+        second_payload["report"]["validation_epoch"]
+    );
+    assert_eq!(
+        second_receipt["trajectory_artifact_hash"],
+        second_trajectory["artifact_hash"]
+    );
+    assert_eq!(
+        second_trajectory["run_id"],
+        "validation_dockerfile_change_recovery"
+    );
+
+    // Once recovery has recorded real proof for the repaired bytes, an
+    // unchanged rerun is stable: no receipt/trajectory rewrite chase.
+    let unchanged_validate = run_decapod(
+        &dir,
+        &["validate", "--format", "json"],
+        &[
+            ("DECAPOD_CONTAINER", "1"),
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        unchanged_validate.status.success(),
+        "unchanged validation failed: {}",
+        String::from_utf8_lossy(&unchanged_validate.stderr)
+    );
+    assert!(
+        fs::read(&validation_receipt).unwrap() == second_receipt_bytes,
+        "unchanged validation should reuse the bound receipt"
+    );
+    assert!(
+        fs::read(&trajectory_path).unwrap() == second_trajectory_bytes,
+        "unchanged validation should preserve the bound trajectory"
+    );
 }
 
 #[test]

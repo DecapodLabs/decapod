@@ -6217,6 +6217,155 @@ fn summarize_claim_container_error(err: &str) -> String {
         .collect()
 }
 
+fn claim_container_warning(detail: &str) -> JsonValue {
+    serde_json::json!({
+        "status": "warning", "code": "container_autorun_unavailable",
+        "message": "Task claimed; optional container preparation did not complete.",
+        "detail": summarize_claim_container_error(detail),
+        "next": "Inspect workspace status and prune abandoned owned containers before explicitly retrying decapod auto container run. The task claim remains committed."
+    })
+}
+
+fn run_claim_container_followup(
+    store: &Store,
+    agent: &str,
+    id: &str,
+    title: &str,
+    request_id: Option<&str>,
+) -> JsonValue {
+    eprintln!(
+        "Task claim committed: {id}; container preparation pending. Recovery: decapod workspace status; inspect before workspace prune."
+    );
+    if let Some(request_id) = request_id {
+        eprintln!("Claim recovery request ID: {request_id:?}");
+    }
+    match container::run_container_for_claim(store, agent, id, title) {
+        Ok(result) => serde_json::json!({"status": "ok", "result": result}),
+        Err(err) => claim_container_warning(&err.to_string()),
+    }
+}
+
+// The once-only receipt is committed before invoking external processes. A crash
+// after that handoff remains explicitly uncertain and never reruns user commands.
+fn claim_followup_once(
+    root: &Path,
+    request_id: &str,
+    launch: impl FnOnce() -> JsonValue,
+) -> Result<JsonValue, error::DecapodError> {
+    use crate::core::events;
+    let key = format!("claim.container.{request_id}");
+    let broker = DbBroker::new(root);
+    let existing = broker.with_transaction(&todo_db_path(root), "decapod", None, "todo.claim.container.reserve", |conn| {
+        let existing: Option<String> = conn.query_row(
+            "SELECT payload FROM events WHERE stream = ?1 AND event_type = ?2 ORDER BY seq DESC LIMIT 1",
+            params![events::WORKSPACE_LIFECYCLE, key], |row| row.get(0)).optional()?;
+        if existing.is_none() {
+            events::append_on_conn(conn, events::WORKSPACE_LIFECYCLE, &serde_json::json!({
+                "event_id": crate::core::ulid::new_ulid(), "event_type": key,
+                "ts": now_iso(), "phase": "started", "request_id": request_id,
+            }))?;
+        }
+        Ok(existing)
+    })?;
+    if let Some(raw) = existing {
+        let receipt: JsonValue = serde_json::from_str(&raw)
+            .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
+        return Ok(receipt.get("result").cloned().unwrap_or_else(|| claim_container_warning(
+            "Container follow-up already started or was interrupted; automatic retry is suppressed to avoid duplicating the command.")));
+    }
+    let result = launch(); // no broker election lease or database lock is held
+    events::append(
+        root,
+        events::WORKSPACE_LIFECYCLE,
+        &serde_json::json!({
+            "event_id": crate::core::ulid::new_ulid(), "event_type": key,
+            "ts": now_iso(), "phase": "finished", "request_id": request_id, "result": result,
+        }),
+    )?;
+    Ok(result)
+}
+
+fn claim_preparation_is_current(
+    root: &Path,
+    id: &str,
+    agent: &str,
+    acknowledged: &JsonValue,
+) -> Result<bool, error::DecapodError> {
+    let Some(generation) = acknowledged["result"]["lease_generation"].as_u64() else {
+        return Ok(false);
+    };
+    if acknowledged["result"]["assigned_to"] != agent {
+        return Ok(false);
+    }
+    DbBroker::new(root).with_conn(&todo_db_path(root), "decapod", None, "todo.claim.container.verify", |conn| {
+        let current: Option<(String, String, u64, Option<String>)> = conn.query_row(
+            "SELECT status, assigned_to, COALESCE(lease_generation, 0), lease_expires_at FROM tasks WHERE id = ?1",
+            [id], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?))).optional()?;
+        Ok(current.is_some_and(|(status, owner, actual_generation, expires)| {
+            !matches!(status.as_str(), "done" | "archived") && owner == agent && actual_generation == generation
+                && expires.as_deref().and_then(parse_epoch_z).is_some_and(|expiry| expiry > now_unix_secs())
+        }))
+    })
+}
+
+/// Runs only on the requesting client, after the broker has acknowledged and
+/// relinquished its own leadership, if elected. Inputs come from the parsed CLI, never response commands.
+pub fn finish_broker_claim_response(
+    store: &Store,
+    cli: &TodoCli,
+    stdout: &str,
+    request_id: &str,
+) -> String {
+    let root = &store.root;
+    let TodoCommand::Claim {
+        id,
+        agent,
+        mode: ClaimMode::Exclusive,
+        ..
+    } = &cli.command
+    else {
+        return stdout.to_owned();
+    };
+    let Ok(mut out) = serde_json::from_str::<JsonValue>(stdout) else {
+        return stdout.to_owned();
+    };
+    if out["cmd"] != "todo.claim"
+        || out["id"] != *id
+        || out["status"] != "ok"
+        || out["container"]["code"] != "claim_container_followup"
+    {
+        return stdout.to_owned();
+    }
+    let default_agent = env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".into());
+    let agent = agent.as_deref().unwrap_or(&default_agent);
+    let result = claim_followup_once(root, request_id, || {
+        match claim_preparation_is_current(root, id, agent, &out) {
+            Ok(true) => {}
+            Ok(false) => {
+                return claim_container_warning(
+                    "The acknowledged claim is no longer current; preparation was not launched.",
+                );
+            }
+            Err(error) => return claim_container_warning(&error.to_string()),
+        }
+        match get_task(root, id) {
+            Ok(Some(task)) => {
+                run_claim_container_followup(store, agent, id, &task.title, Some(request_id))
+            }
+            Ok(None) => claim_container_warning(
+                "Claimed task is no longer available; inspect claim status.",
+            ),
+            Err(err) => claim_container_warning(&err.to_string()),
+        }
+    })
+    .unwrap_or_else(|err| claim_container_warning(&err.to_string()));
+    out["container"] = result;
+    format!(
+        "{}\n",
+        serde_json::to_string_pretty(&out).expect("claim response serializes")
+    )
+}
+
 fn cloud_runtime(
     root: &Path,
 ) -> Result<Option<(CloudRuntimeConfig, RepositoryIdentity)>, error::DecapodError> {
@@ -6923,28 +7072,18 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
             let autorun_enabled = env_bool("DECAPOD_CLAIM_AUTORUN", true);
 
             if *mode == ClaimMode::Exclusive && status == "ok" && !in_container && autorun_enabled {
-                let task_title = get_task(root, id)?
-                    .map(|t| t.title)
-                    .unwrap_or_else(|| id.to_string());
-                let launch = match container::run_container_for_claim(
-                    store,
-                    agent_id,
-                    id,
-                    &task_title,
-                ) {
-                    Ok(result) => serde_json::json!({
-                        "status": "ok",
-                        "result": result
-                    }),
-                    Err(err) => serde_json::json!({
-                        "status": "warning",
-                        "code": "container_autorun_unavailable",
-                        "message": "Task claimed; optional container autorun was skipped.",
-                        "user_message": "The task was claimed successfully. The agent has instructions to continue from the claimed worktree and handle container proof if required.",
-                        "agent_action": "Continue from the claimed Decapod worktree. If container proof is required, inspect Docker/Podman availability and rerun `decapod auto container run` with the task branch.",
-                        "next": "Run `decapod auto container run ...` later if container proof is required.",
-                        "detail": summarize_claim_container_error(&err.to_string())
-                    }),
+                let launch = if crate::core::group_broker::is_internal_invocation() {
+                    serde_json::json!({"status": "pending", "code": "claim_container_followup"})
+                } else {
+                    match get_task(root, id) {
+                        Ok(Some(task)) => {
+                            run_claim_container_followup(store, agent_id, id, &task.title, None)
+                        }
+                        Ok(None) => claim_container_warning(
+                            "Claimed task is no longer available; inspect claim status.",
+                        ),
+                        Err(err) => claim_container_warning(&err.to_string()),
+                    }
                 };
                 if let Some(obj) = out.as_object_mut() {
                     obj.insert("container".to_string(), launch);

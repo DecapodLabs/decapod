@@ -23,6 +23,8 @@ struct Receipt {
     created_nanos: Option<u128>,
     container_expected: bool,
     #[serde(default)]
+    container_runtime: Option<String>,
+    #[serde(default)]
     ready: bool,
     #[serde(default)]
     producer_lease: bool,
@@ -32,7 +34,7 @@ struct Receipt {
 pub struct OwnedWorkspace {
     root: PathBuf,
     receipt: Receipt,
-    _lease: File,
+    _lease: WorkspaceLease,
     _directory: File,
 }
 impl OwnedWorkspace {
@@ -60,13 +62,39 @@ impl OwnedWorkspace {
     pub fn path(&self) -> &Path {
         &self.receipt.path
     }
-    pub fn require_container(&mut self) -> Result<(), DecapodError> {
+    /// Bind the backend before any container handoff. Docker and Podman have
+    /// independent stores even when both executables are installed.
+    pub fn require_container(&mut self, runtime: &str) -> Result<(), DecapodError> {
         self.verify()?;
-        if !self.receipt.container_expected {
+        if !matches!(runtime, "docker" | "podman") {
+            return Err(failure("unsupported container runtime provenance"));
+        }
+        if self
+            .receipt
+            .container_runtime
+            .as_deref()
+            .is_some_and(|recorded| recorded != runtime)
+        {
+            return Err(failure(
+                "container runtime changed for an existing invocation; preserve its resources and recover with the recorded backend",
+            ));
+        }
+        if !self.receipt.container_expected || self.receipt.container_runtime.is_none() {
             self.receipt.container_expected = true;
+            self.receipt.container_runtime = Some(runtime.to_string());
             self.persist()?;
         }
         Ok(())
+    }
+    /// Never rediscover or switch backends during recovery. Missing executables
+    /// and unavailable engines remain errors from the recorded backend.
+    pub fn container_runtime(&self) -> Result<&str, DecapodError> {
+        match self.receipt.container_runtime.as_deref() {
+            Some(runtime @ ("docker" | "podman")) => Ok(runtime),
+            _ => Err(failure(
+                "container runtime provenance unavailable; workspace preserved without attempting cleanup in another engine",
+            )),
+        }
     }
     pub fn verify(&self) -> Result<(), DecapodError> {
         // Keeping the original directory open prevents inode reuse for this
@@ -91,7 +119,7 @@ impl OwnedWorkspace {
         self.receipt.ts = time::now_epoch_z();
         events::append(
             &self.root.join(".decapod/data"),
-            events::BROKER,
+            events::WORKSPACE_LIFECYCLE,
             &serde_json::to_value(&self.receipt).map_err(|e| failure(&e.to_string()))?,
         )?;
         Ok(())
@@ -126,7 +154,19 @@ fn key(path: &Path) -> String {
     )
 }
 
-fn lease(root: &Path, target: &Path) -> Result<File, DecapodError> {
+// flock belongs to the open-file description: a concurrent fork can inherit
+// it even with CLOEXEC. Explicitly unlock before close so unrelated children
+// cannot prolong an invocation's lease until their next exec/exit.
+#[derive(Debug)]
+struct WorkspaceLease(File);
+
+impl Drop for WorkspaceLease {
+    fn drop(&mut self) {
+        let _ = FileExt::unlock(&self.0);
+    }
+}
+
+fn lease(root: &Path, target: &Path) -> Result<WorkspaceLease, DecapodError> {
     let locks = root.join(".decapod/data/workspace-leases");
     fs_permissions::ensure_storage_dir(&locks)?;
     let path = locks.join(format!("{}.lock", key(target)));
@@ -139,7 +179,7 @@ fn lease(root: &Path, target: &Path) -> Result<File, DecapodError> {
             "workspace operation is active or lease is unavailable: {e}"
         ))
     })?;
-    Ok(file)
+    Ok(WorkspaceLease(file))
 }
 
 fn lookup(root: &Path, target: &Path) -> Result<Option<Receipt>, DecapodError> {
@@ -153,7 +193,7 @@ fn lookup(root: &Path, target: &Path) -> Result<Option<Receipt>, DecapodError> {
     }
     let raw: Option<String> = conn.query_row(
         "SELECT payload FROM events WHERE stream = ?1 AND event_type = ?2 ORDER BY seq DESC LIMIT 1",
-        db::params![events::BROKER, key(target)], |row| row.get(0)).optional()?;
+        db::params![events::WORKSPACE_LIFECYCLE, key(target)], |row| row.get(0)).optional()?;
     raw.map(|value| {
         serde_json::from_str(&value)
             .map_err(|e| failure(&format!("invalid ownership receipt: {e}")))
@@ -300,6 +340,7 @@ pub fn reserve(
         inode,
         created_nanos,
         container_expected,
+        container_runtime: None,
         ready: false,
         producer_lease: container_expected,
     };
@@ -354,6 +395,14 @@ pub fn acquire_registered(repo: &Path, target: &Path) -> Result<OwnedWorkspace, 
             _lease: lease,
         });
     }
+    if target
+        .join(crate::plugins::container::MANAGED_DOCKERFILE_REL_PATH)
+        .exists()
+    {
+        return Err(failure(
+            "container runtime provenance is unknown for this registered workspace; preserve it and recover its owning engine before adoption",
+        ));
+    }
     let output = std::process::Command::new("git")
         .arg("-C")
         .arg(&root)
@@ -381,6 +430,7 @@ pub fn acquire_registered(repo: &Path, target: &Path) -> Result<OwnedWorkspace, 
         inode,
         created_nanos,
         container_expected: false,
+        container_runtime: None,
         ready: true,
         producer_lease: false,
     };

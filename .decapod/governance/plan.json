@@ -23,28 +23,28 @@
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1791622472Z",
+  "updated_at": "1791650584Z",
   "spec_reviews": [
     {
       "path": ".decapod/managed/specs/ARCHITECTURE.md",
-      "spec_material_hash": "3334ab741782ee3cc0bd9d00db6de2d375d25658f9dbddcf03e5adcc38b378a7",
-      "reviewed_code_fingerprint": "34647bb8f923292a6788fce97bf591b7da81244f2daed9693986e988f9457e5b",
+      "spec_material_hash": "b0835ece6bd42daee979585d7336ffdf579cfa3d5b036acec0ade4f860d9a9e0",
+      "reviewed_code_fingerprint": "c60a91077200b9e05578ac6e32646771cbc3e73cde13cca031d4073bfba268b0",
       "disposition": "updated",
-      "reason": "Reviewed current ARCHITECTURE implementation and authored contract for the five fixes, including final test-only Clippy correction; source isolation, durable ownership, permission boundaries, retry identity and remote publication are covered by focused regressions."
+      "reason": "Reviewed scoped Actions fixes against current ARCHITECTURE contracts: recorded runtime provenance, dedicated lifecycle event stream, explicit advisory unlock, acknowledged claim follow-up outside broker locks, and private federation rebuild directory; authored contracts and focused regressions reflect these boundaries."
     },
     {
       "path": ".decapod/managed/specs/INTERFACES.md",
-      "spec_material_hash": "5b4753211eb62ce6798a0d40fa20c8d0e52c2aaae628f4059d38c054da4eb3a8",
-      "reviewed_code_fingerprint": "34647bb8f923292a6788fce97bf591b7da81244f2daed9693986e988f9457e5b",
+      "spec_material_hash": "ec59736eba382f3e01ea03fd8fb7eebe415cc343a48075e6e9a91efcd238621a",
+      "reviewed_code_fingerprint": "c60a91077200b9e05578ac6e32646771cbc3e73cde13cca031d4073bfba268b0",
       "disposition": "updated",
-      "reason": "Reviewed current INTERFACES implementation and authored contract for the five fixes, including final test-only Clippy correction; source isolation, durable ownership, permission boundaries, retry identity and remote publication are covered by focused regressions."
+      "reason": "Reviewed scoped Actions fixes against current INTERFACES contracts: recorded runtime provenance, dedicated lifecycle event stream, explicit advisory unlock, acknowledged claim follow-up outside broker locks, and private federation rebuild directory; authored contracts and focused regressions reflect these boundaries."
     },
     {
       "path": ".decapod/managed/specs/SECURITY.md",
       "spec_material_hash": "ad35c389324be26f9a505ea2561acf50ac674e263d0835724a2e9fd9783ac56f",
-      "reviewed_code_fingerprint": "34647bb8f923292a6788fce97bf591b7da81244f2daed9693986e988f9457e5b",
+      "reviewed_code_fingerprint": "c60a91077200b9e05578ac6e32646771cbc3e73cde13cca031d4073bfba268b0",
       "disposition": "updated",
-      "reason": "Reviewed current SECURITY implementation and authored contract for the five fixes, including final test-only Clippy correction; source isolation, durable ownership, permission boundaries, retry identity and remote publication are covered by focused regressions."
+      "reason": "Reviewed scoped Actions fixes against current SECURITY contracts: recorded runtime provenance, dedicated lifecycle event stream, explicit advisory unlock, acknowledged claim follow-up outside broker locks, and private federation rebuild directory; authored contracts and focused regressions reflect these boundaries."
     }
   ]
 }

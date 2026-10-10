@@ -1,98 +1,62 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "five-critical-20261010",
-  "intent_id": "intent:five-critical-20261010",
+  "run_id": "five-critical-ci-20261010",
+  "intent_id": "intent:five-critical-ci-20261010",
   "task_id": "bugs_01m4jdaambn944vm",
-  "original_intent": "Find and fix five most critical Decapod issues in one PR",
-  "derived_intent": "Fix1218 lifecycle,1075 cloud retry,1076 dirty-root isolation,1366 state permissions,1045 publication verification",
-  "current_phase": "validation",
-  "next_transitions": [
-    "publish"
-  ],
+  "original_intent": "Fix five critical issues in one PR",
+  "derived_intent": "Repair scoped GitHub Actions lifecycle, broker, permission and fixture regressions in PR1383",
+  "current_phase": "verification",
   "active_boundaries": [
-    "No deployment, merge, credentials or infrastructure changes; preserve user files and shared database design"
+    "No merge, release, deployment or changes to credentials; preserve intentional shared storage"
   ],
-  "repo_scope": [
-    "Workspace lifecycle, cloud todo, permissions, publication tests and living specs"
-  ],
+  "repo_scope": [],
   "inspected_files": [],
-  "modified_files": [
-    ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json"
-  ],
-  "declared_commands": [
-    "decapod validate"
-  ],
+  "modified_files": [],
+  "declared_commands": [],
   "tool_calls": [],
   "checks": [
     {
-      "name": "actual_container_custody",
+      "name": "actual_docker",
       "status": "unavailable"
     },
     {
-      "name": "actual_docker_custody",
-      "status": "unavailable"
-    },
-    {
-      "name": "candidate_validation",
-      "status": "partial"
-    },
-    {
-      "name": "decapod validate",
+      "name": "all_feature_library",
       "status": "passed"
     },
     {
-      "name": "dirty_root_integration",
+      "name": "scoped_integrations",
       "status": "passed"
     },
     {
-      "name": "integrated_lib",
-      "status": "passed"
-    },
-    {
-      "name": "official_snapshot_validation",
-      "status": "passed"
-    },
-    {
-      "name": "pristine_current_validation",
-      "status": "partial"
-    },
-    {
-      "name": "workspace_unit_tests",
+      "name": "strict_clippy",
       "status": "passed"
     }
   ],
   "evidence": [
-    "Bazel source inventory uses src/**/*.rs and Cargo-derived normal dependencies; no new runtime assets",
-    "Independent official0.106.1 on immutable1182ebdd fresh governed worktree:203pass0fail11skip; pristine master0.107.0:202pass2fail(container custody and then-uncommitted release refresh). Integration candidate after generated refresh:203pass1fail(container custody). No success receipt copied across custody.",
-    "Initial focused candidate:32 workspace unit tests passed;9 dirty-root/spec/inventory integration tests passed; final integrated rerun pending",
-    "Integrated snapshot1182ebdd:540 library tests passed,1 opt-in Docker test ignored; independent source review found no blocking finding; candidate validation202 pass2 fail before generated-surface commit, no fresh successful receipt.",
-    "validation epoch ve_40cb225c1e40c257 completed with zero failures"
+    "Source04f37b66:550 all-feature library tests passed,1 Docker profile ignored locally; strict all-target all-feature Clippy passed; broader core/plugin/replay/validation targets passed after fixture fixes. Actual Docker and Unix broker socket acceptance reruns require GitHub Actions."
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
   "proof_status": "partial",
   "verdicts": {
     "intent_alignment": "supported",
-    "boundary_discipline": "supported",
+    "boundary_discipline": "unassessed",
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:ccdf13e42321856bf65373618fa88270de96cd80cff8a4338ae65dfbc9796e17",
+  "artifact_hash": "sha256:29b5ccc5caa7ab5df517c3ad18841629c6341983afb8a199e8f52f09e5136758",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:five-critical-20261010": {
-        "id": "intent:five-critical-20261010",
-        "raw_intent": "Find and fix five most critical Decapod issues in one PR",
-        "refined_intent": "Fix1218 lifecycle,1075 cloud retry,1076 dirty-root isolation,1366 state permissions,1045 publication verification",
+      "intent:five-critical-ci-20261010": {
+        "id": "intent:five-critical-ci-20261010",
+        "raw_intent": "Fix five critical issues in one PR",
+        "refined_intent": "Repair scoped GitHub Actions lifecycle, broker, permission and fixture regressions in PR1383",
         "acceptance_criteria": [],
-        "constraints": [
-          "Workspace lifecycle, cloud todo, permissions, publication tests and living specs"
-        ],
+        "constraints": [],
         "assumptions": [],
         "boundaries": [
-          "No deployment, merge, credentials or infrastructure changes; preserve user files and shared database design"
+          "No merge, release, deployment or changes to credentials; preserve intentional shared storage"
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -105,124 +69,50 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:five-critical-20261010",
+        "intent_id": "intent:five-critical-ci-20261010",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:five-critical-20261010",
+        "intent_id": "intent:five-critical-ci-20261010",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:five-critical-20261010",
+        "intent_id": "intent:five-critical-ci-20261010",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:five-critical-20261010"
-      },
-      {
-        "sequence": 5,
-        "event_id": "event:5",
-        "intent_id": "intent:five-critical-20261010",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:five-critical-20261010"
-      },
-      {
-        "sequence": 6,
-        "event_id": "event:6",
-        "intent_id": "intent:five-critical-20261010",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:five-critical-20261010"
-      },
-      {
-        "sequence": 7,
-        "event_id": "event:7",
-        "intent_id": "intent:five-critical-20261010",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:five-critical-20261010"
+        "detail": "trajectory:five-critical-ci-20261010"
       }
     ],
     "trajectories": {
-      "five-critical-20261010": {
-        "id": "five-critical-20261010",
-        "intent_id": "intent:five-critical-20261010",
+      "five-critical-ci-20261010": {
+        "id": "five-critical-ci-20261010",
+        "intent_id": "intent:five-critical-ci-20261010",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "implementation",
-            "scope": [
-              "Workspace lifecycle, cloud todo, permissions, publication tests and living specs"
-            ],
+            "action": "trajectory.record",
+            "scope": [],
             "observations": [
-              "Initial focused candidate:32 workspace unit tests passed;9 dirty-root/spec/inventory integration tests passed; final integrated rerun pending",
-              "Bazel source inventory uses src/**/*.rs and Cargo-derived normal dependencies; no new runtime assets"
+              "Source04f37b66:550 all-feature library tests passed,1 Docker profile ignored locally; strict all-target all-feature Clippy passed; broader core/plugin/replay/validation targets passed after fixture fixes. Actual Docker and Unix broker socket acceptance reruns require GitHub Actions."
             ],
             "proof_refs": [
-              "workspace_unit_tests",
-              "dirty_root_integration",
-              "actual_container_custody"
+              "all_feature_library",
+              "strict_clippy",
+              "scoped_integrations",
+              "actual_docker"
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
-          },
-          {
-            "sequence": 5,
-            "action": "verification",
-            "scope": [
-              "Workspace lifecycle, cloud todo, permissions, publication tests and living specs"
-            ],
-            "observations": [
-              "Integrated snapshot1182ebdd:540 library tests passed,1 opt-in Docker test ignored; independent source review found no blocking finding; candidate validation202 pass2 fail before generated-surface commit, no fresh successful receipt."
-            ],
-            "proof_refs": [
-              "integrated_lib",
-              "candidate_validation",
-              "actual_docker_custody"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:5"
-          },
-          {
-            "sequence": 6,
-            "action": "trajectory.record",
-            "scope": [
-              "Workspace lifecycle, cloud todo, permissions, publication tests and living specs"
-            ],
-            "observations": [
-              "Independent official0.106.1 on immutable1182ebdd fresh governed worktree:203pass0fail11skip; pristine master0.107.0:202pass2fail(container custody and then-uncommitted release refresh). Integration candidate after generated refresh:203pass1fail(container custody). No success receipt copied across custody."
-            ],
-            "proof_refs": [
-              "official_snapshot_validation",
-              "pristine_current_validation"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:6"
-          },
-          {
-            "sequence": 7,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "Workspace lifecycle, cloud todo, permissions, publication tests and living specs"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_40cb225c1e40c257 completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:7"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 7
+    "next_sequence": 4
   }
 }

@@ -1025,3 +1025,14 @@ fn interrupted_owned_reservation_retry_preserves_new_user_files() {
         "keep"
     );
 }
+
+#[test]
+fn legacy_container_profile_never_trusts_another_engines_empty_inventory() {
+    let temp = tempdir().unwrap();
+    let profile = temp.path().join(container::MANAGED_DOCKERFILE_REL_PATH);
+    std::fs::create_dir_all(profile.parent().unwrap()).unwrap();
+    std::fs::write(profile, "FROM scratch\n").unwrap();
+    assert!(reconcile_workspace_containers(temp.path(), Ok("podman".into())).is_err());
+    assert!(reconcile_workspace_containers(temp.path(), Ok("docker".into())).is_err());
+    assert!(temp.path().exists());
+}

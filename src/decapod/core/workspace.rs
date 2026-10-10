@@ -672,14 +672,14 @@ pub fn ensure_workspace(
     if config.use_container {
         let mut ownership =
             crate::core::workspace_lifecycle::acquire_registered(&main_repo, &worktree_path)?;
-        ownership.require_container()?;
+        let runtime = container_runtime::find_container_runtime()?;
+        ownership.require_container(&runtime)?;
         crate::plugins::container::prepare_generated_container_profile(&worktree_path)?;
         let image_tag = workspace_image_tag(agent_id, branch);
-        build_workspace_image(&worktree_path, &image_tag)?;
+        build_workspace_image(&worktree_path, &image_tag, &runtime)?;
 
         // Return blocker telling agent to enter container
         // We re-read status but override the blocker/container info
-        let runtime = container_runtime::find_container_runtime()?;
         status = get_workspace_status(&worktree_path)?;
         let container_command = container_workspace_launch_command(
             &main_repo,
@@ -894,8 +894,11 @@ fn process_is_inside_workspace(process_dir: Option<&Path>, workspace: &Path) -> 
 }
 
 /// Build workspace container image
-fn build_workspace_image(workspace_path: &Path, image_tag: &str) -> Result<(), DecapodError> {
-    let runtime = container_runtime::find_container_runtime()?;
+fn build_workspace_image(
+    workspace_path: &Path,
+    image_tag: &str,
+    runtime: &str,
+) -> Result<(), DecapodError> {
     let dockerfile_path = workspace_path
         .join(".decapod")
         .join("managed")
@@ -2746,9 +2749,9 @@ fn prune_workspaces_report_with_process_dir(
                 .as_ref()
                 .filter(|owned| owned.producer_lease() && owned.container_expected())
                 .map(|owned| {
-                    container_runtime::find_container_runtime().and_then(|runtime| {
+                    owned.container_runtime().and_then(|runtime| {
                         container_runtime::remove_workspace_containers_for_invocation(
-                            &runtime,
+                            runtime,
                             &dir_path,
                             Some(owned.invocation()),
                         )
@@ -2964,9 +2967,9 @@ fn prune_workspaces_report_with_process_dir(
             // deleting data still mounted by a container.
             let container_cleanup = if let Some(owned) = ownership.as_ref() {
                 if owned.container_expected() {
-                    container_runtime::find_container_runtime().and_then(|runtime| {
+                    owned.container_runtime().and_then(|runtime| {
                         container_runtime::remove_workspace_containers_for_invocation(
-                            &runtime,
+                            runtime,
                             &dir_path,
                             Some(owned.invocation()),
                         )
@@ -2977,7 +2980,7 @@ fn prune_workspaces_report_with_process_dir(
             } else {
                 reconcile_workspace_containers(
                     &dir_path,
-                    container_runtime::find_container_runtime(),
+                    Err(DecapodError::NotFound("runtime provenance absent".into())),
                 )
             };
             if let Err(error) = container_cleanup {
@@ -3067,18 +3070,17 @@ fn reconcile_workspace_containers(
     workspace: &Path,
     runtime: Result<String, DecapodError>,
 ) -> Result<(), DecapodError> {
-    match runtime {
-        Ok(runtime) => container_runtime::remove_workspace_containers_for_path(&runtime, workspace),
-        Err(error)
-            if workspace
-                .join(container::MANAGED_DOCKERFILE_REL_PATH)
-                .exists() =>
-        {
-            Err(error)
-        }
-        // A plain Git workspace has no managed container handoff to reconcile.
-        Err(_) => Ok(()),
+    let _ = runtime;
+    if workspace
+        .join(container::MANAGED_DOCKERFILE_REL_PATH)
+        .exists()
+    {
+        return Err(DecapodError::ValidationError(
+            "Container runtime provenance is unknown; preserve the workspace and recover its owning engine explicitly.".into(),
+        ));
     }
+    // Legacy plain Git workspaces did not expose a managed container profile.
+    Ok(())
 }
 
 // `all` recursively enumerates every untracked file. A validation pass only
