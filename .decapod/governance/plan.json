@@ -1,55 +1,50 @@
 {
   "schema_version": "1.1.0",
-  "title": "Align Decapod with Dactyl 0.11.0 registry release",
-  "intent": "Fix issue 1380 and confirmed manifest publication failure by consuming published dactyl-db 0.11.0, updating lockfile, Nix vendoring, activation documentation and release-regression proof, preserving all backend and container behavior.",
+  "title": "Restore musl release compilation without weakening workspace promotion",
+  "intent": "Use the Linux renameat2 syscall across libc implementations, preserve atomic no-replace behavior, and add native musl CI for both published Linux architectures.",
   "state": "APPROVED",
   "todo_ids": [
-    "bugs_01m4kmbk49c108a8"
+    "bugs_01m4kqw7ww3pxbkf"
   ],
   "proof_hooks": [
-    "cargo test --locked --lib --test release_dependency_policy --test cloud_dactyl_boundary --test cloud_supabase_boundary --test cloud_cli_boundary --test cloud_command_path",
-    "cargo test --locked --no-default-features --test cloud_dactyl_boundary --test cloud_supabase_boundary --test release_dependency_policy",
-    "cargo package --locked --allow-dirty",
-    "cargo publish --locked --dry-run --allow-dirty",
+    "cargo test --locked --lib core::workspace_lifecycle",
     "cargo clippy --locked --all-targets --all-features -- -D warnings",
-    "decapod validate"
+    "GitHub Actions musl build and no-replace publication regressions on x86_64 and aarch64"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [
-    "No publish, release, tag, merge, deployment, or permission changes"
+    "No overwriting fallback, release publication, merge, deployment, credentials, or system security changes"
   ],
   "unresolved_contradictions": [],
-  "deferred_questions": [
-    "Native Nix packaging is unavailable locally and remains tracked by issue 1376; no hosted service proof is claimed."
-  ],
+  "deferred_questions": [],
   "constraints": {
     "forbidden_paths": [],
-    "file_touch_budget": null
+    "file_touch_budget": 24
   },
   "phases": [],
-  "updated_at": "1791661266Z",
+  "updated_at": "1791664188Z",
   "spec_reviews": [
     {
       "path": ".decapod/managed/specs/ARCHITECTURE.md",
-      "spec_material_hash": "b0835ece6bd42daee979585d7336ffdf579cfa3d5b036acec0ade4f860d9a9e0",
-      "reviewed_code_fingerprint": "59670f6a7a61bbcb0a02e358990462111bdf2ff92004de7ff3110cbe5a1f78fd",
-      "disposition": "unchanged_with_reason",
-      "reason": "Reviewed registry Dactyl 0.11.0 alignment: published Dactyl source is byte-identical to prior Git preview; Decapod runtime source, backend selection, wire contracts, credentials, shared-database permissions and container behavior are unchanged. Existing authored contract remains accurate; release dependency operations are documented in OPERATIONS.md."
+      "spec_material_hash": "a4434d8df2a80b331ee1cd1f15436207f2016887928b66557d9be3a896ed3601",
+      "reviewed_code_fingerprint": "5e522c585e055cae81578f96df9ab41a4f21f6fde8c73b68ca9d0f2be05870d4",
+      "disposition": "updated",
+      "reason": "Document direct Linux renameat2 syscall, atomic non-overwrite invariants, fail-closed behavior, and two-architecture musl CI."
     },
     {
       "path": ".decapod/managed/specs/INTERFACES.md",
       "spec_material_hash": "ec59736eba382f3e01ea03fd8fb7eebe415cc343a48075e6e9a91efcd238621a",
-      "reviewed_code_fingerprint": "59670f6a7a61bbcb0a02e358990462111bdf2ff92004de7ff3110cbe5a1f78fd",
+      "reviewed_code_fingerprint": "5e522c585e055cae81578f96df9ab41a4f21f6fde8c73b68ca9d0f2be05870d4",
       "disposition": "unchanged_with_reason",
-      "reason": "Reviewed registry Dactyl 0.11.0 alignment: published Dactyl source is byte-identical to prior Git preview; Decapod runtime source, backend selection, wire contracts, credentials, shared-database permissions and container behavior are unchanged. Existing authored contract remains accurate; release dependency operations are documented in OPERATIONS.md."
+      "reason": "No public CLI or data contract changes; Linux kernel primitive keeps the same atomic no-replace interface."
     },
     {
       "path": ".decapod/managed/specs/SECURITY.md",
       "spec_material_hash": "ad35c389324be26f9a505ea2561acf50ac674e263d0835724a2e9fd9783ac56f",
-      "reviewed_code_fingerprint": "59670f6a7a61bbcb0a02e358990462111bdf2ff92004de7ff3110cbe5a1f78fd",
+      "reviewed_code_fingerprint": "5e522c585e055cae81578f96df9ab41a4f21f6fde8c73b68ca9d0f2be05870d4",
       "disposition": "unchanged_with_reason",
-      "reason": "Reviewed registry Dactyl 0.11.0 alignment: published Dactyl source is byte-identical to prior Git preview; Decapod runtime source, backend selection, wire contracts, credentials, shared-database permissions and container behavior are unchanged. Existing authored contract remains accurate; release dependency operations are documented in OPERATIONS.md."
+      "reason": "No-replace promotion still fails closed without changing permissions, custody checks, or authorization. Existing security contract is preserved."
     }
   ]
 }

@@ -1,5 +1,17 @@
 # Architecture
 
+## Linux workspace publication across libc implementations
+
+Workspace staging is promoted with the Linux `renameat2` system call and
+`RENAME_NOREPLACE`, using libc's architecture-specific syscall number on both
+glibc and musl. The operation atomically refuses every occupied destination,
+including an empty directory or dangling symlink, and leaves the losing staged
+directory intact. Missing kernel or filesystem support remains an I/O error;
+there is no check-then-rename or overwriting fallback. macOS retains its
+`renamex_np(RENAME_EXCL)` boundary. CI compiles the release CLI and executes
+publication collision/race tests on native x86_64 and aarch64 musl targets;
+these checks neither publish images nor establish a completed image release.
+
 ## Shared datastore audit lock order
 
 Broker audit writes acquire the existing per-database operation lock before
@@ -422,7 +434,7 @@ virtiofs/FUSE filesystem prohibition.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `59670f6a7a61bbcb0a02e358990462111bdf2ff92004de7ff3110cbe5a1f78fd`
+- Repository signal fingerprint: `5e522c585e055cae81578f96df9ab41a4f21f6fde8c73b68ca9d0f2be05870d4`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (124 files), `tests/` (162 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

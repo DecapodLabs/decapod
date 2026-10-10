@@ -457,7 +457,13 @@ fn publish_directory(source: &Path, target: &Path) -> Result<(), DecapodError> {
             .map_err(|_| failure("invalid target path"))?;
         #[cfg(target_os = "linux")]
         let result = unsafe {
-            libc::renameat2(
+            // musl does not expose the libc renameat2 wrapper. Invoke the same
+            // kernel operation on every Linux libc; never fall back to rename,
+            // which could replace a target created by another process.
+            // SAFETY: both C strings live through this call, and the arguments
+            // match renameat2(2). libc supplies the target's syscall number.
+            libc::syscall(
+                libc::SYS_renameat2,
                 libc::AT_FDCWD,
                 source.as_ptr(),
                 libc::AT_FDCWD,
