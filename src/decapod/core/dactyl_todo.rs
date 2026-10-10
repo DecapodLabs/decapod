@@ -6,6 +6,7 @@
 //! provider-specific query input.
 
 use crate::core::backend::StorageContext;
+use crate::core::cloud_todo_operation::{self, AdapterFailure, FailureKind, Outcome};
 use crate::core::dactyl::{DactylBridge, OperationResult};
 use crate::core::storage::{Task, TodoStore};
 use ::dactyl_db::{AtomicResult, Operation, Parameter, Rows};
@@ -19,6 +20,17 @@ const TASK_COLUMNS: &str = "repo_id, id, hash, title, description, status, assig
 pub struct DactylTodoStore {
     context: StorageContext,
     repository: String,
+}
+
+// Keep the physical SQL sink visible to conservative source analysis: a
+// procedural derive can inject bindings that invalidate consumption evidence.
+impl Clone for DactylTodoStore {
+    fn clone(&self) -> Self {
+        Self {
+            context: self.context.clone(),
+            repository: self.repository.clone(),
+        }
+    }
 }
 
 impl DactylTodoStore {
@@ -81,6 +93,49 @@ impl DactylTodoStore {
         )?)
     }
 
+    /// Only the immutable creation event proves that this exact request won.
+    /// Current task contents can legitimately change after successful creation.
+    fn reconcile_add(
+        &self,
+        bridge: &DactylBridge,
+        event_id: &str,
+        fingerprint: &str,
+        task_id: &str,
+    ) -> Result<Option<Task>> {
+        let rows = bridge.read("SELECT subject_id, payload FROM events WHERE event_id = $1 AND stream = 'todo' AND event_type = 'task.add'", &[event_id.into()])?;
+        let Some(row) = rows.as_slice().first() else {
+            return Ok(None);
+        };
+        let subject: String = row.get("subject_id")?;
+        let payload: String = row.get("payload")?;
+        let payload: serde_json::Value =
+            serde_json::from_str(&payload).map_err(|_| AdapterFailure {
+                status: Outcome::BlockedBeforeSubmit,
+                kind: FailureKind::Conflict,
+            })?;
+        if subject != task_id
+            || payload
+                .get("request_fingerprint")
+                .and_then(serde_json::Value::as_str)
+                != Some(fingerprint)
+        {
+            return Err(AdapterFailure {
+                status: Outcome::BlockedBeforeSubmit,
+                kind: FailureKind::Conflict,
+            }
+            .into());
+        }
+        let task = self.task_from_rows(bridge.read(&Self::get_sql(), &[task_id.into()])?)?;
+        if task.repo_id != self.repository {
+            return Err(AdapterFailure {
+                status: Outcome::BlockedBeforeSubmit,
+                kind: FailureKind::Authorization,
+            }
+            .into());
+        }
+        Ok(Some(task))
+    }
+
     fn operation_timestamp() -> String {
         // The timestamp is also the transaction marker used by the portable
         // state-plus-event batch. Millisecond precision allowed a fast stale
@@ -99,20 +154,20 @@ impl DactylTodoStore {
     fn require_write(result: &OperationResult, operation: &str) -> Result<()> {
         match result {
             OperationResult::Write(write) if write.affected_rows == 1 => Ok(()),
-            OperationResult::Write(write) => Err(anyhow!(
-                "Dactyl {operation} changed {} rows; expected exactly one (state conflict or missing task)",
-                write.affected_rows
-            )),
-            OperationResult::Rows(_) => Err(anyhow!(
-                "Dactyl {operation} returned rows where a write result was required"
-            )),
+            OperationResult::Write(write) => Err(crate::core::error::DecapodError::from(dactyl_db::DactylError::Adapter {
+                kind: dactyl_db::AdapterErrorKind::Conflict, code: None,
+                message: format!("Dactyl {operation} changed {} rows; expected exactly one (state conflict or missing task)", write.affected_rows),
+            }).into()),
+            OperationResult::Rows(_) => Err(crate::core::error::DecapodError::from(dactyl_db::DactylError::Adapter {
+                kind: dactyl_db::AdapterErrorKind::InvalidOperation, code: None,
+                message: format!("Dactyl {operation} returned rows where a write result was required"),
+            }).into()),
         }
     }
 }
 
-#[async_trait]
-impl TodoStore for DactylTodoStore {
-    async fn list_tasks(&self) -> Result<Vec<Task>> {
+impl DactylTodoStore {
+    fn list_tasks_blocking(&self) -> Result<Vec<Task>> {
         let bridge = self.bridge()?;
         let rows = bridge.read(&Self::list_sql(), &[])?;
         rows.as_slice()
@@ -121,7 +176,7 @@ impl TodoStore for DactylTodoStore {
             .collect()
     }
 
-    async fn get_task(&self, id: &str) -> Result<Option<Task>> {
+    fn get_task_blocking(&self, id: &str) -> Result<Option<Task>> {
         let bridge = self.bridge()?;
         let rows = bridge.read(&Self::get_sql(), &[id.into()])?;
         rows.as_slice()
@@ -130,7 +185,7 @@ impl TodoStore for DactylTodoStore {
             .transpose()
     }
 
-    async fn add_task(&self, mut task: Task, actor: String, _intent: String) -> Result<Task> {
+    fn add_task_blocking(&self, mut task: Task, actor: String, intent: String) -> Result<Task> {
         if task.id.trim().is_empty() {
             task.id = new_task_id();
         }
@@ -144,14 +199,67 @@ impl TodoStore for DactylTodoStore {
             task.repo_id = self.repository.clone();
         }
 
+        let retry = intent
+            .strip_prefix(cloud_todo_operation::INTENT_PREFIX)
+            .map(|operation_id| {
+                // The same token cannot authorize another repository or payload.
+                // Authentication and effective repository scope remain service-owned.
+                let request = serde_json::json!({
+                    "id": task.id, "repo_id": task.repo_id, "title": task.title,
+                    "description": task.description, "tags": task.tags, "status": task.status,
+                    "scope": task.scope, "dir_path": task.dir_path, "priority": task.priority,
+                    "category": task.category,
+                    "operation_id": operation_id,
+                "endpoint": self.context.route().cloud_uri(),
+                "repository": self.repository,
+                });
+                (
+                    format!(
+                        "todo_add_{}",
+                        cloud_todo_operation::digest(operation_id.as_bytes())
+                    ),
+                    cloud_todo_operation::digest(request.to_string().as_bytes()),
+                )
+            });
+        if task.repo_id != self.repository {
+            return Err(AdapterFailure {
+                status: Outcome::BlockedBeforeSubmit,
+                kind: FailureKind::Authorization,
+            }
+            .into());
+        }
+        let bridge = self.bridge().map_err(|error| {
+            let (_, kind) = cloud_todo_operation::anyhow_failure(&error);
+            AdapterFailure {
+                status: Outcome::BlockedBeforeSubmit,
+                kind,
+            }
+        })?;
+        if let Some((event_id, fingerprint)) = &retry {
+            match self.reconcile_add(&bridge, event_id, fingerprint, &task.id) {
+                Ok(Some(existing)) => return Ok(existing),
+                Ok(None) => {}
+                Err(error) => {
+                    let (_, kind) = cloud_todo_operation::anyhow_failure(&error);
+                    return Err(AdapterFailure {
+                        status: Outcome::BlockedBeforeSubmit,
+                        kind,
+                    }
+                    .into());
+                }
+            }
+        }
         let ts = Self::operation_timestamp();
-        let event_id = crate::core::ulid::new_ulid().to_string();
-        let payload = serde_json::json!({
-            "title": task.title.clone(),
-            "status": task.status.clone(),
-        })
-        .to_string();
-        let bridge = self.bridge()?;
+        let event_id = retry
+            .as_ref()
+            .map(|(id, _)| id.clone())
+            .unwrap_or_else(|| crate::core::ulid::new_ulid().to_string());
+        let mut payload =
+            serde_json::json!({ "title": task.title.clone(), "status": task.status.clone() });
+        if let Some((_, fingerprint)) = &retry {
+            payload["request_fingerprint"] = fingerprint.clone().into();
+        }
+        let payload = payload.to_string();
         let result = Self::atomic_mutation(
             &bridge,
             Operation::write(
@@ -182,7 +290,28 @@ impl TodoStore for DactylTodoStore {
                 actor.into(),
             ],
             task.id.clone().into(),
-        )?;
+        );
+        let result = match result {
+            Ok(result) => result,
+            Err(error) => {
+                let (_, kind) = cloud_todo_operation::anyhow_failure(&error);
+                if !matches!(
+                    kind,
+                    FailureKind::Authentication | FailureKind::Authorization
+                ) && let Some((event_id, fingerprint)) = &retry
+                    && let Ok(Some(existing)) =
+                        self.reconcile_add(&bridge, event_id, fingerprint, &task.id)
+                {
+                    return Ok(existing);
+                }
+                // A dispatched batch error is never evidence of rollback.
+                return Err(AdapterFailure {
+                    status: Outcome::OutcomeUnknown,
+                    kind,
+                }
+                .into());
+            }
+        };
         let mut results = result.results;
         let observation = results
             .pop()
@@ -196,14 +325,24 @@ impl TodoStore for DactylTodoStore {
             .ok_or_else(|| anyhow!("Dactyl add returned no event result"))?;
         Self::require_write(event, "add event")?;
         match observation {
-            OperationResult::Rows(rows) => self.task_from_rows(rows),
+            OperationResult::Rows(rows) => {
+                let observed = self.task_from_rows(rows)?;
+                if observed.id != task.id || observed.repo_id != task.repo_id {
+                    return Err(AdapterFailure {
+                        status: Outcome::OutcomeUnknown,
+                        kind: FailureKind::BackendValidation,
+                    }
+                    .into());
+                }
+                Ok(observed)
+            }
             OperationResult::Write(_) => Err(anyhow!(
                 "Dactyl add returned a write result for its task observation"
             )),
         }
     }
 
-    async fn claim_task(&self, id: &str, actor: String) -> Result<Task> {
+    fn claim_task_blocking(&self, id: &str, actor: String) -> Result<Task> {
         let ts = Self::operation_timestamp();
         let event_id = crate::core::ulid::new_ulid().to_string();
         let payload = serde_json::json!({ "assigned_to": actor }).to_string();
@@ -244,7 +383,7 @@ impl TodoStore for DactylTodoStore {
         }
     }
 
-    async fn release_task(&self, id: &str, actor: String) -> Result<Task> {
+    fn release_task_blocking(&self, id: &str, actor: String) -> Result<Task> {
         let ts = Self::operation_timestamp();
         let event_id = crate::core::ulid::new_ulid().to_string();
         let payload = serde_json::json!({ "released_by": actor }).to_string();
@@ -285,7 +424,7 @@ impl TodoStore for DactylTodoStore {
         }
     }
 
-    async fn complete_task(&self, id: &str, actor: String, resolution: String) -> Result<Task> {
+    fn complete_task_blocking(&self, id: &str, actor: String, resolution: String) -> Result<Task> {
         let ts = Self::operation_timestamp();
         let event_id = crate::core::ulid::new_ulid().to_string();
         let payload = serde_json::json!({ "resolution": resolution }).to_string();
@@ -324,6 +463,59 @@ impl TodoStore for DactylTodoStore {
                 "Dactyl complete returned a write result for its task observation"
             )),
         }
+    }
+}
+
+// Dactyl is a synchronous physical boundary. In particular, its Neon HTTP
+// adapter owns a blocking client/runtime that must never be dropped on an
+// async executor thread. Keep every physical operation on a blocking worker.
+impl DactylTodoStore {
+    async fn blocking<T, F>(&self, action: F) -> Result<T>
+    where
+        T: Send + 'static,
+        F: FnOnce(Self) -> Result<T> + Send + 'static,
+    {
+        let store = self.clone();
+        if tokio::runtime::Handle::try_current().is_ok() {
+            tokio::task::spawn_blocking(move || action(store))
+                .await
+                .map_err(|_| {
+                    anyhow!("Dactyl storage worker did not complete; mutation outcome is unknown")
+                })?
+        } else {
+            action(store)
+        }
+    }
+}
+
+#[async_trait]
+impl TodoStore for DactylTodoStore {
+    async fn list_tasks(&self) -> Result<Vec<Task>> {
+        self.blocking(|store| store.list_tasks_blocking()).await
+    }
+    async fn get_task(&self, id: &str) -> Result<Option<Task>> {
+        let id = id.to_string();
+        self.blocking(move |store| store.get_task_blocking(&id))
+            .await
+    }
+    async fn add_task(&self, task: Task, actor: String, intent: String) -> Result<Task> {
+        self.blocking(move |store| store.add_task_blocking(task, actor, intent))
+            .await
+    }
+    async fn claim_task(&self, id: &str, actor: String) -> Result<Task> {
+        let id = id.to_string();
+        self.blocking(move |store| store.claim_task_blocking(&id, actor))
+            .await
+    }
+    async fn release_task(&self, id: &str, actor: String) -> Result<Task> {
+        let id = id.to_string();
+        self.blocking(move |store| store.release_task_blocking(&id, actor))
+            .await
+    }
+    async fn complete_task(&self, id: &str, actor: String, resolution: String) -> Result<Task> {
+        let id = id.to_string();
+        self.blocking(move |store| store.complete_task_blocking(&id, actor, resolution))
+            .await
     }
 }
 

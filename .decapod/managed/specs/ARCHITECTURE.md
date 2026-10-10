@@ -422,11 +422,33 @@ virtiofs/FUSE filesystem prohibition.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c7bdbebfb346baefe0c9c0d59001b8fe58ae3ddc2b6977be0c6fde625a5319b1`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (119 files), `tests/` (4 files)
+- Repository signal fingerprint: `34647bb8f923292a6788fce97bf591b7da81244f2daed9693986e988f9457e5b`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (124 files), `tests/` (161 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
 ## Target approval correction (#1361)
 
 Policy reads use the caller-owned transaction connection for claim, lease renewal, yield, handoff, and archive. Those gates bind the todo ID. Archive checks its approval after acquiring the transaction, so waiting cannot retain a revoked or expired grant. Target-aware broker entrypoints preserve that resource key through configured approval and risk-zone gates; operation or zone-name fallback applies only when callers have no resource key. External actions retain their capability and scope key.
+
+## Owned recovery and publication boundaries
+
+Workspace lifecycle ownership is separate from task naming. The canonical event
+store records invocation, canonical destination and persistent directory
+identity before a privately staged directory is exposed. A stable per-path
+advisory lease serializes creation and cleanup and releases when its owner exits.
+Recovery checks that durable evidence and the exact directory identity before
+removing an interrupted local clone; unrelated replacements remain untouched.
+Container cleanup also checks the invocation label and immutable runtime ID.
+
+The group broker uses a stable advisory election inode rather than a persisted
+PID as process authority. Its diagnostic marker is disposable. Subprocesses
+have owned lifetimes, finite deadlines, bounded file-backed output and explicit
+reaping; broker socket access is confined by a private or explicitly shared
+runtime directory before bind.
+
+Cloud creation keeps machine-local recovery metadata separate from remote task
+and event authority. Replay first reconciles an immutable authorized creation
+event, preserving unknown outcomes until there is evidence of completion. The
+remote atomic operation remains the source of truth. Publication then verifies
+current local proof and the exact remote branch/PR state as separate transitions.

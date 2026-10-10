@@ -150,11 +150,30 @@ Neither backend decides whether a Decapod transition is valid.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c7bdbebfb346baefe0c9c0d59001b8fe58ae3ddc2b6977be0c6fde625a5319b1`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (119 files), `tests/` (4 files)
+- Repository signal fingerprint: `34647bb8f923292a6788fce97bf591b7da81244f2daed9693986e988f9457e5b`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (124 files), `tests/` (161 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
 ## Target approval correction (#1361)
 
 Expiry accepts epoch seconds with trailing Z and RFC3339 timestamps, including UTC Z and explicit offsets. Authorization requires expiry strictly later than the check time. Target-specific and action-wide fingerprints remain distinct; a target-specific grant cannot authorize another target or an action-wide request. The stored scope must also match the requested scope, including for raw eval fingerprints; contradictory fingerprint/scope grants fail closed.
+
+## Resumable cloud task creation
+
+A fresh cloud `todo add` reserves a distinct operation identity before any
+remote mutation. `--operation-id` resumes that accepted intent; `todo operations`
+exposes recovery metadata without task text or credentials. Operation failures
+report durable operation status separately from the current attempt status,
+failure kind, retryability and next action. Once submission has an unknown
+outcome, a later authentication or readback failure cannot downgrade that
+uncertainty. Only an authorized exact creation-event receipt establishes the
+original task result.
+
+Task and creation-event identities stay stable across retry and agent handoff.
+The immutable creation event retains the original actor attribution. The
+machine-local journal stores hashes, identifiers, status and time, is bounded
+in entries and bytes, uses locked atomic writes and never falls back to writing
+an operation journal or task database in a protected source checkout. Fresh
+identical task requests remain distinct operations. Provider calls that expose
+blocking operations are isolated from active asynchronous runtime contexts.

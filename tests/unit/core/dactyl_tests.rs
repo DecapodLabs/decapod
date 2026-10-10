@@ -344,3 +344,53 @@ fn dactyl_errors_map_to_decapod_storage_classes() {
     );
     assert!(!authorization.storage_failure_kind().is_retryable());
 }
+
+#[cfg(unix)]
+#[test]
+fn runtime_config_replacement_is_private_under_permissive_umask() {
+    use std::os::unix::fs::PermissionsExt;
+    if std::env::var_os("DECAPOD_RUNTIME_PERMISSION_CHILD").is_none() {
+        let root = tempdir().unwrap();
+        let output = std::process::Command::new("sh")
+            .args(["-c", "umask 000; exec \"$@\"", "runtime-child"])
+            .arg(std::env::current_exe().unwrap())
+            .args([
+                "--exact",
+                "core::dactyl::tests::runtime_config_replacement_is_private_under_permissive_umask",
+                "--nocapture",
+                "--test-threads=1",
+            ])
+            .env("DECAPOD_RUNTIME_PERMISSION_CHILD", "1")
+            .env("XDG_CONFIG_HOME", root.path())
+            .env_remove(crate::core::fs_permissions::SHARED_STORAGE_ENV)
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{}\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        return;
+    }
+    for _ in 0..2 {
+        persist_sqlite_library(Path::new("/test-only/libsqlite3.so")).unwrap();
+    }
+    let path = host_runtime_config_path().unwrap();
+    assert_eq!(
+        fs::metadata(&path).unwrap().permissions().mode() & 0o777,
+        0o600
+    );
+    assert_eq!(
+        fs::metadata(path.parent().unwrap())
+            .unwrap()
+            .permissions()
+            .mode()
+            & 0o777,
+        0o700
+    );
+    assert_eq!(
+        configured_sqlite_library().unwrap().as_deref(),
+        Some("/test-only/libsqlite3.so")
+    );
+}

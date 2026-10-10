@@ -1494,7 +1494,8 @@ pub fn refresh_project_specs(
                 .to_string(),
         ));
     }
-    fs::create_dir_all(&specs_dir).map_err(error::DecapodError::IoError)?;
+    crate::core::fs_permissions::ensure_private_dir(&specs_dir)
+        .map_err(error::DecapodError::IoError)?;
 
     let existing_manifest = read_specs_manifest(project_root)?;
     let current_repo_fingerprint = repo_signal_fingerprint(project_root)?;
@@ -1573,7 +1574,8 @@ pub fn refresh_project_specs(
 
     for (dest, content) in file_writes {
         ensure_parent(&dest)?;
-        fs::write(dest, content).map_err(error::DecapodError::IoError)?;
+        crate::core::atomic::write_atomic(&dest, content.as_bytes())
+            .map_err(error::DecapodError::IoError)?;
     }
 
     let manifest_path = project_root.join(LOCAL_PROJECT_SPECS_MANIFEST);
@@ -1581,7 +1583,8 @@ pub fn refresh_project_specs(
     let manifest_body = serde_json::to_string_pretty(&manifest).map_err(|e| {
         error::DecapodError::ValidationError(format!("Failed to serialize specs manifest: {e}"))
     })?;
-    fs::write(manifest_path, manifest_body).map_err(error::DecapodError::IoError)?;
+    crate::core::atomic::write_atomic(&manifest_path, manifest_body.as_bytes())
+        .map_err(error::DecapodError::IoError)?;
 
     Ok(manifest)
 }
@@ -1700,7 +1703,15 @@ fn remove_deprecated_gitignore_entries(target_dir: &Path) -> Result<(), error::D
 
 fn ensure_parent(path: &Path) -> Result<(), error::DecapodError> {
     if let Some(p) = path.parent() {
-        fs::create_dir_all(p).map_err(error::DecapodError::IoError)?;
+        if path
+            .components()
+            .any(|component| component.as_os_str() == ".decapod")
+        {
+            crate::core::fs_permissions::ensure_private_dir(p)
+                .map_err(error::DecapodError::IoError)?;
+        } else {
+            fs::create_dir_all(p).map_err(error::DecapodError::IoError)?;
+        }
     }
     Ok(())
 }
@@ -1752,7 +1763,15 @@ fn write_file(
     }
 
     ensure_parent(&dest)?;
-    fs::write(&dest, content).map_err(error::DecapodError::IoError)?;
+    if dest
+        .components()
+        .any(|component| component.as_os_str() == ".decapod")
+    {
+        crate::core::atomic::write_atomic(&dest, content.as_bytes())
+            .map_err(error::DecapodError::IoError)?;
+    } else {
+        fs::write(&dest, content).map_err(error::DecapodError::IoError)?;
+    }
 
     Ok(FileAction::Created)
 }
@@ -1849,7 +1868,8 @@ pub fn blend_overrides(
         return Ok(FileAction::Created);
     }
 
-    fs::write(&override_path, updated_content).map_err(error::DecapodError::IoError)?;
+    crate::core::atomic::write_atomic(&override_path, updated_content.as_bytes())
+        .map_err(error::DecapodError::IoError)?;
     Ok(FileAction::Created)
 }
 
@@ -1872,7 +1892,9 @@ pub fn scaffold_project_entrypoints(
     let data_dir_rel = ".decapod/data";
 
     // Ensure .decapod/data directory exists (constitution is embedded, not scaffolded)
-    if let Err(e) = fs::create_dir_all(opts.target_dir.join(data_dir_rel)) {
+    if let Err(e) =
+        crate::core::fs_permissions::ensure_storage_dir(&opts.target_dir.join(data_dir_rel))
+    {
         eprintln!("warning: Failed to create .decapod/data directory: {e}");
     }
 
@@ -1968,14 +1990,16 @@ pub fn scaffold_project_entrypoints(
 
     // Generate .decapod/managed/Dockerfile.decapod from Rust-owned template component.
     let generated_dir = opts.target_dir.join(".decapod/managed");
-    if let Err(e) = fs::create_dir_all(&generated_dir) {
+    if let Err(e) = crate::core::fs_permissions::ensure_private_dir(&generated_dir) {
         eprintln!("warning: Failed to create {}: {e}", generated_dir.display());
     }
-    if let Err(e) = fs::create_dir_all(generated_dir.join("migrations")) {
+    if let Err(e) =
+        crate::core::fs_permissions::ensure_private_dir(&generated_dir.join("migrations"))
+    {
         eprintln!("warning: Failed to create migrations dir: {e}");
     }
     let managed_dir = opts.target_dir.join(".decapod/managed");
-    if let Err(e) = fs::create_dir_all(&managed_dir) {
+    if let Err(e) = crate::core::fs_permissions::ensure_private_dir(&managed_dir) {
         eprintln!("warning: Failed to create {}: {e}", managed_dir.display());
     }
     if let Err(e) = crate::plugins::container::migrate_legacy_managed_dockerfile(&opts.target_dir) {
@@ -1985,7 +2009,9 @@ pub fn scaffold_project_entrypoints(
     if !dockerfile_path.exists() {
         let dockerfile_content =
             crate::plugins::container::generated_dockerfile_for_repo(&opts.target_dir);
-        if let Err(e) = fs::write(&dockerfile_path, dockerfile_content) {
+        if let Err(e) =
+            crate::core::atomic::write_atomic(&dockerfile_path, dockerfile_content.as_bytes())
+        {
             eprintln!("warning: Failed to write Dockerfile: {e}");
         }
     } else if let Err(e) =
@@ -2004,7 +2030,8 @@ pub fn scaffold_project_entrypoints(
             "updated_at": now,
         });
         if let Ok(body) = serde_json::to_string_pretty(&version_counter)
-            && let Err(e) = fs::write(version_counter_path, body)
+            && let Err(e) =
+                crate::core::atomic::write_atomic(&version_counter_path, body.as_bytes())
         {
             eprintln!("warning: Failed to write version_counter.json: {e}");
         }
@@ -2015,10 +2042,12 @@ pub fn scaffold_project_entrypoints(
         && let Ok(policy_body) = default_policy_json_pretty()
         && let Some(parent) = generated_policy_path.parent()
     {
-        if let Err(e) = fs::create_dir_all(parent) {
+        if let Err(e) = crate::core::fs_permissions::ensure_private_dir(parent) {
             eprintln!("warning: Failed to create policy directory: {e}");
         }
-        if let Err(e) = fs::write(&generated_policy_path, policy_body) {
+        if let Err(e) =
+            crate::core::atomic::write_atomic(&generated_policy_path, policy_body.as_bytes())
+        {
             eprintln!("warning: Failed to write policy JSON: {e}");
         }
     }
@@ -2026,7 +2055,7 @@ pub fn scaffold_project_entrypoints(
     // Always create epistemic custody artifacts directory (core Decapod infrastructure)
     let custody_dir = opts.target_dir.join(".decapod/managed/artifacts/custody");
     if !custody_dir.exists()
-        && let Err(e) = fs::create_dir_all(&custody_dir)
+        && let Err(e) = crate::core::fs_permissions::ensure_private_dir(&custody_dir)
     {
         eprintln!("warning: Failed to create custody directory: {e}");
     }
@@ -2213,12 +2242,13 @@ pub fn scaffold_project_entrypoints(
                 files: manifest_entries,
             };
             let manifest_path = opts.target_dir.join(LOCAL_PROJECT_SPECS_MANIFEST);
-            if let Err(e) =
-                fs::create_dir_all(manifest_path.parent().unwrap_or(std::path::Path::new("/")))
-            {
+            if let Err(e) = crate::core::fs_permissions::ensure_private_dir(
+                manifest_path.parent().unwrap_or(std::path::Path::new("/")),
+            ) {
                 eprintln!("warning: Failed to create specs directory: {e}");
             } else if let Ok(manifest_body) = serde_json::to_string_pretty(&manifest)
-                && let Err(e) = fs::write(&manifest_path, manifest_body)
+                && let Err(e) =
+                    crate::core::atomic::write_atomic(&manifest_path, manifest_body.as_bytes())
             {
                 eprintln!("warning: Failed to write specs manifest: {e}");
             }

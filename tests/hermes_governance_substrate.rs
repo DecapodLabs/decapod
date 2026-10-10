@@ -167,3 +167,20 @@ fn atomic_writer_replaces_complete_content_without_leftover_temp_files() {
         .count();
     assert_eq!(leftovers, 0);
 }
+
+#[test]
+fn inventory_and_status_share_dirty_root_isolation_ownership() {
+    let (_temp, dir) = repo();
+    fs::write(dir.join(".gitignore"), "private/\n").unwrap();
+    git(&dir, &["add", ".gitignore"]);
+    git(&dir, &["commit", "-qm", "base"]);
+    fs::create_dir(dir.join("private")).unwrap();
+    fs::write(dir.join("private/notes"), "preserve").unwrap();
+    fs::write(dir.join("user.txt"), "preserve user file").unwrap();
+    let status = workspace::get_workspace_status(&dir).unwrap();
+    let inventory = governance_artifacts::inventory(&dir, Some("master"), false).unwrap();
+    assert_eq!(
+        serde_json::to_value(status.root_isolation).unwrap(),
+        serde_json::to_value(inventory.root_isolation).unwrap()
+    );
+}

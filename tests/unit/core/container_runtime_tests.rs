@@ -106,3 +106,92 @@ fn image_inventory_scopes_cleanup_to_decapod_artifacts() {
         "v0.72.9"
     ));
 }
+
+#[cfg(unix)]
+fn lifecycle_runtime(temp: &tempfile::TempDir, mode: &str) -> String {
+    use std::os::unix::fs::PermissionsExt;
+    let workspace = temp.path().join("workspace");
+    let id = "a".repeat(64);
+    let owned_path = if mode == "foreign" {
+        "/unrelated".into()
+    } else {
+        workspace.to_string_lossy().into_owned()
+    };
+    let record = serde_json::json!({"Id": id, "Config": {"Labels": {
+        "org.decapod.managed": "workspace", "org.decapod.workspace.path": owned_path
+    }}})
+    .to_string();
+    let script = temp.path().join("runtime");
+    let marker = temp.path().join("removed");
+    std::fs::write(
+        &script,
+        format!(
+            r#"#!/bin/sh
+if [ "$2" = "inspect" ]; then
+  if [ -f '{marker}' ] || [ '{mode}' = 'missing' ]; then echo 'No such container' >&2; exit 1; fi
+  if [ '{mode}' = 'denied' ]; then echo 'permission denied' >&2; exit 1; fi
+  printf '%s\n' '{record}'
+elif [ "$2" = "ls" ]; then
+  printf '%s\n' '{id}'
+elif [ "$2" = "rm" ]; then
+  [ "$4" = '{id}' ] || exit 9
+  touch '{marker}'
+else exit 8
+fi
+"#,
+            marker = marker.display()
+        ),
+    )
+    .unwrap();
+    std::fs::set_permissions(&script, std::fs::Permissions::from_mode(0o700)).unwrap();
+    script.to_string_lossy().into_owned()
+}
+
+#[cfg(unix)]
+#[test]
+fn lifecycle_cleanup_is_owned_and_idempotent() {
+    let temp = tempfile::tempdir().unwrap();
+    let runtime = lifecycle_runtime(&temp, "owned");
+    let workspace = temp.path().join("workspace");
+    remove_workspace_containers_for_path(&runtime, &workspace).unwrap();
+    assert!(temp.path().join("removed").exists());
+    remove_workspace_containers_for_path(&runtime, &workspace).unwrap();
+}
+
+#[cfg(unix)]
+#[test]
+fn lifecycle_cleanup_refuses_foreign_container_and_runtime_failure() {
+    for mode in ["foreign", "denied"] {
+        let temp = tempfile::tempdir().unwrap();
+        let runtime = lifecycle_runtime(&temp, mode);
+        assert!(
+            remove_container_with_runtime(&runtime, "reused-name", &temp.path().join("workspace"))
+                .is_err()
+        );
+        assert!(!temp.path().join("removed").exists());
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn lifecycle_already_gone_container_is_success() {
+    let temp = tempfile::tempdir().unwrap();
+    let runtime = lifecycle_runtime(&temp, "missing");
+    remove_container_with_runtime(&runtime, "gone", &temp.path().join("workspace")).unwrap();
+    assert!(!temp.path().join("removed").exists());
+}
+
+#[cfg(unix)]
+#[test]
+fn runtime_discovery_rejects_nonexecutable_files_without_spawning() {
+    use std::os::unix::fs::PermissionsExt;
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path().join("docker");
+    std::fs::write(&path, "#!/bin/sh\nsleep 30\n").unwrap();
+    std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o600)).unwrap();
+    assert!(!executable_exists(&path));
+    std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o700)).unwrap();
+    let start = std::time::Instant::now();
+    assert!(executable_exists(&path));
+    assert!(start.elapsed() < std::time::Duration::from_secs(1));
+}

@@ -289,7 +289,8 @@ impl InternalizerProfile {
         let adapter_file = output_dir.join("adapter.bin");
 
         if self.executable == "builtin:noop" {
-            fs::write(&adapter_file, b"").map_err(InternalizeError::Io)?;
+            crate::core::fs_permissions::write_private(&adapter_file, b"")
+                .map_err(InternalizeError::Io)?;
             return Ok((adapter_file, self.default_params.clone()));
         }
 
@@ -732,7 +733,7 @@ pub fn create_internalization(
         });
     }
 
-    fs::create_dir_all(&art_dir).map_err(InternalizeError::Io)?;
+    crate::core::fs_permissions::ensure_private_dir(&art_dir).map_err(InternalizeError::Io)?;
     let (adapter_path, chunking_params) = profile.execute(&canonical_source, model, &art_dir)?;
     let adapter_hash = sha256_file(&adapter_path)?;
     let now = now_iso8601();
@@ -787,7 +788,8 @@ pub fn create_internalization(
     };
 
     let manifest_json = serde_json::to_string_pretty(&manifest).map_err(InternalizeError::Json)?;
-    fs::write(&manifest_path, manifest_json).map_err(InternalizeError::Io)?;
+    crate::core::fs_permissions::write_private(&manifest_path, manifest_json)
+        .map_err(InternalizeError::Io)?;
 
     Ok(InternalizationCreateResult {
         schema_version: SCHEMA_VERSION.to_string(),
@@ -910,7 +912,7 @@ pub fn attach_internalization(
     };
 
     let mounts_dir = mount_dir(store_root, session_id);
-    fs::create_dir_all(&mounts_dir).map_err(InternalizeError::Io)?;
+    crate::core::fs_permissions::ensure_private_dir(&mounts_dir).map_err(InternalizeError::Io)?;
     let mount = serde_json::json!({
         "schema_version": SCHEMA_VERSION,
         "artifact_id": id,
@@ -925,14 +927,15 @@ pub fn attach_internalization(
         "capabilities_contract": inspection.manifest.capabilities_contract,
         "risk_classification": inspection.manifest.risk_tier.attach
     });
-    fs::write(
+    crate::core::fs_permissions::write_private(
         mount_path(store_root, session_id, id),
         serde_json::to_string_pretty(&mount).map_err(InternalizeError::Json)?,
     )
     .map_err(InternalizeError::Io)?;
 
     let session_prov_dir = session_dir(store_root, session_id);
-    fs::create_dir_all(&session_prov_dir).map_err(InternalizeError::Io)?;
+    crate::core::fs_permissions::ensure_private_dir(&session_prov_dir)
+        .map_err(InternalizeError::Io)?;
     let attach_log = session_prov_dir.join(format!("internalize_attach_{id}.json"));
     let attach_entry = serde_json::json!({
         "op": "internalize.attach",
@@ -948,7 +951,7 @@ pub fn attach_internalization(
         "risk_classification": inspection.manifest.risk_tier.attach,
         "source_verification": inspection.integrity.source_verification,
     });
-    fs::write(
+    crate::core::fs_permissions::write_private(
         attach_log,
         serde_json::to_string_pretty(&attach_entry).map_err(InternalizeError::Json)?,
     )
@@ -996,7 +999,8 @@ pub fn detach_internalization(
 
     let detached_at = now_iso8601();
     let session_prov_dir = session_dir(store_root, session_id);
-    fs::create_dir_all(&session_prov_dir).map_err(InternalizeError::Io)?;
+    crate::core::fs_permissions::ensure_private_dir(&session_prov_dir)
+        .map_err(InternalizeError::Io)?;
     let detach_log = session_prov_dir.join(format!("internalize_detach_{id}.json"));
     let detach_entry = serde_json::json!({
         "op": "internalize.detach",
@@ -1005,7 +1009,7 @@ pub fn detach_internalization(
         "lease_id": lease_id,
         "timestamp": detached_at,
     });
-    fs::write(
+    crate::core::fs_permissions::write_private(
         detach_log,
         serde_json::to_string_pretty(&detach_entry).map_err(InternalizeError::Json)?,
     )

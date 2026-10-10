@@ -5,6 +5,7 @@
 //! - protected-branch safeguards
 //! - optional containerized execution for reproducible builds
 
+use crate::core::bounded_process::{BUILD_TIMEOUT, BoundedCommand, CONTROL_TIMEOUT};
 use crate::core::container_runtime;
 use crate::core::db;
 use crate::core::entrypoint_integrity;
@@ -26,6 +27,9 @@ use std::env;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
+#[path = "workspace_publication.rs"]
+mod publication;
+
 /// Workspace status information
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct WorkspaceStatus {
@@ -39,6 +43,26 @@ pub struct WorkspaceStatus {
     pub blockers: Vec<Blocker>,
     /// Required actions before working
     pub required_actions: Vec<String>,
+    /// Dirty source files are retained in place; workspaces use committed Git objects only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub root_isolation: Option<RootIsolation>,
+}
+
+/// Read-only source inventory shared by status and workspace creation.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct RootIsolation {
+    pub strategy: String,
+    pub source_root: PathBuf,
+    pub files: Vec<crate::core::dirty_classification::DirtyFile>,
+}
+
+fn root_isolation(repo_root: &Path) -> Result<RootIsolation, DecapodError> {
+    Ok(RootIsolation {
+        strategy: "committed_base_only_preserve_source".to_string(),
+        source_root: repo_root.to_path_buf(),
+        files: crate::core::dirty_classification::classify_isolation(repo_root)
+            .map_err(DecapodError::IoError)?,
+    })
 }
 
 /// Git status
@@ -61,8 +85,8 @@ pub struct GitStatus {
 /// Governance artifacts that must be present and valid for every published PR.
 ///
 /// These are intentionally kept as one canonical set so presence, staging,
-/// and currency checks cannot drift apart. Unchanged inherited files satisfy
-/// the publication gate when they still load and validate (GitHub #1232).
+/// and currency checks cannot drift apart. Every artifact participates in the
+/// complete PR delta; intermediate commits need not each touch every artifact.
 pub const REQUIRED_PR_GOVERNANCE_ARTIFACTS: &[&str] = &[
     plan_governance::PLAN_PATH,
     research_claims::CLAIMS_PATH,
@@ -125,7 +149,7 @@ pub fn prune_stale_worktree_config(repo_root: &Path) -> Result<usize, DecapodErr
     // 1) Let git clean known stale admin entries first.
     let prune_output = Command::new("git")
         .args(["-C", dir, "worktree", "prune", "--expire", "now"])
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(DecapodError::IoError)?;
     if !prune_output.status.success() {
         return Err(DecapodError::ValidationError(format!(
@@ -151,7 +175,7 @@ pub fn prune_stale_worktree_config(repo_root: &Path) -> Result<usize, DecapodErr
             "--get-regexp",
             r"^worktree\..*\.path$",
         ])
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(DecapodError::IoError)?;
 
     // No worktree sections to process.
@@ -178,7 +202,7 @@ pub fn prune_stale_worktree_config(repo_root: &Path) -> Result<usize, DecapodErr
                 "--get",
                 key,
             ])
-            .output()
+            .bounded_output(CONTROL_TIMEOUT)
             .map_err(DecapodError::IoError)?;
         if !value_output.status.success() {
             continue;
@@ -206,7 +230,7 @@ pub fn prune_stale_worktree_config(repo_root: &Path) -> Result<usize, DecapodErr
                 "--remove-section",
                 section_name,
             ])
-            .output()
+            .bounded_output(CONTROL_TIMEOUT)
             .map_err(DecapodError::IoError)?;
         if remove_output.status.success() {
             removed += 1;
@@ -233,14 +257,6 @@ pub fn get_workspace_status(repo_root: &Path) -> Result<WorkspaceStatus, Decapod
         });
         required_actions
             .push("Run `decapod workspace ensure` and cd into the created worktree".to_string());
-        if git.has_local_mods {
-            blockers.push(Blocker {
-                kind: BlockerKind::WorkspaceRequired,
-                message: "Protected branch has local modifications. Creating an isolated worktree from a dirty protected branch is blocked.".to_string(),
-                resolve_hint: "Commit/stash/discard local changes on protected branch, then run `decapod workspace ensure`.".to_string(),
-            });
-            required_actions.push("Commit/stash/discard local modifications".to_string());
-        }
     }
 
     // Mandate: Should use worktree for isolation
@@ -255,6 +271,10 @@ pub fn get_workspace_status(repo_root: &Path) -> Result<WorkspaceStatus, Decapod
     }
 
     let can_work = !git.is_main_repo && !git.is_protected;
+    let root_isolation = git
+        .is_main_repo
+        .then(|| root_isolation(repo_root))
+        .transpose()?;
 
     Ok(WorkspaceStatus {
         can_work,
@@ -262,6 +282,7 @@ pub fn get_workspace_status(repo_root: &Path) -> Result<WorkspaceStatus, Decapod
         container,
         blockers,
         required_actions,
+        root_isolation,
     })
 }
 
@@ -458,6 +479,21 @@ fn claim_branch_scoped_open_tasks(
         None,
         None,
     )?;
+    let matching_tasks = tasks
+        .iter()
+        .filter(|task| {
+            let candidate = AssignedTodoRef {
+                id: task.id.clone(),
+                hash: task.hash.clone(),
+            };
+            branch_contains_any_todo_id_or_hash(current_branch, &[candidate])
+        })
+        .count();
+    if matching_tasks > 1 {
+        return Err(DecapodError::ValidationError(format!(
+            "WORKSPACE_AMBIGUOUS_TASK_HASH: branch {current_branch:?} matches {matching_tasks} tasks; use one full task ID in the branch. No task ownership was changed."
+        )));
+    }
     for task in tasks {
         let todo_ref = AssignedTodoRef {
             id: task.id.clone(),
@@ -495,6 +531,8 @@ pub fn ensure_workspace(
     agent_id: &str,
 ) -> Result<WorkspaceStatus, DecapodError> {
     let main_repo = get_main_repo_root(repo_root)?;
+    verify_workspace_parent(&main_repo)?;
+    let source_inventory = root_isolation(&main_repo)?;
     let store_root = main_repo.join(".decapod").join("data");
     db::storage_health_preflight(&store_root).map_err(|e| {
         DecapodError::ValidationError(format!(
@@ -512,11 +550,6 @@ pub fn ensure_workspace(
     })?;
 
     let mut status = get_workspace_status(repo_root)?;
-    if status.git.is_protected && status.git.has_local_mods && !status.git.in_worktree {
-        return Err(DecapodError::ValidationError(
-            "AUTOREMEDIABLE_VALIDATION_ERROR code=WORKSPACE_INTERLOCK_DIRTY_PROTECTED severity=transient auto_remediable=true audience=agent agent_action=\"commit, stash, or discard local changes on the protected branch, then retry workspace creation\" user_note=\"Protected branch has local modifications; the agent should resolve this before creating an isolated worktree.\"\nprotected branch has local modifications. Agent must commit, stash, or discard changes before creating a Decapod worktree.".to_string(),
-        ));
-    }
     let upgrade_container = config.as_ref().map(|c| c.use_container).unwrap_or(false);
     let assigned_todos =
         ensure_assigned_open_tasks(repo_root, agent_id, &status.git.current_branch)?;
@@ -547,7 +580,31 @@ pub fn ensure_workspace(
         return Ok(status);
     }
 
-    let todo_scope = build_todo_scope_component(&assigned_todos);
+    // An explicitly task-scoped branch must not change its destination when
+    // another independent task is claimed by this coordinating agent.
+    let scoped_todos: Vec<_> = assigned_todos
+        .iter()
+        .filter(|todo| {
+            config
+                .as_ref()
+                .and_then(|cfg| cfg.branch.as_deref())
+                .is_none_or(|branch| {
+                    branch_contains_any_todo_id_or_hash(branch, std::slice::from_ref(*todo))
+                })
+        })
+        .cloned()
+        .collect();
+    if config
+        .as_ref()
+        .and_then(|cfg| cfg.branch.as_deref())
+        .is_some()
+        && scoped_todos.len() > 1
+    {
+        return Err(DecapodError::ValidationError(
+            "WORKSPACE_AMBIGUOUS_TASK_HASH: requested branch matches multiple tasks; select one full task ID without changing existing claims.".to_string()
+        ));
+    }
+    let todo_scope = build_todo_scope_component(&scoped_todos);
     let config = if let Some(cfg) = config {
         if let Some(branch) = cfg.branch.as_ref()
             && !branch_contains_any_todo_id_or_hash(branch, &assigned_todos)
@@ -613,6 +670,9 @@ pub fn ensure_workspace(
 
     // 2. Ensure container (if requested)
     if config.use_container {
+        let mut ownership =
+            crate::core::workspace_lifecycle::acquire_registered(&main_repo, &worktree_path)?;
+        ownership.require_container()?;
         crate::plugins::container::prepare_generated_container_profile(&worktree_path)?;
         let image_tag = workspace_image_tag(agent_id, branch);
         build_workspace_image(&worktree_path, &image_tag)?;
@@ -621,8 +681,13 @@ pub fn ensure_workspace(
         // We re-read status but override the blocker/container info
         let runtime = container_runtime::find_container_runtime()?;
         status = get_workspace_status(&worktree_path)?;
-        let container_command =
-            container_workspace_launch_command(&main_repo, &worktree_path, &runtime, &image_tag)?;
+        let container_command = container_workspace_launch_command(
+            &main_repo,
+            &worktree_path,
+            &runtime,
+            &image_tag,
+            ownership.invocation(),
+        )?;
         status.blockers.push(Blocker {
             kind: BlockerKind::WorkspaceRequired,
             message: "Container environment prepared; its launch command will seed a private local data-store snapshot.".to_string(),
@@ -631,11 +696,14 @@ pub fn ensure_workspace(
         status
             .required_actions
             .push("Enter containerized workspace".to_string());
+        status.root_isolation = Some(source_inventory);
         return Ok(status);
     }
 
-    // Re-check status in the new worktree
-    get_workspace_status(&worktree_path)
+    // Return the exact pre-setup ownership inventory, including ignored paths.
+    let mut result = get_workspace_status(&worktree_path)?;
+    result.root_isolation = Some(source_inventory);
+    Ok(result)
 }
 
 fn create_worktree(
@@ -647,7 +715,9 @@ fn create_worktree(
 ) -> Result<PathBuf, DecapodError> {
     let main_repo = get_main_repo_root(repo_root)?;
     let workspaces_dir = main_repo.join(".decapod").join("workspaces");
-    std::fs::create_dir_all(&workspaces_dir).map_err(DecapodError::IoError)?;
+    verify_workspace_parent(&main_repo)?;
+    crate::core::fs_permissions::ensure_private_dir(&workspaces_dir)
+        .map_err(DecapodError::IoError)?;
 
     let worktree_name = format!(
         "{}-{}-{}",
@@ -657,14 +727,45 @@ fn create_worktree(
     );
     let worktree_path = workspaces_dir.join(&worktree_name);
 
-    if worktree_path.exists() {
-        return Ok(worktree_path);
+    if std::fs::symlink_metadata(&worktree_path).is_ok() {
+        if worktree_path.is_dir()
+            && !std::fs::symlink_metadata(&worktree_path)?
+                .file_type()
+                .is_symlink()
+            && registered_worktree_paths(&main_repo)?
+                .contains(&normalize_path_for_compare(&worktree_path))
+            && get_current_branch(&worktree_path)? == branch
+        {
+            return Ok(worktree_path);
+        }
+        match crate::core::workspace_lifecycle::acquire(&main_repo, &worktree_path)? {
+            Some(owned)
+                if !owned.is_ready()
+                    && !owned.container_expected()
+                    && std::fs::read_dir(&worktree_path)?.next().is_none() =>
+            {
+                owned.remove_empty()?
+            }
+            _ => {
+                return Err(workspace_path_collision(
+                    &worktree_path,
+                    "existing_unowned_workspace_target",
+                ));
+            }
+        }
     }
 
     // Prefer the fetched remote tip so claim/ensure does not snapshot a
     // stale local protected branch (GitHub #1259).
     fetch_base_branch_best_effort(&main_repo, base_branch);
-    let start_point = base_ref_for_branch(&main_repo, base_branch);
+    let start_point = base_ref_for_branch(&main_repo, base_branch).ok_or_else(|| {
+        DecapodError::ValidationError(format!(
+            "WORKSPACE_BASE_UNRESOLVED: committed base {base_branch:?} does not exist; fetch or select an existing committed base. Source files were preserved."
+        ))
+    })?;
+
+    let mut ownership =
+        crate::core::workspace_lifecycle::reserve(&main_repo, &worktree_path, false)?;
 
     // git worktree add <path> -b <branch> <base-ref>
     let mut args = vec![
@@ -676,37 +777,66 @@ fn create_worktree(
         branch.to_string(),
         worktree_path.to_string_lossy().to_string(),
     ];
-    if let Some(start_point) = &start_point {
-        args.push(start_point.clone());
-    }
+    args.push(start_point);
     let output = Command::new("git")
         .args(&args)
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(DecapodError::IoError)?;
 
     if !output.status.success() {
-        // Fallback: try adding without -b if branch might exist
-        let output2 = Command::new("git")
-            .args([
-                "-C",
-                main_repo.to_str().unwrap_or("."),
-                "worktree",
-                "add",
-                worktree_path.to_str().unwrap_or("."),
-                branch,
-            ])
-            .output()
-            .map_err(DecapodError::IoError)?;
-
-        if !output2.status.success() {
-            let stderr = String::from_utf8_lossy(&output2.stderr);
-            return Err(DecapodError::ValidationError(format!(
-                "Failed to create worktree: {stderr}"
-            )));
-        }
+        return Err(DecapodError::ValidationError(format!(
+            "WORKSPACE_CREATE_FAILED: isolated workspace was not created; existing branches and source files were preserved. Choose an unused task branch or inspect the named registered workspace. {}",
+            String::from_utf8_lossy(&output.stderr).trim()
+        )));
     }
 
+    ownership.mark_ready()?;
     Ok(worktree_path)
+}
+
+fn workspace_path_collision(path: &Path, kind: &str) -> DecapodError {
+    let file_type = std::fs::symlink_metadata(path)
+        .map(|metadata| {
+            if metadata.file_type().is_symlink() {
+                "symlink"
+            } else if metadata.is_dir() {
+                "directory"
+            } else if metadata.is_file() {
+                "file"
+            } else {
+                "special"
+            }
+        })
+        .unwrap_or("unavailable");
+    let detail = serde_json::json!({
+        "code": "WORKSPACE_PATH_OWNERSHIP_CONFLICT",
+        "path": path,
+        "ownership": "unverified",
+        "type": kind,
+        "file_type": file_type,
+        "action": "preserve this path; choose another workspace or ask its owner to resolve the collision",
+    });
+    DecapodError::ValidationError(detail.to_string())
+}
+
+fn verify_workspace_parent(main_repo: &Path) -> Result<(), DecapodError> {
+    for path in [
+        main_repo.join(".decapod"),
+        main_repo.join(".decapod/workspaces"),
+    ] {
+        match std::fs::symlink_metadata(&path) {
+            Ok(meta) if meta.file_type().is_symlink() || !meta.is_dir() => {
+                return Err(workspace_path_collision(
+                    &path,
+                    "non_directory_or_symlink_parent",
+                ));
+            }
+            Ok(_) => {}
+            Err(err) if err.kind() == std::io::ErrorKind::NotFound => {}
+            Err(err) => return Err(DecapodError::IoError(err)),
+        }
+    }
+    Ok(())
 }
 
 fn registered_worktree_paths(main_repo: &Path) -> Result<HashSet<String>, DecapodError> {
@@ -718,7 +848,7 @@ fn registered_worktree_paths(main_repo: &Path) -> Result<HashSet<String>, Decapo
             "list",
             "--porcelain",
         ])
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(DecapodError::IoError)?;
     if !output.status.success() {
         return Err(DecapodError::ValidationError(format!(
@@ -791,7 +921,7 @@ fn build_workspace_image(workspace_path: &Path, image_tag: &str) -> Result<(), D
     }
     let output = build
         .arg(workspace_path.to_str().unwrap_or("."))
-        .output()
+        .bounded_output(BUILD_TIMEOUT)
         .map_err(DecapodError::IoError)?;
 
     if !output.status.success() {
@@ -812,6 +942,7 @@ fn container_workspace_launch_command(
     worktree: &Path,
     runtime: &str,
     image_tag: &str,
+    invocation: &str,
 ) -> Result<String, DecapodError> {
     fn mount_path(path: &Path) -> Result<&str, DecapodError> {
         path.to_str()
@@ -835,12 +966,14 @@ fn container_workspace_launch_command(
     let snapshot_template = mount_path(&snapshot_template)?;
     let cleanup = "result_code=$?; trap - EXIT; rm -f -- \"$snapshot_dir/decapod.db\"; rmdir -- \"$snapshot_dir\"; exit \"$result_code\"";
     Ok(format!(
-        "( cd {workspace} && mkdir -p target || exit; snapshot_dir=$(mktemp -d {snapshot_template}) || exit; trap {cleanup} EXIT; trap 'exit 129' HUP; trap 'exit 130' INT; trap 'exit 143' TERM; decapod data database backup --destination \"$snapshot_dir/decapod.db\" && {runtime} run --rm -it -e DECAPOD_CONTAINER=1 -v {repo_mount} --mount \"type=bind,src=$snapshot_dir/decapod.db,dst=/tmp/decapod-store.db,readonly\" --tmpfs {store_tmpfs} -w {workspace} {image} sh -lc {seed_command} )",
+        "( cd {workspace} && mkdir -p target || exit; snapshot_dir=$(mktemp -d {snapshot_template}) || exit; trap {cleanup} EXIT; trap 'exit 129' HUP; trap 'exit 130' INT; trap 'exit 143' TERM; decapod data database backup --destination \"$snapshot_dir/decapod.db\" && {runtime} run --rm -it --label org.decapod.managed=workspace --label {workspace_label} --label {invocation_label} -e DECAPOD_CONTAINER=1 -v {repo_mount} --mount \"type=bind,src=$snapshot_dir/decapod.db,dst=/tmp/decapod-store.db,readonly\" --tmpfs {store_tmpfs} -w {workspace} {image} sh -lc {seed_command} )",
         workspace = shell_quote(workspace),
         snapshot_template = shell_quote(snapshot_template),
         cleanup = shell_quote(cleanup),
         runtime = shell_quote(runtime),
         repo_mount = shell_quote(&format!("{repo}:{repo}")),
+        workspace_label = shell_quote(&format!("org.decapod.workspace.path={workspace}")),
+        invocation_label = shell_quote(&format!("org.decapod.invocation={invocation}")),
         store_tmpfs = shell_quote(&format!("{store_root}:rw,nosuid,nodev,mode=0700")),
         image = shell_quote(image_tag),
         seed_command = shell_quote(&format!(
@@ -923,7 +1056,7 @@ pub fn get_main_repo_root(current_dir: &Path) -> Result<PathBuf, DecapodError> {
             "rev-parse",
             "--git-common-dir",
         ])
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(DecapodError::IoError)?;
 
     if !output.status.success() {
@@ -969,7 +1102,7 @@ fn get_repo_root(start_dir: &Path) -> Result<PathBuf, DecapodError> {
             "rev-parse",
             "--show-toplevel",
         ])
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(DecapodError::IoError)?;
 
     if !output.status.success() {
@@ -1039,7 +1172,7 @@ pub fn fetch_base_branch_best_effort(repo_root: &Path, base_branch: &str) {
             "origin",
             base_branch,
         ])
-        .output();
+        .bounded_output(CONTROL_TIMEOUT);
 }
 
 /// SHA of the preferred workspace start point: `origin/<base>` after a
@@ -1050,7 +1183,7 @@ pub fn preferred_base_oid(repo_root: &Path, base_branch: &str) -> Option<String>
     for candidate in [format!("origin/{base_branch}"), base_branch.to_string()] {
         let output = Command::new("git")
             .args(["-C", dir, "rev-parse", "--verify", &candidate])
-            .output()
+            .bounded_output(CONTROL_TIMEOUT)
             .ok()?;
         if output.status.success() {
             let oid = String::from_utf8_lossy(&output.stdout).trim().to_string();
@@ -1074,8 +1207,8 @@ fn git_ref_exists(repo_root: &Path, git_ref: &str) -> bool {
         ])
         .stdout(Stdio::null())
         .stderr(Stdio::null())
-        .status()
-        .map(|status| status.success())
+        .bounded_output(CONTROL_TIMEOUT)
+        .map(|output| output.status.success())
         .unwrap_or(false)
 }
 
@@ -1108,7 +1241,7 @@ pub fn check_merge_conflicts_for_branch(
             &base_ref,
             head_branch,
         ])
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(DecapodError::IoError)?;
     if output.status.success() {
         return Ok(());
@@ -1138,7 +1271,7 @@ fn current_branch(repo_root: &Path) -> Result<String, DecapodError> {
             "branch",
             "--show-current",
         ])
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(DecapodError::IoError)?;
     if !output.status.success() {
         return Err(DecapodError::ValidationError(format!(
@@ -1170,7 +1303,7 @@ pub fn detect_base_branch(repo_root: &Path) -> Option<String> {
             "--short",
             "refs/remotes/origin/HEAD",
         ])
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .ok()
         .filter(|output| output.status.success())
         .map(|output| clean_branch_name(String::from_utf8_lossy(&output.stdout).trim()).to_string())
@@ -1197,8 +1330,8 @@ pub fn detect_base_branch(repo_root: &Path) -> Option<String> {
             ])
             .stdout(Stdio::null())
             .stderr(Stdio::null())
-            .status()
-            .map(|status| status.success())
+            .bounded_output(CONTROL_TIMEOUT)
+            .map(|output| output.status.success())
             .unwrap_or(false);
         if exists {
             return Some(branch.to_string());
@@ -1233,7 +1366,7 @@ fn is_commit_in_protected_branch(main_repo: &Path, commit_hash: &str) -> bool {
             "--contains",
             commit_hash,
         ])
-        .output();
+        .bounded_output(CONTROL_TIMEOUT);
 
     let Ok(output) = output else {
         return false;
@@ -1272,7 +1405,7 @@ fn get_current_branch(repo_root: &Path) -> Result<String, DecapodError> {
             "branch",
             "--show-current",
         ])
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(DecapodError::IoError)?;
 
     let branch = String::from_utf8_lossy(&output.stdout).trim().to_string();
@@ -1286,7 +1419,7 @@ fn get_current_branch(repo_root: &Path) -> Result<String, DecapodError> {
                 "--short",
                 "HEAD",
             ])
-            .output()
+            .bounded_output(CONTROL_TIMEOUT)
             .map_err(DecapodError::IoError)?;
         return Ok(format!(
             "detached-{}",
@@ -1304,7 +1437,7 @@ pub fn is_worktree(repo_root: &Path) -> Result<bool, DecapodError> {
             "rev-parse",
             "--git-dir",
         ])
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(DecapodError::IoError)?;
 
     let git_dir = String::from_utf8_lossy(&output.stdout).trim().to_string();
@@ -1386,6 +1519,7 @@ pub fn ensure_isolated_workspace_for_projection_mutation(
 
 fn has_local_modifications(repo_root: &Path) -> Result<bool, DecapodError> {
     let output = Command::new("git")
+        .env("GIT_OPTIONAL_LOCKS", "0")
         .args([
             "-C",
             repo_root.to_str().unwrap_or("."),
@@ -1393,7 +1527,7 @@ fn has_local_modifications(repo_root: &Path) -> Result<bool, DecapodError> {
             "--porcelain",
             "-z",
         ])
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(DecapodError::IoError)?;
 
     let stdout = String::from_utf8_lossy(&output.stdout);
@@ -1444,6 +1578,18 @@ fn build_todo_scope_component(todo_refs: &[AssignedTodoRef]) -> String {
 
 fn branch_contains_any_todo_id_or_hash(branch: &str, todo_refs: &[AssignedTodoRef]) -> bool {
     let branch_lower = branch.to_lowercase();
+    let embedded_ids: Vec<_> = extract_task_ids_from_branch(branch)
+        .into_iter()
+        .filter(|id| {
+            id.rsplit_once('_')
+                .is_some_and(|(_, suffix)| suffix.len() > 6)
+        })
+        .collect();
+    if !embedded_ids.is_empty() {
+        return todo_refs
+            .iter()
+            .any(|todo| embedded_ids.contains(&todo.id.to_lowercase()));
+    }
     todo_refs.iter().any(|todo| {
         let id = &todo.id;
         let id_lower = id.to_lowercase();
@@ -1451,7 +1597,10 @@ fn branch_contains_any_todo_id_or_hash(branch: &str, todo_refs: &[AssignedTodoRe
         let hash_lower = todo.hash.to_lowercase();
         branch_lower.contains(&id_lower)
             || branch_lower.contains(&id_sanitized)
-            || branch_lower.contains(&hash_lower)
+            || (!hash_lower.is_empty()
+                && branch_lower
+                    .split(['/', '-', '_'])
+                    .any(|part| part == hash_lower))
     })
 }
 
@@ -1501,6 +1650,15 @@ pub struct PublishResult {
     pub remote_url: String,
     /// PR URL if one was created
     pub pr_url: Option<String>,
+    /// Exact pushed commit and final remote diff were read back.
+    #[serde(default)]
+    pub remote_verified: bool,
+    /// A matching open PR and its complete diff were verified.
+    #[serde(default)]
+    pub pr_verified: bool,
+    /// Non-blocking publication limitations; never substitutes for failed proof.
+    #[serde(default)]
+    pub warnings: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1548,7 +1706,7 @@ fn git_remote_names(repo_root: &Path) -> Result<Vec<String>, DecapodError> {
     let dir = repo_root.to_str().unwrap_or(".");
     let remotes = Command::new("git")
         .args(["-C", dir, "remote"])
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(DecapodError::IoError)?;
     if !remotes.status.success() {
         return Err(DecapodError::ValidationError(format!(
@@ -1568,12 +1726,12 @@ fn git_remote_url(repo_root: &Path, name: &str) -> Option<String> {
     let dir = repo_root.to_str().unwrap_or(".");
     let mut remote = Command::new("git")
         .args(["-C", dir, "remote", "get-url", "--push", name])
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .ok()?;
     if !remote.status.success() {
         remote = Command::new("git")
             .args(["-C", dir, "remote", "get-url", name])
-            .output()
+            .bounded_output(CONTROL_TIMEOUT)
             .ok()?;
     }
     if !remote.status.success() {
@@ -1637,7 +1795,7 @@ fn ensure_git_remote(repo_root: &Path, name: &str, url: &str) -> Result<(), Deca
     }
     let output = Command::new("git")
         .args(["-C", dir, "remote", "add", name, url])
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(DecapodError::IoError)?;
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -1699,11 +1857,9 @@ fn resolve_publish_remote(repo_root: &Path) -> Result<PublishRemote, DecapodErro
 }
 
 fn publish_push_failure(stderr: &str, branch: &str, remote: &str) -> String {
-    let detail = stderr.trim();
-    let divergence = detail.contains("non-fast-forward")
-        || detail.contains("fetch first")
-        || detail.contains("rejected")
-        || detail.contains("failed to push some refs");
+    // Transport diagnostics may contain credential-bearing URLs or headers.
+    let detail = "Git did not confirm a successful push (raw transport output withheld)";
+    let divergence = stderr.contains("non-fast-forward") || stderr.contains("fetch first");
 
     if divergence {
         format!(
@@ -1711,7 +1867,7 @@ fn publish_push_failure(stderr: &str, branch: &str, remote: &str) -> String {
         )
     } else {
         format!(
-            "Failed to push {remote}/{branch}: {detail}\nRemediation: Decapod uses an ordinary fast-forward push and never force-pushes. Inspect the Git error, correct the workspace state, rerun `decapod validate`, and retry `decapod workspace publish`."
+            "PUBLICATION_OUTCOME_UNKNOWN: {remote}/{branch}: {detail}. The server may have accepted the commit before acknowledgement was lost. Preserve the branch and inspect the exact push destination with `git ls-remote` before retrying `decapod workspace publish`; an idempotent retry verifies the remote commit and reuses a matching PR. Never delete the branch or force-push to recover. If history differs, fetch, reconcile, and rerun `decapod validate`."
         )
     }
 }
@@ -1753,13 +1909,12 @@ pub fn publish_workspace(
     if status.git.has_local_mods {
         let add_output = Command::new("git")
             .args(["-C", dir, "add", "-A"])
-            .output()
+            .bounded_output(CONTROL_TIMEOUT)
             .map_err(DecapodError::IoError)?;
         if !add_output.status.success() {
-            return Err(DecapodError::ValidationError(format!(
-                "Failed to stage changes: {}",
-                String::from_utf8_lossy(&add_output.stderr)
-            )));
+            return Err(DecapodError::ValidationError(
+                "Failed to stage publication changes. Inspect local Git state and retry; raw diagnostics are withheld to protect credentials.".into(),
+            ));
         }
 
         let commit_msg = title
@@ -1767,15 +1922,15 @@ pub fn publish_workspace(
             .unwrap_or("decapod: publish workspace changes");
         let commit_output = Command::new("git")
             .args(["-C", dir, "commit", "-m", commit_msg])
-            .output()
+            .bounded_output(CONTROL_TIMEOUT)
             .map_err(DecapodError::IoError)?;
         if !commit_output.status.success() {
             let stderr = String::from_utf8_lossy(&commit_output.stderr);
             // Allow "nothing to commit" as non-fatal
             if !stderr.contains("nothing to commit") {
-                return Err(DecapodError::ValidationError(format!(
-                    "Failed to commit: {stderr}"
-                )));
+                return Err(DecapodError::ValidationError(
+                    "Failed to commit publication changes. Inspect local hooks and Git state, revalidate, and retry; raw diagnostics are withheld to protect credentials.".into(),
+                ));
             }
         }
     }
@@ -1784,16 +1939,24 @@ pub fn publish_workspace(
     ensure_required_governance_artifacts_in_pr(repo_root, &base_branch)?;
     ensure_material_specs_change_in_pr(repo_root, &base_branch)?;
     ensure_managed_spec_projections_in_pr(repo_root, &base_branch)?;
+    publication::verify_spec_reviews(repo_root, &base_branch)?;
 
     // Get current commit hash
     let hash_output = Command::new("git")
         .args(["-C", dir, "rev-parse", "HEAD"])
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(DecapodError::IoError)?;
+    if !hash_output.status.success() {
+        return Err(DecapodError::ValidationError(
+            "Cannot publish: cannot resolve HEAD.".into(),
+        ));
+    }
     let commit_hash = String::from_utf8_lossy(&hash_output.stdout)
         .trim()
         .to_string();
 
+    publication::verify_committed_bundle(repo_root, &commit_hash)?;
+    verify_validation_artifacts_for_publish(repo_root)?;
     // Preflight against the same base that publication will use. This runs
     // before any push or PR creation and never mutates the worktree.
     check_merge_conflicts(repo_root, &base_branch)?;
@@ -1805,11 +1968,14 @@ pub fn publish_workspace(
             dir,
             "push",
             "-u",
-            &publish_remote.name,
-            &status.git.current_branch,
+            "--",
+            &publish_remote.url,
+            &format!("{commit_hash}:refs/heads/{}", status.git.current_branch),
         ])
-        .output()
-        .map_err(DecapodError::IoError)?;
+        .bounded_output(publication::NETWORK_TIMEOUT)
+        .map_err(|_| DecapodError::ValidationError(
+            "PUBLICATION_INCOMPLETE: push outcome is unknown; it may have reached the remote. Read back the target branch and retry publication safely. Do not force-push, delete the branch, or report success.".into()
+        ))?;
     if !push_output.status.success() {
         return Err(DecapodError::ValidationError(publish_push_failure(
             &String::from_utf8_lossy(&push_output.stderr),
@@ -1818,61 +1984,51 @@ pub fn publish_workspace(
         )));
     }
 
-    let remote_url = publish_remote.url.clone();
-
-    // 4. If gh CLI is available, create a PR
-    let pr_url = if Command::new("gh")
-        .arg("--version")
-        .output()
-        .map(|o| o.status.success())
-        .unwrap_or(false)
+    // Read the exact push destination, not a possibly different fetch URL or
+    // stale remote-tracking ref. A successful push alone is not publication proof.
+    let proof = publication::verify_remote(
+        repo_root,
+        &publish_remote.url,
+        &status.git.current_branch,
+        &base_branch,
+        &commit_hash,
+    )
+    .map_err(publication::after_push)?;
+    let (pr_url, warnings) = if let Some(slug) =
+        github_repo_slug(&publication::redact_remote(&publish_remote.url))
     {
-        let pr_title = title.as_deref().unwrap_or(&status.git.current_branch);
-        let mut pr_args = vec![
-            "-C",
-            dir,
-            "pr",
-            "create",
-            "--title",
-            pr_title,
-            "--head",
+        let url = publication::ensure_and_verify_pr(
+            repo_root,
+            &slug,
             &status.git.current_branch,
-            "--base",
             &base_branch,
-        ];
-        let repo_slug = github_repo_slug(&publish_remote.url);
-        if let Some(slug) = repo_slug.as_deref() {
-            pr_args.push("--repo");
-            pr_args.push(slug);
-        }
-        let desc;
-        if let Some(ref d) = description {
-            desc = d.clone();
-            pr_args.push("--body");
-            pr_args.push(&desc);
-        }
-        let pr_output = Command::new("gh")
-            .args(&pr_args)
-            .output()
-            .map_err(DecapodError::IoError)?;
-        if pr_output.status.success() {
-            Some(
-                String::from_utf8_lossy(&pr_output.stdout)
-                    .trim()
-                    .to_string(),
-            )
-        } else {
-            None
-        }
+            &proof,
+            title.as_deref().unwrap_or(&status.git.current_branch),
+            description.as_deref().unwrap_or(""),
+        )
+        .map_err(publication::after_push)?;
+        // Detect a branch/base movement while GitHub was serving the PR pages.
+        publication::verify_remote_unchanged(
+            repo_root,
+            &publish_remote.url,
+            &status.git.current_branch,
+            &base_branch,
+            &proof,
+        )
+        .map_err(publication::after_push)?;
+        (Some(url), Vec::new())
     } else {
-        None
+        (None, vec!["Branch verified remotely; PR verification is unavailable for this non-GitHub remote. This is not a publish-ready PR.".to_string()])
     };
 
     Ok(PublishResult {
         branch: status.git.current_branch,
         commit_hash,
-        remote_url,
+        remote_url: publication::redact_remote(&publish_remote.url),
+        pr_verified: pr_url.is_some(),
         pr_url,
+        remote_verified: true,
+        warnings,
     })
 }
 
@@ -1999,6 +2155,45 @@ pub fn verify_validation_artifacts_for_publish(repo_root: &Path) -> Result<(), D
             ))
         })?;
     receipt.validate_integrity()?;
+    let active_epoch = crate::core::validation_epoch::active_validation_epoch(repo_root)?;
+    if receipt.validation_epoch != active_epoch
+        || receipt.repo_signal_fingerprint != project_specs::repo_signal_fingerprint(repo_root)?
+        || receipt.decapod_release != entrypoint_integrity::RELEASE_VERSION
+    {
+        return Err(DecapodError::ValidationError(
+            "STALE_PUBLICATION_VALIDATION: code, living specs, or evaluator changed since validation. Review the affected specs, refresh through `decapod rpc --op specs.refresh`, and rerun `decapod validate`.".into(),
+        ));
+    }
+    // Receipt commits may follow the validated commit, but a receipt from an
+    // unrelated history (or an unresolved revision) cannot prove this branch.
+    if !matches!(receipt.git_revision.len(), 40 | 64)
+        || !receipt.git_revision.bytes().all(|b| b.is_ascii_hexdigit())
+    {
+        return Err(DecapodError::ValidationError("STALE_PUBLICATION_REVISION: validation must name a resolved commit. Rerun `decapod validate`.".into()));
+    }
+    let ancestor = Command::new("git")
+        .current_dir(repo_root)
+        .args(["merge-base", "--is-ancestor", &receipt.git_revision, "HEAD"])
+        .bounded_output(CONTROL_TIMEOUT)
+        .map_err(DecapodError::IoError)?;
+    if !ancestor.status.success() {
+        return Err(DecapodError::ValidationError("STALE_PUBLICATION_REVISION: validation is not bound to this commit history. Rerun `decapod validate`.".into()));
+    }
+    let plan = plan_governance::load_plan(repo_root)?.ok_or_else(|| {
+        DecapodError::ValidationError(
+            "Cannot publish: missing governed plan; run `decapod govern plan init`.".into(),
+        )
+    })?;
+    if !trajectory
+        .task_id
+        .as_ref()
+        .is_some_and(|task| plan.todo_ids.contains(task))
+    {
+        return Err(DecapodError::ValidationError("STALE_PUBLICATION_TASK: plan and trajectory must bind the same current todo. Update the governed plan and rerun validation.".into()));
+    }
+    if !plan.human_questions.is_empty() || !plan.unresolved_contradictions.is_empty() {
+        return Err(DecapodError::ValidationError("PUBLICATION_DECISION_REQUIRED: resolve the governed plan's human questions and contradictions before publication; do not infer approval.".into()));
+    }
     if receipt.trajectory_run_id.as_deref() != Some(trajectory.run_id.as_str())
         || receipt.trajectory_artifact_hash.as_deref() != Some(trajectory.artifact_hash.as_str())
     {
@@ -2055,13 +2250,22 @@ fn ensure_validation_artifacts_staged(repo_root: &Path) -> Result<(), DecapodErr
                 "--",
                 path,
             ])
-            .output()
+            .bounded_output(CONTROL_TIMEOUT)
             .map_err(DecapodError::IoError)?;
         if !output.status.success() {
             return Err(DecapodError::ValidationError(format!(
                 "Cannot publish: required validation artifact was not staged: {path}"
             )));
         }
+    }
+    let unstaged = Command::new("git")
+        .current_dir(repo_root)
+        .args(["diff", "--quiet", "--"])
+        .args(REQUIRED_PR_GOVERNANCE_ARTIFACTS)
+        .bounded_output(CONTROL_TIMEOUT)
+        .map_err(DecapodError::IoError)?;
+    if !unstaged.status.success() {
+        return Err(DecapodError::ValidationError("UNSTAGED_GOVERNANCE_ARTIFACT: required artifact bytes differ from the index. Stage the current validated bundle before publication.".into()));
     }
     let jev_path = crate::core::jev_history::JEV_HISTORY_PATH;
     if repo_root.join(jev_path).is_file() {
@@ -2075,7 +2279,7 @@ fn ensure_validation_artifacts_staged(repo_root: &Path) -> Result<(), DecapodErr
                 "--",
                 jev_path,
             ])
-            .output()
+            .bounded_output(CONTROL_TIMEOUT)
             .map_err(DecapodError::IoError)?;
         if !output.status.success() {
             return Err(DecapodError::ValidationError(format!(
@@ -2139,7 +2343,7 @@ pub fn ensure_required_governance_artifacts_in_pr(
             "--",
         ])
         .args(REQUIRED_PR_GOVERNANCE_ARTIFACTS)
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(DecapodError::IoError)?;
     if !output.status.success() {
         return Err(DecapodError::ValidationError(format!(
@@ -2200,7 +2404,7 @@ pub fn ensure_material_specs_change_in_pr(
     let dir = repo_root.to_str().unwrap_or(".");
     let same_commit = Command::new("git")
         .args(["-C", dir, "rev-parse", base_ref.as_str(), "HEAD"])
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(DecapodError::IoError)?;
     if same_commit.status.success() {
         let stdout = String::from_utf8_lossy(&same_commit.stdout);
@@ -2242,7 +2446,7 @@ pub fn pr_changed_paths(repo_root: &Path, base_ref: &str) -> Result<Vec<String>,
             "--name-only",
             &format!("{base_ref}...HEAD"),
         ])
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(DecapodError::IoError)?;
     if !output.status.success() {
         return Err(DecapodError::ValidationError(format!(
@@ -2286,7 +2490,7 @@ pub fn ensure_managed_spec_projections_in_pr(
     let dir = repo_root.to_str().unwrap_or(".");
     let same_commit = Command::new("git")
         .args(["-C", dir, "rev-parse", base_ref.as_str(), "HEAD"])
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(DecapodError::IoError)?;
     if same_commit.status.success() {
         let stdout = String::from_utf8_lossy(&same_commit.stdout);
@@ -2400,6 +2604,17 @@ fn prune_workspaces_report_with_process_dir(
         });
     }
 
+    let canonical_main = main_repo.canonicalize().map_err(DecapodError::IoError)?;
+    if workspaces_dir
+        .canonicalize()
+        .map_err(DecapodError::IoError)?
+        != canonical_main.join(".decapod").join("workspaces")
+    {
+        return Err(DecapodError::ValidationError(
+            "WORKSPACE_OWNERSHIP_UNVERIFIED: managed workspace parent resolves outside the repository; no workspaces were removed".into(),
+        ));
+    }
+
     // 1) Parse all current git worktrees
     let worktrees_output = Command::new("git")
         .args([
@@ -2409,7 +2624,7 @@ fn prune_workspaces_report_with_process_dir(
             "list",
             "--porcelain",
         ])
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(DecapodError::IoError)?;
 
     if !worktrees_output.status.success() {
@@ -2457,7 +2672,7 @@ fn prune_workspaces_report_with_process_dir(
     // 2) Get all tasks from todo database
     let store_root = main_repo.join(".decapod").join("data");
     let tasks = if store_root.exists() {
-        todo::list_tasks(&store_root, None, None, None, None, None).unwrap_or_default()
+        todo::list_tasks(&store_root, None, None, None, None, None)?
     } else {
         vec![]
     };
@@ -2492,10 +2707,81 @@ fn prune_workspaces_report_with_process_dir(
             .unwrap_or("")
             .to_string();
 
+        // Local clones intentionally have their own .git and are absent from
+        // git worktree list. An active claim protects them even during --force
+        // recovery and even before registration has completed.
+        let active_refs: Vec<AssignedTodoRef> = tasks
+            .iter()
+            .filter(|task| {
+                !task.assigned_to.is_empty() && !matches!(task.status.as_str(), "done" | "archived")
+            })
+            .map(|task| AssignedTodoRef {
+                id: task.id.clone(),
+                hash: task.hash.clone(),
+            })
+            .collect();
+        let active_claim = branch_contains_any_todo_id_or_hash(&dir_name, &active_refs);
+
         // Check if registered as a worktree in git
         let matching_wt = worktrees
             .iter()
             .find(|wt| normalize_path_for_compare(&wt.path) == normalized_dir);
+        let ownership = match crate::core::workspace_lifecycle::acquire(&main_repo, &dir_path) {
+            Ok(owned) => owned,
+            Err(error) => {
+                skipped.push(SkippedWorkspace {
+                    path: persisted_path,
+                    reason: "workspace_lifecycle_busy".into(),
+                    detail: error.to_string(),
+                });
+                continue;
+            }
+        };
+        if active_claim {
+            // A producer-held invocation lease proves whether a container.run
+            // caller still exists. Reconcile its abandoned container separately
+            // while retaining every active-task workspace file. Interactive
+            // launch hints do not hold that lease and are not reclaimed here.
+            let recovery = ownership
+                .as_ref()
+                .filter(|owned| owned.producer_lease() && owned.container_expected())
+                .map(|owned| {
+                    container_runtime::find_container_runtime().and_then(|runtime| {
+                        container_runtime::remove_workspace_containers_for_invocation(
+                            &runtime,
+                            &dir_path,
+                            Some(owned.invocation()),
+                        )
+                    })
+                });
+            let detail = match recovery {
+                Some(Ok(())) => "abandoned invocation container reconciled; active task files preserved".to_string(),
+                Some(Err(error)) => format!("active task files preserved; abandoned container recovery remains blocked: {error}"),
+                None => "workspace belongs to an active task claim; release or complete the claim before pruning".to_string(),
+            };
+            skipped.push(SkippedWorkspace {
+                path: persisted_path,
+                reason: "active_claim".into(),
+                detail,
+            });
+            continue;
+        }
+        // --force relaxes cleanliness, never ownership. A name alone, an
+        // arbitrary Dockerfile, or a symlink into another checkout is not a
+        // registration. Even a full completed-task ID in the directory name
+        // is not evidence that Decapod owns the files within it.
+        if entry
+            .file_type()
+            .map_err(DecapodError::IoError)?
+            .is_symlink()
+            || (matching_wt.is_none() && ownership.is_none())
+        {
+            skipped.push(SkippedWorkspace {
+                path: persisted_path, reason: "unregistered_workspace".into(),
+                detail: "workspace ownership is unverified; --force does not authorize deleting unrelated directories. Inspect and preserve or remove this directory explicitly".into(),
+            });
+            continue;
+        }
 
         let mut is_stale = false;
         let mut prune_reason = String::new();
@@ -2509,13 +2795,28 @@ fn prune_workspaces_report_with_process_dir(
                         main_repo.to_str().unwrap_or("."),
                         "show-ref",
                         "--verify",
+                        "--quiet",
                         ref_name,
                     ])
-                    .output();
+                    .bounded_output(CONTROL_TIMEOUT);
 
                 let branch_exists = match show_ref_out {
-                    Ok(out) => out.status.success(),
-                    Err(_) => false,
+                    Ok(out) if out.status.success() => true,
+                    Ok(out) if out.status.code() == Some(1) => false,
+                    result => {
+                        let detail = match result {
+                            Ok(out) => String::from_utf8_lossy(&out.stderr).into_owned(),
+                            Err(error) => error.to_string(),
+                        };
+                        skipped.push(SkippedWorkspace {
+                            path: persisted_path.clone(),
+                            reason: "branch_status_unavailable".into(),
+                            detail: format!(
+                                "could not establish branch state; workspace preserved: {detail}"
+                            ),
+                        });
+                        continue;
+                    }
                 };
 
                 if !branch_exists {
@@ -2565,7 +2866,7 @@ fn prune_workspaces_report_with_process_dir(
                                 "rev-parse",
                                 ref_name,
                             ])
-                            .output()
+                            .bounded_output(CONTROL_TIMEOUT)
                             .ok()
                             .filter(|o| o.status.success())
                             .map(|o| {
@@ -2658,6 +2959,36 @@ fn prune_workspaces_report_with_process_dir(
                 }
             }
 
+            // A daemon-owned container can outlive an interrupted client.
+            // Preserve the workspace and report recovery failure rather than
+            // deleting data still mounted by a container.
+            let container_cleanup = if let Some(owned) = ownership.as_ref() {
+                if owned.container_expected() {
+                    container_runtime::find_container_runtime().and_then(|runtime| {
+                        container_runtime::remove_workspace_containers_for_invocation(
+                            &runtime,
+                            &dir_path,
+                            Some(owned.invocation()),
+                        )
+                    })
+                } else {
+                    Ok(())
+                }
+            } else {
+                reconcile_workspace_containers(
+                    &dir_path,
+                    container_runtime::find_container_runtime(),
+                )
+            };
+            if let Err(error) = container_cleanup {
+                skipped.push(SkippedWorkspace {
+                    path: persisted_path.clone(),
+                    reason: "container_cleanup_failed".to_string(),
+                    detail: format!("workspace preserved because container cleanup could not be verified: {error}"),
+                });
+                continue;
+            }
+
             // Attempt to remove git worktree if registered
             if matching_wt.is_some() {
                 let mut args = vec!["worktree", "remove"];
@@ -2669,9 +3000,9 @@ fn prune_workspaces_report_with_process_dir(
                 let remove_output = Command::new("git")
                     .args(["-C", main_repo.to_str().unwrap_or(".")])
                     .args(&args)
-                    .output();
+                    .bounded_output(CONTROL_TIMEOUT);
                 match remove_output {
-                    Ok(output) if output.status.success() || force => {}
+                    Ok(output) if output.status.success() => {}
                     Ok(output) => {
                         skipped.push(SkippedWorkspace {
                             path: persisted_path.clone(),
@@ -2683,7 +3014,7 @@ fn prune_workspaces_report_with_process_dir(
                         });
                         continue;
                     }
-                    Err(error) if !force => {
+                    Err(error) => {
                         skipped.push(SkippedWorkspace {
                             path: persisted_path.clone(),
                             reason: "git_remove_failed".to_string(),
@@ -2693,7 +3024,6 @@ fn prune_workspaces_report_with_process_dir(
                         });
                         continue;
                     }
-                    Err(_) => {}
                 }
             }
 
@@ -2703,9 +3033,21 @@ fn prune_workspaces_report_with_process_dir(
                 let _ = container_runtime::remove_workspace_images_for_path(&dir_path);
             }
 
+            if dir_path.exists()
+                && let Some(owned) = ownership.as_ref()
+            {
+                owned.verify()?;
+            }
             // Fallback: forcefully remove from disk if it still exists
-            if dir_path.exists() {
-                let _ = std::fs::remove_dir_all(&dir_path);
+            if let Err(error) = std::fs::remove_dir_all(&dir_path)
+                && error.kind() != std::io::ErrorKind::NotFound
+            {
+                skipped.push(SkippedWorkspace {
+                    path: persisted_path,
+                    reason: "workspace_remove_failed".into(),
+                    detail: format!("workspace cleanup incomplete: {error}"),
+                });
+                continue;
             }
 
             pruned.push(PrunedWorkspace {
@@ -2721,6 +3063,24 @@ fn prune_workspaces_report_with_process_dir(
     Ok(WorkspacePruneReport { pruned, skipped })
 }
 
+fn reconcile_workspace_containers(
+    workspace: &Path,
+    runtime: Result<String, DecapodError>,
+) -> Result<(), DecapodError> {
+    match runtime {
+        Ok(runtime) => container_runtime::remove_workspace_containers_for_path(&runtime, workspace),
+        Err(error)
+            if workspace
+                .join(container::MANAGED_DOCKERFILE_REL_PATH)
+                .exists() =>
+        {
+            Err(error)
+        }
+        // A plain Git workspace has no managed container handoff to reconcile.
+        Err(_) => Ok(()),
+    }
+}
+
 // `all` recursively enumerates every untracked file. A validation pass only
 // needs to know whether any untracked directory exists, so keep this check
 // bounded by Git's collapsed directory-level status representation.
@@ -2731,7 +3091,7 @@ fn worktree_is_dirty(path: &Path) -> Result<bool, DecapodError> {
     let output = Command::new("git")
         .args(["-C", path.to_str().unwrap_or(".")])
         .args(WORKTREE_DIRTY_STATUS_ARGS)
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(DecapodError::IoError)?;
     if !output.status.success() {
         return Err(DecapodError::ValidationError(format!(

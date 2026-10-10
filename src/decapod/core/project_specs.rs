@@ -239,8 +239,52 @@ pub fn spec_input_hash(project_root: &Path) -> Result<String, error::DecapodErro
     Ok(format!("{:x}", hasher.finalize()))
 }
 
+/// Shared publication surface classification. Root-level and assets source
+/// files are implementation too; directory-only heuristics miss Go main.go or
+/// build tools, while governance receipts and authored docs remain excluded.
+pub(crate) fn is_implementation_path(path: &str) -> bool {
+    [
+        "src/",
+        "app/",
+        "api/",
+        "backend/",
+        "frontend/",
+        "web/",
+        "services/",
+        "infra/",
+        "deploy/",
+        "k8s/",
+        ".github/workflows/",
+    ]
+    .iter()
+    .any(|prefix| path.starts_with(prefix))
+        || matches!(
+            Path::new(path).extension().and_then(|ext| ext.to_str()),
+            Some(
+                "rs" | "go"
+                    | "py"
+                    | "js"
+                    | "jsx"
+                    | "ts"
+                    | "tsx"
+                    | "java"
+                    | "kt"
+                    | "rb"
+                    | "php"
+                    | "c"
+                    | "h"
+                    | "cpp"
+                    | "hpp"
+                    | "cs"
+                    | "swift"
+                    | "sql"
+            )
+        )
+}
+
 fn repo_signal_requires_content_hash(rel_path: &str) -> bool {
-    rel_path == "AGENTS.md"
+    is_implementation_path(rel_path)
+        || rel_path == "AGENTS.md"
         || rel_path == "CLAUDE.md"
         || rel_path == "CODEX.md"
         || rel_path == "GEMINI.md"
@@ -263,6 +307,12 @@ fn repo_signal_requires_content_hash(rel_path: &str) -> bool {
         || rel_path.starts_with("deploy/")
         || rel_path.starts_with("k8s/")
         || rel_path.starts_with("src/")
+        || rel_path.starts_with("app/")
+        || rel_path.starts_with("api/")
+        || rel_path.starts_with("backend/")
+        || rel_path.starts_with("frontend/")
+        || rel_path.starts_with("web/")
+        || rel_path.starts_with("services/")
         || rel_path.starts_with("tests/")
         || rel_path.starts_with(".github/workflows/")
         || rel_path.ends_with(".sql")
@@ -330,7 +380,7 @@ fn collect_significant_repo_paths(
             || rel_str.starts_with("deploy/")
             || rel_str.starts_with("k8s/")
             || rel_str.ends_with(".sql");
-        if top_level_signal || path_signal {
+        if top_level_signal || path_signal || is_implementation_path(&rel_str) {
             out.push(path);
         }
     }
@@ -489,7 +539,8 @@ pub fn refresh_specs_manifest(
     let manifest_body = serde_json::to_string_pretty(&manifest).map_err(|e| {
         error::DecapodError::ValidationError(format!("Failed to serialize specs manifest: {e}"))
     })?;
-    fs::write(manifest_path, manifest_body).map_err(error::DecapodError::IoError)?;
+    crate::core::fs_permissions::write_private(manifest_path, manifest_body)
+        .map_err(error::DecapodError::IoError)?;
 
     Ok(manifest)
 }
@@ -800,7 +851,8 @@ pub fn refresh_specs_from_codebase(
     // Preflight every document before writing any of them. A preservation
     // failure must be visible and leave the input specs and manifest intact.
     for (path, updated) in updates {
-        fs::write(path, updated).map_err(error::DecapodError::IoError)?;
+        crate::core::fs_permissions::write_private(path, updated)
+            .map_err(error::DecapodError::IoError)?;
     }
     refresh_specs_manifest(project_root, declared_capabilities)
 }

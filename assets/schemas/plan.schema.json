@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://decapod.dev/schemas/plan-1.0.0.schema.json",
+  "$id": "https://decapod.dev/schemas/plan-1.1.0.schema.json",
   "title": "Decapod Governed Plan",
   "description": "The repository-native contract for a Decapod governed execution plan.",
   "type": "object",
@@ -22,7 +22,7 @@
     "updated_at"
   ],
   "properties": {
-    "schema_version": { "const": "1.0.0" },
+    "schema_version": { "enum": ["1.0.0", "1.1.0"] },
     "title": { "type": "string" },
     "intent": { "type": "string" },
     "state": {
@@ -41,9 +41,26 @@
       "type": "array",
       "items": { "$ref": "#/$defs/phase" }
     },
+    "spec_reviews": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/spec_review" }
+    },
     "updated_at": { "type": "string" }
   },
   "$defs": {
+    "spec_review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "spec_material_hash", "reviewed_code_fingerprint", "disposition", "reason"],
+      "properties": {
+        "path": { "enum": [".decapod/managed/specs/INTERFACES.md", ".decapod/managed/specs/ARCHITECTURE.md", ".decapod/managed/specs/SECURITY.md"] },
+        "spec_material_hash": { "type": "string", "minLength": 1 },
+        "reviewed_code_fingerprint": { "type": "string", "minLength": 1 },
+        "disposition": { "enum": ["updated", "unchanged_with_reason", "requires_decision"] },
+        "reason": { "type": "string", "minLength": 1 },
+        "decision_ref": { "type": "string", "minLength": 1 }
+      }
+    },
     "string_array": {
       "type": "array",
       "items": { "type": "string" }

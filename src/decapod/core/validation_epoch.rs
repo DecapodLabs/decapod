@@ -80,6 +80,24 @@ pub fn active_validation_epoch(
         );
     }
 
+    // Bind the plan/review and research claims to the same validation epoch.
+    // The receipt itself is deliberately excluded to avoid a self-reference;
+    // trajectory identity is bound separately by ValidationReceipt.
+    for path in [
+        crate::plan_governance::PLAN_PATH,
+        crate::core::research_claims::CLAIMS_PATH,
+        "AGENTS.md",
+        "CLAUDE.md",
+        "CODEX.md",
+        "GEMINI.md",
+        crate::plugins::container::MANAGED_DOCKERFILE_REL_PATH,
+    ] {
+        material_hashes.insert(
+            format!("governance_material:{path}"),
+            hash_file_if_exists(&project_root.join(path))?,
+        );
+    }
+
     let evaluator_set_hash = hash_named_values(&[
         ("evaluator_identity", evaluator_identity.as_str()),
         ("validation_profile", validation_profile.as_str()),

@@ -1,15 +1,16 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "combined1381default",
-  "intent_id": "intent:combined1381default",
-  "task_id": "bend_01m4hcjdawvw4m7c",
-  "original_intent": "Publish the combined 1369 and 1370 draft, use Supabase for backend cloud, and include typed Rust password binding detection",
-  "derived_intent": "Correct cloud defaults and session-read scope, retain explicit Neon and local SQLite, include native Bazel compiler assets and bounded typed-binding detection",
+  "run_id": "five-critical-20261010",
+  "intent_id": "intent:five-critical-20261010",
+  "task_id": "bugs_01m4jdaambn944vm",
+  "original_intent": "Find and fix five most critical Decapod issues in one PR",
+  "derived_intent": "Fix1218 lifecycle,1075 cloud retry,1076 dirty-root isolation,1366 state permissions,1045 publication verification",
+  "current_phase": "verification",
   "active_boundaries": [
-    "No merge or deployment; no direct client database credentials; do not claim unavailable actual-service, container or native Nix proof"
+    "No deployment, merge, credentials or infrastructure changes; preserve user files and shared database design"
   ],
   "repo_scope": [
-    "Decapod PR 1381 source, tests, documentation and truthful proof artifacts"
+    "Workspace lifecycle, cloud todo, permissions, publication tests and living specs"
   ],
   "inspected_files": [],
   "modified_files": [],
@@ -17,74 +18,68 @@
   "tool_calls": [],
   "checks": [
     {
-      "name": "actual_container",
+      "name": "actual_container_custody",
       "status": "unavailable"
     },
     {
-      "name": "actual_postgres",
+      "name": "actual_docker_custody",
       "status": "unavailable"
     },
     {
-      "name": "default_feature_regressions",
+      "name": "candidate_validation",
+      "status": "partial"
+    },
+    {
+      "name": "dirty_root_integration",
       "status": "passed"
     },
     {
-      "name": "disabled_feature_regressions",
+      "name": "integrated_lib",
       "status": "passed"
     },
     {
-      "name": "hosted_supabase",
-      "status": "unavailable"
-    },
-    {
-      "name": "independent_source_review",
+      "name": "official_snapshot_validation",
       "status": "passed"
     },
     {
-      "name": "native_nix",
-      "status": "unavailable"
+      "name": "pristine_current_validation",
+      "status": "partial"
     },
     {
-      "name": "official_host_validation",
-      "status": "failed"
-    },
-    {
-      "name": "strict_clippy",
-      "status": "passed"
-    },
-    {
-      "name": "typed_binding_regressions",
+      "name": "workspace_unit_tests",
       "status": "passed"
     }
   ],
   "evidence": [
-    "Source commit 66185a7b1d66fb341c1fc50af29cf8a4e29f8023: default 460 library and 35 integration/helper tests passed; two real-service profiles ignored. Disabled-default-features: 459 library and 22 integration tests passed. 80 scanner tests include ref, array, multiline, short literal and per-occurrence isolation regressions. All-target/all-feature Clippy with warnings denied, formatting and diff checks passed. Independent source review found no blockers. First PR 1381 CI exposed missing native template compiler inputs, corrected in this revision; updated CI is pending.",
-    "Unmodified official 0.106.1 validator with projections on source 66185a7b: 204 passed, 1 failed, 10 skipped. The only failure is claim.git.container_workspace_required; actual container custody is not established and remains tracked in issue 1379. No validation gate was bypassed."
+    "Bazel source inventory uses src/**/*.rs and Cargo-derived normal dependencies; no new runtime assets",
+    "Independent official0.106.1 on immutable1182ebdd fresh governed worktree:203pass0fail11skip; pristine master0.107.0:202pass2fail(container custody and then-uncommitted release refresh). Integration candidate after generated refresh:203pass1fail(container custody). No success receipt copied across custody.",
+    "Initial focused candidate:32 workspace unit tests passed;9 dirty-root/spec/inventory integration tests passed; final integrated rerun pending",
+    "Integrated snapshot1182ebdd:540 library tests passed,1 opt-in Docker test ignored; independent source review found no blocking finding; candidate validation202 pass2 fail before generated-surface commit, no fresh successful receipt."
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
-  "proof_status": "failed",
+  "proof_status": "partial",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "unsupported"
+    "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:d137967bf169077695f7d0d29b2993d43ea7887b6ce88904e1f37f8da4748bdb",
+  "artifact_hash": "sha256:2312c229d5e5e11f0649d1cceec4fc5a6d38922dad690be2cefb12b14f81bd4e",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:combined1381default": {
-        "id": "intent:combined1381default",
-        "raw_intent": "Publish the combined 1369 and 1370 draft, use Supabase for backend cloud, and include typed Rust password binding detection",
-        "refined_intent": "Correct cloud defaults and session-read scope, retain explicit Neon and local SQLite, include native Bazel compiler assets and bounded typed-binding detection",
+      "intent:five-critical-20261010": {
+        "id": "intent:five-critical-20261010",
+        "raw_intent": "Find and fix five most critical Decapod issues in one PR",
+        "refined_intent": "Fix1218 lifecycle,1075 cloud retry,1076 dirty-root isolation,1366 state permissions,1045 publication verification",
         "acceptance_criteria": [],
         "constraints": [
-          "Decapod PR 1381 source, tests, documentation and truthful proof artifacts"
+          "Workspace lifecycle, cloud todo, permissions, publication tests and living specs"
         ],
         "assumptions": [],
         "boundaries": [
-          "No merge or deployment; no direct client database credentials; do not claim unavailable actual-service, container or native Nix proof"
+          "No deployment, merge, credentials or infrastructure changes; preserve user files and shared database design"
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -97,79 +92,99 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:combined1381default",
+        "intent_id": "intent:five-critical-20261010",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:combined1381default",
+        "intent_id": "intent:five-critical-20261010",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:combined1381default",
+        "intent_id": "intent:five-critical-20261010",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:combined1381default"
+        "detail": "trajectory:five-critical-20261010"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:combined1381default",
+        "intent_id": "intent:five-critical-20261010",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:combined1381default"
+        "detail": "trajectory:five-critical-20261010"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
+        "intent_id": "intent:five-critical-20261010",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:five-critical-20261010"
       }
     ],
     "trajectories": {
-      "combined1381default": {
-        "id": "combined1381default",
-        "intent_id": "intent:combined1381default",
+      "five-critical-20261010": {
+        "id": "five-critical-20261010",
+        "intent_id": "intent:five-critical-20261010",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "trajectory.record",
+            "action": "implementation",
             "scope": [
-              "Decapod PR 1381 source, tests, documentation and truthful proof artifacts"
+              "Workspace lifecycle, cloud todo, permissions, publication tests and living specs"
             ],
             "observations": [
-              "Source commit 66185a7b1d66fb341c1fc50af29cf8a4e29f8023: default 460 library and 35 integration/helper tests passed; two real-service profiles ignored. Disabled-default-features: 459 library and 22 integration tests passed. 80 scanner tests include ref, array, multiline, short literal and per-occurrence isolation regressions. All-target/all-feature Clippy with warnings denied, formatting and diff checks passed. Independent source review found no blockers. First PR 1381 CI exposed missing native template compiler inputs, corrected in this revision; updated CI is pending."
+              "Initial focused candidate:32 workspace unit tests passed;9 dirty-root/spec/inventory integration tests passed; final integrated rerun pending",
+              "Bazel source inventory uses src/**/*.rs and Cargo-derived normal dependencies; no new runtime assets"
             ],
             "proof_refs": [
-              "default_feature_regressions",
-              "disabled_feature_regressions",
-              "typed_binding_regressions",
-              "independent_source_review",
-              "strict_clippy",
-              "actual_postgres",
-              "hosted_supabase",
-              "actual_container",
-              "native_nix"
+              "workspace_unit_tests",
+              "dirty_root_integration",
+              "actual_container_custody"
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
           },
           {
             "sequence": 5,
-            "action": "trajectory.record",
+            "action": "verification",
             "scope": [
-              "Decapod PR 1381 source, tests, documentation and truthful proof artifacts"
+              "Workspace lifecycle, cloud todo, permissions, publication tests and living specs"
             ],
             "observations": [
-              "Unmodified official 0.106.1 validator with projections on source 66185a7b: 204 passed, 1 failed, 10 skipped. The only failure is claim.git.container_workspace_required; actual container custody is not established and remains tracked in issue 1379. No validation gate was bypassed."
+              "Integrated snapshot1182ebdd:540 library tests passed,1 opt-in Docker test ignored; independent source review found no blocking finding; candidate validation202 pass2 fail before generated-surface commit, no fresh successful receipt."
             ],
             "proof_refs": [
-              "official_host_validation"
+              "integrated_lib",
+              "candidate_validation",
+              "actual_docker_custody"
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "trajectory.record",
+            "scope": [
+              "Workspace lifecycle, cloud todo, permissions, publication tests and living specs"
+            ],
+            "observations": [
+              "Independent official0.106.1 on immutable1182ebdd fresh governed worktree:203pass0fail11skip; pristine master0.107.0:202pass2fail(container custody and then-uncommitted release refresh). Integration candidate after generated refresh:203pass1fail(container custody). No success receipt copied across custody."
+            ],
+            "proof_refs": [
+              "official_snapshot_validation",
+              "pristine_current_validation"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:6"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 5
+    "next_sequence": 6
   }
 }

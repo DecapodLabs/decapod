@@ -66,6 +66,8 @@ pub struct GovernanceArtifactInventory {
     pub workspace_branch: Option<String>,
     pub workspace_sha: Option<String>,
     pub dirty: dirty_classification::DirtyClassification,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub root_isolation: Option<crate::core::workspace::RootIsolation>,
     pub claims_source: String,
     pub claims_ledger_bytes: Option<u64>,
     pub repair_command: String,
@@ -219,6 +221,7 @@ pub fn inventory_with_options(
         workspace_sha: current_revision(repo_root),
         dirty: dirty_classification::classify(repo_root, commit_often_limit())
             .map_err(crate::core::error::DecapodError::IoError)?,
+        root_isolation: crate::core::workspace::get_workspace_status(repo_root)?.root_isolation,
         claims_source: ".decapod/governance/claims.json; Health Engine claims remain in .decapod/data/decapod.db".to_string(),
         claims_ledger_bytes,
         repair_command: format!("{INVENTORY_COMMAND} --repair"),

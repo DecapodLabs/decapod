@@ -105,10 +105,11 @@ pub fn ensure_generated_policy_contract(project_root: &Path) -> Result<(), error
         return Ok(());
     }
     if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
+        crate::core::fs_permissions::ensure_private_dir(parent)
+            .map_err(error::DecapodError::IoError)?;
     }
     let body = default_policy_json_pretty()?;
-    fs::write(path, body).map_err(error::DecapodError::IoError)?;
+    crate::core::fs_permissions::write_private(path, body).map_err(error::DecapodError::IoError)?;
     Ok(())
 }
 

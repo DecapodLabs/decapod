@@ -433,7 +433,8 @@ fn create_data_backup(data_root: &Path) -> Result<Option<std::path::PathBuf>, er
         DECAPOD_VERSION.replace('.', "_"),
         crate::core::ulid::new_ulid()
     ));
-    fs::create_dir_all(&backup_dir).map_err(error::DecapodError::IoError)?;
+    crate::core::fs_permissions::ensure_storage_dir(&backup_dir)
+        .map_err(error::DecapodError::IoError)?;
 
     let copy_result = (|| -> Result<(), error::DecapodError> {
         for entry in fs::read_dir(data_root).map_err(error::DecapodError::IoError)? {
@@ -479,13 +480,31 @@ fn copy_data_entry(source: &Path, target: &Path) -> Result<(), error::DecapodErr
         return Ok(());
     }
     if metadata.is_dir() {
-        fs::create_dir_all(target).map_err(error::DecapodError::IoError)?;
+        crate::core::fs_permissions::check_directory(
+            source,
+            crate::core::fs_permissions::shared_storage(),
+        )
+        .map_err(error::DecapodError::IoError)?;
+        crate::core::fs_permissions::ensure_storage_dir(target)
+            .map_err(error::DecapodError::IoError)?;
         for entry in fs::read_dir(source).map_err(error::DecapodError::IoError)? {
             let entry = entry.map_err(error::DecapodError::IoError)?;
             copy_data_entry(&entry.path(), &target.join(entry.file_name()))?;
         }
     } else if metadata.is_file() {
-        fs::copy(source, target).map_err(error::DecapodError::IoError)?;
+        crate::core::fs_permissions::check_file(
+            source,
+            crate::core::fs_permissions::shared_storage(),
+        )
+        .map_err(error::DecapodError::IoError)?;
+        let mut input = fs::File::open(source).map_err(error::DecapodError::IoError)?;
+        let mut output = crate::core::fs_permissions::open_storage_file(
+            target,
+            fs::OpenOptions::new().create_new(true).write(true),
+        )
+        .map_err(error::DecapodError::IoError)?;
+        std::io::copy(&mut input, &mut output).map_err(error::DecapodError::IoError)?;
+        output.sync_all().map_err(error::DecapodError::IoError)?;
     } else {
         return Err(error::DecapodError::ValidationError(format!(
             "Cannot migrate unsupported data artifact: {}",
@@ -640,11 +659,14 @@ fn migrate_assurance_jsonl_to_events(decapod_root: &Path) -> Result<(), error::D
         return Ok(());
     }
     let data_root = decapod_root.join("data");
-    fs::create_dir_all(&data_root).map_err(error::DecapodError::IoError)?;
+    crate::core::fs_permissions::ensure_storage_dir(&data_root)
+        .map_err(error::DecapodError::IoError)?;
     let db_path = data_root.join(schemas::LOCAL_DB_NAME);
     let conn = db::db_connect(&db_path.to_string_lossy())?;
     events::ensure_tables(&conn)?;
 
+    crate::core::fs_permissions::check_file(&path, crate::core::fs_permissions::shared_storage())
+        .map_err(error::DecapodError::IoError)?;
     let content = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
     let mut count = 0usize;
     for (line_no, line) in content.lines().enumerate() {
@@ -680,7 +702,8 @@ fn migrate_assurance_jsonl_to_events(decapod_root: &Path) -> Result<(), error::D
 
     // Retire the managed JSONL file so it is not a dual authority.
     let archive_dir = data_root.join(events::RETIRED_JSONL_DIR);
-    fs::create_dir_all(&archive_dir).map_err(error::DecapodError::IoError)?;
+    crate::core::fs_permissions::ensure_storage_dir(&archive_dir)
+        .map_err(error::DecapodError::IoError)?;
     let dest = archive_dir.join("assurance_attestations.jsonl");
     fs::rename(&path, &dest).map_err(error::DecapodError::IoError)?;
     eprintln!(
@@ -787,7 +810,8 @@ fn load_last_seen_version(decapod_root: &Path) -> Result<Option<String>, error::
 fn touch_generated_version_counter(decapod_root: &Path) -> Result<(), error::DecapodError> {
     let path = decapod_root.join(GENERATED_VERSION_COUNTER);
     if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
+        crate::core::fs_permissions::ensure_private_dir(parent)
+            .map_err(error::DecapodError::IoError)?;
     }
     let now = crate::core::time::now_epoch_z();
     let mut counter = if path.exists() {
@@ -845,11 +869,13 @@ fn store_applied_migrations(
 ) -> Result<(), error::DecapodError> {
     let path = decapod_root.join(GENERATED_APPLIED_MIGRATIONS);
     if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
+        crate::core::fs_permissions::ensure_private_dir(parent)
+            .map_err(error::DecapodError::IoError)?;
     }
     let body = serde_json::to_string_pretty(ledger)
         .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
-    fs::write(path, body).map_err(error::DecapodError::IoError)?;
+    crate::core::atomic::write_atomic(&path, body.as_bytes())
+        .map_err(error::DecapodError::IoError)?;
     Ok(())
 }
 
@@ -859,7 +885,8 @@ fn touch_generated_migration_catalog(
 ) -> Result<(), error::DecapodError> {
     let path = decapod_root.join(GENERATED_MIGRATION_CATALOG);
     if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
+        crate::core::fs_permissions::ensure_private_dir(parent)
+            .map_err(error::DecapodError::IoError)?;
     }
     let entries = migrations
         .iter()
@@ -884,7 +911,8 @@ fn touch_generated_migration_catalog(
     };
     let body = serde_json::to_string_pretty(&catalog)
         .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
-    fs::write(path, body).map_err(error::DecapodError::IoError)?;
+    crate::core::atomic::write_atomic(&path, body.as_bytes())
+        .map_err(error::DecapodError::IoError)?;
     Ok(())
 }
 

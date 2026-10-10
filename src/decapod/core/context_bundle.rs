@@ -195,12 +195,13 @@ pub fn write_bundle(
 ) -> Result<PathBuf, error::DecapodError> {
     validate_bundle(project_root, bundle)?;
     let dir = context_capsules_dir(project_root).join("bundles");
-    fs::create_dir_all(&dir).map_err(error::DecapodError::IoError)?;
+    crate::core::fs_permissions::ensure_private_dir(&dir).map_err(error::DecapodError::IoError)?;
     let path = dir.join(format!("{}.json", bundle.bundle_hash));
     let bytes = serde_json::to_vec_pretty(bundle).map_err(|e| {
         error::DecapodError::ValidationError(format!("failed to serialize context bundle: {e}"))
     })?;
-    fs::write(&path, bytes).map_err(error::DecapodError::IoError)?;
+    crate::core::fs_permissions::write_private(&path, bytes)
+        .map_err(error::DecapodError::IoError)?;
     write_context_capsule(project_root, &bundle.capsule)?;
     Ok(path)
 }

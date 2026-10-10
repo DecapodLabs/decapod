@@ -31,7 +31,7 @@ fn lcm_db_path(root: &Path) -> PathBuf {
 // ---------------------------------------------------------------------------
 
 pub fn initialize_lcm_db(root: &Path) -> Result<(), error::DecapodError> {
-    fs::create_dir_all(root).map_err(error::DecapodError::IoError)?;
+    crate::core::fs_permissions::ensure_storage_dir(root).map_err(error::DecapodError::IoError)?;
     // LCM shares the local datastore with the control plane. Initialize the
     // transactional foundation first because broker policy checks use its
     // risk_zones table before the LCM schema closure runs.

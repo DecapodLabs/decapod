@@ -531,6 +531,7 @@ fn seed_publication_bundle(dir: &Path) {
 
     research_claims::ensure_template(dir, false).expect("claims template");
     let plan = GovernedPlan {
+        spec_reviews: Vec::new(),
         schema_version: "1.0.0".to_string(),
         title: "fixture".to_string(),
         intent: "fixture intent".to_string(),

@@ -1129,7 +1129,8 @@ pub fn retire_imported_legacy_jsonl(
         if !marked {
             continue;
         }
-        fs::create_dir_all(&archive).map_err(error::DecapodError::IoError)?;
+        crate::core::fs_permissions::ensure_storage_dir(&archive)
+            .map_err(error::DecapodError::IoError)?;
         let dest_name = filename.replace('/', "__");
         let mut dest = archive.join(&dest_name);
         if dest.exists() {
@@ -1137,6 +1138,11 @@ pub fn retire_imported_legacy_jsonl(
             let hash = file_content_hash(&path).unwrap_or_else(|_| "dup".into());
             dest = archive.join(format!("{dest_name}.{hash}"));
         }
+        crate::core::fs_permissions::check_file(
+            &path,
+            crate::core::fs_permissions::shared_storage(),
+        )
+        .map_err(error::DecapodError::IoError)?;
         fs::rename(&path, &dest).map_err(error::DecapodError::IoError)?;
         retired += 1;
         eprintln!(
@@ -1193,6 +1199,8 @@ pub fn mark_previously_consolidated_legacy_inputs(
 }
 
 fn file_content_hash(path: &Path) -> Result<String, error::DecapodError> {
+    crate::core::fs_permissions::check_file(path, crate::core::fs_permissions::shared_storage())
+        .map_err(error::DecapodError::IoError)?;
     let mut file = fs::File::open(path).map_err(error::DecapodError::IoError)?;
     let mut digest = Sha256::new();
     let mut buffer = [0_u8; 64 * 1024];

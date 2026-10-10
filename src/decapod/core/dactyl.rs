@@ -98,6 +98,7 @@ fn configured_sqlite_library() -> Result<Option<String>, DecapodError> {
         return Ok(None);
     }
 
+    crate::core::fs_permissions::check_file(&path, false).map_err(DecapodError::IoError)?;
     let raw = fs::read_to_string(&path).map_err(DecapodError::IoError)?;
     let config: HostRuntimeConfig = toml::from_str(&raw).map_err(|error| {
         DecapodError::Config(format!(
@@ -115,7 +116,7 @@ fn persist_sqlite_library(path: &Path) -> Result<(), DecapodError> {
     let parent = config_path.parent().ok_or_else(|| {
         DecapodError::Config("Decapod machine runtime config has no parent directory".to_string())
     })?;
-    fs::create_dir_all(parent).map_err(DecapodError::IoError)?;
+    crate::core::fs_permissions::ensure_private_dir(parent).map_err(DecapodError::IoError)?;
 
     let config = HostRuntimeConfig {
         schema_version: default_runtime_schema_version(),
@@ -123,18 +124,7 @@ fn persist_sqlite_library(path: &Path) -> Result<(), DecapodError> {
     };
     let body = toml::to_string_pretty(&config)
         .map_err(|error| DecapodError::Config(format!("encode machine runtime config: {error}")))?;
-    let temporary = config_path.with_extension(format!("toml.{}.tmp", std::process::id()));
-    fs::write(&temporary, body).map_err(DecapodError::IoError)?;
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        let mut permissions = fs::metadata(&temporary)
-            .map_err(DecapodError::IoError)?
-            .permissions();
-        permissions.set_mode(0o600);
-        fs::set_permissions(&temporary, permissions).map_err(DecapodError::IoError)?;
-    }
-    fs::rename(&temporary, &config_path).map_err(DecapodError::IoError)
+    crate::core::atomic::write_atomic(&config_path, body.as_bytes()).map_err(DecapodError::IoError)
 }
 
 fn host_runtime_config_path() -> Result<PathBuf, DecapodError> {
@@ -399,7 +389,56 @@ impl DactylBridge {
     /// bridge, so cooperating Decapod writers cannot overlap the operation.
     /// Dactyl owns SQLite's WAL/SHM-aware snapshot and atomic publication.
     pub fn backup(&self, destination: impl AsRef<Path>) -> Result<BackupResult, DecapodError> {
-        Ok(self.connection.backup(destination)?)
+        let destination = destination.as_ref();
+        let parent = destination
+            .parent()
+            .filter(|p| !p.as_os_str().is_empty())
+            .unwrap_or(Path::new("."));
+        crate::core::fs_permissions::ensure_storage_dir(parent).map_err(DecapodError::IoError)?;
+        crate::core::fs_permissions::check_storage(destination).map_err(DecapodError::IoError)?;
+        // Dactyl owns the snapshot, but currently creates maintenance temporaries
+        // with ambient mode. Confine those in a fresh private sibling directory.
+        let staging = parent.join(format!(".decapod-backup-{}", crate::core::ulid::new_ulid()));
+        let mut builder = fs::DirBuilder::new();
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::DirBuilderExt;
+            builder.mode(0o700);
+        }
+        builder.create(&staging).map_err(DecapodError::IoError)?;
+        let snapshot = staging.join("snapshot.db");
+        let result: Result<BackupResult, DecapodError> = (|| {
+            let mut result = self.connection.backup(&snapshot)?;
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                let mode = if crate::core::fs_permissions::shared_storage() {
+                    0o660
+                } else {
+                    0o600
+                };
+                // This is the new private staging inode, never an existing user file.
+                let mode = fs::metadata(&snapshot)
+                    .map_err(DecapodError::IoError)?
+                    .permissions()
+                    .mode()
+                    & mode;
+                fs::set_permissions(&snapshot, fs::Permissions::from_mode(mode))
+                    .map_err(DecapodError::IoError)?;
+            }
+            fs::File::open(&snapshot)
+                .and_then(|f| f.sync_all())
+                .map_err(DecapodError::IoError)?;
+            // Same-filesystem publication without overwriting a concurrently
+            // created destination. Removing staging leaves a single link.
+            fs::hard_link(&snapshot, destination).map_err(DecapodError::IoError)?;
+            result.destination = destination.to_string_lossy().into_owned();
+            Ok(result)
+        })();
+        let cleanup = fs::remove_dir_all(&staging).map_err(DecapodError::IoError);
+        let result = result?;
+        cleanup?;
+        Ok(result)
     }
 
     /// Explicitly activate Dactyl's verified logical dump/reload replacement.
@@ -412,11 +451,54 @@ impl DactylBridge {
         &mut self,
         preserve_original_at: impl AsRef<Path>,
     ) -> Result<RecoveryResult, DecapodError> {
+        let archive = preserve_original_at.as_ref();
+        let parent = archive
+            .parent()
+            .filter(|p| !p.as_os_str().is_empty())
+            .unwrap_or(Path::new("."));
+        crate::core::fs_permissions::check_directory(
+            parent,
+            crate::core::fs_permissions::shared_storage(),
+        )
+        .map_err(DecapodError::IoError)?;
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            if fs::metadata(parent)
+                .map_err(DecapodError::IoError)?
+                .permissions()
+                .mode()
+                & 0o077
+                != 0
+            {
+                return Err(DecapodError::ValidationError(
+                    "STORAGE_RECOVERY_PRIVATE_DIRECTORY_REQUIRED: the pinned Dactyl recovery API creates temporary files beside the active database and does not expose creation modes. Recovery requires a private (0700) database directory; no existing permissions were changed. Shared-directory recovery needs upstream Dactyl maintenance-permission support. Preserve the store and ask its owner to review the recovery location.".to_string()
+                ));
+            }
+        }
+        crate::core::fs_permissions::check_storage(archive).map_err(DecapodError::IoError)?;
         let options = RecoveryOptions::new(
             preserve_original_at.as_ref().to_string_lossy(),
             RecoveryJournalMode::Delete,
         );
-        Ok(self.connection.recover_from_dump_reload(options)?)
+        let result = self.connection.recover_from_dump_reload(options)?;
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            // Dactyl has published a newly rebuilt inode within a private
+            // directory. Preserve the archived original's intentional safe mode.
+            let permissions = fs::metadata(&result.preserved_original_path)
+                .map_err(DecapodError::IoError)?
+                .permissions();
+            fs::set_permissions(
+                &result.active_path,
+                fs::Permissions::from_mode(permissions.mode() & 0o777),
+            )
+            .map_err(DecapodError::IoError)?;
+        }
+        crate::core::fs_permissions::check_storage(Path::new(&result.active_path))
+            .map_err(DecapodError::IoError)?;
+        Ok(result)
     }
 
     fn open_route(
@@ -453,9 +535,20 @@ fn local_storage_lock(
             .parent()
             .filter(|parent| !parent.as_os_str().is_empty())
     {
-        fs::create_dir_all(parent).map_err(DecapodError::IoError)?;
+        crate::core::fs_permissions::ensure_storage_dir(parent).map_err(DecapodError::IoError)?;
     }
 
+    if access_mode == AccessMode::ReadWrite {
+        crate::core::fs_permissions::open_storage_file(
+            path,
+            fs::OpenOptions::new()
+                .create(true)
+                .truncate(false)
+                .write(true),
+        )
+        .map_err(DecapodError::IoError)?;
+    }
+    crate::core::fs_permissions::check_storage(path).map_err(DecapodError::IoError)?;
     let mode = if access_mode == AccessMode::ReadOnly {
         StorageLockMode::Shared
     } else {

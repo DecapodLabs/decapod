@@ -392,8 +392,8 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c7bdbebfb346baefe0c9c0d59001b8fe58ae3ddc2b6977be0c6fde625a5319b1`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (119 files), `tests/` (4 files)
+- Repository signal fingerprint: `34647bb8f923292a6788fce97bf591b7da81244f2daed9693986e988f9457e5b`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (124 files), `tests/` (161 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -414,3 +414,28 @@ failures to distinguish gate execution from startup and receipt overhead.
 Broker crash-replay fixtures use the canonical datastore for both writes and
 verification. Observation-ledger tests validate explicit sequence numbers and
 their associated operations; ULID-key iteration order is not append order.
+
+## Five-issue recovery regression surfaces
+
+Dirty-root isolation is checked with committed Git fixtures containing staged
+and unstaged tracked changes, untracked names with quotes/newlines, ignored
+private files and governance changes. Tests compare original file bytes and the
+index, create independent workspaces, verify only committed content appears in
+them and reject ownership/symlink collisions. A CLI fixture exercises actual
+`todo claim` and `workspace ensure` twice from dirty master while preserving
+root notes, configuration and managed specification bytes. Status and governance
+inventory must return the same source-isolation ownership records.
+
+Lifecycle process tests use real short-lived helpers for excessive output,
+timeouts, reaping and interruption; container protocol fixtures test command and
+ownership handling. Fixture success does not establish execution in a Docker
+container or against a hosted Supabase service. Those proofs require their own
+explicitly provisioned runtime and fixture and must be reported unavailable
+when not run.
+
+The actual Docker lifecycle profile is opt-in locally and explicit in the
+Ubuntu Actions job. It uses a pre-pulled official disposable fixture, interrupts
+the foreground caller, then verifies that receipt-bound recovery removes the
+matching immutable container while preserving unrelated state. Local runs that
+lack Docker leave this profile ignored; only its recorded Actions result can
+establish the actual daemon-backed behavior.

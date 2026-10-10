@@ -29,7 +29,7 @@ fn governed_schemas_are_grouped_and_strict() {
         ),
         (
             "assets/schemas/plan.schema.json",
-            "https://decapod.dev/schemas/plan-1.0.0.schema.json",
+            "https://decapod.dev/schemas/plan-1.1.0.schema.json",
             &["schema_version", "state", "phases"][..],
         ),
         (
@@ -124,4 +124,29 @@ fn relocatable_support_files_have_one_asset_home() {
             "stale support path remains: {path}"
         );
     }
+}
+
+#[test]
+fn plan_review_schema_preserves_legacy_and_current_content_evidence() {
+    let plan = read_json("assets/schemas/plan.schema.json");
+    assert_eq!(
+        plan["properties"]["schema_version"]["enum"],
+        serde_json::json!(["1.0.0", "1.1.0"])
+    );
+    assert!(!has_required(&plan, "spec_reviews"));
+    let review = &plan["$defs"]["spec_review"];
+    assert_eq!(review["additionalProperties"], false);
+    for field in [
+        "path",
+        "spec_material_hash",
+        "reviewed_code_fingerprint",
+        "disposition",
+        "reason",
+    ] {
+        assert!(has_required(review, field));
+    }
+    assert_eq!(
+        review["properties"]["disposition"]["enum"],
+        serde_json::json!(["updated", "unchanged_with_reason", "requires_decision"])
+    );
 }

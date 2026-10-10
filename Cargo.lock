@@ -432,6 +432,7 @@ dependencies = [
  "fancy-regex",
  "flate2",
  "fs2",
+ "libc",
  "proc-macro2",
  "regex",
  "serde",

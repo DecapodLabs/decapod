@@ -35,6 +35,7 @@ pub enum Error {
     InvalidColumnType(usize, String, Type),
     InvalidParameterName(String),
     InvalidQuery,
+    Io(std::io::Error),
 }
 
 impl fmt::Display for Error {
@@ -52,6 +53,7 @@ impl fmt::Display for Error {
                 write!(f, "invalid column type at {index} ({name}): {kind:?}")
             }
             Self::InvalidParameterName(name) => write!(f, "invalid parameter name: {name}"),
+            Self::Io(error) => write!(f, "{error}"),
             Self::InvalidQuery => f.write_str("invalid query"),
         }
     }
@@ -61,6 +63,7 @@ impl std::error::Error for Error {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::Dactyl(error) => Some(error),
+            Self::Io(error) => Some(error),
             Self::FromSqlConversionFailure(_, _, error) => Some(error.as_ref()),
             Self::ToSqlConversionFailure(error) => Some(error.as_ref()),
             _ => None,
@@ -387,7 +390,7 @@ impl Connection {
         // reaches SQLite's CREATE flag. Seed the empty file for a new
         // read-write datastore so the Dactyl open remains the authority for
         // the actual connection and header validation.
-        ensure_dactyl_create_target(path.as_ref(), access_mode);
+        ensure_dactyl_create_target(path.as_ref(), access_mode).map_err(Error::Io)?;
         let driver = dactyl_db::Connection::open_with_options(
             DatastoreRoute::sqlite(path.as_ref().to_string_lossy().into_owned()),
             OpenOptions {
@@ -506,22 +509,26 @@ impl Connection {
     }
 }
 
-fn ensure_dactyl_create_target(path: &Path, access_mode: AccessMode) {
-    if access_mode != AccessMode::ReadWrite || path == Path::new(":memory:") || path.exists() {
-        return;
+fn ensure_dactyl_create_target(path: &Path, access_mode: AccessMode) -> std::io::Result<()> {
+    if path == Path::new(":memory:") {
+        return Ok(());
     }
-
-    if let Some(parent) = path
-        .parent()
-        .filter(|parent| !parent.as_os_str().is_empty())
-    {
-        let _ = fs::create_dir_all(parent);
+    if access_mode == AccessMode::ReadWrite {
+        if let Some(parent) = path
+            .parent()
+            .filter(|parent| !parent.as_os_str().is_empty())
+        {
+            crate::core::fs_permissions::ensure_storage_dir(parent)?;
+        }
+        crate::core::fs_permissions::open_storage_file(
+            path,
+            fs::OpenOptions::new()
+                .create(true)
+                .truncate(false)
+                .write(true),
+        )?;
     }
-    let _ = fs::OpenOptions::new()
-        .create(true)
-        .truncate(false)
-        .write(true)
-        .open(path);
+    crate::core::fs_permissions::check_storage(path)
 }
 
 pub struct Statement<'conn> {

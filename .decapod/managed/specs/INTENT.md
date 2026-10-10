@@ -340,8 +340,8 @@ policy ban based solely on virtiofs or FUSE filesystem identity.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c7bdbebfb346baefe0c9c0d59001b8fe58ae3ddc2b6977be0c6fde625a5319b1`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (119 files), `tests/` (4 files)
+- Repository signal fingerprint: `34647bb8f923292a6788fce97bf591b7da81244f2daed9693986e988f9457e5b`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (124 files), `tests/` (161 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -367,3 +367,25 @@ The GitHub Actions release workflow now publishes a multi-architecture docker im
 ## Target approval correction (#1361)
 
 Target-scoped operator approvals authorize the identified todo without authorizing a different todo. Operators may deliberately grant action-wide approvals as a compatibility fallback, inspect grants, and revoke them. CLI grants expire after 900 seconds by default.
+
+## Critical control-plane recovery and isolation
+
+Workspace setup starts from a committed base and retains unrelated source-checkout
+changes in place. Tracked, staged, untracked, ignored and governance paths are
+reported with their ownership classification; setup does not stash, discard,
+copy or commit user changes. An unowned destination, a symlinked workspace
+parent or an unresolved base is a blocking ownership error, not permission to
+reuse another directory or branch. Full task IDs take precedence over colliding
+short hashes so concurrent tasks cannot acquire one another by prefix.
+
+Lifecycle helpers must finish within explicit deadlines, drain output without
+pipe deadlocks and reap owned subprocesses. Recovery must preserve workspaces
+when runtime cleanup, branch inspection or task ownership cannot be established.
+Persistent numeric PID records alone never authorize signalling a process.
+
+Cloud task retries retain the accepted operation identity across authentication
+handoffs and ambiguous outcomes, without creating a local SQLite fallback.
+State files and runtime configuration have an explicit filesystem permission
+boundary. Publication must establish local proof currency and read back the
+published remote state; a pushed branch, a draft PR, validation success and
+actual external-service/container proof remain separate outcomes.

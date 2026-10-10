@@ -615,7 +615,8 @@ fn container_launch_rejects_ambiguous_runtime_mount_paths() {
                 Path::new(path),
                 Path::new("/workspace"),
                 "docker",
-                "image"
+                "image",
+                "test-invocation"
             )
             .unwrap_err()
             .to_string()
@@ -626,7 +627,8 @@ fn container_launch_rejects_ambiguous_runtime_mount_paths() {
                 Path::new("/repo"),
                 Path::new(path),
                 "podman",
-                "image"
+                "image",
+                "test-invocation"
             )
             .is_err()
         );
@@ -639,8 +641,14 @@ fn container_launch_rejects_non_utf8_paths() {
     use std::os::unix::ffi::OsStrExt;
     let path = Path::new(std::ffi::OsStr::from_bytes(b"/repo\xff"));
     assert!(
-        container_workspace_launch_command(path, Path::new("/workspace"), "docker", "image")
-            .is_err()
+        container_workspace_launch_command(
+            path,
+            Path::new("/workspace"),
+            "docker",
+            "image",
+            "test-invocation"
+        )
+        .is_err()
     );
 }
 
@@ -698,6 +706,7 @@ exit "$RUNTIME_EXIT"
         &workspace,
         bin.join("mock-runtime").to_str().unwrap(),
         "test-image",
+        "test-invocation",
     )
     .unwrap();
     let target = workspace.join("target");
@@ -751,7 +760,14 @@ exit "$RUNTIME_EXIT"
                 repo.display()
             )));
             assert!(args.contains(",dst=/tmp/decapod-store.db,readonly\n"));
-            assert!(args.contains("run\n--rm\n-it\n-e\nDECAPOD_CONTAINER=1\n"));
+            assert!(args.starts_with("run\n--rm\n-it\n"));
+            assert!(args.contains("-e\nDECAPOD_CONTAINER=1\n"));
+            assert!(args.contains("--label\norg.decapod.managed=workspace\n"));
+            assert!(args.contains(&format!(
+                "--label\norg.decapod.workspace.path={}\n",
+                workspace.display()
+            )));
+            assert!(args.contains("--label\norg.decapod.invocation=test-invocation\n"));
             assert!(args.contains("cp -- /tmp/decapod-store.db "));
             assert!(args.contains("/decapod.db && exec bash"));
         }
@@ -760,4 +776,252 @@ exit "$RUNTIME_EXIT"
     let paths: std::collections::HashSet<_> = snapshots.lines().collect();
     assert_eq!(paths.len(), 4, "every invocation owns a fresh snapshot");
     assert!(paths.iter().all(|path| !Path::new(path).exists()));
+}
+
+fn isolation_repo() -> tempfile::TempDir {
+    let repo = tempdir().unwrap();
+    git(repo.path(), &["init", "-q", "-b", "master"]);
+    git(repo.path(), &["config", "user.email", "test@example.com"]);
+    git(repo.path(), &["config", "user.name", "Isolation Test"]);
+    std::fs::write(repo.path().join("tracked.txt"), "committed\n").unwrap();
+    std::fs::write(
+        repo.path().join(".gitignore"),
+        "ignored/\n.decapod/data/\n.decapod/workspaces/\n",
+    )
+    .unwrap();
+    std::fs::create_dir_all(repo.path().join(".decapod/governance")).unwrap();
+    std::fs::write(repo.path().join(".decapod/governance/plan.json"), "{}\n").unwrap();
+    git(repo.path(), &["add", "."]);
+    git(repo.path(), &["commit", "-qm", "base"]);
+    repo
+}
+
+#[test]
+fn dirty_root_isolation_preserves_files_and_uses_only_committed_base() {
+    use crate::core::dirty_classification::DirtyFileClass;
+    let repo = isolation_repo();
+    let root = repo.path();
+    std::fs::write(root.join("tracked.txt"), "user staged changes\n").unwrap();
+    git(root, &["add", "tracked.txt"]);
+    std::fs::write(root.join("tracked.txt"), "user unstaged changes\n").unwrap();
+    std::fs::write(root.join("untracked\n\"note.txt"), "private\n").unwrap();
+    std::fs::create_dir_all(root.join("ignored")).unwrap();
+    std::fs::write(root.join("ignored/private.txt"), "ignored private\n").unwrap();
+    std::fs::write(
+        root.join(".decapod/governance/plan.json"),
+        "{\"user\":true}\n",
+    )
+    .unwrap();
+    let paths = [
+        "tracked.txt",
+        "untracked\n\"note.txt",
+        "ignored/private.txt",
+        ".decapod/governance/plan.json",
+        ".git/index",
+    ];
+    let before: Vec<_> = paths
+        .iter()
+        .map(|path| std::fs::read(root.join(path)).unwrap())
+        .collect();
+    let inventory = root_isolation(root).unwrap();
+    assert!(
+        inventory
+            .files
+            .iter()
+            .any(|file| file.path == "ignored/" && file.status == "!!")
+    );
+    assert!(
+        inventory
+            .files
+            .iter()
+            .any(|file| file.path == "untracked\n\"note.txt" && file.status == "??")
+    );
+    assert!(
+        inventory
+            .files
+            .iter()
+            .any(|file| file.path == ".decapod/governance/plan.json"
+                && file.class == DirtyFileClass::GovernanceTracked)
+    );
+    assert_eq!(
+        serde_json::to_value(&inventory).unwrap(),
+        serde_json::to_value(root_isolation(root).unwrap()).unwrap()
+    );
+    let workspace = create_worktree(root, "agent/isolated-one", "test", "one", "master").unwrap();
+    let second = create_worktree(root, "agent/isolated-two", "test", "two", "master").unwrap();
+    assert_ne!(workspace, second);
+    for path in [workspace, second] {
+        assert_eq!(
+            std::fs::read_to_string(path.join("tracked.txt")).unwrap(),
+            "committed\n"
+        );
+        assert!(!path.join("untracked\n\"note.txt").exists());
+        assert!(!path.join("ignored/private.txt").exists());
+        assert_eq!(
+            std::fs::read_to_string(path.join(".decapod/governance/plan.json")).unwrap(),
+            "{}\n"
+        );
+    }
+    for (path, expected) in paths.iter().zip(before) {
+        assert_eq!(
+            std::fs::read(root.join(path)).unwrap(),
+            expected,
+            "source changed: {path}"
+        );
+    }
+}
+
+#[test]
+fn workspace_collision_preserves_unowned_target_and_existing_branch() {
+    let repo = isolation_repo();
+    let path = repo
+        .path()
+        .join(".decapod/workspaces/test-one-agent-collision");
+    std::fs::create_dir_all(&path).unwrap();
+    std::fs::write(path.join("user.txt"), "preserve").unwrap();
+    let error =
+        create_worktree(repo.path(), "agent/collision", "test", "one", "master").unwrap_err();
+    assert!(
+        error
+            .to_string()
+            .contains("WORKSPACE_PATH_OWNERSHIP_CONFLICT")
+    );
+    assert!(
+        error
+            .to_string()
+            .contains("existing_unowned_workspace_target")
+    );
+    assert_eq!(
+        std::fs::read_to_string(path.join("user.txt")).unwrap(),
+        "preserve"
+    );
+    git(repo.path(), &["branch", "agent/existing"]);
+    let error =
+        create_worktree(repo.path(), "agent/existing", "test", "two", "master").unwrap_err();
+    assert!(error.to_string().contains("WORKSPACE_CREATE_FAILED"));
+}
+
+#[test]
+fn workspace_requires_resolved_base_instead_of_implicit_head() {
+    let repo = isolation_repo();
+    let error = create_worktree(repo.path(), "agent/test", "test", "one", "missing").unwrap_err();
+    assert!(error.to_string().contains("WORKSPACE_BASE_UNRESOLVED"));
+}
+
+#[cfg(unix)]
+#[test]
+fn workspace_symlink_parent_cannot_redirect_mutations() {
+    let repo = isolation_repo();
+    let outside = tempdir().unwrap();
+    std::os::unix::fs::symlink(outside.path(), repo.path().join(".decapod/workspaces")).unwrap();
+    let error = create_worktree(repo.path(), "agent/test", "test", "one", "master").unwrap_err();
+    assert!(
+        error
+            .to_string()
+            .contains("non_directory_or_symlink_parent")
+    );
+    assert_eq!(std::fs::read_dir(outside.path()).unwrap().count(), 0);
+}
+
+#[test]
+fn full_task_ids_never_claim_another_task_with_same_short_hash() {
+    let first = AssignedTodoRef {
+        id: "bugs_01m4jdaambn944vm".into(),
+        hash: "01m4jd".into(),
+    };
+    let second = AssignedTodoRef {
+        id: "bugs_01m4jdgcqhcy5tse".into(),
+        hash: "01m4jd".into(),
+    };
+    let branch = format!("agent/integration/{}", first.id);
+    assert!(branch_contains_any_todo_id_or_hash(&branch, &[first]));
+    assert!(!branch_contains_any_todo_id_or_hash(
+        &branch,
+        std::slice::from_ref(&second)
+    ));
+    assert!(branch_contains_any_todo_id_or_hash(
+        "agent/test/todo-01m4jd",
+        &[second]
+    ));
+}
+
+#[test]
+fn dirty_isolation_inventory_preserves_both_rename_paths() {
+    let repo = isolation_repo();
+    git(repo.path(), &["mv", "tracked.txt", "renamed\nfile.txt"]);
+    let inventory = root_isolation(repo.path()).unwrap();
+    assert!(
+        inventory
+            .files
+            .iter()
+            .any(|file| file.path == "tracked.txt" && file.status.contains('R'))
+    );
+    assert!(
+        inventory
+            .files
+            .iter()
+            .any(|file| file.path == "renamed\nfile.txt" && file.status.contains('R'))
+    );
+}
+
+#[test]
+fn container_profile_requires_verified_runtime_cleanup() {
+    let temp = tempdir().unwrap();
+    let profile = temp.path().join(container::MANAGED_DOCKERFILE_REL_PATH);
+    std::fs::create_dir_all(profile.parent().unwrap()).unwrap();
+    std::fs::write(profile, "FROM scratch\n").unwrap();
+    let result = reconcile_workspace_containers(
+        temp.path(),
+        Err(DecapodError::NotFound("runtime unavailable".into())),
+    );
+    assert!(
+        result.is_err(),
+        "container ownership must remain unresolved without runtime"
+    );
+}
+
+#[test]
+fn plain_git_workspace_does_not_require_installed_container_runtime() {
+    let temp = tempdir().unwrap();
+    assert!(
+        reconcile_workspace_containers(
+            temp.path(),
+            Err(DecapodError::NotFound("runtime unavailable".into()))
+        )
+        .is_ok()
+    );
+}
+
+#[test]
+fn interrupted_owned_reservation_retry_preserves_new_user_files() {
+    let temp = tempdir().unwrap();
+    git(temp.path(), &["init", "-b", "master"]);
+    git(temp.path(), &["config", "user.name", "Test"]);
+    git(
+        temp.path(),
+        &["config", "user.email", "test@example.invalid"],
+    );
+    std::fs::write(temp.path().join("README"), "base").unwrap();
+    git(temp.path(), &["add", "README"]);
+    git(temp.path(), &["commit", "-m", "base"]);
+    let target = temp
+        .path()
+        .join(".decapod/workspaces/tester-todo-safe-agent-test-retry");
+    let owned = crate::core::workspace_lifecycle::reserve(temp.path(), &target, false).unwrap();
+    drop(owned);
+    std::fs::write(target.join("user-note"), "keep").unwrap();
+    assert!(
+        create_worktree(
+            temp.path(),
+            "agent/test/retry",
+            "tester",
+            "todo-safe",
+            "master"
+        )
+        .is_err()
+    );
+    assert_eq!(
+        std::fs::read_to_string(target.join("user-note")).unwrap(),
+        "keep"
+    );
 }

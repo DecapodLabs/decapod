@@ -327,7 +327,21 @@ continue to be surfaced through the existing storage checks.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c7bdbebfb346baefe0c9c0d59001b8fe58ae3ddc2b6977be0c6fde625a5319b1`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (119 files), `tests/` (4 files)
+- Repository signal fingerprint: `34647bb8f923292a6788fce97bf591b7da81244f2daed9693986e988f9457e5b`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (124 files), `tests/` (161 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Conservative workspace recovery
+
+A force-prune request relaxes lifecycle selection only after workspace ownership
+is established; it does not authorize removing arbitrary directories beneath
+`.decapod/workspaces`. Unknown or unowned directories remain preserved. An unregistered local clone
+can be recovered only with a canonical event-store invocation receipt, matching
+directory identity and an inactive per-path lease; a task-like name is never
+ownership evidence. Active claims protect local clones as well as registered
+worktrees. Task lookup,
+branch inspection, runtime discovery, container ownership or deletion failures
+produce a preserved/skipped result rather than a fabricated successful cleanup.
+Container-profile workspaces are retained when the runtime is missing, so a
+later supported recovery can verify and remove the owned container first.
