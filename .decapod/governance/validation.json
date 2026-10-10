@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "kind": "validation_receipt",
   "decapod_release": "0.107.0",
-  "git_revision": "56f744ccbb6f4ca777442690f6fb9f0b6a2d4176",
+  "git_revision": "04bf374aad7d99360660cd0c15b974722a02da9b",
   "repo_signal_fingerprint": "34647bb8f923292a6788fce97bf591b7da81244f2daed9693986e988f9457e5b",
   "trajectory_run_id": "five-critical-20261010",
   "trajectory_artifact_hash": "sha256:ccdf13e42321856bf65373618fa88270de96cd80cff8a4338ae65dfbc9796e17",
@@ -54,91 +54,91 @@
   "pass_count": 203,
   "fail_count": 0,
   "warn_count": 4,
-  "elapsed_ms": 3294,
+  "elapsed_ms": 3481,
   "drift_findings": [],
   "temporary_artifacts_cleaned": 0,
   "failures": [],
   "warnings": [
+    "No open pull request found on GitHub for branch 'agent/five-critical/bugs_01m4jdaambn944vm'. Create a pull request to submit changes.",
     "Risk map missing (run `decapod riskmap init`)",
-    "Stale workspaces preserved for explicit review: <external-path> (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch), <external-path> (active_claim: workspace belongs to an active task claim; release or complete the claim before pruning), <external-path> (active_claim: workspace belongs to an active task claim; release or complete the claim before pruning), <external-path> (active_claim: workspace belongs to an active task claim; release or complete the claim before pruning)",
-    "Watcher audit trail missing (run `decapod govern watcher run`)",
-    "Workspace branch 'agent/five-critical/bugs_01m4jdaambn944vm' has unpushed commits or does not exist on origin. Run `git push origin agent/five-critical/bugs_01m4jdaambn944vm`."
+    "Stale workspaces preserved for explicit review: <external-path> (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch)",
+    "Watcher audit trail missing (run `decapod govern watcher run`)"
   ],
   "gate_timings": [
     {
       "name": "validate_machine_contract",
-      "elapsed_ms": 2024
+      "elapsed_ms": 2027
     },
     {
       "name": "validate_markdown_primitives_roundtrip_gate",
-      "elapsed_ms": 354
+      "elapsed_ms": 362
     },
     {
       "name": "validate_project_specs_docs",
-      "elapsed_ms": 330
+      "elapsed_ms": 319
+    },
+    {
+      "name": "validate_stale_workspaces",
+      "elapsed_ms": 205
     },
     {
       "name": "validate_obligations",
       "elapsed_ms": 110
     },
     {
-      "name": "validate_stale_workspaces",
-      "elapsed_ms": 102
-    },
-    {
       "name": "validate_legacy_jsonl_retired",
-      "elapsed_ms": 69
+      "elapsed_ms": 75
     },
     {
       "name": "validate_git_workspace_context",
-      "elapsed_ms": 62
+      "elapsed_ms": 61
+    },
+    {
+      "name": "validate_git_push_pr_gate",
+      "elapsed_ms": 60
+    },
+    {
+      "name": "validate_control_plane_contract",
+      "elapsed_ms": 46
     },
     {
       "name": "validate_archive_integrity",
       "elapsed_ms": 38
     },
     {
-      "name": "validate_control_plane_contract",
-      "elapsed_ms": 37
-    },
-    {
       "name": "validate_schema_determinism",
-      "elapsed_ms": 26
+      "elapsed_ms": 29
     },
     {
       "name": "validate_embedded_self_contained",
-      "elapsed_ms": 10
+      "elapsed_ms": 11
     },
     {
       "name": "validate_federation_gates",
-      "elapsed_ms": 10
+      "elapsed_ms": 9
     },
     {
-      "name": "validate_git_protected_branch",
-      "elapsed_ms": 8
+      "name": "validate_repomap_determinism",
+      "elapsed_ms": 7
     },
     {
       "name": "validate_no_legacy_namespaces",
-      "elapsed_ms": 8
+      "elapsed_ms": 7
+    },
+    {
+      "name": "validate_git_protected_branch",
+      "elapsed_ms": 7
     },
     {
       "name": "validate_lineage_hard_gate",
       "elapsed_ms": 6
     },
     {
-      "name": "validate_git_push_pr_gate",
+      "name": "validate_interface_contract_bootstrap",
       "elapsed_ms": 5
     },
     {
-      "name": "validate_repomap_determinism",
-      "elapsed_ms": 4
-    },
-    {
-      "name": "validate_interface_contract_bootstrap",
-      "elapsed_ms": 4
-    },
-    {
-      "name": "validate_lcm_immutability",
+      "name": "validate_watcher_audit",
       "elapsed_ms": 4
     },
     {
@@ -146,7 +146,7 @@
       "elapsed_ms": 3
     },
     {
-      "name": "validate_watcher_audit",
+      "name": "validate_lcm_immutability",
       "elapsed_ms": 3
     },
     {
@@ -158,27 +158,27 @@
       "elapsed_ms": 2
     },
     {
-      "name": "validate_health_purity",
-      "elapsed_ms": 2
-    },
-    {
       "name": "validate_knowledge_integrity",
       "elapsed_ms": 2
     },
     {
-      "name": "validate_database_schema_versions",
+      "name": "validate_health_purity",
       "elapsed_ms": 2
     },
     {
       "name": "validate_generated_artifact_whitelist",
-      "elapsed_ms": 1
+      "elapsed_ms": 2
     },
     {
-      "name": "validate_plan_governed_execution_gate",
+      "name": "validate_database_schema_versions",
       "elapsed_ms": 1
     },
     {
       "name": "validate_override_authority",
+      "elapsed_ms": 1
+    },
+    {
+      "name": "validate_plan_governed_execution_gate",
       "elapsed_ms": 1
     },
     {
@@ -194,7 +194,19 @@
       "elapsed_ms": 0
     },
     {
+      "name": "validate_repo_map",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_watcher_purity",
+      "elapsed_ms": 0
+    },
+    {
       "name": "validate_canon_mutation",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_project_config_toml",
       "elapsed_ms": 0
     },
     {
@@ -206,23 +218,7 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_watcher_purity",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_repo_map",
-      "elapsed_ms": 0
-    },
-    {
       "name": "validate_entrypoint_invariants",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_project_config_toml",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_trajectory_artifacts_if_present",
       "elapsed_ms": 0
     },
     {
@@ -230,11 +226,15 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_spec_drift",
+      "name": "validate_trajectory_artifacts_if_present",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_project_scoped_state",
+      "name": "validate_docs_templates_bucket",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_spec_drift",
       "elapsed_ms": 0
     },
     {
@@ -242,11 +242,11 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_context_capsule_policy_contract",
+      "name": "validate_project_scoped_state",
       "elapsed_ms": 0
     },
     {
-      "name": "validate_docs_templates_bucket",
+      "name": "validate_context_capsule_policy_contract",
       "elapsed_ms": 0
     },
     {
@@ -258,7 +258,7 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_eval_gate_if_required",
+      "name": "validate_root_dockerfile_seed_detection",
       "elapsed_ms": 0
     },
     {
@@ -266,15 +266,11 @@
       "elapsed_ms": 0
     },
     {
+      "name": "validate_recursive_improvement_passes_if_present",
+      "elapsed_ms": 0
+    },
+    {
       "name": "validate_tooling_gate",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_root_dockerfile_seed_detection",
-      "elapsed_ms": 0
-    },
-    {
-      "name": "validate_jev_history_if_present",
       "elapsed_ms": 0
     },
     {
@@ -286,7 +282,11 @@
       "elapsed_ms": 0
     },
     {
-      "name": "validate_recursive_improvement_passes_if_present",
+      "name": "validate_jev_history_if_present",
+      "elapsed_ms": 0
+    },
+    {
+      "name": "validate_eval_gate_if_required",
       "elapsed_ms": 0
     }
   ],
@@ -295,15 +295,15 @@
     "result": "review",
     "confidence": "medium",
     "reasons": [
+      "No open pull request found on GitHub for branch 'agent/five-critical/bugs_01m4jdaambn944vm'. Create a pull request to submit changes.",
       "Risk map missing (run `decapod riskmap init`)",
-      "Stale workspaces preserved for explicit review: <external-path> (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch), <external-path> (active_claim: workspace belongs to an active task claim; release or complete the claim before pruning), <external-path> (active_claim: workspace belongs to an active task claim; release or complete the claim before pruning), <external-path> (active_claim: workspace belongs to an active task claim; release or complete the claim before pruning)",
-      "Watcher audit trail missing (run `decapod govern watcher run`)",
-      "Workspace branch 'agent/five-critical/bugs_01m4jdaambn944vm' has unpushed commits or does not exist on origin. Run `git push origin agent/five-critical/bugs_01m4jdaambn944vm`."
+      "Stale workspaces preserved for explicit review: <external-path> (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch)",
+      "Watcher audit trail missing (run `decapod govern watcher run`)"
     ],
     "recommendations": [
       "Review the reported validation warnings before relying on the CI result.",
       "Use `decapod validate -v --format json` to inspect the affected gate output."
     ]
   },
-  "receipt_hash": "sha256:da553bca2750fe9007f020b86fa75417c5c2ded7904db6fec2d84f5d53850626"
+  "receipt_hash": "sha256:9c1bbe4843bb92542c0511de39ed590bcd7d79f5bda6fd5efe5f157e43953bbb"
 }
