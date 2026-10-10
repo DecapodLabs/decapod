@@ -5,14 +5,22 @@
   "task_id": "bugs_01m4jdaambn944vm",
   "original_intent": "Fix five critical issues in one PR",
   "derived_intent": "Repair scoped GitHub Actions lifecycle, broker, permission and fixture regressions in PR1383",
-  "current_phase": "verification",
+  "current_phase": "validation",
+  "next_transitions": [
+    "publish"
+  ],
   "active_boundaries": [
     "No merge, release, deployment or changes to credentials; preserve intentional shared storage"
   ],
   "repo_scope": [],
   "inspected_files": [],
-  "modified_files": [],
-  "declared_commands": [],
+  "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json"
+  ],
+  "declared_commands": [
+    "decapod validate"
+  ],
   "tool_calls": [],
   "checks": [
     {
@@ -21,6 +29,10 @@
     },
     {
       "name": "all_feature_library",
+      "status": "passed"
+    },
+    {
+      "name": "decapod validate",
       "status": "passed"
     },
     {
@@ -33,7 +45,8 @@
     }
   ],
   "evidence": [
-    "Source04f37b66:550 all-feature library tests passed,1 Docker profile ignored locally; strict all-target all-feature Clippy passed; broader core/plugin/replay/validation targets passed after fixture fixes. Actual Docker and Unix broker socket acceptance reruns require GitHub Actions."
+    "Source04f37b66:550 all-feature library tests passed,1 Docker profile ignored locally; strict all-target all-feature Clippy passed; broader core/plugin/replay/validation targets passed after fixture fixes. Actual Docker and Unix broker socket acceptance reruns require GitHub Actions.",
+    "validation epoch ve_4ebe6b4c086b5ebd completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -44,7 +57,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:29b5ccc5caa7ab5df517c3ad18841629c6341983afb8a199e8f52f09e5136758",
+  "artifact_hash": "sha256:c5f4da05e26928dabd78280ef910d8ddb722dc3354bfb22421406a891d72f49f",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -84,6 +97,13 @@
         "intent_id": "intent:five-critical-ci-20261010",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:five-critical-ci-20261010"
+      },
+      {
+        "sequence": 5,
+        "event_id": "event:5",
+        "intent_id": "intent:five-critical-ci-20261010",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:five-critical-ci-20261010"
       }
     ],
     "trajectories": {
@@ -107,12 +127,28 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
+          },
+          {
+            "sequence": 5,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_4ebe6b4c086b5ebd completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:5"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 4
+    "next_sequence": 5
   }
 }
