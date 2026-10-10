@@ -84,8 +84,8 @@ fn setup_repo_with(run: DecapodRunner) -> (TempDir, PathBuf, String) {
     (tmp, dir, password)
 }
 
-fn acquire_session_password(dir: &Path, agent_id: &str) -> String {
-    let acquire = run_decapod(
+fn acquire_session_password_with(dir: &Path, agent_id: &str, run: DecapodRunner) -> String {
+    let acquire = run(
         dir,
         &["session", "acquire"],
         &[
@@ -109,8 +109,12 @@ fn acquire_session_password(dir: &Path, agent_id: &str) -> String {
 }
 
 fn broker_socket_supported(dir: &Path, password: &str) -> bool {
+    broker_socket_supported_with(dir, password, run_decapod)
+}
+
+fn broker_socket_supported_with(dir: &Path, password: &str, run: DecapodRunner) -> bool {
     let hook = dir.join("broker-socket-probe.log");
-    let probe = run_decapod(
+    let probe = run(
         dir,
         &["todo", "add", "broker-socket-probe"],
         &[
@@ -188,8 +192,10 @@ fn wait_for_no_broker_artifacts(dir: &Path, timeout: Duration) -> bool {
 
 #[test]
 fn broker_no_sqlite_busy_surfaced_under_concurrent_mutators() {
-    let (_tmp, dir, password) = setup_repo();
-    if !broker_socket_supported(&dir, &password) {
+    let _timing =
+        BrokerTestTiming::start("broker_no_sqlite_busy_surfaced_under_concurrent_mutators");
+    let (_tmp, dir, password) = setup_repo_with(run_contention_setup);
+    if !broker_socket_supported_with(&dir, &password, run_contention_setup) {
         eprintln!("skipping: unix socket transport not permitted in this sandbox");
         return;
     }
@@ -197,7 +203,8 @@ fn broker_no_sqlite_busy_surfaced_under_concurrent_mutators() {
     let creds: Vec<(String, String)> = (0..20)
         .map(|i| {
             let agent_id = format!("agent-{i:02}");
-            let agent_pw = acquire_session_password(&dir, &agent_id);
+            let _timing = BrokerTestTiming::start(format!("contention credential {i:02}"));
+            let agent_pw = acquire_session_password_with(&dir, &agent_id, run_contention_setup);
             (agent_id, agent_pw)
         })
         .collect();
@@ -206,6 +213,7 @@ fn broker_no_sqlite_busy_surfaced_under_concurrent_mutators() {
     for (i, (agent_id, agent_pw)) in creds.into_iter().enumerate() {
         let dir_cl = dir.clone();
         workers.push(std::thread::spawn(move || {
+            let _timing = BrokerTestTiming::start(format!("contention client {i:02}"));
             let task = format!("concurrent-task-{i}");
             let req_id = format!("BROKER_BUSY_REQ_{i:02}");
             let envs = [
@@ -223,22 +231,38 @@ fn broker_no_sqlite_busy_surfaced_under_concurrent_mutators() {
             ];
             let env_pairs: Vec<(&str, &str)> =
                 envs.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
-            let first = run_decapod(&dir_cl, &["todo", "add", &task], &env_pairs);
+            let first = run_contention_command(
+                &dir_cl,
+                &["todo", "add", &task],
+                &env_pairs,
+                Duration::from_secs(120),
+                &format!("client {i:02} first attempt"),
+            );
             if first.status.success() {
                 return first;
             }
             let stderr = String::from_utf8_lossy(&first.stderr).to_string();
             let stdout = String::from_utf8_lossy(&first.stdout).to_string();
             if stderr.contains("BROKER_UNKNOWN") || stdout.contains("BROKER_UNKNOWN") {
+                let _retry_timing = BrokerTestTiming::start(format!("contention retry {i:02}"));
                 std::thread::sleep(Duration::from_millis(250));
-                return run_decapod(&dir_cl, &["todo", "add", &task], &env_pairs);
+                return run_contention_command(
+                    &dir_cl,
+                    &["todo", "add", &task],
+                    &env_pairs,
+                    Duration::from_secs(120),
+                    &format!("client {i:02} same-ID retry"),
+                );
             }
             first
         }));
     }
 
-    for worker in workers {
-        let output = worker.join().expect("join mutator worker");
+    // Join every bounded worker before asserting, including when one panics,
+    // so a failing attempt cannot leave sibling clients running in a removed fixture.
+    let outputs: Vec<_> = workers.into_iter().map(|worker| worker.join()).collect();
+    for output in outputs {
+        let output = output.expect("join mutator worker");
         assert!(
             output.status.success(),
             "mutator failed (status={:?}) stdout={} stderr={}",
@@ -269,6 +293,7 @@ fn broker_no_sqlite_busy_surfaced_under_concurrent_mutators() {
 
 #[test]
 fn broker_dedupe_returns_exactly_once_per_request_id() {
+    let _timing = BrokerTestTiming::start("broker_dedupe_returns_exactly_once_per_request_id");
     let (_tmp, dir, password) = setup_repo();
     if !broker_socket_supported(&dir, &password) {
         eprintln!("skipping: unix socket transport not permitted in this sandbox");
@@ -327,6 +352,8 @@ fn broker_dedupe_returns_exactly_once_per_request_id() {
 
 #[test]
 fn broker_election_uniqueness_no_residual_lock_after_burst() {
+    let _timing =
+        BrokerTestTiming::start("broker_election_uniqueness_no_residual_lock_after_burst");
     let (_tmp, dir, password) = setup_repo();
     if !broker_socket_supported(&dir, &password) {
         eprintln!("skipping: unix socket transport not permitted in this sandbox");
@@ -379,6 +406,7 @@ fn broker_election_uniqueness_no_residual_lock_after_burst() {
 
 #[test]
 fn broker_protocol_mismatch_returns_typed_failure() {
+    let _timing = BrokerTestTiming::start("broker_protocol_mismatch_returns_typed_failure");
     let (_tmp, dir, password) = setup_repo();
     if !broker_socket_supported(&dir, &password) {
         eprintln!("skipping: unix socket transport not permitted in this sandbox");
@@ -435,6 +463,7 @@ fn broker_protocol_mismatch_returns_typed_failure() {
 
 #[test]
 fn broker_crash_injection_phases_retry_to_exactly_once() {
+    let _timing = BrokerTestTiming::start("broker_crash_injection_phases_retry_to_exactly_once");
     let (_tmp, dir, password) = setup_repo();
     if !broker_socket_supported(&dir, &password) {
         eprintln!("skipping: unix socket transport not permitted in this sandbox");
@@ -512,6 +541,9 @@ fn broker_crash_injection_phases_retry_to_exactly_once() {
 #[cfg(unix)]
 #[test]
 fn explicit_shared_storage_uses_broker_route_without_private_fallback() {
+    let _timing = BrokerTestTiming::start(
+        "explicit_shared_storage_uses_broker_route_without_private_fallback",
+    );
     use std::os::unix::fs::PermissionsExt;
     let (_temp, dir, password) = setup_repo();
     if !broker_socket_supported(&dir, &password) {
@@ -563,12 +595,16 @@ fn explicit_shared_storage_uses_broker_route_without_private_fallback() {
 #[cfg(unix)]
 #[test]
 fn committed_claim_preparation_does_not_hold_broker_or_repeat_on_retry() {
+    let _timing = BrokerTestTiming::start(
+        "committed_claim_preparation_does_not_hold_broker_or_repeat_on_retry",
+    );
     claim_preparation_probe(true);
 }
 
 #[cfg(unix)]
 #[test]
 fn direct_claim_acknowledges_before_preparation() {
+    let _timing = BrokerTestTiming::start("direct_claim_acknowledges_before_preparation");
     claim_preparation_probe(false);
 }
 
@@ -744,6 +780,16 @@ impl ClaimProbeChild {
         hooks: &Path,
         stage: &str,
     ) -> std::process::Output {
+        self.output_timeout(stdout, stderr, hooks, stage, Duration::from_secs(30))
+    }
+    fn output_timeout(
+        &mut self,
+        stdout: &Path,
+        stderr: &Path,
+        hooks: &Path,
+        stage: &str,
+        timeout: Duration,
+    ) -> std::process::Output {
         let start = Instant::now();
         loop {
             if let Some(status) = self.0.as_mut().unwrap().try_wait().unwrap() {
@@ -754,7 +800,7 @@ impl ClaimProbeChild {
                     stderr: std::fs::read(stderr).unwrap(),
                 };
             }
-            if start.elapsed() >= Duration::from_secs(30) {
+            if start.elapsed() >= timeout {
                 self.terminate();
                 let _ = self.0.take().unwrap().wait();
                 panic!(
@@ -783,4 +829,100 @@ fn claim_probe_stage(stage: &str) {
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap();
     eprintln!("claim probe: {stage} at {}ms", now.as_millis());
+}
+
+struct BrokerTestTiming {
+    label: String,
+    started: Instant,
+}
+
+impl BrokerTestTiming {
+    fn start(label: impl Into<String>) -> Self {
+        let label = label.into();
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap();
+        eprintln!("broker timing START {label} at {}ms", now.as_millis());
+        Self {
+            label,
+            started: Instant::now(),
+        }
+    }
+}
+
+impl Drop for BrokerTestTiming {
+    fn drop(&mut self) {
+        eprintln!(
+            "broker timing END {} elapsed={}ms panicking={}",
+            self.label,
+            self.started.elapsed().as_millis(),
+            std::thread::panicking()
+        );
+    }
+}
+
+fn run_contention_setup(dir: &Path, args: &[&str], envs: &[(&str, &str)]) -> std::process::Output {
+    run_contention_command(dir, args, envs, Duration::from_secs(30), "contention setup")
+}
+
+#[cfg(unix)]
+fn run_contention_command(
+    dir: &Path,
+    args: &[&str],
+    envs: &[(&str, &str)],
+    timeout: Duration,
+    stage: &str,
+) -> std::process::Output {
+    use std::os::unix::process::CommandExt;
+    let capture = tempfile::tempdir().expect("private contention capture");
+    let stdout = capture.path().join("stdout");
+    let stderr = capture.path().join("stderr");
+    let hooks = envs
+        .iter()
+        .find(|(key, _)| *key == "DECAPOD_GROUP_BROKER_TEST_HOOK_FILE")
+        .map(|(_, value)| PathBuf::from(value))
+        .unwrap_or_else(|| capture.path().join("hooks"));
+    let request_id = envs
+        .iter()
+        .find(|(key, _)| *key == "DECAPOD_GROUP_BROKER_REQUEST_ID")
+        .map(|(_, value)| *value)
+        .unwrap_or("setup");
+    let label = format!("{stage}, request={request_id}, args={args:?}");
+    let _timing = BrokerTestTiming::start(&label);
+    let child = Command::new(resolve_decapod_bin())
+        .current_dir(dir)
+        .args(args)
+        .envs(envs.iter().copied())
+        .env("DECAPOD_GROUP_BROKER_TEST_HOOK_FILE", &hooks)
+        .stdin(std::process::Stdio::null())
+        .stdout(std::fs::File::create(&stdout).unwrap())
+        .stderr(std::fs::File::create(&stderr).unwrap())
+        .process_group(0)
+        .spawn()
+        .unwrap_or_else(|error| panic!("{label}: spawn failed: {error}"));
+    ClaimProbeChild(Some(child)).output_timeout(&stdout, &stderr, &hooks, &label, timeout)
+}
+
+#[cfg(not(unix))]
+fn run_contention_command(
+    dir: &Path,
+    args: &[&str],
+    envs: &[(&str, &str)],
+    timeout: Duration,
+    stage: &str,
+) -> std::process::Output {
+    use decapod::core::bounded_process::BoundedCommand;
+    let request_id = envs
+        .iter()
+        .find(|(key, _)| *key == "DECAPOD_GROUP_BROKER_REQUEST_ID")
+        .map(|(_, value)| *value)
+        .unwrap_or("setup");
+    let label = format!("{stage}, request={request_id}, args={args:?}");
+    let _timing = BrokerTestTiming::start(&label);
+    Command::new(resolve_decapod_bin())
+        .current_dir(dir)
+        .args(args)
+        .envs(envs.iter().copied())
+        .bounded_output(timeout)
+        .unwrap_or_else(|error| panic!("{label}: {error}"))
 }

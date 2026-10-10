@@ -1,41 +1,29 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "five-critical-broker-ci-20261010",
-  "intent_id": "intent:five-critical-broker-ci-20261010",
+  "run_id": "five-critical-contention-ci-20261010",
+  "intent_id": "intent:five-critical-contention-ci-20261010",
   "task_id": "bugs_01m4jdaambn944vm",
-  "original_intent": "Fix the five selected critical issues in one draft PR",
-  "derived_intent": "Resolve the remaining real-socket claim preparation regression timeout and verify GitHub Actions on the exact published head",
-  "current_phase": "validation",
-  "next_transitions": [
-    "publish"
-  ],
+  "original_intent": "Fix five critical issues in one PR with verified GitHub Actions",
+  "derived_intent": "Measure the existing twenty-client broker contention test with bounded diagnostic waits and a finite target-specific aggregate budget",
+  "current_phase": "verification",
   "active_boundaries": [
-    "Preserve automatic container launch, intentional shared storage, committed claim identity, and dedicated lifecycle coverage"
+    "Keep twenty concurrent clients, existing retries, all assertions and production timeouts unchanged"
   ],
   "repo_scope": [
-    "PR 1383 selected five-issue fixes and their regressions"
+    "PR1383 broker regression proof"
   ],
   "inspected_files": [],
-  "modified_files": [
-    ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json"
-  ],
-  "declared_commands": [
-    "decapod validate"
-  ],
+  "modified_files": [],
+  "declared_commands": [],
   "tool_calls": [],
   "checks": [
     {
-      "name": "actual_docker_interruption_recovery",
+      "name": "actual_broker_claim_followup",
       "status": "passed"
     },
     {
-      "name": "bounded_claim_harness",
-      "status": "passed"
-    },
-    {
-      "name": "decapod validate",
-      "status": "passed"
+      "name": "bounded_contention_harness",
+      "status": "partial"
     },
     {
       "name": "focused_strict_clippy",
@@ -46,27 +34,20 @@
       "status": "failed"
     },
     {
+      "name": "independent_source_review",
+      "status": "passed"
+    },
+    {
       "name": "local_real_broker",
       "status": "unavailable"
-    },
-    {
-      "name": "remaining_actions_groups",
-      "status": "passed"
-    },
-    {
-      "name": "workflow_yaml",
-      "status": "passed"
     }
   ],
   "evidence": [
-    "Focused all-feature Clippy with warnings denied passed. Cargo group_broker target passed 8 tests in 63.89 seconds; seven real-socket paths were capability-limited and the direct autorun responsiveness regression ran successfully. Workflow YAML parsed. Independent review confirms bounded owned-child cleanup and unchanged claim assertions.",
-    "GitHub Actions head 92c264928678753b571fb66ba7360fd53d4eabea: CI run 38068932095, Docker job 114262253743 ran the real interruption recovery test with 1 passed, 0 failed, 0 ignored. Core job 114262254781 passed 9 targets; group_broker timed out at 300 seconds in committed_claim_preparation_does_not_hold_broker_or_repeat_on_retry. All other CI groups passed or intentionally skipped.",
-    "validation epoch ve_88e22cdc69918633 completed with zero failures"
+    "At published head c897d74523ac640695cbcc8f500aa59b235d2732, Actions job114266925260 independently passed the real-socket committed claim preparation test in18.04seconds, including competing mutation and same-request retry. The aggregate group_broker target then exhausted its300second budget in the pre-existing twenty-client contention test. Other GitHub Actions groups passed. Local direct bind remains permission-denied even after the normal execution escalation request; an independent escalated socket probe failed in the environment launcher before execution.",
+    "Strict all-feature group_broker Clippy, formatting and diff checks passed. The focused contention harness compiled and completed bounded setup locally in7.13seconds, but real Unix socket contention remains capability-unavailable. Independent review confirms unchanged twenty-client concurrency, request identities, retry policy and assertions, bounded owned-child cleanup, joining all clients before assertions, and Unix/non-Unix helper separation."
   ],
   "shortcut_risk_signals": [],
-  "unresolved_assumptions": [
-    "Local AF_UNIX transport is unavailable; dedicated broker integration must pass on the GitHub Actions runner."
-  ],
+  "unresolved_assumptions": [],
   "proof_status": "failed",
   "verdicts": {
     "intent_alignment": "supported",
@@ -74,21 +55,21 @@
     "shortcut_risk": "supported",
     "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:058c483c87f6ceb2067c8df4d80e89397c66355538d10bd4e287992415f23c52",
+  "artifact_hash": "sha256:a1cc4bf9f4995130425b049da841d868f274977df6b1b0243db7cbfbb10fe37b",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:five-critical-broker-ci-20261010": {
-        "id": "intent:five-critical-broker-ci-20261010",
-        "raw_intent": "Fix the five selected critical issues in one draft PR",
-        "refined_intent": "Resolve the remaining real-socket claim preparation regression timeout and verify GitHub Actions on the exact published head",
+      "intent:five-critical-contention-ci-20261010": {
+        "id": "intent:five-critical-contention-ci-20261010",
+        "raw_intent": "Fix five critical issues in one PR with verified GitHub Actions",
+        "refined_intent": "Measure the existing twenty-client broker contention test with bounded diagnostic waits and a finite target-specific aggregate budget",
         "acceptance_criteria": [],
         "constraints": [
-          "PR 1383 selected five-issue fixes and their regressions"
+          "PR1383 broker regression proof"
         ],
         "assumptions": [],
         "boundaries": [
-          "Preserve automatic container launch, intentional shared storage, committed claim identity, and dedicated lifecycle coverage"
+          "Keep twenty concurrent clients, existing retries, all assertions and production timeouts unchanged"
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -101,103 +82,75 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:five-critical-broker-ci-20261010",
+        "intent_id": "intent:five-critical-contention-ci-20261010",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:five-critical-broker-ci-20261010",
+        "intent_id": "intent:five-critical-contention-ci-20261010",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:five-critical-broker-ci-20261010",
+        "intent_id": "intent:five-critical-contention-ci-20261010",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:five-critical-broker-ci-20261010"
+        "detail": "trajectory:five-critical-contention-ci-20261010"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:five-critical-broker-ci-20261010",
+        "intent_id": "intent:five-critical-contention-ci-20261010",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:five-critical-broker-ci-20261010"
-      },
-      {
-        "sequence": 6,
-        "event_id": "event:6",
-        "intent_id": "intent:five-critical-broker-ci-20261010",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:five-critical-broker-ci-20261010"
+        "detail": "trajectory:five-critical-contention-ci-20261010"
       }
     ],
     "trajectories": {
-      "five-critical-broker-ci-20261010": {
-        "id": "five-critical-broker-ci-20261010",
-        "intent_id": "intent:five-critical-broker-ci-20261010",
+      "five-critical-contention-ci-20261010": {
+        "id": "five-critical-contention-ci-20261010",
+        "intent_id": "intent:five-critical-contention-ci-20261010",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
             "action": "trajectory.record",
             "scope": [
-              "PR 1383 selected five-issue fixes and their regressions"
+              "PR1383 broker regression proof"
             ],
             "observations": [
-              "GitHub Actions head 92c264928678753b571fb66ba7360fd53d4eabea: CI run 38068932095, Docker job 114262253743 ran the real interruption recovery test with 1 passed, 0 failed, 0 ignored. Core job 114262254781 passed 9 targets; group_broker timed out at 300 seconds in committed_claim_preparation_does_not_hold_broker_or_repeat_on_retry. All other CI groups passed or intentionally skipped."
+              "At published head c897d74523ac640695cbcc8f500aa59b235d2732, Actions job114266925260 independently passed the real-socket committed claim preparation test in18.04seconds, including competing mutation and same-request retry. The aggregate group_broker target then exhausted its300second budget in the pre-existing twenty-client contention test. Other GitHub Actions groups passed. Local direct bind remains permission-denied even after the normal execution escalation request; an independent escalated socket probe failed in the environment launcher before execution."
             ],
             "proof_refs": [
-              "actual_docker_interruption_recovery",
+              "actual_broker_claim_followup",
               "github_actions_core",
-              "remaining_actions_groups"
+              "local_real_broker"
             ],
-            "validation_findings": [
-              "Local AF_UNIX transport is unavailable; dedicated broker integration must pass on the GitHub Actions runner."
-            ],
+            "validation_findings": [],
             "custody_event_id": "event:4"
           },
           {
             "sequence": 5,
             "action": "trajectory.record",
             "scope": [
-              "PR 1383 selected five-issue fixes and their regressions"
+              "PR1383 broker regression proof"
             ],
             "observations": [
-              "Focused all-feature Clippy with warnings denied passed. Cargo group_broker target passed 8 tests in 63.89 seconds; seven real-socket paths were capability-limited and the direct autorun responsiveness regression ran successfully. Workflow YAML parsed. Independent review confirms bounded owned-child cleanup and unchanged claim assertions."
+              "Strict all-feature group_broker Clippy, formatting and diff checks passed. The focused contention harness compiled and completed bounded setup locally in7.13seconds, but real Unix socket contention remains capability-unavailable. Independent review confirms unchanged twenty-client concurrency, request identities, retry policy and assertions, bounded owned-child cleanup, joining all clients before assertions, and Unix/non-Unix helper separation."
             ],
             "proof_refs": [
-              "bounded_claim_harness",
               "focused_strict_clippy",
-              "workflow_yaml",
-              "local_real_broker"
+              "bounded_contention_harness",
+              "independent_source_review"
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
-          },
-          {
-            "sequence": 6,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "PR 1383 selected five-issue fixes and their regressions"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_88e22cdc69918633 completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:6"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 6
+    "next_sequence": 5
   }
 }
