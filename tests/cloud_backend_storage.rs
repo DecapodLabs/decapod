@@ -34,6 +34,7 @@ fn test_cloud_opt_in_fails_closed_without_verified_remote() {
     let dir = tmp.path().to_path_buf();
 
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .env("DECAPOD_CLOUD_DATASTORE", "neon")
         .args(["init", "--backend", "cloud", "--force", "--proof"])
         .current_dir(&dir)
         .output()
@@ -46,6 +47,7 @@ fn test_cloud_opt_in_fails_closed_without_verified_remote() {
     );
 
     let add_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .env("DECAPOD_CLOUD_DATASTORE", "neon")
         .args(["todo", "add", "must not fall back", "--format", "json"])
         .current_dir(&dir)
         .output()
@@ -68,6 +70,7 @@ fn test_cloud_init_records_opt_in_without_auth_or_repo_credentials() {
     let dir = tmp.path().to_path_buf();
 
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .env("DECAPOD_CLOUD_DATASTORE", "neon")
         .args(["init", "--backend", "cloud", "--force", "--proof"])
         .env_remove("SUPABASE_URL")
         .env_remove("SUPABASE_KEY")
@@ -132,6 +135,7 @@ fn cloud_init_starts_machine_session_when_identity_and_mock_auth_are_available()
     );
 
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .env("DECAPOD_CLOUD_DATASTORE", "neon")
         .args(["init", "--backend", "cloud", "--force", "--proof"])
         .current_dir(tmp.path())
         .env("DECAPOD_CLOUD_AUTH_MODE", "mock")
@@ -166,6 +170,7 @@ fn cloud_cli_preflight_does_not_initialize_local_sqlite() {
     let tmp = TempDir::new().expect("tempdir");
     let dir = tmp.path().to_path_buf();
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .env("DECAPOD_CLOUD_DATASTORE", "neon")
         .args(["init", "--backend", "cloud", "--force", "--proof"])
         .current_dir(&dir)
         .output()
@@ -183,6 +188,7 @@ fn cloud_cli_preflight_does_not_initialize_local_sqlite() {
 
     let data_home = TempDir::new().expect("credential data home");
     let list_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .env("DECAPOD_CLOUD_DATASTORE", "neon")
         .args(["todo", "list", "--format", "json"])
         .current_dir(&dir)
         .env_remove("DECAPOD_ACCESS_TOKEN")
@@ -215,6 +221,7 @@ fn canonical_backend_selection_uses_cloud_without_local_fallback() {
     let tmp = TempDir::new().expect("tempdir");
     let dir = tmp.path().to_path_buf();
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .env("DECAPOD_CLOUD_DATASTORE", "neon")
         .args(["init", "--backend", "cloud", "--force", "--proof"])
         .current_dir(&dir)
         .output()
@@ -236,6 +243,7 @@ fn canonical_backend_selection_uses_cloud_without_local_fallback() {
     );
     let data_home = TempDir::new().expect("credential data home");
     let list_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .env("DECAPOD_CLOUD_DATASTORE", "neon")
         .args(["todo", "list", "--format", "json"])
         .current_dir(&dir)
         .env_remove("DECAPOD_ACCESS_TOKEN")
@@ -263,6 +271,7 @@ fn cloud_login_requires_a_project_origin() {
     let tmp = TempDir::new().expect("tempdir");
     let data_home = TempDir::new().expect("credential data home");
     let login_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .env("DECAPOD_CLOUD_DATASTORE", "neon")
         .args(["cloud", "login"])
         .current_dir(tmp.path())
         .env("XDG_DATA_HOME", data_home.path())
@@ -288,6 +297,7 @@ fn cloud_session_acquire_keeps_local_custody_when_cloud_preflight_fails() {
     let data_home = TempDir::new().expect("credential data home");
     let config_home = TempDir::new().expect("config home");
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .env("DECAPOD_CLOUD_DATASTORE", "neon")
         .args(["init", "--backend", "cloud", "--force", "--proof"])
         .current_dir(tmp.path())
         .output()
@@ -304,6 +314,7 @@ fn cloud_session_acquire_keeps_local_custody_when_cloud_preflight_fails() {
     );
 
     let session_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .env("DECAPOD_CLOUD_DATASTORE", "neon")
         .args(["session", "acquire"])
         .current_dir(tmp.path())
         .env_remove("DECAPOD_ACCESS_TOKEN")
@@ -338,6 +349,7 @@ fn cloud_session_acquire_uses_explicit_mock_onboarding_in_validation_harness() {
     let data_home = TempDir::new().expect("credential data home");
     let config_home = TempDir::new().expect("config home");
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .env("DECAPOD_CLOUD_DATASTORE", "neon")
         .args(["init", "--backend", "cloud", "--force", "--proof"])
         .current_dir(tmp.path())
         .output()
@@ -354,6 +366,7 @@ fn cloud_session_acquire_uses_explicit_mock_onboarding_in_validation_harness() {
     );
 
     let session_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .env("DECAPOD_CLOUD_DATASTORE", "neon")
         .args(["session", "acquire"])
         .current_dir(tmp.path())
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")

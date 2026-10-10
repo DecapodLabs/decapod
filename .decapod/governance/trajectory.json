@@ -1,50 +1,21 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "combined1369and1370",
-  "intent_id": "intent:combined1369and1370",
+  "run_id": "combined1381default",
+  "intent_id": "intent:combined1381default",
   "task_id": "bend_01m4hcjdawvw4m7c",
-  "original_intent": "Knock out remaining issues 1369 and 1370 in one PR",
-  "derived_intent": "Reuse reviewed cloud adapter and remaining conservative contextual scanner improvements with exact evidence",
-  "current_phase": "publication",
-  "next_transitions": [
-    "commit",
-    "publish",
-    "validate"
-  ],
-  "blockers": [
-    "Actual PostgreSQL, hosted Supabase, actual container custody and native Nix build evidence remain unavailable."
-  ],
+  "original_intent": "Publish the combined 1369 and 1370 draft, use Supabase for backend cloud, and include typed Rust password binding detection",
+  "derived_intent": "Correct cloud defaults and session-read scope, retain explicit Neon and local SQLite, include native Bazel compiler assets and bounded typed-binding detection",
   "active_boundaries": [
-    "Preserve free offline local backend and authenticated service boundary; no fallback, no client database secrets, no private code disclosure",
-    "Preserve positive scanner controls and policy requirements; do not claim unavailable proof"
+    "No merge or deployment; no direct client database credentials; do not claim unavailable actual-service, container or native Nix proof"
   ],
   "repo_scope": [
-    "src/decapod, tests, public docs, living specs, governed artifacts"
+    "Decapod PR 1381 source, tests, documentation and truthful proof artifacts"
   ],
-  "inspected_files": [
-    "src/decapod/core/dactyl.rs",
-    "src/decapod/core/propodus.rs"
-  ],
-  "modified_files": [
-    ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json",
-    "src/decapod/core/backend.rs",
-    "tests/cloud_supabase_boundary.rs",
-    "tests/supabase_service.rs"
-  ],
-  "declared_commands": [
-    "decapod validate"
-  ],
+  "inspected_files": [],
+  "modified_files": [],
+  "declared_commands": [],
   "tool_calls": [],
   "checks": [
-    {
-      "name": "absent_fixture_fail_closed",
-      "status": "passed"
-    },
-    {
-      "name": "actual-postgres-service",
-      "status": "unavailable"
-    },
     {
       "name": "actual_container",
       "status": "unavailable"
@@ -54,15 +25,11 @@
       "status": "unavailable"
     },
     {
-      "name": "aggregate_final",
+      "name": "default_feature_regressions",
       "status": "passed"
     },
     {
-      "name": "decapod validate",
-      "status": "passed"
-    },
-    {
-      "name": "default_regressions",
+      "name": "disabled_feature_regressions",
       "status": "passed"
     },
     {
@@ -70,66 +37,32 @@
       "status": "unavailable"
     },
     {
-      "name": "integrated-default-library-baseline",
+      "name": "independent_source_review",
       "status": "passed"
     },
     {
-      "name": "integrated-preview-baseline",
-      "status": "passed"
-    },
-    {
-      "name": "nix_build",
+      "name": "native_nix",
       "status": "unavailable"
-    },
-    {
-      "name": "official_context_scan",
-      "status": "failed"
-    },
-    {
-      "name": "official_fixture_scan",
-      "status": "failed"
     },
     {
       "name": "official_host_validation",
-      "status": "passed"
-    },
-    {
-      "name": "original-context-current-official-scanner",
       "status": "failed"
-    },
-    {
-      "name": "protected-hosted-supabase",
-      "status": "unavailable"
-    },
-    {
-      "name": "scanner_independent",
-      "status": "passed"
     },
     {
       "name": "strict_clippy",
       "status": "passed"
     },
     {
-      "name": "supabase_preview_regressions",
+      "name": "typed_binding_regressions",
       "status": "passed"
     }
   ],
   "evidence": [
-    "All-target/all-feature Clippy with warnings denied, formatting, and diff checks passed. Independent scanner review passed 77 tests, 54 adversarial cases and seven post-fix probes; final scanner source-set SHA256 343b21c4635c9fac1e011be8ad467aea699ac2f8ba8136cd61315974102b57f9.",
-    "Explicit unchanged-official scans remain blocked: 25 findings across the original-context source and included native assets; 148 findings in deliberate scanner regression fixtures. Candidate scanner tests are separate evidence, not publication authority.",
-    "Final Supabase preview matrix: 457 library and 23 offline integration/helper tests passed; 2 actual-service profiles ignored. Explicitly selecting either profile without its protected fixture failed as required, before service execution.",
-    "Final default matrix: 456 library and 38 integration tests passed; repeated normal-parallel crash suites each passed 7 tests in three additional runs after the reviewed pool-before-audit lock repair.",
-    "Independent final scanner review: 77 source/module tests passed and 54 adversarial full-scanner outcomes matched; source-set SHA256 5270f9d447ae9ad8840a5897d831d2e36cbb2271be309076f5030d5e6f430000.",
-    "Initial integration before final contextual changes: default library393 passed; Supabase library399 passed; focused integration22 passed; two actual service profiles ignored",
-    "Maintainer explicitly requested the single review PR with live-service proof unrun; existing historical records are preserved.",
-    "Official unchanged master5bf48f1f CLI SHA256bc1c62497bcf6928807c3cf99e3f1631511e531e2f00465e484a46cf686835e9 found14 findings across original lib, cloud SQL and container source; later candidate changes require fresh verification",
-    "Pinned remote Dactyl source62a616e preserves default SQLite and Neon features; no local path override",
-    "Unmodified master 0.106.1 validator with projections: 204 passed, 0 failed, 11 skipped on a clean ordinary-host tree. This uses the supported host/non-code relaxation and does not establish container custody.",
-    "validation epoch ve_774446afdb732ebf completed with zero failures"
+    "Source commit 66185a7b1d66fb341c1fc50af29cf8a4e29f8023: default 460 library and 35 integration/helper tests passed; two real-service profiles ignored. Disabled-default-features: 459 library and 22 integration tests passed. 80 scanner tests include ref, array, multiline, short literal and per-occurrence isolation regressions. All-target/all-feature Clippy with warnings denied, formatting and diff checks passed. Independent source review found no blockers. First PR 1381 CI exposed missing native template compiler inputs, corrected in this revision; updated CI is pending.",
+    "Unmodified official 0.106.1 validator with projections on source 66185a7b: 204 passed, 1 failed, 10 skipped. The only failure is claim.git.container_workspace_required; actual container custody is not established and remains tracked in issue 1379. No validation gate was bypassed."
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
-  "completion_claim": "partial",
   "proof_status": "failed",
   "verdicts": {
     "intent_alignment": "supported",
@@ -137,22 +70,21 @@
     "shortcut_risk": "supported",
     "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:da8af20a3ec8a7cdafe76d3eaa3937f68d4b453a3d3bd1a9c7ab48d7601c0465",
+  "artifact_hash": "sha256:d137967bf169077695f7d0d29b2993d43ea7887b6ce88904e1f37f8da4748bdb",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:combined1369and1370": {
-        "id": "intent:combined1369and1370",
-        "raw_intent": "Knock out remaining issues 1369 and 1370 in one PR",
-        "refined_intent": "Reuse reviewed cloud adapter and remaining conservative contextual scanner improvements with exact evidence",
+      "intent:combined1381default": {
+        "id": "intent:combined1381default",
+        "raw_intent": "Publish the combined 1369 and 1370 draft, use Supabase for backend cloud, and include typed Rust password binding detection",
+        "refined_intent": "Correct cloud defaults and session-read scope, retain explicit Neon and local SQLite, include native Bazel compiler assets and bounded typed-binding detection",
         "acceptance_criteria": [],
         "constraints": [
-          "src/decapod, tests, public docs, living specs, governed artifacts"
+          "Decapod PR 1381 source, tests, documentation and truthful proof artifacts"
         ],
         "assumptions": [],
         "boundaries": [
-          "Preserve free offline local backend and authenticated service boundary; no fallback, no client database secrets, no private code disclosure",
-          "Preserve positive scanner controls and policy requirements; do not claim unavailable proof"
+          "No merge or deployment; no direct client database credentials; do not claim unavailable actual-service, container or native Nix proof"
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -165,171 +97,79 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:combined1369and1370",
+        "intent_id": "intent:combined1381default",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:combined1369and1370",
+        "intent_id": "intent:combined1381default",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:combined1369and1370",
+        "intent_id": "intent:combined1381default",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:combined1369and1370"
+        "detail": "trajectory:combined1381default"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:combined1369and1370",
+        "intent_id": "intent:combined1381default",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:combined1369and1370"
-      },
-      {
-        "sequence": 6,
-        "event_id": "event:6",
-        "intent_id": "intent:combined1369and1370",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:combined1369and1370"
-      },
-      {
-        "sequence": 7,
-        "event_id": "event:7",
-        "intent_id": "intent:combined1369and1370",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:combined1369and1370"
-      },
-      {
-        "sequence": 8,
-        "event_id": "event:8",
-        "intent_id": "intent:combined1369and1370",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:combined1369and1370"
+        "detail": "trajectory:combined1381default"
       }
     ],
     "trajectories": {
-      "combined1369and1370": {
-        "id": "combined1369and1370",
-        "intent_id": "intent:combined1369and1370",
+      "combined1381default": {
+        "id": "combined1381default",
+        "intent_id": "intent:combined1381default",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
             "action": "trajectory.record",
             "scope": [
-              "src/decapod, tests, public docs, living specs, governed artifacts"
+              "Decapod PR 1381 source, tests, documentation and truthful proof artifacts"
             ],
             "observations": [
-              "src/decapod/core/dactyl.rs",
-              "src/decapod/core/propodus.rs",
-              "src/decapod/core/backend.rs",
-              "tests/cloud_supabase_boundary.rs",
-              "tests/supabase_service.rs",
-              "Initial integration before final contextual changes: default library393 passed; Supabase library399 passed; focused integration22 passed; two actual service profiles ignored",
-              "Official unchanged master5bf48f1f CLI SHA256bc1c62497bcf6928807c3cf99e3f1631511e531e2f00465e484a46cf686835e9 found14 findings across original lib, cloud SQL and container source; later candidate changes require fresh verification",
-              "Pinned remote Dactyl source62a616e preserves default SQLite and Neon features; no local path override"
+              "Source commit 66185a7b1d66fb341c1fc50af29cf8a4e29f8023: default 460 library and 35 integration/helper tests passed; two real-service profiles ignored. Disabled-default-features: 459 library and 22 integration tests passed. 80 scanner tests include ref, array, multiline, short literal and per-occurrence isolation regressions. All-target/all-feature Clippy with warnings denied, formatting and diff checks passed. Independent source review found no blockers. First PR 1381 CI exposed missing native template compiler inputs, corrected in this revision; updated CI is pending."
             ],
             "proof_refs": [
-              "integrated-default-library-baseline",
-              "integrated-preview-baseline",
-              "actual-postgres-service",
-              "protected-hosted-supabase",
-              "original-context-current-official-scanner"
+              "default_feature_regressions",
+              "disabled_feature_regressions",
+              "typed_binding_regressions",
+              "independent_source_review",
+              "strict_clippy",
+              "actual_postgres",
+              "hosted_supabase",
+              "actual_container",
+              "native_nix"
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
           },
           {
             "sequence": 5,
-            "action": "validation",
+            "action": "trajectory.record",
             "scope": [
-              "src/decapod, tests, public docs, living specs, governed artifacts"
+              "Decapod PR 1381 source, tests, documentation and truthful proof artifacts"
             ],
             "observations": [
-              "Independent final scanner review: 77 source/module tests passed and 54 adversarial full-scanner outcomes matched; source-set SHA256 5270f9d447ae9ad8840a5897d831d2e36cbb2271be309076f5030d5e6f430000."
+              "Unmodified official 0.106.1 validator with projections on source 66185a7b: 204 passed, 1 failed, 10 skipped. The only failure is claim.git.container_workspace_required; actual container custody is not established and remains tracked in issue 1379. No validation gate was bypassed."
             ],
             "proof_refs": [
-              "scanner_independent",
-              "aggregate_final",
-              "actual_postgres",
-              "hosted_supabase",
-              "actual_container",
-              "nix_build"
+              "official_host_validation"
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
-          },
-          {
-            "sequence": 6,
-            "action": "validation",
-            "scope": [
-              "src/decapod, tests, public docs, living specs, governed artifacts"
-            ],
-            "observations": [
-              "Final default matrix: 456 library and 38 integration tests passed; repeated normal-parallel crash suites each passed 7 tests in three additional runs after the reviewed pool-before-audit lock repair.",
-              "Final Supabase preview matrix: 457 library and 23 offline integration/helper tests passed; 2 actual-service profiles ignored. Explicitly selecting either profile without its protected fixture failed as required, before service execution.",
-              "All-target/all-feature Clippy with warnings denied, formatting, and diff checks passed. Independent scanner review passed 77 tests, 54 adversarial cases and seven post-fix probes; final scanner source-set SHA256 343b21c4635c9fac1e011be8ad467aea699ac2f8ba8136cd61315974102b57f9."
-            ],
-            "proof_refs": [
-              "aggregate_final",
-              "default_regressions",
-              "supabase_preview_regressions",
-              "strict_clippy",
-              "absent_fixture_fail_closed",
-              "scanner_independent",
-              "actual_postgres",
-              "hosted_supabase",
-              "actual_container",
-              "nix_build"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:6"
-          },
-          {
-            "sequence": 7,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "src/decapod, tests, public docs, living specs, governed artifacts"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_774446afdb732ebf completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:7"
-          },
-          {
-            "sequence": 8,
-            "action": "publication",
-            "scope": [
-              "src/decapod, tests, public docs, living specs, governed artifacts"
-            ],
-            "observations": [
-              "Unmodified master 0.106.1 validator with projections: 204 passed, 0 failed, 11 skipped on a clean ordinary-host tree. This uses the supported host/non-code relaxation and does not establish container custody.",
-              "Explicit unchanged-official scans remain blocked: 25 findings across the original-context source and included native assets; 148 findings in deliberate scanner regression fixtures. Candidate scanner tests are separate evidence, not publication authority.",
-              "Maintainer explicitly requested the single review PR with live-service proof unrun; existing historical records are preserved."
-            ],
-            "proof_refs": [
-              "official_host_validation",
-              "official_context_scan",
-              "official_fixture_scan"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:8"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 8
+    "next_sequence": 5
   }
 }

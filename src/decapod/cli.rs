@@ -549,14 +549,32 @@ pub fn canonical_repo_relative_paths(raw: &[String]) -> Result<Vec<String>, Stri
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(from = "CloudRuntimeConfigInput")]
 pub struct CloudRuntimeConfig {
-    #[serde(default = "default_cloud_provider")]
     pub provider: String,
-    #[serde(default = "default_cloud_api_url")]
     pub api_url: String,
     /// Physical Dactyl capability. This is not repository configuration.
-    #[serde(default = "default_cloud_datastore")]
     pub datastore: String,
+}
+
+#[derive(Default, Deserialize)]
+struct CloudRuntimeConfigInput {
+    provider: Option<String>,
+    api_url: Option<String>,
+    datastore: Option<String>,
+}
+
+impl From<CloudRuntimeConfigInput> for CloudRuntimeConfig {
+    fn from(input: CloudRuntimeConfigInput) -> Self {
+        let datastore = input.datastore.unwrap_or_else(default_cloud_datastore);
+        Self {
+            provider: input.provider.unwrap_or_else(default_cloud_provider),
+            api_url: input
+                .api_url
+                .unwrap_or_else(|| default_cloud_api_url(&datastore)),
+            datastore,
+        }
+    }
 }
 
 /// Binary-owned production origin for the Propodus Vercel/Neon service.
@@ -569,11 +587,11 @@ fn default_cloud_provider() -> String {
 }
 
 fn default_cloud_datastore() -> String {
-    std::env::var("DECAPOD_CLOUD_DATASTORE").unwrap_or_else(|_| "neon".to_string())
+    std::env::var("DECAPOD_CLOUD_DATASTORE").unwrap_or_else(|_| "supabase".to_string())
 }
 
 impl CloudRuntimeConfig {
-    /// Fail before onboarding or todo I/O when an explicit preview is invalid.
+    /// Fail before onboarding or todo I/O when the selected cloud route is invalid.
     pub fn validate_datastore(
         &self,
     ) -> Result<crate::core::backend::CloudDatastore, crate::core::error::DecapodError> {
@@ -584,7 +602,7 @@ impl CloudRuntimeConfig {
             && (self.api_url.trim().is_empty() || self.api_url == PROPODUS_VERCEL_NEON_ENTRYPOINT)
         {
             return Err(crate::core::error::DecapodError::Config(
-                "Supabase preview requires an explicit authenticated service endpoint via DECAPOD_PROPODUS_API_URL; the existing Neon default is unchanged".to_string(),
+                "Supabase cloud requires an explicit authenticated service endpoint via DECAPOD_PROPODUS_API_URL; select DECAPOD_CLOUD_DATASTORE=neon only for the explicit Neon alternative".to_string(),
             ));
         }
         #[cfg(feature = "supabase-cloud")]
@@ -597,20 +615,22 @@ impl CloudRuntimeConfig {
     }
 }
 
-fn default_cloud_api_url() -> String {
+fn default_cloud_api_url(datastore: &str) -> String {
     std::env::var("DECAPOD_PROPODUS_API_URL")
         .ok()
         .filter(|value| !value.trim().is_empty())
-        .unwrap_or_else(|| PROPODUS_VERCEL_NEON_ENTRYPOINT.to_string())
+        .unwrap_or_else(|| {
+            if datastore == "neon" {
+                PROPODUS_VERCEL_NEON_ENTRYPOINT.to_string()
+            } else {
+                String::new()
+            }
+        })
 }
 
 impl Default for CloudRuntimeConfig {
     fn default() -> Self {
-        Self {
-            provider: default_cloud_provider(),
-            api_url: default_cloud_api_url(),
-            datastore: default_cloud_datastore(),
-        }
+        CloudRuntimeConfigInput::default().into()
     }
 }
 

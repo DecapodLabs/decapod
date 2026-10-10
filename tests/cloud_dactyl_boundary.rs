@@ -1,5 +1,5 @@
 use dactyl_db::AccessMode;
-use decapod::core::backend::{BackendRoute, StorageContext};
+use decapod::core::backend::{BackendRoute, CloudDatastore, StorageContext};
 use decapod::core::dactyl::DactylBridge;
 use decapod::core::repo_identity::RepositoryIdentity;
 use serde_json::Value;
@@ -91,7 +91,9 @@ async fn cloud_dactyl_uses_query_with_opaque_context_not_backend_query_inputs() 
         let route = BackendRoute::cloud(identity, format!("http://{address}"))
             .expect("validated cloud route");
         let context = StorageContext::from_route(route, Some("test-token"))
-            .expect("authenticated storage context");
+            .expect("authenticated storage context")
+            .with_cloud_datastore(CloudDatastore::Neon)
+            .expect("explicit Neon compatibility route");
         let bridge = DactylBridge::from_storage_context(&context, AccessMode::ReadOnly)
             .expect("Dactyl bridge");
         bridge

@@ -1,8 +1,9 @@
 # Supabase consumer validation
 
-This is an explicit preview of the public Dactyl Supabase HTTP capability.
-It does not switch the default service, release a crate, migrate historical
-state, provision Supabase, or prove a production deployment.
+The cloud backend selects the public Dactyl Supabase HTTP capability by
+default. The integration remains a Git-pinned preview: it does not release a
+crate, migrate historical state, provision Supabase, or prove a production
+deployment. Local storage remains SQLite; Neon is an explicit cloud alternative.
 
 ## Fresh activation
 
@@ -11,16 +12,18 @@ state, provision Supabase, or prove a production deployment.
    [Dactyl #92](https://github.com/DecapodLabs/dactyl/pull/92), which implements
    the client capability tracked by [Dactyl #91](https://github.com/DecapodLabs/dactyl/issues/91).
    It is a pinned Git dependency, not an issued registry release or a local
-   path override. Build with `cargo build --locked --features supabase-cloud`.
+   path override. Build with `cargo build --locked`; the default features
+   include `supabase-cloud`. A `--no-default-features` build retains SQLite and
+   explicit Neon, and fails closed if the unavailable Supabase route is selected.
    Nix vendoring pins the matching recursive Git source hash in `flake.nix`.
    A crates.io release must first consume a published Dactyl version providing
    this feature; the Git preview is not a registry-publication substitute.
 2. An operator must first provide a fresh compatible authenticated service
    backed by PostgreSQL, its task/event schema, and resource permissions.
    The client does not initialize hosted schemas or connect to PostgreSQL.
-3. In machine-local runtime configuration, explicitly set
-   `DECAPOD_CLOUD_DATASTORE=supabase` and `DECAPOD_PROPODUS_API_URL` to that
-   service's HTTPS origin. Literal-loopback HTTP is supported for disposable
+3. In machine-local runtime configuration, set `DECAPOD_PROPODUS_API_URL` to
+   that service's HTTPS origin. No datastore override is required: omitted
+   `DECAPOD_CLOUD_DATASTORE` selects Supabase. Explicit `supabase` is also accepted. Literal-loopback HTTP is supported for disposable
    test services only. This is neither a PostgreSQL DSN nor Supabase REST.
 4. Select `repo.backend = "cloud"`. Production use requires a service that
    also implements the existing `decapod init --backend cloud` onboarding,
@@ -35,9 +38,11 @@ state, provision Supabase, or prove a production deployment.
    separate remote proof-capture contract.
 
 The selector is distinct from `repo.backend = local|cloud` and from the
-hosting-provider label. Its default is `neon`; existing Neon activation stays
-unchanged. An unknown selector, a build without `supabase-cloud`, an invalid
-endpoint, or Supabase with only the existing Neon default fails closed before
+hosting-provider label. Its default is `supabase`. Set
+`DECAPOD_CLOUD_DATASTORE=neon` to select the retained Neon route explicitly; only
+that selection can use the legacy Neon service endpoint by default. An unknown
+selector, a build without `supabase-cloud`, an invalid endpoint, or a missing
+Supabase service endpoint fails closed before
 onboarding or todo I/O. Authentication, authorization, timeout, transport,
 protocol, and storage failures never initialize or fall back to local todos.
 

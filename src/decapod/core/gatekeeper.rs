@@ -178,6 +178,7 @@ fn scan_for_secrets(
     paths: &[PathBuf],
 ) -> Result<Vec<Violation>, error::DecapodError> {
     let patterns = secret_patterns();
+    let typed_password_patterns = typed_password_patterns();
     let mut violations = Vec::new();
 
     for path in paths {
@@ -242,6 +243,57 @@ fn scan_for_secrets(
                 }
             }
             offset += source_line.len();
+        }
+
+        // A Rust type annotation separates the binding name from its value,
+        // and may span lines. Match these declarations over the complete
+        // source without making successful Rust parsing a detection precondition.
+        // Provenance can discharge only the exact initializer candidate, just
+        // as for the ordinary assignment patterns above.
+        for pattern in &typed_password_patterns {
+            for captures in pattern.captures_iter(&content) {
+                let captures = match captures {
+                    Ok(captures) => captures,
+                    Err(_) => {
+                        violations.push(Violation {
+                            kind: ViolationKind::SecretDetected,
+                            path: path.clone(),
+                            line: None,
+                            message: "Secret scan incomplete: typed password pattern evaluation failed; explicit review is required".to_string(),
+                        });
+                        break;
+                    }
+                };
+                let Some(value) = captures.name("password_value") else {
+                    continue;
+                };
+                let context = context.get_or_insert_with(|| {
+                    if path.extension().is_some_and(|ext| ext == "rs") {
+                        RustContext::parse_file(repo_root, path, &content)
+                    } else {
+                        RustContext::default()
+                    }
+                });
+                if context.password_value(value.start()..value.end())
+                    == PasswordContext::RuntimeEnvironment
+                {
+                    continue;
+                }
+                violations.push(Violation {
+                    kind: ViolationKind::SecretDetected,
+                    path: path.clone(),
+                    line: Some(
+                        content[..value.start()]
+                            .bytes()
+                            .filter(|byte| *byte == b'\n')
+                            .count()
+                            + 1,
+                    ),
+                    message: format!(
+                        "Potential secret detected in typed Rust password binding: {pattern}"
+                    ),
+                });
+            }
         }
     }
 
@@ -374,6 +426,27 @@ fn secret_patterns() -> Vec<Regex> {
         Regex::new(r#"-----BEGIN (RSA |DSA |EC |OPENSSH )?PRIVATE KEY-----"#).unwrap(),
         // Connection strings
         Regex::new(r#"(?i)(postgres|mysql|mongodb|redis)://[^\s'"]+:[^\s'"]+@[^\s'"]+"#).unwrap(),
+    ]
+}
+
+/// Additive detection of explicit Rust bindings, including newline-separated
+/// type annotations. Do not consume another statement or a braced type body;
+/// this is a bounded textual recognizer, not a replacement for the Rust parser.
+fn typed_password_patterns() -> Vec<Regex> {
+    // An array's length separator is not a statement separator. Recognize
+    // simple arrays/slices as a balanced unit, with a literal or named length,
+    // rather than allowing arbitrary semicolons in the annotation.
+    let annotation = r"(?:[^\[\]=;{}]|\[[^\[\]=;{}]+(?:;\s*[A-Za-z0-9_:]+\s*)?\])+?";
+    let binding = format!(
+        r"(?i)\b(?:let\s+(?:ref\s+)?(?:mut\s+)?|const\s+|static\s+(?:mut\s+)?)(?:r#)?(?:password|passwd|pwd)\s*:\s*{annotation}\s*=(?!=|>)\s*"
+    );
+    vec![
+        Regex::new(&format!(
+            r#"{binding}(?P<password_quote>\\?['"])(?P<password_value>(?:(?!\k<password_quote>)(?:\\[\s\S]|[^\\]))+)\k<password_quote>"#
+        )).unwrap(),
+        Regex::new(&format!(
+            r#"{binding}(?!\\?['"])(?P<password_value>[^\s'";,]+)"#
+        )).unwrap(),
     ]
 }
 

@@ -75,14 +75,14 @@ walkdir = "2.5.0"
 ignored = ["flate2"]
 
 [features]
-default = []
+default = ["supabase-cloud"]
 cloud = []
-# Explicit preview; leaves existing local and Neon defaults unchanged.
+# Cloud uses Supabase by default; local SQLite and explicit Neon remain available.
 supabase-cloud = ["dactyl-db/supabase"]
 
 [dev-dependencies]
 tempfile = "3.10"
-decapod = { path = "." }
+decapod = { path = ".", default-features = false }
 criterion = { version = "0.5", features = ["html_reports"] }
 serde_json = "1.0"
 regex = "1.10"

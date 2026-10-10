@@ -29,9 +29,10 @@ Publication policy and container custody remain independent requirements.
 
 ## Supabase consumer validation (#1369)
 
-Decapod retains `repo.backend = local|cloud` and the existing default cloud
-route. The explicit Supabase preview selects Dactyl's authenticated HTTP
-transport, never a database connection or a service-role credential. The
+Decapod retains `repo.backend = local|cloud`. Cloud defaults to Dactyl's
+Supabase authenticated HTTP transport; explicit Neon remains available and
+local remains SQLite. Ordinary builds include the Supabase capability. The
+client never receives a database connection or a service-role credential. The
 preview requires its own explicit service endpoint and a machine-local user
 session. Invalid selectors and unavailable features fail before local todo
 SQLite is opened. No remote failure authorizes local fallback.
@@ -82,7 +83,7 @@ mutate intent, claims, trajectory, validation state, or boundaries.
 - The local proof boundary is explicit: host-runtime availability, ordinary close/reopen persistence, read-only enforcement, schema inspection, explicit IDs, atomic rollback, and broker/event routing are local checks. Propodus/Neon deployment, hosted tenancy, credential, and cross-organization concurrency proof remain separate downstream evidence and are not claimed by this local slice.
 - `core::backend::BackendSelection` maps the project `repo.backend` choice to a repository-scoped route. Local resolves to `.decapod/data/decapod.db`; cloud derives `owner/repository` from the Git `origin` remote and accepts an opaque remote URI only after the authenticated/session boundary supplies it. Decapod does not assemble or interpret a provider-specific cloud URI for ordinary state.
 - Local and cloud Decapod agent sessions are machine-local, backend-discriminated (`local_` or `cloud_`), and long-lived enough for an agent run: four hours by default, with a 30-minute minimum and six-hour maximum. Cloud access/refresh credentials remain opaque and are persisted separately from repository state.
-- The explicit cloud todo path authenticates through the service, then constructs Dactyl's explicit Neon HTTP route or the opt-in Supabase HTTP route with an opaque session credential and versioned `StorageContext` containing the target org/repo scope. It does not mutate ambient Dactyl route variables. Dactyl owns `/query` and `/batch` transport; Decapod does not add a backend, tenant, provider, or repository query parameter to individual operations.
+- The explicit cloud todo path authenticates through the service, then constructs Dactyl's default Supabase HTTP route or the explicit Neon HTTP alternative with an opaque session credential and versioned `StorageContext` containing the target org/repo scope. It does not mutate ambient Dactyl route variables. Dactyl owns `/query` and `/batch` transport; Decapod does not add a backend, tenant, provider, or repository query parameter to individual operations.
 - Cloud todo add, claim, release, and complete use Dactyl atomic write-plus-event-plus-observation batches and fail closed on zero-row state conflicts. A compatible service must gate the matching event on the preceding task mutation's affected count; a timestamp match alone is insufficient. Local fixtures do not prove PostgreSQL transaction semantics, hosted authorization, schema parity, or live Neon/Supabase behavior. These remain separate service proof obligations until authorized fixtures are available.
 
 ## Shared-State Durability Intent
@@ -339,7 +340,7 @@ policy ban based solely on virtiofs or FUSE filesystem identity.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1d8c50df18ccf6e945ff8129319be43777512462c516616aeb9754e33fee05f7`
+- Repository signal fingerprint: `c7bdbebfb346baefe0c9c0d59001b8fe58ae3ddc2b6977be0c6fde625a5319b1`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (119 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

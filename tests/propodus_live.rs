@@ -13,6 +13,7 @@ fn required_env(name: &str) -> String {
 
 fn run_decapod(dir: &Path, args: &[&str], agent: &str, token: &str) -> std::process::Output {
     Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .env("DECAPOD_CLOUD_DATASTORE", "neon")
         .args(args)
         .current_dir(dir)
         .env("DECAPOD_AGENT_ID", agent)
@@ -27,6 +28,7 @@ fn run_decapod(dir: &Path, args: &[&str], agent: &str, token: &str) -> std::proc
 
 fn prepare_cloud_repo(dir: &Path, remote: &str) {
     let init = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .env("DECAPOD_CLOUD_DATASTORE", "neon")
         .args(["init", "--backend", "cloud", "--force", "--proof"])
         .current_dir(dir)
         .output()

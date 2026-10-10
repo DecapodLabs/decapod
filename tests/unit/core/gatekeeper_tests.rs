@@ -818,6 +818,87 @@ fn explicit_unquoted_password_assignments_keep_short_values() {
 }
 
 #[test]
+fn typed_rust_password_bindings_keep_literal_and_unknown_values() {
+    for expression in [
+        r#"let password: &str="a";"#,
+        r#"let passwd: String = "ab".into();"#,
+        r#"let mut pwd: &'static str = "x";"#,
+        r#"let ref password: &str = "a";"#,
+        r#"let ref mut passwd: &str = "a";"#,
+        r#"let pwd: [u8; 1] = *b"a";"#,
+        r#"let ref mut pwd: [u8; LENGTH] = *b"a";"#,
+        "let\nref\nmut\npwd:\n[u8;\n1]\n= *b\"a\";",
+        r#"let r#password: &str = "a\"b";"#,
+        r##"let password: &str = r#"a"#;"##,
+        "let pwd: u8 = 1;",
+        "let passwd: char = 'x';",
+        r#"const PASSWORD: &str = "a";"#,
+        r#"static mut PWD: &str = "a";"#,
+        "let\npassword\n:\n&\nstr\n=\n\"a\";",
+        "let\tpasswd\t:\tString\t=\t\"a\".into();",
+        "let pwd:\r\n&str =\r\n\"a\";",
+        "let password: &str = \"two\nwords\";",
+        r#"let password: String = unknown();"#,
+        r#"let password: String = ::std::env::var("APP_CREDENTIAL").unwrap_or("x".into());"#,
+    ] {
+        assert!(
+            has_secret(&scan_rust_expression(expression)),
+            "missed typed password binding: {expression}"
+        );
+    }
+    // Detection is independent of parser success and of the source filename.
+    for path in ["source.rs", "guide.md", "tests/fixture.txt"] {
+        assert!(has_secret(&scan_text(
+            path,
+            r#"fn f(){let password: &str="a";} incomplete ("#
+        )));
+    }
+}
+
+#[test]
+fn typed_rust_password_bindings_preserve_runtime_initializer_scope() {
+    for expression in [
+        r#"let password: String = ::std::env::var("APP_CREDENTIAL").unwrap();"#,
+        "let\npasswd\n:\nString\n=\n::std::env::var(\"APP_CREDENTIAL\").unwrap();",
+        r#"let credential = ::std::env::var("APP_CREDENTIAL").unwrap(); let pwd: String = credential;"#,
+        r#"let password: &str = "";"#,
+        "let password: &str;",
+        "let password: &str; let other = \"a\";",
+        "let ref password: &str; let other = \"a\";",
+        "let pwd: [u8; 1]; let other = b\"a\";",
+        "let pwd: [u8; 1];\nlet other = b\"a\";",
+    ] {
+        assert!(
+            !has_secret(&scan_rust_expression(expression)),
+            "runtime or empty typed binding was classified as a secret: {expression}"
+        );
+    }
+    for expression in [
+        r#"let password: String = ::std::env::var("APP_CREDENTIAL").unwrap(); let passwd: &str = "x";"#,
+        r#"let password: String = ::std::env::var("APP_CREDENTIAL").unwrap(); let ref mut pwd: [u8; 1] = *b"a";"#,
+        r#"let password: &str = "x"; let passwd: String = ::std::env::var("APP_CREDENTIAL").unwrap();"#,
+        r#"let credential = ::std::env::var("APP_CREDENTIAL").unwrap(); let pwd: String = credential; let password: &str = "x";"#,
+        r#"let credential = ::std::env::var("APP_CREDENTIAL").unwrap(); ::std::println!("Password: {credential}"); let password: &str = "x";"#,
+        r#"let password: String = ::std::env::var("password=a").unwrap();"#,
+        r#"let password: String = ::std::env::var("APP_CREDENTIAL").unwrap(); let other = "password=a";"#,
+        r#"let password: String = ::std::env::var("APP_CREDENTIAL").unwrap(); let passwd: &str = "{password}";"#,
+    ] {
+        assert!(
+            has_secret(&scan_rust_expression(expression)),
+            "runtime proof hid another typed literal: {expression}"
+        );
+    }
+}
+
+#[test]
+fn typed_rust_password_binding_reports_the_value_line() {
+    let result = scan_text("source.rs", "fn f() {\nlet password:\n&str =\n\"a\";\n}");
+    assert!(result.violations.iter().any(|violation| {
+        violation.kind == ViolationKind::SecretDetected && violation.line == Some(4)
+    }));
+}
+
+#[test]
 fn included_source_coverage_is_independent_of_suffix_and_input_order() {
     for name in ["payload.txt", "payload.custom", "payload"] {
         let tmp = tempdir().unwrap();

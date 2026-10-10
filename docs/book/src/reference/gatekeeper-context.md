@@ -76,10 +76,16 @@ placeholder words, credential length, or test labels. Broader legacy pattern
 recognizers retain their documented shape limits. The tests retain short
 quoted and explicit-assignment passwords, alongside the old literal setup
 instruction, as positive controls.
-These recognizers do not detect every possible credential representation;
-for example, a Rust type annotation between a binding name and its assignment
-can fall outside the existing password pattern. Contextual classification
-preserves matched literal findings and does not supply universal secret detection.
+Typed Rust `let`, `const`, and `static` password/passwd/pwd declarations
+are scanned across whitespace and newlines, including short literal values.
+The additive textual matcher supports ref/ref mut bindings and simple
+array/slice annotations with literal or named lengths. It stops at statement
+semicolons, braces, or an earlier equals sign; nested arrays and arbitrary
+length expressions are outside this bounded recognizer. It is not a complete
+Rust type parser. Detection does
+not require successful parsing. Runtime provenance can discharge only its
+exact initializer span, so a nearby literal remains a finding. These bounded
+recognizers do not supply universal secret detection.
 
 Actual shell command substitutions remain executable-shell findings even
 when quoted. For example, a fixed script that queries process identity still

@@ -224,7 +224,7 @@ fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
                 Err(error) => Err(error),
             }
         }
-        CloudCommand::Status => match auth::load_cloud_credential(None) {
+        CloudCommand::Status => match auth::load_selected_cloud_credential(None) {
             Ok(credential) => {
                 println!(
                     "Propodus bearer configured ({:?}); issuer, audience, GitHub subject, repository, and seat claims are validated by Propodus",

@@ -253,9 +253,10 @@ fn remote_routes_reject_credential_query_and_fragment_without_echoing_them() {
 }
 
 #[test]
-fn cloud_datastore_selection_preserves_neon_and_rejects_unknown_values() {
+fn cloud_datastore_selection_defaults_to_supabase_and_preserves_explicit_neon() {
     use super::CloudDatastore;
-    assert_eq!(CloudDatastore::default(), CloudDatastore::Neon);
+    assert_eq!(CloudDatastore::default(), CloudDatastore::Supabase);
+    assert_eq!(CloudDatastore::parse("neon").unwrap(), CloudDatastore::Neon);
     assert_eq!(
         CloudDatastore::parse("supabase").unwrap(),
         CloudDatastore::Supabase
