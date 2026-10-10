@@ -30,6 +30,17 @@ trajectory-bound artifact before publication. It is created only when Jev is
 actually attempted, reset by a new trajectory initialization, and never stores
 the `TYPESAFE_API_KEY`.
 
+### Published Dactyl dependency
+
+Decapod consumes `dactyl-db` 0.11.0 from crates.io with the registry source and
+checksum committed in `Cargo.lock`. Nix vendors that same locked package
+without a Git-source hash. Release preparation must verify `cargo package
+--locked` and `cargo publish --locked --dry-run`; a Git-only dependency lacking
+a version requirement is not publishable. The dependency transition preserves
+local SQLite, default cloud Supabase, and explicitly selected Neon. Client
+boundary regressions are required in default and no-default-feature builds;
+registry publication does not establish hosted service or production proof.
+
 ### Native SQLite prerequisite for local Dactyl
 
 Stateful commands in a project configured with `repo.backend = "local"` require a host SQLite shared library for Dactyl's local adapter. The startup preflight first honors `DACTYL_SQLITE_LIBRARY`, then the machine-local `~/.config/decapod/runtime.toml` value. If neither is set, it probes the host and persists a discovered library path in that user-level file so later Decapod projects do not repeat the search. If no runtime is available, the command stops with `LOCAL_SQLITE_RUNTIME_REQUIRED` and gives platform installation commands plus a one-shell `export DACTYL_SQLITE_LIBRARY=...` fallback. Cloud-backed startup does not require or inspect SQLite.
@@ -327,8 +338,8 @@ continue to be surfaced through the existing storage checks.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `240bc3f651c5fc5fb2268c379e6101b03e944f9b9de634b6a2da61d88745a2e8`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (124 files), `tests/` (161 files)
+- Repository signal fingerprint: `59670f6a7a61bbcb0a02e358990462111bdf2ff92004de7ff3110cbe5a1f78fd`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (124 files), `tests/` (162 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

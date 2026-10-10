@@ -1,24 +1,34 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "five-critical-contention-ci-20261010",
-  "intent_id": "intent:five-critical-contention-ci-20261010",
-  "task_id": "bugs_01m4jdaambn944vm",
-  "original_intent": "Fix five critical issues in one PR with verified GitHub Actions",
-  "derived_intent": "Measure the existing twenty-client broker contention test with bounded diagnostic waits and a finite target-specific aggregate budget",
+  "run_id": "dactyl-registry-current-source-1380",
+  "intent_id": "intent:dactyl-registry-current-source-1380",
+  "task_id": "bugs_01m4kmbk49c108a8",
+  "original_intent": "Align Decapod with published Dactyl v0.11.0 and diagnose failed release",
+  "derived_intent": "Registry dependency and release checks, validated by the current source evaluator",
   "current_phase": "validation",
   "next_transitions": [
     "publish"
   ],
   "active_boundaries": [
-    "Keep twenty concurrent clients, existing retries, all assertions and production timeouts unchanged"
+    "Draft PR only; no crate publication, tag, release, merge or deployment"
   ],
   "repo_scope": [
-    "PR1383 broker regression proof"
+    "Issue 1380 registry dependency, docs and regression proof"
   ],
   "inspected_files": [],
   "modified_files": [
+    ".config/build/decapod.BUILD.bzl",
     ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json"
+    ".decapod/governance/validation.json",
+    ".decapod/managed/specs/OPERATIONS.md",
+    ".github/workflows/ci.yml",
+    "Cargo.lock",
+    "Cargo.toml",
+    "docs/book/src/reference/propodus.md",
+    "docs/book/src/reference/supabase-validation.md",
+    "docs/storage-permissions.md",
+    "flake.nix",
+    "tests/release_dependency_policy.rs"
   ],
   "declared_commands": [
     "decapod validate"
@@ -26,63 +36,65 @@
   "tool_calls": [],
   "checks": [
     {
-      "name": "actual_broker_claim_followup",
+      "name": "all-target all-feature Clippy and formatting",
       "status": "passed"
-    },
-    {
-      "name": "bounded_contention_harness",
-      "status": "partial"
     },
     {
       "name": "decapod validate",
       "status": "passed"
     },
     {
-      "name": "focused_strict_clippy",
+      "name": "default and no-default backend tests",
       "status": "passed"
     },
     {
-      "name": "github_actions_core",
-      "status": "failed"
-    },
-    {
-      "name": "independent_source_review",
-      "status": "passed"
-    },
-    {
-      "name": "local_real_broker",
+      "name": "hosted service proof",
       "status": "unavailable"
+    },
+    {
+      "name": "native Nix packaging",
+      "status": "unavailable"
+    },
+    {
+      "name": "package and publish dry-run",
+      "status": "passed"
     }
   ],
   "evidence": [
-    "At published head c897d74523ac640695cbcc8f500aa59b235d2732, Actions job114266925260 independently passed the real-socket committed claim preparation test in18.04seconds, including competing mutation and same-request retry. The aggregate group_broker target then exhausted its300second budget in the pre-existing twenty-client contention test. Other GitHub Actions groups passed. Local direct bind remains permission-denied even after the normal execution escalation request; an independent escalated socket probe failed in the environment launcher before execution.",
-    "Strict all-feature group_broker Clippy, formatting and diff checks passed. The focused contention harness compiled and completed bounded setup locally in7.13seconds, but real Unix socket contention remains capability-unavailable. Independent review confirms unchanged twenty-client concurrency, request identities, retry policy and assertions, bounded owned-child cleanup, joining all clients before assertions, and Unix/non-Unix helper separation.",
-    "validation epoch ve_be0d9e3755be4c2f completed with zero failures"
+    "550 library tests and 22 default cloud/registry integration tests passed, one library test intentionally ignored. Eight no-default-feature backend/registry tests passed.",
+    "All-target/all-feature Clippy -D warnings, cargo fmt --all --check and git diff --check passed.",
+    "Independent review passed after targeted Bazel compile_data correction. Actual current-source evaluator is used for final governance evidence.",
+    "Official Dactyl 0.11.0 archive checksum matches Cargo.lock, and runtime src is byte-identical to prior reviewed Git preview 62a616e.",
+    "Release job 114292890030 failed at 19:20:06 UTC because dactyl-db lacked a manifest version; registry version existed since 19:16:20 UTC.",
+    "cargo package --locked --allow-dirty and cargo publish --locked --dry-run --allow-dirty verified the package and registry Dactyl 0.11.0; dry-run aborted upload as expected.",
+    "validation epoch ve_e145f7adb35d2b69 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
-  "unresolved_assumptions": [],
-  "proof_status": "failed",
+  "unresolved_assumptions": [
+    "Native Nix proof remains tracked by issue 1376; Nix and container runtime unavailable locally, no hosted proof claimed."
+  ],
+  "proof_status": "partial",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "unsupported"
+    "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:58141d2a42abd5507335a76160d732a2cf5f06546480db0d3b524e1ac760e77e",
+  "artifact_hash": "sha256:848f3ac188c1af8395b1c7a9d9cb122f5f90c08eee7e637a6491ec28f67b3efb",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:five-critical-contention-ci-20261010": {
-        "id": "intent:five-critical-contention-ci-20261010",
-        "raw_intent": "Fix five critical issues in one PR with verified GitHub Actions",
-        "refined_intent": "Measure the existing twenty-client broker contention test with bounded diagnostic waits and a finite target-specific aggregate budget",
+      "intent:dactyl-registry-current-source-1380": {
+        "id": "intent:dactyl-registry-current-source-1380",
+        "raw_intent": "Align Decapod with published Dactyl v0.11.0 and diagnose failed release",
+        "refined_intent": "Registry dependency and release checks, validated by the current source evaluator",
         "acceptance_criteria": [],
         "constraints": [
-          "PR1383 broker regression proof"
+          "Issue 1380 registry dependency, docs and regression proof"
         ],
         "assumptions": [],
         "boundaries": [
-          "Keep twenty concurrent clients, existing retries, all assertions and production timeouts unchanged"
+          "Draft PR only; no crate publication, tag, release, merge or deployment"
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -95,100 +107,95 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:five-critical-contention-ci-20261010",
+        "intent_id": "intent:dactyl-registry-current-source-1380",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:five-critical-contention-ci-20261010",
+        "intent_id": "intent:dactyl-registry-current-source-1380",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:five-critical-contention-ci-20261010",
+        "intent_id": "intent:dactyl-registry-current-source-1380",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:five-critical-contention-ci-20261010"
+        "detail": "trajectory:dactyl-registry-current-source-1380"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:five-critical-contention-ci-20261010",
+        "intent_id": "intent:dactyl-registry-current-source-1380",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:five-critical-contention-ci-20261010"
-      },
-      {
-        "sequence": 6,
-        "event_id": "event:6",
-        "intent_id": "intent:five-critical-contention-ci-20261010",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:five-critical-contention-ci-20261010"
+        "detail": "trajectory:dactyl-registry-current-source-1380"
       }
     ],
     "trajectories": {
-      "five-critical-contention-ci-20261010": {
-        "id": "five-critical-contention-ci-20261010",
-        "intent_id": "intent:five-critical-contention-ci-20261010",
+      "dactyl-registry-current-source-1380": {
+        "id": "dactyl-registry-current-source-1380",
+        "intent_id": "intent:dactyl-registry-current-source-1380",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
             "action": "trajectory.record",
             "scope": [
-              "PR1383 broker regression proof"
+              "Issue 1380 registry dependency, docs and regression proof"
             ],
             "observations": [
-              "At published head c897d74523ac640695cbcc8f500aa59b235d2732, Actions job114266925260 independently passed the real-socket committed claim preparation test in18.04seconds, including competing mutation and same-request retry. The aggregate group_broker target then exhausted its300second budget in the pre-existing twenty-client contention test. Other GitHub Actions groups passed. Local direct bind remains permission-denied even after the normal execution escalation request; an independent escalated socket probe failed in the environment launcher before execution."
+              "Cargo.toml",
+              "Cargo.lock",
+              "flake.nix",
+              "tests/release_dependency_policy.rs",
+              ".config/build/decapod.BUILD.bzl",
+              ".github/workflows/ci.yml",
+              "docs/book/src/reference/propodus.md",
+              "docs/book/src/reference/supabase-validation.md",
+              "docs/storage-permissions.md",
+              ".decapod/managed/specs/OPERATIONS.md",
+              "550 library tests and 22 default cloud/registry integration tests passed, one library test intentionally ignored. Eight no-default-feature backend/registry tests passed.",
+              "cargo package --locked --allow-dirty and cargo publish --locked --dry-run --allow-dirty verified the package and registry Dactyl 0.11.0; dry-run aborted upload as expected.",
+              "All-target/all-feature Clippy -D warnings, cargo fmt --all --check and git diff --check passed.",
+              "Official Dactyl 0.11.0 archive checksum matches Cargo.lock, and runtime src is byte-identical to prior reviewed Git preview 62a616e.",
+              "Release job 114292890030 failed at 19:20:06 UTC because dactyl-db lacked a manifest version; registry version existed since 19:16:20 UTC.",
+              "Independent review passed after targeted Bazel compile_data correction. Actual current-source evaluator is used for final governance evidence."
             ],
             "proof_refs": [
-              "actual_broker_claim_followup",
-              "github_actions_core",
-              "local_real_broker"
+              "default and no-default backend tests",
+              "package and publish dry-run",
+              "all-target all-feature Clippy and formatting",
+              "native Nix packaging",
+              "hosted service proof"
             ],
-            "validation_findings": [],
+            "validation_findings": [
+              "Native Nix proof remains tracked by issue 1376; Nix and container runtime unavailable locally, no hosted proof claimed."
+            ],
             "custody_event_id": "event:4"
           },
           {
             "sequence": 5,
-            "action": "trajectory.record",
-            "scope": [
-              "PR1383 broker regression proof"
-            ],
-            "observations": [
-              "Strict all-feature group_broker Clippy, formatting and diff checks passed. The focused contention harness compiled and completed bounded setup locally in7.13seconds, but real Unix socket contention remains capability-unavailable. Independent review confirms unchanged twenty-client concurrency, request identities, retry policy and assertions, bounded owned-child cleanup, joining all clients before assertions, and Unix/non-Unix helper separation."
-            ],
-            "proof_refs": [
-              "focused_strict_clippy",
-              "bounded_contention_harness",
-              "independent_source_review"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:5"
-          },
-          {
-            "sequence": 6,
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              "PR1383 broker regression proof"
+              "Issue 1380 registry dependency, docs and regression proof"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_be0d9e3755be4c2f completed with zero failures"
+              "validation epoch ve_e145f7adb35d2b69 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
             ],
             "validation_findings": [],
-            "custody_event_id": "event:6"
+            "custody_event_id": "event:5"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 6
+    "next_sequence": 5
   }
 }

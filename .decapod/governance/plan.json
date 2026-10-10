@@ -1,50 +1,55 @@
 {
   "schema_version": "1.1.0",
-  "title": "Fix five critical lifecycle and publication issues",
-  "intent": "Resolve1218,1075,1076,1366,1045 in one draft PR without infrastructure changes or merge",
+  "title": "Align Decapod with Dactyl 0.11.0 registry release",
+  "intent": "Fix issue 1380 and confirmed manifest publication failure by consuming published dactyl-db 0.11.0, updating lockfile, Nix vendoring, activation documentation and release-regression proof, preserving all backend and container behavior.",
   "state": "APPROVED",
   "todo_ids": [
-    "bugs_01m4jdaambn944vm"
+    "bugs_01m4kmbk49c108a8"
   ],
   "proof_hooks": [
-    "cargo test --lib",
-    "cargo clippy --all-targets --all-features -- -D warnings",
+    "cargo test --locked --lib --test release_dependency_policy --test cloud_dactyl_boundary --test cloud_supabase_boundary --test cloud_cli_boundary --test cloud_command_path",
+    "cargo test --locked --no-default-features --test cloud_dactyl_boundary --test cloud_supabase_boundary --test release_dependency_policy",
+    "cargo package --locked --allow-dirty",
+    "cargo publish --locked --dry-run --allow-dirty",
+    "cargo clippy --locked --all-targets --all-features -- -D warnings",
     "decapod validate"
   ],
   "unknowns": [],
   "human_questions": [],
-  "stop_conditions": [],
+  "stop_conditions": [
+    "No publish, release, tag, merge, deployment, or permission changes"
+  ],
   "unresolved_contradictions": [],
   "deferred_questions": [
-    "Actual Docker custody unavailable in this environment"
+    "Native Nix packaging is unavailable locally and remains tracked by issue 1376; no hosted service proof is claimed."
   ],
   "constraints": {
     "forbidden_paths": [],
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1791653365Z",
+  "updated_at": "1791661266Z",
   "spec_reviews": [
     {
       "path": ".decapod/managed/specs/ARCHITECTURE.md",
       "spec_material_hash": "b0835ece6bd42daee979585d7336ffdf579cfa3d5b036acec0ade4f860d9a9e0",
-      "reviewed_code_fingerprint": "240bc3f651c5fc5fb2268c379e6101b03e944f9b9de634b6a2da61d88745a2e8",
+      "reviewed_code_fingerprint": "59670f6a7a61bbcb0a02e358990462111bdf2ff92004de7ff3110cbe5a1f78fd",
       "disposition": "unchanged_with_reason",
-      "reason": "Reviewed the twenty-client contention diagnostics, bounded test child collection and finite target-only diagnostic budget. Production commands, storage policy, concurrency, retries and all existing correctness assertions remain unchanged; authored contracts still describe the implementation."
+      "reason": "Reviewed registry Dactyl 0.11.0 alignment: published Dactyl source is byte-identical to prior Git preview; Decapod runtime source, backend selection, wire contracts, credentials, shared-database permissions and container behavior are unchanged. Existing authored contract remains accurate; release dependency operations are documented in OPERATIONS.md."
     },
     {
       "path": ".decapod/managed/specs/INTERFACES.md",
       "spec_material_hash": "ec59736eba382f3e01ea03fd8fb7eebe415cc343a48075e6e9a91efcd238621a",
-      "reviewed_code_fingerprint": "240bc3f651c5fc5fb2268c379e6101b03e944f9b9de634b6a2da61d88745a2e8",
+      "reviewed_code_fingerprint": "59670f6a7a61bbcb0a02e358990462111bdf2ff92004de7ff3110cbe5a1f78fd",
       "disposition": "unchanged_with_reason",
-      "reason": "Reviewed the twenty-client contention diagnostics, bounded test child collection and finite target-only diagnostic budget. Production commands, storage policy, concurrency, retries and all existing correctness assertions remain unchanged; authored contracts still describe the implementation."
+      "reason": "Reviewed registry Dactyl 0.11.0 alignment: published Dactyl source is byte-identical to prior Git preview; Decapod runtime source, backend selection, wire contracts, credentials, shared-database permissions and container behavior are unchanged. Existing authored contract remains accurate; release dependency operations are documented in OPERATIONS.md."
     },
     {
       "path": ".decapod/managed/specs/SECURITY.md",
       "spec_material_hash": "ad35c389324be26f9a505ea2561acf50ac674e263d0835724a2e9fd9783ac56f",
-      "reviewed_code_fingerprint": "240bc3f651c5fc5fb2268c379e6101b03e944f9b9de634b6a2da61d88745a2e8",
+      "reviewed_code_fingerprint": "59670f6a7a61bbcb0a02e358990462111bdf2ff92004de7ff3110cbe5a1f78fd",
       "disposition": "unchanged_with_reason",
-      "reason": "Reviewed the twenty-client contention diagnostics, bounded test child collection and finite target-only diagnostic budget. Production commands, storage policy, concurrency, retries and all existing correctness assertions remain unchanged; authored contracts still describe the implementation."
+      "reason": "Reviewed registry Dactyl 0.11.0 alignment: published Dactyl source is byte-identical to prior Git preview; Decapod runtime source, backend selection, wire contracts, credentials, shared-database permissions and container behavior are unchanged. Existing authored contract remains accurate; release dependency operations are documented in OPERATIONS.md."
     }
   ]
 }

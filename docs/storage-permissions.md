@@ -61,7 +61,7 @@ Migration backup/restore copies use explicit creation modes rather than
 `fs::copy`, which copies the source's mode. Migration ledgers use the same
 atomic writer. The original source is not chmodded.
 
-Dactyl at the pinned revision `62a616e` creates maintenance temporary files
+`dactyl-db` 0.11.0 creates maintenance temporary files
 with ambient modes. Decapod confines online-backup work in a fresh `0700`
 sibling staging directory. After Dactyl verifies the snapshot, Decapod assigns
 the new snapshot inode its private (or explicitly shared) final mode, syncs it,
@@ -69,7 +69,7 @@ and publishes without overwriting an existing destination. Staging is removed
 on success or failure. Private transient Dactyl modes are therefore not
 promised to be `0600`; the effective access boundary is the private directory.
 
-The pinned recovery API cannot select a staging directory or creation mode:
+The Dactyl 0.11.0 recovery API cannot select a staging directory or creation mode:
 it requires the archive and active database to share a parent and creates the
 rebuild temporary beside the active file. Decapod therefore permits recovery
 only in a private `0700` directory on Unix. Successful replacement preserves

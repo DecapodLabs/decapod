@@ -85,14 +85,9 @@
 
             src = self;
 
-            # Registry dependencies use Cargo.lock checksums. The reviewed
-            # Dactyl preview is a Git pin and also needs its recursive source
-            # hash for reproducible Nix vendoring. Update this hash together
-            # with that pin; a future registry release removes this entry.
-            cargoLock = {
-              lockFile = ./Cargo.lock;
-              outputHashes."dactyl-db-0.10.0" = "sha256-z5QRDmqOcojFjcV77l4aXkJA8ge+HMnO9gsFI1LwtgU=";
-            };
+            # All dependencies, including Dactyl, use registry checksums from
+            # Cargo.lock; no Git-source output hash is needed for vendoring.
+            cargoLock.lockFile = ./Cargo.lock;
 
             # Dactyl loads the host SQLite runtime dynamically; there is no
             # bundled SQLite or direct database-driver dependency here.

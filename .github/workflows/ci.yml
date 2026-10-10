@@ -254,6 +254,7 @@ jobs:
         run: >-
           cargo test --locked --features supabase-cloud --lib
           --test cloud_supabase_boundary --test cloud_dactyl_boundary
+          --test release_dependency_policy
           --test cloud_cli_boundary --test cloud_command_path --test cloud_todo_resume_wire --test propodus_contract
           --test supabase_service
       # Real service profiles stay ignored. They require an externally owned

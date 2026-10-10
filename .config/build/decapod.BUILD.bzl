@@ -97,6 +97,7 @@ def decapod_targets():
             # test-threads flag alone does not isolate concurrent Bazel targets.
             tags = ["exclusive"] if path == "tests/validate_termination.rs" else [],
             srcs = [path],
+            compile_data = ["Cargo.toml", "Cargo.lock"] if path == "tests/release_dependency_policy.rs" else [],
             edition = "2024",
             crate_features = ["supabase-cloud"],
             rustc_env_files = [":cargo_pkg_env"],
