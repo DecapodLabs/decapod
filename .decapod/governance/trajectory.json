@@ -5,7 +5,10 @@
   "task_id": "bugs_01m4jdaambn944vm",
   "original_intent": "Find and fix five most critical Decapod issues in one PR",
   "derived_intent": "Fix1218 lifecycle,1075 cloud retry,1076 dirty-root isolation,1366 state permissions,1045 publication verification",
-  "current_phase": "verification",
+  "current_phase": "validation",
+  "next_transitions": [
+    "publish"
+  ],
   "active_boundaries": [
     "No deployment, merge, credentials or infrastructure changes; preserve user files and shared database design"
   ],
@@ -13,8 +16,13 @@
     "Workspace lifecycle, cloud todo, permissions, publication tests and living specs"
   ],
   "inspected_files": [],
-  "modified_files": [],
-  "declared_commands": [],
+  "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json"
+  ],
+  "declared_commands": [
+    "decapod validate"
+  ],
   "tool_calls": [],
   "checks": [
     {
@@ -28,6 +36,10 @@
     {
       "name": "candidate_validation",
       "status": "partial"
+    },
+    {
+      "name": "decapod validate",
+      "status": "passed"
     },
     {
       "name": "dirty_root_integration",
@@ -54,7 +66,8 @@
     "Bazel source inventory uses src/**/*.rs and Cargo-derived normal dependencies; no new runtime assets",
     "Independent official0.106.1 on immutable1182ebdd fresh governed worktree:203pass0fail11skip; pristine master0.107.0:202pass2fail(container custody and then-uncommitted release refresh). Integration candidate after generated refresh:203pass1fail(container custody). No success receipt copied across custody.",
     "Initial focused candidate:32 workspace unit tests passed;9 dirty-root/spec/inventory integration tests passed; final integrated rerun pending",
-    "Integrated snapshot1182ebdd:540 library tests passed,1 opt-in Docker test ignored; independent source review found no blocking finding; candidate validation202 pass2 fail before generated-surface commit, no fresh successful receipt."
+    "Integrated snapshot1182ebdd:540 library tests passed,1 opt-in Docker test ignored; independent source review found no blocking finding; candidate validation202 pass2 fail before generated-surface commit, no fresh successful receipt.",
+    "validation epoch ve_40cb225c1e40c257 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -65,7 +78,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:2312c229d5e5e11f0649d1cceec4fc5a6d38922dad690be2cefb12b14f81bd4e",
+  "artifact_hash": "sha256:ccdf13e42321856bf65373618fa88270de96cd80cff8a4338ae65dfbc9796e17",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -118,6 +131,13 @@
       {
         "sequence": 6,
         "event_id": "event:6",
+        "intent_id": "intent:five-critical-20261010",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:five-critical-20261010"
+      },
+      {
+        "sequence": 7,
+        "event_id": "event:7",
         "intent_id": "intent:five-critical-20261010",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:five-critical-20261010"
@@ -179,12 +199,30 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:6"
+          },
+          {
+            "sequence": 7,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "Workspace lifecycle, cloud todo, permissions, publication tests and living specs"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_40cb225c1e40c257 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:7"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 6
+    "next_sequence": 7
   }
 }
