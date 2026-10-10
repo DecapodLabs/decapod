@@ -3,8 +3,31 @@ use std::process::{Child, Command};
 use std::time::{Duration, Instant};
 use tempfile::TempDir;
 
+fn resolve_decapod_bin() -> PathBuf {
+    let cargo_bin = env!("CARGO_BIN_EXE_decapod");
+    if let Ok(path) = Path::new(cargo_bin).canonicalize() {
+        return path;
+    }
+    if let Ok(runfiles_dir) = std::env::var("RUNFILES_DIR") {
+        let path = Path::new(&runfiles_dir).join("_main").join("decapod");
+        if path.exists() {
+            return path;
+        }
+    }
+    if let Some(parent) = std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(Path::to_path_buf))
+    {
+        let path = parent.join("decapod");
+        if path.exists() {
+            return path;
+        }
+    }
+    PathBuf::from(cargo_bin)
+}
+
 fn run_decapod(dir: &Path, args: &[&str], envs: &[(&str, &str)]) -> std::process::Output {
-    let mut cmd = Command::new(env!("CARGO_BIN_EXE_decapod"));
+    let mut cmd = Command::new(resolve_decapod_bin());
     cmd.current_dir(dir).args(args);
     for (k, v) in envs {
         cmd.env(k, v);
@@ -106,7 +129,7 @@ fn broker_socket_supported(dir: &Path, password: &str) -> bool {
 }
 
 fn spawn_decapod(dir: &Path, args: &[&str], envs: &[(&str, &str)]) -> Child {
-    let mut cmd = Command::new(env!("CARGO_BIN_EXE_decapod"));
+    let mut cmd = Command::new(resolve_decapod_bin());
     cmd.current_dir(dir).args(args);
     for (k, v) in envs {
         cmd.env(k, v);
@@ -494,7 +517,7 @@ fn explicit_shared_storage_uses_broker_route_without_private_fallback() {
     let hook = dir.join("shared-broker-hook");
     let out = Command::new("sh")
         .args(["-c", "umask 007; exec \"$@\"", "shared-broker"])
-        .arg(env!("CARGO_BIN_EXE_decapod"))
+        .arg(resolve_decapod_bin())
         .args(["todo", "add", "trusted shared store mutation"])
         .current_dir(&dir)
         .env("DECAPOD_STORAGE_SHARED_GROUP", "1")
@@ -529,4 +552,130 @@ fn explicit_shared_storage_uses_broker_route_without_private_fallback() {
             & 0o007,
         0
     );
+}
+
+#[cfg(unix)]
+#[test]
+fn committed_claim_preparation_does_not_hold_broker_or_repeat_on_retry() {
+    claim_preparation_probe(true);
+}
+
+#[cfg(unix)]
+#[test]
+fn direct_claim_acknowledges_before_preparation() {
+    claim_preparation_probe(false);
+}
+
+#[cfg(unix)]
+fn claim_preparation_probe(broker: bool) {
+    use std::os::unix::fs::PermissionsExt;
+    let (_temp, dir, password) = setup_repo();
+    if broker && !broker_socket_supported(&dir, &password) {
+        eprintln!(
+            "AF_UNIX broker unavailable; client follow-up integration requires a socket-capable runner"
+        );
+        return;
+    }
+    let envs = [
+        ("DECAPOD_SESSION_PASSWORD", password.as_str()),
+        ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ("DECAPOD_GROUP_BROKER_IDLE_SECS", "1"),
+        (
+            "DECAPOD_GROUP_BROKER_DISABLE",
+            if broker { "0" } else { "1" },
+        ),
+    ];
+    let added = run_decapod(
+        &dir,
+        &["todo", "add", "claim follow-up responsiveness"],
+        &envs,
+    );
+    assert!(
+        added.status.success(),
+        "{}",
+        String::from_utf8_lossy(&added.stderr)
+    );
+    let added: serde_json::Value = serde_json::from_slice(&added.stdout).unwrap();
+    let id = added["id"].as_str().unwrap();
+    let bin = dir.join("mock-runtime");
+    std::fs::create_dir(&bin).unwrap();
+    let ready = dir.join("preparation-ready");
+    let release = dir.join("preparation-release");
+    let calls = dir.join("preparation-calls");
+    let script = format!(
+        "#!/bin/sh\nif [ \"$1\" = info ]; then\n echo called >> '{}'\n : > '{}'\n while [ ! -f '{}' ]; do sleep 0.05; done\n exit 1\nfi\nexit 0\n",
+        calls.display(),
+        ready.display(),
+        release.display()
+    );
+    for runtime in ["docker", "podman"] {
+        let path = bin.join(runtime);
+        std::fs::write(&path, &script).unwrap();
+        std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o700)).unwrap();
+    }
+    let path = format!("{}:{}", bin.display(), std::env::var("PATH").unwrap());
+    let args = ["todo", "--format", "json", "claim", "--id", id];
+    let progress = dir.join("claim-progress");
+    let mut command = Command::new(resolve_decapod_bin());
+    command
+        .current_dir(&dir)
+        .args(args)
+        .envs(envs)
+        .env("PATH", &path)
+        .env("DECAPOD_CLAIM_AUTORUN", "1")
+        .env("DECAPOD_CONTAINER", "0")
+        .env("DECAPOD_GROUP_BROKER_REQUEST_ID", "followup-once")
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::fs::File::create(&progress).unwrap());
+    let mut child = command.spawn().unwrap();
+    let start = Instant::now();
+    while !ready.exists() && start.elapsed() < Duration::from_secs(12) {
+        std::thread::sleep(Duration::from_millis(20));
+    }
+    if !ready.exists() {
+        let _ = child.kill();
+        let output = child.wait_with_output().unwrap();
+        panic!(
+            "preparation did not start: {} {}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+    assert!(
+        std::fs::read_to_string(&progress)
+            .unwrap()
+            .contains(&format!(
+                "Task claim committed: {id}; container preparation pending"
+            ))
+    );
+    // The creating leader has relinquished its lease before client preparation.
+    assert!(!dir.join(".decapod/data/broker.lock").exists());
+    let start = Instant::now();
+    let competing = run_decapod(&dir, &["todo", "add", "while preparation waits"], &envs);
+    std::fs::write(&release, "release").unwrap(); // always release before assertions
+    let output = child.wait_with_output().unwrap();
+    assert!(
+        competing.status.success(),
+        "{}",
+        String::from_utf8_lossy(&competing.stderr)
+    );
+    assert!(start.elapsed() < Duration::from_secs(10));
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let claimed: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(claimed["status"], "ok");
+    assert_eq!(claimed["id"], id);
+    assert_eq!(claimed["container"]["status"], "warning");
+    if !broker {
+        return;
+    }
+    let before = std::fs::read_to_string(&calls).unwrap();
+    let retry = command.output().unwrap();
+    assert!(retry.status.success());
+    let retried: serde_json::Value = serde_json::from_slice(&retry.stdout).unwrap();
+    assert_eq!(retried, claimed);
+    assert_eq!(std::fs::read_to_string(&calls).unwrap(), before);
 }

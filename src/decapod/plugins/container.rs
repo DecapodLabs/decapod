@@ -300,7 +300,7 @@ Agent must clear the disable marker through Decapod self-heal before retrying.",
         .map(|s| s.to_string())
         .unwrap_or_else(|| default_branch_name(agent, task_id));
     let base_branch = resolve_base_branch(&repo, pr_base);
-    let workspace = prepare_workspace_clone(&repo, &branch_name, &base_branch)?;
+    let workspace = prepare_workspace_clone(&repo, &branch_name, &base_branch, &docker)?;
 
     let mut spec = build_docker_spec(
         &docker,
@@ -1253,6 +1253,7 @@ fn prepare_workspace_clone(
     repo: &Path,
     branch: &str,
     base_branch: &str,
+    runtime: &str,
 ) -> Result<WorkspaceSpec, error::DecapodError> {
     let workspaces_root = repo.join(".decapod").join("workspaces");
     crate::core::fs_permissions::ensure_private_dir(&workspaces_root)
@@ -1266,6 +1267,7 @@ fn prepare_workspace_clone(
         .ok_or_else(|| error::DecapodError::PathError("invalid workspace path".to_string()))?;
 
     let mut ownership = crate::core::workspace_lifecycle::reserve(repo, &workspace_path, true)?;
+    ownership.require_container(runtime)?;
     let start_oid = workspace::preferred_base_oid(repo, base_branch);
     let base_ref = format!("refs/heads/{base_branch}");
     let clone_output = if git_ref_exists(repo, &base_ref)? {

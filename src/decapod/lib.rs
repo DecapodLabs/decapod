@@ -2515,8 +2515,22 @@ pub fn run() -> Result<(), error::DecapodError> {
                     .map_err(error::DecapodError::IoError)?;
             }
 
+            let project_store = Store {
+                kind: StoreKind::Repo,
+                root: store_root.clone(),
+            };
+
             if !cloud_todo_command && should_route_via_group_broker(&cli.command, &argv) {
-                match core::group_broker::maybe_route_mutation(&store_root, &argv) {
+                let mut finish = |stdout: &str, request_id: &str| match &cli.command {
+                    Command::Todo(todo_cli) => todo::finish_broker_claim_response(
+                        &project_store,
+                        todo_cli,
+                        stdout,
+                        request_id,
+                    ),
+                    _ => stdout.to_owned(),
+                };
+                match core::group_broker::maybe_route_mutation(&store_root, &argv, &mut finish) {
                     Err(e) => {
                         if !core::group_broker::is_internal_invocation() {
                             return Err(e);
@@ -2564,11 +2578,6 @@ pub fn run() -> Result<(), error::DecapodError> {
             {
                 eprintln!("warn: worktree maintenance skipped: {e}");
             }
-
-            let project_store = Store {
-                kind: StoreKind::Repo,
-                root: store_root.clone(),
-            };
 
             if !cloud_todo_command
                 && !is_storage_independent_command(&cli.command)

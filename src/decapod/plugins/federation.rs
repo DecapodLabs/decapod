@@ -1992,14 +1992,30 @@ pub fn validate_federation(
             let current_hash = canonical_state_hash(&conn)?;
             let (cur_nodes, cur_sources, cur_edges) = db_counts(&conn)?;
 
-            // Rebuild to a unique temp location to avoid collisions across parallel validates.
-            let tmp_db = std::env::temp_dir().join(format!(
-                "decapod_federation_validate_{}.db",
-                crate::core::ulid::new_ulid()
-            ));
-            if tmp_db.exists() {
-                let _ = fs::remove_file(&tmp_db);
+            // Own the whole temporary directory so SQLite's lock and sidecars
+            // share its private boundary and are cleaned up on every return path.
+            // In particular, never place a governed database directly in /tmp.
+            let mut temporary = tempfile::Builder::new();
+            temporary.prefix("decapod_federation_validate_");
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                temporary.permissions(fs::Permissions::from_mode(0o700));
             }
+            let temporary = match temporary.tempdir() {
+                Ok(directory) => directory,
+                Err(e) => {
+                    results.push((
+                        "federation.rebuild_determinism".to_string(),
+                        false,
+                        format!(
+                            "federation.validate could not create a private rebuild directory: {e}"
+                        ),
+                    ));
+                    return Ok(results);
+                }
+            };
+            let tmp_db = temporary.path().join("rebuild.db");
 
             let tmp_conn = match crate::core::db::db_connect(&tmp_db.to_string_lossy()) {
                 Ok(conn) => conn,
@@ -2027,7 +2043,6 @@ pub fn validate_federation(
                     ),
                 ));
                 drop(tmp_conn);
-                let _ = fs::remove_file(&tmp_db);
                 return Ok(results);
             }
             if let Err(e) = tmp_conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_NODES) {
@@ -2041,7 +2056,6 @@ pub fn validate_federation(
                     ),
                 ));
                 drop(tmp_conn);
-                let _ = fs::remove_file(&tmp_db);
                 return Ok(results);
             }
             if let Err(e) = tmp_conn.execute_batch(schemas::MEMORY_DB_SCHEMA_NODE_EDGES) {
@@ -2055,7 +2069,6 @@ pub fn validate_federation(
                     ),
                 ));
                 drop(tmp_conn);
-                let _ = fs::remove_file(&tmp_db);
                 return Ok(results);
             }
             if let Err(e) = crate::core::events::ensure_tables(&tmp_conn) {
@@ -2069,7 +2082,6 @@ pub fn validate_federation(
                     ),
                 ));
                 drop(tmp_conn);
-                let _ = fs::remove_file(&tmp_db);
                 return Ok(results);
             }
 
@@ -2089,7 +2101,6 @@ pub fn validate_federation(
 
             if let Some(err) = replay_error {
                 drop(tmp_conn);
-                let _ = fs::remove_file(&tmp_db);
                 results.push((
                     "federation.rebuild_determinism".to_string(),
                     false,
@@ -2102,7 +2113,6 @@ pub fn validate_federation(
                 let (reb_nodes, reb_sources, reb_edges) = db_counts(&tmp_conn)?;
 
                 drop(tmp_conn);
-                let _ = fs::remove_file(&tmp_db);
 
                 if current_hash == rebuilt_hash {
                     results.push((

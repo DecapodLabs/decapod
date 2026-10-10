@@ -610,8 +610,8 @@ fn prepare_workspace_clone_inherits_parent_github_remote_and_remote_tip() {
         ],
     );
 
-    let workspace =
-        prepare_workspace_clone(&parent, "agent/test-1259", "master").expect("clone workspace");
+    let workspace = prepare_workspace_clone(&parent, "agent/test-1259", "master", "docker")
+        .expect("clone workspace");
 
     let head = Command::new("git")
         .args(["-C", workspace.path.to_str().unwrap(), "rev-parse", "HEAD"])

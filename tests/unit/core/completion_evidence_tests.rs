@@ -243,7 +243,17 @@ fn local_record_replays_and_detects_artifact_change() {
         report.checks
     );
 
-    let portable_path = root.parent().unwrap().join("completion-evidence.json");
+    // Export outside the source repository, but never directly into the
+    // shared system temp directory or a filename shared by parallel tests.
+    let export_directory = tempdir().expect("portable evidence directory");
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(export_directory.path(), fs::Permissions::from_mode(0o700))
+            .expect("private portable evidence fixture");
+    }
+    let portable_path = export_directory.path().join("completion-evidence.json");
+    assert!(!portable_path.starts_with(root));
     let envelope = export_record(root, "task-1", &record_path, &portable_path)
         .expect("export portable evidence");
     assert_eq!(envelope.record.evidence_hash, record.evidence_hash);

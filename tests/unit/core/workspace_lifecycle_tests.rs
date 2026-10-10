@@ -162,17 +162,26 @@ fn interruption_child() {
     let root = PathBuf::from(root);
     let phase = std::env::var("DECAPOD_LIFECYCLE_TEST_PHASE").unwrap();
     if phase == "recover" {
+        if let Ok(expected) = std::env::var("DECAPOD_EXPECT_RUNTIME_DEFAULT") {
+            assert_eq!(
+                crate::core::container_runtime::find_container_runtime().unwrap(),
+                expected
+            );
+        }
         let report = crate::core::workspace::prune_workspaces_report(&root, true).unwrap();
         fs::write(root.join("prune-report"), format!("{report:?}")).unwrap();
         return;
     }
     let target = test_target(&root);
-    let owned = reserve(
+    let mut owned = reserve(
         &root,
         &target,
         matches!(phase.as_str(), "docker" | "failed_startup"),
     )
     .unwrap();
+    if matches!(phase.as_str(), "docker" | "failed_startup") {
+        owned.require_container("docker").unwrap();
+    }
     if phase == "failed_startup" {
         fs::write(target.join("user-work"), "keep").unwrap();
     }
@@ -422,4 +431,222 @@ fn active_claim_failed_startup_recovery_preserves_user_work() {
             "keep"
         );
     }
+}
+
+#[test]
+fn container_runtime_binding_is_durable_and_cannot_switch_or_execute_paths() {
+    let temp = repo();
+    let target = temp.path().join(".decapod/workspaces/backend-binding");
+    let mut owned = reserve(temp.path(), &target, true).unwrap();
+    owned.require_container("docker").unwrap();
+    assert!(owned.require_container("podman").is_err());
+    assert!(owned.require_container("/tmp/untrusted-runtime").is_err());
+    drop(owned);
+    let mut recovered = acquire(temp.path(), &target).unwrap().unwrap();
+    assert_eq!(recovered.container_runtime().unwrap(), "docker");
+    // A legacy/corrupted persisted receipt must not become an executable path.
+    recovered.receipt.container_runtime = Some("/tmp/untrusted-runtime".into());
+    assert!(recovered.container_runtime().is_err());
+    let mut legacy = serde_json::to_value(&recovered.receipt).unwrap();
+    legacy.as_object_mut().unwrap().remove("container_runtime");
+    recovered.receipt = serde_json::from_value(legacy).unwrap();
+    assert!(recovered.container_runtime().is_err());
+}
+
+#[test]
+fn recovery_uses_creating_engine_despite_changed_default_and_never_falls_back() {
+    use crate::core::bounded_process::{BoundedCommand, CONTROL_TIMEOUT};
+    use std::os::unix::fs::{PermissionsExt, symlink};
+    for (active, scenario) in [
+        (true, "bound"),
+        (false, "bound"),
+        (true, "missing"),
+        (true, "legacy"),
+    ] {
+        let temp = git_repo();
+        if active {
+            active_task(temp.path());
+        }
+        let target = test_target(temp.path());
+        let mut owned = reserve(temp.path(), &target, true).unwrap();
+        if scenario != "legacy" {
+            owned.require_container("docker").unwrap();
+        }
+        let invocation = owned.invocation().to_owned();
+        drop(owned);
+        let bin = temp.path().join("runtime-bin");
+        fs::create_dir(&bin).unwrap();
+        // Isolate PATH: the missing-Docker case must not find a runner's Docker.
+        let git = std::env::split_paths(&std::env::var_os("PATH").unwrap())
+            .map(|dir| dir.join("git"))
+            .find(|path| path.is_file())
+            .unwrap();
+        symlink(git, bin.join("git")).unwrap();
+        let wrong_engine = temp.path().join("podman-queried");
+        let removed = temp.path().join("docker-removed");
+        let id = "d".repeat(64);
+        let record = serde_json::json!({"Id": id, "Config": {"Labels": {
+            "org.decapod.managed": "workspace", "org.decapod.workspace.path": target,
+            "org.decapod.invocation": invocation,
+        }}})
+        .to_string();
+        let podman = format!(
+            "#!/bin/sh\nif [ \"$1\" = container ]; then : > '{}'; fi\nexit 0\n",
+            wrong_engine.display()
+        );
+        fs::write(bin.join("podman"), podman).unwrap();
+        fs::set_permissions(bin.join("podman"), fs::Permissions::from_mode(0o700)).unwrap();
+        if scenario != "missing" {
+            let docker = format!(
+                r#"#!/bin/sh
+case "$1 $2" in
+  'container ls') [ -f '{removed}' ] || printf '%s\n' '{id}';;
+  'container inspect') printf '%s\n' '{record}';;
+  'container rm') [ "$4" = '{id}' ] || exit 9; : > '{removed}';;
+  *) exit 1;;
+esac
+"#,
+                removed = removed.display()
+            );
+            fs::write(bin.join("docker"), docker).unwrap();
+            fs::set_permissions(bin.join("docker"), fs::Permissions::from_mode(0o700)).unwrap();
+        }
+        let out = std::process::Command::new(std::env::current_exe().unwrap())
+            .args([
+                "--exact",
+                "core::workspace_lifecycle::tests::interruption_child",
+            ])
+            .env("DECAPOD_LIFECYCLE_TEST_ROOT", temp.path())
+            .env("DECAPOD_LIFECYCLE_TEST_PHASE", "recover")
+            .env("DECAPOD_EXPECT_RUNTIME_DEFAULT", "podman")
+            .env("PATH", &bin)
+            .bounded_output(CONTROL_TIMEOUT)
+            .unwrap();
+        assert!(
+            out.status.success(),
+            "{scenario}: {}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+        let report = fs::read_to_string(temp.path().join("prune-report")).unwrap();
+        assert!(
+            !wrong_engine.exists(),
+            "{scenario}: recovery queried another engine: {report}"
+        );
+        if scenario == "bound" {
+            assert!(
+                removed.exists(),
+                "creating engine wasn't reconciled: {report}"
+            );
+            assert_eq!(
+                target.exists(),
+                active,
+                "active files retained; inactive residue pruned: {report}"
+            );
+        } else {
+            assert!(!removed.exists());
+            assert!(
+                target.exists(),
+                "uncertain resources must be preserved: {report}"
+            );
+            assert!(report.contains("recovery remains blocked"), "{report}");
+            assert!(
+                !report.contains("container reconciled"),
+                "must not report false recovery: {report}"
+            );
+        }
+    }
+}
+
+#[test]
+fn released_invocation_lease_is_not_retained_by_unrelated_fork() {
+    let temp = repo();
+    let target = temp.path().join(".decapod/workspaces/inherited-fd");
+    let owned = reserve(temp.path(), &target, false).unwrap();
+    let mut pipe = [0; 2];
+    assert_eq!(unsafe { libc::pipe(pipe.as_mut_ptr()) }, 0);
+    let pid = unsafe { libc::fork() };
+    assert!(pid >= 0);
+    if pid == 0 {
+        // Only async-signal-safe syscalls after fork in this threaded harness.
+        // The inherited lease FD deliberately stays open until parent cleanup.
+        unsafe {
+            libc::close(pipe[1]);
+            libc::alarm(5);
+            let mut byte = 0u8;
+            libc::read(pipe[0], (&mut byte as *mut u8).cast(), 1);
+            libc::_exit(0);
+        }
+    }
+    unsafe {
+        libc::close(pipe[0]);
+    }
+    drop(owned);
+    let recovered = std::panic::catch_unwind(|| acquire(temp.path(), &target));
+    // Always release and reap the helper before reporting any failure.
+    unsafe {
+        let byte = 1u8;
+        libc::write(pipe[1], (&byte as *const u8).cast(), 1);
+        libc::close(pipe[1]);
+        libc::waitpid(pid, std::ptr::null_mut(), 0);
+    }
+    let recovered = recovered.unwrap();
+    assert!(
+        recovered.is_ok(),
+        "an unrelated inherited FD retained a released lease: {recovered:?}"
+    );
+    assert!(recovered.unwrap().is_some());
+}
+
+#[test]
+fn workspace_receipts_do_not_pollute_broker_replay_or_task_claims() {
+    let temp = git_repo();
+    let target = temp.path().join(".decapod/workspaces/replay-isolation");
+    drop(reserve(temp.path(), &target, false).unwrap());
+    let data = temp.path().join(".decapod/data");
+    assert!(
+        !events::query(&data, events::WORKSPACE_LIFECYCLE, usize::MAX)
+            .unwrap()
+            .is_empty()
+    );
+    let broker = crate::core::broker::DbBroker::new(&data);
+    broker.verify_replay().unwrap();
+    active_task(temp.path());
+    broker.verify_replay().unwrap();
+    assert!(acquire(temp.path(), &target).unwrap().is_some());
+}
+
+#[test]
+fn registered_legacy_container_profile_cannot_be_adopted_or_rebound() {
+    use crate::core::bounded_process::{BoundedCommand, CONTROL_TIMEOUT};
+    let temp = git_repo();
+    let target = temp.path().join(".decapod/workspaces/legacy-container");
+    let result = std::process::Command::new("git")
+        .arg("-C")
+        .arg(temp.path())
+        .args(["worktree", "add", "-b", "legacy-container"])
+        .arg(&target)
+        .bounded_output(CONTROL_TIMEOUT)
+        .unwrap();
+    assert!(result.status.success());
+    let profile = target.join(crate::plugins::container::MANAGED_DOCKERFILE_REL_PATH);
+    fs::create_dir_all(profile.parent().unwrap()).unwrap();
+    fs::write(&profile, "FROM scratch\n").unwrap();
+    let error = acquire_registered(temp.path(), &target).unwrap_err();
+    assert!(error.to_string().contains("provenance is unknown"));
+    assert!(lookup(temp.path(), &target).unwrap().is_none());
+    assert!(profile.exists());
+
+    let plain = temp.path().join(".decapod/workspaces/plain-git");
+    let result = std::process::Command::new("git")
+        .arg("-C")
+        .arg(temp.path())
+        .args(["worktree", "add", "-b", "plain-git"])
+        .arg(&plain)
+        .bounded_output(CONTROL_TIMEOUT)
+        .unwrap();
+    assert!(result.status.success());
+    let mut owned = acquire_registered(temp.path(), &plain).unwrap();
+    assert!(!owned.container_expected());
+    owned.require_container("docker").unwrap();
+    assert_eq!(owned.container_runtime().unwrap(), "docker");
 }
