@@ -392,7 +392,7 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c60a91077200b9e05578ac6e32646771cbc3e73cde13cca031d4073bfba268b0`
+- Repository signal fingerprint: `c38d26bf2c1c1219852f7aec2ce23860a793b4c7809c4d3af5e94e03b7f84caf`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (124 files), `tests/` (161 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -439,3 +439,11 @@ the foreground caller, then verifies that receipt-bound recovery removes the
 matching immutable container while preserving unrelated state. Local runs that
 lack Docker leave this profile ignored; only its recorded Actions result can
 establish the actual daemon-backed behavior.
+
+The broker claim follow-up regression has bounded setup, competing mutation,
+completion and retry stages with timestamps and phase diagnostics. Its child
+output is file-backed so an inherited pipe cannot hide process completion.
+Actions runs the exact real-socket regression independently before the unchanged
+full core gate, distinguishing its own latency from the aggregate test budget.
+Only an explicit local AF_UNIX permission denial makes that proof unavailable;
+other transport or command failures must fail the test.

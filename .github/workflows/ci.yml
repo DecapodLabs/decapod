@@ -614,6 +614,12 @@ jobs:
           case "${{ matrix.target }}" in
             core)
               if echo "$CHANGED" | grep -qE 'src/decapod/core/(todo|validate|workspace|workunit|obligation|docs|capsule|rpc|migration|gateway)'; then
+                # Time the real broker follow-up independently before the full
+                # suite so its bounded stage diagnostics survive a suite timeout.
+                time bazelisk test //:group_broker \
+                  --test_arg=committed_claim_preparation_does_not_hold_broker_or_repeat_on_retry \
+                  --test_arg=--exact --test_arg=--nocapture \
+                  --test_output=all
                 bazelisk test \
                   //:todo_enforcement \
                   //:validate_termination \
