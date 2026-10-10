@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.107.1](https://github.com/DecapodLabs/decapod/compare/v0.107.0...v0.107.1) - 2026-10-10
+
+### Fixed
+
+- *(workspace)* preserve atomic publication on musl ([#1385](https://github.com/DecapodLabs/decapod/pull/1385))
+
 ## [0.107.0](https://github.com/DecapodLabs/decapod/compare/v0.106.1...v0.107.0) - 2026-10-10
 
 ### Added
