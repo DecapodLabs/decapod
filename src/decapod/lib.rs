@@ -102,12 +102,13 @@ fn write_project_config(
     }
     let config_path = decapod_config_path(target_dir);
     if let Some(parent) = config_path.parent() {
-        fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
+        core::fs_permissions::ensure_private_dir(parent).map_err(error::DecapodError::IoError)?;
     }
     let serialized = toml::to_string_pretty(config).map_err(|e| {
         error::DecapodError::ValidationError(format!("AUTOREMEDIABLE_VALIDATION_ERROR code=CONFIG_SERIALIZE_FAILED severity=transient auto_remediable=true audience=agent agent_action=\"ensure the .decapod/config.toml data can be serialized (e.g., fix data types)\" user_note=\"Failed to serialize configuration; the agent should adjust the config content or report the issue.\"\nFailed to serialize config.toml: {e}"))
     })?;
-    fs::write(config_path, serialized).map_err(error::DecapodError::IoError)?;
+    core::atomic::write_atomic(&config_path, serialized.as_bytes())
+        .map_err(error::DecapodError::IoError)?;
     Ok(())
 }
 
@@ -2497,10 +2498,10 @@ pub fn run() -> Result<(), error::DecapodError> {
             let configured_backend = load_project_config_if_present(&workspace_root)?
                 .map(|config| config.repo.effective_backend())
                 .unwrap_or_default();
-            if !configured_backend.is_cloud() {
+            let cloud_todo_command = is_cloud_todo_command(&cli.command, &workspace_root)?;
+            if !configured_backend.is_cloud() && !cloud_todo_command {
                 core::dactyl::ensure_local_sqlite_runtime()?;
             }
-            let cloud_todo_command = is_cloud_todo_command(&cli.command, &workspace_root)?;
             // Cloud todo operations use the Propodus machine session/JWT for
             // authentication, then route physical storage through Dactyl and
             // deliberately bypass the local SQLite-backed agent session. This
@@ -2510,7 +2511,8 @@ pub fn run() -> Result<(), error::DecapodError> {
                 ensure_session_valid()?;
             }
             if !cloud_todo_command {
-                std::fs::create_dir_all(&store_root).map_err(error::DecapodError::IoError)?;
+                core::fs_permissions::ensure_storage_dir(&store_root)
+                    .map_err(error::DecapodError::IoError)?;
             }
 
             if !cloud_todo_command && should_route_via_group_broker(&cli.command, &argv) {
@@ -2556,7 +2558,8 @@ pub fn run() -> Result<(), error::DecapodError> {
 
             // Best-effort hygiene: routinely scrub stale git worktree metadata/config.
             // This must not block primary command execution.
-            if let Err(e) = workspace::prune_stale_worktree_config(&workspace_root)
+            if !cloud_todo_command
+                && let Err(e) = workspace::prune_stale_worktree_config(&workspace_root)
                 && !is_not_git_repository_error(&e)
             {
                 eprintln!("warn: worktree maintenance skipped: {e}");
@@ -2764,7 +2767,11 @@ fn is_cloud_todo_command(
     command: &Command,
     workspace_root: &Path,
 ) -> Result<bool, error::DecapodError> {
-    if !matches!(command, Command::Todo(_)) {
+    if let Command::Todo(cli) = command {
+        if todo::is_operation_inspection(cli) {
+            return Ok(true);
+        }
+    } else {
         return Ok(false);
     }
     Ok(load_project_config_if_present(workspace_root)?
@@ -3236,40 +3243,7 @@ fn read_agent_session(
 }
 
 fn atomic_write_file(path: &Path, body: &str) -> Result<(), error::DecapodError> {
-    let parent = path.parent().ok_or_else(|| {
-        error::DecapodError::IoError(std::io::Error::other(
-            "target path is missing parent directory",
-        ))
-    })?;
-    fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
-
-    let file_name = path
-        .file_name()
-        .and_then(|v| v.to_str())
-        .unwrap_or("file")
-        .to_string();
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|d| d.as_nanos())
-        .unwrap_or(0);
-    let tmp = parent.join(format!(
-        ".{}.tmp-{}-{}",
-        file_name,
-        std::process::id(),
-        nonce
-    ));
-    fs::write(&tmp, body).map_err(error::DecapodError::IoError)?;
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        let mut perms = fs::metadata(&tmp)
-            .map_err(error::DecapodError::IoError)?
-            .permissions();
-        perms.set_mode(0o600);
-        fs::set_permissions(&tmp, perms).map_err(error::DecapodError::IoError)?;
-    }
-    fs::rename(&tmp, path).map_err(error::DecapodError::IoError)?;
-    Ok(())
+    core::atomic::write_atomic(path, body.as_bytes()).map_err(error::DecapodError::IoError)
 }
 
 fn write_agent_session(
@@ -3329,7 +3303,7 @@ fn write_awareness_record(
     rec: &ConstitutionalAwarenessRecord,
 ) -> Result<(), error::DecapodError> {
     let dir = awareness_dir(project_root);
-    fs::create_dir_all(&dir).map_err(error::DecapodError::IoError)?;
+    core::fs_permissions::ensure_private_dir(&dir).map_err(error::DecapodError::IoError)?;
     let path = awareness_file_for_agent(project_root, &rec.agent_id);
     let body = serde_json::to_string_pretty(rec).map_err(|e| {
         error::DecapodError::ValidationError(format!("awareness encode error: {e}"))
@@ -3483,7 +3457,7 @@ fn ensure_session_valid() -> Result<(), error::DecapodError> {
     let store_root = find_governance_root(&project_root)
         .join(".decapod")
         .join("data");
-    fs::create_dir_all(&store_root).map_err(error::DecapodError::IoError)?;
+    core::fs_permissions::ensure_storage_dir(&store_root).map_err(error::DecapodError::IoError)?;
     let _ = cleanup_expired_sessions(&project_root, Some(&store_root))?;
 
     let agent_id = current_agent_id();
@@ -3758,7 +3732,8 @@ fn run_session_command(session_cli: SessionCli) -> Result<(), error::DecapodErro
         .join(".decapod")
         .join("data");
     if !cloud_backend {
-        fs::create_dir_all(&store_root).map_err(error::DecapodError::IoError)?;
+        core::fs_permissions::ensure_storage_dir(&store_root)
+            .map_err(error::DecapodError::IoError)?;
     }
     let _ = cleanup_expired_sessions(
         &project_root,
@@ -4330,7 +4305,7 @@ fn write_handshake_artifact(
         .join(".decapod")
         .join("records")
         .join("handshakes");
-    fs::create_dir_all(&dir).map_err(error::DecapodError::IoError)?;
+    core::fs_permissions::ensure_private_dir(&dir).map_err(error::DecapodError::IoError)?;
     let file = format!(
         "{}-{}.json",
         crate::core::time::now_epoch_z(),
@@ -4340,7 +4315,7 @@ fn write_handshake_artifact(
     let pretty = serde_json::to_vec_pretty(artifact).map_err(|e| {
         error::DecapodError::ValidationError(format!("Failed to serialize handshake record: {e}"))
     })?;
-    fs::write(&path, pretty).map_err(error::DecapodError::IoError)?;
+    core::atomic::write_atomic(&path, &pretty).map_err(error::DecapodError::IoError)?;
     Ok(path)
 }
 
@@ -5944,7 +5919,7 @@ fn write_validate_diagnostic_artifact(
             "Failed to serialize validate diagnostics artifact: {e}"
         ))
     })?;
-    fs::write(&artifact_path, pretty).map_err(error::DecapodError::IoError)?;
+    core::atomic::write_atomic(&artifact_path, &pretty).map_err(error::DecapodError::IoError)?;
     Ok(relative_path)
 }
 
@@ -6393,7 +6368,7 @@ fn write_validation_receipt(
         Some(&trajectory),
     )?;
     if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
+        core::fs_permissions::ensure_private_dir(parent).map_err(error::DecapodError::IoError)?;
     }
     let bytes = serde_json::to_vec_pretty(&receipt).map_err(|e| {
         error::DecapodError::ValidationError(format!(
@@ -6934,6 +6909,31 @@ fn run_plan_command(
     let project_root = workspace_root;
 
     match plan_cli.command {
+        PlanCommand::ResolveSpecReview {
+            path,
+            decision_ref,
+            reason,
+        } => {
+            let plan =
+                plan_governance::resolve_spec_review(project_root, &path, &decision_ref, &reason)?;
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&plan)
+                    .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?
+            );
+        }
+        PlanCommand::ReviewSpec {
+            path,
+            disposition,
+            reason,
+        } => {
+            let plan = plan_governance::review_spec(project_root, &path, disposition, &reason)?;
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&plan)
+                    .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?
+            );
+        }
         PlanCommand::Init {
             title,
             intent,
@@ -8145,30 +8145,6 @@ fn run_workspace_command(
         WorkspaceCommand::Ensure { branch, container } => {
             let agent_id =
                 std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
-            // A dirty protected checkout is an actionable orchestration blocker. Report it in
-            // the same JSON shape as a successful ensure instead of returning only a human error
-            // and leaving callers without machine-readable next actions.
-            if let Ok(status) = workspace::get_workspace_status(project_root)
-                && status.git.is_protected
-                && status.git.has_local_mods
-                && !status.git.in_worktree
-            {
-                println!(
-                    "{}",
-                    serde_json::json!({
-                        "status": "pending",
-                        "branch": status.git.current_branch,
-                        "is_protected": status.git.is_protected,
-                        "can_work": status.can_work,
-                        "in_container": status.container.in_container,
-                        "docker_available": status.container.docker_available,
-                        "worktree_path": status.git.worktree_path,
-                        "blockers": status.blockers,
-                        "required_actions": status.required_actions,
-                    })
-                );
-                return Ok(());
-            }
             let config = if branch.is_some() || container {
                 Some(workspace::WorkspaceConfig {
                     branch,
@@ -8197,6 +8173,7 @@ fn run_workspace_command(
                     "worktree_path": status.git.worktree_path,
                     "blockers": status.blockers,
                     "required_actions": status.required_actions,
+                    "root_isolation": status.root_isolation,
                 })
             );
         }
@@ -8251,6 +8228,9 @@ fn run_workspace_command(
                     "commit_hash": result.commit_hash,
                     "remote_url": result.remote_url,
                     "pr_url": result.pr_url,
+                    "remote_verified": result.remote_verified,
+                    "pr_verified": result.pr_verified,
+                    "warnings": result.warnings,
                 })
             );
         }
@@ -8511,6 +8491,7 @@ mod rpc_handlers {
             git_is_protected: status.git.is_protected,
             in_container: status.container.in_container,
             can_work: status.can_work,
+            root_isolation: status.root_isolation,
         };
 
         let mut response = success_response(
@@ -8545,6 +8526,7 @@ mod rpc_handlers {
         let allowed_ops = workspace::get_allowed_ops(&status);
 
         let result = WorkspaceEnsureResult {
+            root_isolation: status.root_isolation.clone(),
             branch: status.git.current_branch.clone(),
             worktree_path: status
                 .git
@@ -8581,6 +8563,9 @@ mod rpc_handlers {
             commit_hash: result.commit_hash,
             remote_url: result.remote_url,
             pr_url: result.pr_url,
+            remote_verified: result.remote_verified,
+            pr_verified: result.pr_verified,
+            warnings: result.warnings,
         };
 
         Ok(success_response(

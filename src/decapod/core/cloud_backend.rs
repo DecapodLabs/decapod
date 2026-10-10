@@ -2,7 +2,6 @@ use crate::core::error::DecapodError;
 use crate::core::repo_identity::RepositoryIdentity;
 use crate::core::time;
 use serde::{Deserialize, Serialize};
-use std::fs;
 use std::path::{Path, PathBuf};
 
 pub const PUBLIC_CLOUD_BACKEND_UNAVAILABLE: &str = "This cloud storage operation is not implemented yet; cloud mode never falls back to local SQLite, and todo persistence is routed through Dactyl.";
@@ -480,14 +479,14 @@ pub fn write_mock_init_registration(
 
     let path = init_registration_outbox_path(repo_root);
     if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).map_err(DecapodError::IoError)?;
+        crate::core::fs_permissions::ensure_private_dir(parent).map_err(DecapodError::IoError)?;
     }
     let bytes = serde_json::to_vec_pretty(registration).map_err(|e| {
         DecapodError::ValidationError(format!(
             "Failed to serialize cloud init registration payload: {e}"
         ))
     })?;
-    fs::write(&path, bytes).map_err(DecapodError::IoError)?;
+    crate::core::fs_permissions::write_private(&path, bytes).map_err(DecapodError::IoError)?;
     Ok(Some(path))
 }
 

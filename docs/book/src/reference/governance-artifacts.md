@@ -91,3 +91,62 @@ consolidated datastore instead.
 An external tracker such as GitHub Issues, Jira, Linear, or Beads may remain the
 organizational system of record. Decapod's todo and claim state governs the
 accepted work at the repository execution layer.
+
+## Current-contract review and remote publication proof
+
+When a PR changes implementation surfaces, `workspace publish` requires explicit
+reviews of the current INTERFACES, ARCHITECTURE, and SECURITY contracts. This is
+agent-authored review evidence, not automated proof that prose is semantically
+correct. An accurate unchanged spec does not need a cosmetic rewrite:
+
+```bash
+decapod govern plan review-spec \
+  --path .decapod/managed/specs/INTERFACES.md \
+  --disposition unchanged-with-reason \
+  --reason "Inspected the changed command: existing response and error contracts remain accurate"
+```
+
+Repeat for ARCHITECTURE and SECURITY with findings specific to each review. Use
+`updated` for a material authored correction, or `requires-decision` when human
+judgment is needed. The command computes the spec's material hash and the current
+code fingerprint; callers cannot supply their own hashes. Later code or authored
+spec changes invalidate the review. Fingerprint refresh alone is not a review.
+
+Ordinary `review-spec` cannot silently approve an unchanged pending decision.
+After receiving an explicit human answer, record that answer deliberately:
+
+```bash
+decapod govern plan resolve-spec-review \
+  --path .decapod/managed/specs/INTERFACES.md \
+  --decision-ref "review thread and human answer reference" \
+  --reason "The human accepted the documented contract and its stated tradeoff"
+```
+
+This uses the same declared-approval authority as `govern plan approve`; the
+reference preserves provenance and is not cryptographic human authentication.
+The original question remains in the review record. A decision about stale code
+or stale spec content is rejected. Never invent a decision reference or infer
+approval. Existing 1.0 plans remain readable; recording reviews writes plan 1.1.
+
+After review, refresh supported projections and run validation. The validation
+epoch binds the plan (including review evidence), claims, authored and generated
+spec content, entrypoints, and managed Dockerfile. It excludes validation.json
+itself so committing a receipt does not create a self-referential commit loop.
+Plan and trajectory must name the same current todo. Required governance files
+must be valid, match the committed bytes, and participate in the PR's diff.
+
+Publication pushes the captured commit to the captured push URL, reads the exact
+remote head and base back, fetches those immutable objects, and checks their
+base-to-head diff. GitHub publication reuses an existing matching open PR or
+creates a draft, verifies repository/head/base/SHA and the complete paginated PR
+file list, and checks for head/base movement during readback. It does not infer
+success from `git push` or `gh pr create` exit status alone.
+
+`remote_verified` and `pr_verified` are separate result fields. Non-GitHub branch
+publication can succeed with an explicit warning that PR proof is unavailable.
+Missing GitHub CLI/authentication, PR creation errors, wrong targets, truncated
+file lists, or remote races are hard failures. `PUBLICATION_INCOMPLETE` means the
+branch was already pushed but the PR must not be reported ready. Fix the stated
+condition and retry `workspace publish`; retries reuse matching PRs and never
+force-push or delete the published branch. Transport diagnostics are not echoed
+because they may contain credentials.

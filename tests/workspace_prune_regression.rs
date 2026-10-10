@@ -178,6 +178,19 @@ fn test_workspace_prune() {
         ],
     );
 
+    // Active local clones are not registered by git worktree list. The claim
+    // must protect them during recovery, including an interrupted setup.
+    let active_clone_path = workspaces_dir.join(format!("test-agent-todo-{hash_a}-active-clone"));
+    run_git_cmd(
+        &main_root,
+        &[
+            "clone",
+            "--local",
+            main_root.to_str().unwrap(),
+            active_clone_path.to_str().unwrap(),
+        ],
+    );
+
     // Worktree B (Task is done)
     let wt_b_path = workspaces_dir.join(format!("test-agent-todo-{}-todo-b", hash_b));
     let wt_b_branch = format!("agent/test-agent/todo-{}", hash_b);
@@ -228,6 +241,13 @@ fn test_workspace_prune() {
     let wt_e_path = workspaces_dir.join("test-agent-todo-222222-orphaned");
     fs::create_dir_all(&wt_e_path).expect("create wt_e");
     fs::write(wt_e_path.join("some_residual_file.txt"), "hello").expect("write residual");
+    let owned_residue = workspaces_dir.join(format!("test-agent-todo-{id_b}-interrupted"));
+    fs::create_dir_all(&owned_residue).unwrap();
+    fs::write(
+        owned_residue.join("user-document.txt"),
+        "irreplaceable user work",
+    )
+    .unwrap();
 
     // Check directory existence before pruning
     assert!(wt_a_path.exists());
@@ -246,6 +266,10 @@ fn test_workspace_prune() {
     // Verify what was pruned
     // wt_a should NOT be pruned
     assert!(wt_a_path.exists(), "Worktree A (active) must not be pruned");
+    assert!(
+        active_clone_path.exists(),
+        "active local clone must survive forced prune"
+    );
 
     // wt_b, wt_c, wt_d, wt_e should be pruned (no longer exist on disk)
     assert!(
@@ -261,8 +285,8 @@ fn test_workspace_prune() {
         "Worktree D (deleted branch) should be pruned"
     );
     assert!(
-        !wt_e_path.exists(),
-        "Worktree E (unregistered directory) should be pruned"
+        wt_e_path.exists(),
+        "Unknown unregistered directory must be preserved even with force"
     );
 
     // Verify pruned records
@@ -279,10 +303,14 @@ fn test_workspace_prune() {
     assert!(pruned.iter().any(|p| p.path == wt_d_report_path
         && (p.reason == "branch_deleted" || p.reason == "no_matching_task")));
     assert!(
-        pruned
-            .iter()
-            .any(|p| p.path == wt_e_report_path && p.reason == "not_registered")
+        owned_residue.exists(),
+        "a completed-task name is not ownership evidence and must not authorize deletion"
     );
+    assert_eq!(
+        fs::read_to_string(owned_residue.join("user-document.txt")).unwrap(),
+        "irreplaceable user work"
+    );
+    assert!(!pruned.iter().any(|p| p.path == wt_e_report_path));
 }
 
 #[test]
@@ -510,8 +538,8 @@ fn test_workspace_prune_non_force_preserves_dirty_and_unregistered_data() {
     let forced = workspace::prune_workspaces_report(&main_root, true).expect("force prune report");
     assert!(!dirty_path.exists(), "force must remove the stale worktree");
     assert!(
-        !orphan_path.exists(),
-        "force must remove the orphan workspace"
+        orphan_path.exists(),
+        "force must preserve the unowned orphan directory"
     );
     assert!(
         forced
@@ -521,9 +549,10 @@ fn test_workspace_prune_non_force_preserves_dirty_and_unregistered_data() {
     );
     assert!(
         forced
-            .pruned
+            .skipped
             .iter()
-            .any(|workspace| workspace.path == orphan_report_path)
+            .any(|workspace| workspace.path == orphan_report_path
+                && workspace.reason == "unregistered_workspace")
     );
 }
 

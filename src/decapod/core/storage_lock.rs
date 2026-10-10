@@ -59,6 +59,8 @@ impl StorageLock {
         timeout: Duration,
     ) -> Result<Self, DecapodError> {
         let path = lock_path(db_path);
+        crate::core::fs_permissions::check_storage(db_path)
+            .map_err(|error| lock_io_error(&path, error))?;
         let mut registry = process_locks().lock().map_err(|_| {
             DecapodError::ValidationError("local storage lock registry poisoned".to_string())
         })?;
@@ -66,13 +68,15 @@ impl StorageLock {
             return Ok(Self { state: existing });
         }
 
-        let file = OpenOptions::new()
-            .create(true)
-            .read(true)
-            .write(true)
-            .truncate(false)
-            .open(&path)
-            .map_err(|error| lock_io_error(&path, error))?;
+        let file = crate::core::fs_permissions::open_storage_file(
+            &path,
+            OpenOptions::new()
+                .create(true)
+                .read(true)
+                .write(true)
+                .truncate(false),
+        )
+        .map_err(|error| lock_io_error(&path, error))?;
 
         let started = Instant::now();
         loop {

@@ -1,3 +1,4 @@
+use crate::core::bounded_process::{BUILD_TIMEOUT, BoundedCommand, CONTROL_TIMEOUT};
 use crate::core::container_runtime;
 use crate::core::error;
 use crate::core::store::Store;
@@ -81,12 +82,13 @@ struct DockerSpec {
     container_name: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 struct WorkspaceSpec {
     branch: String,
     path: PathBuf,
     base_branch: String,
     backend: String,
+    ownership: crate::core::workspace_lifecycle::OwnedWorkspace,
 }
 
 fn auto_remediable_validation_error(
@@ -300,7 +302,7 @@ Agent must clear the disable marker through Decapod self-heal before retrying.",
     let base_branch = resolve_base_branch(&repo, pr_base);
     let workspace = prepare_workspace_clone(&repo, &branch_name, &base_branch)?;
 
-    let spec = build_docker_spec(
+    let mut spec = build_docker_spec(
         &docker,
         &repo,
         &workspace.path,
@@ -316,9 +318,30 @@ Agent must clear the disable marker through Decapod self-heal before retrying.",
         local_only,
     )?;
 
+    spec.args.splice(
+        1..1,
+        [
+            "--label".to_owned(),
+            format!(
+                "org.decapod.invocation={}",
+                workspace.ownership.invocation()
+            ),
+        ],
+    );
+
     let start = Instant::now();
     let output = execute_container_with_timeout(&docker, &spec.args, timeout_seconds).map_err(
         |exec_err| {
+            // Killing the client does not guarantee a daemon-owned container
+            // stopped. Remove only the unique name allocated by this invocation.
+            let cleanup_result = container_runtime::remove_container_for_invocation(&docker, &spec.container_name, &workspace.path, Some(workspace.ownership.invocation()));
+            if let Err(cleanup_err) = cleanup_result {
+                return auto_remediable_validation_error(
+                    "container_cleanup_incomplete",
+                    format!("{exec_err}; container {} cleanup failed: {cleanup_err}; workspace preserved at {}", spec.container_name, workspace.path.display()),
+                    "Agent: restore runtime access and run workspace prune after preserving any work; do not assume container cleanup succeeded.",
+                );
+            }
             let sync_msg = if local_only {
                 "branch foldback: skipped for local-only container run".to_string()
             } else {
@@ -332,7 +355,7 @@ Agent must clear the disable marker through Decapod self-heal before retrying.",
                 }
             };
             if !keep_worktree {
-                let _ = cleanup_workspace_clone(&workspace.path);
+                let _ = cleanup_workspace_clone(&workspace.ownership);
             }
             auto_remediable_validation_error(
                 "container_runtime_terminated",
@@ -408,7 +431,7 @@ Agent must clear the disable marker through Decapod self-heal before retrying.",
     let cleanup_err = if keep_worktree {
         None
     } else {
-        cleanup_workspace_clone(&workspace.path).err()
+        cleanup_workspace_clone(&workspace.ownership).err()
     };
 
     if !output.status.success() {
@@ -442,31 +465,16 @@ fn execute_container_with_timeout(
     args: &[String],
     timeout_seconds: u64,
 ) -> Result<std::process::Output, error::DecapodError> {
-    let start = Instant::now();
-    let mut child = Command::new(runtime)
-        .args(args)
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .map_err(error::DecapodError::IoError)?;
-
-    let timeout = Duration::from_secs(timeout_seconds);
-    loop {
-        if let Some(_status) = child.try_wait().map_err(error::DecapodError::IoError)? {
-            return child
-                .wait_with_output()
-                .map_err(error::DecapodError::IoError);
-        }
-        if start.elapsed() > timeout {
-            let _ = child.kill();
-            return Err(auto_remediable_validation_error(
-                "container_command_timeout",
-                format!("Container command timed out after {timeout_seconds}s"),
-                "Agent: increase --timeout-seconds for expected long runs, or inspect the command for a lock/deadlock before retrying.",
-            ));
-        }
-        std::thread::sleep(Duration::from_millis(250));
-    }
+    Command::new(runtime).args(args)
+        .bounded_output(Duration::from_secs(timeout_seconds))
+        .map_err(|err| {
+            if err.kind() == std::io::ErrorKind::TimedOut {
+                auto_remediable_validation_error(
+                    "container_command_timeout", err.to_string(),
+                    "Agent: inspect the runtime and command, then retry after resolving the timeout.",
+                )
+            } else { error::DecapodError::IoError(err) }
+        })
 }
 
 fn resolve_repo_path(repo_override: Option<&str>) -> Result<PathBuf, error::DecapodError> {
@@ -582,7 +590,7 @@ fn repo_root_from_store(store: &Store) -> Result<PathBuf, error::DecapodError> {
 fn ensure_container_runtime_access(runtime: &str) -> Result<(), error::DecapodError> {
     let mut output = Command::new(runtime)
         .arg("info")
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(error::DecapodError::IoError)?;
     if output.status.success() {
         return Ok(());
@@ -597,7 +605,7 @@ fn ensure_container_runtime_access(runtime: &str) -> Result<(), error::DecapodEr
         // running. The info retry is authoritative and also handles that case.
         output = Command::new(runtime)
             .arg("info")
-            .output()
+            .bounded_output(CONTROL_TIMEOUT)
             .map_err(error::DecapodError::IoError)?;
         if output.status.success() {
             return Ok(());
@@ -675,7 +683,7 @@ fn start_podman_machine_quietly(
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(error::DecapodError::IoError)
 }
 
@@ -703,7 +711,7 @@ fn push_branch_to_origin(repo: &Path, branch: &str) -> Result<(), error::Decapod
         .arg("-u")
         .arg("origin")
         .arg(branch)
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(error::DecapodError::IoError)?;
     if output.status.success() {
         return Ok(());
@@ -771,7 +779,7 @@ fn ensure_local_generated_workspace_image(
         .arg("-t")
         .arg(&image_tag)
         .arg(repo)
-        .output()
+        .bounded_output(BUILD_TIMEOUT)
         .map_err(error::DecapodError::IoError)?;
     if !output.status.success() {
         return Err(auto_remediable_validation_error(
@@ -791,7 +799,8 @@ fn ensure_local_generated_workspace_image(
 
 pub fn prepare_generated_container_profile(repo: &Path) -> Result<PathBuf, error::DecapodError> {
     let generated_dir = repo.join(".decapod").join("managed");
-    fs::create_dir_all(&generated_dir).map_err(error::DecapodError::IoError)?;
+    crate::core::fs_permissions::ensure_private_dir(&generated_dir)
+        .map_err(error::DecapodError::IoError)?;
 
     stage_current_decapod_binary(&generated_dir)?;
 
@@ -799,7 +808,8 @@ pub fn prepare_generated_container_profile(repo: &Path) -> Result<PathBuf, error
     let dockerfile = managed_dockerfile_path(repo);
     if !dockerfile.exists() {
         let contents = generated_dockerfile_for_repo(repo);
-        fs::write(&dockerfile, contents).map_err(error::DecapodError::IoError)?;
+        crate::core::fs_permissions::write_private(&dockerfile, contents)
+            .map_err(error::DecapodError::IoError)?;
     }
     Ok(dockerfile)
 }
@@ -843,7 +853,8 @@ pub fn refresh_managed_dockerfile_release(repo: &Path) -> Result<bool, error::De
         updated.push('\n');
     }
     if changed {
-        fs::write(&dockerfile, updated).map_err(error::DecapodError::IoError)?;
+        crate::core::fs_permissions::write_private(&dockerfile, updated)
+            .map_err(error::DecapodError::IoError)?;
     }
     Ok(changed)
 }
@@ -1202,8 +1213,14 @@ fn add_project_packages(
 }
 
 fn current_uid_gid() -> Option<(String, String)> {
-    let uid = Command::new("id").arg("-u").output().ok()?;
-    let gid = Command::new("id").arg("-g").output().ok()?;
+    let uid = Command::new("id")
+        .arg("-u")
+        .bounded_output(CONTROL_TIMEOUT)
+        .ok()?;
+    let gid = Command::new("id")
+        .arg("-g")
+        .bounded_output(CONTROL_TIMEOUT)
+        .ok()?;
     if !uid.status.success() || !gid.status.success() {
         return None;
     }
@@ -1220,7 +1237,7 @@ fn run_git(repo: &Path, args: &[&str]) -> Result<(), error::DecapodError> {
         .arg("-C")
         .arg(repo)
         .args(args)
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(error::DecapodError::IoError)?;
     if output.status.success() {
         return Ok(());
@@ -1238,15 +1255,17 @@ fn prepare_workspace_clone(
     base_branch: &str,
 ) -> Result<WorkspaceSpec, error::DecapodError> {
     let workspaces_root = repo.join(".decapod").join("workspaces");
-    fs::create_dir_all(&workspaces_root).map_err(error::DecapodError::IoError)?;
+    crate::core::fs_permissions::ensure_private_dir(&workspaces_root)
+        .map_err(error::DecapodError::IoError)?;
 
     let suffix = crate::core::ulid::new_ulid().to_lowercase();
-    let dir_name = format!("{}-{}", sanitize_branch_component(branch), &suffix[..8]);
+    let dir_name = format!("{}-{}", sanitize_branch_component(branch), &suffix);
     let workspace_path = workspaces_root.join(dir_name);
     let workspace_path_str = workspace_path
         .to_str()
         .ok_or_else(|| error::DecapodError::PathError("invalid workspace path".to_string()))?;
 
+    let mut ownership = crate::core::workspace_lifecycle::reserve(repo, &workspace_path, true)?;
     let start_oid = workspace::preferred_base_oid(repo, base_branch);
     let base_ref = format!("refs/heads/{base_branch}");
     let clone_output = if git_ref_exists(repo, &base_ref)? {
@@ -1258,7 +1277,7 @@ fn prepare_workspace_clone(
             .arg("--single-branch")
             .arg(repo)
             .arg(workspace_path_str)
-            .output()
+            .bounded_output(CONTROL_TIMEOUT)
             .map_err(error::DecapodError::IoError)?
     } else {
         Command::new("git")
@@ -1266,7 +1285,7 @@ fn prepare_workspace_clone(
             .arg("--no-local")
             .arg(repo)
             .arg(workspace_path_str)
-            .output()
+            .bounded_output(CONTROL_TIMEOUT)
             .map_err(error::DecapodError::IoError)?
     };
     if !clone_output.status.success() {
@@ -1305,12 +1324,14 @@ fn prepare_workspace_clone(
     }
 
     let _ = workspace::inherit_network_remotes_from_parent(repo, &workspace_path);
+    ownership.mark_ready()?;
 
     Ok(WorkspaceSpec {
         branch: branch.to_string(),
         path: workspace_path,
         base_branch: base_branch.to_string(),
         backend: "local-clone".to_string(),
+        ownership,
     })
 }
 
@@ -1322,9 +1343,9 @@ fn git_ref_exists(repo: &Path, git_ref: &str) -> Result<bool, error::DecapodErro
         .arg("--verify")
         .arg("--quiet")
         .arg(git_ref)
-        .status()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(error::DecapodError::IoError)?;
-    Ok(status.success())
+    Ok(status.status.success())
 }
 
 fn sync_workspace_branch_to_host_repo(
@@ -1352,7 +1373,7 @@ fn sync_workspace_branch_to_host_repo(
         .arg("--no-tags")
         .arg(workspace_str)
         .arg(&refspec)
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(error::DecapodError::IoError)?;
     if output.status.success() {
         return Ok(());
@@ -1368,7 +1389,7 @@ fn sync_workspace_branch_to_host_repo(
             .arg("--ff-only")
             .arg(workspace_str)
             .arg(branch)
-            .output()
+            .bounded_output(CONTROL_TIMEOUT)
             .map_err(error::DecapodError::IoError)?;
         if pull_output.status.success() {
             return Ok(());
@@ -1396,7 +1417,7 @@ fn current_branch(repo: &Path) -> Result<String, error::DecapodError> {
         .arg("-C")
         .arg(repo)
         .args(["branch", "--show-current"])
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(error::DecapodError::IoError)?;
     if !output.status.success() {
         return Err(error::DecapodError::ValidationError(format!(
@@ -1438,7 +1459,7 @@ fn create_gh_pr(
         .arg(&body_arg)
         .arg("--repo")
         .arg(repo_str)
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(error::DecapodError::IoError)?;
 
     if output.status.success() {
@@ -1451,11 +1472,11 @@ fn create_gh_pr(
     )))
 }
 
-fn cleanup_workspace_clone(workspace_path: &Path) -> Result<(), error::DecapodError> {
-    if workspace_path.exists() {
-        fs::remove_dir_all(workspace_path).map_err(error::DecapodError::IoError)?;
-    }
-    Ok(())
+fn cleanup_workspace_clone(
+    ownership: &crate::core::workspace_lifecycle::OwnedWorkspace,
+) -> Result<(), error::DecapodError> {
+    ownership.verify()?;
+    fs::remove_dir_all(ownership.path()).map_err(error::DecapodError::IoError)
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -1475,7 +1496,8 @@ fn build_docker_spec(
     local_only: bool,
 ) -> Result<DockerSpec, error::DecapodError> {
     let decapod_dir = repo_root.join(".decapod");
-    fs::create_dir_all(&decapod_dir).map_err(error::DecapodError::IoError)?;
+    crate::core::fs_permissions::ensure_private_dir(&decapod_dir)
+        .map_err(error::DecapodError::IoError)?;
     let decapod_dir_str = decapod_dir
         .to_str()
         .ok_or_else(|| error::DecapodError::PathError("invalid .decapod path".to_string()))?;
@@ -1486,13 +1508,17 @@ fn build_docker_spec(
     let container_name = format!(
         "decapod-agent-{}-{}",
         sanitize_name(agent),
-        &crate::core::ulid::new_ulid().to_lowercase()[..8]
+        crate::core::ulid::new_ulid().to_lowercase()
     );
     let mut args = vec![
         "run".to_string(),
         "--rm".to_string(),
         "--name".to_string(),
         container_name.clone(),
+        "--label".to_string(),
+        "org.decapod.managed=workspace".to_string(),
+        "--label".to_string(),
+        format!("org.decapod.workspace.path={workspace_str}"),
         "--cap-drop".to_string(),
         "ALL".to_string(),
         "--security-opt".to_string(),

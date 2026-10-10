@@ -156,12 +156,14 @@ pub fn write_workunit(
     let parent = path.parent().ok_or_else(|| {
         error::DecapodError::ValidationError("invalid workunit parent path".to_string())
     })?;
-    fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
+    crate::core::fs_permissions::ensure_private_dir(parent)
+        .map_err(error::DecapodError::IoError)?;
 
     let bytes = serde_json::to_vec_pretty(&manifest.canonicalized()).map_err(|e| {
         error::DecapodError::ValidationError(format!("failed to serialize workunit manifest: {e}"))
     })?;
-    fs::write(&path, bytes).map_err(error::DecapodError::IoError)?;
+    crate::core::fs_permissions::write_private(&path, bytes)
+        .map_err(error::DecapodError::IoError)?;
     Ok(path)
 }
 

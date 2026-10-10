@@ -68,6 +68,7 @@ pub fn load_typesafe_api_key() -> Result<Option<String>, DecapodError> {
         if !path.exists() {
             None
         } else {
+            crate::core::fs_permissions::check_file(&path, false).map_err(DecapodError::IoError)?;
             let raw = fs::read_to_string(path).map_err(DecapodError::IoError)?;
             let record: MachineSecretsRecord = serde_json::from_str(&raw).map_err(|_| {
                 DecapodError::SessionError("machine secret file is not valid JSON".to_string())
@@ -106,13 +107,7 @@ pub fn store_typesafe_api_key(value: &str) -> Result<(), DecapodError> {
     let parent = path.parent().ok_or_else(|| {
         DecapodError::SessionError("machine secret path has no parent directory".to_string())
     })?;
-    fs::create_dir_all(parent).map_err(DecapodError::IoError)?;
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        fs::set_permissions(parent, fs::Permissions::from_mode(0o700))
-            .map_err(DecapodError::IoError)?;
-    }
+    crate::core::fs_permissions::ensure_private_dir(parent).map_err(DecapodError::IoError)?;
 
     let record = MachineSecretsRecord {
         typesafe_api_key: Some(value),
@@ -120,28 +115,7 @@ pub fn store_typesafe_api_key(value: &str) -> Result<(), DecapodError> {
     let bytes = serde_json::to_vec_pretty(&record).map_err(|error| {
         DecapodError::SessionError(format!("failed to serialize machine secrets: {error}"))
     })?;
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|duration| duration.as_nanos())
-        .unwrap_or(0);
-    let temp_path = parent.join(format!(
-        ".{MACHINE_SECRETS_FILE}.tmp-{}-{nonce}",
-        std::process::id()
-    ));
-    let write_result = (|| {
-        fs::write(&temp_path, bytes).map_err(DecapodError::IoError)?;
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            fs::set_permissions(&temp_path, fs::Permissions::from_mode(0o600))
-                .map_err(DecapodError::IoError)?;
-        }
-        fs::rename(&temp_path, &path).map_err(DecapodError::IoError)
-    })();
-    if write_result.is_err() {
-        let _ = fs::remove_file(&temp_path);
-    }
-    write_result
+    crate::core::atomic::write_atomic(&path, &bytes).map_err(DecapodError::IoError)
 }
 
 /// During Jev-enabled initialization, migrate an explicitly supplied
@@ -262,6 +236,7 @@ fn read_machine_session_record(path: &Path) -> Result<Option<MachineSessionRecor
     if !path.exists() {
         return Ok(None);
     }
+    crate::core::fs_permissions::check_file(path, false).map_err(DecapodError::IoError)?;
     let raw = fs::read_to_string(path).map_err(DecapodError::IoError)?;
     let record: MachineSessionRecord = serde_json::from_str(&raw).map_err(|_| {
         DecapodError::SessionError("cloud credential file is not valid JSON".to_string())
@@ -385,14 +360,16 @@ fn create_private_session_file(path: &Path) -> Result<fs::File, DecapodError> {
         use std::os::unix::fs::OpenOptionsExt;
         options.mode(0o600);
     }
-    options.open(path).map_err(DecapodError::IoError)
+    crate::core::fs_permissions::open_private_file(path, &mut options)
+        .map_err(DecapodError::IoError)
 }
 
 fn store_machine_session_at(session: &CloudSession, path: &Path) -> Result<(), DecapodError> {
     session.validate()?;
     if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).map_err(DecapodError::IoError)?;
+        crate::core::fs_permissions::ensure_private_dir(parent).map_err(DecapodError::IoError)?;
     }
+    crate::core::fs_permissions::check_file(path, false).map_err(DecapodError::IoError)?;
     let record = MachineSessionRecord {
         access_token: session.access_token.clone(),
         refresh_token: session.refresh_token.clone(),
@@ -456,20 +433,14 @@ pub fn store_pending_cloud_onboarding(
 ) -> Result<(), DecapodError> {
     let path = machine_data_dir()?.join("onboarding.json");
     if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).map_err(DecapodError::IoError)?;
+        crate::core::fs_permissions::ensure_private_dir(parent).map_err(DecapodError::IoError)?;
     }
     let bytes = serde_json::to_vec_pretty(pending).map_err(|error| {
         DecapodError::SessionError(format!(
             "failed to serialize cloud onboarding state: {error}"
         ))
     })?;
-    fs::write(&path, bytes).map_err(DecapodError::IoError)?;
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        fs::set_permissions(&path, fs::Permissions::from_mode(0o600))
-            .map_err(DecapodError::IoError)?;
-    }
+    crate::core::atomic::write_atomic(&path, &bytes).map_err(DecapodError::IoError)?;
     Ok(())
 }
 
@@ -478,6 +449,7 @@ pub fn load_pending_cloud_onboarding() -> Result<Option<PendingCloudOnboarding>,
     if !path.exists() {
         return Ok(None);
     }
+    crate::core::fs_permissions::check_file(&path, false).map_err(DecapodError::IoError)?;
     let raw = fs::read_to_string(path).map_err(DecapodError::IoError)?;
     serde_json::from_str(&raw).map(Some).map_err(|_| {
         DecapodError::SessionError("cloud onboarding state is not valid JSON".to_string())

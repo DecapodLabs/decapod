@@ -1,6 +1,7 @@
+use crate::core::bounded_process::{BoundedCommand, CONTROL_TIMEOUT};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
-use std::process::{Command, Stdio};
+use std::process::Command;
 
 use crate::core::error;
 
@@ -105,7 +106,7 @@ fn list_decapod_images(runtime: &str) -> Result<Vec<ImageRecord>, error::Decapod
             "--format",
             "{{.Repository}}|{{.Tag}}|{{.ID}}",
         ])
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(error::DecapodError::IoError)?;
     if !listed.status.success() {
         return Err(error::DecapodError::ValidationError(format!(
@@ -148,7 +149,7 @@ fn list_decapod_images(runtime: &str) -> Result<Vec<ImageRecord>, error::Decapod
                 "{{json .Config.Labels}}",
                 &image_id,
             ])
-            .output()
+            .bounded_output(CONTROL_TIMEOUT)
             .map_err(error::DecapodError::IoError)?;
         if !inspected.status.success() {
             return Err(error::DecapodError::ValidationError(format!(
@@ -245,7 +246,7 @@ pub fn prune_decapod_images() -> Result<ImagePruneReport, error::DecapodError> {
                 "--filter",
                 &format!("label={label}"),
             ])
-            .output()
+            .bounded_output(CONTROL_TIMEOUT)
             .map_err(error::DecapodError::IoError)?;
         if !pruned.status.success() {
             return Err(error::DecapodError::ValidationError(format!(
@@ -262,7 +263,7 @@ pub fn prune_decapod_images() -> Result<ImagePruneReport, error::DecapodError> {
 fn remove_image_with_runtime(runtime: &str, image_ref: &str) -> Result<bool, error::DecapodError> {
     let removed = Command::new(runtime)
         .args(["image", "rm", "--force", image_ref])
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(error::DecapodError::IoError)?;
     if removed.status.success() {
         return Ok(true);
@@ -296,7 +297,7 @@ pub fn remove_workspace_images_for_path(
     );
     let listed = Command::new(&runtime)
         .args(["image", "ls", "--quiet", "--filter", &label])
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .map_err(error::DecapodError::IoError)?;
     if !listed.status.success() {
         return Err(error::DecapodError::ValidationError(format!(
@@ -320,9 +321,6 @@ pub fn remove_workspace_images_for_path(
 }
 
 fn command_present(cmd: &str) -> bool {
-    if command_succeeds(cmd, "--help") || command_succeeds(cmd, "--version") {
-        return true;
-    }
     let Some(path) = std::env::var_os("PATH") else {
         return false;
     };
@@ -330,18 +328,131 @@ fn command_present(cmd: &str) -> bool {
 }
 
 fn executable_exists(path: &Path) -> bool {
-    path.is_file()
-}
-
-fn command_succeeds(cmd: &str, arg: &str) -> bool {
-    Command::new(cmd)
-        .arg(arg)
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .status()
-        .map(|s| s.success())
-        .unwrap_or(false)
+    let Ok(metadata) = path.metadata() else {
+        return false;
+    };
+    if !metadata.is_file() {
+        return false;
+    }
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        metadata.permissions().mode() & 0o111 != 0
+    }
+    #[cfg(not(unix))]
+    {
+        true
+    }
 }
 #[cfg(test)]
 #[path = "../../../tests/unit/core/container_runtime_tests.rs"]
 mod tests;
+
+/// Remove an invocation-owned container; an already removed container is success.
+pub fn remove_container_with_runtime(
+    runtime: &str,
+    name: &str,
+    workspace: &Path,
+) -> Result<(), error::DecapodError> {
+    remove_container_for_invocation(runtime, name, workspace, None)
+}
+
+pub fn remove_container_for_invocation(
+    runtime: &str,
+    name: &str,
+    workspace: &Path,
+    invocation: Option<&str>,
+) -> Result<(), error::DecapodError> {
+    let inspected = Command::new(runtime)
+        .args(["container", "inspect", name, "--format", "{{json .}}"])
+        .bounded_output(CONTROL_TIMEOUT)
+        .map_err(error::DecapodError::IoError)?;
+    if !inspected.status.success() {
+        if String::from_utf8_lossy(&inspected.stderr)
+            .to_ascii_lowercase()
+            .contains("no such container")
+        {
+            return Ok(());
+        }
+        return Err(error::DecapodError::ValidationError(format!(
+            "Container ownership inspection failed: {}",
+            String::from_utf8_lossy(&inspected.stderr).trim()
+        )));
+    }
+    let record: serde_json::Value = serde_json::from_slice(&inspected.stdout).map_err(|err| {
+        error::DecapodError::ValidationError(format!("Invalid container ownership response: {err}"))
+    })?;
+    let id = record
+        .get("Id")
+        .and_then(serde_json::Value::as_str)
+        .unwrap_or("");
+    let labels = &record["Config"]["Labels"];
+    if id.len() != 64
+        || !id.bytes().all(|c| c.is_ascii_hexdigit())
+        || labels["org.decapod.managed"].as_str() != Some("workspace")
+        || labels["org.decapod.workspace.path"].as_str() != workspace.to_str()
+        || invocation
+            .is_some_and(|expected| labels["org.decapod.invocation"].as_str() != Some(expected))
+    {
+        return Err(error::DecapodError::ValidationError(
+            "Container ownership mismatch; refusing cleanup".into(),
+        ));
+    }
+    // An immutable full ID cannot be rebound to an unrelated replacement name.
+    let output = Command::new(runtime)
+        .args(["container", "rm", "--force", id])
+        .bounded_output(CONTROL_TIMEOUT)
+        .map_err(error::DecapodError::IoError)?;
+    let stderr = String::from_utf8_lossy(&output.stderr).to_ascii_lowercase();
+    if output.status.success() || stderr.contains("no such container") {
+        Ok(())
+    } else {
+        Err(error::DecapodError::ValidationError(format!(
+            "Container cleanup failed for {name}: {}",
+            String::from_utf8_lossy(&output.stderr).trim()
+        )))
+    }
+}
+
+/// Recover interrupted, labelled runs before deleting their workspace data.
+pub fn remove_workspace_containers_for_path(
+    runtime: &str,
+    workspace: &Path,
+) -> Result<(), error::DecapodError> {
+    remove_workspace_containers_for_invocation(runtime, workspace, None)
+}
+
+pub fn remove_workspace_containers_for_invocation(
+    runtime: &str,
+    workspace: &Path,
+    invocation: Option<&str>,
+) -> Result<(), error::DecapodError> {
+    let output = Command::new(runtime)
+        .args([
+            "container",
+            "ls",
+            "--all",
+            "--quiet",
+            "--filter",
+            "label=org.decapod.managed=workspace",
+            "--filter",
+            &format!("label=org.decapod.workspace.path={}", workspace.display()),
+        ])
+        .bounded_output(CONTROL_TIMEOUT)
+        .map_err(error::DecapodError::IoError)?;
+    if !output.status.success() {
+        return Err(error::DecapodError::ValidationError(format!(
+            "Could not inspect workspace containers: {}",
+            String::from_utf8_lossy(&output.stderr).trim()
+        )));
+    }
+    for id in String::from_utf8_lossy(&output.stdout).split_whitespace() {
+        if !id.bytes().all(|c| c.is_ascii_hexdigit()) {
+            return Err(error::DecapodError::ValidationError(
+                "Runtime returned invalid container ID".into(),
+            ));
+        }
+        remove_container_for_invocation(runtime, id, workspace, invocation)?;
+    }
+    Ok(())
+}

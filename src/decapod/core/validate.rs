@@ -249,7 +249,7 @@ fn record_validation_gate_progress(name: &str, state: &str, elapsed_ms: Option<u
     // This is best-effort observability for the parent timeout supervisor. A
     // failed diagnostic write must never change the validation result.
     if let Ok(bytes) = serde_json::to_vec(&payload) {
-        let _ = fs::write(path, bytes);
+        let _ = crate::core::fs_permissions::write_private(path, bytes);
     }
 }
 
@@ -5718,7 +5718,7 @@ fn run_migration_validation(
         "repo_signal_fingerprint": repo_signal_fingerprint(repo_root).unwrap_or_default(),
     });
     let evidence_bytes = serde_json::to_vec_pretty(&evidence).map_err(|err| err.to_string())?;
-    fs::write(&evidence_path, evidence_bytes)
+    crate::core::fs_permissions::write_private(&evidence_path, evidence_bytes)
         .map_err(|err| format!("could not record evidence: {err}"))?;
     if exit_code != config.expected_exit_code {
         return Err(format!(

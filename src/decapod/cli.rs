@@ -918,6 +918,24 @@ impl From<PlanStateArg> for plan_governance::PlanState {
 
 #[derive(Subcommand, Debug)]
 pub(crate) enum PlanCommand {
+    /// Record an explicitly accepted human decision for an unchanged pending spec review
+    ResolveSpecReview {
+        #[clap(long)]
+        path: String,
+        #[clap(long)]
+        decision_ref: String,
+        #[clap(long)]
+        reason: String,
+    },
+    /// Record current-content-bound review of a publication spec
+    ReviewSpec {
+        #[clap(long)]
+        path: String,
+        #[clap(long, value_enum)]
+        disposition: crate::plan_governance::SpecReviewDisposition,
+        #[clap(long)]
+        reason: String,
+    },
     /// Initialize governed PLAN artifact
     Init {
         #[clap(long)]

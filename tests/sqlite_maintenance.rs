@@ -8,6 +8,20 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use tempfile::{TempDir, tempdir};
 
+// Recovery confines the pinned Dactyl maintenance temporary to a private
+// directory. Set this explicitly on the newly created, test-owned fixture;
+// production recovery must never chmod an existing installation to proceed.
+fn private_recovery_directory() -> TempDir {
+    let directory = tempdir().expect("temporary recovery directory");
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(directory.path(), fs::Permissions::from_mode(0o700))
+            .expect("private recovery fixture");
+    }
+    directory
+}
+
 fn open_local(path: &Path, access_mode: AccessMode) -> Option<DactylBridge> {
     match DactylBridge::open_local(path, access_mode) {
         Ok(bridge) => Some(bridge),
@@ -103,7 +117,7 @@ fn online_backup_preserves_wal_data_metadata_and_has_no_sidecars() {
 
 #[test]
 fn damaged_secondary_index_is_reported_and_explicit_recovery_preserves_data() {
-    let directory = tempdir().expect("temporary directory");
+    let directory = private_recovery_directory();
     let source_path = directory.path().join("corrupt.db");
     let archive_path = directory.path().join("corrupt.before-recovery.db");
     let (page_size, root_page) = {
@@ -211,7 +225,7 @@ fn damaged_secondary_index_is_reported_and_explicit_recovery_preserves_data() {
 
 #[test]
 fn recovery_requires_quiesced_connections_and_preserves_existing_archive() {
-    let directory = tempdir().expect("temporary directory");
+    let directory = private_recovery_directory();
     let source_path = directory.path().join("source.db");
     let archive_path = directory.path().join("archive.db");
     let Some(mut primary) = open_local(&source_path, AccessMode::ReadWrite) else {

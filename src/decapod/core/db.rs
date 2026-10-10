@@ -149,7 +149,8 @@ fn connection_lock_timeout(default: Duration) -> Duration {
 
 fn ensure_db_parent_dir(db_path: &Path) -> Result<(), error::DecapodError> {
     if let Some(parent) = db_path.parent() {
-        fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
+        crate::core::fs_permissions::ensure_storage_dir(parent)
+            .map_err(error::DecapodError::IoError)?;
     }
     Ok(())
 }
@@ -312,7 +313,8 @@ pub fn storage_health_preflight(store_root: &Path) -> Result<(), error::DecapodE
         return Err(injected);
     }
     if !store_root.exists() {
-        fs::create_dir_all(store_root).map_err(error::DecapodError::IoError)?;
+        crate::core::fs_permissions::ensure_storage_dir(store_root)
+            .map_err(error::DecapodError::IoError)?;
     }
     if !store_root.is_dir() {
         return Err(error::DecapodError::ValidationError(format!(
@@ -338,6 +340,7 @@ fn storage_preflight_for_db(
     db_path: &Path,
     require_write: bool,
 ) -> Result<(), error::DecapodError> {
+    crate::core::fs_permissions::check_storage(db_path).map_err(error::DecapodError::IoError)?;
     let parent = db_path.parent().unwrap_or_else(|| Path::new("."));
     if require_write {
         storage_health_preflight(parent)?;
@@ -372,7 +375,7 @@ fn write_probe(dir: &Path) -> Result<(), error::DecapodError> {
         std::process::id(),
         nanos
     ));
-    fs::write(&probe, b"ok").map_err(|e| {
+    crate::core::fs_permissions::open_storage_file(&probe, fs::OpenOptions::new().create_new(true).write(true)).map_err(|e| {
         error::DecapodError::ValidationError(format!(
             "STORAGE_PREFLIGHT_FAILED: write probe failed at '{}': {}. Check directory permissions, mount mode, and available disk/inodes.",
             probe.display(),

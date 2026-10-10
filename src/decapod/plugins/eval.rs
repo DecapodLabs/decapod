@@ -1079,12 +1079,14 @@ fn parse_kv_pairs(
 
 fn write_json<T: Serialize>(path: PathBuf, value: &T) -> Result<String, error::DecapodError> {
     if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
+        crate::core::fs_permissions::ensure_private_dir(parent)
+            .map_err(error::DecapodError::IoError)?;
     }
     let bytes = serde_json::to_vec_pretty(value).map_err(|e| {
         error::DecapodError::ValidationError(format!("failed to serialize eval artifact: {e}"))
     })?;
-    fs::write(&path, bytes).map_err(error::DecapodError::IoError)?;
+    crate::core::fs_permissions::write_private(&path, bytes)
+        .map_err(error::DecapodError::IoError)?;
     Ok(path.to_string_lossy().to_string())
 }
 

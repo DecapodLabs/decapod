@@ -1,16 +1,14 @@
 {
-  "schema_version": "1.0.0",
-  "title": "Complete cloud integration and contextual scanning",
-  "intent": "Combine remaining issues 1369 and 1370 in one PR using current master, public Dactyl preview dependency, conservative parser context and truthful proof",
+  "schema_version": "1.1.0",
+  "title": "Fix five critical lifecycle and publication issues",
+  "intent": "Resolve1218,1075,1076,1366,1045 in one draft PR without infrastructure changes or merge",
   "state": "APPROVED",
   "todo_ids": [
-    "bend_01m4hcjdawvw4m7c"
+    "bugs_01m4jdaambn944vm"
   ],
   "proof_hooks": [
-    "cargo test --offline --locked --lib",
-    "cargo test --offline --locked --features supabase-cloud --lib",
-    "cargo test --offline --locked --features supabase-cloud --test cloud_supabase_boundary",
-    "cargo clippy --offline --locked --all-targets --all-features -- -D warnings",
+    "cargo test --lib",
+    "cargo clippy --all-targets --all-features -- -D warnings",
     "decapod validate"
   ],
   "unknowns": [],
@@ -18,15 +16,35 @@
   "stop_conditions": [],
   "unresolved_contradictions": [],
   "deferred_questions": [
-    "Actual hosted Supabase proof requires a provisioned approved fixture; unavailable must remain distinct from pass",
-    "True container custody remains unavailable in this environment"
+    "Actual Docker custody unavailable in this environment"
   ],
   "constraints": {
-    "forbidden_paths": [
-      ".decapod/data/decapod.db"
-    ],
+    "forbidden_paths": [],
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1791585078Z"
+  "updated_at": "1791622472Z",
+  "spec_reviews": [
+    {
+      "path": ".decapod/managed/specs/ARCHITECTURE.md",
+      "spec_material_hash": "3334ab741782ee3cc0bd9d00db6de2d375d25658f9dbddcf03e5adcc38b378a7",
+      "reviewed_code_fingerprint": "34647bb8f923292a6788fce97bf591b7da81244f2daed9693986e988f9457e5b",
+      "disposition": "updated",
+      "reason": "Reviewed current ARCHITECTURE implementation and authored contract for the five fixes, including final test-only Clippy correction; source isolation, durable ownership, permission boundaries, retry identity and remote publication are covered by focused regressions."
+    },
+    {
+      "path": ".decapod/managed/specs/INTERFACES.md",
+      "spec_material_hash": "5b4753211eb62ce6798a0d40fa20c8d0e52c2aaae628f4059d38c054da4eb3a8",
+      "reviewed_code_fingerprint": "34647bb8f923292a6788fce97bf591b7da81244f2daed9693986e988f9457e5b",
+      "disposition": "updated",
+      "reason": "Reviewed current INTERFACES implementation and authored contract for the five fixes, including final test-only Clippy correction; source isolation, durable ownership, permission boundaries, retry identity and remote publication are covered by focused regressions."
+    },
+    {
+      "path": ".decapod/managed/specs/SECURITY.md",
+      "spec_material_hash": "ad35c389324be26f9a505ea2561acf50ac674e263d0835724a2e9fd9783ac56f",
+      "reviewed_code_fingerprint": "34647bb8f923292a6788fce97bf591b7da81244f2daed9693986e988f9457e5b",
+      "disposition": "updated",
+      "reason": "Reviewed current SECURITY implementation and authored contract for the five fixes, including final test-only Clippy correction; source isolation, durable ownership, permission boundaries, retry identity and remote publication are covered by focused regressions."
+    }
+  ]
 }

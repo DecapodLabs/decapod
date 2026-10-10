@@ -142,7 +142,11 @@ fn wait_for_lock_pid(lock_path: &Path, timeout: Duration) -> Option<u32> {
 
 fn wait_for_no_broker_artifacts(dir: &Path, timeout: Duration) -> bool {
     let lock_path = dir.join(".decapod").join("data").join("broker.lock");
-    let sock_path = dir.join(".decapod").join("data").join("broker.sock");
+    let sock_path = dir
+        .join(".decapod")
+        .join("data")
+        .join("broker-runtime")
+        .join("broker.sock");
     let start = Instant::now();
     while start.elapsed() < timeout {
         if !lock_path.exists() && !sock_path.exists() {
@@ -223,7 +227,11 @@ fn broker_no_sqlite_busy_surfaced_under_concurrent_mutators() {
     }
 
     let lock_path = dir.join(".decapod").join("data").join("broker.lock");
-    let sock_path = dir.join(".decapod").join("data").join("broker.sock");
+    let sock_path = dir
+        .join(".decapod")
+        .join("data")
+        .join("broker-runtime")
+        .join("broker.sock");
     assert!(
         !lock_path.exists() && !sock_path.exists(),
         "ephemeral broker artifacts should be cleaned up"
@@ -329,7 +337,11 @@ fn broker_election_uniqueness_no_residual_lock_after_burst() {
     }
 
     let lock_path = dir.join(".decapod").join("data").join("broker.lock");
-    let sock_path = dir.join(".decapod").join("data").join("broker.sock");
+    let sock_path = dir
+        .join(".decapod")
+        .join("data")
+        .join("broker-runtime")
+        .join("broker.sock");
     assert!(
         !lock_path.exists() && !sock_path.exists(),
         "broker lease/socket should expire and disappear"
@@ -466,4 +478,55 @@ fn broker_crash_injection_phases_retry_to_exactly_once() {
             .expect("count request id");
         assert_eq!(count, 1, "request_id must have exactly one dedupe row");
     }
+}
+
+#[cfg(unix)]
+#[test]
+fn explicit_shared_storage_uses_broker_route_without_private_fallback() {
+    use std::os::unix::fs::PermissionsExt;
+    let (_temp, dir, password) = setup_repo();
+    if !broker_socket_supported(&dir, &password) {
+        eprintln!("Unix sockets unavailable in this execution environment");
+        return;
+    }
+    let data = dir.join(".decapod/data");
+    std::fs::set_permissions(&data, std::fs::Permissions::from_mode(0o770)).unwrap();
+    let hook = dir.join("shared-broker-hook");
+    let out = Command::new("sh")
+        .args(["-c", "umask 007; exec \"$@\"", "shared-broker"])
+        .arg(env!("CARGO_BIN_EXE_decapod"))
+        .args(["todo", "add", "trusted shared store mutation"])
+        .current_dir(&dir)
+        .env("DECAPOD_STORAGE_SHARED_GROUP", "1")
+        .env("DECAPOD_AGENT_ID", "unknown")
+        .env("DECAPOD_SESSION_PASSWORD", &password)
+        .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
+        .env("DECAPOD_GROUP_BROKER_ENFORCE_ROUTE", "1")
+        .env("DECAPOD_GROUP_BROKER_IDLE_SECS", "1")
+        .env("DECAPOD_GROUP_BROKER_REQUEST_ID", "SHARED_STORE_MUTATION")
+        .env("DECAPOD_GROUP_BROKER_TEST_HOOK_FILE", &hook)
+        .output()
+        .unwrap();
+    assert!(
+        out.status.success(),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert!(
+        std::fs::read_to_string(&hook)
+            .unwrap()
+            .contains("queued|SHARED_STORE_MUTATION")
+    );
+    assert_eq!(
+        std::fs::metadata(&data).unwrap().permissions().mode() & 0o777,
+        0o770
+    );
+    assert_eq!(
+        std::fs::metadata(data.join("broker-runtime"))
+            .unwrap()
+            .permissions()
+            .mode()
+            & 0o007,
+        0
+    );
 }

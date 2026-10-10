@@ -159,3 +159,129 @@ async fn stale_claim_is_a_conflict_and_does_not_change_the_task() {
         Some("agent-a")
     );
 }
+
+#[tokio::test]
+async fn retry_reconciles_one_immutable_creation_event_after_task_changes() {
+    let Some((store, _tempdir)) = local_store() else {
+        panic!("SQLite required for retry regression");
+    };
+    let mut original = task("resumable task");
+    original.id = "todo_resumable_original".into();
+    original.hash = "resume".into();
+    let intent = format!("{}operation-one", cloud_todo_operation::INTENT_PREFIX);
+    // Dropping the successful response models the client's lost acknowledgement.
+    let _ = store
+        .add_task(original.clone(), "agent-a".into(), intent.clone())
+        .await
+        .unwrap();
+    store
+        .claim_task(&original.id, "agent-a".into())
+        .await
+        .unwrap();
+    let retried = store
+        .add_task(original.clone(), "agent-a".into(), intent.clone())
+        .await
+        .unwrap();
+    assert_eq!(retried.id, original.id);
+    assert_eq!(retried.status, "in_progress");
+    assert_eq!(
+        event_count(&store),
+        2,
+        "one creation and one claim, no replay event"
+    );
+    assert_eq!(store.list_tasks().await.unwrap().len(), 1);
+    let mut changed = original.clone();
+    changed.description = Some("different input".into());
+    let error = store
+        .add_task(changed, "agent-a".into(), intent.clone())
+        .await
+        .unwrap_err();
+    assert_eq!(
+        cloud_todo_operation::anyhow_failure(&error).1,
+        FailureKind::Conflict
+    );
+    assert_eq!(event_count(&store), 2);
+    let resumed = store
+        .add_task(original, "other-agent".into(), intent)
+        .await
+        .unwrap();
+    assert_eq!(resumed.status, "in_progress");
+    assert_eq!(event_count(&store), 2);
+    let actor: String = store
+        .bridge()
+        .unwrap()
+        .read(
+            "SELECT actor FROM events WHERE event_type = 'task.add'",
+            &[],
+        )
+        .unwrap()
+        .as_slice()[0]
+        .get("actor")
+        .unwrap();
+    assert_eq!(
+        actor, "agent-a",
+        "retry never overwrites original audit attribution"
+    );
+}
+
+#[tokio::test]
+async fn failed_atomic_creation_can_retry_without_partial_task_or_event() {
+    let Some((store, _tempdir)) = local_store() else {
+        panic!("SQLite required for retry regression");
+    };
+    let mut original = task("atomic retry");
+    original.id = "todo_atomic_retry".into();
+    original.hash = "atomic".into();
+    let intent = format!("{}atomic-operation", cloud_todo_operation::INTENT_PREFIX);
+    store.bridge().unwrap().write("CREATE TRIGGER reject_add BEFORE INSERT ON events BEGIN SELECT RAISE(ABORT, 'fixture failure'); END", &[]).unwrap();
+    let error = store
+        .add_task(original.clone(), "agent-a".into(), intent.clone())
+        .await
+        .unwrap_err();
+    assert_eq!(
+        cloud_todo_operation::anyhow_failure(&error).0,
+        Outcome::OutcomeUnknown
+    );
+    assert!(store.list_tasks().await.unwrap().is_empty());
+    assert_eq!(event_count(&store), 0);
+    store
+        .bridge()
+        .unwrap()
+        .write("DROP TRIGGER reject_add", &[])
+        .unwrap();
+    store
+        .add_task(original, "agent-a".into(), intent)
+        .await
+        .unwrap();
+    assert_eq!(event_count(&store), 1);
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn concurrent_same_operation_retries_never_duplicate_task_or_event() {
+    let Some((store, _tempdir)) = local_store() else {
+        panic!("SQLite required for concurrent retry regression");
+    };
+    let mut original = task("concurrent retry");
+    original.id = "todo_concurrent_retry".into();
+    original.hash = "concur".into();
+    let intent = format!(
+        "{}concurrent-operation",
+        cloud_todo_operation::INTENT_PREFIX
+    );
+    let first = store.clone();
+    let second = store.clone();
+    let (a, b) = tokio::join!(
+        first.add_task(original.clone(), "agent-a".into(), intent.clone()),
+        second.add_task(original.clone(), "agent-a".into(), intent.clone())
+    );
+    assert!(
+        a.is_ok() || b.is_ok(),
+        "at least one attempt must commit: {a:?} {b:?}"
+    );
+    store
+        .add_task(original, "agent-a".into(), intent)
+        .await
+        .unwrap();
+    assert_eq!(store.list_tasks().await.unwrap().len(), 1);
+    assert_eq!(event_count(&store), 1);
+}

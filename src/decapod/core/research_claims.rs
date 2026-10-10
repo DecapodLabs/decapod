@@ -407,9 +407,10 @@ pub fn ensure_template(repo_root: &Path, dry_run: bool) -> Result<bool, DecapodE
         return Ok(false);
     }
     if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).map_err(DecapodError::IoError)?;
+        crate::core::fs_permissions::ensure_private_dir(parent).map_err(DecapodError::IoError)?;
     }
-    fs::write(&path, CLAIMS_TEMPLATE).map_err(DecapodError::IoError)?;
+    crate::core::fs_permissions::write_private(&path, CLAIMS_TEMPLATE)
+        .map_err(DecapodError::IoError)?;
     load_and_validate(repo_root)?.ok_or_else(|| {
         DecapodError::ValidationError(format!(
             "claims template was written but could not be loaded: {}",

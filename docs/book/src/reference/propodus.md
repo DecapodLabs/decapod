@@ -232,3 +232,7 @@ by Dactyl. Live Neon/Vercel availability, Propodus/Dactyl service deployment,
 cross-organization isolation, schema/migration parity, and hosted event
 atomicity remain deployment-dependent proof gates; the client-side batch
 contract and local rollback proof do not claim those hosted properties.
+
+For interrupted cloud creation and auth-blocked custody, see
+[Resuming cloud todo creation](cloud-todo-recovery.md). A returned operation token
+is a retry identity, never an authorization grant or local task-store fallback.

@@ -213,51 +213,71 @@ mod enabled {
         let handle = std::thread::spawn(move || {
             listener.set_nonblocking(true).unwrap();
             let deadline = std::time::Instant::now() + Duration::from_secs(10);
-            let (mut stream, _) = loop {
-                match listener.accept() {
-                    Ok(stream) => break stream,
-                    Err(error)
-                        if error.kind() == std::io::ErrorKind::WouldBlock
-                            && std::time::Instant::now() < deadline =>
-                    {
-                        std::thread::sleep(Duration::from_millis(10))
+            let mut response = Some(response);
+            loop {
+                let (mut stream, _) = loop {
+                    match listener.accept() {
+                        Ok(stream) => break stream,
+                        Err(error)
+                            if error.kind() == std::io::ErrorKind::WouldBlock
+                                && std::time::Instant::now() < deadline =>
+                        {
+                            std::thread::sleep(Duration::from_millis(10))
+                        }
+                        Err(error) => {
+                            panic!("fixture received no request within its budget: {error}")
+                        }
                     }
-                    Err(error) => panic!("fixture received no request within its budget: {error}"),
+                };
+                stream
+                    .set_read_timeout(Some(Duration::from_secs(5)))
+                    .unwrap();
+                let mut bytes = Vec::new();
+                let body_start = loop {
+                    let mut buffer = [0; 4096];
+                    let read = stream.read(&mut buffer).unwrap();
+                    assert_ne!(read, 0, "request ended before headers");
+                    bytes.extend_from_slice(&buffer[..read]);
+                    if let Some(offset) = bytes.windows(4).position(|value| value == b"\r\n\r\n") {
+                        break offset + 4;
+                    }
+                };
+                let headers = String::from_utf8_lossy(&bytes[..body_start]).to_lowercase();
+                let is_reconciliation = path == "/batch" && headers.starts_with("post /query ");
+                assert!(is_reconciliation || headers.starts_with(&format!("post {path} ")));
+                assert!(headers.contains("authorization: bearer synthetic-bearer-secret"));
+                let length = headers
+                    .lines()
+                    .find_map(|line| line.strip_prefix("content-length:"))
+                    .unwrap()
+                    .trim()
+                    .parse::<usize>()
+                    .unwrap();
+                while bytes.len() < body_start + length {
+                    let mut buffer = [0; 4096];
+                    let read = stream.read(&mut buffer).unwrap();
+                    assert_ne!(read, 0);
+                    bytes.extend_from_slice(&buffer[..read]);
                 }
-            };
-            stream
-                .set_read_timeout(Some(Duration::from_secs(5)))
-                .unwrap();
-            let mut bytes = Vec::new();
-            let body_start = loop {
-                let mut buffer = [0; 4096];
-                let read = stream.read(&mut buffer).unwrap();
-                assert_ne!(read, 0, "request ended before headers");
-                bytes.extend_from_slice(&buffer[..read]);
-                if let Some(offset) = bytes.windows(4).position(|value| value == b"\r\n\r\n") {
-                    break offset + 4;
+                let request: Value =
+                    serde_json::from_slice(&bytes[body_start..body_start + length]).unwrap();
+                if is_reconciliation {
+                    assert_context(&request);
+                    assert!(
+                        request["sql"]
+                            .as_str()
+                            .unwrap()
+                            .contains("FROM events WHERE event_id = $1")
+                    );
+                    let body =
+                        json!({"columns": ["subject_id", "payload"], "rows": [], "affected_rows": 0}).to_string();
+                    write!(stream, "HTTP/1.1 200 Fixture\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len()).unwrap();
+                    continue;
                 }
-            };
-            let headers = String::from_utf8_lossy(&bytes[..body_start]).to_lowercase();
-            assert!(headers.starts_with(&format!("post {path} ")));
-            assert!(headers.contains("authorization: bearer synthetic-bearer-secret"));
-            let length = headers
-                .lines()
-                .find_map(|line| line.strip_prefix("content-length:"))
-                .unwrap()
-                .trim()
-                .parse::<usize>()
-                .unwrap();
-            while bytes.len() < body_start + length {
-                let mut buffer = [0; 4096];
-                let read = stream.read(&mut buffer).unwrap();
-                assert_ne!(read, 0);
-                bytes.extend_from_slice(&buffer[..read]);
+                let body = response.take().unwrap()(&request).to_string();
+                write!(stream, "HTTP/1.1 {status} Fixture\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len()).unwrap();
+                break request;
             }
-            let request = serde_json::from_slice(&bytes[body_start..body_start + length]).unwrap();
-            let body = response(&request).to_string();
-            write!(stream, "HTTP/1.1 {status} Fixture\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len()).unwrap();
-            request
         });
         (endpoint, handle)
     }
@@ -501,10 +521,9 @@ mod enabled {
                         assert_eq!(params[3], "Supabase command fixture");
                         assert_eq!(params[7], "open");
                         assert_eq!(&params[13], timestamp);
-                        assert_eq!(
-                            payload,
-                            json!({"title": "Supabase command fixture", "status": "open"})
-                        );
+                        assert_eq!(payload["title"], "Supabase command fixture");
+                        assert_eq!(payload["status"], "open");
+                        assert_eq!(payload["request_fingerprint"].as_str().unwrap().len(), 64);
                     }
                     "claim" => {
                         assert_eq!(id, "todo_proof1");
@@ -638,7 +657,15 @@ mod enabled {
                 );
                 server.join().unwrap();
                 assert_safe_failure(&output, root.path());
-                assert!(String::from_utf8_lossy(&output.stderr).contains("expected exactly one"));
+                if operation == "add" {
+                    let diagnostic: Value = serde_json::from_slice(&output.stdout).unwrap();
+                    assert_eq!(diagnostic["failure_kind"], "conflict");
+                    assert_eq!(diagnostic["status"], "outcome_unknown");
+                } else {
+                    assert!(
+                        String::from_utf8_lossy(&output.stderr).contains("expected exactly one")
+                    );
+                }
             }
         }
     }

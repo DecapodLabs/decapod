@@ -26,7 +26,7 @@ fn resolve_decapod_bin() -> PathBuf {
 }
 
 #[test]
-fn workspace_ensure_blocks_on_protected_branch_with_local_mods() {
+fn workspace_ensure_preserves_dirty_protected_branch_and_isolates_committed_base() {
     let tmp = TempDir::new().expect("tempdir");
     let dir = tmp.path();
 
@@ -65,6 +65,25 @@ fn workspace_ensure_blocks_on_protected_branch_with_local_mods() {
         .expect("decapod init");
     assert!(init_out.status.success(), "init failed");
 
+    // The isolated workspace starts from the committed initialized project, never
+    // from uncommitted root configuration or source bytes.
+    assert!(
+        Command::new("git")
+            .args(["add", "."])
+            .current_dir(dir)
+            .status()
+            .unwrap()
+            .success()
+    );
+    assert!(
+        Command::new("git")
+            .args(["commit", "-m", "initialize governed project"])
+            .current_dir(dir)
+            .status()
+            .unwrap()
+            .success()
+    );
+
     // Dirty the protected branch checkout.
     std::fs::write(dir.join("README.md"), "# changed\n").expect("mutate readme");
 
@@ -76,16 +95,27 @@ fn workspace_ensure_blocks_on_protected_branch_with_local_mods() {
 
     assert!(
         out.status.success(),
-        "workspace ensure should return success status with JSON response"
+        "workspace ensure should return success status with JSON response: stdout={} stderr={}",
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr)
     );
     let stdout_str = String::from_utf8_lossy(&out.stdout);
     let val: serde_json::Value = serde_json::from_str(&stdout_str).expect("parse JSON");
-    assert_eq!(val["status"], "pending");
-    let blockers = val["blockers"].as_array().expect("blockers array");
-    let has_dirty_blocker = blockers.iter().any(|b| b["kind"] == "workspace_required");
-    assert!(
-        has_dirty_blocker,
-        "expected workspace_required blocker in {:?}",
-        blockers
+    assert_eq!(val["status"], "ok");
+    assert!(val["can_work"].as_bool().unwrap());
+    assert!(val["blockers"].as_array().unwrap().is_empty());
+    assert_eq!(
+        std::fs::read_to_string(dir.join("README.md")).unwrap(),
+        "# changed\n"
+    );
+    let workspace = PathBuf::from(val["worktree_path"].as_str().unwrap());
+    assert_ne!(workspace, dir);
+    assert_eq!(
+        std::fs::read_to_string(workspace.join("README.md")).unwrap(),
+        "# test\n"
+    );
+    assert_eq!(
+        val["root_isolation"]["strategy"],
+        "committed_base_only_preserve_source"
     );
 }

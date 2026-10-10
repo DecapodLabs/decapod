@@ -16,7 +16,7 @@ fn reflex_db_path(root: &Path) -> PathBuf {
 }
 
 pub fn initialize_reflex_db(root: &Path) -> Result<(), error::DecapodError> {
-    std::fs::create_dir_all(root).map_err(error::DecapodError::IoError)?;
+    crate::core::fs_permissions::ensure_storage_dir(root).map_err(error::DecapodError::IoError)?;
     let broker = DbBroker::new(root);
     let db_path = reflex_db_path(root);
     broker.with_conn(&db_path, "decapod", None, "reflex.init", |conn| {

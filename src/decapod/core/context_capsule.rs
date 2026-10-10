@@ -5,7 +5,6 @@ use crate::core::{
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::fs;
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
@@ -274,10 +273,12 @@ pub fn write_context_capsule(
     let parent = path.parent().ok_or_else(|| {
         error::DecapodError::ValidationError("invalid context capsule parent path".to_string())
     })?;
-    fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
+    crate::core::fs_permissions::ensure_private_dir(parent)
+        .map_err(error::DecapodError::IoError)?;
     let bytes = serde_json::to_vec_pretty(&normalized).map_err(|e| {
         error::DecapodError::ValidationError(format!("failed to serialize context capsule: {e}"))
     })?;
-    fs::write(&path, bytes).map_err(error::DecapodError::IoError)?;
+    crate::core::fs_permissions::write_private(&path, bytes)
+        .map_err(error::DecapodError::IoError)?;
     Ok(path)
 }

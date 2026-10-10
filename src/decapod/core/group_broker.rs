@@ -1,7 +1,9 @@
+use crate::core::bounded_process::{BUILD_TIMEOUT, BoundedCommand, CONTROL_TIMEOUT};
 use crate::core::db;
 use crate::core::db::OptionalExtension;
 use crate::core::error;
 use crate::core::time;
+use fs2::FileExt;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::fs::{self, File, OpenOptions};
@@ -100,8 +102,10 @@ fn broker_io_error_allows_direct_fallback(kind: std::io::ErrorKind) -> bool {
 
 #[cfg(unix)]
 fn run_unix_broker(broker_root: &Path, argv: &[String]) -> Result<(), error::DecapodError> {
-    fs::create_dir_all(broker_root).map_err(error::DecapodError::IoError)?;
+    crate::core::fs_permissions::ensure_storage_dir(broker_root)
+        .map_err(error::DecapodError::IoError)?;
     let socket_path = broker_socket_path(broker_root);
+    ensure_socket_directory(socket_path.parent().expect("socket parent"))?;
     let lock_path = broker_lock_path(broker_root);
 
     let request = BrokerRequest {
@@ -223,6 +227,12 @@ fn handle_client(
     broker_root: &Path,
     stream: std::os::unix::net::UnixStream,
 ) -> Result<(), error::DecapodError> {
+    stream
+        .set_read_timeout(Some(Duration::from_secs(15)))
+        .map_err(error::DecapodError::IoError)?;
+    stream
+        .set_write_timeout(Some(Duration::from_secs(15)))
+        .map_err(error::DecapodError::IoError)?;
     let mut reader = BufReader::new(stream.try_clone().map_err(error::DecapodError::IoError)?);
     let mut line = String::new();
     reader
@@ -330,11 +340,19 @@ fn execute_request(
         .next()
         .ok_or_else(|| error::DecapodError::ValidationError("BROKER_EXEC_PATH_MISSING".into()))?;
     emit_phase_hook("pre_exec", &request.request_id);
+    let timeout = if request.argv.windows(2).any(|args| {
+        (args[0] == "todo" && args[1] == "claim")
+            || (args[0] == "workspace" && matches!(args[1].as_str(), "status" | "prune"))
+    }) {
+        CONTROL_TIMEOUT
+    } else {
+        BUILD_TIMEOUT
+    };
     let output = match Command::new(exe)
         .args(&request.argv)
         .env(BROKER_INTERNAL_ENV, "1")
         .env("DECAPOD_GROUP_BROKER_REQUEST_ID", &request.request_id)
-        .output()
+        .bounded_output(timeout)
     {
         Ok(output) => output,
         Err(err) => {
@@ -444,7 +462,25 @@ fn broker_lock_path(broker_root: &Path) -> PathBuf {
 }
 
 fn broker_socket_path(broker_root: &Path) -> PathBuf {
-    broker_root.join("broker.sock")
+    broker_root.join("broker-runtime").join("broker.sock")
+}
+
+#[cfg(unix)]
+fn ensure_socket_directory(path: &Path) -> Result<(), error::DecapodError> {
+    use std::os::unix::fs::PermissionsExt;
+    crate::core::fs_permissions::ensure_storage_dir(path).map_err(error::DecapodError::IoError)?;
+    let forbidden = if crate::core::fs_permissions::shared_storage() {
+        0o007
+    } else {
+        0o077
+    };
+    if std::fs::metadata(path)?.permissions().mode() & forbidden != 0 {
+        return Err(error::DecapodError::ValidationError(format!(
+            "BROKER_UNSAFE_SOCKET_DIRECTORY: {} permits access outside the approved private/shared-group boundary. No permissions were changed; ask the owner to review this runtime directory before retrying.",
+            path.display()
+        )));
+    }
+    Ok(())
 }
 
 fn dedupe_db_path(broker_root: &Path) -> PathBuf {
@@ -588,68 +624,33 @@ fn emit_phase_hook(phase: &str, request_id: &str) {
 }
 
 fn try_acquire_lock(lock_path: &Path) -> Result<Option<BrokerLease>, error::DecapodError> {
-    // Leader election lock: create_new gives single-winner semantics per path.
-    let file = match OpenOptions::new()
-        .create_new(true)
-        .read(true)
-        .write(true)
-        .truncate(false)
-        .open(lock_path)
-    {
-        Ok(file) => file,
-        Err(err) if err.kind() == std::io::ErrorKind::AlreadyExists => {
-            if cleanup_stale_lock(lock_path)? {
-                return try_acquire_lock(lock_path);
-            }
-            return Ok(None);
-        }
+    // Keep the advisory-lock inode stable. Unlinking a locked file can elect
+    // two leaders on different inodes. broker.lock is only a diagnostic PID
+    // marker; the OS releases broker.election automatically on interruption.
+    let election = crate::core::fs_permissions::open_storage_file(
+        &lock_path.with_extension("election"),
+        OpenOptions::new()
+            .create(true)
+            .read(true)
+            .write(true)
+            .truncate(false),
+    )
+    .map_err(error::DecapodError::IoError)?;
+    match election.try_lock_exclusive() {
+        Ok(()) => {}
+        Err(err) if err.kind() == std::io::ErrorKind::WouldBlock => return Ok(None),
         Err(err) => return Err(error::DecapodError::IoError(err)),
-    };
-    let pid = std::process::id();
-    let _ = file.set_len(0);
-    let _ = (&file).write_all(format!("{pid}\n").as_bytes());
-    let _ = (&file).flush();
-
+    }
+    let mut marker = crate::core::fs_permissions::open_storage_file(
+        lock_path,
+        OpenOptions::new().create(true).write(true).truncate(true),
+    )
+    .map_err(error::DecapodError::IoError)?;
+    writeln!(marker, "{}", std::process::id()).map_err(error::DecapodError::IoError)?;
     Ok(Some(BrokerLease {
         path: lock_path.to_path_buf(),
-        _file: file,
+        _file: election,
     }))
-}
-
-fn cleanup_stale_lock(lock_path: &Path) -> Result<bool, error::DecapodError> {
-    let raw = match fs::read_to_string(lock_path) {
-        Ok(raw) => raw,
-        Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(false),
-        Err(err) => return Err(error::DecapodError::IoError(err)),
-    };
-    let pid = match raw.trim().parse::<u32>() {
-        Ok(pid) if pid > 0 => pid,
-        _ => return Ok(false),
-    };
-    if is_pid_alive(pid) {
-        return Ok(false);
-    }
-    match fs::remove_file(lock_path) {
-        Ok(()) => Ok(true),
-        Err(err) if err.kind() == std::io::ErrorKind::NotFound => Ok(false),
-        Err(err) => Err(error::DecapodError::IoError(err)),
-    }
-}
-
-fn is_pid_alive(pid: u32) -> bool {
-    #[cfg(unix)]
-    {
-        std::process::Command::new("kill")
-            .args(["-0", &pid.to_string()])
-            .status()
-            .map(|status| status.success())
-            .unwrap_or(false)
-    }
-    #[cfg(not(unix))]
-    {
-        let _ = pid;
-        false
-    }
 }
 
 fn jitter_ms(max_exclusive: u64) -> u64 {

@@ -254,10 +254,37 @@ jobs:
         run: >-
           cargo test --locked --features supabase-cloud --lib
           --test cloud_supabase_boundary --test cloud_dactyl_boundary
-          --test cloud_cli_boundary --test cloud_command_path --test propodus_contract
+          --test cloud_cli_boundary --test cloud_command_path --test cloud_todo_resume_wire --test propodus_contract
           --test supabase_service
       # Real service profiles stay ignored. They require an externally owned
       # disposable PostgreSQL fixture or protected hosted Supabase inputs.
+
+  workspace-lifecycle-docker:
+    name: Workspace lifecycle (actual Docker)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.96.1
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "ci-supabase-consumer-v1.96.1"
+      - name: Prepare explicit disposable runtime fixture
+        run: docker pull busybox:1.37
+      - name: Prove interrupted caller and owned container recovery
+        env:
+          DECAPOD_RUN_DOCKER_LIFECYCLE_TEST: "1"
+          DECAPOD_TEST_DOCKER_IMAGE: busybox:1.37
+        run: >-
+          cargo test --locked --lib
+          core::workspace_lifecycle::tests::docker_parent_interrupt_recovers_owned_container
+          -- --ignored --exact --nocapture
 
   # FMT: Pure source check, no compile needed
   fmt:
@@ -591,6 +618,11 @@ jobs:
                   //:todo_enforcement \
                   //:validate_termination \
                   //:workspace_interlock \
+                  //:spec_workspace_ownership \
+                  //:workspace_prune_regression \
+                  //:hermes_governance_substrate \
+                  //:group_broker \
+                  //:group_broker_strict \
                   //:workunit_cli \
                   //:context_capsule_cli \
                   --test_arg=--test-threads=1
@@ -800,7 +832,7 @@ jobs:
     name: Release Build Check
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
-    needs: [fmt, clippy, test, test-rpc-suite, chaos-replay, daemonless-lifecycle, contracts, health]
+    needs: [fmt, clippy, test, test-rpc-suite, chaos-replay, daemonless-lifecycle, workspace-lifecycle-docker, contracts, health]
     steps:
       - uses: actions/checkout@v4
         with:

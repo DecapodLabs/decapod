@@ -103,3 +103,50 @@ fn session_temporary_is_private_before_writing_and_never_reuses_an_existing_file
     assert!(create_private_session_file(&path).is_err());
     assert_eq!(std::fs::read_to_string(&path).unwrap(), "existing-sentinel");
 }
+
+#[cfg(unix)]
+#[test]
+fn session_creation_and_replacement_are_private_with_permissive_umask() {
+    use std::os::unix::fs::PermissionsExt;
+    if std::env::var_os("DECAPOD_SESSION_PERMISSION_CHILD").is_none() {
+        let output = std::process::Command::new("sh")
+            .args(["-c", "umask 000; exec \"$@\"", "session-child"])
+            .arg(std::env::current_exe().unwrap())
+            .args(["--exact", "core::auth::tests::session_creation_and_replacement_are_private_with_permissive_umask", "--nocapture", "--test-threads=1"])
+            .env("DECAPOD_SESSION_PERMISSION_CHILD", "1")
+            .env_remove(crate::core::fs_permissions::SHARED_STORAGE_ENV)
+            .output().unwrap();
+        assert!(
+            output.status.success(),
+            "{}\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        return;
+    }
+    let directory = tempfile::tempdir().unwrap();
+    fs::set_permissions(directory.path(), fs::Permissions::from_mode(0o700)).unwrap();
+    let path = directory.path().join("config/sessions/session.json");
+    let session = CloudSession {
+        access_token: "synthetic-test-value".to_string(),
+        refresh_token: None,
+        session_id: None,
+        expires_at: None,
+    };
+    for _ in 0..2 {
+        store_machine_session_at(&session, &path).unwrap();
+    }
+    assert_eq!(
+        fs::metadata(&path).unwrap().permissions().mode() & 0o777,
+        0o600
+    );
+    assert_eq!(
+        fs::metadata(path.parent().unwrap())
+            .unwrap()
+            .permissions()
+            .mode()
+            & 0o777,
+        0o700
+    );
+    assert_eq!(fs::read_dir(path.parent().unwrap()).unwrap().count(), 1);
+}

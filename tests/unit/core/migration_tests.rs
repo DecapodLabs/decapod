@@ -122,3 +122,82 @@ fn proven_consolidation_copies_forward_and_retires_recreated_databases() {
         .unwrap();
     assert_eq!(receipt, "proven-by:db.consolidate.single_datastore.v001");
 }
+
+#[cfg(unix)]
+#[test]
+fn backup_restore_and_ledgers_keep_safe_modes_under_permissive_umask() {
+    use std::os::unix::fs::PermissionsExt;
+    if std::env::var_os("DECAPOD_MIGRATION_PERMISSION_CHILD").is_none() {
+        let output = std::process::Command::new("sh")
+            .args(["-c", "umask 000; exec \"$@\"", "migration-child"])
+            .arg(std::env::current_exe().unwrap())
+            .args(["--exact", "core::migration::tests::backup_restore_and_ledgers_keep_safe_modes_under_permissive_umask", "--nocapture", "--test-threads=1"])
+            .env("DECAPOD_MIGRATION_PERMISSION_CHILD", "1")
+            .env_remove(crate::core::fs_permissions::SHARED_STORAGE_ENV)
+            .output().unwrap();
+        assert!(
+            output.status.success(),
+            "{}\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        return;
+    }
+    let root = tempdir().unwrap();
+    fs::set_permissions(root.path(), fs::Permissions::from_mode(0o700)).unwrap();
+    let data = root.path().join("data");
+    crate::core::fs_permissions::ensure_storage_dir(&data).unwrap();
+    let database = data.join("decapod.db");
+    let conn = db::db_connect(database.to_str().unwrap()).unwrap();
+    conn.execute_batch(
+        "CREATE TABLE retained (value TEXT); INSERT INTO retained VALUES ('original')",
+    )
+    .unwrap();
+    drop(conn);
+    let backup = create_data_backup(&data).unwrap().unwrap();
+    assert_eq!(
+        fs::metadata(&backup).unwrap().permissions().mode() & 0o777,
+        0o700
+    );
+    assert_eq!(
+        fs::metadata(backup.join("decapod.db"))
+            .unwrap()
+            .permissions()
+            .mode()
+            & 0o777,
+        0o600
+    );
+    restore_data_backup(&data, &backup).unwrap();
+    assert_eq!(
+        fs::metadata(&database).unwrap().permissions().mode() & 0o777,
+        0o600
+    );
+    let conn = db::db_connect(database.to_str().unwrap()).unwrap();
+    let value: String = conn
+        .query_row("SELECT value FROM retained", [], |row| row.get(0))
+        .unwrap();
+    assert_eq!(value, "original");
+    drop(conn);
+    let ledger = AppliedMigrationLedger {
+        schema_version: "1.0.0".to_string(),
+        entries: vec![],
+    };
+    store_applied_migrations(root.path(), &ledger).unwrap();
+    store_applied_migrations(root.path(), &ledger).unwrap();
+    touch_generated_version_counter(root.path()).unwrap();
+    touch_generated_migration_catalog(root.path(), &all_migrations()).unwrap();
+    for name in [
+        GENERATED_APPLIED_MIGRATIONS,
+        GENERATED_VERSION_COUNTER,
+        GENERATED_MIGRATION_CATALOG,
+    ] {
+        assert_eq!(
+            fs::metadata(root.path().join(name))
+                .unwrap()
+                .permissions()
+                .mode()
+                & 0o777,
+            0o600
+        );
+    }
+}

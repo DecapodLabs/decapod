@@ -167,7 +167,22 @@ Describe the security primitives and security controls implemented in this repos
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c7bdbebfb346baefe0c9c0d59001b8fe58ae3ddc2b6977be0c6fde625a5319b1`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (119 files), `tests/` (4 files)
+- Repository signal fingerprint: `34647bb8f923292a6788fce97bf591b7da81244f2daed9693986e988f9457e5b`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (124 files), `tests/` (161 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Storage filesystem permission boundary
+
+Decapod-owned creation uses explicit Unix directory/file modes before writing
+state. Datastore entrypoints validate existing SQLite and coordination
+sidecars, leaf links and directory ancestry without silently chmodding an
+installation. Explicit trusted-group datastore sharing is bounded to the
+storage directory's group; machine credentials and sessions remain private.
+Atomic and migration copies use the same owned-state creation boundary.
+Online-backup temporaries are confined to a private staging directory before
+safe final publication. Pinned Dactyl recovery cannot select private staging,
+so shared-directory recovery is explicitly unsupported; private-directory
+recovery preserves the original safe mode on its new rebuilt inode. Unix
+mode checks are not Windows ACL enforcement. `docs/storage-permissions.md`
+defines the supported boundary, operator recovery and subprocess-umask proof.

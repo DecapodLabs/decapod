@@ -6,7 +6,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-const PLAN_SCHEMA_VERSION: &str = "1.0.0";
+const PLAN_SCHEMA_VERSION: &str = "1.1.0";
 pub const PLAN_PATH: &str = ".decapod/governance/plan.json";
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
@@ -100,6 +100,125 @@ pub struct GovernedPlan {
     #[serde(default)]
     pub phases: Vec<Phase>,
     pub updated_at: String,
+    /// Agent-authored review evidence, never a claim of independent semantic proof.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub spec_reviews: Vec<SpecReview>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, clap::ValueEnum)]
+#[serde(rename_all = "snake_case")]
+pub enum SpecReviewDisposition {
+    Updated,
+    UnchangedWithReason,
+    RequiresDecision,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct SpecReview {
+    pub path: String,
+    pub spec_material_hash: String,
+    pub reviewed_code_fingerprint: String,
+    pub disposition: SpecReviewDisposition,
+    pub reason: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub decision_ref: Option<String>,
+}
+
+pub const PUBLICATION_REVIEW_SPECS: &[&str] = &[
+    ".decapod/managed/specs/INTERFACES.md",
+    ".decapod/managed/specs/ARCHITECTURE.md",
+    ".decapod/managed/specs/SECURITY.md",
+];
+
+/// Record the agent's review against bytes actually present in this workspace.
+/// This is evidence of explicit review, not automatic semantic verification.
+pub fn review_spec(
+    project_root: &Path,
+    path: &str,
+    disposition: SpecReviewDisposition,
+    reason: &str,
+) -> Result<GovernedPlan, error::DecapodError> {
+    if !PUBLICATION_REVIEW_SPECS.contains(&path) || reason.trim().is_empty() {
+        return Err(error::DecapodError::ValidationError("Review requires a canonical INTERFACES, ARCHITECTURE, or SECURITY spec path and a non-empty substantive reason.".into()));
+    }
+    let mut plan = load_plan(project_root)?.ok_or_else(|| {
+        error::DecapodError::ValidationError(
+            "Initialize the governed plan before recording spec reviews.".into(),
+        )
+    })?;
+    let body = fs::read_to_string(project_root.join(path)).map_err(error::DecapodError::IoError)?;
+    let hash = crate::core::project_specs::material_spec_body_hash(&body);
+    let fingerprint = crate::core::project_specs::repo_signal_fingerprint(project_root)?;
+    // A generic new review cannot silently turn an unresolved human decision
+    // into an approval, even after a code change. Refresh a pending request
+    // against current bytes, then resolve it through the deliberate command.
+    if plan.spec_reviews.iter().any(|review| {
+        review.path == path && review.disposition == SpecReviewDisposition::RequiresDecision
+    }) && disposition != SpecReviewDisposition::RequiresDecision
+    {
+        return Err(error::DecapodError::ValidationError("SPEC_REVIEW_DECISION_REQUIRED: this contract still requires human judgment. Preserve the decision request; do not replace it with agent self-approval. After obtaining the human decision, use `decapod govern plan resolve-spec-review --path <path> --decision-ref <human decision reference> --reason <accepted rationale>`; ordinary review cannot grant approval.".into()));
+    }
+    plan.spec_reviews.retain(|review| review.path != path);
+    plan.spec_reviews.push(SpecReview {
+        path: path.to_string(),
+        spec_material_hash: hash,
+        reviewed_code_fingerprint: fingerprint,
+        disposition,
+        reason: reason.trim().to_string(),
+        decision_ref: None,
+    });
+    plan.spec_reviews.sort_by(|a, b| a.path.cmp(&b.path));
+    plan.schema_version = PLAN_SCHEMA_VERSION.to_string();
+    plan.updated_at = crate::core::time::now_epoch_z();
+    save_plan(project_root, &plan)?;
+    Ok(plan)
+}
+
+/// Deliberate resolution under the same declared-human-approval authority as
+/// `govern plan approve`. The reference is provenance, not authenticated identity.
+pub fn resolve_spec_review(
+    project_root: &Path,
+    path: &str,
+    decision_ref: &str,
+    reason: &str,
+) -> Result<GovernedPlan, error::DecapodError> {
+    if !PUBLICATION_REVIEW_SPECS.contains(&path)
+        || decision_ref.trim().is_empty()
+        || reason.trim().is_empty()
+    {
+        return Err(error::DecapodError::ValidationError("Explicit spec review resolution requires a canonical path, human decision reference, and accepted rationale.".into()));
+    }
+    let mut plan = load_plan(project_root)?
+        .ok_or_else(|| error::DecapodError::ValidationError("Missing governed plan.".into()))?;
+    let review = plan
+        .spec_reviews
+        .iter_mut()
+        .find(|review| {
+            review.path == path && review.disposition == SpecReviewDisposition::RequiresDecision
+        })
+        .ok_or_else(|| {
+            error::DecapodError::ValidationError(
+                "No pending spec decision exists for this path.".into(),
+            )
+        })?;
+    let body = fs::read_to_string(project_root.join(path)).map_err(error::DecapodError::IoError)?;
+    if review.spec_material_hash != crate::core::project_specs::material_spec_body_hash(&body)
+        || review.reviewed_code_fingerprint
+            != crate::core::project_specs::repo_signal_fingerprint(project_root)?
+    {
+        return Err(error::DecapodError::ValidationError("STALE_SPEC_REVIEW: code/spec changed after the decision request; present current content to the human and record a new decision request first.".into()));
+    }
+    review.disposition = SpecReviewDisposition::UnchangedWithReason;
+    review.reason = format!(
+        "Decision request: {}\nAccepted rationale: {}",
+        review.reason,
+        reason.trim()
+    );
+    review.decision_ref = Some(decision_ref.trim().to_string());
+    plan.schema_version = PLAN_SCHEMA_VERSION.to_string();
+    plan.updated_at = crate::core::time::now_epoch_z();
+    save_plan(project_root, &plan)?;
+    Ok(plan)
 }
 
 #[derive(Clone, Debug, Default)]
@@ -184,6 +303,7 @@ pub fn init_plan(
         deferred_questions: input.deferred_questions,
         constraints: input.constraints,
         phases: input.phases,
+        spec_reviews: Vec::new(),
         updated_at: crate::core::time::now_epoch_z(),
     };
     save_plan(project_root, &plan)?;

@@ -331,13 +331,15 @@ pub fn export_record(
             "portable completion evidence export has no parent directory".to_string(),
         )
     })?;
-    fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
+    crate::core::fs_permissions::ensure_private_dir(parent)
+        .map_err(error::DecapodError::IoError)?;
     let bytes = serde_json::to_vec_pretty(&envelope).map_err(|e| {
         error::DecapodError::ValidationError(format!(
             "portable completion evidence serialization failed: {e}"
         ))
     })?;
-    fs::write(output_path, bytes).map_err(error::DecapodError::IoError)?;
+    crate::core::fs_permissions::write_private(output_path, bytes)
+        .map_err(error::DecapodError::IoError)?;
     Ok(envelope)
 }
 
@@ -359,9 +361,11 @@ pub fn import_record(
             "portable completion evidence import has no destination directory".to_string(),
         )
     })?;
-    fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
+    crate::core::fs_permissions::ensure_private_dir(parent)
+        .map_err(error::DecapodError::IoError)?;
     let bytes = fs::read(input_path).map_err(error::DecapodError::IoError)?;
-    fs::write(&destination, bytes).map_err(error::DecapodError::IoError)?;
+    crate::core::fs_permissions::write_private(&destination, bytes)
+        .map_err(error::DecapodError::IoError)?;
     let custody_paths = write_artifact_custody(project_root, &envelope)?;
     let mut report = verify_portable_evidence(project_root, task_id, &envelope, &destination)?;
     report.custody_paths = custody_paths;
@@ -612,7 +616,7 @@ fn write_artifact_custody(
         .join(IMPORTED_COMPLETION_EVIDENCE_DIR)
         .join(&envelope.envelope_hash)
         .join("artifacts");
-    fs::create_dir_all(&base).map_err(error::DecapodError::IoError)?;
+    crate::core::fs_permissions::ensure_private_dir(&base).map_err(error::DecapodError::IoError)?;
     let mut paths = Vec::new();
     for content in &envelope.artifact_contents {
         let path = base.join(&content.digest.sha256["sha256:".len()..]);
@@ -629,7 +633,8 @@ fn write_artifact_custody(
                 ));
             }
         } else {
-            fs::write(&path, bytes).map_err(error::DecapodError::IoError)?;
+            crate::core::fs_permissions::write_private(&path, bytes)
+                .map_err(error::DecapodError::IoError)?;
         }
         paths.push(relative_path(project_root, &path)?);
     }
@@ -657,7 +662,8 @@ fn write_receiver_decision(
             ));
         }
     } else {
-        fs::write(&path, bytes).map_err(error::DecapodError::IoError)?;
+        crate::core::fs_permissions::write_private(&path, bytes)
+            .map_err(error::DecapodError::IoError)?;
     }
     Ok(())
 }
@@ -800,13 +806,15 @@ pub fn write_record(
             "completion evidence record has no parent directory".to_string(),
         )
     })?;
-    fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
+    crate::core::fs_permissions::ensure_private_dir(parent)
+        .map_err(error::DecapodError::IoError)?;
     let bytes = serde_json::to_vec_pretty(record).map_err(|e| {
         error::DecapodError::ValidationError(format!(
             "completion evidence record serialization failed: {e}"
         ))
     })?;
-    fs::write(&path, bytes).map_err(error::DecapodError::IoError)?;
+    crate::core::fs_permissions::write_private(&path, bytes)
+        .map_err(error::DecapodError::IoError)?;
     Ok(path)
 }
 

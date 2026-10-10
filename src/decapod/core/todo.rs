@@ -1,6 +1,9 @@
 use crate::cli::CloudRuntimeConfig;
 use crate::core::backend::{BackendRoute, BackendSelection, StorageContext};
 use crate::core::broker::DbBroker;
+use crate::core::cloud_todo_operation::{
+    self, Diagnostic as CloudTodoDiagnostic, Journal as CloudTodoJournal, OperationRecord, Outcome,
+};
 use crate::core::dactyl_todo::DactylTodoStore;
 use crate::core::db::{Connection, OptionalExtension, Result as SqlResult, params, types::ToSql};
 use crate::core::error;
@@ -60,12 +63,17 @@ pub struct TodoCli {
     /// Output format for this command group.
     #[clap(long, global = true, value_enum, default_value = "text")]
     format: OutputFormat,
+    /// Resume a cloud add using the token returned by its original attempt.
+    #[clap(long, global = true)]
+    operation_id: Option<String>,
     #[clap(subcommand)]
     command: TodoCommand,
 }
 
 #[derive(Subcommand, Debug)]
 pub enum TodoCommand {
+    /// Inspect non-secret machine-local cloud operation receipts after interruption.
+    Operations,
     /// Add a new task.
     Add {
         /// Task title (positional argument)
@@ -6235,7 +6243,17 @@ fn cloud_runtime(
 }
 
 fn cloud_error(error: anyhow::Error) -> error::DecapodError {
-    error::DecapodError::ValidationError(format!("Dactyl cloud todo operation failed: {error}"))
+    let error = match error.downcast::<error::DecapodError>() {
+        Ok(error) => return error,
+        Err(error) => error,
+    };
+    match error.downcast::<dactyl_db::DactylError>() {
+        Ok(error) => error::DecapodError::DactylError(error),
+        Err(_) => error::DecapodError::ValidationError(
+            "Dactyl cloud todo operation failed (unclassified storage failure; no local fallback)"
+                .into(),
+        ),
+    }
 }
 
 pub trait CloudTodoStoreFactory {
@@ -6262,9 +6280,27 @@ impl CloudTodoStoreFactory for DactylCloudTodoStoreFactory {
                 PropodusClientError::Authentication(diagnostic) => {
                     error::DecapodError::CloudAuth(diagnostic)
                 }
-                other => error::DecapodError::ValidationError(format!(
-                    "Propodus cloud authentication preflight failed: {other}. Cloud mode never falls back to local SQLite."
-                )),
+                other => {
+                    use dactyl_db::AdapterErrorKind as K;
+                    let kind = match other {
+                        PropodusClientError::Transport(_) => K::Transport,
+                        PropodusClientError::Conflict(_) => K::Conflict,
+                        PropodusClientError::Service { status: 401, .. } => K::Authentication,
+                        PropodusClientError::Service { status: 403, .. } => K::Authorization,
+                        PropodusClientError::Service { status: 409, .. } => K::Conflict,
+                        PropodusClientError::Service { status: 429, .. } => K::RateLimited,
+                        PropodusClientError::Service {
+                            status: 500..=599, ..
+                        } => K::Unavailable,
+                        PropodusClientError::Decode(_) => K::Protocol,
+                        _ => K::InvalidOperation,
+                    };
+                    error::DecapodError::DactylError(dactyl_db::DactylError::Adapter {
+                        kind,
+                        code: None,
+                        message: "Cloud authentication preflight failed; no local fallback".into(),
+                    })
+                }
             })?;
         let context = StorageContext::from_route(route, Some(&credential.token))?
             .with_cloud_datastore(datastore)?;
@@ -6323,24 +6359,114 @@ fn cloud_status_matches(requested: &str, actual: &str) -> bool {
     }
 }
 
+fn cloud_add_request(command: &TodoCommand) -> Option<JsonValue> {
+    let TodoCommand::Add {
+        title,
+        description,
+        priority,
+        tags,
+        owner,
+        due,
+        r#ref,
+        scope,
+        dir,
+        depends_on,
+        blocks,
+        parent,
+        one_shot,
+    } = command
+    else {
+        return None;
+    };
+    Some(serde_json::json!({
+        "title": title, "description": description, "priority": priority,
+        "tags": tags, "owner": owner, "due": due, "ref": r#ref,
+        "scope": scope, "dir": dir, "depends_on": depends_on, "blocks": blocks,
+        "parent": parent, "one_shot": one_shot
+    }))
+}
+
 fn run_cloud_todo_command_with_factory<F: CloudTodoStoreFactory>(
     root: &Path,
     command: &TodoCommand,
     config: &CloudRuntimeConfig,
     identity: &RepositoryIdentity,
     factory: &F,
+    operation_id: Option<&str>,
+    journal: Option<&CloudTodoJournal>,
 ) -> Result<JsonValue, error::DecapodError> {
-    let store = factory.build(config, identity)?;
+    let mut operation = cloud_add_request(command)
+        .map(|payload| {
+            OperationRecord::new(
+                cloud_todo_operation::fingerprint(
+                    &config.api_url,
+                    &identity.canonical_name,
+                    &payload,
+                ),
+                operation_id,
+            )
+        })
+        .transpose()?;
+    if operation.is_some() && journal.is_none() {
+        return Err(error::DecapodError::ValidationError("Cloud add requires machine-local operation metadata; no repository fallback is permitted".into()));
+    }
+    if let (Some(operation), Some(journal)) = (&mut operation, journal) {
+        *operation = journal.prepare(operation)?;
+    }
+    let store = match factory.build(config, identity) {
+        Ok(store) => store,
+        Err(error) => {
+            if let (Some(operation), Some(journal)) = (&operation, journal) {
+                let kind = cloud_todo_operation::failure_kind(&error);
+                let _ = journal.finish(operation, Outcome::BlockedBeforeSubmit, Some(kind));
+                return Err(error::DecapodError::CloudTodo(CloudTodoDiagnostic::new(
+                    operation,
+                    Outcome::BlockedBeforeSubmit,
+                    kind,
+                )));
+            }
+            return Err(error);
+        }
+    };
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
         .map_err(|error| error::DecapodError::ValidationError(error.to_string()))?;
-    runtime.block_on(run_cloud_todo_command_with_store_async(
+    // Persist uncertainty before dispatch, so interruption cannot masquerade as
+    // a known rollback. No local receipt is used to authorize or skip a retry.
+    if let (Some(operation), Some(journal)) = (&mut operation, journal) {
+        journal.finish(operation, Outcome::OutcomeUnknown, None)?;
+        // The journal records possible dispatch before entering the adapter.
+        // Keep that uncertainty even if this attempt later fails a read: a
+        // concurrent attempt or an earlier interrupted one may have committed.
+        if operation.status != Outcome::Succeeded {
+            operation.status = Outcome::OutcomeUnknown;
+        }
+    }
+    let result = runtime.block_on(run_cloud_todo_command_with_store_async(
         root,
         command,
         store.as_ref(),
         &identity.canonical_name,
-    ))
+        operation.as_ref(),
+    ));
+    if let (Some(operation), Some(journal)) = (&operation, journal) {
+        match &result {
+            Ok(_) => {
+                if journal.finish(operation, Outcome::Succeeded, None).is_err() {
+                    eprintln!(
+                        "warn: cloud todo committed; local operation receipt could not be updated. Retain operation token {} for safe reconciliation.",
+                        operation.operation_id
+                    );
+                }
+            }
+            Err(error::DecapodError::CloudTodo(diagnostic)) => {
+                let _ = journal.finish(operation, diagnostic.status, Some(diagnostic.failure_kind));
+            }
+            Err(_) => {}
+        }
+    }
+    result
 }
 
 async fn run_cloud_todo_command_with_store_async(
@@ -6348,6 +6474,7 @@ async fn run_cloud_todo_command_with_store_async(
     command: &TodoCommand,
     store: &dyn TodoStore,
     repo_id: &str,
+    operation: Option<&OperationRecord>,
 ) -> Result<JsonValue, error::DecapodError> {
     let actor = env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
     let result = match command {
@@ -6388,7 +6515,7 @@ async fn run_cloud_todo_command_with_store_async(
             dir,
             ..
         } => {
-            let task = cloud_task_from_command(
+            let mut task = cloud_task_from_command(
                 title,
                 description,
                 priority,
@@ -6397,14 +6524,26 @@ async fn run_cloud_todo_command_with_store_async(
                 dir.as_ref(),
                 repo_id,
             );
+            let intent = if let Some(operation) = operation {
+                task.id = operation.task_id.clone();
+                task.hash = task_hash_from_id(&task.id);
+                operation.intent()
+            } else {
+                format!("intent:todo.add:{}", crate::core::ulid::new_ulid())
+            };
             let task = store
-                .add_task(
-                    task,
-                    actor.clone(),
-                    format!("intent:todo.add:{}", crate::core::ulid::new_ulid()),
-                )
+                .add_task(task, actor.clone(), intent)
                 .await
-                .map_err(cloud_error)?;
+                .map_err(|error| {
+                    if let Some(operation) = operation {
+                        let (outcome, kind) = cloud_todo_operation::anyhow_failure(&error);
+                        error::DecapodError::CloudTodo(CloudTodoDiagnostic::new(
+                            operation, outcome, kind,
+                        ))
+                    } else {
+                        cloud_error(error)
+                    }
+                })?;
             serde_json::json!({
                 "ts": now_iso(),
                 "cmd": "todo.add",
@@ -6412,6 +6551,8 @@ async fn run_cloud_todo_command_with_store_async(
                 "root": root.to_string_lossy(),
                 "backend": "dactyl",
                 "id": task.id,
+                "operation_id": operation.map(|operation| operation.operation_id.as_str()),
+                "operation_status": "succeeded",
                 "item": task,
             })
         }
@@ -6493,6 +6634,7 @@ pub fn run_cloud_todo_command_with_store(
         command,
         store,
         crate::core::repo_identity::DOGFOOD_REPOSITORY,
+        None,
     ))
 }
 
@@ -6522,15 +6664,47 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
     factory: &F,
 ) -> Result<(), error::DecapodError> {
     let root = &store.root;
+    if matches!(cli.command, TodoCommand::Operations) {
+        let records = CloudTodoJournal::machine()?.list()?;
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&serde_json::json!({
+                "schema_version": "decapod.cloud.todo-operations.v1", "operations": records
+            }))
+            .expect("operation records serialize")
+        );
+        return Ok(());
+    }
+    if cli.operation_id.is_some() && !matches!(cli.command, TodoCommand::Add { .. }) {
+        return Err(error::DecapodError::ValidationError(
+            "--operation-id is only supported for cloud todo add".into(),
+        ));
+    }
     if let Some((cloud, identity)) = cloud_runtime(root)? {
+        let journal = matches!(cli.command, TodoCommand::Add { .. })
+            .then(CloudTodoJournal::machine)
+            .transpose()?;
         let out = match run_cloud_todo_command_with_factory(
             root,
             &cli.command,
             &cloud,
             &identity,
             factory,
+            cli.operation_id.as_deref(),
+            journal.as_ref(),
         ) {
             Ok(out) => out,
+            Err(error @ error::DecapodError::CloudTodo(_)) => {
+                if let error::DecapodError::CloudTodo(diagnostic) = &error
+                    && (matches!(cli.format, OutputFormat::Json) || !std::io::stdin().is_terminal())
+                {
+                    println!(
+                        "{}",
+                        serde_json::to_string_pretty(diagnostic).expect("diagnostic serializes")
+                    );
+                }
+                return Err(error);
+            }
             Err(error @ error::DecapodError::CloudAuth(_)) => {
                 if (matches!(cli.format, OutputFormat::Json)
                     || !std::io::stdin().is_terminal()
@@ -6581,7 +6755,13 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
         }
         return Ok(());
     }
+    if cli.operation_id.is_some() {
+        return Err(error::DecapodError::ValidationError(
+            "--operation-id requires the cloud backend; no local todo state was changed".into(),
+        ));
+    }
     let out = match &cli.command {
+        TodoCommand::Operations => unreachable!("handled without a task store"),
         TodoCommand::Add { .. } => add_task(root, &cli.command)?,
         TodoCommand::List {
             status,
@@ -7146,6 +7326,15 @@ fn mark_todo_claimed_pending_proof(
 pub fn is_heartbeat_command(cli: &TodoCli) -> bool {
     matches!(cli.command, TodoCommand::Heartbeat { .. })
 }
+/// Machine-local operation inspection must not initialize or repair task state.
+pub fn is_operation_inspection(cli: &TodoCli) -> bool {
+    matches!(cli.command, TodoCommand::Operations)
+}
+
 #[cfg(test)]
 #[path = "../../../tests/unit/core/todo_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "../../../tests/unit/core/cloud_todo_retry_tests.rs"]
+mod cloud_retry_tests;

@@ -317,11 +317,51 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c7bdbebfb346baefe0c9c0d59001b8fe58ae3ddc2b6977be0c6fde625a5319b1`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (119 files), `tests/` (4 files)
+- Repository signal fingerprint: `34647bb8f923292a6788fce97bf591b7da81244f2daed9693986e988f9457e5b`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (124 files), `tests/` (161 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
 ## Target approval correction (#1361)
 
 `govern policy eval --command <action> --path <target>` prints a matching approval command. `approve --id <fingerprint> --expires-in-seconds <seconds>` defaults to 900 seconds and preserves `Action Approved (ID: <approval-id>)` on its own line, followed by `ExpiresAt`. `revoke --id <approval-id>` removes that grant. Invalid, expired, or revoked grants do not authorize actions; legacy grants without expiry remain valid until revoked.
+
+## Source isolation inventory
+
+`workspace status`, `workspace ensure` and governance artifact inventory expose
+optional `root_isolation` metadata. The strategy is
+`committed_base_only_preserve_source`, with the source root and deterministic
+path/status/ownership records. Git status paths are parsed with NUL delimiters,
+including both sides of a rename; ignored directory trees are represented at
+their boundary rather than recursively enumerating build outputs or other
+workspaces. Metadata describes preservation, never authorization to import
+uncommitted source content.
+
+An explicit task branch has a stable destination independent of other tasks
+claimed by the same coordinating agent. Existing targets are reused only when
+Git registration and branch identity match. Setup refuses unowned destinations,
+symlinked workspace parents and unavailable committed bases with a concrete
+preserve-and-resolve diagnostic. Protected-root implementation remains blocked;
+only creation of the separate governed workspace is permitted.
+
+## Current publication review and remote proof
+
+Workspace publication reports `remote_verified`, `pr_verified` and non-blocking
+`warnings` separately. A pushed branch alone is not proof of an open, correctly
+targeted PR. The publisher verifies the exact push destination's immutable head
+and base, the complete GitHub PR file list, all four governance artifacts,
+material living specs and unchanged remote state before returning PR success.
+Failure after a confirmed push is `PUBLICATION_INCOMPLETE`; an ambiguous push
+acknowledgment is an unknown outcome. In either case reconcile the target and
+retry idempotently, without force-push or destructive rollback.
+
+`govern plan review-spec` records agent-authored contract review for INTERFACES,
+ARCHITECTURE and SECURITY against current code and authored-spec hashes. The
+dispositions are updated, unchanged-with-reason and requires-decision. Ordinary
+reviews cannot silently approve pending decisions. The separate
+`govern plan resolve-spec-review` operation records an explicit human decision
+reference and rationale under the existing declared plan-approval authority; it
+does not authenticate a human or prove semantic correctness automatically.
+Changed code or spec material invalidates the previous review. Validation epochs
+bind review/plan, claims, specs, entrypoints and managed Dockerfile while
+excluding the receipt itself, permitting a proof-only receipt commit.

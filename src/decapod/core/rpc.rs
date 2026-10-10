@@ -115,6 +115,8 @@ pub struct WorkspaceStatusParams {}
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct WorkspaceStatusResult {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub root_isolation: Option<crate::core::workspace::RootIsolation>,
     pub git_branch: String,
     pub git_is_protected: bool,
     pub in_container: bool,
@@ -128,6 +130,8 @@ pub struct WorkspaceEnsureParams {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct WorkspaceEnsureResult {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub root_isolation: Option<crate::core::workspace::RootIsolation>,
     pub branch: String,
     pub worktree_path: String,
 }
@@ -144,6 +148,12 @@ pub struct WorkspacePublishResult {
     pub commit_hash: String,
     pub remote_url: String,
     pub pr_url: Option<String>,
+    #[serde(default)]
+    pub remote_verified: bool,
+    #[serde(default)]
+    pub pr_verified: bool,
+    #[serde(default)]
+    pub warnings: Vec<String>,
 }
 
 // Context Subsystem

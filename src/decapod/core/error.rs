@@ -107,6 +107,8 @@ pub enum DecapodError {
     SessionError(String),
     /// A safe, actionable cloud authentication handoff result.
     CloudAuth(CloudAuthDiagnostic),
+    /// Non-secret cloud mutation outcome and exact retry identity.
+    CloudTodo(crate::core::cloud_todo_operation::Diagnostic),
 }
 
 impl fmt::Display for DecapodError {
@@ -142,6 +144,7 @@ impl fmt::Display for DecapodError {
             Self::Config(s) => write!(f, "Configuration error: {s}"),
             Self::ContextPackError(s) => write!(f, "Context pack error: {s}"),
             Self::SessionError(s) => write!(f, "Session error: {s}"),
+            Self::CloudTodo(diagnostic) => write!(f, "{diagnostic}"),
             Self::CloudAuth(diagnostic) => write!(
                 f,
                 "Cloud authentication {:?}: {}; next action: {}",
@@ -255,6 +258,7 @@ fn classify_dactyl_error(err: &dactyl_db::DactylError) -> StorageFailureKind {
 fn classify_storage_error(err: &crate::core::db::Error) -> StorageFailureKind {
     match err {
         crate::core::db::Error::Dactyl(error) => classify_dactyl_error(error),
+        crate::core::db::Error::Io(_) => StorageFailureKind::Io,
         crate::core::db::Error::QueryReturnedNoRows => StorageFailureKind::Query,
         crate::core::db::Error::FromSqlConversionFailure(_, _, _)
         | crate::core::db::Error::ToSqlConversionFailure(_)

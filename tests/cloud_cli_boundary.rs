@@ -159,6 +159,11 @@ fn cloud_project() -> TempDir {
 
 #[test]
 fn production_cli_dispatch_uses_remote_store_and_never_local_sqlite() {
+    let machine = tempfile::tempdir().unwrap();
+    // This integration binary has one test; set before any worker threads.
+    unsafe {
+        std::env::set_var("XDG_CONFIG_HOME", machine.path());
+    }
     let project = cloud_project();
     let data_root = project.path().join(".decapod/data");
     let todo_db = data_root.join("decapod.db");

@@ -7,7 +7,6 @@ use crate::core::todo;
 use clap::{Parser, Subcommand};
 use serde::{Deserialize, Serialize};
 use std::env;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 fn cron_db_path(root: &Path) -> PathBuf {
@@ -15,7 +14,7 @@ fn cron_db_path(root: &Path) -> PathBuf {
 }
 
 pub fn initialize_cron_db(root: &Path) -> Result<(), error::DecapodError> {
-    fs::create_dir_all(root).map_err(error::DecapodError::IoError)?;
+    crate::core::fs_permissions::ensure_storage_dir(root).map_err(error::DecapodError::IoError)?;
     let broker = DbBroker::new(root);
     let db_path = cron_db_path(root);
     broker.with_conn(&db_path, "decapod", None, "cron.init", |conn| {

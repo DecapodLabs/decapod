@@ -232,3 +232,122 @@ fn specs_refresh_does_not_depend_on_the_local_database() {
         String::from_utf8_lossy(&refresh.stderr)
     );
 }
+
+#[test]
+fn dirty_protected_root_cli_ensure_creates_isolation_without_moving_user_files() {
+    let (_tmp, root) = setup_protected_repo("master");
+    let before = snapshot_specs(&root);
+    let config_before = fs::read(root.join(".decapod/config.toml")).unwrap();
+    let add = run_decapod(
+        &root,
+        &[
+            "todo",
+            "add",
+            "Isolate unrelated protected checkout files",
+            "--scope",
+            "workspace",
+        ],
+        &[("DECAPOD_AGENT_ID", "isolation-test")],
+    );
+    assert!(
+        add.status.success(),
+        "{}",
+        String::from_utf8_lossy(&add.stderr)
+    );
+    let added: serde_json::Value = serde_json::from_slice(&add.stdout).unwrap();
+    let id = added["id"].as_str().unwrap();
+    let claim = run_decapod(
+        &root,
+        &["todo", "claim", "--id", id],
+        &[("DECAPOD_AGENT_ID", "isolation-test")],
+    );
+    assert!(
+        claim.status.success(),
+        "{}",
+        String::from_utf8_lossy(&claim.stderr)
+    );
+    let branch = format!("agent/isolation-test/{id}");
+    let ensure = run_decapod(
+        &root,
+        &["workspace", "ensure", "--branch", &branch],
+        &[("DECAPOD_AGENT_ID", "isolation-test")],
+    );
+    assert!(
+        ensure.status.success(),
+        "stdout={} stderr={}",
+        String::from_utf8_lossy(&ensure.stdout),
+        String::from_utf8_lossy(&ensure.stderr)
+    );
+    let result: serde_json::Value = serde_json::from_slice(&ensure.stdout).unwrap();
+    assert_eq!(result["status"], "ok");
+    assert_eq!(
+        result["root_isolation"]["strategy"],
+        "committed_base_only_preserve_source"
+    );
+    assert!(
+        result["root_isolation"]["files"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|file| file["path"] == "NOTES.md" && file["class"] == "user_authored")
+    );
+    let workspace = PathBuf::from(result["worktree_path"].as_str().unwrap());
+    assert!(workspace.is_dir());
+    assert!(!workspace.join("NOTES.md").exists());
+    assert_root_untouched(&root, &before, "pre-existing unrelated root dirt\n");
+    assert_eq!(
+        fs::read(root.join(".decapod/config.toml")).unwrap(),
+        config_before
+    );
+    let second_add = run_decapod(
+        &root,
+        &[
+            "todo",
+            "add",
+            "Independent concurrent source isolation",
+            "--scope",
+            "workspace",
+        ],
+        &[("DECAPOD_AGENT_ID", "isolation-test")],
+    );
+    assert!(second_add.status.success());
+    let second_added: serde_json::Value = serde_json::from_slice(&second_add.stdout).unwrap();
+    let second_id = second_added["id"].as_str().unwrap();
+    assert_ne!(second_id, id);
+    let second_claim = run_decapod(
+        &root,
+        &["todo", "claim", "--id", second_id],
+        &[("DECAPOD_AGENT_ID", "isolation-test")],
+    );
+    assert!(
+        second_claim.status.success(),
+        "{}",
+        String::from_utf8_lossy(&second_claim.stderr)
+    );
+    let second_branch = format!("agent/isolation-test/{second_id}");
+    let second_ensure = run_decapod(
+        &root,
+        &["workspace", "ensure", "--branch", &second_branch],
+        &[("DECAPOD_AGENT_ID", "isolation-test")],
+    );
+    assert!(
+        second_ensure.status.success(),
+        "{}",
+        String::from_utf8_lossy(&second_ensure.stderr)
+    );
+    let second_result: serde_json::Value = serde_json::from_slice(&second_ensure.stdout).unwrap();
+    assert_ne!(second_result["worktree_path"], result["worktree_path"]);
+    let repeated = run_decapod(
+        &root,
+        &["workspace", "ensure", "--branch", &branch],
+        &[("DECAPOD_AGENT_ID", "isolation-test")],
+    );
+    assert!(
+        repeated.status.success(),
+        "{}",
+        String::from_utf8_lossy(&repeated.stderr)
+    );
+    let repeated: serde_json::Value = serde_json::from_slice(&repeated.stdout).unwrap();
+    assert_eq!(repeated["worktree_path"], result["worktree_path"]);
+    assert_root_untouched(&root, &before, "pre-existing unrelated root dirt\n");
+}
