@@ -112,6 +112,15 @@
         "trajectory:dactyl-0111-governance/local-rust-suites",
         "trajectory:dactyl-0111-governance/repository-validation"
       ]
+    },
+    {
+      "id": "remote-custody-binding",
+      "summary": "Bind branch custody and workspace coordination todos without losing the approved intent or measured test evidence; local Docker proof remains unavailable.",
+      "input_digest": "sha256:78cea3c3d6645c209278dd75b3cce1a09b34421001eb434dc34bcf33f4a4bead",
+      "proof_refs": [
+        "trajectory:dactyl-0111-governance/local-rust-suites",
+        "trajectory:dactyl-0111-governance/repository-validation"
+      ]
     }
   ],
   "intents": {
@@ -180,17 +189,18 @@
       ],
       "title": "Dactyl 0.11.1 and compact PR governance",
       "todo_ids": [
-        "bugs_01m4kyt3rfha5w6f"
+        "bugs_01m4kyt3rfha5w6f",
+        "bugs_01m4kyeckvq8r1pv"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791674515Z"
+      "updated_at": "1791675311Z"
     },
     "trajectory": {
       "active_boundaries": [
         "No merge, crate publish, tag, credential changes, paid resources, or claims of unavailable hosted/container proof"
       ],
-      "artifact_hash": "sha256:84d244a558b7b6e181646b529de86f85f1c12c96ce031ef3f3c069f92ef1153b",
+      "artifact_hash": "sha256:874740d8f53fd50492d31436bac79e87fe634bf3f036819d3a7cbb76e98959aa",
       "checks": [
         {
           "name": "clippy-all-targets",
@@ -245,10 +255,24 @@
             "intent_id": "intent:dactyl-0111-governance",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:dactyl-0111-governance",
+            "event_id": "event:6",
+            "intent_id": "intent:dactyl-0111-governance",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
+          },
+          {
+            "detail": "trajectory:dactyl-0111-governance",
+            "event_id": "event:7",
+            "intent_id": "intent:dactyl-0111-governance",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "dactyl-0111-governance": {
@@ -290,6 +314,35 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Branch custody task is bugs_01m4kyeckvq8r1pv; active workspace-scoped coordination/ownership task is bugs_01m4kyt3rfha5w6f. Both are linked in the governed plan; the prompt and approved scope remain unchanged.",
+                  "GitHub connector re-creates commit identities. The genuine final validation receipt binds fetched remote adoption ancestor cbdbfd8e99ef7e5424fb3989cc626fca762f2164. Local source tests apply to the identical authored source tree; pre-adoption evidence is preserved in remote Git."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "Dactyl recovery and dependency policy; issues 1141, 1165, 1166; normalized governance lifecycle, docs, tests, and living specs"
+                ],
+                "sequence": 6,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "After aligning remote ancestry, the dirty governance binding update passed all non-container validator gates. Container custody remained unavailable locally; the next clean committed evaluation will report its actual result without skip flags."
+                ],
+                "proof_refs": [
+                  "repository-validation"
+                ],
+                "scope": [
+                  "Dactyl recovery and dependency policy; issues 1141, 1165, 1166; normalized governance lifecycle, docs, tests, and living specs"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -300,7 +353,10 @@
       ],
       "destination": "Draft pull request on DecapodLabs/decapod",
       "evidence": [
+        "After aligning remote ancestry, the dirty governance binding update passed all non-container validator gates. Container custody remained unavailable locally; the next clean committed evaluation will report its actual result without skip flags.",
+        "Branch custody task is bugs_01m4kyeckvq8r1pv; active workspace-scoped coordination/ownership task is bugs_01m4kyt3rfha5w6f. Both are linked in the governed plan; the prompt and approved scope remain unchanged.",
         "Exact combined source: 717 tests passed across 20 suites; five pre-existing ignored tests are not passes. Includes real shared-mode/ACL recovery, migration/concurrency/lifecycle/checkpoints, all three issue regressions, and workunit paths. Clippy and rustfmt passed. Local Docker and authorized hosted service fixtures are unavailable.",
+        "GitHub connector re-creates commit identities. The genuine final validation receipt binds fetched remote adoption ancestor cbdbfd8e99ef7e5424fb3989cc626fca762f2164. Local source tests apply to the identical authored source tree; pre-adoption evidence is preserved in remote Git.",
         "Pre-adoption current-source validate: 199 gates passed, four failed. One is unavailable container workspace proof; three require the adoption bundle to be committed (dirty-file count and publication/spec participation). No successful validation receipt was produced. Re-run after the checkpointed adoption commit."
       ],
       "inspected_files": [],
@@ -315,7 +371,7 @@
       "run_id": "dactyl-0111-governance",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m4kyt3rfha5w6f",
+      "task_id": "bugs_01m4kyeckvq8r1pv",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
