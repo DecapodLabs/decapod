@@ -5,7 +5,10 @@
   "task_id": "bugs_01m4jdaambn944vm",
   "original_intent": "Fix five critical issues in one PR with verified GitHub Actions",
   "derived_intent": "Measure the existing twenty-client broker contention test with bounded diagnostic waits and a finite target-specific aggregate budget",
-  "current_phase": "verification",
+  "current_phase": "validation",
+  "next_transitions": [
+    "publish"
+  ],
   "active_boundaries": [
     "Keep twenty concurrent clients, existing retries, all assertions and production timeouts unchanged"
   ],
@@ -13,8 +16,13 @@
     "PR1383 broker regression proof"
   ],
   "inspected_files": [],
-  "modified_files": [],
-  "declared_commands": [],
+  "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json"
+  ],
+  "declared_commands": [
+    "decapod validate"
+  ],
   "tool_calls": [],
   "checks": [
     {
@@ -24,6 +32,10 @@
     {
       "name": "bounded_contention_harness",
       "status": "partial"
+    },
+    {
+      "name": "decapod validate",
+      "status": "passed"
     },
     {
       "name": "focused_strict_clippy",
@@ -44,7 +56,8 @@
   ],
   "evidence": [
     "At published head c897d74523ac640695cbcc8f500aa59b235d2732, Actions job114266925260 independently passed the real-socket committed claim preparation test in18.04seconds, including competing mutation and same-request retry. The aggregate group_broker target then exhausted its300second budget in the pre-existing twenty-client contention test. Other GitHub Actions groups passed. Local direct bind remains permission-denied even after the normal execution escalation request; an independent escalated socket probe failed in the environment launcher before execution.",
-    "Strict all-feature group_broker Clippy, formatting and diff checks passed. The focused contention harness compiled and completed bounded setup locally in7.13seconds, but real Unix socket contention remains capability-unavailable. Independent review confirms unchanged twenty-client concurrency, request identities, retry policy and assertions, bounded owned-child cleanup, joining all clients before assertions, and Unix/non-Unix helper separation."
+    "Strict all-feature group_broker Clippy, formatting and diff checks passed. The focused contention harness compiled and completed bounded setup locally in7.13seconds, but real Unix socket contention remains capability-unavailable. Independent review confirms unchanged twenty-client concurrency, request identities, retry policy and assertions, bounded owned-child cleanup, joining all clients before assertions, and Unix/non-Unix helper separation.",
+    "validation epoch ve_be0d9e3755be4c2f completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -55,7 +68,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:a1cc4bf9f4995130425b049da841d868f274977df6b1b0243db7cbfbb10fe37b",
+  "artifact_hash": "sha256:58141d2a42abd5507335a76160d732a2cf5f06546480db0d3b524e1ac760e77e",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -104,6 +117,13 @@
         "intent_id": "intent:five-critical-contention-ci-20261010",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:five-critical-contention-ci-20261010"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
+        "intent_id": "intent:five-critical-contention-ci-20261010",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:five-critical-contention-ci-20261010"
       }
     ],
     "trajectories": {
@@ -145,12 +165,30 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "PR1383 broker regression proof"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_be0d9e3755be4c2f completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:6"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 5
+    "next_sequence": 6
   }
 }
