@@ -146,6 +146,7 @@ fn cloud_config_binds_client_to_verified_repository_identity() {
     };
     let runtime = CloudRuntimeConfig {
         provider: "vercel".to_string(),
+        datastore: "neon".to_string(),
         api_url: "https://propodus.example.test".to_string(),
     };
 

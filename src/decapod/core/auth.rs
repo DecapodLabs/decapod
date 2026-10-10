@@ -170,13 +170,32 @@ pub enum CredentialSource {
     MachineFile,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct CloudCredential {
     pub token: String,
     pub source: CredentialSource,
     pub refresh_token: Option<String>,
     pub session_id: Option<String>,
     pub expires_at: Option<String>,
+}
+
+impl std::fmt::Debug for CloudCredential {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("CloudCredential")
+            .field("token", &"[REDACTED]")
+            .field("source", &self.source)
+            .field(
+                "refresh_token",
+                &self.refresh_token.as_ref().map(|_| "[REDACTED]"),
+            )
+            .field(
+                "session_id",
+                &self.session_id.as_ref().map(|_| "[REDACTED]"),
+            )
+            .field("expires_at", &self.expires_at)
+            .finish()
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -239,8 +258,7 @@ pub fn resolve_cloud_credential(
     ))
 }
 
-fn read_machine_session_record() -> Result<Option<MachineSessionRecord>, DecapodError> {
-    let path = machine_session_token_path()?;
+fn read_machine_session_record(path: &Path) -> Result<Option<MachineSessionRecord>, DecapodError> {
     if !path.exists() {
         return Ok(None);
     }
@@ -256,16 +274,65 @@ fn read_machine_session_record() -> Result<Option<MachineSessionRecord>, Decapod
     Ok(Some(record))
 }
 
+/// Machine-local credential storage. Supabase endpoints are intentionally
+/// isolated from each other and from the legacy Neon machine session.
+#[derive(Clone)]
+pub struct CloudSessionStore {
+    path: PathBuf,
+}
+
+impl CloudSessionStore {
+    pub fn legacy() -> Result<Self, DecapodError> {
+        Ok(Self {
+            path: machine_session_token_path()?,
+        })
+    }
+
+    pub fn for_service(endpoint: &str) -> Result<Self, DecapodError> {
+        Self::for_service_in(&machine_data_dir()?, endpoint)
+    }
+
+    fn for_service_in(directory: &Path, endpoint: &str) -> Result<Self, DecapodError> {
+        use sha2::{Digest, Sha256};
+        let key = format!(
+            "{:x}",
+            Sha256::digest(endpoint.trim_end_matches('/').as_bytes())
+        );
+        Ok(Self {
+            path: directory
+                .join("services")
+                .join(key)
+                .join("session_token.json"),
+        })
+    }
+
+    pub fn load_credential(&self, explicit: Option<&str>) -> Result<CloudCredential, DecapodError> {
+        let environment = env::var(CLOUD_ACCESS_TOKEN_ENV).ok();
+        if explicit.is_some() || environment.is_some() {
+            return resolve_cloud_credential(explicit, environment.as_deref(), None);
+        }
+        self.load_machine_session()?.ok_or_else(|| {
+            DecapodError::SessionError(
+                "no cloud session is configured for this service; complete setup with `decapod init --backend cloud`, then retry".to_string(),
+            )
+        })
+    }
+
+    pub fn load_machine_session(&self) -> Result<Option<CloudCredential>, DecapodError> {
+        load_machine_session_at(&self.path)
+    }
+
+    pub fn store_machine_session(&self, session: &CloudSession) -> Result<(), DecapodError> {
+        store_machine_session_at(session, &self.path)
+    }
+}
+
 pub fn load_cloud_credential(explicit: Option<&str>) -> Result<CloudCredential, DecapodError> {
     let environment = env::var(CLOUD_ACCESS_TOKEN_ENV).ok();
     if explicit.is_some() || environment.is_some() {
         return resolve_cloud_credential(explicit, environment.as_deref(), None);
     }
-    load_machine_session()?.ok_or_else(|| {
-        DecapodError::SessionError(
-            "no cloud session is configured; complete setup with `decapod init --backend cloud`, then retry".to_string(),
-        )
-    })
+    CloudSessionStore::legacy()?.load_credential(None)
 }
 
 pub fn perform_cloud_auth(_target_dir: &Path) -> Result<(), DecapodError> {
@@ -275,7 +342,11 @@ pub fn perform_cloud_auth(_target_dir: &Path) -> Result<(), DecapodError> {
 }
 
 pub fn load_machine_session() -> Result<Option<CloudCredential>, DecapodError> {
-    let Some(record) = read_machine_session_record()? else {
+    CloudSessionStore::legacy()?.load_machine_session()
+}
+
+fn load_machine_session_at(path: &Path) -> Result<Option<CloudCredential>, DecapodError> {
+    let Some(record) = read_machine_session_record(path)? else {
         return Ok(None);
     };
     Ok(Some(CloudCredential {
@@ -288,8 +359,22 @@ pub fn load_machine_session() -> Result<Option<CloudCredential>, DecapodError> {
 }
 
 pub fn store_machine_session(session: &CloudSession) -> Result<(), DecapodError> {
+    CloudSessionStore::legacy()?.store_machine_session(session)
+}
+
+fn create_private_session_file(path: &Path) -> Result<fs::File, DecapodError> {
+    let mut options = fs::OpenOptions::new();
+    options.write(true).create_new(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.mode(0o600);
+    }
+    options.open(path).map_err(DecapodError::IoError)
+}
+
+fn store_machine_session_at(session: &CloudSession, path: &Path) -> Result<(), DecapodError> {
     session.validate()?;
-    let path = machine_session_token_path()?;
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent).map_err(DecapodError::IoError)?;
     }
@@ -313,15 +398,15 @@ pub fn store_machine_session(session: &CloudSession) -> Result<(), DecapodError>
         ".session_token.json.tmp-{}-{nonce}",
         std::process::id()
     ));
+    // The mode applies at creation, before any credential byte is written.
+    // A colliding temporary path is never overwritten or removed.
+    let temporary = create_private_session_file(&temp_path)?;
     let write_result = (|| {
-        fs::write(&temp_path, bytes).map_err(DecapodError::IoError)?;
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            fs::set_permissions(&temp_path, fs::Permissions::from_mode(0o600))
-                .map_err(DecapodError::IoError)?;
-        }
-        fs::rename(&temp_path, &path).map_err(DecapodError::IoError)
+        use std::io::Write;
+        let mut temporary = temporary;
+        temporary.write_all(&bytes).map_err(DecapodError::IoError)?;
+        drop(temporary);
+        fs::rename(&temp_path, path).map_err(DecapodError::IoError)
     })();
     if write_result.is_err() {
         let _ = fs::remove_file(&temp_path);

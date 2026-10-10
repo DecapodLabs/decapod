@@ -85,15 +85,17 @@
 
             src = self;
 
-            # Cargo.lock is committed (and ships inside the published crate
-            # tarball), so the vendored dependency closure derives from the
-            # lockfile alone: no cargoHash to recompute on release, here or
-            # for downstream packagers consuming this flake as an input.
-            cargoLock.lockFile = ./Cargo.lock;
+            # Registry dependencies use Cargo.lock checksums. The reviewed
+            # Dactyl preview is a Git pin and also needs its recursive source
+            # hash for reproducible Nix vendoring. Update this hash together
+            # with that pin; a future registry release removes this entry.
+            cargoLock = {
+              lockFile = ./Cargo.lock;
+              outputHashes."dactyl-db-0.10.0" = "sha256-z5QRDmqOcojFjcV77l4aXkJA8ge+HMnO9gsFI1LwtgU=";
+            };
 
-            # rusqlite builds its bundled SQLite (see Cargo.toml features),
-            # so no external C libraries are needed beyond the stdenv
-            # toolchain.
+            # Dactyl loads the host SQLite runtime dynamically; there is no
+            # bundled SQLite or direct database-driver dependency here.
 
             # The test suite is exercised by the repository's primary CI
             # (Bazel + cargo). This derivation is the packaging proof:

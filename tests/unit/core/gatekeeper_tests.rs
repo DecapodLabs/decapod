@@ -466,3 +466,489 @@ fn repeated_extraction_is_not_assumed_to_be_a_standard_library_operation() {
         );
     }
 }
+
+#[test]
+fn immutable_environment_captures_have_bounded_provenance() {
+    for expression in [
+        r#"let credential = ::std::env::var("APP_CREDENTIAL").unwrap(); ::std::println!("Password: {credential}");"#,
+        r#"let credential = ::std::env::var("APP_CREDENTIAL")?; ::std::println!("Password: {credential}");"#,
+        r#"let credential = ::std::env::var("APP_CREDENTIAL").unwrap(); let copy = credential; ::std::println!("Password: {copy}");"#,
+        r#"let credential = ::std::env::var("APP_CREDENTIAL").unwrap(); { ::std::println!("Password: {credential}"); }"#,
+        r#"let credential = ::std::env::var("APP_CREDENTIAL").unwrap(); ::std::println!("Password: {value}", value = credential);"#,
+    ] {
+        assert!(
+            !has_secret(&scan_rust_expression(expression)),
+            "missed runtime capture: {expression}"
+        );
+    }
+}
+
+#[test]
+fn capture_shadowing_mutation_and_opaque_execution_remain_findings() {
+    for expression in [
+        r#"let credential = ::std::env::var("APP_CREDENTIAL").unwrap(); let credential = "literal-secret"; ::std::println!("Password: {credential}");"#,
+        r#"let credential = ::std::env::var("APP_CREDENTIAL").unwrap(); { let credential = "literal-secret"; ::std::println!("Password: {credential}"); }"#,
+        r#"let mut credential = ::std::env::var("APP_CREDENTIAL").unwrap(); credential = "literal-secret".into(); ::std::println!("Password: {credential}");"#,
+        r#"let credential = ::std::env::var("APP_CREDENTIAL").unwrap_or("literal-secret".into()); ::std::println!("Password: {credential}");"#,
+        r#"let credential = ::std::env::var("APP_CREDENTIAL").unwrap(); replace!(credential); ::std::println!("Password: {credential}");"#,
+        r#"let credential = ::std::env::var("APP_CREDENTIAL").unwrap(); let callback = |credential| ::std::println!("Password: {credential}");"#,
+        r#"let credential = ::std::env::var("APP_CREDENTIAL").unwrap(); fn inner() { ::std::println!("Password: {credential}"); }"#,
+        r#"let credential = ::std::env::var("APP_CREDENTIAL").unwrap(); match input { Some(credential) => ::std::println!("Password: {credential}"), _ => {} }"#,
+        r#"let credential = ::std::env::var("APP_CREDENTIAL").unwrap(); ::std::println!("Password: {credential}", other = { credential = "literal-secret".into(); 1 });"#,
+        r#"let credential = ::std::env::var("APP_CREDENTIAL").unwrap(); unsafe { mutate_pointer(&credential); } ::std::println!("Password: {credential}");"#,
+        r#"let credential = ::std::env::var("APP_CREDENTIAL").unwrap(); println!("Password: {credential}");"#,
+        r#"let credential = ::std::env::var("APP_CREDENTIAL").unwrap(); ::std::println!("Password: {credential} password=literal-secret");"#,
+    ] {
+        assert!(
+            has_secret(&scan_rust_expression(expression)),
+            "unproven capture was exempted: {expression}"
+        );
+    }
+}
+
+#[test]
+fn included_native_sources_remain_inside_explicit_scans() {
+    let tmp = tempdir().unwrap();
+    std::fs::write(
+        tmp.path().join("source.rs"),
+        r#"fn example() { let template = format!(include_str!("startup.sh"), name = "test"); }"#,
+    )
+    .unwrap();
+    std::fs::write(
+        tmp.path().join("startup.sh"),
+        "echo \"${INPUT}\"; eval $COMMAND\n",
+    )
+    .unwrap();
+    let result = run_gatekeeper(
+        tmp.path(),
+        &[PathBuf::from("source.rs")],
+        0,
+        &GatekeeperConfig::default(),
+    )
+    .unwrap();
+    assert!(
+        result
+            .violations
+            .iter()
+            .any(|finding| finding.kind == ViolationKind::DangerousPattern
+                && finding.path == Path::new("startup.sh"))
+    );
+    std::fs::write(tmp.path().join("startup.sh"), "echo \"${INPUT}\"\n").unwrap();
+    assert!(
+        run_gatekeeper(
+            tmp.path(),
+            &[PathBuf::from("source.rs")],
+            0,
+            &GatekeeperConfig::default()
+        )
+        .unwrap()
+        .passed
+    );
+    std::fs::write(
+        tmp.path().join("startup.sh"),
+        "echo \"${INPUT}\"; password=literal-secret\n",
+    )
+    .unwrap();
+    assert!(has_secret(
+        &run_gatekeeper(
+            tmp.path(),
+            &[PathBuf::from("source.rs")],
+            0,
+            &GatekeeperConfig::default()
+        )
+        .unwrap()
+    ));
+}
+
+#[test]
+fn missing_dynamic_or_escaping_include_dependencies_fail_closed() {
+    for source in [
+        r#"fn example() { include_str!("missing.sh"); }"#,
+        r#"fn example() { include_str!(concat!("startup", ".sh")); }"#,
+        r#"fn example() { include_str!("/tmp/startup.sh"); }"#,
+    ] {
+        let tmp = tempdir().unwrap();
+        std::fs::write(tmp.path().join("source.rs"), source).unwrap();
+        assert!(
+            run_gatekeeper(
+                tmp.path(),
+                &[PathBuf::from("source.rs")],
+                0,
+                &GatekeeperConfig::default()
+            )
+            .is_err(),
+            "unresolved include passed: {source}"
+        );
+    }
+}
+
+#[test]
+fn crate_provenance_requires_real_manifest_edition_and_target() {
+    let tmp = tempdir().unwrap();
+    std::fs::create_dir_all(tmp.path().join("src")).unwrap();
+    std::fs::write(tmp.path().join("src/lib.rs"), "fn sample() {}").unwrap();
+    std::fs::write(tmp.path().join("src/other.rs"), "fn sample() {}").unwrap();
+    for edition in ["2015", "2018", "2021", "2024"] {
+        std::fs::write(
+            tmp.path().join("Cargo.toml"),
+            format!("[package]\nname='example'\nversion='0.1.0'\nedition='{edition}'\n"),
+        )
+        .unwrap();
+        assert_eq!(
+            source_dependencies::modern_crate_root(tmp.path(), Path::new("src/lib.rs")),
+            edition != "2015"
+        );
+        assert!(!source_dependencies::modern_crate_root(
+            tmp.path(),
+            Path::new("src/other.rs")
+        ));
+    }
+}
+
+#[test]
+fn explicit_quoted_passwords_keep_short_and_escaped_values() {
+    for text in [
+        r#"password="a""#,
+        r#"password = 'ab'"#,
+        r#"{"password": "a"}"#,
+        r#"let password = "a";"#,
+        r#"password="a\"b""#,
+        r#"password="a'b""#,
+        r#"password='a"b'"#,
+        r#"password=""; passwd="x""#,
+        r#"password="two words""#,
+        r#"let payload = "{\"password\":\"a\"}";"#,
+    ] {
+        for path in ["source.rs", "guide.md", "tests/fixture.txt"] {
+            assert!(
+                has_secret(&scan_text(path, text)),
+                "missed explicit password {path}: {text}"
+            );
+        }
+    }
+    for text in [
+        r#"password="""#,
+        r#"password=''"#,
+        "fn example(password: &str) {}",
+    ] {
+        assert!(
+            !has_secret(&scan_text("source.rs", text)),
+            "empty value or type was treated as password: {text}"
+        );
+    }
+}
+
+#[test]
+fn dynamic_native_shell_boundaries_do_not_depend_on_regex_suffixes() {
+    for text in [
+        "sh -c \"$1\"",
+        "eval \"$1\"",
+        "source \"$1\"",
+        "\"$1\" argument",
+    ] {
+        let result = scan_text("script.sh", text);
+        assert!(
+            result
+                .violations
+                .iter()
+                .any(|finding| finding.kind == ViolationKind::DangerousPattern),
+            "missed dynamic execution: {text}"
+        );
+    }
+}
+
+fn scan_crate_text(text: &str) -> GateResult {
+    let tmp = tempdir().unwrap();
+    std::fs::write(tmp.path().join("Cargo.toml"), "[package]\nname='scanner-example'\nversion='0.1.0'\nedition='2024'\n[lib]\npath='source.rs'\n").unwrap();
+    std::fs::write(tmp.path().join("source.rs"), text).unwrap();
+    run_gatekeeper(
+        tmp.path(),
+        &[PathBuf::from("source.rs")],
+        0,
+        &GatekeeperConfig::default(),
+    )
+    .unwrap()
+}
+
+#[test]
+fn primitive_boolean_text_sinks_prove_inert_literals_only() {
+    for source in [
+        r#"fn example(current: &str) { ::std::primitive::str::contains(current, "FROM $DECAPOD_IMAGE"); }"#,
+        r#"fn example(line: &str) { <::std::primitive::str as ::std::cmp::PartialEq>::eq(line, "FROM $DECAPOD_IMAGE"); }"#,
+    ] {
+        assert!(
+            scan_crate_text(source).passed,
+            "primitive literal comparison was flagged: {source}"
+        );
+        assert!(
+            !scan_text("source.rs", source).passed,
+            "unknown crate edition was trusted"
+        );
+    }
+    for source in [
+        r#"fn example(current: &str) { current.contains("FROM $DECAPOD_IMAGE"); }"#,
+        r#"fn example(current: &str) { local::contains(current, "FROM $DECAPOD_IMAGE"); }"#,
+        r#"mod std {} fn example(current: &str) { ::std::primitive::str::contains(current, "FROM $DECAPOD_IMAGE"); }"#,
+        r#"use alternate as std; fn example(current: &str) { ::std::primitive::str::contains(current, "FROM $DECAPOD_IMAGE"); }"#,
+        r#"#[rewrite] fn example(current: &str) { ::std::primitive::str::contains(current, "FROM $DECAPOD_IMAGE"); }"#,
+        r#"#[rewrite] trait Example { fn run(current: &str) { ::std::primitive::str::contains(current, "FROM $DECAPOD_IMAGE"); } }"#,
+        r#"trait Example { #[rewrite] fn run(current: &str) { ::std::primitive::str::contains(current, "FROM $DECAPOD_IMAGE"); } }"#,
+        r#"#[rewrite] const VALUE: bool = ::std::primitive::str::contains("source", "FROM $DECAPOD_IMAGE");"#,
+        r#"#[rewrite] static VALUE: bool = ::std::primitive::str::contains("source", "FROM $DECAPOD_IMAGE");"#,
+        r#"struct Example; impl Example { #[rewrite] const VALUE: bool = ::std::primitive::str::contains("source", "FROM $DECAPOD_IMAGE"); }"#,
+        r#"fn example(current: &str) { stringify!(::std::primitive::str::contains(current, "FROM $DECAPOD_IMAGE")); }"#,
+        r#"fn example(current: &str) { <::std::primitive::str as Custom>::eq(current, "FROM $DECAPOD_IMAGE"); }"#,
+        r#"fn example(current: &str) { <Custom as ::std::cmp::PartialEq>::eq(current, "FROM $DECAPOD_IMAGE"); }"#,
+        r#"fn example(current: &str) { <::std::primitive::str as ::std::cmp::PartialEq<Custom>>::eq(current, "FROM $DECAPOD_IMAGE"); }"#,
+        r#"fn example(current: &str) { let value = "FROM $DECAPOD_IMAGE"; ::std::primitive::str::contains(current, value); run_external(value); }"#,
+        r#"fn example(current: &str) { ::std::primitive::str::contains(current, "FROM $DECAPOD_IMAGE"); run_external("${INPUT}"); }"#,
+    ] {
+        assert!(
+            !scan_crate_text(source).passed,
+            "unproven text flow was exempted: {source}"
+        );
+    }
+    assert!(has_secret(&scan_crate_text(
+        r#"fn example(current: &str) { ::std::primitive::str::contains(current, "password='x'"); }"#
+    )));
+}
+
+#[test]
+fn commit_message_hook_preserves_original_master_bytes() {
+    use sha2::{Digest, Sha256};
+    let hook = include_str!("../../../src/decapod/hooks/commit-msg.sh");
+    assert_eq!(
+        format!("{:x}", Sha256::digest(hook.as_bytes())),
+        "a9430c4833b2f639b926af841061f066f3879c6de108528a9c566621de96e182"
+    );
+    let result = scan_text("commit-msg.sh", hook);
+    assert!(
+        result
+            .violations
+            .iter()
+            .any(|finding| finding.kind == ViolationKind::DangerousPattern
+                && finding.line == Some(3)),
+        "actual command substitution must remain"
+    );
+    assert!(
+        !result
+            .violations
+            .iter()
+            .any(|finding| finding.kind == ViolationKind::DangerousPattern
+                && matches!(finding.line, Some(4 | 8))),
+        "quoted subject data should be classified in shell context"
+    );
+}
+
+#[test]
+fn old_literal_password_export_instruction_remains_a_secret_fixture() {
+    let text = "Export before running other commands: DECAPOD_AGENT_ID='{}' and DECAPOD_SESSION_PASSWORD='<token>'";
+    assert!(has_secret(&scan_text("tests/fixture.txt", text)));
+}
+
+#[test]
+fn visible_standard_library_replacement_cannot_supply_primitive_proof() {
+    let tmp = tempdir().unwrap();
+    std::fs::write(tmp.path().join("source.rs"), "fn example() {}").unwrap();
+    let base =
+        "[package]\nname='example'\nversion='0.1.0'\nedition='2024'\n[lib]\npath='source.rs'\n";
+    for suffix in [
+        "[dependencies]\nstd={path='fake'}\n",
+        "[dev-dependencies]\nstd='1'\n",
+        "[build-dependencies]\nstd={package='fake',version='1'}\n",
+        "[target.'cfg(unix)'.dependencies]\nstd='1'\n",
+        "[workspace.dependencies]\nstd='1'\n",
+        "[patch.crates-io]\nstd={path='fake'}\n",
+        "[replace]\n'std:0.1.0'={path='fake'}\n",
+    ] {
+        std::fs::write(tmp.path().join("Cargo.toml"), format!("{base}{suffix}")).unwrap();
+        assert!(
+            !source_dependencies::modern_crate_root(tmp.path(), Path::new("source.rs")),
+            "visible std replacement was trusted: {suffix}"
+        );
+    }
+}
+
+#[test]
+fn explicit_unquoted_password_assignments_keep_short_values() {
+    for text in [
+        "password=a",
+        "PASSWORD = abc",
+        "export PASSWORD=x",
+        "pwd=1",
+        "passwd=$VALUE",
+        "password=<token>",
+    ] {
+        for path in ["source.rs", "script.sh", "guide.md", "tests/fixture.txt"] {
+            assert!(
+                has_secret(&scan_text(path, text)),
+                "missed unquoted password {path}: {text}"
+            );
+        }
+    }
+    for text in [
+        "password=",
+        "password == a",
+        "password => value",
+        "fn example(password: &str) {}",
+    ] {
+        assert!(
+            !has_secret(&scan_text("source.rs", text)),
+            "non-value was classified as a password: {text}"
+        );
+    }
+    assert!(!has_secret(&scan_rust_expression(
+        r#"let password = ::std::env::var("APP_CREDENTIAL").unwrap();"#
+    )));
+    assert!(!has_secret(&scan_rust_expression(
+        r#"let credential = ::std::env::var("APP_CREDENTIAL").unwrap(); let password = credential;"#
+    )));
+    for expression in [
+        r#"let password = ::std::env::var("password=a").unwrap();"#,
+        r#"let password = ::std::env::var("APP_CREDENTIAL").unwrap_or("x".into());"#,
+        r#"let password = unknown();"#,
+        r#"let password = ::std::env::var("APP_CREDENTIAL").unwrap(); let other = "password=a";"#,
+        r#"let credential = ::std::env::var("APP_CREDENTIAL").unwrap(); let password = credential;password=x;"#,
+    ] {
+        assert!(
+            has_secret(&scan_rust_expression(expression)),
+            "initializer proof hid a literal/unknown source: {expression}"
+        );
+    }
+}
+
+#[test]
+fn included_source_coverage_is_independent_of_suffix_and_input_order() {
+    for name in ["payload.txt", "payload.custom", "payload"] {
+        let tmp = tempdir().unwrap();
+        std::fs::write(
+            tmp.path().join("source.rs"),
+            format!(
+                r#"fn example() {{ Command::new("sh").arg("-c").arg(include_str!("{name}")); }}"#
+            ),
+        )
+        .unwrap();
+        std::fs::write(tmp.path().join(name), "eval \"$INPUT\"\n").unwrap();
+        for paths in [
+            vec![PathBuf::from("source.rs")],
+            vec![PathBuf::from("source.rs"), PathBuf::from(name)],
+            vec![PathBuf::from(name), PathBuf::from("source.rs")],
+        ] {
+            let result =
+                run_gatekeeper(tmp.path(), &paths, 0, &GatekeeperConfig::default()).unwrap();
+            assert!(
+                result
+                    .violations
+                    .iter()
+                    .any(|finding| finding.kind == ViolationKind::DangerousPattern
+                        && finding.path == Path::new(name)),
+                "included source vanished: {name}, {paths:?}"
+            );
+        }
+    }
+}
+
+#[test]
+fn extensionless_shebang_sources_keep_dynamic_execution_checks() {
+    let result = scan_text("script", "#!/bin/sh\necho \"${INPUT}\"\neval \"$1\"\n");
+    assert!(
+        result
+            .violations
+            .iter()
+            .any(|finding| finding.kind == ViolationKind::DangerousPattern
+                && finding.line == Some(3))
+    );
+    // An evaluator anywhere in a script intentionally invalidates local
+    // quoting evidence. Check the safe standalone grammar separately.
+    assert!(scan_text("script", "#!/bin/sh\necho \"${INPUT}\"\n").passed);
+}
+
+#[test]
+fn explicit_shell_interpreters_cannot_borrow_included_dockerfile_grammar() {
+    for expression in [
+        r#"::std::process::Command::new("sh").arg("-c").arg(include_str!("Dockerfile.payload"));"#,
+        "::std::process::Command::new(\"/bin/sh\")\n.arg(\"-c\")\n.arg(include_str!(\"Dockerfile.payload\"));",
+        r#"let mut command = Command::new("sh"); command.arg("-c"); command.arg(include_str!("Dockerfile.payload"));"#,
+        r#"use ::std::process::Command as Process; Process::new("sh").args(["-c", include_str!("Dockerfile.payload")]);"#,
+        r#"type Process = ::std::process::Command; Process::new("sh").arg(include_str!("Dockerfile.payload"));"#,
+        r#"::std::process::Command::new(interpreter).args(arguments).arg(include_str!("Dockerfile.payload"));"#,
+        r#"opaque!(::std::process::Command::new("sh").arg("-c").arg(include_str!("Dockerfile.payload")));"#,
+    ] {
+        let tmp = tempdir().unwrap();
+        std::fs::write(
+            tmp.path().join("source.rs"),
+            format!("fn example() {{ {expression} }}"),
+        )
+        .unwrap();
+        std::fs::write(tmp.path().join("Dockerfile.payload"), "FROM $INPUT\n").unwrap();
+        let result = run_gatekeeper(
+            tmp.path(),
+            &[PathBuf::from("source.rs")],
+            0,
+            &GatekeeperConfig::default(),
+        )
+        .unwrap();
+        assert!(
+            result
+                .violations
+                .iter()
+                .any(|finding| finding.kind == ViolationKind::DangerousPattern
+                    && finding.path == Path::new("source.rs")
+                    && finding.message.contains("interpreter boundary")),
+            "explicit interpreter was hidden by an included filename: {expression}"
+        );
+    }
+}
+
+#[test]
+fn visible_std_manifest_substitutions_veto_every_password_exemption() {
+    for source in [
+        r#"fn example() { ::std::println!("Password: {credential}", credential = ::std::env::var("APP_CREDENTIAL").unwrap()); }"#,
+        r#"fn example() { let credential = ::std::env::var("APP_CREDENTIAL").unwrap(); ::std::println!("Password: {credential}"); }"#,
+        r#"fn example() { let password = ::std::env::var("APP_CREDENTIAL").unwrap(); }"#,
+    ] {
+        let tmp = tempdir().unwrap();
+        std::fs::write(tmp.path().join("source.rs"), source).unwrap();
+        let paths = [PathBuf::from("source.rs")];
+        assert!(
+            !has_secret(
+                &run_gatekeeper(tmp.path(), &paths, 0, &GatekeeperConfig::default()).unwrap()
+            ),
+            "source-only baseline changed"
+        );
+        for manifest in [
+            "[package]\nname='example'\nversion='0.1.0'\nedition='2024'\n[lib]\npath='source.rs'\n[dependencies]\nstd={path='fake-std'}\n",
+            "[package]\nname='example'\nversion='0.1.0'\nedition='2024'\n[patch.crates-io]\nstd={path='fake-std'}\n",
+            "[package\n",
+        ] {
+            std::fs::write(tmp.path().join("Cargo.toml"), manifest).unwrap();
+            assert!(
+                has_secret(
+                    &run_gatekeeper(tmp.path(), &paths, 0, &GatekeeperConfig::default()).unwrap()
+                ),
+                "known manifest ambiguity still lent password proof: {source}, {manifest}"
+            );
+        }
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn unresolved_manifest_links_do_not_become_absent_evidence() {
+    let tmp = tempdir().unwrap();
+    std::fs::write(
+        tmp.path().join("source.rs"),
+        r#"fn example() { let password = ::std::env::var("APP_CREDENTIAL").unwrap(); }"#,
+    )
+    .unwrap();
+    std::os::unix::fs::symlink("missing-manifest", tmp.path().join("Cargo.toml")).unwrap();
+    assert!(has_secret(
+        &run_gatekeeper(
+            tmp.path(),
+            &[PathBuf::from("source.rs")],
+            0,
+            &GatekeeperConfig::default()
+        )
+        .unwrap()
+    ));
+}

@@ -8,21 +8,19 @@ local SQLite.
 
 ## Dactyl storage contract
 
-The Decapod client uses Dactyl `dactyl-db` 0.10.0. Decapod supplies Dactyl's
-ambient route values at connection construction: `DATASTORE=sqlite` or
-`DATASTORE=neon`, `DATASTORE_ROUTE` for the local file or the hardcoded
-Propodus Vercel/Neon origin (`https://project-oqn7i.vercel.app`), and
-`DATASTORE_TOKEN` for the machine session bearer. Dactyl resolves those values
-and runs the same operation contract for either backend; individual SQL
-operations do not receive a backend selector, provider name, tenant argument,
-or other out-of-band query input.
+The Decapod bridge constructs explicit Dactyl SQLite or Neon HTTP routes.
+It does not set or trust ambient `DATASTORE`, `DATASTORE_ROUTE`, or
+`DATASTORE_TOKEN` during connection construction. The cloud route receives
+an opaque machine-session bearer and the versioned repository context.
+Individual SQL operations do not select a provider or interpret authorization.
 
-At route binding, Decapod establishes Dactyl's ambient process inputs:
-`DATASTORE=sqlite` or `DATASTORE=neon`, the opaque `DATASTORE_ROUTE`, and the
-cloud-only `DATASTORE_TOKEN`. Selecting local clears any stale cloud token.
-Dactyl resolves these values with `DatastoreRoute::from_env()` when Decapod
-opens a connection; no provider-specific route logic or backend selector is
-added to the execution API.
+The additive, feature-gated Supabase HTTP preview is described in
+[Supabase consumer validation](supabase-validation.md). It depends on
+[Dactyl #91](https://github.com/DecapodLabs/dactyl/issues/91) and pins reviewed
+remote commit `62a616e409cbc4c68ca63668c0132a8deffb555c` from
+[Dactyl #92](https://github.com/DecapodLabs/dactyl/pull/92). This Git dependency
+is not a published registry release or hosted proof.
+The default route and local SQLite behavior remain unchanged.
 
 | Operation | Dactyl request | Scope/authentication |
 |---|---|---|
@@ -34,8 +32,9 @@ is forwarded as an opaque JSON object; Propodus resolves its authenticated
 principal and repository authorization. Add, claim, release, and complete use
 a Dactyl batch containing the conditional state write, the matching event
 write, and a task observation. The event insert is conditioned on the state
-transition marker, so a lost claim or stale completion aborts the entire
-batch instead of committing state without its event.
+transition marker. The service must also require a successful preceding
+state mutation before writing an event, including when a stale request reuses
+a timestamp marker; a timestamp alone is not authorization for an event.
 
 The checked-in `tests/cloud_dactyl_boundary.rs` proof verifies `/query`, the
 bearer header, the versioned context, and the absence of a per-query backend
@@ -98,10 +97,10 @@ logical repository scope derived from `origin`; it requires an authenticated
 session bearer, but the bearer is memory-only and is omitted from serialized
 context data.
 
-The Dactyl v0.10.0 bridge forwards the route, versioned context envelope, and
-opaque bearer without interpreting membership or authorization. Decapod keeps
-the bearer in Dactyl's ambient `DATASTORE_TOKEN` only while Dactyl captures the
-connection route; the token is restored/removed from the process afterward.
+The Dactyl bridge forwards the explicit route, versioned context envelope, and
+opaque bearer without interpreting membership or authorization. The bearer
+never enters ambient Dactyl environment variables. Context debug formatting
+redacts the bearer and endpoint; serialization excludes the bearer.
 The versioned context carries the target org/repo scope unchanged. Propodus remains
 responsible for resolving the authenticated principal, organization membership,
 and repository access. The Decapod bridge opens the canonical local
@@ -173,8 +172,11 @@ The cloud Dactyl todo slice supports repo-scoped list/add/get/claim/release/
 complete operations. `get` and `show` use keyed reads through Dactyl rather
 than list-and-filter. Add, claim, release, and complete each use one Dactyl
 atomic batch for the conditional task transition, matching event, and final
-task observation; a stale transition fails before either state or event is
-committed. A missing item returns `status = "not_found"`.
+task observation. A compatible service must enforce that a zero-row task
+transition cannot create an event, even if a timestamp marker matches an older
+operation. Client checks of returned counts occur after the remote transaction
+and cannot alone enforce rollback. The Supabase service proof tests this
+server-side requirement; timestamps alone are not compare-and-swap authority. A missing item returns `status = "not_found"`.
 `todo done --validated` is intentionally rejected because v1 has no proof
 capture or verification-artifact contract. This is an explicit unsupported
 boundary, not full remote governance completion; a future proof-contract issue

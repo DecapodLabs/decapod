@@ -10,7 +10,7 @@ use crate::core::fleet_coord::{
     LeaseLifecycle, MAX_CLAIM_LEASE_SECS,
 };
 use crate::core::propodus::{
-    CurlTransport, PropodusClientError, PropodusConfig, ensure_cloud_session,
+    PropodusClientError, PropodusConfig, ensure_cloud_session_for_datastore,
 };
 use crate::core::repo_identity::RepositoryIdentity;
 use crate::core::schemas; // Import the new schemas module
@@ -6254,8 +6254,10 @@ impl CloudTodoStoreFactory for DactylCloudTodoStoreFactory {
         config: &CloudRuntimeConfig,
         identity: &RepositoryIdentity,
     ) -> Result<Box<dyn TodoStore>, error::DecapodError> {
+        let datastore = config.validate_datastore()?;
+        let route = BackendRoute::cloud(identity.clone(), &config.api_url)?;
         let propodus = PropodusConfig::for_repository(config, identity);
-        let credential = ensure_cloud_session(&propodus, identity, CurlTransport::default())
+        let credential = ensure_cloud_session_for_datastore(&propodus, identity, datastore)
             .map_err(|error| match error {
                 PropodusClientError::Authentication(diagnostic) => {
                     error::DecapodError::CloudAuth(diagnostic)
@@ -6264,8 +6266,8 @@ impl CloudTodoStoreFactory for DactylCloudTodoStoreFactory {
                     "Propodus cloud authentication preflight failed: {other}. Cloud mode never falls back to local SQLite."
                 )),
             })?;
-        let route = BackendRoute::cloud(identity.clone(), &config.api_url)?;
-        let context = StorageContext::from_route(route, Some(&credential.token))?;
+        let context = StorageContext::from_route(route, Some(&credential.token))?
+            .with_cloud_datastore(datastore)?;
         Ok(Box::new(DactylTodoStore::new(
             context,
             identity.canonical_name.clone(),

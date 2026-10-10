@@ -247,19 +247,13 @@ impl DbBroker {
         db_id: &str,
         status: &str,
     ) -> Result<(), error::DecapodError> {
-        let ev = self.build_event(actor, intent_ref, op, db_id, status)?;
-        let audit_lock = get_audit_lock();
-        let _audit_guard = audit_lock
-            .lock()
-            .map_err(|_| error::DecapodError::ValidationError("Audit lock poisoned".into()))?;
-
-        events::append(
-            &self.root,
-            events::BROKER,
-            &serde_json::to_value(ev)
-                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
-        )?;
-        Ok(())
+        // Match the writer's pool -> audit lock order. Taking the audit lock
+        // before events::append could deadlock a read-completion audit against
+        // a writer that already held this database's operation lock.
+        let path = events::canonical_db_path(&self.root);
+        pool::global_pool().with_write(&path, |conn| {
+            self.log_event_on_conn(conn, actor, intent_ref, op, db_id, status)
+        })
     }
 
     fn log_event_on_conn(
@@ -649,3 +643,7 @@ pub fn schema() -> serde_json::Value {
 fn default_broker_schema_version() -> String {
     "1.0.0".to_string()
 }
+
+#[cfg(test)]
+#[path = "../../../tests/unit/core/broker_tests.rs"]
+mod tests;

@@ -554,6 +554,9 @@ pub struct CloudRuntimeConfig {
     pub provider: String,
     #[serde(default = "default_cloud_api_url")]
     pub api_url: String,
+    /// Physical Dactyl capability. This is not repository configuration.
+    #[serde(default = "default_cloud_datastore")]
+    pub datastore: String,
 }
 
 /// Binary-owned production origin for the Propodus Vercel/Neon service.
@@ -563,6 +566,35 @@ pub const PROPODUS_VERCEL_NEON_ENTRYPOINT: &str = "https://project-oqn7i.vercel.
 
 fn default_cloud_provider() -> String {
     "vercel".to_string()
+}
+
+fn default_cloud_datastore() -> String {
+    std::env::var("DECAPOD_CLOUD_DATASTORE").unwrap_or_else(|_| "neon".to_string())
+}
+
+impl CloudRuntimeConfig {
+    /// Fail before onboarding or todo I/O when an explicit preview is invalid.
+    pub fn validate_datastore(
+        &self,
+    ) -> Result<crate::core::backend::CloudDatastore, crate::core::error::DecapodError> {
+        use crate::core::backend::CloudDatastore;
+        let datastore = CloudDatastore::parse(&self.datastore)?;
+        datastore.validate_available()?;
+        if datastore == CloudDatastore::Supabase
+            && (self.api_url.trim().is_empty() || self.api_url == PROPODUS_VERCEL_NEON_ENTRYPOINT)
+        {
+            return Err(crate::core::error::DecapodError::Config(
+                "Supabase preview requires an explicit authenticated service endpoint via DECAPOD_PROPODUS_API_URL; the existing Neon default is unchanged".to_string(),
+            ));
+        }
+        #[cfg(feature = "supabase-cloud")]
+        if datastore == CloudDatastore::Supabase {
+            // Validate transport policy before onboarding or refreshing a session.
+            // Dactyl owns URL parsing; this operation never performs network I/O.
+            dactyl_db::DatastoreRoute::supabase(&self.api_url, None).validate()?;
+        }
+        Ok(datastore)
+    }
 }
 
 fn default_cloud_api_url() -> String {
@@ -577,6 +609,7 @@ impl Default for CloudRuntimeConfig {
         Self {
             provider: default_cloud_provider(),
             api_url: default_cloud_api_url(),
+            datastore: default_cloud_datastore(),
         }
     }
 }
@@ -1694,7 +1727,7 @@ pub(crate) struct GatekeeperCli {
 pub(crate) enum GatekeeperCommand {
     /// Check staged/changed files against safety gates
     Check {
-        /// Paths to check (defaults to git staged files)
+        /// Files to check; repeat --paths for each file (defaults to Git staged files)
         #[clap(long)]
         paths: Option<Vec<String>>,
         /// Maximum diff size in bytes (default 10MB)

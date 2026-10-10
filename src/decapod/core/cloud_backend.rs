@@ -131,18 +131,39 @@ pub struct CloudOnboardingStatusResponse {
     pub poll_after_seconds: Option<u64>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct CloudOnboardingExchangeResponse {
     pub transaction_id: String,
     pub repository_id: String,
     pub code: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct CloudSessionExchangeRequest {
     pub code: String,
     #[serde(default = "requested_cloud_session_ttl_secs")]
     pub requested_ttl_seconds: u64,
+}
+
+impl std::fmt::Debug for CloudOnboardingExchangeResponse {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("CloudOnboardingExchangeResponse")
+            .field("transaction_id", &"[REDACTED]")
+            .field("repository_id", &self.repository_id)
+            .field("code", &"[REDACTED]")
+            .finish()
+    }
+}
+
+impl std::fmt::Debug for CloudSessionExchangeRequest {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("CloudSessionExchangeRequest")
+            .field("code", &"[REDACTED]")
+            .field("requested_ttl_seconds", &self.requested_ttl_seconds)
+            .finish()
+    }
 }
 
 impl CloudSessionExchangeRequest {
@@ -220,12 +241,23 @@ impl CloudSessionExchangeResponse {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct CloudSessionRefreshRequest {
     pub session_id: String,
     pub refresh_token: String,
     #[serde(default = "requested_cloud_session_ttl_secs")]
     pub requested_ttl_seconds: u64,
+}
+
+impl std::fmt::Debug for CloudSessionRefreshRequest {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("CloudSessionRefreshRequest")
+            .field("session_id", &"[REDACTED]")
+            .field("refresh_token", &"[REDACTED]")
+            .field("requested_ttl_seconds", &self.requested_ttl_seconds)
+            .finish()
+    }
 }
 
 impl CloudSessionRefreshRequest {
