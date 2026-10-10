@@ -123,6 +123,87 @@ fn no_replace_publication_preserves_even_empty_raced_user_directory() {
     assert!(source.exists());
 }
 
+#[test]
+fn no_replace_publication_moves_the_original_directory() {
+    let temp = repo();
+    let source = temp.path().join("source");
+    let target = temp.path().join("target");
+    fs::create_dir(&source).unwrap();
+    fs::write(source.join("payload"), "preserve").unwrap();
+    let before = identity(&source).unwrap();
+
+    publish_directory(&source, &target).unwrap();
+
+    assert!(!source.exists());
+    assert_eq!(identity(&target).unwrap(), before);
+    assert_eq!(
+        fs::read_to_string(target.join("payload")).unwrap(),
+        "preserve"
+    );
+}
+
+#[test]
+fn no_replace_publication_preserves_files_and_symlinks() {
+    use std::os::unix::fs::symlink;
+    let temp = repo();
+    let source = temp.path().join("source");
+    let target = temp.path().join("target");
+    fs::create_dir(&source).unwrap();
+    fs::write(source.join("payload"), "source").unwrap();
+    let before = identity(&source).unwrap();
+
+    fs::write(&target, "existing file").unwrap();
+    assert!(publish_directory(&source, &target).is_err());
+    assert_eq!(fs::read_to_string(&target).unwrap(), "existing file");
+    fs::remove_file(&target).unwrap();
+
+    // A dangling link still occupies the destination. An exists() precheck
+    // would miss it and a plain rename would silently replace it.
+    let missing = temp.path().join("missing");
+    symlink(&missing, &target).unwrap();
+    assert!(publish_directory(&source, &target).is_err());
+    assert_eq!(fs::read_link(&target).unwrap(), missing);
+    assert!(!missing.exists());
+    assert_eq!(identity(&source).unwrap(), before);
+    assert_eq!(
+        fs::read_to_string(source.join("payload")).unwrap(),
+        "source"
+    );
+}
+
+#[test]
+fn no_replace_publication_has_exactly_one_racing_winner() {
+    use std::sync::{Arc, Barrier};
+    let temp = repo();
+    let sources = [temp.path().join("first"), temp.path().join("second")];
+    let target = temp.path().join("target");
+    for source in &sources {
+        // Keep both directories empty: plain rename could otherwise appear
+        // safe merely because replacing a nonempty directory is refused.
+        fs::create_dir(source).unwrap();
+    }
+    let identities = sources.each_ref().map(|source| identity(source).unwrap());
+    let barrier = Arc::new(Barrier::new(2));
+    let results = std::thread::scope(|scope| {
+        let handles = sources.each_ref().map(|source| {
+            let barrier = Arc::clone(&barrier);
+            let target = &target;
+            scope.spawn(move || {
+                barrier.wait();
+                publish_directory(source, target)
+            })
+        });
+        handles.map(|handle| handle.join().unwrap())
+    });
+
+    assert_eq!(results.iter().filter(|result| result.is_ok()).count(), 1);
+    let winner = results.iter().position(|result| result.is_ok()).unwrap();
+    let loser = 1 - winner;
+    assert_eq!(identity(&target).unwrap(), identities[winner]);
+    assert!(!sources[winner].exists());
+    assert_eq!(identity(&sources[loser]).unwrap(), identities[loser]);
+}
+
 fn git(repo: &Path, args: &[&str]) {
     use crate::core::bounded_process::{BoundedCommand, CONTROL_TIMEOUT};
     let out = std::process::Command::new("git")

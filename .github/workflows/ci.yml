@@ -287,6 +287,45 @@ jobs:
           core::workspace_lifecycle::tests::docker_parent_interrupt_recovers_owned_container
           -- --ignored --exact --nocapture
 
+  musl-publication:
+    name: Musl build and atomic publication (${{ matrix.target }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+          - runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-musl
+    env:
+      CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER: musl-gcc
+      CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER: musl-gcc
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.96.1
+          targets: ${{ matrix.target }}
+      - name: Install native musl compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes musl-tools
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: ci-musl-${{ matrix.target }}-v1.96.1
+      - name: Compile the release CLI for musl
+        run: cargo build --locked --release --target ${{ matrix.target }} --bin decapod
+      - name: Run musl no-replace publication regressions
+        run: >-
+          cargo test --locked --release --target ${{ matrix.target }} --lib
+          no_replace_publication -- --nocapture
+
   # FMT: Pure source check, no compile needed
   fmt:
     name: Lint (fmt)
