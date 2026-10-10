@@ -15,12 +15,12 @@ It does not set or trust ambient `DATASTORE`, `DATASTORE_ROUTE`, or
 an opaque machine-session bearer and the versioned repository context.
 Individual SQL operations do not select a provider or interpret authorization.
 
-The Git-pinned Supabase HTTP preview, enabled in standard builds, is described in
-[Supabase consumer validation](supabase-validation.md). It depends on
-[Dactyl #91](https://github.com/DecapodLabs/dactyl/issues/91) and pins reviewed
-remote commit `62a616e409cbc4c68ca63668c0132a8deffb555c` from
-[Dactyl #92](https://github.com/DecapodLabs/dactyl/pull/92). This Git dependency
-is not a published registry release or hosted proof.
+The Supabase HTTP capability, enabled in standard builds, is described in
+[Supabase consumer validation](supabase-validation.md). Decapod consumes the
+published `dactyl-db` 0.11.0 registry release containing the client reviewed in
+[Dactyl #92](https://github.com/DecapodLabs/dactyl/pull/92). The committed
+lockfile supplies its registry checksum; registry publication is not hosted
+service proof.
 Cloud selects Supabase unless `DECAPOD_CLOUD_DATASTORE=neon` is set. Local
 SQLite behavior is unchanged. Supabase still requires a configured compatible
 authenticated service endpoint; no production deployment is implied.

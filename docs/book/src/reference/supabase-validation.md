@@ -1,23 +1,22 @@
 # Supabase consumer validation
 
 The cloud backend selects the public Dactyl Supabase HTTP capability by
-default. The integration remains a Git-pinned preview: it does not release a
-crate, migrate historical state, provision Supabase, or prove a production
-deployment. Local storage remains SQLite; Neon is an explicit cloud alternative.
+default. The client uses the published `dactyl-db` 0.11.0 registry release.
+This dependency alignment does not migrate historical state, provision
+Supabase, or prove a production deployment. Local storage remains SQLite; Neon is an explicit cloud alternative.
 
 ## Fresh activation
 
-1. This preview consumes the reviewed remote commit
-   `62a616e409cbc4c68ca63668c0132a8deffb555c` from
-   [Dactyl #92](https://github.com/DecapodLabs/dactyl/pull/92), which implements
-   the client capability tracked by [Dactyl #91](https://github.com/DecapodLabs/dactyl/issues/91).
-   It is a pinned Git dependency, not an issued registry release or a local
-   path override. Build with `cargo build --locked`; the default features
-   include `supabase-cloud`. A `--no-default-features` build retains SQLite and
-   explicit Neon, and fails closed if the unavailable Supabase route is selected.
-   Nix vendoring pins the matching recursive Git source hash in `flake.nix`.
-   A crates.io release must first consume a published Dactyl version providing
-   this feature; the Git preview is not a registry-publication substitute.
+1. Decapod consumes `dactyl-db` 0.11.0 from crates.io, including the Supabase
+   client capability reviewed in [Dactyl #92](https://github.com/DecapodLabs/dactyl/pull/92)
+   and released in [v0.11.0](https://github.com/DecapodLabs/dactyl/releases/tag/v0.11.0).
+   `Cargo.lock` records the registry source and checksum; there is no Git or
+   local-path dependency override. Build with `cargo build --locked`; the
+   default features include `supabase-cloud`. A `--no-default-features` build
+   retains SQLite and explicit Neon, and fails closed if the unavailable
+   Supabase route is selected. Nix vendoring uses the same lockfile checksum.
+   Before publishing Decapod, run `cargo package --locked` and
+   `cargo publish --locked --dry-run` to verify the packaged registry dependency.
 2. An operator must first provide a fresh compatible authenticated service
    backed by PostgreSQL, its task/event schema, and resource permissions.
    The client does not initialize hosted schemas or connect to PostgreSQL.
@@ -81,7 +80,7 @@ the preceding mutation affecting one row; a matching timestamp by itself is
 insufficient. Concurrent claims have one winner. Stale or missing transitions
 return a conflict/zero count and cannot append success events. A response lost
 after commit is ambiguous: observe task state before deciding whether to
-retry. This preview does not add or claim mutation idempotency.
+retry. This client contract does not add or claim mutation idempotency.
 
 ## Separate evidence profiles
 
