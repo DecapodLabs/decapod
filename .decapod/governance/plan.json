@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "title": "Align Decapod with Dactyl 0.11.0 registry release",
   "intent": "Fix issue 1380 and confirmed manifest publication failure by consuming published dactyl-db 0.11.0, updating lockfile, Nix vendoring, activation documentation and release-regression proof, preserving all backend and container behavior.",
   "state": "APPROVED",
@@ -7,9 +7,12 @@
     "bugs_01m4kmbk49c108a8"
   ],
   "proof_hooks": [
+    "cargo test --locked --lib --test release_dependency_policy --test cloud_dactyl_boundary --test cloud_supabase_boundary --test cloud_cli_boundary --test cloud_command_path",
     "cargo test --locked --no-default-features --test cloud_dactyl_boundary --test cloud_supabase_boundary --test release_dependency_policy",
+    "cargo package --locked --allow-dirty",
+    "cargo publish --locked --dry-run --allow-dirty",
     "cargo clippy --locked --all-targets --all-features -- -D warnings",
-    "cargo package --locked --allow-dirty"
+    "decapod validate"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -25,5 +28,28 @@
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1791660697Z"
+  "updated_at": "1791661266Z",
+  "spec_reviews": [
+    {
+      "path": ".decapod/managed/specs/ARCHITECTURE.md",
+      "spec_material_hash": "b0835ece6bd42daee979585d7336ffdf579cfa3d5b036acec0ade4f860d9a9e0",
+      "reviewed_code_fingerprint": "59670f6a7a61bbcb0a02e358990462111bdf2ff92004de7ff3110cbe5a1f78fd",
+      "disposition": "unchanged_with_reason",
+      "reason": "Reviewed registry Dactyl 0.11.0 alignment: published Dactyl source is byte-identical to prior Git preview; Decapod runtime source, backend selection, wire contracts, credentials, shared-database permissions and container behavior are unchanged. Existing authored contract remains accurate; release dependency operations are documented in OPERATIONS.md."
+    },
+    {
+      "path": ".decapod/managed/specs/INTERFACES.md",
+      "spec_material_hash": "ec59736eba382f3e01ea03fd8fb7eebe415cc343a48075e6e9a91efcd238621a",
+      "reviewed_code_fingerprint": "59670f6a7a61bbcb0a02e358990462111bdf2ff92004de7ff3110cbe5a1f78fd",
+      "disposition": "unchanged_with_reason",
+      "reason": "Reviewed registry Dactyl 0.11.0 alignment: published Dactyl source is byte-identical to prior Git preview; Decapod runtime source, backend selection, wire contracts, credentials, shared-database permissions and container behavior are unchanged. Existing authored contract remains accurate; release dependency operations are documented in OPERATIONS.md."
+    },
+    {
+      "path": ".decapod/managed/specs/SECURITY.md",
+      "spec_material_hash": "ad35c389324be26f9a505ea2561acf50ac674e263d0835724a2e9fd9783ac56f",
+      "reviewed_code_fingerprint": "59670f6a7a61bbcb0a02e358990462111bdf2ff92004de7ff3110cbe5a1f78fd",
+      "disposition": "unchanged_with_reason",
+      "reason": "Reviewed registry Dactyl 0.11.0 alignment: published Dactyl source is byte-identical to prior Git preview; Decapod runtime source, backend selection, wire contracts, credentials, shared-database permissions and container behavior are unchanged. Existing authored contract remains accurate; release dependency operations are documented in OPERATIONS.md."
+    }
+  ]
 }
