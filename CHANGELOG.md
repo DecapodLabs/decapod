@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.107.0](https://github.com/DecapodLabs/decapod/compare/v0.106.1...v0.107.0) - 2026-10-10
+
+### Added
+
+- combine Supabase consumer and contextual credential validation
+
+### Fixed
+
+- default cloud routing to Supabase and repair native build inputs
+
 ## [0.106.1](https://github.com/DecapodLabs/decapod/compare/v0.106.0...v0.106.1) - 2026-10-09
 
 ### Fixed
