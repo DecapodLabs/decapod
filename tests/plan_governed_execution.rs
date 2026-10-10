@@ -159,3 +159,71 @@ fn plan_gate_returns_needs_human_input_until_questions_cleared() {
         String::from_utf8_lossy(&ok.stderr)
     );
 }
+
+#[test]
+fn missing_todo_reports_coordination_recovery_without_reasking_intent() {
+    let (_tmp, dir, todo_id) = setup_repo();
+    let init = run_decapod(
+        &dir,
+        &[
+            "govern",
+            "plan",
+            "init",
+            "--title",
+            "Preserve request context",
+            "--intent",
+            "Implement the already understood request",
+            "--todo-id",
+            &todo_id,
+            "--proof-hook",
+            "focused tests pass",
+        ],
+    );
+    assert!(
+        init.status.success(),
+        "{}",
+        String::from_utf8_lossy(&init.stderr)
+    );
+    assert!(
+        run_decapod(&dir, &["govern", "plan", "approve"])
+            .status
+            .success()
+    );
+    let before = run_decapod(&dir, &["govern", "plan", "status"]);
+    let missing = run_decapod(
+        &dir,
+        &[
+            "govern",
+            "plan",
+            "check-execute",
+            "--todo-id",
+            "absent-task",
+        ],
+    );
+    assert_eq!(missing.status.code(), Some(1));
+    let stderr = String::from_utf8_lossy(&missing.stderr);
+    assert!(stderr.contains("TODO_PROJECTION_MISSING"), "{stderr}");
+    assert!(!stderr.contains("NEEDS_HUMAN_INPUT"), "{stderr}");
+    let payload: serde_json::Value =
+        serde_json::from_str(stderr.split_once("payload=").unwrap().1.trim()).unwrap();
+    assert_eq!(payload["kind"], "coordination_projection_missing");
+    assert_eq!(payload["todo_ids"], serde_json::json!(["absent-task"]));
+    assert_eq!(payload["execution_ready"], false);
+    assert_eq!(
+        before.stdout,
+        run_decapod(&dir, &["govern", "plan", "status"]).stdout
+    );
+
+    // Select the existing coordination record; no new user answer or plan
+    // approval is needed, and the ordinary execution check still runs.
+    let recovered = run_decapod(
+        &dir,
+        &["govern", "plan", "check-execute", "--todo-id", &todo_id],
+    );
+    assert!(
+        recovered.status.success(),
+        "{}",
+        String::from_utf8_lossy(&recovered.stderr)
+    );
+    assert!(String::from_utf8_lossy(&recovered.stdout).contains("EXECUTION_READY"));
+}

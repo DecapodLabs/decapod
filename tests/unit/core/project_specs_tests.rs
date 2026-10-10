@@ -366,3 +366,11 @@ fn legacy_manifest_without_capability_provenance_is_readable() {
     assert!(parsed.declared_capabilities.is_empty());
     assert!(parsed.capability_definition_version.is_empty());
 }
+
+#[test]
+fn codebase_attestation_names_the_executable_refresh_surface() {
+    let updated = update_codebase_attestation("# Intent\nAuthored purpose.\n", "proof", "src/");
+    assert!(updated.contains("by `decapod rpc --op specs.refresh`"));
+    assert!(!updated.contains("by `decapod specs.refresh`"));
+    assert!(updated.contains("Authored purpose."));
+}

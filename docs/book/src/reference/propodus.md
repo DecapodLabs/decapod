@@ -17,7 +17,7 @@ Individual SQL operations do not select a provider or interpret authorization.
 
 The Supabase HTTP capability, enabled in standard builds, is described in
 [Supabase consumer validation](supabase-validation.md). Decapod consumes the
-published `dactyl-db` 0.11.0 registry release containing the client reviewed in
+published `dactyl-db` 0.11.1 registry release containing the client reviewed in
 [Dactyl #92](https://github.com/DecapodLabs/dactyl/pull/92). The committed
 lockfile supplies its registry checksum; registry publication is not hosted
 service proof.

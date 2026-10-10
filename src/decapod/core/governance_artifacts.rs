@@ -147,6 +147,7 @@ pub fn inventory_with_options(
         entry(
             repo_root,
             plan_governance::PLAN_PATH,
+            "plan",
             "governed intent and phase plan",
             ArtifactValidity {
                 valid: plan.is_some(),
@@ -159,6 +160,7 @@ pub fn inventory_with_options(
         entry(
             repo_root,
             research_claims::CLAIMS_PATH,
+            "claims",
             "repository research claims ledger; distinct from Health Engine claims in decapod.db",
             ArtifactValidity {
                 valid: claims.is_some(),
@@ -175,6 +177,7 @@ pub fn inventory_with_options(
         entry(
             repo_root,
             trajectory::TRAJECTORY_PATH,
+            "trajectory",
             "agent-run trajectory cookie and proof evidence",
             ArtifactValidity {
                 valid: trajectory.is_some(),
@@ -187,6 +190,7 @@ pub fn inventory_with_options(
         entry(
             repo_root,
             validate::VALIDATION_RECEIPT_PATH,
+            "validation",
             "successful Decapod validation receipt bound to the current trajectory",
             ArtifactValidity {
                 valid: receipt_chain_valid,
@@ -197,6 +201,21 @@ pub fn inventory_with_options(
             &pr_paths,
         ),
     ];
+    for (artifact, section) in
+        artifacts
+            .iter_mut()
+            .zip(["plan", "claims", "trajectory", "validation"])
+    {
+        artifact.path = format!(
+            "{}#/{}",
+            crate::core::governance_document::GOVERNANCE_PATH,
+            if section == "claims" {
+                "claims".to_string()
+            } else {
+                format!("sections/{section}")
+            }
+        );
+    }
     artifacts.sort_by(|left, right| left.path.cmp(&right.path));
 
     let all_present = artifacts.iter().all(|item| item.present);
@@ -222,7 +241,7 @@ pub fn inventory_with_options(
         dirty: dirty_classification::classify(repo_root, commit_often_limit())
             .map_err(crate::core::error::DecapodError::IoError)?,
         root_isolation: crate::core::workspace::get_workspace_status(repo_root)?.root_isolation,
-        claims_source: ".decapod/governance/claims.json; Health Engine claims remain in .decapod/data/decapod.db".to_string(),
+        claims_source: ".decapod/governance.json#/claims; Health Engine claims remain in .decapod/data/decapod.db".to_string(),
         claims_ledger_bytes,
         repair_command: format!("{INVENTORY_COMMAND} --repair"),
     })
@@ -259,7 +278,7 @@ pub fn run_inventory_with_options(
     // acceptable when they still validate (GitHub #1232).
     if !report.all_present || !report.all_valid || !report.all_semantically_current {
         return Err(crate::core::error::DecapodError::ValidationError(format!(
-            "governance artifact inventory is incomplete or stale; run `{INVENTORY_COMMAND} --repair`, ensure all four artifacts are present and current, then rerun with `--base-branch <branch>`. Unchanged inherited files are fine when provenance still validates."
+            "governance artifact inventory is incomplete or stale; run `{INVENTORY_COMMAND} --repair`, ensure all required logical sections of governance.json are present and current, then rerun with `--base-branch <branch>`. Unchanged inherited files are fine when provenance still validates."
         )));
     }
     Ok(())
@@ -268,6 +287,7 @@ pub fn run_inventory_with_options(
 fn entry(
     repo_root: &Path,
     path: &str,
+    section: &str,
     role: &str,
     validity: ArtifactValidity,
     staged_paths: &BTreeSet<String>,
@@ -296,7 +316,7 @@ fn entry(
     if workspace_target_state != WorkspaceTargetState::Identical {
         freshness_reasons.push("workspace_differs_from_target".to_string());
     }
-    if path == validate::VALIDATION_RECEIPT_PATH {
+    if section == "validation" {
         freshness_reasons.push("receipt_must_bind_current_trajectory".to_string());
     }
     GovernanceArtifactEntry {
@@ -316,10 +336,22 @@ fn entry(
         },
         freshness_reasons,
         schema_error: validity.schema_error,
-        remediation: if path == research_claims::CLAIMS_PATH {
-            format!("Run `{INVENTORY_COMMAND} --repair`; existing claims content is preserved.")
-        } else {
-            format!("Create or refresh `{path}` through the governed workflow.")
+        remediation: match section {
+            "claims" => format!(
+                "Run `{INVENTORY_COMMAND} --repair`; existing claims content is preserved. Record current-PR claims with `decapod govern artifacts claim`."
+            ),
+            "plan" => "Create or refresh the plan section through `decapod govern plan`.".into(),
+            "trajectory" => {
+                "Create or refresh the trajectory section through `decapod govern trajectory`."
+                    .into()
+            }
+            "validation" => {
+                "Run `decapod validate` to refresh the receipt bound to current governance inputs."
+                    .into()
+            }
+            _ => format!(
+                "Create or refresh the {section} section of `{path}` through the governed workflow."
+            ),
         },
     }
 }
@@ -327,14 +359,12 @@ fn entry(
 fn load_validation_receipt(
     repo_root: &Path,
 ) -> Result<Option<validate::ValidationReceipt>, String> {
-    let path = repo_root.join(validate::VALIDATION_RECEIPT_PATH);
-    if !path.is_file() {
-        return Ok(None);
-    }
-    let raw = std::fs::read_to_string(path).map_err(|error| error.to_string())?;
-    serde_json::from_str(&raw)
-        .map(Some)
-        .map_err(|error| format!("invalid validation receipt: {error}"))
+    crate::core::governance_document::read_section(repo_root, "validation")
+        .map_err(|e| e.to_string())?
+        .map(|value| {
+            serde_json::from_value(value).map_err(|e| format!("invalid validation receipt: {e}"))
+        })
+        .transpose()
 }
 
 fn commit_often_limit() -> usize {

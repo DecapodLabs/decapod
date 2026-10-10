@@ -342,7 +342,7 @@ pub struct ValidationReport {
     pub ci_prediction: ValidationCiPrediction,
 }
 
-pub const VALIDATION_RECEIPT_PATH: &str = ".decapod/governance/validation.json";
+pub const VALIDATION_RECEIPT_PATH: &str = crate::core::governance_document::GOVERNANCE_PATH;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ValidationReceipt {
@@ -520,7 +520,7 @@ pub(crate) fn receipt_is_reusable(
         .filter(|line| !line.is_empty())
         .all(|path| {
             workspace::REQUIRED_PR_GOVERNANCE_ARTIFACTS.contains(&path)
-                || path.starts_with(".decapod/governance/")
+                || path == crate::core::governance_document::GOVERNANCE_PATH
         })
 }
 
@@ -2287,7 +2287,7 @@ fn validate_project_specs_docs(
     // this is an isolated feature branch with a resolvable base.
     validate_material_specs_mutation(ctx, repo_root)?;
     validate_managed_spec_projection_inventory(ctx, repo_root)?;
-    // PR-level: every project PR must update the four governance JSON files.
+    // PR-level: every project PR must update the canonical governance document.
     validate_governance_pr_updates(ctx, repo_root)?;
     validate_publication_bundle_currency(ctx, repo_root)?;
     // Entrypoints: Decapod-owned; only canonical rewrites when pins mismatch.
@@ -2812,12 +2812,9 @@ fn validate_managed_spec_projection_inventory(
     Ok(())
 }
 
-/// Require the four governance JSON files to be updated in the feature-branch
-/// delta vs base (PR-level, not per-commit).
-///
-/// Agents must refresh claims/plan/trajectory/validation for every project PR.
-/// Intermediate commits need not each touch them; `base...HEAD` must include all
-/// four paths.
+/// Require the canonical governance document in the feature-branch delta.
+/// Logical section currency and exact per-commit checkpoints are enforced by
+/// their dedicated validation and publication gates.
 fn validate_governance_pr_updates(
     ctx: &ValidationContext,
     repo_root: &Path,
@@ -2871,12 +2868,7 @@ fn validate_governance_pr_updates(
         return Ok(());
     }
 
-    let required = [
-        ".decapod/governance/claims.json",
-        ".decapod/governance/plan.json",
-        ".decapod/governance/trajectory.json",
-        ".decapod/governance/validation.json",
-    ];
+    let required = [crate::core::governance_document::GOVERNANCE_PATH];
     let changed = match governance_paths_updated_vs_base(repo_root, &base_ref, &required) {
         Ok(changed) => changed,
         Err(_) => {
@@ -2894,22 +2886,13 @@ fn validate_governance_pr_updates(
         .collect();
     if missing.is_empty() {
         pass(
-            "PR updates all four governance JSON artifacts versus base",
-            ctx,
-        );
-    } else if missing == [VALIDATION_RECEIPT_PATH] {
-        // Receipt is written only after a successful validate. Counting it as
-        // a hard miss here is the #1259 deadlock: the same gate that requires
-        // the file also prevents writing it. Plan/claims/trajectory must still
-        // appear in the PR; the receipt is emitted on this successful run.
-        pass(
-            "PR updates plan/claims/trajectory; validation.json is written on successful validate (GitHub #1259)",
+            "PR updates the canonical governance document versus base",
             ctx,
         );
     } else {
         fail(
             &format!(
-                "GOVERNANCE_PR_UPDATES: every project PR must update all four governance files versus '{base_ref}' (missing: {}). Intermediate commits need not each touch them; the PR tip must. Update via governed CLI + `decapod validate`.",
+                "GOVERNANCE_PR_UPDATES: every project PR must update the canonical governance document versus '{base_ref}' (missing: {}). Each authored commit must carry a material-bound checkpoint before publication. Update via governed CLI + `decapod validate`.",
                 missing.join(", ")
             ),
             ctx,
@@ -3068,10 +3051,7 @@ fn validate_publication_bundle_currency(
         "GEMINI.md",
         ".decapod/managed/Dockerfile.decapod",
         ".decapod/managed/specs/.manifest.json",
-        ".decapod/governance/claims.json",
-        ".decapod/governance/plan.json",
-        ".decapod/governance/trajectory.json",
-        ".decapod/governance/validation.json",
+        crate::core::governance_document::GOVERNANCE_PATH,
     ];
     let mut failures = Vec::new();
 
@@ -3133,23 +3113,26 @@ fn validate_publication_bundle_currency(
     // and receipt↔trajectory↔HEAD binding are other gates (publish-time for the
     // latter). Mid-validate the receipt is often the prior successful run.
     match plan_governance::load_plan(repo_root) {
-        Ok(None) => failures.push(".decapod/governance/plan.json: missing or empty".to_string()),
-        Err(error) => failures.push(format!(".decapod/governance/plan.json: {error}")),
+        Ok(None) => {
+            failures.push(".decapod/governance.json#/sections/plan: missing or empty".to_string())
+        }
+        Err(error) => failures.push(format!(".decapod/governance.json#/sections/plan: {error}")),
         Ok(Some(_)) => {}
     }
     match research_claims::load_and_validate(repo_root) {
-        Ok(None) => failures.push(".decapod/governance/claims.json: missing or empty".to_string()),
-        Err(error) => failures.push(format!(".decapod/governance/claims.json: {error}")),
+        Ok(None) => failures.push(".decapod/governance.json#/claims: missing or empty".to_string()),
+        Err(error) => failures.push(format!(".decapod/governance.json#/claims: {error}")),
         Ok(Some(_)) => {}
     }
     match trajectory::load_trajectory_cookie(repo_root) {
-        Ok(None) => {
-            failures.push(".decapod/governance/trajectory.json: missing or empty".to_string())
-        }
-        Err(error) => failures.push(format!(".decapod/governance/trajectory.json: {error}")),
+        Ok(None) => failures
+            .push(".decapod/governance.json#/sections/trajectory: missing or empty".to_string()),
+        Err(error) => failures.push(format!(
+            ".decapod/governance.json#/sections/trajectory: {error}"
+        )),
         Ok(Some(_)) => {}
     }
-    if repo_root.join(jev_history::JEV_HISTORY_PATH).is_file() {
+    if crate::core::governance_document::read_section(repo_root, "jev")?.is_some() {
         match jev_history::load_and_validate(repo_root) {
             Ok(Some(ledger)) => match trajectory::load_trajectory_cookie(repo_root) {
                 Ok(Some(trajectory)) if ledger.trajectory_run_id == trajectory.run_id => {}
@@ -3171,7 +3154,9 @@ fn validate_publication_bundle_currency(
     }
     match load_validation_receipt_for_currency(repo_root) {
         Ok(()) => {}
-        Err(error) => failures.push(format!(".decapod/governance/validation.json: {error}")),
+        Err(error) => failures.push(format!(
+            ".decapod/governance.json#/sections/validation: {error}"
+        )),
     }
 
     if failures.is_empty() {
@@ -3192,13 +3177,15 @@ fn validate_publication_bundle_currency(
 }
 
 fn load_validation_receipt_for_currency(repo_root: &Path) -> Result<(), String> {
-    let path = repo_root.join(VALIDATION_RECEIPT_PATH);
-    if !path.is_file() {
-        return Err("missing".to_string());
-    }
-    let raw = fs::read_to_string(&path).map_err(|error| error.to_string())?;
-    let _: ValidationReceipt =
-        serde_json::from_str(&raw).map_err(|error| format!("invalid JSON: {error}"))?;
+    // This gate runs before the successful evaluation issues its receipt. A new
+    // PR intentionally starts without one; publication independently requires a
+    // current, integrity-checked receipt. Present malformed receipts still fail.
+    let Some(value) = crate::core::governance_document::read_section(repo_root, "validation")
+        .map_err(|e| e.to_string())?
+    else {
+        return Ok(());
+    };
+    let _: ValidationReceipt = serde_json::from_value(value).map_err(|e| e.to_string())?;
     Ok(())
 }
 
@@ -3642,10 +3629,7 @@ fn validate_workunit_manifests_if_present(
 ) -> Result<(), error::DecapodError> {
     info("Work Unit Manifest Gate", ctx);
 
-    let workunits_dir = repo_root
-        .join(".decapod")
-        .join("governance")
-        .join("workunits");
+    let workunits_dir = repo_root.join(".decapod").join("data").join("workunits");
     if !workunits_dir.exists() {
         skip("No workunit manifests found; skipping workunit gate", ctx);
         return Ok(());
@@ -3727,19 +3711,10 @@ fn validate_jev_history_if_present(
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
     info("Jev Observation Ledger Gate", ctx);
-    if !repo_root.join(jev_history::JEV_HISTORY_PATH).exists() {
-        skip(
-            "No Jev observation ledger found; skipping optional Jev history gate",
-            ctx,
-        );
+    let Some(ledger) = jev_history::load_and_validate(repo_root)? else {
+        skip("No advisory observations recorded", ctx);
         return Ok(());
-    }
-    let ledger = jev_history::load_and_validate(repo_root)?.ok_or_else(|| {
-        error::DecapodError::ValidationError(format!(
-            "Jev observation ledger disappeared during validation: {}",
-            repo_root.join(jev_history::JEV_HISTORY_PATH).display()
-        ))
-    })?;
+    };
     let trajectory = trajectory::load_trajectory_cookie(repo_root)?.ok_or_else(|| {
         error::DecapodError::ValidationError(
             "Jev observation ledger requires an active trajectory cookie".to_string(),
@@ -3781,24 +3756,16 @@ fn validate_validation_receipt_if_present(
     ctx: &ValidationContext,
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Per-Commit Validation Receipt Gate", ctx);
-    let path = repo_root.join(VALIDATION_RECEIPT_PATH);
-    if !path.exists() {
-        skip(
-            "No validation receipt found; skipping receipt integrity gate",
-            ctx,
-        );
+    info("Validation Receipt Gate", ctx);
+    let Some(value) = crate::core::governance_document::read_section(repo_root, "validation")?
+    else {
+        skip("No validation receipt recorded yet", ctx);
         return Ok(());
-    }
-    let raw = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
-    let receipt: ValidationReceipt = serde_json::from_str(&raw).map_err(|e| {
-        error::DecapodError::ValidationError(format!(
-            "invalid validation receipt {}: {e}",
-            path.display()
-        ))
-    })?;
+    };
+    let receipt: ValidationReceipt = serde_json::from_value(value)
+        .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
     receipt.validate_integrity()?;
-    pass("Per-commit validation receipt hash is valid", ctx);
+    pass("Validation receipt hash is valid", ctx);
     Ok(())
 }
 
@@ -4633,6 +4600,15 @@ fn forbidden_path_touched(forbidden: &[String], touched: &[String]) -> Option<(S
     None
 }
 
+pub(crate) fn validate_recursive_value(
+    value: &serde_json::Value,
+) -> Result<(), error::DecapodError> {
+    let parsed: RecursiveImprovementPass = serde_json::from_value(value.clone()).map_err(|e| {
+        error::DecapodError::ValidationError(format!("Invalid recursive pass: {e}"))
+    })?;
+    validate_recursive_pass(&parsed).map_err(error::DecapodError::ValidationError)
+}
+
 fn validate_recursive_pass(pass: &RecursiveImprovementPass) -> Result<(), String> {
     if pass.schema_version != "recursive-improvement-pass.v1" {
         return Err("schema_version must be recursive-improvement-pass.v1".to_string());
@@ -4706,46 +4682,21 @@ fn validate_recursive_improvement_passes_if_present(
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
     info("Recursive Improvement Pass Gate", ctx);
-
-    let passes_dir = repo_root
-        .join(".decapod")
-        .join("governance")
-        .join("recursive_passes");
-    if !passes_dir.exists() {
-        skip(
-            "No recursive improvement pass artifacts found; skipping recursive pass gate",
-            ctx,
-        );
+    let Some(document) = crate::core::governance_document::load(repo_root)? else {
         return Ok(());
+    };
+    for (id, value) in &document.recursive_passes {
+        let parsed: RecursiveImprovementPass =
+            serde_json::from_value(value.clone()).map_err(|e| {
+                error::DecapodError::ValidationError(format!("Invalid recursive pass {id}: {e}"))
+            })?;
+        validate_recursive_pass(&parsed).map_err(error::DecapodError::ValidationError)?;
     }
-
-    let mut files = 0usize;
-    for entry in fs::read_dir(&passes_dir).map_err(error::DecapodError::IoError)? {
-        let entry = entry.map_err(error::DecapodError::IoError)?;
-        let path = entry.path();
-        if path.extension().and_then(|s| s.to_str()) != Some("json") {
-            continue;
-        }
-        files += 1;
-        let raw = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
-        let parsed: RecursiveImprovementPass = serde_json::from_str(&raw).map_err(|e| {
-            error::DecapodError::ValidationError(format!(
-                "invalid recursive improvement pass {}: {}",
-                path.display(),
-                e
-            ))
-        })?;
-        validate_recursive_pass(&parsed).map_err(|e| {
-            error::DecapodError::ValidationError(format!(
-                "invalid recursive improvement pass: {} ({})",
-                e,
-                path.display()
-            ))
-        })?;
-    }
-
     pass(
-        &format!("Recursive improvement pass schema check passed for {files} file(s)"),
+        &format!(
+            "Validated {} normalized recursive pass records",
+            document.recursive_passes.len()
+        ),
         ctx,
     );
     Ok(())
@@ -5747,10 +5698,7 @@ fn validate_projection_consistency(
         .join(crate::core::schemas::LOCAL_DB_NAME);
     let data_root = main_root.join(".decapod").join("data");
     let context_dir = main_root.join(".decapod").join("managed").join("context");
-    let workunit_dir = main_root
-        .join(".decapod")
-        .join("governance")
-        .join("workunits");
+    let workunit_dir = main_root.join(".decapod").join("data").join("workunits");
     let mut declared_capabilities = Vec::new();
     let mut migration_validation = None;
 

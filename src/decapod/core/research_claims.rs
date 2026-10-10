@@ -4,22 +4,19 @@
 //! Schema is the machine-readable public contract; these Rust types provide
 //! the executable semantic checks used by validation.
 
-use crate::core::atomic;
 use crate::core::error::DecapodError;
 use serde::Deserialize;
 use serde_json::Value;
 use std::collections::HashSet;
-use std::fs;
 use std::path::Path;
 
-pub const CLAIMS_PATH: &str = ".decapod/governance/claims.json";
+pub const CLAIMS_PATH: &str = crate::core::governance_document::GOVERNANCE_PATH;
 pub const CLAIMS_SCHEMA_VERSION: &str = "1.0.0";
 pub const CLAIMS_KIND: &str = "research_claims_ledger";
 pub const CLAIMS_SCHEMA_URI: &str =
     "https://decapod.dev/schemas/research-claims-ledger-1.0.0.schema.json";
 pub const CLAIMS_COMPACT_COMMAND: &str = "decapod govern artifacts inventory --compact";
 const CLAIMS_SCHEMA_DOCUMENT: &str = include_str!("../../../assets/schemas/claims.schema.json");
-const CLAIMS_TEMPLATE: &str = include_str!("../../../assets/templates/claims.json");
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -371,156 +368,60 @@ pub struct ChangeControl {
     pub requires_human_review: bool,
 }
 
-pub fn load_and_validate(repo_root: &Path) -> Result<Option<ClaimsLedger>, DecapodError> {
-    let path = repo_root.join(CLAIMS_PATH);
-    if !path.exists() {
-        return Ok(None);
-    }
-
-    let raw = fs::read_to_string(&path).map_err(DecapodError::IoError)?;
-    let ledger: ClaimsLedger = serde_json::from_str(&raw).map_err(|error| {
-        DecapodError::ValidationError(format!(
-            "invalid research claims ledger {}: {error}",
-            path.display()
-        ))
-    })?;
-    validate_ledger(&ledger)?;
-    Ok(Some(ledger))
+/// Legacy schema remains readable for explicit, lossless migration.
+pub fn validate_legacy_value(value: &Value) -> Result<(), DecapodError> {
+    let ledger: ClaimsLedger = serde_json::from_value(value.clone())
+        .map_err(|e| DecapodError::ValidationError(format!("Invalid legacy claims: {e}")))?;
+    validate_ledger(&ledger)
 }
 
-/// Return the on-disk size of the repository research claims ledger.
+pub fn load_and_validate(repo_root: &Path) -> Result<Option<Value>, DecapodError> {
+    crate::core::governance_document::read_section(repo_root, "claims")
+}
+
 pub fn ledger_size_bytes(repo_root: &Path) -> Result<Option<u64>, DecapodError> {
-    let path = repo_root.join(CLAIMS_PATH);
-    if !path.exists() {
-        return Ok(None);
-    }
-    fs::metadata(path)
-        .map(|metadata| Some(metadata.len()))
-        .map_err(DecapodError::IoError)
+    load_and_validate(repo_root)?
+        .map(|value| {
+            serde_json::to_vec(&value)
+                .map(|bytes| bytes.len() as u64)
+                .map_err(|e| DecapodError::ValidationError(e.to_string()))
+        })
+        .transpose()
 }
 
-/// Create the deterministic repository claims template when a project does
-/// not yet have a research ledger. Existing content is never overwritten.
+/// New repositories start with no historical claim catalog. No claim is invented.
 pub fn ensure_template(repo_root: &Path, dry_run: bool) -> Result<bool, DecapodError> {
-    let path = repo_root.join(CLAIMS_PATH);
-    if path.exists() || dry_run {
+    if dry_run || crate::core::governance_document::load(repo_root)?.is_some() {
         return Ok(false);
     }
-    if let Some(parent) = path.parent() {
-        crate::core::fs_permissions::ensure_private_dir(parent).map_err(DecapodError::IoError)?;
-    }
-    crate::core::fs_permissions::write_private(&path, CLAIMS_TEMPLATE)
-        .map_err(DecapodError::IoError)?;
-    load_and_validate(repo_root)?.ok_or_else(|| {
-        DecapodError::ValidationError(format!(
-            "claims template was written but could not be loaded: {}",
-            path.display()
-        ))
-    })?;
+    crate::core::governance_document::migrate(repo_root)?;
     Ok(true)
 }
 
-/// Compact a valid research claims ledger without changing its JSON value.
-/// This is explicit because formatting is part of the review surface: no
-/// claims are inferred, removed, archived, or superseded by this operation.
 pub fn compact(repo_root: &Path) -> Result<bool, DecapodError> {
-    let path = repo_root.join(CLAIMS_PATH);
-    let raw = fs::read_to_string(&path).map_err(DecapodError::IoError)?;
-    load_and_validate(repo_root)?.ok_or_else(|| {
-        DecapodError::ValidationError(format!("claims ledger is missing: {}", path.display()))
-    })?;
-    let value: Value = serde_json::from_str(&raw).map_err(|error| {
-        DecapodError::ValidationError(format!(
-            "invalid research claims ledger {}: {error}",
-            path.display()
-        ))
-    })?;
-    let mut compacted = serde_json::to_vec(&value).map_err(|error| {
-        DecapodError::ValidationError(format!("claims ledger compaction failed: {error}"))
-    })?;
-    compacted.push(b'\n');
-    if raw.as_bytes() == compacted {
-        return Ok(false);
-    }
-    atomic::write_atomic(&path, &compacted).map_err(DecapodError::IoError)?;
-    load_and_validate(repo_root)?.ok_or_else(|| {
-        DecapodError::ValidationError(format!(
-            "claims ledger was compacted but could not be loaded: {}",
-            path.display()
-        ))
-    })?;
-    Ok(true)
+    let existed = repo_root.join(CLAIMS_PATH).exists();
+    crate::core::governance_document::migrate(repo_root)?;
+    Ok(!existed)
 }
 
-/// Append an issue-scoped note to the claims ledger through the governed CLI.
-/// Existing claims remain byte-for-byte semantically intact and the write is
-/// atomic so publication can carry an explicit claims-artifact change.
+/// Compatibility note surface records PR work, never appends history to policy.
 pub fn append_change_note(repo_root: &Path, note: &str) -> Result<bool, DecapodError> {
-    let note = note.trim();
-    if note.is_empty() {
+    if note.trim().is_empty() {
         return Err(DecapodError::ValidationError(
-            "claims note must not be empty".to_string(),
+            "Claims note must not be empty".into(),
         ));
     }
-    let path = repo_root.join(CLAIMS_PATH);
-    let raw = fs::read_to_string(&path).map_err(DecapodError::IoError)?;
-    let ledger = load_and_validate(repo_root)?.ok_or_else(|| {
-        DecapodError::ValidationError(format!("claims ledger is missing: {}", path.display()))
+    let id = format!(
+        "note:{}",
+        &crate::core::governance_document::digest(&serde_json::json!(note))?[7..23]
+    );
+    let document = crate::core::governance_document::load(repo_root)?.ok_or_else(|| {
+        DecapodError::ValidationError("Begin a PR before recording a claims note".into())
     })?;
-    if ledger.authority.change_policy.contains(note) {
+    if document.checkpoints.iter().any(|entry| entry.id == id) {
         return Ok(false);
     }
-    // Replace only the encoded string token for the one closed-schema field.
-    // This keeps an explicit compact ledger compact and leaves a pretty or
-    // hand-wrapped ledger's formatting untouched; only `--compact` changes
-    // formatting by design.
-    let key = "\"change_policy\"";
-    let key_start = raw.find(key).ok_or_else(|| {
-        DecapodError::ValidationError(
-            "research claims ledger authority.change_policy is missing".to_string(),
-        )
-    })?;
-    let after_key = &raw[key_start + key.len()..];
-    let colon = after_key.find(':').ok_or_else(|| {
-        DecapodError::ValidationError(
-            "research claims ledger authority.change_policy is malformed".to_string(),
-        )
-    })?;
-    let value_start = after_key[colon + 1..]
-        .char_indices()
-        .find_map(|(offset, character)| (!character.is_whitespace()).then_some(offset))
-        .map(|offset| key_start + key.len() + colon + 1 + offset)
-        .ok_or_else(|| {
-            DecapodError::ValidationError(
-                "research claims ledger authority.change_policy has no value".to_string(),
-            )
-        })?;
-    let encoded_old = serde_json::to_string(&ledger.authority.change_policy).map_err(|error| {
-        DecapodError::ValidationError(format!("claims policy serialization failed: {error}"))
-    })?;
-    let encoded_new = serde_json::to_string(&format!(
-        "{} {}",
-        ledger.authority.change_policy, note
-    ))
-    .map_err(|error| {
-        DecapodError::ValidationError(format!("claims policy serialization failed: {error}"))
-    })?;
-    if !raw[value_start..].starts_with(&encoded_old) {
-        return Err(DecapodError::ValidationError(
-            "research claims ledger authority.change_policy value is malformed".to_string(),
-        ));
-    }
-    let mut updated = Vec::with_capacity(raw.len() + encoded_new.len());
-    updated.extend_from_slice(&raw.as_bytes()[..value_start]);
-    updated.extend_from_slice(encoded_new.as_bytes());
-    updated.extend_from_slice(&raw.as_bytes()[value_start + encoded_old.len()..]);
-    atomic::write_atomic(&path, &updated).map_err(DecapodError::IoError)?;
-    load_and_validate(repo_root)?.ok_or_else(|| {
-        DecapodError::ValidationError(format!(
-            "claims ledger was updated but could not be loaded: {}",
-            path.display()
-        ))
-    })?;
+    crate::core::governance_document::checkpoint(repo_root, &id, note, Vec::new())?;
     Ok(true)
 }
 

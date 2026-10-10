@@ -54,7 +54,8 @@ fn new_run_replaces_the_cookie_and_git_preserves_prior_history() {
     assert!(load_trajectory(temp.path(), "run_old").is_err());
     let cookie_path = trajectory_cookie_path(temp.path());
     let governance_dir = cookie_path.parent().unwrap();
-    assert_eq!(fs::read_dir(governance_dir).unwrap().count(), 1);
+    assert!(governance_dir.join("governance.json").exists());
+    assert!(!governance_dir.join("governance").exists());
     assert_eq!(
         load_trajectory(temp.path(), "run_new").unwrap(),
         replacement
@@ -92,7 +93,7 @@ fn corrupted_current_cookie_is_not_masked_by_secondary_state() {
 }
 
 #[test]
-fn init_replaces_a_malformed_or_appended_cookie() {
+fn init_preserves_a_malformed_document_for_explicit_recovery() {
     let temp = tempdir().unwrap();
     let init = |run_id: &str| TrajectoryInit {
         run_id: run_id.to_string(),
@@ -112,16 +113,10 @@ fn init_replaces_a_malformed_or_appended_cookie() {
     let cookie = trajectory_cookie_path(temp.path());
     let mut raw = fs::read_to_string(&cookie).unwrap();
     raw.push_str("\n{\"stale\":true}\n");
-    fs::write(&cookie, raw).unwrap();
+    fs::write(&cookie, &raw).unwrap();
 
-    let replacement = init_trajectory(temp.path(), init("run_new")).unwrap();
-    let cookie_raw = fs::read_to_string(cookie).unwrap();
-    let parsed: serde_json::Value = serde_json::from_str(&cookie_raw).unwrap();
-    assert_eq!(parsed["run_id"], "run_new");
-    assert_eq!(
-        load_trajectory_cookie(temp.path()).unwrap(),
-        Some(replacement)
-    );
+    assert!(init_trajectory(temp.path(), init("run_new")).is_err());
+    assert_eq!(fs::read_to_string(cookie).unwrap(), raw);
 }
 
 #[test]

@@ -454,9 +454,10 @@ These files are the project-local contract for humans and agents.
 - `.decapod/managed/context/`: ignored, current-run deterministic context capsules.
 - `.decapod/managed/policy/`: ignored, current-run JIT context policy material; use `.decapod/policy/` for a durable override.
 - `.decapod/managed/artifacts/`: ignored, current-run provenance/custody/inventory/diagnostic outputs.
-- `.decapod/governance/validation.json`: tracked per-commit validation receipt, overwritten after successful validation.
-- `.decapod/governance/trajectory.json`: the single tracked run cookie; Git history preserves prior merged cookies.
-- `.decapod/governance/jev.json`: optional schema-validated Jev observation ledger for the active trajectory run; Git history preserves prior committed ledgers.
+- `.decapod/governance.json`: the sole tracked governance document, with a compact baseline, current plan and trajectory, validation evidence, active claims, explicit unresolved obligations, and cumulative current-PR checkpoints.
+- `decapod govern artifacts begin-pr --id <change> --base-branch <base>` explicitly starts a new PR boundary; accepted completed claims remain recoverable from Git history.
+- `decapod govern artifacts checkpoint --id <checkpoint> --summary "..." --proof-ref <evidence>` records proof after staging authored work; stage the governance document next and commit both. Publication verifies the complete authored commit range.
+- Optional Jev observations remain a logical section of the same governance document.
 - `.decapod/managed/artifacts/inventory/`: deterministic release inventory.
 - `.decapod/managed/artifacts/diagnostics/`: opt-in diagnostics artifacts.
 - `.decapod/workspaces/`: isolated todo-scoped git worktrees.
@@ -1599,7 +1600,6 @@ pub const DECAPOD_GITIGNORE_RULES: &[&str] = &[
     ".decapod/.stfolder",
     ".decapod/workspaces",
     ".decapod/managed/*",
-    ".decapod/governance/workunits/",
     "!.decapod/data/",
     "!.decapod/managed/",
     "!.decapod/managed/Dockerfile.decapod",
@@ -1613,6 +1613,7 @@ pub const DECAPOD_GITIGNORE_RULES: &[&str] = &[
 /// Keep stale allowlists out of downstream repos when a formerly tracked generated
 /// artifact becomes volatile local state.
 const DEPRECATED_DECAPOD_GITIGNORE_RULES: &[&str] = &[
+    ".decapod/governance/workunits/",
     "!.decapod/generated/validation-epoch.json",
     "!.decapod/managed/validation-epoch.json",
     // Knowledge promotions live in decapod.db; JSONL is no longer a tracked ledger (#1180).

@@ -7,14 +7,25 @@ invocation is ephemeral and no daemon owns the task. Repository state turns a
 temporary agent conversation into work that can be resumed, audited, validated,
 and handed off across processes, models, harnesses, and later invocations.
 
+The agent retains the incoming prompt, conversation, user clarifications, and
+current task context across workspace isolation. That agent-held request context
+establishes meaning; an isolated workspace supplies the filesystem for execution;
+todos supply coordination and durable custody. None replaces the others. Missing
+workspace-local coordination state is not evidence that the request was lost.
+
 ## 1. Tasks (Todos)
-The primary unit of work.
+The primary coordination unit of work, not the sole authority for request meaning.
 - **States:** `open` -> `claimed` -> `done` | `archived`.
 - **Ownership:** A task in the `claimed` state is locked to a specific `agent_id`.
 - **Identity:** ULID-based (e.g., `code_01H2...`).
 
 ## 2. Workspaces
 Isolated execution environments.
+- **Context boundary:** Isolation does not discard the agent's prompt. With clear
+  intent, scope, and proof expectations, retain and use that context while
+  satisfying ownership, collision, execution, and publication gates. A missing
+  todo projection is a coordination discrepancy; record it and follow
+  `TODO_PROJECTION_MISSING` recovery rather than requesting redundant clarification.
 - **Types:** Git Worktree | Docker Container.
 - **Relationship:** Each active workspace is mapped to exactly one `task_id` and one `agent_id`.
 - **Artifacts:** Changes made in a workspace are transient until `workspace publish` is called.

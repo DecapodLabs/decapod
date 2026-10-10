@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 
 pub const TRAJECTORY_SCHEMA_VERSION: &str = "1.1.0";
 pub const LEGACY_TRAJECTORY_SCHEMA_VERSION: &str = "1.0.0";
-pub const TRAJECTORY_PATH: &str = ".decapod/governance/trajectory.json";
+pub const TRAJECTORY_PATH: &str = crate::core::governance_document::GOVERNANCE_PATH;
 pub const MAX_LOOP_FEEDBACK_BYTES: usize = 2048;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
@@ -394,146 +394,126 @@ pub fn init_trajectory(
     project_root: &Path,
     input: TrajectoryInit,
 ) -> Result<TrajectoryArtifact, error::DecapodError> {
-    let TrajectoryInit {
-        run_id,
-        task_id,
-        intent_id,
-        original_intent,
-        derived_intent,
-        active_boundaries,
-        repo_scope,
-        destination,
-        current_phase,
-        next_transitions,
-        blockers,
-    } = input;
-    let path = trajectory_path(project_root, &run_id)?;
-    // A different run replaces the current cookie. Git history preserves the
-    // prior committed artifact, while loops retain multiple jobs within one
-    // active workspace run.
-    if path.exists()
-        && load_trajectory_cookie(project_root)
+    crate::core::governance_document::with_lock(project_root, || {
+        let TrajectoryInit {
+            run_id,
+            task_id,
+            intent_id,
+            original_intent,
+            derived_intent,
+            active_boundaries,
+            repo_scope,
+            destination,
+            current_phase,
+            next_transitions,
+            blockers,
+        } = input;
+        validate_run_id(&run_id)?;
+        // A different run replaces the current cookie. Git history preserves the
+        // prior committed artifact, while loops retain multiple jobs within one
+        // active workspace run.
+        if load_trajectory_cookie(project_root)
             .ok()
             .flatten()
             .is_some_and(|existing| existing.run_id == run_id)
-    {
-        return Err(error::DecapodError::ValidationError(format!(
-            "trajectory '{run_id}' already exists"
-        )));
-    }
-    if original_intent.trim().is_empty() || derived_intent.trim().is_empty() {
-        return Err(error::DecapodError::ValidationError(
-            "trajectory requires non-empty original_intent and derived_intent".to_string(),
-        ));
-    }
+        {
+            return Err(error::DecapodError::ValidationError(format!(
+                "trajectory '{run_id}' already exists"
+            )));
+        }
+        if original_intent.trim().is_empty() || derived_intent.trim().is_empty() {
+            return Err(error::DecapodError::ValidationError(
+                "trajectory requires non-empty original_intent and derived_intent".to_string(),
+            ));
+        }
 
-    let effective_intent_id = intent_id.unwrap_or_else(|| format!("intent:{run_id}"));
-    let durable_active_boundaries = active_boundaries
-        .iter()
-        .map(|path| crate::core::path_policy::normalize_persisted_path(project_root, path))
-        .collect::<Vec<_>>();
-    let durable_repo_scope = repo_scope
-        .iter()
-        .map(|path| crate::core::path_policy::normalize_persisted_path(project_root, path))
-        .collect::<Vec<_>>();
-    let custody = crate::core::custody::bootstrap_intent(
-        &effective_intent_id,
-        original_intent.clone(),
-        derived_intent.clone(),
-        durable_active_boundaries.clone(),
-        durable_repo_scope.clone(),
-    )
-    .map_err(|e| {
-        error::DecapodError::ValidationError(format!("failed to initialize intent custody: {e}"))
-    })?;
+        let effective_intent_id = intent_id.unwrap_or_else(|| format!("intent:{run_id}"));
+        let durable_active_boundaries = active_boundaries
+            .iter()
+            .map(|path| crate::core::path_policy::normalize_persisted_path(project_root, path))
+            .collect::<Vec<_>>();
+        let durable_repo_scope = repo_scope
+            .iter()
+            .map(|path| crate::core::path_policy::normalize_persisted_path(project_root, path))
+            .collect::<Vec<_>>();
+        let custody = crate::core::custody::bootstrap_intent(
+            &effective_intent_id,
+            original_intent.clone(),
+            derived_intent.clone(),
+            durable_active_boundaries.clone(),
+            durable_repo_scope.clone(),
+        )
+        .map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "failed to initialize intent custody: {e}"
+            ))
+        })?;
 
-    let artifact = TrajectoryArtifact {
-        schema_version: TRAJECTORY_SCHEMA_VERSION.to_string(),
-        run_id: run_id.to_string(),
-        intent_id: Some(effective_intent_id),
-        task_id,
-        original_intent,
-        derived_intent,
-        destination,
-        current_phase,
-        next_transitions,
-        blockers,
-        active_boundaries: durable_active_boundaries,
-        repo_scope: durable_repo_scope,
-        inspected_files: Vec::new(),
-        modified_files: Vec::new(),
-        declared_commands: Vec::new(),
-        tool_calls: Vec::new(),
-        loops: Vec::new(),
-        checks: Vec::new(),
-        evidence: Vec::new(),
-        shortcut_risk_signals: Vec::new(),
-        unresolved_assumptions: Vec::new(),
-        completion_claim: None,
-        proof_status: TrajectoryProofStatus::NoChecksRun,
-        verdicts: TrajectoryVerdicts {
-            intent_alignment: TrajectoryVerdict::Unassessed,
-            boundary_discipline: TrajectoryVerdict::Unassessed,
-            shortcut_risk: TrajectoryVerdict::Supported,
-            completion_proof: TrajectoryVerdict::Unsupported,
-        },
-        artifact_hash: String::new(),
-        custody,
-    };
-    let written = write_trajectory(project_root, &artifact)?;
-    crate::core::jev_history::reset_for_trajectory(project_root, &written.run_id)?;
-    Ok(written)
+        let artifact = TrajectoryArtifact {
+            schema_version: TRAJECTORY_SCHEMA_VERSION.to_string(),
+            run_id: run_id.to_string(),
+            intent_id: Some(effective_intent_id),
+            task_id,
+            original_intent,
+            derived_intent,
+            destination,
+            current_phase,
+            next_transitions,
+            blockers,
+            active_boundaries: durable_active_boundaries,
+            repo_scope: durable_repo_scope,
+            inspected_files: Vec::new(),
+            modified_files: Vec::new(),
+            declared_commands: Vec::new(),
+            tool_calls: Vec::new(),
+            loops: Vec::new(),
+            checks: Vec::new(),
+            evidence: Vec::new(),
+            shortcut_risk_signals: Vec::new(),
+            unresolved_assumptions: Vec::new(),
+            completion_claim: None,
+            proof_status: TrajectoryProofStatus::NoChecksRun,
+            verdicts: TrajectoryVerdicts {
+                intent_alignment: TrajectoryVerdict::Unassessed,
+                boundary_discipline: TrajectoryVerdict::Unassessed,
+                shortcut_risk: TrajectoryVerdict::Supported,
+                completion_proof: TrajectoryVerdict::Unsupported,
+            },
+            artifact_hash: String::new(),
+            custody,
+        };
+        let written = artifact
+            .with_recomputed_hash()
+            .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
+        validate_loops(&written)?;
+        let mut updates = vec![(
+            "trajectory",
+            Some(
+                serde_json::to_value(&written)
+                    .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
+            ),
+        )];
+        if crate::core::jev_history::load_and_validate(project_root)?
+            .is_some_and(|ledger| ledger.trajectory_run_id != written.run_id)
+        {
+            updates.push(("jev", None));
+        }
+        crate::core::governance_document::write_sections(project_root, &updates)?;
+        Ok(written)
+    })
 }
 
 pub fn load_trajectory(
     project_root: &Path,
     run_id: &str,
 ) -> Result<TrajectoryArtifact, error::DecapodError> {
-    let path = trajectory_path(project_root, run_id)?;
-    if !path.exists() {
-        return Err(error::DecapodError::NotFound(format!(
-            "trajectory '{run_id}' not found at {}",
-            path.display()
-        )));
-    }
-    load_trajectory_from_path(&path, run_id)
-}
-
-fn load_trajectory_from_path(
-    path: &Path,
-    run_id: &str,
-) -> Result<TrajectoryArtifact, error::DecapodError> {
-    let raw = fs::read_to_string(path).map_err(error::DecapodError::IoError)?;
-    let artifact: TrajectoryArtifact = serde_json::from_str(&raw).map_err(|e| {
-        error::DecapodError::ValidationError(format!(
-            "invalid trajectory artifact {}: {e}",
-            path.display()
-        ))
-    })?;
-    if artifact.schema_version != TRAJECTORY_SCHEMA_VERSION
-        && artifact.schema_version != LEGACY_TRAJECTORY_SCHEMA_VERSION
-    {
-        return Err(error::DecapodError::ValidationError(format!(
-            "unsupported trajectory schema version '{}'",
-            artifact.schema_version
-        )));
-    }
+    validate_run_id(run_id)?;
+    let artifact = load_trajectory_cookie(project_root)?
+        .ok_or_else(|| error::DecapodError::NotFound(format!("trajectory '{run_id}' not found")))?;
     if artifact.run_id != run_id {
         return Err(error::DecapodError::ValidationError(format!(
             "trajectory artifact run_id '{}' does not match requested '{run_id}'",
             artifact.run_id
-        )));
-    }
-    validate_loops(&artifact)?;
-    let expected_hash = artifact.computed_hash_hex().map_err(|e| {
-        error::DecapodError::ValidationError(format!(
-            "failed to compute trajectory artifact hash: {e}"
-        ))
-    })?;
-    if artifact.artifact_hash != expected_hash {
-        return Err(error::DecapodError::ValidationError(format!(
-            "trajectory artifact hash mismatch: expected {expected_hash}, found {}",
-            artifact.artifact_hash
         )));
     }
     Ok(artifact)
@@ -542,20 +522,13 @@ fn load_trajectory_from_path(
 pub fn load_trajectory_cookie(
     project_root: &Path,
 ) -> Result<Option<TrajectoryArtifact>, error::DecapodError> {
-    let path = trajectory_cookie_path(project_root);
-    if !path.exists() {
-        return Ok(None);
-    }
-    let raw = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
-    let artifact: TrajectoryArtifact = serde_json::from_str(&raw).map_err(|e| {
-        error::DecapodError::ValidationError(format!(
-            "invalid trajectory artifact {}: {e}",
-            path.display()
-        ))
-    })?;
-    // Validate the current artifact that controls validation and publication
-    // authority. There is no secondary archive that can mask corruption.
-    load_trajectory_from_path(&path, &artifact.run_id).map(Some)
+    crate::core::governance_document::read_section(project_root, "trajectory")?
+        .map(|value| {
+            serde_json::from_value(value).map_err(|e| {
+                error::DecapodError::ValidationError(format!("Invalid trajectory: {e}"))
+            })
+        })
+        .transpose()
 }
 
 pub fn write_trajectory(
@@ -594,7 +567,12 @@ pub fn write_trajectory(
     })?;
     // The single tracked cookie is atomically replaced. Prior committed
     // versions remain available through Git history and PR commit SHAs.
-    crate::core::atomic::write_atomic(&path, &bytes).map_err(error::DecapodError::IoError)?;
+    crate::core::governance_document::write_section(
+        project_root,
+        "trajectory",
+        &serde_json::from_slice(&bytes)
+            .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
+    )?;
     Ok(canonical)
 }
 
@@ -603,165 +581,167 @@ pub fn record_trajectory(
     run_id: &str,
     update: TrajectoryUpdate,
 ) -> Result<TrajectoryArtifact, error::DecapodError> {
-    let mut artifact = load_trajectory(project_root, run_id)?;
-    let normalized_repo_scope = artifact
-        .repo_scope
-        .iter()
-        .map(|path| crate::core::path_policy::normalize_persisted_path(project_root, path))
-        .collect::<Vec<_>>();
-    let normalized_active_boundaries = update
-        .active_boundaries
-        .iter()
-        .map(|path| crate::core::path_policy::normalize_persisted_path(project_root, path))
-        .collect::<Vec<_>>();
-    let normalized_update_repo_scope = update
-        .repo_scope
-        .iter()
-        .map(|path| crate::core::path_policy::normalize_persisted_path(project_root, path))
-        .collect::<Vec<_>>();
-    let normalized_inspected_files = update
-        .inspected_files
-        .iter()
-        .map(|path| crate::core::path_policy::normalize_persisted_path(project_root, path))
-        .collect::<Vec<_>>();
-    let normalized_modified_files = update
-        .modified_files
-        .iter()
-        .map(|path| crate::core::path_policy::normalize_persisted_path(project_root, path))
-        .collect::<Vec<_>>();
-    artifact.repo_scope = normalized_repo_scope;
-    let loop_count = update.loops.len();
-    let generic_step = if loop_count == 0
-        && (!update.declared_commands.is_empty()
-            || !update.tool_calls.is_empty()
-            || !normalized_inspected_files.is_empty()
-            || !normalized_modified_files.is_empty()
-            || !update.checks.is_empty()
-            || !update.evidence.is_empty()
-            || !update.shortcut_risk_signals.is_empty()
-            || !update.unresolved_assumptions.is_empty())
-    {
-        Some(crate::core::custody::TrajectoryStepInput {
-            action: update
-                .current_phase
-                .clone()
-                .unwrap_or_else(|| "trajectory.record".to_string()),
-            tool: update.tool_calls.first().cloned(),
-            command: update.declared_commands.first().cloned(),
-            scope: artifact.repo_scope.clone(),
-            observations: normalized_inspected_files
-                .iter()
-                .chain(normalized_modified_files.iter())
-                .chain(update.evidence.iter())
-                .cloned()
-                .collect(),
-            proof_refs: update
-                .checks
-                .iter()
-                .map(|check| check.name.clone())
-                .collect(),
-            validation_findings: update
-                .shortcut_risk_signals
-                .iter()
-                .chain(update.unresolved_assumptions.iter())
-                .cloned()
-                .collect(),
-        })
-    } else {
-        None
-    };
-    if update.task_id.is_some() {
-        artifact.task_id = update.task_id;
-    }
-    if update.destination.is_some() {
-        artifact.destination = update.destination;
-    }
-    if update.current_phase.is_some() {
-        artifact.current_phase = update.current_phase;
-    }
-    artifact.next_transitions.extend(update.next_transitions);
-    if update.clear_blockers {
-        artifact.blockers.clear();
-    }
-    artifact.blockers.extend(update.blockers);
-    artifact
-        .active_boundaries
-        .extend(normalized_active_boundaries);
-    artifact.repo_scope.extend(normalized_update_repo_scope);
-    artifact.inspected_files.extend(normalized_inspected_files);
-    artifact.modified_files.extend(normalized_modified_files);
-    artifact.declared_commands.extend(update.declared_commands);
-    artifact.tool_calls.extend(update.tool_calls);
-    for loop_record in update.loops {
-        let mut loop_record = loop_record;
-        let input = crate::core::custody::TrajectoryStepInput {
-            action: format!("loop:{}:{}", loop_record.loop_id, loop_record.attempt),
-            tool: loop_record.tool_calls.first().cloned(),
-            scope: artifact.repo_scope.clone(),
-            observations: loop_record.observations.clone(),
-            proof_refs: loop_record.proof_refs.clone(),
-            validation_findings: if loop_record.feedback.is_empty() {
-                Vec::new()
-            } else {
-                vec![loop_record.feedback.clone()]
-            },
-            ..Default::default()
+    crate::core::governance_document::with_lock(project_root, || {
+        let mut artifact = load_trajectory(project_root, run_id)?;
+        let normalized_repo_scope = artifact
+            .repo_scope
+            .iter()
+            .map(|path| crate::core::path_policy::normalize_persisted_path(project_root, path))
+            .collect::<Vec<_>>();
+        let normalized_active_boundaries = update
+            .active_boundaries
+            .iter()
+            .map(|path| crate::core::path_policy::normalize_persisted_path(project_root, path))
+            .collect::<Vec<_>>();
+        let normalized_update_repo_scope = update
+            .repo_scope
+            .iter()
+            .map(|path| crate::core::path_policy::normalize_persisted_path(project_root, path))
+            .collect::<Vec<_>>();
+        let normalized_inspected_files = update
+            .inspected_files
+            .iter()
+            .map(|path| crate::core::path_policy::normalize_persisted_path(project_root, path))
+            .collect::<Vec<_>>();
+        let normalized_modified_files = update
+            .modified_files
+            .iter()
+            .map(|path| crate::core::path_policy::normalize_persisted_path(project_root, path))
+            .collect::<Vec<_>>();
+        artifact.repo_scope = normalized_repo_scope;
+        let loop_count = update.loops.len();
+        let generic_step = if loop_count == 0
+            && (!update.declared_commands.is_empty()
+                || !update.tool_calls.is_empty()
+                || !normalized_inspected_files.is_empty()
+                || !normalized_modified_files.is_empty()
+                || !update.checks.is_empty()
+                || !update.evidence.is_empty()
+                || !update.shortcut_risk_signals.is_empty()
+                || !update.unresolved_assumptions.is_empty())
+        {
+            Some(crate::core::custody::TrajectoryStepInput {
+                action: update
+                    .current_phase
+                    .clone()
+                    .unwrap_or_else(|| "trajectory.record".to_string()),
+                tool: update.tool_calls.first().cloned(),
+                command: update.declared_commands.first().cloned(),
+                scope: artifact.repo_scope.clone(),
+                observations: normalized_inspected_files
+                    .iter()
+                    .chain(normalized_modified_files.iter())
+                    .chain(update.evidence.iter())
+                    .cloned()
+                    .collect(),
+                proof_refs: update
+                    .checks
+                    .iter()
+                    .map(|check| check.name.clone())
+                    .collect(),
+                validation_findings: update
+                    .shortcut_risk_signals
+                    .iter()
+                    .chain(update.unresolved_assumptions.iter())
+                    .cloned()
+                    .collect(),
+            })
+        } else {
+            None
         };
-        let (custody, event_id) = crate::core::custody::append_trajectory_step(
-            artifact.custody.clone(),
-            &artifact.run_id,
-            artifact
-                .intent_id
-                .as_deref()
-                .unwrap_or(&format!("intent:{}", artifact.run_id)),
-            input,
-        )
-        .map_err(|e| {
-            error::DecapodError::ValidationError(format!(
-                "failed to append trajectory custody step: {e}"
-            ))
-        })?;
-        artifact.custody = custody;
-        loop_record.custody_event_id = Some(event_id);
-        artifact.loops.retain(|existing| {
-            existing.loop_id != loop_record.loop_id || existing.attempt != loop_record.attempt
-        });
-        artifact.loops.push(loop_record);
-    }
-    if let Some(input) = generic_step {
-        let (custody, _) = crate::core::custody::append_trajectory_step(
-            artifact.custody.clone(),
-            &artifact.run_id,
-            artifact
-                .intent_id
-                .as_deref()
-                .unwrap_or(&format!("intent:{}", artifact.run_id)),
-            input,
-        )
-        .map_err(|e| {
-            error::DecapodError::ValidationError(format!(
-                "failed to append trajectory custody step: {e}"
-            ))
-        })?;
-        artifact.custody = custody;
-    }
-    for check in &update.checks {
+        if update.task_id.is_some() {
+            artifact.task_id = update.task_id;
+        }
+        if update.destination.is_some() {
+            artifact.destination = update.destination;
+        }
+        if update.current_phase.is_some() {
+            artifact.current_phase = update.current_phase;
+        }
+        artifact.next_transitions.extend(update.next_transitions);
+        if update.clear_blockers {
+            artifact.blockers.clear();
+        }
+        artifact.blockers.extend(update.blockers);
         artifact
-            .checks
-            .retain(|existing| existing.name != check.name);
-    }
-    artifact.checks.extend(update.checks);
-    artifact.evidence.extend(update.evidence);
-    artifact
-        .shortcut_risk_signals
-        .extend(update.shortcut_risk_signals);
-    artifact
-        .unresolved_assumptions
-        .extend(update.unresolved_assumptions);
-    if update.completion_claim.is_some() {
-        artifact.completion_claim = update.completion_claim;
-    }
-    write_trajectory(project_root, &artifact)
+            .active_boundaries
+            .extend(normalized_active_boundaries);
+        artifact.repo_scope.extend(normalized_update_repo_scope);
+        artifact.inspected_files.extend(normalized_inspected_files);
+        artifact.modified_files.extend(normalized_modified_files);
+        artifact.declared_commands.extend(update.declared_commands);
+        artifact.tool_calls.extend(update.tool_calls);
+        for loop_record in update.loops {
+            let mut loop_record = loop_record;
+            let input = crate::core::custody::TrajectoryStepInput {
+                action: format!("loop:{}:{}", loop_record.loop_id, loop_record.attempt),
+                tool: loop_record.tool_calls.first().cloned(),
+                scope: artifact.repo_scope.clone(),
+                observations: loop_record.observations.clone(),
+                proof_refs: loop_record.proof_refs.clone(),
+                validation_findings: if loop_record.feedback.is_empty() {
+                    Vec::new()
+                } else {
+                    vec![loop_record.feedback.clone()]
+                },
+                ..Default::default()
+            };
+            let (custody, event_id) = crate::core::custody::append_trajectory_step(
+                artifact.custody.clone(),
+                &artifact.run_id,
+                artifact
+                    .intent_id
+                    .as_deref()
+                    .unwrap_or(&format!("intent:{}", artifact.run_id)),
+                input,
+            )
+            .map_err(|e| {
+                error::DecapodError::ValidationError(format!(
+                    "failed to append trajectory custody step: {e}"
+                ))
+            })?;
+            artifact.custody = custody;
+            loop_record.custody_event_id = Some(event_id);
+            artifact.loops.retain(|existing| {
+                existing.loop_id != loop_record.loop_id || existing.attempt != loop_record.attempt
+            });
+            artifact.loops.push(loop_record);
+        }
+        if let Some(input) = generic_step {
+            let (custody, _) = crate::core::custody::append_trajectory_step(
+                artifact.custody.clone(),
+                &artifact.run_id,
+                artifact
+                    .intent_id
+                    .as_deref()
+                    .unwrap_or(&format!("intent:{}", artifact.run_id)),
+                input,
+            )
+            .map_err(|e| {
+                error::DecapodError::ValidationError(format!(
+                    "failed to append trajectory custody step: {e}"
+                ))
+            })?;
+            artifact.custody = custody;
+        }
+        for check in &update.checks {
+            artifact
+                .checks
+                .retain(|existing| existing.name != check.name);
+        }
+        artifact.checks.extend(update.checks);
+        artifact.evidence.extend(update.evidence);
+        artifact
+            .shortcut_risk_signals
+            .extend(update.shortcut_risk_signals);
+        artifact
+            .unresolved_assumptions
+            .extend(update.unresolved_assumptions);
+        if update.completion_claim.is_some() {
+            artifact.completion_claim = update.completion_claim;
+        }
+        write_trajectory(project_root, &artifact)
+    })
 }
 
 pub fn parse_loop_json(spec: &str) -> Result<TrajectoryLoop, error::DecapodError> {

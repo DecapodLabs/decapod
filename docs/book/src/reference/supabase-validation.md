@@ -1,15 +1,15 @@
 # Supabase consumer validation
 
 The cloud backend selects the public Dactyl Supabase HTTP capability by
-default. The client uses the published `dactyl-db` 0.11.0 registry release.
+default. The client uses the published `dactyl-db` 0.11.1 registry release.
 This dependency alignment does not migrate historical state, provision
 Supabase, or prove a production deployment. Local storage remains SQLite; Neon is an explicit cloud alternative.
 
 ## Fresh activation
 
-1. Decapod consumes `dactyl-db` 0.11.0 from crates.io, including the Supabase
+1. Decapod consumes `dactyl-db` 0.11.1 from crates.io, including the Supabase
    client capability reviewed in [Dactyl #92](https://github.com/DecapodLabs/dactyl/pull/92)
-   and released in [v0.11.0](https://github.com/DecapodLabs/dactyl/releases/tag/v0.11.0).
+   and released in [v0.11.1](https://github.com/DecapodLabs/dactyl/releases/tag/v0.11.1).
    `Cargo.lock` records the registry source and checksum; there is no Git or
    local-path dependency override. Build with `cargo build --locked`; the
    default features include `supabase-cloud`. A `--no-default-features` build

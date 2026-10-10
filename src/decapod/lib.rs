@@ -2466,6 +2466,39 @@ pub fn run() -> Result<(), error::DecapodError> {
                 println!("Cloud setup is pending: {error}");
             }
         }
+        Command::Govern(GovernCli {
+            command:
+                GovernCommand::Artifacts(ArtifactsCli {
+                    command: ArtifactsCommand::Status,
+                }),
+        }) => {
+            let document = core::governance_document::load(&decapod_root_option?)?;
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&document)
+                    .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?
+            );
+        }
+        Command::Govern(GovernCli {
+            command:
+                GovernCommand::Artifacts(ArtifactsCli {
+                    command:
+                        ArtifactsCommand::VerifyCheckpoints {
+                            base_branch,
+                            head_ref,
+                        },
+                }),
+        }) => {
+            core::governance_document::verify_pr_checkpoints(
+                &decapod_root_option?,
+                &base_branch,
+                &head_ref,
+            )?;
+            println!(
+                "{}",
+                serde_json::json!({"status": "ok", "base_ref": base_branch, "head_ref": head_ref})
+            );
+        }
         Command::Session(session_cli) => {
             run_session_command(session_cli)?;
         }
@@ -2789,6 +2822,12 @@ fn is_cloud_todo_command(
 
 fn command_requires_worktree(command: &Command) -> bool {
     match command {
+        Command::Govern(GovernCli {
+            command:
+                GovernCommand::Artifacts(ArtifactsCli {
+                    command: ArtifactsCommand::Status | ArtifactsCommand::VerifyCheckpoints { .. },
+                }),
+        }) => false,
         Command::Init(_)
         | Command::Activate
         | Command::Eval(_)
@@ -3004,6 +3043,12 @@ fn rpc_op_bypasses_session(op: &str) -> bool {
 
 fn requires_session_token(command: &Command) -> bool {
     match command {
+        Command::Govern(GovernCli {
+            command:
+                GovernCommand::Artifacts(ArtifactsCli {
+                    command: ArtifactsCommand::Status | ArtifactsCommand::VerifyCheckpoints { .. },
+                }),
+        }) => false,
         // Bootstrap/session lifecycle + version + capabilities are sessionless.
         Command::Init(_)
         | Command::Eval(_)
@@ -4637,7 +4682,7 @@ fn run_release_lineage_sync(project_root: &Path) -> Result<(), error::DecapodErr
             serde_json::json!({
                 "cmd": "release.lineage_sync",
                 "status": "skipped",
-                "reason": "runtime provenance manifests are absent; trajectory.json is the canonical promotion record",
+                "reason": "runtime provenance manifests are absent; the trajectory section of governance.json is the canonical promotion record",
                 "missing": missing,
             })
         );
@@ -6359,13 +6404,12 @@ fn write_validation_receipt(
         .unwrap_or_else(|_| "unavailable".to_string());
     let trajectory = core::trajectory::load_trajectory_cookie(project_root)?.ok_or_else(|| {
         error::DecapodError::ValidationError(
-            "validation completion requires .decapod/governance/trajectory.json".to_string(),
+            "validation completion requires the governance.json trajectory section".to_string(),
         )
     })?;
     let path = project_root.join(validate::VALIDATION_RECEIPT_PATH);
-    if path.is_file()
-        && let Ok(raw) = fs::read_to_string(&path)
-        && let Ok(existing) = serde_json::from_str::<validate::ValidationReceipt>(&raw)
+    if let Some(value) = core::governance_document::read_section(project_root, "validation")?
+        && let Ok(existing) = serde_json::from_value::<validate::ValidationReceipt>(value)
         && validate::receipt_is_reusable(project_root, &existing, &trajectory)
     {
         return Ok(path);
@@ -6384,7 +6428,12 @@ fn write_validation_receipt(
             "validation receipt serialization failed: {e}"
         ))
     })?;
-    core::atomic::write_atomic(&path, &bytes).map_err(error::DecapodError::IoError)?;
+    core::governance_document::write_section(
+        project_root,
+        "validation",
+        &serde_json::from_slice(&bytes)
+            .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
+    )?;
     Ok(path)
 }
 
@@ -6604,6 +6653,100 @@ fn run_govern_command(
             }
         },
         GovernCommand::Artifacts(artifacts_cli) => match artifacts_cli.command {
+            ArtifactsCommand::Migrate => {
+                let document = core::governance_document::migrate(workspace_root)?;
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&document)
+                        .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?
+                );
+            }
+            ArtifactsCommand::BeginPr { id, base_branch } => {
+                let document =
+                    core::governance_document::begin_pr(workspace_root, &id, &base_branch)?;
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&document)
+                        .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?
+                );
+            }
+            ArtifactsCommand::Checkpoint {
+                id,
+                summary,
+                proof_refs,
+            } => {
+                let document = core::governance_document::checkpoint(
+                    workspace_root,
+                    &id,
+                    &summary,
+                    proof_refs,
+                )?;
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&document)
+                        .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?
+                );
+            }
+            ArtifactsCommand::Claim {
+                id,
+                statement,
+                falsifier,
+                status,
+                proof_refs,
+            } => {
+                let document = core::governance_document::record_claim(
+                    workspace_root,
+                    &id,
+                    &statement,
+                    &falsifier,
+                    &status,
+                    proof_refs,
+                )?;
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&document)
+                        .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?
+                );
+            }
+            ArtifactsCommand::ResolveObligation {
+                id,
+                resolution,
+                proof_refs,
+            } => {
+                let document = core::governance_document::resolve_obligation(
+                    workspace_root,
+                    &id,
+                    &resolution,
+                    proof_refs,
+                )?;
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&document)
+                        .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?
+                );
+            }
+            ArtifactsCommand::Status => {
+                let document = core::governance_document::load(workspace_root)?;
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&document)
+                        .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?
+                );
+            }
+            ArtifactsCommand::VerifyCheckpoints {
+                base_branch,
+                head_ref,
+            } => {
+                core::governance_document::verify_pr_checkpoints(
+                    workspace_root,
+                    &base_branch,
+                    &head_ref,
+                )?;
+                println!(
+                    "{}",
+                    serde_json::json!({"status": "ok", "base_ref": base_branch, "head_ref": head_ref})
+                );
+            }
             ArtifactsCommand::Inventory {
                 base_branch,
                 repair,
@@ -7638,9 +7781,16 @@ fn database_diagnostic_status(error: &error::DecapodError) -> &'static str {
             if code.as_deref() == Some("recovery_rollback_failed") {
                 return "recovery_rollback_failed";
             }
-            if code
-                .as_deref()
-                .is_some_and(|code| code.starts_with("recovery_"))
+            // Reopen failure follows activation and rollback attempts even
+            // though the adapter class is Unavailable. Keep it distinguishable
+            // from capability, ownership and path-policy refusals.
+            if code.as_deref() == Some("recovery_reopen_failed") {
+                return "recovery_failed";
+            }
+            if matches!(kind, dactyl_db::AdapterErrorKind::Storage)
+                && code
+                    .as_deref()
+                    .is_some_and(|code| code.starts_with("recovery_"))
             {
                 return "recovery_failed";
             }
@@ -10718,7 +10868,10 @@ fn governed_plan_context(
     project_root: &Path,
     task_id: Option<&str>,
 ) -> Result<crate::core::rpc::GovernedPlanContext, error::DecapodError> {
-    let path = ".decapod/governance/plan.json".to_string();
+    let path = format!(
+        "{}#/sections/plan",
+        core::governance_document::GOVERNANCE_PATH
+    );
     let Some(plan) = plan_governance::load_plan(project_root)? else {
         return Ok(crate::core::rpc::GovernedPlanContext {
             status: "missing".to_string(),

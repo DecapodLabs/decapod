@@ -565,9 +565,7 @@ fn seed_publication_bundle(dir: &Path) {
         },
     )
     .expect("trajectory");
-    // Parse-only receipt (currency gate does not require integrity/HEAD bind).
-    fs::write(
-        dir.join(VALIDATION_RECEIPT_PATH),
+    let receipt: super::ValidationReceipt = serde_json::from_str(
         r#"{
   "schema_version": "1.0.0",
   "kind": "validation_receipt",
@@ -602,7 +600,14 @@ fn seed_publication_bundle(dir: &Path) {
 }
 "#,
     )
-    .expect("validation receipt");
+    .unwrap();
+    let receipt = receipt.with_recomputed_hash().unwrap();
+    crate::core::governance_document::write_section(
+        dir,
+        "validation",
+        &serde_json::to_value(receipt).unwrap(),
+    )
+    .unwrap();
 }
 
 /// A/B/G: inherited bundle at HEAD with only app commits must not fail this gate
@@ -723,7 +728,7 @@ fn publication_bundle_currency_fails_when_plan_missing() {
     fs::write(dir.join("app.txt"), "x\n").expect("app");
     git(dir, &["add", "app.txt"]);
     git(dir, &["commit", "-m", "app"]);
-    fs::remove_file(dir.join(plan_governance::PLAN_PATH)).expect("remove plan");
+    crate::core::governance_document::remove_section(dir, "plan").expect("remove plan");
 
     let ctx = ValidationContext::new();
     validate_publication_bundle_currency(&ctx, dir).expect("gate runs");
@@ -854,4 +859,40 @@ fn receipt_is_reusable_after_governance_only_commit() {
         receipt_is_reusable(dir, &receipt, &trajectory),
         "receipt must stay reusable when HEAD only added governance files"
     );
+}
+
+#[test]
+fn canonical_first_commit_can_validate_before_receipt_issuance_without_optional_jev() {
+    let tmp = tempdir().unwrap();
+    let dir = tmp.path();
+    git(dir, &["init", "-b", "master"]);
+    git(dir, &["config", "user.email", "test@example.invalid"]);
+    git(dir, &["config", "user.name", "Tests"]);
+    fs::write(dir.join("README"), "baseline").unwrap();
+    fs::write(dir.join(".gitignore"), ".decapod/data/\n").unwrap();
+    git(dir, &["add", "."]);
+    git(dir, &["commit", "-m", "baseline"]);
+    git(dir, &["checkout", "-b", "agent/test/first-receipt"]);
+    crate::core::governance_document::begin_pr(dir, "first-receipt", "master").unwrap();
+    seed_publication_bundle(dir);
+    crate::core::governance_document::remove_section(dir, "validation").unwrap();
+    assert!(
+        crate::core::governance_document::read_section(dir, "jev")
+            .unwrap()
+            .is_none()
+    );
+    git(dir, &["add", "."]);
+    crate::core::governance_document::checkpoint(
+        dir,
+        "first",
+        "Authored work before first validation",
+        vec![],
+    )
+    .unwrap();
+    git(dir, &["add", "."]);
+    git(dir, &["commit", "-m", "first checkpointed authored commit"]);
+    let ctx = ValidationContext::new();
+    validate_publication_bundle_currency(&ctx, dir).unwrap();
+    assert_eq!(ctx.fail_count.load(Ordering::Relaxed), 0);
+    assert!(ctx.pass_count.load(Ordering::Relaxed) > 0);
 }

@@ -84,8 +84,6 @@ pub fn active_validation_epoch(
     // The receipt itself is deliberately excluded to avoid a self-reference;
     // trajectory identity is bound separately by ValidationReceipt.
     for path in [
-        crate::plan_governance::PLAN_PATH,
-        crate::core::research_claims::CLAIMS_PATH,
         "AGENTS.md",
         "CLAUDE.md",
         "CODEX.md",
@@ -97,6 +95,18 @@ pub fn active_validation_epoch(
             hash_file_if_exists(&project_root.join(path))?,
         );
     }
+
+    for section in ["plan", "claims"] {
+        material_hashes.insert(
+            format!("governance_section:{section}"),
+            crate::core::governance_document::section_hash(project_root, section)?,
+        );
+    }
+
+    material_hashes.insert(
+        "governance_context".to_string(),
+        crate::core::governance_document::validation_context_hash(project_root)?,
+    );
 
     let evaluator_set_hash = hash_named_values(&[
         ("evaluator_identity", evaluator_identity.as_str()),

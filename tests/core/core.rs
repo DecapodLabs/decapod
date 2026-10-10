@@ -768,8 +768,9 @@ fn scaffold_store_and_docs_cli_behaviors() {
         "decapod init must not allowlist generated artifact sprawl"
     );
     assert!(
-        gitignore.contains(".decapod/governance/workunits/"),
-        "decapod init must keep workunit manifests in ignored current-run state"
+        gitignore.contains(".decapod/data/*")
+            && !gitignore.contains(".decapod/governance/workunits/"),
+        "decapod init must ignore runtime workunits through data rules and retire the legacy governance directory"
     );
     assert!(
         gitignore.contains("!.decapod/managed/specs/*.md"),

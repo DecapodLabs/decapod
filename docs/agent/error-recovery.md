@@ -17,6 +17,42 @@ output when a caller must distinguish failure kinds.
 
 ## Common Error Patterns
 
+### `TODO_PROJECTION_MISSING`
+
+`govern plan check-execute` found no selected todo in the store named by the
+diagnostic, after its plan intent check passed. This is a typed coordination
+failure (`kind: coordination_projection_missing`, `execution_ready: false`),
+not `NEEDS_HUMAN_INPUT`. It does not prove the todo is absent in another control
+plane, that ownership is available, or that later phase/scope checks passed.
+Database read failures remain storage errors, not missing-projection evidence.
+
+1. Preserve the incoming prompt, current context, approved plan, scope, and proof
+   expectations. Record the diagnostic's todo IDs, project/store paths, and the
+   discrepancy through `decapod govern trajectory record --run-id <run-id>
+   --evidence "<coordination discrepancy and observed evidence>"`.
+2. Run `decapod todo get --id <id>`, `decapod todo claim-status --id <id>`, and
+   `decapod workspace status` from the intended control plane. For work created
+   in the protected root, inspect the original claim there without doing product
+   work on that branch. Verify the task, agent ownership, lease, and collision
+   state; a missing row is not evidence of a free claim. Resolve an actual
+   conflict through serialization or governed handoff.
+3. If running from the wrong checkout, use `decapod workspace ensure` from the
+   original control plane after confirming its claim, and enter the reported
+   workspace. For a stale private container snapshot, inspect workspace/container
+   status before retrying the supported workspace/container preparation path.
+   Do not manually copy or edit databases, fabricate a duplicate todo to silence
+   the error, or use `todo rebuild` as a cross-store import: it cannot supply
+   history absent from the selected store.
+4. Rerun `decapod govern plan check-execute --todo-id <id>` inside the execution
+   workspace, then the relevant validation/proof checks. Continue once the
+   applicable gates pass. Work independent of the blocked coordination may
+   continue when its own ownership and execution gates are already satisfied.
+5. If the original coordination state is unavailable or supported recovery does
+   not restore it, report that concrete blocker and preserve the evidence. Do
+   not claim execution readiness or ask the human to restate known intent.
+   Ask for clarification only when request meaning, scope, or proof expectations
+   are genuinely ambiguous; approval and ownership conflicts remain real gates.
+
 ### `Conflict("TODO already claimed")`
 - **Reason:** Another agent instance is working on this task.
 - **Protocol:** **STOP**. List other tasks with `decapod todo list` and select an unclaimed one.
@@ -65,18 +101,21 @@ output when a caller must distinguish failure kinds.
 
 ## General Strategy
 
-### Invalid or oversized research claims ledger
+### Invalid governance document or legacy claim ledger
 
-`.decapod/governance/claims.json` is a repository-owned research ledger, not
-the Health Engine store. Health Engine claims and proof events remain in the
-consolidated `.decapod/data/decapod.db`. Do not repair either file by hand.
+`.decapod/governance.json` owns tracked governance; Health Engine claims and proof
+events remain in `.decapod/data/decapod.db`. Never repair either authority by hand.
+For valid legacy split files, use `decapod govern artifacts migrate` (or the
+compatible `inventory --compact`) to preserve their semantics in the single document.
+A malformed document or conflicting legacy authority fails closed; preserve it
+and use the supported recovery path or ask a maintainer.
 
-For an otherwise valid ledger that is too large to review comfortably, run
-`decapod govern artifacts inventory --compact`; this is an explicit,
-semantics-preserving formatting operation. For a hand-edit or schema failure,
-restore the last governed ledger, then use
-`decapod govern artifacts inventory --claims-note "..."` for any intentional
-change and rerun `decapod validate`.
+`GOVERNANCE_UNARCHIVED_WORK` means a new-PR boundary would discard state that Git
+cannot recover. Preserve that work before `begin-pr`; do not infer acceptance or
+remove obligations. `GOVERNANCE_UNSTAGED_MATERIAL` means code/spec changes must be
+staged before recording a checkpoint. After checkpointing, stage governance.json
+and commit. Publication refuses a missing checkpoint before auto-commit, and a
+later checkpoint cannot retroactively prove an earlier uncheckpointed commit.
 
 ### Orphan broker audit entries (`data broker verify`)
 

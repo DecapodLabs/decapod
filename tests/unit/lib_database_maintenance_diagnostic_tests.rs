@@ -54,3 +54,49 @@ fn maintenance_diagnostics_preserve_dactyl_failure_classes() {
         "recovery_rollback_failed"
     );
 }
+
+#[test]
+fn secure_recovery_refusals_keep_their_typed_diagnostics() {
+    use dactyl_db::AdapterErrorKind;
+    for (kind, code, status) in [
+        (
+            AdapterErrorKind::Unavailable,
+            "recovery_reopen_failed",
+            "recovery_failed",
+        ),
+        (
+            AdapterErrorKind::Storage,
+            "recovery_sync_failed",
+            "recovery_failed",
+        ),
+        (
+            AdapterErrorKind::Capability,
+            "secure_recovery_unsupported",
+            "unsupported",
+        ),
+        (
+            AdapterErrorKind::Capability,
+            "recovery_metadata_unsupported",
+            "unsupported",
+        ),
+        (
+            AdapterErrorKind::Authorization,
+            "recovery_ownership_unavailable",
+            "unavailable",
+        ),
+        (
+            AdapterErrorKind::Conflict,
+            "recovery_path_changed",
+            "conflict",
+        ),
+        (
+            AdapterErrorKind::Conflict,
+            "unsafe_recovery_mode",
+            "conflict",
+        ),
+    ] {
+        let error = adapter_error(kind, Some(code));
+        assert_eq!(database_diagnostic_status(&error), status, "{code}");
+        assert_eq!(database_failure_code(&error).as_deref(), Some(code));
+    }
+}

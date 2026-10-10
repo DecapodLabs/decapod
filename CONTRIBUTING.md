@@ -159,12 +159,9 @@ Beyond the rules above, every PR must satisfy Decapod's governance gates and CI'
 
 - Work in an isolated worktree: `decapod workspace ensure` after claiming a todo. Do not push directly to `master`.
 - `decapod validate` must pass. If it reports `entrypoint_release_mismatch`, regenerate the governed entrypoints (`AGENTS.md`, `CLAUDE.md`, `CODEX.md`, `GEMINI.md`) with the installed Decapod release and re-run; the entrypoint pin and the binary must agree before validate can pass.
-- The `governance-artifacts` CI job requires every PR to have all four present and parseable at HEAD (unchanged inherited files are fine when still valid — GitHub #1232):
-  - `.decapod/governance/claims.json`
-  - `.decapod/governance/trajectory.json`
-  - `.decapod/governance/validation.json`
-  - `.decapod/governance/plan.json`
-- Use `decapod govern trajectory init` and `decapod govern trajectory record` to record intent, inspected/modified files, and check results at `.decapod/governance/trajectory.json` so reviewers (and future agents) can recover the run from the repo.
+- The `governance-artifacts` CI job verifies `.decapod/governance.json` and each authored commit's exact-material checkpoint, including merges. A document at HEAD alone is insufficient.
+- Use `govern artifacts begin-pr --id <change> --base-branch master` for the explicit boundary, then existing plan and trajectory commands to record the work. Before committing, stage authored changes, record a unique `govern artifacts checkpoint --id <id> --summary "..." --proof-ref <evidence>`, stage governance.json, and commit.
+- Accepted completed claims remain in Git history; explicit unresolved obligations carry forward until resolved with proof. Runtime workunit manifests live under ignored `.decapod/data/workunits/`.
 
 ## Architecture Boundary
 

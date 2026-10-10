@@ -71,10 +71,7 @@ impl WorkUnitManifest {
 }
 
 pub fn workunits_dir(project_root: &Path) -> PathBuf {
-    project_root
-        .join(".decapod")
-        .join("governance")
-        .join("workunits")
+    project_root.join(".decapod").join("data").join("workunits")
 }
 
 pub fn validate_task_id(task_id: &str) -> Result<(), error::DecapodError> {
@@ -95,6 +92,90 @@ pub fn validate_task_id(task_id: &str) -> Result<(), error::DecapodError> {
     }
 }
 
+/// Read-only preflight: ignored workunit state moves to data/, never into Git governance.
+pub(crate) fn validate_legacy_workunits(project_root: &Path) -> Result<(), error::DecapodError> {
+    let legacy = project_root.join(".decapod/governance/workunits");
+    let mut ancestor = project_root.to_path_buf();
+    for component in [".decapod", "governance", "workunits"] {
+        ancestor.push(component);
+        if fs::symlink_metadata(&ancestor).is_ok_and(|metadata| metadata.file_type().is_symlink()) {
+            return Err(error::DecapodError::ValidationError(
+                "Symlink legacy workunit path is not migratable".into(),
+            ));
+        }
+    }
+    if !legacy.exists() {
+        return Ok(());
+    }
+    if fs::symlink_metadata(&legacy)
+        .map_err(error::DecapodError::IoError)?
+        .file_type()
+        .is_symlink()
+    {
+        return Err(error::DecapodError::ValidationError(
+            "Symlink legacy workunit directory is not migratable".into(),
+        ));
+    }
+    for entry in fs::read_dir(&legacy).map_err(error::DecapodError::IoError)? {
+        let path = entry.map_err(error::DecapodError::IoError)?.path();
+        let metadata = fs::symlink_metadata(&path).map_err(error::DecapodError::IoError)?;
+        if !metadata.is_file()
+            || metadata.file_type().is_symlink()
+            || path.extension().and_then(|s| s.to_str()) != Some("json")
+        {
+            return Err(error::DecapodError::ValidationError(
+                "Unexpected legacy workunit file; explicit recovery required".into(),
+            ));
+        }
+        let bytes = fs::read(&path).map_err(error::DecapodError::IoError)?;
+        let manifest: WorkUnitManifest = serde_json::from_slice(&bytes).map_err(|e| {
+            error::DecapodError::ValidationError(format!("Invalid legacy workunit: {e}"))
+        })?;
+        validate_task_id(&manifest.task_id)?;
+        if path.file_stem().and_then(|s| s.to_str()) != Some(&manifest.task_id) {
+            return Err(error::DecapodError::ValidationError(
+                "Workunit filename/identity mismatch".into(),
+            ));
+        }
+        let destination = workunit_path(project_root, &manifest.task_id)?;
+        if destination.exists()
+            && fs::read(destination).map_err(error::DecapodError::IoError)? != bytes
+        {
+            return Err(error::DecapodError::ValidationError(
+                "Conflicting legacy/runtime workunit state; no migration performed".into(),
+            ));
+        }
+    }
+    Ok(())
+}
+
+pub(crate) fn migrate_legacy_workunits(project_root: &Path) -> Result<(), error::DecapodError> {
+    validate_legacy_workunits(project_root)?;
+    let legacy = project_root.join(".decapod/governance/workunits");
+    if !legacy.exists() {
+        return Ok(());
+    }
+    crate::core::fs_permissions::ensure_storage_dir(&workunits_dir(project_root))
+        .map_err(error::DecapodError::IoError)?;
+    for entry in fs::read_dir(&legacy).map_err(error::DecapodError::IoError)? {
+        let entry = entry.map_err(error::DecapodError::IoError)?;
+        let destination = workunits_dir(project_root).join(entry.file_name());
+        if destination.exists() {
+            if fs::read(entry.path()).map_err(error::DecapodError::IoError)?
+                != fs::read(&destination).map_err(error::DecapodError::IoError)?
+            {
+                return Err(error::DecapodError::ValidationError(
+                    "Workunit changed during migration".into(),
+                ));
+            }
+            fs::remove_file(entry.path()).map_err(error::DecapodError::IoError)?;
+        } else {
+            fs::rename(entry.path(), destination).map_err(error::DecapodError::IoError)?;
+        }
+    }
+    fs::remove_dir(legacy).map_err(error::DecapodError::IoError)
+}
+
 pub fn workunit_path(project_root: &Path, task_id: &str) -> Result<PathBuf, error::DecapodError> {
     validate_task_id(task_id)?;
     Ok(workunits_dir(project_root).join(format!("{task_id}.json")))
@@ -105,32 +186,41 @@ pub fn init_workunit(
     task_id: &str,
     intent_ref: &str,
 ) -> Result<WorkUnitManifest, error::DecapodError> {
-    let path = workunit_path(project_root, task_id)?;
-    if path.exists() {
-        return Err(error::DecapodError::ValidationError(format!(
-            "workunit '{task_id}' already exists"
-        )));
-    }
+    crate::core::governance_document::with_lock(project_root, || {
+        migrate_legacy_workunits(project_root)?;
+        let path = workunit_path(project_root, task_id)?;
+        if path.exists() {
+            return Err(error::DecapodError::ValidationError(format!(
+                "workunit '{task_id}' already exists"
+            )));
+        }
 
-    let manifest = WorkUnitManifest {
-        task_id: task_id.to_string(),
-        intent_ref: intent_ref.to_string(),
-        spec_refs: Vec::new(),
-        state_refs: Vec::new(),
-        proof_plan: Vec::new(),
-        proof_results: Vec::new(),
-        validation_epoch: None,
-        status: WorkUnitStatus::Draft,
-    };
-    write_workunit(project_root, &manifest)?;
-    Ok(manifest)
+        let manifest = WorkUnitManifest {
+            task_id: task_id.to_string(),
+            intent_ref: intent_ref.to_string(),
+            spec_refs: Vec::new(),
+            state_refs: Vec::new(),
+            proof_plan: Vec::new(),
+            proof_results: Vec::new(),
+            validation_epoch: None,
+            status: WorkUnitStatus::Draft,
+        };
+        write_workunit(project_root, &manifest)?;
+        Ok(manifest)
+    })
 }
 
 pub fn load_workunit(
     project_root: &Path,
     task_id: &str,
 ) -> Result<WorkUnitManifest, error::DecapodError> {
-    let path = workunit_path(project_root, task_id)?;
+    let mut path = workunit_path(project_root, task_id)?;
+    let legacy = project_root
+        .join(".decapod/governance/workunits")
+        .join(format!("{task_id}.json"));
+    if !path.exists() && legacy.exists() {
+        path = legacy;
+    }
     if !path.exists() {
         return Err(error::DecapodError::NotFound(format!(
             "workunit '{}' not found at {}",
@@ -152,19 +242,39 @@ pub fn write_workunit(
     project_root: &Path,
     manifest: &WorkUnitManifest,
 ) -> Result<PathBuf, error::DecapodError> {
-    let path = workunit_path(project_root, &manifest.task_id)?;
-    let parent = path.parent().ok_or_else(|| {
-        error::DecapodError::ValidationError("invalid workunit parent path".to_string())
-    })?;
-    crate::core::fs_permissions::ensure_private_dir(parent)
-        .map_err(error::DecapodError::IoError)?;
-
-    let bytes = serde_json::to_vec_pretty(&manifest.canonicalized()).map_err(|e| {
-        error::DecapodError::ValidationError(format!("failed to serialize workunit manifest: {e}"))
-    })?;
-    crate::core::fs_permissions::write_private(&path, bytes)
-        .map_err(error::DecapodError::IoError)?;
-    Ok(path)
+    use std::io::Write;
+    crate::core::governance_document::with_lock(project_root, || {
+        migrate_legacy_workunits(project_root)?;
+        let path = workunit_path(project_root, &manifest.task_id)?;
+        let parent = path
+            .parent()
+            .ok_or_else(|| error::DecapodError::ValidationError("Invalid workunit path".into()))?;
+        crate::core::fs_permissions::ensure_storage_dir(parent)
+            .map_err(error::DecapodError::IoError)?;
+        let bytes = serde_json::to_vec_pretty(&manifest.canonicalized())
+            .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
+        let temporary = parent.join(format!(
+            ".workunit-{}-{}.tmp",
+            std::process::id(),
+            crate::core::ulid::new_ulid()
+        ));
+        let result = (|| {
+            let mut file = crate::core::fs_permissions::open_storage_file(
+                &temporary,
+                std::fs::OpenOptions::new().create_new(true).write(true),
+            )
+            .map_err(error::DecapodError::IoError)?;
+            file.write_all(&bytes)
+                .map_err(error::DecapodError::IoError)?;
+            file.sync_all().map_err(error::DecapodError::IoError)?;
+            fs::rename(&temporary, &path).map_err(error::DecapodError::IoError)
+        })();
+        if result.is_err() {
+            let _ = fs::remove_file(&temporary);
+        }
+        result?;
+        Ok(path)
+    })
 }
 
 pub fn add_spec_ref(

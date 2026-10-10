@@ -86,16 +86,18 @@ fn valid_recursive_pass() -> serde_json::Value {
 }
 
 fn write_recursive_pass(dir: &Path, pass: serde_json::Value) {
-    let recursive_dir = dir
-        .join(".decapod")
-        .join("governance")
-        .join("recursive_passes");
-    fs::create_dir_all(&recursive_dir).expect("create recursive pass dir");
+    // Fixtures deliberately inject both valid and invalid recursive records;
+    // production writers must use the governed control plane.
+    let document = decapod::core::governance_document::load(dir)
+        .expect("load governance")
+        .expect("initialized governance");
+    let mut value = serde_json::to_value(document).expect("serialize governance");
+    value["recursive_passes"] = serde_json::json!({"rip_01_valid": pass});
     fs::write(
-        recursive_dir.join("rip_01.json"),
-        serde_json::to_vec_pretty(&pass).expect("serialize recursive pass"),
+        dir.join(decapod::core::governance_document::GOVERNANCE_PATH),
+        serde_json::to_vec_pretty(&value).expect("serialize fixture"),
     )
-    .expect("write recursive pass");
+    .expect("write recursive-pass fixture");
 }
 
 fn validate_with_session(dir: &Path, password: &str) -> std::process::Output {
@@ -298,7 +300,7 @@ fn validate_rejects_recursive_pass_touching_forbidden_paths() {
 #[test]
 fn validate_fails_on_invalid_workunit_manifest_if_present() {
     let (_tmp, dir, password) = setup_repo();
-    let workunits = dir.join(".decapod").join("governance").join("workunits");
+    let workunits = dir.join(".decapod").join("data").join("workunits");
     fs::create_dir_all(&workunits).expect("create workunits dir");
     fs::write(workunits.join("test_BAD.json"), "{not-json").expect("write malformed workunit");
 
@@ -325,9 +327,11 @@ fn validate_fails_on_invalid_workunit_manifest_if_present() {
 #[test]
 fn validate_fails_on_invalid_trajectory_artifact_if_present() {
     let (_tmp, dir, password) = setup_repo();
-    let governance = dir.join(".decapod").join("governance");
-    fs::create_dir_all(&governance).expect("create governance directory");
-    fs::write(governance.join("trajectory.json"), "{not-json").expect("write malformed trajectory");
+    let path = dir.join(decapod::core::governance_document::GOVERNANCE_PATH);
+    let mut value: serde_json::Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+    value["sections"]["trajectory"] = serde_json::json!({"schema_version": "unsupported"});
+    fs::write(&path, serde_json::to_vec_pretty(&value).unwrap())
+        .expect("write malformed logical trajectory");
 
     let validate = run_decapod(
         &dir,
@@ -344,15 +348,35 @@ fn validate_fails_on_invalid_trajectory_artifact_if_present() {
     );
     let stderr = combined_output(&validate);
     assert!(
-        stderr.contains("invalid trajectory artifact"),
+        stderr.contains("Unsupported trajectory schema"),
         "expected trajectory artifact parse failure in stderr, got:\n{stderr}"
+    );
+}
+
+#[test]
+fn validate_fails_on_malformed_shared_governance_json() {
+    let (_tmp, dir, password) = setup_repo();
+    let path = dir.join(decapod::core::governance_document::GOVERNANCE_PATH);
+    fs::write(&path, "{not-json").expect("write malformed governance fixture");
+    let before = fs::read(&path).unwrap();
+    let validate = validate_with_session(&dir, &password);
+    assert!(
+        !validate.status.success(),
+        "malformed governance must fail closed"
+    );
+    let output = combined_output(&validate);
+    assert!(output.contains("Invalid governance document"), "{output}");
+    assert_eq!(
+        fs::read(path).unwrap(),
+        before,
+        "validation must not overwrite corrupted evidence"
     );
 }
 
 #[test]
 fn validate_fails_on_verified_workunit_missing_passing_proofs() {
     let (_tmp, dir, password) = setup_repo();
-    let workunits = dir.join(".decapod").join("governance").join("workunits");
+    let workunits = dir.join(".decapod").join("data").join("workunits");
     fs::create_dir_all(&workunits).expect("create workunits dir");
     fs::write(
         workunits.join("test_BAD_VERIFIED.json"),
@@ -391,7 +415,7 @@ fn validate_fails_on_verified_workunit_missing_passing_proofs() {
 #[test]
 fn validate_fails_on_verified_workunit_missing_capsule_policy_lineage() {
     let (_tmp, dir, password) = setup_repo();
-    let workunits = dir.join(".decapod").join("governance").join("workunits");
+    let workunits = dir.join(".decapod").join("data").join("workunits");
     fs::create_dir_all(&workunits).expect("create workunits dir");
     fs::write(
         workunits.join("test_BAD_NO_CAPSULE.json"),
@@ -432,7 +456,7 @@ fn validate_fails_on_verified_workunit_missing_capsule_policy_lineage() {
 #[test]
 fn validate_fails_on_verified_workunit_capsule_without_state_ref_binding() {
     let (_tmp, dir, password) = setup_repo();
-    let workunits = dir.join(".decapod").join("governance").join("workunits");
+    let workunits = dir.join(".decapod").join("data").join("workunits");
     let capsules = dir.join(".decapod").join("managed").join("context");
     fs::create_dir_all(&workunits).expect("create workunits dir");
     fs::create_dir_all(&capsules).expect("create context dir");
@@ -630,7 +654,7 @@ fn validate_fails_when_gitignore_missing_generated_whitelist_rules() {
     let content = fs::read_to_string(&gitignore_path).expect("read .gitignore");
     let content = content
         .lines()
-        .filter(|line| line.trim() != ".decapod/governance/workunits/")
+        .filter(|line| line.trim() != ".decapod/data/*")
         .collect::<Vec<_>>()
         .join("\n");
     fs::write(&gitignore_path, format!("{content}\n")).expect("rewrite .gitignore");
@@ -650,7 +674,7 @@ fn validate_fails_when_gitignore_missing_generated_whitelist_rules() {
     );
     let stderr = combined_output(&validate);
     assert!(
-        stderr.contains("Missing .gitignore rule '.decapod/governance/workunits/'"),
+        stderr.contains("Missing .gitignore rule '.decapod/data/*'"),
         "expected generated whitelist .gitignore failure, got:\n{stderr}"
     );
 }

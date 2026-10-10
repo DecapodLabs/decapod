@@ -408,12 +408,13 @@ dependencies = [
 
 [[package]]
 name = "dactyl-db"
-version = "0.11.0"
+version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f7bbbc3973d77f2e1e3a324ebd2bc409498a1c629a2e09ac4792148d0cc2a0f4"
+checksum = "886e457c97f6adcbbf95504e21e43268482149d8e835cbd8cf14b47eb31a07fb"
 dependencies = [
  "libloading",
  "reqwest",
+ "rustix",
  "serde",
  "serde_json",
  "thiserror 1.0.69",

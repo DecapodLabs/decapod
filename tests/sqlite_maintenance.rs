@@ -1,16 +1,18 @@
-use dactyl_db::{AccessMode, AdapterErrorKind, RecoveryJournalMode};
+#[cfg(any(target_os = "linux", target_os = "android"))]
+use dactyl_db::RecoveryJournalMode;
+use dactyl_db::{AccessMode, AdapterErrorKind};
 use decapod::core::dactyl::DactylBridge;
 use decapod::core::error::{DecapodError, StorageFailureKind};
 use fs2::FileExt;
 use std::fs::{self, OpenOptions};
+#[cfg(any(target_os = "linux", target_os = "android"))]
 use std::io::{Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use tempfile::{TempDir, tempdir};
 
-// Recovery confines the pinned Dactyl maintenance temporary to a private
-// directory. Set this explicitly on the newly created, test-owned fixture;
-// production recovery must never chmod an existing installation to proceed.
+// Private fixtures cover default storage. Shared recovery is exercised separately;
+// production recovery never chmods an existing installation to proceed.
 fn private_recovery_directory() -> TempDir {
     let directory = tempdir().expect("temporary recovery directory");
     #[cfg(unix)]
@@ -115,6 +117,7 @@ fn online_backup_preserves_wal_data_metadata_and_has_no_sidecars() {
     assert_eq!(rows.as_slice()[0].get_blob(0).expect("payload"), &[1, 2, 3]);
 }
 
+#[cfg(any(target_os = "linux", target_os = "android"))]
 #[test]
 fn damaged_secondary_index_is_reported_and_explicit_recovery_preserves_data() {
     let directory = private_recovery_directory();
@@ -223,6 +226,7 @@ fn damaged_secondary_index_is_reported_and_explicit_recovery_preserves_data() {
     assert!(!sidecar(&source_path, "-shm").exists());
 }
 
+#[cfg(any(target_os = "linux", target_os = "android"))]
 #[test]
 fn recovery_requires_quiesced_connections_and_preserves_existing_archive() {
     let directory = private_recovery_directory();
@@ -412,6 +416,25 @@ fn operator_cli_exposes_verify_backup_and_recovery_without_automatic_repair() {
         "--preserve-original-at",
         archive_path.to_str().expect("archive path"),
     ]);
+    if !cfg!(any(target_os = "linux", target_os = "android")) {
+        assert!(!recovery.status.success());
+        let json: serde_json::Value =
+            serde_json::from_slice(&recovery.stdout).expect("refusal JSON");
+        assert_eq!(json["diagnostic_status"], "unsupported");
+        assert_eq!(json["failure_code"], "secure_recovery_unsupported");
+        assert!(!archive_path.exists());
+        let db =
+            open_local(&source_path, AccessMode::ReadOnly).expect("original remains available");
+        assert_eq!(
+            db.read("select value from records", &[])
+                .unwrap()
+                .as_slice()[0]
+                .get_str(0)
+                .unwrap(),
+            "operator"
+        );
+        return;
+    }
     assert!(
         recovery.status.success(),
         "recovery failed: {}",
@@ -502,4 +525,27 @@ fn operator_cli_reports_malformed_database_without_repairing_it() {
         fs::read(&source_path).expect("validation must not repair the database"),
         malformed
     );
+}
+
+#[cfg(not(any(target_os = "linux", target_os = "android")))]
+#[test]
+fn unsupported_platform_recovery_is_typed_and_preserves_the_original() {
+    let directory = private_recovery_directory();
+    let source = directory.path().join("source.db");
+    let archive = directory.path().join("archive.db");
+    let Some(mut db) = open_local(&source, AccessMode::ReadWrite) else {
+        return;
+    };
+    db.write("create table keep_original (id integer)", &[])
+        .unwrap();
+    let before = fs::read(&source).unwrap();
+    match db.recover_from_dump_reload(&archive).unwrap_err() {
+        DecapodError::DactylError(error) => {
+            assert_eq!(error.adapter_kind(), Some(AdapterErrorKind::Capability));
+            assert_eq!(error.adapter_code(), Some("secure_recovery_unsupported"));
+        }
+        other => panic!("unexpected refusal: {other}"),
+    }
+    assert_eq!(fs::read(&source).unwrap(), before);
+    assert!(!archive.exists());
 }

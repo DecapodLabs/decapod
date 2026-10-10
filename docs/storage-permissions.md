@@ -61,33 +61,47 @@ Migration backup/restore copies use explicit creation modes rather than
 `fs::copy`, which copies the source's mode. Migration ledgers use the same
 atomic writer. The original source is not chmodded.
 
-`dactyl-db` 0.11.0 creates maintenance temporary files
-with ambient modes. Decapod confines online-backup work in a fresh `0700`
-sibling staging directory. After Dactyl verifies the snapshot, Decapod assigns
-the new snapshot inode its private (or explicitly shared) final mode, syncs it,
-and publishes without overwriting an existing destination. Staging is removed
-on success or failure. Private transient Dactyl modes are therefore not
-promised to be `0600`; the effective access boundary is the private directory.
+Online backup remains confined in a fresh `0700` sibling staging directory.
+After Dactyl verifies the snapshot, Decapod assigns the new snapshot inode its
+private (or explicitly shared) final mode, syncs it, and publishes without
+overwriting an existing destination. Staging is removed on success or failure.
 
-The Dactyl 0.11.0 recovery API cannot select a staging directory or creation mode:
-it requires the archive and active database to share a parent and creates the
-rebuild temporary beside the active file. Decapod therefore permits recovery
-only in a private `0700` directory on Unix. Successful replacement preserves
-the archived original's safe mode on the **new** rebuilt inode. The original
-archive's mode is untouched. If Dactyl fails partway through, retain its error
-and files for supported operator recovery; do not assume success or retry by
-editing SQLite files directly.
+Decapod consumes the published `dactyl-db` 0.11.1 secure recovery primitive.
+On Linux and Android, explicit `decapod data db recover --preserve-original-at
+<unused-path>` supports a `0660` database in a trusted-group `2770` directory
+with `DECAPOD_STORAGE_SHARED_GROUP=1`. The archive must be unused and share the
+active database's parent. Dactyl creates same-filesystem private staging with
+permissions bounded by `0700`, and rebuild/rollback-journal files bounded by
+`0600` from creation even under umask `000`. More restrictive umasks can cause
+refusal. Dactyl restores the original owner, group, and exact safe mode on the
+rebuilt inode before activation. The archived original keeps its inode and
+metadata; Decapod performs no post-activation chmod.
 
-For a shared installation, an operator-controlled recovery plan is: quiesce
-all writers, create an authorized consistent private copy through supported
-backup tooling, repair the private copy, validate it, and explicitly approve
-replacement of the shared store. Decapod does not perform an unsafe live file
-copy or change shared-directory modes to force recovery through.
+The primitive verifies the logical rebuild, archives the original and its
+surviving sidecars, and activates using atomic no-replace rename. It never
+clobbers an existing archive or a competing destination. Final journal mode is
+DELETE. Normal trusted-group access remains available afterward. Existing
+storage/ancestry checks still apply; world-writable storage is never accepted.
 
-Shared-directory recovery remains unsupported until Dactyl exposes secure
-maintenance creation modes (ideally preserving the source mode on rebuild)
-or configurable private staging. This change does not claim to fix all
-Dactyl consumers or to complete that upstream capability.
+Quiesce all SQLite connections and filesystem name, content, and metadata
+writers from connection open through completion. The same-user and trusted
+group boundary is not a sandbox against a malicious directory writer. The
+filesystem must support reliable sync and atomic no-replace rename. Extended
+source ACLs/MAC labels or inherited directory policy that Dactyl cannot preserve
+fail closed with `recovery_metadata_unsupported`. Failure to preserve ownership
+returns `recovery_ownership_unavailable`. Other platforms return
+`secure_recovery_unsupported`; ordinary read/write/backup remain independent.
+No existing permissions or security policy are changed to force recovery.
+
+Pre-activation failures preserve the original in place or try to restore its
+archive. Post-activation failures attempt restoration and confine retained
+`failed.db` diagnostics beneath private staging. If rollback is blocked, the
+original may remain at its archive path and `recovery_rollback_failed` identifies
+the failed restoration. Inspect the original typed error and preserved paths;
+do not guess success or retry by editing SQLite files. Crashes are not automatic
+repair triggers, and power-loss guarantees remain bounded by filesystem sync.
+See [Dactyl's recovery contract](https://github.com/DecapodLabs/dactyl/blob/v0.11.1/docs/sqlite-recovery.md)
+for upstream creation, failure-injection, and interruption proof.
 
 ## Existing installations
 
@@ -97,9 +111,8 @@ and links. A human owner can then remove unintended write access or relocate
 state through an approved backup/recovery workflow. For an intentional trusted
 group, use the bounded datastore opt-in above. Do not recursively chmod a
 repository, delete lock files, or replace a database as an automatic repair.
-`STORAGE_RECOVERY_PRIVATE_DIRECTORY_REQUIRED` describes the separate pinned
-Dactyl recovery limitation. No automatic chmod is performed on existing files
-or directories.
+Typed Dactyl capability and conflict codes retain their identity in maintenance
+diagnostics. No automatic chmod is performed on existing files or directories.
 
 ## Windows
 
