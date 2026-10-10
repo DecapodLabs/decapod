@@ -123,20 +123,34 @@ Classification and approval for high-risk actions.
 ### `govern health`
 Claims, proofs, and system-wide integrity status.
 
-### `govern artifacts inventory`
-Inspect the four required publication artifacts and their PR-diff presence.
+### `govern artifacts`
 
-- `--base-branch <branch>`: branch used for the PR diff; defaults to `master`,
-  then `main`.
-- `--repair`: create the schema-valid claims ledger template only when
-  `.decapod/governance/claims.json` is absent.
-- `--claims-note "..."`: append an explicit issue-scoped note to the research
-  ledger's change policy through the governed CLI.
-- `--compact`: rewrite a valid research ledger in compact JSON without changing
-  claims or schema semantics.
+Manage the single `.decapod/governance.json` document through logical sections:
+Populate in dependency order: stable PR identity, intent/scope plan, current claims
+and planned checks, work/evidence trajectory, validation, then staged-material
+checkpoints. Record meaningful boundaries throughout the work, not only at completion.
 
-This research claims ledger is separate from Health Engine claims in the
-consolidated `.decapod/data/decapod.db`.
+
+- `migrate`: losslessly import legacy split files; reads never migrate implicitly.
+- `begin-pr --id <change> --base-branch <branch>`: start an explicit PR boundary
+  after verifying discarded evidence is recoverable from Git.
+- `claim --id <id> --statement <text> --falsifier <text> --status <status>`:
+  record a current-PR claim; status is `open`, `supported`, `refuted`, or `blocked`.
+  Repeat `--proof-ref <ref>` for evidence; support requires proof.
+- `resolve-obligation --id <id> --resolution <text> --proof-ref <ref>`:
+  explicitly retire a carried obligation with one or more proof references.
+- `checkpoint --id <unique-id> --summary <text> [--proof-ref <ref>]`: bind staged
+  authored material and logical governance inputs. Stage the updated governance
+  document afterward and commit both.
+- `status`: read current normalized state without creating runtime state.
+- `verify-checkpoints --base-branch <ref> [--head-ref HEAD]`: read-only verification
+  of exact-material checkpoints across the full commit graph.
+- `inventory [--base-branch <branch>]`: inspect logical sections, semantic
+  currency, and PR participation. `--repair` initializes absent empty claims;
+  `--claims-note <text>` records a current-PR checkpoint; `--compact` preserves
+  legacy semantics while normalizing storage. Existing evidence is not overwritten.
+
+Research claims are separate from Health Engine claims in `.decapod/data/decapod.db`.
 
 ### `govern capsule query`
 Perform a deterministic query over the embedded constitution.

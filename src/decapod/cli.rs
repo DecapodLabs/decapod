@@ -845,7 +845,12 @@ pub(crate) enum GovernCommand {
     /// Workspace safety gates: path blocklist, diff size, secret scan, dangerous patterns
     Gatekeeper(GatekeeperCli),
 
-    /// Inspect and repair the required publication governance artifacts
+    /// Manage the normalized governance document and PR lifecycle
+    ///
+    /// Population order: begin a stable PR identity; record intent/scope in the
+    /// plan; record current claims and planned checks; record work/evidence in
+    /// the trajectory; validate; stage material and checkpoint each commit.
+    /// Persist meaningful boundaries as work proceeds, not only at completion.
     Artifacts(ArtifactsCli),
 
     /// Plan-governed execution artifacts and gates
@@ -872,18 +877,67 @@ pub(crate) struct ArtifactsCli {
 
 #[derive(Subcommand, Debug)]
 pub(crate) enum ArtifactsCommand {
-    /// Inventory plan, claims, trajectory, and validation artifacts
+    /// Migrate legacy files into the single normalized governance document
+    Migrate,
+    /// Start an explicit current-PR boundary from a recoverable Git baseline
+    BeginPr {
+        #[clap(long)]
+        id: String,
+        #[clap(long = "base-branch")]
+        base_branch: String,
+    },
+    /// Record a cumulative checkpoint after staging authored work, before committing
+    Checkpoint {
+        #[clap(long)]
+        id: String,
+        #[clap(long)]
+        summary: String,
+        #[clap(long = "proof-ref")]
+        proof_refs: Vec<String>,
+    },
+    /// Record a falsifiable claim scoped to the active PR
+    Claim {
+        #[clap(long)]
+        id: String,
+        #[clap(long)]
+        statement: String,
+        #[clap(long)]
+        falsifier: String,
+        #[clap(long, value_parser = ["open", "supported", "refuted", "blocked"])]
+        status: String,
+        #[clap(long = "proof-ref")]
+        proof_refs: Vec<String>,
+    },
+    /// Explicitly resolve a carried obligation with current-PR proof
+    ResolveObligation {
+        #[clap(long)]
+        id: String,
+        #[clap(long)]
+        resolution: String,
+        #[clap(long = "proof-ref", required = true)]
+        proof_refs: Vec<String>,
+    },
+    /// Read the governance document without modifying repository state
+    Status,
+    /// Verify checkpoint coverage of every authored commit in a PR
+    VerifyCheckpoints {
+        #[clap(long = "base-branch")]
+        base_branch: String,
+        #[clap(long = "head-ref", default_value = "HEAD")]
+        head_ref: String,
+    },
+    /// Inventory logical plan, claims, trajectory, and validation sections
     Inventory {
         /// Base branch used to verify the PR diff (defaults to master, then main)
         #[clap(long = "base-branch")]
         base_branch: Option<String>,
-        /// Create the claims ledger template when claims.json is absent
+        /// Initialize the claims section when it is absent
         #[clap(long)]
         repair: bool,
-        /// Append an issue-scoped note to the claims change policy atomically
+        /// Record an issue-scoped current-PR checkpoint without inventing a claim
         #[clap(long)]
         claims_note: Option<String>,
-        /// Compact the valid research claims ledger without changing its semantics
+        /// Normalize legacy claims into the shared document without changing their semantics
         #[clap(long)]
         compact: bool,
     },

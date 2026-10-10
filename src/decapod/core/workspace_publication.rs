@@ -133,7 +133,7 @@ fn require_bundle_paths(paths: &BTreeSet<String>) -> Result<(), DecapodError> {
         .collect();
     if !missing.is_empty() {
         return Err(failure(format!(
-            "REMOTE_GOVERNANCE_DIFF_MISSING: {}. Refresh through the governed CLI, validate, commit all four artifacts, and retry.",
+            "REMOTE_GOVERNANCE_DIFF_MISSING: {}. Refresh through the governed CLI, validate, commit the normalized governance document, and retry.",
             missing.join(", ")
         )));
     }
@@ -219,6 +219,12 @@ pub(super) fn verify_remote(
         "Remote publication object fetch",
     )?;
     verify_committed_bundle(repo, &head)?;
+    crate::core::governance_document::verify_pr_checkpoints_for_target(
+        repo,
+        &base,
+        &head,
+        base_branch,
+    )?;
     let paths = changed_paths(repo, &base, &head)?;
     require_bundle_paths(&paths)?;
     let proof = RemoteProof { head, base, paths };
@@ -496,4 +502,4 @@ fn ensure_and_verify_pr_with(
 
 #[cfg(test)]
 #[path = "../../../tests/unit/core/workspace_publication_tests.rs"]
-mod tests;
+pub(super) mod tests;

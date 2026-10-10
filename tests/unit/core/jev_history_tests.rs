@@ -90,7 +90,11 @@ fn a_new_trajectory_removes_the_prior_working_tree_ledger() {
     assert!(temp.path().join(JEV_HISTORY_PATH).is_file());
 
     reset_for_trajectory(temp.path(), "trajectory_new").expect("reset");
-    assert!(!temp.path().join(JEV_HISTORY_PATH).exists());
+    assert!(load_and_validate(temp.path()).unwrap().is_none());
+    assert!(
+        temp.path().join(JEV_HISTORY_PATH).exists(),
+        "retiring Jev must preserve the shared document"
+    );
 }
 
 #[test]
@@ -111,7 +115,7 @@ fn same_trajectory_preserves_history_and_corruption_fails_closed() {
     fs::write(temp.path().join(JEV_HISTORY_PATH), b"not-json").expect("corrupt ledger");
     let error = reset_for_trajectory(temp.path(), "trajectory_new")
         .expect_err("corrupt history must not be discarded");
-    assert!(error.to_string().contains("invalid Jev observation ledger"));
+    assert!(error.to_string().contains("Invalid governance document"));
     assert_eq!(
         fs::read_to_string(temp.path().join(JEV_HISTORY_PATH)).expect("read ledger"),
         "not-json"

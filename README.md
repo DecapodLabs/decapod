@@ -204,7 +204,7 @@ optional.
 
 When Jev is enabled and a trajectory run is active, each assurance call also
 appends its typed Jev result (including explicit `no_observation` failures) to
-`.decapod/governance/jev.json`. The ledger is keyed by the active trajectory
+the `jev` section of `.decapod/governance.json`. The ledger is keyed by the active trajectory
 run, validated before publication, and committed with the PR so the complete
 observation history is recoverable through Git. Starting a new trajectory run
 removes the prior working-tree ledger; its committed history remains in Git.
@@ -245,7 +245,7 @@ available. It does not assert a threshold or affect ordinary tests or CI.
   managed/sessions/  # Session custody
   generated/         # Context capsules and proof artifacts
   data/              # Local project store
-  governance/        # Trajectory, claims, and validation
+  governance.json    # Baseline, current-PR checkpoints, and logical governance sections
   workspaces/        # Isolated worktrees (containers when configured)
   config.toml        # Project shape
   OVERRIDE.md        # Local authority, in plain Markdown

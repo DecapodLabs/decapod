@@ -52,7 +52,7 @@ flate2 = "1.0"
 
 [dependencies]
 flate2 = "1.0"
-dactyl-db = { version = "0.11.0", features = ["sqlite", "neon"] }
+dactyl-db = { version = "0.11.1", features = ["sqlite", "neon"] }
 fs2 = "0.4"
 tempfile = "3.10"
 fancy-regex = "0.13"

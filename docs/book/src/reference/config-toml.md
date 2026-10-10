@@ -60,7 +60,7 @@ disable it, including the decision provider. The refresh path preserves the
 existing repository setup and does not require `--force`.
 
 With an active trajectory run, every Jev attempt is retained in the
-schema-versioned `.decapod/governance/jev.json` ledger. A new trajectory run
+schema-versioned `jev` section of `.decapod/governance.json`. A new trajectory run
 resets that working-tree ledger, while committed prior ledgers remain
 recoverable through Git history. The ledger is advisory evidence and is not
 included as a governance authority or completion proof.

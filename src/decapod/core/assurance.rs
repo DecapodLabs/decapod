@@ -12,7 +12,6 @@ use crate::core::{research_claims, trajectory, validate};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 pub const INTERLOCK_WORKSPACE_REQUIRED: &str = "workspace_required";
@@ -291,17 +290,17 @@ impl AssuranceEngine {
             plan: Self::validated_artifact_state(
                 crate::plan_governance::load_plan(repo_root),
                 repo_root,
-                crate::plan_governance::PLAN_PATH,
+                "plan",
             ),
             claims: match research_claims::load_and_validate(repo_root) {
-                Ok(Some(_)) => Self::read_artifact_state(repo_root, research_claims::CLAIMS_PATH),
+                Ok(Some(_)) => Self::read_artifact_state(repo_root, "claims"),
                 Ok(None) => GovernanceArtifactState::Missing,
                 Err(_) => GovernanceArtifactState::Invalid,
             },
             trajectory: Self::validated_artifact_state(
                 trajectory::load_trajectory_cookie(repo_root),
                 repo_root,
-                trajectory::TRAJECTORY_PATH,
+                "trajectory",
             ),
             validation: Self::validation_artifact_state(repo_root),
         }
@@ -310,25 +309,22 @@ impl AssuranceEngine {
     fn validated_artifact_state<T: Serialize>(
         loaded: Result<Option<T>, DecapodError>,
         repo_root: &Path,
-        path: &str,
+        section: &str,
     ) -> GovernanceArtifactState {
         match loaded {
-            Ok(Some(_)) => Self::read_artifact_state(repo_root, path),
+            Ok(Some(_)) => Self::read_artifact_state(repo_root, section),
             Ok(None) => GovernanceArtifactState::Missing,
             Err(_) => GovernanceArtifactState::Invalid,
         }
     }
 
     fn validation_artifact_state(repo_root: &Path) -> GovernanceArtifactState {
-        let path = repo_root.join(validate::VALIDATION_RECEIPT_PATH);
-        if !path.is_file() {
-            return GovernanceArtifactState::Missing;
-        }
-        let raw = match fs::read_to_string(&path) {
-            Ok(raw) => raw,
+        let value = match crate::core::governance_document::read_section(repo_root, "validation") {
+            Ok(Some(value)) => value,
+            Ok(None) => return GovernanceArtifactState::Missing,
             Err(_) => return GovernanceArtifactState::Invalid,
         };
-        let receipt = match serde_json::from_str::<validate::ValidationReceipt>(&raw) {
+        let receipt = match serde_json::from_value::<validate::ValidationReceipt>(value) {
             Ok(receipt) if receipt.validate_integrity().is_ok() => receipt,
             _ => return GovernanceArtifactState::Invalid,
         };
@@ -337,18 +333,12 @@ impl AssuranceEngine {
             .unwrap_or(GovernanceArtifactState::Invalid)
     }
 
-    fn read_artifact_state(repo_root: &Path, relative_path: &str) -> GovernanceArtifactState {
-        let path = repo_root.join(relative_path);
-        if !path.is_file() {
-            return GovernanceArtifactState::Missing;
+    fn read_artifact_state(repo_root: &Path, section: &str) -> GovernanceArtifactState {
+        match crate::core::governance_document::read_section(repo_root, section) {
+            Ok(Some(value)) => GovernanceArtifactState::Present(value),
+            Ok(None) => GovernanceArtifactState::Missing,
+            Err(_) => GovernanceArtifactState::Invalid,
         }
-        let raw = match fs::read_to_string(path) {
-            Ok(raw) => raw,
-            Err(_) => return GovernanceArtifactState::Invalid,
-        };
-        serde_json::from_str(&raw)
-            .map(GovernanceArtifactState::Present)
-            .unwrap_or(GovernanceArtifactState::Invalid)
     }
 
     fn resolve_interlock(
@@ -606,5 +596,42 @@ impl AssuranceEngine {
         let mut seen = std::collections::HashSet::new();
         items.retain(|item| seen.insert(format!("{}::{}", item.kind, item.r#ref)));
         items.truncate(5);
+    }
+}
+
+#[cfg(test)]
+mod governance_section_tests {
+    use super::*;
+
+    #[test]
+    fn durable_context_contains_logical_plan_not_the_shared_document() {
+        let root = tempfile::tempdir().unwrap();
+        crate::plan_governance::init_plan(
+            root.path(),
+            crate::plan_governance::InitPlanInput {
+                title: "Logical section".into(),
+                intent: "Expose only the plan to the plan observation".into(),
+                todo_ids: vec![],
+                proof_hooks: vec![],
+                unknowns: vec![],
+                human_questions: vec![],
+                stop_conditions: vec![],
+                unresolved_contradictions: vec![],
+                deferred_questions: vec![],
+                constraints: Default::default(),
+                phases: vec![],
+            },
+        )
+        .unwrap();
+        let state = AssuranceEngine::durable_governance_context(root.path());
+        match state.plan {
+            GovernanceArtifactState::Present(value) => {
+                assert_eq!(value["title"], "Logical section");
+                assert!(value.get("sections").is_none());
+                assert!(value.get("checkpoints").is_none());
+            }
+            other => panic!("expected logical plan, got {other:?}"),
+        }
+        assert!(matches!(state.validation, GovernanceArtifactState::Missing));
     }
 }

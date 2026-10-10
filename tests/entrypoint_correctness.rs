@@ -114,6 +114,22 @@ fn extract_password(output: &str) -> Option<String> {
 }
 
 #[test]
+fn generated_entrypoints_stay_within_current_validation_budgets() {
+    for (file, limit) in [
+        ("AGENTS.md", 120),
+        ("CLAUDE.md", 70),
+        ("CODEX.md", 70),
+        ("GEMINI.md", 70),
+    ] {
+        let content = entrypoint_integrity::render_entrypoint(file).expect("render entrypoint");
+        assert!(
+            content.lines().count() <= limit,
+            "{file} exceeds its {limit}-line validation budget"
+        );
+    }
+}
+
+#[test]
 fn test_init_creates_all_entrypoints() {
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
     let temp_path = temp_dir.path().to_path_buf();
@@ -156,6 +172,56 @@ fn generated_entrypoints_distinguish_authored_specs_from_machine_state() {
         assert!(
             content.contains("generated attestations, overlays, manifests"),
             "{file} must keep generated projections machine-owned"
+        );
+    }
+}
+
+#[test]
+fn generated_entrypoints_preserve_request_context_without_waiving_coordination() {
+    for file in ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md"] {
+        let content = assets::canonical_template(file).expect("canonical entrypoint template");
+        for required in [
+            "Agent-held request context",
+            "authoritative for request meaning across workspace isolation",
+            "todos govern ownership, collision avoidance, lifecycle, and handoff",
+            "TODO_PROJECTION_MISSING",
+            "without redundant intent clarification",
+            "does not establish ownership or waive execution gates",
+        ] {
+            assert!(
+                content.contains(required),
+                "{file} missing contract: {required}"
+            );
+        }
+    }
+}
+
+#[test]
+fn embedded_orientation_separates_request_context_from_projection_recovery() {
+    let dir = TempDir::new().unwrap();
+    let root = dir.path().to_path_buf();
+    let (initialized, message) = run_decapod(&root, &["init", "--force", "--no-git"]);
+    assert!(initialized, "fixture initialization failed: {message}");
+    let output = run_raw(&root, &["docs", "ingest"], &[]);
+    assert!(
+        output.status.success(),
+        "docs ingest failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let text = String::from_utf8_lossy(&output.stdout);
+    for required in [
+        "Agent-held request context",
+        "Workspace isolation",
+        "Todo coordination state",
+        "TODO_PROJECTION_MISSING",
+        "execution_ready: false",
+        "do not ask the human to repeat an",
+        "not the sole authority for request meaning",
+        "Database read failures remain storage errors",
+    ] {
+        assert!(
+            text.contains(required),
+            "embedded orientation missing: {required}"
         );
     }
 }

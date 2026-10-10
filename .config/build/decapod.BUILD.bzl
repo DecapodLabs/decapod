@@ -97,7 +97,11 @@ def decapod_targets():
             # test-threads flag alone does not isolate concurrent Bazel targets.
             tags = ["exclusive"] if path == "tests/validate_termination.rs" else [],
             srcs = [path],
-            compile_data = ["Cargo.toml", "Cargo.lock"] if path == "tests/release_dependency_policy.rs" else [],
+            compile_data = ["Cargo.toml", "Cargo.lock"] if path == "tests/release_dependency_policy.rs" else [
+                "assets/schemas/trajectory.schema.json",
+                "docs/agent/command-contracts.md",
+                "docs/agent/payload-examples.md",
+            ] if path == "tests/trajectory_docs.rs" else [],
             edition = "2024",
             crate_features = ["supabase-cloud"],
             rustc_env_files = [":cargo_pkg_env"],
@@ -121,7 +125,7 @@ def decapod_targets():
                 # Runtime state is intentionally absent from a clean checkout;
                 # tests create the managed surfaces they need at runtime.
                 ".decapod/managed/**/*",
-                ".decapod/governance/**/*",
+                ".decapod/governance.json",
             ], allow_empty = True),
             deps = [
                 ":decapod_lib",

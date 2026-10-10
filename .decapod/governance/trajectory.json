@@ -1,87 +1,59 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "musl-publication",
-  "intent_id": "intent:musl-publication",
-  "task_id": "bugs_01m4kqw7ww3pxbkf",
-  "original_intent": "Choose and publish the next focused implementation PR",
-  "derived_intent": "Fix the verified musl release compile blocker while preserving atomic no-replace workspace promotion",
-  "current_phase": "validation",
+  "run_id": "dactyl-0111-workflow",
+  "intent_id": "intent:dactyl-0111-workflow",
+  "task_id": "bugs_01m4kyeckvq8r1pv",
+  "original_intent": "Yes let’s get decapod on dactyl v0.11.1 but also go ahead and enhance decapod by solving 3 more open issues on that same PR",
+  "derived_intent": "Adopt registry Dactyl 0.11.1 safe recovery and fully resolve issues 1141, 1165, 1166. User explicitly approved selected scope and draft PR publication.",
+  "current_phase": "implementation",
   "next_transitions": [
-    "publish"
+    "validation"
   ],
   "active_boundaries": [
-    "No merge or release publication; no overwrite fallback; retain macOS behavior"
+    "Preserve shared storage and automatic container startup. No merge, release, or credential changes."
   ],
   "repo_scope": [
-    ".github/workflows/ci.yml",
-    "src/decapod/core/workspace_lifecycle.rs",
-    "tests/unit/core/workspace_lifecycle_tests.rs"
+    "Dactyl bridge, dependency policy, workflow diagnostics, embedded docs, regression tests, living specs"
   ],
-  "inspected_files": [
-    ".github/workflows/ci.yml",
-    "src/decapod/core/workspace_lifecycle.rs",
-    "tests/unit/core/workspace_lifecycle_tests.rs"
+  "inspected_files": [],
+  "modified_files": [],
+  "declared_commands": [],
+  "tool_calls": [
+    "User explicitly expanded the same PR to normalized .decapod/governance.json with PR-scoped evidence and compact accepted baseline; delegated central store and adapters to an isolated governed workspace."
   ],
-  "modified_files": [
-    ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json",
-    ".decapod/managed/specs/ARCHITECTURE.md",
-    ".github/workflows/ci.yml",
-    "src/decapod/core/workspace_lifecycle.rs",
-    "tests/unit/core/workspace_lifecycle_tests.rs"
-  ],
-  "declared_commands": [
-    "cargo clippy --locked --all-targets --all-features -- -D warnings",
-    "cargo test --locked --lib core::workspace_lifecycle",
-    "decapod validate",
-    "decapod validate --format json"
-  ],
-  "tool_calls": [],
   "checks": [
     {
-      "name": "clippy",
-      "status": "passed"
-    },
-    {
-      "name": "decapod validate",
-      "status": "passed"
-    },
-    {
-      "name": "decapod-validate",
-      "status": "passed"
-    },
-    {
-      "name": "diff-check",
-      "status": "passed"
-    },
-    {
-      "name": "fmt",
-      "status": "passed"
-    },
-    {
-      "name": "independent-source-review",
-      "status": "passed"
-    },
-    {
-      "name": "local-docker",
+      "name": "final_combined_tree",
       "status": "unavailable"
     },
     {
-      "name": "native-musl",
+      "name": "fs_permissions",
+      "status": "passed"
+    },
+    {
+      "name": "local_container_custody",
       "status": "unavailable"
     },
     {
-      "name": "workspace-lifecycle",
+      "name": "release_dependency_policy",
+      "status": "passed"
+    },
+    {
+      "name": "specs_refresh_docs",
+      "status": "passed"
+    },
+    {
+      "name": "sqlite_maintenance",
+      "status": "passed"
+    },
+    {
+      "name": "sqlite_shared_recovery",
       "status": "passed"
     }
   ],
   "evidence": [
-    "Current-source validator passed 203 gates on the committed native worktree; local Docker/musl execution remains unavailable and is not implied by that result",
-    "Native glibc lifecycle result: 18 passed, 0 failed, 1 Docker-only test ignored; four no-replace publication tests passed",
-    "No Docker or musl compiler available locally; native x86_64 and aarch64 musl compilation and tests are delegated to automatic GitHub Actions",
-    "Ordinary plan approval records explicit user delegation to choose and publish a PR; it does not assert human review of authored artifacts",
-    "cargo fmt --all -- --check and git diff --check passed; independent read-only review found no blocker",
-    "validation epoch ve_55410c03d82c10cf completed with zero failures"
+    "Focused pre-consolidation checks: sqlite_maintenance 7, sqlite_shared_recovery 2 including real ACL rejection, release_dependency_policy 2, specs_refresh_docs 2, fs_permissions 4. Final combined checks are pending; container proof unavailable locally.",
+    "User instruction: So this PR will be ultra. Keep working and publish the PR when ready."
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -92,23 +64,21 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:32e91b988b2cd6b9a64409cf92e183312c7aaeb88a53bd27865faaf19d463d1b",
+  "artifact_hash": "sha256:1d7adaea176b680fe1ef2d2248dabbcdb8d3e305f45016217bba6e3b9167c494",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:musl-publication": {
-        "id": "intent:musl-publication",
-        "raw_intent": "Choose and publish the next focused implementation PR",
-        "refined_intent": "Fix the verified musl release compile blocker while preserving atomic no-replace workspace promotion",
+      "intent:dactyl-0111-workflow": {
+        "id": "intent:dactyl-0111-workflow",
+        "raw_intent": "Yes let’s get decapod on dactyl v0.11.1 but also go ahead and enhance decapod by solving 3 more open issues on that same PR",
+        "refined_intent": "Adopt registry Dactyl 0.11.1 safe recovery and fully resolve issues 1141, 1165, 1166. User explicitly approved selected scope and draft PR publication.",
         "acceptance_criteria": [],
         "constraints": [
-          "src/decapod/core/workspace_lifecycle.rs",
-          "tests/unit/core/workspace_lifecycle_tests.rs",
-          ".github/workflows/ci.yml"
+          "Dactyl bridge, dependency policy, workflow diagnostics, embedded docs, regression tests, living specs"
         ],
         "assumptions": [],
         "boundaries": [
-          "No merge or release publication; no overwrite fallback; retain macOS behavior"
+          "Preserve shared storage and automatic container startup. No merge, release, or credential changes."
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -121,142 +91,95 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:musl-publication",
+        "intent_id": "intent:dactyl-0111-workflow",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:musl-publication",
+        "intent_id": "intent:dactyl-0111-workflow",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:musl-publication",
+        "intent_id": "intent:dactyl-0111-workflow",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:musl-publication"
+        "detail": "trajectory:dactyl-0111-workflow"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:musl-publication",
+        "intent_id": "intent:dactyl-0111-workflow",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:musl-publication"
+        "detail": "trajectory:dactyl-0111-workflow"
       },
       {
         "sequence": 6,
         "event_id": "event:6",
-        "intent_id": "intent:musl-publication",
+        "intent_id": "intent:dactyl-0111-workflow",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:musl-publication"
-      },
-      {
-        "sequence": 7,
-        "event_id": "event:7",
-        "intent_id": "intent:musl-publication",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:musl-publication"
+        "detail": "trajectory:dactyl-0111-workflow"
       }
     ],
     "trajectories": {
-      "musl-publication": {
-        "id": "musl-publication",
-        "intent_id": "intent:musl-publication",
+      "dactyl-0111-workflow": {
+        "id": "dactyl-0111-workflow",
+        "intent_id": "intent:dactyl-0111-workflow",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
             "action": "trajectory.record",
+            "tool": "User explicitly expanded the same PR to normalized .decapod/governance.json with PR-scoped evidence and compact accepted baseline; delegated central store and adapters to an isolated governed workspace.",
             "scope": [
-              ".github/workflows/ci.yml",
-              "src/decapod/core/workspace_lifecycle.rs",
-              "tests/unit/core/workspace_lifecycle_tests.rs"
+              "Dactyl bridge, dependency policy, workflow diagnostics, embedded docs, regression tests, living specs"
             ],
             "observations": [
-              "src/decapod/core/workspace_lifecycle.rs",
-              "tests/unit/core/workspace_lifecycle_tests.rs",
-              ".github/workflows/ci.yml",
-              "src/decapod/core/workspace_lifecycle.rs",
-              "tests/unit/core/workspace_lifecycle_tests.rs",
-              ".github/workflows/ci.yml",
-              ".decapod/managed/specs/ARCHITECTURE.md",
-              "cargo fmt --all -- --check and git diff --check passed; independent read-only review found no blocker",
-              "No Docker or musl compiler available locally; native x86_64 and aarch64 musl compilation and tests are delegated to automatic GitHub Actions",
-              "Ordinary plan approval records explicit user delegation to choose and publish a PR; it does not assert human review of authored artifacts"
+              "User instruction: So this PR will be ultra. Keep working and publish the PR when ready."
             ],
-            "proof_refs": [
-              "fmt",
-              "diff-check",
-              "independent-source-review",
-              "local-docker",
-              "native-musl"
-            ],
+            "proof_refs": [],
             "validation_findings": [],
             "custody_event_id": "event:4"
           },
           {
             "sequence": 5,
             "action": "trajectory.record",
-            "command": "cargo test --locked --lib core::workspace_lifecycle",
             "scope": [
-              ".github/workflows/ci.yml",
-              "src/decapod/core/workspace_lifecycle.rs",
-              "tests/unit/core/workspace_lifecycle_tests.rs"
+              "Dactyl bridge, dependency policy, workflow diagnostics, embedded docs, regression tests, living specs"
             ],
             "observations": [
-              "Native glibc lifecycle result: 18 passed, 0 failed, 1 Docker-only test ignored; four no-replace publication tests passed"
+              "Focused pre-consolidation checks: sqlite_maintenance 7, sqlite_shared_recovery 2 including real ACL rejection, release_dependency_policy 2, specs_refresh_docs 2, fs_permissions 4. Final combined checks are pending; container proof unavailable locally."
             ],
             "proof_refs": [
-              "workspace-lifecycle"
+              "sqlite_maintenance",
+              "sqlite_shared_recovery",
+              "release_dependency_policy",
+              "specs_refresh_docs",
+              "fs_permissions"
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
           },
           {
             "sequence": 6,
-            "action": "validation",
-            "command": "decapod validate",
+            "action": "trajectory.record",
             "scope": [
-              ".github/workflows/ci.yml",
-              "src/decapod/core/workspace_lifecycle.rs",
-              "tests/unit/core/workspace_lifecycle_tests.rs"
+              "Dactyl bridge, dependency policy, workflow diagnostics, embedded docs, regression tests, living specs"
             ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_55410c03d82c10cf completed with zero failures"
-            ],
+            "observations": [],
             "proof_refs": [
-              "decapod validate"
+              "final_combined_tree",
+              "local_container_custody"
             ],
             "validation_findings": [],
             "custody_event_id": "event:6"
-          },
-          {
-            "sequence": 7,
-            "action": "trajectory.record",
-            "command": "cargo clippy --locked --all-targets --all-features -- -D warnings",
-            "scope": [
-              ".github/workflows/ci.yml",
-              "src/decapod/core/workspace_lifecycle.rs",
-              "tests/unit/core/workspace_lifecycle_tests.rs"
-            ],
-            "observations": [
-              "Current-source validator passed 203 gates on the committed native worktree; local Docker/musl execution remains unavailable and is not implied by that result"
-            ],
-            "proof_refs": [
-              "clippy",
-              "decapod-validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:7"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 7
+    "next_sequence": 6
   }
 }

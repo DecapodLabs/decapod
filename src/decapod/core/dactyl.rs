@@ -443,9 +443,11 @@ impl DactylBridge {
 
     /// Explicitly activate Dactyl's verified logical dump/reload replacement.
     ///
-    /// Dactyl v0.10.0 currently activates recovered databases in DELETE
+    /// Dactyl v0.11.1 activates recovered databases in DELETE
     /// journal mode. The archive path is supplied by the operator and must be
-    /// distinct and unused; no startup, validation, append, or open path calls
+    /// distinct and unused. Dactyl owns private staging, creation-time modes,
+    /// original owner/group/mode preservation and fail-closed capability checks.
+    /// No startup, validation, append, or open path calls
     /// this method.
     pub fn recover_from_dump_reload(
         &mut self,
@@ -461,41 +463,12 @@ impl DactylBridge {
             crate::core::fs_permissions::shared_storage(),
         )
         .map_err(DecapodError::IoError)?;
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            if fs::metadata(parent)
-                .map_err(DecapodError::IoError)?
-                .permissions()
-                .mode()
-                & 0o077
-                != 0
-            {
-                return Err(DecapodError::ValidationError(
-                    "STORAGE_RECOVERY_PRIVATE_DIRECTORY_REQUIRED: the pinned Dactyl recovery API creates temporary files beside the active database and does not expose creation modes. Recovery requires a private (0700) database directory; no existing permissions were changed. Shared-directory recovery needs upstream Dactyl maintenance-permission support. Preserve the store and ask its owner to review the recovery location.".to_string()
-                ));
-            }
-        }
         crate::core::fs_permissions::check_storage(archive).map_err(DecapodError::IoError)?;
         let options = RecoveryOptions::new(
             preserve_original_at.as_ref().to_string_lossy(),
             RecoveryJournalMode::Delete,
         );
         let result = self.connection.recover_from_dump_reload(options)?;
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            // Dactyl has published a newly rebuilt inode within a private
-            // directory. Preserve the archived original's intentional safe mode.
-            let permissions = fs::metadata(&result.preserved_original_path)
-                .map_err(DecapodError::IoError)?
-                .permissions();
-            fs::set_permissions(
-                &result.active_path,
-                fs::Permissions::from_mode(permissions.mode() & 0o777),
-            )
-            .map_err(DecapodError::IoError)?;
-        }
         crate::core::fs_permissions::check_storage(Path::new(&result.active_path))
             .map_err(DecapodError::IoError)?;
         Ok(result)

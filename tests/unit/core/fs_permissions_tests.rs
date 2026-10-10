@@ -91,9 +91,21 @@ fn permissive_umask_flows_are_confined() {
         crate::core::dactyl::DactylBridge::open_local(&database, dactyl_db::AccessMode::ReadWrite)
             .unwrap();
     let archive = data.join("original.db");
-    bridge.recover_from_dump_reload(&archive).unwrap();
-    assert_eq!(mode(&database), 0o600);
-    assert_eq!(mode(&archive), 0o600);
+    let recovery = bridge.recover_from_dump_reload(&archive);
+    if cfg!(any(target_os = "linux", target_os = "android")) {
+        recovery.unwrap();
+        assert_eq!(mode(&database), 0o600);
+        assert_eq!(mode(&archive), 0o600);
+    } else {
+        assert!(
+            recovery
+                .unwrap_err()
+                .to_string()
+                .contains("secure_recovery_unsupported")
+        );
+        assert!(!archive.exists());
+        assert_eq!(mode(&database), 0o600);
+    }
 }
 
 #[cfg(unix)]
@@ -197,14 +209,22 @@ fn shared_store_requires_explicit_opt_in_and_never_accepts_world_write() {
             .unwrap();
     let before = fs::read(&database).unwrap();
     let archive = data.join("archive.db");
-    let error = bridge.recover_from_dump_reload(&archive).unwrap_err();
-    assert!(
-        error
-            .to_string()
-            .contains("STORAGE_RECOVERY_PRIVATE_DIRECTORY_REQUIRED")
-    );
-    assert!(!archive.exists());
-    assert_eq!(fs::read(&database).unwrap(), before);
+    let recovery = bridge.recover_from_dump_reload(&archive);
+    if cfg!(any(target_os = "linux", target_os = "android")) {
+        recovery.unwrap();
+        assert_eq!(fs::read(&archive).unwrap(), before);
+        assert_eq!(mode(&database), 0o660);
+        assert_eq!(mode(&archive), 0o660);
+    } else {
+        assert!(
+            recovery
+                .unwrap_err()
+                .to_string()
+                .contains("secure_recovery_unsupported")
+        );
+        assert!(!archive.exists());
+        assert_eq!(fs::read(&database).unwrap(), before);
+    }
     assert!(!fs::read_dir(&data).unwrap().any(|entry| {
         entry
             .unwrap()

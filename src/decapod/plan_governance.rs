@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 const PLAN_SCHEMA_VERSION: &str = "1.1.0";
-pub const PLAN_PATH: &str = ".decapod/governance/plan.json";
+pub const PLAN_PATH: &str = crate::core::governance_document::GOVERNANCE_PATH;
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
@@ -138,40 +138,43 @@ pub fn review_spec(
     disposition: SpecReviewDisposition,
     reason: &str,
 ) -> Result<GovernedPlan, error::DecapodError> {
-    if !PUBLICATION_REVIEW_SPECS.contains(&path) || reason.trim().is_empty() {
-        return Err(error::DecapodError::ValidationError("Review requires a canonical INTERFACES, ARCHITECTURE, or SECURITY spec path and a non-empty substantive reason.".into()));
-    }
-    let mut plan = load_plan(project_root)?.ok_or_else(|| {
-        error::DecapodError::ValidationError(
-            "Initialize the governed plan before recording spec reviews.".into(),
-        )
-    })?;
-    let body = fs::read_to_string(project_root.join(path)).map_err(error::DecapodError::IoError)?;
-    let hash = crate::core::project_specs::material_spec_body_hash(&body);
-    let fingerprint = crate::core::project_specs::repo_signal_fingerprint(project_root)?;
-    // A generic new review cannot silently turn an unresolved human decision
-    // into an approval, even after a code change. Refresh a pending request
-    // against current bytes, then resolve it through the deliberate command.
-    if plan.spec_reviews.iter().any(|review| {
-        review.path == path && review.disposition == SpecReviewDisposition::RequiresDecision
-    }) && disposition != SpecReviewDisposition::RequiresDecision
-    {
-        return Err(error::DecapodError::ValidationError("SPEC_REVIEW_DECISION_REQUIRED: this contract still requires human judgment. Preserve the decision request; do not replace it with agent self-approval. After obtaining the human decision, use `decapod govern plan resolve-spec-review --path <path> --decision-ref <human decision reference> --reason <accepted rationale>`; ordinary review cannot grant approval.".into()));
-    }
-    plan.spec_reviews.retain(|review| review.path != path);
-    plan.spec_reviews.push(SpecReview {
-        path: path.to_string(),
-        spec_material_hash: hash,
-        reviewed_code_fingerprint: fingerprint,
-        disposition,
-        reason: reason.trim().to_string(),
-        decision_ref: None,
-    });
-    plan.spec_reviews.sort_by(|a, b| a.path.cmp(&b.path));
-    plan.schema_version = PLAN_SCHEMA_VERSION.to_string();
-    plan.updated_at = crate::core::time::now_epoch_z();
-    save_plan(project_root, &plan)?;
-    Ok(plan)
+    crate::core::governance_document::with_lock(project_root, || {
+        if !PUBLICATION_REVIEW_SPECS.contains(&path) || reason.trim().is_empty() {
+            return Err(error::DecapodError::ValidationError("Review requires a canonical INTERFACES, ARCHITECTURE, or SECURITY spec path and a non-empty substantive reason.".into()));
+        }
+        let mut plan = load_plan(project_root)?.ok_or_else(|| {
+            error::DecapodError::ValidationError(
+                "Initialize the governed plan before recording spec reviews.".into(),
+            )
+        })?;
+        let body =
+            fs::read_to_string(project_root.join(path)).map_err(error::DecapodError::IoError)?;
+        let hash = crate::core::project_specs::material_spec_body_hash(&body);
+        let fingerprint = crate::core::project_specs::repo_signal_fingerprint(project_root)?;
+        // A generic new review cannot silently turn an unresolved human decision
+        // into an approval, even after a code change. Refresh a pending request
+        // against current bytes, then resolve it through the deliberate command.
+        if plan.spec_reviews.iter().any(|review| {
+            review.path == path && review.disposition == SpecReviewDisposition::RequiresDecision
+        }) && disposition != SpecReviewDisposition::RequiresDecision
+        {
+            return Err(error::DecapodError::ValidationError("SPEC_REVIEW_DECISION_REQUIRED: this contract still requires human judgment. Preserve the decision request; do not replace it with agent self-approval. After obtaining the human decision, use `decapod govern plan resolve-spec-review --path <path> --decision-ref <human decision reference> --reason <accepted rationale>`; ordinary review cannot grant approval.".into()));
+        }
+        plan.spec_reviews.retain(|review| review.path != path);
+        plan.spec_reviews.push(SpecReview {
+            path: path.to_string(),
+            spec_material_hash: hash,
+            reviewed_code_fingerprint: fingerprint,
+            disposition,
+            reason: reason.trim().to_string(),
+            decision_ref: None,
+        });
+        plan.spec_reviews.sort_by(|a, b| a.path.cmp(&b.path));
+        plan.schema_version = PLAN_SCHEMA_VERSION.to_string();
+        plan.updated_at = crate::core::time::now_epoch_z();
+        save_plan(project_root, &plan)?;
+        Ok(plan)
+    })
 }
 
 /// Deliberate resolution under the same declared-human-approval authority as
@@ -182,43 +185,46 @@ pub fn resolve_spec_review(
     decision_ref: &str,
     reason: &str,
 ) -> Result<GovernedPlan, error::DecapodError> {
-    if !PUBLICATION_REVIEW_SPECS.contains(&path)
-        || decision_ref.trim().is_empty()
-        || reason.trim().is_empty()
-    {
-        return Err(error::DecapodError::ValidationError("Explicit spec review resolution requires a canonical path, human decision reference, and accepted rationale.".into()));
-    }
-    let mut plan = load_plan(project_root)?
-        .ok_or_else(|| error::DecapodError::ValidationError("Missing governed plan.".into()))?;
-    let review = plan
-        .spec_reviews
-        .iter_mut()
-        .find(|review| {
-            review.path == path && review.disposition == SpecReviewDisposition::RequiresDecision
-        })
-        .ok_or_else(|| {
-            error::DecapodError::ValidationError(
-                "No pending spec decision exists for this path.".into(),
-            )
-        })?;
-    let body = fs::read_to_string(project_root.join(path)).map_err(error::DecapodError::IoError)?;
-    if review.spec_material_hash != crate::core::project_specs::material_spec_body_hash(&body)
-        || review.reviewed_code_fingerprint
-            != crate::core::project_specs::repo_signal_fingerprint(project_root)?
-    {
-        return Err(error::DecapodError::ValidationError("STALE_SPEC_REVIEW: code/spec changed after the decision request; present current content to the human and record a new decision request first.".into()));
-    }
-    review.disposition = SpecReviewDisposition::UnchangedWithReason;
-    review.reason = format!(
-        "Decision request: {}\nAccepted rationale: {}",
-        review.reason,
-        reason.trim()
-    );
-    review.decision_ref = Some(decision_ref.trim().to_string());
-    plan.schema_version = PLAN_SCHEMA_VERSION.to_string();
-    plan.updated_at = crate::core::time::now_epoch_z();
-    save_plan(project_root, &plan)?;
-    Ok(plan)
+    crate::core::governance_document::with_lock(project_root, || {
+        if !PUBLICATION_REVIEW_SPECS.contains(&path)
+            || decision_ref.trim().is_empty()
+            || reason.trim().is_empty()
+        {
+            return Err(error::DecapodError::ValidationError("Explicit spec review resolution requires a canonical path, human decision reference, and accepted rationale.".into()));
+        }
+        let mut plan = load_plan(project_root)?
+            .ok_or_else(|| error::DecapodError::ValidationError("Missing governed plan.".into()))?;
+        let review = plan
+            .spec_reviews
+            .iter_mut()
+            .find(|review| {
+                review.path == path && review.disposition == SpecReviewDisposition::RequiresDecision
+            })
+            .ok_or_else(|| {
+                error::DecapodError::ValidationError(
+                    "No pending spec decision exists for this path.".into(),
+                )
+            })?;
+        let body =
+            fs::read_to_string(project_root.join(path)).map_err(error::DecapodError::IoError)?;
+        if review.spec_material_hash != crate::core::project_specs::material_spec_body_hash(&body)
+            || review.reviewed_code_fingerprint
+                != crate::core::project_specs::repo_signal_fingerprint(project_root)?
+        {
+            return Err(error::DecapodError::ValidationError("STALE_SPEC_REVIEW: code/spec changed after the decision request; present current content to the human and record a new decision request first.".into()));
+        }
+        review.disposition = SpecReviewDisposition::UnchangedWithReason;
+        review.reason = format!(
+            "Decision request: {}\nAccepted rationale: {}",
+            review.reason,
+            reason.trim()
+        );
+        review.decision_ref = Some(decision_ref.trim().to_string());
+        plan.schema_version = PLAN_SCHEMA_VERSION.to_string();
+        plan.updated_at = crate::core::time::now_epoch_z();
+        save_plan(project_root, &plan)?;
+        Ok(plan)
+    })
 }
 
 #[derive(Clone, Debug, Default)]
@@ -257,147 +263,146 @@ pub struct ExecuteCheckInput<'a> {
     pub todo_id: Option<&'a str>,
 }
 
+#[allow(dead_code)]
 pub fn plan_path(project_root: &Path) -> PathBuf {
     project_root.join(PLAN_PATH)
 }
 
 pub fn load_plan(project_root: &Path) -> Result<Option<GovernedPlan>, error::DecapodError> {
-    let path = plan_path(project_root);
-    if !path.exists() {
-        return Ok(None);
-    }
-    let bytes = fs::read(path).map_err(error::DecapodError::IoError)?;
-    let plan: GovernedPlan = serde_json::from_slice(&bytes).map_err(|e| {
-        error::DecapodError::ValidationError(format!("Invalid plan artifact JSON: {e}"))
-    })?;
-    Ok(Some(plan))
+    crate::core::governance_document::read_section(project_root, "plan")?
+        .map(|value| {
+            serde_json::from_value(value).map_err(|e| {
+                error::DecapodError::ValidationError(format!("Invalid governed plan: {e}"))
+            })
+        })
+        .transpose()
 }
 
 pub fn save_plan(project_root: &Path, plan: &GovernedPlan) -> Result<(), error::DecapodError> {
-    let path = plan_path(project_root);
-    if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
-    }
-    let bytes = serde_json::to_vec_pretty(plan).map_err(|e| {
-        error::DecapodError::ValidationError(format!("Unable to serialize plan artifact: {e}"))
-    })?;
-    fs::write(path, bytes).map_err(error::DecapodError::IoError)?;
-    Ok(())
+    let value = serde_json::to_value(plan)
+        .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
+    crate::core::governance_document::write_section(project_root, "plan", &value)
 }
 
 pub fn init_plan(
     project_root: &Path,
     input: InitPlanInput,
 ) -> Result<GovernedPlan, error::DecapodError> {
-    let plan = GovernedPlan {
-        schema_version: PLAN_SCHEMA_VERSION.to_string(),
-        title: input.title,
-        intent: input.intent,
-        state: PlanState::Draft,
-        todo_ids: input.todo_ids,
-        proof_hooks: input.proof_hooks,
-        unknowns: input.unknowns,
-        human_questions: input.human_questions,
-        stop_conditions: input.stop_conditions,
-        unresolved_contradictions: input.unresolved_contradictions,
-        deferred_questions: input.deferred_questions,
-        constraints: input.constraints,
-        phases: input.phases,
-        spec_reviews: Vec::new(),
-        updated_at: crate::core::time::now_epoch_z(),
-    };
-    save_plan(project_root, &plan)?;
-    Ok(plan)
+    crate::core::governance_document::with_lock(project_root, || {
+        let plan = GovernedPlan {
+            schema_version: PLAN_SCHEMA_VERSION.to_string(),
+            title: input.title,
+            intent: input.intent,
+            state: PlanState::Draft,
+            todo_ids: input.todo_ids,
+            proof_hooks: input.proof_hooks,
+            unknowns: input.unknowns,
+            human_questions: input.human_questions,
+            stop_conditions: input.stop_conditions,
+            unresolved_contradictions: input.unresolved_contradictions,
+            deferred_questions: input.deferred_questions,
+            constraints: input.constraints,
+            phases: input.phases,
+            spec_reviews: Vec::new(),
+            updated_at: crate::core::time::now_epoch_z(),
+        };
+        save_plan(project_root, &plan)?;
+        Ok(plan)
+    })
 }
 
 pub fn patch_plan(
     project_root: &Path,
     patch: PlanPatch,
 ) -> Result<GovernedPlan, error::DecapodError> {
-    let mut plan = load_plan(project_root)?.ok_or_else(|| {
-        marker_error(
-            "NEEDS_PLAN_APPROVAL",
-            "Plan artifact is missing. Run `decapod govern plan init` first.",
-            None,
-        )
-    })?;
+    crate::core::governance_document::with_lock(project_root, || {
+        let mut plan = load_plan(project_root)?.ok_or_else(|| {
+            marker_error(
+                "NEEDS_PLAN_APPROVAL",
+                "Plan artifact is missing. Run `decapod govern plan init` first.",
+                None,
+            )
+        })?;
 
-    if let Some(title) = patch.title {
-        plan.title = title;
-    }
-    if let Some(intent) = patch.intent {
-        plan.intent = intent;
-    }
-    if let Some(state) = patch.state {
-        if state == PlanState::Done && plan.phases.iter().any(|phase| !phase.completed) {
-            return Err(marker_error(
-                "PHASES_INCOMPLETE",
-                "Plan cannot reach DONE until every declared phase is completed.",
-                Some(json!({
-                    "incomplete_phases": plan.phases.iter().filter(|phase| !phase.completed).map(|phase| phase.id.clone()).collect::<Vec<_>>()
-                })),
-            ));
+        if let Some(title) = patch.title {
+            plan.title = title;
         }
-        plan.state = state;
-    }
-    if let Some(todo_ids) = patch.todo_ids {
-        plan.todo_ids = todo_ids;
-    }
-    if let Some(proof_hooks) = patch.proof_hooks {
-        plan.proof_hooks = proof_hooks;
-    }
-    if let Some(unknowns) = patch.unknowns {
-        plan.unknowns = unknowns;
-    }
-    if let Some(human_questions) = patch.human_questions {
-        plan.human_questions = human_questions;
-    }
-    if let Some(stop_conditions) = patch.stop_conditions {
-        plan.stop_conditions = stop_conditions;
-    }
-    if let Some(unresolved_contradictions) = patch.unresolved_contradictions {
-        plan.unresolved_contradictions = unresolved_contradictions;
-    }
-    if let Some(deferred_questions) = patch.deferred_questions {
-        plan.deferred_questions = deferred_questions;
-    }
-    if let Some(constraints) = patch.constraints {
-        plan.constraints = constraints;
-    }
-    if let Some(phases) = patch.phases {
-        plan.phases = phases;
-    }
-    plan.updated_at = crate::core::time::now_epoch_z();
-    save_plan(project_root, &plan)?;
-    Ok(plan)
+        if let Some(intent) = patch.intent {
+            plan.intent = intent;
+        }
+        if let Some(state) = patch.state {
+            if state == PlanState::Done && plan.phases.iter().any(|phase| !phase.completed) {
+                return Err(marker_error(
+                    "PHASES_INCOMPLETE",
+                    "Plan cannot reach DONE until every declared phase is completed.",
+                    Some(json!({
+                        "incomplete_phases": plan.phases.iter().filter(|phase| !phase.completed).map(|phase| phase.id.clone()).collect::<Vec<_>>()
+                    })),
+                ));
+            }
+            plan.state = state;
+        }
+        if let Some(todo_ids) = patch.todo_ids {
+            plan.todo_ids = todo_ids;
+        }
+        if let Some(proof_hooks) = patch.proof_hooks {
+            plan.proof_hooks = proof_hooks;
+        }
+        if let Some(unknowns) = patch.unknowns {
+            plan.unknowns = unknowns;
+        }
+        if let Some(human_questions) = patch.human_questions {
+            plan.human_questions = human_questions;
+        }
+        if let Some(stop_conditions) = patch.stop_conditions {
+            plan.stop_conditions = stop_conditions;
+        }
+        if let Some(unresolved_contradictions) = patch.unresolved_contradictions {
+            plan.unresolved_contradictions = unresolved_contradictions;
+        }
+        if let Some(deferred_questions) = patch.deferred_questions {
+            plan.deferred_questions = deferred_questions;
+        }
+        if let Some(constraints) = patch.constraints {
+            plan.constraints = constraints;
+        }
+        if let Some(phases) = patch.phases {
+            plan.phases = phases;
+        }
+        plan.updated_at = crate::core::time::now_epoch_z();
+        save_plan(project_root, &plan)?;
+        Ok(plan)
+    })
 }
 
 pub fn add_phase(project_root: &Path, phase: Phase) -> Result<GovernedPlan, error::DecapodError> {
-    let mut plan = load_plan(project_root)?.ok_or_else(|| {
-        marker_error(
-            "NEEDS_PLAN_APPROVAL",
-            "Plan artifact is missing. Run `decapod govern plan init` first.",
-            None,
-        )
-    })?;
-    if phase.id.trim().is_empty() || phase.name.trim().is_empty() {
-        return Err(marker_error(
-            "INVALID_PHASE_CONTRACT",
-            "Phase id and name must not be empty",
-            None,
-        ));
-    }
-    if plan.phases.iter().any(|existing| existing.id == phase.id) {
-        return Err(marker_error(
-            "INVALID_PHASE_CONTRACT",
-            &format!("Phase '{}' already exists", phase.id),
-            None,
-        ));
-    }
-    plan.phases.push(phase);
-    plan.updated_at = crate::core::time::now_epoch_z();
-    save_plan(project_root, &plan)?;
-    Ok(plan)
+    crate::core::governance_document::with_lock(project_root, || {
+        let mut plan = load_plan(project_root)?.ok_or_else(|| {
+            marker_error(
+                "NEEDS_PLAN_APPROVAL",
+                "Plan artifact is missing. Run `decapod govern plan init` first.",
+                None,
+            )
+        })?;
+        if phase.id.trim().is_empty() || phase.name.trim().is_empty() {
+            return Err(marker_error(
+                "INVALID_PHASE_CONTRACT",
+                "Phase id and name must not be empty",
+                None,
+            ));
+        }
+        if plan.phases.iter().any(|existing| existing.id == phase.id) {
+            return Err(marker_error(
+                "INVALID_PHASE_CONTRACT",
+                &format!("Phase '{}' already exists", phase.id),
+                None,
+            ));
+        }
+        plan.phases.push(phase);
+        plan.updated_at = crate::core::time::now_epoch_z();
+        save_plan(project_root, &plan)?;
+        Ok(plan)
+    })
 }
 
 pub fn update_phase(
@@ -406,35 +411,37 @@ pub fn update_phase(
     name: Option<String>,
     description: Option<String>,
 ) -> Result<GovernedPlan, error::DecapodError> {
-    let mut plan = load_plan(project_root)?.ok_or_else(|| {
-        marker_error(
-            "NEEDS_PLAN_APPROVAL",
-            "Plan artifact is missing. Run `decapod govern plan init` first.",
-            None,
-        )
-    })?;
-    let phase = plan
-        .phases
-        .iter_mut()
-        .find(|phase| phase.id == phase_id)
-        .ok_or_else(|| {
+    crate::core::governance_document::with_lock(project_root, || {
+        let mut plan = load_plan(project_root)?.ok_or_else(|| {
             marker_error(
-                "PHASE_NOT_FOUND",
-                &format!("Phase with ID '{phase_id}' not found"),
+                "NEEDS_PLAN_APPROVAL",
+                "Plan artifact is missing. Run `decapod govern plan init` first.",
                 None,
             )
         })?;
-    if let Some(name) = name
-        && !name.trim().is_empty()
-    {
-        phase.name = name;
-    }
-    if let Some(description) = description {
-        phase.description = description;
-    }
-    plan.updated_at = crate::core::time::now_epoch_z();
-    save_plan(project_root, &plan)?;
-    Ok(plan)
+        let phase = plan
+            .phases
+            .iter_mut()
+            .find(|phase| phase.id == phase_id)
+            .ok_or_else(|| {
+                marker_error(
+                    "PHASE_NOT_FOUND",
+                    &format!("Phase with ID '{phase_id}' not found"),
+                    None,
+                )
+            })?;
+        if let Some(name) = name
+            && !name.trim().is_empty()
+        {
+            phase.name = name;
+        }
+        if let Some(description) = description {
+            phase.description = description;
+        }
+        plan.updated_at = crate::core::time::now_epoch_z();
+        save_plan(project_root, &plan)?;
+        Ok(plan)
+    })
 }
 
 pub fn add_gate(
@@ -443,32 +450,34 @@ pub fn add_gate(
     is_entry_gate: bool,
     gate: Gate,
 ) -> Result<GovernedPlan, error::DecapodError> {
-    let mut plan = load_plan(project_root)?.ok_or_else(|| {
-        marker_error(
-            "NEEDS_PLAN_APPROVAL",
-            "Plan artifact is missing. Run `decapod govern plan init` first.",
-            None,
-        )
-    })?;
-    let phase = plan
-        .phases
-        .iter_mut()
-        .find(|phase| phase.id == phase_id)
-        .ok_or_else(|| {
+    crate::core::governance_document::with_lock(project_root, || {
+        let mut plan = load_plan(project_root)?.ok_or_else(|| {
             marker_error(
-                "PHASE_NOT_FOUND",
-                &format!("Phase with ID '{phase_id}' not found"),
+                "NEEDS_PLAN_APPROVAL",
+                "Plan artifact is missing. Run `decapod govern plan init` first.",
                 None,
             )
         })?;
-    if is_entry_gate {
-        phase.entry_gates.push(gate);
-    } else {
-        phase.exit_gates.push(gate);
-    }
-    plan.updated_at = crate::core::time::now_epoch_z();
-    save_plan(project_root, &plan)?;
-    Ok(plan)
+        let phase = plan
+            .phases
+            .iter_mut()
+            .find(|phase| phase.id == phase_id)
+            .ok_or_else(|| {
+                marker_error(
+                    "PHASE_NOT_FOUND",
+                    &format!("Phase with ID '{phase_id}' not found"),
+                    None,
+                )
+            })?;
+        if is_entry_gate {
+            phase.entry_gates.push(gate);
+        } else {
+            phase.exit_gates.push(gate);
+        }
+        plan.updated_at = crate::core::time::now_epoch_z();
+        save_plan(project_root, &plan)?;
+        Ok(plan)
+    })
 }
 
 pub fn update_gate(
@@ -478,42 +487,44 @@ pub fn update_gate(
     gate_index: usize,
     description: String,
 ) -> Result<GovernedPlan, error::DecapodError> {
-    let mut plan = load_plan(project_root)?.ok_or_else(|| {
-        marker_error(
-            "NEEDS_PLAN_APPROVAL",
-            "Plan artifact is missing. Run `decapod govern plan init` first.",
-            None,
-        )
-    })?;
-    let phase = plan
-        .phases
-        .iter_mut()
-        .find(|phase| phase.id == phase_id)
-        .ok_or_else(|| {
+    crate::core::governance_document::with_lock(project_root, || {
+        let mut plan = load_plan(project_root)?.ok_or_else(|| {
             marker_error(
-                "PHASE_NOT_FOUND",
-                &format!("Phase with ID '{phase_id}' not found"),
+                "NEEDS_PLAN_APPROVAL",
+                "Plan artifact is missing. Run `decapod govern plan init` first.",
                 None,
             )
         })?;
-    let gates = if is_entry_gate {
-        &mut phase.entry_gates
-    } else {
-        &mut phase.exit_gates
-    };
-    let gate = gates.get_mut(gate_index).ok_or_else(|| {
-        marker_error(
-            "INVALID_GATE_INDEX",
-            &format!("Gate index {gate_index} is out of bounds"),
-            None,
-        )
-    })?;
-    gate.description = description;
-    gate.satisfied = false;
-    gate.satisfied_at = None;
-    plan.updated_at = crate::core::time::now_epoch_z();
-    save_plan(project_root, &plan)?;
-    Ok(plan)
+        let phase = plan
+            .phases
+            .iter_mut()
+            .find(|phase| phase.id == phase_id)
+            .ok_or_else(|| {
+                marker_error(
+                    "PHASE_NOT_FOUND",
+                    &format!("Phase with ID '{phase_id}' not found"),
+                    None,
+                )
+            })?;
+        let gates = if is_entry_gate {
+            &mut phase.entry_gates
+        } else {
+            &mut phase.exit_gates
+        };
+        let gate = gates.get_mut(gate_index).ok_or_else(|| {
+            marker_error(
+                "INVALID_GATE_INDEX",
+                &format!("Gate index {gate_index} is out of bounds"),
+                None,
+            )
+        })?;
+        gate.description = description;
+        gate.satisfied = false;
+        gate.satisfied_at = None;
+        plan.updated_at = crate::core::time::now_epoch_z();
+        save_plan(project_root, &plan)?;
+        Ok(plan)
+    })
 }
 
 pub fn ensure_execute_ready(
@@ -591,12 +602,27 @@ pub fn ensure_execute_ready(
         }
     }
     if !found {
+        // A task lookup cannot determine whether the agent still holds the
+        // user's request. Keep the coordination gate closed, but do not turn
+        // an absent local projection into an intent clarification request.
         return Err(marker_error(
-            "NEEDS_HUMAN_INPUT",
-            "Execution blocked: referenced TODO is missing.",
-            Some(
-                json!({ "questions": ["Confirm the TODO ID and run `decapod todo add` if needed."] }),
-            ),
+            "TODO_PROJECTION_MISSING",
+            "Execution coordination blocked: referenced TODO is absent from the selected store. Agent-held request context is not invalidated.",
+            Some(json!({
+                "kind": "coordination_projection_missing",
+                "todo_ids": candidate_todo_ids,
+                "project_root": input.project_root,
+                "store_root": input.store_root,
+                "intent_check": "passed",
+                "execution_ready": false,
+                "ownership": "not_established_by_absence",
+                "recovery": [
+                    "Preserve the prompt, plan, scope, proof expectations, and this diagnostic in trajectory evidence; do not request redundant intent clarification.",
+                    "Inspect `decapod todo get --id <id>`, `decapod todo claim-status --id <id>`, and `decapod workspace status` in the intended control plane; verify ownership and collision state.",
+                    "Recover the correct governed workspace/store or its supported container snapshot, then rerun `decapod govern plan check-execute --todo-id <id>` in the execution workspace.",
+                    "Do not fabricate a replacement todo, copy database files by hand, or bypass a gate. If coordination cannot be recovered, report that blocker separately from any actual intent ambiguity."
+                ]
+            })),
         ));
     }
 
@@ -665,167 +691,171 @@ pub fn enter_phase(
     project_root: &Path,
     phase_id: &str,
 ) -> Result<GovernedPlan, error::DecapodError> {
-    let mut plan = load_plan(project_root)?.ok_or_else(|| {
-        marker_error(
-            "NEEDS_PLAN_APPROVAL",
-            "Plan asset is missing. Run `decapod govern plan init` first.",
-            None,
-        )
-    })?;
-
-    // Find the phase
-    let phase_index = plan
-        .phases
-        .iter()
-        .position(|p| p.id == phase_id)
-        .ok_or_else(|| {
+    crate::core::governance_document::with_lock(project_root, || {
+        let mut plan = load_plan(project_root)?.ok_or_else(|| {
             marker_error(
-                "PHASE_NOT_FOUND",
-                &format!("Phase with ID '{}' not found", phase_id),
+                "NEEDS_PLAN_APPROVAL",
+                "Plan asset is missing. Run `decapod govern plan init` first.",
                 None,
             )
         })?;
 
-    validate_phase_contract(&plan.phases)?;
+        // Find the phase
+        let phase_index = plan
+            .phases
+            .iter()
+            .position(|p| p.id == phase_id)
+            .ok_or_else(|| {
+                marker_error(
+                    "PHASE_NOT_FOUND",
+                    &format!("Phase with ID '{}' not found", phase_id),
+                    None,
+                )
+            })?;
 
-    // Check ordering and exclusive activation.
-    if plan.phases[..phase_index]
-        .iter()
-        .any(|phase| !phase.completed)
-    {
-        return Err(marker_error(
-            "INVALID_PHASE_TRANSITION",
-            "Phases must be entered and completed in declaration order.",
-            Some(json!({ "phase": phase_id })),
-        ));
-    }
-    if plan
-        .phases
-        .iter()
-        .enumerate()
-        .any(|(index, phase)| index != phase_index && phase.entered && !phase.completed)
-    {
-        return Err(marker_error(
-            "PHASE_LOCKED",
-            "Another phase is already active; complete it before entering the next phase.",
-            None,
-        ));
-    }
+        validate_phase_contract(&plan.phases)?;
 
-    let phase = &mut plan.phases[phase_index];
-
-    // Check if already entered
-    if phase.entered {
-        return Err(marker_error(
-            "PHASE_ALREADY_ENTERED",
-            &format!("Phase '{}' has already been entered", phase.name),
-            None,
-        ));
-    }
-
-    // Check all entry gates
-    for gate in &phase.entry_gates {
-        if !gate.satisfied {
+        // Check ordering and exclusive activation.
+        if plan.phases[..phase_index]
+            .iter()
+            .any(|phase| !phase.completed)
+        {
             return Err(marker_error(
-                "PHASE_ENTRY_GATE_NOT_SATISFIED",
-                &format!(
-                    "Entry gate not satisfied for phase '{}': {}",
-                    phase.name, gate.description
-                ),
-                Some(json!({ "phase": phase.name, "gate_description": gate.description })),
+                "INVALID_PHASE_TRANSITION",
+                "Phases must be entered and completed in declaration order.",
+                Some(json!({ "phase": phase_id })),
             ));
         }
-    }
+        if plan
+            .phases
+            .iter()
+            .enumerate()
+            .any(|(index, phase)| index != phase_index && phase.entered && !phase.completed)
+        {
+            return Err(marker_error(
+                "PHASE_LOCKED",
+                "Another phase is already active; complete it before entering the next phase.",
+                None,
+            ));
+        }
 
-    // Mark phase as entered
-    phase.entered = true;
-    phase.entered_at = Some(crate::core::time::now_epoch_z());
-    plan.updated_at = crate::core::time::now_epoch_z();
-    if plan.state == PlanState::Approved {
-        plan.state = PlanState::Executing;
-    }
-    save_plan(project_root, &plan)?;
-    Ok(plan)
+        let phase = &mut plan.phases[phase_index];
+
+        // Check if already entered
+        if phase.entered {
+            return Err(marker_error(
+                "PHASE_ALREADY_ENTERED",
+                &format!("Phase '{}' has already been entered", phase.name),
+                None,
+            ));
+        }
+
+        // Check all entry gates
+        for gate in &phase.entry_gates {
+            if !gate.satisfied {
+                return Err(marker_error(
+                    "PHASE_ENTRY_GATE_NOT_SATISFIED",
+                    &format!(
+                        "Entry gate not satisfied for phase '{}': {}",
+                        phase.name, gate.description
+                    ),
+                    Some(json!({ "phase": phase.name, "gate_description": gate.description })),
+                ));
+            }
+        }
+
+        // Mark phase as entered
+        phase.entered = true;
+        phase.entered_at = Some(crate::core::time::now_epoch_z());
+        plan.updated_at = crate::core::time::now_epoch_z();
+        if plan.state == PlanState::Approved {
+            plan.state = PlanState::Executing;
+        }
+        save_plan(project_root, &plan)?;
+        Ok(plan)
+    })
 }
 
 pub fn complete_phase(
     project_root: &Path,
     phase_id: &str,
 ) -> Result<GovernedPlan, error::DecapodError> {
-    let mut plan = load_plan(project_root)?.ok_or_else(|| {
-        marker_error(
-            "NEEDS_PLAN_APPROVAL",
-            "Plan asset is missing. Run `decapod govern plan init` first.",
-            None,
-        )
-    })?;
-
-    // Find the phase
-    let phase_index = plan
-        .phases
-        .iter()
-        .position(|p| p.id == phase_id)
-        .ok_or_else(|| {
+    crate::core::governance_document::with_lock(project_root, || {
+        let mut plan = load_plan(project_root)?.ok_or_else(|| {
             marker_error(
-                "PHASE_NOT_FOUND",
-                &format!("Phase with ID '{}' not found", phase_id),
+                "NEEDS_PLAN_APPROVAL",
+                "Plan asset is missing. Run `decapod govern plan init` first.",
                 None,
             )
         })?;
 
-    validate_phase_contract(&plan.phases)?;
+        // Find the phase
+        let phase_index = plan
+            .phases
+            .iter()
+            .position(|p| p.id == phase_id)
+            .ok_or_else(|| {
+                marker_error(
+                    "PHASE_NOT_FOUND",
+                    &format!("Phase with ID '{}' not found", phase_id),
+                    None,
+                )
+            })?;
 
-    let phase = &mut plan.phases[phase_index];
+        validate_phase_contract(&plan.phases)?;
 
-    // Check if phase has been entered
-    if !phase.entered {
-        return Err(marker_error(
-            "PHASE_NOT_ENTERED",
-            &format!("Phase '{}' has not been entered yet", phase.name),
-            None,
-        ));
-    }
+        let phase = &mut plan.phases[phase_index];
 
-    if !phase.entry_gates.iter().all(|gate| gate.satisfied) {
-        return Err(marker_error(
-            "PHASE_GATE_NOT_SATISFIED",
-            "All entry gates must be satisfied before phase completion.",
-            None,
-        ));
-    }
-
-    // Check if already completed
-    if phase.completed {
-        return Err(marker_error(
-            "PHASE_ALREADY_COMPLETED",
-            &format!("Phase '{}' has already been completed", phase.name),
-            None,
-        ));
-    }
-
-    // Check all exit gates
-    for gate in &phase.exit_gates {
-        if !gate.satisfied {
+        // Check if phase has been entered
+        if !phase.entered {
             return Err(marker_error(
-                "PHASE_EXIT_GATE_NOT_SATISFIED",
-                &format!(
-                    "Exit gate not satisfied for phase '{}': {}",
-                    phase.name, gate.description
-                ),
-                Some(json!({ "phase": phase.name, "gate_description": gate.description })),
+                "PHASE_NOT_ENTERED",
+                &format!("Phase '{}' has not been entered yet", phase.name),
+                None,
             ));
         }
-    }
 
-    // Mark phase as completed
-    phase.completed = true;
-    phase.completed_at = Some(crate::core::time::now_epoch_z());
-    plan.updated_at = crate::core::time::now_epoch_z();
-    if plan.phases.iter().all(|candidate| candidate.completed) {
-        plan.state = PlanState::Done;
-    }
-    save_plan(project_root, &plan)?;
-    Ok(plan)
+        if !phase.entry_gates.iter().all(|gate| gate.satisfied) {
+            return Err(marker_error(
+                "PHASE_GATE_NOT_SATISFIED",
+                "All entry gates must be satisfied before phase completion.",
+                None,
+            ));
+        }
+
+        // Check if already completed
+        if phase.completed {
+            return Err(marker_error(
+                "PHASE_ALREADY_COMPLETED",
+                &format!("Phase '{}' has already been completed", phase.name),
+                None,
+            ));
+        }
+
+        // Check all exit gates
+        for gate in &phase.exit_gates {
+            if !gate.satisfied {
+                return Err(marker_error(
+                    "PHASE_EXIT_GATE_NOT_SATISFIED",
+                    &format!(
+                        "Exit gate not satisfied for phase '{}': {}",
+                        phase.name, gate.description
+                    ),
+                    Some(json!({ "phase": phase.name, "gate_description": gate.description })),
+                ));
+            }
+        }
+
+        // Mark phase as completed
+        phase.completed = true;
+        phase.completed_at = Some(crate::core::time::now_epoch_z());
+        plan.updated_at = crate::core::time::now_epoch_z();
+        if plan.phases.iter().all(|candidate| candidate.completed) {
+            plan.state = PlanState::Done;
+        }
+        save_plan(project_root, &plan)?;
+        Ok(plan)
+    })
 }
 
 pub fn satisfy_gate(
@@ -834,76 +864,78 @@ pub fn satisfy_gate(
     gate_type: &str, // "entry" or "exit"
     gate_index: usize,
 ) -> Result<GovernedPlan, error::DecapodError> {
-    let mut plan = load_plan(project_root)?.ok_or_else(|| {
-        marker_error(
-            "NEEDS_PLAN_APPROVAL",
-            "Plan asset is missing. Run `decapod govern plan init` first.",
-            None,
-        )
-    })?;
-
-    // Find the phase
-    let phase_index = plan
-        .phases
-        .iter()
-        .position(|p| p.id == phase_id)
-        .ok_or_else(|| {
+    crate::core::governance_document::with_lock(project_root, || {
+        let mut plan = load_plan(project_root)?.ok_or_else(|| {
             marker_error(
-                "PHASE_NOT_FOUND",
-                &format!("Phase with ID '{}' not found", phase_id),
+                "NEEDS_PLAN_APPROVAL",
+                "Plan asset is missing. Run `decapod govern plan init` first.",
                 None,
             )
         })?;
 
-    let phase = &mut plan.phases[phase_index];
+        // Find the phase
+        let phase_index = plan
+            .phases
+            .iter()
+            .position(|p| p.id == phase_id)
+            .ok_or_else(|| {
+                marker_error(
+                    "PHASE_NOT_FOUND",
+                    &format!("Phase with ID '{}' not found", phase_id),
+                    None,
+                )
+            })?;
 
-    // Get the appropriate gate
-    let gate = match gate_type {
-        "entry" => {
-            if gate_index >= phase.entry_gates.len() {
+        let phase = &mut plan.phases[phase_index];
+
+        // Get the appropriate gate
+        let gate = match gate_type {
+            "entry" => {
+                if gate_index >= phase.entry_gates.len() {
+                    return Err(marker_error(
+                        "INVALID_GATE_INDEX",
+                        &format!(
+                            "Entry gate index {} is out of bounds for phase '{}' (has {} gates)",
+                            gate_index,
+                            phase.name,
+                            phase.entry_gates.len()
+                        ),
+                        None,
+                    ));
+                }
+                &mut phase.entry_gates[gate_index]
+            }
+            "exit" => {
+                if gate_index >= phase.exit_gates.len() {
+                    return Err(marker_error(
+                        "INVALID_GATE_INDEX",
+                        &format!(
+                            "Exit gate index {} is out of bounds for phase '{}' (has {} gates)",
+                            gate_index,
+                            phase.name,
+                            phase.exit_gates.len()
+                        ),
+                        None,
+                    ));
+                }
+                &mut phase.exit_gates[gate_index]
+            }
+            _ => {
                 return Err(marker_error(
-                    "INVALID_GATE_INDEX",
-                    &format!(
-                        "Entry gate index {} is out of bounds for phase '{}' (has {} gates)",
-                        gate_index,
-                        phase.name,
-                        phase.entry_gates.len()
-                    ),
+                    "INVALID_GATE_TYPE",
+                    "Gate type must be 'entry' or 'exit'",
                     None,
                 ));
             }
-            &mut phase.entry_gates[gate_index]
-        }
-        "exit" => {
-            if gate_index >= phase.exit_gates.len() {
-                return Err(marker_error(
-                    "INVALID_GATE_INDEX",
-                    &format!(
-                        "Exit gate index {} is out of bounds for phase '{}' (has {} gates)",
-                        gate_index,
-                        phase.name,
-                        phase.exit_gates.len()
-                    ),
-                    None,
-                ));
-            }
-            &mut phase.exit_gates[gate_index]
-        }
-        _ => {
-            return Err(marker_error(
-                "INVALID_GATE_TYPE",
-                "Gate type must be 'entry' or 'exit'",
-                None,
-            ));
-        }
-    };
+        };
 
-    // Mark gate as satisfied
-    gate.satisfied = true;
-    gate.satisfied_at = Some(crate::core::time::now_epoch_z());
-    plan.updated_at = crate::core::time::now_epoch_z();
-    save_plan(project_root, &plan)?;
-    Ok(plan)
+        // Mark gate as satisfied
+        gate.satisfied = true;
+        gate.satisfied_at = Some(crate::core::time::now_epoch_z());
+        plan.updated_at = crate::core::time::now_epoch_z();
+        save_plan(project_root, &plan)?;
+        Ok(plan)
+    })
 }
 
 fn verify_artifact_exists(project_root: &Path, artifact_path: &str) -> bool {

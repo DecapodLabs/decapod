@@ -5,7 +5,6 @@
 //! the evidence with the PR. A new trajectory run replaces the active ledger;
 //! prior committed ledgers remain recoverable through Git history.
 
-use crate::core::atomic;
 use crate::core::decision_provider::{
     DecisionObservationResult, NoObservationReason, TRAJECTORY_SATISFIES_INTENT,
 };
@@ -13,10 +12,9 @@ use crate::core::error::DecapodError;
 use crate::core::path_policy;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashSet};
-use std::fs;
 use std::path::Path;
 
-pub const JEV_HISTORY_PATH: &str = ".decapod/governance/jev.json";
+pub const JEV_HISTORY_PATH: &str = crate::core::governance_document::GOVERNANCE_PATH;
 pub const JEV_HISTORY_SCHEMA_VERSION: &str = "1.0.0";
 pub const JEV_HISTORY_KIND: &str = "jev_observation_ledger";
 pub const JEV_HISTORY_SCHEMA_URI: &str =
@@ -49,41 +47,35 @@ pub struct JevRun {
 }
 
 pub fn load_and_validate(repo_root: &Path) -> Result<Option<JevObservationLedger>, DecapodError> {
-    let path = repo_root.join(JEV_HISTORY_PATH);
-    if !path.exists() {
-        return Ok(None);
-    }
-    let raw = fs::read_to_string(&path).map_err(DecapodError::IoError)?;
-    let ledger: JevObservationLedger = serde_json::from_str(&raw).map_err(|error| {
-        DecapodError::ValidationError(format!(
-            "invalid Jev observation ledger {}: {error}",
-            path.display()
-        ))
-    })?;
-    validate(&ledger)?;
-    Ok(Some(ledger))
+    crate::core::governance_document::read_section(repo_root, "jev")?
+        .map(|value| {
+            serde_json::from_value(value).map_err(|e| DecapodError::ValidationError(e.to_string()))
+        })
+        .transpose()
 }
 
 /// Remove a prior run's working-tree ledger when the trajectory cookie starts
 /// a new run. This is intentionally a narrow reset: Git history remains the
 /// recovery surface for the committed prior ledger.
 pub fn reset_for_trajectory(repo_root: &Path, trajectory_run_id: &str) -> Result<(), DecapodError> {
-    if trajectory_run_id.trim().is_empty() {
-        return Err(DecapodError::ValidationError(
-            "Jev observation ledger requires a non-empty trajectory run id".to_string(),
-        ));
-    }
-    let path = repo_root.join(JEV_HISTORY_PATH);
-    if !path.exists() {
-        return Ok(());
-    }
-    let Some(existing) = load_and_validate(repo_root)? else {
-        return Ok(());
-    };
-    if existing.trajectory_run_id != trajectory_run_id {
-        fs::remove_file(path).map_err(DecapodError::IoError)?;
-    }
-    Ok(())
+    crate::core::governance_document::with_lock(repo_root, || {
+        if trajectory_run_id.trim().is_empty() {
+            return Err(DecapodError::ValidationError(
+                "Jev observation ledger requires a non-empty trajectory run id".to_string(),
+            ));
+        }
+        let path = repo_root.join(JEV_HISTORY_PATH);
+        if !path.exists() {
+            return Ok(());
+        }
+        let Some(existing) = load_and_validate(repo_root)? else {
+            return Ok(());
+        };
+        if existing.trajectory_run_id != trajectory_run_id {
+            crate::core::governance_document::remove_section(repo_root, "jev")?;
+        }
+        Ok(())
+    })
 }
 
 pub fn append(
@@ -94,44 +86,51 @@ pub fn append(
     diff_summary: Option<&str>,
     result: DecisionObservationResult,
 ) -> Result<(), DecapodError> {
-    if trajectory_run_id.trim().is_empty() {
-        return Err(DecapodError::ValidationError(
-            "Jev observation ledger requires a non-empty trajectory run id".to_string(),
-        ));
-    }
-    let path = repo_root.join(JEV_HISTORY_PATH);
-    let mut ledger = match load_and_validate(repo_root)? {
-        Some(existing) if existing.trajectory_run_id == trajectory_run_id => existing,
-        Some(_) | None => new_ledger(trajectory_run_id),
-    };
-    let id = crate::core::ulid::new_ulid();
-    let sequence = ledger
-        .runs
-        .values()
-        .map(|run| run.sequence)
-        .max()
-        .unwrap_or(0)
-        .saturating_add(1);
-    ledger.runs.insert(
-        id.clone(),
-        JevRun {
-            id,
-            sequence,
-            recorded_at: crate::core::time::now_epoch_z(),
-            operation: operation.to_string(),
-            touched_paths: touched_paths
-                .iter()
-                .map(|path| path_policy::normalize_persisted_path(repo_root, path))
-                .collect(),
-            diff_summary: diff_summary.map(|summary| path_policy::redact_text(repo_root, summary)),
-            result,
-        },
-    );
-    validate(&ledger)?;
-    let bytes = serde_json::to_vec_pretty(&ledger).map_err(|error| {
-        DecapodError::ValidationError(format!("serialize Jev observation ledger: {error}"))
-    })?;
-    atomic::write_atomic(&path, &bytes).map_err(DecapodError::IoError)
+    crate::core::governance_document::with_lock(repo_root, || {
+        if trajectory_run_id.trim().is_empty() {
+            return Err(DecapodError::ValidationError(
+                "Jev observation ledger requires a non-empty trajectory run id".to_string(),
+            ));
+        }
+        let mut ledger = match load_and_validate(repo_root)? {
+            Some(existing) if existing.trajectory_run_id == trajectory_run_id => existing,
+            Some(_) | None => new_ledger(trajectory_run_id),
+        };
+        let id = crate::core::ulid::new_ulid();
+        let sequence = ledger
+            .runs
+            .values()
+            .map(|run| run.sequence)
+            .max()
+            .unwrap_or(0)
+            .saturating_add(1);
+        ledger.runs.insert(
+            id.clone(),
+            JevRun {
+                id,
+                sequence,
+                recorded_at: crate::core::time::now_epoch_z(),
+                operation: operation.to_string(),
+                touched_paths: touched_paths
+                    .iter()
+                    .map(|path| path_policy::normalize_persisted_path(repo_root, path))
+                    .collect(),
+                diff_summary: diff_summary
+                    .map(|summary| path_policy::redact_text(repo_root, summary)),
+                result,
+            },
+        );
+        validate(&ledger)?;
+        let bytes = serde_json::to_vec_pretty(&ledger).map_err(|error| {
+            DecapodError::ValidationError(format!("serialize Jev observation ledger: {error}"))
+        })?;
+        crate::core::governance_document::write_section(
+            repo_root,
+            "jev",
+            &serde_json::from_slice(&bytes)
+                .map_err(|e| DecapodError::ValidationError(e.to_string()))?,
+        )
+    })
 }
 
 fn new_ledger(trajectory_run_id: &str) -> JevObservationLedger {
@@ -144,7 +143,7 @@ fn new_ledger(trajectory_run_id: &str) -> JevObservationLedger {
     }
 }
 
-fn validate(ledger: &JevObservationLedger) -> Result<(), DecapodError> {
+pub(crate) fn validate(ledger: &JevObservationLedger) -> Result<(), DecapodError> {
     if ledger.schema_uri != JEV_HISTORY_SCHEMA_URI
         || ledger.schema_version != JEV_HISTORY_SCHEMA_VERSION
         || ledger.kind != JEV_HISTORY_KIND

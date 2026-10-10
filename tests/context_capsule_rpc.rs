@@ -89,10 +89,11 @@ fn setup_repo() -> (TempDir, std::path::PathBuf) {
     );
     assert!(
         validate.status.success(),
-        "validate failed: {}",
+        "validate failed: {}\n{}",
+        String::from_utf8_lossy(&validate.stdout),
         String::from_utf8_lossy(&validate.stderr)
     );
-    let receipt_add = run_git(&dir, &["add", ".decapod/governance/validation.json"]);
+    let receipt_add = run_git(&dir, &["add", ".decapod/governance.json"]);
     assert!(
         receipt_add.status.success(),
         "git add validation receipt failed: {}",
@@ -154,12 +155,23 @@ fn setup_repo() -> (TempDir, std::path::PathBuf) {
         "fixture governance git add failed: {}",
         String::from_utf8_lossy(&governance_add.stderr)
     );
-    let governance_commit = run_git(&dir, &["commit", "-m", "record resolved context"]);
+    // Content-equal governance updates are no-ops. Commit only when the
+    // initialization actually changed a tracked projection.
+    let governance_diff = run_git(&dir, &["diff", "--cached", "--quiet"]);
     assert!(
-        governance_commit.status.success(),
-        "fixture governance commit failed: {}",
-        String::from_utf8_lossy(&governance_commit.stderr)
+        matches!(governance_diff.status.code(), Some(0 | 1)),
+        "fixture staged diff failed: {}",
+        String::from_utf8_lossy(&governance_diff.stderr)
     );
+    if governance_diff.status.code() == Some(1) {
+        let governance_commit = run_git(&dir, &["commit", "-m", "record resolved context"]);
+        assert!(
+            governance_commit.status.success(),
+            "fixture governance commit failed: {}\n{}",
+            String::from_utf8_lossy(&governance_commit.stdout),
+            String::from_utf8_lossy(&governance_commit.stderr)
+        );
+    }
 
     let ensure = run_decapod(&dir, &["workspace", "ensure"]);
     assert!(
@@ -315,7 +327,7 @@ fn rpc_context_capsule_query_write_auto_binds_workunit_state_ref() {
     let has_workunit_path = touched.iter().any(|v| {
         v.as_str()
             .unwrap_or_default()
-            .ends_with(".decapod/governance/workunits/test_654.json")
+            .ends_with(".decapod/data/workunits/test_654.json")
     });
     assert!(
         has_workunit_path,

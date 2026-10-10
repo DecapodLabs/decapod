@@ -32,49 +32,53 @@ When asked to add a maintenance or release-ops tool:
 
 ## 3. Governance Artifacts Per PR
 
-The four governance JSON files are a **coherent publication bundle**. They are
-evaluated together (`decapod govern artifacts inventory`), required present and
-semantically current, and **must appear in the PR tip** (`base...HEAD`) for every
-project PR—enforced by `GOVERNANCE_PR_UPDATES`, workspace publish, and the
-`governance-artifacts` CI job. Intermediate commits need not each touch them.
+`.decapod/governance.json` is the sole tracked governance authority. It contains
+one compact baseline, current-PR claims and checkpoints, explicit unresolved
+obligations, and logical plan, trajectory, validation, and optional Jev sections.
+Runtime workunit manifests remain ignored under `.decapod/data/workunits/`.
 
-Refresh each surface through its governed CLI:
+Update logical sections through their existing CLI surfaces: `govern plan`,
+`govern trajectory`, and `validate`. Use `govern artifacts claim` for a real
+current-PR claim with a falsifier; a supported claim requires proof references.
+Do not invent a claim when the change advances none. `inventory --claims-note`
+records a checkpoint instead of appending history to a claim policy.
 
-- `.decapod/governance/claims.json` — falsifiable research claims ledger (`decapod govern artifacts inventory --claims-note` for ledger notes).
-- `.decapod/governance/plan.json` — `decapod govern plan {init,update,approve}`.
-- `.decapod/governance/trajectory.json` — `decapod govern trajectory {init,record}`.
-- `.decapod/governance/validation.json` — written by a successful `decapod validate`. If plan, claims, and trajectory already participate, the receipt is not a chicken-and-egg: the gate lets that run succeed and writes the file. Do not set `DECAPOD_VALIDATE_SKIP_GIT_GATES`. After the receipt exists, commit it (or run `workspace publish`, which commits a dirty receipt) and do not expect a rewrite just because `git_revision` is the parent of HEAD.
+### Population order
 
-### One-shot first-PR sequence (0.98.2+)
+Populate stable PR identity first, then intent/scope in the plan, actual current
+claims and planned checks, work/evidence in the trajectory, validation, and the
+staged-material checkpoint for each commit. Persist meaningful boundaries while
+working, not only at final completion. Combine related updates at each boundary
+and skip unchanged re-statements; return to the affected step when intent, scope,
+or evidence changes without resetting the PR identity.
 
-1. Fast-forward the protected base, then `todo claim` and `workspace ensure`. Work only in the printed workspace.
-2. Commit incremental product work (commit-often).
-3. Refresh plan, claims, and trajectory through the governed CLI.
-4. `decapod validate` — writes `validation.json` without skipping git gates.
-5. `decapod workspace publish`. Local-clone workspaces inherit the parent GitHub remote as `upstream`; do not add remotes by hand unless publish still reports none.
+### Current-PR sequence
 
-See [governance-artifacts.md](../book/src/reference/governance-artifacts.md).
+1. Fast-forward the protected base, claim a todo, and run `workspace ensure`.
+2. Preserve any legacy evidence in Git, then use `govern artifacts migrate` for
+   lossless adoption and `govern artifacts begin-pr --id <change> --base-branch master`
+   for the explicit boundary. Accepted completed claims remain in Git history;
+   unresolved obligations carry forward and require explicit proof-backed resolution.
+3. Refine the plan, record trajectory and proof, review material living specs,
+   refresh supported projections, and run `decapod validate` without skipping gates.
+4. Stage authored code/spec changes, record `govern artifacts checkpoint --id <unique-id>
+   --summary "..." --proof-ref <evidence>`, then stage governance.json and commit.
+   Repeat for every authored commit, including merges; later proof cannot repair a
+   missing historical checkpoint.
+5. Run `workspace publish`. It checks staged proof before auto-commit, then verifies
+   every checkpoint against the immutable pushed commit graph and exact PR target.
 
-If a PR advances no *new* research claim body, still update `claims.json` at the
-PR tip (e.g. an issue-scoped `change_policy` note); do not invent a fake claim.
+Inventory is read-only unless a repair/compact/note option is explicitly used.
+Repair initializes absent empty claims without overwriting existing evidence;
+compact preserves valid legacy semantics. Neither replaces a missing plan,
+trajectory, or validation receipt. See [governance-artifacts.md](../book/src/reference/governance-artifacts.md).
 
 ### Research claims versus Health Engine claims
 
-These are different authorities with different lifecycles:
-
-- `.decapod/governance/claims.json` is the append-only, repository-owned ledger
-  of falsifiable research claims. It is validated as a closed schema and is
-  changed through the governed artifact surface.
-- `.decapod/data/decapod.db` is the consolidated local datastore. Its Health
-  Engine tables hold operational claims and proof events; those are not entries
-  in the research ledger.
-
-Use `decapod govern artifacts inventory --claims-note "..."` for an explicit
-issue-scoped research-ledger note, and `decapod govern health claim` or
-`decapod govern health proof` for Health Engine state. Never hand-edit either
-control-plane store. If the research ledger needs byte-size reduction, use the
-explicit `decapod govern artifacts inventory --compact` path; compaction changes
-format only and does not invent, delete, or supersede claims.
+Current-PR research claims in governance.json are distinct from operational
+Health Engine claims and proof events in `.decapod/data/decapod.db`. Use
+`govern health claim` and `govern health proof` for Health Engine state. Never
+hand-edit either authority or copy accepted historical claim catalogs into each PR.
 
 ## 3b. Material Living-Spec Rewrites Per PR
 
@@ -148,15 +152,12 @@ Artifact Sync workflow are removed.
    with `vN+1` and commits all release-bound surfaces.
 
 
-## 4b. Governance JSON — always update every PR
+## 4b. Governance JSON — explicit current-PR evidence
 
-These files are required publication/governance artifacts and **must change on
-every project PR** (PR-level tip participation, not every intermediate commit):
-
-- `.decapod/governance/claims.json`
-- `.decapod/governance/plan.json`
-- `.decapod/governance/trajectory.json`
-- `.decapod/governance/validation.json` (from a successful `decapod validate`)
+Every project PR must update `.decapod/governance.json`. Presence at the tip is
+insufficient: each authored commit needs its own exact-material checkpoint,
+with prior checkpoints preserved cumulatively until the PR is accepted.
+The validation receipt is a logical section written by successful `decapod validate`.
 
 ## 4c. Living specs — material every PR; fingerprint only on Decapod version advance
 
@@ -186,7 +187,7 @@ entry sequence:
 Run validation before opening the pull request and commit every generated
 projection it refreshes in that first commit. The PR diff must carry:
 
-- **Always:** all four governance JSON files
+- **Always:** the normalized governance document with current-PR checkpoint coverage
 - **When changed:** managed Dockerfile pin, managed-spec attestation, material
   living-spec prose
 - **Entrypoints only when** Decapod rewrote them because the evaluating release
