@@ -179,3 +179,4 @@ cumulative checkpoint preservation across the entire commit graph, including mer
 `inventory --claims-note "..."` records a current-PR checkpoint, not a fake claim
 or a policy-history append. `inventory --compact` performs lossless legacy
 normalization. Neither surface repairs malformed evidence by overwriting it.
+
