@@ -52,9 +52,8 @@ dev/
 !.decapod/managed/specs/
 !.decapod/managed/specs/*.md
 !.decapod/managed/specs/.manifest.json
-# Durable governance cookies under `.decapod/governance/` are tracked; workunit
-# manifests remain ignored current-run execution state.
-.decapod/governance/workunits/
+# Durable `.decapod/governance.json` is tracked; runtime workunit manifests
+# remain ignored under `.decapod/data/`.
 # Allowlist skills - imported skill cards for reproducibility
 !.decapod/skills/
 

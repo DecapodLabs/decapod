@@ -63,9 +63,9 @@ Neither backend decides whether a Decapod transition is valid.
 
 ## Current Governance Artifact Semantics
 ### Trajectory Cookie
-- Cardinality: one current pointer and zero or more hash-checked historical
-  archives per workspace; only the current pointer is validation/publication
-  authority.
+- Cardinality: one current trajectory section in `.decapod/governance.json`;
+  the same document keeps current-PR proof checkpoints, while Git preserves
+  accepted historical runs.
 - Replacement: a new run replaces the previous cookie through an atomic
   write; same-run initialization remains a duplicate error for a valid object.
 - Recovery: an explicit new initialization may replace a malformed or appended
@@ -74,8 +74,8 @@ Neither backend decides whether a Decapod transition is valid.
   trajectory; no project-level multi-run selector is introduced.
 
 ### Jev Observation Ledger
-- Cardinality: zero or one current `.decapod/governance/jev.json` ledger per
-  active trajectory run, with many keyed `runs` entries for repeated assurance
+- Cardinality: zero or one optional `jev` section in `.decapod/governance.json`
+  per active trajectory run, with keyed `runs` entries for repeated assurance
   calls in that PR.
 - Binding: `trajectory_run_id` must equal the current trajectory cookie, and
   each stored observed result must remain the typed
@@ -150,9 +150,9 @@ Neither backend decides whether a Decapod transition is valid.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5e522c585e055cae81578f96df9ab41a4f21f6fde8c73b68ca9d0f2be05870d4`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (124 files), `tests/` (162 files)
-- Refreshed from the current codebase by `decapod specs.refresh`
+- Repository signal fingerprint: `ff0e704a1389577bb72bd8d97fc1f5f7d0e567779df8ad00b96ab8d2bf46557e`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (125 files), `tests/` (167 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
 ## Target approval correction (#1361)

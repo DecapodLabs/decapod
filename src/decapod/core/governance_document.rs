@@ -919,15 +919,15 @@ pub fn begin_pr(
     }
     with_lock(root, || {
         let previous = load(root)?.unwrap_or_default();
-        if let Some(change) = &previous.change {
-            if change.id == change_id {
-                if change.target_base != base_ref {
-                    return Err(invalid(
-                        "GOVERNANCE_PR_IDENTITY_CONFLICT: the same PR ID cannot silently change its target base",
-                    ));
-                }
-                return Ok(previous);
+        if let Some(change) = &previous.change
+            && change.id == change_id
+        {
+            if change.target_base != base_ref {
+                return Err(invalid(
+                    "GOVERNANCE_PR_IDENTITY_CONFLICT: the same PR ID cannot silently change its target base",
+                ));
             }
+            return Ok(previous);
         }
         if root.join(GOVERNANCE_PATH).exists() || !previous.legacy_digests.is_empty() {
             recoverable_in_git(root, &previous)?;
@@ -1000,20 +1000,18 @@ pub fn begin_pr(
                 }
             }
         }
-        if let Some(plan) = get_section(&previous, "plan")? {
-            if let Some(reviews) = plan.get("spec_reviews").and_then(Value::as_array) {
-                for review in reviews {
-                    if review.get("disposition").and_then(Value::as_str)
-                        == Some("requires_decision")
-                    {
-                        baseline.unresolved.insert(
-                            format!(
-                                "spec-review:{}",
-                                review["path"].as_str().unwrap_or("unknown")
-                            ),
-                            review.clone(),
-                        );
-                    }
+        if let Some(plan) = get_section(&previous, "plan")?
+            && let Some(reviews) = plan.get("spec_reviews").and_then(Value::as_array)
+        {
+            for review in reviews {
+                if review.get("disposition").and_then(Value::as_str) == Some("requires_decision") {
+                    baseline.unresolved.insert(
+                        format!(
+                            "spec-review:{}",
+                            review["path"].as_str().unwrap_or("unknown")
+                        ),
+                        review.clone(),
+                    );
                 }
             }
         }
@@ -1221,11 +1219,7 @@ fn material_digest(
 fn require_staged_material(root: &Path) -> Result<(), DecapodError> {
     let changed = git(root, &["diff", "--name-only"])?;
     let untracked = git(root, &["ls-files", "--others", "--exclude-standard"])?;
-    if changed
-        .lines()
-        .chain(untracked.lines())
-        .any(|path| material_path(path))
-    {
+    if changed.lines().chain(untracked.lines()).any(material_path) {
         return Err(invalid(
             "GOVERNANCE_UNSTAGED_MATERIAL: stage authored code/spec changes before checkpoint; stage governance.json after checkpoint",
         ));
@@ -1286,12 +1280,12 @@ fn verify_base_binding(
         .change
         .as_ref()
         .ok_or_else(|| invalid("GOVERNANCE_PR_IDENTITY_MISSING"))?;
-    if let Some(target) = target_base {
-        if normalized_base_label(&change.target_base) != normalized_base_label(target) {
-            return Err(invalid(
-                "GOVERNANCE_PR_TARGET_MISMATCH: document target differs from captured publication base",
-            ));
-        }
+    if let Some(target) = target_base
+        && normalized_base_label(&change.target_base) != normalized_base_label(target)
+    {
+        return Err(invalid(
+            "GOVERNANCE_PR_TARGET_MISMATCH: document target differs from captured publication base",
+        ));
     }
     for descendant in [base_ref, head_ref] {
         let status = Command::new("git")

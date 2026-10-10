@@ -93,19 +93,26 @@ and names `decapod rpc --op specs.refresh` as the supported repair.
 
 An epoch change is intentional proof invalidation, not a receipt rewrite. If a
 trajectory already contains successful validation for another epoch, validation
-returns `STALE_VALIDATION_EVIDENCE`, leaves `.decapod/governance/trajectory.json`
-and `validation.json` unchanged, and instructs the operator to initialize a new
+returns `STALE_VALIDATION_EVIDENCE`, leaves the canonical trajectory and
+validation sections unchanged, and instructs the operator to initialize a new
 run before retrying. Same-epoch validation remains idempotent. Force re-init is
 allowed to stay green only when it preserves existing config authority,
 manifest state, and authored living specs.
 
-## Claims Ledger Size and Ownership (#1093, #1163, #1326)
-The research claims ledger is an append-only governance artifact, not the Health
-Engine runtime claims store. Its valid JSON schema is unchanged by compaction.
-`decapod govern artifacts inventory --compact` is the explicit maintenance
-surface: it canonicalizes the valid ledger, reports `claims_ledger_bytes`, and
-is idempotent. It does not prune claims, rewrite their meaning, or touch Health
-Engine records in `.decapod/data/decapod.db`.
+## Governance Normalization and PR Proof
+The canonical document must preserve every unresolved obligation and live proof
+reference through migration and PR reset. Tests cover conflicting legacy and
+canonical authorities, shared-directory locking, concurrent writers, interrupted
+cleanup, fresh initialization, and symlink/path escape rejection. Normalization
+must preserve logical information rather than merely rename files.
+
+Every commit after canonical adoption requires a checkpoint bound to its actual
+material and semantic inputs. Verification includes merge commits and the exact
+PR head, rejects reused prior-PR identity and altered checkpoint history, and
+does not hash a receipt into itself. Legacy commits before adoption remain
+explicitly unverified. A new PR may retire accepted current-PR claims only after
+Git proves the prior change is accepted; unresolved obligations remain active
+until evidence-bound resolution. Health Engine runtime claims are unchanged.
 
 ## Validation Harness
 Define the test and verification harness used by this project.
@@ -166,19 +173,18 @@ When validation reports `OUT_OF_SYNC_SPECS` or `STALE_SPECS_FINGERPRINT`, the go
 The four generated agent entrypoints are release-bound projections of the installed Decapod binary. Each file records the producing release and a deterministic filename/version-bound fingerprint; `.decapod/managed/specs/.manifest.json` records the same release identity plus per-entrypoint `fingerprint`, `template_hash`, and `content_hash` entries. Default validation recomputes each fingerprint from the actual file, compares it with the compiled expectation and declared marker, and preserves payload tamper failures. Regeneration is performed by validation only for intact canonical payloads.
 
 ## Validation Receipt Without Skip-Git-Gates (#1259)
-The first successful `decapod validate` on a feature branch writes
-`.decapod/governance/validation.json` when plan, claims, and trajectory already
-participate in the PR or working tree. `GOVERNANCE_PR_UPDATES` does not fail
-that run solely because the receipt is not yet in `base...HEAD`. Subsequent
-validates reuse the receipt when it is still bound to the current trajectory
-and HEAD only added governance files — there is no commit/validate/amend
-chase, and `DECAPOD_VALIDATE_SKIP_GIT_GATES` is not a sanctioned agent path.
+The first successful `decapod validate` writes the validation section of
+`.decapod/governance.json`. The receipt binds logical input sections rather
+than whole-file bytes, so adding the receipt cannot invalidate its own hash.
+`GOVERNANCE_PR_UPDATES` recognizes working-tree canonical participation;
+`DECAPOD_VALIDATE_SKIP_GIT_GATES` is not a sanctioned agent path.
 
-One-shot sequence: claim a clean, fetched base → work in the printed
-workspace → commit incrementally → `govern plan` / `trajectory` / claims →
-`decapod validate` (writes the receipt) → commit the four governance files
-or go straight to `workspace publish` (it commits dirty receipts) → publish
-uses the inherited GitHub remote.
+Sequence: claim a fetched base and enter its isolated workspace → explicitly
+begin the PR → author source/specs and record plan/trajectory/current claims →
+validate → stage material → record a unique exact-input checkpoint → stage the
+canonical document and commit → publish through the inherited network remote.
+Each later commit repeats the checkpoint step; immutable-tree verification
+covers merge commits and the exact published head.
 
 Host-vs-container validate stickiness after `ensure --container` remains a
 documented deferred question: prefer staying in the printed container when
@@ -192,7 +198,7 @@ gone.
 
 `PUBLICATION_BUNDLE_CURRENCY` itself only proves a **HEAD participation/load
 predicate**: required paths exist, living-spec `*.md` exists, plan/claims/
-trajectory load, validation.json parses, and (when base release pin ≠ running
+trajectory load, the canonical validation section parses, and (when base release pin ≠ running
 release) some release-bound path appears in `base...HEAD`. It does **not** by
 itself prove fingerprint currency, living-spec attestation, or receipt↔HEAD
 binding — those remain sibling gates.
@@ -275,7 +281,7 @@ flowchart LR
 - A watcher record imported by existing-project init is observed by validation, health, heartbeat, and flight recorder after the source JSONL is removed.
 - Re-running event reconciliation imports zero additional rows; malformed or conflicting fresh records return visible errors, and a proven consolidation receipt prevents retired archives from being reinterpreted.
 - Event migration regression proof includes a canonical-only store with 17,392 broker rows, 1,240 duplicate sequence groups, no legacy stream tables, and no structural unique index; it must normalize to a contiguous unique sequence and install the canonical index. A forced residual duplicate must fail with the typed normalization marker before index creation. Broker replay proof separately exercises the reported 20,384-row scale with 9,785 pending and 10,599 terminal events through the paged query path.
-- Local Dactyl v0.10.0 conformance covers explicit IDs, event-atomic todo transitions with rollback, read-only enforcement, ordinary file close/reopen persistence, backend-neutral schema inspection, native integrity verification, WAL-aware online backup, explicit logical recovery, metadata/data preservation, DELETE journal mode, archive/path safety, open-connection quiescence, and bounded coordination when the host SQLite runtime is available. A missing host runtime is a typed `sqlite_runtime_unavailable` storage-I/O result and never activates a bundled or second driver; hosted Propodus/Neon and tenancy/concurrency proof remain separate checks.
+- Local Dactyl v0.11.1 conformance covers explicit IDs, event-atomic todo transitions with rollback, read-only enforcement, ordinary file close/reopen persistence, backend-neutral schema inspection, native integrity verification, WAL-aware online backup, explicit logical recovery, metadata/data preservation, DELETE journal mode, archive/path safety, open-connection quiescence, and bounded coordination when the host SQLite runtime is available. A missing host runtime is a typed `sqlite_runtime_unavailable` storage-I/O result and never activates a bundled or second driver; hosted Propodus/Neon and tenancy/concurrency proof remain separate checks.
 - Local startup proof also covers the agent-facing `LOCAL_SQLITE_RUNTIME_REQUIRED` remediation, supported library-name discovery, machine-local runtime configuration serialization, and the cloud-path exclusion from the native SQLite preflight.
 
 ## Promotion Gates
@@ -392,9 +398,9 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5e522c585e055cae81578f96df9ab41a4f21f6fde8c73b68ca9d0f2be05870d4`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (124 files), `tests/` (162 files)
-- Refreshed from the current codebase by `decapod specs.refresh`
+- Repository signal fingerprint: `ff0e704a1389577bb72bd8d97fc1f5f7d0e567779df8ad00b96ab8d2bf46557e`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (125 files), `tests/` (167 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
 ## Approval and bounded-runtime regression proof (#1361)
