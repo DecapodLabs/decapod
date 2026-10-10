@@ -36,6 +36,12 @@ fn run_decapod(dir: &Path, args: &[&str], envs: &[(&str, &str)]) -> std::process
 }
 
 fn setup_repo() -> (TempDir, PathBuf, String) {
+    setup_repo_with(run_decapod)
+}
+
+type DecapodRunner = fn(&Path, &[&str], &[(&str, &str)]) -> std::process::Output;
+
+fn setup_repo_with(run: DecapodRunner) -> (TempDir, PathBuf, String) {
     let tmp = TempDir::new().expect("tmpdir");
     let dir = tmp.path().to_path_buf();
 
@@ -46,14 +52,14 @@ fn setup_repo() -> (TempDir, PathBuf, String) {
         .expect("git init");
     assert!(init.status.success(), "git init failed");
 
-    let out = run_decapod(&dir, &["init", "--force"], &[]);
+    let out = run(&dir, &["init", "--force"], &[]);
     assert!(
         out.status.success(),
         "decapod init failed: {}",
         String::from_utf8_lossy(&out.stderr)
     );
 
-    let acquire = run_decapod(
+    let acquire = run(
         &dir,
         &["session", "acquire"],
         &[
@@ -569,12 +575,22 @@ fn direct_claim_acknowledges_before_preparation() {
 #[cfg(unix)]
 fn claim_preparation_probe(broker: bool) {
     use std::os::unix::fs::PermissionsExt;
-    let (_temp, dir, password) = setup_repo();
-    if broker && !broker_socket_supported(&dir, &password) {
-        eprintln!(
-            "AF_UNIX broker unavailable; client follow-up integration requires a socket-capable runner"
-        );
-        return;
+    claim_probe_stage("setup");
+    let (_temp, dir, password) = setup_repo_with(run_decapod_bounded);
+    if broker {
+        match std::os::unix::net::UnixListener::bind(dir.join("capability.sock")) {
+            Ok(listener) => {
+                drop(listener);
+                std::fs::remove_file(dir.join("capability.sock")).unwrap();
+            }
+            Err(error) if error.kind() == std::io::ErrorKind::PermissionDenied => {
+                eprintln!(
+                    "AF_UNIX creation denied by local sandbox; dedicated broker proof requires Actions"
+                );
+                return;
+            }
+            Err(error) => panic!("AF_UNIX capability probe failed: {error}"),
+        }
     }
     let envs = [
         ("DECAPOD_SESSION_PASSWORD", password.as_str()),
@@ -585,7 +601,8 @@ fn claim_preparation_probe(broker: bool) {
             if broker { "0" } else { "1" },
         ),
     ];
-    let added = run_decapod(
+    claim_probe_stage("add");
+    let added = run_decapod_bounded(
         &dir,
         &["todo", "add", "claim follow-up responsiveness"],
         &envs,
@@ -616,6 +633,8 @@ fn claim_preparation_probe(broker: bool) {
     let path = format!("{}:{}", bin.display(), std::env::var("PATH").unwrap());
     let args = ["todo", "--format", "json", "claim", "--id", id];
     let progress = dir.join("claim-progress");
+    let output_path = dir.join("claim-output");
+    let hooks = dir.join("claim-hooks");
     let mut command = Command::new(resolve_decapod_bin());
     command
         .current_dir(&dir)
@@ -625,16 +644,20 @@ fn claim_preparation_probe(broker: bool) {
         .env("DECAPOD_CLAIM_AUTORUN", "1")
         .env("DECAPOD_CONTAINER", "0")
         .env("DECAPOD_GROUP_BROKER_REQUEST_ID", "followup-once")
-        .stdout(std::process::Stdio::piped())
+        .env("DECAPOD_GROUP_BROKER_TEST_HOOK_FILE", &hooks)
+        .stdout(std::fs::File::create(&output_path).unwrap())
         .stderr(std::fs::File::create(&progress).unwrap());
-    let mut child = command.spawn().unwrap();
+    use std::os::unix::process::CommandExt;
+    command.process_group(0);
+    claim_probe_stage("spawn claim");
+    let mut child = ClaimProbeChild(Some(command.spawn().unwrap()));
     let start = Instant::now();
     while !ready.exists() && start.elapsed() < Duration::from_secs(12) {
         std::thread::sleep(Duration::from_millis(20));
     }
     if !ready.exists() {
-        let _ = child.kill();
-        let output = child.wait_with_output().unwrap();
+        child.terminate();
+        let output = child.output(&output_path, &progress, &hooks, "claim readiness");
         panic!(
             "preparation did not start: {} {}",
             String::from_utf8_lossy(&output.stdout),
@@ -651,9 +674,11 @@ fn claim_preparation_probe(broker: bool) {
     // The creating leader has relinquished its lease before client preparation.
     assert!(!dir.join(".decapod/data/broker.lock").exists());
     let start = Instant::now();
-    let competing = run_decapod(&dir, &["todo", "add", "while preparation waits"], &envs);
+    claim_probe_stage("competing mutation");
+    let competing = run_decapod_bounded(&dir, &["todo", "add", "while preparation waits"], &envs);
     std::fs::write(&release, "release").unwrap(); // always release before assertions
-    let output = child.wait_with_output().unwrap();
+    claim_probe_stage("await final claim envelope");
+    let output = child.output(&output_path, &progress, &hooks, "claim completion");
     assert!(
         competing.status.success(),
         "{}",
@@ -673,9 +698,89 @@ fn claim_preparation_probe(broker: bool) {
         return;
     }
     let before = std::fs::read_to_string(&calls).unwrap();
-    let retry = command.output().unwrap();
-    assert!(retry.status.success());
+    claim_probe_stage("retry committed request");
+    use decapod::core::bounded_process::BoundedCommand;
+    let retry = command
+        .bounded_output(Duration::from_secs(30))
+        .expect("bounded claim retry");
+    assert!(
+        retry.status.success(),
+        "retry stdout={} stderr={}",
+        String::from_utf8_lossy(&retry.stdout),
+        String::from_utf8_lossy(&retry.stderr)
+    );
     let retried: serde_json::Value = serde_json::from_slice(&retry.stdout).unwrap();
     assert_eq!(retried, claimed);
     assert_eq!(std::fs::read_to_string(&calls).unwrap(), before);
+}
+
+fn run_decapod_bounded(dir: &Path, args: &[&str], envs: &[(&str, &str)]) -> std::process::Output {
+    use decapod::core::bounded_process::BoundedCommand;
+    Command::new(resolve_decapod_bin())
+        .current_dir(dir)
+        .args(args)
+        .envs(envs.iter().copied())
+        .bounded_output(Duration::from_secs(30))
+        .unwrap_or_else(|error| panic!("bounded probe command {args:?}: {error}"))
+}
+
+#[cfg(unix)]
+struct ClaimProbeChild(Option<Child>);
+#[cfg(unix)]
+impl ClaimProbeChild {
+    fn terminate(&mut self) {
+        if let Some(child) = self.0.as_mut() {
+            // This child has not been reaped, so its owned group cannot be reused.
+            unsafe {
+                libc::kill(-(child.id() as libc::pid_t), libc::SIGKILL);
+            }
+            let _ = child.kill();
+        }
+    }
+    fn output(
+        &mut self,
+        stdout: &Path,
+        stderr: &Path,
+        hooks: &Path,
+        stage: &str,
+    ) -> std::process::Output {
+        let start = Instant::now();
+        loop {
+            if let Some(status) = self.0.as_mut().unwrap().try_wait().unwrap() {
+                self.0.take();
+                return std::process::Output {
+                    status,
+                    stdout: std::fs::read(stdout).unwrap(),
+                    stderr: std::fs::read(stderr).unwrap(),
+                };
+            }
+            if start.elapsed() >= Duration::from_secs(30) {
+                self.terminate();
+                let _ = self.0.take().unwrap().wait();
+                panic!(
+                    "{stage} timed out; stdout={} stderr={} hooks={}",
+                    std::fs::read_to_string(stdout).unwrap_or_default(),
+                    std::fs::read_to_string(stderr).unwrap_or_default(),
+                    std::fs::read_to_string(hooks).unwrap_or_default()
+                );
+            }
+            std::thread::sleep(Duration::from_millis(20));
+        }
+    }
+}
+#[cfg(unix)]
+impl Drop for ClaimProbeChild {
+    fn drop(&mut self) {
+        self.terminate();
+        if let Some(mut child) = self.0.take() {
+            let _ = child.wait();
+        }
+    }
+}
+
+fn claim_probe_stage(stage: &str) {
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap();
+    eprintln!("claim probe: {stage} at {}ms", now.as_millis());
 }
