@@ -138,6 +138,8 @@ pub trait PropodusTransport: Send + Sync + Clone + 'static {
 pub struct CurlTransport {
     pub connect_timeout_seconds: u64,
     pub max_time_seconds: u64,
+    pub follow_redirects: bool,
+    pub private_stdin: bool,
 }
 
 impl Default for CurlTransport {
@@ -145,8 +147,85 @@ impl Default for CurlTransport {
         Self {
             connect_timeout_seconds: 10,
             max_time_seconds: 30,
+            follow_redirects: true,
+            private_stdin: false,
         }
     }
+}
+
+impl CurlTransport {
+    /// Supabase authentication uses the same no-redirect boundary as Dactyl
+    /// data requests: refresh material must never follow an HTTP redirect.
+    pub fn for_datastore(datastore: crate::core::backend::CloudDatastore) -> Self {
+        Self {
+            follow_redirects: datastore != crate::core::backend::CloudDatastore::Supabase,
+            private_stdin: datastore == crate::core::backend::CloudDatastore::Supabase,
+            ..Self::default()
+        }
+    }
+}
+
+fn quote_curl_config(value: &str) -> String {
+    value
+        .replace('\\', "\\\\")
+        .replace('"', "\\\"")
+        .replace('\n', "\\n")
+        .replace('\r', "\\r")
+        .replace('\t', "\\t")
+}
+
+fn private_curl_config(bearer: &str, body: Option<&[u8]>) -> Result<String, PropodusClientError> {
+    if bearer
+        .chars()
+        .any(|value| value.is_whitespace() || value.is_control())
+    {
+        return Err(PropodusClientError::Configuration(
+            "invalid authentication bearer".to_string(),
+        ));
+    }
+    let mut config = String::new();
+    if !bearer.is_empty() {
+        config.push_str(&format!(
+            "header = \"Authorization: Bearer {}\"\n",
+            quote_curl_config(bearer)
+        ));
+    }
+    if let Some(body) = body {
+        let body = std::str::from_utf8(body).map_err(|_| {
+            PropodusClientError::Configuration("authentication body must be UTF-8 JSON".to_string())
+        })?;
+        // JSON also excludes curl's special @file data input syntax.
+        serde_json::from_str::<serde_json::Value>(body).map_err(|_| {
+            PropodusClientError::Configuration("authentication body must be JSON".to_string())
+        })?;
+        config.push_str(&format!("data-binary = \"{}\"\n", quote_curl_config(body)));
+    }
+    Ok(config)
+}
+
+fn safe_auth_error_body(body: &[u8], status: u16) -> Vec<u8> {
+    let parsed = serde_json::from_slice::<serde_json::Value>(body).ok();
+    let supplied_code = parsed
+        .as_ref()
+        .and_then(|value| value.get("error")?.get("code")?.as_str());
+    let code = supplied_code
+        .filter(|code| {
+            matches!(
+                *code,
+                "session_revoked"
+                    | "revoked"
+                    | "token_expired"
+                    | "session_expired"
+                    | "identity_not_authorized"
+                    | "unauthorized_identity"
+                    | "repository_not_authorized"
+                    | "authorization_denied"
+                    | "invalid_token"
+                    | "organization_seat_required"
+            )
+        })
+        .unwrap_or("http_error");
+    serde_json::json!({"error": {"code": code, "message": format!("authentication service returned HTTP status {status}")}}).to_string().into_bytes()
 }
 
 impl PropodusTransport for CurlTransport {
@@ -158,10 +237,15 @@ impl PropodusTransport for CurlTransport {
         body: Option<&[u8]>,
     ) -> Result<PropodusHttpResponse, PropodusClientError> {
         let mut command = Command::new("curl");
+        if self.private_stdin {
+            // Must be the first argument: ignore ambient curlrc directives,
+            // including redirects that could forward authentication material.
+            command.arg("--disable");
+            command.env_remove(auth::CLOUD_ACCESS_TOKEN_ENV);
+        }
         command.args([
             "--silent",
             "--show-error",
-            "--location",
             "--request",
             method,
             "--header",
@@ -176,16 +260,53 @@ impl PropodusTransport for CurlTransport {
             "\n%{http_code}",
             url,
         ]);
-        if !bearer.trim().is_empty() {
-            command.args(["--header", &format!("Authorization: Bearer {bearer}")]);
+        if self.follow_redirects {
+            command.arg("--location");
         }
-        if let Some(body) = body {
-            command.args(["--data-binary", &String::from_utf8_lossy(body)]);
-        }
-
-        let output = command
-            .output()
-            .map_err(|error| PropodusClientError::Transport(error.to_string()))?;
+        let output = if self.private_stdin {
+            use std::io::Write;
+            use std::process::Stdio;
+            let config = private_curl_config(bearer, body)?;
+            command
+                .args(["--config", "-"])
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped());
+            let mut child = command.spawn().map_err(|_| {
+                PropodusClientError::Transport(
+                    "could not start authentication transport".to_string(),
+                )
+            })?;
+            let write_result = child
+                .stdin
+                .take()
+                .ok_or_else(|| {
+                    std::io::Error::other("authentication transport stdin is unavailable")
+                })
+                .and_then(|mut stdin| stdin.write_all(config.as_bytes()));
+            if write_result.is_err() {
+                let _ = child.kill();
+                let _ = child.wait();
+                return Err(PropodusClientError::Transport(
+                    "could not provide authentication request".to_string(),
+                ));
+            }
+            child.wait_with_output().map_err(|_| {
+                PropodusClientError::Transport(
+                    "authentication transport did not complete".to_string(),
+                )
+            })?
+        } else {
+            if !bearer.trim().is_empty() {
+                command.args(["--header", &format!("Authorization: Bearer {bearer}")]);
+            }
+            if let Some(body) = body {
+                command.args(["--data-binary", &String::from_utf8_lossy(body)]);
+            }
+            command
+                .output()
+                .map_err(|error| PropodusClientError::Transport(error.to_string()))?
+        };
         if !output.status.success() {
             return Err(PropodusClientError::Transport(format!(
                 "curl failed with exit status {}",
@@ -204,7 +325,11 @@ impl PropodusTransport for CurlTransport {
         })?;
         Ok(PropodusHttpResponse {
             status,
-            body: body.as_bytes().to_vec(),
+            body: if self.private_stdin && !(200..300).contains(&status) {
+                safe_auth_error_body(body.as_bytes(), status)
+            } else {
+                body.as_bytes().to_vec()
+            },
         })
     }
 }
@@ -302,7 +427,7 @@ pub fn cloud_auth_diagnostic(error: &PropodusClientError) -> Option<&CloudAuthDi
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct PropodusClient<T = CurlTransport> {
     api_url: String,
     repo_id: String,
@@ -310,11 +435,27 @@ pub struct PropodusClient<T = CurlTransport> {
     transport: T,
 }
 
+impl<T> fmt::Debug for PropodusClient<T> {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("PropodusClient")
+            .field("api_url", &"[REDACTED]")
+            .field("repo_id", &self.repo_id)
+            .field("credential", &"[REDACTED]")
+            .finish_non_exhaustive()
+    }
+}
+
 impl PropodusClient<CurlTransport> {
     pub fn from_cloud_config(
         config: &CloudRuntimeConfig,
         identity: &RepositoryIdentity,
     ) -> Result<Self, PropodusClientError> {
+        if config.datastore != "neon" {
+            return Err(PropodusClientError::Configuration(
+                "legacy todo client requires the Neon route; use the Dactyl command boundary for Supabase".to_string(),
+            ));
+        }
         let credential = auth::load_cloud_credential(None).map_err(|_| {
             cloud_auth_error(
                 CloudAuthStatus::Missing,
@@ -332,6 +473,11 @@ impl PropodusClient<CurlTransport> {
         config: &CloudRuntimeConfig,
         identity: &RepositoryIdentity,
     ) -> Result<Self, PropodusClientError> {
+        if config.datastore != "neon" {
+            return Err(PropodusClientError::Configuration(
+                "legacy todo client requires the Neon route; use the Dactyl command boundary for Supabase".to_string(),
+            ));
+        }
         let config = PropodusConfig::for_repository(config, identity);
         let credential = ensure_cloud_session(&config, identity, CurlTransport::default())?;
         Self::with_transport(&config, &credential.token, CurlTransport::default())
@@ -351,12 +497,53 @@ pub fn ensure_cloud_session<T: PropodusTransport>(
     identity: &RepositoryIdentity,
     transport: T,
 ) -> Result<auth::CloudCredential, PropodusClientError> {
+    let store = auth::CloudSessionStore::legacy().map_err(|_| {
+        PropodusClientError::Configuration("cloud session storage is unavailable".to_string())
+    })?;
+    ensure_cloud_session_with_store(config, identity, transport, &store)
+}
+
+pub fn ensure_cloud_session_for_datastore(
+    config: &PropodusConfig,
+    identity: &RepositoryIdentity,
+    datastore: crate::core::backend::CloudDatastore,
+) -> Result<auth::CloudCredential, PropodusClientError> {
+    datastore
+        .validate_available()
+        .map_err(|error| PropodusClientError::Configuration(error.to_string()))?;
+    #[cfg(feature = "supabase-cloud")]
+    if datastore == crate::core::backend::CloudDatastore::Supabase {
+        dactyl_db::DatastoreRoute::supabase(&config.api_url, None)
+            .validate()
+            .map_err(|error| PropodusClientError::Configuration(error.to_string()))?;
+    }
+    // This helper owns transport policy as well as credential scope. Callers
+    // cannot accidentally enable redirects or credential-bearing arguments.
+    let transport = CurlTransport::for_datastore(datastore);
+    let store = match datastore {
+        crate::core::backend::CloudDatastore::Neon => auth::CloudSessionStore::legacy(),
+        crate::core::backend::CloudDatastore::Supabase => {
+            auth::CloudSessionStore::for_service(&config.api_url)
+        }
+    }
+    .map_err(|_| {
+        PropodusClientError::Configuration("cloud session storage is unavailable".to_string())
+    })?;
+    ensure_cloud_session_with_store(config, identity, transport, &store)
+}
+
+fn ensure_cloud_session_with_store<T: PropodusTransport>(
+    config: &PropodusConfig,
+    identity: &RepositoryIdentity,
+    transport: T,
+    store: &auth::CloudSessionStore,
+) -> Result<auth::CloudCredential, PropodusClientError> {
     if mock_cloud_auth_enabled() {
-        return ensure_mock_cloud_session(identity);
+        return ensure_mock_cloud_session(identity, store);
     }
 
     let mut expired_machine_session = false;
-    if let Ok(credential) = auth::load_cloud_credential(None) {
+    if let Ok(credential) = store.load_credential(None) {
         if credential.source != auth::CredentialSource::MachineFile
             || !auth::cloud_session_needs_refresh(&credential)
         {
@@ -368,14 +555,15 @@ pub fn ensure_cloud_session<T: PropodusTransport>(
             credential.refresh_token.as_deref(),
         ) {
             let session = refresh_cloud_session(config, session_id, refresh_token, &transport)?;
-            auth::store_machine_session(&session).map_err(|_| {
+            store.store_machine_session(&session).map_err(|_| {
                 cloud_auth_error(
                     CloudAuthStatus::AuthRequired,
                     "the refreshed cloud session could not be stored",
                     cloud_init_action("again after checking machine data-directory permissions"),
                 )
             })?;
-            return auth::load_machine_session()
+            return store
+                .load_machine_session()
                 .map_err(|_| {
                     cloud_auth_error(
                         CloudAuthStatus::AuthRequired,
@@ -393,7 +581,7 @@ pub fn ensure_cloud_session<T: PropodusTransport>(
         }
     }
 
-    complete_cloud_onboarding(config, identity, transport, expired_machine_session)
+    complete_cloud_onboarding(config, identity, transport, expired_machine_session, store)
 }
 
 /// CI and deterministic repository tests need the cloud control-plane path to
@@ -409,6 +597,7 @@ fn mock_cloud_auth_enabled() -> bool {
 
 fn ensure_mock_cloud_session(
     identity: &RepositoryIdentity,
+    store: &auth::CloudSessionStore,
 ) -> Result<auth::CloudCredential, PropodusClientError> {
     let session = CloudSession {
         access_token: "decapod-test-mock-access".to_string(),
@@ -416,14 +605,15 @@ fn ensure_mock_cloud_session(
         session_id: Some(format!("decapod-test-mock-{}", identity.canonical_name)),
         expires_at: Some("2099-01-01T00:00:00Z".to_string()),
     };
-    auth::store_machine_session(&session).map_err(|_| {
+    store.store_machine_session(&session).map_err(|_| {
         cloud_auth_error(
             CloudAuthStatus::AuthRequired,
             "the mock cloud session could not be stored",
             "check machine data-directory permissions, then rerun the validation command",
         )
     })?;
-    auth::load_machine_session()
+    store
+        .load_machine_session()
         .map_err(|_| {
             cloud_auth_error(
                 CloudAuthStatus::AuthRequired,
@@ -445,6 +635,7 @@ fn complete_cloud_onboarding<T: PropodusTransport>(
     identity: &RepositoryIdentity,
     transport: T,
     expired_machine_session: bool,
+    store: &auth::CloudSessionStore,
 ) -> Result<auth::CloudCredential, PropodusClientError> {
     let interactive = std::io::stdin().is_terminal()
         && std::env::var_os("GITHUB_ACTIONS").is_none()
@@ -455,6 +646,7 @@ fn complete_cloud_onboarding<T: PropodusTransport>(
         transport,
         expired_machine_session,
         interactive,
+        store,
     )
 }
 
@@ -464,6 +656,7 @@ fn complete_cloud_onboarding_with_mode<T: PropodusTransport>(
     transport: T,
     expired_machine_session: bool,
     interactive: bool,
+    store: &auth::CloudSessionStore,
 ) -> Result<auth::CloudCredential, PropodusClientError> {
     let endpoints = CloudOnboardingEndpoints::new(&config.api_url)
         .map_err(|error| PropodusClientError::Configuration(error.to_string()))?;
@@ -638,7 +831,7 @@ fn complete_cloud_onboarding_with_mode<T: PropodusTransport>(
             cloud_init_action("to start a new handoff"),
         )
     })?;
-    auth::store_machine_session(&session).map_err(|_| {
+    store.store_machine_session(&session).map_err(|_| {
         cloud_auth_error(
             CloudAuthStatus::AuthRequired,
             "the cloud session could not be stored",
@@ -652,7 +845,8 @@ fn complete_cloud_onboarding_with_mode<T: PropodusTransport>(
             cloud_init_action("again"),
         )
     })?;
-    auth::load_machine_session()
+    store
+        .load_machine_session()
         .map_err(|_| {
             cloud_auth_error(
                 CloudAuthStatus::AuthRequired,
@@ -985,7 +1179,11 @@ fn parse_timestamp(value: Option<&str>) -> Option<DateTime<Utc>> {
 }
 
 fn decode_json<T: for<'de> Deserialize<'de>>(body: &[u8]) -> Result<T, PropodusClientError> {
-    serde_json::from_slice(body).map_err(|error| PropodusClientError::Decode(error.to_string()))
+    // Serde type/enum errors can quote values from an untrusted response.
+    // Authentication responses may echo session material even with HTTP 200.
+    serde_json::from_slice(body).map_err(|_| {
+        PropodusClientError::Decode("response did not match the expected JSON contract".to_string())
+    })
 }
 
 fn map_http_error(response: PropodusHttpResponse) -> PropodusClientError {

@@ -1,5 +1,42 @@
 # Interfaces
 
+## Gatekeeper evidence and input contract (#1370)
+
+`govern gatekeeper check --paths` accepts one explicit file per repeated option.
+Missing/non-file inputs fail closed. Git discovery is status-checked and NUL-
+delimited, retaining removed/renamed source paths for protected-path policy.
+Literal Rust `include_str!` dependencies are resolved inside the repository, traversed with a
+bound, and scanned under the same credential and path checks. Dynamic,
+missing, unreadable, or escaping includes cannot establish scan success.
+
+Supported classifiers may discharge only the exact matched span. SQL proof
+requires real terminal connection use or a source-verified strict forwarding
+wrapper, and rejects operation-string escape. Password proof distinguishes
+immutable runtime provenance from literal fallbacks, mutation, ambiguous
+binding and unsupported flow. Standard primitive comparison results are
+non-executable text consumers; native shell/Dockerfile rules preserve actual
+command-substitution and dangerous-operation findings.
+
+## Supabase preview contract (#1369)
+
+`DECAPOD_CLOUD_DATASTORE=neon|supabase` is an explicit machine-runtime selector;
+Neon remains the default. Supabase requires the `supabase-cloud` build feature
+and an explicit `DECAPOD_PROPODUS_API_URL` pointing to a compatible authenticated
+service. It is not a Supabase REST URL or a PostgreSQL DSN. The ordinary
+onboarding/session flow supplies user credentials outside the repository.
+Unknown selectors, unsupported builds and missing explicit preview routes
+fail closed before authentication or todo dispatch.
+
+Supabase machine sessions are endpoint-scoped; a different endpoint cannot
+reuse or refresh the legacy Neon machine session. Supabase authentication
+and data transports refuse redirects.
+
+The Dactyl wire context remains version 1 and does not serialize the client
+selector or bearer. Debug formatting redacts credentials. Caller-supplied
+repository identifiers remain routing hints, never authorization. The service
+permission contract is tested by observed permitted and denied outcomes;
+Decapod does not implement organizational access policy.
+
 ## Worktree and Validation Interface
 
 `workspace status` is an observational, bounded operation and reports
@@ -104,8 +141,8 @@ Generated interface specs should include:
 | `core::backend::BackendSelection` / `BackendRoute` | `.decapod/config.toml` backend plus Git origin identity | Local datastore or authenticated Dactyl session | `local` binds `.decapod/data/decapod.db`; `cloud` binds the GitHub owner/repository and accepts only an opaque remote URI supplied by the session boundary; provider names and URI construction are outside ordinary Decapod persistence |
 | `core::backend::StorageContext` | `BackendSelection`, opaque route, and optional session bearer | Dactyl bridge or future physical driver | Version 1 distinguishes local and remote targets; local has no cloud scope or credential, remote requires an authenticated bearer, credentials are never serialized, and unsupported future versions fail closed before I/O; Propodus owns effective membership/repository authorization |
 | `core::dactyl_db::Connection` | Decapod relational caller, SQL text, typed parameters | Dactyl v0.10.0 local connection | Provides the only application-facing connection facade; it seeds a new empty read-write filesystem target for Dactyl's pre-open validation, while Dactyl owns physical execution, access mode, normalized rows/results, typed errors, schema inspection, host-runtime availability, and physical maintenance. No direct SQL-driver dependency, raw SQLite handle, or maintenance PRAGMA is exposed |
-| `core::dactyl::DactylBridge` | Backend route, access mode, optional opaque bearer, or explicit maintenance request | Dactyl v0.10.0 operation/context and maintenance contract | Scopes `DATASTORE`, `DATASTORE_ROUTE`, and `DATASTORE_TOKEN` while Dactyl resolves the connection, then restores the process environment; provides explicit reads, writes, atomic batches, portable schema inspection, access-mode enforcement, typed integrity verification, online backup, logical recovery, and Decapod-normalized errors; local existing files open directly and cloud construction fails closed without a bearer |
-| Ambient route construction | `BackendRoute` plus an optional session bearer | `DactylBridge` connection snapshot | Route and credential validation happens before the ambient variables are installed; the construction lock covers Dactyl's `from_env()` snapshot, and prior process values are restored immediately afterward so reopening a store cannot leak one backend's endpoint or token into the next connection |
+| `core::dactyl::DactylBridge` | Backend route, access mode, optional opaque credential, or explicit maintenance request | Dactyl operation/context contract and local maintenance capabilities | Constructs explicit SQLite, Neon HTTP, or feature-gated Supabase HTTP routes without changing ambient process routing; provides reads, writes, atomic batches, portable schema inspection, access-mode enforcement, typed integrity verification, online backup, logical recovery, and Decapod-normalized errors; local existing files open directly and cloud construction fails closed without a credential |
+| Explicit route construction | `StorageContext` plus its client-only cloud capability selector | `DactylBridge` connection | Context, route and credential requirements are checked before physical opening. Supabase transport policy is also validated before session lookup or refresh. Each connection receives its own explicit route; unrelated ambient `DATASTORE*` values are neither used nor changed |
 | `core::dactyl_todo::DactylTodoStore` | Cloud `TodoStore` command boundary plus versioned storage context | Dactyl `/query` and `/batch` handlers | Lists canonical task columns; keyed get uses a direct query; add/claim/release/complete use conditional SQL write, matching event, and row observation in one batch; zero affected rows are conflicts; no per-query backend, tenant, provider, or repository input is accepted |
 | Propodus cloud session boundary | Cloud runtime config, Git-derived repository identity, machine-local credential | `StorageContext` bearer and opaque Dactyl route | Propodus authenticates and authorizes the principal/repository; authentication failures are surfaced as cloud diagnostics; bearer material is never serialized into repository state |
 | Local SQLite runtime preflight | Project backend plus `DACTYL_SQLITE_LIBRARY` and `~/.config/decapod/runtime.toml` | Dactyl local adapter startup | Runs only for `backend=local`; an explicit shell/config value is reused without discovery, a discovered host library is persisted at user scope, and a missing runtime returns `LOCAL_SQLITE_RUNTIME_REQUIRED` with installation/export remediation. Cloud startup does not probe SQLite |
@@ -278,8 +315,8 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d0b72a673bf3d164c0cfa631aa8633cf58ef7ed8db848552d782536d7ffb0806`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (110 files), `tests/` (4 files)
+- Repository signal fingerprint: `1d8c50df18ccf6e945ff8129319be43777512462c516616aeb9754e33fee05f7`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (119 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

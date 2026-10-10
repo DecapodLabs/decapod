@@ -211,3 +211,113 @@ fn route_serialization_preserves_only_the_opaque_target_and_scope() {
     assert!(!encoded.contains("neon"));
     assert!(!encoded.contains("propodus"));
 }
+
+#[test]
+fn cloud_context_debug_redacts_endpoint_and_credentials() {
+    let identity = crate::core::repo_identity::resolve_repository_identity_from_remote(
+        "git@github.com:example/project.git",
+    )
+    .unwrap();
+    let route = BackendRoute::cloud(identity, "https://service.example.test/private-path").unwrap();
+    let context = StorageContext::from_route(route, Some("synthetic-bearer-secret")).unwrap();
+    let debug = format!("{context:?}");
+    assert!(!debug.contains("synthetic-bearer-secret"));
+    assert!(!debug.contains("private-path"));
+    assert!(!debug.contains("service.example.test"));
+    assert!(debug.contains("REDACTED"));
+    let encoded = serde_json::to_value(&context).unwrap();
+    assert!(encoded.get("bearer").is_none());
+    assert!(encoded.get("cloud_datastore").is_none());
+    let restored: StorageContext = serde_json::from_value(encoded).unwrap();
+    assert!(
+        restored.validate().is_err(),
+        "deserialization must not restore authentication"
+    );
+}
+
+#[test]
+fn remote_routes_reject_credential_query_and_fragment_without_echoing_them() {
+    let identity = crate::core::repo_identity::resolve_repository_identity_from_remote(
+        "git@github.com:example/project.git",
+    )
+    .unwrap();
+    for endpoint in [
+        "https://service.example.test?token=synthetic-secret",
+        "https://service.example.test/#synthetic-secret",
+        "postgres://user:synthetic-secret@db.example.test/db",
+        "https://user:synthetic-secret@service.example.test",
+    ] {
+        let error = BackendRoute::cloud(identity.clone(), endpoint).unwrap_err();
+        assert!(!error.to_string().contains("synthetic-secret"));
+    }
+}
+
+#[test]
+fn cloud_datastore_selection_preserves_neon_and_rejects_unknown_values() {
+    use super::CloudDatastore;
+    assert_eq!(CloudDatastore::default(), CloudDatastore::Neon);
+    assert_eq!(
+        CloudDatastore::parse("supabase").unwrap(),
+        CloudDatastore::Supabase
+    );
+    for value in [
+        "",
+        "postgres",
+        "sqlite",
+        "supabase-postgres",
+        "supabase?token=secret",
+    ] {
+        let error = CloudDatastore::parse(value).unwrap_err();
+        assert!(!error.to_string().contains("token=secret"));
+    }
+    assert!(CloudDatastore::Neon.validate_available().is_ok());
+    assert_eq!(
+        CloudDatastore::Supabase.validate_available().is_ok(),
+        cfg!(feature = "supabase-cloud")
+    );
+}
+
+#[test]
+fn supabase_requires_explicit_service_endpoint_and_never_uses_neon_default() {
+    let config = crate::cli::CloudRuntimeConfig {
+        provider: "vercel".to_string(),
+        api_url: crate::cli::PROPODUS_VERCEL_NEON_ENTRYPOINT.to_string(),
+        datastore: "supabase".to_string(),
+    };
+    assert!(config.validate_datastore().is_err());
+    let config = crate::cli::CloudRuntimeConfig {
+        datastore: "neon".to_string(),
+        ..config
+    };
+    assert!(config.validate_datastore().is_ok());
+}
+
+#[cfg(feature = "supabase-cloud")]
+#[test]
+fn supabase_validates_transport_before_onboarding() {
+    for endpoint in [
+        "http://remote.example.test",
+        "postgres://user:secret@host/db",
+        "https://service.example.test/?token=secret",
+    ] {
+        let config = crate::cli::CloudRuntimeConfig {
+            provider: "vercel".to_string(),
+            api_url: endpoint.to_string(),
+            datastore: "supabase".to_string(),
+        };
+        let error = config.validate_datastore().unwrap_err();
+        assert!(!error.to_string().contains("secret"));
+    }
+    for endpoint in [
+        "https://service.example.test",
+        "http://127.0.0.1:9000",
+        "http://[::1]:9000",
+    ] {
+        let config = crate::cli::CloudRuntimeConfig {
+            provider: "vercel".to_string(),
+            api_url: endpoint.to_string(),
+            datastore: "supabase".to_string(),
+        };
+        assert!(config.validate_datastore().is_ok());
+    }
+}

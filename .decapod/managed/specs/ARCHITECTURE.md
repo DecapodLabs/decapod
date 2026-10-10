@@ -1,5 +1,43 @@
 # Architecture
 
+## Shared datastore audit lock order
+
+Broker audit writes acquire the existing per-database operation lock before
+the audit mutex, including completion events emitted after reads. This matches
+the writer's order and prevents policy-read auditing from deadlocking a
+concurrent task or repair mutation. Standalone event append transactions and
+caller-owned mutation transactions retain their existing commit/rollback
+boundaries; the fix introduces neither a separate database nor a new global
+serialization boundary.
+
+## Evidence-based source classification (#1370)
+
+Gatekeeper retains independent per-occurrence secret and dangerous-pattern
+checks. Rust source evidence is divided into formatting bindings, bounded
+runtime credential flow, resolved SQL terminal/forwarding use, and source
+include discovery. Native shell and Dockerfile grammar provide their own
+contexts. Classifiers return exact source spans rather than exempting whole
+lines or files. The SQL wrapper proof uses the actual Cargo module graph and
+strict physical-connection forwarding bodies; an operation constructor or a
+helper name alone is not a terminal consumer.
+
+Extracted native templates remain byte-equivalent executable/package inputs.
+Scanning their Rust caller follows literal `include_str!` dependencies; missing or unresolved
+inputs fail closed. Real command substitutions and unsupported constructions
+remain findings. The recognizers do not implement arbitrary macro expansion,
+whole-program compilation, or dependency authenticity verification.
+
+## Supabase routing boundary (#1369)
+
+The runtime cloud datastore selector is separate from the logical project
+backend and the service's hosting provider. `StorageContext` carries the
+validated physical selector only within the client. The Dactyl bridge maps
+that selector to an explicit Dactyl HTTP route and passes the existing opaque
+repository context and user bearer. Route construction does not mutate
+process-wide Dactyl environment variables. Dactyl owns transport validation,
+SQL compatibility and normalized physical results. The authenticated service
+owns schema initialization, tenant resolution and authorization.
+
 ## Canonical Worktree Control Plane
 
 Managed worktrees resolve repository-scoped state through the owning main
@@ -95,12 +133,12 @@ This project's architecture consists of the following key layers/directories:
 - `DbBroker::with_transaction` is the Decapod-owned atomic mutation seam. The facade keeps a connection-scoped local transaction on Dactyl's physical connection for existing callers, while Dactyl owns the execution and rollback mechanics; cloud callers must use Dactyl's ordered atomic operation contract.
 - `core::backend::BackendSelection` is the provider-neutral route seam: it reads `repo.backend`, uses the Git `origin` remote for cloud repository scope, binds local to `.decapod/data/decapod.db`, and passes a session-supplied cloud URI through as opaque data for Dactyl. Ordinary Decapod persistence does not construct a Propodus, Vercel, or Neon path.
 - `core::dactyl_db` is the single application-facing relational facade for Dactyl v0.10.0. It exposes the narrow query/row/parameter compatibility surface used by existing domain code while keeping Dactyl's connection and result types behind the Decapod boundary. For a new read-write path it seeds only the empty filesystem target required by Dactyl's pre-open header check; Dactyl still owns the connection, validation, execution, and physical maintenance. `core::dactyl::DactylBridge` is the explicit route/context seam for operation batches, access mode, typed errors, portable schema inspection, integrity verification, online backup, and logical recovery. `open_canonical` opens the ordinary `.decapod/data/decapod.db` file through Dactyl's host runtime; there is no Decapod raw SQLite handle, PRAGMA maintenance API, or shell connector.
-- The Cargo dependency is resolved as the published crates.io `dactyl-db` v0.10.0 package with Decapod's `sqlite` and `neon` features recorded in `Cargo.lock`. This preserves the same local facade while making release packaging and Nix vendoring registry-backed instead of dependent on a Git source hash. Cloud route selection remains bound once at `backend=cloud`; Decapod supplies Dactyl's ambient `DATASTORE`, `DATASTORE_ROUTE`, and `DATASTORE_TOKEN` values while individual operations carry no backend, tenant, provider, or repository selector.
+- The existing SQLite and Neon consumer contracts remain compatible with Dactyl v0.10.0. The Supabase preview consumes the additive Dactyl capability at reviewed Git commit `62a616e409cbc4c68ca63668c0132a8deffb555c`. This remotely resolvable pin is not a registry release. Cloud route selection remains bound once at `backend=cloud`; Decapod constructs an explicit Dactyl route while individual operations carry no backend, tenant, provider, or repository selector.
 - `core::backend::StorageContext` is the versioned Decapod-owned handoff between logical selection and physical execution. Local contexts contain only the canonical repository path; remote contexts contain the opaque route, logical repository scope, and an in-memory bearer that is excluded from serialization. Organization membership and repository authorization remain Propodus concerns.
 - Cloud todo composition is deliberately layered: `backend=cloud` and Git `origin` select the repository-scoped route; Propodus resolves the machine session and authorization; `core::dactyl::DactylBridge` opens Dactyl with the context; `core::dactyl_todo::DactylTodoStore` issues backend-neutral SQL through Dactyl `/query` and `/batch`. No cloud todo code calls the legacy Propodus `/api/todos` resource route.
-- The cloud todo adapter reopens the non-thread-safe Dactyl connection per operation while retaining only the route/context in the `Send + Sync` store object. Decapod scopes the ambient Dactyl values to connection construction; the Dactyl connection captures the selected backend, endpoint, and bearer before those process values are restored. The opaque context carries target org/repo scope. Each add, claim, release, and complete mutation requests one physical batch containing the conditional task write, matching event insert, and committed row observation; a transition marker makes a stale mutation fail and roll back the batch. Remote event schema, server-side tenancy/version assignment, and deployed Neon parity are owned by the hosted Dactyl/Propodus implementation and are not inferred locally.
+- The cloud todo adapter reopens the non-thread-safe Dactyl connection per operation while retaining only the route/context in the `Send + Sync` store object. Decapod constructs the selected Dactyl route directly from its validated context and supplies the endpoint and credential as explicit arguments. It neither installs nor restores ambient Dactyl route variables. The opaque context carries target org/repo scope. Each add, claim, release, and complete mutation requests one physical batch containing the conditional task write, matching event insert, and committed row observation; the service must bind the event to a preceding task write that affected one row and roll back both on failure. A timestamp marker alone cannot authorize an event after a stale mutation. Remote event schema, server-side tenancy/version assignment, and deployed Neon parity are owned by the hosted Dactyl/Propodus implementation and are not inferred locally.
 - Read-only domain operations skip schema initialization and migration writes; those changes remain owned by the write-side initialization path before a read connection is opened. This keeps Dactyl's read-only enforcement meaningful while allowing validation, RPC, and Markdown primitive reads to use the same facade.
-- Session custody is machine-local for both backend choices: the Decapod agent-session record is stored under the machine config directory, uses `local_`/`cloud_` token prefixes to detect backend changes, and defaults to a four-hour TTL bounded between 30 minutes and six hours. Cloud access and refresh tokens are stored separately under the machine data directory and refreshed before the remaining lifetime falls below 30 minutes.
+- Session custody is machine-local for both backend choices: the Decapod agent-session record is stored under the machine config directory, uses `local_`/`cloud_` token prefixes to detect backend changes, and defaults to a four-hour TTL bounded between 30 minutes and six hours. Cloud access and refresh tokens are stored separately under the machine data directory and refreshed before the remaining lifetime falls below 30 minutes. Supabase sessions are scoped to the selected endpoint and cannot reuse the legacy Neon session or another endpoint's session.
 - Native local storage readiness is machine-local rather than repository-local. Before stateful commands use Dactyl with `backend=local`, Decapod honors `DACTYL_SQLITE_LIBRARY` or `~/.config/decapod/runtime.toml`, discovers a non-standard host SQLite library only when neither is configured, and persists a discovered path for reuse across projects on that machine. Cloud-backed startup skips this capability entirely.
 
 ## Local-Clone Publication and Store Binding (#1259)
@@ -380,8 +418,8 @@ virtiofs/FUSE filesystem prohibition.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d0b72a673bf3d164c0cfa631aa8633cf58ef7ed8db848552d782536d7ffb0806`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (110 files), `tests/` (4 files)
+- Repository signal fingerprint: `1d8c50df18ccf6e945ff8129319be43777512462c516616aeb9754e33fee05f7`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (119 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

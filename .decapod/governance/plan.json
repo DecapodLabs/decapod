@@ -1,15 +1,16 @@
 {
   "schema_version": "1.0.0",
-  "title": "Prepare bounded Gatekeeper scanner PR 1371",
-  "intent": "Merge current master and release into the bounded issue 1370 scanner fix, retain database sharing and approval boundaries, preserve unresolved provenance findings, and prepare existing draft for review with exact-head GitHub Actions evidence",
+  "title": "Complete cloud integration and contextual scanning",
+  "intent": "Combine remaining issues 1369 and 1370 in one PR using current master, public Dactyl preview dependency, conservative parser context and truthful proof",
   "state": "APPROVED",
   "todo_ids": [
-    "code_01m4hascghp2tfc0"
+    "bend_01m4hcjdawvw4m7c"
   ],
   "proof_hooks": [
     "cargo test --offline --locked --lib",
-    "cargo clippy --offline --locked --lib -- -D warnings",
-    "cargo fmt --all -- --check",
+    "cargo test --offline --locked --features supabase-cloud --lib",
+    "cargo test --offline --locked --features supabase-cloud --test cloud_supabase_boundary",
+    "cargo clippy --offline --locked --all-targets --all-features -- -D warnings",
     "decapod validate"
   ],
   "unknowns": [],
@@ -17,8 +18,8 @@
   "stop_conditions": [],
   "unresolved_contradictions": [],
   "deferred_questions": [
-    "SQL parameters, captured variable provenance, ambiguous embedded shell and credential-shaped fixtures remain findings; issue 1370 remains partial",
-    "Real container custody remains unverified in this host environment"
+    "Actual hosted Supabase proof requires a provisioned approved fixture; unavailable must remain distinct from pass",
+    "True container custody remains unavailable in this environment"
   ],
   "constraints": {
     "forbidden_paths": [
@@ -27,5 +28,5 @@
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1791583259Z"
+  "updated_at": "1791585078Z"
 }

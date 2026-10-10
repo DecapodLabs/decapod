@@ -156,16 +156,12 @@ fn ensure_project_cloud_session(
             "cloud session setup did not resolve a repository identity".to_string(),
         )
     })?;
-    let propodus = core::propodus::PropodusConfig::for_repository(
-        &crate::cli::CloudRuntimeConfig::default(),
-        &identity,
-    );
-    core::propodus::ensure_cloud_session(
-        &propodus,
-        &identity,
-        core::propodus::CurlTransport::default(),
-    )
-    .map_err(map_cloud_preflight_error)?;
+    let cloud = crate::cli::CloudRuntimeConfig::default();
+    let datastore = cloud.validate_datastore()?;
+    core::backend::BackendRoute::cloud(identity.clone(), &cloud.api_url)?;
+    let propodus = core::propodus::PropodusConfig::for_repository(&cloud, &identity);
+    core::propodus::ensure_cloud_session_for_datastore(&propodus, &identity, datastore)
+        .map_err(map_cloud_preflight_error)?;
     Ok(identity)
 }
 
@@ -3194,16 +3190,15 @@ fn hash_password(password: &str, token: &str) -> String {
 }
 
 fn generate_ephemeral_password() -> Result<String, error::DecapodError> {
-    let mut buf = vec![0u8; 24];
-    let mut urandom = fs::File::open("/dev/urandom").map_err(error::DecapodError::IoError)?;
-    urandom
-        .read_exact(&mut buf)
-        .map_err(error::DecapodError::IoError)?;
-    let mut out = String::with_capacity(buf.len() * 2);
+    let mut buf = ::std::vec![0u8; 24];
+    let mut urandom =
+        ::std::fs::File::open("/dev/urandom").map_err(error::DecapodError::IoError)?;
+    ::std::io::Read::read_exact(&mut urandom, &mut buf).map_err(error::DecapodError::IoError)?;
+    let mut out = ::std::string::String::with_capacity(buf.len() * 2);
     for b in buf {
-        out.push_str(&format!("{b:02x}"));
+        out.push_str(&::std::format!("{b:02x}"));
     }
-    Ok(out)
+    ::std::result::Result::Ok(out)
 }
 
 fn read_agent_session(
@@ -3793,12 +3788,12 @@ fn run_session_command(session_cli: SessionCli) -> Result<(), error::DecapodErro
                 && session_token_matches_backend(&existing.token, session_backend)
                 && existing.expires_at_epoch_secs > now_epoch_secs()
             {
-                Some(None)
+                ::std::option::Option::Some(::std::option::Option::None)
             } else {
                 let issued = now_epoch_secs();
                 let expires = issued.saturating_add(session_ttl_secs());
                 let token = new_session_token(session_backend);
-                let temp_p = generate_ephemeral_password()?;
+                let temp_p = crate::generate_ephemeral_password()?;
                 let rec = AgentSessionRecord {
                     agent_id: agent_id.clone(),
                     token: token.clone(),
@@ -3808,7 +3803,7 @@ fn run_session_command(session_cli: SessionCli) -> Result<(), error::DecapodErro
                 };
                 write_agent_session(&project_root, &rec)?;
                 clear_agent_awareness(&project_root, &agent_id)?;
-                Some(Some((rec, temp_p)))
+                ::std::option::Option::Some(::std::option::Option::Some((rec, temp_p)))
             };
 
             // Local Decapod custody is established before any cloud request.
@@ -3828,25 +3823,25 @@ fn run_session_command(session_cli: SessionCli) -> Result<(), error::DecapodErro
             }
 
             match newly_acquired {
-                Some(Some((rec, password))) => {
-                    println!("Session acquired successfully.");
-                    println!("Agent: {}", rec.agent_id);
-                    println!("Token: {}", rec.token);
+                ::std::option::Option::Some(::std::option::Option::Some((rec, password))) => {
+                    ::std::println!("Session acquired successfully.");
+                    ::std::println!("Agent: {}", rec.agent_id);
+                    ::std::println!("Token: {}", rec.token);
                     // The local session password is intentionally printed only
                     // after cloud preflight succeeds; cloud diagnostics remain
                     // stable JSON without mixing in custody secrets.
-                    println!("Password: {password}");
-                    println!("ExpiresAtEpoch: {}", rec.expires_at_epoch_secs);
-                    println!(
-                        "Export before running other commands: DECAPOD_AGENT_ID='{}' and DECAPOD_SESSION_PASSWORD='<token>'",
+                    ::std::println!("Password: {password}");
+                    ::std::println!("ExpiresAtEpoch: {}", rec.expires_at_epoch_secs);
+                    ::std::println!(
+                        "Export DECAPOD_AGENT_ID='{}' before running other commands; set and export DECAPOD_SESSION_PASSWORD to the password printed above",
                         rec.agent_id
                     );
-                    println!("\nYou may now use other decapod commands.");
+                    ::std::println!("\nYou may now use other decapod commands.");
                 }
-                Some(None) => println!(
+                ::std::option::Option::Some(::std::option::Option::None) => ::std::println!(
                     "Session already active for agent '{agent_id}'. Use 'decapod session status' for details."
                 ),
-                None => {}
+                ::std::option::Option::None => {}
             }
             Ok(())
         }
@@ -5568,7 +5563,7 @@ fn maintain_generated_dockerfile_contract(current: &str, expected: &str) -> Opti
         .find(|line| line.starts_with("ARG DECAPOD_VERSION="))?;
 
     if !current.contains("# Generated by decapod container profile")
-        || !current.contains("FROM $DECAPOD_IMAGE")
+        || !::std::primitive::str::contains(current, "FROM $DECAPOD_IMAGE")
         || !current
             .lines()
             .any(|line| line.starts_with("ARG DECAPOD_IMAGE="))
@@ -5600,7 +5595,10 @@ fn maintain_generated_dockerfile_contract(current: &str, expected: &str) -> Opti
             out.push(expected_version.to_string());
         } else {
             out.push(line.to_string());
-            if !saw_version && !current_has_version && line == "FROM $DECAPOD_IMAGE" {
+            if !saw_version
+                && !current_has_version
+                && <::std::primitive::str as ::std::cmp::PartialEq>::eq(line, "FROM $DECAPOD_IMAGE")
+            {
                 changed = true;
                 saw_version = true;
                 out.push(expected_version.to_string());
@@ -6479,6 +6477,57 @@ fn enforce_constitutional_awareness_for_rpc(
     Ok(())
 }
 
+/// Collect exactly the files requested for a safety scan. A missing explicit
+/// path is not evidence of a clean file, and Git failure is not an empty diff.
+fn collect_gatekeeper_paths(
+    repo_root: &Path,
+    explicit: Option<Vec<String>>,
+) -> Result<Vec<PathBuf>, error::DecapodError> {
+    if let Some(paths) = explicit {
+        let paths = paths.into_iter().map(PathBuf::from).collect::<Vec<_>>();
+        for path in &paths {
+            if !repo_root.join(path).is_file() {
+                return Err(error::DecapodError::ValidationError(format!(
+                    "Gatekeeper: explicit scan path is missing or is not a file: {}. Repeat --paths for multiple files; comma-separated paths are not expanded.",
+                    path.display()
+                )));
+            }
+            fs::read_to_string(repo_root.join(path)).map_err(|_| {
+                error::DecapodError::ValidationError(format!(
+                    "Gatekeeper: explicit scan path cannot be read as UTF-8 text: {}. No scan was performed.",
+                    path.display()
+                ))
+            })?;
+        }
+        return Ok(paths);
+    }
+    let output = std::process::Command::new("git")
+        // Deleted paths must still reach protected-path policy checks.
+        .args(["diff", "--cached", "--name-only", "--no-renames", "-z"])
+        .current_dir(repo_root)
+        .output()
+        .map_err(error::DecapodError::IoError)?;
+    if !output.status.success() {
+        return Err(error::DecapodError::ValidationError(
+            "Gatekeeper: Git could not enumerate staged files; no scan was performed".to_string(),
+        ));
+    }
+    let paths = String::from_utf8(output.stdout).map_err(|_| {
+        error::DecapodError::ValidationError(
+            "Gatekeeper: staged paths are not valid UTF-8; no scan was performed".to_string(),
+        )
+    })?;
+    Ok(paths
+        .split('\0')
+        .filter(|path| !path.is_empty())
+        .map(PathBuf::from)
+        .collect())
+}
+
+#[cfg(test)]
+#[path = "../../tests/unit/lib_gatekeeper_path_tests.rs"]
+mod gatekeeper_path_tests;
+
 fn run_govern_command(
     govern_cli: GovernCli,
     project_store: &Store,
@@ -6524,22 +6573,7 @@ fn run_govern_command(
 
                 let repo_root = workspace_root;
 
-                // Collect paths: explicit or git staged files
-                let check_paths: Vec<std::path::PathBuf> = if let Some(explicit) = paths {
-                    explicit.into_iter().map(std::path::PathBuf::from).collect()
-                } else {
-                    // Get staged files from git
-                    let output = std::process::Command::new("git")
-                        .args(["diff", "--cached", "--name-only"])
-                        .current_dir(repo_root)
-                        .output()
-                        .map_err(error::DecapodError::IoError)?;
-                    String::from_utf8_lossy(&output.stdout)
-                        .lines()
-                        .filter(|l| !l.is_empty())
-                        .map(std::path::PathBuf::from)
-                        .collect()
-                };
+                let check_paths = collect_gatekeeper_paths(repo_root, paths)?;
 
                 // Get diff size
                 let diff_output = std::process::Command::new("git")
@@ -6547,6 +6581,11 @@ fn run_govern_command(
                     .current_dir(repo_root)
                     .output()
                     .map_err(error::DecapodError::IoError)?;
+                if !diff_output.status.success() {
+                    return Err(error::DecapodError::ValidationError(
+                        "Gatekeeper: Git could not inspect the staged diff".to_string(),
+                    ));
+                }
                 let diff_bytes = diff_output.stdout.len() as u64;
 
                 let mut config = gatekeeper::GatekeeperConfig::from_repo_config(repo_root);
@@ -6561,7 +6600,7 @@ fn run_govern_command(
 
                 if result.passed {
                     println!(
-                        "Gatekeeper: all checks passed ({} files scanned)",
+                        "Gatekeeper: all checks passed ({} input paths plus resolved source dependencies)",
                         check_paths.len()
                     );
                 } else {
@@ -7946,16 +7985,7 @@ fn run_hook_install(
     }
 
     if commit_msg {
-        let hook_content = r#"#!/bin/sh
-MSG_FILE="$1"
-SUBJECT="$(head -n1 "$MSG_FILE")"
-if printf '%s' "$SUBJECT" | grep -Eq '^(feat|fix|docs|style|refactor|test|chore|ci|build|perf|revert)(\([^)]+\))?: .+'; then
-  exit 0
-fi
-echo "commit-msg hook: expected conventional commit subject"
-echo "got: $SUBJECT"
-exit 1
-"#;
+        let hook_content = include_str!("hooks/commit-msg.sh");
         let hook_path = hooks_dir.join("commit-msg");
         let mut file = fs::File::create(&hook_path).map_err(error::DecapodError::IoError)?;
         file.write_all(hook_content.as_bytes())

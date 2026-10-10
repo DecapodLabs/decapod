@@ -4,31 +4,24 @@
 //! private host-runtime connector. No second format or compatibility database
 //! is introduced.
 
-use crate::core::backend::{BackendRoute, StorageContext};
+use crate::core::backend::{BackendRoute, CloudDatastore, StorageContext};
 use crate::core::error::{CloudAuthDiagnostic, CloudAuthStatus, DecapodError};
 use crate::core::schemas;
 use crate::core::storage_lock::{StorageLock, StorageLockMode};
-use dactyl_db::{
+use ::dactyl_db::{
     AccessMode, AtomicResult, BackupResult, Connection, IntegrityReport, OpenOptions, Operation,
     Parameter, RecoveryJournalMode, RecoveryOptions, RecoveryResult, Rows,
 };
 use serde::{Deserialize, Serialize};
-use std::ffi::OsString;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::{Mutex, OnceLock};
 use std::time::Duration;
 
 pub use dactyl_db::{OperationResult, WriteResult};
 
 const DEFAULT_LOCK_TIMEOUT: Duration = Duration::from_millis(250);
-const DATASTORE_ENV: &str = "DATASTORE";
-const DATASTORE_ROUTE_ENV: &str = "DATASTORE_ROUTE";
-const DATASTORE_TOKEN_ENV: &str = "DATASTORE_TOKEN";
 pub const SQLITE_LIBRARY_ENV: &str = "DACTYL_SQLITE_LIBRARY";
 const HOST_RUNTIME_CONFIG_FILE: &str = "runtime.toml";
-
-static AMBIENT_ROUTE_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 struct HostRuntimeConfig {
@@ -314,55 +307,20 @@ impl DactylBridge {
         access_mode: AccessMode,
         bearer: Option<&str>,
     ) -> Result<Self, DecapodError> {
-        match route {
-            BackendRoute::Local { path } => {
-                let storage_lock = local_storage_lock(path, access_mode)?;
-                Self::open_from_ambient(
-                    "sqlite",
-                    &path.to_string_lossy(),
-                    None,
-                    access_mode,
-                    None,
-                    storage_lock,
-                )
-            }
-            BackendRoute::Cloud { uri, .. } => {
-                let bearer = bearer
-                    .map(str::trim)
-                    .filter(|value| !value.is_empty())
-                    .ok_or_else(|| {
-                        DecapodError::CloudAuth(CloudAuthDiagnostic::new(
-                            CloudAuthStatus::Missing,
-                            "cloud storage requires a machine-local session credential",
-                            "acquire or refresh the cloud session, then retry the command",
-                        ))
-                    })?;
-                Self::open_from_ambient("neon", uri, Some(bearer), access_mode, None, None)
-            }
-        }
+        let context = StorageContext::from_route(route.clone(), bearer)?;
+        Self::from_storage_context(&context, access_mode)
     }
 
-    /// Open the physical driver from a Decapod-owned storage context.
-    ///
-    /// The context's bearer is passed as opaque authentication material to
-    /// Dactyl and is never interpreted as organization, user, or repository
-    /// policy by this bridge.
+    /// Map Decapod's logical context to one explicit Dactyl capability.
+    /// Authentication and repository scope are supplied separately; no ambient
+    /// `DATASTORE*` values are changed or trusted by this composition boundary.
     pub fn from_storage_context(
         context: &StorageContext,
         access_mode: AccessMode,
     ) -> Result<Self, DecapodError> {
         context.validate()?;
-        let dactyl_context = dactyl_db::StorageContext::new(
-            context.version(),
-            serde_json::to_value(context).map_err(|error| {
-                DecapodError::Config(format!("failed to encode storage context: {error}"))
-            })?,
-        )?;
-
         match context.route() {
-            BackendRoute::Local { .. } => {
-                Self::from_backend_route(context.route(), access_mode, context.bearer())
-            }
+            BackendRoute::Local { path } => Self::open_local(path, access_mode),
             BackendRoute::Cloud { uri, .. } => {
                 let bearer = context.bearer().ok_or_else(|| {
                     DecapodError::CloudAuth(CloudAuthDiagnostic::new(
@@ -371,14 +329,31 @@ impl DactylBridge {
                         "acquire or refresh the cloud session, then retry the command",
                     ))
                 })?;
-                Self::open_from_ambient(
-                    "neon",
-                    uri,
-                    Some(bearer),
-                    access_mode,
-                    Some(dactyl_context),
-                    None,
-                )
+                let route = match context.cloud_datastore() {
+                    CloudDatastore::Neon => {
+                        dactyl_db::DatastoreRoute::neon(uri, Some(bearer.to_string()))
+                    }
+                    CloudDatastore::Supabase => {
+                        #[cfg(feature = "supabase-cloud")]
+                        {
+                            dactyl_db::DatastoreRoute::supabase(uri, Some(bearer.to_string()))
+                        }
+                        #[cfg(not(feature = "supabase-cloud"))]
+                        {
+                            return Err(DecapodError::Config(
+                                "Supabase cloud capability is unavailable in this build"
+                                    .to_string(),
+                            ));
+                        }
+                    }
+                };
+                let wire_context = dactyl_db::StorageContext::new(
+                    context.version(),
+                    serde_json::to_value(context).map_err(|error| {
+                        DecapodError::Config(format!("failed to encode storage context: {error}"))
+                    })?,
+                )?;
+                Self::open_route(route, access_mode, Some(wire_context), None)
             }
         }
     }
@@ -463,27 +438,6 @@ impl DactylBridge {
             _storage_lock: storage_lock,
         })
     }
-
-    /// Let Dactyl resolve its own route from the ambient values supplied by
-    /// Decapod. The values are scoped to connection construction; Dactyl
-    /// captures the route and token in its connection, while Decapod never
-    /// leaks another project's endpoint or credential into the process.
-    fn open_from_ambient(
-        datastore: &str,
-        route: &str,
-        token: Option<&str>,
-        access_mode: AccessMode,
-        context: Option<dactyl_db::StorageContext>,
-        storage_lock: Option<StorageLock>,
-    ) -> Result<Self, DecapodError> {
-        let lock = AMBIENT_ROUTE_LOCK.get_or_init(|| Mutex::new(()));
-        let _lock = lock.lock().map_err(|_| {
-            DecapodError::Config("Dactyl ambient route lock was poisoned".to_string())
-        })?;
-        let _environment = AmbientDactylEnvironment::install(datastore, route, token);
-        let resolved = dactyl_db::DatastoreRoute::from_env()?;
-        Self::open_route(resolved, access_mode, context, storage_lock)
-    }
 }
 
 fn local_storage_lock(
@@ -513,48 +467,6 @@ fn local_storage_lock(
         Duration::from_secs(5)
     };
     Ok(Some(StorageLock::acquire(path, mode, timeout)?))
-}
-
-struct AmbientDactylEnvironment {
-    datastore: Option<OsString>,
-    route: Option<OsString>,
-    token: Option<OsString>,
-}
-
-impl AmbientDactylEnvironment {
-    fn install(datastore: &str, route: &str, token: Option<&str>) -> Self {
-        let previous = Self {
-            datastore: std::env::var_os(DATASTORE_ENV),
-            route: std::env::var_os(DATASTORE_ROUTE_ENV),
-            token: std::env::var_os(DATASTORE_TOKEN_ENV),
-        };
-        unsafe {
-            std::env::set_var(DATASTORE_ENV, datastore);
-            std::env::set_var(DATASTORE_ROUTE_ENV, route);
-            match token {
-                Some(token) => std::env::set_var(DATASTORE_TOKEN_ENV, token),
-                None => std::env::remove_var(DATASTORE_TOKEN_ENV),
-            }
-        }
-        previous
-    }
-}
-
-impl Drop for AmbientDactylEnvironment {
-    fn drop(&mut self) {
-        restore_env(DATASTORE_ENV, self.datastore.take());
-        restore_env(DATASTORE_ROUTE_ENV, self.route.take());
-        restore_env(DATASTORE_TOKEN_ENV, self.token.take());
-    }
-}
-
-fn restore_env(name: &str, value: Option<OsString>) {
-    unsafe {
-        match value {
-            Some(value) => std::env::set_var(name, value),
-            None => std::env::remove_var(name),
-        }
-    }
 }
 
 #[cfg(test)]

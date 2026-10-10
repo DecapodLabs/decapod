@@ -335,9 +335,15 @@ fn one_time_onboarding_and_session_exchange_persist_machine_session() {
         repo_id: identity.canonical_name.clone(),
     };
     let transport = AuthorizedExchangeTransport::default();
-    let credential =
-        complete_cloud_onboarding_with_mode(&config, &identity, transport.clone(), false, true)
-            .expect("authorized onboarding should complete");
+    let credential = complete_cloud_onboarding_with_mode(
+        &config,
+        &identity,
+        transport.clone(),
+        false,
+        true,
+        &auth::CloudSessionStore::legacy().unwrap(),
+    )
+    .expect("authorized onboarding should complete");
     assert_eq!(credential.token, "access-after-exchange");
     assert_eq!(
         auth::load_machine_session().unwrap().unwrap().token,
@@ -476,5 +482,121 @@ fn expired_machine_session_refreshes_without_human_interaction() {
             Some(value) => std::env::set_var(auth::CLOUD_ACCESS_TOKEN_ENV, value),
             None => std::env::remove_var(auth::CLOUD_ACCESS_TOKEN_ENV),
         }
+    }
+}
+
+#[test]
+fn supabase_auth_stdin_config_escapes_directives_and_rejects_file_inputs() {
+    let body =
+        serde_json::json!({"refresh_token": "synthetic-quote\"slash\\newline\nsecret"}).to_string();
+    let config = private_curl_config("synthetic-bearer", Some(body.as_bytes())).unwrap();
+    assert_eq!(
+        config.lines().count(),
+        2,
+        "secret values cannot add curl directives"
+    );
+    assert!(config.starts_with("header = \"Authorization: Bearer synthetic-bearer\"\n"));
+    assert!(config.contains("\\\"refresh_token\\\""));
+    assert!(private_curl_config("token\nheader=injected", None).is_err());
+    assert!(private_curl_config("token", Some(b"@/private/file")).is_err());
+    assert!(private_curl_config("token", Some(&[0xff])).is_err());
+    let transport = CurlTransport::for_datastore(crate::core::backend::CloudDatastore::Supabase);
+    assert!(transport.private_stdin);
+    assert!(!transport.follow_redirects);
+}
+
+#[test]
+fn supabase_auth_error_bodies_never_echo_remote_messages_or_unknown_codes() {
+    for status in [301, 307, 400, 401, 403, 404, 409, 500] {
+        let raw =
+            br#"{"error":{"code":"synthetic-secret-code","message":"synthetic-secret-token"}}"#;
+        let safe = safe_auth_error_body(raw, status);
+        assert!(!String::from_utf8_lossy(&safe).contains("synthetic-secret"));
+    }
+    let expired = safe_auth_error_body(
+        br#"{"error":{"code":"session_expired","message":"synthetic-secret"}}"#,
+        401,
+    );
+    assert!(String::from_utf8_lossy(&expired).contains("session_expired"));
+    assert!(!String::from_utf8_lossy(&expired).contains("synthetic-secret"));
+}
+
+#[test]
+fn legacy_todo_constructors_reject_supabase_before_credential_lookup() {
+    let runtime = CloudRuntimeConfig {
+        provider: "vercel".to_string(),
+        api_url: "https://service.example.test".to_string(),
+        datastore: "supabase".to_string(),
+    };
+    let identity = crate::core::repo_identity::resolve_repository_identity_from_remote(
+        "https://github.com/example/project.git",
+    )
+    .unwrap();
+    assert!(matches!(
+        PropodusClient::from_cloud_config(&runtime, &identity),
+        Err(PropodusClientError::Configuration(_))
+    ));
+    assert!(matches!(
+        PropodusClient::from_dogfood_cloud_config(&runtime, &identity),
+        Err(PropodusClientError::Configuration(_))
+    ));
+}
+
+#[test]
+fn supabase_session_helper_validates_its_own_endpoint_before_credential_access() {
+    let identity = crate::core::repo_identity::resolve_repository_identity_from_remote(
+        "https://github.com/example/project.git",
+    )
+    .unwrap();
+    for endpoint in [
+        "http://remote.example.test",
+        "https://user:synthetic-secret@service.example.test",
+        "postgres://user:synthetic-secret@db.example.test/db",
+    ] {
+        let config = PropodusConfig {
+            api_url: endpoint.to_string(),
+            repo_id: identity.canonical_name.clone(),
+        };
+        let error = ensure_cloud_session_for_datastore(
+            &config,
+            &identity,
+            crate::core::backend::CloudDatastore::Supabase,
+        )
+        .unwrap_err();
+        assert!(matches!(error, PropodusClientError::Configuration(_)));
+        assert!(!error.to_string().contains("synthetic-secret"));
+    }
+}
+
+#[test]
+fn client_debug_redacts_credentials_and_endpoint_without_transport_debug() {
+    let client = PropodusClient {
+        api_url: "https://private-service.example.test".to_string(),
+        repo_id: "example/project".to_string(),
+        credential: "synthetic-private-session".to_string(),
+        transport: NoRequestTransport::default(),
+    };
+    let diagnostic = format!("{client:?}");
+    assert!(diagnostic.contains("example/project"));
+    assert!(diagnostic.contains("[REDACTED]"));
+    assert!(!diagnostic.contains("synthetic-private-session"));
+    assert!(!diagnostic.contains("private-service.example.test"));
+}
+
+#[test]
+fn malformed_successful_authentication_responses_have_safe_decode_diagnostics() {
+    for response in [
+        br#""synthetic-private-response""#.as_slice(),
+        br#"{"credentials":{"access_token":123,"refresh_token":"synthetic-private-response"}}"#
+            .as_slice(),
+        br#"{"credentials":"synthetic-private-response"}"#.as_slice(),
+    ] {
+        let error = match decode_json::<CloudSessionExchangeResponse>(response) {
+            Ok(_) => panic!("malformed authentication response must fail"),
+            Err(error) => error,
+        };
+        assert!(matches!(error, PropodusClientError::Decode(_)));
+        assert!(!error.to_string().contains("synthetic-private-response"));
+        assert!(!format!("{error:?}").contains("synthetic-private-response"));
     }
 }

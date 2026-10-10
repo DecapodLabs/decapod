@@ -8,10 +8,10 @@
 use crate::core::backend::StorageContext;
 use crate::core::dactyl::{DactylBridge, OperationResult};
 use crate::core::storage::{Task, TodoStore};
+use ::dactyl_db::{AtomicResult, Operation, Parameter, Rows};
 use anyhow::{Result, anyhow};
 use async_trait::async_trait;
 use chrono::{DateTime, NaiveDateTime, SecondsFormat, Utc};
-use dactyl_db::{Operation, Parameter, Rows};
 
 const TASK_COLUMNS: &str = "repo_id, id, hash, title, description, status, assigned_to AS assignee, scope, dir_path, priority, category, tags, created_at, updated_at, version";
 
@@ -44,8 +44,18 @@ impl DactylTodoStore {
         format!("SELECT {TASK_COLUMNS} FROM tasks WHERE id = $1")
     }
 
-    fn event_insert_sql() -> &'static str {
-        "WITH event_params(event_id, event_ts, task_id, event_type, event_payload, event_actor) AS (
+    fn atomic_mutation(
+        bridge: &DactylBridge,
+        mutation: Operation,
+        event_parameters: Vec<Parameter>,
+        task_id: Parameter,
+    ) -> Result<AtomicResult> {
+        Ok(DactylBridge::atomic(
+            bridge,
+            &[
+                mutation,
+                Operation::write(
+                    "WITH event_params(event_id, event_ts, task_id, event_type, event_payload, event_actor) AS (
              VALUES ($1, $2, $3, $4, $5, $6)
          )
          INSERT INTO events (event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
@@ -63,7 +73,12 @@ impl DactylTodoStore {
              SELECT 1 FROM tasks
              WHERE tasks.id = event_params.task_id
                AND tasks.updated_at = event_params.event_ts
-         )"
+         )",
+                    event_parameters,
+                ),
+                Operation::read(Self::get_sql(), ::std::vec::Vec::from([task_id])),
+            ],
+        )?)
     }
 
     fn operation_timestamp() -> String {
@@ -137,7 +152,8 @@ impl TodoStore for DactylTodoStore {
         })
         .to_string();
         let bridge = self.bridge()?;
-        let result = bridge.atomic(&[
+        let result = Self::atomic_mutation(
+            &bridge,
             Operation::write(
                 "INSERT INTO tasks (repo_id, id, hash, title, description, tags, owner, status, dir_path, scope, priority, category, assigned_to, created_at, updated_at, version) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $14, 1)",
                 vec![
@@ -157,19 +173,16 @@ impl TodoStore for DactylTodoStore {
                     ts.clone().into(),
                 ],
             ),
-            Operation::write(
-                Self::event_insert_sql(),
-                vec![
-                    event_id.into(),
-                    ts.into(),
-                    task.id.clone().into(),
-                    "task.add".into(),
-                    payload.into(),
-                    actor.into(),
-                ],
-            ),
-            Operation::read(Self::get_sql(), vec![task.id.clone().into()]),
-        ])?;
+            vec![
+                event_id.into(),
+                ts.into(),
+                task.id.clone().into(),
+                "task.add".into(),
+                payload.into(),
+                actor.into(),
+            ],
+            task.id.clone().into(),
+        )?;
         let mut results = result.results;
         let observation = results
             .pop()
@@ -195,24 +208,22 @@ impl TodoStore for DactylTodoStore {
         let event_id = crate::core::ulid::new_ulid().to_string();
         let payload = serde_json::json!({ "assigned_to": actor }).to_string();
         let bridge = self.bridge()?;
-        let result = bridge.atomic(&[
+        let result = Self::atomic_mutation(
+            &bridge,
             Operation::write(
                 "UPDATE tasks SET status = 'in_progress', assigned_to = $1, assigned_at = $2, updated_at = $2, version = COALESCE(version, 1) + 1 WHERE id = $3 AND status IN ('open', 'pending') AND (assigned_to = '' OR assigned_to IS NULL)",
                 vec![actor.clone().into(), ts.clone().into(), id.into()],
             ),
-            Operation::write(
-                Self::event_insert_sql(),
-                vec![
-                    event_id.into(),
-                    ts.into(),
-                    id.into(),
-                    "task.claim".into(),
-                    payload.into(),
-                    actor.into(),
-                ],
-            ),
-            Operation::read(Self::get_sql(), vec![id.into()]),
-        ])?;
+            vec![
+                event_id.into(),
+                ts.into(),
+                id.into(),
+                "task.claim".into(),
+                payload.into(),
+                actor.into(),
+            ],
+            id.into(),
+        )?;
         let mut results = result.results;
         let observation = results
             .pop()
@@ -238,24 +249,22 @@ impl TodoStore for DactylTodoStore {
         let event_id = crate::core::ulid::new_ulid().to_string();
         let payload = serde_json::json!({ "released_by": actor }).to_string();
         let bridge = self.bridge()?;
-        let result = bridge.atomic(&[
+        let result = Self::atomic_mutation(
+            &bridge,
             Operation::write(
                 "UPDATE tasks SET status = 'open', assigned_to = '', assigned_at = NULL, updated_at = $1, version = COALESCE(version, 1) + 1 WHERE id = $2 AND status = 'in_progress' AND assigned_to = $3",
                 vec![ts.clone().into(), id.into(), actor.clone().into()],
             ),
-            Operation::write(
-                Self::event_insert_sql(),
-                vec![
-                    event_id.into(),
-                    ts.into(),
-                    id.into(),
-                    "task.release".into(),
-                    payload.into(),
-                    actor.into(),
-                ],
-            ),
-            Operation::read(Self::get_sql(), vec![id.into()]),
-        ])?;
+            vec![
+                event_id.into(),
+                ts.into(),
+                id.into(),
+                "task.release".into(),
+                payload.into(),
+                actor.into(),
+            ],
+            id.into(),
+        )?;
         let mut results = result.results;
         let observation = results
             .pop()
@@ -281,24 +290,22 @@ impl TodoStore for DactylTodoStore {
         let event_id = crate::core::ulid::new_ulid().to_string();
         let payload = serde_json::json!({ "resolution": resolution }).to_string();
         let bridge = self.bridge()?;
-        let result = bridge.atomic(&[
+        let result = Self::atomic_mutation(
+            &bridge,
             Operation::write(
                 "UPDATE tasks SET status = 'completed', completed_at = $1, updated_at = $1, version = COALESCE(version, 1) + 1 WHERE id = $2 AND status = 'in_progress' AND assigned_to = $3",
                 vec![ts.clone().into(), id.into(), actor.clone().into()],
             ),
-            Operation::write(
-                Self::event_insert_sql(),
-                vec![
-                    event_id.into(),
-                    ts.into(),
-                    id.into(),
-                    "task.done".into(),
-                    payload.into(),
-                    actor.into(),
-                ],
-            ),
-            Operation::read(Self::get_sql(), vec![id.into()]),
-        ])?;
+            vec![
+                event_id.into(),
+                ts.into(),
+                id.into(),
+                "task.done".into(),
+                payload.into(),
+                actor.into(),
+            ],
+            id.into(),
+        )?;
         let mut results = result.results;
         let observation = results
             .pop()

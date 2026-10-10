@@ -282,6 +282,96 @@ fn concurrent_repair_appends_one_acknowledgment() {
 }
 
 #[test]
+fn read_completion_audits_and_repairs_share_consistent_lock_order() {
+    let tmp = tempfile::tempdir().unwrap();
+    seed_pending(tmp.path(), "orphan", "1Z");
+    let barrier = std::sync::Barrier::new(3);
+    std::thread::scope(|scope| {
+        let reader = scope.spawn(|| {
+            barrier.wait();
+            let broker = DbBroker::new(tmp.path());
+            let path = events::canonical_db_path(tmp.path());
+            for _ in 0..20 {
+                let value: i64 = broker
+                    .with_conn(&path, "read-audit-regression", None, "todo.get", |conn| {
+                        Ok(conn.query_row("SELECT 1", [], |row| row.get(0))?)
+                    })
+                    .unwrap();
+                assert_eq!(value, 1);
+            }
+        });
+        let writers: Vec<_> = (0..2)
+            .map(|_| {
+                scope.spawn(|| {
+                    barrier.wait();
+                    (0..8)
+                        .map(|_| {
+                            DbBroker::new(tmp.path())
+                                .repair("orphan", "Writer stopped", true, "test")
+                                .unwrap()
+                                .status
+                        })
+                        .collect::<Vec<_>>()
+                })
+            })
+            .collect();
+        reader.join().unwrap();
+        let statuses: Vec<_> = writers
+            .into_iter()
+            .flat_map(|writer| writer.join().unwrap())
+            .collect();
+        assert_eq!(
+            statuses
+                .iter()
+                .filter(|status| *status == "abandoned")
+                .count(),
+            1
+        );
+        assert_eq!(
+            statuses
+                .iter()
+                .filter(|status| *status == "already_abandoned")
+                .count(),
+            15
+        );
+    });
+    let audit = events::query(tmp.path(), events::BROKER, usize::MAX).unwrap();
+    assert_eq!(
+        audit
+            .iter()
+            .filter(|event| {
+                event.payload["status"] == "abandoned" && event.payload["causation_id"] == "orphan"
+            })
+            .count(),
+        1
+    );
+    assert!(
+        audit
+            .iter()
+            .any(|event| event.payload["event_id"] == "orphan"
+                && event.payload["status"] == "pending")
+    );
+    assert_eq!(
+        audit
+            .iter()
+            .filter(|event| {
+                event.payload["actor"] == "read-audit-regression"
+                    && event.payload["op"] == "todo.get"
+                    && event.payload["status"] == "success"
+            })
+            .count(),
+        20
+    );
+    assert!(
+        DbBroker::new(tmp.path())
+            .verify_replay()
+            .unwrap()
+            .divergences
+            .is_empty()
+    );
+}
+
+#[test]
 fn test_demonstrate_crash_divergence_risk() {
     let tmp = tempfile::tempdir().unwrap();
     let root = tmp.path();

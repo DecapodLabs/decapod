@@ -52,7 +52,7 @@ flate2 = "1.0"
 
 [dependencies]
 flate2 = "1.0"
-dactyl-db = { version = "0.10.0", features = ["sqlite", "neon"] }
+dactyl-db = { git = "https://github.com/DecapodLabs/dactyl.git", rev = "62a616e409cbc4c68ca63668c0132a8deffb555c", features = ["sqlite", "neon"] }
 fs2 = "0.4"
 fancy-regex = "0.13"
 proc-macro2 = { version = "1.0", features = ["span-locations"] }
@@ -77,6 +77,8 @@ ignored = ["flate2"]
 [features]
 default = []
 cloud = []
+# Explicit preview; leaves existing local and Neon defaults unchanged.
+supabase-cloud = ["dactyl-db/supabase"]
 
 [dev-dependencies]
 tempfile = "3.10"

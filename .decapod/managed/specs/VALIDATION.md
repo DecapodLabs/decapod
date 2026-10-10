@@ -1,6 +1,57 @@
 # Validation
 
+## Context classifier regression proof (#1370)
+
+Each supported safe case requires a neighboring adversarial control and an
+independent occurrence check. The corpus covers short explicit credentials,
+literal fallback, mutable/shadowed captures, custom macros, random-source
+helper tampering, tuple/option/match uncertainty, operation SQL extraction,
+changed or missing wrapper modules, manifest substitution, quoted shell
+function overrides, unsafe re-parsing, missing includes and mixed lines.
+Credential-shaped fixtures continue to be expected findings.
+
+Native template extraction requires both exact original bytes and rendered
+script/Dockerfile equivalence. Cargo packaging must retain every included
+asset. Classifier tests and genuine ordinary-host validation do not establish
+container custody, live Supabase access, or actual PostgreSQL transactions;
+those evidence states are recorded independently. A candidate scanner cannot
+serve as its own publication authorization evaluator.
+
+## Supabase consumer evidence (#1369)
+
+Default SQLite and Neon regressions remain distinct from Supabase HTTP fixture
+coverage. The opt-in actual PostgreSQL and hosted Supabase service profiles
+are ignored without authorized disposable fixtures; ignored is unavailable
+proof, not a pass. Consumer fixtures verify command dispatch, typed results,
+credential scope, redacted diagnostics, redirect refusal and bounded timeouts.
+Service-owned tests must independently verify schema, authorization and the
+atomic task/event ledger before any hosted readiness claim.
+
+The Supabase HTTP contract profile exercises real CLI add/get/show/claim/release/
+done dispatch. Mutations carry an ordered task write, event write and task read
+in one request with matching explicit task IDs and timestamps; both write counts
+must equal one before a returned task is treated as success. Read commands
+preserve normalized fields and explicit not-found results. Rejected mutation
+responses remain redacted and cannot create local databases. Validated completion
+must fail before any data request. Scripted responses establish client composition,
+not actual transaction commit, service authorization or cleanup.
+
+The separate service profile requires second-principal list/get/show visibility,
+missing-task transition failures, non-owner release/completion failures and safe
+observations after completion retries. Every denied principal is checked against
+all supported mutations, not only creation; fully denied principals also cannot
+list/get/show. These extra failed attempts must preserve the existing single-task,
+version-five and exactly-five-event ledger expectation. The profile remains
+unrun until an authorized actual PostgreSQL or protected hosted fixture is present.
+
 ## Reliability Proof Budget
+
+Shared-database regression tests verify that standalone read-completion audits
+acquire the pool operation lock before waiting for the audit mutex. A test-only
+read-only mutex observer checks that ordering directly while the audit mutex
+is held. A separate parallel read/repair regression checks one abandonment
+acknowledgment, all successful read audits, retained history and clean replay.
+The production operation-lock timeout is unchanged.
 
 Validation must remain bounded even when host maintenance services are
 unavailable. The parent supervisor records the active gate and elapsed time
@@ -341,8 +392,8 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d0b72a673bf3d164c0cfa631aa8633cf58ef7ed8db848552d782536d7ffb0806`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (110 files), `tests/` (4 files)
+- Repository signal fingerprint: `1d8c50df18ccf6e945ff8129319be43777512462c516616aeb9754e33fee05f7`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (119 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

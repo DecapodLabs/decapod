@@ -92,6 +92,20 @@ impl StoragePool {
         Ok(entry)
     }
 
+    #[cfg(test)]
+    pub(crate) fn operation_lock_is_held_for_test(
+        &self,
+        db_path: &Path,
+    ) -> Result<bool, DecapodError> {
+        match self.get_entry(db_path)?.write_lock.try_lock() {
+            Ok(_guard) => Ok(false),
+            Err(TryLockError::WouldBlock) => Ok(true),
+            Err(TryLockError::Poisoned(_)) => Err(DecapodError::ValidationError(
+                "StoragePool operation lock poisoned during ordering test".to_string(),
+            )),
+        }
+    }
+
     /// Execute a closure with a write connection for the given DB path.
     /// Write access is serialized per-DB via mutex.
     #[inline]

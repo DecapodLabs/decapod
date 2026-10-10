@@ -1,8 +1,8 @@
 // Moved from src/decapod/core/cloud_backend.rs
 use super::{
-    CloudOnboardingEndpoints, CloudOnboardingHandoff, CloudOnboardingStartRequest,
-    CloudOnboardingStartResponse, CloudOnboardingState, CloudSession, CloudSessionExchangeRequest,
-    CloudSessionRefreshRequest,
+    CloudOnboardingEndpoints, CloudOnboardingExchangeResponse, CloudOnboardingHandoff,
+    CloudOnboardingStartRequest, CloudOnboardingStartResponse, CloudOnboardingState, CloudSession,
+    CloudSessionExchangeRequest, CloudSessionRefreshRequest,
 };
 use crate::core::repo_identity::resolve_repository_identity_from_remote;
 
@@ -122,5 +122,34 @@ fn onboarding_start_response_produces_safe_handoff() {
         }
         .into_handoff()
         .is_err()
+    );
+}
+
+#[test]
+fn authentication_request_debug_does_not_expose_exchange_or_refresh_material() {
+    let exchange = CloudSessionExchangeRequest::new("synthetic-exchange-code").unwrap();
+    let refresh =
+        CloudSessionRefreshRequest::new("synthetic-session-id", "synthetic-refresh-token").unwrap();
+    let response = CloudOnboardingExchangeResponse {
+        transaction_id: "synthetic-transaction-id".to_string(),
+        repository_id: "example/project".to_string(),
+        code: "synthetic-response-code".to_string(),
+    };
+    for diagnostic in [
+        format!("{exchange:?}"),
+        format!("{refresh:?}"),
+        format!("{response:?}"),
+    ] {
+        assert!(diagnostic.contains("[REDACTED]"));
+        assert!(!diagnostic.contains("synthetic-"));
+    }
+    // Debug redaction must not alter the authenticated wire contract.
+    assert_eq!(
+        serde_json::to_value(&exchange).unwrap()["code"],
+        "synthetic-exchange-code"
+    );
+    assert_eq!(
+        serde_json::to_value(&refresh).unwrap()["refresh_token"],
+        "synthetic-refresh-token"
     );
 }

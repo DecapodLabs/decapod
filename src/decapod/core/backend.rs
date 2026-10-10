@@ -102,7 +102,7 @@ impl BackendSelection {
 /// A fully bound datastore route.  The cloud URI is opaque: callers may pass
 /// it to Dactyl, but Decapod does not know whether it is backed by Neon,
 /// Vercel, or another compatible service.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum BackendRoute {
     Local {
         path: PathBuf,
@@ -111,6 +111,19 @@ pub enum BackendRoute {
         repository: RepositoryIdentity,
         uri: String,
     },
+}
+
+impl std::fmt::Debug for BackendRoute {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Local { path } => formatter.debug_struct("Local").field("path", path).finish(),
+            Self::Cloud { repository, .. } => formatter
+                .debug_struct("Cloud")
+                .field("repository", &repository.canonical_name)
+                .field("uri", &"[REDACTED]")
+                .finish(),
+        }
+    }
 }
 
 impl BackendRoute {
@@ -148,17 +161,61 @@ impl BackendRoute {
     }
 }
 
+/// Physical cloud capability, independent of `repo.backend` and service hosting.
+/// The default preserves the existing Neon HTTP route. Neither variant is a DSN.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum CloudDatastore {
+    #[default]
+    Neon,
+    Supabase,
+}
+
+impl CloudDatastore {
+    pub fn parse(value: &str) -> Result<Self, DecapodError> {
+        match value {
+            "neon" => Ok(Self::Neon),
+            "supabase" => Ok(Self::Supabase),
+            _ => Err(DecapodError::Config(
+                "unsupported cloud datastore; expected neon or supabase".to_string(),
+            )),
+        }
+    }
+
+    pub fn validate_available(self) -> Result<(), DecapodError> {
+        if self == Self::Supabase && !cfg!(feature = "supabase-cloud") {
+            return Err(DecapodError::Config(
+                "Supabase cloud requires a build with the supabase-cloud feature; no local fallback is permitted".to_string(),
+            ));
+        }
+        Ok(())
+    }
+}
+
 /// Versioned, backend-neutral storage target passed from Decapod policy to a
 /// physical driver. Cloud tenancy and authorization are deliberately not
 /// modeled as local storage fields: the remote route carries only the logical
 /// repository scope, while Propodus remains responsible for resolving the
 /// authenticated principal and its effective authorization.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct StorageContext {
     version: u16,
     route: BackendRoute,
     #[serde(skip)]
     bearer: Option<String>,
+    #[serde(skip)]
+    cloud_datastore: CloudDatastore,
+}
+
+impl std::fmt::Debug for StorageContext {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("StorageContext")
+            .field("version", &self.version)
+            .field("route", &self.route)
+            .field("bearer", &self.bearer.as_ref().map(|_| "[REDACTED]"))
+            .field("cloud_datastore", &self.cloud_datastore)
+            .finish()
+    }
 }
 
 impl StorageContext {
@@ -181,8 +238,25 @@ impl StorageContext {
                 version: Self::CURRENT_VERSION,
                 route,
                 bearer: bearer.map(str::to_owned),
+                cloud_datastore: CloudDatastore::default(),
             }),
         }
+    }
+
+    /// Select an explicitly enabled HTTP capability without changing wire context.
+    pub fn with_cloud_datastore(mut self, datastore: CloudDatastore) -> Result<Self, DecapodError> {
+        if self.is_local() {
+            return Err(DecapodError::Config(
+                "local storage cannot select a cloud datastore".to_string(),
+            ));
+        }
+        datastore.validate_available()?;
+        self.cloud_datastore = datastore;
+        Ok(self)
+    }
+
+    pub fn cloud_datastore(&self) -> CloudDatastore {
+        self.cloud_datastore
     }
 
     pub fn version(&self) -> u16 {
@@ -196,6 +270,21 @@ impl StorageContext {
                 self.version,
                 Self::CURRENT_VERSION
             )));
+        }
+        if let BackendRoute::Cloud { uri, .. } = &self.route {
+            validate_remote_uri(uri)?;
+            self.cloud_datastore.validate_available()?;
+            if self
+                .bearer
+                .as_deref()
+                .is_none_or(|value| value.trim().is_empty())
+            {
+                return Err(DecapodError::CloudAuth(CloudAuthDiagnostic::new(
+                    CloudAuthStatus::Missing,
+                    "remote storage requires an authenticated opaque session context",
+                    "acquire or refresh the cloud session, then retry the command",
+                )));
+            }
         }
         Ok(())
     }
@@ -233,9 +322,10 @@ fn validate_remote_uri(raw: &str) -> Result<String, DecapodError> {
         .split_once("://")
         .and_then(|(_, value)| value.split('/').next())
         .unwrap_or_default();
-    if authority.is_empty() || authority.contains('@') {
+    if authority.is_empty() || authority.contains('@') || uri.contains('?') || uri.contains('#') {
         return Err(DecapodError::Config(
-            "cloud datastore route must not contain embedded credentials".to_string(),
+            "cloud datastore route must not contain embedded credentials, queries or fragments"
+                .to_string(),
         ));
     }
     Ok(uri.to_string())

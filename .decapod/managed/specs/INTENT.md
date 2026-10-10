@@ -17,6 +17,31 @@
 
 <!-- decapod:declared-capabilities:end -->
 
+## Contextual safety outcome (#1370)
+
+Source context must distinguish supported non-secret values and non-shell uses
+without making credential-shaped fixtures safe by convention. Password fields
+need exact-span runtime provenance; SQL parameters need terminal database-use
+evidence; native quoted expansions need shell-language evidence. Unknown or
+escaping values remain findings. Literal `include_str!` dependencies participate in the same
+scan, and explicit missing paths cannot produce a successful empty result.
+Publication policy and container custody remain independent requirements.
+
+## Supabase consumer validation (#1369)
+
+Decapod retains `repo.backend = local|cloud` and the existing default cloud
+route. The explicit Supabase preview selects Dactyl's authenticated HTTP
+transport, never a database connection or a service-role credential. The
+preview requires its own explicit service endpoint and a machine-local user
+session. Invalid selectors and unavailable features fail before local todo
+SQLite is opened. No remote failure authorizes local fallback.
+
+Task and event state is service-owned through Dactyl. Governance documents,
+plans, claims, trajectory, proof receipts and living specs remain in Git.
+The preview does not synchronize a SQLite file or remove the cloud
+`todo done --validated` restriction. Hosted Supabase proof remains separate
+from deterministic mocks and actual local PostgreSQL service proof.
+
 ## Reliability Outcome
 
 Issues #1294–#1300 establish a single reliability outcome for Decapod: every
@@ -57,8 +82,8 @@ mutate intent, claims, trajectory, validation state, or boundaries.
 - The local proof boundary is explicit: host-runtime availability, ordinary close/reopen persistence, read-only enforcement, schema inspection, explicit IDs, atomic rollback, and broker/event routing are local checks. Propodus/Neon deployment, hosted tenancy, credential, and cross-organization concurrency proof remain separate downstream evidence and are not claimed by this local slice.
 - `core::backend::BackendSelection` maps the project `repo.backend` choice to a repository-scoped route. Local resolves to `.decapod/data/decapod.db`; cloud derives `owner/repository` from the Git `origin` remote and accepts an opaque remote URI only after the authenticated/session boundary supplies it. Decapod does not assemble or interpret a provider-specific cloud URI for ordinary state.
 - Local and cloud Decapod agent sessions are machine-local, backend-discriminated (`local_` or `cloud_`), and long-lived enough for an agent run: four hours by default, with a 30-minute minimum and six-hour maximum. Cloud access/refresh credentials remain opaque and are persisted separately from repository state.
-- The explicit cloud todo path authenticates through Propodus, then supplies Dactyl's ambient `DATASTORE=neon`, hardcoded Propodus Vercel/Neon `DATASTORE_ROUTE`, and session `DATASTORE_TOKEN` while passing a versioned opaque `StorageContext` containing the target org/repo scope. Dactyl owns `/query` and `/batch` transport and chooses the physical backend; Decapod does not add a backend, tenant, provider, or repository query parameter to individual operations.
-- Cloud todo add, claim, release, and complete are composed from Dactyl 0.10.0 atomic write-plus-event-plus-observation batches and fail closed on zero-row state conflicts. The local fake-Dactyl proof covers rollback when the transition predicate loses; hosted event-stream atomicity, tenancy, schema parity, and live Neon/Vercel behavior remain downstream proof obligations until those services are available.
+- The explicit cloud todo path authenticates through the service, then constructs Dactyl's explicit Neon HTTP route or the opt-in Supabase HTTP route with an opaque session credential and versioned `StorageContext` containing the target org/repo scope. It does not mutate ambient Dactyl route variables. Dactyl owns `/query` and `/batch` transport; Decapod does not add a backend, tenant, provider, or repository query parameter to individual operations.
+- Cloud todo add, claim, release, and complete use Dactyl atomic write-plus-event-plus-observation batches and fail closed on zero-row state conflicts. A compatible service must gate the matching event on the preceding task mutation's affected count; a timestamp match alone is insufficient. Local fixtures do not prove PostgreSQL transaction semantics, hosted authorization, schema parity, or live Neon/Supabase behavior. These remain separate service proof obligations until authorized fixtures are available.
 
 ## Shared-State Durability Intent
 - Material TODO lifecycle mutations are compare-and-swap operations over `(task.id, task.status, task.revision)`. A stale agent receives an explicit conflict and must not create a success event.
@@ -314,8 +339,8 @@ policy ban based solely on virtiofs or FUSE filesystem identity.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d0b72a673bf3d164c0cfa631aa8633cf58ef7ed8db848552d782536d7ffb0806`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (110 files), `tests/` (4 files)
+- Repository signal fingerprint: `1d8c50df18ccf6e945ff8129319be43777512462c516616aeb9754e33fee05f7`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (119 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

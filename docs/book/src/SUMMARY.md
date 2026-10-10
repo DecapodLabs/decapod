@@ -26,6 +26,8 @@
   - [Config (config.toml)](reference/config-toml.md)
   - [CLI Reference](reference/cli.md)
   - [Propodus Todo Boundary](reference/propodus.md)
+  - [Supabase Consumer Validation](reference/supabase-validation.md)
+  - [Gatekeeper Source Context](reference/gatekeeper-context.md)
   - [Governance Artifact Inventory](reference/governance-artifacts.md)
   - [Error Codes](reference/errors.md)
   - [Artifacts](reference/artifacts.md)

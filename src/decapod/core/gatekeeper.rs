@@ -10,7 +10,12 @@ use crate::core::error;
 use fancy_regex::Regex;
 use std::path::{Path, PathBuf};
 
+mod runtime_credentials;
 mod rust_context;
+mod shell_context;
+mod source_dependencies;
+mod sql_context;
+mod text_context;
 use rust_context::{PasswordContext, RustContext};
 
 /// Gatekeeper configuration
@@ -92,6 +97,10 @@ pub fn run_gatekeeper(
     diff_bytes: u64,
     config: &GatekeeperConfig,
 ) -> Result<GateResult, error::DecapodError> {
+    // Embedded native source is part of an explicit Rust scan. A missing or
+    // dynamically constructed include must never turn that scan into a pass.
+    let expanded_paths = source_dependencies::expand(repo_root, paths)?;
+    let paths = expanded_paths.paths.as_slice();
     let mut violations = Vec::new();
 
     // Check diff size
@@ -142,7 +151,11 @@ pub fn run_gatekeeper(
 
     // Dangerous pattern detection
     if config.scan_dangerous_patterns {
-        violations.extend(scan_for_dangerous_patterns(repo_root, paths)?);
+        violations.extend(scan_for_dangerous_patterns(
+            repo_root,
+            paths,
+            &expanded_paths.included,
+        )?);
     }
 
     let passed = violations.is_empty();
@@ -188,16 +201,18 @@ fn scan_for_secrets(
                 // Evaluate every occurrence independently: a runtime field
                 // cannot suppress a literal credential on the same line.
                 let mut unresolved_format = false;
+                let mut incomplete_match = false;
                 let finding = pattern.captures_iter(line).any(|captures| {
                     let Ok(captures) = captures else {
-                        return false;
+                        incomplete_match = true;
+                        return true;
                     };
                     let Some(value) = captures.name("password_value") else {
                         return true;
                     };
                     let context = context.get_or_insert_with(|| {
                         if path.extension().is_some_and(|ext| ext == "rs") {
-                            RustContext::parse(&content)
+                            RustContext::parse_file(repo_root, path, &content)
                         } else {
                             RustContext::default()
                         }
@@ -216,7 +231,9 @@ fn scan_for_secrets(
                         kind: ViolationKind::SecretDetected,
                         path: path.clone(),
                         line: Some(line_num + 1),
-                        message: if unresolved_format {
+                        message: if incomplete_match {
+                            "Secret scan incomplete: pattern evaluation failed; explicit review is required".to_string()
+                        } else if unresolved_format {
                             format!("Potential secret detected: {pattern}; format interpolation has unresolved credential provenance")
                         } else {
                             format!("Potential secret detected: {pattern}")
@@ -235,6 +252,7 @@ fn scan_for_secrets(
 fn scan_for_dangerous_patterns(
     repo_root: &Path,
     paths: &[PathBuf],
+    included: &std::collections::BTreeSet<PathBuf>,
 ) -> Result<Vec<Violation>, error::DecapodError> {
     let patterns = dangerous_patterns();
     let mut violations = Vec::new();
@@ -244,10 +262,10 @@ fn scan_for_dangerous_patterns(
 
     for path in paths {
         let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
-        if !code_extensions.contains(&ext) {
-            continue;
-        }
-
+        let dockerfile = path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .is_some_and(|name| name == "Dockerfile" || name.starts_with("Dockerfile."));
         let full_path = repo_root.join(path);
         if !full_path.exists() || !full_path.is_file() {
             continue;
@@ -258,9 +276,58 @@ fn scan_for_dangerous_patterns(
             Err(_) => continue,
         };
 
-        for (line_num, line) in content.lines().enumerate() {
+        // A dependency is source regardless of its suffix. Extensionless
+        // shebang files are executable inputs too. Only a recognized native
+        // grammar may discharge a match; other included text is scanned raw.
+        if !code_extensions.contains(&ext)
+            && !dockerfile
+            && !included.contains(path)
+            && !content.starts_with("#!")
+        {
+            continue;
+        }
+
+        let sql = if ext == "rs" {
+            sql_context::SqlContext::parse_file(repo_root, path, &content)
+        } else {
+            sql_context::SqlContext::default()
+        };
+        let shell = shell_context::ShellContext::parse(path, &content);
+        let inert_text = if ext == "rs" {
+            text_context::ranges(repo_root, path, &content)
+        } else {
+            Vec::new()
+        };
+        let rust_execution = if ext == "rs" {
+            rust_context::shell_execution_boundaries(&content)
+        } else {
+            Vec::new()
+        };
+        for boundary in shell.execution_boundaries().iter().chain(&rust_execution) {
+            violations.push(Violation {
+                kind: ViolationKind::DangerousPattern,
+                path: path.clone(),
+                line: content
+                    .get(..boundary.start)
+                    .map(|prefix| prefix.bytes().filter(|byte| *byte == b'\n').count() + 1),
+                message: "Shell or unresolved interpreter boundary requires explicit review"
+                    .to_string(),
+            });
+        }
+        let mut offset = 0;
+        for (line_num, source_line) in content.split_inclusive('\n').enumerate() {
+            let line = source_line.trim_end_matches(['\r', '\n']);
             for pattern in &patterns {
-                if pattern.is_match(line).unwrap_or(false) {
+                let finding = pattern.find_iter(line).any(|matched| {
+                    let Ok(matched) = matched else { return true };
+                    let source = offset + matched.start()..offset + matched.end();
+                    !sql.is_safe(source.clone())
+                        && !shell.is_safe(source.clone())
+                        && !inert_text.iter().any(|literal| {
+                            literal.start <= source.start && source.end <= literal.end
+                        })
+                });
+                if finding {
                     violations.push(Violation {
                         kind: ViolationKind::DangerousPattern,
                         path: path.clone(),
@@ -269,6 +336,7 @@ fn scan_for_dangerous_patterns(
                     });
                 }
             }
+            offset += source_line.len();
         }
     }
 
@@ -291,6 +359,15 @@ fn secret_patterns() -> Vec<Regex> {
         Regex::new(r#"(?i)(?:[:=]\s*["'`]?\s*|["'`]\s*|(?://[/!]?|/\*+)\s*|^\s*(?:[#*]\s*)?)bearer[ \t]+[a-zA-Z0-9_~+./-]+=*"#).unwrap(),
         // GitHub tokens
         Regex::new(r#"(ghp|gho|ghu|ghs|ghr)_[a-zA-Z0-9_]{36,255}"#).unwrap(),
+        // A balanced quoted password is explicit credential syntax even if
+        // its value is one character. Escapes cannot terminate the value and
+        // hide a second same-line credential; genuinely empty values do not
+        // establish a credential. Keep the broader legacy unquoted detector.
+        Regex::new(r#"(?i)(?:password|passwd|pwd)(?:\\?['"])?\s*[:=]\s*(?P<password_quote>\\?['"])(?P<password_value>(?:(?!\k<password_quote>)(?:\\[^\r\n]|[^\\\r\n]))+)\k<password_quote>"#).unwrap(),
+        // Unquoted equal-sign assignments are explicit value syntax too.
+        // Keep comparisons/arrows and empty/quoted values out of this branch;
+        // Rust type annotations use a colon and are not shortened by this rule.
+        Regex::new(r#"(?i)(?:password|passwd|pwd)\s*=(?!=|>)\s*(?!\\?['"])(?P<password_value>[^\s'";,]+)"#).unwrap(),
         // Generic secrets
         Regex::new(r#"(?i)(password|passwd|pwd)['"]?\s*[:=]\s*['"]?(?P<password_value>[^\s'"]{8,})['"]?"#).unwrap(),
         // Private keys

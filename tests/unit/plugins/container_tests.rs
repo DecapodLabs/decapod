@@ -643,3 +643,53 @@ fn prepare_workspace_clone_inherits_parent_github_remote_and_remote_tip() {
         "git@github.com:DecapodLabs/dactyl.git"
     );
 }
+
+#[test]
+fn native_templates_preserve_master_bytes() {
+    use sha2::{Digest, Sha256};
+
+    // Independently compiled from master 5bf48f1f before extraction. These
+    // goldens validate the old Rust escape decoding, not newly edited files.
+    let startup = include_str!("../../../src/decapod/plugins/container/startup.sh");
+    let dockerfile = include_str!("../../../src/decapod/plugins/container/Dockerfile.template");
+    assert_eq!(
+        format!("{:x}", Sha256::digest(startup.as_bytes())),
+        "241b2ec486f69fd663f4df581c87745a0e5c41ca0cc11317b77dc4dd2df1e7b4"
+    );
+    assert_eq!(
+        format!("{:x}", Sha256::digest(dockerfile.as_bytes())),
+        "fa51174eabf68804067945e90cae6904c4d081e1b2be287585d2407b7705d5bf"
+    );
+    let rendered = format!(
+        include_str!("../../../src/decapod/plugins/container/Dockerfile.template"),
+        decapod_image = "example.invalid/decapod:v0.106.1-debian",
+        decapod_version = "0.106.1",
+        apk_pkg_line = "ca-certificates git",
+        apt_pkg_line = "ca-certificates git openssh-client",
+    );
+    assert_eq!(
+        format!("{:x}", Sha256::digest(rendered.as_bytes())),
+        "0a0d888cd844c9d29fa464054357aceb88fb320586bfc43103cd2c9aed1a4823"
+    );
+}
+
+#[test]
+fn assembled_container_scripts_preserve_master_bytes() {
+    use sha2::{Digest, Sha256};
+
+    // Whole-script goldens include the runtime command, escaped branch names,
+    // and both local-only branches from master 5bf48f1f.
+    for (local_only, expected) in [
+        (
+            true,
+            "b3f6733ba38cd4a12cc8aef46d84028e2d9eb3e6dc23a2e4a5aa67a142092cb6",
+        ),
+        (
+            false,
+            "f27a0a404e8a716474ced93352e8f0ed663781992382cd3c5eea72e8a1a2548d",
+        ),
+    ] {
+        let actual = build_container_script("echo governed", "agent/test", "main", local_only);
+        assert_eq!(format!("{:x}", Sha256::digest(actual.as_bytes())), expected);
+    }
+}
