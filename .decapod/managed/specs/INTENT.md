@@ -78,8 +78,8 @@ mutate intent, claims, trajectory, validation state, or boundaries.
 
 ## Current Storage Cutover Intent
 - The canonical `.decapod/data/decapod.db` path is a Dactyl-backed physical store. Decapod has no direct SQL driver dependency, subprocess connector, backend handle, or second local authority. Every canonical read, write, schema inspection, transaction, migration step, and validation probe crosses the `core::dactyl_db` facade into Dactyl.
-- Decapod owns domain schemas, migration ordering and ledgers, stable identifier generation, bounded retry policy, the explicit backup/recovery command policy, and the decision to admit legacy rows. Dactyl v0.10.0 owns host-runtime loading, physical execution, access mode, atomicity, normalized results, typed physical errors, native integrity verification, online backup, logical dump/reload recovery, route selection, and backend-neutral schema inspection. Propodus remains the hosted/authenticated route boundary.
-- This cutover pins Dactyl v0.10.0 and removes the old direct SQL-driver, bundled-SQLite, and legacy-import assumptions. New read-write paths receive only the empty filesystem target needed by Dactyl's pre-open header validation; the physical connection remains Dactyl-owned. Existing local database files are opened directly by Dactyl without conversion to a second format; Decapod migration code opens any legacy source through the same facade and owns row translation and ledgers, while Dactyl owns the physical backup/recovery contract invoked by explicit operator commands.
+- Decapod owns domain schemas, migration ordering and ledgers, stable identifier generation, bounded retry policy, the explicit backup/recovery command policy, and the decision to admit legacy rows. Dactyl v0.11.1 owns host-runtime loading, physical execution, access mode, atomicity, normalized results, typed physical errors, native integrity verification, online backup, logical dump/reload recovery, route selection, and backend-neutral schema inspection. Propodus remains the hosted/authenticated route boundary.
+- The current dependency pins published Dactyl v0.11.1 and removes the old direct SQL-driver, bundled-SQLite, and legacy-import assumptions. New read-write paths receive only the empty filesystem target needed by Dactyl's pre-open header validation; the physical connection remains Dactyl-owned. Existing local database files are opened directly by Dactyl without conversion to a second format; Decapod migration code opens any legacy source through the same facade and owns row translation and ledgers, while Dactyl owns the physical backup/recovery contract invoked by explicit operator commands.
 - The local proof boundary is explicit: host-runtime availability, ordinary close/reopen persistence, read-only enforcement, schema inspection, explicit IDs, atomic rollback, and broker/event routing are local checks. Propodus/Neon deployment, hosted tenancy, credential, and cross-organization concurrency proof remain separate downstream evidence and are not claimed by this local slice.
 - `core::backend::BackendSelection` maps the project `repo.backend` choice to a repository-scoped route. Local resolves to `.decapod/data/decapod.db`; cloud derives `owner/repository` from the Git `origin` remote and accepts an opaque remote URI only after the authenticated/session boundary supplies it. Decapod does not assemble or interpret a provider-specific cloud URI for ordinary state.
 - Local and cloud Decapod agent sessions are machine-local, backend-discriminated (`local_` or `cloud_`), and long-lived enough for an agent run: four hours by default, with a 30-minute minimum and six-hour maximum. Cloud access/refresh credentials remain opaque and are persisted separately from repository state.
@@ -95,8 +95,8 @@ mutate intent, claims, trajectory, validation state, or boundaries.
 
 ## Compatibility Slice for Issues #1311–#1314
 - specs.refresh is a filesystem projection operation. It retains worktree, session, and constitutional safety checks but skips unrelated local-database migration, presence clock-in, and mandate-store reads when invoked as the explicit specs.refresh RPC operation. Best-effort trace failure remains non-blocking.
-- Trajectory writes keep .decapod/governance/trajectory.json as the sole current-run validation/publication artifact. A workspace has one active agent authority; subagent jobs are loops within that trajectory, not project-level concurrent runs. Prior committed trajectory versions are recovered from Git history and the linked issue or PR rather than repository-side per-run archives.
-- Standalone event appends route through the shared Dactyl-backed write pool. Canonical local Dactyl connections retain a bounded exclusive sidecar advisory lock (`decapod.db.lock`), conservatively serializing read and write connection lifetimes so cooperating host/container Decapod processes do not overlap access to the same file. `data db verify` uses Dactyl v0.10.0's read-only integrity API; explicit `data db backup` and `data db recover` expose Dactyl's online backup and verified logical dump/reload contract. Diagnostics distinguish healthy, unavailable/locked, corrupt/malformed, unsupported, and recovery/rollback failure. None performs automatic repair.
+- The trajectory section in `.decapod/governance.json` is the current-run validation/publication authority. A workspace has one active agent authority; subagent jobs are loops within that trajectory. The current PR retains cumulative proof checkpoints; prior accepted PR evidence is recovered from Git history rather than a repository-side historical claim catalog.
+- Standalone event appends route through the shared Dactyl-backed write pool. Canonical local Dactyl connections retain a bounded exclusive sidecar advisory lock (`decapod.db.lock`), conservatively serializing read and write connection lifetimes so cooperating host/container Decapod processes do not overlap access to the same file. `data db verify` uses Dactyl v0.11.1's read-only integrity API; explicit `data db backup` and `data db recover` expose Dactyl's online backup and verified logical dump/reload contract. Diagnostics distinguish healthy, unavailable/locked, corrupt/malformed, unsupported, and recovery/rollback failure. None performs automatic repair.
 - Absolute paths entering trajectory path fields become project-relative paths when inside the project and <external-path> otherwise. Validation prose receives the same final-boundary redaction. Operational code may still use absolute paths locally.
 - The maintenance boundary is intentionally explicit rather than automatic: recovery requires writer quiescence, an unused same-filesystem archive path, and Dactyl's atomic replacement/rollback contract. The single-workspace trajectory authority and Decapod-side coordination lock are settled here; the lock coordinates cooperating Decapod processes but does not certify arbitrary external SQLite writers or unreliable filesystems or repair corruption silently.
 
@@ -123,10 +123,11 @@ mutate intent, claims, trajectory, validation state, or boundaries.
 - A hand-trimmed `.decapod/OVERRIDE.md` is a valid minimal scaffold. Re-init
   upgrades selected legacy directive bodies but does not re-expand omitted
   sections or erase authored meaning.
-- `.decapod/governance/claims.json` is the append-only research claims ledger;
-  Health Engine claims are separate runtime records in the consolidated
-  `.decapod/data/decapod.db`. Ledger compaction is explicit, schema-preserving,
-  and auditable; no command silently invents, deletes, or supersedes claims.
+- `.decapod/governance.json` is the sole tracked governance authority. A PR
+  accumulates its own claims and per-commit proof checkpoints; the next PR
+  starts from a compact accepted baseline plus unresolved obligations.
+  Completed historical claims are recoverable from Git. Health Engine claims
+  remain separate runtime records in `.decapod/data/decapod.db`.
 - Validation input authority includes both `.decapod/config.toml` and
   `.decapod/OVERRIDE.md`. A changed authority refreshes the specs manifest, but
   a bound trajectory may not silently adopt a new validation epoch. The old
@@ -134,12 +135,11 @@ mutate intent, claims, trajectory, validation state, or boundaries.
   trajectory run.
 
 ## First-PR Publication Sequence (#1259)
-- Agents do not need `DECAPOD_VALIDATE_SKIP_GIT_GATES` to emit a validation
-  receipt. After plan, claims, and trajectory appear in the feature-branch
-  delta (or working tree), `decapod validate` writes
-  `.decapod/governance/validation.json` on success. The governance PR-update
-  gate treats a just-written receipt as the remaining participation, then
-  skips rewrite when later commits only carry the four governance files.
+- Agents establish the current PR with `govern artifacts begin-pr`, then use
+  the existing plan and trajectory commands plus current-PR claims. Successful
+  `decapod validate` writes the validation section of the same canonical
+  document. After staging material, a checkpoint binds the exact inputs before
+  each commit; publication verifies the complete PR DAG and exact head.
 - Local-clone workspaces inherit the parent checkout's GitHub remote as
   `upstream`. `workspace publish` walks a filesystem `origin` to that parent
   and publishes there; agents must not invent a raw `git push` + `gh pr create`
@@ -340,9 +340,9 @@ policy ban based solely on virtiofs or FUSE filesystem identity.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5e522c585e055cae81578f96df9ab41a4f21f6fde8c73b68ca9d0f2be05870d4`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (124 files), `tests/` (162 files)
-- Refreshed from the current codebase by `decapod specs.refresh`
+- Repository signal fingerprint: `ff0e704a1389577bb72bd8d97fc1f5f7d0e567779df8ad00b96ab8d2bf46557e`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (125 files), `tests/` (167 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
 ## Honest composition note (#1233 review)

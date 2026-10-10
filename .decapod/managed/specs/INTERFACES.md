@@ -1,5 +1,35 @@
 # Interfaces
 
+## Canonical Governance Lifecycle
+
+Agents populate the document in dependency order: establish intent, scope, and
+boundaries; declare current claims and planned checks; record work and measured
+evidence at meaningful boundaries; then validate and checkpoint the staged
+material. Related section updates share one atomic write. Unchanged semantic
+state is a no-op, and derived summaries are computed rather than repeatedly
+persisted. This reduces duplicate writes without deferring all evidence until
+the end of a PR.
+
+`govern artifacts status` reads without migration. `migrate` imports legacy
+artifacts losslessly under a cross-process lock. Archive dirty legacy evidence
+in Git before `begin-pr --id <stable-id> --base-branch <target>` resets accepted
+history to a compact baseline. The target must prove acceptance of an existing
+PR before it can be replaced. Repeating the same ID is idempotent only for the
+same base identity. Merge acceptance never invents a release tag.
+
+`claim --id <id> --statement <text> --falsifier <text> --status <status>` records
+only current-PR claims, with repeatable `--proof-ref` values for supported proof.
+`resolve-obligation --id <carried-id> --resolution <text> --proof-ref <ref>`
+explicitly retires a carried obligation with evidence. Historical accepted
+claims are not copied into the baseline.
+
+After authoring and validation, stage source/spec material, then call
+`checkpoint --id <unique-id> --summary <text> --proof-ref <ref>` and stage
+`.decapod/governance.json`. `verify-checkpoints --base-branch <target>
+--head-ref <head>` verifies the immutable commit range, including merges and
+the exact head. A checkpoint cannot stand in for a passed test or a human
+approval; unavailable and failed evidence retain their actual status.
+
 ## Gatekeeper evidence and input contract (#1370)
 
 `govern gatekeeper check --paths` accepts one explicit file per repeated option.
@@ -69,8 +99,9 @@ remains CLI/RPC-owned; validation and material-spec proof gates are unchanged.
 
 | Interface | Owner and semantics | Recovery/error boundary |
 |---|---|---|
-| `govern artifacts inventory --compact` | Decapod CLI owns validation, canonical serialization, and explicit compaction of `.decapod/governance/claims.json`; the operation is idempotent and schema-preserving | Invalid or oversized ledgers remain visible; restore a valid governed ledger or use the documented `--claims-note` path rather than editing machine state by hand |
-| Research claims ledger vs Health Engine claims | Research claims live in `.decapod/governance/claims.json`; Health Engine runtime claims live in `.decapod/data/decapod.db` and use `govern health claim/proof` | The two ledgers are not interchangeable and are never silently merged |
+| `govern artifacts migrate` / `begin-pr` | CLI performs lossless legacy migration and an explicit Git-bound new-PR transition in `.decapod/governance.json` | Conflicting authority or unarchived state fails closed; unresolved obligations survive reset |
+| `govern artifacts claim` / `resolve-obligation` | Current-PR claims carry a statement, falsifier, status, and proof references; carried obligations require explicit evidence-bound resolution | Completed history remains in Git; machine state is never hand-edited |
+| Governance claims vs Health Engine claims | Current-PR claims live in `.decapod/governance.json`; Health Engine runtime claims live in `.decapod/data/decapod.db` and use `govern health claim/proof` | The two stores are not interchangeable and are never silently merged |
 | Specs input authority | `config.toml` and `OVERRIDE.md` feed the manifest `config_input_hash` | Authority drift is refreshed in the isolated workspace; the non-refresh validation branch reports `STALE_CONFIG_INPUT_HASH` |
 | Validation epoch binding | A successful `decapod validate` records the active epoch in the bound trajectory and receipt | If the active epoch changes, `STALE_VALIDATION_EVIDENCE` preserves prior evidence and requires explicit `govern trajectory init` before revalidation |
 
@@ -90,12 +121,12 @@ input; a non-Git directory receives the bounded fallback exclusions instead.
 | Interface | Compatibility behavior | Failure/authority boundary |
 |---|---|---|
 | rpc --op specs.refresh | Performs the existing filesystem projection after worktree/session checks without unrelated datastore migration, presence, or mandate reads | Projection writes stay workspace-owned; best-effort trace remains non-blocking |
-| data db verify / data database verify | Uses Dactyl v0.10.0's read-only native integrity API | Emits typed healthy/unavailable/locked/corrupt/unsupported diagnostics; corruption is reported, never repaired |
-| data db backup | Uses Dactyl v0.10.0 online backup through the canonical, bounded-coordinated bridge | Destination is a verified standalone snapshot; WAL/SHM handling remains Dactyl-owned and failures are explicit |
-| data db recover | Uses Dactyl v0.10.0 logical dump/reload with an operator-selected archive path | Requires explicit invocation and writer quiescence; atomic replacement, rollback, archive, and DELETE journal mode remain Dactyl-owned |
+| data db verify / data database verify | Uses Dactyl v0.11.1's read-only native integrity API | Emits typed healthy/unavailable/locked/corrupt/unsupported diagnostics; corruption is reported, never repaired |
+| data db backup | Uses Dactyl v0.11.1 online backup through the canonical, bounded-coordinated bridge | Destination is a verified standalone snapshot; WAL/SHM handling remains Dactyl-owned and failures are explicit |
+| data db recover | Uses Dactyl v0.11.1 logical dump/reload with an operator-selected archive path | Requires explicit invocation and writer quiescence; atomic replacement, rollback, archive, and DELETE journal mode remain Dactyl-owned |
 | events::append | Uses StoragePool::with_write before schema preparation and append; canonical connection retains an exclusive datastore sidecar lock | Serializes standalone writers in-process and across cooperating Decapod processes; Dactyl remains the physical boundary |
 | db_connect / db_connect_pooled / db_connect_read_pooled | Retain a bounded exclusive `decapod.db.lock` sidecar guard for the connection lifetime | Conservative serialization makes lock timeout typed contention; lock files are never deleted as stale-lock repair |
-| trajectory::load_trajectory(project_root, run_id) | Reads and validates the single current trajectory cookie | trajectory.json is the sole workspace validation/publication artifact; Git history provides prior committed context and subagent jobs use loops |
+| trajectory::load_trajectory(project_root, run_id) | Reads and validates the logical current trajectory from the canonical document | `.decapod/governance.json` is the sole tracked authority; Git history provides accepted context and subagent jobs use loops |
 | Persisted path fields | Project-internal absolute paths become relative; external absolute paths become <external-path> | JSON field types and trajectory schema remain unchanged |
 
 ## Contract Principles
@@ -142,7 +173,7 @@ Generated interface specs should include:
 | `DbBroker::with_transaction` | Decapod domain mutation | Dactyl-backed local transaction facade | Commits state and its canonical event together; rolls both back on failure; no physical connection handle crosses the application boundary |
 | `core::backend::BackendSelection` / `BackendRoute` | `.decapod/config.toml` backend plus Git origin identity | Local datastore or authenticated Dactyl session | `local` binds `.decapod/data/decapod.db`; `cloud` binds the GitHub owner/repository and accepts only an opaque remote URI supplied by the session boundary; provider names and URI construction are outside ordinary Decapod persistence |
 | `core::backend::StorageContext` | `BackendSelection`, opaque route, and optional session bearer | Dactyl bridge or future physical driver | Version 1 distinguishes local and remote targets; local has no cloud scope or credential, remote requires an authenticated bearer, credentials are never serialized, and unsupported future versions fail closed before I/O; Propodus owns effective membership/repository authorization |
-| `core::dactyl_db::Connection` | Decapod relational caller, SQL text, typed parameters | Dactyl v0.10.0 local connection | Provides the only application-facing connection facade; it seeds a new empty read-write filesystem target for Dactyl's pre-open validation, while Dactyl owns physical execution, access mode, normalized rows/results, typed errors, schema inspection, host-runtime availability, and physical maintenance. No direct SQL-driver dependency, raw SQLite handle, or maintenance PRAGMA is exposed |
+| `core::dactyl_db::Connection` | Decapod relational caller, SQL text, typed parameters | Dactyl v0.11.1 local connection | Provides the only application-facing connection facade; it seeds a new empty read-write filesystem target for Dactyl's pre-open validation, while Dactyl owns physical execution, access mode, normalized rows/results, typed errors, schema inspection, host-runtime availability, and physical maintenance. No direct SQL-driver dependency, raw SQLite handle, or maintenance PRAGMA is exposed |
 | `core::dactyl::DactylBridge` | Backend route, access mode, optional opaque credential, or explicit maintenance request | Dactyl operation/context contract and local maintenance capabilities | Constructs explicit SQLite, Neon HTTP, or feature-gated Supabase HTTP routes without changing ambient process routing; provides reads, writes, atomic batches, portable schema inspection, access-mode enforcement, typed integrity verification, online backup, logical recovery, and Decapod-normalized errors; local existing files open directly and cloud construction fails closed without a credential |
 | Explicit route construction | `StorageContext` plus its client-only cloud capability selector | `DactylBridge` connection | Context, route and credential requirements are checked before physical opening. Supabase transport policy is also validated before session lookup or refresh. Each connection receives its own explicit route; unrelated ambient `DATASTORE*` values are neither used nor changed |
 | `core::dactyl_todo::DactylTodoStore` | Cloud `TodoStore` command boundary plus versioned storage context | Dactyl `/query` and `/batch` handlers | Lists canonical task columns; keyed get uses a direct query; add/claim/release/complete use conditional SQL write, matching event, and row observation in one batch; zero affected rows are conflicts; no per-query backend, tenant, provider, or repository input is accepted |
@@ -164,7 +195,7 @@ Read callers must not invoke schema DDL or migration repair through a read-only 
 | `verify::resolve_artifact_path_for_todo` | `--artifact` path plus optional todo id | `todo done --validated` | Resolves first against cwd, then the newest workspace directory matching the todo id |
 | `workspace::resolve_publish_remote` | Workspace remotes, then parent filesystem remotes | `workspace publish` | Inherits a GitHub remote from the local-clone parent as `upstream`; never treats a path `origin` as publication |
 | `workspace::prune_workspaces_report` | Host checkout, Git worktree registry, task state, and current process path | `workspace prune` | Reports stale registered and unregistered candidates; preserves the current workspace for safety and returns it in `skipped` as `current_workspace` with a host-checkout recovery instruction |
-| `validate::governance_paths_updated_vs_base` | `base...HEAD` plus working tree | `GOVERNANCE_PR_UPDATES` | Working-tree and just-written `validation.json` count; the gate does not require `DECAPOD_VALIDATE_SKIP_GIT_GATES` |
+| `validate::governance_paths_updated_vs_base` | `base...HEAD` plus working tree | `GOVERNANCE_PR_UPDATES` | The canonical document and just-written validation section count; final checkpoint proof is verified separately |
 
 ## Event Consumers
 | Consumer | Event | Ordering Requirement | Retry Policy | DLQ Policy |
@@ -228,15 +259,15 @@ pub enum ApiError {
 ## Current PR Contract Details
 ### Trajectory Cookie
 - Input: a valid run identifier and trajectory fields.
-- Output: exactly one schema-valid JSON object at the canonical cookie path.
+- Output: one schema-valid logical trajectory section in `.decapod/governance.json`.
 - Update semantics: same-run initialization is rejected when the existing
   object is valid; a different or malformed legacy cookie is replaced.
 - Historical semantics: Git commits preserve prior cookies; the file is not an
   append-only JSONL stream.
 - Historical lookup: agents use the PR or commit SHA and Git tooling such as
-  `git show <sha>:.decapod/governance/trajectory.json` to recover prior
-  committed context. Decapod does not create a second trajectory history
-  surface inside the repository.
+  `git show <sha>:.decapod/governance.json` to recover prior committed context
+  (pre-migration commits retain their legacy artifact paths). Decapod does not
+  create a second trajectory history surface inside the repository.
 
 ### Local datastore coordination
 - Local Decapod connection factories retain an exclusive sidecar lock beside
@@ -317,9 +348,9 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5e522c585e055cae81578f96df9ab41a4f21f6fde8c73b68ca9d0f2be05870d4`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (124 files), `tests/` (162 files)
-- Refreshed from the current codebase by `decapod specs.refresh`
+- Repository signal fingerprint: `ff0e704a1389577bb72bd8d97fc1f5f7d0e567779df8ad00b96ab8d2bf46557e`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (125 files), `tests/` (167 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
 ## Target approval correction (#1361)
@@ -369,3 +400,13 @@ excluding the receipt itself, permitting a proof-only receipt commit.
 ### Claim acknowledgement and container follow-up
 
 A brokered exclusive claim commits before optional automatic container preparation. The client acknowledges the committed task on stderr, then runs the existing bounded launcher outside the broker election and datastore lock. Stdout remains one structured claim result. Preparation failure preserves the successful claim and reports recovery guidance; a durable request-bound follow-up receipt prevents interrupted or repeated requests from launching the command twice. Direct callers retain automatic launch behavior.
+
+## Executable living-spec refresh instructions
+
+Agent documentation and generated entrypoints name both supported interfaces:
+`decapod rpc --op specs.refresh` and `decapod validate --refresh-specs`.
+The former refreshes supported generated projections and manifests; the latter
+requests that refresh during ordinary validation. Neither changes authored
+intent or replaces the material living-spec review. There is no top-level
+`decapod specs.refresh` command. Generated codebase attestations use the RPC
+invocation, and documentation regeneration retains this contract.

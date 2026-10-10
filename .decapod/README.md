@@ -23,7 +23,7 @@ issue tracker are on [GitHub](https://github.com/DecapodLabs/decapod).
 - `config.toml`: repository configuration and declared capabilities.
 - `OVERRIDE.md`: project-local policy overlays.
 - `data/`: canonical local control-plane state, including `decapod.db`.
-- `governance/`: plans, claims, trajectories, and validation receipts.
+- `governance.json`: compact accepted baseline, current-PR claims, checkpoints, and normalized plan/trajectory/validation sections.
 - `managed/specs/`: authored living specs plus generated attestations.
 - `managed/context/`: generated context projections.
 - `managed/artifacts/`: generated provenance, inventory, and diagnostics.
