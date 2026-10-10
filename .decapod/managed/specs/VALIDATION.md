@@ -392,7 +392,7 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c38d26bf2c1c1219852f7aec2ce23860a793b4c7809c4d3af5e94e03b7f84caf`
+- Repository signal fingerprint: `240bc3f651c5fc5fb2268c379e6101b03e944f9b9de634b6a2da61d88745a2e8`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (124 files), `tests/` (161 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -447,3 +447,10 @@ Actions runs the exact real-socket regression independently before the unchanged
 full core gate, distinguishing its own latency from the aggregate test budget.
 Only an explicit local AF_UNIX permission denial makes that proof unavailable;
 other transport or command failures must fail the test.
+
+The twenty-client contention fixture reports credential setup and individual
+client/retry durations and bounds its child collection. Actions also measures
+that case independently before the full suite. The broker target's finite
+900-second diagnostic budget does not alter runtime timeouts or establish
+correctness by itself: all twenty clients and the existing no-busy, exactly-once,
+cleanup and responsiveness assertions must complete successfully.

@@ -23,28 +23,28 @@
     "file_touch_budget": null
   },
   "phases": [],
-  "updated_at": "1791651915Z",
+  "updated_at": "1791653365Z",
   "spec_reviews": [
     {
       "path": ".decapod/managed/specs/ARCHITECTURE.md",
       "spec_material_hash": "b0835ece6bd42daee979585d7336ffdf579cfa3d5b036acec0ade4f860d9a9e0",
-      "reviewed_code_fingerprint": "c38d26bf2c1c1219852f7aec2ce23860a793b4c7809c4d3af5e94e03b7f84caf",
+      "reviewed_code_fingerprint": "240bc3f651c5fc5fb2268c379e6101b03e944f9b9de634b6a2da61d88745a2e8",
       "disposition": "unchanged_with_reason",
-      "reason": "Reviewed the bounded broker regression harness and separately timed Actions invocation. These test-only changes preserve production claim responses, storage boundaries, runtime identity, and publication contracts; existing authored interface, architecture, and security descriptions remain accurate."
+      "reason": "Reviewed the twenty-client contention diagnostics, bounded test child collection and finite target-only diagnostic budget. Production commands, storage policy, concurrency, retries and all existing correctness assertions remain unchanged; authored contracts still describe the implementation."
     },
     {
       "path": ".decapod/managed/specs/INTERFACES.md",
       "spec_material_hash": "ec59736eba382f3e01ea03fd8fb7eebe415cc343a48075e6e9a91efcd238621a",
-      "reviewed_code_fingerprint": "c38d26bf2c1c1219852f7aec2ce23860a793b4c7809c4d3af5e94e03b7f84caf",
+      "reviewed_code_fingerprint": "240bc3f651c5fc5fb2268c379e6101b03e944f9b9de634b6a2da61d88745a2e8",
       "disposition": "unchanged_with_reason",
-      "reason": "Reviewed the bounded broker regression harness and separately timed Actions invocation. These test-only changes preserve production claim responses, storage boundaries, runtime identity, and publication contracts; existing authored interface, architecture, and security descriptions remain accurate."
+      "reason": "Reviewed the twenty-client contention diagnostics, bounded test child collection and finite target-only diagnostic budget. Production commands, storage policy, concurrency, retries and all existing correctness assertions remain unchanged; authored contracts still describe the implementation."
     },
     {
       "path": ".decapod/managed/specs/SECURITY.md",
       "spec_material_hash": "ad35c389324be26f9a505ea2561acf50ac674e263d0835724a2e9fd9783ac56f",
-      "reviewed_code_fingerprint": "c38d26bf2c1c1219852f7aec2ce23860a793b4c7809c4d3af5e94e03b7f84caf",
+      "reviewed_code_fingerprint": "240bc3f651c5fc5fb2268c379e6101b03e944f9b9de634b6a2da61d88745a2e8",
       "disposition": "unchanged_with_reason",
-      "reason": "Reviewed the bounded broker regression harness and separately timed Actions invocation. These test-only changes preserve production claim responses, storage boundaries, runtime identity, and publication contracts; existing authored interface, architecture, and security descriptions remain accurate."
+      "reason": "Reviewed the twenty-client contention diagnostics, bounded test child collection and finite target-only diagnostic budget. Production commands, storage policy, concurrency, retries and all existing correctness assertions remain unchanged; authored contracts still describe the implementation."
     }
   ]
 }

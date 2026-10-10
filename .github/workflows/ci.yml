@@ -620,6 +620,10 @@ jobs:
                   --test_arg=committed_claim_preparation_does_not_hold_broker_or_repeat_on_retry \
                   --test_arg=--exact --test_arg=--nocapture \
                   --test_output=all
+                time bazelisk test //:group_broker \
+                  --test_arg=broker_no_sqlite_busy_surfaced_under_concurrent_mutators \
+                  --test_arg=--exact --test_arg=--nocapture \
+                  --test_output=all
                 bazelisk test \
                   //:todo_enforcement \
                   //:validate_termination \
