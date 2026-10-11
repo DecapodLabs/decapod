@@ -91,6 +91,15 @@
       "proof_refs": [
         "decapod validate --format json: 202 passing gates, zero failures at ba466ce23afa4033e8ddc54fa84cb62a051ce699"
       ]
+    },
+    {
+      "id": "bazel-owning-package-labels",
+      "summary": "Correct Bazel cleanup test package labels and exports; add regression and record actual Docker CI proof.",
+      "input_digest": "sha256:668431de8eccf6573ebb51948b3a39a5aeedb15c6a4ad20ff6500a9ee8767c4c",
+      "proof_refs": [
+        "cargo:cleanup-tool-12-passed",
+        "github:job/114376175675"
+      ]
     }
   ],
   "intents": {
@@ -184,24 +193,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Records locked template initialization, stable branch identity, exact creator base, branch-local managed paths, shared migration ledger, and invocation-owned build cleanup",
-          "reviewed_code_fingerprint": "9f0aad7af6e6afea8f76637a5a325d188125da973ae0349c49635287c477ebdb",
+          "reason": "Reviewed the Bazel owning-package label and explicit export correction. It preserves the existing governed branch lifecycle, container path contract, and invocation-owned cleanup semantics; no authored contract changes are needed.",
+          "reviewed_code_fingerprint": "6206061ff20549860c2ae6f2dfd2ed2e49d1104fea36f062c074a6cd8441f71d",
           "spec_material_hash": "c121b671d037803ff27cf59ea8c41fff6e48b931a40e7954238e740f6728fb84"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Defines normal CLI initialization, unproven draft template, container datastore and policy path contract, and local build/test lifecycle commands",
-          "reviewed_code_fingerprint": "9f0aad7af6e6afea8f76637a5a325d188125da973ae0349c49635287c477ebdb",
+          "reason": "Reviewed the Bazel owning-package label and explicit export correction. It preserves the existing governed branch lifecycle, container path contract, and invocation-owned cleanup semantics; no authored contract changes are needed.",
+          "reviewed_code_fingerprint": "6206061ff20549860c2ae6f2dfd2ed2e49d1104fea36f062c074a6cd8441f71d",
           "spec_material_hash": "0d132a5b536f0089d08ca58e41c0cf2eddb9d32643820cfd09a92402fcb912e7"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documents alias refusal, branch-local lock, read-only accepted host policy, shared datastore ledger authority, and identity-checked owned scratch cleanup",
-          "reviewed_code_fingerprint": "9f0aad7af6e6afea8f76637a5a325d188125da973ae0349c49635287c477ebdb",
+          "reason": "Reviewed the Bazel owning-package label and explicit export correction. It preserves the existing governed branch lifecycle, container path contract, and invocation-owned cleanup semantics; no authored contract changes are needed.",
+          "reviewed_code_fingerprint": "6206061ff20549860c2ae6f2dfd2ed2e49d1104fea36f062c074a6cd8441f71d",
           "spec_material_hash": "a61a52af20a5233dac76f61b4b6f9bf65fba2907f688eb5b7ed0db4a0515ed3d"
         }
       ],
@@ -215,13 +224,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791685679Z"
+      "updated_at": "1791688574Z"
     },
     "trajectory": {
       "active_boundaries": [
         "No main/master writes, merge, release, deployment, or fabricated container proof"
       ],
-      "artifact_hash": "sha256:5b713d1f1b4c5b4890b23ff94dfe98c5739967ef10997d8c35fe580dd56ba586",
+      "artifact_hash": "sha256:06df02db71e9c76aea609ca8a60f15e797edd937c2f33683af3423b479fce0f0",
       "checks": [
         {
           "name": "actual_bazel_local",
@@ -240,11 +249,19 @@
           "status": "passed"
         },
         {
+          "name": "bazel-subpackage-regression",
+          "status": "passed"
+        },
+        {
           "name": "branch_governance_suite",
           "status": "passed"
         },
         {
           "name": "build_cleanup_behavior",
+          "status": "passed"
+        },
+        {
+          "name": "cleanup-tool-cargo-12-tests",
           "status": "passed"
         },
         {
@@ -260,6 +277,18 @@
           "status": "passed"
         },
         {
+          "name": "format-check-ci-fix",
+          "status": "passed"
+        },
+        {
+          "name": "github-actual-docker-dfb30cd1",
+          "status": "passed"
+        },
+        {
+          "name": "github-bazel-package-label-dfb30cd1",
+          "status": "failed"
+        },
+        {
           "name": "initial-library-regressions",
           "status": "passed"
         },
@@ -268,7 +297,7 @@
           "status": "unavailable"
         }
       ],
-      "current_phase": "validation",
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
@@ -317,10 +346,24 @@
             "intent_id": "intent:fresh-governance-template",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:fresh-governance-template",
+            "event_id": "event:9",
+            "intent_id": "intent:fresh-governance-template",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
+          },
+          {
+            "detail": "trajectory:fresh-governance-template",
+            "event_id": "event:10",
+            "intent_id": "intent:fresh-governance-template",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "fresh-governance-template": {
@@ -454,6 +497,58 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:9",
+                "observations": [
+                  ".config/build/BUILD.bazel",
+                  ".config/build/decapod.BUILD.bzl",
+                  "assets/tools/build_lifecycle_tests.rs",
+                  "GitHub Actions job 114376175675: actual Docker lifecycle and branch-local governance/shared data mount assertions passed on dfb30cd1.",
+                  "GitHub Actions job 114376175867 exposed cross-package bazelrc label; fixed owning package labels and explicit exports with a red-control regression."
+                ],
+                "proof_refs": [
+                  "github-actual-docker-dfb30cd1",
+                  "github-bazel-package-label-dfb30cd1",
+                  "bazel-subpackage-regression"
+                ],
+                "scope": [
+                  ".cargo/config.toml",
+                  ".config/build",
+                  ".decapod/managed/specs",
+                  "Cargo.toml",
+                  "assets",
+                  "assets/tools",
+                  "docs",
+                  "src",
+                  "tests"
+                ],
+                "sequence": 9,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "cargo test --locked --features build-tools --bin decapod-build",
+                "custody_event_id": "event:10",
+                "observations": [],
+                "proof_refs": [
+                  "cleanup-tool-cargo-12-tests",
+                  "format-check-ci-fix"
+                ],
+                "scope": [
+                  ".cargo/config.toml",
+                  ".config/build",
+                  ".decapod/managed/specs",
+                  "Cargo.toml",
+                  "assets",
+                  "assets/tools",
+                  "docs",
+                  "src",
+                  "tests"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
@@ -461,12 +556,15 @@
       },
       "declared_commands": [
         "cargo test --lib -- --test-threads=2: 612 passed, 1 ignored before final container/legacy guards",
+        "cargo test --locked --features build-tools --bin decapod-build",
         "decapod validate"
       ],
       "evidence": [
         "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings passed",
         "Current-source precommit validation: 198 passing gates; two expected dirty-worktree failures require a checkpointed clean commit before final validation. No validation receipt was fabricated.",
         "Final combined Cargo suite: 627 library tests, 11 build supervisor tests, 9 fresh-workbranch tests, 4 read-only artifact tests, 8 container-disabled tests, and 1 workspace-isolation test passed; one actual-Docker opt-in test unavailable locally",
+        "GitHub Actions job 114376175675: actual Docker lifecycle and branch-local governance/shared data mount assertions passed on dfb30cd1.",
+        "GitHub Actions job 114376175867 exposed cross-package bazelrc label; fixed owning package labels and explicit exports with a red-control regression.",
         "No Docker or Bazel binary is available locally; actual Docker path verification is attached to the existing opt-in CI test",
         "Review corrected shared-data aliases, branch-local governance lock, accepted policy lookup, source validation roots, migration ledger mounts, and checkpoint-before-container-commit failure propagation",
         "Reviewer found and remediation added for cross-agent context, missing task identity, session custody, malformed/default/deleted journals, and canonical workspace aliases",
@@ -476,8 +574,11 @@
       "inspected_files": [],
       "intent_id": "intent:fresh-governance-template",
       "modified_files": [
+        ".config/build/BUILD.bazel",
+        ".config/build/decapod.BUILD.bzl",
         ".decapod/governance.json",
         "assets/tools/build_lifecycle.rs",
+        "assets/tools/build_lifecycle_tests.rs",
         "src/decapod/core/validate.rs",
         "src/decapod/plugins/container.rs",
         "src/decapod/plugins/policy.rs"

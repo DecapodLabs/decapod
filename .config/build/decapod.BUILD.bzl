@@ -24,8 +24,10 @@ def decapod_targets():
         crate_root = "assets/tools/build_lifecycle.rs",
         edition = "2024",
         compile_data = [
-            ".cargo/config.toml",
-            ".config/build/bazelrc",
+            "//:.cargo/config.toml",
+            "//.config/build:BUILD.bazel",
+            "//.config/build:bazelrc",
+            "//.config/build:decapod.BUILD.bzl",
         ],
     )
 

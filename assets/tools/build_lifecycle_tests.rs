@@ -326,3 +326,40 @@ fn main_build_and_test_configuration_enables_owned_cleanup() {
         assert!(cargo.contains(&format!("{command}-main = \"run --quiet --features build-tools --bin decapod-build -- --scratch-parent target -- cargo {command}\"")));
     }
 }
+
+#[test]
+fn bazel_lifecycle_inputs_use_exported_subpackage_labels() {
+    let rules = include_str!("../../.config/build/decapod.BUILD.bzl");
+    let lifecycle = rules
+        .split("name = \"build_lifecycle_tests\"")
+        .nth(1)
+        .expect("lifecycle test target exists")
+        .split("cargo_toml_env_vars(")
+        .next()
+        .unwrap();
+    let package = include_str!("../../.config/build/BUILD.bazel");
+    let exports = package
+        .split("exports_files([")
+        .nth(1)
+        .expect("build package explicitly exports its source inputs")
+        .split("])")
+        .next()
+        .unwrap();
+
+    // These include_str! inputs live in a distinct Bazel package. Root-relative
+    // file labels such as ".config/build/bazelrc" cannot cross that boundary.
+    for name in ["BUILD.bazel", "bazelrc", "decapod.BUILD.bzl"] {
+        assert!(
+            lifecycle.contains(&format!("\"//.config/build:{name}\"")),
+            "lifecycle input {name} must use its owning package label"
+        );
+        assert!(!lifecycle.contains(&format!("\".config/build/{name}\"")));
+        assert!(!lifecycle.contains(&format!("\"//:.config/build/{name}\"")));
+        assert!(
+            exports.contains(&format!("\"{name}\"")),
+            "build package must export {name} to the root test target"
+        );
+    }
+    // .cargo has no BUILD file and is part of the root package.
+    assert!(lifecycle.contains("\"//:.cargo/config.toml\""));
+}

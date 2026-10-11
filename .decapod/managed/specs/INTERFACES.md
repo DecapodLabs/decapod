@@ -353,7 +353,7 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9f0aad7af6e6afea8f76637a5a325d188125da973ae0349c49635287c477ebdb`
+- Repository signal fingerprint: `6206061ff20549860c2ae6f2dfd2ed2e49d1104fea36f062c074a6cd8441f71d`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (7 files), `docs/` (1 files), `src/` (125 files), `tests/` (169 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
