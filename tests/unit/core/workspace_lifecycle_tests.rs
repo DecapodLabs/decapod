@@ -457,6 +457,7 @@ fn docker_parent_interrupt_recovers_owned_container() {
         absent_after_prune,
         "container survived prune before fallback cleanup: {observed:?}"
     );
+    crate::plugins::container::tests::assert_actual_docker_governance_mount_isolation();
 }
 
 #[test]

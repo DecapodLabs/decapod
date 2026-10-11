@@ -446,8 +446,8 @@ virtiofs/FUSE filesystem prohibition.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `76abacad7a2a007655edfdd5e59e517944c2927704c41ce51195889bc75d901c`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (125 files), `tests/` (168 files)
+- Repository signal fingerprint: `9f0aad7af6e6afea8f76637a5a325d188125da973ae0349c49635287c477ebdb`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (7 files), `docs/` (1 files), `src/` (125 files), `tests/` (169 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -480,3 +480,34 @@ current local proof and the exact remote branch/PR state as separate transitions
 ### Lifecycle backend provenance and event typing
 
 Workspace lifecycle receipts use their own typed stream within the canonical events table; they do not enter the broker mutation-audit stream. A container invocation records only a validated Docker or Podman identity before launch. Recovery targets that recorded engine, even when runtime preference changes, and preserves container-profile paths whose creating engine is unknown. Owned advisory locks are explicitly unlocked on release so unrelated forked processes cannot prolong their lifetime through an inherited descriptor. Federation rebuild validation confines its temporary database and sidecars to a private, automatically cleaned directory.
+
+## Fresh branch governance lifecycle
+
+A shared locked initializer uses the existing canonical governance store.
+Workspace creation supplies its exact resolved base commit; manually created
+worktree branches require matching Git creation and accepted-base evidence.
+The initializer constructs the draft plan and no-checks trajectory together,
+then atomically replaces only the recoverable inherited journal. Stable change
+identity survives repeats, renames, and rebases. No auxiliary branch registry
+or second authority is introduced, and dirty or malformed context fails closed.
+
+Container clones use the same captured-base initialization boundary before
+launch. `data/` and the applied-migration ledger are shared with the host: the canonical coordination
+database, task leases, and datastore locks retain their shared behavior, while
+tracked governance, project configuration, living specs, session state, and
+awareness remain branch-local. Startup preserves the prepared branch and its
+resolved base rather than rewinding it to a stale local branch. Mutations reject
+symlinked or overmounted governance before acquiring a write transaction.
+
+Host-root runtime lookups alias the branch's managed directory, with only
+`managed/migrations` overlaid from the shared host ledger. This preserves
+atomic ledger updates and prevents historical migrations from rerunning, while
+version counters and tracked specs remain branch-local. Existing host config
+and overrides are available read-only for shared-datastore policy decisions;
+branch files remain the input to source and document validation.
+
+The optional `decapod-build` Rust binary supervises local build/test processes
+and Bazel's test run-under contract. It allocates private scratch atomically,
+remembers directory identity, and deletes only that directory after child exit.
+Interruption forwards to the owned process group with a bounded grace period;
+unconfirmed descendant exit retains evidence rather than deleting live state.

@@ -518,6 +518,102 @@ fn claim_branch_scoped_open_tasks(
     Ok(())
 }
 
+/// Prepare branch-local governance before a mutating agent entrypoint exposes
+/// inherited plan/trajectory context. Read-only status never calls this helper.
+pub fn initialize_workbranch_governance(
+    repo_root: &Path,
+    agent_id: &str,
+    explicit_base: Option<&str>,
+) -> Result<(), DecapodError> {
+    initialize_workbranch_governance_at(repo_root, agent_id, explicit_base, None)
+}
+
+pub(crate) fn initialize_workbranch_governance_at(
+    repo_root: &Path,
+    agent_id: &str,
+    explicit_base: Option<&str>,
+    created_base: Option<&str>,
+) -> Result<(), DecapodError> {
+    let status = get_workspace_status(repo_root)?;
+    if !status.git.in_worktree || !status.can_work {
+        return Ok(());
+    }
+    let base_branch = resolve_base_branch(repo_root, explicit_base);
+    let base_ref = base_ref_for_branch(repo_root, &base_branch).ok_or_else(|| {
+        DecapodError::ValidationError(format!("WORKSPACE_BASE_UNRESOLVED: {base_branch}"))
+    })?;
+    let main = get_main_repo_root(repo_root)?;
+    let store_root = main.join(".decapod/data");
+    // A bootstrap validation can precede datastore creation. Absence means no
+    // captured task; existing storage errors must still fail closed.
+    let tasks = if store_root.join("decapod.db").exists() {
+        todo::list_tasks(&store_root, Some("open".into()), None, None, None, None)?
+    } else {
+        Vec::new()
+    };
+    let scoped: Vec<_> = tasks
+        .iter()
+        .filter(|task| {
+            branch_contains_any_todo_id_or_hash(
+                &status.git.current_branch,
+                &[AssignedTodoRef {
+                    id: task.id.clone(),
+                    hash: task.hash.clone(),
+                }],
+            )
+        })
+        .collect();
+    if scoped.len() > 1 {
+        return Err(DecapodError::ValidationError("WORKSPACE_AMBIGUOUS_TASK_HASH: branch matches multiple tasks; existing governance was preserved".into()));
+    }
+    if let Some(task) = scoped.first()
+        && task.assigned_to != agent_id
+    {
+        return Err(DecapodError::ValidationError(format!(
+            "WORKSPACE_BRANCH_TODO_CLAIM_CONFLICT: branch task {} must be claimed by {agent_id} before initialization; existing governance was preserved",
+            task.id
+        )));
+    }
+    let owned: Vec<_> = tasks
+        .iter()
+        .filter(|task| task.assigned_to == agent_id)
+        .collect();
+    let selected = if scoped.is_empty()
+        && owned.len() == 1
+        && extract_task_ids_from_branch(&status.git.current_branch).is_empty()
+    {
+        owned
+    } else {
+        scoped
+    };
+    let context = (selected.len() == 1).then(|| {
+        let task = selected[0];
+        crate::core::governance_document::BranchWorkContext {
+            title: task.title.clone(),
+            intent: if task.description.trim().is_empty() {
+                task.title.clone()
+            } else {
+                format!("{}\n\n{}", task.title, task.description)
+            },
+            todo_ids: vec![task.id.clone()],
+            scope: task
+                .scope
+                .split(',')
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .map(str::to_string)
+                .collect(),
+        }
+    });
+    crate::core::governance_document::initialize_workbranch_at(
+        repo_root,
+        &base_ref,
+        context.as_ref(),
+        created_base,
+    )?;
+    Ok(())
+}
+
 /// Ensure/create isolated workspace
 pub fn ensure_workspace(
     repo_root: &Path,
@@ -571,6 +667,11 @@ pub fn ensure_workspace(
         && !status.git.is_protected
         && (!upgrade_container || status.container.in_container)
     {
+        initialize_workbranch_governance(
+            repo_root,
+            agent_id,
+            config.as_ref().and_then(|c| c.base_branch.as_deref()),
+        )?;
         return Ok(status);
     }
 
@@ -649,8 +750,8 @@ pub fn ensure_workspace(
     })?;
 
     // 1. Ensure git worktree
-    let worktree_path = if status.git.in_worktree {
-        repo_root.to_path_buf()
+    let (worktree_path, created_base) = if status.git.in_worktree {
+        (repo_root.to_path_buf(), None)
     } else {
         let base_branch = config
             .base_branch
@@ -660,6 +761,12 @@ pub fn ensure_workspace(
         create_worktree(repo_root, branch, agent_id, &todo_scope, &base_branch)?
     };
 
+    initialize_workbranch_governance_at(
+        &worktree_path,
+        agent_id,
+        config.base_branch.as_deref(),
+        created_base.as_deref(),
+    )?;
     refresh_workspace_release_surfaces(&worktree_path)?;
 
     // 2. Ensure container (if requested)
@@ -706,7 +813,7 @@ fn create_worktree(
     agent_id: &str,
     todo_scope: &str,
     base_branch: &str,
-) -> Result<PathBuf, DecapodError> {
+) -> Result<(PathBuf, Option<String>), DecapodError> {
     let main_repo = get_main_repo_root(repo_root)?;
     let workspaces_dir = main_repo.join(".decapod").join("workspaces");
     verify_workspace_parent(&main_repo)?;
@@ -730,7 +837,7 @@ fn create_worktree(
                 .contains(&normalize_path_for_compare(&worktree_path))
             && get_current_branch(&worktree_path)? == branch
         {
-            return Ok(worktree_path);
+            return Ok((worktree_path, None));
         }
         match crate::core::workspace_lifecycle::acquire(&main_repo, &worktree_path)? {
             Some(owned)
@@ -758,6 +865,23 @@ fn create_worktree(
         ))
     })?;
 
+    let resolved_base = Command::new("git")
+        .args([
+            "rev-parse",
+            "--verify",
+            &format!("{start_point}^{{commit}}"),
+        ])
+        .current_dir(&main_repo)
+        .bounded_output(CONTROL_TIMEOUT)
+        .map_err(DecapodError::IoError)?;
+    if !resolved_base.status.success() {
+        return Err(DecapodError::ValidationError(
+            "WORKSPACE_BASE_UNRESOLVED: selected base disappeared".into(),
+        ));
+    }
+    let base_commit = String::from_utf8_lossy(&resolved_base.stdout)
+        .trim()
+        .to_string();
     let mut ownership =
         crate::core::workspace_lifecycle::reserve(&main_repo, &worktree_path, false)?;
 
@@ -771,7 +895,7 @@ fn create_worktree(
         branch.to_string(),
         worktree_path.to_string_lossy().to_string(),
     ];
-    args.push(start_point);
+    args.push(base_commit.clone());
     let output = Command::new("git")
         .args(&args)
         .bounded_output(CONTROL_TIMEOUT)
@@ -785,7 +909,7 @@ fn create_worktree(
     }
 
     ownership.mark_ready()?;
-    Ok(worktree_path)
+    Ok((worktree_path, Some(base_commit)))
 }
 
 fn workspace_path_collision(path: &Path, kind: &str) -> DecapodError {

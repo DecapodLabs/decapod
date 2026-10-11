@@ -1,4 +1,9 @@
 build --announce_rc
 build --color=yes
 build --curses=yes
+# Dispose action-owned sandbox trees before the build returns. Compiled outputs,
+# action/download caches and declared test logs remain available for reuse/proof.
+build --reuse_sandbox_directories=false
+build --experimental_sandbox_async_tree_delete_idle_threads=0
 test --test_output=errors
+test --run_under=//:build_lifecycle

@@ -2483,6 +2483,26 @@ pub fn run() -> Result<(), error::DecapodError> {
             command:
                 GovernCommand::Artifacts(ArtifactsCli {
                     command:
+                        ArtifactsCommand::Inventory {
+                            base_branch,
+                            repair: false,
+                            claims_note: None,
+                            compact: false,
+                        },
+                }),
+        }) => {
+            core::governance_artifacts::run_inventory_with_options(
+                &decapod_root_option?,
+                base_branch.as_deref(),
+                false,
+                None,
+                false,
+            )?;
+        }
+        Command::Govern(GovernCli {
+            command:
+                GovernCommand::Artifacts(ArtifactsCli {
+                    command:
                         ArtifactsCommand::VerifyCheckpoints {
                             base_branch,
                             head_ref,
@@ -2825,7 +2845,15 @@ fn command_requires_worktree(command: &Command) -> bool {
         Command::Govern(GovernCli {
             command:
                 GovernCommand::Artifacts(ArtifactsCli {
-                    command: ArtifactsCommand::Status | ArtifactsCommand::VerifyCheckpoints { .. },
+                    command:
+                        ArtifactsCommand::Status
+                        | ArtifactsCommand::VerifyCheckpoints { .. }
+                        | ArtifactsCommand::Inventory {
+                            repair: false,
+                            claims_note: None,
+                            compact: false,
+                            ..
+                        },
                 }),
         }) => false,
         Command::Init(_)
@@ -3046,7 +3074,15 @@ fn requires_session_token(command: &Command) -> bool {
         Command::Govern(GovernCli {
             command:
                 GovernCommand::Artifacts(ArtifactsCli {
-                    command: ArtifactsCommand::Status | ArtifactsCommand::VerifyCheckpoints { .. },
+                    command:
+                        ArtifactsCommand::Status
+                        | ArtifactsCommand::VerifyCheckpoints { .. }
+                        | ArtifactsCommand::Inventory {
+                            repair: false,
+                            claims_note: None,
+                            compact: false,
+                            ..
+                        },
                 }),
         }) => false,
         // Bootstrap/session lifecycle + version + capabilities are sessionless.
@@ -6045,6 +6081,7 @@ fn run_validation_bounded(
     refresh_specs: bool,
     projections: bool,
 ) -> Result<validate::ValidationReport, error::DecapodError> {
+    core::workspace::initialize_workbranch_governance(workspace_root, &current_agent_id(), None)?;
     let timeout_secs = validate_timeout_secs();
     let started = std::time::Instant::now();
     let result = run_validation_in_child_process(
@@ -6290,13 +6327,16 @@ fn record_validation_proof(
     let current_branch = core::workspace::get_workspace_status(project_root)
         .map(|status| status.git.current_branch)
         .unwrap_or_default();
-    let task_id = core::workspace::extract_task_ids_from_branch(&current_branch)
-        .into_iter()
-        .next();
     let existing = core::trajectory::load_trajectory_cookie(project_root)?;
-    let needs_fresh_trajectory = existing
+    let task_id = existing
         .as_ref()
-        .is_none_or(|artifact| task_id.is_some() && artifact.task_id.as_ref() != task_id.as_ref());
+        .and_then(|artifact| artifact.task_id.clone())
+        .or_else(|| {
+            core::workspace::extract_task_ids_from_branch(&current_branch)
+                .into_iter()
+                .next()
+        });
+    let needs_fresh_trajectory = existing.is_none();
     let trajectory = if needs_fresh_trajectory {
         let run_id = format!("validation_{}", core::ulid::new_ulid());
         core::trajectory::init_trajectory(
@@ -6662,6 +6702,12 @@ fn run_govern_command(
                 );
             }
             ArtifactsCommand::BeginPr { id, base_branch } => {
+                if core::workspace::get_workspace_status(workspace_root)?
+                    .git
+                    .is_protected
+                {
+                    return Err(error::DecapodError::ValidationError("GOVERNANCE_PROTECTED_BRANCH: begin-pr requires an isolated work branch; accepted governance was preserved".into()));
+                }
                 let document =
                     core::governance_document::begin_pr(workspace_root, &id, &base_branch)?;
                 println!(
@@ -8546,6 +8592,14 @@ mod rpc_handlers {
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
         let workspace_status = workspace::get_workspace_status(ctx.project_root)?;
+        if workspace_status.git.in_worktree && workspace_status.can_work {
+            ensure_session_valid()?;
+            workspace::initialize_workbranch_governance(
+                ctx.project_root,
+                &current_agent_id(),
+                None,
+            )?;
+        }
         let mut allowed_ops = workspace::get_allowed_ops(&workspace_status);
 
         let agent_id = current_agent_id();
@@ -8673,6 +8727,7 @@ mod rpc_handlers {
         let params: WorkspaceEnsureParams = serde_json::from_value(ctx.request.params.clone())
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
+        ensure_session_valid()?;
         let agent_id = std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
         let config = params.branch.map(|b| workspace::WorkspaceConfig {
             branch: Some(b),
@@ -9483,6 +9538,7 @@ mod rpc_handlers {
         let _params: ValidateRunParams = serde_json::from_value(ctx.request.params.clone())
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
+        ensure_session_valid()?;
         let workspace_root = &ctx.project_root;
         let governance_root = super::find_governance_root(workspace_root);
         let project_store = Store {

@@ -1,5 +1,6 @@
 [package]
 name = "decapod"
+default-run = "decapod"
 version = "0.107.2"
 edition = "2024"
 rust-version = "1.96.1"
@@ -30,6 +31,11 @@ path = "src/decapod/lib.rs"
 [[bin]]
 name = "decapod"
 path = "src/main.rs"
+
+[[bin]]
+name = "decapod-build"
+path = "assets/tools/build_lifecycle.rs"
+required-features = ["build-tools"]
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]
@@ -77,6 +83,7 @@ ignored = ["flate2"]
 
 [features]
 default = ["supabase-cloud"]
+build-tools = []
 cloud = []
 # Cloud uses Supabase by default; local SQLite and explicit Neon remain available.
 supabase-cloud = ["dactyl-db/supabase"]

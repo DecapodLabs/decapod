@@ -5,7 +5,11 @@ fn repo() -> TempDir {
     let root = TempDir::new().unwrap();
     git(root.path(), &["init", "-b", "master"]).unwrap();
     fs::write(root.path().join("source.rs"), "fn main() {}\n").unwrap();
-    fs::write(root.path().join(".gitignore"), ".decapod/data/\n").unwrap();
+    fs::write(
+        root.path().join(".gitignore"),
+        ".decapod/data/\n.decapod/managed/governance-document.lock\n",
+    )
+    .unwrap();
     git(root.path(), &["add", "source.rs", ".gitignore"]).unwrap();
     commit(root.path(), "baseline");
     root
@@ -651,5 +655,916 @@ fn malformed_normalized_values_return_errors_instead_of_panicking() {
     ] {
         let value = json!({"schema_version":SCHEMA_VERSION, "sections":sections});
         assert!(parse(&serde_json::to_vec(&value).unwrap()).is_err());
+    }
+}
+
+fn branch_context() -> BranchWorkContext {
+    BranchWorkContext {
+        title: "Fresh branch work".into(),
+        intent: "Implement only the newly claimed task".into(),
+        todo_ids: vec!["code_current".into()],
+        scope: vec!["src/current.rs".into(), "tests/current.rs".into()],
+    }
+}
+
+/// A fully archived journal with both completed evidence and open obligations.
+fn accepted_branch_repo() -> TempDir {
+    use crate::core::trajectory::{self, TrajectoryCheck, TrajectoryCheckStatus, TrajectoryInit};
+    use crate::core::validate::ValidationReceipt;
+
+    let root = repo();
+    begin_pr(root.path(), "accepted-change", "master").unwrap();
+    let mut accepted_plan = plan("Accepted work");
+    accepted_plan["state"] = json!("DONE");
+    accepted_plan["todo_ids"] = json!(["code_accepted"]);
+    accepted_plan["unknowns"] = json!(["An accepted-plan question remains open"]);
+    accepted_plan["spec_reviews"] = json!([{
+        "path": ".decapod/managed/specs/SECURITY.md",
+        "spec_material_hash": "sha256:accepted-spec",
+        "reviewed_code_fingerprint": "accepted-code",
+        "disposition": "requires_decision",
+        "reason": "A human policy decision remains open"
+    }]);
+    write_section(root.path(), "plan", &accepted_plan).unwrap();
+    let mut run = trajectory::fresh_trajectory(
+        root.path(),
+        TrajectoryInit {
+            run_id: "accepted-run".into(),
+            task_id: Some("code_accepted".into()),
+            intent_id: Some("intent:accepted".into()),
+            original_intent: "Complete the accepted task".into(),
+            derived_intent: "Complete the accepted task".into(),
+            active_boundaries: vec!["accepted scope".into()],
+            repo_scope: vec!["src/accepted.rs".into()],
+            destination: Some("pull request".into()),
+            current_phase: Some("complete".into()),
+            next_transitions: vec![],
+            blockers: vec!["A carried operational blocker".into()],
+        },
+    )
+    .unwrap();
+    run.checks.push(TrajectoryCheck {
+        name: "accepted test".into(),
+        status: TrajectoryCheckStatus::Passed,
+    });
+    run.evidence.push("proof:accepted-result".into());
+    run.completion_claim = Some("Accepted implementation is complete".into());
+    run.unresolved_assumptions
+        .push("A carried assumption".into());
+    let run = run.with_recomputed_hash().unwrap();
+    write_section(
+        root.path(),
+        "trajectory",
+        &serde_json::to_value(&run).unwrap(),
+    )
+    .unwrap();
+    record_claim(
+        root.path(),
+        "accepted-supported",
+        "Accepted behavior worked",
+        "A contrary result",
+        "supported",
+        vec!["proof:accepted-result".into()],
+    )
+    .unwrap();
+    record_claim(
+        root.path(),
+        "accepted-open",
+        "The open obligation still needs proof",
+        "A contrary result",
+        "blocked",
+        vec![],
+    )
+    .unwrap();
+    let receipt = ValidationReceipt {
+        schema_version: "1.0.0".into(),
+        kind: "validation_receipt".into(),
+        decapod_release: crate::core::entrypoint_integrity::RELEASE_VERSION.into(),
+        git_revision: git(root.path(), &["rev-parse", "HEAD"]).unwrap(),
+        repo_signal_fingerprint: "sha256:accepted-repository".into(),
+        trajectory_run_id: Some(run.run_id),
+        trajectory_artifact_hash: Some(run.artifact_hash),
+        validation_epoch: crate::core::validation_epoch::active_validation_epoch(root.path())
+            .unwrap(),
+        status: "ok".into(),
+        pass_count: 1,
+        fail_count: 0,
+        warn_count: 0,
+        elapsed_ms: 1,
+        drift_findings: vec![],
+        temporary_artifacts_cleaned: 0,
+        failures: None,
+        warnings: None,
+        gate_timings: None,
+        parallelism: None,
+        ci_prediction: None,
+        receipt_hash: String::new(),
+    }
+    .with_recomputed_hash()
+    .unwrap();
+    write_section(
+        root.path(),
+        "validation",
+        &serde_json::to_value(receipt).unwrap(),
+    )
+    .unwrap();
+    let mut document = load(root.path()).unwrap().unwrap();
+    document
+        .baseline
+        .policy
+        .insert("review_policy".into(), json!({"required": true}));
+    document
+        .baseline
+        .unresolved
+        .insert("baseline:existing".into(), json!("Keep this obligation"));
+    save(root.path(), &document).unwrap();
+    checkpoint(
+        root.path(),
+        "accepted-checkpoint",
+        "Accepted evidence",
+        vec![],
+    )
+    .unwrap();
+    git(root.path(), &["add", GOVERNANCE_PATH]).unwrap();
+    commit(root.path(), "accepted governance journal");
+    root
+}
+
+#[test]
+fn workbranch_template_has_no_accepted_identity_or_proof() {
+    let template = parse(include_bytes!("../../../assets/templates/governance.json")).unwrap();
+    assert!(template.change.is_none());
+    assert!(template.baseline.accepted_commit.is_none());
+    assert!(template.claims.is_empty());
+    assert!(template.checkpoints.is_empty());
+    assert!(template.epochs.is_empty());
+    assert!(template.intents.is_empty());
+    assert_eq!(template.sections.len(), 1);
+    let draft = get_section(&template, "plan").unwrap().unwrap();
+    assert_eq!(draft["state"], "DRAFT");
+    assert_eq!(draft["title"], "");
+    assert_eq!(draft["intent"], "");
+    assert_eq!(draft["todo_ids"], json!([]));
+}
+
+#[test]
+fn workbranch_compacts_accepted_proof_and_seeds_only_current_task_context() {
+    let root = accepted_branch_repo();
+    let accepted_head = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
+    let accepted_bytes = fs::read(root.path().join(GOVERNANCE_PATH)).unwrap();
+    git(root.path(), &["checkout", "-b", "fresh-work"]).unwrap();
+    let context = branch_context();
+    let next = initialize_workbranch(root.path(), "master", Some(&context))
+        .unwrap()
+        .unwrap();
+    let change = next.change.as_ref().unwrap();
+    assert_ne!(change.id, "accepted-change");
+    assert_eq!(change.base_commit, accepted_head);
+    assert_eq!(change.target_base, "master");
+    assert_eq!(
+        next.baseline.accepted_commit.as_deref(),
+        Some(accepted_head.as_str())
+    );
+    assert_eq!(
+        next.baseline.policy["review_policy"],
+        json!({"required": true})
+    );
+    assert_eq!(
+        next.baseline.unresolved["baseline:existing"],
+        "Keep this obligation"
+    );
+    assert!(next.baseline.unresolved.contains_key("claim:accepted-open"));
+    assert!(
+        !next
+            .baseline
+            .unresolved
+            .contains_key("claim:accepted-supported")
+    );
+    assert!(
+        next.baseline
+            .unresolved
+            .contains_key("spec-review:.decapod/managed/specs/SECURITY.md")
+    );
+    for obligation in [
+        "An accepted-plan question remains open",
+        "A carried operational blocker",
+        "A carried assumption",
+    ] {
+        assert!(
+            next.baseline
+                .unresolved
+                .values()
+                .any(|value| value == &json!(obligation))
+        );
+    }
+    assert!(next.claims.is_empty());
+    assert!(next.checkpoints.is_empty());
+    assert!(next.resolutions.is_empty());
+    assert!(next.epochs.is_empty());
+    assert!(get_section(&next, "validation").unwrap().is_none());
+    assert!(!next.intents.contains_key("intent:accepted"));
+    let draft = get_section(&next, "plan").unwrap().unwrap();
+    assert_eq!(draft["state"], "DRAFT");
+    assert_eq!(draft["title"], context.title);
+    assert_eq!(draft["intent"], context.intent);
+    assert_eq!(draft["todo_ids"], json!(context.todo_ids));
+    let run = crate::core::trajectory::load_trajectory_cookie(root.path())
+        .unwrap()
+        .unwrap();
+    assert_ne!(run.run_id, "accepted-run");
+    assert_eq!(run.intent_id, Some(format!("intent:{}", change.id)));
+    assert_eq!(run.task_id.as_deref(), Some("code_current"));
+    assert_eq!(run.original_intent, context.intent);
+    assert_eq!(run.derived_intent, context.intent);
+    assert_eq!(run.repo_scope, context.scope);
+    assert!(run.checks.is_empty());
+    assert!(run.evidence.is_empty());
+    assert!(run.completion_claim.is_none());
+    assert_eq!(
+        run.proof_status,
+        crate::core::trajectory::TrajectoryProofStatus::NoChecksRun
+    );
+    assert_eq!(
+        run.verdicts.completion_proof,
+        crate::core::trajectory::TrajectoryVerdict::Unsupported
+    );
+    assert_eq!(
+        parse(
+            git(root.path(), &["show", &format!("master:{GOVERNANCE_PATH}")])
+                .unwrap()
+                .as_bytes()
+        )
+        .unwrap()
+        .change
+        .unwrap()
+        .id,
+        "accepted-change"
+    );
+    assert_ne!(
+        accepted_bytes,
+        fs::read(root.path().join(GOVERNANCE_PATH)).unwrap()
+    );
+}
+
+#[test]
+fn workbranch_repeated_initialization_preserves_uncommitted_current_evidence() {
+    let root = accepted_branch_repo();
+    git(root.path(), &["checkout", "-b", "repeat-work"]).unwrap();
+    let first = initialize_workbranch(root.path(), "master", Some(&branch_context()))
+        .unwrap()
+        .unwrap();
+    record_claim(
+        root.path(),
+        "current",
+        "Work in progress",
+        "Counterexample",
+        "open",
+        vec![],
+    )
+    .unwrap();
+    let path = root.path().join(GOVERNANCE_PATH);
+    let before = fs::read(&path).unwrap();
+    let modified = fs::metadata(&path).unwrap().modified().unwrap();
+    let mut unrelated_context = branch_context();
+    unrelated_context.title = "Do not replace the current plan".into();
+    for context in [None, Some(&unrelated_context), Some(&unrelated_context)] {
+        let repeated = initialize_workbranch(root.path(), "master", context)
+            .unwrap()
+            .unwrap();
+        assert_eq!(
+            repeated.change.unwrap().id,
+            first.change.as_ref().unwrap().id
+        );
+        assert!(repeated.claims.contains_key("current"));
+        assert_eq!(fs::read(&path).unwrap(), before);
+        assert_eq!(fs::metadata(&path).unwrap().modified().unwrap(), modified);
+    }
+}
+
+#[test]
+fn workbranch_concurrent_initialization_creates_one_durable_identity() {
+    let root = accepted_branch_repo();
+    git(root.path(), &["checkout", "-b", "concurrent-work"]).unwrap();
+    let barrier = std::sync::Arc::new(std::sync::Barrier::new(8));
+    let threads: Vec<_> = (0..8)
+        .map(|_| {
+            let root = root.path().to_path_buf();
+            let barrier = barrier.clone();
+            std::thread::spawn(move || {
+                barrier.wait();
+                initialize_workbranch(&root, "master", Some(&branch_context()))
+                    .unwrap()
+                    .unwrap()
+            })
+        })
+        .collect();
+    let snapshots: Vec<_> = threads
+        .into_iter()
+        .map(|thread| serde_json::to_value(thread.join().unwrap()).unwrap())
+        .collect();
+    assert!(snapshots.iter().all(|document| document == &snapshots[0]));
+    assert_eq!(
+        serde_json::to_value(load(root.path()).unwrap().unwrap()).unwrap(),
+        snapshots[0]
+    );
+}
+
+#[test]
+fn workbranch_identity_and_evidence_survive_branch_rename_and_rebase() {
+    let root = accepted_branch_repo();
+    git(root.path(), &["checkout", "-b", "before-rename"]).unwrap();
+    initialize_workbranch(root.path(), "master", Some(&branch_context())).unwrap();
+    record_claim(
+        root.path(),
+        "current",
+        "Current proof",
+        "Counterexample",
+        "supported",
+        vec!["proof:current".into()],
+    )
+    .unwrap();
+    checkpoint(root.path(), "current-checkpoint", "Current work", vec![]).unwrap();
+    git(root.path(), &["add", GOVERNANCE_PATH]).unwrap();
+    commit(root.path(), "current branch work");
+    let before = fs::read(root.path().join(GOVERNANCE_PATH)).unwrap();
+    git(root.path(), &["branch", "-m", "after-rename"]).unwrap();
+    initialize_workbranch(root.path(), "master", None).unwrap();
+    assert_eq!(fs::read(root.path().join(GOVERNANCE_PATH)).unwrap(), before);
+    git(root.path(), &["checkout", "master"]).unwrap();
+    fs::write(
+        root.path().join("upstream.rs"),
+        "// independent upstream change\n",
+    )
+    .unwrap();
+    git(root.path(), &["add", "upstream.rs"]).unwrap();
+    commit(root.path(), "advance upstream");
+    git(root.path(), &["checkout", "after-rename"]).unwrap();
+    git(
+        root.path(),
+        &[
+            "-c",
+            "user.name=Governance Tests",
+            "-c",
+            "user.email=test@example.invalid",
+            "rebase",
+            "master",
+        ],
+    )
+    .unwrap();
+    initialize_workbranch(root.path(), "master", Some(&branch_context())).unwrap();
+    assert_eq!(fs::read(root.path().join(GOVERNANCE_PATH)).unwrap(), before);
+}
+
+#[test]
+fn workbranch_protected_refs_do_not_initialize_or_rewrite_governance() {
+    let root = accepted_branch_repo();
+    let path = root.path().join(GOVERNANCE_PATH);
+    let before = fs::read(&path).unwrap();
+    assert!(
+        initialize_workbranch(root.path(), "master", Some(&branch_context()))
+            .unwrap()
+            .is_none()
+    );
+    git(root.path(), &["checkout", "-b", "main"]).unwrap();
+    assert!(
+        initialize_workbranch(root.path(), "master", Some(&branch_context()))
+            .unwrap()
+            .is_none()
+    );
+    git(root.path(), &["checkout", "-b", "release"]).unwrap();
+    for target in [
+        "release",
+        "refs/heads/release",
+        "origin/release",
+        "refs/remotes/origin/release",
+    ] {
+        assert!(
+            initialize_workbranch(root.path(), target, Some(&branch_context()))
+                .unwrap()
+                .is_none()
+        );
+        assert_eq!(fs::read(&path).unwrap(), before);
+    }
+}
+
+#[test]
+fn workbranch_dirty_inherited_journal_fails_closed_even_when_staged() {
+    for staged in [false, true] {
+        let root = accepted_branch_repo();
+        git(root.path(), &["checkout", "-b", "dirty-inherited"]).unwrap();
+        write_section(root.path(), "plan", &plan("Unarchived user edits")).unwrap();
+        if staged {
+            git(root.path(), &["add", GOVERNANCE_PATH]).unwrap();
+        }
+        let before = fs::read(root.path().join(GOVERNANCE_PATH)).unwrap();
+        let error =
+            initialize_workbranch(root.path(), "master", Some(&branch_context())).unwrap_err();
+        assert!(error.to_string().contains("UNARCHIVED_WORK"), "{error}");
+        assert_eq!(fs::read(root.path().join(GOVERNANCE_PATH)).unwrap(), before);
+    }
+}
+
+#[test]
+fn workbranch_malformed_inherited_journal_is_not_repaired_by_reset() {
+    for malformed in [
+        b"not-json".as_slice(),
+        br#"{"schema_version":"99.0.0"}"#.as_slice(),
+    ] {
+        let root = accepted_branch_repo();
+        git(root.path(), &["checkout", "-b", "malformed-inherited"]).unwrap();
+        fs::write(root.path().join(GOVERNANCE_PATH), malformed).unwrap();
+        assert!(initialize_workbranch(root.path(), "master", Some(&branch_context())).is_err());
+        assert_eq!(
+            fs::read(root.path().join(GOVERNANCE_PATH)).unwrap(),
+            malformed
+        );
+    }
+}
+
+#[test]
+fn workbranch_deleted_inherited_journal_fails_closed_without_recreating_it() {
+    let root = accepted_branch_repo();
+    let base_before = fs::read(root.path().join(GOVERNANCE_PATH)).unwrap();
+    git(root.path(), &["checkout", "-b", "deleted-inherited"]).unwrap();
+    let path = root.path().join(GOVERNANCE_PATH);
+    fs::remove_file(&path).unwrap();
+    let status_before = git(root.path(), &["status", "--porcelain=v1"]).unwrap();
+    let error = initialize_workbranch(root.path(), "master", Some(&branch_context())).unwrap_err();
+    assert!(
+        error.to_string().contains("GOVERNANCE_UNARCHIVED_WORK"),
+        "{error}"
+    );
+    assert!(
+        !path.exists(),
+        "a deleted inherited journal must not be silently recreated"
+    );
+    assert_eq!(
+        git(root.path(), &["status", "--porcelain=v1"]).unwrap(),
+        status_before
+    );
+    let base_after = Command::new("git")
+        .current_dir(root.path())
+        .args(["show", &format!("master:{GOVERNANCE_PATH}")])
+        .output()
+        .unwrap();
+    assert!(base_after.status.success());
+    assert_eq!(base_after.stdout, base_before);
+}
+
+#[test]
+fn workbranch_default_replacement_cannot_discard_inherited_obligations() {
+    let root = accepted_branch_repo();
+    let path = root.path().join(GOVERNANCE_PATH);
+    let base_before = fs::read(&path).unwrap();
+    let accepted = parse(&base_before).unwrap();
+    assert!(
+        accepted
+            .baseline
+            .unresolved
+            .contains_key("baseline:existing")
+    );
+    assert!(accepted.claims.contains_key("accepted-open"));
+    git(
+        root.path(),
+        &["checkout", "-b", "empty-inherited-replacement"],
+    )
+    .unwrap();
+    let replacement = br#"{"schema_version":"1.0.0"}"#;
+    assert!(parse(replacement).unwrap().change.is_none());
+    fs::write(&path, replacement).unwrap();
+    let status_before = git(root.path(), &["status", "--porcelain=v1"]).unwrap();
+    let error = initialize_workbranch(root.path(), "master", Some(&branch_context())).unwrap_err();
+    assert!(
+        error.to_string().contains("GOVERNANCE_UNARCHIVED_WORK"),
+        "{error}"
+    );
+    assert_eq!(fs::read(&path).unwrap(), replacement);
+    assert_eq!(
+        git(root.path(), &["status", "--porcelain=v1"]).unwrap(),
+        status_before
+    );
+    let base_after = Command::new("git")
+        .current_dir(root.path())
+        .args(["show", &format!("master:{GOVERNANCE_PATH}")])
+        .output()
+        .unwrap();
+    assert!(base_after.status.success());
+    assert_eq!(base_after.stdout, base_before);
+}
+
+#[test]
+fn workbranch_partial_or_full_legacy_deletion_cannot_discard_accepted_obligations() {
+    for remove_claims in [false, true] {
+        let root = repo();
+        let legacy_plan = ".decapod/governance/plan.json";
+        let legacy_claims = ".decapod/governance/claims.json";
+        let mut accepted_plan = plan("Accepted legacy work");
+        accepted_plan["unknowns"] = json!(["Do not lose this unresolved legacy question"]);
+        let accepted_claims: Value =
+            serde_json::from_str(include_str!("../../../assets/templates/claims.json")).unwrap();
+        let plan_bytes = serde_json::to_vec_pretty(&accepted_plan).unwrap();
+        let claims_bytes = serde_json::to_vec_pretty(&accepted_claims).unwrap();
+        fs::create_dir_all(root.path().join(".decapod/governance")).unwrap();
+        fs::write(root.path().join(legacy_plan), &plan_bytes).unwrap();
+        fs::write(root.path().join(legacy_claims), &claims_bytes).unwrap();
+        let accepted = load(root.path()).unwrap().unwrap();
+        assert_eq!(accepted.legacy_digests.len(), 2);
+        assert_eq!(accepted.legacy_claims.as_ref(), Some(&accepted_claims));
+        git(root.path(), &["add", legacy_plan, legacy_claims]).unwrap();
+        commit(root.path(), "accepted legacy obligations");
+        git(root.path(), &["checkout", "-b", "deleted-legacy-context"]).unwrap();
+        fs::remove_file(root.path().join(legacy_plan)).unwrap();
+        if remove_claims {
+            fs::remove_file(root.path().join(legacy_claims)).unwrap();
+        }
+        let status_before = git(root.path(), &["status", "--porcelain=v1"]).unwrap();
+        let error =
+            initialize_workbranch(root.path(), "master", Some(&branch_context())).unwrap_err();
+        assert!(
+            error.to_string().contains("GOVERNANCE_UNARCHIVED_WORK"),
+            "{error}"
+        );
+        assert!(!root.path().join(GOVERNANCE_PATH).exists());
+        assert!(!root.path().join(legacy_plan).exists());
+        if remove_claims {
+            assert!(!root.path().join(legacy_claims).exists());
+        } else {
+            assert_eq!(
+                fs::read(root.path().join(legacy_claims)).unwrap(),
+                claims_bytes
+            );
+        }
+        assert_eq!(
+            git(root.path(), &["status", "--porcelain=v1"]).unwrap(),
+            status_before
+        );
+        for (relative, expected) in [(legacy_plan, &plan_bytes), (legacy_claims, &claims_bytes)] {
+            let archived = Command::new("git")
+                .current_dir(root.path())
+                .args(["show", &format!("master:{relative}")])
+                .output()
+                .unwrap();
+            assert!(archived.status.success());
+            assert_eq!(&archived.stdout, expected);
+        }
+    }
+}
+
+#[test]
+fn workbranch_uses_preferred_remote_base_when_local_master_is_stale() {
+    let root = accepted_branch_repo();
+    let accepted = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
+    let stale = git(root.path(), &["rev-parse", "HEAD^"]).unwrap();
+    git(
+        root.path(),
+        &["update-ref", "refs/remotes/origin/master", &accepted],
+    )
+    .unwrap();
+    git(
+        root.path(),
+        &["checkout", "-b", "remote-based-work", "origin/master"],
+    )
+    .unwrap();
+    git(root.path(), &["branch", "-f", "master", &stale]).unwrap();
+    let base = crate::core::workspace::base_ref_for_branch(root.path(), "master").unwrap();
+    assert_eq!(base, "origin/master");
+    let next = initialize_workbranch(root.path(), &base, Some(&branch_context()))
+        .unwrap()
+        .unwrap();
+    assert_ne!(next.change.as_ref().unwrap().id, "accepted-change");
+    assert_eq!(next.change.as_ref().unwrap().base_commit, accepted);
+    assert_eq!(next.change.unwrap().target_base, "origin/master");
+    assert!(next.claims.is_empty());
+}
+
+#[test]
+fn workbranch_captures_its_fork_commit_when_target_has_advanced() {
+    let root = accepted_branch_repo();
+    let fork = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
+    git(root.path(), &["branch", "fresh-before-upstream"]).unwrap();
+    fs::write(root.path().join("upstream.rs"), "// upstream\n").unwrap();
+    git(root.path(), &["add", "upstream.rs"]).unwrap();
+    commit(root.path(), "advance target after branch creation");
+    git(root.path(), &["checkout", "fresh-before-upstream"]).unwrap();
+    let next = initialize_workbranch(root.path(), "master", Some(&branch_context()))
+        .unwrap()
+        .unwrap();
+    assert_eq!(next.change.unwrap().base_commit, fork);
+    assert_eq!(
+        next.baseline.accepted_commit.as_deref(),
+        Some(fork.as_str())
+    );
+}
+
+#[test]
+fn workbranch_old_merged_branch_is_not_mistaken_for_a_fresh_boundary() {
+    let root = repo();
+    git(root.path(), &["checkout", "-b", "old-merged-work"]).unwrap();
+    begin_pr(root.path(), "old-merged-change", "master").unwrap();
+    write_section(root.path(), "plan", &plan("Keep the old branch journal")).unwrap();
+    git(root.path(), &["add", GOVERNANCE_PATH]).unwrap();
+    commit(root.path(), "old branch implementation");
+    git(root.path(), &["checkout", "master"]).unwrap();
+    git(root.path(), &["merge", "--ff-only", "old-merged-work"]).unwrap();
+    git(root.path(), &["checkout", "old-merged-work"]).unwrap();
+    let before = fs::read(root.path().join(GOVERNANCE_PATH)).unwrap();
+    let error = initialize_workbranch(root.path(), "master", Some(&branch_context())).unwrap_err();
+    assert!(error.to_string().contains("RESET_REQUIRED"), "{error}");
+    assert_eq!(fs::read(root.path().join(GOVERNANCE_PATH)).unwrap(), before);
+}
+
+#[test]
+fn workbranch_requires_current_task_context_before_discarding_accepted_state() {
+    let root = accepted_branch_repo();
+    git(root.path(), &["checkout", "-b", "missing-task"]).unwrap();
+    let before = fs::read(root.path().join(GOVERNANCE_PATH)).unwrap();
+    let mut missing_title = branch_context();
+    missing_title.title = " ".into();
+    let mut missing_intent = branch_context();
+    missing_intent.intent.clear();
+    let mut missing_todo = branch_context();
+    missing_todo.todo_ids.clear();
+    for context in [
+        None,
+        Some(&missing_title),
+        Some(&missing_intent),
+        Some(&missing_todo),
+    ] {
+        let error = initialize_workbranch(root.path(), "master", context).unwrap_err();
+        assert!(
+            error.to_string().contains("WORK_CONTEXT_REQUIRED"),
+            "{error}"
+        );
+        assert_eq!(fs::read(root.path().join(GOVERNANCE_PATH)).unwrap(), before);
+    }
+}
+
+#[test]
+fn workbranch_two_accepted_cycles_get_distinct_unproven_current_journals() {
+    let root = accepted_branch_repo();
+    let mut previous_id = "accepted-change".to_string();
+    for cycle in 1..=2 {
+        let branch = format!("cycle-{cycle}");
+        git(root.path(), &["checkout", "-b", &branch]).unwrap();
+        let mut context = branch_context();
+        context.title = format!("Task for cycle {cycle}");
+        context.todo_ids = vec![format!("code_cycle_{cycle}")];
+        let next = initialize_workbranch(root.path(), "master", Some(&context))
+            .unwrap()
+            .unwrap();
+        let id = next.change.unwrap().id;
+        assert_ne!(id, previous_id);
+        assert!(next.claims.is_empty());
+        assert!(next.checkpoints.is_empty());
+        assert!(next.baseline.unresolved.contains_key("claim:accepted-open"));
+        assert_eq!(
+            read_section(root.path(), "plan").unwrap().unwrap()["todo_ids"],
+            json!(context.todo_ids)
+        );
+        assert_eq!(
+            read_section(root.path(), "trajectory").unwrap().unwrap()["proof_status"],
+            "no_checks_run"
+        );
+        record_claim(
+            root.path(),
+            "cycle-proof",
+            "This cycle works",
+            "Counterexample",
+            "supported",
+            vec![format!("proof:cycle-{cycle}")],
+        )
+        .unwrap();
+        checkpoint(
+            root.path(),
+            &format!("cycle-{cycle}"),
+            "Current cycle evidence",
+            vec![],
+        )
+        .unwrap();
+        git(root.path(), &["add", GOVERNANCE_PATH]).unwrap();
+        commit(root.path(), &format!("complete cycle {cycle}"));
+        git(root.path(), &["checkout", "master"]).unwrap();
+        git(root.path(), &["merge", "--ff-only", &branch]).unwrap();
+        previous_id = id;
+    }
+}
+
+#[test]
+fn workbranch_explicit_creation_proof_works_without_branch_reflog() {
+    let root = accepted_branch_repo();
+    let created_base = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
+    git(root.path(), &["config", "core.logAllRefUpdates", "false"]).unwrap();
+    git(root.path(), &["checkout", "-b", "without-reflog"]).unwrap();
+    assert!(
+        git(
+            root.path(),
+            &["reflog", "show", "refs/heads/without-reflog"]
+        )
+        .unwrap()
+        .is_empty()
+    );
+    let before = fs::read(root.path().join(GOVERNANCE_PATH)).unwrap();
+    assert!(initialize_workbranch(root.path(), "master", Some(&branch_context())).is_err());
+    assert_eq!(fs::read(root.path().join(GOVERNANCE_PATH)).unwrap(), before);
+    let next = initialize_workbranch_at(
+        root.path(),
+        "master",
+        Some(&branch_context()),
+        Some(&created_base),
+    )
+    .unwrap()
+    .unwrap();
+    assert_ne!(next.change.as_ref().unwrap().id, "accepted-change");
+    assert_eq!(next.change.unwrap().base_commit, created_base);
+}
+
+#[test]
+fn workbranch_active_target_change_is_rejected_without_mutation() {
+    let root = accepted_branch_repo();
+    git(root.path(), &["branch", "release"]).unwrap();
+    git(root.path(), &["checkout", "-b", "current-target-work"]).unwrap();
+    let initialized = initialize_workbranch(root.path(), "master", Some(&branch_context()))
+        .unwrap()
+        .unwrap();
+    let before = fs::read(root.path().join(GOVERNANCE_PATH)).unwrap();
+    let error = initialize_workbranch(root.path(), "release", Some(&branch_context())).unwrap_err();
+    assert!(error.to_string().contains("TARGET_MISMATCH"), "{error}");
+    assert_eq!(fs::read(root.path().join(GOVERNANCE_PATH)).unwrap(), before);
+    let repeated = begin_pr(
+        root.path(),
+        &initialized.change.unwrap().id,
+        "refs/heads/master",
+    )
+    .unwrap();
+    assert_eq!(repeated.change.unwrap().target_base, "master");
+    assert_eq!(fs::read(root.path().join(GOVERNANCE_PATH)).unwrap(), before);
+}
+
+#[test]
+fn workbranch_active_identity_rejects_a_target_behind_its_recorded_base() {
+    let root = accepted_branch_repo();
+    let stale_base = git(root.path(), &["rev-parse", "HEAD^"]).unwrap();
+    git(root.path(), &["checkout", "-b", "current-with-stale-base"]).unwrap();
+    initialize_workbranch(root.path(), "master", Some(&branch_context())).unwrap();
+    record_claim(
+        root.path(),
+        "current",
+        "Keep current work",
+        "Counterexample",
+        "open",
+        vec![],
+    )
+    .unwrap();
+    let before = fs::read(root.path().join(GOVERNANCE_PATH)).unwrap();
+    git(root.path(), &["branch", "-f", "master", &stale_base]).unwrap();
+    let error = initialize_workbranch(root.path(), "master", Some(&branch_context())).unwrap_err();
+    assert!(
+        error.to_string().contains("GOVERNANCE_PR_BASE_MISMATCH"),
+        "{error}"
+    );
+    assert_eq!(fs::read(root.path().join(GOVERNANCE_PATH)).unwrap(), before);
+    assert_eq!(
+        git(root.path(), &["rev-parse", "master"]).unwrap(),
+        stale_base
+    );
+}
+
+#[test]
+fn workbranch_bootstrap_without_current_task_does_not_create_a_journal() {
+    let root = repo();
+    git(root.path(), &["checkout", "-b", "bootstrap-without-task"]).unwrap();
+    let unchanged = initialize_workbranch(root.path(), "master", None)
+        .unwrap()
+        .unwrap();
+    assert!(unchanged.change.is_none());
+    assert!(!root.path().join(GOVERNANCE_PATH).exists());
+    let initialized = initialize_workbranch(root.path(), "master", Some(&branch_context()))
+        .unwrap()
+        .unwrap();
+    assert!(initialized.change.is_some());
+    assert!(initialized.claims.is_empty());
+    assert_eq!(
+        read_section(root.path(), "trajectory").unwrap().unwrap()["proof_status"],
+        "no_checks_run"
+    );
+}
+
+#[test]
+fn workbranch_mount_guard_rejects_only_exact_governance_overmounts() {
+    let root = Path::new("/workspace/project");
+    for (point, blocked) in [
+        ("/workspace/project/.decapod", true),
+        ("/workspace/project/.decapod/governance.json", true),
+        ("/workspace/project/.decapod/data", false),
+        ("/workspace/project/.decapod/data/workunits", false),
+        ("/workspace/project", false),
+        ("/workspace", false),
+        ("/workspace/project/.decapod-other", false),
+        ("/workspace/other/.decapod", false),
+    ] {
+        let mounts = format!("35 25 0:32 / {point} rw,relatime - overlay overlay rw\n");
+        assert_eq!(
+            governance_overmounted(root, &mounts),
+            blocked,
+            "mountpoint {point}"
+        );
+    }
+    assert!(!governance_overmounted(root, "\nmalformed\n"));
+    assert!(governance_overmounted(
+        root,
+        concat!(
+            "35 25 0:32 / /workspace/project rw - overlay overlay rw\n",
+            "36 35 0:33 / /workspace/project/.decapod/data rw - tmpfs tmpfs rw\n",
+            "37 35 0:34 / /workspace/project/.decapod/governance.json rw - ext4 /dev/root rw\n"
+        )
+    ));
+}
+
+#[test]
+fn workbranch_mount_guard_decodes_escaped_spaces_and_tabs() {
+    let root = Path::new("/workspace/project with space\tand-tab");
+    let encoded = "/workspace/project\\040with\\040space\\011and-tab";
+    for (suffix, blocked) in [
+        ("/.decapod", true),
+        ("/.decapod/governance.json", true),
+        ("/.decapod/data", false),
+        ("", false),
+    ] {
+        let mounts = format!("35 25 0:32 / {encoded}{suffix} rw - overlay overlay rw\n");
+        assert_eq!(
+            governance_overmounted(root, &mounts),
+            blocked,
+            "mount suffix {suffix}"
+        );
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn workbranch_host_governance_aliases_fail_closed_before_initialization_or_save() {
+    use std::os::unix::fs::symlink;
+
+    for alias in [
+        "decapod-directory-symlink",
+        "governance-file-symlink",
+        "governance-hardlink",
+    ] {
+        let host = accepted_branch_repo();
+        let host_path = host.path().join(GOVERNANCE_PATH);
+        let host_before = fs::read(&host_path).unwrap();
+        let workspace = host.path().join(".decapod/workspaces/aliased-governance");
+        fs::create_dir_all(workspace.parent().unwrap()).unwrap();
+        git(
+            host.path(),
+            &[
+                "worktree",
+                "add",
+                "-b",
+                "aliased-work",
+                workspace.to_str().unwrap(),
+                "master",
+            ],
+        )
+        .unwrap();
+        let local_path = workspace.join(GOVERNANCE_PATH);
+        match alias {
+            "decapod-directory-symlink" => {
+                fs::remove_dir_all(workspace.join(".decapod")).unwrap();
+                symlink(host.path().join(".decapod"), workspace.join(".decapod")).unwrap();
+            }
+            "governance-file-symlink" => {
+                fs::remove_file(&local_path).unwrap();
+                symlink(&host_path, &local_path).unwrap();
+            }
+            "governance-hardlink" => {
+                fs::remove_file(&local_path).unwrap();
+                fs::hard_link(&host_path, &local_path).unwrap();
+            }
+            _ => unreachable!(),
+        }
+        let error =
+            initialize_workbranch(&workspace, "master", Some(&branch_context())).unwrap_err();
+        assert!(
+            error.to_string().contains("GOVERNANCE_WORKSPACE_ALIAS"),
+            "{alias}: {error}"
+        );
+        assert_eq!(
+            fs::read(&host_path).unwrap(),
+            host_before,
+            "{alias} changed accepted host evidence"
+        );
+        assert_eq!(fs::read(&local_path).unwrap(), host_before);
+        let error =
+            write_section(&workspace, "plan", &plan("Must not overwrite host work")).unwrap_err();
+        assert!(
+            error.to_string().contains("GOVERNANCE_WORKSPACE_ALIAS"),
+            "save {alias}: {error}"
+        );
+        assert_eq!(fs::read(&host_path).unwrap(), host_before);
+        assert_eq!(fs::read(&local_path).unwrap(), host_before);
+        assert_eq!(
+            git(host.path(), &["branch", "--show-current"]).unwrap(),
+            "master"
+        );
     }
 }

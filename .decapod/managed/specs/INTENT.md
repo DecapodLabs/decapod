@@ -340,8 +340,8 @@ policy ban based solely on virtiofs or FUSE filesystem identity.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `76abacad7a2a007655edfdd5e59e517944c2927704c41ce51195889bc75d901c`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (125 files), `tests/` (168 files)
+- Repository signal fingerprint: `9f0aad7af6e6afea8f76637a5a325d188125da973ae0349c49635287c477ebdb`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (7 files), `docs/` (1 files), `src/` (125 files), `tests/` (169 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -389,3 +389,21 @@ State files and runtime configuration have an explicit filesystem permission
 boundary. Publication must establish local proof currency and read back the
 published remote state; a pushed branch, a draft PR, validation success and
 actual external-service/container proof remain separate outcomes.
+
+## Fresh branch governance lifecycle
+
+Beginning the next work branch must replace the inherited accepted journal with
+a fresh versioned template describing the current claimed task. Main/master
+retains its accepted document. Repeated invocations and branch renames or
+rebases preserve the current workstream; they are not new intent boundaries.
+Durable policy and unresolved obligations carry forward. Historical claims and
+proof remain in Git, and publication still requires genuine current validation.
+
+## Build and test cleanup
+
+Build/test runs own their temporary files and clean that invocation's scratch
+on success, failure, and handled interruption. Bazel disposes its action-owned
+sandboxes synchronously; the Rust lifecycle supervisor bounds child shutdown
+and refuses to remove replaced or unconfirmed-live scratch. Cargo incremental
+state is opt-in. Shared dependency caches, other runs, sources, and proof logs
+remain outside cleanup authority. Cleanup belongs in local build/test tooling.

@@ -206,7 +206,8 @@ fn worktree_creation_starts_from_resolved_base_branch() {
     git(tmp.path(), &["commit", "-am", "unrelated"]);
 
     let worktree = create_worktree(tmp.path(), "agent/test-base", "agent", "scope", "main")
-        .expect("worktree should be created from base");
+        .expect("worktree should be created from base")
+        .0;
     let head = Command::new("git")
         .args(["-C", worktree.to_str().unwrap(), "rev-parse", "HEAD"])
         .output()
@@ -840,8 +841,12 @@ fn dirty_root_isolation_preserves_files_and_uses_only_committed_base() {
         serde_json::to_value(&inventory).unwrap(),
         serde_json::to_value(root_isolation(root).unwrap()).unwrap()
     );
-    let workspace = create_worktree(root, "agent/isolated-one", "test", "one", "master").unwrap();
-    let second = create_worktree(root, "agent/isolated-two", "test", "two", "master").unwrap();
+    let workspace = create_worktree(root, "agent/isolated-one", "test", "one", "master")
+        .unwrap()
+        .0;
+    let second = create_worktree(root, "agent/isolated-two", "test", "two", "master")
+        .unwrap()
+        .0;
     assert_ne!(workspace, second);
     for path in [workspace, second] {
         assert_eq!(

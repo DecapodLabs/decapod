@@ -704,7 +704,10 @@ pub fn with_lock<T>(
     f: impl FnOnce() -> Result<T, DecapodError>,
 ) -> Result<T, DecapodError> {
     let root = root.canonicalize().map_err(DecapodError::IoError)?;
-    let path = root.join(".decapod/data/governance-document.lock");
+    require_branch_local_governance(&root)?;
+    // This document is branch-local even when data/ is mounted from the host.
+    // Keep its advisory lock on the same workspace volume in both namespaces.
+    let path = root.join(".decapod/managed/governance-document.lock");
     if HELD.with(|held| held.borrow().contains(&path)) {
         return f();
     }
@@ -743,7 +746,62 @@ pub fn with_lock<T>(
     f()
 }
 
+#[cfg(any(target_os = "linux", test))]
+fn governance_overmounted(root: &Path, mountinfo: &str) -> bool {
+    mountinfo
+        .lines()
+        .filter_map(|line| line.split_whitespace().nth(4))
+        .any(|point| {
+            let point = point
+                .replace("\\040", " ")
+                .replace("\\011", "\t")
+                .replace("\\012", "\n")
+                .replace("\\134", "\\");
+            let point = Path::new(&point);
+            point == root.join(".decapod") || point == root.join(GOVERNANCE_PATH)
+        })
+}
+
+/// Tracked governance must be private to the work branch. Sharing data/ is
+/// intentional; an older whole-.decapod bind mount aliases accepted host state.
+fn require_branch_local_governance(root: &Path) -> Result<(), DecapodError> {
+    let root = root.canonicalize().map_err(DecapodError::IoError)?;
+    let aliased = || {
+        invalid(
+            "GOVERNANCE_WORKSPACE_ALIAS: tracked governance is shared or overmounted; recreate the workspace with branch-local governance and supported shared runtime mounts. Existing evidence was preserved",
+        )
+    };
+    for path in [root.join(".decapod"), root.join(GOVERNANCE_PATH)] {
+        if fs::symlink_metadata(path).is_ok_and(|metadata| metadata.file_type().is_symlink()) {
+            return Err(aliased());
+        }
+    }
+    #[cfg(target_os = "linux")]
+    if governance_overmounted(
+        &root,
+        &fs::read_to_string("/proc/self/mountinfo").map_err(DecapodError::IoError)?,
+    ) {
+        return Err(aliased());
+    }
+    #[cfg(unix)]
+    if let Some(host) = crate::core::workspace::host_repo_from_canonical_workspace(&root) {
+        use std::os::unix::fs::MetadataExt;
+        for relative in [".decapod", GOVERNANCE_PATH] {
+            if let (Ok(local), Ok(accepted)) = (
+                fs::metadata(root.join(relative)),
+                fs::metadata(host.join(relative)),
+            ) && local.dev() == accepted.dev()
+                && local.ino() == accepted.ino()
+            {
+                return Err(aliased());
+            }
+        }
+    }
+    Ok(())
+}
+
 fn save(root: &Path, document: &GovernanceDocument) -> Result<(), DecapodError> {
+    require_branch_local_governance(root)?;
     validate_document(document)?;
     check_legacy_conflicts(root, document)?;
     crate::core::workunit::validate_legacy_workunits(root)?;
@@ -857,6 +915,26 @@ fn imported_from_git(
     root: &Path,
     document: &GovernanceDocument,
 ) -> Result<GovernanceDocument, DecapodError> {
+    let committed_paths = git(
+        root,
+        &[
+            "ls-tree",
+            "-r",
+            "--name-only",
+            "HEAD",
+            "--",
+            ".decapod/governance",
+        ],
+    )?;
+    if committed_paths
+        .lines()
+        .filter(|path| recognized_legacy_path(path))
+        .any(|path| !document.legacy_digests.contains_key(path))
+    {
+        return Err(invalid(
+            "GOVERNANCE_UNARCHIVED_WORK: inherited legacy evidence is missing; restore it before starting a compact new PR",
+        ));
+    }
     let mut imported = GovernanceDocument::default();
     for (path, expected) in &document.legacy_digests {
         if !recognized_legacy_path(path) {
@@ -892,24 +970,32 @@ fn imported_from_git(
 }
 
 fn recoverable_in_git(root: &Path, document: &GovernanceDocument) -> Result<(), DecapodError> {
-    if serde_json::to_value(document).map_err(|e| invalid(e.to_string()))?
-        == serde_json::to_value(GovernanceDocument::default())
-            .map_err(|e| invalid(e.to_string()))?
-    {
-        return Ok(());
-    }
-    let archived = if root.join(GOVERNANCE_PATH).exists() {
-        match git(root, &["show", &format!("HEAD:{GOVERNANCE_PATH}")]) {
-            Ok(content) => parse(content.as_bytes())?,
-            Err(_) if !document.legacy_digests.is_empty() => imported_from_git(root, document)?,
-            Err(_) => {
-                return Err(invalid(
-                    "GOVERNANCE_UNARCHIVED_WORK: no committed source can preserve the current document",
-                ));
+    let archived = match git(root, &["show", &format!("HEAD:{GOVERNANCE_PATH}")]) {
+        Ok(content) => parse(content.as_bytes())?,
+        Err(_) if !document.legacy_digests.is_empty() => imported_from_git(root, document)?,
+        Err(_) => {
+            let is_empty = serde_json::to_value(document).map_err(|e| invalid(e.to_string()))?
+                == serde_json::to_value(GovernanceDocument::default())
+                    .map_err(|e| invalid(e.to_string()))?;
+            let inherited_legacy = git(
+                root,
+                &[
+                    "ls-tree",
+                    "-r",
+                    "--name-only",
+                    "HEAD",
+                    "--",
+                    ".decapod/governance",
+                ],
+            )
+            .is_ok_and(|paths| paths.lines().any(recognized_legacy_path));
+            if is_empty && !inherited_legacy {
+                return Ok(());
             }
+            return Err(invalid(
+                "GOVERNANCE_UNARCHIVED_WORK: no committed source can preserve the complete current document",
+            ));
         }
-    } else {
-        imported_from_git(root, document)?
     };
     if digest(&serde_json::to_value(archived).map_err(|e| invalid(e.to_string()))?)?
         != digest(&serde_json::to_value(document).map_err(|e| invalid(e.to_string()))?)?
@@ -921,10 +1007,154 @@ fn recoverable_in_git(root: &Path, document: &GovernanceDocument) -> Result<(), 
     Ok(())
 }
 
+/// Captured current task context, never inferred from the inherited PR journal.
+pub struct BranchWorkContext {
+    pub title: String,
+    pub intent: String,
+    pub todo_ids: Vec<String>,
+    pub scope: Vec<String>,
+}
+
+/// Initialize only a proven fresh branch from its accepted base. An active
+/// change ID is durable across invocations, branch renames, and rebases.
+/// Callers must enforce normal session and isolated-workspace mutation gates.
+pub fn initialize_workbranch(
+    root: &Path,
+    base_ref: &str,
+    context: Option<&BranchWorkContext>,
+) -> Result<Option<GovernanceDocument>, DecapodError> {
+    initialize_workbranch_at(root, base_ref, context, None)
+}
+
+pub(crate) fn initialize_workbranch_at(
+    root: &Path,
+    base_ref: &str,
+    context: Option<&BranchWorkContext>,
+    created_base: Option<&str>,
+) -> Result<Option<GovernanceDocument>, DecapodError> {
+    let branch = git(root, &["symbolic-ref", "--quiet", "--short", "HEAD"])?;
+    let target = normalized_base_label(base_ref);
+    if matches!(branch.as_str(), "main" | "master") || branch == target {
+        return Ok(None);
+    }
+    require_branch_local_governance(root)?;
+    with_lock(root, || {
+        let loaded = load(root)?;
+        let previous = loaded.clone().unwrap_or_default();
+        let head = git(root, &["rev-parse", "HEAD"])?;
+        let base = git(
+            root,
+            &[
+                "rev-parse",
+                "--verify",
+                &format!("{}^{{commit}}", created_base.unwrap_or(base_ref)),
+            ],
+        )?;
+        let accepted = git(root, &["show", &format!("{base}:{GOVERNANCE_PATH}")])
+            .ok()
+            .map(|text| parse(text.as_bytes()))
+            .transpose()?;
+        let reflog = git(
+            root,
+            &[
+                "reflog",
+                "show",
+                "--format=%H %gs",
+                &format!("refs/heads/{branch}"),
+            ],
+        )?;
+        let created_at_head = created_base.map_or_else(
+            || {
+                reflog.lines().last().is_some_and(|entry| {
+                    entry.starts_with(&format!("{head} branch: Created from "))
+                })
+            },
+            |created| created == head,
+        );
+        let starts_at_base = created_at_head
+            && Command::new("git")
+                .args(["merge-base", "--is-ancestor", &head, &base])
+                .current_dir(root)
+                .status()
+                .map_err(DecapodError::IoError)?
+                .success();
+        let inherited = if starts_at_base {
+            git(root, &["show", &format!("{head}:{GOVERNANCE_PATH}")])
+                .ok()
+                .map(|text| parse(text.as_bytes()))
+                .transpose()?
+        } else {
+            accepted
+        };
+        if starts_at_base && loaded.is_none() && inherited.is_some() {
+            return Err(invalid(
+                "GOVERNANCE_UNARCHIVED_WORK: inherited governance is missing from this worktree; restore the accepted document before initialization",
+            ));
+        }
+        if let Some(change) = &previous.change {
+            if inherited
+                .as_ref()
+                .and_then(|doc| doc.change.as_ref())
+                .map(|c| &c.id)
+                != Some(&change.id)
+            {
+                if normalized_base_label(&change.target_base) != target {
+                    return Err(invalid(
+                        "GOVERNANCE_PR_TARGET_MISMATCH: active workstream target changed; existing journal was preserved",
+                    ));
+                }
+                verify_base_binding(root, &previous, &base, &head, Some(target))?;
+                return Ok(Some(previous));
+            }
+        } else if !starts_at_base {
+            // Bootstrap repositories and existing explicit workflows keep their
+            // current document until an actual branch-start boundary is known.
+            return Ok(Some(previous));
+        }
+        if !starts_at_base {
+            return Err(invalid(
+                "GOVERNANCE_PR_RESET_REQUIRED: inherited accepted context is not a fresh branch boundary; create a new workspace from the target base or explicitly begin a PR. Existing work was preserved",
+            ));
+        }
+        if previous.change.is_none() && context.is_none() {
+            return Ok(Some(previous));
+        }
+        let context = context.ok_or_else(|| invalid(
+            "GOVERNANCE_WORK_CONTEXT_REQUIRED: claim the current task, then rerun workspace ensure or agent.init; inherited governance was preserved"
+        ))?;
+        if context.title.trim().is_empty()
+            || context.intent.trim().is_empty()
+            || context.todo_ids.is_empty()
+        {
+            return Err(invalid(
+                "GOVERNANCE_WORK_CONTEXT_REQUIRED: current task title, intent, and identity are required",
+            ));
+        }
+        begin_pr_from_context(
+            root,
+            &format!("change_{}", crate::core::ulid::new_ulid()),
+            base_ref,
+            Some(&head),
+            Some(context),
+        )
+        .map(Some)
+    })
+}
+
 pub fn begin_pr(
     root: &Path,
     change_id: &str,
     base_ref: &str,
+) -> Result<GovernanceDocument, DecapodError> {
+    begin_pr_from_context(root, change_id, base_ref, None, None)
+}
+
+fn begin_pr_from_context(
+    root: &Path,
+    change_id: &str,
+    base_ref: &str,
+    captured_base: Option<&str>,
+    context: Option<&BranchWorkContext>,
 ) -> Result<GovernanceDocument, DecapodError> {
     if change_id.trim().is_empty() {
         return Err(invalid("A stable PR change ID is required"));
@@ -934,19 +1164,21 @@ pub fn begin_pr(
         if let Some(change) = &previous.change
             && change.id == change_id
         {
-            if change.target_base != base_ref {
+            if normalized_base_label(&change.target_base) != normalized_base_label(base_ref) {
                 return Err(invalid(
                     "GOVERNANCE_PR_IDENTITY_CONFLICT: the same PR ID cannot silently change its target base",
                 ));
             }
             return Ok(previous);
         }
-        if root.join(GOVERNANCE_PATH).exists() || !previous.legacy_digests.is_empty() {
-            recoverable_in_git(root, &previous)?;
-        }
+        recoverable_in_git(root, &previous)?;
         let base_commit = git(
             root,
-            &["rev-parse", "--verify", &format!("{base_ref}^{{commit}}")],
+            &[
+                "rev-parse",
+                "--verify",
+                &format!("{}^{{commit}}", captured_base.unwrap_or(base_ref)),
+            ],
         )?;
         if let Some(old_change) = &previous.change {
             let accepted_text = git(root, &["show", &format!("{base_commit}:{GOVERNANCE_PATH}")])
@@ -965,7 +1197,7 @@ pub fn begin_pr(
                     "GOVERNANCE_PR_NOT_ACCEPTED: merge/accept the previous record into its target base before starting a compact new PR",
                 ));
             }
-            if old_change.target_base != base_ref {
+            if normalized_base_label(&old_change.target_base) != normalized_base_label(base_ref) {
                 return Err(invalid(
                     "GOVERNANCE_PR_TARGET_CHANGED: start from the accepted target, do not relabel unrelated base history",
                 ));
@@ -1066,6 +1298,37 @@ pub fn begin_pr(
             epochs: previous.epochs,
             ..Default::default()
         };
+        if let Some(context) = context {
+            let template = parse(include_bytes!("../../../assets/templates/governance.json"))?;
+            let mut plan = get_section(&template, "plan")?
+                .ok_or_else(|| invalid("Branch template requires a draft plan"))?;
+            plan["title"] = json!(context.title);
+            plan["intent"] = json!(context.intent);
+            plan["todo_ids"] = json!(context.todo_ids);
+            plan["updated_at"] = json!(crate::core::time::now_epoch_z());
+            set_section(&mut document, "plan", plan)?;
+            let trajectory = crate::core::trajectory::fresh_trajectory(
+                root,
+                crate::core::trajectory::TrajectoryInit {
+                    run_id: format!("branch_{}", crate::core::ulid::new_ulid()),
+                    task_id: (context.todo_ids.len() == 1).then(|| context.todo_ids[0].clone()),
+                    intent_id: Some(format!("intent:{change_id}")),
+                    original_intent: context.intent.clone(),
+                    derived_intent: context.intent.clone(),
+                    active_boundaries: vec!["Current claimed task and isolated work branch".into()],
+                    repo_scope: context.scope.clone(),
+                    destination: Some("pull request".into()),
+                    current_phase: Some("intent".into()),
+                    next_transitions: vec!["Refine plan and declare falsifiable checks".into()],
+                    blockers: vec![],
+                },
+            )?;
+            set_section(
+                &mut document,
+                "trajectory",
+                serde_json::to_value(trajectory).map_err(|e| invalid(e.to_string()))?,
+            )?;
+        }
         prune_epochs(&mut document)?;
         save(root, &document)?;
         Ok(document)

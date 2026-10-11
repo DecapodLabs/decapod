@@ -4,6 +4,11 @@
 [env]
 CLIPPY_CONF_DIR = { value = ".config", relative = true }
 
+[alias]
+# Cargo itself releases its build lock before running the lifecycle supervisor.
+build-main = "run --quiet --features build-tools --bin decapod-build -- --scratch-parent target -- cargo build"
+test-main = "run --quiet --features build-tools --bin decapod-build -- --scratch-parent target -- cargo test"
+
 # Use LLD linker for 2-3x faster linking (requires: apt-get install lld)
 # [target.x86_64-unknown-linux-gnu]
 # linker = "clang"
@@ -48,15 +53,16 @@ lto = "thin"
 codegen-units = 16
 panic = "abort"
 strip = true
-incremental = true        # Enable incremental for cached rebuilds
+incremental = false       # Opt in explicitly with CARGO_INCREMENTAL=1
 
 # Dev profile: optimize for fast compilation
 [profile.dev]
 opt-level = 0         # No optimization
 debug = true
-incremental = true    # Incremental compilation for dev builds
+incremental = false  # Avoid unbounded per-worktree incremental scratch
 
 # Test profile: balance between speed and debuggability
 [profile.test]
 opt-level = 1         # Light optimization
 debug = true
+incremental = false  # Compiled dependencies still remain cached
