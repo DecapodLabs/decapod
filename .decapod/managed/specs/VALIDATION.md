@@ -26,6 +26,14 @@ shared state. The packaged policy artifact must reproduce the unsafe-fixture
 failure without that boundary and pass with it; changing existing permissions
 or suppressing the storage check cannot satisfy this proof.
 
+Git fixture tests poison inherited provider configuration and prove that only
+the offline test child ignores global/system and inherited command settings;
+existing configuration files and the parent environment remain unchanged.
+SQLite recovery fixtures must reject unsuitable scratch candidates and execute
+the complete recovery proof on a checked, owned same-device candidate. Overlay
+filesystems may expose different directory/file device IDs; recognizing that
+fixture limitation must not disable the dependency's production safety guard.
+
 Musl publication regressions retain x86_64 native execution and aarch64 binary
 execution through QEMU user-mode on a supported Linux runner. The ARM lane pins
 both the official Cross source revision and its matching compiler/runtime image
@@ -486,7 +494,7 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `effbdd4550ebc44bd220f16bb843ec11e7ba83ed5831694ab3d2ee200007dde7`
+- Repository signal fingerprint: `ab9a11ea42af3b5496a92844b43b1fb208608acd04fed342b0a1168f3c94af27`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (11 files), `docs/` (1 files), `src/` (125 files), `tests/` (173 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

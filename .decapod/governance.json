@@ -128,6 +128,14 @@
       "proof_refs": [
         "decapod validate on clean remote c6791c01b3c1da68a1237ba2ef1ce3b147a36f5d, default gates, status ok"
       ]
+    },
+    {
+      "id": "buildkite-offline-fixture-boundaries",
+      "summary": "Isolate inherited Git settings and require compatible owned recovery fixture storage",
+      "input_digest": "sha256:2464094bb1b674e5e528990a47caf772a24210c3b588d131d9b0a5b15b913bd7",
+      "proof_refs": [
+        "Fresh Bazel72 policy tests; exact supabase library recovery6 and Git4 tests; Clippy/fmt; no production guard or service changes"
+      ]
     }
   ],
   "intents": {
@@ -217,22 +225,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Follow-up confines private creation umask to three disposable CI test commands; the previously reviewed architecture, external interfaces and unchanged shared storage guard remain accurate.",
-          "reviewed_code_fingerprint": "effbdd4550ebc44bd220f16bb843ec11e7ba83ed5831694ab3d2ee200007dde7",
+          "reason": "Follow-up isolates only offline test child Git configuration and two disposable recovery fixtures; production interfaces, shared storage rules and recovery guard stay unchanged. Operations and validation prose describe the capability probes.",
+          "reviewed_code_fingerprint": "ab9a11ea42af3b5496a92844b43b1fb208608acd04fed342b0a1168f3c94af27",
           "spec_material_hash": "067286adac676ae65f24b3d75d16bf74bf55ced059a54e91d906164764cb66ef"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Follow-up confines private creation umask to three disposable CI test commands; the previously reviewed architecture, external interfaces and unchanged shared storage guard remain accurate.",
-          "reviewed_code_fingerprint": "effbdd4550ebc44bd220f16bb843ec11e7ba83ed5831694ab3d2ee200007dde7",
+          "reason": "Follow-up isolates only offline test child Git configuration and two disposable recovery fixtures; production interfaces, shared storage rules and recovery guard stay unchanged. Operations and validation prose describe the capability probes.",
+          "reviewed_code_fingerprint": "ab9a11ea42af3b5496a92844b43b1fb208608acd04fed342b0a1168f3c94af27",
           "spec_material_hash": "dbc2c41ea2a503adf4a311d62ee14b4e317615f0b6d7934047037da95a6255cd"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Follow-up confines private creation umask to three disposable CI test commands; the previously reviewed architecture, external interfaces and unchanged shared storage guard remain accurate.",
-          "reviewed_code_fingerprint": "effbdd4550ebc44bd220f16bb843ec11e7ba83ed5831694ab3d2ee200007dde7",
+          "reason": "Follow-up isolates only offline test child Git configuration and two disposable recovery fixtures; production interfaces, shared storage rules and recovery guard stay unchanged. Operations and validation prose describe the capability probes.",
+          "reviewed_code_fingerprint": "ab9a11ea42af3b5496a92844b43b1fb208608acd04fed342b0a1168f3c94af27",
           "spec_material_hash": "104f8c7ff33a76536830670971641ef8ef8aa86ce7f9390ec234291c81ed3b82"
         }
       ],
@@ -246,14 +254,19 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791752489Z"
+      "updated_at": "1791754010Z"
     },
     "trajectory": {
       "active_boundaries": [
+        "Test-only Git environment and recovery scratch probes, no global config, mounts, storage permission guard, Dactyl source, dependency version or production semantics changes.",
         "Three CI run commands and executable policy regressions; no release/deploy action, security grant, existing shared modes, or runtime policy change"
       ],
-      "artifact_hash": "sha256:0d5430274ccd064ab8774b8a4f48cef7e7561422b436cc37f2a857f95680ed63",
+      "artifact_hash": "sha256:59e648b4c282062b84d7883120976c5cfd6a8cdf514c926e97301d9af5e6e388",
       "checks": [
+        {
+          "name": "actual-buildkite-filesystem-kind",
+          "status": "unavailable"
+        },
         {
           "name": "actual-local-arm",
           "status": "unavailable"
@@ -261,6 +274,14 @@
         {
           "name": "actual-local-docker",
           "status": "unavailable"
+        },
+        {
+          "name": "buildkite-848-offline-consumer",
+          "status": "failed"
+        },
+        {
+          "name": "buildkite-848-other-checks",
+          "status": "passed"
         },
         {
           "name": "cargo-five-policies",
@@ -271,11 +292,27 @@
           "status": "passed"
         },
         {
+          "name": "exact-git-fixture-regressions",
+          "status": "passed"
+        },
+        {
           "name": "focused-clippy",
           "status": "passed"
         },
         {
           "name": "fresh-bazel-six-policies",
+          "status": "passed"
+        },
+        {
+          "name": "fresh-policy-bazel",
+          "status": "passed"
+        },
+        {
+          "name": "git-configuration-regression",
+          "status": "passed"
+        },
+        {
+          "name": "github-5030b9ef-full-ci",
           "status": "passed"
         },
         {
@@ -291,12 +328,24 @@
           "status": "passed"
         },
         {
+          "name": "recovery-permission-regressions",
+          "status": "passed"
+        },
+        {
           "name": "rustfmt",
           "status": "passed"
         },
         {
           "name": "static-provider-admission",
           "status": "partial"
+        },
+        {
+          "name": "supabase-lib-tests-clippy",
+          "status": "passed"
+        },
+        {
+          "name": "workflow-permission-preservation",
+          "status": "passed"
         }
       ],
       "current_phase": "validation",
@@ -327,10 +376,31 @@
             "intent_id": "intent:buildkite-private-fixtures-20261011",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:buildkite-private-fixtures-20261011",
+            "event_id": "event:6",
+            "intent_id": "intent:buildkite-private-fixtures-20261011",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
+          },
+          {
+            "detail": "trajectory:buildkite-private-fixtures-20261011",
+            "event_id": "event:7",
+            "intent_id": "intent:buildkite-private-fixtures-20261011",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
+          },
+          {
+            "detail": "trajectory:buildkite-private-fixtures-20261011",
+            "event_id": "event:8",
+            "intent_id": "intent:buildkite-private-fixtures-20261011",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "buildkite-private-fixtures-20261011": {
@@ -386,6 +456,67 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:6",
+                "observations": [
+                  ".github/workflows/ci.yml",
+                  "tests/ci_checkout_policy.rs",
+                  "tests/unit/core/fs_permissions_tests.rs",
+                  ".decapod/managed/specs/OPERATIONS.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "GitHub5030b9ef full CI passed; Buildkite848 has53 successful checks and only offline-consumer failure. Policies, aggregate and actualDocker repaired and green. Offline library624 passed,5 failed,1 preexisting ignored Docker test executed in separate job.",
+                  "Three SSH fixture URLs are rewritten to HTTPS by inherited provider Git config. Two Dactyl recovery errors report source/parent dev mismatch; OverlayFS hypothesis is supported by kernel docs but actual runner filesystem confirmation is pending focused diagnostics."
+                ],
+                "proof_refs": [
+                  "github-5030b9ef-full-ci",
+                  "buildkite-848-other-checks",
+                  "buildkite-848-offline-consumer",
+                  "git-configuration-regression"
+                ],
+                "scope": [
+                  ".github/workflows/ci.yml, tests/ci_checkout_policy.rs and authored specification/proof updates"
+                ],
+                "sequence": 6,
+                "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Final source9c452911dba3a87828e41aaa1940c74aab88f86a60b36b51a10f6cede3896c57: cargo test --locked --features supabase-cloud --lib core::fs_permissions passes6,0 ignored, including both actual recovery flows and fixture guards. Local selected filesystem tmpfs device55; mixed-device branch awaits Buildkite.",
+                  "Same final supabase-cloud libtest: resolve_publish_remote3/3 and exact container inherited-remote1/1 pass with actual offline CI Git isolation. Checkout policy8/8 tests five independent poisoned inherited Git-config sources, outer environment and config files unchanged. Fresh Bazel six policy targets72 tests pass.",
+                  "User-linked check114576291548 is exactly Buildkite848 offline supabase-consumer at5030b9ef. Errors are SQLite local recovery and Git fixtures; no missing Supabase/PostgreSQL service, no new service provisioning needed."
+                ],
+                "proof_refs": [
+                  "recovery-permission-regressions",
+                  "exact-git-fixture-regressions",
+                  "fresh-policy-bazel",
+                  "actual-buildkite-filesystem-kind"
+                ],
+                "scope": [
+                  ".github/workflows/ci.yml, tests/ci_checkout_policy.rs and authored specification/proof updates"
+                ],
+                "sequence": 7,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "Clippy --features supabase-cloud --lib --tests with -D warnings passes; rustfmt and whitespace pass. Semantic workflow comparison changes only offline consumer step commands; all permission maps and protected manual job remain identical."
+                ],
+                "proof_refs": [
+                  "supabase-lib-tests-clippy",
+                  "rustfmt",
+                  "workflow-permission-preservation"
+                ],
+                "scope": [
+                  ".github/workflows/ci.yml, tests/ci_checkout_policy.rs and authored specification/proof updates"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -396,8 +527,14 @@
       ],
       "destination": "PR1394 exact-head proof",
       "evidence": [
+        "Clippy --features supabase-cloud --lib --tests with -D warnings passes; rustfmt and whitespace pass. Semantic workflow comparison changes only offline consumer step commands; all permission maps and protected manual job remain identical.",
+        "Final source9c452911dba3a87828e41aaa1940c74aab88f86a60b36b51a10f6cede3896c57: cargo test --locked --features supabase-cloud --lib core::fs_permissions passes6,0 ignored, including both actual recovery flows and fixture guards. Local selected filesystem tmpfs device55; mixed-device branch awaits Buildkite.",
         "Fresh Bazel all six policies71 tests pass; five Cargo policies61 pass; seven private-creation tests preserve existing shared fixture modes and parent mask. Identical full artifact fails projection tests under000 and passes68 under077. Only three run bodies change; permission map and protected live job remain identical.",
+        "GitHub5030b9ef full CI passed; Buildkite848 has53 successful checks and only offline-consumer failure. Policies, aggregate and actualDocker repaired and green. Offline library624 passed,5 failed,1 preexisting ignored Docker test executed in separate job.",
         "Prior PRhead0dba235 GitHub full CI green including ARM4/native4/Docker1. Buildkite841 has exactly three unsafe fresh-fixture failures plus dependent integration aggregate; all50 other checks passed. Offline importer admits repaired jobs but protected environments need live Agent API.",
+        "Same final supabase-cloud libtest: resolve_publish_remote3/3 and exact container inherited-remote1/1 pass with actual offline CI Git isolation. Checkout policy8/8 tests five independent poisoned inherited Git-config sources, outer environment and config files unchanged. Fresh Bazel six policy targets72 tests pass.",
+        "Three SSH fixture URLs are rewritten to HTTPS by inherited provider Git config. Two Dactyl recovery errors report source/parent dev mismatch; OverlayFS hypothesis is supported by kernel docs but actual runner filesystem confirmation is pending focused diagnostics.",
+        "User-linked check114576291548 is exactly Buildkite848 offline supabase-consumer at5030b9ef. Errors are SQLite local recovery and Git fixtures; no missing Supabase/PostgreSQL service, no new service provisioning needed.",
         "Validator rejected prior trajectory epoch after supported expired lease reclaim. This new task-bound trajectory follows STALE_VALIDATION_EVIDENCE remediation; old proof remains in committed ancestor3f62aeee. Initial local parallel sharding call-log failure passed unchanged serial/default/four-thread reruns and fresh Bazel.",
         "validation epoch ve_87bd4e51f77b280b completed with zero failures"
       ],
@@ -410,10 +547,12 @@
         ".decapod/managed/specs/OPERATIONS.md",
         ".decapod/managed/specs/VALIDATION.md",
         ".github/workflows/ci.yml",
-        "tests/ci_checkout_policy.rs"
+        "tests/ci_checkout_policy.rs",
+        "tests/unit/core/fs_permissions_tests.rs"
       ],
       "next_transitions": [
-        "publish"
+        "publish",
+        "validation"
       ],
       "repo_scope": [
         ".github/workflows/ci.yml, tests/ci_checkout_policy.rs and authored specification/proof updates"

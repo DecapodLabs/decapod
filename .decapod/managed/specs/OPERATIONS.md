@@ -19,6 +19,19 @@ trusted-group policy, and contributor build-supervisor defaults stay unchanged.
 Storage rejection remains a real test failure rather than a reason to relax a
 guard or retry against shared user state.
 
+Offline consumer fixtures also isolate process-inherited Git configuration.
+Provider URL rewrites and command-scope settings must not reinterpret a fixture's
+explicit remote; repository-local fixture configuration remains authoritative.
+Only the test command receives that isolation. Checkout transport and all other
+steps retain their normal provider configuration.
+
+The two SQLite recovery permission fixtures require storage compatible with the
+published dependency's same-device guard. Probe disposable entries under the
+normal temporary root first, then a pre-existing compatible scratch filesystem
+with bounded capacity checks. Never mount a filesystem or relax recovery safety.
+If no candidate is suitable the tests fail with diagnostics; they never count
+recovery as passed without executing the original archive and mode assertions.
+
 Release planning exports only bounded scheduling decisions between jobs while
 retaining the complete cargo-dist manifest as an artifact. A failed plan cannot
 authorize the host/publish stage. Existing release ownership, provider-specific
@@ -397,7 +410,7 @@ continue to be surfaced through the existing storage checks.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `effbdd4550ebc44bd220f16bb843ec11e7ba83ed5831694ab3d2ee200007dde7`
+- Repository signal fingerprint: `ab9a11ea42af3b5496a92844b43b1fb208608acd04fed342b0a1168f3c94af27`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (11 files), `docs/` (1 files), `src/` (125 files), `tests/` (173 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

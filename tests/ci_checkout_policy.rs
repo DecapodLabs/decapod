@@ -244,9 +244,14 @@ fn test_step_preamble(job: &str, step: &str, command: &str) -> String {
 #[test]
 fn only_fresh_ci_test_processes_set_private_creation_permissions() {
     for (job, step, command) in PRIVATE_TEST_STEPS {
+        let expected = if job == "supabase-consumer" {
+            "set -euo pipefail\numask 077\nunset GIT_CONFIG GIT_CONFIG_PARAMETERS\nexport GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_COUNT=0"
+        } else {
+            "set -euo pipefail\numask 077"
+        };
         assert_eq!(
             test_step_preamble(job, step, command),
-            "set -euo pipefail\numask 077",
+            expected,
             "{job} must set creation permissions before spawning test processes"
         );
     }
@@ -254,6 +259,111 @@ fn only_fresh_ci_test_processes_set_private_creation_permissions() {
     // opt-out, a global workflow default, or changes to existing installations.
     assert!(!CI.contains("DECAPOD_STORAGE_SHARED_GROUP"));
     assert!(!CI.contains("\ndefaults:\n"));
+}
+
+#[test]
+fn offline_git_fixture_isolation_preserves_local_config_and_provider_settings() {
+    let fixture = Fixture::new();
+    let root = &fixture.0;
+    git(root, &["init", "-q"]);
+    git(root, &["config", "--local", "user.name", "Fixture owner"]);
+    let authored = "git@github.com:DecapodLabs/decapod.git";
+    git(root, &["remote", "add", "origin", authored]);
+    let provider_config = root.join("provider-gitconfig");
+    let provider_body = "[url \"https://provider.invalid/\"]\n\tinsteadOf = git@github.com:\n[user]\n\tname = Provider owner\n";
+    fs::write(&provider_config, provider_body).unwrap();
+    let local_before = fs::read(root.join(".git/config")).unwrap();
+    let (job, step, cargo) = PRIVATE_TEST_STEPS[0];
+    let preamble = test_step_preamble(job, step, cargo);
+    // Each inherited source can independently poison fixtures. No process-wide
+    // environment mutations or real user/provider configuration are needed.
+    for layer in ["global", "system", "count", "parameters", "config"] {
+        let configure = |command: &mut Command| {
+            command
+                .current_dir(root)
+                .env("GIT_CONFIG_GLOBAL", "/dev/null")
+                .env("GIT_CONFIG_NOSYSTEM", "1")
+                .env("GIT_CONFIG_COUNT", "0")
+                .env_remove("GIT_CONFIG")
+                .env_remove("GIT_CONFIG_PARAMETERS");
+            match layer {
+                "global" => {
+                    command.env("GIT_CONFIG_GLOBAL", &provider_config);
+                }
+                "system" => {
+                    command
+                        .env("GIT_CONFIG_NOSYSTEM", "0")
+                        .env("GIT_CONFIG_SYSTEM", &provider_config);
+                }
+                "count" => {
+                    command
+                        .env("GIT_CONFIG_COUNT", "1")
+                        .env(
+                            "GIT_CONFIG_KEY_0",
+                            "url.https://provider.invalid/.insteadOf",
+                        )
+                        .env("GIT_CONFIG_VALUE_0", "git@github.com:");
+                }
+                "parameters" => {
+                    command.env(
+                        "GIT_CONFIG_PARAMETERS",
+                        "'url.https://provider.invalid/.insteadOf=git@github.com:'",
+                    );
+                }
+                "config" => {
+                    command.env("GIT_CONFIG", &provider_config);
+                }
+                _ => unreachable!(),
+            }
+        };
+        let baseline = || {
+            let mut command = Command::new("git");
+            configure(&mut command);
+            if layer == "config" {
+                command.args(["config", "--get", "user.name"]);
+            } else {
+                command.args(["remote", "get-url", "origin"]);
+            }
+            let output = command.output().unwrap();
+            assert!(output.status.success(), "{layer}: {output:?}");
+            String::from_utf8(output.stdout).unwrap().trim().to_owned()
+        };
+        let expected_poison = if layer == "config" {
+            "Provider owner"
+        } else {
+            "https://provider.invalid/DecapodLabs/decapod.git"
+        };
+        assert_eq!(
+            baseline(),
+            expected_poison,
+            "{layer} baseline must detect the contamination"
+        );
+        let mut command = Command::new("bash");
+        configure(&mut command);
+        command.args([
+            "-c",
+            &format!("{preamble}\ngit remote get-url origin\ngit config --get user.name"),
+        ]);
+        let output = command.output().unwrap();
+        assert!(output.status.success(), "{layer}: {output:?}");
+        assert_eq!(
+            String::from_utf8(output.stdout).unwrap(),
+            format!("{authored}\nFixture owner\n"),
+            "{layer}"
+        );
+        assert_eq!(fs::read_to_string(&provider_config).unwrap(), provider_body);
+        assert_eq!(fs::read(root.join(".git/config")).unwrap(), local_before);
+        assert_eq!(
+            baseline(),
+            expected_poison,
+            "{layer}: isolation leaked outside the child process"
+        );
+    }
+    assert_eq!(CI.matches("GIT_CONFIG_GLOBAL=/dev/null").count(), 1);
+    assert_eq!(
+        CI.matches("unset GIT_CONFIG GIT_CONFIG_PARAMETERS").count(),
+        1
+    );
 }
 
 #[test]

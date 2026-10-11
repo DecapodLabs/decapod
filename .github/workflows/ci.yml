@@ -270,9 +270,17 @@ jobs:
         with:
           shared-key: "ci-supabase-consumer-v1.96.1"
       - name: Supabase HTTP and existing cloud boundaries
+        # Offline fixture remotes must retain their authored URL spelling.
+        # Isolate this process from provider Git rewrites; never edit its config.
+        # Print the filesystem probe, then execute the unchanged complete suite.
         run: |
           set -euo pipefail
           umask 077
+          unset GIT_CONFIG GIT_CONFIG_PARAMETERS
+          export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_COUNT=0
+          cargo test --locked --features supabase-cloud --lib \
+            core::fs_permissions::tests::recovery_fixture_selection_rejects_incompatible_candidates \
+            -- --exact --nocapture
           cargo test --locked --features supabase-cloud --lib \
             --test cloud_supabase_boundary --test cloud_dactyl_boundary \
             --test release_dependency_policy \
