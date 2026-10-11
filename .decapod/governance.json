@@ -96,6 +96,14 @@
       "proof_refs": [
         "Exact source tree c86195fc131918ac9cbaa76dcb7670f591964585;6 fresh Bazel targets;68 relocated tests in3.633955s; no skips or container-policy changes"
       ]
+    },
+    {
+      "id": "buildkite-remote-proof-20261011",
+      "summary": "Bind actual successful default validation receipt to the fetched remote source ancestor",
+      "input_digest": "sha256:927f757a58fef1f63a1f2d4224ca9a13070b206b2ccb229130216cdcf24a0a53",
+      "proof_refs": [
+        "decapod validate default profile on clean remote7b3e25efd66f482c7ef3605113631f9cb9f2eeff; exacttree28bf69efa0f5318fe88f56946d9c2d986edaeccc; no skips, no container-policy change"
+      ]
     }
   ],
   "intents": {
@@ -534,33 +542,37 @@
       },
       "decapod_release": "0.107.4",
       "drift_findings": [],
-      "elapsed_ms": 3611,
+      "elapsed_ms": 3879,
       "epoch_ref": "ve_69c0eb182d7e8765",
       "fail_count": 0,
       "failures": [],
       "gate_timings": [
         {
-          "elapsed_ms": 2031,
+          "elapsed_ms": 2036,
           "name": "validate_machine_contract"
         },
         {
-          "elapsed_ms": 435,
+          "elapsed_ms": 484,
           "name": "validate_markdown_primitives_roundtrip_gate"
         },
         {
-          "elapsed_ms": 365,
+          "elapsed_ms": 373,
           "name": "validate_project_specs_docs"
         },
         {
-          "elapsed_ms": 161,
+          "elapsed_ms": 176,
           "name": "validate_stale_workspaces"
         },
         {
-          "elapsed_ms": 149,
+          "elapsed_ms": 139,
           "name": "validate_obligations"
         },
         {
-          "elapsed_ms": 81,
+          "elapsed_ms": 129,
+          "name": "validate_git_push_pr_gate"
+        },
+        {
+          "elapsed_ms": 93,
           "name": "validate_legacy_jsonl_retired"
         },
         {
@@ -568,15 +580,19 @@
           "name": "validate_git_workspace_context"
         },
         {
-          "elapsed_ms": 49,
+          "elapsed_ms": 52,
           "name": "validate_control_plane_contract"
         },
         {
-          "elapsed_ms": 46,
+          "elapsed_ms": 44,
           "name": "validate_archive_integrity"
         },
         {
-          "elapsed_ms": 33,
+          "elapsed_ms": 31,
+          "name": "validate_no_legacy_namespaces"
+        },
+        {
+          "elapsed_ms": 31,
           "name": "validate_schema_determinism"
         },
         {
@@ -584,19 +600,11 @@
           "name": "validate_embedded_self_contained"
         },
         {
-          "elapsed_ms": 14,
+          "elapsed_ms": 11,
           "name": "validate_federation_gates"
         },
         {
-          "elapsed_ms": 12,
-          "name": "validate_no_legacy_namespaces"
-        },
-        {
           "elapsed_ms": 9,
-          "name": "validate_git_push_pr_gate"
-        },
-        {
-          "elapsed_ms": 8,
           "name": "validate_git_protected_branch"
         },
         {
@@ -608,12 +616,16 @@
           "name": "validate_lineage_hard_gate"
         },
         {
-          "elapsed_ms": 5,
+          "elapsed_ms": 6,
+          "name": "validate_watcher_audit"
+        },
+        {
+          "elapsed_ms": 6,
           "name": "validate_interface_contract_bootstrap"
         },
         {
-          "elapsed_ms": 4,
-          "name": "validate_lcm_rebuild_gate"
+          "elapsed_ms": 5,
+          "name": "validate_lcm_immutability"
         },
         {
           "elapsed_ms": 4,
@@ -621,11 +633,27 @@
         },
         {
           "elapsed_ms": 4,
-          "name": "validate_watcher_audit"
+          "name": "validate_plan_governed_execution_gate"
         },
         {
           "elapsed_ms": 4,
-          "name": "validate_lcm_immutability"
+          "name": "validate_lcm_rebuild_gate"
+        },
+        {
+          "elapsed_ms": 4,
+          "name": "validate_recursive_improvement_passes_if_present"
+        },
+        {
+          "elapsed_ms": 3,
+          "name": "validate_generated_artifact_whitelist"
+        },
+        {
+          "elapsed_ms": 3,
+          "name": "validate_knowledge_integrity"
+        },
+        {
+          "elapsed_ms": 3,
+          "name": "validate_validation_receipt_if_present"
         },
         {
           "elapsed_ms": 3,
@@ -633,27 +661,31 @@
         },
         {
           "elapsed_ms": 3,
-          "name": "validate_plan_governed_execution_gate"
-        },
-        {
-          "elapsed_ms": 3,
-          "name": "validate_knowledge_integrity"
+          "name": "validate_jev_history_if_present"
         },
         {
           "elapsed_ms": 2,
-          "name": "validate_generated_artifact_whitelist"
+          "name": "validate_health_purity"
         },
         {
           "elapsed_ms": 2,
-          "name": "validate_database_schema_versions"
+          "name": "validate_trajectory_artifacts_if_present"
         },
         {
           "elapsed_ms": 2,
           "name": "validate_override_authority"
         },
         {
-          "elapsed_ms": 2,
+          "elapsed_ms": 1,
+          "name": "validate_database_schema_versions"
+        },
+        {
+          "elapsed_ms": 1,
           "name": "validate_health_cache_integrity"
+        },
+        {
+          "elapsed_ms": 1,
+          "name": "validate_project_config_toml"
         },
         {
           "elapsed_ms": 1,
@@ -661,31 +693,7 @@
         },
         {
           "elapsed_ms": 1,
-          "name": "validate_health_purity"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_trajectory_artifacts_if_present"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_repo_map"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_risk_map_violations"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_jev_history_if_present"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_entrypoint_invariants"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_validation_receipt_if_present"
+          "name": "validate_canon_mutation"
         },
         {
           "elapsed_ms": 0,
@@ -693,15 +701,7 @@
         },
         {
           "elapsed_ms": 0,
-          "name": "validate_canon_mutation"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_recursive_improvement_passes_if_present"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_watcher_purity"
+          "name": "validate_repo_map"
         },
         {
           "elapsed_ms": 0,
@@ -709,7 +709,15 @@
         },
         {
           "elapsed_ms": 0,
-          "name": "validate_project_config_toml"
+          "name": "validate_watcher_purity"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_entrypoint_invariants"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_risk_map_violations"
         },
         {
           "elapsed_ms": 0,
@@ -717,7 +725,7 @@
         },
         {
           "elapsed_ms": 0,
-          "name": "validate_spec_drift"
+          "name": "validate_state_commit_gate"
         },
         {
           "elapsed_ms": 0,
@@ -725,7 +733,15 @@
         },
         {
           "elapsed_ms": 0,
-          "name": "validate_state_commit_gate"
+          "name": "validate_spec_drift"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_coplayer_policy_tightening"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_docs_templates_bucket"
         },
         {
           "elapsed_ms": 0,
@@ -737,19 +753,15 @@
         },
         {
           "elapsed_ms": 0,
-          "name": "validate_docs_templates_bucket"
+          "name": "validate_tooling_gate"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_root_dockerfile_seed_detection"
         },
         {
           "elapsed_ms": 0,
           "name": "validate_eval_gate_if_required"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_coplayer_policy_tightening"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_tooling_gate"
         },
         {
           "elapsed_ms": 0,
@@ -758,30 +770,26 @@
         {
           "elapsed_ms": 0,
           "name": "validate_risk_map"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_root_dockerfile_seed_detection"
         }
       ],
-      "git_revision": "47931e2e1fb8414cc805f109113240bdaa987b89",
+      "git_revision": "7b3e25efd66f482c7ef3605113631f9cb9f2eeff",
       "kind": "validation_receipt",
       "parallelism": 1,
-      "pass_count": 202,
+      "pass_count": 203,
       "prediction_uses_warnings": true,
-      "receipt_hash": "sha256:67496907fa42364761bcc509f4c8370b8b76d2b238aee7e4f77c35dd8cb0b8a1",
+      "receipt_hash": "sha256:932baed6ce7a7619f43f70374d0748252977c99ce320c72808b3bddd6c334113",
       "repo_signal_fingerprint": "bac6e5839628cf023618a58809904f047d79bc1a3c48948018d79b5eb217e1b0",
       "schema_version": "1.0.0",
       "status": "ok",
       "temporary_artifacts_cleaned": 0,
-      "trajectory_artifact_hash": "sha256:ab9a7a19868eae0b3c0a80427cdb4644c2b47b0bbae6162e45dc50d3d17de6dc",
+      "trajectory_artifact_hash": "sha256:b488abf1ceb111b27250173da59744194b2ec9aca435bc5ceaf14e5ca7adb066",
       "trajectory_run_id": "buildkite-repair-20261011",
       "warn_count": 4,
       "warnings": [
+        "No open pull request found on GitHub for branch 'agent/buildkite-fix/cicd_01m4pa8bxxpr5gve'. Create a pull request to submit changes.",
         "Risk map missing (run `decapod riskmap init`)",
         "Stale workspaces preserved for explicit review: <external-path> (unregistered_workspace: workspace ownership is unverified; --force does not authorize deleting unrelated directories. Inspect and preserve or remove this directory explicitly), <external-path> (container_cleanup_failed: workspace preserved because container cleanup could not be verified: Validation error: Container runtime provenance is unknown; preserve the workspace and recover its owning engine explicitly.), <external-path> (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch)",
-        "Watcher audit trail missing (run `decapod govern watcher run`)",
-        "Workspace branch 'agent/buildkite-fix/cicd_01m4pa8bxxpr5gve' has unpushed commits or does not exist on origin. Run `git push origin agent/buildkite-fix/cicd_01m4pa8bxxpr5gve`."
+        "Watcher audit trail missing (run `decapod govern watcher run`)"
       ]
     }
   },
