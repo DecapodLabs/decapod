@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.107.4](https://github.com/DecapodLabs/decapod/compare/v0.107.3...v0.107.4) - 2026-10-11
+
+### Fixed
+
+- repair post-merge host tests and version-only release checks
+
+### Other
+
+- bind shared integration matrix proof to remote source
+- shard integration tests after one shared build
+- bind hermetic fixture validation to remote source
+- declare release workflow fixture for Bazel sandbox
+- bind Gatling fixture correction to remote validation
+- bound idle batching for serial Gatling fixtures
+- bind repair validation to the remote source
+- use borrowed fixture paths and record packaging proof
+
 ## [0.107.3](https://github.com/DecapodLabs/decapod/compare/v0.107.2...v0.107.3) - 2026-10-11
 
 ### Added
