@@ -515,7 +515,7 @@ fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
             }
         }
 
-        writeln!(file, "\n{}", governance_artifacts_contract())?;
+        writeln!(file, "\n{}", governance_artifacts_contract().trim_end())?;
     }
 
     if update_schema {

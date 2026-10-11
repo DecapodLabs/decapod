@@ -62,15 +62,16 @@ jobs:
             ./target/debug/decapod docs build
           fi
 
-      - name: Commit and push changes
+      - name: Verify generated documentation has no drift
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/${{ github.repository }}
-          git add docs/agent/command-contracts.md docs/agent/config-schema.md
-          if git diff --staged --quiet; then
-            echo "No doc changes detected."
-          else
-            git commit -m "docs: autogenerate/sync command contracts"
-            git push origin "HEAD:${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
+          set -euo pipefail
+          if ! git diff --exit-code HEAD -- docs/agent/command-contracts.md docs/agent/config-schema.md; then
+            echo "::error::Generated documentation differs from the reviewed PR commit."
+            echo "Run decapod docs build with the source-built binary and review the generated changes."
+            echo "Update the governed trajectory and run decapod validate against the final material."
+            echo "Stage authored/generated changes, record a unique decapod govern artifacts checkpoint,"
+            echo "then stage .decapod/governance.json and create a governed commit before retrying CI."
+            echo "This workflow reports drift; it does not author commits or push changes."
+            exit 1
           fi
+          echo "Generated documentation matches the reviewed PR commit."

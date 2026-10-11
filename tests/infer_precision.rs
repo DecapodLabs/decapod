@@ -276,7 +276,7 @@ fn test_infer_surfaces_governed_plan_context_before_mutation() {
             .as_array()
             .unwrap()
             .iter()
-            .any(|path| path == ".decapod/governance/plan.json")
+            .any(|path| path == ".decapod/governance.json#/sections/plan")
     );
     assert!(
         inference_json["selected_policies"]

@@ -204,10 +204,15 @@ fn changed_validation_epoch_preserves_bound_proof_and_requires_new_run() {
         "initial validation should succeed: {}",
         String::from_utf8_lossy(&initial.stderr)
     );
-    let trajectory_path = dir.join(".decapod/governance/trajectory.json");
-    let receipt_path = dir.join(".decapod/governance/validation.json");
-    let trajectory_before = fs::read(&trajectory_path).expect("trajectory");
-    let receipt_before = fs::read(&receipt_path).expect("receipt");
+    let governance_path = dir.join(decapod::core::governance_document::GOVERNANCE_PATH);
+    let governance_before = fs::read(&governance_path).expect("canonical governance proof");
+    for section in ["trajectory", "validation"] {
+        assert!(
+            decapod::core::governance_document::read_section(dir, section)
+                .unwrap()
+                .is_some()
+        );
+    }
 
     let changed_epoch = run_decapod_with_password(
         dir,
@@ -232,14 +237,9 @@ fn changed_validation_epoch_preserves_bound_proof_and_requires_new_run() {
         "validation must provide trajectory recovery: {output}"
     );
     assert_eq!(
-        fs::read(&trajectory_path).expect("trajectory after stale validation"),
-        trajectory_before,
-        "bound trajectory evidence must remain unchanged"
-    );
-    assert_eq!(
-        fs::read(&receipt_path).expect("receipt after stale validation"),
-        receipt_before,
-        "receipt must not be rebound to a changed epoch"
+        fs::read(&governance_path).expect("governance after stale validation"),
+        governance_before,
+        "the entire shared document must remain unchanged, including bound trajectory and receipt"
     );
 }
 

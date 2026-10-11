@@ -160,6 +160,16 @@ current claims, plan, trajectory, validation, and staged-material checkpoints
 through Decapod before publication. This separation keeps adapter behavior in the workflow PR while
 keeping the machine-facing proof contract independently reviewable.
 
+## Generated Documentation in Pull Requests
+
+The PR documentation workflow regenerates command/config documentation and
+checks for drift without committing or pushing to the PR branch. Generated
+changes must be reviewed, validated, and included in a normal staged-material
+governance checkpoint. This preserves the immutable per-commit proof chain;
+a later checkpoint cannot repair a previous uncheckpointed automation commit.
+The command-contract generator emits one final newline, preventing whitespace
+alone from creating a new documentation change.
+
 ## Installed-Version Upgrade Path
 After `cargo install decapod`, the next normal governed command runs protected, idempotent schema migration and legacy-event reconciliation before runtime consumers read evidence. Existing-project `decapod init` executes the same reconciliation before regeneration. A prior successful single-datastore migration retires its JSONL inputs through a durable receipt; startup does not rescan them. Legacy local database sources are opened through the Dactyl v0.11.1 facade, while Decapod owns row translation, schema policy, the explicit maintenance command policy, and idempotency ledgers. Dactyl opens the canonical path directly through its host runtime and owns the physical backup/recovery contract; no bundled fallback or second local authority is used. Human-authored `OVERRIDE.md` content is validated but never mechanically rewritten. Fresh migration conflicts preserve source artifacts and stop with an actionable error.
 
@@ -337,8 +347,8 @@ continue to be surfaced through the existing storage checks.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ff0e704a1389577bb72bd8d97fc1f5f7d0e567779df8ad00b96ab8d2bf46557e`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (125 files), `tests/` (167 files)
+- Repository signal fingerprint: `76abacad7a2a007655edfdd5e59e517944c2927704c41ce51195889bc75d901c`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (125 files), `tests/` (168 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

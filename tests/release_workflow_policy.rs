@@ -307,24 +307,18 @@ fn governance_artifact_gate_skips_release_labeled_prs() {
     );
     assert!(
         workflow.contains("!contains(github.event.pull_request.labels.*.name, 'release')"),
-        "release-labeled PRs must not be forced to carry the four governance artifacts"
+        "release-labeled PRs retain the explicit checkpoint-policy exemption"
     );
-    // Three-tier contract: every project PR must update all four governance JSON files.
-    assert!(
-        workflow.contains("updated in PR")
-            || workflow.contains("not updated in PR diff")
-            || workflow.contains("Every project PR must update"),
-        "governance job must require PR-level updates of all four artifacts"
-    );
-    for artifact in [
-        ".decapod/governance/claims.json",
-        ".decapod/governance/trajectory.json",
-        ".decapod/governance/validation.json",
-        ".decapod/governance/plan.json",
+    for required in [
+        "govern artifacts verify-checkpoints",
+        "--base-branch \"origin/$GOVERNANCE_BASE_BRANCH\"",
+        "--head-ref \"$GOVERNANCE_HEAD_REF\"",
+        "github.event.pull_request.head.sha",
+        "fetch-depth: 0",
     ] {
         assert!(
-            workflow.contains(artifact),
-            "the regular governance gate must continue checking {artifact}"
+            workflow.contains(required),
+            "governance job must verify the full immutable PR range: missing {required}"
         );
     }
 }
