@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "8566c9578e8540b1c3abe66f509e75a2bbf64ae7",
+    "accepted_commit": "cb33052f83b87b402eeca793a691c06296c6c302",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -57,338 +57,227 @@
     }
   },
   "change": {
-    "id": "dactyl-0111-normalized-governance",
-    "base_commit": "8566c9578e8540b1c3abe66f509e75a2bbf64ae7",
+    "id": "fresh-workbranch-template-2026-10-11",
+    "base_commit": "cb33052f83b87b402eeca793a691c06296c6c302",
     "target_base": "origin/master"
   },
   "claims": {
-    "normalized-pr-governance": {
-      "statement": "One normalized document preserves live obligations and evidence, scopes claims/checkpoints to the PR, and supports ordered atomic/no-op updates.",
-      "falsifier": "Lossless migration, conflicts, concurrent writes, PR/base identity, per-commit tree proof, obligation resolution, epoch retention, or atomic/no-op regression fails.",
+    "fresh-branch-current-context": {
+      "statement": "Normal governed workspace and agent flows seed one new unproven journal from accepted branch context, preserve active work and meaningful obligations, and require current proof rather than inherited accepted claims.",
+      "falsifier": "A fresh accepted-base branch retains a prior successful receipt, loses unresolved obligations, changes the accepted host journal, or resets an active journal on repeat/rename/rebase.",
       "status": "supported",
       "proof_refs": [
-        "git:dd2cc561360a3270434324afbdd550f9fffbc058:.decapod/governance.json",
-        "trajectory:dactyl-0111-governance-repair/repair-library"
-      ]
-    },
-    "request-context-1141": {
-      "statement": "Workspace isolation preserves request meaning; missing todo projection has a distinct coordination diagnostic without waiving execution gates.",
-      "falsifier": "Request-context, missing-todo, or genuine intent/ownership gate regression fails.",
-      "status": "supported",
-      "proof_refs": [
-        "git:dd2cc561360a3270434324afbdd550f9fffbc058:.decapod/governance.json",
-        "trajectory:dactyl-0111-governance-repair/repair-library"
-      ]
-    },
-    "shared-sqlite-recovery": {
-      "statement": "Dactyl 0.11.1 supports tested shared-directory SQLite recovery while preserving source metadata and typed unsupported failures.",
-      "falsifier": "Shared-mode, archive identity, no-clobber, ACL rejection, or maintenance diagnostic regression fails.",
-      "status": "supported",
-      "proof_refs": [
-        "git:dd2cc561360a3270434324afbdd550f9fffbc058:.decapod/governance.json",
-        "trajectory:dactyl-0111-governance-repair/repair-library"
-      ]
-    },
-    "specs-refresh-1166": {
-      "statement": "Embedded docs and generated entrypoints expose both supported specs-refresh invocations without inventing a top-level alias.",
-      "falsifier": "Refresh documentation, command parsing, regeneration, or authored-spec ownership regression fails.",
-      "status": "supported",
-      "proof_refs": [
-        "git:dd2cc561360a3270434324afbdd550f9fffbc058:.decapod/governance.json",
-        "trajectory:dactyl-0111-governance-repair/repair-library"
-      ]
-    },
-    "trajectory-contract-1165": {
-      "statement": "Trajectory enum and check guidance derives from the unchanged schema and its documented example executes.",
-      "falsifier": "Schema/serde/documentation drift or executable trajectory example regression fails.",
-      "status": "supported",
-      "proof_refs": [
-        "git:dd2cc561360a3270434324afbdd550f9fffbc058:.decapod/governance.json",
-        "trajectory:dactyl-0111-governance-repair/repair-library"
+        "tests/unit/core/governance_document_tests.rs",
+        "tests/workbranch_governance.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "canonical-adoption-1",
-      "summary": "Adopt Dactyl 0.11.1, solve 1141/1165/1166, and migrate to ordered normalized PR governance; 717 tests plus all-target lint pass. Pre-adoption validator remains partial and no receipt is invented.",
-      "input_digest": "sha256:73af057793d5b42481c2de637a0ea49f637a76cdc883765f88108b6aed326683",
+      "id": "fresh-template-and-owned-cleanup",
+      "summary": "Implement fresh per-workbranch governance, preserve container datastore and policy boundaries, and add owned build/test cleanup with regression coverage",
+      "input_digest": "sha256:eb9ba517cc86119a8531e4ee8abc9fb832a85d73e8f3a8191c64339f0fb4f813",
       "proof_refs": [
-        "trajectory:dactyl-0111-governance/local-rust-suites",
-        "trajectory:dactyl-0111-governance/repository-validation"
-      ]
-    },
-    {
-      "id": "remote-custody-binding",
-      "summary": "Bind branch custody and workspace coordination todos without losing the approved intent or measured test evidence; local Docker proof remains unavailable.",
-      "input_digest": "sha256:78cea3c3d6645c209278dd75b3cce1a09b34421001eb434dc34bcf33f4a4bead",
-      "proof_refs": [
-        "trajectory:dactyl-0111-governance/local-rust-suites",
-        "trajectory:dactyl-0111-governance/repository-validation"
-      ]
-    },
-    {
-      "id": "final-remote-validation",
-      "summary": "Record genuine current-source validation on the exact remote custody ancestor, retaining 717-test proof and explicit unavailable local container/hosted coverage.",
-      "input_digest": "sha256:5be5251438442d32138eb46dcea5b2a896ea949069614c960c7729eaeedd86bf",
-      "proof_refs": [
-        "/tmp/decapod-final-remote-validation.json",
-        "trajectory:dactyl-0111-governance"
-      ]
-    },
-    {
-      "id": "ci-repair-approved-bot-replacement",
-      "summary": "Repair canonical CI fixtures and read-only inventory diagnostics; replace mutating PR docs automation with tested drift verification. Archive bot tip preserved and one-time replacement explicitly approved; no new successful validation receipt claimed before clean-tree evaluation.",
-      "input_digest": "sha256:1123c0993e083cccc3c32f197b75a5fde200b9b19438fa47434dd72610a637d2",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/tree/archive/pr1387-docs-bot-8c5e3b08",
-        "trajectory:dactyl-0111-governance-repair"
-      ]
-    },
-    {
-      "id": "remote-ci-repair-validation",
-      "summary": "Record genuine unskipped validator success on exact remote repair ancestor e01057cd, with scoped tests and explicit local container and baseline re-init limitations preserved.",
-      "input_digest": "sha256:cd73bae34217a8ecc46248cf8f2c9ccb58c9d6adedb24eca4285b2743c0dbd96",
-      "proof_refs": [
-        "/tmp/decapod-pr1387-repair-validation.json",
-        "trajectory:dactyl-0111-governance-repair"
+        "assets/tools/build_lifecycle_tests.rs",
+        "tests/unit/core/governance_document_tests.rs",
+        "tests/unit/plugins/container_tests.rs",
+        "tests/workbranch_governance.rs"
       ]
     }
   ],
   "intents": {
-    "intent:dactyl-0111-governance-repair": {
+    "intent:fresh-governance-template": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "No merge, release, credential changes, gate weakening, fabricated proof, or overwrite of concurrent changes. Archive exact bot tip before replacing only its commit."
+        "No main/master writes, merge, release, deployment, or fabricated container proof"
       ],
       "constraints": [
-        "Existing approved Dactyl/recovery, three issues, normalized governance, and scoped CI regression repair"
+        "src",
+        "tests",
+        "assets",
+        "docs",
+        ".decapod/managed/specs"
       ],
       "created_sequence": 1,
-      "id": "intent:dactyl-0111-governance-repair",
+      "id": "intent:fresh-governance-template",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Adopt Dactyl 0.11.1, solve issues 1141/1165/1166, consolidate normalized PR governance, and fix the Action errors on PR 1387 then push.",
-      "refined_intent": "Repair canonical test fixtures and read-only inventory diagnostics, prevent documentation automation from bypassing checkpoints, and publish the scoped checked repair with the explicitly approved one-time archive-and-replace exception.",
+      "raw_intent": "Dedicated PR for governance.json template generation in each new work branch",
+      "refined_intent": "Reuse locked canonical journal and truthful proof paths; initialize new context automatically without resetting in-progress work",
       "status": "refined",
       "updated_sequence": 3
-    }
-  },
-  "epochs": {
-    "ve_9d40d443038159c9": {
-      "constitution_hash": "sha256:ade071b52ccf2d7b9b7fdf33bd93f1e8460576f9c0916a531bcf56050e50c653",
-      "constitution_version": "embedded-docs@0.107.1",
-      "epoch_id": "ve_9d40d443038159c9",
-      "evaluator_identity": "decapod-validate@0.107.1",
-      "evaluator_set_hash": "sha256:32386060db4d10ece5371a32f0d6a900f4fb5bc54c0d51bbf664aac5e84d6da8",
-      "generated_specs_fingerprint": "76abacad7a2a007655edfdd5e59e517944c2927704c41ce51195889bc75d901c",
-      "generated_specs_manifest_hash": "sha256:dd6f84856f687507ca7375f9304e55c13d76d74fad2143e32b6292ae03029091",
-      "material_hashes": {
-        "constitution:core/DECAPOD": "sha256:ade071b52ccf2d7b9b7fdf33bd93f1e8460576f9c0916a531bcf56050e50c653",
-        "generated_spec:.decapod/managed/specs/ARCHITECTURE.md": "sha256:df57027536c1dddaade0d8d7fbd3ce256424e320c0936ee631e5cd5e6195faac",
-        "generated_spec:.decapod/managed/specs/INTENT.md": "sha256:f80b3c4efe2e8cd6198171ab05414f0b67c775471f595977e0001ea7bb1996e2",
-        "generated_spec:.decapod/managed/specs/INTERFACES.md": "sha256:61b7e79297360595d9fbcae0808482a7fe689c61c7f29c98ba615f69b1e13d25",
-        "generated_spec:.decapod/managed/specs/OPERATIONS.md": "sha256:035cbb559d5575149f3e773ffd5250bbb4b826ad823fea3244d8cca952f173f9",
-        "generated_spec:.decapod/managed/specs/README.md": "sha256:52d0c6142b4a6f26d2a3c92ae142673da3ec767e982906cd90815e737371cc4f",
-        "generated_spec:.decapod/managed/specs/SECURITY.md": "sha256:0e7c47bdd3a13cbdf886d0be4715d7e7feb05a7bf23b00f435965c5ac07be5b3",
-        "generated_spec:.decapod/managed/specs/SEMANTICS.md": "sha256:358e67330d7fbf2de751d5e841f97d66f4d2f550e505a8dc4f6badcc38634e30",
-        "generated_spec:.decapod/managed/specs/VALIDATION.md": "sha256:4886b67eafa34ba9d9be3d6c57b8f04395df1f5336c1afe0f413835377c2512a",
-        "generated_specs_fingerprint": "76abacad7a2a007655edfdd5e59e517944c2927704c41ce51195889bc75d901c",
-        "generated_specs_manifest": "sha256:dd6f84856f687507ca7375f9304e55c13d76d74fad2143e32b6292ae03029091",
-        "governance_context": "sha256:af91b62873d5ec8c072564ad5fbb30f13e5ae15bb0d3f51e8330e1ea3f3b5a98",
-        "governance_material:.decapod/managed/Dockerfile.decapod": "sha256:59b9fab22c6198b0a4a0469dfb817b818a932d78a8c63b9d6d2f7efedc9254c1",
-        "governance_material:AGENTS.md": "sha256:c80b38a56be8dcc5f1fcbc0b4d57edb72041882a868a0e8afa42f7e44cee9ace",
-        "governance_material:CLAUDE.md": "sha256:127b114dc0428f68b05381b6c46e5314b0c335a6ee10015e78d197696e1c5ae6",
-        "governance_material:CODEX.md": "sha256:5d371fc7e25cc5ea8ced19433d8ee78f5d202c4e2a52912d049507ebfba2a30b",
-        "governance_material:GEMINI.md": "sha256:fe6819e4b34ca78ec5f265fcfc4401dc5eb0f4946ac4a76fbd752f6a60d69232",
-        "governance_section:claims": "sha256:0e78d7febb631849ecae968def14cbd512f08de8e9afb3e0c1df6c6572f02825",
-        "governance_section:plan": "sha256:0d681f458210feebc6928e3d56e9888b7c2c59bd5d12609293cc698a59964fbc",
-        "living_spec_material:.decapod/managed/specs/ARCHITECTURE.md": "sha256:b87c8a2da58c41fed175651d16dcd5e7fa447c6db90a15a79b271cc222d64fcc",
-        "living_spec_material:.decapod/managed/specs/INTENT.md": "sha256:7ec0b2a5ae0d4ef4187333131813f158baf9a9c2d43a6b6ccaa79b3fcefd55b0",
-        "living_spec_material:.decapod/managed/specs/INTERFACES.md": "sha256:a17fe8ab2f92c5fa639373d5a03e96090d037871b3c25672ed0cecba85286a01",
-        "living_spec_material:.decapod/managed/specs/OPERATIONS.md": "sha256:ebf2623dd4e10d34c615658df06b0487be64d01d9ee13076feafb50fd702852f",
-        "living_spec_material:.decapod/managed/specs/README.md": "sha256:6c4338fb8446fa04e2d7c823ff3e33c2bd4949bf6018392045993401131f690a",
-        "living_spec_material:.decapod/managed/specs/SECURITY.md": "sha256:3a4bbc6bd7b9728a719f7177df9026212cfa4f5c901a35ac6ae7746f389dc502",
-        "living_spec_material:.decapod/managed/specs/SEMANTICS.md": "sha256:27cf430b3c93ff95ff84a95bf685a5682177ca1ca5a810648491f23278953d76",
-        "living_spec_material:.decapod/managed/specs/VALIDATION.md": "sha256:d5be97e7cc5e502cb44b9c6eefae84ad600dcc95049153d91baeefc8110fbcd2",
-        "proof_rubric": "sha256:99e8ef25629da391e9b479db9fff52b82f340224f7a69d8a88d2992ae8e90466",
-        "validation_profile": "sha256:37a8eec1ce19687d132fe29051dca629d164e2c4958ba141d5f4133a33f0688f"
-      },
-      "proof_rubric": "decapod-validate/current-proof-v1",
-      "proof_rubric_hash": "sha256:99e8ef25629da391e9b479db9fff52b82f340224f7a69d8a88d2992ae8e90466",
-      "schema_version": "1.0.0",
-      "validation_profile": "default",
-      "validation_profile_hash": "sha256:37a8eec1ce19687d132fe29051dca629d164e2c4958ba141d5f4133a33f0688f"
     }
   },
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 180,
-        "forbidden_paths": [
-          "production credentials and external service configuration"
-        ]
+        "file_touch_budget": 50,
+        "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "User approved one draft PR adopting published Dactyl 0.11.1, resolving 1141/1165/1166, and replacing the governance directory with one normalized governance.json. Preserve explicit unresolved obligations and Git history; keep only current-PR claims/checkpoints, reset at an accepted new-PR boundary, guide ordered population, batch related writes, and skip unchanged content.",
+      "intent": "Instantiate the embedded fresh governance template once at each new work-branch boundary through normal workspace, agent, container and validation entrypoints. Seed the current claimed task, retain durable policy and unresolved obligations, preserve active journals across repeats/rename/rebase, and require genuine new proof. Keep accepted governance untouched, branch-local runtime locks/specs, shared datastore and applied-migration ledger, and read-only accepted datastore policy. Add invocation-owned local build/test cleanup as requested, with no Actions changes or broad shared-cache wipes.",
       "phases": [],
       "proof_hooks": [
-        "Exact combined Rust library and scoped CLI/integration regressions; all-target clippy and rustfmt",
-        "Current-source bounded validator with genuine unavailable container proof reported separately; exact-head GitHub Actions"
+        "Fresh accepted-base lifecycle, idempotence, malformed/dirty/stale context, carried obligations and concurrent initialization tests",
+        "Normal workspace/agent/validation CLI integration and current receipt integrity tests",
+        "Branch-local container mount/base/script tests plus existing opt-in actual-Docker CI test",
+        "Owned build/test scratch cleanup tests; Cargo aliases; fmt and all-feature clippy",
+        "Current-source decapod validate and exact remote-ancestor receipt/checkpoint verification"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed normalized storage, atomic/no-op writes, current-PR claims, Git-bound acceptance/reset, semantic hashes, and live obligations.",
-          "reviewed_code_fingerprint": "ff0e704a1389577bb72bd8d97fc1f5f7d0e567779df8ad00b96ab8d2bf46557e",
-          "spec_material_hash": "b87c8a2da58c41fed175651d16dcd5e7fa447c6db90a15a79b271cc222d64fcc"
+          "reason": "Records locked template initialization, stable branch identity, exact creator base, branch-local managed paths, shared migration ledger, and invocation-owned build cleanup",
+          "reviewed_code_fingerprint": "9f0aad7af6e6afea8f76637a5a325d188125da973ae0349c49635287c477ebdb",
+          "spec_material_hash": "c121b671d037803ff27cf59ea8c41fff6e48b931a40e7954238e740f6728fb84"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Read-only inventory retains explicit schema errors and safe legacy-byte divergence; seven Hermes regressions verify diagnostics and fail-closed repair/migration. Publication authority is unchanged.",
-          "reviewed_code_fingerprint": "76abacad7a2a007655edfdd5e59e517944c2927704c41ce51195889bc75d901c",
-          "spec_material_hash": "a17fe8ab2f92c5fa639373d5a03e96090d037871b3c25672ed0cecba85286a01"
+          "reason": "Defines normal CLI initialization, unproven draft template, container datastore and policy path contract, and local build/test lifecycle commands",
+          "reviewed_code_fingerprint": "9f0aad7af6e6afea8f76637a5a325d188125da973ae0349c49635287c477ebdb",
+          "spec_material_hash": "0d132a5b536f0089d08ca58e41c0cf2eddb9d32643820cfd09a92402fcb912e7"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed shared recovery, no-clobber activation, exact metadata preservation, typed unsupported cases, and locked migration confinement.",
-          "reviewed_code_fingerprint": "ff0e704a1389577bb72bd8d97fc1f5f7d0e567779df8ad00b96ab8d2bf46557e",
-          "spec_material_hash": "3a4bbc6bd7b9728a719f7177df9026212cfa4f5c901a35ac6ae7746f389dc502"
+          "reason": "Documents alias refusal, branch-local lock, read-only accepted host policy, shared datastore ledger authority, and identity-checked owned scratch cleanup",
+          "reviewed_code_fingerprint": "9f0aad7af6e6afea8f76637a5a325d188125da973ae0349c49635287c477ebdb",
+          "spec_material_hash": "a61a52af20a5233dac76f61b4b6f9bf65fba2907f688eb5b7ed0db4a0515ed3d"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [
-        "Pause for a genuine user decision, authorization denial, conflicting authority, or unsafe migration; never fabricate proof or acceptance"
+        "No protected branch mutation or lost unresolved obligation"
       ],
-      "title": "Dactyl 0.11.1 and compact PR governance",
+      "title": "Fresh governance for each work branch",
       "todo_ids": [
-        "bugs_01m4kyt3rfha5w6f",
-        "bugs_01m4kyeckvq8r1pv"
+        "code_01m4m9pf73zrfgr3"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791677666Z"
+      "updated_at": "1791685679Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "No merge, release, credential changes, gate weakening, fabricated proof, or overwrite of concurrent changes. Archive exact bot tip before replacing only its commit."
+        "No main/master writes, merge, release, deployment, or fabricated container proof"
       ],
-      "artifact_hash": "sha256:05778f2235bad2dabc2a46e08b62c27aaf921bf7be82cd8ad21e08b525ea6cdd",
+      "artifact_hash": "sha256:708f189b42bf6a278b811f36b5ab1d1f1e15094c27ea0a11c020c22c2b781315",
       "checks": [
         {
-          "name": "canonical-ci-regressions",
-          "status": "passed"
-        },
-        {
-          "name": "clippy-all-targets",
-          "status": "passed"
-        },
-        {
-          "name": "container-local",
+          "name": "actual_bazel_local",
           "status": "unavailable"
         },
         {
-          "name": "decapod validate",
-          "status": "passed"
-        },
-        {
-          "name": "docs-writer-regressions",
-          "status": "passed"
-        },
-        {
-          "name": "green-field-init",
-          "status": "partial"
-        },
-        {
-          "name": "hosted-service-proof",
+          "name": "actual_docker_local",
           "status": "unavailable"
         },
         {
-          "name": "repair-library",
+          "name": "all_feature_clippy",
           "status": "passed"
         },
         {
-          "name": "rustfmt",
+          "name": "all_library_tests",
           "status": "passed"
+        },
+        {
+          "name": "branch_governance_suite",
+          "status": "passed"
+        },
+        {
+          "name": "build_cleanup_behavior",
+          "status": "passed"
+        },
+        {
+          "name": "container_path_and_policy_tests",
+          "status": "passed"
+        },
+        {
+          "name": "current_validation_receipt_integration",
+          "status": "passed"
+        },
+        {
+          "name": "initial-library-regressions",
+          "status": "passed"
+        },
+        {
+          "name": "local-Docker-runtime",
+          "status": "unavailable"
         }
       ],
-      "current_phase": "validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:dactyl-0111-governance-repair",
+            "intent_id": "intent:fresh-governance-template",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:dactyl-0111-governance-repair",
+            "intent_id": "intent:fresh-governance-template",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:dactyl-0111-governance-repair",
+            "detail": "trajectory:fresh-governance-template",
             "event_id": "event:4",
-            "intent_id": "intent:dactyl-0111-governance-repair",
+            "intent_id": "intent:fresh-governance-template",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:dactyl-0111-governance-repair",
+            "detail": "trajectory:fresh-governance-template",
             "event_id": "event:5",
-            "intent_id": "intent:dactyl-0111-governance-repair",
+            "intent_id": "intent:fresh-governance-template",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:dactyl-0111-governance-repair",
+            "detail": "trajectory:fresh-governance-template",
             "event_id": "event:6",
-            "intent_id": "intent:dactyl-0111-governance-repair",
+            "intent_id": "intent:fresh-governance-template",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:fresh-governance-template",
+            "event_id": "event:7",
+            "intent_id": "intent:fresh-governance-template",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
-          "dactyl-0111-governance-repair": {
+          "fresh-governance-template": {
             "evidence_only": true,
-            "id": "dactyl-0111-governance-repair",
-            "intent_id": "intent:dactyl-0111-governance-repair",
+            "id": "fresh-governance-template",
+            "intent_id": "intent:fresh-governance-template",
             "steps": [
               {
                 "action": "trajectory.record",
-                "command": "cargo test --locked --lib and scoped integration suites; cargo clippy --locked --all-targets -- -D warnings; cargo fmt --all -- --check; git diff --check",
+                "command": "cargo test --lib -- --test-threads=2: 612 passed, 1 ignored before final container/legacy guards",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "Original published source at dd2cc561 passed 717 tests across 20 suites with five existing ignored tests, plus genuine clean-tree validator and publication gates. Those immutable Git records retain the original proof; no old validation epoch is asserted as new repair proof.",
-                  "Exact prepared repair source: library 593 passed/1 ignored; Hermes inventory 7 passed; inference 4; release policy 13; validation termination 11; deadlock 2; docs/writer 7. All-target clippy -D warnings, rustfmt, and git diff --check passed.",
-                  "Green-field init: 7 passed, one unchanged re-init idempotence assertion fails only on manifest generated_at. Reproduced using baseline 8566c957: init, validate and force-init succeed, config and INTENT unchanged, timestamp alone changes. Existing issue 1024 covers deterministic re-init; no workaround or assertion weakening applied.",
-                  "GitHub Actions on 8c5e3b08 passed actual Docker lifecycle, native x86_64/aarch64 musl builds, and all active jobs except missing immutable bot checkpoint and two canonical test/diagnostic regressions. Those two regression tests now pass locally.",
-                  "User Sentinel_232e78eada0c8191b868760318a95465 approved: Correct. Fix the action errors on #1387 then push. This answered the explicit request to archive the docs bot commit and replace only that commit with valid checkpoint under a one-time no-force-push exception.",
-                  "Archive branch archive/pr1387-docs-bot-8c5e3b08 was fetched and verified at exact bot tip 8c5e3b083e45f69881da98079ae2da4dd7d4c442. Remote head will be lease-checked before replacement; no concurrent change is authorized to be overwritten.",
-                  "Branch custody task bugs_01m4kyeckvq8r1pv and active workspace coordination task bugs_01m4kyt3rfha5w6f remain linked in the plan. Container startup is intentional but Docker is unavailable locally."
+                  "Reviewer found and remediation added for cross-agent context, missing task identity, session custody, malformed/default/deleted journals, and canonical workspace aliases"
                 ],
                 "proof_refs": [
-                  "repair-library",
-                  "canonical-ci-regressions",
-                  "docs-writer-regressions",
-                  "clippy-all-targets",
-                  "rustfmt",
-                  "green-field-init",
-                  "container-local",
-                  "hosted-service-proof"
+                  "initial-library-regressions",
+                  "local-Docker-runtime"
                 ],
                 "scope": [
-                  "Existing approved Dactyl/recovery, three issues, normalized governance, and scoped CI regression repair"
+                  ".decapod/managed/specs",
+                  "assets",
+                  "docs",
+                  "src",
+                  "tests"
                 ],
                 "sequence": 4,
                 "validation_findings": []
@@ -397,57 +286,80 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  ".config/build/decapod.BUILD.bzl",
-                  ".decapod/governance.json",
-                  ".decapod/managed/specs/.manifest.json",
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/INTENT.md",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  ".decapod/managed/specs/OPERATIONS.md",
-                  ".decapod/managed/specs/README.md",
-                  ".decapod/managed/specs/SECURITY.md",
-                  ".decapod/managed/specs/SEMANTICS.md",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  ".github/workflows/docs_sync.yml",
-                  "src/decapod/core/docs_cli.rs",
-                  "src/decapod/core/governance_artifacts.rs",
-                  "src/decapod/core/governance_document.rs",
-                  "tests/hermes_governance_substrate.rs",
-                  "tests/infer_precision.rs",
-                  "tests/init_validate_green_field.rs",
-                  "tests/release_workflow_policy.rs",
-                  "tests/trajectory_docs.rs",
-                  "tests/unit/core/fs_permissions_tests.rs",
-                  "tests/unit/core/validate_tests.rs",
-                  "tests/unit/core/workspace_tests.rs",
-                  "tests/unit/lib_init_prompt_tests.rs",
-                  "tests/validate_termination.rs",
-                  "tests/verify_deadlock_regression.rs",
-                  "tests/docs_sync_checkpoint_boundary.rs"
+                  "src/decapod/plugins/container.rs",
+                  "src/decapod/plugins/policy.rs",
+                  "src/decapod/core/validate.rs",
+                  "assets/tools/build_lifecycle.rs",
+                  "cargo test --locked --features build-tools --bin decapod-build: 11 passed",
+                  "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings passed",
+                  "No Docker or Bazel binary is available locally; actual Docker path verification is attached to the existing opt-in CI test",
+                  "Review corrected shared-data aliases, branch-local governance lock, accepted policy lookup, source validation roots, migration ledger mounts, and checkpoint-before-container-commit failure propagation"
                 ],
-                "proof_refs": [],
+                "proof_refs": [
+                  "build_cleanup_behavior",
+                  "all_feature_clippy",
+                  "actual_docker_local",
+                  "actual_bazel_local"
+                ],
                 "scope": [
-                  "Existing approved Dactyl/recovery, three issues, normalized governance, and scoped CI regression repair"
+                  ".cargo/config.toml",
+                  ".config/build",
+                  ".decapod/managed/specs",
+                  "Cargo.toml",
+                  "assets",
+                  "assets/tools",
+                  "docs",
+                  "src",
+                  "tests"
                 ],
                 "sequence": 5,
                 "validation_findings": []
               },
               {
-                "action": "validation",
-                "command": "decapod validate",
+                "action": "trajectory.record",
                 "custody_event_id": "event:6",
                 "observations": [
-                  ".decapod/governance.json",
-                  ".decapod/governance.json",
-                  "validation epoch ve_9d40d443038159c9 completed with zero failures"
+                  "Final combined Cargo suite: 627 library tests, 11 build supervisor tests, 9 fresh-workbranch tests, 4 read-only artifact tests, 8 container-disabled tests, and 1 workspace-isolation test passed; one actual-Docker opt-in test unavailable locally"
                 ],
                 "proof_refs": [
-                  "decapod validate"
+                  "branch_governance_suite",
+                  "current_validation_receipt_integration",
+                  "all_library_tests",
+                  "container_path_and_policy_tests"
                 ],
                 "scope": [
-                  "Existing approved Dactyl/recovery, three issues, normalized governance, and scoped CI regression repair"
+                  ".cargo/config.toml",
+                  ".config/build",
+                  ".decapod/managed/specs",
+                  "Cargo.toml",
+                  "assets",
+                  "assets/tools",
+                  "docs",
+                  "src",
+                  "tests"
                 ],
                 "sequence": 6,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Current-source precommit validation: 198 passing gates; two expected dirty-worktree failures require a checkpointed clean commit before final validation. No validation receipt was fabricated."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  ".cargo/config.toml",
+                  ".config/build",
+                  ".decapod/managed/specs",
+                  "Cargo.toml",
+                  "assets",
+                  "assets/tools",
+                  "docs",
+                  "src",
+                  "tests"
+                ],
+                "sequence": 7,
                 "validation_findings": []
               }
             ]
@@ -455,324 +367,42 @@
         }
       },
       "declared_commands": [
-        "cargo test --locked --lib and scoped integration suites; cargo clippy --locked --all-targets -- -D warnings; cargo fmt --all -- --check; git diff --check",
-        "decapod validate"
+        "cargo test --lib -- --test-threads=2: 612 passed, 1 ignored before final container/legacy guards"
       ],
-      "destination": "Pull request https://github.com/DecapodLabs/decapod/pull/1387",
       "evidence": [
-        "Archive branch archive/pr1387-docs-bot-8c5e3b08 was fetched and verified at exact bot tip 8c5e3b083e45f69881da98079ae2da4dd7d4c442. Remote head will be lease-checked before replacement; no concurrent change is authorized to be overwritten.",
-        "Branch custody task bugs_01m4kyeckvq8r1pv and active workspace coordination task bugs_01m4kyt3rfha5w6f remain linked in the plan. Container startup is intentional but Docker is unavailable locally.",
-        "Exact prepared repair source: library 593 passed/1 ignored; Hermes inventory 7 passed; inference 4; release policy 13; validation termination 11; deadlock 2; docs/writer 7. All-target clippy -D warnings, rustfmt, and git diff --check passed.",
-        "GitHub Actions on 8c5e3b08 passed actual Docker lifecycle, native x86_64/aarch64 musl builds, and all active jobs except missing immutable bot checkpoint and two canonical test/diagnostic regressions. Those two regression tests now pass locally.",
-        "Green-field init: 7 passed, one unchanged re-init idempotence assertion fails only on manifest generated_at. Reproduced using baseline 8566c957: init, validate and force-init succeed, config and INTENT unchanged, timestamp alone changes. Existing issue 1024 covers deterministic re-init; no workaround or assertion weakening applied.",
-        "Original published source at dd2cc561 passed 717 tests across 20 suites with five existing ignored tests, plus genuine clean-tree validator and publication gates. Those immutable Git records retain the original proof; no old validation epoch is asserted as new repair proof.",
-        "User Sentinel_232e78eada0c8191b868760318a95465 approved: Correct. Fix the action errors on #1387 then push. This answered the explicit request to archive the docs bot commit and replace only that commit with valid checkpoint under a one-time no-force-push exception.",
-        "validation epoch ve_9d40d443038159c9 completed with zero failures"
+        "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings passed",
+        "Current-source precommit validation: 198 passing gates; two expected dirty-worktree failures require a checkpointed clean commit before final validation. No validation receipt was fabricated.",
+        "Final combined Cargo suite: 627 library tests, 11 build supervisor tests, 9 fresh-workbranch tests, 4 read-only artifact tests, 8 container-disabled tests, and 1 workspace-isolation test passed; one actual-Docker opt-in test unavailable locally",
+        "No Docker or Bazel binary is available locally; actual Docker path verification is attached to the existing opt-in CI test",
+        "Review corrected shared-data aliases, branch-local governance lock, accepted policy lookup, source validation roots, migration ledger mounts, and checkpoint-before-container-commit failure propagation",
+        "Reviewer found and remediation added for cross-agent context, missing task identity, session custody, malformed/default/deleted journals, and canonical workspace aliases",
+        "cargo test --locked --features build-tools --bin decapod-build: 11 passed"
       ],
       "inspected_files": [],
-      "intent_id": "intent:dactyl-0111-governance-repair",
+      "intent_id": "intent:fresh-governance-template",
       "modified_files": [
-        ".config/build/decapod.BUILD.bzl",
-        ".decapod/governance.json",
-        ".decapod/managed/specs/.manifest.json",
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTENT.md",
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/OPERATIONS.md",
-        ".decapod/managed/specs/README.md",
-        ".decapod/managed/specs/SECURITY.md",
-        ".decapod/managed/specs/SEMANTICS.md",
-        ".decapod/managed/specs/VALIDATION.md",
-        ".github/workflows/docs_sync.yml",
-        "src/decapod/core/docs_cli.rs",
-        "src/decapod/core/governance_artifacts.rs",
-        "src/decapod/core/governance_document.rs",
-        "tests/docs_sync_checkpoint_boundary.rs",
-        "tests/hermes_governance_substrate.rs",
-        "tests/infer_precision.rs",
-        "tests/init_validate_green_field.rs",
-        "tests/release_workflow_policy.rs",
-        "tests/trajectory_docs.rs",
-        "tests/unit/core/fs_permissions_tests.rs",
-        "tests/unit/core/validate_tests.rs",
-        "tests/unit/core/workspace_tests.rs",
-        "tests/unit/lib_init_prompt_tests.rs",
-        "tests/validate_termination.rs",
-        "tests/verify_deadlock_regression.rs"
-      ],
-      "next_transitions": [
-        "publish"
+        "assets/tools/build_lifecycle.rs",
+        "src/decapod/core/validate.rs",
+        "src/decapod/plugins/container.rs",
+        "src/decapod/plugins/policy.rs"
       ],
       "repo_scope": [
-        "Existing approved Dactyl/recovery, three issues, normalized governance, and scoped CI regression repair"
+        ".cargo/config.toml",
+        ".config/build",
+        ".decapod/managed/specs",
+        "Cargo.toml",
+        "assets",
+        "assets/tools",
+        "docs",
+        "src",
+        "tests"
       ],
-      "run_id": "dactyl-0111-governance-repair",
+      "run_id": "fresh-governance-template",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m4kyeckvq8r1pv",
+      "task_id": "code_01m4m9pf73zrfgr3",
       "tool_calls": [],
       "unresolved_assumptions": []
-    },
-    "validation": {
-      "ci_prediction": {
-        "confidence": "medium",
-        "recommendations": [
-          "Review the reported validation warnings before relying on the CI result.",
-          "Use `decapod validate -v --format json` to inspect the affected gate output."
-        ],
-        "result": "review"
-      },
-      "decapod_release": "0.107.1",
-      "drift_findings": [],
-      "elapsed_ms": 3721,
-      "epoch_ref": "ve_9d40d443038159c9",
-      "fail_count": 0,
-      "failures": [],
-      "gate_timings": [
-        {
-          "elapsed_ms": 2024,
-          "name": "validate_machine_contract"
-        },
-        {
-          "elapsed_ms": 341,
-          "name": "validate_markdown_primitives_roundtrip_gate"
-        },
-        {
-          "elapsed_ms": 337,
-          "name": "validate_project_specs_docs"
-        },
-        {
-          "elapsed_ms": 311,
-          "name": "validate_stale_workspaces"
-        },
-        {
-          "elapsed_ms": 98,
-          "name": "validate_obligations"
-        },
-        {
-          "elapsed_ms": 68,
-          "name": "validate_legacy_jsonl_retired"
-        },
-        {
-          "elapsed_ms": 66,
-          "name": "validate_git_workspace_context"
-        },
-        {
-          "elapsed_ms": 57,
-          "name": "validate_git_push_pr_gate"
-        },
-        {
-          "elapsed_ms": 37,
-          "name": "validate_control_plane_contract"
-        },
-        {
-          "elapsed_ms": 36,
-          "name": "validate_archive_integrity"
-        },
-        {
-          "elapsed_ms": 29,
-          "name": "validate_schema_determinism"
-        },
-        {
-          "elapsed_ms": 17,
-          "name": "validate_no_legacy_namespaces"
-        },
-        {
-          "elapsed_ms": 13,
-          "name": "validate_federation_gates"
-        },
-        {
-          "elapsed_ms": 10,
-          "name": "validate_embedded_self_contained"
-        },
-        {
-          "elapsed_ms": 9,
-          "name": "validate_lineage_hard_gate"
-        },
-        {
-          "elapsed_ms": 8,
-          "name": "validate_git_protected_branch"
-        },
-        {
-          "elapsed_ms": 5,
-          "name": "validate_repomap_determinism"
-        },
-        {
-          "elapsed_ms": 4,
-          "name": "validate_interface_contract_bootstrap"
-        },
-        {
-          "elapsed_ms": 3,
-          "name": "validate_knowledge_promotions_if_present"
-        },
-        {
-          "elapsed_ms": 3,
-          "name": "validate_knowledge_integrity"
-        },
-        {
-          "elapsed_ms": 3,
-          "name": "validate_watcher_audit"
-        },
-        {
-          "elapsed_ms": 3,
-          "name": "validate_lcm_immutability"
-        },
-        {
-          "elapsed_ms": 3,
-          "name": "validate_lcm_rebuild_gate"
-        },
-        {
-          "elapsed_ms": 2,
-          "name": "validate_recursive_improvement_passes_if_present"
-        },
-        {
-          "elapsed_ms": 2,
-          "name": "validate_health_purity"
-        },
-        {
-          "elapsed_ms": 2,
-          "name": "validate_policy_integrity"
-        },
-        {
-          "elapsed_ms": 2,
-          "name": "validate_gatekeeper_gate"
-        },
-        {
-          "elapsed_ms": 2,
-          "name": "validate_plan_governed_execution_gate"
-        },
-        {
-          "elapsed_ms": 2,
-          "name": "validate_database_schema_versions"
-        },
-        {
-          "elapsed_ms": 1,
-          "name": "validate_generated_artifact_whitelist"
-        },
-        {
-          "elapsed_ms": 1,
-          "name": "validate_health_cache_integrity"
-        },
-        {
-          "elapsed_ms": 1,
-          "name": "validate_canon_mutation"
-        },
-        {
-          "elapsed_ms": 1,
-          "name": "validate_watcher_purity"
-        },
-        {
-          "elapsed_ms": 1,
-          "name": "validate_risk_map_violations"
-        },
-        {
-          "elapsed_ms": 1,
-          "name": "validate_override_authority"
-        },
-        {
-          "elapsed_ms": 1,
-          "name": "validate_trajectory_artifacts_if_present"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_validation_receipt_if_present"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_jev_history_if_present"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_research_claims_if_present"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_repo_map"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_heartbeat_invocation_gate"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_entrypoint_invariants"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_project_config_toml"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_risk_map"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_context_capsule_policy_contract"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_state_commit_gate"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_spec_drift"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_project_scoped_state"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_eval_gate_if_required"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_tooling_gate"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_docs_templates_bucket"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_workunit_manifests_if_present"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_root_dockerfile_seed_detection"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_coplayer_policy_tightening"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_internalization_artifacts_if_present"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_context_capsules_if_present"
-        }
-      ],
-      "git_revision": "e01057cd19bdea3b4659a23647643782517ff9cf",
-      "kind": "validation_receipt",
-      "parallelism": 1,
-      "pass_count": 203,
-      "prediction_uses_warnings": true,
-      "receipt_hash": "sha256:0d8391e66c5dd3efc0385e0a0ba17a9412d23a54125f712d66ed22e05f6b657b",
-      "repo_signal_fingerprint": "76abacad7a2a007655edfdd5e59e517944c2927704c41ce51195889bc75d901c",
-      "schema_version": "1.0.0",
-      "status": "ok",
-      "temporary_artifacts_cleaned": 0,
-      "trajectory_artifact_hash": "sha256:05778f2235bad2dabc2a46e08b62c27aaf921bf7be82cd8ad21e08b525ea6cdd",
-      "trajectory_run_id": "dactyl-0111-governance-repair",
-      "warn_count": 4,
-      "warnings": [
-        "No open pull request found on GitHub for branch 'agent/upgrade-dactyl/bugs_01m4kyeckvq8r1pv'. Create a pull request to submit changes.",
-        "Risk map missing (run `decapod riskmap init`)",
-        "Stale workspaces preserved for explicit review: <external-path> (unregistered_workspace: workspace ownership is unverified; --force does not authorize deleting unrelated directories. Inspect and preserve or remove this directory explicitly), <external-path> (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch), <external-path> (active_claim: workspace belongs to an active task claim; release or complete the claim before pruning), <external-path> (active_claim: workspace belongs to an active task claim; release or complete the claim before pruning), <external-path> (active_claim: workspace belongs to an active task claim; release or complete the claim before pruning)",
-        "Watcher audit trail missing (run `decapod govern watcher run`)"
-      ]
     }
   },
   "legacy_digests": {

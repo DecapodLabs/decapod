@@ -353,8 +353,8 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `76abacad7a2a007655edfdd5e59e517944c2927704c41ce51195889bc75d901c`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (125 files), `tests/` (168 files)
+- Repository signal fingerprint: `9f0aad7af6e6afea8f76637a5a325d188125da973ae0349c49635287c477ebdb`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (7 files), `docs/` (1 files), `src/` (125 files), `tests/` (169 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -415,3 +415,32 @@ requests that refresh during ordinary validation. Neither changes authored
 intent or replaces the material living-spec review. There is no top-level
 `decapod specs.refresh` command. Generated codebase attestations use the RPC
 invocation, and documentation regeneration retains this contract.
+
+## Fresh branch governance lifecycle
+
+`workspace ensure`, `agent.init`, and validation initialize a new work branch
+from the embedded governance template and its claimed task title, intent, and
+scope. A template has a DRAFT plan and no validation receipt or completion
+claim. `begin-pr` remains the explicit recovery boundary on an isolated
+unprotected work branch. Status and plain inventory are sessionless readers.
+Missing, conflicting, or ambiguous task/base context preserves the journal and
+returns recovery guidance; successful validation must supply fresh bound proof.
+
+Automatic container workspaces expose host `.decapod/data` at both the canonical
+host path and the clone path, together with the authoritative applied-migration
+ledger directory. The clone retains its accepted project configuration and overrides, and
+its own tracked governance and runtime session files. Existing workspaces with
+whole-directory governance aliases fail closed with `GOVERNANCE_WORKSPACE_ALIAS`
+and must be recreated using the supported branch-local layout.
+
+Host-root runtime lookups alias the branch's managed directory, with only
+`managed/migrations` overlaid from the shared host ledger. This preserves
+atomic ledger updates and prevents historical migrations from rerunning, while
+version counters and tracked specs remain branch-local. Existing host config
+and overrides are available read-only for shared-datastore policy decisions;
+branch files remain the input to source and document validation.
+
+`cargo build-main` and `cargo test-main` invoke the optional lifecycle supervisor
+without changing ordinary Cargo commands. Bazel's checked-in build/test config
+enables synchronous sandbox disposal and the same test scratch supervisor.
+`CARGO_INCREMENTAL=1` explicitly opts back into incremental compilation.

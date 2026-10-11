@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0.0",
+  "baseline": {},
+  "sections": {
+    "plan": {
+      "schema_version": "1.1.0",
+      "title": "",
+      "intent": "",
+      "state": "DRAFT",
+      "todo_ids": [],
+      "proof_hooks": ["decapod validate"],
+      "constraints": {},
+      "updated_at": "0Z"
+    }
+  }
+}

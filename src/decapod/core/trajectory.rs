@@ -390,102 +390,107 @@ pub struct TrajectoryInit {
     pub blockers: Vec<String>,
 }
 
+/// Construct an unproven trajectory without writing any governance state.
+/// Branch initialization uses this to seed plan and trajectory in one transaction.
+pub(crate) fn fresh_trajectory(
+    project_root: &Path,
+    input: TrajectoryInit,
+) -> Result<TrajectoryArtifact, error::DecapodError> {
+    let TrajectoryInit {
+        run_id,
+        task_id,
+        intent_id,
+        original_intent,
+        derived_intent,
+        active_boundaries,
+        repo_scope,
+        destination,
+        current_phase,
+        next_transitions,
+        blockers,
+    } = input;
+    validate_run_id(&run_id)?;
+    if original_intent.trim().is_empty() || derived_intent.trim().is_empty() {
+        return Err(error::DecapodError::ValidationError(
+            "trajectory requires non-empty original_intent and derived_intent".to_string(),
+        ));
+    }
+
+    let effective_intent_id = intent_id.unwrap_or_else(|| format!("intent:{run_id}"));
+    let durable_active_boundaries = active_boundaries
+        .iter()
+        .map(|path| crate::core::path_policy::normalize_persisted_path(project_root, path))
+        .collect::<Vec<_>>();
+    let durable_repo_scope = repo_scope
+        .iter()
+        .map(|path| crate::core::path_policy::normalize_persisted_path(project_root, path))
+        .collect::<Vec<_>>();
+    let custody = crate::core::custody::bootstrap_intent(
+        &effective_intent_id,
+        original_intent.clone(),
+        derived_intent.clone(),
+        durable_active_boundaries.clone(),
+        durable_repo_scope.clone(),
+    )
+    .map_err(|e| {
+        error::DecapodError::ValidationError(format!("failed to initialize intent custody: {e}"))
+    })?;
+
+    let artifact = TrajectoryArtifact {
+        schema_version: TRAJECTORY_SCHEMA_VERSION.to_string(),
+        run_id: run_id.to_string(),
+        intent_id: Some(effective_intent_id),
+        task_id,
+        original_intent,
+        derived_intent,
+        destination,
+        current_phase,
+        next_transitions,
+        blockers,
+        active_boundaries: durable_active_boundaries,
+        repo_scope: durable_repo_scope,
+        inspected_files: Vec::new(),
+        modified_files: Vec::new(),
+        declared_commands: Vec::new(),
+        tool_calls: Vec::new(),
+        loops: Vec::new(),
+        checks: Vec::new(),
+        evidence: Vec::new(),
+        shortcut_risk_signals: Vec::new(),
+        unresolved_assumptions: Vec::new(),
+        completion_claim: None,
+        proof_status: TrajectoryProofStatus::NoChecksRun,
+        verdicts: TrajectoryVerdicts {
+            intent_alignment: TrajectoryVerdict::Unassessed,
+            boundary_discipline: TrajectoryVerdict::Unassessed,
+            shortcut_risk: TrajectoryVerdict::Supported,
+            completion_proof: TrajectoryVerdict::Unsupported,
+        },
+        artifact_hash: String::new(),
+        custody,
+    };
+    let written = artifact
+        .with_recomputed_hash()
+        .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
+    validate_loops(&written)?;
+    Ok(written)
+}
+
 pub fn init_trajectory(
     project_root: &Path,
     input: TrajectoryInit,
 ) -> Result<TrajectoryArtifact, error::DecapodError> {
     crate::core::governance_document::with_lock(project_root, || {
-        let TrajectoryInit {
-            run_id,
-            task_id,
-            intent_id,
-            original_intent,
-            derived_intent,
-            active_boundaries,
-            repo_scope,
-            destination,
-            current_phase,
-            next_transitions,
-            blockers,
-        } = input;
-        validate_run_id(&run_id)?;
-        // A different run replaces the current cookie. Git history preserves the
-        // prior committed artifact, while loops retain multiple jobs within one
-        // active workspace run.
-        if load_trajectory_cookie(project_root)
-            .ok()
-            .flatten()
-            .is_some_and(|existing| existing.run_id == run_id)
+        // Repeated run initialization never erases its existing evidence.
+        if load_trajectory_cookie(project_root)?
+            .is_some_and(|existing| existing.run_id == input.run_id)
         {
             return Err(error::DecapodError::ValidationError(format!(
-                "trajectory '{run_id}' already exists"
+                "trajectory '{}' already exists",
+                input.run_id
             )));
         }
-        if original_intent.trim().is_empty() || derived_intent.trim().is_empty() {
-            return Err(error::DecapodError::ValidationError(
-                "trajectory requires non-empty original_intent and derived_intent".to_string(),
-            ));
-        }
-
-        let effective_intent_id = intent_id.unwrap_or_else(|| format!("intent:{run_id}"));
-        let durable_active_boundaries = active_boundaries
-            .iter()
-            .map(|path| crate::core::path_policy::normalize_persisted_path(project_root, path))
-            .collect::<Vec<_>>();
-        let durable_repo_scope = repo_scope
-            .iter()
-            .map(|path| crate::core::path_policy::normalize_persisted_path(project_root, path))
-            .collect::<Vec<_>>();
-        let custody = crate::core::custody::bootstrap_intent(
-            &effective_intent_id,
-            original_intent.clone(),
-            derived_intent.clone(),
-            durable_active_boundaries.clone(),
-            durable_repo_scope.clone(),
-        )
-        .map_err(|e| {
-            error::DecapodError::ValidationError(format!(
-                "failed to initialize intent custody: {e}"
-            ))
-        })?;
-
-        let artifact = TrajectoryArtifact {
-            schema_version: TRAJECTORY_SCHEMA_VERSION.to_string(),
-            run_id: run_id.to_string(),
-            intent_id: Some(effective_intent_id),
-            task_id,
-            original_intent,
-            derived_intent,
-            destination,
-            current_phase,
-            next_transitions,
-            blockers,
-            active_boundaries: durable_active_boundaries,
-            repo_scope: durable_repo_scope,
-            inspected_files: Vec::new(),
-            modified_files: Vec::new(),
-            declared_commands: Vec::new(),
-            tool_calls: Vec::new(),
-            loops: Vec::new(),
-            checks: Vec::new(),
-            evidence: Vec::new(),
-            shortcut_risk_signals: Vec::new(),
-            unresolved_assumptions: Vec::new(),
-            completion_claim: None,
-            proof_status: TrajectoryProofStatus::NoChecksRun,
-            verdicts: TrajectoryVerdicts {
-                intent_alignment: TrajectoryVerdict::Unassessed,
-                boundary_discipline: TrajectoryVerdict::Unassessed,
-                shortcut_risk: TrajectoryVerdict::Supported,
-                completion_proof: TrajectoryVerdict::Unsupported,
-            },
-            artifact_hash: String::new(),
-            custody,
-        };
-        let written = artifact
-            .with_recomputed_hash()
-            .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
-        validate_loops(&written)?;
+        let written = fresh_trajectory(project_root, input)?;
         let mut updates = vec![(
             "trajectory",
             Some(

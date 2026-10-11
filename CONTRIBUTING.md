@@ -67,6 +67,54 @@ bazel run //:decapod -- validate
 
 If you do not have Bazelisk installed, you can install it via your package manager (e.g., `npm install -g @bazel/bazelisk`, `brew install bazelisk`, etc.).
 
+### Build and test cleanup
+
+The normal Bazel commands above clean their action-owned sandbox trees before
+returning. Sandbox-directory reuse is disabled; compiled outputs, action caches,
+download caches, and declared test logs remain available. `--sandbox_debug`
+intentionally retains Bazel sandboxes when investigating a failure.
+
+Bazel tests automatically run through the Rust `//:build_lifecycle` supervisor.
+Each test process gets a unique temporary directory under Bazel's `TEST_TMPDIR`.
+The supervisor waits for the child and removes only that invocation's scratch on
+success, failure, or handled Unix SIGHUP/SIGINT/SIGTERM. Tests must write evidence
+that should survive cleanup to Bazel's declared test-output locations, not TMPDIR.
+Source files, governance evidence, sibling runs, and build output/cache trees are
+never cleanup targets. If child shutdown cannot be established or the scratch
+root was replaced, cleanup fails closed and reports the retained path. SIGKILL
+and machine crashes cannot run cleanup; no later invocation sweeps old or
+unowned directories.
+Build/test children must join their descendants before returning. Cancellation
+is forwarded to the immediate child's process group; a descendant that creates
+another group must handle its own shutdown and join. Detached descendants are
+outside this portable lifecycle contract. This helper is not a general
+process/container reaper and cannot guarantee cleanup after a runner's hard kill.
+
+For Cargo, use the repository lifecycle aliases:
+
+```bash
+cargo build-main --locked
+cargo test-main --locked --lib
+cargo test-main --locked --test entrypoint_correctness
+
+# Verify the cleanup supervisor itself
+cargo test --locked --features build-tools --bin decapod-build
+bazelisk test //:build_lifecycle_tests
+```
+
+These aliases run the Rust tool in `assets/tools/build_lifecycle.rs`, then invoke
+Cargo with owned scratch beneath the checkout's `target/`. Plain `cargo build`
+and `cargo test` remain supported but do not use the scratch supervisor. The
+optional `build-tools` feature exposes `decapod-build`; normal installation still
+installs only the runtime binary.
+
+Cargo development, test, and install profiles disable incremental compilation
+by default to avoid accumulating per-worktree compiler scratch. Compiled
+dependencies remain cached. For a deliberate incremental edit loop, opt in with
+`CARGO_INCREMENTAL=1 cargo test-main ...`. Existing Cargo incremental directories
+are not deleted by a build: they may belong to another active process. No build
+or test action invokes `bazel clean`, `cargo clean`, or an output-base expunge.
+
 ### Nix Development Shell
 
 If you are using Nix, you can enter a fully reproducible development shell containing all the required tooling by running:

@@ -7509,7 +7509,7 @@ pub fn run_validation(
             timings,
             ctx,
             "validate_docs_templates_bucket",
-            validate_docs_templates_bucket(ctx, main_root)
+            validate_docs_templates_bucket(ctx, working_root)
         );
         gate!(
             s,
@@ -7523,21 +7523,21 @@ pub fn run_validation(
             timings,
             ctx,
             "validate_interface_contract_bootstrap",
-            validate_interface_contract_bootstrap(ctx, main_root)
+            validate_interface_contract_bootstrap(ctx, working_root)
         );
         gate!(
             s,
             timings,
             ctx,
             "validate_health_purity",
-            validate_health_purity(ctx, main_root)
+            validate_health_purity(ctx, working_root)
         );
         gate!(
             s,
             timings,
             ctx,
             "validate_project_scoped_state",
-            validate_project_scoped_state(store, ctx, main_root)
+            validate_project_scoped_state(store, ctx, working_root)
         );
         gate!(
             s,
@@ -7630,7 +7630,7 @@ pub fn run_validation(
             timings,
             ctx,
             "validate_recursive_improvement_passes_if_present",
-            validate_recursive_improvement_passes_if_present(ctx, main_root)
+            validate_recursive_improvement_passes_if_present(ctx, working_root)
         );
         gate!(
             s,
@@ -7667,7 +7667,7 @@ pub fn run_validation(
             timings,
             ctx,
             "validate_internalization_artifacts_if_present",
-            validate_internalization_artifacts_if_present(ctx, main_root)
+            validate_internalization_artifacts_if_present(ctx, working_root)
         );
         gate!(
             s,

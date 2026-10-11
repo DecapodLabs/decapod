@@ -54,11 +54,18 @@ or evidence changes without resetting the PR identity.
 
 ### Current-PR sequence
 
-1. Fast-forward the protected base, claim a todo, and run `workspace ensure`.
-2. Preserve any legacy evidence in Git, then use `govern artifacts migrate` for
-   lossless adoption and `govern artifacts begin-pr --id <change> --base-branch master`
-   for the explicit boundary. Accepted completed claims remain in Git history;
-   unresolved obligations carry forward and require explicit proof-backed resolution.
+1. Fetch the protected base, claim the current task, and run `workspace ensure`.
+   Decapod creates the isolated work branch from the selected committed base and
+   instantiates its embedded governance template from the claimed task's intent
+   and scope. The main/master document is never rewritten by branch initialization.
+2. Review the new draft plan and unproven trajectory. Only durable policy and
+   explicit unresolved obligations carry over; accepted claims, checkpoints,
+   and successful validation remain in Git history. `agent.init` and validation
+   also initialize a manually created fresh worktree branch with a claimed task.
+   Repeated calls, renames, and rebases preserve an active workstream unchanged.
+   Ambiguous or dirty inherited context fails closed; preserve it and use the
+   explicit `govern artifacts begin-pr --id <change> --base-branch <base>` recovery
+   only after establishing the accepted boundary. Legacy migration stays lossless.
 3. Refine the plan, record trajectory and proof, review material living specs,
    refresh supported projections, and run `decapod validate` without skipping gates.
 4. Stage authored code/spec changes, record `govern artifacts checkpoint --id <unique-id>

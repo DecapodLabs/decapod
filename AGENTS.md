@@ -1,5 +1,5 @@
-<!-- decapod-release: 0.107.1 -->
-<!-- decapod-fingerprint: 56168d07b8eb4ac0b485b8cb67bb27118a4290d768541b9d77ccadc398a0982d -->
+<!-- decapod-release: 0.107.2 -->
+<!-- decapod-fingerprint: 1d75eb729c821ef42020436a8d20bf3da6b957d7bc2518f3eeefcef7acd308a0 -->
 # AGENTS.md — Universal Agent Contract
 
 This is a Decapod-managed repository. **Strict Dependency: You are strictly bound to the Decapod governance kernel.**
@@ -87,7 +87,7 @@ Preserve the chain between intent, context, assumptions, action, and proof.
 4. **Clarification Trigger**: Stop if a critical assumption cannot be proven.
 
 ## Run-Level Trajectory and Proof
-Record the current trajectory section in `.decapod/governance.json`: initialize intent/boundaries/scope, then record inspected/modified files, commands/tool calls, checks, evidence, assumptions, and shortcut signals at meaningful work boundaries. Inspect with `decapod govern trajectory status --run-id <run-id>`. Stage material, record `decapod govern artifacts checkpoint --id <id> --summary "..."`, then stage governance.json before each commit. Explicit `begin-pr` starts the next compact PR baseline after acceptance; Git preserves accepted historical evidence.
+Record the current trajectory section in `.decapod/governance.json`: initialize intent/boundaries/scope, then record inspected/modified files, commands/tool calls, checks, evidence, assumptions, and shortcut signals at meaningful work boundaries. Inspect with `decapod govern trajectory status --run-id <run-id>`. Stage material, record `decapod govern artifacts checkpoint --id <id> --summary "..."`, then stage governance.json before each commit. `workspace ensure` seeds a fresh governance template from the current claimed task when it creates the next work branch from the accepted base. `agent.init` and validation cover manually created fresh worktree branches. Repeated calls, renames, and rebases preserve the active journal; Git preserves accepted historical evidence. Explicit `begin-pr` remains the deliberate recovery boundary.
 Use `decapod govern trajectory init --run-id <run-id> --original-intent "..." --derived-intent "..." --boundary "..." --scope "..."` and `decapod govern trajectory record --run-id <run-id> --inspected-file <path> --check "name=status"`; repeatable `--loop-json` objects record `intent_id`, `trajectory_id`, `loop_id`, `loop_type`, `attempt`, `trigger`, `grader_result`, `feedback`, `proof_refs`, `mutation_proposal`, and `status`. Verification passes require proof references; failed verification feedback is bounded and retry attempts are contiguous. Event and improvement loops remain evidence records, and improvement output is a proposal only.
 Completion claims never prove completion: `passed`, `failed`, `partial`, `unavailable`, and `no_checks_run` remain distinct, and no checks means an `unsupported` completion verdict.
 ## Invariants (Normative)

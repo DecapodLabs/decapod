@@ -87,6 +87,7 @@ struct WorkspaceSpec {
     branch: String,
     path: PathBuf,
     base_branch: String,
+    base_commit: String,
     backend: String,
     ownership: crate::core::workspace_lifecycle::OwnedWorkspace,
 }
@@ -301,6 +302,12 @@ Agent must clear the disable marker through Decapod self-heal before retrying.",
         .unwrap_or_else(|| default_branch_name(agent, task_id));
     let base_branch = resolve_base_branch(&repo, pr_base);
     let workspace = prepare_workspace_clone(&repo, &branch_name, &base_branch, &docker)?;
+    workspace::initialize_workbranch_governance_at(
+        &workspace.path,
+        agent,
+        Some(&workspace.base_branch),
+        Some(&workspace.base_commit),
+    )?;
 
     let mut spec = build_docker_spec(
         &docker,
@@ -1255,6 +1262,11 @@ fn prepare_workspace_clone(
     base_branch: &str,
     runtime: &str,
 ) -> Result<WorkspaceSpec, error::DecapodError> {
+    let start_oid = workspace::preferred_base_oid(repo, base_branch).ok_or_else(|| {
+        error::DecapodError::ValidationError(format!(
+            "WORKSPACE_BASE_UNRESOLVED: {base_branch}; no workspace was created"
+        ))
+    })?;
     let workspaces_root = repo.join(".decapod").join("workspaces");
     crate::core::fs_permissions::ensure_private_dir(&workspaces_root)
         .map_err(error::DecapodError::IoError)?;
@@ -1268,7 +1280,6 @@ fn prepare_workspace_clone(
 
     let mut ownership = crate::core::workspace_lifecycle::reserve(repo, &workspace_path, true)?;
     ownership.require_container(runtime)?;
-    let start_oid = workspace::preferred_base_oid(repo, base_branch);
     let base_ref = format!("refs/heads/{base_branch}");
     let clone_output = if git_ref_exists(repo, &base_ref)? {
         Command::new("git")
@@ -1297,41 +1308,49 @@ fn prepare_workspace_clone(
         )));
     }
 
-    if let Some(oid) = start_oid {
-        // `--single-branch` only copies the parent's local base. Fetch the
-        // preferred OID (usually origin/base) from the parent object store
-        // so a stale local protected branch is not the start point.
-        let fetch_ref = format!("{oid}:refs/decapod/base");
-        let _ = run_git(
-            &workspace_path,
-            &[
-                "fetch",
-                "--no-tags",
-                repo.to_str().unwrap_or("."),
-                &fetch_ref,
-            ],
-        );
-        run_git(&workspace_path, &["checkout", "-B", branch, &oid])?;
-    } else {
-        let local_base_ref = format!("refs/heads/{base_branch}");
-        let remote_base_ref = format!("refs/remotes/origin/{base_branch}");
-        if git_ref_exists(&workspace_path, &local_base_ref)? {
-            run_git(&workspace_path, &["checkout", "-B", branch, base_branch])?;
-        } else if git_ref_exists(&workspace_path, &remote_base_ref)? {
-            let from_remote = format!("origin/{base_branch}");
-            run_git(&workspace_path, &["checkout", "-B", branch, &from_remote])?;
-        } else {
-            run_git(&workspace_path, &["checkout", "-B", branch])?;
-        }
-    }
+    // A single-branch clone can copy a stale local base. Fetch the captured
+    // accepted OID from the parent store before preparing the work branch.
+    let fetch_ref = format!("{start_oid}:refs/decapod/base");
+    run_git(
+        &workspace_path,
+        &[
+            "fetch",
+            "--no-tags",
+            repo.to_str().unwrap_or("."),
+            &fetch_ref,
+        ],
+    )?;
+    run_git(&workspace_path, &["checkout", "-B", branch, &start_oid])?;
 
     let _ = workspace::inherit_network_remotes_from_parent(repo, &workspace_path);
+    let head = Command::new("git")
+        .args(["rev-parse", "HEAD"])
+        .current_dir(&workspace_path)
+        .bounded_output(CONTROL_TIMEOUT)
+        .map_err(error::DecapodError::IoError)?;
+    if !head.status.success() {
+        return Err(error::DecapodError::ValidationError(
+            "Cannot capture initialized container work branch".into(),
+        ));
+    }
+    let base_commit = String::from_utf8_lossy(&head.stdout).trim().to_string();
+    // The clone's copied origin/base may lag the actual accepted snapshot.
+    // Keep its local read-only base view aligned with the captured creator input.
+    run_git(
+        &workspace_path,
+        &[
+            "update-ref",
+            &format!("refs/remotes/origin/{base_branch}"),
+            base_commit.trim(),
+        ],
+    )?;
     ownership.mark_ready()?;
 
     Ok(WorkspaceSpec {
         branch: branch.to_string(),
         path: workspace_path,
         base_branch: base_branch.to_string(),
+        base_commit: base_commit.trim().to_string(),
         backend: "local-clone".to_string(),
         ownership,
     })
@@ -1497,8 +1516,8 @@ fn build_docker_spec(
     inherit_env: bool,
     local_only: bool,
 ) -> Result<DockerSpec, error::DecapodError> {
-    let decapod_dir = repo_root.join(".decapod");
-    crate::core::fs_permissions::ensure_private_dir(&decapod_dir)
+    let decapod_dir = repo_root.join(".decapod/data");
+    crate::core::fs_permissions::ensure_storage_dir(&decapod_dir)
         .map_err(error::DecapodError::IoError)?;
     let decapod_dir_str = decapod_dir
         .to_str()
@@ -1506,7 +1525,7 @@ fn build_docker_spec(
     let workspace_str = workspace
         .to_str()
         .ok_or_else(|| error::DecapodError::PathError("invalid repository path".to_string()))?;
-    let workspace_decapod_mount = format!("{workspace_str}/.decapod");
+    let workspace_decapod_mount = format!("{workspace_str}/.decapod/data");
     let container_name = format!(
         "decapod-agent-{}-{}",
         sanitize_name(agent),
@@ -1555,9 +1574,51 @@ fn build_docker_spec(
         format!("{}:{}", workspace_str, workspace_str),
         "-v".to_string(),
         format!("{}:{}", decapod_dir_str, workspace_decapod_mount),
+        // Canonical datastore resolution uses the host-root path. Expose that
+        // alias too, without sharing the host's tracked governance or config.
+        "-v".to_string(),
+        format!("{decapod_dir_str}:{decapod_dir_str}"),
         "-w".to_string(),
         workspace_str.to_string(),
     ];
+
+    // Host-root runtime lookups must still see the branch's generated state.
+    // This aliases the workspace volume, never the host's tracked specs.
+    let workspace_managed = workspace.join(".decapod/managed");
+    crate::core::fs_permissions::ensure_private_dir(&workspace_managed)
+        .map_err(error::DecapodError::IoError)?;
+    args.push("-v".into());
+    args.push(format!(
+        "{}:{}",
+        workspace_managed.display(),
+        repo_root.join(".decapod/managed").display()
+    ));
+
+    // The applied migration ledger is authoritative for this shared database.
+    // Share its directory (atomic renames remain supported), not tracked specs.
+    let migrations = repo_root.join(".decapod/managed/migrations");
+    crate::core::fs_permissions::ensure_storage_dir(&migrations)
+        .map_err(error::DecapodError::IoError)?;
+    for target in [
+        migrations.clone(),
+        workspace.join(".decapod/managed/migrations"),
+    ] {
+        args.push("-v".into());
+        args.push(format!("{}:{}", migrations.display(), target.display()));
+    }
+
+    // Shared datastore policy remains owned by the host project, not editable
+    // branch copies. Only these existing configuration files are exposed, read-only.
+    for relative in [".decapod/config.toml", ".decapod/OVERRIDE.md"] {
+        let path = repo_root.join(relative);
+        if path.is_file() {
+            let path = path.to_str().ok_or_else(|| {
+                error::DecapodError::PathError("invalid project policy path".into())
+            })?;
+            args.push("-v".into());
+            args.push(format!("{path}:{path}:ro"));
+        }
+    }
 
     if inherit_env {
         for (k, v) in inherited_env_vars() {
@@ -1627,7 +1688,9 @@ fn build_container_script(
     let base_branch_escaped = shell_escape(base_branch);
     let branch_escaped = shell_escape(branch);
     script.push_str(&format!(
-        "if git_safe show-ref --verify --quiet {local_head_ref}; then\n\
+        "if [ \"$(git_safe branch --show-current)\" = {branch_escaped} ]; then\n\
+           : # Preserve the creator's captured base and branch-local journal.\n\
+         elif git_safe show-ref --verify --quiet {local_head_ref}; then\n\
            git_safe checkout -B {branch_escaped} {base_branch_escaped}\n\
          elif git_safe show-ref --verify --quiet {remote_head_ref}; then\n\
            git_safe checkout -B {branch_escaped} origin/{base_branch_escaped}\n\
@@ -1639,7 +1702,7 @@ fn build_container_script(
     script.push('\n');
 
     script.push_str(
-        "if [ -n \"$(git_safe status --porcelain)\" ]; then\n  git_safe add -A\n  git_safe commit -m \"chore: automated container updates\"\nfi\n",
+        "if [ -n \"$(git_safe status --porcelain)\" ]; then\n  git_safe add -A || exit $?\n  decapod govern artifacts checkpoint --id \"container-$(git_safe rev-parse HEAD)\" --summary \"Capture branch-local container work and governance\" || exit $?\n  git_safe add .decapod/governance.json || exit $?\n  git_safe commit -m \"chore: automated container updates\" || exit $?\nfi\n",
     );
     if !local_only {
         script.push_str(include_str!("container/host-control-plane.sh"));
@@ -1722,4 +1785,4 @@ pub fn schema() -> serde_json::Value {
 }
 #[cfg(test)]
 #[path = "../../../tests/unit/plugins/container_tests.rs"]
-mod tests;
+pub(crate) mod tests;

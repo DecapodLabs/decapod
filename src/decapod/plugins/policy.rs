@@ -599,8 +599,19 @@ fn risk_zone_for_operation(op_name: &str) -> &'static str {
 }
 
 fn configured_approval_categories(root: &Path) -> Result<Vec<String>, error::DecapodError> {
-    let main_root =
-        crate::core::workspace::get_main_repo_root(root).unwrap_or_else(|_| root.to_path_buf());
+    // The shared datastore identifies its accepted project policy even when a
+    // container mounts the host config without the host Git metadata. Do not
+    // substitute the workspace clone's config or search arbitrary ancestors.
+    let project_root = root
+        .parent()
+        .filter(|parent| {
+            root.file_name().is_some_and(|name| name == "data")
+                && parent.file_name().is_some_and(|name| name == ".decapod")
+        })
+        .and_then(Path::parent)
+        .unwrap_or(root);
+    let main_root = crate::core::workspace::get_main_repo_root(project_root)
+        .unwrap_or_else(|_| project_root.to_path_buf());
     let config_path = main_root.join(".decapod").join("config.toml");
     if !config_path.exists() {
         return Ok(Vec::new());
@@ -943,4 +954,122 @@ pub fn schema() -> serde_json::Value {
         ],
         "storage": ["decapod.db", "RISKMAP.json"]
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    fn write_approval_config(root: &Path, categories: &[&str]) {
+        fs::create_dir_all(root.join(".decapod")).unwrap();
+        fs::write(
+            root.join(".decapod/config.toml"),
+            format!(
+                "schema_version = \"1.0.0\"\n\
+                 [init]\n\
+                 specs = true\n\
+                 ci = true\n\
+                 diagram_style = \"mermaid\"\n\
+                 entrypoints = []\n\
+                 [repo]\n\
+                 product_name = \"policy-test\"\n\
+                 [governance]\n\
+                 approval_categories = {}\n",
+                serde_json::to_string(categories).unwrap()
+            ),
+        )
+        .unwrap();
+    }
+
+    #[test]
+    fn configured_approvals_resolve_exact_shared_store_without_host_git() {
+        let host = tempfile::tempdir().unwrap();
+        write_approval_config(host.path(), &["destructive_operations", "policy_changes"]);
+        let store = host.path().join(".decapod/data");
+        fs::create_dir_all(&store).unwrap();
+        assert!(!host.path().join(".git").exists());
+        let before = fs::read(host.path().join(".decapod/config.toml")).unwrap();
+        let categories = configured_approval_categories(&store).unwrap();
+        assert_eq!(categories, vec!["destructive_operations", "policy_changes"]);
+        assert!(configured_approval_required(&categories, "todo.delete"));
+        assert!(configured_approval_required(&categories, "policy.approve"));
+        assert_eq!(
+            fs::read(host.path().join(".decapod/config.toml")).unwrap(),
+            before
+        );
+    }
+
+    #[test]
+    fn workspace_clone_config_cannot_supersede_shared_host_store_policy() {
+        let host = tempfile::tempdir().unwrap();
+        write_approval_config(host.path(), &["destructive_operations"]);
+        let store = host.path().join(".decapod/data");
+        fs::create_dir_all(&store).unwrap();
+        let workspace = host.path().join(".decapod/workspaces/policy-test");
+        write_approval_config(&workspace, &["policy_changes"]);
+        let git = std::process::Command::new("git")
+            .current_dir(&workspace)
+            .args(["init", "-b", "workbranch"])
+            .output()
+            .unwrap();
+        assert!(
+            git.status.success(),
+            "{}",
+            String::from_utf8_lossy(&git.stderr)
+        );
+        assert!(workspace.join(".git").is_dir());
+        assert!(!host.path().join(".git").exists());
+        let categories = configured_approval_categories(&store).unwrap();
+        assert_eq!(categories, vec!["destructive_operations"]);
+        assert!(configured_approval_required(&categories, "todo.delete"));
+        assert!(!configured_approval_required(&categories, "policy.approve"));
+        let workspace_store = workspace.join(".decapod/data");
+        fs::create_dir_all(&workspace_store).unwrap();
+        assert_eq!(
+            configured_approval_categories(&workspace_store).unwrap(),
+            categories
+        );
+        write_approval_config(&workspace, &[]);
+        assert_eq!(configured_approval_categories(&store).unwrap(), categories);
+        assert_eq!(
+            configured_approval_categories(&workspace_store).unwrap(),
+            categories
+        );
+    }
+
+    #[test]
+    fn configured_approvals_do_not_infer_policy_from_arbitrary_store_ancestors() {
+        let host = tempfile::tempdir().unwrap();
+        write_approval_config(host.path(), &["destructive_operations"]);
+        for relative in [
+            "data",
+            "other/data",
+            ".decapod/cache",
+            ".decapod/data/nested",
+        ] {
+            let store = host.path().join(relative);
+            fs::create_dir_all(&store).unwrap();
+            assert!(
+                configured_approval_categories(&store).unwrap().is_empty(),
+                "{relative}"
+            );
+        }
+    }
+
+    #[test]
+    fn configured_approvals_without_host_git_fail_on_invalid_host_config() {
+        let host = tempfile::tempdir().unwrap();
+        let store = host.path().join(".decapod/data");
+        fs::create_dir_all(&store).unwrap();
+        let path = host.path().join(".decapod/config.toml");
+        let malformed = b"[governance\napproval_categories = []\n";
+        fs::write(&path, malformed).unwrap();
+        let error = configured_approval_categories(&store).unwrap_err();
+        assert!(
+            error.to_string().contains("Unable to load approval policy"),
+            "{error}"
+        );
+        assert_eq!(fs::read(path).unwrap(), malformed);
+    }
 }

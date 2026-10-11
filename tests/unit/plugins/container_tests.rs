@@ -78,13 +78,27 @@ fn docker_spec_contains_safety_flags_and_sdlc_steps() {
     assert!(
         joined.contains("-v /tmp/repo/.decapod/workspaces/w1:/tmp/repo/.decapod/workspaces/w1")
     );
-    assert!(joined.contains("-v /tmp/repo/.decapod:/tmp/repo/.decapod/workspaces/w1/.decapod"));
+    assert!(
+        joined
+            .contains("-v /tmp/repo/.decapod/data:/tmp/repo/.decapod/workspaces/w1/.decapod/data")
+    );
+    assert!(
+        !spec
+            .args
+            .iter()
+            .any(|arg| arg == "/tmp/repo/.decapod:/tmp/repo/.decapod/workspaces/w1/.decapod")
+    );
+    assert!(joined.contains("-v /tmp/repo/.decapod/data:/tmp/repo/.decapod/data"));
     assert!(joined.contains("DECAPOD_LOCAL_ONLY=1"));
     assert!(joined.contains("decapod() { cargo run --quiet --bin decapod -- \"$@\"; }"));
     assert!(joined.contains("git_safe checkout -B 'ahr/branch'"));
     assert!(!joined.contains("git_safe fetch --no-write-fetch-head origin 'master'"));
     assert!(!joined.contains("git_safe rebase origin/'master'"));
     assert!(joined.contains("decapod update"));
+    assert!(
+        joined.find("decapod govern artifacts checkpoint").unwrap()
+            < joined.find("git_safe commit -m").unwrap()
+    );
     assert!(!joined.contains("git_safe push -u origin HEAD"));
     assert!(!joined.contains("gh auth status"));
     assert!(!joined.contains("gh pr create --base 'master' --head 'ahr/branch'"));
@@ -674,22 +688,300 @@ fn native_templates_preserve_master_bytes() {
 }
 
 #[test]
-fn assembled_container_scripts_preserve_master_bytes() {
-    use sha2::{Digest, Sha256};
-
-    // Whole-script goldens include the runtime command, escaped branch names,
-    // and both local-only branches from master 5bf48f1f.
-    for (local_only, expected) in [
-        (
-            true,
-            "b3f6733ba38cd4a12cc8aef46d84028e2d9eb3e6dc23a2e4a5aa67a142092cb6",
-        ),
-        (
-            false,
-            "f27a0a404e8a716474ced93352e8f0ed663781992382cd3c5eea72e8a1a2548d",
-        ),
-    ] {
-        let actual = build_container_script("echo governed", "agent/test", "main", local_only);
-        assert_eq!(format!("{:x}", Sha256::digest(actual.as_bytes())), expected);
+fn container_scripts_preserve_the_already_prepared_branch() {
+    for local_only in [true, false] {
+        let script = build_container_script("echo governed", "agent/test", "main", local_only);
+        assert!(
+            script.contains("if [ \"$(git_safe branch --show-current)\" = 'agent/test' ]; then")
+        );
+        assert!(
+            script.find("Preserve the creator's captured base").unwrap()
+                < script.find("git_safe checkout -B").unwrap()
+        );
+        assert!(
+            script.find("git_safe checkout -B").unwrap() < script.find("echo governed").unwrap()
+        );
     }
+}
+
+#[test]
+fn generated_container_script_keeps_newer_base_and_branch_local_governance() {
+    let temp = tempdir().unwrap();
+    let repo = temp.path().join("repo");
+    fs::create_dir(&repo).unwrap();
+    git(&repo, &["init", "-b", "master"]);
+    git(&repo, &["config", "user.name", "Container Tests"]);
+    git(&repo, &["config", "user.email", "test@example.invalid"]);
+    fs::write(repo.join("README"), "old main").unwrap();
+    git(&repo, &["add", "README"]);
+    git(&repo, &["commit", "-m", "old main"]);
+    git(&repo, &["checkout", "-b", "accepted-remote"]);
+    fs::write(repo.join("README"), "new accepted base").unwrap();
+    git(&repo, &["commit", "-am", "new accepted base"]);
+    let workspace = repo.join(".decapod/workspaces/branch");
+    git(
+        &repo,
+        &[
+            "worktree",
+            "add",
+            "-b",
+            "agent/test",
+            workspace.to_str().unwrap(),
+            "HEAD",
+        ],
+    );
+    fs::create_dir_all(workspace.join(".decapod")).unwrap();
+    fs::write(
+        workspace.join(".decapod/governance.json"),
+        "branch-local journal",
+    )
+    .unwrap();
+    fs::create_dir_all(repo.join(".decapod")).unwrap();
+    fs::write(
+        repo.join(".decapod/governance.json"),
+        "accepted host journal",
+    )
+    .unwrap();
+    let home = temp.path().join("home");
+    let bin = temp.path().join("bin");
+    fs::create_dir_all(&bin).unwrap();
+    #[cfg(unix)]
+    for (name, executable) in [
+        ("git", "/usr/bin/git"),
+        ("mkdir", "/bin/mkdir"),
+        ("cat", "/bin/cat"),
+    ] {
+        std::os::unix::fs::symlink(executable, bin.join(name)).unwrap();
+    }
+    let script = build_container_script(
+        "test \"$(cat README)\" = 'new accepted base' && test \"$(cat .decapod/governance.json)\" = 'branch-local journal'; set +e; decapod() { return 17; }",
+        "agent/test",
+        "master",
+        true,
+    );
+    let output = Command::new("/bin/sh")
+        .args(["-c", &script])
+        .env("DECAPOD_WORKSPACE", &workspace)
+        .env("HOME", &home)
+        .env("PATH", &bin)
+        .env("GIT_CONFIG_GLOBAL", home.join(".gitconfig"))
+        .output()
+        .unwrap();
+    // A failed real checkpoint must stop the automatic commit and preserve work.
+    assert_eq!(output.status.code(), Some(17));
+    let head = Command::new("git")
+        .args(["log", "-1", "--format=%s"])
+        .current_dir(&workspace)
+        .output()
+        .unwrap();
+    assert!(head.status.success());
+    assert_eq!(
+        String::from_utf8_lossy(&head.stdout).trim(),
+        "new accepted base"
+    );
+    assert_eq!(
+        fs::read_to_string(workspace.join("README")).unwrap(),
+        "new accepted base"
+    );
+    assert_eq!(
+        fs::read_to_string(repo.join(".decapod/governance.json")).unwrap(),
+        "accepted host journal"
+    );
+    assert_eq!(
+        fs::read_to_string(workspace.join(".decapod/governance.json")).unwrap(),
+        "branch-local journal"
+    );
+}
+
+/// Called by the existing opt-in actual-Docker lifecycle test, so the established
+/// CI job also exercises the production volume arguments without workflow edits.
+pub(crate) fn assert_actual_docker_governance_mount_isolation() {
+    use crate::core::bounded_process::{BoundedCommand, CONTROL_TIMEOUT};
+    let temp = tempdir().unwrap();
+    let repo = temp.path();
+    let workspace = repo.join(".decapod/workspaces/mount-proof");
+    fs::create_dir_all(repo.join(".decapod/data")).unwrap();
+    fs::create_dir_all(workspace.join(".decapod/data")).unwrap();
+    fs::write(
+        repo.join(".decapod/governance.json"),
+        "accepted host journal",
+    )
+    .unwrap();
+    fs::write(
+        workspace.join(".decapod/governance.json"),
+        "branch-local journal",
+    )
+    .unwrap();
+    let image = std::env::var("DECAPOD_TEST_DOCKER_IMAGE").expect("explicit disposable image");
+    let mut spec = build_docker_spec(
+        "docker",
+        repo,
+        &workspace,
+        &image,
+        "mount-proof",
+        "true",
+        "agent/mount-proof",
+        "master",
+        "128m",
+        "1",
+        None,
+        false,
+        true,
+    )
+    .unwrap();
+    // Busybox intentionally has no Git/Decapod. Exercise the exact production
+    // mounts and isolation flags with a bounded filesystem probe instead.
+    let resolved_data = crate::core::store::find_governance_root(&workspace).join(".decapod/data");
+    assert_eq!(resolved_data, repo.join(".decapod/data"));
+    crate::core::governance_document::with_lock(&workspace, || Ok(())).unwrap();
+    let lock_path = workspace.join(".decapod/managed/governance-document.lock");
+    assert!(lock_path.is_file());
+    fs::write(&lock_path, "workspace lock inode").unwrap();
+    let quoted_data = shell_escape(resolved_data.to_str().unwrap());
+    let host_managed = repo.join(".decapod/managed");
+    fs::write(host_managed.join("version_counter.json"), "host version").unwrap();
+    fs::write(
+        host_managed.join("migrations/applied.json"),
+        "shared ledger",
+    )
+    .unwrap();
+    let quoted_managed = shell_escape(host_managed.to_str().unwrap());
+    *spec.args.last_mut().unwrap() = format!(
+        "set -eu; test \"$(cat .decapod/managed/governance-document.lock)\" = 'workspace lock inode'; printf '%s' 'current branch journal' > .decapod/governance.json; printf '%s' 'shared coordination' > {}/mount-proof; test \"$(cat .decapod/data/mount-proof)\" = 'shared coordination'; printf '%s' 'same workspace volume' > .decapod/managed/governance-document.lock",
+        quoted_data
+    );
+    spec.args.last_mut().unwrap().push_str(&format!(
+        "; test \"$(cat {quoted_managed}/migrations/applied.json)\" = 'shared ledger'; test \"$(cat .decapod/managed/migrations/applied.json)\" = 'shared ledger'; printf '%s' 'workspace version' > {quoted_managed}/version_counter.json; printf '%s' 'updated ledger' > {quoted_managed}/migrations/applied.next; mv {quoted_managed}/migrations/applied.next {quoted_managed}/migrations/applied.json"
+    ));
+    let output = Command::new("docker")
+        .args(&spec.args)
+        .bounded_output(CONTROL_TIMEOUT);
+    let cleanup = crate::core::container_runtime::remove_container_for_invocation(
+        "docker",
+        &spec.container_name,
+        &workspace,
+        None,
+    );
+    assert!(
+        cleanup.is_ok(),
+        "mount-proof container cleanup failed: {cleanup:?}"
+    );
+    let output = output.unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_eq!(
+        fs::read_to_string(repo.join(".decapod/governance.json")).unwrap(),
+        "accepted host journal"
+    );
+    assert_eq!(
+        fs::read_to_string(workspace.join(".decapod/governance.json")).unwrap(),
+        "current branch journal"
+    );
+    assert_eq!(
+        fs::read_to_string(lock_path).unwrap(),
+        "same workspace volume"
+    );
+    assert_eq!(
+        fs::read_to_string(host_managed.join("version_counter.json")).unwrap(),
+        "host version"
+    );
+    assert_eq!(
+        fs::read_to_string(workspace.join(".decapod/managed/version_counter.json")).unwrap(),
+        "workspace version"
+    );
+    assert_eq!(
+        fs::read_to_string(host_managed.join("migrations/applied.json")).unwrap(),
+        "updated ledger"
+    );
+    assert_eq!(
+        fs::read_to_string(repo.join(".decapod/data/mount-proof")).unwrap(),
+        "shared coordination"
+    );
+}
+
+#[test]
+fn container_clone_rejects_missing_base_before_creating_workspace() {
+    let temp = tempdir().unwrap();
+    let repo = temp.path();
+    git(repo, &["init", "-b", "master"]);
+    git(repo, &["config", "user.name", "Container Tests"]);
+    git(repo, &["config", "user.email", "test@example.invalid"]);
+    fs::write(repo.join("README"), "accepted").unwrap();
+    git(repo, &["add", "README"]);
+    git(repo, &["commit", "-m", "accepted"]);
+    let error = prepare_workspace_clone(repo, "agent/test", "missing-base", "docker")
+        .expect_err("missing base must fail closed");
+    assert!(error.to_string().contains("WORKSPACE_BASE_UNRESOLVED"));
+    assert!(!repo.join(".decapod/workspaces").exists());
+    let status = Command::new("git")
+        .args([
+            "show-ref",
+            "--verify",
+            "--quiet",
+            "refs/remotes/origin/missing-base",
+        ])
+        .current_dir(repo)
+        .status()
+        .unwrap();
+    assert!(!status.success());
+}
+
+#[test]
+fn container_spec_preserves_host_policy_read_only_and_branch_files_local() {
+    let temp = tempdir().unwrap();
+    let repo = temp.path();
+    fs::create_dir_all(repo.join(".decapod")).unwrap();
+    for name in ["config.toml", "OVERRIDE.md"] {
+        fs::write(repo.join(".decapod").join(name), "explicit host policy").unwrap();
+    }
+    let workspace = repo.join(".decapod/workspaces/policy");
+    let spec = build_docker_spec(
+        "docker",
+        repo,
+        &workspace,
+        "busybox",
+        "policy",
+        "true",
+        "agent/policy",
+        "master",
+        "128m",
+        "1",
+        None,
+        false,
+        true,
+    )
+    .unwrap();
+    assert!(spec.args.contains(&format!(
+        "{}:{}",
+        workspace.join(".decapod/managed").display(),
+        repo.join(".decapod/managed").display()
+    )));
+    for target in [
+        repo.join(".decapod/managed/migrations"),
+        workspace.join(".decapod/managed/migrations"),
+    ] {
+        assert!(spec.args.contains(&format!(
+            "{}:{}",
+            repo.join(".decapod/managed/migrations").display(),
+            target.display()
+        )));
+    }
+    for name in ["config.toml", "OVERRIDE.md"] {
+        let path = repo.join(".decapod").join(name).display().to_string();
+        assert!(spec.args.contains(&format!("{path}:{path}:ro")));
+        assert!(
+            !spec
+                .args
+                .iter()
+                .any(|arg| arg.ends_with(&format!("/workspaces/policy/.decapod/{name}")))
+        );
+    }
+    assert!(!spec.args.contains(&format!(
+        "{}:{}",
+        repo.join(".decapod").display(),
+        workspace.join(".decapod").display()
+    )));
 }

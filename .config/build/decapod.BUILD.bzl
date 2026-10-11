@@ -8,6 +8,27 @@ load("@crates//:defs.bzl", "all_crate_deps")
 
 
 def decapod_targets():
+    # This supervisor owns only test scratch, never Bazel's output/cache trees.
+    rust_binary(
+        name = "build_lifecycle",
+        srcs = ["assets/tools/build_lifecycle.rs"],
+        edition = "2024",
+    )
+
+    rust_test(
+        name = "build_lifecycle_tests",
+        srcs = [
+            "assets/tools/build_lifecycle.rs",
+            "assets/tools/build_lifecycle_tests.rs",
+        ],
+        crate_root = "assets/tools/build_lifecycle.rs",
+        edition = "2024",
+        compile_data = [
+            ".cargo/config.toml",
+            ".config/build/bazelrc",
+        ],
+    )
+
     cargo_toml_env_vars(
         name = "cargo_pkg_env",
         src = "Cargo.toml",
@@ -39,6 +60,7 @@ def decapod_targets():
         + native.glob(["assets/schemas/*.schema.json"])
         + [
             "assets/templates/claims.json",
+            "assets/templates/governance.json",
             "src/decapod/hooks/commit-msg.sh",
             "src/decapod/plugins/container/Dockerfile.template",
             "src/decapod/plugins/container/startup.sh",

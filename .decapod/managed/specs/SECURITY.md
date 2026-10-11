@@ -167,8 +167,8 @@ Describe the security primitives and security controls implemented in this repos
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `76abacad7a2a007655edfdd5e59e517944c2927704c41ce51195889bc75d901c`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (125 files), `tests/` (168 files)
+- Repository signal fingerprint: `9f0aad7af6e6afea8f76637a5a325d188125da973ae0349c49635287c477ebdb`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (7 files), `docs/` (1 files), `src/` (125 files), `tests/` (169 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -205,3 +205,18 @@ filesystem-name, content and metadata writers to be quiesced. Process failure
 can leave private diagnostics; blocked rollback may leave the preserved original
 at its archive path. Operators inspect those paths before resuming. Ordinary
 open, read, write and backup never automatically trigger recovery.
+
+## Branch-local governance and shared policy
+
+A work branch cannot initialize or mutate a governance document aliased to the
+host checkout by a symlink, shared inode, or direct bind mount. The document
+and its advisory lock remain on the branch volume. Container mounts retain the
+shared datastore and applied-migration ledger, expose accepted host policy
+configuration read-only, and keep tracked governance/specs branch-local.
+Datastore approval categories resolve from that host authority even without
+host Git metadata. Unresolved base, task, or recovery evidence fails closed.
+
+Build/test cleanup is limited to an atomically created invocation-owned scratch
+directory with the original filesystem identity. Replaced roots and unconfirmed
+live process groups are preserved; shared build caches and proof artifacts are
+outside deletion authority.

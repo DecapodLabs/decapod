@@ -17,6 +17,114 @@ use std::path::Path;
 use std::sync::atomic::Ordering;
 use tempfile::tempdir;
 
+#[test]
+fn branch_file_validation_dispatch_uses_working_root() {
+    // Check the dispatcher as well as each gate's behavior below: a gate can
+    // work correctly in isolation while its caller supplies the host store root.
+    let source = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/src/decapod/core/validate.rs"
+    ));
+    let dispatch = source.split("pub fn run_validation(").nth(1).unwrap();
+    for call in [
+        "validate_docs_templates_bucket(ctx, working_root)",
+        "validate_interface_contract_bootstrap(ctx, working_root)",
+        "validate_health_purity(ctx, working_root)",
+        "validate_project_scoped_state(store, ctx, working_root)",
+        "validate_recursive_improvement_passes_if_present(ctx, working_root)",
+        "validate_internalization_artifacts_if_present(ctx, working_root)",
+    ] {
+        assert!(
+            dispatch.contains(call),
+            "branch-file gate lost its workspace binding: {call}"
+        );
+        assert!(!dispatch.contains(&call.replace("working_root", "main_root")));
+    }
+}
+
+#[test]
+fn branch_entrypoint_and_interface_gates_do_not_require_host_source_files() {
+    let host = tempdir().unwrap();
+    let branch = tempdir().unwrap();
+    fs::create_dir_all(host.path().join(".decapod/data")).unwrap();
+    fs::create_dir_all(branch.path().join(".decapod")).unwrap();
+    for name in [
+        "AGENTS.md",
+        "CLAUDE.md",
+        "GEMINI.md",
+        "CODEX.md",
+        ".decapod/README.md",
+    ] {
+        fs::write(branch.path().join(name), "Branch-owned entrypoint\n").unwrap();
+    }
+    fs::create_dir_all(branch.path().join("assets")).unwrap();
+    fs::write(branch.path().join("assets/constitution.json"), "{}").unwrap();
+
+    let host_ctx = ValidationContext::new();
+    super::validate_docs_templates_bucket(&host_ctx, host.path()).unwrap();
+    assert_eq!(host_ctx.fail_count.load(Ordering::Relaxed), 5);
+    let branch_ctx = ValidationContext::new();
+    super::validate_docs_templates_bucket(&branch_ctx, branch.path()).unwrap();
+    assert_eq!(branch_ctx.fail_count.load(Ordering::Relaxed), 0);
+
+    let host_ctx = ValidationContext::new();
+    super::validate_interface_contract_bootstrap(&host_ctx, host.path()).unwrap();
+    assert_eq!(host_ctx.skip_count.load(Ordering::Relaxed), 1);
+    let branch_ctx = ValidationContext::new();
+    super::validate_interface_contract_bootstrap(&branch_ctx, branch.path()).unwrap();
+    assert!(branch_ctx.pass_count.load(Ordering::Relaxed) > 0);
+    assert_eq!(branch_ctx.skip_count.load(Ordering::Relaxed), 0);
+}
+
+#[test]
+fn branch_health_and_state_violations_cannot_hide_behind_clean_host() {
+    let host = tempdir().unwrap();
+    let branch = tempdir().unwrap();
+    fs::create_dir_all(host.path().join(".decapod/data")).unwrap();
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: host.path().join(".decapod/data"),
+    };
+    fs::write(branch.path().join("README.md"), "(health: VERIFIED)\n").unwrap();
+    fs::write(branch.path().join("misplaced.db"), "branch state").unwrap();
+    let host_ctx = ValidationContext::new();
+    super::validate_health_purity(&host_ctx, host.path()).unwrap();
+    super::validate_project_scoped_state(&store, &host_ctx, host.path()).unwrap();
+    assert_eq!(host_ctx.fail_count.load(Ordering::Relaxed), 0);
+    let branch_ctx = ValidationContext::new();
+    super::validate_health_purity(&branch_ctx, branch.path()).unwrap();
+    super::validate_project_scoped_state(&store, &branch_ctx, branch.path()).unwrap();
+    assert_eq!(branch_ctx.fail_count.load(Ordering::Relaxed), 2);
+}
+
+#[test]
+fn branch_recursive_and_internalization_evidence_is_not_skipped_with_host_absence() {
+    let host = tempdir().unwrap();
+    let branch = tempdir().unwrap();
+    fs::create_dir_all(
+        branch
+            .path()
+            .join(".decapod/managed/artifacts/internalizations/current"),
+    )
+    .unwrap();
+    fs::write(
+        branch.path().join(".decapod/governance.json"),
+        "malformed branch evidence",
+    )
+    .unwrap();
+    let host_ctx = ValidationContext::new();
+    super::validate_recursive_improvement_passes_if_present(&host_ctx, host.path()).unwrap();
+    super::validate_internalization_artifacts_if_present(&host_ctx, host.path()).unwrap();
+    assert_eq!(host_ctx.fail_count.load(Ordering::Relaxed), 0);
+    let branch_ctx = ValidationContext::new();
+    assert!(
+        super::validate_recursive_improvement_passes_if_present(&branch_ctx, branch.path())
+            .is_err()
+    );
+    super::validate_internalization_artifacts_if_present(&branch_ctx, branch.path()).unwrap();
+    assert_eq!(branch_ctx.fail_count.load(Ordering::Relaxed), 1);
+}
+
 fn git_init(dir: &std::path::Path) {
     std::process::Command::new("git")
         .args(["init"])

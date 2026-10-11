@@ -160,3 +160,36 @@ branch was already pushed but the PR must not be reported ready. Fix the stated
 condition and retry `workspace publish`; retries reuse matching PRs and never
 force-push or delete the published branch. Transport diagnostics are not echoed
 because they may contain credentials.
+
+## Fresh work branches
+
+`workspace ensure` initializes the branch-local document from the embedded,
+versioned template after creating an isolated branch from the selected accepted
+base. Its draft plan and initial trajectory describe the current claimed task,
+including captured intent and scope. `agent.init` and validation share this
+initializer for manually created fresh worktree branches. They do not rewrite
+main/master or treat initialization as successful validation.
+
+A stable change ID survives repeated calls, process restarts, branch renames, and
+rebases. New-branch evidence must agree with Git's accepted base and the inherited
+document must be recoverable in Git. Dirty, malformed, missing-task, and ambiguous
+accepted context is preserved with an actionable error. Old accepted claims,
+checkpoints, and receipts stay in Git history; policy and explicit unresolved
+obligations carry forward. Read-only status and inventory never initialize.
+
+### Container workspace paths
+
+Container workspaces share `.decapod/data` and `.decapod/managed/migrations` with the host for coordination
+databases, leases, and datastore locks. The clone retains branch-local tracked
+governance, accepted project configuration and overrides, living specs, sessions,
+and awareness. Initialization happens before launch against the exact prepared
+base, and startup preserves that branch. An older whole-`.decapod` bind mount or
+symlink is rejected with `GOVERNANCE_WORKSPACE_ALIAS`; recreate the workspace
+with the supported layout before writing governance.
+
+Host-root runtime lookups alias the branch's managed directory, with only
+`managed/migrations` overlaid from the shared host ledger. This preserves
+atomic ledger updates and prevents historical migrations from rerunning, while
+version counters and tracked specs remain branch-local. Existing host config
+and overrides are available read-only for shared-datastore policy decisions;
+branch files remain the input to source and document validation.

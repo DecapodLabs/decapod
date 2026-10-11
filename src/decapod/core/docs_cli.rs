@@ -620,6 +620,13 @@ Do not hand-edit either control-plane authority.
 
 Use `decapod govern artifacts migrate` for lossless legacy adoption and
 `begin-pr --id <change> --base-branch <branch>` for an explicit new-PR boundary.
+Normal `workspace ensure`, `agent.init`, and validation initialize a proven fresh
+worktree branch from the embedded governance template and current claimed task.
+The plan starts DRAFT and the trajectory has no checks or completion proof; only
+actual successful validation writes a receipt. Protected refs and read-only
+status/inventory never trigger initialization. Repeats, renames, and rebases keep
+the active change identity and journal. Dirty inherited or ambiguous context
+fails closed rather than being overwritten.
 The boundary requires discarded state to be recoverable from Git, keeps explicit
 unresolved obligations, and leaves accepted completed claims in Git history.
 Use `claim` for actual current-PR claims and `resolve-obligation` with proof
