@@ -800,8 +800,18 @@ pub(crate) fn assert_actual_docker_governance_mount_isolation() {
     let temp = tempdir().unwrap();
     let repo = temp.path();
     let workspace = repo.join(".decapod/workspaces/mount-proof");
-    fs::create_dir_all(repo.join(".decapod/data")).unwrap();
-    fs::create_dir_all(workspace.join(".decapod/data")).unwrap();
+    fs::create_dir_all(workspace.join(".decapod")).unwrap();
+    let nested_targets = [
+        workspace.join(".decapod/data"),
+        workspace.join(".decapod/managed/migrations"),
+    ];
+    for target in &nested_targets {
+        assert!(
+            !target.exists(),
+            "fixture must not prepare {}",
+            target.display()
+        );
+    }
     fs::write(
         repo.join(".decapod/governance.json"),
         "accepted host journal",
@@ -829,6 +839,19 @@ pub(crate) fn assert_actual_docker_governance_mount_isolation() {
         true,
     )
     .unwrap();
+    let target_metadata: Vec<_> = nested_targets
+        .iter()
+        .map(|target| {
+            let metadata = fs::symlink_metadata(target).unwrap();
+            assert!(metadata.is_dir());
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::MetadataExt;
+                assert_eq!(metadata.uid(), fs::metadata(repo).unwrap().uid());
+            }
+            metadata
+        })
+        .collect();
     // Busybox intentionally has no Git/Decapod. Exercise the exact production
     // mounts and isolation flags with a bounded filesystem probe instead.
     let resolved_data = crate::core::store::find_governance_root(&workspace).join(".decapod/data");
@@ -900,6 +923,157 @@ pub(crate) fn assert_actual_docker_governance_mount_isolation() {
         fs::read_to_string(repo.join(".decapod/data/mount-proof")).unwrap(),
         "shared coordination"
     );
+    for (target, before) in nested_targets.iter().zip(target_metadata) {
+        let after = fs::symlink_metadata(target).unwrap();
+        assert!(after.is_dir());
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::MetadataExt;
+            assert_eq!(
+                (
+                    after.dev(),
+                    after.ino(),
+                    after.uid(),
+                    after.gid(),
+                    after.mode()
+                ),
+                (
+                    before.dev(),
+                    before.ino(),
+                    before.uid(),
+                    before.gid(),
+                    before.mode()
+                ),
+                "mountpoint ownership or identity changed: {}",
+                target.display()
+            );
+        }
+        #[cfg(not(unix))]
+        let _ = before;
+    }
+    temp.close()
+        .expect("host must be able to remove Docker mount-proof scratch");
+}
+
+#[test]
+fn container_spec_prepares_owned_nested_mount_targets() {
+    #[cfg(unix)]
+    if std::env::var_os("DECAPOD_MOUNT_TARGETS_CHILD").is_none() {
+        use crate::core::bounded_process::{BoundedCommand, CONTROL_TIMEOUT};
+        for shared in ["0", "1"] {
+            // Keep the parallel harness's environment and umask unchanged.
+            let output = Command::new("sh")
+                .args(["-c", "umask 000; exec \"$@\"", "mount-targets-child"])
+                .arg(std::env::current_exe().unwrap())
+                .args([
+                    "--exact",
+                    "plugins::container::tests::container_spec_prepares_owned_nested_mount_targets",
+                    "--nocapture",
+                    "--test-threads=1",
+                ])
+                .env("DECAPOD_MOUNT_TARGETS_CHILD", "1")
+                .env(crate::core::fs_permissions::SHARED_STORAGE_ENV, shared)
+                .bounded_output(CONTROL_TIMEOUT)
+                .unwrap();
+            assert!(
+                output.status.success(),
+                "shared={shared}: {}\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            );
+        }
+        return;
+    }
+    let mut fixture = tempfile::Builder::new();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        // The fixture itself must remain private even under the child's
+        // deliberately permissive umask; creation below it is what we test.
+        fixture.permissions(fs::Permissions::from_mode(0o700));
+    }
+    let temp = fixture.tempdir().unwrap();
+    let repo = temp.path();
+    let workspace = repo.join(".decapod/workspaces/mount-targets");
+    let targets = [
+        workspace.join(".decapod/data"),
+        workspace.join(".decapod/managed/migrations"),
+    ];
+    for target in &targets {
+        assert!(!target.exists());
+    }
+    let build_spec = || {
+        build_docker_spec(
+            "docker",
+            repo,
+            &workspace,
+            "busybox",
+            "mount-targets",
+            "true",
+            "agent/mount-targets",
+            "master",
+            "128m",
+            "1",
+            None,
+            false,
+            true,
+        )
+        .unwrap()
+    };
+    build_spec();
+    let before: Vec<_> = targets
+        .iter()
+        .map(|target| {
+            let metadata = fs::symlink_metadata(target).unwrap();
+            assert!(
+                metadata.is_dir(),
+                "target must be a real directory: {}",
+                target.display()
+            );
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::MetadataExt;
+                assert_eq!(metadata.uid(), fs::metadata(repo).unwrap().uid());
+                let expected_mode = if crate::core::fs_permissions::shared_storage() {
+                    0o770
+                } else {
+                    0o700
+                };
+                assert_eq!(metadata.mode() & 0o777, expected_mode);
+            }
+            metadata
+        })
+        .collect();
+    // Existing trusted-group targets must remain accepted and untouched.
+    build_spec();
+    for (target, before) in targets.iter().zip(before) {
+        let after = fs::symlink_metadata(target).unwrap();
+        assert!(after.is_dir());
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::MetadataExt;
+            assert_eq!(
+                (
+                    after.dev(),
+                    after.ino(),
+                    after.uid(),
+                    after.gid(),
+                    after.mode()
+                ),
+                (
+                    before.dev(),
+                    before.ino(),
+                    before.uid(),
+                    before.gid(),
+                    before.mode()
+                )
+            );
+        }
+        #[cfg(not(unix))]
+        let _ = before;
+    }
+    temp.close()
+        .expect("prepared targets must remain removable by the caller");
 }
 
 #[test]

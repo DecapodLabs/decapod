@@ -188,6 +188,8 @@ fn add_and_claim_task(
     let out = Command::new(resolve_decapod_bin())
         .args(["todo", "claim", "--id", &task_id, "--agent", agent_id])
         .current_dir(dir)
+        // Host task-binding proof must not depend on a real Docker daemon.
+        .env("DECAPOD_CLAIM_AUTORUN", "0")
         .env("DECAPOD_AGENT_ID", agent_id)
         .env("DECAPOD_SESSION_PASSWORD", password)
         .output()
@@ -248,6 +250,7 @@ fn test_agent_init_and_todo_claim_lifecycle() {
     let out = Command::new(resolve_decapod_bin())
         .args(["todo", "claim", "--id", &task_id, "--agent", agent_id])
         .current_dir(&dir)
+        .env("DECAPOD_CLAIM_AUTORUN", "0")
         .env("DECAPOD_AGENT_ID", agent_id)
         .env("DECAPOD_SESSION_PASSWORD", &password)
         .output()
@@ -448,6 +451,66 @@ fn test_workspace_ensure_requires_claimed_todo_and_scopes_naming() {
             || worktree_path.contains(&sanitized_generated),
         "worktree path '{worktree_path}' must contain an assigned todo hash/id"
     );
+
+    // Recent ULIDs share a six-character prefix. The generated branch must
+    // carry the exact primary task, not ask initialization to guess by hash.
+    let mut assigned_ids = [generated_task_id, task_id.as_str()];
+    assigned_ids.sort_unstable();
+    let primary_id = assigned_ids[0];
+    assert!(
+        branch.contains(primary_id),
+        "missing exact task binding: {branch}"
+    );
+    let workspace = Path::new(worktree_path);
+    let plan = decapod::core::governance_document::read_section(workspace, "plan")
+        .unwrap()
+        .unwrap();
+    assert_eq!(plan["todo_ids"], serde_json::json!([primary_id]));
+    let trajectory = decapod::core::governance_document::read_section(workspace, "trajectory")
+        .unwrap()
+        .unwrap();
+    assert_eq!(trajectory["task_id"], primary_id);
+    let journal = workspace.join(decapod::core::governance_document::GOVERNANCE_PATH);
+    let before = std::fs::read(&journal).unwrap();
+    add_and_claim_task(
+        &dir,
+        agent_id,
+        &password,
+        "Another independently claimed task",
+    );
+    let repeated = Command::new(resolve_decapod_bin())
+        .args(["workspace", "ensure"])
+        .current_dir(workspace)
+        .env("DECAPOD_AGENT_ID", agent_id)
+        .env("DECAPOD_SESSION_PASSWORD", &password)
+        .output()
+        .unwrap();
+    assert!(
+        repeated.status.success(),
+        "repeat must retain its exact primary task: {}",
+        String::from_utf8_lossy(&repeated.stderr)
+    );
+    assert_eq!(std::fs::read(&journal).unwrap(), before);
+
+    let renamed = Command::new("git")
+        .args(["branch", "-m", "renamed-current-work"])
+        .current_dir(workspace)
+        .output()
+        .unwrap();
+    assert!(renamed.status.success());
+    let resumed = Command::new(resolve_decapod_bin())
+        .args(["rpc", "--op", "agent.init"])
+        .current_dir(workspace)
+        .env("DECAPOD_AGENT_ID", agent_id)
+        .env("DECAPOD_SESSION_PASSWORD", &password)
+        .output()
+        .unwrap();
+    assert!(
+        resumed.status.success(),
+        "{}",
+        String::from_utf8_lossy(&resumed.stderr)
+    );
+    assert_eq!(std::fs::read(&journal).unwrap(), before);
 }
 
 #[test]

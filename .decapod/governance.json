@@ -135,24 +135,32 @@
         "decapod:203-passed-zero-failed",
         "git:b99df3745fd9a10a5a7a3c2bf6c0aa22cd78f772"
       ]
+    },
+    {
+      "id": "ci-final-context-and-mount-targets",
+      "summary": "Bind generated workspace branches to exact tasks; prepare caller-owned nested mount targets; scope host fixtures and report cleanup failures without permission changes",
+      "input_digest": "sha256:b4d4848074258ed1feae2eca48a6c2db33375dcc1fa472da15f9436dcf439ddf",
+      "proof_refs": [
+        "677 local regression tests passed; all-target all-feature clippy and formatting passed; actual Docker teardown remains a CI proof"
+      ]
     }
   ],
   "intents": {
-    "intent:fresh-governance-socket-fix": {
+    "intent:fresh-governance-ci-final": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "No release, merge, workflow edits, fabricated proof, or shared cache deletion."
+        "No merge, release, workflow changes, permission repair, fabricated runtime proof, or shared-cache deletion."
       ],
       "constraints": [
-        "Cleanup supervisor temporary path selection, behavioral tests, documentation, and genuine proof."
+        "Workspace task identity, safe container mount preparation, affected test fixtures, cleanup diagnostics, and current proof."
       ],
       "created_sequence": 1,
-      "id": "intent:fresh-governance-socket-fix",
+      "id": "intent:fresh-governance-ci-final",
       "out_of_scope": [],
       "proof_requirements": [],
       "raw_intent": "Deliver the dedicated fresh workbranch governance template PR with invocation-owned build and test cleanup.",
-      "refined_intent": "Preserve Unix socket capacity while cleaning only owned build scratch, then verify the exact pushed correction.",
+      "refined_intent": "Bind generated branches to exact tasks, prepare branch-local mount targets under caller ownership, and verify scoped host fixtures plus real Docker teardown.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -226,22 +234,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Clarified short owned temporary roots for Bazel and deep-checkout Cargo aliases, preservation of short sandbox aliases, and unchanged explicit scratch-parent ownership.",
-          "reviewed_code_fingerprint": "27d941d3716f0e5e0bed7ad36d1743f652eea9f13ad4d4837cee6d30c7980fc7",
-          "spec_material_hash": "e787e1a3d084af6c053a9c29216b1822628d74b92a188ffb343397b1ab065211"
+          "reason": "Reviewed exact task identity in generated branches and caller-owned nested container mount preparation, with explicit shared-storage mode preservation and host teardown proof. Host-only fixtures suppress optional claim containers while separate Docker proof remains mandatory.",
+          "reviewed_code_fingerprint": "cdf450ecc34491bfb4ccbde5ff4f8ea4b909586b9d5473363ed770209f1c28a6",
+          "spec_material_hash": "5c81115746da106fc0f2aff3d365f03f250d3f8356985e5ed75bfcd2b48d83a0"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed short temporary-root selection for Unix sockets. Existing build/test interfaces remain optional, explicit parents stay authoritative, and parent plus scratch inode checks preserve the documented no-shared-cache-deletion boundary.",
-          "reviewed_code_fingerprint": "27d941d3716f0e5e0bed7ad36d1743f652eea9f13ad4d4837cee6d30c7980fc7",
-          "spec_material_hash": "0d132a5b536f0089d08ca58e41c0cf2eddb9d32643820cfd09a92402fcb912e7"
+          "reason": "Reviewed exact task identity in generated branches and caller-owned nested container mount preparation, with explicit shared-storage mode preservation and host teardown proof. Host-only fixtures suppress optional claim containers while separate Docker proof remains mandatory.",
+          "reviewed_code_fingerprint": "cdf450ecc34491bfb4ccbde5ff4f8ea4b909586b9d5473363ed770209f1c28a6",
+          "spec_material_hash": "cd9b94141bc326b505eb812570a82b8d663cb7db367c39d9fe7e3cd91924f133"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed short temporary-root selection for Unix sockets. Existing build/test interfaces remain optional, explicit parents stay authoritative, and parent plus scratch inode checks preserve the documented no-shared-cache-deletion boundary.",
-          "reviewed_code_fingerprint": "27d941d3716f0e5e0bed7ad36d1743f652eea9f13ad4d4837cee6d30c7980fc7",
+          "reason": "Existing security boundaries remain intact: no permission repair, no source/main governance aliasing, intentional shared-store modes preserved through existing checked creation helpers, and cleanup retains foreign or replaced paths with bounded read-only diagnostics.",
+          "reviewed_code_fingerprint": "cdf450ecc34491bfb4ccbde5ff4f8ea4b909586b9d5473363ed770209f1c28a6",
           "spec_material_hash": "a61a52af20a5233dac76f61b4b6f9bf65fba2907f688eb5b7ed0db4a0515ed3d"
         }
       ],
@@ -255,149 +263,119 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791705377Z"
+      "updated_at": "1791707656Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "No release, merge, workflow edits, fabricated proof, or shared cache deletion."
+        "No merge, release, workflow changes, permission repair, fabricated runtime proof, or shared-cache deletion."
       ],
-      "artifact_hash": "sha256:fa1ab7e116979a4cd33d9b1c5b5d70a32baf54ab8db4a0c27b71d42c559cbe6d",
+      "artifact_hash": "sha256:59d1cc1a1f084fd6c2165b5fd538d7223a2a9005fc629b2d7d98405194de7ad8",
       "checks": [
         {
           "name": "all-target-all-feature-clippy",
           "status": "passed"
         },
         {
-          "name": "cargo-fmt",
+          "name": "final-local-regression",
           "status": "passed"
         },
         {
-          "name": "cargo-test-main-cleanup-17-tests",
+          "name": "formatting-and-diff",
           "status": "passed"
         },
         {
-          "name": "decapod validate",
-          "status": "passed"
-        },
-        {
-          "name": "github-core-bazel-ab5f9a20",
+          "name": "github-core-227e7371",
           "status": "failed"
         },
         {
-          "name": "github-other-jobs-ab5f9a20",
+          "name": "github-other-jobs-227e7371",
           "status": "passed"
         },
         {
-          "name": "local-live-unix-sockets",
+          "name": "local-core-fixture-reproduction",
+          "status": "passed"
+        },
+        {
+          "name": "new-container-teardown-proof",
           "status": "unavailable"
         }
       ],
-      "current_phase": "validation",
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:fresh-governance-socket-fix",
+            "intent_id": "intent:fresh-governance-ci-final",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:fresh-governance-socket-fix",
+            "intent_id": "intent:fresh-governance-ci-final",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:fresh-governance-socket-fix",
+            "detail": "trajectory:fresh-governance-ci-final",
             "event_id": "event:4",
-            "intent_id": "intent:fresh-governance-socket-fix",
+            "intent_id": "intent:fresh-governance-ci-final",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:fresh-governance-socket-fix",
+            "detail": "trajectory:fresh-governance-ci-final",
             "event_id": "event:5",
-            "intent_id": "intent:fresh-governance-socket-fix",
+            "intent_id": "intent:fresh-governance-ci-final",
             "kind": "trajectory_step_recorded",
             "sequence": 5
-          },
-          {
-            "detail": "trajectory:fresh-governance-socket-fix",
-            "event_id": "event:6",
-            "intent_id": "intent:fresh-governance-socket-fix",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "fresh-governance-socket-fix": {
+          "fresh-governance-ci-final": {
             "evidence_only": true,
-            "id": "fresh-governance-socket-fix",
-            "intent_id": "intent:fresh-governance-socket-fix",
+            "id": "fresh-governance-ci-final",
+            "intent_id": "intent:fresh-governance-ci-final",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "assets/tools/build_lifecycle.rs",
-                  "assets/tools/build_lifecycle_tests.rs",
-                  "tests/group_broker.rs",
-                  "assets/tools/build_lifecycle.rs",
-                  "assets/tools/build_lifecycle_tests.rs",
-                  "CONTRIBUTING.md",
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  "GitHub Actions job 114418815658 failed only because the new supervisor TMPDIR exceeded Unix-domain socket SUN_LEN; every other Actions job passed on ab5f9a20.",
-                  "Previous run and 203 passing validation gates remain preserved in ab5f9a206a9f22447c885566a2c671c9377217d5:.decapod/governance.json. The path correction and material architecture clarification require a new validation epoch."
+                  "GitHub Actions job 114422487982 passed real broker socket tests, then exposed ambiguous compact task identity and scratch EACCES after host fixture assertions passed. Every other Actions job passed on 227e7371.",
+                  "Bazel-like HOME/TEST_TMPDIR production-wrapper local reproduction passed all four spec ownership and all four todo enforcement tests after exact-task naming correction; no local Docker is available, so the remote cleanup permission cause is not locally reproduced.",
+                  "Read-only review found two unprepared branch-local nested mount targets and a Docker fixture masking one; narrow caller-owned target preparation and explicit teardown proof are required, without assuming that gap alone caused EACCES.",
+                  "Earlier runs and receipts remain in Git at 227e737183e42e66cf2b22083e4828d96cf6babc:.decapod/governance.json."
                 ],
                 "proof_refs": [
-                  "github-core-bazel-ab5f9a20",
-                  "github-other-jobs-ab5f9a20"
+                  "github-core-227e7371",
+                  "github-other-jobs-227e7371",
+                  "local-core-fixture-reproduction",
+                  "new-container-teardown-proof"
                 ],
                 "scope": [
-                  "Cleanup supervisor temporary path selection, behavioral tests, documentation, and genuine proof."
+                  "Workspace task identity, safe container mount preparation, affected test fixtures, cleanup diagnostics, and current proof."
                 ],
                 "sequence": 4,
                 "validation_findings": []
               },
               {
                 "action": "trajectory.record",
-                "command": "cargo test-main --locked --features build-tools --bin decapod-build",
+                "command": "CARGO_INCREMENTAL=0 cargo test --locked --features build-tools --lib --bin decapod-build --test workbranch_governance --test governance_artifacts_cli --test container_workspaces_disabled --test workspace_interlock --test spec_workspace_ownership --test todo_enforcement -- --test-threads=2",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "cargo test-main --locked --features build-tools --bin decapod-build passed all 17 tests through the production supervisor from the deep governed worktree. Strict portable socket path lengths, alias safety, cleanup ownership and automatic Cargo mode were checked; this executor denies AF_UNIX bind with EPERM.",
-                  "All-target all-feature clippy with -D warnings, rustfmt check, and diff check passed after the final correction."
+                  "Final combined current-source regression: 677 passed, zero failed, one ignored actual-Docker test. Includes 629 library, 18 cleanup supervisor, eight container-disabled, four artifact readers, four spec ownership, four todo enforcement, nine fresh-workbranch and one workspace-isolation tests. All-feature all-target clippy, formatting and diff checks passed. Actual Docker teardown awaits exact-head Actions; local Docker and Bazel are unavailable and live AF_UNIX is denied."
                 ],
                 "proof_refs": [
-                  "cargo-test-main-cleanup-17-tests",
+                  "final-local-regression",
                   "all-target-all-feature-clippy",
-                  "cargo-fmt",
-                  "local-live-unix-sockets"
+                  "formatting-and-diff"
                 ],
                 "scope": [
-                  "Cleanup supervisor temporary path selection, behavioral tests, documentation, and genuine proof."
+                  "Workspace task identity, safe container mount preparation, affected test fixtures, cleanup diagnostics, and current proof."
                 ],
                 "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "command": "decapod validate",
-                "custody_event_id": "event:6",
-                "observations": [
-                  ".decapod/governance.json",
-                  ".decapod/governance.json",
-                  "validation epoch ve_ab793230420ba446 completed with zero failures"
-                ],
-                "proof_refs": [
-                  "decapod validate"
-                ],
-                "scope": [
-                  "Cleanup supervisor temporary path selection, behavioral tests, documentation, and genuine proof."
-                ],
-                "sequence": 6,
                 "validation_findings": []
               }
             ]
@@ -405,37 +383,26 @@
         }
       },
       "declared_commands": [
-        "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings",
-        "cargo test-main --locked --features build-tools --bin decapod-build",
-        "decapod validate"
+        "CARGO_INCREMENTAL=0 cargo test --locked --features build-tools --lib --bin decapod-build --test workbranch_governance --test governance_artifacts_cli --test container_workspaces_disabled --test workspace_interlock --test spec_workspace_ownership --test todo_enforcement -- --test-threads=2",
+        "CLIPPY_CONF_DIR=.config CARGO_INCREMENTAL=0 cargo clippy --all-targets --all-features -- -D warnings"
       ],
       "evidence": [
-        "All-target all-feature clippy with -D warnings, rustfmt check, and diff check passed after the final correction.",
-        "GitHub Actions job 114418815658 failed only because the new supervisor TMPDIR exceeded Unix-domain socket SUN_LEN; every other Actions job passed on ab5f9a20.",
-        "Previous run and 203 passing validation gates remain preserved in ab5f9a206a9f22447c885566a2c671c9377217d5:.decapod/governance.json. The path correction and material architecture clarification require a new validation epoch.",
-        "cargo test-main --locked --features build-tools --bin decapod-build passed all 17 tests through the production supervisor from the deep governed worktree. Strict portable socket path lengths, alias safety, cleanup ownership and automatic Cargo mode were checked; this executor denies AF_UNIX bind with EPERM.",
-        "validation epoch ve_ab793230420ba446 completed with zero failures"
+        "Bazel-like HOME/TEST_TMPDIR production-wrapper local reproduction passed all four spec ownership and all four todo enforcement tests after exact-task naming correction; no local Docker is available, so the remote cleanup permission cause is not locally reproduced.",
+        "Earlier runs and receipts remain in Git at 227e737183e42e66cf2b22083e4828d96cf6babc:.decapod/governance.json.",
+        "Final combined current-source regression: 677 passed, zero failed, one ignored actual-Docker test. Includes 629 library, 18 cleanup supervisor, eight container-disabled, four artifact readers, four spec ownership, four todo enforcement, nine fresh-workbranch and one workspace-isolation tests. All-feature all-target clippy, formatting and diff checks passed. Actual Docker teardown awaits exact-head Actions; local Docker and Bazel are unavailable and live AF_UNIX is denied.",
+        "GitHub Actions job 114422487982 passed real broker socket tests, then exposed ambiguous compact task identity and scratch EACCES after host fixture assertions passed. Every other Actions job passed on 227e7371.",
+        "Read-only review found two unprepared branch-local nested mount targets and a Docker fixture masking one; narrow caller-owned target preparation and explicit teardown proof are required, without assuming that gap alone caused EACCES."
       ],
-      "inspected_files": [
-        "assets/tools/build_lifecycle.rs",
-        "assets/tools/build_lifecycle_tests.rs",
-        "tests/group_broker.rs"
-      ],
-      "intent_id": "intent:fresh-governance-socket-fix",
-      "modified_files": [
-        ".decapod/governance.json",
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        "CONTRIBUTING.md",
-        "assets/tools/build_lifecycle.rs",
-        "assets/tools/build_lifecycle_tests.rs"
-      ],
+      "inspected_files": [],
+      "intent_id": "intent:fresh-governance-ci-final",
+      "modified_files": [],
       "next_transitions": [
         "publish"
       ],
       "repo_scope": [
-        "Cleanup supervisor temporary path selection, behavioral tests, documentation, and genuine proof."
+        "Workspace task identity, safe container mount preparation, affected test fixtures, cleanup diagnostics, and current proof."
       ],
-      "run_id": "fresh-governance-socket-fix",
+      "run_id": "fresh-governance-ci-final",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
       "task_id": "code_01m4m9pf73zrfgr3",

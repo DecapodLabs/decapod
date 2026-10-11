@@ -37,6 +37,8 @@ fn run_decapod(dir: &Path, args: &[&str], envs: &[(&str, &str)]) -> std::process
     let mut cmd = Command::new(resolve_decapod_bin());
     cmd.current_dir(dir)
         .args(args)
+        // These host projection tests do not exercise optional claim containers.
+        .env("DECAPOD_CLAIM_AUTORUN", "0")
         .env_remove("DECAPOD_VALIDATE_SKIP_GIT_GATES")
         .env_remove("DECAPOD_WORKSPACE")
         .env("XDG_CONFIG_HOME", dir.join(".xdg-config"));

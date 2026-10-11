@@ -446,7 +446,7 @@ virtiofs/FUSE filesystem prohibition.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `27d941d3716f0e5e0bed7ad36d1743f652eea9f13ad4d4837cee6d30c7980fc7`
+- Repository signal fingerprint: `cdf450ecc34491bfb4ccbde5ff4f8ea4b909586b9d5473363ed770209f1c28a6`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (7 files), `docs/` (1 files), `src/` (125 files), `tests/` (169 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -505,6 +505,10 @@ atomic ledger updates and prevents historical migrations from rerunning, while
 version counters and tracked specs remain branch-local. Existing host config
 and overrides are available read-only for shared-datastore policy decisions;
 branch files remain the input to source and document validation.
+Nested data and migration mount targets are prepared by the caller before
+launch, preserving existing safe modes and explicit shared-storage policy.
+Docker must leave those branch-local placeholders owned and removable by the
+caller; the runtime proof includes host scratch teardown after container exit.
 
 The optional `decapod-build` Rust binary supervises local build/test processes
 and Bazel's test run-under contract. It allocates private scratch atomically,
@@ -517,3 +521,5 @@ The normal Cargo aliases use the process temporary root rather than nesting
 scratch beneath potentially deep checkout paths.
 Interruption forwards to the owned process group with a bounded grace period;
 unconfirmed descendant exit retains evidence rather than deleting live state.
+Cleanup errors retain the original failure and bounded ownership/path
+diagnostics; they never trigger automatic permission repair.

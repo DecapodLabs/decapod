@@ -75,8 +75,91 @@ impl Scratch {
             ));
         }
         // remove_dir_all does not follow symlinks within the owned tree.
-        fs::remove_dir_all(&self.path)
+        fs::remove_dir_all(&self.path).map_err(|error| {
+            io::Error::new(
+                error.kind(),
+                format!("{error}; {}", cleanup_diagnostics(&self.path)),
+            )
+        })
     }
+}
+
+fn cleanup_diagnostics(root: &Path) -> String {
+    // Read-only, bounded diagnostics for a failed removal. Never follow links
+    // or restore permissions: foreign-owned output needs its owner's teardown.
+    let mut pending = vec![root.to_path_buf()];
+    let mut details = Vec::new();
+    let mut inspected = 0;
+    #[cfg(unix)]
+    let root_uid = {
+        use std::os::unix::fs::MetadataExt;
+        fs::symlink_metadata(root)
+            .ok()
+            .map(|metadata| metadata.uid())
+    };
+    while let Some(path) = pending.pop() {
+        if inspected >= 1024 || details.len() >= 8 {
+            details.push("diagnostic traversal limit reached".to_string());
+            break;
+        }
+        inspected += 1;
+        let metadata = match fs::symlink_metadata(&path) {
+            Ok(metadata) => metadata,
+            Err(error) => {
+                details.push(format!("{}: metadata: {error}", path.display()));
+                continue;
+            }
+        };
+        if !metadata.is_dir() {
+            continue;
+        }
+        #[cfg(unix)]
+        let (description, noteworthy) = {
+            use std::os::unix::fs::MetadataExt;
+            (
+                format!(
+                    "{} (uid={}, gid={}, mode={:o})",
+                    path.display(),
+                    metadata.uid(),
+                    metadata.gid(),
+                    metadata.mode() & 0o7777
+                ),
+                path == root
+                    || Some(metadata.uid()) != root_uid
+                    || metadata.mode() & 0o700 != 0o700,
+            )
+        };
+        #[cfg(not(unix))]
+        let (description, noteworthy) = (
+            format!(
+                "{} (readonly={})",
+                path.display(),
+                metadata.permissions().readonly()
+            ),
+            path == root || metadata.permissions().readonly(),
+        );
+        // Include remaining directory ownership even if listing is allowed:
+        // unlinking its children can fail because it is owned by a container.
+        if noteworthy {
+            details.push(description.clone());
+        }
+        match fs::read_dir(&path) {
+            Ok(entries) => {
+                for entry in entries.take(1024 - inspected) {
+                    if pending.len() + inspected >= 1024 {
+                        details.push("diagnostic traversal limit reached".to_string());
+                        break;
+                    }
+                    match entry {
+                        Ok(entry) => pending.push(entry.path()),
+                        Err(error) => details.push(format!("{description}: listing: {error}")),
+                    }
+                }
+            }
+            Err(error) => details.push(format!("{description}: listing: {error}")),
+        }
+    }
+    format!("remaining scratch diagnostics: {}", details.join("; "))
 }
 
 fn same_directory(original: &fs::Metadata, current: &fs::Metadata) -> bool {
