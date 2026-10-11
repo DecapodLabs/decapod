@@ -6,6 +6,231 @@ fn mode(path: &Path) -> u32 {
     fs::metadata(path).unwrap().permissions().mode() & 0o777
 }
 
+#[cfg(any(target_os = "linux", target_os = "android"))]
+fn same_recovery_device(devices: &[u64]) -> std::io::Result<()> {
+    if devices.is_empty() || devices.iter().any(|device| *device != devices[0]) {
+        return Err(std::io::Error::other(format!(
+            "recovery fixture requires equal parent/source/stage/rebuilt device IDs: {devices:?}"
+        )));
+    }
+    Ok(())
+}
+
+#[cfg(any(target_os = "linux", target_os = "android"))]
+fn recovery_filesystem_kind(path: &Path) -> String {
+    use std::os::unix::ffi::OsStrExt;
+    let Ok(path) = std::ffi::CString::new(path.as_os_str().as_bytes()) else {
+        return "unavailable".into();
+    };
+    let mut stat = std::mem::MaybeUninit::<libc::statfs>::uninit();
+    // Read only the filesystem type; never inspect or change mount settings.
+    if unsafe { libc::statfs(path.as_ptr(), stat.as_mut_ptr()) } != 0 {
+        return format!("unavailable ({})", std::io::Error::last_os_error());
+    }
+    let kind = unsafe { stat.assume_init() }.f_type;
+    match kind {
+        0x794c7630 => "overlayfs".into(),
+        0x01021994 => "tmpfs".into(),
+        _ => format!("0x{kind:x}"),
+    }
+}
+
+#[cfg(any(target_os = "linux", target_os = "android"))]
+fn probe_recovery_directory(candidate: &Path) -> std::io::Result<tempfile::TempDir> {
+    use std::os::unix::ffi::OsStrExt;
+    use std::os::unix::fs::{MetadataExt, PermissionsExt};
+
+    // Resolve ordinary system temp aliases before creating our private fixture;
+    // all paths subsequently passed to Dactyl have real directory ancestors.
+    let parent = fs::canonicalize(candidate)?;
+    for ancestor in parent.ancestors() {
+        if !fs::symlink_metadata(ancestor)?.is_dir() {
+            return Err(std::io::Error::other("unsafe recovery fixture ancestor"));
+        }
+    }
+    let root = tempfile::Builder::new()
+        .prefix("decapod-recovery-test-")
+        .permissions(fs::Permissions::from_mode(0o700))
+        .tempdir_in(parent)?;
+    let metadata = fs::symlink_metadata(root.path())?;
+    if metadata.mode() & 0o777 != 0o700 || metadata.uid() != unsafe { libc::geteuid() } {
+        return Err(std::io::Error::other(
+            "recovery fixture must be owned and private",
+        ));
+    }
+    // These fixtures hold only a few one-row databases and their sidecars.
+    // Do not put the entire suite on a capacity-limited or noexec tmpfs.
+    const MINIMUM_SPACE: u64 = 4 * 1024 * 1024;
+    let available = fs2::available_space(root.path())?;
+    if available < MINIMUM_SPACE {
+        return Err(std::io::Error::other(format!(
+            "recovery fixture needs {MINIMUM_SPACE} available bytes; found {available}"
+        )));
+    }
+    {
+        let source = tempfile::NamedTempFile::new_in(root.path())?;
+        let stage = tempfile::Builder::new()
+            .permissions(fs::Permissions::from_mode(0o700))
+            .tempdir_in(root.path())?;
+        let rebuilt = tempfile::NamedTempFile::new_in(stage.path())?;
+        let identity = source.as_file().metadata()?;
+        same_recovery_device(&[
+            metadata.dev(),
+            identity.dev(),
+            fs::symlink_metadata(stage.path())?.dev(),
+            rebuilt.as_file().metadata()?.dev(),
+        ])?;
+        let destination = rebuilt.path().to_path_buf();
+        let from = std::ffi::CString::new(source.path().as_os_str().as_bytes())?;
+        let to = std::ffi::CString::new(destination.as_os_str().as_bytes())?;
+        let rename = || {
+            // Match the released recovery primitive's atomic no-clobber rename.
+            let result = unsafe {
+                libc::syscall(
+                    libc::SYS_renameat2,
+                    libc::AT_FDCWD,
+                    from.as_ptr(),
+                    libc::AT_FDCWD,
+                    to.as_ptr(),
+                    libc::RENAME_NOREPLACE,
+                )
+            };
+            if result == 0 {
+                Ok(())
+            } else {
+                Err(std::io::Error::last_os_error())
+            }
+        };
+        match rename() {
+            Err(error) if error.raw_os_error() == Some(libc::EEXIST) => {}
+            other => {
+                return Err(std::io::Error::other(format!(
+                    "no-clobber probe: {other:?}"
+                )));
+            }
+        }
+        rebuilt.close()?;
+        rename()?;
+        let moved = fs::symlink_metadata(&destination)?;
+        if (identity.dev(), identity.ino()) != (moved.dev(), moved.ino()) {
+            return Err(std::io::Error::other(
+                "recovery rename changed file identity",
+            ));
+        }
+    }
+    eprintln!(
+        "selected recovery fixture: {} (filesystem={}, device={}, available_bytes={available})",
+        root.path().display(),
+        recovery_filesystem_kind(root.path()),
+        metadata.dev()
+    );
+    Ok(root)
+}
+
+#[cfg(any(target_os = "linux", target_os = "android"))]
+fn select_recovery_directory(candidates: &[PathBuf]) -> std::io::Result<tempfile::TempDir> {
+    let mut failures = Vec::new();
+    for candidate in candidates {
+        match probe_recovery_directory(candidate) {
+            Ok(directory) => return Ok(directory),
+            Err(error) => {
+                let diagnostic = format!(
+                    "{} (filesystem={}): {error}",
+                    candidate.display(),
+                    recovery_filesystem_kind(candidate)
+                );
+                eprintln!("rejected recovery fixture candidate: {diagnostic}");
+                failures.push(diagnostic);
+            }
+        }
+    }
+    Err(std::io::Error::other(format!(
+        "no compatible recovery fixture filesystem; {}",
+        failures.join("; ")
+    )))
+}
+
+#[cfg(unix)]
+fn recovery_fixture_directory() -> tempfile::TempDir {
+    #[cfg(any(target_os = "linux", target_os = "android"))]
+    {
+        // Some layered filesystems report different devices for directories and
+        // regular files. Preserve Dactyl's guard and run real recovery elsewhere.
+        // /dev/shm is only a preexisting candidate, never a mount request or skip.
+        select_recovery_directory(&[std::env::temp_dir(), PathBuf::from("/dev/shm")])
+            .expect("a filesystem supporting the released secure recovery contract")
+    }
+    #[cfg(not(any(target_os = "linux", target_os = "android")))]
+    tempfile::tempdir().unwrap()
+}
+
+#[cfg(any(target_os = "linux", target_os = "android"))]
+#[test]
+fn recovery_fixture_selection_rejects_incompatible_candidates() {
+    assert!(same_recovery_device(&[1, 2, 1, 2]).is_err());
+    assert!(same_recovery_device(&[]).is_err());
+    same_recovery_device(&[7, 7, 7, 7]).unwrap();
+    let supported = recovery_fixture_directory();
+    let unavailable = supported.path().join("missing-parent");
+    let error = select_recovery_directory(std::slice::from_ref(&unavailable)).unwrap_err();
+    assert!(
+        error
+            .to_string()
+            .contains("no compatible recovery fixture filesystem")
+    );
+    let selected =
+        select_recovery_directory(&[unavailable, supported.path().to_path_buf()]).unwrap();
+    assert_eq!(selected.path().parent(), Some(supported.path()));
+    assert_eq!(mode(selected.path()), 0o700);
+    assert_eq!(fs::read_dir(selected.path()).unwrap().count(), 0);
+}
+
+#[cfg(any(target_os = "linux", target_os = "android"))]
+#[test]
+fn recovery_device_mismatch_preserves_the_original() {
+    use std::os::unix::fs::{MetadataExt, PermissionsExt};
+    // Always prove rejection; additionally exercise the released adapter's
+    // fail-closed path whenever the runner exposes real mixed device IDs.
+    assert!(same_recovery_device(&[1, 2, 1, 2]).is_err());
+    let parent = fs::canonicalize(std::env::temp_dir()).unwrap();
+    let root = tempfile::tempdir_in(parent).unwrap();
+    fs::set_permissions(root.path(), fs::Permissions::from_mode(0o700)).unwrap();
+    let source = root.path().join("source.db");
+    let archive = root.path().join("archive.db");
+    let mut db =
+        crate::core::dactyl::DactylBridge::open_local(&source, dactyl_db::AccessMode::ReadWrite)
+            .unwrap();
+    db.write("CREATE TABLE preserved (id INTEGER)", &[])
+        .unwrap();
+    let original = fs::metadata(&source).unwrap();
+    let parent = fs::metadata(root.path()).unwrap();
+    if original.dev() != parent.dev() {
+        let before = fs::read(&source).unwrap();
+        let error = db.recover_from_dump_reload(&archive).unwrap_err();
+        match error {
+            crate::core::error::DecapodError::DactylError(error) => {
+                assert_eq!(error.adapter_code(), Some("recovery_cross_filesystem"));
+            }
+            other => panic!("unexpected recovery error: {other}"),
+        }
+        let after = fs::metadata(&source).unwrap();
+        assert_eq!(
+            (after.dev(), after.ino(), after.mode()),
+            (original.dev(), original.ino(), original.mode())
+        );
+        assert_eq!(fs::read(&source).unwrap(), before);
+        assert!(!archive.exists());
+        assert!(!fs::read_dir(root.path()).unwrap().any(|entry| {
+            entry
+                .unwrap()
+                .file_name()
+                .to_string_lossy()
+                .starts_with(".dactyl-recovery-")
+        }));
+        db.write("INSERT INTO preserved VALUES (1)", &[]).unwrap();
+    }
+}
+
 #[cfg(unix)]
 #[test]
 fn permissive_umask_flows_are_confined() {
@@ -33,7 +258,7 @@ fn permissive_umask_flows_are_confined() {
         );
         return;
     }
-    let root = tempfile::tempdir().unwrap();
+    let root = recovery_fixture_directory();
     fs::set_permissions(
         root.path(),
         <fs::Permissions as std::os::unix::fs::PermissionsExt>::from_mode(0o700),
@@ -167,7 +392,7 @@ fn shared_store_requires_explicit_opt_in_and_never_accepts_world_write() {
         );
         return;
     }
-    let root = tempfile::tempdir().unwrap();
+    let root = recovery_fixture_directory();
     fs::set_permissions(
         root.path(),
         <fs::Permissions as std::os::unix::fs::PermissionsExt>::from_mode(0o700),

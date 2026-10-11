@@ -1,5 +1,55 @@
 # Validation
 
+## Dual-provider workflow proof
+
+GitHub Actions and the Buildkite workflow importer schedule the same exhaustive
+static integration shard inventory. A bounded producer output selects the active
+shards; inactive workers perform no artifact download or test execution. Tests
+must prove that the static inventory equals every shard the planner can produce,
+including empty selections. Shared compilation, exact non-overlapping Gatling
+partitions, five-minute test-only budgets and the aggregate integration check
+remain mandatory. Workflow and checkout repairs select their executable policy
+regressions in the shared release-policy shard.
+
+Direct CI governance commands operate in a fresh private clone of the exact
+provider checkout commit. The clone is created with a restrictive umask and no
+local hard-link or alternate-object borrowing; its commit and tree are checked
+against the source before use. Existing provider checkout permissions and runtime
+databases are not changed or copied. A permissive-checkout regression proves
+private directory modes, exact Git identity, clean runtime state and unchanged
+source permissions. The shared-group storage policy stays intact.
+
+Fresh test-fixture creation also has a process boundary. Tests start from a
+permissive inherited umask, execute the three direct CI test-command prefixes,
+and verify private new directory/file modes without changing pre-existing
+shared state. The packaged policy artifact must reproduce the unsafe-fixture
+failure without that boundary and pass with it; changing existing permissions
+or suppressing the storage check cannot satisfy this proof.
+
+Git fixture tests poison inherited provider configuration and prove that only
+the offline test child ignores global/system and inherited command settings;
+existing configuration files and the parent environment remain unchanged.
+SQLite recovery fixtures must reject unsuitable scratch candidates and execute
+the complete recovery proof on a checked, owned same-device candidate. Overlay
+filesystems may expose different directory/file device IDs; recognizing that
+fixture limitation must not disable the dependency's production safety guard.
+
+Musl publication regressions retain x86_64 native execution and aarch64 binary
+execution through QEMU user-mode on a supported Linux runner. The ARM lane pins
+both the official Cross source revision and its matching compiler/runtime image
+digest. It compiles the release CLI and executes the no-replace publication
+tests; a cross-compile-only result is insufficient. Direct qemu-aarch64 execution
+must not introduce privileged Docker, host binfmt registration, or a security
+policy override. Emulated execution is reported separately from native proof.
+
+Cargo-dist manifests remain files and uploaded artifacts. Cross-job decisions
+are bounded booleans and tag values rather than the full manifest; malformed,
+empty or multiple JSON documents fail before output publication. The host job
+requires a successful plan in addition to successful or intentionally skipped
+artifact jobs. Tests use isolated fake cargo executables and never publish a
+release. Static importer admission is distinct from executed CI proof, and
+rejected workflow tokens remain unresolved authorization failures.
+
 ## Post-merge source and release proof
 
 Gatling is a host CLI contract suite. Its shared fixture suppresses optional
@@ -444,8 +494,8 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `37766aacd5516c09a68a0d9090f6ee0609ef93501024f3ffda96bcebdb3165c1`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (11 files), `docs/` (1 files), `src/` (125 files), `tests/` (172 files)
+- Repository signal fingerprint: `ab9a11ea42af3b5496a92844b43b1fb208608acd04fed342b0a1168f3c94af27`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (11 files), `docs/` (1 files), `src/` (125 files), `tests/` (173 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -378,3 +378,38 @@ fn workflow_keeps_validation_and_release_build_on_the_slim_path() {
     assert!(classifier.contains("github.event.pull_request.head.sha"));
     assert!(classifier.contains("rustc --edition=2024"));
 }
+
+#[test]
+fn musl_workflow_preserves_native_x86_and_executed_arm_regressions() {
+    let workflow = include_str!("../.github/workflows/ci.yml");
+    let musl = workflow_job(workflow, "musl-publication");
+    assert!(musl.contains("runs-on: ubuntu-latest"));
+    assert!(musl.contains("- target: x86_64-unknown-linux-musl\n            execution: native"));
+    assert!(
+        musl.contains(
+            "- target: aarch64-unknown-linux-musl\n            execution: QEMU user-mode"
+        )
+    );
+    assert!(musl.contains("${{ matrix.execution }}"));
+    assert!(musl.contains("CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER: musl-gcc"));
+    assert!(!musl.contains("CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER: musl-gcc"));
+    assert!(musl.contains("CROSS_CONTAINER_ENGINE: docker"));
+    assert!(musl.contains("ghcr.io/cross-rs/aarch64-unknown-linux-musl@sha256:ca0f4a798b756bba34c9cd2f7ceafc1d665daa6c70349a95e2eb06fb687a1ea6"));
+    assert!(musl.contains("cargo install --locked --git https://github.com/cross-rs/cross"));
+    assert!(musl.contains("--rev 74e99b2223de06166f8cdcc1af7f1308ec52baf4 cross"));
+    for runner in ["cargo", "cross"] {
+        assert!(musl.contains(&format!(
+            "{runner} build --locked --release --target ${{{{ matrix.target }}}} --bin decapod"
+        )));
+        assert!(musl.contains(&format!("{runner} test --locked --release --target ${{{{ matrix.target }}}} --lib \\\n              no_replace_publication -- --nocapture")));
+    }
+    for forbidden in [
+        "--no-run",
+        "continue-on-error",
+        "--privileged",
+        "setup-qemu",
+        "--security-opt",
+    ] {
+        assert!(!musl.contains(forbidden), "{forbidden}");
+    }
+}

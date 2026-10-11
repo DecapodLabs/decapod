@@ -9,7 +9,9 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  # Build/test jobs never write repository contents. Buildkite applies this
+  # top-level map and limits PR workflow tokens to contents: read.
+  contents: read
   id-token: write
 
 # Cancel in-progress runs for massive time savings
@@ -83,20 +85,24 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Prepare private validation checkout
+        id: validation-checkout
+        uses: ./.github/actions/validation-checkout
       - name: Download shared decapod binary
         uses: actions/download-artifact@v4
         with:
           name: decapod-debug-linux-${{ github.sha }}
           path: target/debug
       - name: Verify normalized governance and every authored checkpoint
+        working-directory: ${{ steps.validation-checkout.outputs.path }}
         env:
           GOVERNANCE_BASE_BRANCH: ${{ github.base_ref || 'master' }}
           GOVERNANCE_HEAD_REF: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
-          chmod +x target/debug/decapod
+          chmod +x "$GITHUB_WORKSPACE/target/debug/decapod"
           git fetch --no-tags --prune origin "$GOVERNANCE_BASE_BRANCH"
-          ./target/debug/decapod govern artifacts verify-checkpoints \
+          "$GITHUB_WORKSPACE/target/debug/decapod" govern artifacts verify-checkpoints \
             --base-branch "origin/$GOVERNANCE_BASE_BRANCH" \
             --head-ref "$GOVERNANCE_HEAD_REF"
 
@@ -264,12 +270,22 @@ jobs:
         with:
           shared-key: "ci-supabase-consumer-v1.96.1"
       - name: Supabase HTTP and existing cloud boundaries
-        run: >-
-          cargo test --locked --features supabase-cloud --lib
-          --test cloud_supabase_boundary --test cloud_dactyl_boundary
-          --test release_dependency_policy
-          --test cloud_cli_boundary --test cloud_command_path --test cloud_todo_resume_wire --test propodus_contract
-          --test supabase_service
+        # Offline fixture remotes must retain their authored URL spelling.
+        # Isolate this process from provider Git rewrites; never edit its config.
+        # Print the filesystem probe, then execute the unchanged complete suite.
+        run: |
+          set -euo pipefail
+          umask 077
+          unset GIT_CONFIG GIT_CONFIG_PARAMETERS
+          export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_COUNT=0
+          cargo test --locked --features supabase-cloud --lib \
+            core::fs_permissions::tests::recovery_fixture_selection_rejects_incompatible_candidates \
+            -- --exact --nocapture
+          cargo test --locked --features supabase-cloud --lib \
+            --test cloud_supabase_boundary --test cloud_dactyl_boundary \
+            --test release_dependency_policy \
+            --test cloud_cli_boundary --test cloud_command_path --test cloud_todo_resume_wire --test propodus_contract \
+            --test supabase_service
       # Real service profiles stay ignored. They require an externally owned
       # disposable PostgreSQL fixture or protected hosted Supabase inputs.
 
@@ -297,15 +313,17 @@ jobs:
         env:
           DECAPOD_RUN_DOCKER_LIFECYCLE_TEST: "1"
           DECAPOD_TEST_DOCKER_IMAGE: busybox:1.37
-        run: >-
-          cargo test --locked --lib
-          core::workspace_lifecycle::tests::docker_parent_interrupt_recovers_owned_container
-          -- --ignored --exact --nocapture
+        run: |
+          set -euo pipefail
+          umask 077
+          cargo test --locked --lib \
+            core::workspace_lifecycle::tests::docker_parent_interrupt_recovers_owned_container \
+            -- --ignored --exact --nocapture
 
   musl-publication:
-    name: Musl build and atomic publication (${{ matrix.target }})
+    name: Musl build and atomic publication (${{ matrix.target }}, ${{ matrix.execution }})
     needs: release-metadata
-    runs-on: ${{ matrix.runner }}
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
       contents: read
@@ -313,13 +331,16 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runner: ubuntu-latest
-            target: x86_64-unknown-linux-musl
-          - runner: ubuntu-24.04-arm
-            target: aarch64-unknown-linux-musl
+          - target: x86_64-unknown-linux-musl
+            execution: native
+          - target: aarch64-unknown-linux-musl
+            execution: QEMU user-mode
     env:
       CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER: musl-gcc
-      CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER: musl-gcc
+      # The official cross image provides the ARM musl compiler and executes
+      # ARM tests through qemu-aarch64 without privileged/binfmt registration.
+      CROSS_CONTAINER_ENGINE: docker
+      CROSS_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_IMAGE: ghcr.io/cross-rs/aarch64-unknown-linux-musl@sha256:ca0f4a798b756bba34c9cd2f7ceafc1d665daa6c70349a95e2eb06fb687a1ea6
     steps:
       - uses: actions/checkout@v4
         with:
@@ -329,19 +350,37 @@ jobs:
           toolchain: 1.96.1
           targets: ${{ matrix.target }}
       - name: Install native musl compiler
+        if: matrix.target == 'x86_64-unknown-linux-musl'
         run: |
           sudo apt-get update
           sudo apt-get install --yes musl-tools
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: ci-musl-${{ matrix.target }}-v1.96.1
+      - name: Install pinned ARM musl cross runner
+        if: matrix.target == 'aarch64-unknown-linux-musl'
+        run: >-
+          cargo install --locked --git https://github.com/cross-rs/cross
+          --rev 74e99b2223de06166f8cdcc1af7f1308ec52baf4 cross
       - name: Compile the release CLI for musl
-        run: cargo build --locked --release --target ${{ matrix.target }} --bin decapod
+        run: |
+          set -euo pipefail
+          if [ "${{ matrix.target }}" = aarch64-unknown-linux-musl ]; then
+            cross build --locked --release --target ${{ matrix.target }} --bin decapod
+          else
+            cargo build --locked --release --target ${{ matrix.target }} --bin decapod
+          fi
       - name: Run musl no-replace publication regressions
         if: needs.release-metadata.outputs.release_only != 'true'
-        run: >-
-          cargo test --locked --release --target ${{ matrix.target }} --lib
-          no_replace_publication -- --nocapture
+        run: |
+          set -euo pipefail
+          if [ "${{ matrix.target }}" = aarch64-unknown-linux-musl ]; then
+            cross test --locked --release --target ${{ matrix.target }} --lib \
+              no_replace_publication -- --nocapture
+          else
+            cargo test --locked --release --target ${{ matrix.target }} --lib \
+              no_replace_publication -- --nocapture
+          fi
 
   # FMT: Pure source check, no compile needed
   fmt:
@@ -425,6 +464,9 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Prepare private validation checkout
+        id: validation-checkout
+        uses: ./.github/actions/validation-checkout
       - name: Download shared decapod binary
         uses: actions/download-artifact@v4
         with:
@@ -435,6 +477,7 @@ jobs:
           chmod +x target/debug/decapod target/debug/decapod-release-projection-drift
           echo "$PWD/target/debug" >> "$GITHUB_PATH"
       - name: Start validation trajectory
+        working-directory: ${{ steps.validation-checkout.outputs.path }}
         env:
           # CI checkouts are detached and are not Decapod agent worktrees.
           # Keep the normal validation gates enabled, but allow this ephemeral
@@ -453,6 +496,7 @@ jobs:
             --phase validation \
             --next-transition publish
       - name: Initialize Decapod
+        working-directory: ${{ steps.validation-checkout.outputs.path }}
         # Do not re-init an existing tree: init can invent non-idempotent churn
         # that the drift gate below would treat as a packaging failure.
         run: |
@@ -462,16 +506,19 @@ jobs:
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
       - name: Acquire Decapod session
+        working-directory: ${{ steps.validation-checkout.outputs.path }}
         run: decapod session acquire
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
           DECAPOD_CLOUD_AUTH_MODE: mock
       - name: Run validation harness
+        working-directory: ${{ steps.validation-checkout.outputs.path }}
         run: decapod validate --refresh-specs
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
           DECAPOD_VALIDATE_TIMEOUT_SECS: "120"
       - name: Ensure no spec or entrypoint drift
+        working-directory: ${{ steps.validation-checkout.outputs.path }}
         # validate rewrites generated metadata every run; that is not semantic
         # drift. Normalize it to HEAD before the exit-code check.
         # Version-only releases may refresh only proven release projections.
@@ -506,10 +553,12 @@ jobs:
             exit 1
           fi
       - name: Run watcher
+        working-directory: ${{ steps.validation-checkout.outputs.path }}
         run: decapod govern watcher run
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
       - name: Check health summary
+        working-directory: ${{ steps.validation-checkout.outputs.path }}
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
         run: |
@@ -755,7 +804,7 @@ jobs:
     runs-on: ubuntu-latest
     if: (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && needs.release-metadata.outputs.release_only != 'true'
     outputs:
-      matrix: ${{ steps.plan.outputs.matrix }}
+      shards: ${{ steps.plan.outputs.shards }}
       count: ${{ steps.plan.outputs.count }}
     steps:
       - uses: actions/checkout@v4
@@ -798,7 +847,7 @@ jobs:
           fi
           rustc --edition=2024 assets/tools/integration_shards.rs -o "$RUNNER_TEMP/integration-shards"
           "$RUNNER_TEMP/integration-shards" plan --paths "$RUNNER_TEMP/integration-paths.txt" > "$RUNNER_TEMP/integration-matrix.json"
-          echo "matrix=$(jq -c . "$RUNNER_TEMP/integration-matrix.json")" >> "$GITHUB_OUTPUT"
+          echo "shards=$(jq -c '[.include[].shard]' "$RUNNER_TEMP/integration-matrix.json")" >> "$GITHUB_OUTPUT"
           echo "count=$(jq '.include | length' "$RUNNER_TEMP/integration-matrix.json")" >> "$GITHUB_OUTPUT"
       - name: Compile and package selected integration tests once
         if: steps.plan.outputs.count != '0'
@@ -826,22 +875,39 @@ jobs:
     if: (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && needs.release-metadata.outputs.release_only != 'true' && needs.integration-prepare.outputs.count != '0'
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(needs.integration-prepare.outputs.matrix) }}
+      # Static scheduling preserves workflow concurrency on both CI providers.
+      # Selection remains dynamic; inactive workers do not download or run tests.
+      # integration_sharding_policy proves this set covers every planner shard.
+      matrix:
+        shard:
+          - gatling-0
+          - gatling-1
+          - gatling-2
+          - gatling-3
+          - release-policies
+          - contract_conformance
+          - constitution_claims
+          - spec_conformance
+          - substrate_integrity
     steps:
       - name: Download shared integration tests
+        if: contains(fromJSON(needs.integration-prepare.outputs.shards), matrix.shard)
         uses: actions/download-artifact@v4
         with:
           name: decapod-integration-linux-${{ github.sha }}
           path: target/integration-download
       - name: Restore integration executables and runfiles
+        if: contains(fromJSON(needs.integration-prepare.outputs.shards), matrix.shard)
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/integration-tests"
           tar -xf target/integration-download/integration-tests.tar -C "$RUNNER_TEMP/integration-tests"
       - name: Run selective tests
+        if: contains(fromJSON(needs.integration-prepare.outputs.shards), matrix.shard)
         timeout-minutes: 5
         run: |
           set -euo pipefail
+          umask 077
           "$RUNNER_TEMP/integration-tests/integration-shards" run \
             --artifact "$RUNNER_TEMP/integration-tests" \
             --shard "${{ matrix.shard }}"

@@ -54,8 +54,21 @@ else
 fi
 
 : "${GITHUB_OUTPUT:?GITHUB_OUTPUT must be provided by the workflow runtime}"
+# A job output is limited to 1 KiB in Buildkite. The complete manifest remains
+# a file/artifact; only these bounded scheduling decisions cross job boundaries.
+# Assign before echoing so malformed/empty output fails instead of hiding jq's
+# exit status inside a successful echo command. False decisions are valid.
+plan_outputs="$(jq --raw-output --slurp '
+  if length != 1 or (.[0] | type) != "object" then
+    error("cargo-dist must emit exactly one manifest object")
+  else
+    .[0] |
+    "has_local_artifacts=\(.ci.github.artifacts_matrix.include != null)",
+    "pr_upload=\(.ci.github.pr_run_mode == "upload")"
+  end
+' plan-dist-manifest.json)"
 {
-  echo "manifest=$(jq -c . plan-dist-manifest.json)"
+  printf '%s\n' "$plan_outputs"
   echo "tag=${tag}"
   echo "tag_flag=${tag_flag}"
   echo "publishing=${publishing}"

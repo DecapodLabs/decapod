@@ -1,0 +1,28 @@
+name: Prepare private validation checkout
+description: Recreate the exact checked-out commit in a fresh, privately owned CI directory
+outputs:
+  path:
+    description: Workspace-relative path to the private checkout
+    value: ${{ steps.checkout.outputs.path }}
+runs:
+  using: composite
+  steps:
+    - id: checkout
+      shell: bash
+      run: |
+        set -euo pipefail
+        # Imported CI checkouts can inherit a permissive provider umask. Never
+        # chmod their existing state or relax the shared-datastore safety gate.
+        # Clone only immutable Git objects into a new directory owned by this job.
+        umask 077
+        source_root="$(git rev-parse --show-toplevel)"
+        source_head="$(git rev-parse --verify HEAD^{commit})"
+        source_origin="$(git remote get-url origin)"
+        private_root="$(mktemp -d "$source_root/.ci-validation.XXXXXXXX")"
+        git -c core.sharedRepository=false clone --quiet --no-local --no-hardlinks \
+          --no-checkout -- "$source_root" "$private_root"
+        git -C "$private_root" checkout --quiet --detach "$source_head"
+        git -C "$private_root" remote set-url origin "$source_origin"
+        test "$(git -C "$private_root" rev-parse HEAD)" = "$source_head"
+        test "$(git -C "$private_root" rev-parse HEAD^{tree})" = "$(git rev-parse HEAD^{tree})"
+        printf 'path=%s\n' "${private_root##*/}" >> "$GITHUB_OUTPUT"

@@ -12,6 +12,12 @@ missing artifact inputs, and failed child tests fail the invocation. Each test
 uses its relocated runfiles root and the existing lifecycle supervisor, preserving
 normal ignored-test semantics and child failure propagation. Artifact names are
 bound to the current workflow commit, not a mutable latest-build alias.
+The workflow projects the planned matrix into a bounded `shards` JSON array and
+`count`, then gates every static worker's download, restore and execution on
+membership. Cargo-dist similarly exposes only `has-local-artifacts`, `pr-upload`,
+tag and publishing decisions between jobs; the complete manifest stays in the
+existing artifact contract. The private validation-checkout composite returns a
+workspace-relative `path` for subsequent governance and drift commands.
 
 ## Canonical Governance Lifecycle
 
@@ -366,8 +372,8 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `37766aacd5516c09a68a0d9090f6ee0609ef93501024f3ffda96bcebdb3165c1`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (11 files), `docs/` (1 files), `src/` (125 files), `tests/` (172 files)
+- Repository signal fingerprint: `ab9a11ea42af3b5496a92844b43b1fb208608acd04fed342b0a1168f3c94af27`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (11 files), `docs/` (1 files), `src/` (125 files), `tests/` (173 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
