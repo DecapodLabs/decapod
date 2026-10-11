@@ -17,6 +17,11 @@ history to a compact baseline. The target must prove acceptance of an existing
 PR before it can be replaced. Repeating the same ID is idempotent only for the
 same base identity. Merge acceptance never invents a release tag.
 
+Read-only artifact inventory retains structured schema errors for malformed or
+unsupported authority and identifies safe legacy source-byte divergence without
+migrating it. Optional size diagnostics cannot discard that report. Repair,
+migration, and publication still reject the same invalid authority.
+
 `claim --id <id> --statement <text> --falsifier <text> --status <status>` records
 only current-PR claims, with repeatable `--proof-ref` values for supported proof.
 `resolve-obligation --id <carried-id> --resolution <text> --proof-ref <ref>`
@@ -348,8 +353,8 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ff0e704a1389577bb72bd8d97fc1f5f7d0e567779df8ad00b96ab8d2bf46557e`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (125 files), `tests/` (167 files)
+- Repository signal fingerprint: `76abacad7a2a007655edfdd5e59e517944c2927704c41ce51195889bc75d901c`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (5 files), `docs/` (1 files), `src/` (125 files), `tests/` (168 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

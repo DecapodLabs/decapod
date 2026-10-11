@@ -176,15 +176,8 @@ fn test_verify_deadlock_prevention() {
         },
         "updated_at": "2026-06-20T00:00:00Z"
     });
-    let plan_str = serde_json::to_string_pretty(&plan).unwrap();
-
-    let plan_dir_wt = wt_path.join(".decapod").join("governance");
-    std::fs::create_dir_all(&plan_dir_wt).unwrap();
-    std::fs::write(plan_dir_wt.join("plan.json"), &plan_str).unwrap();
-
-    let plan_dir_main = main_repo.join(".decapod").join("governance");
-    std::fs::create_dir_all(&plan_dir_main).unwrap();
-    std::fs::write(plan_dir_main.join("plan.json"), &plan_str).unwrap();
+    decapod::core::governance_document::write_section(&wt_path, "plan", &plan).unwrap();
+    decapod::core::governance_document::write_section(&main_repo, "plan", &plan).unwrap();
 
     // Manually force both tasks to have failed verification status in the SQLite DB
     let db_path = main_repo.join(".decapod/data/decapod.db");

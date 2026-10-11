@@ -201,6 +201,18 @@ fn safe_legacy_file(root: &Path, relative: &str) -> Result<PathBuf, DecapodError
     Ok(path)
 }
 
+/// Physical source for read-only inventory diagnostics. Invalid legacy content
+/// still has useful byte/HEAD divergence; this does not authorize importing it.
+pub(crate) fn diagnostic_section_path(root: &Path, section: &str) -> &'static str {
+    if !root.join(GOVERNANCE_PATH).exists()
+        && let Some((_, legacy)) = LEGACY.iter().find(|(name, _)| *name == section)
+        && safe_legacy_file(root, legacy).is_ok_and(|path| path.is_file())
+    {
+        return legacy;
+    }
+    GOVERNANCE_PATH
+}
+
 fn check_legacy_conflicts(root: &Path, document: &GovernanceDocument) -> Result<(), DecapodError> {
     for (path, expected) in &document.legacy_digests {
         let file = safe_legacy_file(root, path)?;

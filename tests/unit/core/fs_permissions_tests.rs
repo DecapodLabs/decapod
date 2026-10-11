@@ -68,7 +68,7 @@ fn permissive_umask_flows_are_confined() {
     assert_eq!(mode(&data.join("rollback.db-journal")), 0o600);
     connection.execute_batch("ROLLBACK").unwrap();
     drop(connection);
-    let artifact = root.path().join(".decapod/governance/result.json");
+    let artifact = root.path().join("atomic-fixture/result.json");
     crate::core::atomic::write_atomic(&artifact, b"first").unwrap();
     crate::core::atomic::write_atomic(&artifact, b"replacement").unwrap();
     assert_eq!(mode(&artifact), 0o600);

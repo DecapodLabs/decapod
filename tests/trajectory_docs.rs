@@ -279,6 +279,11 @@ fn trajectory_contract_is_embedded_and_schema_touch_regenerates_it() {
     let regenerated = fs::read_to_string(contracts).unwrap();
     assert_eq!(trajectory_section(&regenerated), contract.trim());
     assert!(regenerated.contains(decapod::core::docs_cli::specs_refresh_contract()));
+    assert!(regenerated.ends_with('\n'));
+    assert!(
+        !regenerated.ends_with("\n\n"),
+        "generated EOF whitespace drift"
+    );
 }
 
 #[test]

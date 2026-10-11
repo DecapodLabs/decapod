@@ -146,7 +146,6 @@ pub fn inventory_with_options(
     let mut artifacts = vec![
         entry(
             repo_root,
-            plan_governance::PLAN_PATH,
             "plan",
             "governed intent and phase plan",
             ArtifactValidity {
@@ -159,7 +158,6 @@ pub fn inventory_with_options(
         ),
         entry(
             repo_root,
-            research_claims::CLAIMS_PATH,
             "claims",
             "repository research claims ledger; distinct from Health Engine claims in decapod.db",
             ArtifactValidity {
@@ -176,7 +174,6 @@ pub fn inventory_with_options(
         ),
         entry(
             repo_root,
-            trajectory::TRAJECTORY_PATH,
             "trajectory",
             "agent-run trajectory cookie and proof evidence",
             ArtifactValidity {
@@ -189,7 +186,6 @@ pub fn inventory_with_options(
         ),
         entry(
             repo_root,
-            validate::VALIDATION_RECEIPT_PATH,
             "validation",
             "successful Decapod validation receipt bound to the current trajectory",
             ArtifactValidity {
@@ -206,6 +202,9 @@ pub fn inventory_with_options(
             .iter_mut()
             .zip(["plan", "claims", "trajectory", "validation"])
     {
+        if artifact.path != crate::core::governance_document::GOVERNANCE_PATH {
+            continue;
+        }
         artifact.path = format!(
             "{}#/{}",
             crate::core::governance_document::GOVERNANCE_PATH,
@@ -225,7 +224,12 @@ pub fn inventory_with_options(
     let all_semantically_current = artifacts
         .iter()
         .all(|item| item.semantic_freshness == SemanticFreshness::Current);
-    let claims_ledger_bytes = research_claims::ledger_size_bytes(repo_root)?;
+    // Reuse the diagnostic read: a malformed authority is reported through
+    // schema_error, not converted into an early return by an optional size probe.
+    let claims_ledger_bytes = claims
+        .map(|value| serde_json::to_vec(value).map(|bytes| bytes.len() as u64))
+        .transpose()
+        .map_err(|error| crate::core::error::DecapodError::ValidationError(error.to_string()))?;
     Ok(GovernanceArtifactInventory {
         schema_version: INVENTORY_SCHEMA_VERSION.to_string(),
         kind: "governance_artifact_inventory".to_string(),
@@ -286,13 +290,13 @@ pub fn run_inventory_with_options(
 
 fn entry(
     repo_root: &Path,
-    path: &str,
     section: &str,
     role: &str,
     validity: ArtifactValidity,
     staged_paths: &BTreeSet<String>,
     pr_paths: &BTreeSet<String>,
 ) -> GovernanceArtifactEntry {
+    let path = crate::core::governance_document::diagnostic_section_path(repo_root, section);
     let present = repo_root.join(path).is_file();
     let workspace_sha = present.then(|| file_sha(&repo_root.join(path)));
     let target_sha = git_blob_sha(repo_root, "HEAD", path);

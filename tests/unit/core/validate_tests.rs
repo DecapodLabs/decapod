@@ -654,8 +654,7 @@ fn publication_bundle_currency_accepts_inherited_bundle_without_diff_churn() {
         "CODEX.md",
         "GEMINI.md",
         ".decapod/managed/Dockerfile.decapod",
-        ".decapod/governance/claims.json",
-        ".decapod/governance/plan.json",
+        crate::core::governance_document::GOVERNANCE_PATH,
     ] {
         assert!(
             !names.lines().any(|l| l.trim() == forbidden),
@@ -850,7 +849,7 @@ fn receipt_is_reusable_after_governance_only_commit() {
     .with_recomputed_hash()
     .expect("hash");
 
-    fs::create_dir_all(dir.join(".decapod/governance")).expect("gov");
+    fs::create_dir_all(dir.join(".decapod")).expect("governance parent");
     fs::write(dir.join(VALIDATION_RECEIPT_PATH), "{}\n").expect("receipt");
     git(dir, &["add", VALIDATION_RECEIPT_PATH]);
     git(dir, &["commit", "-m", "receipt"]);

@@ -778,8 +778,12 @@ fn isolation_repo() -> tempfile::TempDir {
         "ignored/\n.decapod/data/\n.decapod/workspaces/\n",
     )
     .unwrap();
-    std::fs::create_dir_all(repo.path().join(".decapod/governance")).unwrap();
-    std::fs::write(repo.path().join(".decapod/governance/plan.json"), "{}\n").unwrap();
+    std::fs::create_dir_all(repo.path().join(".decapod")).unwrap();
+    std::fs::write(
+        repo.path().join(".decapod/governance.json"),
+        "{\"schema_version\":\"1.0.0\"}\n",
+    )
+    .unwrap();
     git(repo.path(), &["add", "."]);
     git(repo.path(), &["commit", "-qm", "base"]);
     repo
@@ -797,15 +801,15 @@ fn dirty_root_isolation_preserves_files_and_uses_only_committed_base() {
     std::fs::create_dir_all(root.join("ignored")).unwrap();
     std::fs::write(root.join("ignored/private.txt"), "ignored private\n").unwrap();
     std::fs::write(
-        root.join(".decapod/governance/plan.json"),
-        "{\"user\":true}\n",
+        root.join(".decapod/governance.json"),
+        "{\"schema_version\":\"1.0.0\",\"baseline\":{\"policy\":{\"user\":true}}}\n",
     )
     .unwrap();
     let paths = [
         "tracked.txt",
         "untracked\n\"note.txt",
         "ignored/private.txt",
-        ".decapod/governance/plan.json",
+        ".decapod/governance.json",
         ".git/index",
     ];
     let before: Vec<_> = paths
@@ -829,7 +833,7 @@ fn dirty_root_isolation_preserves_files_and_uses_only_committed_base() {
         inventory
             .files
             .iter()
-            .any(|file| file.path == ".decapod/governance/plan.json"
+            .any(|file| file.path == ".decapod/governance.json"
                 && file.class == DirtyFileClass::GovernanceTracked)
     );
     assert_eq!(
@@ -847,8 +851,8 @@ fn dirty_root_isolation_preserves_files_and_uses_only_committed_base() {
         assert!(!path.join("untracked\n\"note.txt").exists());
         assert!(!path.join("ignored/private.txt").exists());
         assert_eq!(
-            std::fs::read_to_string(path.join(".decapod/governance/plan.json")).unwrap(),
-            "{}\n"
+            std::fs::read_to_string(path.join(".decapod/governance.json")).unwrap(),
+            "{\"schema_version\":\"1.0.0\"}\n"
         );
     }
     for (path, expected) in paths.iter().zip(before) {

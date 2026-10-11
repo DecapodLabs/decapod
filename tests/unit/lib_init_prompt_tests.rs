@@ -341,7 +341,7 @@ fn dockerfile_orientation_separates_workspace_and_application_containers() {
         task_id: None,
         governed_plan: crate::core::rpc::GovernedPlanContext {
             status: "missing".to_string(),
-            path: ".decapod/governance/plan.json".to_string(),
+            path: ".decapod/governance.json#/sections/plan".to_string(),
             title: None,
             intent: None,
             state: None,

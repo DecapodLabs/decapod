@@ -101,7 +101,9 @@ def decapod_targets():
                 "assets/schemas/trajectory.schema.json",
                 "docs/agent/command-contracts.md",
                 "docs/agent/payload-examples.md",
-            ] if path == "tests/trajectory_docs.rs" else [],
+            ] if path == "tests/trajectory_docs.rs" else [
+                ".github/workflows/docs_sync.yml",
+            ] if path == "tests/docs_sync_checkpoint_boundary.rs" else [],
             edition = "2024",
             crate_features = ["supabase-cloud"],
             rustc_env_files = [":cargo_pkg_env"],

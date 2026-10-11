@@ -386,15 +386,13 @@ fn validate_json_reports_self_heal_and_structured_summary() {
         format!("decapod-validate@{}", env!("CARGO_PKG_VERSION"))
     );
 
-    let validation_receipt = dir.join(".decapod/governance/validation.json");
     assert!(
-        validation_receipt.exists(),
-        "successful validation should overwrite the per-commit validation receipt"
+        dir.join(decapod::core::governance_document::GOVERNANCE_PATH)
+            .is_file()
     );
-    let receipt: Value = serde_json::from_str(
-        &fs::read_to_string(&validation_receipt).expect("read validation receipt"),
-    )
-    .expect("parse validation receipt");
+    let receipt = decapod::core::governance_document::read_section(&dir, "validation")
+        .expect("load canonical validation receipt")
+        .expect("successful validation must provide a receipt section");
     assert_eq!(receipt["kind"], "validation_receipt");
     assert_eq!(receipt["decapod_release"], env!("CARGO_PKG_VERSION"));
     assert_eq!(receipt["status"], "ok");
@@ -413,15 +411,9 @@ fn validate_json_reports_self_heal_and_structured_summary() {
             .starts_with("sha256:")
     );
 
-    let trajectory_path = dir.join(".decapod/governance/trajectory.json");
-    assert!(
-        trajectory_path.exists(),
-        "successful validation must provide a trajectory artifact"
-    );
-    let trajectory: Value = serde_json::from_str(
-        &fs::read_to_string(&trajectory_path).expect("read trajectory artifact"),
-    )
-    .expect("parse trajectory artifact");
+    let trajectory = decapod::core::governance_document::read_section(&dir, "trajectory")
+        .expect("load canonical trajectory")
+        .expect("successful validation must provide a trajectory section");
     assert_eq!(
         receipt["trajectory_run_id"], trajectory["run_id"],
         "validation receipt must identify the current trajectory"
@@ -487,8 +479,8 @@ fn validate_json_reports_self_heal_and_structured_summary() {
     // The managed Dockerfile is validation-epoch material. Repairing the old
     // release pin must preserve the authored RUN line, so this is genuinely a
     // new epoch, not permission to relabel an earlier successful proof.
-    let prior_receipt = fs::read(&validation_receipt).expect("prior receipt bytes");
-    let prior_trajectory = fs::read(&trajectory_path).expect("prior trajectory bytes");
+    let governance_path = dir.join(decapod::core::governance_document::GOVERNANCE_PATH);
+    let prior_governance = fs::read(&governance_path).expect("prior governance bytes");
     let stale_validate = run_decapod(
         &dir,
         &["validate", "--format", "json"],
@@ -508,13 +500,10 @@ fn validate_json_reports_self_heal_and_structured_summary() {
         "expected stale-proof recovery, got: {}",
         String::from_utf8_lossy(&stale_validate.stderr)
     );
-    assert!(
-        fs::read(&validation_receipt).expect("preserved receipt") == prior_receipt,
-        "stale validation must not overwrite the previously successful receipt"
-    );
-    assert!(
-        fs::read(&trajectory_path).expect("preserved trajectory") == prior_trajectory,
-        "stale validation must not add the new epoch to the previous trajectory"
+    assert_eq!(
+        fs::read(&governance_path).expect("preserved governance"),
+        prior_governance,
+        "stale validation must preserve the entire document, including the prior receipt and trajectory"
     );
     let recovery = run_decapod(
         &dir,
@@ -573,10 +562,13 @@ fn validate_json_reports_self_heal_and_structured_summary() {
 
     let second_payload: Value =
         serde_json::from_slice(&second_validate.stdout).expect("recovered validation JSON");
-    let second_receipt_bytes = fs::read(&validation_receipt).expect("recovered receipt bytes");
-    let second_trajectory_bytes = fs::read(&trajectory_path).expect("recovered trajectory bytes");
-    let second_receipt: Value = serde_json::from_slice(&second_receipt_bytes).unwrap();
-    let second_trajectory: Value = serde_json::from_slice(&second_trajectory_bytes).unwrap();
+    let second_governance_bytes = fs::read(&governance_path).expect("recovered governance bytes");
+    let second_receipt = decapod::core::governance_document::read_section(&dir, "validation")
+        .unwrap()
+        .expect("recovered validation receipt");
+    let second_trajectory = decapod::core::governance_document::read_section(&dir, "trajectory")
+        .unwrap()
+        .expect("recovered trajectory");
     assert_ne!(
         second_receipt["validation_epoch"]["epoch_id"],
         epoch["epoch_id"]
@@ -611,13 +603,10 @@ fn validate_json_reports_self_heal_and_structured_summary() {
         "unchanged validation failed: {}",
         String::from_utf8_lossy(&unchanged_validate.stderr)
     );
-    assert!(
-        fs::read(&validation_receipt).unwrap() == second_receipt_bytes,
-        "unchanged validation should reuse the bound receipt"
-    );
-    assert!(
-        fs::read(&trajectory_path).unwrap() == second_trajectory_bytes,
-        "unchanged validation should preserve the bound trajectory"
+    assert_eq!(
+        fs::read(&governance_path).unwrap(),
+        second_governance_bytes,
+        "unchanged validation should preserve the entire document and reuse its bound proof"
     );
 }
 

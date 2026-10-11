@@ -67,7 +67,8 @@
       "falsifier": "Lossless migration, conflicts, concurrent writes, PR/base identity, per-commit tree proof, obligation resolution, epoch retention, or atomic/no-op regression fails.",
       "status": "supported",
       "proof_refs": [
-        "trajectory:dactyl-0111-governance/local-rust-suites"
+        "git:dd2cc561360a3270434324afbdd550f9fffbc058:.decapod/governance.json",
+        "trajectory:dactyl-0111-governance-repair/repair-library"
       ]
     },
     "request-context-1141": {
@@ -75,7 +76,8 @@
       "falsifier": "Request-context, missing-todo, or genuine intent/ownership gate regression fails.",
       "status": "supported",
       "proof_refs": [
-        "trajectory:dactyl-0111-governance/local-rust-suites"
+        "git:dd2cc561360a3270434324afbdd550f9fffbc058:.decapod/governance.json",
+        "trajectory:dactyl-0111-governance-repair/repair-library"
       ]
     },
     "shared-sqlite-recovery": {
@@ -83,7 +85,8 @@
       "falsifier": "Shared-mode, archive identity, no-clobber, ACL rejection, or maintenance diagnostic regression fails.",
       "status": "supported",
       "proof_refs": [
-        "trajectory:dactyl-0111-governance/local-rust-suites"
+        "git:dd2cc561360a3270434324afbdd550f9fffbc058:.decapod/governance.json",
+        "trajectory:dactyl-0111-governance-repair/repair-library"
       ]
     },
     "specs-refresh-1166": {
@@ -91,7 +94,8 @@
       "falsifier": "Refresh documentation, command parsing, regeneration, or authored-spec ownership regression fails.",
       "status": "supported",
       "proof_refs": [
-        "trajectory:dactyl-0111-governance/local-rust-suites"
+        "git:dd2cc561360a3270434324afbdd550f9fffbc058:.decapod/governance.json",
+        "trajectory:dactyl-0111-governance-repair/repair-library"
       ]
     },
     "trajectory-contract-1165": {
@@ -99,7 +103,8 @@
       "falsifier": "Schema/serde/documentation drift or executable trajectory example regression fails.",
       "status": "supported",
       "proof_refs": [
-        "trajectory:dactyl-0111-governance/local-rust-suites"
+        "git:dd2cc561360a3270434324afbdd550f9fffbc058:.decapod/governance.json",
+        "trajectory:dactyl-0111-governance-repair/repair-library"
       ]
     }
   },
@@ -130,24 +135,33 @@
         "/tmp/decapod-final-remote-validation.json",
         "trajectory:dactyl-0111-governance"
       ]
+    },
+    {
+      "id": "ci-repair-approved-bot-replacement",
+      "summary": "Repair canonical CI fixtures and read-only inventory diagnostics; replace mutating PR docs automation with tested drift verification. Archive bot tip preserved and one-time replacement explicitly approved; no new successful validation receipt claimed before clean-tree evaluation.",
+      "input_digest": "sha256:1123c0993e083cccc3c32f197b75a5fde200b9b19438fa47434dd72610a637d2",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/tree/archive/pr1387-docs-bot-8c5e3b08",
+        "trajectory:dactyl-0111-governance-repair"
+      ]
     }
   ],
   "intents": {
-    "intent:dactyl-0111-governance": {
+    "intent:dactyl-0111-governance-repair": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "No merge, crate publish, tag, credential changes, paid resources, or claims of unavailable hosted/container proof"
+        "No merge, release, credential changes, gate weakening, fabricated proof, or overwrite of concurrent changes. Archive exact bot tip before replacing only its commit."
       ],
       "constraints": [
-        "Dactyl recovery and dependency policy; issues 1141, 1165, 1166; normalized governance lifecycle, docs, tests, and living specs"
+        "Existing approved Dactyl/recovery, three issues, normalized governance, and scoped CI regression repair"
       ],
       "created_sequence": 1,
-      "id": "intent:dactyl-0111-governance",
+      "id": "intent:dactyl-0111-governance-repair",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Adopt Dactyl 0.11.1, solve three open issues in the same PR, consolidate governance into a compact normalized file, guide ordered population, and publish the PR when ready.",
-      "refined_intent": "Deliver the approved combined change with current-PR proof, preserved unresolved obligations and explicit limits; keep shared access and automatic container startup intentional.",
+      "raw_intent": "Adopt Dactyl 0.11.1, solve issues 1141/1165/1166, consolidate normalized PR governance, and fix the Action errors on PR 1387 then push.",
+      "refined_intent": "Repair canonical test fixtures and read-only inventory diagnostics, prevent documentation automation from bypassing checkpoints, and publish the scoped checked repair with the explicitly approved one-time archive-and-replace exception.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -227,9 +241,9 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed lifecycle CLI, ordered updates and staged checkpoints; request-context custody plus executable trajectory/spec-refresh contracts remain explicit.",
-          "reviewed_code_fingerprint": "ff0e704a1389577bb72bd8d97fc1f5f7d0e567779df8ad00b96ab8d2bf46557e",
-          "spec_material_hash": "1f5e1a98984a778d7116f4a8fea5b33599a8a555ff7618e66b529ef01d160e41"
+          "reason": "Read-only inventory retains explicit schema errors and safe legacy-byte divergence; seven Hermes regressions verify diagnostics and fail-closed repair/migration. Publication authority is unchanged.",
+          "reviewed_code_fingerprint": "76abacad7a2a007655edfdd5e59e517944c2927704c41ce51195889bc75d901c",
+          "spec_material_hash": "a17fe8ab2f92c5fa639373d5a03e96090d037871b3c25672ed0cecba85286a01"
         },
         {
           "disposition": "updated",
@@ -250,37 +264,41 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791675311Z"
+      "updated_at": "1791677666Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "No merge, crate publish, tag, credential changes, paid resources, or claims of unavailable hosted/container proof"
+        "No merge, release, credential changes, gate weakening, fabricated proof, or overwrite of concurrent changes. Archive exact bot tip before replacing only its commit."
       ],
-      "artifact_hash": "sha256:6775a9e1cca9630e27f4282e27e577f95077110107d1737153372b520618acd9",
+      "artifact_hash": "sha256:da378d0a3f7451837536530712f17ebbb091f38edb791e77e403cca5c8fd744a",
       "checks": [
+        {
+          "name": "canonical-ci-regressions",
+          "status": "passed"
+        },
         {
           "name": "clippy-all-targets",
           "status": "passed"
         },
         {
-          "name": "container-workspace",
+          "name": "container-local",
           "status": "unavailable"
         },
         {
-          "name": "decapod validate",
+          "name": "docs-writer-regressions",
           "status": "passed"
+        },
+        {
+          "name": "green-field-init",
+          "status": "partial"
         },
         {
           "name": "hosted-service-proof",
           "status": "unavailable"
         },
         {
-          "name": "local-rust-suites",
+          "name": "repair-library",
           "status": "passed"
-        },
-        {
-          "name": "repository-validation",
-          "status": "partial"
         },
         {
           "name": "rustfmt",
@@ -292,77 +310,65 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:dactyl-0111-governance",
+            "intent_id": "intent:dactyl-0111-governance-repair",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:dactyl-0111-governance",
+            "intent_id": "intent:dactyl-0111-governance-repair",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:dactyl-0111-governance",
+            "detail": "trajectory:dactyl-0111-governance-repair",
             "event_id": "event:4",
-            "intent_id": "intent:dactyl-0111-governance",
+            "intent_id": "intent:dactyl-0111-governance-repair",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:dactyl-0111-governance",
+            "detail": "trajectory:dactyl-0111-governance-repair",
             "event_id": "event:5",
-            "intent_id": "intent:dactyl-0111-governance",
+            "intent_id": "intent:dactyl-0111-governance-repair",
             "kind": "trajectory_step_recorded",
             "sequence": 5
-          },
-          {
-            "detail": "trajectory:dactyl-0111-governance",
-            "event_id": "event:6",
-            "intent_id": "intent:dactyl-0111-governance",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:dactyl-0111-governance",
-            "event_id": "event:7",
-            "intent_id": "intent:dactyl-0111-governance",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:dactyl-0111-governance",
-            "event_id": "event:8",
-            "intent_id": "intent:dactyl-0111-governance",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "dactyl-0111-governance": {
+          "dactyl-0111-governance-repair": {
             "evidence_only": true,
-            "id": "dactyl-0111-governance",
-            "intent_id": "intent:dactyl-0111-governance",
+            "id": "dactyl-0111-governance-repair",
+            "intent_id": "intent:dactyl-0111-governance-repair",
             "steps": [
               {
                 "action": "trajectory.record",
-                "command": "cargo test --locked --lib; cargo test --locked on the 19 listed integration suites; cargo clippy --locked --all-targets -- -D warnings; cargo fmt --all -- --check",
+                "command": "cargo test --locked --lib and scoped integration suites; cargo clippy --locked --all-targets -- -D warnings; cargo fmt --all -- --check; git diff --check",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "Exact combined source: 717 tests passed across 20 suites; five pre-existing ignored tests are not passes. Includes real shared-mode/ACL recovery, migration/concurrency/lifecycle/checkpoints, all three issue regressions, and workunit paths. Clippy and rustfmt passed. Local Docker and authorized hosted service fixtures are unavailable."
+                  "Original published source at dd2cc561 passed 717 tests across 20 suites with five existing ignored tests, plus genuine clean-tree validator and publication gates. Those immutable Git records retain the original proof; no old validation epoch is asserted as new repair proof.",
+                  "Exact prepared repair source: library 593 passed/1 ignored; Hermes inventory 7 passed; inference 4; release policy 13; validation termination 11; deadlock 2; docs/writer 7. All-target clippy -D warnings, rustfmt, and git diff --check passed.",
+                  "Green-field init: 7 passed, one unchanged re-init idempotence assertion fails only on manifest generated_at. Reproduced using baseline 8566c957: init, validate and force-init succeed, config and INTENT unchanged, timestamp alone changes. Existing issue 1024 covers deterministic re-init; no workaround or assertion weakening applied.",
+                  "GitHub Actions on 8c5e3b08 passed actual Docker lifecycle, native x86_64/aarch64 musl builds, and all active jobs except missing immutable bot checkpoint and two canonical test/diagnostic regressions. Those two regression tests now pass locally.",
+                  "User Sentinel_232e78eada0c8191b868760318a95465 approved: Correct. Fix the action errors on #1387 then push. This answered the explicit request to archive the docs bot commit and replace only that commit with valid checkpoint under a one-time no-force-push exception.",
+                  "Archive branch archive/pr1387-docs-bot-8c5e3b08 was fetched and verified at exact bot tip 8c5e3b083e45f69881da98079ae2da4dd7d4c442. Remote head will be lease-checked before replacement; no concurrent change is authorized to be overwritten.",
+                  "Branch custody task bugs_01m4kyeckvq8r1pv and active workspace coordination task bugs_01m4kyt3rfha5w6f remain linked in the plan. Container startup is intentional but Docker is unavailable locally."
                 ],
                 "proof_refs": [
-                  "local-rust-suites",
-                  "rustfmt",
+                  "repair-library",
+                  "canonical-ci-regressions",
+                  "docs-writer-regressions",
                   "clippy-all-targets",
-                  "container-workspace",
+                  "rustfmt",
+                  "green-field-init",
+                  "container-local",
                   "hosted-service-proof"
                 ],
                 "scope": [
-                  "Dactyl recovery and dependency policy; issues 1141, 1165, 1166; normalized governance lifecycle, docs, tests, and living specs"
+                  "Existing approved Dactyl/recovery, three issues, normalized governance, and scoped CI regression repair"
                 ],
                 "sequence": 4,
                 "validation_findings": []
@@ -371,62 +377,39 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "Pre-adoption current-source validate: 199 gates passed, four failed. One is unavailable container workspace proof; three require the adoption bundle to be committed (dirty-file count and publication/spec participation). No successful validation receipt was produced. Re-run after the checkpointed adoption commit."
-                ],
-                "proof_refs": [
-                  "repository-validation"
-                ],
-                "scope": [
-                  "Dactyl recovery and dependency policy; issues 1141, 1165, 1166; normalized governance lifecycle, docs, tests, and living specs"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "Branch custody task is bugs_01m4kyeckvq8r1pv; active workspace-scoped coordination/ownership task is bugs_01m4kyt3rfha5w6f. Both are linked in the governed plan; the prompt and approved scope remain unchanged.",
-                  "GitHub connector re-creates commit identities. The genuine final validation receipt binds fetched remote adoption ancestor cbdbfd8e99ef7e5424fb3989cc626fca762f2164. Local source tests apply to the identical authored source tree; pre-adoption evidence is preserved in remote Git."
+                  ".config/build/decapod.BUILD.bzl",
+                  ".decapod/governance.json",
+                  ".decapod/managed/specs/.manifest.json",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTENT.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/OPERATIONS.md",
+                  ".decapod/managed/specs/README.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  ".decapod/managed/specs/SEMANTICS.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  ".github/workflows/docs_sync.yml",
+                  "src/decapod/core/docs_cli.rs",
+                  "src/decapod/core/governance_artifacts.rs",
+                  "src/decapod/core/governance_document.rs",
+                  "tests/hermes_governance_substrate.rs",
+                  "tests/infer_precision.rs",
+                  "tests/init_validate_green_field.rs",
+                  "tests/release_workflow_policy.rs",
+                  "tests/trajectory_docs.rs",
+                  "tests/unit/core/fs_permissions_tests.rs",
+                  "tests/unit/core/validate_tests.rs",
+                  "tests/unit/core/workspace_tests.rs",
+                  "tests/unit/lib_init_prompt_tests.rs",
+                  "tests/validate_termination.rs",
+                  "tests/verify_deadlock_regression.rs",
+                  "tests/docs_sync_checkpoint_boundary.rs"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "Dactyl recovery and dependency policy; issues 1141, 1165, 1166; normalized governance lifecycle, docs, tests, and living specs"
+                  "Existing approved Dactyl/recovery, three issues, normalized governance, and scoped CI regression repair"
                 ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "After aligning remote ancestry, the dirty governance binding update passed all non-container validator gates. Container custody remained unavailable locally; the next clean committed evaluation will report its actual result without skip flags."
-                ],
-                "proof_refs": [
-                  "repository-validation"
-                ],
-                "scope": [
-                  "Dactyl recovery and dependency policy; issues 1141, 1165, 1166; normalized governance lifecycle, docs, tests, and living specs"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "command": "decapod validate",
-                "custody_event_id": "event:8",
-                "observations": [
-                  ".decapod/governance.json",
-                  ".decapod/governance.json",
-                  "validation epoch ve_bbd2be18d4666486 completed with zero failures"
-                ],
-                "proof_refs": [
-                  "decapod validate"
-                ],
-                "scope": [
-                  "Dactyl recovery and dependency policy; issues 1141, 1165, 1166; normalized governance lifecycle, docs, tests, and living specs"
-                ],
-                "sequence": 8,
+                "sequence": 5,
                 "validation_findings": []
               }
             ]
@@ -434,30 +417,56 @@
         }
       },
       "declared_commands": [
-        "cargo test --locked --lib; cargo test --locked on the 19 listed integration suites; cargo clippy --locked --all-targets -- -D warnings; cargo fmt --all -- --check",
-        "decapod validate"
+        "cargo test --locked --lib and scoped integration suites; cargo clippy --locked --all-targets -- -D warnings; cargo fmt --all -- --check; git diff --check"
       ],
-      "destination": "Draft pull request on DecapodLabs/decapod",
+      "destination": "Pull request https://github.com/DecapodLabs/decapod/pull/1387",
       "evidence": [
-        "After aligning remote ancestry, the dirty governance binding update passed all non-container validator gates. Container custody remained unavailable locally; the next clean committed evaluation will report its actual result without skip flags.",
-        "Branch custody task is bugs_01m4kyeckvq8r1pv; active workspace-scoped coordination/ownership task is bugs_01m4kyt3rfha5w6f. Both are linked in the governed plan; the prompt and approved scope remain unchanged.",
-        "Exact combined source: 717 tests passed across 20 suites; five pre-existing ignored tests are not passes. Includes real shared-mode/ACL recovery, migration/concurrency/lifecycle/checkpoints, all three issue regressions, and workunit paths. Clippy and rustfmt passed. Local Docker and authorized hosted service fixtures are unavailable.",
-        "GitHub connector re-creates commit identities. The genuine final validation receipt binds fetched remote adoption ancestor cbdbfd8e99ef7e5424fb3989cc626fca762f2164. Local source tests apply to the identical authored source tree; pre-adoption evidence is preserved in remote Git.",
-        "Pre-adoption current-source validate: 199 gates passed, four failed. One is unavailable container workspace proof; three require the adoption bundle to be committed (dirty-file count and publication/spec participation). No successful validation receipt was produced. Re-run after the checkpointed adoption commit.",
-        "validation epoch ve_bbd2be18d4666486 completed with zero failures"
+        "Archive branch archive/pr1387-docs-bot-8c5e3b08 was fetched and verified at exact bot tip 8c5e3b083e45f69881da98079ae2da4dd7d4c442. Remote head will be lease-checked before replacement; no concurrent change is authorized to be overwritten.",
+        "Branch custody task bugs_01m4kyeckvq8r1pv and active workspace coordination task bugs_01m4kyt3rfha5w6f remain linked in the plan. Container startup is intentional but Docker is unavailable locally.",
+        "Exact prepared repair source: library 593 passed/1 ignored; Hermes inventory 7 passed; inference 4; release policy 13; validation termination 11; deadlock 2; docs/writer 7. All-target clippy -D warnings, rustfmt, and git diff --check passed.",
+        "GitHub Actions on 8c5e3b08 passed actual Docker lifecycle, native x86_64/aarch64 musl builds, and all active jobs except missing immutable bot checkpoint and two canonical test/diagnostic regressions. Those two regression tests now pass locally.",
+        "Green-field init: 7 passed, one unchanged re-init idempotence assertion fails only on manifest generated_at. Reproduced using baseline 8566c957: init, validate and force-init succeed, config and INTENT unchanged, timestamp alone changes. Existing issue 1024 covers deterministic re-init; no workaround or assertion weakening applied.",
+        "Original published source at dd2cc561 passed 717 tests across 20 suites with five existing ignored tests, plus genuine clean-tree validator and publication gates. Those immutable Git records retain the original proof; no old validation epoch is asserted as new repair proof.",
+        "User Sentinel_232e78eada0c8191b868760318a95465 approved: Correct. Fix the action errors on #1387 then push. This answered the explicit request to archive the docs bot commit and replace only that commit with valid checkpoint under a one-time no-force-push exception."
       ],
       "inspected_files": [],
-      "intent_id": "intent:dactyl-0111-governance",
+      "intent_id": "intent:dactyl-0111-governance-repair",
       "modified_files": [
-        ".decapod/governance.json"
+        ".config/build/decapod.BUILD.bzl",
+        ".decapod/governance.json",
+        ".decapod/managed/specs/.manifest.json",
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTENT.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/OPERATIONS.md",
+        ".decapod/managed/specs/README.md",
+        ".decapod/managed/specs/SECURITY.md",
+        ".decapod/managed/specs/SEMANTICS.md",
+        ".decapod/managed/specs/VALIDATION.md",
+        ".github/workflows/docs_sync.yml",
+        "src/decapod/core/docs_cli.rs",
+        "src/decapod/core/governance_artifacts.rs",
+        "src/decapod/core/governance_document.rs",
+        "tests/docs_sync_checkpoint_boundary.rs",
+        "tests/hermes_governance_substrate.rs",
+        "tests/infer_precision.rs",
+        "tests/init_validate_green_field.rs",
+        "tests/release_workflow_policy.rs",
+        "tests/trajectory_docs.rs",
+        "tests/unit/core/fs_permissions_tests.rs",
+        "tests/unit/core/validate_tests.rs",
+        "tests/unit/core/workspace_tests.rs",
+        "tests/unit/lib_init_prompt_tests.rs",
+        "tests/validate_termination.rs",
+        "tests/verify_deadlock_regression.rs"
       ],
       "next_transitions": [
         "publish"
       ],
       "repo_scope": [
-        "Dactyl recovery and dependency policy; issues 1141, 1165, 1166; normalized governance lifecycle, docs, tests, and living specs"
+        "Existing approved Dactyl/recovery, three issues, normalized governance, and scoped CI regression repair"
       ],
-      "run_id": "dactyl-0111-governance",
+      "run_id": "dactyl-0111-governance-repair",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
       "task_id": "bugs_01m4kyeckvq8r1pv",

@@ -33,11 +33,15 @@ fn repo() -> (TempDir, PathBuf) {
 #[test]
 fn dirty_classification_is_deterministic_and_groups_governance_files() {
     let (_temp, dir) = repo();
-    fs::create_dir_all(dir.join(".decapod/governance")).expect("governance directory");
+    fs::create_dir_all(dir.join(".decapod")).expect("governance parent");
     fs::create_dir_all(dir.join(".decapod/managed/specs")).expect("spec directory");
     fs::create_dir_all(dir.join(".decapod/data/sessions")).expect("session directory");
     fs::write(dir.join("user.rs"), "fn main() {}\n").expect("user file");
-    fs::write(dir.join(".decapod/governance/plan.json"), "{}\n").expect("plan");
+    fs::write(
+        dir.join(".decapod/governance.json"),
+        "{\"schema_version\":\"1.0.0\"}\n",
+    )
+    .expect("canonical governance");
     fs::write(dir.join(".decapod/managed/specs/INTENT.md"), "projection\n").expect("projection");
     fs::write(
         dir.join(".decapod/data/sessions/runtime.json"),
@@ -52,7 +56,7 @@ fn dirty_classification_is_deterministic_and_groups_governance_files() {
     );
     assert_eq!(report.files[0].path, ".decapod/data/sessions/runtime.json");
     assert_eq!(
-        dirty_classification::classify_path(".decapod/governance/plan.json", &[]),
+        dirty_classification::classify_path(".decapod/governance.json", &[]),
         DirtyFileClass::GovernanceTracked
     );
     assert_eq!(
@@ -117,7 +121,22 @@ fn inventory_reports_workspace_target_divergence_missing_base_and_does_not_mutat
         .find(|artifact| artifact.path == ".decapod/governance/plan.json")
         .expect("plan artifact");
     assert_eq!(plan.workspace_target_state, WorkspaceTargetState::Divergent);
-    assert!(plan.schema_error.is_some());
+    assert!(
+        plan.schema_error
+            .as_deref()
+            .is_some_and(|error| error.contains("intent"))
+    );
+    assert!(!plan.valid);
+    assert!(!report.all_valid);
+    assert!(report.claims_ledger_bytes.is_none());
+    assert!(
+        !dir.join(decapod::core::governance_document::GOVERNANCE_PATH)
+            .exists()
+    );
+    assert!(
+        governance_artifacts::inventory(&dir, Some("missing-target"), true).is_err(),
+        "repair must reject malformed authority"
+    );
     assert_eq!(report.base_ref, None);
     assert!(!report.all_in_pr_diff);
     let after = Command::new("git")
@@ -153,7 +172,7 @@ fn protected_root_status_is_a_blocker_and_json_has_stable_shape() {
 #[test]
 fn atomic_writer_replaces_complete_content_without_leftover_temp_files() {
     let (_temp, dir) = repo();
-    let path = dir.join(".decapod/governance/receipt.json");
+    let path = dir.join("atomic-fixture/receipt.json");
     atomic::write_atomic(&path, b"{\"status\":\"ok\"}\n").expect("atomic write");
     assert_eq!(fs::read_to_string(&path).unwrap(), "{\"status\":\"ok\"}\n");
     let leftovers = fs::read_dir(path.parent().unwrap())
@@ -183,4 +202,41 @@ fn inventory_and_status_share_dirty_root_isolation_ownership() {
         serde_json::to_value(status.root_isolation).unwrap(),
         serde_json::to_value(inventory.root_isolation).unwrap()
     );
+}
+
+#[test]
+fn malformed_or_newer_canonical_inventory_reports_errors_without_mutation() {
+    use decapod::core::governance_document::{self, GOVERNANCE_PATH};
+    for contents in [
+        "{not-json",
+        r#"{"schema_version":"99.0.0"}"#,
+        r#"{"schema_version":"1.0.0","sections":{"plan":{}}}"#,
+    ] {
+        let (_temp, dir) = repo();
+        fs::create_dir_all(dir.join(".decapod")).unwrap();
+        let path = dir.join(GOVERNANCE_PATH);
+        fs::write(&path, contents).unwrap();
+        let report = governance_artifacts::inventory(&dir, None, false).unwrap();
+        let plan = report
+            .artifacts
+            .iter()
+            .find(|artifact| artifact.path == format!("{GOVERNANCE_PATH}#/sections/plan"))
+            .unwrap();
+        assert!(plan.present);
+        assert!(!plan.valid);
+        assert!(plan.schema_error.is_some());
+        assert!(!report.all_valid);
+        assert!(report.claims_ledger_bytes.is_none());
+        assert_eq!(fs::read_to_string(&path).unwrap(), contents);
+        assert!(
+            !dir.join(".decapod/data").exists(),
+            "read-only diagnosis must not initialize runtime state"
+        );
+        assert!(governance_document::migrate(&dir).is_err());
+        assert_eq!(
+            fs::read_to_string(path).unwrap(),
+            contents,
+            "migration must fail closed on the same malformed authority"
+        );
+    }
 }
