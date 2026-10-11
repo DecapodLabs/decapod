@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.107.3](https://github.com/DecapodLabs/decapod/compare/v0.107.2...v0.107.3) - 2026-10-11
+
+### Added
+
+- initialize fresh workbranch governance and owned build cleanup
+
+### Fixed
+
+- preserve exact workspace context and owned mount targets
+- *(build)* keep owned scratch paths within Unix socket limits
+- *(build)* use owning package labels for cleanup tests
+
+### Other
+
+- bind repair proof to remote source ancestor
+- bind short scratch validation to remote ancestor
+- bind corrected build validation to remote ancestor
+- establish current validation epoch for build correction
+- bind fresh governance validation to remote ancestor
+
 ## [0.107.2](https://github.com/DecapodLabs/decapod/compare/v0.107.1...v0.107.2) - 2026-10-11
 
 ### Added
