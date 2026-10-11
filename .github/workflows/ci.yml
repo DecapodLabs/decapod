@@ -270,12 +270,14 @@ jobs:
         with:
           shared-key: "ci-supabase-consumer-v1.96.1"
       - name: Supabase HTTP and existing cloud boundaries
-        run: >-
-          cargo test --locked --features supabase-cloud --lib
-          --test cloud_supabase_boundary --test cloud_dactyl_boundary
-          --test release_dependency_policy
-          --test cloud_cli_boundary --test cloud_command_path --test cloud_todo_resume_wire --test propodus_contract
-          --test supabase_service
+        run: |
+          set -euo pipefail
+          umask 077
+          cargo test --locked --features supabase-cloud --lib \
+            --test cloud_supabase_boundary --test cloud_dactyl_boundary \
+            --test release_dependency_policy \
+            --test cloud_cli_boundary --test cloud_command_path --test cloud_todo_resume_wire --test propodus_contract \
+            --test supabase_service
       # Real service profiles stay ignored. They require an externally owned
       # disposable PostgreSQL fixture or protected hosted Supabase inputs.
 
@@ -303,10 +305,12 @@ jobs:
         env:
           DECAPOD_RUN_DOCKER_LIFECYCLE_TEST: "1"
           DECAPOD_TEST_DOCKER_IMAGE: busybox:1.37
-        run: >-
-          cargo test --locked --lib
-          core::workspace_lifecycle::tests::docker_parent_interrupt_recovers_owned_container
-          -- --ignored --exact --nocapture
+        run: |
+          set -euo pipefail
+          umask 077
+          cargo test --locked --lib \
+            core::workspace_lifecycle::tests::docker_parent_interrupt_recovers_owned_container \
+            -- --ignored --exact --nocapture
 
   musl-publication:
     name: Musl build and atomic publication (${{ matrix.target }}, ${{ matrix.execution }})
@@ -895,6 +899,7 @@ jobs:
         timeout-minutes: 5
         run: |
           set -euo pipefail
+          umask 077
           "$RUNNER_TEMP/integration-tests/integration-shards" run \
             --artifact "$RUNNER_TEMP/integration-tests" \
             --shard "${{ matrix.shard }}"

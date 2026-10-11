@@ -11,6 +11,14 @@ Source CI requests read-only repository contents access because its jobs build,
 test and retain artifacts without writing repository contents. This matches the
 Buildkite pull-request token ceiling; it does not grant publishing authority.
 
+The direct offline-consumer, Docker-lifecycle and packaged-integration test
+commands set a process-local `umask 077` before creating disposable fixtures.
+Provider runner defaults must not make new fixture stores group/world writable.
+The mask follows those test children only: existing checkout/datastore modes,
+trusted-group policy, and contributor build-supervisor defaults stay unchanged.
+Storage rejection remains a real test failure rather than a reason to relax a
+guard or retry against shared user state.
+
 Release planning exports only bounded scheduling decisions between jobs while
 retaining the complete cargo-dist manifest as an artifact. A failed plan cannot
 authorize the host/publish stage. Existing release ownership, provider-specific
@@ -389,7 +397,7 @@ continue to be surfaced through the existing storage checks.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `bac6e5839628cf023618a58809904f047d79bc1a3c48948018d79b5eb217e1b0`
+- Repository signal fingerprint: `effbdd4550ebc44bd220f16bb843ec11e7ba83ed5831694ab3d2ee200007dde7`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (11 files), `docs/` (1 files), `src/` (125 files), `tests/` (173 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

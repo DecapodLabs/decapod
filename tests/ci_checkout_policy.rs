@@ -207,3 +207,142 @@ fn source_ci_requests_only_read_access_to_repository_contents() {
     assert!(!CI.contains("git push"));
     assert!(!CI.contains("gh release"));
 }
+
+const PRIVATE_TEST_STEPS: [(&str, &str, &str); 3] = [
+    (
+        "supabase-consumer",
+        "Supabase HTTP and existing cloud boundaries",
+        "cargo test --locked --features supabase-cloud --lib",
+    ),
+    (
+        "workspace-lifecycle-docker",
+        "Prove interrupted caller and owned container recovery",
+        "cargo test --locked --lib",
+    ),
+    (
+        "test-integration",
+        "Run selective tests",
+        "\"$RUNNER_TEMP/integration-tests/integration-shards\" run",
+    ),
+];
+
+fn test_step_preamble(job: &str, step: &str, command: &str) -> String {
+    let job = CI.split_once(&format!("\n  {job}:\n")).unwrap().1;
+    let step = job
+        .split_once(&format!("      - name: {step}\n"))
+        .unwrap()
+        .1;
+    let body = step.split_once("        run: |\n").unwrap().1;
+    let prefix = body.split_once(&format!("          {command}")).unwrap().0;
+    prefix
+        .lines()
+        .map(|line| line.strip_prefix("          ").unwrap())
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+#[test]
+fn only_fresh_ci_test_processes_set_private_creation_permissions() {
+    for (job, step, command) in PRIVATE_TEST_STEPS {
+        assert_eq!(
+            test_step_preamble(job, step, command),
+            "set -euo pipefail\numask 077",
+            "{job} must set creation permissions before spawning test processes"
+        );
+    }
+    // Do not replace this scoped boundary with an inherited storage-policy
+    // opt-out, a global workflow default, or changes to existing installations.
+    assert!(!CI.contains("DECAPOD_STORAGE_SHARED_GROUP"));
+    assert!(!CI.contains("\ndefaults:\n"));
+}
+
+#[test]
+fn private_creation_child_fixture() {
+    let Some(root) = std::env::var_os("DECAPOD_CI_CREATION_FIXTURE") else {
+        return;
+    };
+    let root = PathBuf::from(root);
+    fs::create_dir_all(root.join("new/state/data")).unwrap();
+    fs::write(root.join("new/state/data/file"), "fresh private state").unwrap();
+}
+
+#[cfg(unix)]
+#[test]
+fn test_step_umask_is_inherited_by_children_without_changing_shared_state() {
+    use std::os::unix::fs::PermissionsExt;
+    for (job, step, command) in PRIVATE_TEST_STEPS {
+        let fixture = Fixture::new();
+        let root = &fixture.0;
+        fs::create_dir(root.join("existing-shared")).unwrap();
+        fs::write(root.join("existing-shared/file"), "unchanged shared state").unwrap();
+        fs::set_permissions(
+            root.join("existing-shared"),
+            fs::Permissions::from_mode(0o777),
+        )
+        .unwrap();
+        fs::set_permissions(
+            root.join("existing-shared/file"),
+            fs::Permissions::from_mode(0o666),
+        )
+        .unwrap();
+        // Change only the new shell's mask, never the parallel Rust test
+        // process. The actual CI preamble must reach a spawned Rust process.
+        let output = Command::new("bash")
+            .args([
+                "-c",
+                &format!(
+                    "umask 000\n(\n{}\n\"$1\" --exact private_creation_child_fixture --nocapture\n)\ntest \"$(umask)\" = 0000",
+                    test_step_preamble(job, step, command)
+                ),
+                "ci-private-creation",
+            ])
+            .arg(std::env::current_exe().unwrap())
+            .env("DECAPOD_CI_CREATION_FIXTURE", root)
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "{job}: {output:?}");
+        for relative in ["new", "new/state", "new/state/data"] {
+            assert_eq!(
+                fs::metadata(root.join(relative))
+                    .unwrap()
+                    .permissions()
+                    .mode()
+                    & 0o777,
+                0o700,
+                "{job}: {relative}"
+            );
+        }
+        assert_eq!(
+            fs::metadata(root.join("new/state/data/file"))
+                .unwrap()
+                .permissions()
+                .mode()
+                & 0o777,
+            0o600,
+            "{job}"
+        );
+        assert_eq!(
+            fs::metadata(root.join("existing-shared"))
+                .unwrap()
+                .permissions()
+                .mode()
+                & 0o777,
+            0o777,
+            "{job}"
+        );
+        assert_eq!(
+            fs::metadata(root.join("existing-shared/file"))
+                .unwrap()
+                .permissions()
+                .mode()
+                & 0o777,
+            0o666,
+            "{job}"
+        );
+        assert_eq!(
+            fs::read_to_string(root.join("existing-shared/file")).unwrap(),
+            "unchanged shared state",
+            "{job}"
+        );
+    }
+}

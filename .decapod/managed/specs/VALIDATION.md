@@ -19,6 +19,13 @@ databases are not changed or copied. A permissive-checkout regression proves
 private directory modes, exact Git identity, clean runtime state and unchanged
 source permissions. The shared-group storage policy stays intact.
 
+Fresh test-fixture creation also has a process boundary. Tests start from a
+permissive inherited umask, execute the three direct CI test-command prefixes,
+and verify private new directory/file modes without changing pre-existing
+shared state. The packaged policy artifact must reproduce the unsafe-fixture
+failure without that boundary and pass with it; changing existing permissions
+or suppressing the storage check cannot satisfy this proof.
+
 Musl publication regressions retain x86_64 native execution and aarch64 binary
 execution through QEMU user-mode on a supported Linux runner. The ARM lane pins
 both the official Cross source revision and its matching compiler/runtime image
@@ -479,7 +486,7 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `bac6e5839628cf023618a58809904f047d79bc1a3c48948018d79b5eb217e1b0`
+- Repository signal fingerprint: `effbdd4550ebc44bd220f16bb843ec11e7ba83ed5831694ab3d2ee200007dde7`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (11 files), `docs/` (1 files), `src/` (125 files), `tests/` (173 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

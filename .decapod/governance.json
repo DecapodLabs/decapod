@@ -104,6 +104,14 @@
       "proof_refs": [
         "decapod validate default profile on clean remote7b3e25efd66f482c7ef3605113631f9cb9f2eeff; exacttree28bf69efa0f5318fe88f56946d9c2d986edaeccc; no skips, no container-policy change"
       ]
+    },
+    {
+      "id": "buildkite-private-fixture-creation",
+      "summary": "Create new direct CI test fixtures privately under permissive provider umask",
+      "input_digest": "sha256:343a999941b344f701950599f00d61de018669a1ab625b13922f13990a12bc4b",
+      "proof_refs": [
+        "Fresh Bazel six policy targets71 tests; same artifact unsafe umask000 failure and private077 success; CI fixture child regressions preserve existing shared modes"
+      ]
     }
   ],
   "intents": {
@@ -191,24 +199,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed current authored interoperability contract and changes: static exhaustive scheduling, exact private CI source clone, bounded manifest decisions, least-privilege source CI and direct user-mode ARM execution without new security grants.",
-          "reviewed_code_fingerprint": "bac6e5839628cf023618a58809904f047d79bc1a3c48948018d79b5eb217e1b0",
+          "reason": "Follow-up confines private creation umask to three disposable CI test commands; the previously reviewed architecture, external interfaces and unchanged shared storage guard remain accurate.",
+          "reviewed_code_fingerprint": "effbdd4550ebc44bd220f16bb843ec11e7ba83ed5831694ab3d2ee200007dde7",
           "spec_material_hash": "067286adac676ae65f24b3d75d16bf74bf55ced059a54e91d906164764cb66ef"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed current authored interoperability contract and changes: static exhaustive scheduling, exact private CI source clone, bounded manifest decisions, least-privilege source CI and direct user-mode ARM execution without new security grants.",
-          "reviewed_code_fingerprint": "bac6e5839628cf023618a58809904f047d79bc1a3c48948018d79b5eb217e1b0",
+          "reason": "Follow-up confines private creation umask to three disposable CI test commands; the previously reviewed architecture, external interfaces and unchanged shared storage guard remain accurate.",
+          "reviewed_code_fingerprint": "effbdd4550ebc44bd220f16bb843ec11e7ba83ed5831694ab3d2ee200007dde7",
           "spec_material_hash": "dbc2c41ea2a503adf4a311d62ee14b4e317615f0b6d7934047037da95a6255cd"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed current authored interoperability contract and changes: static exhaustive scheduling, exact private CI source clone, bounded manifest decisions, least-privilege source CI and direct user-mode ARM execution without new security grants.",
-          "reviewed_code_fingerprint": "bac6e5839628cf023618a58809904f047d79bc1a3c48948018d79b5eb217e1b0",
+          "reason": "Follow-up confines private creation umask to three disposable CI test commands; the previously reviewed architecture, external interfaces and unchanged shared storage guard remain accurate.",
+          "reviewed_code_fingerprint": "effbdd4550ebc44bd220f16bb843ec11e7ba83ed5831694ab3d2ee200007dde7",
           "spec_material_hash": "104f8c7ff33a76536830670971641ef8ef8aa86ce7f9390ec234291c81ed3b82"
         }
       ],
@@ -222,13 +230,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791751141Z"
+      "updated_at": "1791752489Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "No deployment, release publication, merge or security grants"
+        "No deployment, release publication, merge or security grants",
+        "Only the three new CI-owned test process creation masks change; preserve existing shared datastore policy, contributor supervisor defaults, all assertions and aggregate failure propagation."
       ],
-      "artifact_hash": "sha256:b488abf1ceb111b27250173da59744194b2ec9aca435bc5ceaf14e5ca7adb066",
+      "artifact_hash": "sha256:c319c2a29d6b7ddf56a4b685f6042956a2e9190452e6457cb1dc19498e25f5b5",
       "blockers": [
         "Live Release and Docs publishing jobs reject GitHub workflow token requests; private settings/grants unavailable and no security changes or publish reruns authorized"
       ],
@@ -239,6 +248,18 @@
         },
         {
           "name": "bazel-six-policy-targets",
+          "status": "passed"
+        },
+        {
+          "name": "buildkite-841-arm-execution",
+          "status": "passed"
+        },
+        {
+          "name": "buildkite-841-test-fixtures",
+          "status": "failed"
+        },
+        {
+          "name": "cargo-policy-recheck",
           "status": "passed"
         },
         {
@@ -262,11 +283,31 @@
           "status": "passed"
         },
         {
+          "name": "fresh-bazel-six-policies",
+          "status": "passed"
+        },
+        {
+          "name": "github-0dba235-all-workflows",
+          "status": "passed"
+        },
+        {
           "name": "local-docker-arm-execution",
           "status": "unavailable"
         },
         {
+          "name": "permissive-umask-reproduction",
+          "status": "passed"
+        },
+        {
           "name": "private-checkout-policy",
+          "status": "passed"
+        },
+        {
+          "name": "private-creation-regressions",
+          "status": "passed"
+        },
+        {
+          "name": "private-umask-relocated-artifact",
           "status": "passed"
         },
         {
@@ -286,12 +327,20 @@
           "status": "passed"
         },
         {
+          "name": "rustfmt",
+          "status": "passed"
+        },
+        {
           "name": "source-ci-importer",
           "status": "partial"
         },
         {
           "name": "static-integration-policy",
           "status": "passed"
+        },
+        {
+          "name": "static-provider-admission",
+          "status": "partial"
         }
       ],
       "current_phase": "validation",
@@ -350,10 +399,31 @@
             "intent_id": "intent:buildkite-repair-20261011",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:buildkite-repair-20261011",
+            "event_id": "event:10",
+            "intent_id": "intent:buildkite-repair-20261011",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
+          },
+          {
+            "detail": "trajectory:buildkite-repair-20261011",
+            "event_id": "event:11",
+            "intent_id": "intent:buildkite-repair-20261011",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
+          },
+          {
+            "detail": "trajectory:buildkite-repair-20261011",
+            "event_id": "event:12",
+            "intent_id": "intent:buildkite-repair-20261011",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 12,
         "schema_version": "1.0.0",
         "trajectories": {
           "buildkite-repair-20261011": {
@@ -478,6 +548,67 @@
                 ],
                 "sequence": 9,
                 "validation_findings": []
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:10",
+                "observations": [
+                  ".github/workflows/ci.yml",
+                  "assets/tools/build_lifecycle.rs",
+                  ".github/workflows/ci.yml",
+                  "tests/ci_checkout_policy.rs",
+                  ".decapod/managed/specs/OPERATIONS.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "GitHub CI38173837304 at PR head0dba235: all jobs terminal; ARM four and native four actual tests passed, Docker actual test passed. Buildkite841 ARM four passed; three fixture permission failures and their integration aggregate, no independent fourth defect.",
+                  "Same relocated full policy artifact fails under process umask000 with nine STORAGE_UNSAFE_PERMISSIONS errors; process umask077 passes all68 tests. No existing modes or storage guard changed."
+                ],
+                "proof_refs": [
+                  "github-0dba235-all-workflows",
+                  "buildkite-841-arm-execution",
+                  "buildkite-841-test-fixtures",
+                  "permissive-umask-reproduction",
+                  "private-umask-relocated-artifact"
+                ],
+                "scope": [
+                  ".github/workflows,.github/scripts,assets/tools,tests/release_workflow_policy.rs,.decapod/managed/specs"
+                ],
+                "sequence": 10,
+                "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "Updated CI checkout policy seven tests pass; sharding seventeen tests pass under default and four-thread rechecks. Five Cargo policy binaries pass61 tests. Focused Clippy denies warnings; rustfmt and diff whitespace pass. One initial local sharding run could not open its child call log; unchanged serial/default/four-thread rechecks pass, and final provider proof remains mandatory.",
+                  "Source diff semantic check: only supabase-consumer, workspace-lifecycle-docker and test-integration run bodies changed; permissions and protected propodus-live job identical. Offline importer admits affected jobs; existing protected environment requires live Agent API."
+                ],
+                "proof_refs": [
+                  "private-creation-regressions",
+                  "cargo-policy-recheck",
+                  "focused-clippy",
+                  "rustfmt",
+                  "static-provider-admission"
+                ],
+                "scope": [
+                  ".github/workflows,.github/scripts,assets/tools,tests/release_workflow_policy.rs,.decapod/managed/specs"
+                ],
+                "sequence": 11,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:12",
+                "observations": [
+                  "Final fresh Bazel execution with system CA verification: all six policy targets pass, 71 tests total, nocache_test_results. Fixture test state creation stays private, shared fixture modes unchanged."
+                ],
+                "proof_refs": [
+                  "fresh-bazel-six-policies"
+                ],
+                "scope": [
+                  ".github/workflows,.github/scripts,assets/tools,tests/release_workflow_policy.rs,.decapod/managed/specs"
+                ],
+                "sequence": 12,
+                "validation_findings": []
               }
             ]
           }
@@ -490,20 +621,28 @@
       "evidence": [
         "Buildkite 830 needs-derived matrix/concurrency and ARM runner diagnostics; 832 unsafe checkout modes; 837 oversized manifest output; 833/837 token rejections. Local tests: integration17, checkout3, release19, distribution3 passed. Official importer admits new validation composite; release compile indeterminate only because release environment requires job-scoped Agent API.",
         "Committed local source validation passed202/0 without skips/config changes. Exact remote source fa3e7fd13277645104f069690da8b202a731d9ea tree c86195fc131918ac9cbaa76dcb7670f591964585 fetched and matches staged tested source. Fresh6 Bazel tests passed; relocated release-policies actual run68/68 passed in3.633955s. Full ARM/container execution awaits CI; source host lacks Docker.",
+        "Final fresh Bazel execution with system CA verification: all six policy targets pass, 71 tests total, nocache_test_results. Fixture test state creation stays private, shared fixture modes unchanged.",
         "Fresh artifact-relocation run:68/68 tests across metadata15, projection10, distribution3, integration17, private checkout4, release workflow19; 3.633955s run-only; no symlinks or original artifact path. First remote validation203/1 was blocked only by dirty governance updates; preserve them in an evidence checkpoint and validate a clean fetched remote child next.",
+        "GitHub CI38173837304 at PR head0dba235: all jobs terminal; ARM four and native four actual tests passed, Docker actual test passed. Buildkite841 ARM four passed; three fixture permission failures and their integration aggregate, no independent fourth defect.",
         "Initial six-target processwrapper-sandbox Bazel test passed, all6 targets executed. Focused Clippy rechecked final test sources with -D warnings. No actual Docker or ARM runtime proof claimed locally.",
         "Official importer admits repaired ARM, all nine integration workers, governance and health jobs. Only offline propodus-live environment requires live Agent API; existing environment gate preserved. Default dirty-worktree validation198pass2fail reports container proof unavailable and commit-often; use genuine checkpointed committed-source validation next, no flags or config changes.",
+        "Same relocated full policy artifact fails under process umask000 with nine STORAGE_UNSAFE_PERMISSIONS errors; process umask077 passes all68 tests. No existing modes or storage guard changed.",
+        "Source diff semantic check: only supabase-consumer, workspace-lifecycle-docker and test-integration run bodies changed; permissions and protected propodus-live job identical. Offline importer admits affected jobs; existing protected environment requires live Agent API.",
+        "Updated CI checkout policy seven tests pass; sharding seventeen tests pass under default and four-thread rechecks. Five Cargo policy binaries pass61 tests. Focused Clippy denies warnings; rustfmt and diff whitespace pass. One initial local sharding run could not open its child call log; unchanged serial/default/four-thread rechecks pass, and final provider proof remains mandatory.",
         "validation epoch ve_69c0eb182d7e8765 completed with zero failures"
       ],
       "inspected_files": [
         ".github/workflows/ci.yml",
         ".github/workflows/decapod-validate.yml",
         ".github/workflows/docs.yml",
-        ".github/workflows/release.yml"
+        ".github/workflows/release.yml",
+        "assets/tools/build_lifecycle.rs"
       ],
       "intent_id": "intent:buildkite-repair-20261011",
       "modified_files": [
         ".decapod/governance.json",
+        ".decapod/managed/specs/OPERATIONS.md",
+        ".decapod/managed/specs/VALIDATION.md",
         ".github/actions/validation-checkout/action.yml",
         ".github/scripts/release-plan.sh",
         ".github/workflows/ci.yml",
