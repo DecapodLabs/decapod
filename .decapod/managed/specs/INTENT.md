@@ -17,6 +17,17 @@
 
 <!-- decapod:declared-capabilities:end -->
 
+## Post-merge reliability boundary
+
+Source merges must retain full behavioral proof, including the host CLI
+lifecycle suite. Release-only metadata should avoid repeating unchanged source
+lint and tests while preserving candidate validation and packaging evidence.
+Release classification must fail closed for substantive or ambiguous changes,
+and release projection refresh must not require fabricated authored spec prose
+in a version-only release PR. Test fixtures may explicitly suppress optional
+container preparation; production task claims and container isolation keep
+their existing behavior.
+
 ## Contextual safety outcome (#1370)
 
 Source context must distinguish supported non-secret values and non-shell uses
@@ -340,8 +351,8 @@ policy ban based solely on virtiofs or FUSE filesystem identity.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `cdf450ecc34491bfb4ccbde5ff4f8ea4b909586b9d5473363ed770209f1c28a6`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (7 files), `docs/` (1 files), `src/` (125 files), `tests/` (169 files)
+- Repository signal fingerprint: `f7539e6c67a90f185edde8d9ba05217f291197756653d14797555f894eb11334`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (10 files), `docs/` (1 files), `src/` (125 files), `tests/` (171 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

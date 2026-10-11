@@ -1,5 +1,34 @@
 # Validation
 
+## Post-merge source and release proof
+
+Gatling is a host CLI contract suite. Its shared fixture suppresses optional
+claim-triggered container startup, including initialization and task lookup,
+while dedicated container tests retain the production startup path. Each
+stateful fixture command emits uncaptured start/end diagnostics naming its
+fixture and elapsed time, so an aggregate timeout identifies unfinished stages.
+Children stay in the invocation supervisor's process group for cancellation and
+scratch cleanup. The aggregate Bazel budget stays at 300 seconds. A passing isolated decision lifecycle is not
+proof that a parallel full-suite timeout has been reproduced or repaired; the
+complete four-thread Gatling target must pass as well.
+
+Release routing is determined from the immutable Git event range, not release
+labels, branch names, or commit messages. Only an advancing root package version,
+the matching root lockfile version, and optional changelog content qualify for
+the slim source-check path. Source, dependency, feature, template, file-mode,
+add/delete, mixed-range, or unresolvable-base changes retain normal checks.
+The candidate binary is still built and `decapod validate` still executes for
+version-only releases. Any tolerated post-validation drift must be reproduced
+by the actual projection generator from the accepted version-only inputs;
+authored prose and unrelated generated surfaces cannot be normalized away.
+
+Release planning tests must inspect the pinned cargo-dist plan for all four
+configured targets and verify that every archive selects only the product
+executable. A version-bump-only fixture verifies that the package overlay does
+not pin a second product version. Native packaging evidence and foreign-target
+runner evidence are reported separately; selecting an artifact is not proof
+that every target compiled or shipped.
+
 ## Context classifier regression proof (#1370)
 
 Each supported safe case requires a neighboring adversarial control and an
@@ -398,8 +427,8 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `cdf450ecc34491bfb4ccbde5ff4f8ea4b909586b9d5473363ed770209f1c28a6`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (7 files), `docs/` (1 files), `src/` (125 files), `tests/` (169 files)
+- Repository signal fingerprint: `f7539e6c67a90f185edde8d9ba05217f291197756653d14797555f894eb11334`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (10 files), `docs/` (1 files), `src/` (125 files), `tests/` (171 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -1,5 +1,27 @@
 # Operations
 
+## Version-only release CI
+
+A release commit may carry only package-version, matching root lock-version,
+and changelog metadata. Its verified event range can reuse source lint and test
+coverage from the preceding code merge. The shared candidate binary build,
+Decapod validation, and release packaging checks remain active. Missing or
+ambiguous Git history takes the full source-check path. A push containing both
+a source change and a release change is never metadata-only, even when its last
+commit is a release. The release workflow and publication permissions do not
+change as part of this routing decision.
+
+## Release artifact selection
+
+The pinned cargo-dist configuration uses a Cargo workspace member for package
+identity, version, and compilation, with an explicit product binary list in
+`dist.toml`. Only `decapod` belongs in release archives. The feature-gated build
+supervisor and release-check tools remain contributor tools; a successful Cargo
+release build does not mean cargo-dist can package targets it never built.
+The package version stays single-sourced in Cargo.toml, so version-only release
+PRs continue to update only Cargo.toml, Cargo.lock, and CHANGELOG.md. Linux and
+macOS x86_64/aarch64 target support and publication permissions remain unchanged.
+
 ## Operational Readiness Checklist
 - [ ] On-call ownership defined.
 - [ ] SLOs and alert thresholds defined.
@@ -347,8 +369,8 @@ continue to be surfaced through the existing storage checks.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `cdf450ecc34491bfb4ccbde5ff4f8ea4b909586b9d5473363ed770209f1c28a6`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (7 files), `docs/` (1 files), `src/` (125 files), `tests/` (169 files)
+- Repository signal fingerprint: `f7539e6c67a90f185edde8d9ba05217f291197756653d14797555f894eb11334`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (10 files), `docs/` (1 files), `src/` (125 files), `tests/` (171 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

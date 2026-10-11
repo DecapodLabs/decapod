@@ -21,11 +21,42 @@ env:
   RUST_BACKTRACE: 1
 
 jobs:
+  # Prove a version-only release from immutable Git objects, never labels/titles.
+  release-metadata:
+    name: Release Metadata Classification
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      release_only: ${{ steps.classify.outputs.release_only }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.96.1
+      - name: Classify immutable change range
+        id: classify
+        env:
+          CHANGE_EVENT: ${{ github.event_name }}
+          CHANGE_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          CHANGE_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          rustc --edition=2024 assets/tools/release_metadata.rs -o "$RUNNER_TEMP/decapod-release-metadata"
+          "$RUNNER_TEMP/decapod-release-metadata" \
+            --repo . --event "$CHANGE_EVENT" --base "$CHANGE_BASE" --head "$CHANGE_HEAD" \
+            | tee -a "$GITHUB_OUTPUT"
+
   # COMMIT LINT: Fast check, no build dependency
   commit-lint:
     name: Commit Lint
+    needs: release-metadata
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    if: (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && needs.release-metadata.outputs.release_only != 'true'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -45,8 +76,8 @@ jobs:
   governance-artifacts:
     name: Governance Checkpoints (every authored commit)
     runs-on: ubuntu-latest
-    needs: setup
-    if: (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && !contains(github.event.pull_request.labels.*.name, 'release')
+    needs: [release-metadata, setup]
+    if: (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && needs.release-metadata.outputs.release_only != 'true'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -73,8 +104,9 @@ jobs:
   # not only refresh fingerprints/attestation blocks (GitHub #1183).
   material-specs:
     name: Material Living Specs (beyond fingerprints)
+    needs: release-metadata
     runs-on: ubuntu-latest
-    if: (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && !contains(github.event.pull_request.labels.*.name, 'release')
+    if: (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && needs.release-metadata.outputs.release_only != 'true'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -191,8 +223,9 @@ jobs:
 
   detect-migration-script-changes:
     name: Detect Migration Script Changes
+    needs: release-metadata
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    if: (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && needs.release-metadata.outputs.release_only != 'true'
     outputs:
       changed: ${{ steps.diff.outputs.changed }}
     steps:
@@ -215,6 +248,8 @@ jobs:
 
   supabase-consumer:
     name: Supabase consumer (offline fixtures)
+    needs: release-metadata
+    if: needs.release-metadata.outputs.release_only != 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -240,6 +275,8 @@ jobs:
 
   workspace-lifecycle-docker:
     name: Workspace lifecycle (actual Docker)
+    needs: release-metadata
+    if: needs.release-metadata.outputs.release_only != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -267,6 +304,7 @@ jobs:
 
   musl-publication:
     name: Musl build and atomic publication (${{ matrix.target }})
+    needs: release-metadata
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 20
     permissions:
@@ -300,6 +338,7 @@ jobs:
       - name: Compile the release CLI for musl
         run: cargo build --locked --release --target ${{ matrix.target }} --bin decapod
       - name: Run musl no-replace publication regressions
+        if: needs.release-metadata.outputs.release_only != 'true'
         run: >-
           cargo test --locked --release --target ${{ matrix.target }} --lib
           no_replace_publication -- --nocapture
@@ -307,6 +346,8 @@ jobs:
   # FMT: Pure source check, no compile needed
   fmt:
     name: Lint (fmt)
+    needs: release-metadata
+    if: needs.release-metadata.outputs.release_only != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -323,6 +364,8 @@ jobs:
   # CLIPPY: Compiles its own analysis pass, runs in parallel with setup
   clippy:
     name: Lint (clippy)
+    needs: release-metadata
+    if: needs.release-metadata.outputs.release_only != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -345,6 +388,8 @@ jobs:
   # DEPS-LINT: Cargo deny and unused dependency checks
   deps-lint:
     name: Lint (dependencies)
+    needs: release-metadata
+    if: needs.release-metadata.outputs.release_only != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -374,11 +419,11 @@ jobs:
   health:
     name: Decapod Validate
     runs-on: ubuntu-latest
-    needs: setup
+    needs: [setup, release-metadata]
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
           persist-credentials: false
       - name: Download shared decapod binary
         uses: actions/download-artifact@v4
@@ -387,7 +432,7 @@ jobs:
           path: target/debug
       - name: Install shared decapod binary
         run: |
-          chmod +x target/debug/decapod
+          chmod +x target/debug/decapod target/debug/decapod-release-projection-drift
           echo "$PWD/target/debug" >> "$GITHUB_PATH"
       - name: Start validation trajectory
         env:
@@ -429,11 +474,20 @@ jobs:
       - name: Ensure no spec or entrypoint drift
         # validate rewrites generated metadata every run; that is not semantic
         # drift. Normalize it to HEAD before the exit-code check.
-        # Release-bound projections must be refreshed by the agent and committed
-        # with the code PR. release-plz PRs skip drift; pins advance on the next user/agent PR (Release Artifact Sync removed).
-        if: github.event_name != 'pull_request' || (!contains(github.event.pull_request.labels.*.name, 'release') && !startsWith(github.head_ref, 'release-plz-'))
+        # Version-only releases may refresh only proven release projections.
+        # Validation above remains mandatory, including its authoritative proofs.
+        env:
+          RELEASE_ONLY: ${{ needs.release-metadata.outputs.release_only }}
+          CHANGE_EVENT: ${{ github.event_name }}
+          CHANGE_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          CHANGE_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
+          if [ "$RELEASE_ONLY" = "true" ]; then
+            decapod-release-projection-drift \
+              --repo . --event "$CHANGE_EVENT" --base "$CHANGE_BASE" --head "$CHANGE_HEAD"
+            exit 0
+          fi
           MANIFEST=".decapod/managed/specs/.manifest.json"
           if git cat-file -e "HEAD:${MANIFEST}" 2>/dev/null && [ -f "${MANIFEST}" ]; then
             OLD=$(git show "HEAD:${MANIFEST}" | sed -n 's/.*"generated_at": "\([^"]*\)".*/\1/p' | head -1)
@@ -468,6 +522,8 @@ jobs:
   # STATE_COMMIT: Builds its own golden_vectors binary, no dependency on setup
   state-commit-golden-vectors:
     name: Golden Vectors (${{ matrix.os }})
+    needs: release-metadata
+    if: needs.release-metadata.outputs.release_only != 'true'
     runs-on: ${{ matrix.os }}
     env:
       DECAPOD_STATE_COMMIT_CI_JOB: state-commit-golden-vectors
@@ -553,12 +609,13 @@ jobs:
           echo "$bazelisk_dir" >> "$GITHUB_PATH"
           echo "PATH=$bazelisk_dir:$PATH" >> "$GITHUB_ENV"
       - name: Compile shared decapod binary
-        run: bazelisk build //:decapod
+        run: bazelisk build //:decapod //:release_projection_drift
       - name: Stage shared decapod binary
         run: |
           set -euo pipefail
           mkdir -p target/buildkite-artifacts
           cp -L bazel-bin/decapod target/buildkite-artifacts/decapod
+          cp -L bazel-bin/release_projection_drift target/buildkite-artifacts/decapod-release-projection-drift
           test -x target/buildkite-artifacts/decapod
       - name: Upload shared decapod binary
         uses: actions/upload-artifact@v4
@@ -566,15 +623,18 @@ jobs:
           name: decapod-debug-linux-${{ github.sha }}
           # Upload a regular workspace file: Bazel's bazel-bin path is a
           # symlink, and Buildkite's artifact adapter rejects symlink roots.
-          path: target/buildkite-artifacts/decapod
+          path: |
+            target/buildkite-artifacts/decapod
+            target/buildkite-artifacts/decapod-release-projection-drift
           retention-days: 1
           compression-level: 0
 
 # SELECTIVE TESTS: Run only tests for changed files (PRs) or all tests (master)
   test:
     name: Tests (${{ matrix.target }})
+    needs: release-metadata
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    if: (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && needs.release-metadata.outputs.release_only != 'true'
     strategy:
       fail-fast: false
       max-parallel: 4
@@ -685,6 +745,15 @@ jobs:
               fi
               ;;
             integration)
+              if echo "$CHANGED" | grep -qE '(^|,)tests/gatling\.rs(,|$)'; then
+                bazelisk test //:gatling --test_arg=--test-threads=4
+              fi
+              if echo "$CHANGED" | grep -qE '(^|,)(assets/tools/release_(metadata|projection_drift|projection_drift_tests)\.rs|tests/release_(metadata|projection_drift)_policy\.rs|\.github/workflows/ci\.yml)(,|$)'; then
+                bazelisk test //:release_metadata_policy //:release_projection_drift_policy --test_arg=--test-threads=4
+              fi
+              if echo "$CHANGED" | grep -qE '(^|,)(Cargo\.toml|dist(-workspace)?\.toml|tests/release_distribution_policy\.rs)(,|$)'; then
+                bazelisk test //:release_distribution_policy --test_arg=--test-threads=4
+              fi
               if echo "$CHANGED" | grep -qE 'src/'; then
                 bazelisk test \
                   //:contract_conformance \
@@ -700,8 +769,9 @@ jobs:
   # MASTER: Full test suite for direct master pushes only
   test-master:
     name: Tests (Full)
+    needs: release-metadata
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/master') && needs.release-metadata.outputs.release_only != 'true'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -726,6 +796,8 @@ jobs:
   # RPC SUITE: isolated to avoid contention
   test-rpc-suite:
     name: Tests (RPC Suite)
+    needs: release-metadata
+    if: needs.release-metadata.outputs.release_only != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -751,6 +823,8 @@ jobs:
   # CHAOS: Multi-agent contention + deterministic replay gate
   chaos-replay:
     name: Chaos Replay Gate
+    needs: release-metadata
+    if: needs.release-metadata.outputs.release_only != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -776,6 +850,8 @@ jobs:
   # DAEMONLESS: ensure commands do not leave background processes
   daemonless-lifecycle:
     name: Daemonless Lifecycle Gate
+    needs: release-metadata
+    if: needs.release-metadata.outputs.release_only != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -801,6 +877,8 @@ jobs:
   # CONTRACTS: README/Constitution drift detection
   contracts:
     name: Contract Conformance
+    needs: release-metadata
+    if: needs.release-metadata.outputs.release_only != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -831,8 +909,8 @@ jobs:
   migration-script-tests:
     name: Migration Script Tests
     runs-on: ubuntu-latest
-    needs: detect-migration-script-changes
-    if: (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && needs.detect-migration-script-changes.outputs.changed == 'true'
+    needs: [release-metadata, detect-migration-script-changes]
+    if: ((github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && needs.detect-migration-script-changes.outputs.changed == 'true') && needs.release-metadata.outputs.release_only != 'true'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -858,8 +936,11 @@ jobs:
   release-build:
     name: Release Build Check
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
-    needs: [fmt, clippy, test, test-rpc-suite, chaos-replay, daemonless-lifecycle, workspace-lifecycle-docker, contracts, health]
+    if: >-
+      always() && !cancelled() && github.ref == 'refs/heads/master' &&
+      needs.release-metadata.result == 'success' && needs.health.result == 'success' &&
+      !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
+    needs: [release-metadata, fmt, clippy, deps-lint, test, test-master, test-rpc-suite, chaos-replay, daemonless-lifecycle, workspace-lifecycle-docker, contracts, health, musl-publication]
     steps:
       - uses: actions/checkout@v4
         with:

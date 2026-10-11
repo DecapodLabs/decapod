@@ -37,19 +37,15 @@ name = "decapod-build"
 path = "assets/tools/build_lifecycle.rs"
 required-features = ["build-tools"]
 
-# Config for 'cargo dist'
-[workspace.metadata.dist]
-# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.22.1"
-# CI backends to support
-ci = "github"
-# The installers to generate for each app
-installers = []
-# Target platforms to build apps for (Rust target-triple syntax)
-targets = ["x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu", "x86_64-apple-darwin", "aarch64-apple-darwin"]
-# Allow manual modifications to the generated CI workflow
-allow-dirty = ["ci"]
-# members = ["crates/*"]
+[[bin]]
+name = "decapod-release-metadata"
+path = "assets/tools/release_metadata.rs"
+required-features = ["build-tools"]
+
+[[bin]]
+name = "decapod-release-projection-drift"
+path = "assets/tools/release_projection_drift.rs"
+required-features = ["build-tools"]
 
 [build-dependencies]
 serde = { version = "1.0", features = ["derive"] }
@@ -164,10 +160,3 @@ harness = false
 [profile.dist]
 inherits = "release"
 lto = "thin"
-
-[workspace.metadata.dist.github-custom-runners]
-global = "ubuntu-24.04"
-x86_64-unknown-linux-gnu = "ubuntu-24.04"
-aarch64-unknown-linux-gnu = "ubuntu-24.04"
-x86_64-apple-darwin = "macos-14"
-aarch64-apple-darwin = "macos-14"
