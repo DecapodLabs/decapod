@@ -136,24 +136,32 @@
       "proof_refs": [
         "Fresh Bazel72 policy tests; exact supabase library recovery6 and Git4 tests; Clippy/fmt; no production guard or service changes"
       ]
+    },
+    {
+      "id": "buildkite-offline-final-material",
+      "summary": "Bind offline fixture checks to final source/spec/review epoch",
+      "input_digest": "sha256:f2923310d90417a7fa1a1326f75b1aca56c489d3efb08ec6277069b0a3191a72",
+      "proof_refs": [
+        "Final Bazel72, recovery6, Git4, checkout8, Clippy and fmt proof"
+      ]
     }
   ],
   "intents": {
-    "intent:buildkite-private-fixtures-20261011": {
+    "intent:buildkite-offline-consumer-20261011": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Three CI run commands and executable policy regressions; no release/deploy action, security grant, existing shared modes, or runtime policy change"
+        "Only offline CI/test fixtures; preserve production recovery/shared-storage guards, all assertions and existing config; no services, mounts, release/deploy or image changes"
       ],
       "constraints": [
-        ".github/workflows/ci.yml, tests/ci_checkout_policy.rs and authored specification/proof updates"
+        ".github/workflows/ci.yml, tests/ci_checkout_policy.rs, tests/unit/core/fs_permissions_tests.rs and authored specs/proof"
       ],
       "created_sequence": 1,
-      "id": "intent:buildkite-private-fixtures-20261011",
+      "id": "intent:buildkite-offline-consumer-20261011",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Get all current relevant Decapod Buildkite red builds green",
-      "refined_intent": "Repair direct CI fixture creation under permissive provider umask while preserving storage safety and actual test execution",
+      "raw_intent": "Get current Decapod Buildkite checks green",
+      "refined_intent": "Isolate provider Git rewrites and use checked owned storage for actual SQLite recovery fixture proof",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -258,21 +266,12 @@
     },
     "trajectory": {
       "active_boundaries": [
-        "Test-only Git environment and recovery scratch probes, no global config, mounts, storage permission guard, Dactyl source, dependency version or production semantics changes.",
-        "Three CI run commands and executable policy regressions; no release/deploy action, security grant, existing shared modes, or runtime policy change"
+        "Only offline CI/test fixtures; preserve production recovery/shared-storage guards, all assertions and existing config; no services, mounts, release/deploy or image changes"
       ],
-      "artifact_hash": "sha256:59e648b4c282062b84d7883120976c5cfd6a8cdf514c926e97301d9af5e6e388",
+      "artifact_hash": "sha256:bd04b4ff35fe7dac356da0ac0f162b9ceb4f6c2c4f0474223812eb1ffc5cc887",
       "checks": [
         {
           "name": "actual-buildkite-filesystem-kind",
-          "status": "unavailable"
-        },
-        {
-          "name": "actual-local-arm",
-          "status": "unavailable"
-        },
-        {
-          "name": "actual-local-docker",
           "status": "unavailable"
         },
         {
@@ -284,19 +283,15 @@
           "status": "passed"
         },
         {
-          "name": "cargo-five-policies",
+          "name": "clippy-supabase-lib-tests",
           "status": "passed"
         },
         {
-          "name": "decapod validate",
+          "name": "current-material-rebind",
           "status": "passed"
         },
         {
-          "name": "exact-git-fixture-regressions",
-          "status": "passed"
-        },
-        {
-          "name": "focused-clippy",
+          "name": "exact-git-fixture-tests",
           "status": "passed"
         },
         {
@@ -304,47 +299,19 @@
           "status": "passed"
         },
         {
-          "name": "fresh-policy-bazel",
-          "status": "passed"
-        },
-        {
-          "name": "git-configuration-regression",
-          "status": "passed"
-        },
-        {
           "name": "github-5030b9ef-full-ci",
           "status": "passed"
         },
         {
-          "name": "initial-remote-validation",
-          "status": "failed"
-        },
-        {
-          "name": "permissive-umask-reproduction",
+          "name": "poisoned-git-config-regression",
           "status": "passed"
         },
         {
-          "name": "private-umask-relocated-artifact",
-          "status": "passed"
-        },
-        {
-          "name": "recovery-permission-regressions",
+          "name": "recovery-permission-tests",
           "status": "passed"
         },
         {
           "name": "rustfmt",
-          "status": "passed"
-        },
-        {
-          "name": "static-provider-admission",
-          "status": "partial"
-        },
-        {
-          "name": "supabase-lib-tests-clippy",
-          "status": "passed"
-        },
-        {
-          "name": "workflow-permission-preservation",
           "status": "passed"
         }
       ],
@@ -353,197 +320,81 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:buildkite-private-fixtures-20261011",
+            "intent_id": "intent:buildkite-offline-consumer-20261011",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:buildkite-private-fixtures-20261011",
+            "intent_id": "intent:buildkite-offline-consumer-20261011",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:buildkite-private-fixtures-20261011",
+            "detail": "trajectory:buildkite-offline-consumer-20261011",
             "event_id": "event:4",
-            "intent_id": "intent:buildkite-private-fixtures-20261011",
+            "intent_id": "intent:buildkite-offline-consumer-20261011",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:buildkite-private-fixtures-20261011",
-            "event_id": "event:5",
-            "intent_id": "intent:buildkite-private-fixtures-20261011",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:buildkite-private-fixtures-20261011",
-            "event_id": "event:6",
-            "intent_id": "intent:buildkite-private-fixtures-20261011",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:buildkite-private-fixtures-20261011",
-            "event_id": "event:7",
-            "intent_id": "intent:buildkite-private-fixtures-20261011",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:buildkite-private-fixtures-20261011",
-            "event_id": "event:8",
-            "intent_id": "intent:buildkite-private-fixtures-20261011",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "buildkite-private-fixtures-20261011": {
+          "buildkite-offline-consumer-20261011": {
             "evidence_only": true,
-            "id": "buildkite-private-fixtures-20261011",
-            "intent_id": "intent:buildkite-private-fixtures-20261011",
+            "id": "buildkite-offline-consumer-20261011",
+            "intent_id": "intent:buildkite-offline-consumer-20261011",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
-                "observations": [
-                  "assets/tools/build_lifecycle.rs",
-                  ".github/workflows/ci.yml",
-                  "tests/ci_checkout_policy.rs",
-                  ".decapod/managed/specs/OPERATIONS.md",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "Fresh Bazel all six policies71 tests pass; five Cargo policies61 pass; seven private-creation tests preserve existing shared fixture modes and parent mask. Identical full artifact fails projection tests under000 and passes68 under077. Only three run bodies change; permission map and protected live job remain identical.",
-                  "Prior PRhead0dba235 GitHub full CI green including ARM4/native4/Docker1. Buildkite841 has exactly three unsafe fresh-fixture failures plus dependent integration aggregate; all50 other checks passed. Offline importer admits repaired jobs but protected environments need live Agent API.",
-                  "Validator rejected prior trajectory epoch after supported expired lease reclaim. This new task-bound trajectory follows STALE_VALIDATION_EVIDENCE remediation; old proof remains in committed ancestor3f62aeee. Initial local parallel sharding call-log failure passed unchanged serial/default/four-thread reruns and fresh Bazel."
-                ],
-                "proof_refs": [
-                  "fresh-bazel-six-policies",
-                  "cargo-five-policies",
-                  "focused-clippy",
-                  "rustfmt",
-                  "permissive-umask-reproduction",
-                  "private-umask-relocated-artifact",
-                  "initial-remote-validation",
-                  "static-provider-admission",
-                  "actual-local-docker",
-                  "actual-local-arm"
-                ],
-                "scope": [
-                  ".github/workflows/ci.yml, tests/ci_checkout_policy.rs and authored specification/proof updates"
-                ],
-                "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "command": "decapod validate",
-                "custody_event_id": "event:5",
-                "observations": [
-                  ".decapod/governance.json",
-                  ".decapod/governance.json",
-                  "validation epoch ve_87bd4e51f77b280b completed with zero failures"
-                ],
-                "proof_refs": [
-                  "decapod validate"
-                ],
-                "scope": [
-                  ".github/workflows/ci.yml, tests/ci_checkout_policy.rs and authored specification/proof updates"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:6",
                 "observations": [
                   ".github/workflows/ci.yml",
                   "tests/ci_checkout_policy.rs",
                   "tests/unit/core/fs_permissions_tests.rs",
                   ".decapod/managed/specs/OPERATIONS.md",
                   ".decapod/managed/specs/VALIDATION.md",
-                  "GitHub5030b9ef full CI passed; Buildkite848 has53 successful checks and only offline-consumer failure. Policies, aggregate and actualDocker repaired and green. Offline library624 passed,5 failed,1 preexisting ignored Docker test executed in separate job.",
-                  "Three SSH fixture URLs are rewritten to HTTPS by inherited provider Git config. Two Dactyl recovery errors report source/parent dev mismatch; OverlayFS hypothesis is supported by kernel docs but actual runner filesystem confirmation is pending focused diagnostics."
+                  "Fresh final Bazel six policy targets72 tests pass. Actual supabase-cloud libtest recovery permission suite6/6 includes both unchanged recovery/archive/mode flows; exact Git resolver3/3 and inherited remote1/1 pass. Clippy --features supabase-cloud --lib --tests -D warnings, rustfmt, semantic workflow permission comparison and diff whitespace pass.",
+                  "Checkout policy8/8 proves five poisoned Git-config sources isolated only in test child, existing config and outer process preserved. Recovery fixture probes normal temp then existing /dev/shm, private creation, >=4MiB, same-device staging and actual no-clobber rename; absence fails, never skips. Local tmpfs device55; Buildkite filesystem type remains pending visible probe.",
+                  "Prior5030b9ef GitHub full CI green; Buildkite84853 checks green including policies, integration aggregate and actualDocker, remaining offline consumer624 passed5 failed from URL rewrites and device guards. User-linked114576291548 is that same offline job; no missing Supabase service.",
+                  "Source b0a5391b was fetched with exact tree7dbfd210. Validator requested fresh trajectory after source/spec/review material epoch changed. This record follows supported remediation; prior proof is retained in Git, with no governance hand edits."
                 ],
                 "proof_refs": [
-                  "github-5030b9ef-full-ci",
-                  "buildkite-848-other-checks",
+                  "fresh-bazel-six-policies",
+                  "recovery-permission-tests",
+                  "exact-git-fixture-tests",
+                  "poisoned-git-config-regression",
+                  "clippy-supabase-lib-tests",
+                  "rustfmt",
                   "buildkite-848-offline-consumer",
-                  "git-configuration-regression"
-                ],
-                "scope": [
-                  ".github/workflows/ci.yml, tests/ci_checkout_policy.rs and authored specification/proof updates"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "Final source9c452911dba3a87828e41aaa1940c74aab88f86a60b36b51a10f6cede3896c57: cargo test --locked --features supabase-cloud --lib core::fs_permissions passes6,0 ignored, including both actual recovery flows and fixture guards. Local selected filesystem tmpfs device55; mixed-device branch awaits Buildkite.",
-                  "Same final supabase-cloud libtest: resolve_publish_remote3/3 and exact container inherited-remote1/1 pass with actual offline CI Git isolation. Checkout policy8/8 tests five independent poisoned inherited Git-config sources, outer environment and config files unchanged. Fresh Bazel six policy targets72 tests pass.",
-                  "User-linked check114576291548 is exactly Buildkite848 offline supabase-consumer at5030b9ef. Errors are SQLite local recovery and Git fixtures; no missing Supabase/PostgreSQL service, no new service provisioning needed."
-                ],
-                "proof_refs": [
-                  "recovery-permission-regressions",
-                  "exact-git-fixture-regressions",
-                  "fresh-policy-bazel",
+                  "buildkite-848-other-checks",
+                  "github-5030b9ef-full-ci",
+                  "current-material-rebind",
                   "actual-buildkite-filesystem-kind"
                 ],
                 "scope": [
-                  ".github/workflows/ci.yml, tests/ci_checkout_policy.rs and authored specification/proof updates"
+                  ".github/workflows/ci.yml, tests/ci_checkout_policy.rs, tests/unit/core/fs_permissions_tests.rs and authored specs/proof"
                 ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "Clippy --features supabase-cloud --lib --tests with -D warnings passes; rustfmt and whitespace pass. Semantic workflow comparison changes only offline consumer step commands; all permission maps and protected manual job remain identical."
-                ],
-                "proof_refs": [
-                  "supabase-lib-tests-clippy",
-                  "rustfmt",
-                  "workflow-permission-preservation"
-                ],
-                "scope": [
-                  ".github/workflows/ci.yml, tests/ci_checkout_policy.rs and authored specification/proof updates"
-                ],
-                "sequence": 8,
+                "sequence": 4,
                 "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "decapod validate"
-      ],
-      "destination": "PR1394 exact-head proof",
+      "declared_commands": [],
+      "destination": "PR1394",
       "evidence": [
-        "Clippy --features supabase-cloud --lib --tests with -D warnings passes; rustfmt and whitespace pass. Semantic workflow comparison changes only offline consumer step commands; all permission maps and protected manual job remain identical.",
-        "Final source9c452911dba3a87828e41aaa1940c74aab88f86a60b36b51a10f6cede3896c57: cargo test --locked --features supabase-cloud --lib core::fs_permissions passes6,0 ignored, including both actual recovery flows and fixture guards. Local selected filesystem tmpfs device55; mixed-device branch awaits Buildkite.",
-        "Fresh Bazel all six policies71 tests pass; five Cargo policies61 pass; seven private-creation tests preserve existing shared fixture modes and parent mask. Identical full artifact fails projection tests under000 and passes68 under077. Only three run bodies change; permission map and protected live job remain identical.",
-        "GitHub5030b9ef full CI passed; Buildkite848 has53 successful checks and only offline-consumer failure. Policies, aggregate and actualDocker repaired and green. Offline library624 passed,5 failed,1 preexisting ignored Docker test executed in separate job.",
-        "Prior PRhead0dba235 GitHub full CI green including ARM4/native4/Docker1. Buildkite841 has exactly three unsafe fresh-fixture failures plus dependent integration aggregate; all50 other checks passed. Offline importer admits repaired jobs but protected environments need live Agent API.",
-        "Same final supabase-cloud libtest: resolve_publish_remote3/3 and exact container inherited-remote1/1 pass with actual offline CI Git isolation. Checkout policy8/8 tests five independent poisoned inherited Git-config sources, outer environment and config files unchanged. Fresh Bazel six policy targets72 tests pass.",
-        "Three SSH fixture URLs are rewritten to HTTPS by inherited provider Git config. Two Dactyl recovery errors report source/parent dev mismatch; OverlayFS hypothesis is supported by kernel docs but actual runner filesystem confirmation is pending focused diagnostics.",
-        "User-linked check114576291548 is exactly Buildkite848 offline supabase-consumer at5030b9ef. Errors are SQLite local recovery and Git fixtures; no missing Supabase/PostgreSQL service, no new service provisioning needed.",
-        "Validator rejected prior trajectory epoch after supported expired lease reclaim. This new task-bound trajectory follows STALE_VALIDATION_EVIDENCE remediation; old proof remains in committed ancestor3f62aeee. Initial local parallel sharding call-log failure passed unchanged serial/default/four-thread reruns and fresh Bazel.",
-        "validation epoch ve_87bd4e51f77b280b completed with zero failures"
+        "Checkout policy8/8 proves five poisoned Git-config sources isolated only in test child, existing config and outer process preserved. Recovery fixture probes normal temp then existing /dev/shm, private creation, >=4MiB, same-device staging and actual no-clobber rename; absence fails, never skips. Local tmpfs device55; Buildkite filesystem type remains pending visible probe.",
+        "Fresh final Bazel six policy targets72 tests pass. Actual supabase-cloud libtest recovery permission suite6/6 includes both unchanged recovery/archive/mode flows; exact Git resolver3/3 and inherited remote1/1 pass. Clippy --features supabase-cloud --lib --tests -D warnings, rustfmt, semantic workflow permission comparison and diff whitespace pass.",
+        "Prior5030b9ef GitHub full CI green; Buildkite84853 checks green including policies, integration aggregate and actualDocker, remaining offline consumer624 passed5 failed from URL rewrites and device guards. User-linked114576291548 is that same offline job; no missing Supabase service.",
+        "Source b0a5391b was fetched with exact tree7dbfd210. Validator requested fresh trajectory after source/spec/review material epoch changed. This record follows supported remediation; prior proof is retained in Git, with no governance hand edits."
       ],
-      "inspected_files": [
-        "assets/tools/build_lifecycle.rs"
-      ],
-      "intent_id": "intent:buildkite-private-fixtures-20261011",
+      "inspected_files": [],
+      "intent_id": "intent:buildkite-offline-consumer-20261011",
       "modified_files": [
-        ".decapod/governance.json",
         ".decapod/managed/specs/OPERATIONS.md",
         ".decapod/managed/specs/VALIDATION.md",
         ".github/workflows/ci.yml",
@@ -551,13 +402,12 @@
         "tests/unit/core/fs_permissions_tests.rs"
       ],
       "next_transitions": [
-        "publish",
-        "validation"
+        "publish"
       ],
       "repo_scope": [
-        ".github/workflows/ci.yml, tests/ci_checkout_policy.rs and authored specification/proof updates"
+        ".github/workflows/ci.yml, tests/ci_checkout_policy.rs, tests/unit/core/fs_permissions_tests.rs and authored specs/proof"
       ],
-      "run_id": "buildkite-private-fixtures-20261011",
+      "run_id": "buildkite-offline-consumer-20261011",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
       "task_id": "cicd_01m4pa8bxxpr5gve",
