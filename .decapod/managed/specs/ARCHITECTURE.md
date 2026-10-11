@@ -1,5 +1,14 @@
 # Architecture
 
+## Release-projection scratch ownership
+
+The exact release-projection checker refreshes the baseline Dockerfile only in
+its own disposable scratch tree. The scratch root and nested state directories
+are created privately, and the staged Dockerfile is written through the private
+atomic-file boundary. Creation modes do not depend on the runner's umask.
+The normal storage guard still rejects unsafe existing state; this helper never
+repairs caller permissions or changes the process-wide umask.
+
 ## Shared-build integration proof
 
 Pull-request integration coverage is planned from the changed paths, compiled
@@ -464,7 +473,7 @@ virtiofs/FUSE filesystem prohibition.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ab9a11ea42af3b5496a92844b43b1fb208608acd04fed342b0a1168f3c94af27`
+- Repository signal fingerprint: `292620722de35b6c75924b57b28cff1ec0e6788454aeb0ed8bba0a18c4ca9d06`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (11 files), `docs/` (1 files), `src/` (125 files), `tests/` (173 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

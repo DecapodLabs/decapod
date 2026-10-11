@@ -275,3 +275,51 @@ fn rejects_ambiguous_attestations() {
     assert!(expected_spec(&(valid.clone() + &valid), &"a".repeat(64)).is_err());
     assert!(expected_spec(&valid.replace(ATTESTATION_END, ""), &"a".repeat(64)).is_err());
 }
+
+#[cfg(unix)]
+#[test]
+fn expected_dockerfile_uses_private_scratch_under_permissive_umask() {
+    const CHILD: &str = "DECAPOD_PROJECTION_UMASK_CHILD";
+    if std::env::var_os(CHILD).is_some() {
+        // Only the process-local child inherits the deliberately permissive
+        // umask. Do not change permissions on any existing checkout or state.
+        let root = tempfile::tempdir().unwrap();
+        let old = container::generated_dockerfile_for_repo(root.path())
+            .replace(entrypoints::RELEASE_VERSION, OLD);
+        let refreshed = expected_dockerfile(&old, OLD).unwrap();
+        container::managed_dockerfile_matches_release(&refreshed, entrypoints::RELEASE_VERSION)
+            .unwrap();
+        println!("private scratch refresh completed");
+        return;
+    }
+
+    let test_name = std::thread::current()
+        .name()
+        .expect("libtest names this test thread")
+        .to_string();
+    for mask in ["000", "002"] {
+        let output = Command::new("/bin/sh")
+            .args([
+                "-c",
+                "umask \"$1\"; shift; exec \"$@\"",
+                "projection-umask",
+                mask,
+            ])
+            .arg(std::env::current_exe().unwrap())
+            .args(["--exact", &test_name, "--nocapture", "--test-threads=1"])
+            .env(CHILD, "1")
+            .env_remove("DECAPOD_STORAGE_SHARED_GROUP")
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "umask {mask}:\n{}\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert!(
+            String::from_utf8_lossy(&output.stdout).contains("private scratch refresh completed"),
+            "umask {mask}: child must execute the exact helper regression"
+        );
+    }
+}

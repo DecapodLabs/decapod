@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "25558e0e8e9b6a25a53e6168566226edad01e161",
+    "accepted_commit": "ada59ea9435f55c5e68f98720da1e0ec914ccaf8",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -62,150 +62,93 @@
     }
   },
   "change": {
-    "id": "change_01M4PA9B10M71GJ4NGDHGAVJWT",
-    "base_commit": "25558e0e8e9b6a25a53e6168566226edad01e161",
+    "id": "change_01M4PGA0Q80SPK9F09KYPMMW5Q",
+    "base_commit": "ada59ea9435f55c5e68f98720da1e0ec914ccaf8",
     "target_base": "origin/master"
   },
   "claims": {
-    "buildkite-compatibility": {
-      "statement": "CI scheduling, private checkout bootstrap and bounded release outputs preserve selected test coverage and satisfy the observed Buildkite syntax and output contracts",
-      "falsifier": "Hosted compilation fails on these repaired jobs, policy regressions fail, source state changes, or selected shards are omitted",
+    "private-release-scratch": {
+      "statement": "Release projection Dockerfile refresh creates its scratch root, state directories, and file privately under umask 000 and 002.",
+      "falsifier": "The child-process permissive-umask regression fails, or the helper relaxes an existing-state guard or changes existing permissions.",
       "status": "supported",
       "proof_refs": [
-        "official buildkite-gha v0.102.2 hosted-profile job admission, auth/environment runtime pending",
-        "tests/ci_checkout_policy.rs:4 passed",
-        "tests/integration_sharding_policy.rs:17 passed",
-        "tests/release_metadata_policy.rs:15 passed",
-        "tests/release_workflow_policy.rs:19 passed"
+        "cargo test --locked --features build-tools --bin decapod-release-projection-drift: 11 passed, including isolated umask 000 and 002"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "buildkite-source-20261011",
-      "summary": "Repair observed Buildkite workflow contracts with tested static sharding, fresh private validation clone, bounded release outputs and actual ARM emulation lane",
-      "input_digest": "sha256:e7573be528926393982259d079bbae7eb1210b225ad93295cb58a13f93f64cc3",
+      "id": "release-scratch-source",
+      "summary": "Create release projection scratch privately and prove permissive-umask regression; preserve pending full CI requirement.",
+      "input_digest": "sha256:f03546cd3408f378b23fd561eadd4eb5fa48b4ca841565294ee4bf684def5a1f",
       "proof_refs": [
-        "Bazel6 policy targets passed; focused Clippy and format passed; hosted importer admits repaired jobs; runtime token and environment limits remain explicit"
+        "Cargo projection helper11/0; Clippy warnings denied; fmt and whitespace clean; baseline exact failure reproduced; independent review no blocker"
       ]
     },
     {
-      "id": "buildkite-evidence-20261011",
-      "summary": "Preserve genuine final regression and source-provenance evidence before clean remote validation",
-      "input_digest": "sha256:927f757a58fef1f63a1f2d4224ca9a13070b206b2ccb229130216cdcf24a0a53",
+      "id": "release-scratch-local-validation",
+      "summary": "Retain genuine local candidate validation receipt with full pre-PR CI still pending.",
+      "input_digest": "sha256:4b816ada7f92f652949ab96ced7eed28c64d073fbcb084feadf07024a32c9882",
       "proof_refs": [
-        "Exact source tree c86195fc131918ac9cbaa76dcb7670f591964585;6 fresh Bazel targets;68 relocated tests in3.633955s; no skips or container-policy changes"
-      ]
-    },
-    {
-      "id": "buildkite-remote-proof-20261011",
-      "summary": "Bind actual successful default validation receipt to the fetched remote source ancestor",
-      "input_digest": "sha256:927f757a58fef1f63a1f2d4224ca9a13070b206b2ccb229130216cdcf24a0a53",
-      "proof_refs": [
-        "decapod validate default profile on clean remote7b3e25efd66f482c7ef3605113631f9cb9f2eeff; exacttree28bf69efa0f5318fe88f56946d9c2d986edaeccc; no skips, no container-policy change"
-      ]
-    },
-    {
-      "id": "buildkite-private-fixture-creation",
-      "summary": "Create new direct CI test fixtures privately under permissive provider umask",
-      "input_digest": "sha256:343a999941b344f701950599f00d61de018669a1ab625b13922f13990a12bc4b",
-      "proof_refs": [
-        "Fresh Bazel six policy targets71 tests; same artifact unsafe umask000 failure and private077 success; CI fixture child regressions preserve existing shared modes"
-      ]
-    },
-    {
-      "id": "buildkite-private-fixture-current-epoch",
-      "summary": "Bind fresh fixture evidence to reclaimed active task epoch",
-      "input_digest": "sha256:83efe7b29cb335a7ada545f1df9d47071f31fbea05c791e11a9692c279f8c0bb",
-      "proof_refs": [
-        "Fresh Bazel71 policy tests; scoped mask reproduction; current task-bound trajectory"
-      ]
-    },
-    {
-      "id": "buildkite-private-fixture-validation",
-      "summary": "Preserve default validation receipt bound to exact remote fixture repair source",
-      "input_digest": "sha256:fd927d9828aa0335e486daf8a0bfe667bd512ff14d4fb83c2ed8b50a614fa3af",
-      "proof_refs": [
-        "decapod validate on clean remote c6791c01b3c1da68a1237ba2ef1ce3b147a36f5d, default gates, status ok"
-      ]
-    },
-    {
-      "id": "buildkite-offline-fixture-boundaries",
-      "summary": "Isolate inherited Git settings and require compatible owned recovery fixture storage",
-      "input_digest": "sha256:2464094bb1b674e5e528990a47caf772a24210c3b588d131d9b0a5b15b913bd7",
-      "proof_refs": [
-        "Fresh Bazel72 policy tests; exact supabase library recovery6 and Git4 tests; Clippy/fmt; no production guard or service changes"
-      ]
-    },
-    {
-      "id": "buildkite-offline-final-material",
-      "summary": "Bind offline fixture checks to final source/spec/review epoch",
-      "input_digest": "sha256:f2923310d90417a7fa1a1326f75b1aca56c489d3efb08ec6277069b0a3191a72",
-      "proof_refs": [
-        "Final Bazel72, recovery6, Git4, checkout8, Clippy and fmt proof"
-      ]
-    },
-    {
-      "id": "buildkite-offline-validated-receipt",
-      "summary": "Preserve successful default validation of exact remote offline fixture repair",
-      "input_digest": "sha256:2c65234733d070a9d5c44a2b3bde5536a0394fdc97e8edfd550971446033e689",
-      "proof_refs": [
-        "decapod validate on clean c700e1b9252f1a6569f453099d7ed14a709392f6:203 passed,0 failed,no bypass"
+        "Actual candidate0.107.5 default validate:202 passed0failed on local92e8e3c2"
       ]
     }
   ],
   "intents": {
-    "intent:buildkite-offline-consumer-20261011": {
+    "intent:release-scratch-final": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Only offline CI/test fixtures; preserve production recovery/shared-storage guards, all assertions and existing config; no services, mounts, release/deploy or image changes"
+        "No material-spec gate changes, image work, credentials, existing-state chmod, workflow umask, publishing or reruns. PR withheld pending full required suite proof."
       ],
       "constraints": [
-        ".github/workflows/ci.yml, tests/ci_checkout_policy.rs, tests/unit/core/fs_permissions_tests.rs and authored specs/proof"
+        "assets/tools/release_projection_drift.rs",
+        "assets/tools/release_projection_drift_tests.rs",
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTERFACES.md"
       ],
       "created_sequence": 1,
-      "id": "intent:buildkite-offline-consumer-20261011",
+      "id": "intent:release-scratch-final",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Get current Decapod Buildkite checks green",
-      "refined_intent": "Isolate provider Git rewrites and use checked owned storage for actual SQLite recovery fixture proof",
+      "raw_intent": "Fix PR1395 Buildkite health failure in a dedicated PR; publish no PR until actual candidate validation and required proof pass.",
+      "refined_intent": "Create only disposable release projection scratch with private creation-time modes and verify both permissive masks, preserving existing storage guards.",
       "status": "refined",
       "updated_sequence": 3
     }
   },
   "epochs": {
-    "ve_606a59e824688e50": {
-      "constitution_hash": "sha256:5e5584b3214f004f6edbd66b3f46268b943cf6f25371a0ec55b2e15ee2a304d0",
-      "constitution_version": "embedded-docs@0.107.4",
-      "epoch_id": "ve_606a59e824688e50",
-      "evaluator_identity": "decapod-validate@0.107.4",
-      "evaluator_set_hash": "sha256:ff0fd170484b8af8a9bbbc1dba078e102c7563d30dbb8ece7f96276f8828f0fa",
-      "generated_specs_fingerprint": "ab9a11ea42af3b5496a92844b43b1fb208608acd04fed342b0a1168f3c94af27",
-      "generated_specs_manifest_hash": "sha256:48813a99350e50816f7f322d83584bc5d8eaf1a50b045236737f999eb7e92825",
+    "ve_561a56aa0ac680e9": {
+      "constitution_hash": "sha256:59e25671b6d027fb7f6691bb814cd45e988b305c51176e2acc981d8c86803442",
+      "constitution_version": "embedded-docs@0.107.5",
+      "epoch_id": "ve_561a56aa0ac680e9",
+      "evaluator_identity": "decapod-validate@0.107.5",
+      "evaluator_set_hash": "sha256:469d3679344174bc181dfc1ff5aa43df31d5e329e307bd1225d839ae6f09331e",
+      "generated_specs_fingerprint": "292620722de35b6c75924b57b28cff1ec0e6788454aeb0ed8bba0a18c4ca9d06",
+      "generated_specs_manifest_hash": "sha256:ddf3bc7abb7d6a7967ae9b12a8362155366d5b006a3256ed3b28656e0b6aef26",
       "material_hashes": {
-        "constitution:core/DECAPOD": "sha256:5e5584b3214f004f6edbd66b3f46268b943cf6f25371a0ec55b2e15ee2a304d0",
-        "generated_spec:.decapod/managed/specs/ARCHITECTURE.md": "sha256:2d5d6375dd94dd8477ee0d7bd08c699f89a19d4ae9fcd47f5f3d8715516f5a0b",
-        "generated_spec:.decapod/managed/specs/INTENT.md": "sha256:ec80f9f4af5c359d58c1ef2dcc319be73a0a293a3b1e5a401a765088283f0c42",
-        "generated_spec:.decapod/managed/specs/INTERFACES.md": "sha256:af299556347af174db33f4c04c52809f1309c8918ac688c8d013965fdc48baee",
-        "generated_spec:.decapod/managed/specs/OPERATIONS.md": "sha256:ccf4d58c66437acd4d4d588df42568a6f30586d0056d4621b237ce2068fc0e49",
-        "generated_spec:.decapod/managed/specs/README.md": "sha256:26d544576520889d0bcc678740767e9a087434f684d3feba4d7b00380e30becc",
-        "generated_spec:.decapod/managed/specs/SECURITY.md": "sha256:a00fe8143b52af28c61d43b337a0f9a66e75c2fbc13c0b723c923dd05c6d3006",
-        "generated_spec:.decapod/managed/specs/SEMANTICS.md": "sha256:624aaa642910aaa85e2bbcf3ab22906e65354af3fcec496854745f5aeada4b0d",
-        "generated_spec:.decapod/managed/specs/VALIDATION.md": "sha256:9f9cf24f3adc74b195221e3f877c0da95b508baf24bf3d0e7adce82a8e10cc4b",
-        "generated_specs_fingerprint": "ab9a11ea42af3b5496a92844b43b1fb208608acd04fed342b0a1168f3c94af27",
-        "generated_specs_manifest": "sha256:48813a99350e50816f7f322d83584bc5d8eaf1a50b045236737f999eb7e92825",
-        "governance_context": "sha256:6c9f1d09de79724584ecad7912955f3c7124ba93718b12854f90ec4c23e7aeb6",
-        "governance_material:.decapod/managed/Dockerfile.decapod": "sha256:941bcc13bbb316224e9dd51813848d420379a11923d49de93f71b26099b03d52",
-        "governance_material:AGENTS.md": "sha256:04a96867ee503afd7392ece4d27bf1b0d085aa7e7bdae2130464b54e0a26669e",
-        "governance_material:CLAUDE.md": "sha256:a5117d1ee7350ee68b6db25501244300cf1f6ff6b6f937e4fcc97c4953bb4f0b",
-        "governance_material:CODEX.md": "sha256:cbb32d206844a4c8db0138cc895c7053f23d6ff97da1d4575ac1c7526671ec4a",
-        "governance_material:GEMINI.md": "sha256:16668e3dd79148362127c10acb71d8404bb588983be79cb87a1fc2b7e53f9a58",
-        "governance_section:claims": "sha256:52925903e7d291ad9d59f35bd02d929f2d64f4611597f2fb6cc6531c5d3460be",
-        "governance_section:plan": "sha256:3137dc59f0ba48214027fb9418999839e5aaa2cad91fcf5226102fb693dd3e82",
-        "living_spec_material:.decapod/managed/specs/ARCHITECTURE.md": "sha256:067286adac676ae65f24b3d75d16bf74bf55ced059a54e91d906164764cb66ef",
+        "constitution:core/DECAPOD": "sha256:59e25671b6d027fb7f6691bb814cd45e988b305c51176e2acc981d8c86803442",
+        "generated_spec:.decapod/managed/specs/ARCHITECTURE.md": "sha256:795588dcd1b638a2b9b968f6d48ae2a3f314ca8bfd99881ab696b5f7c73dae69",
+        "generated_spec:.decapod/managed/specs/INTENT.md": "sha256:13d1a4c2148cb9551b126f441b01e1bb52574217b69f9313453c1424c5956db4",
+        "generated_spec:.decapod/managed/specs/INTERFACES.md": "sha256:e455be39b770c0d4345f43b3b4344384704425d91ba44eff009408705aad64a9",
+        "generated_spec:.decapod/managed/specs/OPERATIONS.md": "sha256:a936abde077f3a784342ee02c818c4a591d8facdf457753adf8a125276bf3ab5",
+        "generated_spec:.decapod/managed/specs/README.md": "sha256:0bcd368b2436c8bb25908b4a19294d5ddde42705fd4ff222e4ff00e329fea1fd",
+        "generated_spec:.decapod/managed/specs/SECURITY.md": "sha256:4aed122f610b976243c5237ee21b60bf2f82cd1868ffcb2cd1db6491bd7a851d",
+        "generated_spec:.decapod/managed/specs/SEMANTICS.md": "sha256:6473a2e24c6e54309975a809f010992ba279a7acbdab5314809232cf8d00eb1b",
+        "generated_spec:.decapod/managed/specs/VALIDATION.md": "sha256:7443a33fc68cfc177639a761df4b7908bea6b36776a2d98807c80487b6d6e3a4",
+        "generated_specs_fingerprint": "292620722de35b6c75924b57b28cff1ec0e6788454aeb0ed8bba0a18c4ca9d06",
+        "generated_specs_manifest": "sha256:ddf3bc7abb7d6a7967ae9b12a8362155366d5b006a3256ed3b28656e0b6aef26",
+        "governance_context": "sha256:ee97873df31a956b16f5906825bac71568de4f3ee8c6d783a552aa1390ec345a",
+        "governance_material:.decapod/managed/Dockerfile.decapod": "sha256:3b51684110be026f7c91ac885f5806cebe995fcb37eed251d09ac6f3bd85ebe6",
+        "governance_material:AGENTS.md": "sha256:de3ba5e49626dcbbea6aa6a793a069bf048c341ff7cd1496324f9ce03ec88d3e",
+        "governance_material:CLAUDE.md": "sha256:296ba4e6910a7e12272e0eef3a6cd859a47ea9030e5b214b0182d74a1a30bd9b",
+        "governance_material:CODEX.md": "sha256:a98a0d6f812e089c53179a8c4059fb31f17e51c1a1c123e52b5ed966b1b2ecf5",
+        "governance_material:GEMINI.md": "sha256:ebce4e5d3ff3371ea024942693becfaf5f7d66b9fbf6dc55deb32bc9a3e1625e",
+        "governance_section:claims": "sha256:4f8ae9b75550a910a607c9201c66c8a6993a942d5fab8bf2a903ec9784614b1f",
+        "governance_section:plan": "sha256:55c56b8f574cbc4c6b6ece71af6255a116305a5b776c0c35d5bf505a0367a271",
+        "living_spec_material:.decapod/managed/specs/ARCHITECTURE.md": "sha256:7f3a339233ed65eae552c7ac3094856d9ceb02b667e6de242b4e536bb5cc9a15",
         "living_spec_material:.decapod/managed/specs/INTENT.md": "sha256:63d36769b87eb0d87a7e4f221f7a430162cd0fa05a71a8ad6bf22b444bfd3f37",
-        "living_spec_material:.decapod/managed/specs/INTERFACES.md": "sha256:dbc2c41ea2a503adf4a311d62ee14b4e317615f0b6d7934047037da95a6255cd",
+        "living_spec_material:.decapod/managed/specs/INTERFACES.md": "sha256:043adfd9a55104a2a91203ce6f932c1e6479d451284439b975874d00781daad5",
         "living_spec_material:.decapod/managed/specs/OPERATIONS.md": "sha256:98a538e0c0fe76aa72fbeec0d33be5e263dd5b3cc9b6a0786627bc2d2ab0e133",
         "living_spec_material:.decapod/managed/specs/README.md": "sha256:6c4338fb8446fa04e2d7c823ff3e33c2bd4949bf6018392045993401131f690a",
         "living_spec_material:.decapod/managed/specs/SECURITY.md": "sha256:104f8c7ff33a76536830670971641ef8ef8aa86ce7f9390ec234291c81ed3b82",
@@ -225,77 +168,78 @@
     "plan": {
       "constraints": {
         "file_touch_budget": null,
-        "forbidden_paths": []
+        "forbidden_paths": [
+          ".github/workflows/release.yml",
+          "src/decapod/core/validate.rs"
+        ]
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Repair Buildkite workflow scheduling and outputs, CI checkout preparation, and focused regression tests. Authorized file scope: .github/workflows, .github/scripts, assets/tools, tests, .config/build/decapod.BUILD.bzl and authored .decapod/managed/specs; generated governance and release pins remain CLI-owned. Keep true ARM/test coverage, release conventions and shared database/container behavior. Publish a draft repair PR only, no deploy, merge, or security grant changes.",
+      "intent": "Create release projection scratch privately under permissive umask\n\nDedicated fix for PR1395 Buildkite869 health: actual validate190pass0fail, exact projection checker rejects its own newly created .decapod/managed scratch. Use private directory/file creation from birth with child-process umask000/002 regression. Preserve guards and existing state; no material-gate changes, image work, credentials, or release reruns.",
       "phases": [],
       "proof_hooks": [
-        "CI/release workflow regression tests",
-        "decapod validate",
-        "exact-commit GitHub and Buildkite checks"
+        "Bazel release_projection_drift_policy including child umask000 and002 regressions",
+        "Cargo release projection policy regressions",
+        "Default candidate validation on clean committed source"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Follow-up isolates only offline test child Git configuration and two disposable recovery fixtures; production interfaces, shared storage rules and recovery guard stay unchanged. Operations and validation prose describe the capability probes.",
-          "reviewed_code_fingerprint": "ab9a11ea42af3b5496a92844b43b1fb208608acd04fed342b0a1168f3c94af27",
-          "spec_material_hash": "067286adac676ae65f24b3d75d16bf74bf55ced059a54e91d906164764cb66ef"
+          "reason": "Documents creation-time private release projection scratch ownership independent of runner umask.",
+          "reviewed_code_fingerprint": "292620722de35b6c75924b57b28cff1ec0e6788454aeb0ed8bba0a18c4ca9d06",
+          "spec_material_hash": "7f3a339233ed65eae552c7ac3094856d9ceb02b667e6de242b4e536bb5cc9a15"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Follow-up isolates only offline test child Git configuration and two disposable recovery fixtures; production interfaces, shared storage rules and recovery guard stay unchanged. Operations and validation prose describe the capability probes.",
-          "reviewed_code_fingerprint": "ab9a11ea42af3b5496a92844b43b1fb208608acd04fed342b0a1168f3c94af27",
-          "spec_material_hash": "dbc2c41ea2a503adf4a311d62ee14b4e317615f0b6d7934047037da95a6255cd"
+          "reason": "Documents permissive-umask scratch contract, read-only caller checkout and fatal CI projection rejection.",
+          "reviewed_code_fingerprint": "292620722de35b6c75924b57b28cff1ec0e6788454aeb0ed8bba0a18c4ca9d06",
+          "spec_material_hash": "043adfd9a55104a2a91203ce6f932c1e6479d451284439b975874d00781daad5"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Follow-up isolates only offline test child Git configuration and two disposable recovery fixtures; production interfaces, shared storage rules and recovery guard stay unchanged. Operations and validation prose describe the capability probes.",
-          "reviewed_code_fingerprint": "ab9a11ea42af3b5496a92844b43b1fb208608acd04fed342b0a1168f3c94af27",
+          "reason": "Uses existing private creation and atomic writing primitives; existing-state permission, ancestry and link guards are unchanged. No shared-group policy, credentials, or workflow permission changes.",
+          "reviewed_code_fingerprint": "292620722de35b6c75924b57b28cff1ec0e6788454aeb0ed8bba0a18c4ca9d06",
           "spec_material_hash": "104f8c7ff33a76536830670971641ef8ef8aa86ce7f9390ec234291c81ed3b82"
         }
       ],
       "state": "APPROVED",
-      "stop_conditions": [
-        "Do not change external app/security permissions or retry publishing/deployment without action-time user approval"
-      ],
-      "title": "Repair current Buildkite workflow failures",
+      "stop_conditions": [],
+      "title": "Create release projection scratch privately under permissive umask",
       "todo_ids": [
-        "cicd_01m4pa8bxxpr5gve"
+        "code_01m4pg93e3agdx99"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791754010Z"
+      "updated_at": "1791757315Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Only offline CI/test fixtures; preserve production recovery/shared-storage guards, all assertions and existing config; no services, mounts, release/deploy or image changes"
+        "No material-spec gate changes, image work, credentials, existing-state chmod, workflow umask, publishing or reruns. PR withheld pending full required suite proof."
       ],
-      "artifact_hash": "sha256:cfb8bb79d43282121233a14f756aee1edb938462f57db3ec791ca1358310c82d",
+      "artifact_hash": "sha256:b4257437f6a572f70e23dc1fe072ea9ce10e71f052c0563dffcf13794f7471c2",
       "checks": [
         {
-          "name": "actual-buildkite-filesystem-kind",
+          "name": "bazel-projection-policy",
           "status": "unavailable"
         },
         {
-          "name": "buildkite-848-offline-consumer",
-          "status": "failed"
-        },
-        {
-          "name": "buildkite-848-other-checks",
+          "name": "candidate-build",
           "status": "passed"
         },
         {
-          "name": "clippy-supabase-lib-tests",
+          "name": "cargo-fmt",
           "status": "passed"
         },
         {
-          "name": "current-material-rebind",
+          "name": "clean-candidate-validate",
+          "status": "passed"
+        },
+        {
+          "name": "clippy",
           "status": "passed"
         },
         {
@@ -303,27 +247,23 @@
           "status": "passed"
         },
         {
-          "name": "exact-git-fixture-tests",
+          "name": "full-required-ci",
+          "status": "unavailable"
+        },
+        {
+          "name": "independent-review",
           "status": "passed"
         },
         {
-          "name": "fresh-bazel-six-policies",
+          "name": "projection-helper-suite",
           "status": "passed"
         },
         {
-          "name": "github-5030b9ef-full-ci",
-          "status": "passed"
+          "name": "regression-baseline",
+          "status": "failed"
         },
         {
-          "name": "poisoned-git-config-regression",
-          "status": "passed"
-        },
-        {
-          "name": "recovery-permission-tests",
-          "status": "passed"
-        },
-        {
-          "name": "rustfmt",
+          "name": "whitespace",
           "status": "passed"
         }
       ],
@@ -332,89 +272,145 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:buildkite-offline-consumer-20261011",
+            "intent_id": "intent:release-scratch-final",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:buildkite-offline-consumer-20261011",
+            "intent_id": "intent:release-scratch-final",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:buildkite-offline-consumer-20261011",
+            "detail": "trajectory:release-scratch-final",
             "event_id": "event:4",
-            "intent_id": "intent:buildkite-offline-consumer-20261011",
+            "intent_id": "intent:release-scratch-final",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:buildkite-offline-consumer-20261011",
+            "detail": "trajectory:release-scratch-final",
             "event_id": "event:5",
-            "intent_id": "intent:buildkite-offline-consumer-20261011",
+            "intent_id": "intent:release-scratch-final",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:release-scratch-final",
+            "event_id": "event:6",
+            "intent_id": "intent:release-scratch-final",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
+          },
+          {
+            "detail": "trajectory:release-scratch-final",
+            "event_id": "event:7",
+            "intent_id": "intent:release-scratch-final",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
-          "buildkite-offline-consumer-20261011": {
+          "release-scratch-final": {
             "evidence_only": true,
-            "id": "buildkite-offline-consumer-20261011",
-            "intent_id": "intent:buildkite-offline-consumer-20261011",
+            "id": "release-scratch-final",
+            "intent_id": "intent:release-scratch-final",
             "steps": [
               {
                 "action": "trajectory.record",
+                "command": "cargo test --locked --features build-tools --bin decapod-release-projection-drift",
                 "custody_event_id": "event:4",
                 "observations": [
+                  "assets/tools/release_projection_drift.rs",
+                  "src/decapod/core/fs_permissions.rs",
                   ".github/workflows/ci.yml",
-                  "tests/ci_checkout_policy.rs",
-                  "tests/unit/core/fs_permissions_tests.rs",
-                  ".decapod/managed/specs/OPERATIONS.md",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "Fresh final Bazel six policy targets72 tests pass. Actual supabase-cloud libtest recovery permission suite6/6 includes both unchanged recovery/archive/mode flows; exact Git resolver3/3 and inherited remote1/1 pass. Clippy --features supabase-cloud --lib --tests -D warnings, rustfmt, semantic workflow permission comparison and diff whitespace pass.",
-                  "Checkout policy8/8 proves five poisoned Git-config sources isolated only in test child, existing config and outer process preserved. Recovery fixture probes normal temp then existing /dev/shm, private creation, >=4MiB, same-device staging and actual no-clobber rename; absence fails, never skips. Local tmpfs device55; Buildkite filesystem type remains pending visible probe.",
-                  "Prior5030b9ef GitHub full CI green; Buildkite84853 checks green including policies, integration aggregate and actualDocker, remaining offline consumer624 passed5 failed from URL rewrites and device guards. User-linked114576291548 is that same offline job; no missing Supabase service.",
-                  "Source b0a5391b was fetched with exact tree7dbfd210. Validator requested fresh trajectory after source/spec/review material epoch changed. This record follows supported remediation; prior proof is retained in Git, with no governance hand edits."
+                  "assets/tools/release_projection_drift.rs",
+                  "assets/tools/release_projection_drift_tests.rs",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "Buildkite869 health after validate190/0 failed in projection scratch STORAGE_UNSAFE_PERMISSIONS; exact child regression reproduced before fix under umask000. After private creation fix all11 helper tests passed including000/002. Independent read-only review found no blocker. CI existing policies shard selects this Bazel target and health set-e propagates projection failure. Docker unavailable locally; full required CI proof remains pending and no PR will be created yet.",
+                  "Current source0.107.5 binary built successfully. Dirty preflight refreshed canonical release pins/specs and reported199pass1fail container_workspace_required; this is not final clean candidate validation."
                 ],
                 "proof_refs": [
-                  "fresh-bazel-six-policies",
-                  "recovery-permission-tests",
-                  "exact-git-fixture-tests",
-                  "poisoned-git-config-regression",
-                  "clippy-supabase-lib-tests",
-                  "rustfmt",
-                  "buildkite-848-offline-consumer",
-                  "buildkite-848-other-checks",
-                  "github-5030b9ef-full-ci",
-                  "current-material-rebind",
-                  "actual-buildkite-filesystem-kind"
+                  "regression-baseline",
+                  "projection-helper-suite",
+                  "cargo-fmt",
+                  "whitespace",
+                  "independent-review",
+                  "full-required-ci"
                 ],
                 "scope": [
-                  ".github/workflows/ci.yml, tests/ci_checkout_policy.rs, tests/unit/core/fs_permissions_tests.rs and authored specs/proof"
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "assets/tools/release_projection_drift.rs",
+                  "assets/tools/release_projection_drift_tests.rs"
                 ],
                 "sequence": 4,
                 "validation_findings": []
               },
               {
+                "action": "trajectory.record",
+                "command": "cargo clippy --locked --features build-tools --bin decapod-release-projection-drift --tests -- -D warnings",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Clippy completed successfully with warnings denied. Bazel attempt initially failed BCR TLS; corrected standard system trust-store attempt has an inconclusive log because its read-only poll was canceled by approval review. No Bazel pass claimed; full required proof remains pending before PR creation."
+                ],
+                "proof_refs": [
+                  "clippy",
+                  "candidate-build",
+                  "bazel-projection-policy"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "assets/tools/release_projection_drift.rs",
+                  "assets/tools/release_projection_drift_tests.rs"
+                ],
+                "sequence": 5,
+                "validation_findings": []
+              },
+              {
                 "action": "validation",
                 "command": "decapod validate",
-                "custody_event_id": "event:5",
+                "custody_event_id": "event:6",
                 "observations": [
                   ".decapod/governance.json",
                   ".decapod/governance.json",
-                  "validation epoch ve_606a59e824688e50 completed with zero failures"
+                  "validation epoch ve_561a56aa0ac680e9 completed with zero failures"
                 ],
                 "proof_refs": [
                   "decapod validate"
                 ],
                 "scope": [
-                  ".github/workflows/ci.yml, tests/ci_checkout_policy.rs, tests/unit/core/fs_permissions_tests.rs and authored specs/proof"
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "assets/tools/release_projection_drift.rs",
+                  "assets/tools/release_projection_drift_tests.rs"
                 ],
-                "sequence": 5,
+                "sequence": 6,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "decapod validate --format json on clean committed 92e8e3c2 with candidate0.107.5",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Default actual candidate validation passed202/0 on clean local source92e8e3c2; the generated receipt is retained. Full required pre-PR CI remains pending; this local pass is not a merge-ready claim."
+                ],
+                "proof_refs": [
+                  "clean-candidate-validate"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "assets/tools/release_projection_drift.rs",
+                  "assets/tools/release_projection_drift_tests.rs"
+                ],
+                "sequence": 7,
                 "validation_findings": []
               }
             ]
@@ -422,36 +418,49 @@
         }
       },
       "declared_commands": [
-        "decapod validate"
+        "cargo build --locked --features build-tools --bin decapod --bin decapod-release-projection-drift",
+        "cargo clippy --locked --features build-tools --bin decapod-release-projection-drift --tests -- -D warnings",
+        "cargo fmt --all -- --check",
+        "cargo test --locked --features build-tools --bin decapod-release-projection-drift",
+        "decapod validate",
+        "decapod validate --format json on clean committed 92e8e3c2 with candidate0.107.5",
+        "git diff --check"
       ],
-      "destination": "PR1394",
+      "destination": "pr",
       "evidence": [
-        "Checkout policy8/8 proves five poisoned Git-config sources isolated only in test child, existing config and outer process preserved. Recovery fixture probes normal temp then existing /dev/shm, private creation, >=4MiB, same-device staging and actual no-clobber rename; absence fails, never skips. Local tmpfs device55; Buildkite filesystem type remains pending visible probe.",
-        "Fresh final Bazel six policy targets72 tests pass. Actual supabase-cloud libtest recovery permission suite6/6 includes both unchanged recovery/archive/mode flows; exact Git resolver3/3 and inherited remote1/1 pass. Clippy --features supabase-cloud --lib --tests -D warnings, rustfmt, semantic workflow permission comparison and diff whitespace pass.",
-        "Prior5030b9ef GitHub full CI green; Buildkite84853 checks green including policies, integration aggregate and actualDocker, remaining offline consumer624 passed5 failed from URL rewrites and device guards. User-linked114576291548 is that same offline job; no missing Supabase service.",
-        "Source b0a5391b was fetched with exact tree7dbfd210. Validator requested fresh trajectory after source/spec/review material epoch changed. This record follows supported remediation; prior proof is retained in Git, with no governance hand edits.",
-        "validation epoch ve_606a59e824688e50 completed with zero failures"
+        "Buildkite869 health after validate190/0 failed in projection scratch STORAGE_UNSAFE_PERMISSIONS; exact child regression reproduced before fix under umask000. After private creation fix all11 helper tests passed including000/002. Independent read-only review found no blocker. CI existing policies shard selects this Bazel target and health set-e propagates projection failure. Docker unavailable locally; full required CI proof remains pending and no PR will be created yet.",
+        "Clippy completed successfully with warnings denied. Bazel attempt initially failed BCR TLS; corrected standard system trust-store attempt has an inconclusive log because its read-only poll was canceled by approval review. No Bazel pass claimed; full required proof remains pending before PR creation.",
+        "Current source0.107.5 binary built successfully. Dirty preflight refreshed canonical release pins/specs and reported199pass1fail container_workspace_required; this is not final clean candidate validation.",
+        "Default actual candidate validation passed202/0 on clean local source92e8e3c2; the generated receipt is retained. Full required pre-PR CI remains pending; this local pass is not a merge-ready claim.",
+        "validation epoch ve_561a56aa0ac680e9 completed with zero failures"
       ],
-      "inspected_files": [],
-      "intent_id": "intent:buildkite-offline-consumer-20261011",
+      "inspected_files": [
+        ".github/workflows/ci.yml",
+        "assets/tools/release_projection_drift.rs",
+        "src/decapod/core/fs_permissions.rs"
+      ],
+      "intent_id": "intent:release-scratch-final",
       "modified_files": [
         ".decapod/governance.json",
-        ".decapod/managed/specs/OPERATIONS.md",
-        ".decapod/managed/specs/VALIDATION.md",
-        ".github/workflows/ci.yml",
-        "tests/ci_checkout_policy.rs",
-        "tests/unit/core/fs_permissions_tests.rs"
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        "assets/tools/release_projection_drift.rs",
+        "assets/tools/release_projection_drift_tests.rs"
       ],
       "next_transitions": [
-        "publish"
+        "publish",
+        "remote-source-proof"
       ],
       "repo_scope": [
-        ".github/workflows/ci.yml, tests/ci_checkout_policy.rs, tests/unit/core/fs_permissions_tests.rs and authored specs/proof"
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        "assets/tools/release_projection_drift.rs",
+        "assets/tools/release_projection_drift_tests.rs"
       ],
-      "run_id": "buildkite-offline-consumer-20261011",
+      "run_id": "release-scratch-final",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "cicd_01m4pa8bxxpr5gve",
+      "task_id": "code_01m4pg93e3agdx99",
       "tool_calls": [],
       "unresolved_assumptions": []
     },
@@ -464,196 +473,184 @@
         ],
         "result": "review"
       },
-      "decapod_release": "0.107.4",
+      "decapod_release": "0.107.5",
       "drift_findings": [],
-      "elapsed_ms": 4117,
-      "epoch_ref": "ve_606a59e824688e50",
+      "elapsed_ms": 5632,
+      "epoch_ref": "ve_561a56aa0ac680e9",
       "fail_count": 0,
       "failures": [],
       "gate_timings": [
         {
-          "elapsed_ms": 2042,
+          "elapsed_ms": 2051,
           "name": "validate_machine_contract"
         },
         {
-          "elapsed_ms": 498,
-          "name": "validate_project_specs_docs"
-        },
-        {
-          "elapsed_ms": 493,
+          "elapsed_ms": 719,
           "name": "validate_markdown_primitives_roundtrip_gate"
         },
         {
-          "elapsed_ms": 248,
+          "elapsed_ms": 647,
+          "name": "validate_project_specs_docs"
+        },
+        {
+          "elapsed_ms": 310,
           "name": "validate_stale_workspaces"
         },
         {
-          "elapsed_ms": 173,
+          "elapsed_ms": 233,
           "name": "validate_obligations"
         },
         {
-          "elapsed_ms": 85,
+          "elapsed_ms": 201,
           "name": "validate_legacy_jsonl_retired"
         },
         {
-          "elapsed_ms": 84,
-          "name": "validate_git_workspace_context"
-        },
-        {
-          "elapsed_ms": 50,
-          "name": "validate_archive_integrity"
-        },
-        {
-          "elapsed_ms": 42,
-          "name": "validate_control_plane_contract"
-        },
-        {
-          "elapsed_ms": 33,
+          "elapsed_ms": 162,
           "name": "validate_schema_determinism"
         },
         {
-          "elapsed_ms": 29,
-          "name": "validate_embedded_self_contained"
-        },
-        {
-          "elapsed_ms": 26,
-          "name": "validate_git_protected_branch"
-        },
-        {
-          "elapsed_ms": 25,
-          "name": "validate_repomap_determinism"
-        },
-        {
-          "elapsed_ms": 20,
+          "elapsed_ms": 129,
           "name": "validate_no_legacy_namespaces"
         },
         {
-          "elapsed_ms": 15,
-          "name": "validate_federation_gates"
+          "elapsed_ms": 110,
+          "name": "validate_embedded_self_contained"
         },
         {
-          "elapsed_ms": 13,
+          "elapsed_ms": 88,
+          "name": "validate_archive_integrity"
+        },
+        {
+          "elapsed_ms": 73,
+          "name": "validate_git_workspace_context"
+        },
+        {
+          "elapsed_ms": 52,
+          "name": "validate_control_plane_contract"
+        },
+        {
+          "elapsed_ms": 37,
+          "name": "validate_repomap_determinism"
+        },
+        {
+          "elapsed_ms": 36,
           "name": "validate_interface_contract_bootstrap"
         },
         {
-          "elapsed_ms": 13,
-          "name": "validate_git_push_pr_gate"
+          "elapsed_ms": 21,
+          "name": "validate_federation_gates"
         },
         {
-          "elapsed_ms": 9,
+          "elapsed_ms": 17,
           "name": "validate_lineage_hard_gate"
         },
         {
-          "elapsed_ms": 8,
-          "name": "validate_watcher_audit"
-        },
-        {
-          "elapsed_ms": 4,
-          "name": "validate_lcm_immutability"
-        },
-        {
-          "elapsed_ms": 4,
-          "name": "validate_knowledge_integrity"
-        },
-        {
-          "elapsed_ms": 4,
-          "name": "validate_knowledge_promotions_if_present"
-        },
-        {
-          "elapsed_ms": 4,
-          "name": "validate_lcm_rebuild_gate"
-        },
-        {
-          "elapsed_ms": 3,
+          "elapsed_ms": 15,
           "name": "validate_health_purity"
         },
         {
-          "elapsed_ms": 3,
+          "elapsed_ms": 15,
+          "name": "validate_knowledge_integrity"
+        },
+        {
+          "elapsed_ms": 14,
+          "name": "validate_canon_mutation"
+        },
+        {
+          "elapsed_ms": 14,
+          "name": "validate_git_push_pr_gate"
+        },
+        {
+          "elapsed_ms": 12,
+          "name": "validate_policy_integrity"
+        },
+        {
+          "elapsed_ms": 11,
+          "name": "validate_watcher_purity"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_risk_map_violations"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_git_protected_branch"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_override_authority"
+        },
+        {
+          "elapsed_ms": 9,
+          "name": "validate_knowledge_promotions_if_present"
+        },
+        {
+          "elapsed_ms": 8,
+          "name": "validate_lcm_rebuild_gate"
+        },
+        {
+          "elapsed_ms": 8,
+          "name": "validate_plan_governed_execution_gate"
+        },
+        {
+          "elapsed_ms": 6,
+          "name": "validate_watcher_audit"
+        },
+        {
+          "elapsed_ms": 6,
+          "name": "validate_lcm_immutability"
+        },
+        {
+          "elapsed_ms": 5,
+          "name": "validate_trajectory_artifacts_if_present"
+        },
+        {
+          "elapsed_ms": 5,
+          "name": "validate_entrypoint_invariants"
+        },
+        {
+          "elapsed_ms": 5,
+          "name": "validate_recursive_improvement_passes_if_present"
+        },
+        {
+          "elapsed_ms": 4,
+          "name": "validate_generated_artifact_whitelist"
+        },
+        {
+          "elapsed_ms": 4,
           "name": "validate_gatekeeper_gate"
         },
         {
           "elapsed_ms": 3,
-          "name": "validate_override_authority"
+          "name": "validate_jev_history_if_present"
         },
         {
           "elapsed_ms": 3,
-          "name": "validate_generated_artifact_whitelist"
-        },
-        {
-          "elapsed_ms": 3,
-          "name": "validate_plan_governed_execution_gate"
-        },
-        {
-          "elapsed_ms": 2,
           "name": "validate_database_schema_versions"
         },
         {
           "elapsed_ms": 2,
-          "name": "validate_policy_integrity"
+          "name": "validate_research_claims_if_present"
         },
         {
-          "elapsed_ms": 1,
+          "elapsed_ms": 2,
+          "name": "validate_validation_receipt_if_present"
+        },
+        {
+          "elapsed_ms": 2,
           "name": "validate_health_cache_integrity"
         },
         {
           "elapsed_ms": 1,
-          "name": "validate_entrypoint_invariants"
-        },
-        {
-          "elapsed_ms": 1,
-          "name": "validate_trajectory_artifacts_if_present"
-        },
-        {
-          "elapsed_ms": 1,
-          "name": "validate_recursive_improvement_passes_if_present"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_jev_history_if_present"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_research_claims_if_present"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_validation_receipt_if_present"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_canon_mutation"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_watcher_purity"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_risk_map_violations"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_heartbeat_invocation_gate"
-        },
-        {
-          "elapsed_ms": 0,
           "name": "validate_repo_map"
         },
         {
-          "elapsed_ms": 0,
+          "elapsed_ms": 1,
           "name": "validate_project_config_toml"
         },
         {
-          "elapsed_ms": 0,
-          "name": "validate_project_scoped_state"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_context_capsule_policy_contract"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_state_commit_gate"
+          "elapsed_ms": 1,
+          "name": "validate_heartbeat_invocation_gate"
         },
         {
           "elapsed_ms": 0,
@@ -661,23 +658,7 @@
         },
         {
           "elapsed_ms": 0,
-          "name": "validate_root_dockerfile_seed_detection"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_docs_templates_bucket"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_workunit_manifests_if_present"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_internalization_artifacts_if_present"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_coplayer_policy_tightening"
+          "name": "validate_context_capsule_policy_contract"
         },
         {
           "elapsed_ms": 0,
@@ -685,7 +666,31 @@
         },
         {
           "elapsed_ms": 0,
-          "name": "validate_context_capsules_if_present"
+          "name": "validate_eval_gate_if_required"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_docs_templates_bucket"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_project_scoped_state"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_state_commit_gate"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_workunit_manifests_if_present"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_root_dockerfile_seed_detection"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_internalization_artifacts_if_present"
         },
         {
           "elapsed_ms": 0,
@@ -693,27 +698,31 @@
         },
         {
           "elapsed_ms": 0,
-          "name": "validate_eval_gate_if_required"
+          "name": "validate_coplayer_policy_tightening"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_context_capsules_if_present"
         }
       ],
-      "git_revision": "c700e1b9252f1a6569f453099d7ed14a709392f6",
+      "git_revision": "92e8e3c29d3e66f0cc9771112fe5dfde7c23017d",
       "kind": "validation_receipt",
       "parallelism": 1,
-      "pass_count": 203,
+      "pass_count": 202,
       "prediction_uses_warnings": true,
-      "receipt_hash": "sha256:50c907278b4ebce42d5c901d163bba1b4135a900c11a0d739c8302117a940b9f",
-      "repo_signal_fingerprint": "ab9a11ea42af3b5496a92844b43b1fb208608acd04fed342b0a1168f3c94af27",
+      "receipt_hash": "sha256:9e0df195598110350150e5d2bc2f8552450d9169eb117b8b46c2c1b68f6efda2",
+      "repo_signal_fingerprint": "292620722de35b6c75924b57b28cff1ec0e6788454aeb0ed8bba0a18c4ca9d06",
       "schema_version": "1.0.0",
       "status": "ok",
       "temporary_artifacts_cleaned": 0,
-      "trajectory_artifact_hash": "sha256:cfb8bb79d43282121233a14f756aee1edb938462f57db3ec791ca1358310c82d",
-      "trajectory_run_id": "buildkite-offline-consumer-20261011",
+      "trajectory_artifact_hash": "sha256:b614f486d6424994ceee1b805f97717ca4955fa62cbaddf4b0260a2a87bbfd58",
+      "trajectory_run_id": "release-scratch-final",
       "warn_count": 4,
       "warnings": [
         "Risk map missing (run `decapod riskmap init`)",
         "Stale workspaces preserved for explicit review: <external-path> (unregistered_workspace: workspace ownership is unverified; --force does not authorize deleting unrelated directories. Inspect and preserve or remove this directory explicitly), <external-path> (container_cleanup_failed: workspace preserved because container cleanup could not be verified: Validation error: Container runtime provenance is unknown; preserve the workspace and recover its owning engine explicitly.), <external-path> (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch)",
         "Watcher audit trail missing (run `decapod govern watcher run`)",
-        "Workspace branch 'agent/buildkite-fix/cicd_01m4pa8bxxpr5gve' has unpushed commits or does not exist on origin. Run `git push origin agent/buildkite-fix/cicd_01m4pa8bxxpr5gve`."
+        "Workspace branch 'agent/release-scratch-fix/code_01m4pg93e3agdx99' has unpushed commits or does not exist on origin. Run `git push origin agent/release-scratch-fix/code_01m4pg93e3agdx99`."
       ]
     }
   },

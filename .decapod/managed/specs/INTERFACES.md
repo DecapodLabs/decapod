@@ -1,5 +1,15 @@
 # Interfaces
 
+## Release projection scratch contract
+
+The release-projection check remains read-only with respect to its checkout and
+returns failure for unexpected generated or authored drift. Its Dockerfile
+comparison may create and delete only its own temporary fixture, using private
+directory and file creation even under umask `000` or `002`. Child-process
+regressions exercise those masks without altering the test runner's umask.
+The CI health step propagates checker failure after the separate validation
+command; successful validation alone is not a successful health job.
+
 ## Integration shard tooling
 
 The repository-owned Rust integration helper exposes `plan --paths FILE`,
@@ -372,7 +382,7 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ab9a11ea42af3b5496a92844b43b1fb208608acd04fed342b0a1168f3c94af27`
+- Repository signal fingerprint: `292620722de35b6c75924b57b28cff1ec0e6788454aeb0ed8bba0a18c4ca9d06`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (11 files), `docs/` (1 files), `src/` (125 files), `tests/` (173 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

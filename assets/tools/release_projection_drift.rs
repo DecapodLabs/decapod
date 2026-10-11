@@ -2,7 +2,7 @@
 //! This is not validation: CI must run `decapod validate --refresh-specs` first.
 //! Only exact current-release projections may differ from the immutable tree.
 
-use decapod::core::{entrypoint_integrity as entrypoints, project_specs as specs};
+use decapod::core::{entrypoint_integrity as entrypoints, fs_permissions, project_specs as specs};
 use decapod::plugins::container;
 use serde_json::Value;
 use std::{collections::BTreeSet, fs, path::Path, process::Command};
@@ -106,10 +106,17 @@ fn expected_dockerfile(old: &str, old_release: &str) -> Check<String> {
     }
     // Invoke the real, bounded header refresh on a private fixture. This also
     // captures its exact whitespace behavior; no normalization hides changes.
-    let temp = tempfile::tempdir()?;
+    let mut scratch = tempfile::Builder::new();
+    scratch.prefix("decapod-release-projection-");
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        scratch.permissions(fs::Permissions::from_mode(0o700));
+    }
+    let temp = scratch.tempdir()?;
     let path = temp.path().join(DOCKERFILE);
-    fs::create_dir_all(path.parent().ok_or("missing Dockerfile parent")?)?;
-    fs::write(&path, old)?;
+    fs_permissions::ensure_private_dir(path.parent().ok_or("missing Dockerfile parent")?)?;
+    fs_permissions::write_private(&path, old)?;
     container::refresh_managed_dockerfile_release(temp.path())?;
     Ok(fs::read_to_string(path)?)
 }
