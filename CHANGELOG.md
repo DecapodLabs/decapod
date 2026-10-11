@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.107.5](https://github.com/DecapodLabs/decapod/compare/v0.107.4...v0.107.5) - 2026-10-11
+
+### Fixed
+
+- restore Buildkite workflow compatibility ([#1394](https://github.com/DecapodLabs/decapod/pull/1394))
+
 ## [0.107.4](https://github.com/DecapodLabs/decapod/compare/v0.107.3...v0.107.4) - 2026-10-11
 
 ### Fixed
