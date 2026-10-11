@@ -1,5 +1,17 @@
 # Security
 
+## CI checkout and provider authority
+
+CI must not repair permissive provider checkout modes by recursively changing
+existing state or enabling trusted-group access implicitly. Direct governance
+checks recreate the exact committed tree in a new privately owned checkout with
+umask 077, without copying runtime databases, sharing object-file hard links, or
+mutating the source permissions. User-configured trusted datastore groups retain
+their existing explicit policy. Source CI requests read-only repository contents
+access; release token denials do not authorize broader app grants or publishing.
+ARM musl proof uses a pinned official image and direct QEMU user-mode execution,
+with no privileged container or host binfmt registration introduced by this lane.
+
 ## Integration artifact custody
 
 Parallel integration runners consume only the artifact produced by their own
@@ -176,8 +188,8 @@ Describe the security primitives and security controls implemented in this repos
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `37766aacd5516c09a68a0d9090f6ee0609ef93501024f3ffda96bcebdb3165c1`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (11 files), `docs/` (1 files), `src/` (125 files), `tests/` (172 files)
+- Repository signal fingerprint: `bac6e5839628cf023618a58809904f047d79bc1a3c48948018d79b5eb217e1b0`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (11 files), `docs/` (1 files), `src/` (125 files), `tests/` (173 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

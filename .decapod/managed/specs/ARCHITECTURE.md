@@ -12,6 +12,11 @@ The existing lifecycle supervisor remains the owner of test scratch and process
 groups when the relocated executables run. Compilation and artifact preparation
 are explicit build work; each selective-test execution step has a five-minute
 ceiling and must prove a successful runtime below it.
+The provider workflow matrix is a static exhaustive shard set, while a bounded
+JSON array carries the selected members. This avoids deferred-matrix scheduling
+constraints without changing planner selection or rerunning shared compilation.
+Direct governance checks use an isolated private clone with the provider's exact
+commit and tree identity, preserving immutable checkpoint and drift comparisons.
 
 ## Linux workspace publication across libc implementations
 
@@ -22,7 +27,7 @@ including an empty directory or dangling symlink, and leaves the losing staged
 directory intact. Missing kernel or filesystem support remains an I/O error;
 there is no check-then-rename or overwriting fallback. macOS retains its
 `renamex_np(RENAME_EXCL)` boundary. CI compiles the release CLI and executes
-publication collision/race tests on native x86_64 and aarch64 musl targets;
+publication collision/race tests on native x86_64 and QEMU user-mode aarch64 musl targets;
 these checks neither publish images nor establish a completed image release.
 
 ## Shared datastore audit lock order
@@ -459,8 +464,8 @@ virtiofs/FUSE filesystem prohibition.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `37766aacd5516c09a68a0d9090f6ee0609ef93501024f3ffda96bcebdb3165c1`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (11 files), `docs/` (1 files), `src/` (125 files), `tests/` (172 files)
+- Repository signal fingerprint: `bac6e5839628cf023618a58809904f047d79bc1a3c48948018d79b5eb217e1b0`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (11 files), `docs/` (1 files), `src/` (125 files), `tests/` (173 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -11,11 +11,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Prepare private validation checkout
+        id: validation-checkout
+        uses: ./.github/actions/validation-checkout
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
       - name: Build Decapod from checkout
+        working-directory: ${{ steps.validation-checkout.outputs.path }}
         run: cargo build --locked --quiet
       - name: Start validation trajectory
+        working-directory: ${{ steps.validation-checkout.outputs.path }}
         env:
           # CI checkouts are detached and are not Decapod agent worktrees.
           # Keep the normal validation gates enabled, but allow this ephemeral
@@ -34,6 +42,7 @@ jobs:
             --phase validation \
             --next-transition publish
       - name: Decapod Validate
+        working-directory: ${{ steps.validation-checkout.outputs.path }}
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
           # Post-merge: tree-local binary fingerprints lag the last published pin.
@@ -45,6 +54,7 @@ jobs:
           fi
           ./target/debug/decapod validate --refresh-specs
       - name: Ensure no spec or entrypoint drift
+        working-directory: ${{ steps.validation-checkout.outputs.path }}
         # release-plz PRs intentionally contain only release metadata. Their
         # repo fingerprint changes before the next governed code PR refreshes
         # entrypoints/specs, so release PRs must not run spec inspection.

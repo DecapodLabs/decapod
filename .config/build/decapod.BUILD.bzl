@@ -163,6 +163,10 @@ def decapod_targets():
                 ".github/workflows/ci.yml",
                 "//.config/build:decapod.BUILD.bzl",
             ] if path == "tests/integration_sharding_policy.rs" else [
+                ".github/actions/validation-checkout/action.yml",
+                ".github/workflows/ci.yml",
+                ".github/workflows/decapod-validate.yml",
+            ] if path == "tests/ci_checkout_policy.rs" else [
                 "Cargo.toml",
                 "dist.toml",
                 "dist-workspace.toml",
@@ -193,7 +197,17 @@ def decapod_targets():
                 "assets/constitution.json",
                 "src/decapod/cli.rs",
                 "src/decapod/lib.rs",
-            ] + native.glob([
+            ] + ([
+                # This policy reads repository fixtures and executes only the
+                # checked-in plan helper against mocked cargo binaries.
+                "Cargo.toml",
+                "Cargo.lock",
+                ".github/scripts/release-plan.sh",
+                ".github/workflows/release.yml",
+                ".github/workflows/decapod-validate.yml",
+                ".github/workflows/docs_sync.yml",
+                "assets/Dockerfile.workspace",
+            ] if path == "tests/release_workflow_policy.rs" else []) + native.glob([
                 # Runtime state is intentionally absent from a clean checkout;
                 # tests create the managed surfaces they need at runtime.
                 ".decapod/managed/**/*",

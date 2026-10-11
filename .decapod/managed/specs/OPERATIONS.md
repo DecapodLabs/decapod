@@ -1,5 +1,25 @@
 # Operations
 
+## Buildkite interoperability boundaries
+
+Buildkite imports the repository's GitHub workflows. Its matrix, runner, output,
+token and artifact contracts must be checked directly rather than inferred from
+a green GitHub Actions run. Workflow-level cancellation remains effective on
+GitHub; Buildkite's intermediate-build cancellation is a separate pipeline
+setting and is not changed by repository repairs.
+Source CI requests read-only repository contents access because its jobs build,
+test and retain artifacts without writing repository contents. This matches the
+Buildkite pull-request token ceiling; it does not grant publishing authority.
+
+Release planning exports only bounded scheduling decisions between jobs while
+retaining the complete cargo-dist manifest as an artifact. A failed plan cannot
+authorize the host/publish stage. Existing release ownership, provider-specific
+publishing paths, environment gates and permission maps remain unchanged. Token
+denials are reported with the failed build and requested scope; they must not be
+hidden by skipping publication, expanding grants, or treating a local importer
+check as proof that credentials work. Retrying release or deployment work is a
+separate consequential action from testing a draft repair.
+
 ## Version-only release CI
 
 A release commit may carry only package-version, matching root lock-version,
@@ -369,8 +389,8 @@ continue to be surfaced through the existing storage checks.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `37766aacd5516c09a68a0d9090f6ee0609ef93501024f3ffda96bcebdb3165c1`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (11 files), `docs/` (1 files), `src/` (125 files), `tests/` (172 files)
+- Repository signal fingerprint: `bac6e5839628cf023618a58809904f047d79bc1a3c48948018d79b5eb217e1b0`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (11 files), `docs/` (1 files), `src/` (125 files), `tests/` (173 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

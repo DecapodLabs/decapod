@@ -4,11 +4,23 @@ use std::path::Path;
 use std::process::Command;
 
 #[cfg(unix)]
-use tempfile::tempdir;
+use tempfile::{TempDir, tempdir};
+
+// Bazel removes compilation sandboxes before tests run. Resolve declared data
+// through runfiles rather than the compile-time CARGO_MANIFEST_DIR in that case.
+fn repository_root() -> std::path::PathBuf {
+    match (
+        std::env::var_os("TEST_SRCDIR"),
+        std::env::var_os("TEST_WORKSPACE"),
+    ) {
+        (Some(runfiles), Some(workspace)) => Path::new(&runfiles).join(workspace),
+        _ => Path::new(env!("CARGO_MANIFEST_DIR")).to_path_buf(),
+    }
+}
 
 #[test]
 fn release_workflow_lets_release_plz_update_the_manifest() {
-    let workflow_path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/workflows/release.yml");
+    let workflow_path = repository_root().join(".github/workflows/release.yml");
     let workflow = fs::read_to_string(&workflow_path).expect("read release workflow");
 
     assert!(
@@ -26,46 +38,235 @@ fn release_workflow_lets_release_plz_update_the_manifest() {
 }
 
 #[cfg(unix)]
-#[test]
-fn release_plan_restores_cargo_dist_path_after_installer_step() {
+fn run_release_plan_fixture(
+    manifest: &str,
+    environment: &[(&str, &str)],
+    cargo_exit: i32,
+) -> (TempDir, std::process::Output) {
     use std::os::unix::fs::PermissionsExt;
 
     let temp = tempdir().expect("create temporary home");
     let cargo_bin = temp.path().join(".cargo/bin");
     fs::create_dir_all(&cargo_bin).expect("create cargo bin directory");
     let cargo_dist = cargo_bin.join("cargo-dist");
-    fs::write(&cargo_dist, "#!/bin/sh\nprintf '%s\\n' '{\"ci\":{}}'\n")
-        .expect("write cargo-dist fixture");
+    fs::write(
+        &cargo_dist,
+        "#!/bin/sh\nprintf '%s\\n' \"$@\" > \"$CARGO_HOME/invocation\"\ncat \"$CARGO_HOME/fixture-manifest.json\"\nexit \"$RELEASE_PLAN_FIXTURE_EXIT\"\n",
+    )
+    .expect("write cargo-dist fixture");
     fs::set_permissions(&cargo_dist, fs::Permissions::from_mode(0o755))
         .expect("make cargo-dist fixture executable");
+    // Shadow cargo too: tag cases must never reach a real host/publish command.
+    let cargo = cargo_bin.join("cargo");
+    fs::write(
+        &cargo,
+        "#!/bin/sh\nexec \"$CARGO_HOME/bin/cargo-dist\" \"$@\"\n",
+    )
+    .expect("write cargo fixture");
+    fs::set_permissions(cargo, fs::Permissions::from_mode(0o755))
+        .expect("make cargo fixture executable");
+    fs::write(temp.path().join(".cargo/fixture-manifest.json"), manifest)
+        .expect("write manifest fixture");
 
     let github_output = temp.path().join("github-output");
-    let script = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/scripts/release-plan.sh");
-    let output = Command::new("/bin/bash")
-        .current_dir(env!("CARGO_MANIFEST_DIR"))
+    let script = repository_root().join(".github/scripts/release-plan.sh");
+    let mut command = Command::new("/bin/bash");
+    command
+        .current_dir(temp.path())
         .env("HOME", temp.path())
         .env("CARGO_HOME", temp.path().join(".cargo"))
+        .env_remove("BUILDKITE_TAG")
+        .env_remove("BUILDKITE_BRANCH")
+        .env_remove("BUILDKITE_GITHUB_EVENT")
         .env("GITHUB_EVENT_NAME", "pull_request")
         .env("GITHUB_REF_NAME", "release-plz-test")
         .env("GITHUB_REF_TYPE", "branch")
         .env("GITHUB_OUTPUT", &github_output)
-        .arg(script)
-        .output()
-        .expect("run release plan script");
+        .env("RELEASE_PLAN_FIXTURE_EXIT", cargo_exit.to_string())
+        .arg(script);
+    for (key, value) in environment {
+        command.env(key, value);
+    }
+    let output = command.output().expect("run release plan script");
+    (temp, output)
+}
+
+#[cfg(unix)]
+#[test]
+fn release_plan_restores_cargo_dist_path_after_installer_step() {
+    let (temp, output) = run_release_plan_fixture(r#"{"ci":{}}"#, &[], 0);
 
     assert!(
         output.status.success(),
         "release plan should find cargo-dist in CARGO_HOME/bin; stderr:\n{}",
         String::from_utf8_lossy(&output.stderr)
     );
-    let outputs = fs::read_to_string(github_output).expect("read workflow outputs");
+    let outputs =
+        fs::read_to_string(temp.path().join("github-output")).expect("read workflow outputs");
     assert!(outputs.contains("publishing=false"));
-    assert!(outputs.contains("manifest={\"ci\":{}}"));
+    assert!(outputs.contains("has_local_artifacts=false"));
+    assert!(outputs.contains("pr_upload=false"));
+    assert!(!outputs.contains("manifest="));
+    assert_eq!(
+        fs::read_to_string(temp.path().join(".cargo/invocation")).unwrap(),
+        "dist\nplan\n--output-format=json\n"
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn release_plan_preserves_large_manifests_without_exporting_them() {
+    let manifest = serde_json::json!({
+        "announcement_github_body": "release notes\n".repeat(1000),
+        "ci": {"github": {
+            "artifacts_matrix": {"include": [{"target": "x86_64-unknown-linux-gnu"}]},
+            "pr_run_mode": "upload"
+        }}
+    })
+    .to_string();
+    assert!(manifest.len() > 1024);
+    let (temp, output) = run_release_plan_fixture(&manifest, &[], 0);
+    assert!(output.status.success(), "{:?}", output);
+    assert_eq!(
+        fs::read_to_string(temp.path().join("plan-dist-manifest.json")).unwrap(),
+        manifest
+    );
+    let outputs = fs::read_to_string(temp.path().join("github-output")).unwrap();
+    assert_eq!(
+        outputs,
+        "has_local_artifacts=true\npr_upload=true\ntag=\ntag_flag=\npublishing=false\n"
+    );
+    for line in outputs.lines() {
+        let (_, value) = line.split_once('=').expect("key/value output");
+        assert!(value.len() <= 1024, "job output exceeds Buildkite limit");
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn release_plan_scheduling_outputs_preserve_cargo_dist_decisions() {
+    for (github, has_local_artifacts, pr_upload) in [
+        (serde_json::json!({}), false, false),
+        (serde_json::json!({"pr_run_mode": "upload"}), false, true),
+        (
+            serde_json::json!({"artifacts_matrix": {"include": null}}),
+            false,
+            false,
+        ),
+        (
+            serde_json::json!({"artifacts_matrix": {"include": []}, "pr_run_mode": "plan"}),
+            true,
+            false,
+        ),
+        (
+            serde_json::json!({"artifacts_matrix": {"include": [{}]}, "pr_run_mode": "upload"}),
+            true,
+            true,
+        ),
+        (
+            serde_json::json!({"artifacts_matrix": {"include": [{}]}, "pr_run_mode": "skip"}),
+            true,
+            false,
+        ),
+        (
+            serde_json::json!({"pr_run_mode": "x".repeat(2048)}),
+            false,
+            false,
+        ),
+    ] {
+        let manifest = serde_json::json!({"ci": {"github": github}}).to_string();
+        let (temp, output) = run_release_plan_fixture(&manifest, &[], 0);
+        assert!(output.status.success(), "{manifest}: {:?}", output);
+        let outputs = fs::read_to_string(temp.path().join("github-output")).unwrap();
+        assert!(outputs.contains(&format!("has_local_artifacts={has_local_artifacts}\n")));
+        assert!(outputs.contains(&format!("pr_upload={pr_upload}\n")));
+        assert!(outputs.len() < 1024);
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn release_plan_keeps_tag_hosting_explicit_on_both_runtimes() {
+    for environment in [
+        vec![("GITHUB_REF_TYPE", "tag"), ("GITHUB_REF_NAME", "v1.2.3")],
+        vec![("BUILDKITE_TAG", "v1.2.3"), ("GITHUB_REF_NAME", "")],
+    ] {
+        let (temp, output) = run_release_plan_fixture(r#"{"ci":{}}"#, &environment, 0);
+        assert!(output.status.success(), "{:?}", output);
+        let outputs = fs::read_to_string(temp.path().join("github-output")).unwrap();
+        assert!(outputs.contains("tag=v1.2.3\n"));
+        assert!(outputs.contains("tag_flag=--tag=v1.2.3\n"));
+        assert!(outputs.contains("publishing=true\n"));
+        assert_eq!(
+            fs::read_to_string(temp.path().join(".cargo/invocation")).unwrap(),
+            "dist\nhost\n--steps=create\n--tag=v1.2.3\n--output-format=json\n"
+        );
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn release_plan_invalid_manifests_fail_before_exporting_outputs() {
+    for manifest in ["", "{", "null", "[]", "{}\n{}", r#"{"ci":"invalid"}"#] {
+        let (temp, output) = run_release_plan_fixture(manifest, &[], 0);
+        assert!(
+            !output.status.success(),
+            "accepted invalid manifest: {manifest}"
+        );
+        assert!(
+            !temp.path().join("github-output").exists(),
+            "invalid manifest must not publish scheduling or publishing outputs"
+        );
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn release_plan_cargo_failure_does_not_export_publishing_outputs() {
+    let (temp, output) = run_release_plan_fixture(
+        r#"{"ci":{}}"#,
+        &[("GITHUB_REF_TYPE", "tag"), ("GITHUB_REF_NAME", "v1.2.3")],
+        42,
+    );
+    assert_eq!(output.status.code(), Some(42));
+    assert!(!temp.path().join("github-output").exists());
+}
+
+#[test]
+fn release_workflow_keeps_manifests_in_artifacts_and_bounded_job_outputs() {
+    let workflow =
+        fs::read_to_string(repository_root().join(".github/workflows/release.yml")).unwrap();
+    for required in [
+        "has-local-artifacts: ${{ steps.plan.outputs.has_local_artifacts }}",
+        "pr-upload: ${{ steps.plan.outputs.pr_upload }}",
+        "needs.plan.outputs.has-local-artifacts == 'true'",
+        "needs.plan.outputs.pr-upload == 'true'",
+        "needs.plan.outputs.publishing == 'true'",
+        "name: artifacts-plan-dist-manifest",
+        "path: plan-dist-manifest.json",
+        "name: artifacts-dist-manifest",
+        "path: dist-manifest.json",
+        "fromJson(steps.host.outputs.manifest).announcement_github_body",
+    ] {
+        assert!(
+            workflow.contains(required),
+            "missing release contract: {required}"
+        );
+    }
+    assert!(!workflow.contains("val: ${{ steps.plan.outputs.manifest }}"));
+    assert!(!workflow.contains("val: ${{ steps.host.outputs.manifest }}"));
+    assert!(!workflow.contains("needs.plan.outputs.val"));
+    assert!(
+        workflow.contains(
+            "always() && needs.plan.result == 'success' && needs.plan.outputs.publishing == 'true'"
+        ),
+        "hosting must not proceed after a failed plan, even if it emitted publishing=true"
+    );
 }
 
 #[test]
 fn release_plan_does_not_request_a_github_workflow_token() {
-    let workflow_path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/workflows/release.yml");
+    let workflow_path = repository_root().join(".github/workflows/release.yml");
     let workflow = fs::read_to_string(workflow_path).expect("read release workflow");
     let plan_start = workflow.find("\n  plan:\n").expect("find release plan job");
     let plan_end = workflow[plan_start + 1..]
@@ -89,7 +290,7 @@ fn release_workflow_does_not_auto_heal_release_bound_pins() {
     // Master pins stay at the Decapod version that generated master.
     // release-plz may bump Cargo.toml only; the next user/agent PR advances pins.
     // Release Artifact Sync is removed entirely (#1245).
-    let workflow_path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/workflows/release.yml");
+    let workflow_path = repository_root().join(".github/workflows/release.yml");
     let workflow = fs::read_to_string(&workflow_path).expect("read release workflow");
     assert!(
         !workflow.contains("Sync release-bound artifacts after release-plz"),
@@ -108,8 +309,7 @@ fn release_workflow_does_not_auto_heal_release_bound_pins() {
 
 #[test]
 fn release_artifact_sync_workflow_is_removed() {
-    let path =
-        Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/workflows/release-artifact-sync.yml");
+    let path = repository_root().join(".github/workflows/release-artifact-sync.yml");
     assert!(
         !path.exists(),
         "Release Artifact Sync workflow must be deleted; agents advance pins in PRs via local validate"
@@ -120,7 +320,7 @@ fn release_artifact_sync_workflow_is_removed() {
 fn post_merge_validate_skips_fingerprint_evaluation() {
     // A tree-local post-merge binary cannot match the last published
     // entrypoint fingerprint; enforce pins on PRs, not on push to master.
-    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".github/workflows/decapod-validate.yml");
+    let path = repository_root().join(".github/workflows/decapod-validate.yml");
     let workflow = fs::read_to_string(&path).expect("read decapod-validate workflow");
     assert!(
         workflow.contains("DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES"),
@@ -140,7 +340,7 @@ fn post_merge_validate_skips_fingerprint_evaluation() {
 
 #[test]
 fn release_workflow_publishes_decapod_ghcr_image() {
-    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let root = repository_root();
     let workflow = fs::read_to_string(root.join(".github/workflows/release.yml"))
         .expect("read release workflow");
     let dockerfile = fs::read_to_string(root.join("assets/Dockerfile.workspace"))
@@ -208,7 +408,7 @@ fn release_workflow_publishes_decapod_ghcr_image() {
 
 #[test]
 fn release_workflow_verifies_anonymous_ghcr_pull() {
-    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let root = repository_root();
     let workflow = fs::read_to_string(root.join(".github/workflows/release.yml"))
         .expect("read release workflow");
 
@@ -234,7 +434,7 @@ fn release_workflow_verifies_anonymous_ghcr_pull() {
 
 #[test]
 fn release_workflow_can_resume_existing_github_release() {
-    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let root = repository_root();
     let workflow = fs::read_to_string(root.join(".github/workflows/release.yml"))
         .expect("read release workflow");
 
@@ -259,7 +459,7 @@ fn release_workflow_can_resume_existing_github_release() {
 
 #[test]
 fn public_release_surface_has_no_private_propodus_dependency() {
-    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let root = repository_root();
     let cargo_toml = fs::read_to_string(root.join("Cargo.toml")).expect("read Cargo.toml");
     let cargo_lock = fs::read_to_string(root.join("Cargo.lock")).expect("read Cargo.lock");
 
@@ -297,7 +497,7 @@ fn public_release_surface_has_no_private_propodus_dependency() {
 
 #[test]
 fn governance_artifact_gate_skips_only_proven_release_metadata() {
-    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let root = repository_root();
     let workflow =
         fs::read_to_string(root.join(".github/workflows/ci.yml")).expect("read CI workflow");
 
@@ -325,7 +525,7 @@ fn governance_artifact_gate_skips_only_proven_release_metadata() {
 
 #[test]
 fn material_specs_gate_skips_only_proven_release_metadata() {
-    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let root = repository_root();
     let workflow =
         fs::read_to_string(root.join(".github/workflows/ci.yml")).expect("read CI workflow");
 
@@ -349,7 +549,7 @@ fn release_pr_skips_spec_entrypoint_drift_gate() {
     // release-plz bumps Cargo.toml (repo_signal changes) without entrypoint
     // pins; validate --refresh-specs rewrites the manifest and the drift gate
     // must not hard-fail the release PR. Pin advancement is deferred to the next user/agent PR (Release Artifact Sync removed).
-    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let root = repository_root();
     let validate = fs::read_to_string(root.join(".github/workflows/decapod-validate.yml"))
         .expect("read decapod-validate workflow");
     let ci = fs::read_to_string(root.join(".github/workflows/ci.yml")).expect("read CI workflow");

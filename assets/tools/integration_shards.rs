@@ -84,6 +84,22 @@ pub fn plan(paths: &[String]) -> Plan {
     ]) {
         result.policies.push("integration_sharding_policy");
     }
+    if has(&[
+        ".github/actions/validation-checkout/action.yml",
+        ".github/workflows/ci.yml",
+        ".github/workflows/decapod-validate.yml",
+        "tests/ci_checkout_policy.rs",
+    ]) {
+        result.policies.push("ci_checkout_policy");
+    }
+    if has(&[
+        ".github/workflows/release.yml",
+        ".github/workflows/ci.yml",
+        ".github/scripts/release-plan.sh",
+        "tests/release_workflow_policy.rs",
+    ]) {
+        result.policies.push("release_workflow_policy");
+    }
     result
 }
 

@@ -77,7 +77,9 @@ fn runner_changes_cover_the_runner_and_workflow_retains_release_policies() {
         [
             "release_metadata_policy",
             "release_projection_drift_policy",
-            "integration_sharding_policy"
+            "integration_sharding_policy",
+            "ci_checkout_policy",
+            "release_workflow_policy"
         ]
     );
 }
@@ -95,7 +97,7 @@ fn combined_selection_is_deterministic_and_each_target_is_unique() {
     reversed.reverse();
     assert_eq!(selection, plan(&reversed));
     let targets = selection.targets();
-    assert_eq!(targets.len(), 9);
+    assert_eq!(targets.len(), 11);
     assert_eq!(targets.len(), targets.iter().collect::<BTreeSet<_>>().len());
     assert_eq!(
         selection.shards(),
@@ -111,6 +113,137 @@ fn combined_selection_is_deterministic_and_each_target_is_unique() {
             "substrate_integrity"
         ])
     );
+}
+
+#[test]
+fn workflow_repairs_select_their_executable_regressions() {
+    for changed in [
+        ".github/actions/validation-checkout/action.yml",
+        ".github/workflows/decapod-validate.yml",
+        "tests/ci_checkout_policy.rs",
+    ] {
+        assert_eq!(plan(&paths(&[changed])).targets(), ["ci_checkout_policy"]);
+    }
+    for changed in [
+        ".github/workflows/release.yml",
+        ".github/scripts/release-plan.sh",
+        "tests/release_workflow_policy.rs",
+    ] {
+        assert_eq!(
+            plan(&paths(&[changed])).targets(),
+            ["release_workflow_policy"]
+        );
+    }
+}
+
+fn workflow_job<'a>(workflow: &'a str, name: &str) -> &'a str {
+    let marker = format!("\n  {name}:\n");
+    let start = workflow.find(&marker).expect("job exists") + 1;
+    let rest = &workflow[start..];
+    let mut end = rest.lines().next().unwrap().len() + 1;
+    for line in rest.lines().skip(1) {
+        if line.starts_with("  ") && !line.starts_with("   ") && line.ends_with(':') {
+            break;
+        }
+        end += line.len() + 1;
+    }
+    &rest[..end.min(rest.len())]
+}
+
+#[test]
+fn static_workflow_matrix_covers_every_selected_shard_exactly_once() {
+    let workflow = include_str!("../.github/workflows/ci.yml");
+    let worker = workflow_job(workflow, "test-integration");
+    let matrix = worker
+        .split_once("      matrix:\n        shard:\n")
+        .expect("static shard matrix, compatible with workflow concurrency")
+        .1
+        .split_once("    steps:\n")
+        .unwrap()
+        .0;
+    let scheduled: Vec<_> = matrix
+        .lines()
+        .map(|line| line.strip_prefix("          - ").expect("literal shard"))
+        .collect();
+    let all = plan(&paths(&[
+        "tests/gatling.rs",
+        "src/main.rs",
+        "Cargo.toml",
+        ".github/workflows/ci.yml",
+    ]))
+    .shards();
+    assert_eq!(scheduled, all);
+    assert_eq!(
+        scheduled.len(),
+        scheduled.iter().collect::<BTreeSet<_>>().len()
+    );
+    assert!(!worker.contains("fromJSON(needs.integration-prepare.outputs.matrix)"));
+    assert!(workflow.contains("\nconcurrency:\n"));
+    assert!(workflow.contains("  cancel-in-progress: true\n"));
+
+    // Every combination of existing selectors must be covered, including the
+    // empty plan. Static scheduling must never introduce a second partition.
+    let selectors = [
+        "tests/gatling.rs",
+        "src/main.rs",
+        "Cargo.toml",
+        ".github/workflows/ci.yml",
+    ];
+    for mask in 0..1 << selectors.len() {
+        let changed: Vec<_> = selectors
+            .iter()
+            .enumerate()
+            .filter(|(index, _)| mask & (1 << index) != 0)
+            .map(|(_, path)| path.to_string())
+            .collect();
+        for shard in plan(&changed).shards() {
+            assert!(
+                scheduled.contains(&shard.as_str()),
+                "unscheduled shard: {shard}"
+            );
+        }
+    }
+}
+
+#[test]
+fn static_workers_preserve_selection_shared_build_and_five_minute_test_budget() {
+    let workflow = include_str!("../.github/workflows/ci.yml");
+    let prepare = workflow_job(workflow, "integration-prepare");
+    let worker = workflow_job(workflow, "test-integration");
+    assert!(prepare.contains("shards: ${{ steps.plan.outputs.shards }}"));
+    assert!(prepare.contains("jq -c '[.include[].shard]'"));
+    assert!(prepare.contains("jq '.include | length'"));
+    assert_eq!(
+        prepare
+            .matches("\"$RUNNER_TEMP/integration-shards\" prepare")
+            .count(),
+        1
+    );
+    assert!(prepare.contains("uses: actions/upload-artifact@v4"));
+    assert!(prepare.contains("path: target/integration-artifacts/integration-tests.tar"));
+    assert!(worker.contains("needs: [release-metadata, integration-prepare]"));
+    assert!(worker.contains("needs.integration-prepare.outputs.count != '0'"));
+    assert!(worker.contains("needs.release-metadata.outputs.release_only != 'true'"));
+    let selection =
+        "        if: contains(fromJSON(needs.integration-prepare.outputs.shards), matrix.shard)\n";
+    for step in [
+        "Download shared integration tests",
+        "Restore integration executables and runfiles",
+        "Run selective tests",
+    ] {
+        assert!(
+            worker.contains(&format!("      - name: {step}\n{selection}")),
+            "{step}"
+        );
+    }
+    assert_eq!(worker.matches(selection).count(), 3);
+    assert!(worker.contains(&format!("{selection}        timeout-minutes: 5\n")));
+    assert!(worker.contains("\"$RUNNER_TEMP/integration-tests/integration-shards\" run"));
+    assert!(worker.contains("--shard \"${{ matrix.shard }}\""));
+    assert!(!worker.contains("bazelisk"));
+    assert!(!worker.contains("cargo "));
+    assert!(!worker.contains("rustc "));
+    assert!(!worker.contains("actions/checkout"));
 }
 
 #[test]

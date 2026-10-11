@@ -120,7 +120,10 @@ jobs:
     # normal PR from acquiring a release-plan check it cannot publish.
     if: (github.event_name == 'pull_request' && startsWith(github.head_ref, 'release-plz-')) || (github.event_name == 'push' && github.ref != 'refs/heads/master')
     outputs:
-      val: ${{ steps.plan.outputs.manifest }}
+      # Buildkite job outputs are limited to 1 KiB each. Keep the full manifest
+      # in artifacts-plan-dist-manifest and export only scheduling decisions.
+      has-local-artifacts: ${{ steps.plan.outputs.has_local_artifacts }}
+      pr-upload: ${{ steps.plan.outputs.pr_upload }}
       tag: ${{ steps.plan.outputs.tag }}
       tag-flag: ${{ steps.plan.outputs.tag_flag }}
       publishing: ${{ steps.plan.outputs.publishing }}
@@ -276,7 +279,7 @@ jobs:
     # Let the initial task tell us to not run (currently very blunt)
     needs:
       - plan
-    if: ${{ fromJson(needs.plan.outputs.val).ci.github.artifacts_matrix.include != null && (needs.plan.outputs.publishing == 'true' || fromJson(needs.plan.outputs.val).ci.github.pr_run_mode == 'upload') }}
+    if: ${{ needs.plan.outputs.has-local-artifacts == 'true' && (needs.plan.outputs.publishing == 'true' || needs.plan.outputs.pr-upload == 'true') }}
     strategy:
       fail-fast: false
       # Buildkite validates workflow matrices before applying the job-level
@@ -417,13 +420,11 @@ jobs:
       - plan
       - build-local-artifacts
       - build-global-artifacts
-    # Only run if we're "publishing", and only if local and global didn't fail (skipped is fine)
-    if: ${{ always() && needs.plan.outputs.publishing == 'true' && (needs.build-global-artifacts.result == 'skipped' || needs.build-global-artifacts.result == 'success') && (needs.build-local-artifacts.result == 'skipped' || needs.build-local-artifacts.result == 'success') }}
+    # Require a successful publishing plan; local/global may be skipped, but must not fail.
+    if: ${{ always() && needs.plan.result == 'success' && needs.plan.outputs.publishing == 'true' && (needs.build-global-artifacts.result == 'skipped' || needs.build-global-artifacts.result == 'success') && (needs.build-local-artifacts.result == 'skipped' || needs.build-local-artifacts.result == 'success') }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     runs-on: "ubuntu-latest"
-    outputs:
-      val: ${{ steps.host.outputs.manifest }}
     steps:
       - uses: actions/checkout@v4
         with:

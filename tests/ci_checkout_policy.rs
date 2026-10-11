@@ -1,0 +1,209 @@
+//! CI storage isolation must preserve the source checkout and exact Git proof.
+use std::fs;
+use std::path::{Path, PathBuf};
+use std::process::Command;
+use std::sync::atomic::{AtomicUsize, Ordering};
+
+const ACTION: &str = include_str!("../.github/actions/validation-checkout/action.yml");
+const CI: &str = include_str!("../.github/workflows/ci.yml");
+const VALIDATE: &str = include_str!("../.github/workflows/decapod-validate.yml");
+static NEXT: AtomicUsize = AtomicUsize::new(0);
+
+struct Fixture(PathBuf);
+impl Fixture {
+    fn new() -> Self {
+        let path = std::env::temp_dir().join(format!(
+            "decapod-ci-checkout-{}-{} with spaces",
+            std::process::id(),
+            NEXT.fetch_add(1, Ordering::Relaxed)
+        ));
+        fs::create_dir(&path).unwrap();
+        Self(path)
+    }
+}
+impl Drop for Fixture {
+    fn drop(&mut self) {
+        fs::remove_dir_all(&self.0).unwrap();
+    }
+}
+
+fn git(repo: &Path, args: &[&str]) -> String {
+    let out = Command::new("git")
+        .args(args)
+        .current_dir(repo)
+        .output()
+        .unwrap();
+    assert!(out.status.success(), "git {args:?}: {:?}", out);
+    String::from_utf8(out.stdout).unwrap().trim().to_owned()
+}
+
+fn script() -> String {
+    ACTION
+        .split_once("      run: |\n")
+        .unwrap()
+        .1
+        .lines()
+        .map(|line| line.strip_prefix("        ").unwrap_or(line))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+#[cfg(unix)]
+#[test]
+fn private_clone_preserves_exact_commit_and_does_not_copy_or_chmod_existing_state() {
+    use std::os::unix::fs::PermissionsExt;
+    let fixture = Fixture::new();
+    let root = &fixture.0;
+    git(root, &["init", "-q", "--initial-branch=master"]);
+    git(
+        root,
+        &[
+            "remote",
+            "add",
+            "origin",
+            "https://example.invalid/repository.git",
+        ],
+    );
+    fs::create_dir_all(root.join(".decapod/managed/specs")).unwrap();
+    fs::write(root.join(".decapod/config.toml"), "[repo]\n").unwrap();
+    fs::write(
+        root.join(".decapod/managed/specs/INTENT.md"),
+        "Authored proof\n",
+    )
+    .unwrap();
+    fs::write(root.join(".gitignore"), ".decapod/data/\n").unwrap();
+    git(root, &["add", "."]);
+    git(
+        root,
+        &[
+            "-c",
+            "user.name=CI Fixture",
+            "-c",
+            "user.email=ci@example.invalid",
+            "commit",
+            "-qm",
+            "fixture",
+        ],
+    );
+    fs::create_dir_all(root.join(".decapod/data")).unwrap();
+    fs::write(
+        root.join(".decapod/data/local-state"),
+        "untouched runtime state",
+    )
+    .unwrap();
+    fs::set_permissions(root.join(".decapod"), fs::Permissions::from_mode(0o777)).unwrap();
+    let head = git(root, &["rev-parse", "HEAD"]);
+    let tree = git(root, &["rev-parse", "HEAD^{tree}"]);
+    let output_file = root.join("action-output");
+    let out = Command::new("bash")
+        .args(["-c", &format!("umask 000; {}", script())])
+        .current_dir(root)
+        .env("GITHUB_OUTPUT", &output_file)
+        .output()
+        .unwrap();
+    assert!(out.status.success(), "{out:?}");
+    let output = fs::read_to_string(output_file).unwrap();
+    let path = output.trim().strip_prefix("path=").unwrap();
+    assert!(path.starts_with(".ci-validation."));
+    assert!(!path.contains('/'));
+    let clone = root.join(path);
+    assert_eq!(git(&clone, &["rev-parse", "HEAD"]), head);
+    assert_eq!(git(&clone, &["rev-parse", "HEAD^{tree}"]), tree);
+    assert_eq!(
+        git(&clone, &["remote", "get-url", "origin"]),
+        "https://example.invalid/repository.git"
+    );
+    for relative in [
+        "",
+        ".git",
+        ".decapod",
+        ".decapod/managed",
+        ".decapod/managed/specs",
+    ] {
+        assert_eq!(
+            fs::metadata(clone.join(relative))
+                .unwrap()
+                .permissions()
+                .mode()
+                & 0o077,
+            0,
+            "{relative}"
+        );
+    }
+    assert!(!clone.join(".decapod/data").exists());
+    assert_eq!(
+        fs::read_to_string(root.join(".decapod/data/local-state")).unwrap(),
+        "untouched runtime state"
+    );
+    assert_eq!(
+        fs::metadata(root.join(".decapod"))
+            .unwrap()
+            .permissions()
+            .mode()
+            & 0o777,
+        0o777
+    );
+    assert!(!clone.join(".git/objects/info/alternates").exists());
+}
+
+#[test]
+fn action_does_not_relax_storage_policy_or_reuse_existing_state() {
+    assert!(ACTION.contains("umask 077"));
+    assert!(ACTION.contains("mktemp -d"));
+    assert!(ACTION.contains("--no-local --no-hardlinks"));
+    assert!(
+        !script()
+            .lines()
+            .any(|line| line.trim_start().starts_with("chmod "))
+    );
+    assert!(!ACTION.contains("DECAPOD_STORAGE_SHARED_GROUP"));
+    assert!(!ACTION.contains("DECAPOD_VALIDATE_SKIP"));
+}
+
+#[test]
+fn all_direct_governance_steps_use_private_checkout() {
+    for (workflow, step) in [
+        (VALIDATE, "Build Decapod from checkout"),
+        (VALIDATE, "Start validation trajectory"),
+        (VALIDATE, "Decapod Validate"),
+        (VALIDATE, "Ensure no spec or entrypoint drift"),
+        (
+            CI,
+            "Verify normalized governance and every authored checkpoint",
+        ),
+        (CI, "Start validation trajectory"),
+        (CI, "Initialize Decapod"),
+        (CI, "Acquire Decapod session"),
+        (CI, "Run validation harness"),
+        (CI, "Ensure no spec or entrypoint drift"),
+        (CI, "Run watcher"),
+        (CI, "Check health summary"),
+    ] {
+        assert!(workflow.contains(&format!("      - name: {step}\n        working-directory: ${{{{ steps.validation-checkout.outputs.path }}}}\n")), "{step}");
+    }
+    assert_eq!(
+        CI.matches("uses: ./.github/actions/validation-checkout")
+            .count(),
+        2
+    );
+    assert_eq!(
+        VALIDATE
+            .matches("uses: ./.github/actions/validation-checkout")
+            .count(),
+        1
+    );
+    assert!(CI.contains(
+        "\"$GITHUB_WORKSPACE/target/debug/decapod\" govern artifacts verify-checkpoints"
+    ));
+    assert!(!CI.contains("path: ${{ steps.validation-checkout.outputs.path }}"));
+}
+
+#[test]
+fn source_ci_requests_only_read_access_to_repository_contents() {
+    let permissions = CI.split_once("permissions:\n").unwrap().1;
+    let permissions = permissions.split_once("\n\n").unwrap().0;
+    assert!(permissions.contains("  contents: read"));
+    assert!(!permissions.contains("contents: write"));
+    assert!(!CI.contains("git push"));
+    assert!(!CI.contains("gh release"));
+}

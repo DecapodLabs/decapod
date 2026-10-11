@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "94eb4a1df0d0cd436c60874284375231a106b2e1",
+    "accepted_commit": "25558e0e8e9b6a25a53e6168566226edad01e161",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -12,6 +12,11 @@
       "review_policy": "Reviewers must check that every claim remains falsifiable, evidence status is bounded by observed evidence, proof references resolve, and changes preserve schema compatibility or explicitly version it."
     },
     "unresolved": {
+      "claim:bounded-integration-matrix": {
+        "falsifier": "A selected target or test is omitted/duplicated, compilation repeats inside shard runs, or any successful selective-test step takes 300 seconds or more.",
+        "statement": "PR integration test execution uses one shared build and complete non-overlapping Gatling shards; every selective-test step finishes in under five minutes.",
+        "status": "open"
+      },
       "claim:build-layout-compatibility:question:bazel-root-marker-policy": {
         "decision_impact": "Determines whether the root lockfile remains an intentional exception to the canonical build configuration directory.",
         "id": "bazel-root-marker-policy",
@@ -57,279 +62,152 @@
     }
   },
   "change": {
-    "id": "change_01M4NN7KHY3W4MR4N09R5MHH7Q",
-    "base_commit": "94eb4a1df0d0cd436c60874284375231a106b2e1",
+    "id": "change_01M4PA9B10M71GJ4NGDHGAVJWT",
+    "base_commit": "25558e0e8e9b6a25a53e6168566226edad01e161",
     "target_base": "origin/master"
   },
   "claims": {
-    "bounded-integration-matrix": {
-      "statement": "PR integration test execution uses one shared build and complete non-overlapping Gatling shards; every selective-test step finishes in under five minutes.",
-      "falsifier": "A selected target or test is omitted/duplicated, compilation repeats inside shard runs, or any successful selective-test step takes 300 seconds or more.",
-      "status": "open"
-    },
-    "host-gatling": {
-      "statement": "Host Gatling claims ownership without optional container preparation; unfinished CLI stages remain visible in aggregate-timeout diagnostics.",
-      "falsifier": "A host fixture starts container preparation or command-stage diagnostics are hidden when the full target times out.",
+    "buildkite-compatibility": {
+      "statement": "CI scheduling, private checkout bootstrap and bounded release outputs preserve selected test coverage and satisfy the observed Buildkite syntax and output contracts",
+      "falsifier": "Hosted compilation fails on these repaired jobs, policy regressions fail, source state changes, or selected shards are omitted",
       "status": "supported",
       "proof_refs": [
-        "tests/gatling.rs: full four-thread suite49passed1ignored120.76sec"
-      ]
-    },
-    "release-artifacts": {
-      "statement": "Pinned release artifact planning selects only decapod while tooling feature gates and all four target platforms remain intact.",
-      "falsifier": "A planned archive expects a maintenance executable, a platform disappears, or package version is duplicated in distribution configuration.",
-      "status": "supported",
-      "proof_refs": [
-        "cargo-dist0.22.1 four-target plan and Cargo-only0.107.4 version fixture pass",
-        "tests/release_distribution_policy.rs"
-      ]
-    },
-    "release-classification": {
-      "statement": "Only root package version and changelog release deltas may avoid redundant source checks, and only exact expected post-validation projections may drift.",
-      "falsifier": "A dependency, source, workflow, template, authored prose, config, or non-version manifest change is accepted as version-only or expected projection drift.",
-      "status": "supported",
-      "proof_refs": [
-        "Exact #1391 tree94eb4a1d replay: validate191pass0fail and projection verifier pass",
-        "assets/tools/release_projection_drift_tests.rs",
-        "tests/release_metadata_policy.rs"
+        "official buildkite-gha v0.102.2 hosted-profile job admission, auth/environment runtime pending",
+        "tests/ci_checkout_policy.rs:4 passed",
+        "tests/integration_sharding_policy.rs:17 passed",
+        "tests/release_metadata_policy.rs:15 passed",
+        "tests/release_workflow_policy.rs:19 passed"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "postmerge-actions-repair",
-      "summary": "Isolate host Gatling claims, strictly classify slim release metadata and exact projection drift, and package only the runtime executable",
-      "input_digest": "sha256:9f4912b300819b9260487ae902973e247f72606f4244acf36e0952adbef9bca7",
+      "id": "buildkite-source-20261011",
+      "summary": "Repair observed Buildkite workflow contracts with tested static sharding, fresh private validation clone, bounded release outputs and actual ARM emulation lane",
+      "input_digest": "sha256:e7573be528926393982259d079bbae7eb1210b225ad93295cb58a13f93f64cc3",
       "proof_refs": [
-        "Exact1391validate-replay and pinned four-target artifact/version plans passed",
-        "Gatling49passed1ignored120.76sec",
-        "Release classifier14, projection10, distribution3 regressions passed"
-      ]
-    },
-    {
-      "id": "borrowed-path-and-packaging-proof",
-      "summary": "Use borrowed fixture paths after clippy review and record verified native product-only archive plus final exact gate regressions",
-      "input_digest": "sha256:832d958104bedf820f2013b490ba87f41d67a7d1754712856c705955afb8be40",
-      "proof_refs": [
-        "Native cargo-dist x86_64 archive and checksum verified",
-        "cargo clippy --all-targets --all-features: warnings denied pass"
-      ]
-    },
-    {
-      "id": "remote-source-validation",
-      "summary": "Bind genuine current-source validation to the exact remote source ancestor",
-      "input_digest": "sha256:f037396c73c28c2a3048e20cf37c5d5925fd3ebeceed0706f8a1cb99e10b7949",
-      "proof_refs": [
-        "Final Gatling49passed1ignored135.87sec; all-target/all-feature clippy passed",
-        "decapod0.107.3 validate202passed0failed at0f779579ed90342a5f4a1929600846d87003f5b5"
-      ]
-    },
-    {
-      "id": "serial-fixture-broker-idle",
-      "summary": "Retain broker mutation coverage with a one-second idle window for serial Gatling fixture commands and preserve exact CI timeout evidence",
-      "input_digest": "sha256:b0ab4216bf1e7fe98e1b1c5b77936d4f33440e68a601cb10aef7faec2fbf5090",
-      "proof_refs": [
-        "Actions114496959817 command-stage timing",
-        "Host environment regression and all-target/all-feature clippy passed"
-      ]
-    },
-    {
-      "id": "broker-idle-remote-proof",
-      "summary": "Bind the serial Gatling fixture correction to genuine validation of remote source 668e8a18",
-      "input_digest": "sha256:34eed77076a8f6ce6eab44d109fc9f7d9efb9e8ec70dd7b3857ab7b2778b7b94",
-      "proof_refs": [
-        "decapod validate: 203 passed, 0 failed; remote ancestor 668e8a1860d13ed35cf4d5e9a9e4da5dd6fef447"
-      ]
-    },
-    {
-      "id": "bazel-release-fixture-input",
-      "summary": "Embed the release routing workflow as a declared hermetic test input; preserve all assertions",
-      "input_digest": "sha256:625b05f43f0410290cfb3d56e7e55f9c2d9330d75dc220829d112070b8671f61",
-      "proof_refs": [
-        "/tmp/postmerge-bazel-release-fixtures-final.log: 3 targets passed; /tmp/postmerge-bazel-cargo-tests.log: 17 passed; /tmp/postmerge-bazel-clippy.log: passed"
-      ]
-    },
-    {
-      "id": "bazel-release-fixture-remote-proof",
-      "summary": "Bind sandboxed release policy fixture repair to remote source validation",
-      "input_digest": "sha256:0260b0edbafb7424f116ac15401ce697756653532be26c035349a34a3beb5153",
-      "proof_refs": [
-        "decapod validate: 203 passed,0 failed; remote source c6ce80073c0bf07e638d0e69b1290b0555eb9eca"
-      ]
-    },
-    {
-      "id": "integration-shared-build-matrix",
-      "summary": "Build integration tests once and execute complete bounded parallel shards",
-      "input_digest": "sha256:bf09e2c5c638bc489a0b58e52cb35924cfa9c28d8b5e1e716b1fd971c4941522",
-      "proof_refs": [
-        "/tmp/integration-relocation.HxqiVJ/summary.json:130passed,1ignored; all9shardsunder160s;31Cargo regressions and all-feature clippy passed"
-      ]
-    },
-    {
-      "id": "integration-matrix-remote-proof",
-      "summary": "Bind shared-build matrix to genuine remote-source validation",
-      "input_digest": "sha256:3ff5c653bc189c30b7744a03761dec90373072201e48217d58661070c6277f31",
-      "proof_refs": [
-        "decapod validate:203passed,0failed; remote ancestor77d5aefadf3469b01c36aab2550f460f4e232a78; local130passed,1ignored across9shards each below160s"
+        "Bazel6 policy targets passed; focused Clippy and format passed; hosted importer admits repaired jobs; runtime token and environment limits remain explicit"
       ]
     }
   ],
   "intents": {
-    "intent:postmerge-integration-matrix": {
+    "intent:buildkite-repair-20261011": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Preserve all coverage, validate, release-only classification, production behavior and cleanup ownership"
+        "No deployment, release publication, merge or security grants"
       ],
       "constraints": [
-        "GitHub Actions integration build/matrix plus Rust planner/runner and regression tests"
+        ".github/workflows,.github/scripts,assets/tools,tests/release_workflow_policy.rs,.decapod/managed/specs"
       ],
       "created_sequence": 1,
-      "id": "intent:postmerge-integration-matrix",
+      "id": "intent:buildkite-repair-20261011",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Fix post-merge Actions and keep every integration selective test step below five minutes",
-      "refined_intent": "Build integration executables once and run complete coverage-checked target and Gatling shards in parallel through the existing lifecycle supervisor",
+      "raw_intent": "Let us get all red Buildkite builds to green",
+      "refined_intent": "Repair observed current Buildkite workflow compatibility failures without reducing proof coverage; surface external authorization blockers honestly",
       "status": "refined",
       "updated_sequence": 3
-    }
-  },
-  "epochs": {
-    "ve_96402f6f5678cd13": {
-      "constitution_hash": "sha256:7953014dee74c0c8f87f88f01e70753b2921ffebacd921897288d469906e7ee8",
-      "constitution_version": "embedded-docs@0.107.3",
-      "epoch_id": "ve_96402f6f5678cd13",
-      "evaluator_identity": "decapod-validate@0.107.3",
-      "evaluator_set_hash": "sha256:9a0bc9edacbf0596a1e71e05e445923c8dce800b59bd6d9d3854121cf1712c57",
-      "generated_specs_fingerprint": "37766aacd5516c09a68a0d9090f6ee0609ef93501024f3ffda96bcebdb3165c1",
-      "generated_specs_manifest_hash": "sha256:5788fd6e81a0e0f72230f2eae4979d276212ce32a3b819deb5c93614c5c79866",
-      "material_hashes": {
-        "constitution:core/DECAPOD": "sha256:7953014dee74c0c8f87f88f01e70753b2921ffebacd921897288d469906e7ee8",
-        "generated_spec:.decapod/managed/specs/ARCHITECTURE.md": "sha256:bff98e620782b064862b729fe9bf0151ba85ea73f197d195dc2eb030702e2999",
-        "generated_spec:.decapod/managed/specs/INTENT.md": "sha256:eb5ed1ad3d13203ae1a6db801b3500f11e0b28315d781cad193118241b7539e7",
-        "generated_spec:.decapod/managed/specs/INTERFACES.md": "sha256:70c315a57857f1466f384c9adf82eb39e4701b9cd3c73711098c6776b32e86c4",
-        "generated_spec:.decapod/managed/specs/OPERATIONS.md": "sha256:aff6909cc5586d9f6c76971138accec081457ce35b6e517d9a739635b8179a29",
-        "generated_spec:.decapod/managed/specs/README.md": "sha256:b48e31c02ffbf62a7dca0f098b19133d345ddfc13ed90a0af30dafdef0663390",
-        "generated_spec:.decapod/managed/specs/SECURITY.md": "sha256:ffb8c3a4cb4c75390a00dbbafa09a74e460bb3c55dcfdce9fe0494e1ba703f65",
-        "generated_spec:.decapod/managed/specs/SEMANTICS.md": "sha256:b415e63a4a7e050b5fd66eb205fc8eb55d01fb3cd7748e3ba015c29c7acaa99c",
-        "generated_spec:.decapod/managed/specs/VALIDATION.md": "sha256:dc3219d967be319e838badef0ea54d00507147eae0a75266f59e880ab8abcdce",
-        "generated_specs_fingerprint": "37766aacd5516c09a68a0d9090f6ee0609ef93501024f3ffda96bcebdb3165c1",
-        "generated_specs_manifest": "sha256:5788fd6e81a0e0f72230f2eae4979d276212ce32a3b819deb5c93614c5c79866",
-        "governance_context": "sha256:7d61e401bf9ff6c211da728b8967f91700284fb30ff6e4b05bd1fcc3ba5782c8",
-        "governance_material:.decapod/managed/Dockerfile.decapod": "sha256:3230de3c5f2531e046edf8a6b44b8e7784d0d850918d381a64bb99119062e4ef",
-        "governance_material:AGENTS.md": "sha256:704443b735a86c8dd51d1f940048d97f37c087f50069031e04faa133f4c648d5",
-        "governance_material:CLAUDE.md": "sha256:85de80a862d71d9108892befc9572a402b64953c29804be5f52909c61d534c00",
-        "governance_material:CODEX.md": "sha256:00af172fca850ae795c5ac9e18e93d89ee1726b03419de44fed6780b4dada89a",
-        "governance_material:GEMINI.md": "sha256:dbc4cd74c4056c215176cd78f21e8bd4319a43e3478d77c54b6541e1ed92b8da",
-        "governance_section:claims": "sha256:dc30880cf8ca34f5f59fefc2bfd492e9ba8a8afd8d590f84bcd0f157304e92af",
-        "governance_section:plan": "sha256:8e62d75349280957e712c0ac757a939e42180fb3df2a02429b8321efe6215e3b",
-        "living_spec_material:.decapod/managed/specs/ARCHITECTURE.md": "sha256:67644892351700c9c9936c3c5bc74087c16564c2b2a8c9a98ae7555648f6736c",
-        "living_spec_material:.decapod/managed/specs/INTENT.md": "sha256:5e72c6e22fb0b8a6e4ad994b1a365ca8a8e706364434476942a9d413e99a43e1",
-        "living_spec_material:.decapod/managed/specs/INTERFACES.md": "sha256:db2f24acec8e9a173adab4d4660f2d90353431f2a00c28c59c5f8b1cacb8845d",
-        "living_spec_material:.decapod/managed/specs/OPERATIONS.md": "sha256:9679742001cf3c23ef118d799c7930d7aad3f173d514036c37c9f9bb21894413",
-        "living_spec_material:.decapod/managed/specs/README.md": "sha256:6c4338fb8446fa04e2d7c823ff3e33c2bd4949bf6018392045993401131f690a",
-        "living_spec_material:.decapod/managed/specs/SECURITY.md": "sha256:22affdad8f47fc107d0e424cd99eb5daeaad3db383eb8abf7600fdf5ec653bf7",
-        "living_spec_material:.decapod/managed/specs/SEMANTICS.md": "sha256:27cf430b3c93ff95ff84a95bf685a5682177ca1ca5a810648491f23278953d76",
-        "living_spec_material:.decapod/managed/specs/VALIDATION.md": "sha256:044356b43527ee381e4a30b864b9ab8dfc2cac45748a545ee0d4516dc7f24189",
-        "proof_rubric": "sha256:99e8ef25629da391e9b479db9fff52b82f340224f7a69d8a88d2992ae8e90466",
-        "validation_profile": "sha256:37a8eec1ce19687d132fe29051dca629d164e2c4958ba141d5f4133a33f0688f"
-      },
-      "proof_rubric": "decapod-validate/current-proof-v1",
-      "proof_rubric_hash": "sha256:99e8ef25629da391e9b479db9fff52b82f340224f7a69d8a88d2992ae8e90466",
-      "schema_version": "1.0.0",
-      "validation_profile": "default",
-      "validation_profile_hash": "sha256:37a8eec1ce19687d132fe29051dca629d164e2c4958ba141d5f4133a33f0688f"
     }
   },
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 40,
+        "file_touch_budget": null,
         "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Repair post-merge host test timeouts, version-only release routing/projection validation and release packaging, and keep each PR integration selective-test step below five minutes through complete parallel coverage with one shared build.",
+      "intent": "Repair Buildkite workflow scheduling and outputs, CI checkout preparation, and focused regression tests. Authorized file scope: .github/workflows, .github/scripts, assets/tools, tests, .config/build/decapod.BUILD.bzl and authored .decapod/managed/specs; generated governance and release pins remain CLI-owned. Keep true ARM/test coverage, release conventions and shared database/container behavior. Publish a draft repair PR only, no deploy, merge, or security grant changes.",
       "phases": [],
       "proof_hooks": [
-        "Exact-head Actions: every integration selective-test matrix step succeeds in under 300 seconds, with complete no-overlap Gatling inventory and all previously selected integration targets retained."
+        "CI/release workflow regression tests",
+        "decapod validate",
+        "exact-commit GitHub and Buildkite checks"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Specify one shared integration build, relocated runfiles and complete parallel Gatling coverage.",
-          "reviewed_code_fingerprint": "37766aacd5516c09a68a0d9090f6ee0609ef93501024f3ffda96bcebdb3165c1",
-          "spec_material_hash": "67644892351700c9c9936c3c5bc74087c16564c2b2a8c9a98ae7555648f6736c"
+          "reason": "Reviewed current authored interoperability contract and changes: static exhaustive scheduling, exact private CI source clone, bounded manifest decisions, least-privilege source CI and direct user-mode ARM execution without new security grants.",
+          "reviewed_code_fingerprint": "bac6e5839628cf023618a58809904f047d79bc1a3c48948018d79b5eb217e1b0",
+          "spec_material_hash": "067286adac676ae65f24b3d75d16bf74bf55ced059a54e91d906164764cb66ef"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document the repository Rust plan/prepare/run interface and fail-closed shard inventory contract.",
-          "reviewed_code_fingerprint": "37766aacd5516c09a68a0d9090f6ee0609ef93501024f3ffda96bcebdb3165c1",
-          "spec_material_hash": "db2f24acec8e9a173adab4d4660f2d90353431f2a00c28c59c5f8b1cacb8845d"
+          "reason": "Reviewed current authored interoperability contract and changes: static exhaustive scheduling, exact private CI source clone, bounded manifest decisions, least-privilege source CI and direct user-mode ARM execution without new security grants.",
+          "reviewed_code_fingerprint": "bac6e5839628cf023618a58809904f047d79bc1a3c48948018d79b5eb217e1b0",
+          "spec_material_hash": "dbc2c41ea2a503adf4a311d62ee14b4e317615f0b6d7934047037da95a6255cd"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Document current-workflow artifact custody and retention of supervisor-owned process groups and scratch.",
-          "reviewed_code_fingerprint": "37766aacd5516c09a68a0d9090f6ee0609ef93501024f3ffda96bcebdb3165c1",
-          "spec_material_hash": "22affdad8f47fc107d0e424cd99eb5daeaad3db383eb8abf7600fdf5ec653bf7"
+          "reason": "Reviewed current authored interoperability contract and changes: static exhaustive scheduling, exact private CI source clone, bounded manifest decisions, least-privilege source CI and direct user-mode ARM execution without new security grants.",
+          "reviewed_code_fingerprint": "bac6e5839628cf023618a58809904f047d79bc1a3c48948018d79b5eb217e1b0",
+          "spec_material_hash": "104f8c7ff33a76536830670971641ef8ef8aa86ce7f9390ec234291c81ed3b82"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [
-        "No release, merge, force-push, container isolation weakening, or unrelated infrastructure changes"
+        "Do not change external app/security permissions or retry publishing/deployment without action-time user approval"
       ],
-      "title": "Repair post-merge Actions failures",
+      "title": "Repair current Buildkite workflow failures",
       "todo_ids": [
-        "bugs_01m4nn6bx9f2s2td"
+        "cicd_01m4pa8bxxpr5gve"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791740985Z"
+      "updated_at": "1791751141Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Preserve all coverage, validate, release-only classification, production behavior and cleanup ownership"
+        "No deployment, release publication, merge or security grants"
       ],
-      "artifact_hash": "sha256:4d25a6bac9570d1d94c548b37bd0917bd32a5d7dd4bfdf7e270df25bb04610ec",
+      "artifact_hash": "sha256:c43c0f7f840c501ca0a5b24e5a0d6da22b9e1dae1b3535ae0cd4843649eb98bb",
+      "blockers": [
+        "Live Release and Docs publishing jobs reject GitHub workflow token requests; private settings/grants unavailable and no security changes or publish reruns authorized"
+      ],
       "checks": [
         {
-          "name": "all_target_all_feature_clippy",
+          "name": "bazel-six-policy-targets",
           "status": "passed"
         },
         {
-          "name": "baseline_full_ci",
+          "name": "decapod-validate-importer",
           "status": "passed"
         },
         {
-          "name": "baseline_integration_step_under_300s",
-          "status": "failed"
-        },
-        {
-          "name": "cargo_matrix_and_release_tests",
+          "name": "focused-clippy",
           "status": "passed"
         },
         {
-          "name": "complete_gatling_partition",
+          "name": "format",
           "status": "passed"
         },
         {
-          "name": "decapod validate",
+          "name": "private-checkout-policy",
           "status": "passed"
         },
         {
-          "name": "formatting",
+          "name": "release-distribution-policy",
           "status": "passed"
         },
         {
-          "name": "local_shards_under_300s",
+          "name": "release-importer",
+          "status": "partial"
+        },
+        {
+          "name": "release-workflow-policy",
           "status": "passed"
         },
         {
-          "name": "relocated_integration_artifact",
+          "name": "source-ci-importer",
+          "status": "partial"
+        },
+        {
+          "name": "static-integration-policy",
           "status": "passed"
         }
       ],
@@ -338,34 +216,34 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:postmerge-integration-matrix",
+            "intent_id": "intent:buildkite-repair-20261011",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:postmerge-integration-matrix",
+            "intent_id": "intent:buildkite-repair-20261011",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:postmerge-integration-matrix",
+            "detail": "trajectory:buildkite-repair-20261011",
             "event_id": "event:4",
-            "intent_id": "intent:postmerge-integration-matrix",
+            "intent_id": "intent:buildkite-repair-20261011",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:postmerge-integration-matrix",
+            "detail": "trajectory:buildkite-repair-20261011",
             "event_id": "event:5",
-            "intent_id": "intent:postmerge-integration-matrix",
+            "intent_id": "intent:buildkite-repair-20261011",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:postmerge-integration-matrix",
+            "detail": "trajectory:buildkite-repair-20261011",
             "event_id": "event:6",
-            "intent_id": "intent:postmerge-integration-matrix",
+            "intent_id": "intent:buildkite-repair-20261011",
             "kind": "trajectory_step_recorded",
             "sequence": 6
           }
@@ -374,63 +252,74 @@
         "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
-          "postmerge-integration-matrix": {
+          "buildkite-repair-20261011": {
             "evidence_only": true,
-            "id": "postmerge-integration-matrix",
-            "intent_id": "intent:postmerge-integration-matrix",
+            "id": "buildkite-repair-20261011",
+            "intent_id": "intent:buildkite-repair-20261011",
             "steps": [
               {
                 "action": "trajectory.record",
-                "command": "CI run38159672346 at0b535cf0: integration Run selective tests17:27:13-17:36:22=549s; Gatling293.1s; all checks succeeded",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "Fresh exact-head shard timing proof remains pending; source suite is retained in four complete disjoint Gatling partitions."
+                  ".github/workflows/ci.yml",
+                  ".github/workflows/release.yml",
+                  ".github/workflows/decapod-validate.yml",
+                  ".github/workflows/docs.yml",
+                  "Buildkite 830 needs-derived matrix/concurrency and ARM runner diagnostics; 832 unsafe checkout modes; 837 oversized manifest output; 833/837 token rejections. Local tests: integration17, checkout3, release19, distribution3 passed. Official importer admits new validation composite; release compile indeterminate only because release environment requires job-scoped Agent API."
                 ],
                 "proof_refs": [
-                  "baseline_full_ci",
-                  "baseline_integration_step_under_300s",
-                  "cargo_matrix_and_release_tests",
-                  "all_target_all_feature_clippy",
-                  "formatting"
+                  "static-integration-policy",
+                  "private-checkout-policy",
+                  "release-workflow-policy",
+                  "release-distribution-policy",
+                  "decapod-validate-importer",
+                  "release-importer"
                 ],
                 "scope": [
-                  "GitHub Actions integration build/matrix plus Rust planner/runner and regression tests"
+                  ".github/workflows,.github/scripts,assets/tools,tests/release_workflow_policy.rs,.decapod/managed/specs"
                 ],
                 "sequence": 4,
+                "tool": "GitHub exact-master check-runs and public Buildkite job logs",
                 "validation_findings": []
               },
               {
                 "action": "trajectory.record",
-                "command": "One Bazel build and portable152MB artifact;9relocated shards run with existing lifecycle supervisor and300s guards",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "130active tests passed plus1pre-existing ignored; Gatling50-name --list inventory exactly equals disjoint union of4shard outcomes. Gatling durations159.925/130.632/127.077/114.394s; spec156.938s; substrate69.945s; release3.885s; contract0.029s; constitution0.228s. Local proof /tmp/integration-relocation.HxqiVJ/summary.json; exact-head CI timings still pending."
+                  ".github/workflows/ci.yml",
+                  ".github/workflows/decapod-validate.yml",
+                  ".github/actions/validation-checkout/action.yml",
+                  ".github/workflows/release.yml",
+                  ".github/scripts/release-plan.sh",
+                  "assets/tools/integration_shards.rs",
+                  "tests/ci_checkout_policy.rs",
+                  "tests/integration_sharding_policy.rs",
+                  "tests/release_workflow_policy.rs",
+                  "tests/release_metadata_policy.rs",
+                  "Official importer admits repaired ARM, all nine integration workers, governance and health jobs. Only offline propodus-live environment requires live Agent API; existing environment gate preserved. Default dirty-worktree validation198pass2fail reports container proof unavailable and commit-often; use genuine checkpointed committed-source validation next, no flags or config changes."
                 ],
                 "proof_refs": [
-                  "relocated_integration_artifact",
-                  "complete_gatling_partition",
-                  "local_shards_under_300s"
+                  "focused-clippy",
+                  "format",
+                  "source-ci-importer"
                 ],
                 "scope": [
-                  "GitHub Actions integration build/matrix plus Rust planner/runner and regression tests"
+                  ".github/workflows,.github/scripts,assets/tools,tests/release_workflow_policy.rs,.decapod/managed/specs"
                 ],
                 "sequence": 5,
                 "validation_findings": []
               },
               {
                 "action": "validation",
-                "command": "decapod validate",
                 "custody_event_id": "event:6",
                 "observations": [
-                  ".decapod/governance.json",
-                  ".decapod/governance.json",
-                  "validation epoch ve_96402f6f5678cd13 completed with zero failures"
+                  "Initial six-target processwrapper-sandbox Bazel test passed, all6 targets executed. Focused Clippy rechecked final test sources with -D warnings. No actual Docker or ARM runtime proof claimed locally."
                 ],
                 "proof_refs": [
-                  "decapod validate"
+                  "bazel-six-policy-targets"
                 ],
                 "scope": [
-                  "GitHub Actions integration build/matrix plus Rust planner/runner and regression tests"
+                  ".github/workflows,.github/scripts,assets/tools,tests/release_workflow_policy.rs,.decapod/managed/specs"
                 ],
                 "sequence": 6,
                 "validation_findings": []
@@ -439,296 +328,47 @@
           }
         }
       },
-      "declared_commands": [
-        "CI run38159672346 at0b535cf0: integration Run selective tests17:27:13-17:36:22=549s; Gatling293.1s; all checks succeeded",
-        "One Bazel build and portable152MB artifact;9relocated shards run with existing lifecycle supervisor and300s guards",
-        "cargo test --locked --test integration_sharding_policy --test release_metadata_policy --test release_distribution_policy:31passed; cargo clippy --locked --all-targets --all-features -- -D warnings; cargo fmt --all -- --check",
-        "decapod validate"
-      ],
-      "destination": "pr",
+      "declared_commands": [],
+      "destination": "Draft repair PR",
       "evidence": [
-        "130active tests passed plus1pre-existing ignored; Gatling50-name --list inventory exactly equals disjoint union of4shard outcomes. Gatling durations159.925/130.632/127.077/114.394s; spec156.938s; substrate69.945s; release3.885s; contract0.029s; constitution0.228s. Local proof /tmp/integration-relocation.HxqiVJ/summary.json; exact-head CI timings still pending.",
-        "Fresh exact-head shard timing proof remains pending; source suite is retained in four complete disjoint Gatling partitions.",
-        "validation epoch ve_96402f6f5678cd13 completed with zero failures"
+        "Buildkite 830 needs-derived matrix/concurrency and ARM runner diagnostics; 832 unsafe checkout modes; 837 oversized manifest output; 833/837 token rejections. Local tests: integration17, checkout3, release19, distribution3 passed. Official importer admits new validation composite; release compile indeterminate only because release environment requires job-scoped Agent API.",
+        "Initial six-target processwrapper-sandbox Bazel test passed, all6 targets executed. Focused Clippy rechecked final test sources with -D warnings. No actual Docker or ARM runtime proof claimed locally.",
+        "Official importer admits repaired ARM, all nine integration workers, governance and health jobs. Only offline propodus-live environment requires live Agent API; existing environment gate preserved. Default dirty-worktree validation198pass2fail reports container proof unavailable and commit-often; use genuine checkpointed committed-source validation next, no flags or config changes."
       ],
-      "inspected_files": [],
-      "intent_id": "intent:postmerge-integration-matrix",
+      "inspected_files": [
+        ".github/workflows/ci.yml",
+        ".github/workflows/decapod-validate.yml",
+        ".github/workflows/docs.yml",
+        ".github/workflows/release.yml"
+      ],
+      "intent_id": "intent:buildkite-repair-20261011",
       "modified_files": [
-        ".decapod/governance.json"
+        ".github/actions/validation-checkout/action.yml",
+        ".github/scripts/release-plan.sh",
+        ".github/workflows/ci.yml",
+        ".github/workflows/decapod-validate.yml",
+        ".github/workflows/release.yml",
+        "assets/tools/integration_shards.rs",
+        "tests/ci_checkout_policy.rs",
+        "tests/integration_sharding_policy.rs",
+        "tests/release_metadata_policy.rs",
+        "tests/release_workflow_policy.rs"
       ],
       "next_transitions": [
-        "publish"
+        "publish",
+        "validation"
       ],
       "repo_scope": [
-        "GitHub Actions integration build/matrix plus Rust planner/runner and regression tests"
+        ".github/workflows,.github/scripts,assets/tools,tests/release_workflow_policy.rs,.decapod/managed/specs"
       ],
-      "run_id": "postmerge-integration-matrix",
+      "run_id": "buildkite-repair-20261011",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m4nn6bx9f2s2td",
-      "tool_calls": [],
-      "unresolved_assumptions": []
-    },
-    "validation": {
-      "ci_prediction": {
-        "confidence": "medium",
-        "recommendations": [
-          "Review the reported validation warnings before relying on the CI result.",
-          "Use `decapod validate -v --format json` to inspect the affected gate output."
-        ],
-        "result": "review"
-      },
-      "decapod_release": "0.107.3",
-      "drift_findings": [],
-      "elapsed_ms": 4826,
-      "epoch_ref": "ve_96402f6f5678cd13",
-      "fail_count": 0,
-      "failures": [],
-      "gate_timings": [
-        {
-          "elapsed_ms": 2039,
-          "name": "validate_machine_contract"
-        },
-        {
-          "elapsed_ms": 728,
-          "name": "validate_markdown_primitives_roundtrip_gate"
-        },
-        {
-          "elapsed_ms": 614,
-          "name": "validate_project_specs_docs"
-        },
-        {
-          "elapsed_ms": 237,
-          "name": "validate_obligations"
-        },
-        {
-          "elapsed_ms": 152,
-          "name": "validate_legacy_jsonl_retired"
-        },
-        {
-          "elapsed_ms": 140,
-          "name": "validate_schema_determinism"
-        },
-        {
-          "elapsed_ms": 133,
-          "name": "validate_no_legacy_namespaces"
-        },
-        {
-          "elapsed_ms": 133,
-          "name": "validate_stale_workspaces"
-        },
-        {
-          "elapsed_ms": 90,
-          "name": "validate_embedded_self_contained"
-        },
-        {
-          "elapsed_ms": 88,
-          "name": "validate_archive_integrity"
-        },
-        {
-          "elapsed_ms": 79,
-          "name": "validate_git_workspace_context"
-        },
-        {
-          "elapsed_ms": 57,
-          "name": "validate_repomap_determinism"
-        },
-        {
-          "elapsed_ms": 52,
-          "name": "validate_control_plane_contract"
-        },
-        {
-          "elapsed_ms": 24,
-          "name": "validate_interface_contract_bootstrap"
-        },
-        {
-          "elapsed_ms": 17,
-          "name": "validate_health_purity"
-        },
-        {
-          "elapsed_ms": 9,
-          "name": "validate_git_protected_branch"
-        },
-        {
-          "elapsed_ms": 9,
-          "name": "validate_git_push_pr_gate"
-        },
-        {
-          "elapsed_ms": 8,
-          "name": "validate_watcher_audit"
-        },
-        {
-          "elapsed_ms": 7,
-          "name": "validate_lcm_immutability"
-        },
-        {
-          "elapsed_ms": 7,
-          "name": "validate_override_authority"
-        },
-        {
-          "elapsed_ms": 7,
-          "name": "validate_knowledge_promotions_if_present"
-        },
-        {
-          "elapsed_ms": 7,
-          "name": "validate_plan_governed_execution_gate"
-        },
-        {
-          "elapsed_ms": 6,
-          "name": "validate_lcm_rebuild_gate"
-        },
-        {
-          "elapsed_ms": 6,
-          "name": "validate_knowledge_integrity"
-        },
-        {
-          "elapsed_ms": 6,
-          "name": "validate_lineage_hard_gate"
-        },
-        {
-          "elapsed_ms": 6,
-          "name": "validate_watcher_purity"
-        },
-        {
-          "elapsed_ms": 5,
-          "name": "validate_validation_receipt_if_present"
-        },
-        {
-          "elapsed_ms": 5,
-          "name": "validate_trajectory_artifacts_if_present"
-        },
-        {
-          "elapsed_ms": 4,
-          "name": "validate_gatekeeper_gate"
-        },
-        {
-          "elapsed_ms": 4,
-          "name": "validate_generated_artifact_whitelist"
-        },
-        {
-          "elapsed_ms": 3,
-          "name": "validate_policy_integrity"
-        },
-        {
-          "elapsed_ms": 3,
-          "name": "validate_entrypoint_invariants"
-        },
-        {
-          "elapsed_ms": 3,
-          "name": "validate_federation_gates"
-        },
-        {
-          "elapsed_ms": 3,
-          "name": "validate_research_claims_if_present"
-        },
-        {
-          "elapsed_ms": 3,
-          "name": "validate_jev_history_if_present"
-        },
-        {
-          "elapsed_ms": 3,
-          "name": "validate_recursive_improvement_passes_if_present"
-        },
-        {
-          "elapsed_ms": 3,
-          "name": "validate_database_schema_versions"
-        },
-        {
-          "elapsed_ms": 2,
-          "name": "validate_health_cache_integrity"
-        },
-        {
-          "elapsed_ms": 2,
-          "name": "validate_repo_map"
-        },
-        {
-          "elapsed_ms": 1,
-          "name": "validate_canon_mutation"
-        },
-        {
-          "elapsed_ms": 1,
-          "name": "validate_risk_map_violations"
-        },
-        {
-          "elapsed_ms": 1,
-          "name": "validate_heartbeat_invocation_gate"
-        },
-        {
-          "elapsed_ms": 1,
-          "name": "validate_project_config_toml"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_spec_drift"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_context_capsule_policy_contract"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_project_scoped_state"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_state_commit_gate"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_docs_templates_bucket"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_eval_gate_if_required"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_workunit_manifests_if_present"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_internalization_artifacts_if_present"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_context_capsules_if_present"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_root_dockerfile_seed_detection"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_tooling_gate"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_coplayer_policy_tightening"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_risk_map"
-        }
+      "task_id": "cicd_01m4pa8bxxpr5gve",
+      "tool_calls": [
+        "GitHub exact-master check-runs and public Buildkite job logs"
       ],
-      "git_revision": "77d5aefadf3469b01c36aab2550f460f4e232a78",
-      "kind": "validation_receipt",
-      "parallelism": 1,
-      "pass_count": 203,
-      "prediction_uses_warnings": true,
-      "receipt_hash": "sha256:b2c66fd485fe3ba3410f0fa01f9633cd95069d21a78ed38a6ffaa43f512c4e96",
-      "repo_signal_fingerprint": "37766aacd5516c09a68a0d9090f6ee0609ef93501024f3ffda96bcebdb3165c1",
-      "schema_version": "1.0.0",
-      "status": "ok",
-      "temporary_artifacts_cleaned": 0,
-      "trajectory_artifact_hash": "sha256:4d25a6bac9570d1d94c548b37bd0917bd32a5d7dd4bfdf7e270df25bb04610ec",
-      "trajectory_run_id": "postmerge-integration-matrix",
-      "warn_count": 4,
-      "warnings": [
-        "Risk map missing (run `decapod riskmap init`)",
-        "Stale workspaces preserved for explicit review: <external-path> (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch)",
-        "Watcher audit trail missing (run `decapod govern watcher run`)",
-        "Workspace branch 'agent/postmerge-actions/bugs_01m4nn6bx9f2s2td' has unpushed commits or does not exist on origin. Run `git push origin agent/postmerge-actions/bugs_01m4nn6bx9f2s2td`."
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {
