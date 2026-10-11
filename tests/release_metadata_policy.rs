@@ -4,7 +4,7 @@
 mod release_metadata;
 
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::Command;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -316,8 +316,9 @@ fn workflow_job<'a>(workflow: &'a str, name: &str) -> &'a str {
 
 #[test]
 fn workflow_keeps_validation_and_release_build_on_the_slim_path() {
-    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
-    let workflow = fs::read_to_string(root.join(".github/workflows/ci.yml")).unwrap();
+    // Bazel's compile-time manifest directory is not a runtime checkout. Embed
+    // the declared fixture so these policy assertions also run in its sandbox.
+    let workflow = include_str!("../.github/workflows/ci.yml");
     for job in [
         "fmt",
         "clippy",
@@ -332,29 +333,29 @@ fn workflow_keeps_validation_and_release_build_on_the_slim_path() {
         "workspace-lifecycle-docker",
         "state-commit-golden-vectors",
     ] {
-        let block = workflow_job(&workflow, job);
+        let block = workflow_job(workflow, job);
         assert!(
             block.contains("needs.release-metadata.outputs.release_only != 'true'"),
             "{job}"
         );
     }
-    let health = workflow_job(&workflow, "health");
+    let health = workflow_job(workflow, "health");
     assert!(health.contains("run: decapod validate --refresh-specs"));
     assert!(!health.contains("SKIP_FINGERPRINT"));
     assert!(!health.contains("startsWith(github.head_ref"));
     assert!(health.contains("decapod-release-projection-drift"));
     assert!(!health.contains("if: needs.release-metadata.outputs.release_only"));
-    let setup = workflow_job(&workflow, "setup");
+    let setup = workflow_job(workflow, "setup");
     assert!(!setup.contains("release_only"));
-    let musl = workflow_job(&workflow, "musl-publication");
+    let musl = workflow_job(workflow, "musl-publication");
     assert!(musl.contains("cargo build --locked --release"));
     assert!(musl.contains("      - name: Run musl no-replace publication regressions\n        if: needs.release-metadata.outputs.release_only != 'true'"));
     assert!(!musl.contains("\n    if: needs.release-metadata.outputs.release_only"));
-    let release = workflow_job(&workflow, "release-build");
+    let release = workflow_job(workflow, "release-build");
     assert!(release.contains("always() && !cancelled()"));
     assert!(release.contains("needs.health.result == 'success'"));
     assert!(release.contains("!contains(needs.*.result, 'failure')"));
-    let classifier = workflow_job(&workflow, "release-metadata");
+    let classifier = workflow_job(workflow, "release-metadata");
     assert!(classifier.contains("github.event.before"));
     assert!(classifier.contains("github.event.pull_request.base.sha"));
     assert!(classifier.contains("github.event.pull_request.head.sha"));

@@ -26,6 +26,9 @@ The candidate binary is still built and `decapod validate` still executes for
 version-only releases. Any tolerated post-validation drift must be reproduced
 by the actual projection generator from the accepted version-only inputs;
 authored prose and unrelated generated surfaces cannot be normalized away.
+The release-routing workflow fixture is embedded from a declared compile-time
+input. Its policy assertions must pass under Bazel's isolated test sandbox as
+well as Cargo; a compile-time checkout path is not a runtime filesystem contract.
 
 Release planning tests must inspect the pinned cargo-dist plan for all four
 configured targets and verify that every archive selects only the product
@@ -432,7 +435,7 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3a8cfa8455c0499e114c843358974cde54e685d169207502dc030c284b07e99d`
+- Repository signal fingerprint: `50643457a2781105ad23a22cec5af9e0bc5ad1580a97a086b2f5ec08c902f927`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (10 files), `docs/` (1 files), `src/` (125 files), `tests/` (171 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

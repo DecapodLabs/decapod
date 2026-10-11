@@ -351,7 +351,7 @@ policy ban based solely on virtiofs or FUSE filesystem identity.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3a8cfa8455c0499e114c843358974cde54e685d169207502dc030c284b07e99d`
+- Repository signal fingerprint: `50643457a2781105ad23a22cec5af9e0bc5ad1580a97a086b2f5ec08c902f927`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (10 files), `docs/` (1 files), `src/` (125 files), `tests/` (171 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

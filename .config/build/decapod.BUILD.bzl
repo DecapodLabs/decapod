@@ -150,6 +150,8 @@ def decapod_targets():
             ] if path == "tests/release_metadata_policy.rs" else [path],
             crate_root = path,
             compile_data = ["Cargo.toml", "Cargo.lock"] if path == "tests/release_dependency_policy.rs" else [
+                ".github/workflows/ci.yml",
+            ] if path == "tests/release_metadata_policy.rs" else [
                 "Cargo.toml",
                 "dist.toml",
                 "dist-workspace.toml",

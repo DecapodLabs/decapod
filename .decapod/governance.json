@@ -135,24 +135,32 @@
       "proof_refs": [
         "decapod validate: 203 passed, 0 failed; remote ancestor 668e8a1860d13ed35cf4d5e9a9e4da5dd6fef447"
       ]
+    },
+    {
+      "id": "bazel-release-fixture-input",
+      "summary": "Embed the release routing workflow as a declared hermetic test input; preserve all assertions",
+      "input_digest": "sha256:625b05f43f0410290cfb3d56e7e55f9c2d9330d75dc220829d112070b8671f61",
+      "proof_refs": [
+        "/tmp/postmerge-bazel-release-fixtures-final.log: 3 targets passed; /tmp/postmerge-bazel-cargo-tests.log: 17 passed; /tmp/postmerge-bazel-clippy.log: passed"
+      ]
     }
   ],
   "intents": {
-    "intent:postmerge-broker-idle": {
+    "intent:postmerge-bazel-fixture": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "No production broker default, container startup, database behavior, test skipping, or aggregate timeout increase."
+        "Preserve runtime behavior, all test assertions, and existing CI budgets"
       ],
       "constraints": [
-        "Gatling host command environment and its lifecycle regression proof"
+        "tests/release_metadata_policy.rs and its Bazel compile_data declaration"
       ],
       "created_sequence": 1,
-      "id": "intent:postmerge-broker-idle",
+      "id": "intent:postmerge-bazel-fixture",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Repair all observed post-merge Actions failures in draft PR1392",
-      "refined_intent": "Keep Gatling broker mutation execution while using the existing one-second idle window for serial host fixtures; verify the socket-capable Actions target within its unchanged300-second budget.",
+      "raw_intent": "Fix the post-merge Actions failures and get all tests green in PR 1392",
+      "refined_intent": "Declare the release metadata workflow fixture as a compile-time Bazel input after full Gatling passed in socket-capable CI",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -225,22 +233,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The fixture uses the existing broker idle setting; production batching defaults, serial mutation ownership and storage remain unchanged.",
-          "reviewed_code_fingerprint": "3a8cfa8455c0499e114c843358974cde54e685d169207502dc030c284b07e99d",
+          "reason": "Only the embedded release-policy test fixture and its declared Bazel input change; architecture remains unchanged.",
+          "reviewed_code_fingerprint": "50643457a2781105ad23a22cec5af9e0bc5ad1580a97a086b2f5ec08c902f927",
           "spec_material_hash": "5c81115746da106fc0f2aff3d365f03f250d3f8356985e5ed75bfcd2b48d83a0"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "No public commands, environment configuration contracts or response envelopes change; only a documented existing idle setting is applied in Gatling.",
-          "reviewed_code_fingerprint": "3a8cfa8455c0499e114c843358974cde54e685d169207502dc030c284b07e99d",
+          "reason": "No CLI or workflow interface changes; retain every release policy assertion.",
+          "reviewed_code_fingerprint": "50643457a2781105ad23a22cec5af9e0bc5ad1580a97a086b2f5ec08c902f927",
           "spec_material_hash": "cd9b94141bc326b505eb812570a82b8d663cb7db367c39d9fe7e3cd91924f133"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Broker execution remains enabled, with the same identity, locking and database semantics; invocation supervisor process groups and production defaults are unchanged.",
-          "reviewed_code_fingerprint": "3a8cfa8455c0499e114c843358974cde54e685d169207502dc030c284b07e99d",
+          "reason": "Hermetic test input only; no runtime security or permission changes.",
+          "reviewed_code_fingerprint": "50643457a2781105ad23a22cec5af9e0bc5ad1580a97a086b2f5ec08c902f927",
           "spec_material_hash": "a61a52af20a5233dac76f61b4b6f9bf65fba2907f688eb5b7ed0db4a0515ed3d"
         }
       ],
@@ -254,61 +262,64 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791730824Z"
+      "updated_at": "1791739375Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "No production broker default, container startup, database behavior, test skipping, or aggregate timeout increase."
+        "Preserve runtime behavior, all test assertions, and existing CI budgets"
       ],
-      "artifact_hash": "sha256:8a60390d044c23e4be057319840222cf98525df5c0451fc3ef83feac649bbf3a",
+      "artifact_hash": "sha256:e3e611a8613b95c59895de33967606c739f8b7c69e890d6535223029e0b91717",
       "checks": [
         {
-          "name": "all-target-clippy",
+          "name": "bazel_release_policy_targets",
           "status": "passed"
         },
         {
-          "name": "decapod validate",
+          "name": "cargo_release_metadata_and_distribution",
           "status": "passed"
         },
         {
-          "name": "host-environment-regression",
+          "name": "formatting",
           "status": "passed"
         },
         {
-          "name": "previous-exact-head-gatling",
+          "name": "gatling_socket_ci",
+          "status": "passed"
+        },
+        {
+          "name": "release_metadata_bazel_prior",
           "status": "failed"
         },
         {
-          "name": "socket-capable-full-target",
-          "status": "partial"
+          "name": "targeted_clippy",
+          "status": "passed"
         }
       ],
-      "current_phase": "validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:postmerge-broker-idle",
+            "intent_id": "intent:postmerge-bazel-fixture",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:postmerge-broker-idle",
+            "intent_id": "intent:postmerge-bazel-fixture",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:postmerge-broker-idle",
+            "detail": "trajectory:postmerge-bazel-fixture",
             "event_id": "event:4",
-            "intent_id": "intent:postmerge-broker-idle",
+            "intent_id": "intent:postmerge-bazel-fixture",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:postmerge-broker-idle",
+            "detail": "trajectory:postmerge-bazel-fixture",
             "event_id": "event:5",
-            "intent_id": "intent:postmerge-broker-idle",
+            "intent_id": "intent:postmerge-bazel-fixture",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           }
@@ -317,49 +328,45 @@
         "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "postmerge-broker-idle": {
+          "postmerge-bazel-fixture": {
             "evidence_only": true,
-            "id": "postmerge-broker-idle",
-            "intent_id": "intent:postmerge-broker-idle",
+            "id": "postmerge-bazel-fixture",
+            "intent_id": "intent:postmerge-bazel-fixture",
             "steps": [
               {
                 "action": "trajectory.record",
-                "command": "cargo test --locked --test gatling host_fixture_suppresses_optional_claim_startup -- --exact",
+                "command": "GitHub Actions run38158116304/job114525242392",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/group_broker.rs",
-                  "tests/gatling.rs",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "Actions job114496959817 confirms successful commands continue until decide complete when aggregate300-second budget expires; no rootless overlay cleanup error remains.",
-                  "Broker run_as_leader retains the invoking process for a default3-second idle window after each serial mutation; existing DECAPOD_GROUP_BROKER_IDLE_SECS=1 keeps broker execution and bounds fixture-only batching cost.",
-                  "Local sandbox AF_UNIX fallback cannot establish socket-capable broker timing; exact-head Actions rerun is required."
+                  "tests/release_metadata_policy.rs",
+                  ".config/build/decapod.BUILD.bzl",
+                  "Exact head d294b246 CI job114525242392: full Gatling passed231.4 seconds; subsequent release metadata policy assertion failed reading compile-time checkout path under Bazel; projection suite passed"
                 ],
                 "proof_refs": [
-                  "previous-exact-head-gatling",
-                  "host-environment-regression",
-                  "all-target-clippy",
-                  "socket-capable-full-target"
+                  "gatling_socket_ci",
+                  "release_metadata_bazel_prior"
                 ],
                 "scope": [
-                  "Gatling host command environment and its lifecycle regression proof"
+                  "tests/release_metadata_policy.rs and its Bazel compile_data declaration"
                 ],
                 "sequence": 4,
                 "validation_findings": []
               },
               {
-                "action": "validation",
-                "command": "decapod validate",
+                "action": "trajectory.record",
+                "command": "cargo test --locked --test release_metadata_policy --test release_distribution_policy (17 passed); cargo clippy --locked --test release_metadata_policy -- -D warnings; cargo fmt --all -- --check",
                 "custody_event_id": "event:5",
                 "observations": [
-                  ".decapod/governance.json",
-                  ".decapod/governance.json",
-                  "validation epoch ve_a98bd128fce05963 completed with zero failures"
+                  "The workflow fixture also passed under Linux sandbox; other Git fixture tests require the same processwrapper sandbox used by CI because this local Linux sandbox denies Git random-byte access."
                 ],
                 "proof_refs": [
-                  "decapod validate"
+                  "cargo_release_metadata_and_distribution",
+                  "targeted_clippy",
+                  "formatting",
+                  "bazel_release_policy_targets"
                 ],
                 "scope": [
-                  "Gatling host command environment and its lifecycle regression proof"
+                  "tests/release_metadata_policy.rs and its Bazel compile_data declaration"
                 ],
                 "sequence": 5,
                 "validation_findings": []
@@ -369,32 +376,25 @@
         }
       },
       "declared_commands": [
-        "cargo clippy --locked --all-targets --all-features -- -D warnings",
-        "cargo test --locked --test gatling host_fixture_suppresses_optional_claim_startup -- --exact",
-        "decapod validate"
+        "Bazel9.3.0 test //:release_metadata_policy //:release_distribution_policy //:release_projection_drift_policy --lockfile_mode=off --spawn_strategy=processwrapper-sandbox (all3 targets passed; uncached)",
+        "GitHub Actions run38158116304/job114525242392",
+        "cargo test --locked --test release_metadata_policy --test release_distribution_policy (17 passed); cargo clippy --locked --test release_metadata_policy -- -D warnings; cargo fmt --all -- --check"
       ],
+      "destination": "pr",
       "evidence": [
-        "Actions job114496959817 confirms successful commands continue until decide complete when aggregate300-second budget expires; no rootless overlay cleanup error remains.",
-        "Broker run_as_leader retains the invoking process for a default3-second idle window after each serial mutation; existing DECAPOD_GROUP_BROKER_IDLE_SECS=1 keeps broker execution and bounds fixture-only batching cost.",
-        "Local sandbox AF_UNIX fallback cannot establish socket-capable broker timing; exact-head Actions rerun is required.",
-        "validation epoch ve_a98bd128fce05963 completed with zero failures"
+        "Exact head d294b246 CI job114525242392: full Gatling passed231.4 seconds; subsequent release metadata policy assertion failed reading compile-time checkout path under Bazel; projection suite passed",
+        "The workflow fixture also passed under Linux sandbox; other Git fixture tests require the same processwrapper sandbox used by CI because this local Linux sandbox denies Git random-byte access."
       ],
       "inspected_files": [
-        "src/decapod/core/group_broker.rs"
+        ".config/build/decapod.BUILD.bzl",
+        "tests/release_metadata_policy.rs"
       ],
-      "intent_id": "intent:postmerge-broker-idle",
-      "modified_files": [
-        ".decapod/governance.json",
-        ".decapod/managed/specs/VALIDATION.md",
-        "tests/gatling.rs"
-      ],
-      "next_transitions": [
-        "publish"
-      ],
+      "intent_id": "intent:postmerge-bazel-fixture",
+      "modified_files": [],
       "repo_scope": [
-        "Gatling host command environment and its lifecycle regression proof"
+        "tests/release_metadata_policy.rs and its Bazel compile_data declaration"
       ],
-      "run_id": "postmerge-broker-idle",
+      "run_id": "postmerge-bazel-fixture",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
       "task_id": "bugs_01m4nn6bx9f2s2td",
