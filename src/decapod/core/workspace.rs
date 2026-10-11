@@ -700,6 +700,7 @@ pub fn ensure_workspace(
         ));
     }
     let todo_scope = build_todo_scope_component(&scoped_todos);
+    let generated_branch_scope = build_generated_branch_scope(&scoped_todos);
     let config = if let Some(cfg) = config {
         if let Some(branch) = cfg.branch.as_ref()
             && !branch_contains_any_todo_id_or_hash(branch, &assigned_todos)
@@ -718,7 +719,7 @@ pub fn ensure_workspace(
             format!(
                 "agent/{}/{}-{}",
                 sanitize_agent_id(agent_id),
-                todo_scope,
+                generated_branch_scope,
                 ts
             )
         });
@@ -737,7 +738,7 @@ pub fn ensure_workspace(
             branch: Some(format!(
                 "agent/{}/{}-{}",
                 sanitize_agent_id(agent_id),
-                todo_scope,
+                generated_branch_scope,
                 ts
             )),
             use_container: false,
@@ -1695,6 +1696,17 @@ fn build_todo_scope_component(todo_refs: &[AssignedTodoRef]) -> String {
         return format!("todo-{head}");
     }
     format!("todo-{}-plus-{}", head, todo_refs.len() - 1)
+}
+
+fn build_generated_branch_scope(todo_refs: &[AssignedTodoRef]) -> String {
+    let scope = build_todo_scope_component(todo_refs);
+    // The compact hash is a ULID prefix and can identify several recent tasks.
+    // Assigned tasks are sorted before generation: bind the primary one exactly
+    // so a later claim cannot reinterpret this branch's intent or ownership.
+    match todo_refs.first() {
+        Some(primary) => format!("{scope}-{}", sanitize_todo_component(&primary.id)),
+        None => scope,
+    }
 }
 
 fn branch_contains_any_todo_id_or_hash(branch: &str, todo_refs: &[AssignedTodoRef]) -> bool {

@@ -476,6 +476,44 @@ fn existing_scratch_is_never_adopted_or_swept() {
     first.clean().unwrap();
 }
 
+#[cfg(unix)]
+#[test]
+fn cleanup_diagnostics_report_readonly_paths_without_changing_or_following_them() {
+    use std::os::unix::fs::{PermissionsExt, symlink};
+    let fixture = Fixture::new();
+    let scratch = Scratch::create(fixture.path()).unwrap();
+    let readonly = scratch.path.join("readonly");
+    fs::create_dir(&readonly).unwrap();
+    fs::write(readonly.join("keep"), "fixture evidence").unwrap();
+    fs::set_permissions(&readonly, fs::Permissions::from_mode(0o555)).unwrap();
+    let external = fixture.path().join("external-must-not-be-traversed");
+    fs::create_dir(&external).unwrap();
+    fs::write(external.join("keep"), "external evidence").unwrap();
+    symlink(&external, scratch.path.join("link")).unwrap();
+    let diagnostic = cleanup_diagnostics(&scratch.path);
+    assert!(
+        diagnostic.contains(readonly.to_str().unwrap()),
+        "{diagnostic}"
+    );
+    assert!(diagnostic.contains("mode=555"), "{diagnostic}");
+    assert!(diagnostic.contains("uid="), "{diagnostic}");
+    assert!(!diagnostic.contains("external-must-not-be-traversed"));
+    assert_eq!(
+        fs::metadata(&readonly).unwrap().permissions().mode() & 0o777,
+        0o555
+    );
+    assert_eq!(
+        fs::read_to_string(readonly.join("keep")).unwrap(),
+        "fixture evidence"
+    );
+    assert_eq!(
+        fs::read_to_string(external.join("keep")).unwrap(),
+        "external evidence"
+    );
+    fs::set_permissions(&readonly, fs::Permissions::from_mode(0o755)).unwrap();
+    scratch.clean().unwrap();
+}
+
 #[test]
 fn main_build_and_test_configuration_enables_owned_cleanup() {
     let bazel = include_str!("../../.config/build/bazelrc");

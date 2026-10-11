@@ -1525,6 +1525,12 @@ fn build_docker_spec(
     let workspace_str = workspace
         .to_str()
         .ok_or_else(|| error::DecapodError::PathError("invalid repository path".to_string()))?;
+    // Nested bind targets live on the workspace volume. Create them as the
+    // caller before the engine can create daemon-owned mountpoints there.
+    // Preserve the datastore's explicit trusted-group policy for these leaves.
+    let workspace_data = workspace.join(".decapod/data");
+    crate::core::fs_permissions::ensure_storage_dir(&workspace_data)
+        .map_err(error::DecapodError::IoError)?;
     let workspace_decapod_mount = format!("{workspace_str}/.decapod/data");
     let container_name = format!(
         "decapod-agent-{}-{}",
@@ -1599,10 +1605,10 @@ fn build_docker_spec(
     let migrations = repo_root.join(".decapod/managed/migrations");
     crate::core::fs_permissions::ensure_storage_dir(&migrations)
         .map_err(error::DecapodError::IoError)?;
-    for target in [
-        migrations.clone(),
-        workspace.join(".decapod/managed/migrations"),
-    ] {
+    let workspace_migrations = workspace_managed.join("migrations");
+    crate::core::fs_permissions::ensure_storage_dir(&workspace_migrations)
+        .map_err(error::DecapodError::IoError)?;
+    for target in [migrations.clone(), workspace_migrations] {
         args.push("-v".into());
         args.push(format!("{}:{}", migrations.display(), target.display()));
     }

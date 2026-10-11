@@ -922,6 +922,41 @@ fn workspace_symlink_parent_cannot_redirect_mutations() {
 }
 
 #[test]
+fn generated_branch_scope_disambiguates_shared_task_hashes() {
+    let primary = AssignedTodoRef {
+        id: "bugs_01m4jdaambn944vm".into(),
+        hash: "01m4jd".into(),
+    };
+    let other = AssignedTodoRef {
+        id: "bugs_01m4jdgcqhcy5tse".into(),
+        hash: "01m4jd".into(),
+    };
+    for selected in [vec![primary.clone()], vec![primary.clone(), other.clone()]] {
+        let scope = build_generated_branch_scope(&selected);
+        let branch = format!("agent/test/{scope}-1782239277");
+        assert!(branch.contains(&primary.id));
+        assert!(branch_contains_any_todo_id_or_hash(
+            &branch,
+            std::slice::from_ref(&primary)
+        ));
+        assert!(!branch_contains_any_todo_id_or_hash(
+            &branch,
+            std::slice::from_ref(&other)
+        ));
+    }
+    // Preserve the old path component for explicitly named workspaces; callers
+    // must still reject a genuinely ambiguous user-supplied hash-only branch.
+    let compact = build_todo_scope_component(&[primary.clone(), other.clone()]);
+    assert_eq!(compact, "todo-01m4jd-plus-1");
+    for task in [primary, other] {
+        assert!(branch_contains_any_todo_id_or_hash(
+            &format!("agent/test/{compact}"),
+            &[task]
+        ));
+    }
+}
+
+#[test]
 fn full_task_ids_never_claim_another_task_with_same_short_hash() {
     let first = AssignedTodoRef {
         id: "bugs_01m4jdaambn944vm".into(),
