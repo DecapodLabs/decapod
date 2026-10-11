@@ -4,7 +4,12 @@
 
 Gatling is a host CLI contract suite. Its shared fixture suppresses optional
 claim-triggered container startup, including initialization and task lookup,
-while dedicated container tests retain the production startup path. Each
+while dedicated container tests retain the production startup path. Fixtures
+issue their commands serially and set the existing broker idle window to one
+second; broker mutation dispatch, durable receipts, and shared database behavior
+remain enabled. The production three-second batching default and dedicated
+concurrent-broker tests are unchanged. Socket-capable CI must exercise this
+path because constrained local hosts may fall back to direct execution. Each
 stateful fixture command emits uncaptured start/end diagnostics naming its
 fixture and elapsed time, so an aggregate timeout identifies unfinished stages.
 Children stay in the invocation supervisor's process group for cancellation and
@@ -427,7 +432,7 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e6dca62363380b366933a3f9ef89d22f859c06465a0f7f10416bb71d7395175e`
+- Repository signal fingerprint: `3a8cfa8455c0499e114c843358974cde54e685d169207502dc030c284b07e99d`
 - Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (10 files), `docs/` (1 files), `src/` (125 files), `tests/` (171 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

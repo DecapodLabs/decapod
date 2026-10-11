@@ -48,6 +48,9 @@ fn host_command(dir: &Path, args: &[&str]) -> Command {
         .current_dir(dir)
         .env("XDG_CONFIG_HOME", dir.join(".config"))
         .env("DECAPOD_CLAIM_AUTORUN", "0")
+        // Each fixture issues commands serially: retain broker execution without
+        // paying the production three-second batching window after every call.
+        .env("DECAPOD_GROUP_BROKER_IDLE_SECS", "1")
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1");
     command
 }
@@ -80,6 +83,18 @@ fn host_fixture_suppresses_optional_claim_startup() {
     assert_eq!(
         autorun.and_then(|(_, value)| value),
         Some(std::ffi::OsStr::new("0"))
+    );
+    let idle = command
+        .get_envs()
+        .find(|(name, _)| *name == "DECAPOD_GROUP_BROKER_IDLE_SECS");
+    assert_eq!(
+        idle.and_then(|(_, value)| value),
+        Some(std::ffi::OsStr::new("1"))
+    );
+    assert!(
+        command
+            .get_envs()
+            .all(|(name, _)| name != "DECAPOD_GROUP_BROKER_DISABLE")
     );
 }
 

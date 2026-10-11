@@ -118,24 +118,33 @@
         "Final Gatling49passed1ignored135.87sec; all-target/all-feature clippy passed",
         "decapod0.107.3 validate202passed0failed at0f779579ed90342a5f4a1929600846d87003f5b5"
       ]
+    },
+    {
+      "id": "serial-fixture-broker-idle",
+      "summary": "Retain broker mutation coverage with a one-second idle window for serial Gatling fixture commands and preserve exact CI timeout evidence",
+      "input_digest": "sha256:b0ab4216bf1e7fe98e1b1c5b77936d4f33440e68a601cb10aef7faec2fbf5090",
+      "proof_refs": [
+        "Actions114496959817 command-stage timing",
+        "Host environment regression and all-target/all-feature clippy passed"
+      ]
     }
   ],
   "intents": {
-    "intent:postmerge-actions": {
+    "intent:postmerge-broker-idle": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Preserve production container and database behavior, strict substantive proof gates, and minimal version-only releases; no release publication or merge."
+        "No production broker default, container startup, database behavior, test skipping, or aggregate timeout increase."
       ],
       "constraints": [
-        "Gatling fixtures, release metadata classifier, narrow Actions routing and regression tests"
+        "Gatling host command environment and its lifecycle regression proof"
       ],
       "created_sequence": 1,
-      "id": "intent:postmerge-actions",
+      "id": "intent:postmerge-broker-idle",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Fix the failing Actions from merges #1390 and #1391 in a new PR; release merges should not repeat full source tests.",
-      "refined_intent": "Isolate host Gatling fixtures from optional claim startup; strictly classify release version metadata for expected drift and full-test routing.",
+      "raw_intent": "Repair all observed post-merge Actions failures in draft PR1392",
+      "refined_intent": "Keep Gatling broker mutation execution while using the existing one-second idle window for serial host fixtures; verify the socket-capable Actions target within its unchanged300-second budget.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -208,22 +217,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Production control-plane architecture is unchanged; host fixture isolation and strict release-only CI preserve runtime ownership and storage boundaries.",
-          "reviewed_code_fingerprint": "f7539e6c67a90f185edde8d9ba05217f291197756653d14797555f894eb11334",
+          "reason": "The fixture uses the existing broker idle setting; production batching defaults, serial mutation ownership and storage remain unchanged.",
+          "reviewed_code_fingerprint": "3a8cfa8455c0499e114c843358974cde54e685d169207502dc030c284b07e99d",
           "spec_material_hash": "5c81115746da106fc0f2aff3d365f03f250d3f8356985e5ed75bfcd2b48d83a0"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Public runtime CLI and RPC contracts are unchanged; new maintainer-only release check commands are documented in Operations and Validation and excluded from shipped artifacts.",
-          "reviewed_code_fingerprint": "f7539e6c67a90f185edde8d9ba05217f291197756653d14797555f894eb11334",
+          "reason": "No public commands, environment configuration contracts or response envelopes change; only a documented existing idle setting is applied in Gatling.",
+          "reviewed_code_fingerprint": "3a8cfa8455c0499e114c843358974cde54e685d169207502dc030c284b07e99d",
           "spec_material_hash": "cd9b94141bc326b505eb812570a82b8d663cb7db367c39d9fe7e3cd91924f133"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No production container, credential, approval, datastore, file-permission or publishing authority changes; release classification and drift verification fail closed on substantive changes.",
-          "reviewed_code_fingerprint": "f7539e6c67a90f185edde8d9ba05217f291197756653d14797555f894eb11334",
+          "reason": "Broker execution remains enabled, with the same identity, locking and database semantics; invocation supervisor process groups and production defaults are unchanged.",
+          "reviewed_code_fingerprint": "3a8cfa8455c0499e114c843358974cde54e685d169207502dc030c284b07e99d",
           "spec_material_hash": "a61a52af20a5233dac76f61b4b6f9bf65fba2907f688eb5b7ed0db4a0515ed3d"
         }
       ],
@@ -237,274 +246,85 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791729296Z"
+      "updated_at": "1791730824Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Preserve production container and database behavior, strict substantive proof gates, and minimal version-only releases; no release publication or merge."
+        "No production broker default, container startup, database behavior, test skipping, or aggregate timeout increase."
       ],
-      "artifact_hash": "sha256:64d40a2b8b848421617a86a4823b507f251ad66c7000b56a1ed06238635a8f1f",
+      "artifact_hash": "sha256:e86a87f11b81f5a213fe9e2ca2346a935f8609875905f4a61befafad711ac504",
       "checks": [
         {
           "name": "all-target-clippy",
           "status": "passed"
         },
         {
-          "name": "all-target-clippy-initial",
+          "name": "host-environment-regression",
+          "status": "passed"
+        },
+        {
+          "name": "previous-exact-head-gatling",
           "status": "failed"
         },
         {
-          "name": "baseline-isolated-decide",
-          "status": "passed"
-        },
-        {
-          "name": "current-validator-build",
-          "status": "passed"
-        },
-        {
-          "name": "decapod validate",
-          "status": "passed"
-        },
-        {
-          "name": "distribution-policy",
-          "status": "passed"
-        },
-        {
-          "name": "distribution-version-inheritance",
-          "status": "passed"
-        },
-        {
-          "name": "exact-1391-replay",
-          "status": "passed"
-        },
-        {
-          "name": "formatting",
-          "status": "passed"
-        },
-        {
-          "name": "four-target-artifact-plan",
-          "status": "passed"
-        },
-        {
-          "name": "full-gatling",
-          "status": "passed"
-        },
-        {
-          "name": "independent-review",
-          "status": "passed"
-        },
-        {
-          "name": "native-release-package",
-          "status": "passed"
-        },
-        {
-          "name": "precommit-validation",
-          "status": "failed"
-        },
-        {
-          "name": "projection-final-adversarial",
-          "status": "passed"
-        },
-        {
-          "name": "release-classifier",
-          "status": "passed"
-        },
-        {
-          "name": "release-projection-tests",
-          "status": "passed"
+          "name": "socket-capable-full-target",
+          "status": "partial"
         }
       ],
-      "current_phase": "validation",
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:postmerge-actions",
+            "intent_id": "intent:postmerge-broker-idle",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:postmerge-actions",
+            "intent_id": "intent:postmerge-broker-idle",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:postmerge-actions",
+            "detail": "trajectory:postmerge-broker-idle",
             "event_id": "event:4",
-            "intent_id": "intent:postmerge-actions",
+            "intent_id": "intent:postmerge-broker-idle",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:postmerge-actions",
-            "event_id": "event:5",
-            "intent_id": "intent:postmerge-actions",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:postmerge-actions",
-            "event_id": "event:6",
-            "intent_id": "intent:postmerge-actions",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:postmerge-actions",
-            "event_id": "event:7",
-            "intent_id": "intent:postmerge-actions",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:postmerge-actions",
-            "event_id": "event:8",
-            "intent_id": "intent:postmerge-actions",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
-          },
-          {
-            "detail": "trajectory:postmerge-actions",
-            "event_id": "event:9",
-            "intent_id": "intent:postmerge-actions",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "postmerge-actions": {
+          "postmerge-broker-idle": {
             "evidence_only": true,
-            "id": "postmerge-actions",
-            "intent_id": "intent:postmerge-actions",
+            "id": "postmerge-broker-idle",
+            "intent_id": "intent:postmerge-broker-idle",
             "steps": [
               {
                 "action": "trajectory.record",
+                "command": "cargo test --locked --test gatling host_fixture_suppresses_optional_claim_startup -- --exact",
                 "custody_event_id": "event:4",
                 "observations": [
+                  "src/decapod/core/group_broker.rs",
                   "tests/gatling.rs",
-                  "src/decapod/core/todo.rs",
-                  "src/decapod/plugins/decide.rs",
-                  "tests/gatling.rs",
-                  "cargo test --test gatling t292_decide_session_lifecycle: pristine 0.107.3 source passed in 19.35 seconds",
-                  "GitHub Actions job 114486043863: aggregate 300-second Gatling timeout and unintended rootless overlay under invocation scratch",
-                  "GitHub Actions job 114489316653: validator succeeded before version-only generated drift gate failed"
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Actions job114496959817 confirms successful commands continue until decide complete when aggregate300-second budget expires; no rootless overlay cleanup error remains.",
+                  "Broker run_as_leader retains the invoking process for a default3-second idle window after each serial mutation; existing DECAPOD_GROUP_BROKER_IDLE_SECS=1 keeps broker execution and bounds fixture-only batching cost.",
+                  "Local sandbox AF_UNIX fallback cannot establish socket-capable broker timing; exact-head Actions rerun is required."
                 ],
                 "proof_refs": [
-                  "baseline-isolated-decide"
+                  "previous-exact-head-gatling",
+                  "host-environment-regression",
+                  "all-target-clippy",
+                  "socket-capable-full-target"
                 ],
                 "scope": [
-                  "Gatling fixtures, release metadata classifier, narrow Actions routing and regression tests"
+                  "Gatling host command environment and its lifecycle regression proof"
                 ],
                 "sequence": 4,
-                "validation_findings": [
-                  "Host fixture container startup is observed; the aggregate suite timing must still be reverified on the full target."
-                ]
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "All four Actions release jobs 114488874649, 114488874582, 114488874547, 114488874517 complete optimized compilation then fail artifact assembly: failed to find bin decapod-build."
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "Gatling fixtures, release metadata classifier, narrow Actions routing and regression tests"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "verification",
-                "command": "cargo test --locked --test gatling -- --test-threads=4",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "Full Gatling: 49 passed, zero failed, one pre-existing ignored, 120.76 seconds; unchanged aggregate300-second budget",
-                  "14 standalone classifier regressions passed; exact #1391 release range classified true",
-                  "9 projection regression groups and targeted clippy passed; exact94eb4a1d release replay validate191passed/0failed then exact drift checker passed",
-                  "Gatling fixture children preserve invocation supervisor process group; raw start/end command diagnostics remain visible on aggregate timeout"
-                ],
-                "proof_refs": [
-                  "full-gatling",
-                  "release-classifier",
-                  "release-projection-tests",
-                  "exact-1391-replay"
-                ],
-                "scope": [
-                  "Gatling fixtures, release metadata classifier, narrow Actions routing and regression tests",
-                  "Gatling host fixtures, strict release metadata and projection gates, CI routing, pinned release artifact selection"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "command": "cargo fmt --all -- --check",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "10 projection adversarial regression groups passed; actual release replay passed after final ignored-source hardening",
-                  "3 distribution regressions passed; native cargo-dist packaging still compiling its cold dist profile",
-                  "Precommit validator198passed2failed: dirty-source mandate and host-container gate; rerun clean committed source without waiving gates"
-                ],
-                "proof_refs": [
-                  "projection-final-adversarial",
-                  "distribution-policy",
-                  "four-target-artifact-plan",
-                  "distribution-version-inheritance",
-                  "native-release-package",
-                  "formatting",
-                  "precommit-validation"
-                ],
-                "scope": [
-                  "Gatling fixtures, release metadata classifier, narrow Actions routing and regression tests",
-                  "Gatling host fixtures, strict release metadata and projection gates, CI routing, pinned release artifact selection"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "command": "cargo clippy --locked --all-targets --all-features -- -D warnings",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "Clippy identified two borrowed PathBuf helper arguments after centralization; use Path references consistently, then all-target/all-feature clippy passed with warnings denied",
-                  "Pinned cargo-dist native x86_64 Linux packaging passed; actual archive runtime+README+LICENSE+CHANGELOG only and checksum sidecar matched",
-                  "Independent targeted review found no actionable blocker; foreign-target packaging remains unrun, all four target plans pass"
-                ],
-                "proof_refs": [
-                  "all-target-clippy-initial",
-                  "all-target-clippy",
-                  "current-validator-build",
-                  "native-release-package",
-                  "independent-review"
-                ],
-                "scope": [
-                  "Gatling fixtures, release metadata classifier, narrow Actions routing and regression tests",
-                  "Gatling host fixtures, strict release metadata and projection gates, CI routing, pinned release artifact selection"
-                ],
-                "sequence": 8,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "command": "decapod validate",
-                "custody_event_id": "event:9",
-                "observations": [
-                  ".decapod/governance.json",
-                  ".decapod/governance.json",
-                  "validation epoch ve_502dea3312a288ba completed with zero failures"
-                ],
-                "proof_refs": [
-                  "decapod validate"
-                ],
-                "scope": [
-                  "Gatling fixtures, release metadata classifier, narrow Actions routing and regression tests",
-                  "Gatling host fixtures, strict release metadata and projection gates, CI routing, pinned release artifact selection"
-                ],
-                "sequence": 9,
                 "validation_findings": []
               }
             ]
@@ -512,54 +332,31 @@
         }
       },
       "declared_commands": [
-        "cargo build --locked --bin decapod",
         "cargo clippy --locked --all-targets --all-features -- -D warnings",
-        "cargo fmt --all -- --check",
-        "cargo test --locked --test gatling -- --test-threads=4",
-        "decapod validate"
+        "cargo test --locked --test gatling host_fixture_suppresses_optional_claim_startup -- --exact"
       ],
       "evidence": [
-        "10 projection adversarial regression groups passed; actual release replay passed after final ignored-source hardening",
-        "14 standalone classifier regressions passed; exact #1391 release range classified true",
-        "3 distribution regressions passed; native cargo-dist packaging still compiling its cold dist profile",
-        "9 projection regression groups and targeted clippy passed; exact94eb4a1d release replay validate191passed/0failed then exact drift checker passed",
-        "All four Actions release jobs 114488874649, 114488874582, 114488874547, 114488874517 complete optimized compilation then fail artifact assembly: failed to find bin decapod-build.",
-        "Clippy identified two borrowed PathBuf helper arguments after centralization; use Path references consistently, then all-target/all-feature clippy passed with warnings denied",
-        "Full Gatling: 49 passed, zero failed, one pre-existing ignored, 120.76 seconds; unchanged aggregate300-second budget",
-        "Gatling fixture children preserve invocation supervisor process group; raw start/end command diagnostics remain visible on aggregate timeout",
-        "GitHub Actions job 114486043863: aggregate 300-second Gatling timeout and unintended rootless overlay under invocation scratch",
-        "GitHub Actions job 114489316653: validator succeeded before version-only generated drift gate failed",
-        "Independent targeted review found no actionable blocker; foreign-target packaging remains unrun, all four target plans pass",
-        "Pinned cargo-dist native x86_64 Linux packaging passed; actual archive runtime+README+LICENSE+CHANGELOG only and checksum sidecar matched",
-        "Precommit validator198passed2failed: dirty-source mandate and host-container gate; rerun clean committed source without waiving gates",
-        "cargo test --test gatling t292_decide_session_lifecycle: pristine 0.107.3 source passed in 19.35 seconds",
-        "validation epoch ve_502dea3312a288ba completed with zero failures"
+        "Actions job114496959817 confirms successful commands continue until decide complete when aggregate300-second budget expires; no rootless overlay cleanup error remains.",
+        "Broker run_as_leader retains the invoking process for a default3-second idle window after each serial mutation; existing DECAPOD_GROUP_BROKER_IDLE_SECS=1 keeps broker execution and bounds fixture-only batching cost.",
+        "Local sandbox AF_UNIX fallback cannot establish socket-capable broker timing; exact-head Actions rerun is required."
       ],
       "inspected_files": [
-        "src/decapod/core/todo.rs",
-        "src/decapod/plugins/decide.rs",
-        "tests/gatling.rs"
+        "src/decapod/core/group_broker.rs"
       ],
-      "intent_id": "intent:postmerge-actions",
+      "intent_id": "intent:postmerge-broker-idle",
       "modified_files": [
-        ".decapod/governance.json",
+        ".decapod/managed/specs/VALIDATION.md",
         "tests/gatling.rs"
-      ],
-      "next_transitions": [
-        "publish"
       ],
       "repo_scope": [
-        "Gatling fixtures, release metadata classifier, narrow Actions routing and regression tests",
-        "Gatling host fixtures, strict release metadata and projection gates, CI routing, pinned release artifact selection"
+        "Gatling host command environment and its lifecycle regression proof"
       ],
-      "run_id": "postmerge-actions",
+      "run_id": "postmerge-broker-idle",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
       "task_id": "bugs_01m4nn6bx9f2s2td",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "Host fixture container startup is observed; the aggregate suite timing must still be reverified on the full target."
-      ]
+      "unresolved_assumptions": []
     },
     "validation": {
       "ci_prediction": {
