@@ -75,7 +75,10 @@ download caches, and declared test logs remain available. `--sandbox_debug`
 intentionally retains Bazel sandboxes when investigating a failure.
 
 Bazel tests automatically run through the Rust `//:build_lifecycle` supervisor.
-Each test process gets a unique temporary directory under Bazel's `TEST_TMPDIR`.
+Each test process gets a short, uniquely owned temporary directory. Automatic
+Bazel mode chooses the shorter absolute spelling of `TEST_TMPDIR` and the
+process's existing temporary root, preserving short sandbox aliases so Unix
+socket paths stay usable. An explicit `--scratch-parent` remains authoritative.
 The supervisor waits for the child and removes only that invocation's scratch on
 success, failure, or handled Unix SIGHUP/SIGINT/SIGTERM. Tests must write evidence
 that should survive cleanup to Bazel's declared test-output locations, not TMPDIR.
@@ -103,7 +106,8 @@ bazelisk test //:build_lifecycle_tests
 ```
 
 These aliases run the Rust tool in `assets/tools/build_lifecycle.rs`, then invoke
-Cargo with owned scratch beneath the checkout's `target/`. Plain `cargo build`
+Cargo with owned scratch beneath the process's existing temporary root, keeping
+deep checkout paths out of Unix socket names. Plain `cargo build`
 and `cargo test` remain supported but do not use the scratch supervisor. The
 optional `build-tools` feature exposes `decapod-build`; normal installation still
 installs only the runtime binary.

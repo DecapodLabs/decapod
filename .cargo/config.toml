@@ -6,8 +6,8 @@ CLIPPY_CONF_DIR = { value = ".config", relative = true }
 
 [alias]
 # Cargo itself releases its build lock before running the lifecycle supervisor.
-build-main = "run --quiet --features build-tools --bin decapod-build -- --scratch-parent target -- cargo build"
-test-main = "run --quiet --features build-tools --bin decapod-build -- --scratch-parent target -- cargo test"
+build-main = "run --quiet --features build-tools --bin decapod-build -- cargo build"
+test-main = "run --quiet --features build-tools --bin decapod-build -- cargo test"
 
 # Use LLD linker for 2-3x faster linking (requires: apt-get install lld)
 # [target.x86_64-unknown-linux-gnu]

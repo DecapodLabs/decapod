@@ -1,7 +1,7 @@
 //! Run a build or test with an invocation-owned temporary directory.
 //!
-//! Bazel uses this as its test `--run_under` executable. Cargo aliases pass an
-//! explicit scratch parent. Never clean Cargo targets, Bazel output bases, or
+//! Bazel uses this as its test `--run_under` executable. Cargo aliases use the
+//! existing process temp root. Never clean Cargo targets, Bazel output bases, or
 //! arbitrary pre-existing directories from inside a build/test action.
 
 use std::env;
@@ -18,16 +18,20 @@ use std::time::Instant;
 struct Scratch {
     path: PathBuf,
     identity: fs::Metadata,
+    parent_identity: fs::Metadata,
 }
 
 impl Scratch {
     fn create(parent: &Path) -> io::Result<Self> {
         fs::create_dir_all(parent)?;
-        let parent = parent.canonicalize()?;
+        // Keep short sandbox/symlink aliases intact. Canonicalization can turn a
+        // valid Unix-socket path into a hundreds-of-bytes Bazel output path.
+        let parent = std::path::absolute(parent)?;
+        let parent_identity = fs::metadata(&parent)?;
         // Atomic creation, rather than timestamps or a scan of old directories,
         // establishes ownership and keeps concurrent runs disjoint.
         for sequence in 0..1000 {
-            let path = parent.join(format!(".decapod-build-{}-{sequence}", std::process::id()));
+            let path = parent.join(format!(".d{:x}-{sequence:x}", std::process::id()));
             let mut builder = fs::DirBuilder::new();
             #[cfg(unix)]
             {
@@ -37,7 +41,11 @@ impl Scratch {
             match builder.create(&path) {
                 Ok(()) => {
                     let identity = fs::symlink_metadata(&path)?;
-                    return Ok(Self { path, identity });
+                    return Ok(Self {
+                        path,
+                        identity,
+                        parent_identity,
+                    });
                 }
                 Err(error) if error.kind() == io::ErrorKind::AlreadyExists => continue,
                 Err(error) => return Err(error),
@@ -50,6 +58,12 @@ impl Scratch {
     }
 
     fn clean(&self) -> io::Result<()> {
+        let parent = fs::metadata(self.path.parent().expect("scratch has a parent"))?;
+        if !same_directory(&self.parent_identity, &parent) {
+            return Err(io::Error::other(
+                "scratch parent was replaced; refusing cleanup",
+            ));
+        }
         let current = match fs::symlink_metadata(&self.path) {
             Ok(current) => current,
             Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),
@@ -75,6 +89,24 @@ fn same_directory(original: &fs::Metadata, current: &fs::Metadata) -> bool {
     {
         matches!((original.created(), current.created()), (Ok(first), Ok(second)) if first == second)
     }
+}
+
+fn bazel_scratch_parent(test_tmpdir: &Path, process_tmpdir: &Path) -> io::Result<PathBuf> {
+    let test_tmpdir = std::path::absolute(test_tmpdir)?;
+    let process_tmpdir = std::path::absolute(process_tmpdir)?;
+    // Bazel TEST_TMPDIR can live under a very long output base. Use the existing
+    // process temp root when shorter, just as tempfile did before supervision.
+    // Both roots are provided by the current execution environment; do not
+    // hardcode /tmp, escape its sandbox, or sweep either shared parent.
+    Ok(
+        if process_tmpdir.as_os_str().as_encoded_bytes().len()
+            < test_tmpdir.as_os_str().as_encoded_bytes().len()
+        {
+            process_tmpdir
+        } else {
+            test_tmpdir
+        },
+    )
 }
 
 #[cfg(unix)]
@@ -257,27 +289,28 @@ fn run(arguments: Vec<OsString>) -> io::Result<i32> {
         println!(
             "decapod-build [--scratch-parent DIR] [--] COMMAND [ARGS...]\n\
                   Run a build/test and remove only its owned temporary files.\n\
-                  Bazel supplies TEST_TMPDIR; other callers must pass --scratch-parent."
+                  Bazel uses TEST_TMPDIR or its shorter process temp root;\n\
+                  otherwise the process temp root is used. --scratch-parent overrides it."
         );
         return Ok(0);
     }
     let mut arguments = arguments.into_iter().peekable();
-    let parent =
-        if arguments
-            .peek()
-            .is_some_and(|argument| argument == "--scratch-parent")
-        {
-            arguments.next();
-            PathBuf::from(
-                arguments
-                    .next()
-                    .ok_or_else(|| io::Error::other("missing scratch parent"))?,
-            )
-        } else {
-            PathBuf::from(env::var_os("TEST_TMPDIR").ok_or_else(|| {
-                io::Error::other("pass --scratch-parent DIR outside a Bazel test")
-            })?)
-        };
+    let parent = if arguments
+        .peek()
+        .is_some_and(|argument| argument == "--scratch-parent")
+    {
+        arguments.next();
+        PathBuf::from(
+            arguments
+                .next()
+                .ok_or_else(|| io::Error::other("missing scratch parent"))?,
+        )
+    } else if let Some(test_tmpdir) = env::var_os("TEST_TMPDIR") {
+        let test_tmpdir = PathBuf::from(test_tmpdir);
+        bazel_scratch_parent(&test_tmpdir, &env::temp_dir())?
+    } else {
+        env::temp_dir()
+    };
     if arguments.peek().is_some_and(|argument| argument == "--") {
         arguments.next();
     }

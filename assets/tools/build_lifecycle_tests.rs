@@ -74,7 +74,9 @@ fn supervisor_fixture() {
     } else {
         env::current_exe().unwrap()
     };
-    let mut arguments = if env::var_os("DECAPOD_BUILD_TEST_BAZEL").is_some() {
+    let mut arguments = if env::var_os("DECAPOD_BUILD_TEST_BAZEL").is_some()
+        || env::var_os("DECAPOD_BUILD_TEST_AUTOMATIC").is_some()
+    {
         Vec::new()
     } else {
         vec![
@@ -99,6 +101,12 @@ fn child_fixture() {
         return;
     };
     let scratch = env::temp_dir();
+    if let Some(expected) = env::var_os("DECAPOD_BUILD_TEST_CWD") {
+        assert_eq!(
+            env::current_dir().unwrap(),
+            Path::new(&expected).canonicalize().unwrap()
+        );
+    }
     #[cfg(unix)]
     if behavior == "ignore-term" {
         unsafe extern "C" {
@@ -120,6 +128,38 @@ fn child_fixture() {
     fs::write(scratch.join("transient/generated"), "build scratch").unwrap();
     let record = PathBuf::from(env::var_os("DECAPOD_BUILD_TEST_RECORD").unwrap());
     fs::write(&record, scratch.to_str().unwrap()).unwrap();
+    #[cfg(unix)]
+    if behavior == "unix-socket" {
+        use std::os::unix::net::{UnixListener, UnixStream};
+        for relative in [
+            ".tmpABCDEF/capability.sock",
+            ".tmpABCDEF/.decapod/data/broker-runtime/broker.sock",
+        ] {
+            let path = scratch.join(relative);
+            // sockaddr_un.sun_path is 104 bytes on macOS (108 on Linux),
+            // including its terminator. Check this even if AF_UNIX is denied.
+            assert!(
+                path.as_os_str().as_encoded_bytes().len() < 104,
+                "Unix socket path exceeds portable SUN_LEN: {}",
+                path.display()
+            );
+            fs::create_dir_all(path.parent().unwrap()).unwrap();
+            let listener = match UnixListener::bind(&path) {
+                Ok(listener) => listener,
+                Err(error) if error.kind() == io::ErrorKind::PermissionDenied => {
+                    eprintln!(
+                        "AF_UNIX capability unavailable ({error}); path-length assertion passed for {}, live bind/connect proof requires a socket-capable executor",
+                        path.display()
+                    );
+                    continue;
+                }
+                Err(error) => panic!("real Unix socket {}: {error}", path.display()),
+            };
+            let client = UnixStream::connect(&path).unwrap();
+            let (accepted, _) = listener.accept().unwrap();
+            drop((client, accepted, listener));
+        }
+    }
     if behavior == "wait" || behavior == "ignore-term" {
         while !record.with_extension("release").exists() {
             thread::sleep(Duration::from_millis(10));
@@ -193,6 +233,153 @@ fn bazel_test_tmpdir_and_disposable_home_are_owned_but_proof_is_preserved() {
     assert!(result.status.success());
     assert!(!wait_record(&record).exists());
     assert_eq!(fs::read_to_string(proof).unwrap(), "preserve test evidence");
+}
+
+#[cfg(unix)]
+#[test]
+fn long_bazel_parent_uses_owned_short_scratch_for_real_unix_sockets() {
+    let fixture = Fixture::new();
+    let long_parent = fixture.path().join("bazel-output-base-".repeat(12));
+    let process_temp = fixture.path().join("tmp");
+    fs::create_dir_all(&long_parent).unwrap();
+    fs::create_dir(&process_temp).unwrap();
+    fs::write(long_parent.join("proof"), "keep Bazel evidence").unwrap();
+    fs::write(process_temp.join("neighbor"), "keep another run").unwrap();
+    let record = fixture.path().join("record");
+    let output = supervisor(&long_parent, &record, "unix-socket")
+        .env("TEST_TMPDIR", &long_parent)
+        .env("HOME", &long_parent)
+        .env("TMPDIR", &process_temp)
+        .env("DECAPOD_BUILD_TEST_BAZEL", "1")
+        .output()
+        .unwrap();
+    eprint!("{}", String::from_utf8_lossy(&output.stderr));
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let scratch = wait_record(&record);
+    assert!(scratch.is_absolute());
+    assert_eq!(scratch.parent(), Some(process_temp.as_path()));
+    assert!(!scratch.exists());
+    assert_eq!(
+        fs::read_to_string(long_parent.join("proof")).unwrap(),
+        "keep Bazel evidence"
+    );
+    assert_eq!(
+        fs::read_to_string(process_temp.join("neighbor")).unwrap(),
+        "keep another run"
+    );
+}
+
+#[test]
+fn explicit_long_scratch_parent_is_never_silently_relocated() {
+    let fixture = Fixture::new();
+    let long_parent = fixture.path().join("explicit-build-parent-".repeat(10));
+    let record = fixture.path().join("record");
+    let output = supervisor(&long_parent, &record, "success")
+        .env("TMPDIR", fixture.path())
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+    let scratch = wait_record(&record);
+    assert_eq!(scratch.parent(), Some(long_parent.as_path()));
+    assert!(!scratch.exists());
+    assert!(long_parent.exists());
+}
+
+#[cfg(unix)]
+#[test]
+fn automatic_cargo_mode_keeps_scratch_short_from_a_deep_checkout() {
+    let fixture = Fixture::new();
+    let checkout = fixture.path().join("deep-governed-worktree-".repeat(10));
+    let process_temp = fixture.path().join("tmp");
+    fs::create_dir_all(checkout.join("target")).unwrap();
+    fs::create_dir(&process_temp).unwrap();
+    fs::write(checkout.join("target/cache"), "reusable output").unwrap();
+    fs::write(checkout.join("proof"), "preserve evidence").unwrap();
+    fs::write(process_temp.join("neighbor"), "other invocation").unwrap();
+    let record = fixture.path().join("record");
+    let output = supervisor(&checkout, &record, "unix-socket")
+        .current_dir(&checkout)
+        .env_remove("TEST_TMPDIR")
+        .env_remove("DECAPOD_BUILD_TEST_BAZEL")
+        .env("DECAPOD_BUILD_TEST_AUTOMATIC", "1")
+        .env("DECAPOD_BUILD_TEST_CWD", &checkout)
+        .env("TMPDIR", &process_temp)
+        .output()
+        .unwrap();
+    eprint!("{}", String::from_utf8_lossy(&output.stderr));
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let scratch = wait_record(&record);
+    assert!(scratch.is_absolute());
+    assert_eq!(scratch.parent(), Some(process_temp.as_path()));
+    assert!(!scratch.exists());
+    for (path, expected) in [
+        (checkout.join("target/cache"), "reusable output"),
+        (checkout.join("proof"), "preserve evidence"),
+        (process_temp.join("neighbor"), "other invocation"),
+    ] {
+        assert_eq!(fs::read_to_string(path).unwrap(), expected);
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn short_parent_alias_stays_short_and_supports_real_unix_sockets() {
+    use std::os::unix::fs::symlink;
+    let fixture = Fixture::new();
+    let long_parent = fixture.path().join("bazel-sandbox-output-".repeat(10));
+    fs::create_dir_all(&long_parent).unwrap();
+    let alias = fixture.path().join("s");
+    symlink(&long_parent, &alias).unwrap();
+    let record = fixture.path().join("record");
+    let output = supervisor(&alias, &record, "unix-socket").output().unwrap();
+    eprint!("{}", String::from_utf8_lossy(&output.stderr));
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let scratch = wait_record(&record);
+    assert!(scratch.is_absolute());
+    assert_eq!(scratch.parent(), Some(alias.as_path()));
+    assert!(!scratch.exists());
+    assert!(alias.exists());
+    assert!(long_parent.exists());
+}
+
+#[cfg(unix)]
+#[test]
+fn retargeted_parent_alias_never_deletes_the_new_targets_files() {
+    use std::os::unix::fs::symlink;
+    let fixture = Fixture::new();
+    let original = fixture.path().join("original");
+    let replacement = fixture.path().join("replacement");
+    fs::create_dir(&original).unwrap();
+    fs::create_dir(&replacement).unwrap();
+    let alias = fixture.path().join("s");
+    symlink(&original, &alias).unwrap();
+    let scratch = Scratch::create(&alias).unwrap();
+    let name = scratch.path.file_name().unwrap();
+    let unrelated = replacement.join(name);
+    fs::remove_file(&alias).unwrap();
+    symlink(&replacement, &alias).unwrap();
+    // A missing path through a retargeted alias is not evidence of cleanup.
+    assert!(scratch.clean().is_err());
+    fs::create_dir(&unrelated).unwrap();
+    fs::write(unrelated.join("keep"), "another run").unwrap();
+    assert!(scratch.clean().is_err());
+    assert!(original.join(name).exists());
+    assert_eq!(
+        fs::read_to_string(unrelated.join("keep")).unwrap(),
+        "another run"
+    );
 }
 
 #[test]
@@ -323,7 +510,7 @@ fn main_build_and_test_configuration_enables_owned_cleanup() {
         );
     }
     for command in ["build", "test"] {
-        assert!(cargo.contains(&format!("{command}-main = \"run --quiet --features build-tools --bin decapod-build -- --scratch-parent target -- cargo {command}\"")));
+        assert!(cargo.contains(&format!("{command}-main = \"run --quiet --features build-tools --bin decapod-build -- cargo {command}\"")));
     }
 }
 
