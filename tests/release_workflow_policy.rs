@@ -296,7 +296,7 @@ fn public_release_surface_has_no_private_propodus_dependency() {
 }
 
 #[test]
-fn governance_artifact_gate_skips_release_labeled_prs() {
+fn governance_artifact_gate_skips_only_proven_release_metadata() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let workflow =
         fs::read_to_string(root.join(".github/workflows/ci.yml")).expect("read CI workflow");
@@ -306,8 +306,8 @@ fn governance_artifact_gate_skips_release_labeled_prs() {
         "CI must retain the governance artifact job"
     );
     assert!(
-        workflow.contains("!contains(github.event.pull_request.labels.*.name, 'release')"),
-        "release-labeled PRs retain the explicit checkpoint-policy exemption"
+        workflow.contains("needs.release-metadata.outputs.release_only != 'true'"),
+        "only proven version-only PRs retain the checkpoint-policy exemption"
     );
     for required in [
         "govern artifacts verify-checkpoints",
@@ -324,7 +324,7 @@ fn governance_artifact_gate_skips_release_labeled_prs() {
 }
 
 #[test]
-fn material_specs_gate_skips_release_labeled_prs() {
+fn material_specs_gate_skips_only_proven_release_metadata() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let workflow =
         fs::read_to_string(root.join(".github/workflows/ci.yml")).expect("read CI workflow");
@@ -338,8 +338,8 @@ fn material_specs_gate_skips_release_labeled_prs() {
         "material-specs job must fail closed on fingerprint-only refreshes"
     );
     assert!(
-        workflow.contains("!contains(github.event.pull_request.labels.*.name, 'release')"),
-        "release-labeled PRs must not be forced through the material living-specs gate"
+        workflow.contains("needs.release-metadata.outputs.release_only != 'true'"),
+        "only proven version-only PRs skip the material living-specs gate"
     );
 }
 
@@ -360,8 +360,9 @@ fn release_pr_skips_spec_entrypoint_drift_gate() {
         "decapod-validate drift gate must skip release-plz / release-labeled PRs"
     );
     assert!(
-        ci.contains("startsWith(github.head_ref, 'release-plz-')")
+        ci.contains("RELEASE_ONLY: ${{ needs.release-metadata.outputs.release_only }}")
+            && ci.contains("decapod-release-projection-drift")
             && ci.contains("Ensure no spec or entrypoint drift"),
-        "CI drift gate must also skip release-plz / release-labeled PRs"
+        "CI must verify expected projection drift only for proven version-only releases"
     );
 }

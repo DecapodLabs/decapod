@@ -15,6 +15,12 @@ def decapod_targets():
         edition = "2024",
     )
 
+    rust_binary(
+        name = "integration_shards",
+        srcs = ["assets/tools/integration_shards.rs"],
+        edition = "2024",
+    )
+
     rust_test(
         name = "build_lifecycle_tests",
         srcs = [
@@ -91,6 +97,31 @@ def decapod_targets():
         proc_macro_deps = all_crate_deps(proc_macro = True),
     )
 
+    rust_binary(
+        name = "release_projection_drift",
+        srcs = [
+            "assets/tools/release_metadata.rs",
+            "assets/tools/release_projection_drift.rs",
+        ],
+        crate_root = "assets/tools/release_projection_drift.rs",
+        edition = "2024",
+        deps = [":decapod_lib"] + all_crate_deps(normal = True),
+        proc_macro_deps = all_crate_deps(proc_macro = True),
+    )
+
+    rust_test(
+        name = "release_projection_drift_policy",
+        srcs = [
+            "assets/tools/release_metadata.rs",
+            "assets/tools/release_projection_drift.rs",
+            "assets/tools/release_projection_drift_tests.rs",
+        ],
+        crate_root = "assets/tools/release_projection_drift.rs",
+        edition = "2024",
+        deps = [":decapod_lib"] + all_crate_deps(normal = True, normal_dev = True),
+        proc_macro_deps = all_crate_deps(proc_macro = True, proc_macro_dev = True),
+    )
+
     rust_test(
         name = "core_tests",
         srcs = ["tests/core/core.rs"],
@@ -120,8 +151,22 @@ def decapod_targets():
             # This suite asserts uncontended process wall-clock budgets. Rust's
             # test-threads flag alone does not isolate concurrent Bazel targets.
             tags = ["exclusive"] if path == "tests/validate_termination.rs" else [],
-            srcs = [path],
+            srcs = [path] + [
+                "assets/tools/release_metadata.rs",
+            ] if path == "tests/release_metadata_policy.rs" else [path] + [
+                "assets/tools/integration_shards.rs",
+            ] if path == "tests/integration_sharding_policy.rs" else [path],
+            crate_root = path,
             compile_data = ["Cargo.toml", "Cargo.lock"] if path == "tests/release_dependency_policy.rs" else [
+                ".github/workflows/ci.yml",
+            ] if path == "tests/release_metadata_policy.rs" else [
+                ".github/workflows/ci.yml",
+                "//.config/build:decapod.BUILD.bzl",
+            ] if path == "tests/integration_sharding_policy.rs" else [
+                "Cargo.toml",
+                "dist.toml",
+                "dist-workspace.toml",
+            ] if path == "tests/release_distribution_policy.rs" else [
                 "assets/schemas/trajectory.schema.json",
                 "docs/agent/command-contracts.md",
                 "docs/agent/payload-examples.md",
@@ -136,6 +181,7 @@ def decapod_targets():
             },
             data = [
                 "//:decapod",
+                ".github/workflows/ci.yml",
                 ".decapod/config.toml",
                 ".decapod/contracts/README_CONTRACTS.json",
                 "AGENTS.md",

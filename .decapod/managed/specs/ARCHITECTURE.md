@@ -1,5 +1,18 @@
 # Architecture
 
+## Shared-build integration proof
+
+Pull-request integration coverage is planned from the changed paths, compiled
+once, and transferred as executable test artifacts with dereferenced runfiles.
+Parallel runners consume that same build instead of independently compiling the
+CLI and test dependencies. The Gatling executable supplies its own complete test
+inventory; four deterministic, disjoint shards collectively select every listed
+test. Release policies and source-conformance targets run in independent groups.
+The existing lifecycle supervisor remains the owner of test scratch and process
+groups when the relocated executables run. Compilation and artifact preparation
+are explicit build work; each selective-test execution step has a five-minute
+ceiling and must prove a successful runtime below it.
+
 ## Linux workspace publication across libc implementations
 
 Workspace staging is promoted with the Linux `renameat2` system call and
@@ -446,8 +459,8 @@ virtiofs/FUSE filesystem prohibition.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `cdf450ecc34491bfb4ccbde5ff4f8ea4b909586b9d5473363ed770209f1c28a6`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (7 files), `docs/` (1 files), `src/` (125 files), `tests/` (169 files)
+- Repository signal fingerprint: `37766aacd5516c09a68a0d9090f6ee0609ef93501024f3ffda96bcebdb3165c1`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (11 files), `docs/` (1 files), `src/` (125 files), `tests/` (172 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

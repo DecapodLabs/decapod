@@ -1,0 +1,19 @@
+# Keep Cargo as the build/version authority while applying dist.toml's
+# explicit runtime-binary selection. cargo-dist 0.22.1 otherwise discovers
+# feature-gated maintenance binaries that a normal release build omits.
+[workspace]
+members = ["cargo:."]
+
+[dist]
+cargo-dist-version = "0.22.1"
+ci = "github"
+installers = []
+targets = ["x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu", "x86_64-apple-darwin", "aarch64-apple-darwin"]
+allow-dirty = ["ci"]
+
+[dist.github-custom-runners]
+global = "ubuntu-24.04"
+x86_64-unknown-linux-gnu = "ubuntu-24.04"
+aarch64-unknown-linux-gnu = "ubuntu-24.04"
+x86_64-apple-darwin = "macos-14"
+aarch64-apple-darwin = "macos-14"

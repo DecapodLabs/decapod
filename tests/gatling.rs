@@ -3,8 +3,10 @@
 //! Converted from `dev/gatling_test.sh` (v2). Each subsystem is tested
 //! in an isolated temp directory with a git repo + `decapod init`.
 
-use std::path::PathBuf;
-use std::process::Command;
+use std::io::Write;
+use std::path::{Path, PathBuf};
+use std::process::{Command, Output};
+use std::time::Instant;
 use tempfile::TempDir;
 
 // ---------------------------------------------------------------------------
@@ -34,6 +36,66 @@ fn resolve_decapod_bin() -> PathBuf {
         }
     }
     PathBuf::from(cargo_bin)
+}
+
+// Gatling exercises host CLI contracts. Container lifecycle tests opt in in their
+// own suites; an ordinary todo claim here must not pull/build a container image
+// or populate the test supervisor's disposable HOME with rootless overlays.
+fn host_command(dir: &Path, args: &[&str]) -> Command {
+    let mut command = Command::new(resolve_decapod_bin());
+    command
+        .args(args)
+        .current_dir(dir)
+        .env("XDG_CONFIG_HOME", dir.join(".config"))
+        .env("DECAPOD_CLAIM_AUTORUN", "0")
+        // Each fixture issues commands serially: retain broker execution without
+        // paying the production three-second batching window after every call.
+        .env("DECAPOD_GROUP_BROKER_IDLE_SECS", "1")
+        .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1");
+    command
+}
+
+// Write progress directly so the active stage survives libtest capture if the
+// aggregate Bazel budget expires. Keep children in the test supervisor's process
+// group: it owns cancellation and scratch cleanup for the complete invocation.
+fn host_output(dir: &Path, args: &[&str]) -> Output {
+    let started = Instant::now();
+    let label = format!("decapod {} in {}", args.join(" "), dir.display());
+    let _ = writeln!(std::io::stderr(), "gatling: starting {label}");
+    let output = host_command(dir, args)
+        .output()
+        .unwrap_or_else(|error| panic!("failed to run {label}: {error}"));
+    let _ = writeln!(
+        std::io::stderr(),
+        "gatling: finished {label} in {:?} ({})",
+        started.elapsed(),
+        output.status
+    );
+    output
+}
+
+#[test]
+fn host_fixture_suppresses_optional_claim_startup() {
+    let command = host_command(Path::new("fixture"), &["todo", "claim"]);
+    let autorun = command
+        .get_envs()
+        .find(|(name, _)| *name == "DECAPOD_CLAIM_AUTORUN");
+    assert_eq!(
+        autorun.and_then(|(_, value)| value),
+        Some(std::ffi::OsStr::new("0"))
+    );
+    let idle = command
+        .get_envs()
+        .find(|(name, _)| *name == "DECAPOD_GROUP_BROKER_IDLE_SECS");
+    assert_eq!(
+        idle.and_then(|(_, value)| value),
+        Some(std::ffi::OsStr::new("1"))
+    );
+    assert!(
+        command
+            .get_envs()
+            .all(|(name, _)| name != "DECAPOD_GROUP_BROKER_DISABLE")
+    );
 }
 
 /// Create a temp dir with git init + decapod init --force.
@@ -69,21 +131,11 @@ fn setup_workspace() -> (TempDir, PathBuf) {
         .output()
         .unwrap();
 
-    // decapod init --force
-    let exe = resolve_decapod_bin();
-    let out = Command::new(&exe)
-        .args(["init", "--force"])
-        .current_dir(&dir)
-        .output()
-        .expect("decapod init");
+    // Keep initialization and the session in the same host-only fixture policy.
+    let out = host_output(&dir, &["init", "--force"]);
     assert!(out.status.success(), "decapod init --force failed");
 
-    let session = Command::new(&exe)
-        .args(["session", "acquire"])
-        .current_dir(&dir)
-        .env("XDG_CONFIG_HOME", dir.join(".config"))
-        .output()
-        .expect("decapod session acquire");
+    let session = host_output(&dir, &["session", "acquire"]);
     assert!(
         session.status.success(),
         "decapod session acquire failed:\n{}\n{}",
@@ -95,14 +147,8 @@ fn setup_workspace() -> (TempDir, PathBuf) {
 }
 
 /// Run decapod with given args. Returns (success, stdout+stderr).
-fn run(dir: &PathBuf, args: &[&str]) -> (bool, String) {
-    let out = Command::new(resolve_decapod_bin())
-        .args(args)
-        .current_dir(dir)
-        .env("XDG_CONFIG_HOME", dir.join(".config"))
-        .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
-        .output()
-        .expect("failed to run decapod");
+fn run(dir: &Path, args: &[&str]) -> (bool, String) {
+    let out = host_output(dir, args);
     let combined = format!(
         "{}\n{}",
         String::from_utf8_lossy(&out.stdout),
@@ -112,7 +158,7 @@ fn run(dir: &PathBuf, args: &[&str]) -> (bool, String) {
 }
 
 /// Assert command succeeds.
-fn ok(dir: &PathBuf, args: &[&str]) {
+fn ok(dir: &Path, args: &[&str]) {
     let (success, output) = run(dir, args);
     assert!(
         success,
@@ -123,7 +169,7 @@ fn ok(dir: &PathBuf, args: &[&str]) {
 }
 
 /// Assert command fails.
-fn fail(dir: &PathBuf, args: &[&str]) {
+fn fail(dir: &Path, args: &[&str]) {
     let (success, output) = run(dir, args);
     assert!(
         !success,
@@ -134,12 +180,8 @@ fn fail(dir: &PathBuf, args: &[&str]) {
 }
 
 /// Extract first task ID from `todo --format json list` output.
-fn extract_task_id(dir: &PathBuf) -> String {
-    let out = Command::new(resolve_decapod_bin())
-        .args(["todo", "--format", "json", "list"])
-        .current_dir(dir)
-        .output()
-        .expect("failed to run decapod");
+fn extract_task_id(dir: &Path) -> String {
+    let out = host_output(dir, &["todo", "--format", "json", "list"]);
     let stdout = String::from_utf8_lossy(&out.stdout);
     // Parse stdout-only (no stderr contamination) as JSON.
     if let Ok(v) = serde_json::from_str::<serde_json::Value>(stdout.trim())
@@ -351,10 +393,30 @@ fn t040_todo_lifecycle() {
 
     // T045: get
     ok(&dir, &["todo", "get", "--id", &id]);
-    // T046: claim
-    ok(
+    // T046: the host contract claims ownership without preparing containers.
+    let claim = host_output(
         &dir,
-        &["todo", "claim", "--id", &id, "--agent", "test-agent"],
+        &[
+            "todo",
+            "--format",
+            "json",
+            "claim",
+            "--id",
+            &id,
+            "--agent",
+            "test-agent",
+        ],
+    );
+    assert!(
+        claim.status.success(),
+        "{}",
+        String::from_utf8_lossy(&claim.stderr)
+    );
+    let claimed: serde_json::Value = serde_json::from_slice(&claim.stdout).unwrap();
+    assert_eq!(claimed["status"], "ok");
+    assert!(
+        claimed.get("container").is_none(),
+        "unexpected container preparation: {claimed}"
     );
     // T047: comment
     ok(
