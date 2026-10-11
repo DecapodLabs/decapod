@@ -100,6 +100,15 @@
         "Gatling49passed1ignored120.76sec",
         "Release classifier14, projection10, distribution3 regressions passed"
       ]
+    },
+    {
+      "id": "borrowed-path-and-packaging-proof",
+      "summary": "Use borrowed fixture paths after clippy review and record verified native product-only archive plus final exact gate regressions",
+      "input_digest": "sha256:832d958104bedf820f2013b490ba87f41d67a7d1754712856c705955afb8be40",
+      "proof_refs": [
+        "Native cargo-dist x86_64 archive and checksum verified",
+        "cargo clippy --all-targets --all-features: warnings denied pass"
+      ]
     }
   ],
   "intents": {
@@ -178,10 +187,22 @@
       "active_boundaries": [
         "Preserve production container and database behavior, strict substantive proof gates, and minimal version-only releases; no release publication or merge."
       ],
-      "artifact_hash": "sha256:fe7b9687243927d36f654e46ea3d2e8cdf392909bf7d7582187f97a32a73a08f",
+      "artifact_hash": "sha256:d885c0311dfb0f3807b5d57103096e148cd7bf4bb7e2feef5b19feb78c2efc9e",
       "checks": [
         {
+          "name": "all-target-clippy",
+          "status": "passed"
+        },
+        {
+          "name": "all-target-clippy-initial",
+          "status": "failed"
+        },
+        {
           "name": "baseline-isolated-decide",
+          "status": "passed"
+        },
+        {
+          "name": "current-validator-build",
           "status": "passed"
         },
         {
@@ -209,8 +230,12 @@
           "status": "passed"
         },
         {
+          "name": "independent-review",
+          "status": "passed"
+        },
+        {
           "name": "native-release-package",
-          "status": "partial"
+          "status": "passed"
         },
         {
           "name": "precommit-validation",
@@ -271,10 +296,17 @@
             "intent_id": "intent:postmerge-actions",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:postmerge-actions",
+            "event_id": "event:8",
+            "intent_id": "intent:postmerge-actions",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "postmerge-actions": {
@@ -365,12 +397,37 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "cargo clippy --locked --all-targets --all-features -- -D warnings",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "Clippy identified two borrowed PathBuf helper arguments after centralization; use Path references consistently, then all-target/all-feature clippy passed with warnings denied",
+                  "Pinned cargo-dist native x86_64 Linux packaging passed; actual archive runtime+README+LICENSE+CHANGELOG only and checksum sidecar matched",
+                  "Independent targeted review found no actionable blocker; foreign-target packaging remains unrun, all four target plans pass"
+                ],
+                "proof_refs": [
+                  "all-target-clippy-initial",
+                  "all-target-clippy",
+                  "current-validator-build",
+                  "native-release-package",
+                  "independent-review"
+                ],
+                "scope": [
+                  "Gatling fixtures, release metadata classifier, narrow Actions routing and regression tests",
+                  "Gatling host fixtures, strict release metadata and projection gates, CI routing, pinned release artifact selection"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
+        "cargo build --locked --bin decapod",
+        "cargo clippy --locked --all-targets --all-features -- -D warnings",
         "cargo fmt --all -- --check",
         "cargo test --locked --test gatling -- --test-threads=4"
       ],
@@ -380,10 +437,13 @@
         "3 distribution regressions passed; native cargo-dist packaging still compiling its cold dist profile",
         "9 projection regression groups and targeted clippy passed; exact94eb4a1d release replay validate191passed/0failed then exact drift checker passed",
         "All four Actions release jobs 114488874649, 114488874582, 114488874547, 114488874517 complete optimized compilation then fail artifact assembly: failed to find bin decapod-build.",
+        "Clippy identified two borrowed PathBuf helper arguments after centralization; use Path references consistently, then all-target/all-feature clippy passed with warnings denied",
         "Full Gatling: 49 passed, zero failed, one pre-existing ignored, 120.76 seconds; unchanged aggregate300-second budget",
         "Gatling fixture children preserve invocation supervisor process group; raw start/end command diagnostics remain visible on aggregate timeout",
         "GitHub Actions job 114486043863: aggregate 300-second Gatling timeout and unintended rootless overlay under invocation scratch",
         "GitHub Actions job 114489316653: validator succeeded before version-only generated drift gate failed",
+        "Independent targeted review found no actionable blocker; foreign-target packaging remains unrun, all four target plans pass",
+        "Pinned cargo-dist native x86_64 Linux packaging passed; actual archive runtime+README+LICENSE+CHANGELOG only and checksum sidecar matched",
         "Precommit validator198passed2failed: dirty-source mandate and host-container gate; rerun clean committed source without waiving gates",
         "cargo test --test gatling t292_decide_session_lifecycle: pristine 0.107.3 source passed in 19.35 seconds"
       ],

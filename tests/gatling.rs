@@ -132,7 +132,7 @@ fn setup_workspace() -> (TempDir, PathBuf) {
 }
 
 /// Run decapod with given args. Returns (success, stdout+stderr).
-fn run(dir: &PathBuf, args: &[&str]) -> (bool, String) {
+fn run(dir: &Path, args: &[&str]) -> (bool, String) {
     let out = host_output(dir, args);
     let combined = format!(
         "{}\n{}",
@@ -143,7 +143,7 @@ fn run(dir: &PathBuf, args: &[&str]) -> (bool, String) {
 }
 
 /// Assert command succeeds.
-fn ok(dir: &PathBuf, args: &[&str]) {
+fn ok(dir: &Path, args: &[&str]) {
     let (success, output) = run(dir, args);
     assert!(
         success,
@@ -154,7 +154,7 @@ fn ok(dir: &PathBuf, args: &[&str]) {
 }
 
 /// Assert command fails.
-fn fail(dir: &PathBuf, args: &[&str]) {
+fn fail(dir: &Path, args: &[&str]) {
     let (success, output) = run(dir, args);
     assert!(
         !success,
@@ -165,7 +165,7 @@ fn fail(dir: &PathBuf, args: &[&str]) {
 }
 
 /// Extract first task ID from `todo --format json list` output.
-fn extract_task_id(dir: &PathBuf) -> String {
+fn extract_task_id(dir: &Path) -> String {
     let out = host_output(dir, &["todo", "--format", "json", "list"]);
     let stdout = String::from_utf8_lossy(&out.stdout);
     // Parse stdout-only (no stderr contamination) as JSON.
