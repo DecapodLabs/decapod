@@ -15,6 +15,12 @@ def decapod_targets():
         edition = "2024",
     )
 
+    rust_binary(
+        name = "integration_shards",
+        srcs = ["assets/tools/integration_shards.rs"],
+        edition = "2024",
+    )
+
     rust_test(
         name = "build_lifecycle_tests",
         srcs = [
@@ -147,11 +153,16 @@ def decapod_targets():
             tags = ["exclusive"] if path == "tests/validate_termination.rs" else [],
             srcs = [path] + [
                 "assets/tools/release_metadata.rs",
-            ] if path == "tests/release_metadata_policy.rs" else [path],
+            ] if path == "tests/release_metadata_policy.rs" else [path] + [
+                "assets/tools/integration_shards.rs",
+            ] if path == "tests/integration_sharding_policy.rs" else [path],
             crate_root = path,
             compile_data = ["Cargo.toml", "Cargo.lock"] if path == "tests/release_dependency_policy.rs" else [
                 ".github/workflows/ci.yml",
             ] if path == "tests/release_metadata_policy.rs" else [
+                ".github/workflows/ci.yml",
+                "//.config/build:decapod.BUILD.bzl",
+            ] if path == "tests/integration_sharding_policy.rs" else [
                 "Cargo.toml",
                 "dist.toml",
                 "dist-workspace.toml",

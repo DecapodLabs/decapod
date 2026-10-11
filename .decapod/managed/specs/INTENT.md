@@ -27,6 +27,10 @@ and release projection refresh must not require fabricated authored spec prose
 in a version-only release PR. Test fixtures may explicitly suppress optional
 container preparation; production task claims and container isolation keep
 their existing behavior.
+PR integration execution must finish each selective-test step in under five
+minutes. Shared compilation and complete parallel shards reduce elapsed time
+without dropping assertions, disabling production behavior, or hiding failures
+behind larger timeouts. Publication proof includes the final per-shard timings.
 
 ## Contextual safety outcome (#1370)
 
@@ -351,8 +355,8 @@ policy ban based solely on virtiofs or FUSE filesystem identity.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `50643457a2781105ad23a22cec5af9e0bc5ad1580a97a086b2f5ec08c902f927`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (10 files), `docs/` (1 files), `src/` (125 files), `tests/` (171 files)
+- Repository signal fingerprint: `37766aacd5516c09a68a0d9090f6ee0609ef93501024f3ffda96bcebdb3165c1`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (11 files), `docs/` (1 files), `src/` (125 files), `tests/` (172 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

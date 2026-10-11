@@ -639,7 +639,7 @@ jobs:
       fail-fast: false
       max-parallel: 4
       matrix:
-        target: [core, plugins, cli, integration]
+        target: [core, plugins, cli]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -744,27 +744,131 @@ jobs:
                   --test_arg=--test-threads=1
               fi
               ;;
-            integration)
-              if echo "$CHANGED" | grep -qE '(^|,)tests/gatling\.rs(,|$)'; then
-                bazelisk test //:gatling --test_arg=--test-threads=4
-              fi
-              if echo "$CHANGED" | grep -qE '(^|,)(assets/tools/release_(metadata|projection_drift|projection_drift_tests)\.rs|tests/release_(metadata|projection_drift)_policy\.rs|\.github/workflows/ci\.yml)(,|$)'; then
-                bazelisk test //:release_metadata_policy //:release_projection_drift_policy --test_arg=--test-threads=4
-              fi
-              if echo "$CHANGED" | grep -qE '(^|,)(Cargo\.toml|dist(-workspace)?\.toml|tests/release_distribution_policy\.rs)(,|$)'; then
-                bazelisk test //:release_distribution_policy --test_arg=--test-threads=4
-              fi
-              if echo "$CHANGED" | grep -qE 'src/'; then
-                bazelisk test \
-                  //:contract_conformance \
-                  //:constitution_claims \
-                  //:spec_conformance \
-                  //:substrate_integrity \
-                  --test_arg=--test-threads=1
-              fi
-              ;;
           esac
           echo "✓ Selective tests passed"
+
+  # Build selected integration tests once, then distribute relocatable runfiles.
+  # Compilation is shared work, never repeated inside each timed test shard.
+  integration-prepare:
+    name: Prepare Integration Tests
+    needs: release-metadata
+    runs-on: ubuntu-latest
+    if: (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && needs.release-metadata.outputs.release_only != 'true'
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      count: ${{ steps.plan.outputs.count }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.96.1
+      - name: Install Bazelisk
+        run: |
+          set -euo pipefail
+          bazelisk_dir="${HOME}/.local/bin"
+          mkdir -p "$bazelisk_dir"
+          if ! command -v bazelisk >/dev/null 2>&1; then
+            curl --fail --silent --show-error --location \
+              "https://github.com/bazelbuild/bazelisk/releases/download/v1.26.0/bazelisk-linux-amd64" \
+              --output "$bazelisk_dir/bazelisk"
+            chmod +x "$bazelisk_dir/bazelisk"
+          fi
+          echo "$bazelisk_dir" >> "$GITHUB_PATH"
+          echo "PATH=$bazelisk_dir:$PATH" >> "$GITHUB_ENV"
+      - name: Plan integration shards from changed files
+        id: plan
+        run: |
+          set -euo pipefail
+          base_ref="${{ github.base_ref || 'master' }}"
+          if ! git fetch --no-tags --prune origin "$base_ref"; then
+            echo "::warning::PR base fetch unavailable; using refs already present in the full checkout."
+          fi
+          if base_commit=$(git rev-parse --verify "origin/$base_ref^{commit}" 2>/dev/null); then
+            git diff --name-only -z "$base_commit"...HEAD > "$RUNNER_TEMP/integration-paths.txt"
+          elif base_commit=$(git rev-parse --verify HEAD^ 2>/dev/null); then
+            echo "::warning::PR base ref unavailable; using the checked-out commit parent for selective test detection."
+            git diff --name-only -z "$base_commit"...HEAD > "$RUNNER_TEMP/integration-paths.txt"
+          else
+            echo "::error::No PR base or commit parent is available for selective test detection."
+            exit 1
+          fi
+          rustc --edition=2024 assets/tools/integration_shards.rs -o "$RUNNER_TEMP/integration-shards"
+          "$RUNNER_TEMP/integration-shards" plan --paths "$RUNNER_TEMP/integration-paths.txt" > "$RUNNER_TEMP/integration-matrix.json"
+          echo "matrix=$(jq -c . "$RUNNER_TEMP/integration-matrix.json")" >> "$GITHUB_OUTPUT"
+          echo "count=$(jq '.include | length' "$RUNNER_TEMP/integration-matrix.json")" >> "$GITHUB_OUTPUT"
+      - name: Compile and package selected integration tests once
+        if: steps.plan.outputs.count != '0'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/integration-shards" prepare \
+            --paths "$RUNNER_TEMP/integration-paths.txt" \
+            --output "$RUNNER_TEMP/integration-tests"
+          mkdir -p target/integration-artifacts
+          tar -C "$RUNNER_TEMP/integration-tests" -cf target/integration-artifacts/integration-tests.tar .
+      - name: Upload shared integration tests
+        if: steps.plan.outputs.count != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: decapod-integration-linux-${{ github.sha }}
+          # A regular archive preserves executable modes and runfile hard links.
+          path: target/integration-artifacts/integration-tests.tar
+          retention-days: 1
+          compression-level: 0
+
+  test-integration:
+    name: Tests (integration ${{ matrix.shard }})
+    needs: [release-metadata, integration-prepare]
+    runs-on: ubuntu-latest
+    if: (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && needs.release-metadata.outputs.release_only != 'true' && needs.integration-prepare.outputs.count != '0'
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.integration-prepare.outputs.matrix) }}
+    steps:
+      - name: Download shared integration tests
+        uses: actions/download-artifact@v4
+        with:
+          name: decapod-integration-linux-${{ github.sha }}
+          path: target/integration-download
+      - name: Restore integration executables and runfiles
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/integration-tests"
+          tar -xf target/integration-download/integration-tests.tar -C "$RUNNER_TEMP/integration-tests"
+      - name: Run selective tests
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/integration-tests/integration-shards" run \
+            --artifact "$RUNNER_TEMP/integration-tests" \
+            --shard "${{ matrix.shard }}"
+
+  # Preserve the established required-check name while aggregating every shard.
+  integration-status:
+    name: Tests (integration)
+    needs: [release-metadata, integration-prepare, test-integration]
+    runs-on: ubuntu-latest
+    if: always() && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && needs.release-metadata.result == 'success' && needs.release-metadata.outputs.release_only != 'true'
+    steps:
+      - name: Require successful preparation and complete shard coverage
+        env:
+          PREPARE_RESULT: ${{ needs.integration-prepare.result }}
+          SHARD_RESULT: ${{ needs.test-integration.result }}
+          SHARD_COUNT: ${{ needs.integration-prepare.outputs.count }}
+        run: |
+          set -euo pipefail
+          test "$PREPARE_RESULT" = success
+          if [ "$SHARD_COUNT" = 0 ]; then
+            test "$SHARD_RESULT" = skipped
+          elif [[ "$SHARD_COUNT" =~ ^[1-9][0-9]*$ ]]; then
+            test "$SHARD_RESULT" = success
+          else
+            echo "::error::Missing or invalid integration shard count."
+            exit 1
+          fi
 
   # MASTER: Full test suite for direct master pushes only
   test-master:
@@ -940,7 +1044,7 @@ jobs:
       always() && !cancelled() && github.ref == 'refs/heads/master' &&
       needs.release-metadata.result == 'success' && needs.health.result == 'success' &&
       !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
-    needs: [release-metadata, fmt, clippy, deps-lint, test, test-master, test-rpc-suite, chaos-replay, daemonless-lifecycle, workspace-lifecycle-docker, contracts, health, musl-publication]
+    needs: [release-metadata, fmt, clippy, deps-lint, test, integration-prepare, test-integration, integration-status, test-master, test-rpc-suite, chaos-replay, daemonless-lifecycle, workspace-lifecycle-docker, contracts, health, musl-publication]
     steps:
       - uses: actions/checkout@v4
         with:

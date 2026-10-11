@@ -1,5 +1,18 @@
 # Interfaces
 
+## Integration shard tooling
+
+The repository-owned Rust integration helper exposes `plan --paths FILE`,
+`prepare --paths FILE --output DIR`, and `run --artifact DIR --shard ID`.
+Planning emits the selected matrix; preparation builds and packages those test
+executables once; running consumes the prepared artifact without invoking a
+compiler. Gatling selection comes from the executable's libtest inventory and
+uses exact test names. Invalid shard identities, duplicate or empty inventories,
+missing artifact inputs, and failed child tests fail the invocation. Each test
+uses its relocated runfiles root and the existing lifecycle supervisor, preserving
+normal ignored-test semantics and child failure propagation. Artifact names are
+bound to the current workflow commit, not a mutable latest-build alias.
+
 ## Canonical Governance Lifecycle
 
 Agents populate the document in dependency order: establish intent, scope, and
@@ -353,8 +366,8 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `50643457a2781105ad23a22cec5af9e0bc5ad1580a97a086b2f5ec08c902f927`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (10 files), `docs/` (1 files), `src/` (125 files), `tests/` (171 files)
+- Repository signal fingerprint: `37766aacd5516c09a68a0d9090f6ee0609ef93501024f3ffda96bcebdb3165c1`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (11 files), `docs/` (1 files), `src/` (125 files), `tests/` (172 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

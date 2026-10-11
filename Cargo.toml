@@ -47,6 +47,11 @@ name = "decapod-release-projection-drift"
 path = "assets/tools/release_projection_drift.rs"
 required-features = ["build-tools"]
 
+[[bin]]
+name = "decapod-integration-shards"
+path = "assets/tools/integration_shards.rs"
+required-features = ["build-tools"]
+
 [build-dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"

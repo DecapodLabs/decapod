@@ -62,6 +62,11 @@
     "target_base": "origin/master"
   },
   "claims": {
+    "bounded-integration-matrix": {
+      "statement": "PR integration test execution uses one shared build and complete non-overlapping Gatling shards; every selective-test step finishes in under five minutes.",
+      "falsifier": "A selected target or test is omitted/duplicated, compilation repeats inside shard runs, or any successful selective-test step takes 300 seconds or more.",
+      "status": "open"
+    },
     "host-gatling": {
       "statement": "Host Gatling claims ownership without optional container preparation; unfinished CLI stages remain visible in aggregate-timeout diagnostics.",
       "falsifier": "A host fixture starts container preparation or command-stage diagnostics are hidden when the full target times out.",
@@ -151,24 +156,32 @@
       "proof_refs": [
         "decapod validate: 203 passed,0 failed; remote source c6ce80073c0bf07e638d0e69b1290b0555eb9eca"
       ]
+    },
+    {
+      "id": "integration-shared-build-matrix",
+      "summary": "Build integration tests once and execute complete bounded parallel shards",
+      "input_digest": "sha256:bf09e2c5c638bc489a0b58e52cb35924cfa9c28d8b5e1e716b1fd971c4941522",
+      "proof_refs": [
+        "/tmp/integration-relocation.HxqiVJ/summary.json:130passed,1ignored; all9shardsunder160s;31Cargo regressions and all-feature clippy passed"
+      ]
     }
   ],
   "intents": {
-    "intent:postmerge-bazel-fixture": {
+    "intent:postmerge-integration-matrix": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Preserve runtime behavior, all test assertions, and existing CI budgets"
+        "Preserve all coverage, validate, release-only classification, production behavior and cleanup ownership"
       ],
       "constraints": [
-        "tests/release_metadata_policy.rs and its Bazel compile_data declaration"
+        "GitHub Actions integration build/matrix plus Rust planner/runner and regression tests"
       ],
       "created_sequence": 1,
-      "id": "intent:postmerge-bazel-fixture",
+      "id": "intent:postmerge-integration-matrix",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Fix the post-merge Actions failures and get all tests green in PR 1392",
-      "refined_intent": "Declare the release metadata workflow fixture as a compile-time Bazel input after full Gatling passed in socket-capable CI",
+      "raw_intent": "Fix post-merge Actions and keep every integration selective test step below five minutes",
+      "refined_intent": "Build integration executables once and run complete coverage-checked target and Gatling shards in parallel through the existing lifecycle supervisor",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -228,36 +241,33 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Fix the post-merge Gatling timeout, strictly slim only verified version-only release source checks while retaining actual validation, verify only exact expected projection drift, and package only the product executable across all four release targets.",
+      "intent": "Repair post-merge host test timeouts, version-only release routing/projection validation and release packaging, and keep each PR integration selective-test step below five minutes through complete parallel coverage with one shared build.",
       "phases": [],
       "proof_hooks": [
-        "Four-thread Gatling host-fixture lifecycle and command-stage diagnostics",
-        "Strict release classifier and exact projection adversarial regressions plus exact #1391 replay",
-        "Pinned four-target cargo-dist product selection and version-inheritance regression",
-        "Current-source validation, formatting, clippy and exact-head Actions"
+        "Exact-head Actions: every integration selective-test matrix step succeeds in under 300 seconds, with complete no-overlap Gatling inventory and all previously selected integration targets retained."
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Only the embedded release-policy test fixture and its declared Bazel input change; architecture remains unchanged.",
-          "reviewed_code_fingerprint": "50643457a2781105ad23a22cec5af9e0bc5ad1580a97a086b2f5ec08c902f927",
-          "spec_material_hash": "5c81115746da106fc0f2aff3d365f03f250d3f8356985e5ed75bfcd2b48d83a0"
+          "reason": "Specify one shared integration build, relocated runfiles and complete parallel Gatling coverage.",
+          "reviewed_code_fingerprint": "37766aacd5516c09a68a0d9090f6ee0609ef93501024f3ffda96bcebdb3165c1",
+          "spec_material_hash": "67644892351700c9c9936c3c5bc74087c16564c2b2a8c9a98ae7555648f6736c"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "No CLI or workflow interface changes; retain every release policy assertion.",
-          "reviewed_code_fingerprint": "50643457a2781105ad23a22cec5af9e0bc5ad1580a97a086b2f5ec08c902f927",
-          "spec_material_hash": "cd9b94141bc326b505eb812570a82b8d663cb7db367c39d9fe7e3cd91924f133"
+          "reason": "Document the repository Rust plan/prepare/run interface and fail-closed shard inventory contract.",
+          "reviewed_code_fingerprint": "37766aacd5516c09a68a0d9090f6ee0609ef93501024f3ffda96bcebdb3165c1",
+          "spec_material_hash": "db2f24acec8e9a173adab4d4660f2d90353431f2a00c28c59c5f8b1cacb8845d"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Hermetic test input only; no runtime security or permission changes.",
-          "reviewed_code_fingerprint": "50643457a2781105ad23a22cec5af9e0bc5ad1580a97a086b2f5ec08c902f927",
-          "spec_material_hash": "a61a52af20a5233dac76f61b4b6f9bf65fba2907f688eb5b7ed0db4a0515ed3d"
+          "reason": "Document current-workflow artifact custody and retention of supervisor-owned process groups and scratch.",
+          "reviewed_code_fingerprint": "37766aacd5516c09a68a0d9090f6ee0609ef93501024f3ffda96bcebdb3165c1",
+          "spec_material_hash": "22affdad8f47fc107d0e424cd99eb5daeaad3db383eb8abf7600fdf5ec653bf7"
         }
       ],
       "state": "APPROVED",
@@ -270,24 +280,32 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791739375Z"
+      "updated_at": "1791740985Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Preserve runtime behavior, all test assertions, and existing CI budgets"
+        "Preserve all coverage, validate, release-only classification, production behavior and cleanup ownership"
       ],
-      "artifact_hash": "sha256:47e6aae05c900e4b6fd2fd12dd2f519610ec38177e78e39960fab38dda66e9d2",
+      "artifact_hash": "sha256:4d625a3a0b9e9d9724b2f148d95be7809e4272a724aa305d25f7cf936f0affca",
       "checks": [
         {
-          "name": "bazel_release_policy_targets",
+          "name": "all_target_all_feature_clippy",
           "status": "passed"
         },
         {
-          "name": "cargo_release_metadata_and_distribution",
+          "name": "baseline_full_ci",
           "status": "passed"
         },
         {
-          "name": "decapod validate",
+          "name": "baseline_integration_step_under_300s",
+          "status": "failed"
+        },
+        {
+          "name": "cargo_matrix_and_release_tests",
+          "status": "passed"
+        },
+        {
+          "name": "complete_gatling_partition",
           "status": "passed"
         },
         {
@@ -295,118 +313,88 @@
           "status": "passed"
         },
         {
-          "name": "gatling_socket_ci",
+          "name": "local_shards_under_300s",
           "status": "passed"
         },
         {
-          "name": "release_metadata_bazel_prior",
-          "status": "failed"
-        },
-        {
-          "name": "targeted_clippy",
+          "name": "relocated_integration_artifact",
           "status": "passed"
         }
       ],
-      "current_phase": "validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:postmerge-bazel-fixture",
+            "intent_id": "intent:postmerge-integration-matrix",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:postmerge-bazel-fixture",
+            "intent_id": "intent:postmerge-integration-matrix",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:postmerge-bazel-fixture",
+            "detail": "trajectory:postmerge-integration-matrix",
             "event_id": "event:4",
-            "intent_id": "intent:postmerge-bazel-fixture",
+            "intent_id": "intent:postmerge-integration-matrix",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:postmerge-bazel-fixture",
+            "detail": "trajectory:postmerge-integration-matrix",
             "event_id": "event:5",
-            "intent_id": "intent:postmerge-bazel-fixture",
+            "intent_id": "intent:postmerge-integration-matrix",
             "kind": "trajectory_step_recorded",
             "sequence": 5
-          },
-          {
-            "detail": "trajectory:postmerge-bazel-fixture",
-            "event_id": "event:6",
-            "intent_id": "intent:postmerge-bazel-fixture",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "postmerge-bazel-fixture": {
+          "postmerge-integration-matrix": {
             "evidence_only": true,
-            "id": "postmerge-bazel-fixture",
-            "intent_id": "intent:postmerge-bazel-fixture",
+            "id": "postmerge-integration-matrix",
+            "intent_id": "intent:postmerge-integration-matrix",
             "steps": [
               {
                 "action": "trajectory.record",
-                "command": "GitHub Actions run38158116304/job114525242392",
+                "command": "CI run38159672346 at0b535cf0: integration Run selective tests17:27:13-17:36:22=549s; Gatling293.1s; all checks succeeded",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "tests/release_metadata_policy.rs",
-                  ".config/build/decapod.BUILD.bzl",
-                  "Exact head d294b246 CI job114525242392: full Gatling passed231.4 seconds; subsequent release metadata policy assertion failed reading compile-time checkout path under Bazel; projection suite passed"
+                  "Fresh exact-head shard timing proof remains pending; source suite is retained in four complete disjoint Gatling partitions."
                 ],
                 "proof_refs": [
-                  "gatling_socket_ci",
-                  "release_metadata_bazel_prior"
+                  "baseline_full_ci",
+                  "baseline_integration_step_under_300s",
+                  "cargo_matrix_and_release_tests",
+                  "all_target_all_feature_clippy",
+                  "formatting"
                 ],
                 "scope": [
-                  "tests/release_metadata_policy.rs and its Bazel compile_data declaration"
+                  "GitHub Actions integration build/matrix plus Rust planner/runner and regression tests"
                 ],
                 "sequence": 4,
                 "validation_findings": []
               },
               {
                 "action": "trajectory.record",
-                "command": "cargo test --locked --test release_metadata_policy --test release_distribution_policy (17 passed); cargo clippy --locked --test release_metadata_policy -- -D warnings; cargo fmt --all -- --check",
+                "command": "One Bazel build and portable152MB artifact;9relocated shards run with existing lifecycle supervisor and300s guards",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "The workflow fixture also passed under Linux sandbox; other Git fixture tests require the same processwrapper sandbox used by CI because this local Linux sandbox denies Git random-byte access."
+                  "130active tests passed plus1pre-existing ignored; Gatling50-name --list inventory exactly equals disjoint union of4shard outcomes. Gatling durations159.925/130.632/127.077/114.394s; spec156.938s; substrate69.945s; release3.885s; contract0.029s; constitution0.228s. Local proof /tmp/integration-relocation.HxqiVJ/summary.json; exact-head CI timings still pending."
                 ],
                 "proof_refs": [
-                  "cargo_release_metadata_and_distribution",
-                  "targeted_clippy",
-                  "formatting",
-                  "bazel_release_policy_targets"
+                  "relocated_integration_artifact",
+                  "complete_gatling_partition",
+                  "local_shards_under_300s"
                 ],
                 "scope": [
-                  "tests/release_metadata_policy.rs and its Bazel compile_data declaration"
+                  "GitHub Actions integration build/matrix plus Rust planner/runner and regression tests"
                 ],
                 "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "command": "decapod validate",
-                "custody_event_id": "event:6",
-                "observations": [
-                  ".decapod/governance.json",
-                  ".decapod/governance.json",
-                  "validation epoch ve_80da9b22e76c5e94 completed with zero failures"
-                ],
-                "proof_refs": [
-                  "decapod validate"
-                ],
-                "scope": [
-                  "tests/release_metadata_policy.rs and its Bazel compile_data declaration"
-                ],
-                "sequence": 6,
                 "validation_findings": []
               }
             ]
@@ -414,32 +402,22 @@
         }
       },
       "declared_commands": [
-        "Bazel9.3.0 test //:release_metadata_policy //:release_distribution_policy //:release_projection_drift_policy --lockfile_mode=off --spawn_strategy=processwrapper-sandbox (all3 targets passed; uncached)",
-        "GitHub Actions run38158116304/job114525242392",
-        "cargo test --locked --test release_metadata_policy --test release_distribution_policy (17 passed); cargo clippy --locked --test release_metadata_policy -- -D warnings; cargo fmt --all -- --check",
-        "decapod validate"
+        "CI run38159672346 at0b535cf0: integration Run selective tests17:27:13-17:36:22=549s; Gatling293.1s; all checks succeeded",
+        "One Bazel build and portable152MB artifact;9relocated shards run with existing lifecycle supervisor and300s guards",
+        "cargo test --locked --test integration_sharding_policy --test release_metadata_policy --test release_distribution_policy:31passed; cargo clippy --locked --all-targets --all-features -- -D warnings; cargo fmt --all -- --check"
       ],
       "destination": "pr",
       "evidence": [
-        "Exact head d294b246 CI job114525242392: full Gatling passed231.4 seconds; subsequent release metadata policy assertion failed reading compile-time checkout path under Bazel; projection suite passed",
-        "The workflow fixture also passed under Linux sandbox; other Git fixture tests require the same processwrapper sandbox used by CI because this local Linux sandbox denies Git random-byte access.",
-        "validation epoch ve_80da9b22e76c5e94 completed with zero failures"
+        "130active tests passed plus1pre-existing ignored; Gatling50-name --list inventory exactly equals disjoint union of4shard outcomes. Gatling durations159.925/130.632/127.077/114.394s; spec156.938s; substrate69.945s; release3.885s; contract0.029s; constitution0.228s. Local proof /tmp/integration-relocation.HxqiVJ/summary.json; exact-head CI timings still pending.",
+        "Fresh exact-head shard timing proof remains pending; source suite is retained in four complete disjoint Gatling partitions."
       ],
-      "inspected_files": [
-        ".config/build/decapod.BUILD.bzl",
-        "tests/release_metadata_policy.rs"
-      ],
-      "intent_id": "intent:postmerge-bazel-fixture",
-      "modified_files": [
-        ".decapod/governance.json"
-      ],
-      "next_transitions": [
-        "publish"
-      ],
+      "inspected_files": [],
+      "intent_id": "intent:postmerge-integration-matrix",
+      "modified_files": [],
       "repo_scope": [
-        "tests/release_metadata_policy.rs and its Bazel compile_data declaration"
+        "GitHub Actions integration build/matrix plus Rust planner/runner and regression tests"
       ],
-      "run_id": "postmerge-bazel-fixture",
+      "run_id": "postmerge-integration-matrix",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
       "task_id": "bugs_01m4nn6bx9f2s2td",

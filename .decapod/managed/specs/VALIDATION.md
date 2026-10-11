@@ -15,7 +15,16 @@ fixture and elapsed time, so an aggregate timeout identifies unfinished stages.
 Children stay in the invocation supervisor's process group for cancellation and
 scratch cleanup. The aggregate Bazel budget stays at 300 seconds. A passing isolated decision lifecycle is not
 proof that a parallel full-suite timeout has been reproduced or repaired; the
-complete four-thread Gatling target must pass as well.
+complete Gatling inventory must pass, either in the full target or its exact,
+non-overlapping shard union. Ignored cases remain explicitly ignored.
+
+PR integration proof separates one shared compilation from parallel execution.
+Each `Run selective tests` matrix step must succeed in less than 300 seconds;
+raising a deadline, suppressing a case, or merely reporting an unmeasured budget
+does not establish this bound. Regression tests cover routing equivalence,
+complete shard coverage, no overlap, relocated runfiles, and supervisor invocation.
+The final evidence includes actual exact-head step durations and selected test
+counts. The unsharded master target remains available as full-suite coverage.
 
 Release routing is determined from the immutable Git event range, not release
 labels, branch names, or commit messages. Only an advancing root package version,
@@ -435,8 +444,8 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `50643457a2781105ad23a22cec5af9e0bc5ad1580a97a086b2f5ec08c902f927`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (10 files), `docs/` (1 files), `src/` (125 files), `tests/` (171 files)
+- Repository signal fingerprint: `37766aacd5516c09a68a0d9090f6ee0609ef93501024f3ffda96bcebdb3165c1`
+- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (11 files), `docs/` (1 files), `src/` (125 files), `tests/` (172 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

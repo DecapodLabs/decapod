@@ -87,6 +87,7 @@ fn release_selection_does_not_enable_maintenance_tools() {
         "decapod-build",
         "decapod-release-metadata",
         "decapod-release-projection-drift",
+        "decapod-integration-shards",
     ] {
         let tool = binaries
             .iter()

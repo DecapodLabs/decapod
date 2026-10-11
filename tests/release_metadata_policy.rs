@@ -324,6 +324,9 @@ fn workflow_keeps_validation_and_release_build_on_the_slim_path() {
         "clippy",
         "deps-lint",
         "test",
+        "integration-prepare",
+        "test-integration",
+        "integration-status",
         "test-master",
         "test-rpc-suite",
         "chaos-replay",
@@ -355,6 +358,20 @@ fn workflow_keeps_validation_and_release_build_on_the_slim_path() {
     assert!(release.contains("always() && !cancelled()"));
     assert!(release.contains("needs.health.result == 'success'"));
     assert!(release.contains("!contains(needs.*.result, 'failure')"));
+    assert!(
+        release.contains(
+            "test, integration-prepare, test-integration, integration-status, test-master"
+        )
+    );
+    let integration = workflow_job(workflow, "integration-status");
+    assert!(integration.contains("name: Tests (integration)"));
+    assert!(
+        integration.contains("needs: [release-metadata, integration-prepare, test-integration]")
+    );
+    assert!(integration.contains("test \"$PREPARE_RESULT\" = success"));
+    assert!(integration.contains("test \"$SHARD_RESULT\" = success"));
+    assert!(integration.contains("if [ \"$SHARD_COUNT\" = 0 ]; then"));
+    assert!(integration.contains("test \"$SHARD_RESULT\" = skipped"));
     let classifier = workflow_job(workflow, "release-metadata");
     assert!(classifier.contains("github.event.before"));
     assert!(classifier.contains("github.event.pull_request.base.sha"));
