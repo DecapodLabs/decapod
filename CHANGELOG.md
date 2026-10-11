@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.107.2](https://github.com/DecapodLabs/decapod/compare/v0.107.1...v0.107.2) - 2026-10-11
+
+### Added
+
+- adopt compact checkpointed governance and final proof bundle
+- integrate Dactyl recovery, agent workflows, and normalized governance
+
+### Fixed
+
+- checkpoint documentation automation and canonical CI fixtures
+
+### Other
+
+- bind CI repair validation to exact remote ancestor
+- record remote-bound validation and final proof checkpoint
+- bind publication custody to the approved plan
+
 ## [0.107.1](https://github.com/DecapodLabs/decapod/compare/v0.107.0...v0.107.1) - 2026-10-10
 
 ### Fixed
