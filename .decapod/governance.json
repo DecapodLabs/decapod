@@ -100,28 +100,32 @@
         "cargo:cleanup-tool-12-passed",
         "github:job/114376175675"
       ]
+    },
+    {
+      "id": "ci-fix-validation-epoch",
+      "summary": "Begin explicit validation run for the corrected Bazel material; retain prior run and checks in Git history.",
+      "input_digest": "sha256:ea84f07de1b6204db6d46f1e29f88aabc6a495094744e6e7196e77ac6bc575ea",
+      "proof_refs": [
+        "git:9b1acc33463991b68113c67a1e3235e55d227ef9"
+      ]
     }
   ],
   "intents": {
-    "intent:fresh-governance-template": {
+    "intent:fresh-governance-ci-fix": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "No main/master writes, merge, release, deployment, or fabricated container proof"
+        "No release, merge, workflow edits, fabricated proof, or shared cache deletion."
       ],
       "constraints": [
-        "src",
-        "tests",
-        "assets",
-        "docs",
-        ".decapod/managed/specs"
+        "Bazel cleanup test inputs and current validation proof."
       ],
       "created_sequence": 1,
-      "id": "intent:fresh-governance-template",
+      "id": "intent:fresh-governance-ci-fix",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Dedicated PR for governance.json template generation in each new work branch",
-      "refined_intent": "Reuse locked canonical journal and truthful proof paths; initialize new context automatically without resetting in-progress work",
+      "raw_intent": "Deliver the dedicated fresh workbranch governance template PR with invocation-owned build and test cleanup.",
+      "refined_intent": "Repair the Bazel package-label failure, preserve the previous run in Git, and validate the actual remote correction before publication.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -228,52 +232,20 @@
     },
     "trajectory": {
       "active_boundaries": [
-        "No main/master writes, merge, release, deployment, or fabricated container proof"
+        "No release, merge, workflow edits, fabricated proof, or shared cache deletion."
       ],
-      "artifact_hash": "sha256:06df02db71e9c76aea609ca8a60f15e797edd937c2f33683af3423b479fce0f0",
+      "artifact_hash": "sha256:736ee1b6209d6bf00c9eae8ba42d5b96dd72c207d3764795fb6feffbc79f3b90",
       "checks": [
         {
-          "name": "actual_bazel_local",
-          "status": "unavailable"
-        },
-        {
-          "name": "actual_docker_local",
-          "status": "unavailable"
-        },
-        {
-          "name": "all_feature_clippy",
+          "name": "actual-docker-dfb30cd1",
           "status": "passed"
         },
         {
-          "name": "all_library_tests",
-          "status": "passed"
-        },
-        {
-          "name": "bazel-subpackage-regression",
-          "status": "passed"
-        },
-        {
-          "name": "branch_governance_suite",
-          "status": "passed"
-        },
-        {
-          "name": "build_cleanup_behavior",
-          "status": "passed"
+          "name": "bazel-current-head",
+          "status": "partial"
         },
         {
           "name": "cleanup-tool-cargo-12-tests",
-          "status": "passed"
-        },
-        {
-          "name": "container_path_and_policy_tests",
-          "status": "passed"
-        },
-        {
-          "name": "current_validation_receipt_integration",
-          "status": "passed"
-        },
-        {
-          "name": "decapod validate",
           "status": "passed"
         },
         {
@@ -281,20 +253,8 @@
           "status": "passed"
         },
         {
-          "name": "github-actual-docker-dfb30cd1",
-          "status": "passed"
-        },
-        {
-          "name": "github-bazel-package-label-dfb30cd1",
-          "status": "failed"
-        },
-        {
-          "name": "initial-library-regressions",
-          "status": "passed"
-        },
-        {
-          "name": "local-Docker-runtime",
-          "status": "unavailable"
+          "name": "uncommitted-host-validation",
+          "status": "partial"
         }
       ],
       "current_phase": "verification",
@@ -302,92 +262,59 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:fresh-governance-template",
+            "intent_id": "intent:fresh-governance-ci-fix",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:fresh-governance-template",
+            "intent_id": "intent:fresh-governance-ci-fix",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:fresh-governance-template",
+            "detail": "trajectory:fresh-governance-ci-fix",
             "event_id": "event:4",
-            "intent_id": "intent:fresh-governance-template",
+            "intent_id": "intent:fresh-governance-ci-fix",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:fresh-governance-template",
+            "detail": "trajectory:fresh-governance-ci-fix",
             "event_id": "event:5",
-            "intent_id": "intent:fresh-governance-template",
+            "intent_id": "intent:fresh-governance-ci-fix",
             "kind": "trajectory_step_recorded",
             "sequence": 5
-          },
-          {
-            "detail": "trajectory:fresh-governance-template",
-            "event_id": "event:6",
-            "intent_id": "intent:fresh-governance-template",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:fresh-governance-template",
-            "event_id": "event:7",
-            "intent_id": "intent:fresh-governance-template",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:fresh-governance-template",
-            "event_id": "event:8",
-            "intent_id": "intent:fresh-governance-template",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
-          },
-          {
-            "detail": "trajectory:fresh-governance-template",
-            "event_id": "event:9",
-            "intent_id": "intent:fresh-governance-template",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
-          },
-          {
-            "detail": "trajectory:fresh-governance-template",
-            "event_id": "event:10",
-            "intent_id": "intent:fresh-governance-template",
-            "kind": "trajectory_step_recorded",
-            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "fresh-governance-template": {
+          "fresh-governance-ci-fix": {
             "evidence_only": true,
-            "id": "fresh-governance-template",
-            "intent_id": "intent:fresh-governance-template",
+            "id": "fresh-governance-ci-fix",
+            "intent_id": "intent:fresh-governance-ci-fix",
             "steps": [
               {
                 "action": "trajectory.record",
-                "command": "cargo test --lib -- --test-threads=2: 612 passed, 1 ignored before final container/legacy guards",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "Reviewer found and remediation added for cross-agent context, missing task identity, session custody, malformed/default/deleted journals, and canonical workspace aliases"
+                  ".config/build/BUILD.bazel",
+                  ".config/build/decapod.BUILD.bzl",
+                  "assets/tools/build_lifecycle_tests.rs",
+                  "Previous complete trajectory is preserved at 9b1acc33463991b68113c67a1e3235e55d227ef9:.decapod/governance.json; new run required because spec fingerprints and reviewed material changed.",
+                  "cargo test --locked --features build-tools --bin decapod-build: 12 passed on exact source tree a1c61aef7c91ea6c5e7030211e75fdc29f8f0f6b.",
+                  "GitHub Actions job 114376175675 passed actual Docker production mount checks on dfb30cd1; unchanged runtime source in this correction."
                 ],
                 "proof_refs": [
-                  "initial-library-regressions",
-                  "local-Docker-runtime"
+                  "cleanup-tool-cargo-12-tests",
+                  "format-check-ci-fix",
+                  "actual-docker-dfb30cd1",
+                  "bazel-current-head"
                 ],
                 "scope": [
-                  ".decapod/managed/specs",
-                  "assets",
-                  "docs",
-                  "src",
-                  "tests"
+                  "Bazel cleanup test inputs and current validation proof."
                 ],
                 "sequence": 4,
                 "validation_findings": []
@@ -396,208 +323,42 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/decapod/plugins/container.rs",
-                  "src/decapod/plugins/policy.rs",
-                  "src/decapod/core/validate.rs",
-                  "assets/tools/build_lifecycle.rs",
-                  "cargo test --locked --features build-tools --bin decapod-build: 11 passed",
-                  "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings passed",
-                  "No Docker or Bazel binary is available locally; actual Docker path verification is attached to the existing opt-in CI test",
-                  "Review corrected shared-data aliases, branch-local governance lock, accepted policy lookup, source validation roots, migration ledger mounts, and checkpoint-before-container-commit failure propagation"
+                  "Validation before committing the new trajectory: 203 passed, one container custody failure for dirty host state; local Docker is unavailable. Commit the explicit run transition, then use the existing clean-tree validation path."
                 ],
                 "proof_refs": [
-                  "build_cleanup_behavior",
-                  "all_feature_clippy",
-                  "actual_docker_local",
-                  "actual_bazel_local"
+                  "uncommitted-host-validation"
                 ],
                 "scope": [
-                  ".cargo/config.toml",
-                  ".config/build",
-                  ".decapod/managed/specs",
-                  "Cargo.toml",
-                  "assets",
-                  "assets/tools",
-                  "docs",
-                  "src",
-                  "tests"
+                  "Bazel cleanup test inputs and current validation proof."
                 ],
                 "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "Final combined Cargo suite: 627 library tests, 11 build supervisor tests, 9 fresh-workbranch tests, 4 read-only artifact tests, 8 container-disabled tests, and 1 workspace-isolation test passed; one actual-Docker opt-in test unavailable locally"
-                ],
-                "proof_refs": [
-                  "branch_governance_suite",
-                  "current_validation_receipt_integration",
-                  "all_library_tests",
-                  "container_path_and_policy_tests"
-                ],
-                "scope": [
-                  ".cargo/config.toml",
-                  ".config/build",
-                  ".decapod/managed/specs",
-                  "Cargo.toml",
-                  "assets",
-                  "assets/tools",
-                  "docs",
-                  "src",
-                  "tests"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "Current-source precommit validation: 198 passing gates; two expected dirty-worktree failures require a checkpointed clean commit before final validation. No validation receipt was fabricated."
-                ],
-                "proof_refs": [],
-                "scope": [
-                  ".cargo/config.toml",
-                  ".config/build",
-                  ".decapod/managed/specs",
-                  "Cargo.toml",
-                  "assets",
-                  "assets/tools",
-                  "docs",
-                  "src",
-                  "tests"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "command": "decapod validate",
-                "custody_event_id": "event:8",
-                "observations": [
-                  ".decapod/governance.json",
-                  ".decapod/governance.json",
-                  "validation epoch ve_2057f3bcbf53a332 completed with zero failures"
-                ],
-                "proof_refs": [
-                  "decapod validate"
-                ],
-                "scope": [
-                  ".cargo/config.toml",
-                  ".config/build",
-                  ".decapod/managed/specs",
-                  "Cargo.toml",
-                  "assets",
-                  "assets/tools",
-                  "docs",
-                  "src",
-                  "tests"
-                ],
-                "sequence": 8,
-                "validation_findings": []
-              },
-              {
-                "action": "verification",
-                "custody_event_id": "event:9",
-                "observations": [
-                  ".config/build/BUILD.bazel",
-                  ".config/build/decapod.BUILD.bzl",
-                  "assets/tools/build_lifecycle_tests.rs",
-                  "GitHub Actions job 114376175675: actual Docker lifecycle and branch-local governance/shared data mount assertions passed on dfb30cd1.",
-                  "GitHub Actions job 114376175867 exposed cross-package bazelrc label; fixed owning package labels and explicit exports with a red-control regression."
-                ],
-                "proof_refs": [
-                  "github-actual-docker-dfb30cd1",
-                  "github-bazel-package-label-dfb30cd1",
-                  "bazel-subpackage-regression"
-                ],
-                "scope": [
-                  ".cargo/config.toml",
-                  ".config/build",
-                  ".decapod/managed/specs",
-                  "Cargo.toml",
-                  "assets",
-                  "assets/tools",
-                  "docs",
-                  "src",
-                  "tests"
-                ],
-                "sequence": 9,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "command": "cargo test --locked --features build-tools --bin decapod-build",
-                "custody_event_id": "event:10",
-                "observations": [],
-                "proof_refs": [
-                  "cleanup-tool-cargo-12-tests",
-                  "format-check-ci-fix"
-                ],
-                "scope": [
-                  ".cargo/config.toml",
-                  ".config/build",
-                  ".decapod/managed/specs",
-                  "Cargo.toml",
-                  "assets",
-                  "assets/tools",
-                  "docs",
-                  "src",
-                  "tests"
-                ],
-                "sequence": 10,
                 "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "cargo test --lib -- --test-threads=2: 612 passed, 1 ignored before final container/legacy guards",
-        "cargo test --locked --features build-tools --bin decapod-build",
-        "decapod validate"
-      ],
+      "declared_commands": [],
       "evidence": [
-        "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings passed",
-        "Current-source precommit validation: 198 passing gates; two expected dirty-worktree failures require a checkpointed clean commit before final validation. No validation receipt was fabricated.",
-        "Final combined Cargo suite: 627 library tests, 11 build supervisor tests, 9 fresh-workbranch tests, 4 read-only artifact tests, 8 container-disabled tests, and 1 workspace-isolation test passed; one actual-Docker opt-in test unavailable locally",
-        "GitHub Actions job 114376175675: actual Docker lifecycle and branch-local governance/shared data mount assertions passed on dfb30cd1.",
-        "GitHub Actions job 114376175867 exposed cross-package bazelrc label; fixed owning package labels and explicit exports with a red-control regression.",
-        "No Docker or Bazel binary is available locally; actual Docker path verification is attached to the existing opt-in CI test",
-        "Review corrected shared-data aliases, branch-local governance lock, accepted policy lookup, source validation roots, migration ledger mounts, and checkpoint-before-container-commit failure propagation",
-        "Reviewer found and remediation added for cross-agent context, missing task identity, session custody, malformed/default/deleted journals, and canonical workspace aliases",
-        "cargo test --locked --features build-tools --bin decapod-build: 11 passed",
-        "validation epoch ve_2057f3bcbf53a332 completed with zero failures"
+        "GitHub Actions job 114376175675 passed actual Docker production mount checks on dfb30cd1; unchanged runtime source in this correction.",
+        "Previous complete trajectory is preserved at 9b1acc33463991b68113c67a1e3235e55d227ef9:.decapod/governance.json; new run required because spec fingerprints and reviewed material changed.",
+        "Validation before committing the new trajectory: 203 passed, one container custody failure for dirty host state; local Docker is unavailable. Commit the explicit run transition, then use the existing clean-tree validation path.",
+        "cargo test --locked --features build-tools --bin decapod-build: 12 passed on exact source tree a1c61aef7c91ea6c5e7030211e75fdc29f8f0f6b."
       ],
-      "inspected_files": [],
-      "intent_id": "intent:fresh-governance-template",
-      "modified_files": [
+      "inspected_files": [
         ".config/build/BUILD.bazel",
         ".config/build/decapod.BUILD.bzl",
-        ".decapod/governance.json",
-        "assets/tools/build_lifecycle.rs",
-        "assets/tools/build_lifecycle_tests.rs",
-        "src/decapod/core/validate.rs",
-        "src/decapod/plugins/container.rs",
-        "src/decapod/plugins/policy.rs"
+        "assets/tools/build_lifecycle_tests.rs"
       ],
+      "intent_id": "intent:fresh-governance-ci-fix",
+      "modified_files": [],
       "next_transitions": [
         "publish"
       ],
       "repo_scope": [
-        ".cargo/config.toml",
-        ".config/build",
-        ".decapod/managed/specs",
-        "Cargo.toml",
-        "assets",
-        "assets/tools",
-        "docs",
-        "src",
-        "tests"
+        "Bazel cleanup test inputs and current validation proof."
       ],
-      "run_id": "fresh-governance-template",
+      "run_id": "fresh-governance-ci-fix",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
       "task_id": "code_01m4m9pf73zrfgr3",
