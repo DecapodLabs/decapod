@@ -211,24 +211,29 @@
       "id": "second-live-source-clean",
       "summary": "Keep the regenerated canonical entrypoint; preserve its identical historical backup outside source material",
       "input_digest": "sha256:31ff7cf933a154e589eb91dcafd5ada055c17cab09c96afc5e5d67bdbd2b12d6"
+    },
+    {
+      "id": "second-live-epoch",
+      "summary": "Bind a fresh trajectory to preserved-history candidate after supported template-epoch recovery",
+      "input_digest": "sha256:6cd500b5db30f6869ce4b4e67967d11a87158a2dacb469b5ac3438bcc2ebf1a5"
     }
   ],
   "intents": {
-    "intent:server-source-snapshot-20261012": {
+    "intent:second-live-snapshot-20261012": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Temporary snapshot only; no workbranch or PR publication before complete actual required proof; no release or deploy"
+        "No workbranch or PR publication before full proof; temporary CI-only snapshot transport authorized; no releases, deployment or credential changes"
       ],
       "constraints": [
-        "Decapod source readiness, observed validator and CI defects, shared source profile and temporary provider transport"
+        "Decapod full source readiness and first-run CI repairs"
       ],
       "created_sequence": 1,
-      "id": "intent:server-source-snapshot-20261012",
+      "id": "intent:second-live-snapshot-20261012",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Make exact current workbranch validation prove the actual complete source CI suite before publication",
-      "refined_intent": "Bind preserved source readiness implementation to the verified server commit identity and run its reserved temporary CI snapshot",
+      "raw_intent": "Make validation prove the complete current source CI suite before workbranch or PR publication",
+      "refined_intent": "Run the second actual temporary snapshot now, preserve observed failures, and iterate from its provider evidence",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -329,12 +334,12 @@
     },
     "trajectory": {
       "active_boundaries": [
-        "Temporary snapshot only; no workbranch or PR publication before complete actual required proof; no release or deploy"
+        "No workbranch or PR publication before full proof; temporary CI-only snapshot transport authorized; no releases, deployment or credential changes"
       ],
-      "artifact_hash": "sha256:122864130532b22a2503eb58bdd61150cab677c119b051c5be358a07f7509c43",
+      "artifact_hash": "sha256:981ebccf9a389a093d64a6d0217be82dcda470909761eb1617d4f1d76df2bb19",
       "checks": [
         {
-          "name": "automatic-scratch-231",
+          "name": "automatic-controller-5",
           "status": "passed"
         },
         {
@@ -342,35 +347,23 @@
           "status": "passed"
         },
         {
-          "name": "combined-unit-953-two-fixture-failures",
-          "status": "failed"
-        },
-        {
-          "name": "corrected-fixture-rerun",
-          "status": "partial"
-        },
-        {
-          "name": "decapod validate",
+          "name": "ci-local-cli-rpc-integration-2",
           "status": "passed"
         },
         {
-          "name": "first-exact-source-provider-suite",
+          "name": "first-provider-snapshot",
           "status": "failed"
         },
         {
-          "name": "first-real-snapshot",
-          "status": "failed"
+          "name": "fresh-complete-provider-proof",
+          "status": "partial"
         },
         {
           "name": "material-gates-11",
           "status": "passed"
         },
         {
-          "name": "normalized-snapshot-context-fixtures",
-          "status": "passed"
-        },
-        {
-          "name": "publication-loop-regression",
+          "name": "publisher-ci-spoof-2",
           "status": "passed"
         },
         {
@@ -379,136 +372,74 @@
         }
       ],
       "completion_claim": "in_progress",
-      "current_phase": "validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:server-source-snapshot-20261012",
+            "intent_id": "intent:second-live-snapshot-20261012",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:server-source-snapshot-20261012",
+            "intent_id": "intent:second-live-snapshot-20261012",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:server-source-snapshot-20261012",
+            "detail": "trajectory:second-live-snapshot-20261012",
             "event_id": "event:4",
-            "intent_id": "intent:server-source-snapshot-20261012",
+            "intent_id": "intent:second-live-snapshot-20261012",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:server-source-snapshot-20261012",
-            "event_id": "event:5",
-            "intent_id": "intent:server-source-snapshot-20261012",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:server-source-snapshot-20261012",
-            "event_id": "event:6",
-            "intent_id": "intent:server-source-snapshot-20261012",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "server-source-snapshot-20261012": {
+          "second-live-snapshot-20261012": {
             "evidence_only": true,
-            "id": "server-source-snapshot-20261012",
-            "intent_id": "intent:server-source-snapshot-20261012",
+            "id": "second-live-snapshot-20261012",
+            "intent_id": "intent:second-live-snapshot-20261012",
             "steps": [
               {
-                "action": "validation",
-                "command": "decapod validate",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  ".decapod/governance.json",
-                  ".decapod/governance.json",
-                  "validation epoch ve_9624195bb1b909fb completed with zero failures"
+                  "Real first-run logs and exact source identities preserved. Corrected focused tests pass. Second snapshot intentionally starts before pending importer-identity implementation and full green proof."
                 ],
                 "proof_refs": [
-                  "decapod validate"
-                ],
-                "scope": [
-                  "Decapod source readiness, observed validator and CI defects, shared source profile and temporary provider transport"
-                ],
-                "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "repair-preflight",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "Actual Buildkite885-889 and GitHub38200206701 source snapshot failed before readiness; logs and authenticated artifacts preserved",
-                  "40 executable immutable context fixtures passed;2 publication-loop integration tests passed"
-                ],
-                "proof_refs": [
-                  "first-exact-source-provider-suite",
-                  "normalized-snapshot-context-fixtures",
-                  "publication-loop-regression"
-                ],
-                "scope": [
-                  "Decapod source readiness, observed validator and CI defects, shared source profile and temporary provider transport"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "GitHub38200206701 and Buildkite885-889 are terminal failed; actual logs preserved. Both failed local test fixtures are corrected; rerun pending. Core code proof and publication remain pending."
-                ],
-                "proof_refs": [
-                  "first-real-snapshot",
                   "material-gates-11",
                   "ci-context-40",
                   "source-policy-35",
-                  "automatic-scratch-231",
-                  "combined-unit-953-two-fixture-failures",
-                  "corrected-fixture-rerun"
+                  "automatic-controller-5",
+                  "publisher-ci-spoof-2",
+                  "ci-local-cli-rpc-integration-2",
+                  "first-provider-snapshot",
+                  "fresh-complete-provider-proof"
                 ],
                 "scope": [
-                  "Decapod source readiness, observed validator and CI defects, shared source profile and temporary provider transport"
+                  "Decapod full source readiness and first-run CI repairs"
                 ],
-                "sequence": 6,
+                "sequence": 4,
                 "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "decapod validate"
-      ],
+      "declared_commands": [],
       "evidence": [
-        "40 executable immutable context fixtures passed;2 publication-loop integration tests passed",
-        "Actual Buildkite885-889 and GitHub38200206701 source snapshot failed before readiness; logs and authenticated artifacts preserved",
-        "GitHub38200206701 and Buildkite885-889 are terminal failed; actual logs preserved. Both failed local test fixtures are corrected; rerun pending. Core code proof and publication remain pending.",
-        "validation epoch ve_9624195bb1b909fb completed with zero failures"
+        "Real first-run logs and exact source identities preserved. Corrected focused tests pass. Second snapshot intentionally starts before pending importer-identity implementation and full green proof."
       ],
       "inspected_files": [],
-      "intent_id": "intent:server-source-snapshot-20261012",
-      "modified_files": [
-        ".decapod/governance.json"
-      ],
-      "next_transitions": [
-        "Execute exact same-tree temporary source CI snapshot; inspect actual failures",
-        "Run the second real temporary snapshot and repair its actual failures before publication",
-        "publish"
-      ],
+      "intent_id": "intent:second-live-snapshot-20261012",
+      "modified_files": [],
       "repo_scope": [
-        "Decapod source readiness, observed validator and CI defects, shared source profile and temporary provider transport"
+        "Decapod full source readiness and first-run CI repairs"
       ],
-      "run_id": "server-source-snapshot-20261012",
+      "run_id": "second-live-snapshot-20261012",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
       "task_id": "bugs_01m4pf92p0r108x1",
