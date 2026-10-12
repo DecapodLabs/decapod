@@ -46,6 +46,13 @@ impl PublicBuild {
 pub struct PublicRequest {
     path: String,
     artifact_redirect: bool,
+    log_redirect: Option<LogRedirectIdentity>,
+}
+#[derive(Debug)]
+struct LogRedirectIdentity {
+    pipeline: String,
+    build: String,
+    job: String,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PublicReadKind {
@@ -151,11 +158,29 @@ impl PublicRequest {
             self.artifact_redirect == (kind == PublicReadKind::ArtifactContent),
             "public redirect policy mismatch",
         )?;
+        match (&self.log_redirect, kind) {
+            (Some(identity), PublicReadKind::JobLog) => ensure(
+                uuid(&identity.pipeline)
+                    && uuid(&identity.build)
+                    && uuid(&identity.job)
+                    && parts[8] == identity.job,
+                "public log redirect identity mismatch",
+            )?,
+            (None, PublicReadKind::JobLog) => {
+                return Err(invalid("public log requires verified inventory identity"));
+            }
+            (Some(_), _) => return Err(invalid("log redirect on non-log route")),
+            (None, _) => (),
+        }
         Ok(AuthorizedPublicRead {
             kind,
             url: self.url(),
             scope: format!("buildkite:{organization}/{pipeline}/builds/{number}"),
-            redirects: if self.artifact_redirect { 3 } else { 0 },
+            redirects: match kind {
+                PublicReadKind::ArtifactContent => 3,
+                PublicReadKind::JobLog => 1,
+                _ => 0,
+            },
         })
     }
     pub fn url(&self) -> String {
@@ -223,6 +248,33 @@ fn validate_storage_redirect(request: &PublicRequest, location: &str) -> Result<
                     .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'.' | b'-' | b'_'))
         }),
         "unsupported artifact object path",
+    )
+}
+/// One redirect from the exact provider job-log route, bound to all three
+/// UUIDs already authenticated in PublicInventory. Signed query bytes stay
+/// opaque and are never emitted in diagnostics or persisted as evidence.
+fn validate_log_redirect(request: &PublicRequest, location: &str) -> Result<()> {
+    ensure(
+        request.authorize_read()?.kind == PublicReadKind::JobLog,
+        "log redirect on a non-log read",
+    )?;
+    let identity = request
+        .log_redirect
+        .as_ref()
+        .ok_or_else(|| invalid("log redirect lacks inventory identity"))?;
+    ensure(
+        location.len() <= 16 * 1024
+            && location.bytes().all(|b| b.is_ascii_graphic())
+            && !location.contains('#'),
+        "invalid log redirect encoding",
+    )?;
+    let path = location.split('?').next().unwrap_or(location);
+    ensure(
+        path == format!(
+            "https://buildkite-cloud.s3.amazonaws.com/logs-by-pipeline/{}/{}/{}.log",
+            identity.pipeline, identity.build, identity.job
+        ),
+        "log storage destination or producer identity mismatch",
     )
 }
 pub(super) fn http_response(bytes: &[u8]) -> Result<(u16, Option<String>, &[u8])> {
@@ -348,13 +400,24 @@ impl PublicReader for CurlPublicReader {
             if status == 200 {
                 return Ok(body.to_vec());
             }
-            ensure(
-                matches!(status, 301 | 302 | 303 | 307 | 308)
-                    && hop < validated.max_https_redirects(),
-                "unsupported provider HTTP status or redirect limit",
-            )?;
+            if !matches!(status, 301 | 302 | 303 | 307 | 308)
+                || hop >= validated.max_https_redirects()
+            {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    format!(
+                        "unsupported public {:?} HTTP status {status} at redirect hop {hop} (limit {})",
+                        validated.kind(),
+                        validated.max_https_redirects()
+                    ),
+                ));
+            }
             let location = location.ok_or_else(|| invalid("provider redirect location absent"))?;
-            validate_storage_redirect(request, &location)?;
+            match validated.kind() {
+                PublicReadKind::ArtifactContent => validate_storage_redirect(request, &location)?,
+                PublicReadKind::JobLog => validate_log_redirect(request, &location)?,
+                _ => return Err(invalid("redirect on non-content public read")),
+            }
             destination = location;
         }
         Err(invalid("public artifact redirect limit"))
@@ -371,9 +434,18 @@ fn read(
     let request = PublicRequest {
         path,
         artifact_redirect: redirect,
+        log_redirect: None,
     };
+    read_request(reader, &request, budget)
+}
+fn read_request(
+    reader: &mut impl PublicReader,
+    request: &PublicRequest,
+    budget: &Budget<'_>,
+) -> Result<Vec<u8>> {
+    budget.remaining()?;
     request.authorize_read()?;
-    let bytes = reader.get(&request, budget)?;
+    let bytes = reader.get(request, budget)?;
     ensure(
         bytes.len() <= budget.max_bytes,
         "public response exceeded bound",
@@ -1321,12 +1393,16 @@ pub fn collect_log(
         inventory.jobs.contains_key(job),
         "log job absent from complete inventory",
     )?;
-    let bytes = read(
-        reader,
-        format!("{}/download.txt", inventory.build.job_base(job)?),
-        false,
-        budget,
-    )?;
+    let request = PublicRequest {
+        path: format!("{}/download.txt", inventory.build.job_base(job)?),
+        artifact_redirect: false,
+        log_redirect: Some(LogRedirectIdentity {
+            pipeline: string(field(&inventory.envelope, "project")?, "id")?.into(),
+            build: inventory.build_id().into(),
+            job: job.into(),
+        }),
+    };
+    let bytes = read_request(reader, &request, budget)?;
     ensure(!bytes.is_empty(), "provider job log empty or unavailable")?;
     Ok(CollectedLog {
         job_id: job.into(),

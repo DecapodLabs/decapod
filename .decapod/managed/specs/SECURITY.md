@@ -234,7 +234,7 @@ Describe the security primitives and security controls implemented in this repos
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5d93a6f2f7ce7a182c34b6fc41d527ba263489503b349c9c101681331ac623ea`
+- Repository signal fingerprint: `9c7a5dde6d65f50fef85577b83b28e98c8125e47fef667c9d6a55375cdab7263`
 - Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -327,3 +327,7 @@ Selecting Buildkite moves substantive verification to the required remote worker
 ## Reviewed importer compiler and runtime identity
 
 Remote execution custody pins the independently reviewed official Buildkite GHA compiler version and executable digest separately from the runtime executable selected by the authored platform matrix. The reviewed 0.102.3 Linux x86_64 compiler may emit Linux x86_64 or Darwin arm64 runtime plans; a runtime digest never substitutes for the compiler digest. Observed green jobs cannot authorize new versions, executable digests or platforms. A provider upgrade requires independent official-release verification before its exact pins are accepted. Wrong producer, altered artifacts, workflow, matrix or execution identity still fails closed.
+
+## Provider-owned job log redirects
+
+Public Buildkite job-log reads may follow one HTTPS redirect to the exact Buildkite cloud log object. The pipeline, native build and job UUIDs come from the already-verified inventory, and every storage path component must match before the redirected GET is issued. Metadata routes remain nonredirecting and artifact routes retain their separate bounded policy. Alternate hosts, changed identities, extra hops, malformed paths, authentication failures and HTTP denials fail closed; signed query values remain opaque and absent from diagnostics.

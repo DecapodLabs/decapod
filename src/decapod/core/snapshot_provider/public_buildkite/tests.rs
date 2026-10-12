@@ -343,7 +343,8 @@ fn sealed_authorizer_rejects_post_like_queries_and_wrong_redirects() {
         assert!(
             PublicRequest {
                 path: path.into(),
-                artifact_redirect: redirect
+                artifact_redirect: redirect,
+                log_redirect: None,
             }
             .authorize_read()
             .is_err()
@@ -352,6 +353,7 @@ fn sealed_authorizer_rejects_post_like_queries_and_wrong_redirects() {
     let seal = PublicRequest {
         path: format!("{}/artifacts/{AID}", build().job_base(JOB).unwrap()),
         artifact_redirect: true,
+        log_redirect: None,
     }
     .authorize_read()
     .unwrap();
@@ -364,6 +366,7 @@ fn redirects_are_validated_before_following_and_bound_to_exact_producer() {
     let request = PublicRequest {
         path: format!("{}/artifacts/{AID}", build().job_base(JOB).unwrap()),
         artifact_redirect: true,
+        log_redirect: None,
     };
     let valid = format!(
         "https://s3.amazonaws.com/buildkiteartifacts.com/{BUILD}/{PIPE}/{ISTEP}/{JOB}/.buildkite-gha/plans/file.json?opaque=signature"
@@ -504,6 +507,7 @@ fn timeout_request() -> PublicRequest {
     PublicRequest {
         path: "/org/pipe/builds/7.json".into(),
         artifact_redirect: false,
+        log_redirect: None,
     }
 }
 
@@ -586,4 +590,109 @@ fn timeout_retry_shares_deadline_and_respects_denied_authorization() {
         io::ErrorKind::PermissionDenied
     );
     assert!(!Path::new(&format!("{}.count", path.display())).exists());
+}
+
+fn log_request() -> PublicRequest {
+    PublicRequest {
+        path: format!("{}/download.txt", build().job_base(JOB).unwrap()),
+        artifact_redirect: false,
+        log_redirect: Some(LogRedirectIdentity {
+            pipeline: PIPE.into(),
+            build: BUILD.into(),
+            job: JOB.into(),
+        }),
+    }
+}
+fn log_location() -> String {
+    format!(
+        "https://buildkite-cloud.s3.amazonaws.com/logs-by-pipeline/{PIPE}/{BUILD}/{JOB}.log?opaque=synthetic-signature"
+    )
+}
+#[test]
+fn log_redirect_requires_all_verified_ids_and_exact_https_storage_path() {
+    let mut request = log_request();
+    let seal = request.authorize_read().unwrap();
+    assert_eq!(seal.kind(), PublicReadKind::JobLog);
+    assert_eq!(seal.max_https_redirects(), 1);
+    let valid = log_location();
+    validate_log_redirect(&request, &valid).unwrap();
+    for bad in [
+        valid.replace(PIPE, IMPORTER),
+        valid.replace(BUILD, IMPORTER),
+        valid.replace(JOB, IMPORTER),
+        valid.replace("https://", "http://"),
+        valid.replace("buildkite-cloud.s3.amazonaws.com", "evil.invalid"),
+        valid.replace(".com/", ".com:443/"),
+        valid.replace("https://", "https://name@"),
+        valid.replace("logs-by-pipeline/", "logs-by-pipeline/extra/"),
+        valid.replace(".log?", ".log/extra?"),
+        valid.replace("logs-by-pipeline/", "logs-by-pipeline/%2e%2e/"),
+        format!("{valid}#fragment"),
+        format!("{valid}\n"),
+    ] {
+        assert!(validate_log_redirect(&request, &bad).is_err());
+    }
+    request.log_redirect.as_mut().unwrap().job = IMPORTER.into();
+    assert!(request.authorize_read().is_err());
+    request.log_redirect = None;
+    assert!(request.authorize_read().is_err());
+    let mut request = log_request();
+    request.path = build().base() + ".json";
+    assert!(request.authorize_read().is_err());
+}
+#[cfg(unix)]
+#[test]
+fn log_reader_follows_one_scoped_redirect_and_retains_raw_body() {
+    let location = log_location();
+    let initial = log_request().url();
+    let (_temp, path) = timeout_curl_fixture(&format!(
+        "for arg in \"$@\"; do actual=\"$arg\"; done\nif test \"$n\" = 1; then test \"$actual\" = '{initial}' || exit 9; printf 'HTTP/2 302\\r\\nLocation: {location}\\r\\n\\r\\n'; else test \"$actual\" = '{location}' || exit 10; printf 'HTTP/2 200\\r\\n\\r\\nraw log bytes\\n'; fi"
+    ));
+    let mut reader = CurlPublicReader::new(path.clone(), |r, _| {
+        assert_eq!(r.authorize_read()?.kind(), PublicReadKind::JobLog);
+        Ok(())
+    })
+    .unwrap();
+    let cancel = Cancellation::default();
+    let budget = Budget::new(Duration::from_secs(3), 4096, &cancel).unwrap();
+    assert_eq!(
+        read_request(&mut reader, &log_request(), &budget).unwrap(),
+        b"raw log bytes\n"
+    );
+    assert_eq!(timeout_attempts(&path), 2);
+}
+#[cfg(unix)]
+#[test]
+fn log_reader_rejects_escape_second_hop_and_http_denial_without_retry() {
+    for location in [
+        log_location().replace(PIPE, IMPORTER),
+        log_location().replace(BUILD, IMPORTER),
+        log_location().replace(JOB, IMPORTER),
+        log_location().replace("https://", "http://"),
+        log_location().replace("buildkite-cloud.s3.amazonaws.com", "evil.invalid"),
+    ] {
+        let (_temp, path) = timeout_curl_fixture(&format!(
+            "printf 'HTTP/2 302\\r\\nLocation: {location}\\r\\n\\r\\n'"
+        ));
+        let mut reader = CurlPublicReader::new(path.clone(), |_, _| Ok(())).unwrap();
+        let cancel = Cancellation::default();
+        let budget = Budget::new(Duration::from_secs(3), 4096, &cancel).unwrap();
+        assert!(reader.get(&log_request(), &budget).is_err());
+        assert_eq!(timeout_attempts(&path), 1);
+    }
+    let location = log_location();
+    for second in [
+        format!("printf 'HTTP/2 302\\r\\nLocation: {location}\\r\\n\\r\\n'"),
+        "printf 'HTTP/2 403\\r\\n\\r\\n'; exit 22".into(),
+    ] {
+        let (_temp, path) = timeout_curl_fixture(&format!(
+            "if test \"$n\" = 1; then printf 'HTTP/2 302\\r\\nLocation: {location}\\r\\n\\r\\n'; else {second}; fi"
+        ));
+        let mut reader = CurlPublicReader::new(path.clone(), |_, _| Ok(())).unwrap();
+        let cancel = Cancellation::default();
+        let budget = Budget::new(Duration::from_secs(3), 4096, &cancel).unwrap();
+        let error = reader.get(&log_request(), &budget).unwrap_err();
+        assert!(!error.to_string().contains("synthetic-signature"));
+        assert_eq!(timeout_attempts(&path), 2);
+    }
 }
