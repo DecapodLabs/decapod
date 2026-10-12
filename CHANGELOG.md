@@ -7,6 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.108.0](https://github.com/DecapodLabs/decapod/compare/v0.107.5...v0.108.0) - 2026-10-12
+
+### Added
+
+- run Buildkite validation on the PR workspace branch
+- *(validate)* enforce full source preflight readiness
+- enforce source readiness before workbranch publication
+
+### Fixed
+
+- *(ci)* stabilize release inputs and reduce preflight collection overhead ([#1403](https://github.com/DecapodLabs/decapod/pull/1403))
+- *(ci)* verify authored head from exact PR merge checkout
+- *(ci)* preserve validation context across PR runtimes
+- *(validate)* canonicalize authenticated workflow identity
+- *(validate)* authenticate provider-owned job log redirects
+- *(validate)* pin reviewed importer compiler and platform runtimes
+- compile provider and history regression fixtures
+- execute material verification on the selected provider
+- *(validation)* avoid redundant RPC path borrows
+- *(validation)* run configured preflight directly on Buildkite
+- *(validation)* align branch iteration and historical template proof
+- converge measured Buildkite source preflight
+- preserve provider trigger for Buildkite-only preflight
+- repair source fixtures and streamline Buildkite preflight
+- *(ci)* authenticate imported runtime custody and restore source checks
+- create release projection scratch with private permissions
+- isolate offline consumer fixture assumptions
+- create disposable CI test state privately
+- restore Buildkite workflow compatibility
+
+### Other
+
+- *(governance)* construct invalid journal history explicitly
+- *(governance)* bind final RPC repair reviews
+- *(governance)* retain remote-bound sixth prerequisite receipt
+- *(governance)* bind the sixth preflight execution state
+- bind fifth source prerequisite receipt
+- bind unmarked preflight prerequisite receipt
+- bind fourth candidate prerequisite receipt
+- *(governance)* bind reviewed contracts to current preflight repair
+- *(governance)* retain exact third-candidate prerequisite receipt
+- retain exact second preflight prerequisite receipt
+- bind second preflight trajectory
+- bind prerequisite receipt to exact server source
+- bind temporary snapshot prerequisites to current epoch
+- bind private scratch validation to remote source
+- record exact-source offline repair validation
+- bind offline repair proof to final material
+- record exact-source CI fixture validation
+- bind CI fixture proof to current task epoch
+- bind Buildkite repair proof to remote source
+- preserve Buildkite regression evidence
+
 ## [0.107.5](https://github.com/DecapodLabs/decapod/compare/v0.107.4...v0.107.5) - 2026-10-11
 
 ### Fixed

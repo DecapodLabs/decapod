@@ -50,10 +50,19 @@ or ordinary-failure isolation. Compare successful cold full invocations and
 same-head warm recollection separately; completed CI reused by recollection is
 not a second test execution, and provider queue time is not code runtime.
 
-The canonical README mentions Jev casually in the upper introduction and an
-existing capabilities callout, one short sentence in each. Describe only its
-supported System 1/advisory role, preserve Decapod's deterministic completion
-authority, and omit a dedicated section or flag/environment setup instructions.
+The canonical README starts with what a reader can inspect: the request, the
+agent's understanding, the changes and the proof retained in the repository.
+Show the intent/work/validate/repair/review loop, a short first-use path, and an
+authentic historical validation excerpt with its exact commit and evidence
+links. State what the configured checks establish and keep missing proof or
+human decisions visible; do not promise correct software or guaranteed
+completion. Organize capabilities around reader outcomes and preserve useful
+technical and installation links. Use direct technical prose without hype.
+
+Mention Jev casually in the upper introduction and an existing capabilities
+callout, one short sentence in each. Describe only its supported System 1/advisory
+role, preserve Decapod's deterministic completion authority, and omit a dedicated
+section or flag/environment setup instructions.
 
 Source merges must retain full behavioral proof, including the host CLI
 lifecycle suite. Release-only metadata should avoid repeating unchanged source
@@ -400,7 +409,7 @@ policy ban based solely on virtiofs or FUSE filesystem identity.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fcee2f5c4479d35338874a0fb52a9c56f3b2a3941173c5c5b2803fe5555b034c`
+- Repository signal fingerprint: `82096862eeb09ce32d87a138bd68041186df5c31df34fc65f853d2f160f81228`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

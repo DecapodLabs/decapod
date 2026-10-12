@@ -1,17 +1,13 @@
 <p align="center">🦀</p>
 
 <p align="center">
-  <code>cargo binstall decapod && decapod init</code>
-</p>
-
-<p align="center">
   <strong>Decapod</strong><br />
-  Repo-native governance kernel for bounded, provable, shippable AI coding work.
+  AI coding work you can verify.
 </p>
 
 <p align="center">
-  Work in Cursor, Claude Code, Codex, Antigravity, Grok, or any harness you prefer.
-  Decapod governs the work without replacing the agent or its harness.
+  Work in Cursor, Claude Code, Codex, Antigravity, Grok, or your preferred coding agent.
+  Decapod governs the work while you keep using the same tools.
   Decapod can use <a href="https://docs.typesafe.ai/introduction">Jev</a> for System 1 decisions.
 </p>
 
@@ -23,228 +19,143 @@
   <a href="https://decapodlabs.github.io/accountable-agentic-execution/"><img alt="Research" src="https://img.shields.io/badge/Research-Accountable%20Agentic%20Execution-blueviolet"></a>
 </p>
 
----
+
+Decapod keeps an agent's work tied to the request and the repository's required
+checks. The agent records its understanding, makes the change, and repairs
+failures it can resolve. Missing proof and decisions that need a human remain
+visible blockers.
+
+What was asked, what was understood, what changed, and what was proven stays
+with the project. Another agent or reviewer can pick up those records after
+the original conversation ends.
+
+```text
+intent → work → validate → repair when needed → revalidate → ready for review
+```
 
 ## Quick start
+
+In your Git repository:
 
 ```bash
 cargo binstall decapod
 decapod init
 ```
 
-One command installs the kernel. One command prepares the repository. You keep
-speaking naturally. Agents call Decapod at the points that matter: before
-acting, before inference, at validation boundaries, and before publication.
+The install command uses cargo-binstall. With standard Cargo, use
+`cargo install decapod` instead. Initialization prepares the project and writes
+the agent instructions.
 
-What was asked, what was understood, what changed, and what was proven
-is written into the project itself.
+Have your coding agent follow the generated `AGENTS.md`, then give it a small
+task, for example:
 
-## The layer Decapod occupies
+> Fix the bug described in this issue and add a regression test. Show me the
+> change and its validation result.
 
-Decapod sits between agent capability and trusted delivery:
+Your agent handles task claims and workspace setup, then runs this from its
+isolated task workspace:
 
-```text
-Models produce intelligence.
-Agents perform work.
-Repositories preserve state.
-Decapod governs the transition from intent to proof.
+```bash
+decapod validate
 ```
 
-As agents make code generation easier, generation is no longer the complete
-reliability problem. Organizations need to trust what was generated. Reliability
-is designed, not hoped for: intent, boundaries, durable state, validation,
-recovery, and evidence make trust an architectural property of the delivery
-path.
+Review the diff, the agent's recorded interpretation, and the validation
+result. Required project tools and any configured CI access must be available;
+validation reports missing prerequisites as blockers.
 
-## What Decapod is
+[Setup and workflow details](docs/book/src/quickstart.md)
 
-> Decapod is a repo-native governance kernel that turns human intent into bounded, durable, and proof-backed agent work.
+## A real validation result
 
-Software work has always required people to manage commands, workflows, state,
-and recovery. AI agents improve that interface, but natural language alone does
-not prevent drift, lost context, conflicting work, or false completion. Decapod
-moves those execution burdens into governed repository state.
+This historical run checked Decapod commit
+[`873ab797`](https://github.com/DecapodLabs/decapod/commit/873ab7979e67d6b80d1e5d9b622fd110035acede)
+against `master` at `f2073bd4` on October 12, 2026. `decapod validate` exited 0.
+Selected fields from its JSON output:
 
-## Why you need Decapod
-
-> The model can reason. Decapod makes the agent converge.
-
-Convergence means the agent preserves the original intent, stays within explicit
-boundaries, carries durable state across invocations, responds to validation,
-remediates supported failures, and produces evidence before claiming completion.
-Governance is the mechanism. Reliable convergence is the outcome.
-
-## Execution flow
-
-```text
-Human intent
-→ agent interpretation
-→ explicit boundaries
-→ governed execution
-→ validation and recovery
-→ proof-backed publication
+```json
+{
+  "publication_ready": true,
+  "readiness": {
+    "blockers": [],
+    "ready": true,
+    "scope": "source_pr_readiness"
+  },
+  "scope": "publication_readiness",
+  "status": "pass"
+}
 ```
 
-The human expresses intent and provides judgment. The agent interprets the
-repository, performs the work, authors the living specifications, follows
-validation feedback, and gathers evidence. Decapod governs accepted work and
-blocks publication when required conditions are not satisfied. The repository
-preserves the state and history that let the work continue across processes,
-models, harnesses, and Decapod invocations.
+The evidence came from Buildkite runs for
+[CI #1024](https://buildkite.com/decapodlabs/decapod/builds/1024),
+[constitution checks #1025](https://buildkite.com/decapodlabs/decapod/builds/1025),
+[validation #1026](https://buildkite.com/decapodlabs/decapod/builds/1026),
+[docs #1027](https://buildkite.com/decapodlabs/decapod/builds/1027), and
+[docs sync #1028](https://buildkite.com/decapodlabs/decapod/builds/1028).
 
-## Boundaries
+That result covers the configured source-PR checks for that candidate and target.
+Release-only packaging was outside the profile; validation did not publish or
+deploy anything. This is an example of the report, not a current-branch status
+or a timing benchmark.
 
-Decapod is not an autonomous coding agent, LLM, inference engine, orchestration
-framework, daemon, prompt library, coding assistant, project-management system,
-or replacement for an agent harness. It governs work performed by agents.
-
----
-
-## How Decapod works
-
-An agent task may span many Decapod invocations. Each CLI or RPC invocation is
-ephemeral. Decapod intentionally runs without a daemon; durable execution state
-lives in the repository. Agents repeatedly invoke the kernel as they interpret,
-execute, validate, remediate, revalidate, and publish.
-
-```mermaid
-flowchart LR
-    subgraph HumanGroup["Human"]
-        UserIn["User"]
-        UserOut["User"]
-    end
-
-    subgraph HarnessGroup["Agent Harness"]
-        HarnessNode["Harness"]
-    end
-
-    subgraph IntelligenceGroup["Intelligence"]
-        ModelNode["Model"]
-    end
-
-    subgraph GovernanceGroup["Governance"]
-        DecapodNode["Decapod"]
-    end
-
-    subgraph AgentGroup["Agent"]
-        AgentNode["Agent"]
-    end
-
-    UserIn ==>|intent| HarnessNode
-    HarnessNode ==>|request| AgentNode
-    AgentNode -.->|pre-inference| DecapodNode
-    DecapodNode -.->|context, gates| AgentNode
-    AgentNode ==>|inference| ModelNode
-    ModelNode ==>|response| AgentNode
-    AgentNode -.->|post-inference| DecapodNode
-    DecapodNode -.->|proof| AgentNode
-    AgentNode ==>|verified result| UserOut
-    AgentNode -.->|clarify| UserIn
-
-    style UserIn fill:#9f1239,stroke:#4c0519,color:#ffffff
-    style UserOut fill:#9f1239,stroke:#4c0519,color:#ffffff
-    style HarnessNode fill:#1e40af,stroke:#172554,color:#ffffff
-    style AgentNode fill:#6b21a8,stroke:#3b0764,color:#ffffff
-    style ModelNode fill:#155e75,stroke:#083344,color:#ffffff
-    style DecapodNode fill:#111827,stroke:#f59e0b,color:#fbbf24,stroke-width:3px
-    style HumanGroup fill:#fff1f2,stroke:#9f1239,color:#4c0519,stroke-width:2px
-    style HarnessGroup fill:#dbeafe,stroke:#1e40af,color:#172554,stroke-width:2px
-    style IntelligenceGroup fill:#cffafe,stroke:#155e75,color:#083344,stroke-width:2px
-    style GovernanceGroup fill:#fef3c7,stroke:#b45309,color:#78350f,stroke-width:2px
-    style AgentGroup fill:#f3e8ff,stroke:#6b21a8,color:#3b0764,stroke-width:2px
-    linkStyle default stroke:#334155,stroke-width:1.5px
-```
-
-Validation is part of that control loop, not a terminal report. A failed gate
-usually means the task remains incomplete. When Decapod exposes a supported
-remediation, the agent applies it, updates the relevant artifact, and validates
-again. Not every failure is recoverable; unresolved decision gates and
-contradictions remain visible for human judgment. Publication is a governed
-state transition, and agent-reported completion is not proof that it occurred.
-
----
+A failed or incomplete required check keeps readiness blocked. The agent follows the
+report's recovery instructions and validates again after repairs. Relevant
+changes to the candidate, target, configuration, or toolchain require fresh
+validation. Passing checks still leaves the change for human review.
 
 ## Capabilities
 
-1. **Intent** — Vague requests become explicit, versioned specifications.
-2. **Context** — Only the relevant code and docs, with provenance.
-3. **Coordination** — Exclusive claims and isolated workspaces for concurrent agents.
-4. **Trajectory** — Durable events for handoff across sessions and harnesses.
-5. **Boundaries** — Protected branches and sensitive modules stay protected.
-6. **Adaptation** — Instruction changes go through explicit review.
-7. **Proof** — Decapod requires deterministic verification for completion; Jev can add advisory input.
+1. **Review what the agent understood.** Agent-authored specifications make the request, scope, and expected behavior available for review.
+2. **Give agents relevant context.** Scoped context points to code and documentation with their sources.
+3. **Keep concurrent tasks separate.** Exclusive task claims establish ownership; isolated workspaces separate changes.
+4. **Pick up work across sessions.** Recorded intent, decisions, changes, and evidence support handoff to another agent.
+5. **Apply project rules.** Explicit boundaries and project overrides govern the work and expose conflicts that need a decision.
+6. **Review the proof.** Decapod requires deterministic verification for completion; Jev can add advisory input.
 
----
+## How it works
 
-## Substrate
+Decapod is a repo-native governance kernel. The agent interprets the request,
+writes the code and specifications, and gathers evidence. Decapod manages
+coordination, checks invariants, and blocks governed publication when required
+conditions remain unsatisfied.
 
-`.decapod/` holds the durable state of governed agent work:
+Decapod runs on demand, without a daemon. Agents call it before inference,
+while coordinating work, at validation boundaries, and before publication.
+Durable state lives in the repository:
 
-```
-.decapod/
-  managed/specs/     # Living project specifications
-  managed/sessions/  # Session custody
-  generated/         # Context capsules and proof artifacts
-  data/              # Local project store
-  governance.json    # Baseline, current-PR checkpoints, and logical governance sections
-  workspaces/        # Isolated worktrees (containers when configured)
-  config.toml        # Project shape
-  OVERRIDE.md        # Local authority, in plain Markdown
-```
+- `.decapod/governance.json` records the plan, trajectory, claims, and validation
+- `.decapod/managed/specs/` holds the agent's reviewable understanding of the project
+- `.decapod/workspaces/` separates task execution from the main checkout
+- `.decapod/config.toml` describes the project and its configuration
+- `.decapod/OVERRIDE.md` holds project-specific instructions you can edit
 
-- **Intent** becomes specs and todos.
-- **Context** becomes scoped capsules.
-- **Custody** becomes claimed tasks and workspaces.
-- **Trajectory** becomes event-backed records.
-- **Boundaries** become rules, overrides, and gates.
-- **Validation** becomes proof artifacts.
-- **Completion** becomes a verified state transition.
+Decapod runs locally by default. You keep your coding agent, review process,
+and project tracker. Its checks cover the configured requirements; they cannot
+establish correctness beyond that scope or control commands an agent runs
+outside Decapod.
 
-`OVERRIDE.md` is yours to edit. Write instructions the way you write documentation.
-Decapod binds each directive to its source and body with fail-closed resolution.
-
-Decapod does not author repository meaning or perform the agent's work. It makes
-the work reviewable and publishable by turning governance into repository state.
-
----
+[Governed execution architecture](docs/architecture/governed-execution.md) ·
+[Configuration reference](docs/book/src/reference/config-toml.md)
 
 ## The Constitution
 
-Decapod ships with an embedded engineering constitution —
-architecture, security, performance, research, and testing as queryable doctrine.
+Decapod includes queryable engineering guidance for architecture, security,
+performance, research, and testing. Agents use it to shape their approach before
+implementation. Project overrides make local requirements explicit.
 
-Agents consult it, cite claims, follow gates, and produce proof.
-Judgment remains human. Authority is explicit:
-baseline constitution, project override, task-scoped projection.
+The canonical router is `core/DECAPOD` in
+[`assets/constitution.json`](assets/constitution.json):
 
-The canonical router is the embedded [`assets/constitution.json`](assets/constitution.json)
-section `core/DECAPOD`, queried with `decapod constitution get core/DECAPOD`.
-
----
-
-## Guarantees
-
-- **Daemonless** — Invoked like `git` or `grep`.
-- **Local-first** — Governance runs on your machine by default.
-- **Repo-native** — State stays with the repository.
-- **Provider-agnostic** — Any model, any harness. The project is the coordination surface.
-- **Proof-gated completion** — `VERIFIED` requires passed proof-plan gates.
-- **Branch isolation** — Protected paths and branches stay protected.
-
-Decapod is a governance kernel. The agent remains responsible for the work.
-
----
+```bash
+decapod constitution get core/DECAPOD
+```
 
 ## Documentation
 
 - [Human docs](https://decapodlabs.github.io/decapod/)
-- [Governed execution architecture](docs/architecture/governed-execution.md)
 - [Agent API](docs/agent/api-index.md)
 - [Agent contract](AGENTS.md)
 - [Paper](https://github.com/DecapodLabs/accountable-agentic-execution/blob/main/paper/Accountable_Agentic_Execution.pdf)
 - [Research](https://decapodlabs.github.io/accountable-agentic-execution/)
-
----
 
 ## Contributing
 
