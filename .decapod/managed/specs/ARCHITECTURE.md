@@ -47,10 +47,12 @@ capabilities such as knowledge, federation, policy, health, and bounded
 automation. Embedded Constitution data and agent documentation ship with the
 binary.
 
-The agent interprets the request, selects and performs work, writes living
-specifications, and gathers evidence. Decapod evaluates supported transitions
-and persists their state. The runtime does not own a model loop or keep a
-background service running for a task.
+The agent interprets the request, plans and performs work, configures the
+project's build, test and CI paths as needed, writes living specifications, and
+gathers evidence. Decapod steers those responsibilities through project rules,
+state and actionable reports, evaluates supported transitions, and persists
+their state. Validation is one phase in that lifecycle. The runtime does not
+own a model loop or keep a background service running for a task.
 
 ## Execution Path
 
@@ -261,7 +263,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `667a48279b6f65c06fbc010723f7c053401dbeac2ba1c589e0f17865949ef801`
+- Repository signal fingerprint: `facb5810903dc87ab8bbef7ecd3df901a264afcd0e31b55164fbd1feb1fd7156`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (186 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

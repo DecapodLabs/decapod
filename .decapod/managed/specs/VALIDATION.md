@@ -40,6 +40,21 @@ separate from lifecycle status `passed`/`failed`. Retry attempts remain contiguo
 and feedback is bounded. Failed historical attempts remain visible when new
 successful evidence replaces their blocking condition.
 
+## Agent steering
+
+Validation reports identify this phase, the agent as operator, the entry command,
+and the next repair or review action. Reconciliation assigns missing build, test
+and CI configuration to the agent and names validation as the resume command.
+The agent follows those actions within the accepted intent and authority. A
+decision gate or unavailable authorization/access remains a human-input boundary.
+
+Configured candidate builds and downstream consumers belong inside the selected
+validation route. Required consumers must be bound to the exact authenticated
+producer artifact; missing, empty, duplicate or substituted inputs fail. The
+command-execution fixtures prove ordering and failure propagation with controlled
+tools. Only actual applicable execution and provider evidence can establish
+readiness for the product candidate.
+
 ## Governance invariants
 
 The agent contract requires prompt evaluation before repository/tool actions.
@@ -325,7 +340,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `667a48279b6f65c06fbc010723f7c053401dbeac2ba1c589e0f17865949ef801`
+- Repository signal fingerprint: `facb5810903dc87ab8bbef7ecd3df901a264afcd0e31b55164fbd1feb1fd7156`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (186 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

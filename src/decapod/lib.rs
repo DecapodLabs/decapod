@@ -1937,6 +1937,10 @@ fn print_init_reconciliation(report: &core::init_reconciliation::ReconciliationR
     for task in &report.repair_tasks {
         println!("TASK [{}]: {}", task.code, task.title);
         println!("  {}", task.action);
+        println!(
+            "  Owner: {}; after resolution: {}",
+            task.owner, task.resume_command
+        );
         if !task.sources.is_empty() {
             println!("  Sources: {}", task.sources.join(", "));
         }
@@ -6005,12 +6009,16 @@ fn run_validate_command_remote(
         );
     } else {
         println!("Validation backend: Buildkite; local project checks are provider-owned.");
+        println!("{}", readiness.agent_guidance.execution);
         if readiness.ready {
             println!("Complete current-candidate Buildkite proof passed.");
+            println!("{}", readiness.agent_guidance.instruction);
         } else {
             for blocker in &readiness.blockers {
                 eprintln!("{}: {}", blocker.code, blocker.detail);
             }
+            eprintln!("{}", readiness.agent_guidance.instruction);
+            eprintln!("{}", readiness.agent_guidance.human_input_when);
             if let Some(path) = &readiness.evidence_path {
                 eprintln!("Evidence: {}", path.display());
             }
@@ -6203,6 +6211,11 @@ fn run_validate_command_local(
                 "status": report.status,
                 "scope": scope.label(),
                 "publication_ready": readiness.as_ref().is_some_and(|r| r.ready),
+                "agent_guidance": scope.requires_publication_proof().then(||
+                    core::validation_runtime::ValidationGuidance::for_outcome(
+                        readiness.as_ref().is_some_and(|r| r.ready)
+                    )
+                ),
                 "readiness": readiness,
                 "self_heal": heal_actions,
                 "report": report,
@@ -6218,6 +6231,16 @@ fn run_validate_command_local(
             );
         }
         render_validation_text(&report, &heal_actions, validate_cli.verbose);
+        if scope.requires_publication_proof() {
+            let guidance = core::validation_runtime::ValidationGuidance::for_outcome(
+                readiness.as_ref().is_some_and(|r| r.ready),
+            );
+            println!("{}", guidance.execution);
+            println!("{}", guidance.instruction);
+            if !readiness.as_ref().is_some_and(|r| r.ready) {
+                println!("{}", guidance.human_input_when);
+            }
+        }
     }
 
     if report.fail_count > 0 {
@@ -6426,7 +6449,7 @@ fn run_current_workbranch_readiness_with(
         }
         if config.proof.required_profile.is_none() {
             return Err(error::DecapodError::ValidationError(
-                "READINESS_PROFILE_REQUIRED: reconcile this repository's complete build, source-CI and release contract through init/agent.init; project prerequisites alone cannot establish PR readiness; branch pushes may precede preflight".into(),
+                "READINESS_PROFILE_REQUIRED: agent must reconcile this repository's complete build, test and source-CI contract through init/agent.init, preserving separately scoped release requirements; configure the supported required profile, checkpoint, then rerun decapod validate so validation executes the build and proof; project prerequisites alone cannot establish PR readiness".into(),
             ));
         }
         if config.proof.validation_buildkite_preflights {
@@ -6503,6 +6526,7 @@ fn run_current_workbranch_readiness_with(
                 return Ok(runtime::ValidationReport {
                     ready: false,
                     scope: runtime::READINESS_SCOPE,
+                    agent_guidance: runtime::ValidationGuidance::for_outcome(false),
                     stage_dispositions: Vec::new(),
                     blockers: vec![runtime::Blocker::new(
                         "READINESS_SNAPSHOT_ADOPTED_PROOF_PENDING",
@@ -6584,6 +6608,7 @@ fn run_current_workbranch_readiness_with(
     result.unwrap_or_else(|error| runtime::ValidationReport {
         ready: false,
         scope: runtime::READINESS_SCOPE,
+        agent_guidance: runtime::ValidationGuidance::for_outcome(false),
         stage_dispositions: Vec::new(),
         blockers: vec![runtime::Blocker::new(
             "READINESS_BLOCKED",

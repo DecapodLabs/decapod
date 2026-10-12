@@ -46,11 +46,15 @@ records a checkpoint instead of appending history to a claim policy.
 ### Population order
 
 Populate stable PR identity first, then intent/scope in the plan, actual current
-claims and planned checks, work/evidence in the trajectory, validation, and the
-staged-material checkpoint for each commit. Persist meaningful boundaries while
-working, not only at final completion. Combine related updates at each boundary
-and skip unchanged re-statements; return to the affected step when intent, scope,
-or evidence changes without resetting the PR identity.
+claims and planned checks, and work/evidence in the trajectory. Record the
+staged-material checkpoint for each commit, stage governance.json, and commit.
+Once the candidate is ready, run full `decapod validate` against the exact
+committed candidate and accepted target. Follow its report; checkpoint and commit
+any repair before rerunning validation. Record only observed evidence, never an
+anticipated validation result. Persist meaningful boundaries while working, not
+only at final completion. Combine related updates at each boundary and skip
+unchanged re-statements; return to the affected step when intent, scope, or
+evidence changes without resetting the PR identity.
 
 ### Current-PR sequence
 

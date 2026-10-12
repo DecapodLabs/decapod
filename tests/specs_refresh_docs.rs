@@ -172,3 +172,78 @@ fn living_spec_authoring_contract_survives_template_and_docs_generation() {
     let contract = docs_cli::specs_refresh_contract();
     assert!(include_str!("../docs/agent/command-contracts.md").contains(contract));
 }
+
+#[test]
+fn embedded_orientation_steers_lifecycle_and_committed_candidate_validation() {
+    let orientation = include_str!("../docs/agent/api-index.md");
+    let conventions = include_str!("../docs/agent/contribution-conventions.md");
+    for (path, source) in [
+        ("docs/agent/api-index.md", orientation),
+        ("docs/agent/contribution-conventions.md", conventions),
+    ] {
+        let doc = assets::get_embedded_doc(path).expect("agent guidance must be embedded");
+        let embedded: serde_json::Value = serde_json::from_str(&doc).unwrap();
+        let body = embedded["sections"]["concepts"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|value| value.as_str().unwrap())
+            .collect::<Vec<_>>()
+            .join("\n");
+        assert_eq!(body, source, "embedded guidance differs from {path}");
+    }
+
+    let normalized = orientation.split_whitespace().collect::<Vec<_>>().join(" ");
+    for required in [
+        "The human supplies intent by prompting the agent",
+        "The agent owns the engineering work",
+        "configuring builds, tests and CI, orchestrating their execution",
+        "Decapod steers and governs that work",
+        "Validation is one phase of this lifecycle",
+        "Required candidate builds and checks belong to the configured validation flow",
+        "Follow its report to repair source, build/test/CI configuration, or missing evidence",
+        "blocks publication while required conditions remain unsatisfied",
+    ] {
+        assert!(
+            normalized.contains(required),
+            "missing lifecycle guidance: {required}"
+        );
+    }
+    assert!(!orientation.contains("**Before Committing:**"));
+    let phase = orientation
+        .split_once("**At the Validation Phase:**")
+        .unwrap()
+        .1;
+    assert!(
+        phase.find("checkpoint and commit").unwrap() < phase.find("`decapod validate`").unwrap()
+    );
+
+    let population = conventions
+        .split_once("### Population order")
+        .unwrap()
+        .1
+        .split_once("### Current-PR sequence")
+        .unwrap()
+        .0;
+    assert!(
+        population.find("checkpoint for each commit").unwrap()
+            < population.find("`decapod validate`").unwrap()
+    );
+    assert!(population.contains("checkpoint and commit\nany repair before rerunning validation"));
+
+    let temp = tempfile::tempdir().unwrap();
+    std::fs::create_dir(temp.path().join(".decapod")).unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["docs", "ingest"])
+        .current_dir(temp.path())
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let ingested = String::from_utf8(output.stdout).unwrap();
+    assert!(ingested.contains(orientation.trim()));
+    assert!(ingested.contains(conventions.trim()));
+}

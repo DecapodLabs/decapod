@@ -653,3 +653,91 @@ fn native_snapshot_preserves_only_reviewed_toolchain_alias_and_target() {
         .is_err()
     );
 }
+
+#[test]
+fn validation_phase_assigns_missing_configuration_to_agent_and_never_requests_prebuild() {
+    for buildkite in [false, true] {
+        let f = Fixture::new(&format!(
+            "[proof]\nvalidation_buildkite_preflights={buildkite}\n"
+        ));
+        let mut h = host();
+        h.prerequisites = if buildkite {
+            ProjectPrerequisites::ProviderRequired
+        } else {
+            ProjectPrerequisites::Passed
+        };
+        let report = validate(&f.options, &mut h, &Cancellation::default());
+        assert_eq!(report.exit_code(), 1);
+        assert!(
+            report
+                .blockers
+                .iter()
+                .any(|b| b.detail.contains("MISSING_PROOF_PROFILE"))
+        );
+        let value = serde_json::to_value(&report).unwrap();
+        assert_eq!(value["ready"], false);
+        assert_eq!(value["agent_guidance"]["phase"], "validation");
+        assert_eq!(value["agent_guidance"]["owner"], "agent");
+        assert_eq!(value["agent_guidance"]["entry_command"], "decapod validate");
+        assert_eq!(
+            value["agent_guidance"]["next_action"],
+            "repair_and_revalidate"
+        );
+        assert!(
+            report
+                .agent_guidance
+                .execution
+                .contains("no separate manual build")
+        );
+        assert!(
+            report
+                .agent_guidance
+                .human_input_when
+                .contains("missing authorization")
+        );
+        assert!(!f.options.root.join("target").exists());
+    }
+}
+
+#[test]
+fn missing_required_build_test_sources_fail_before_provider_execution() {
+    let f = Fixture::new("[proof]\n");
+    let digest = crate::core::init_reconciliation::discover_source_inventory(&f.options.root)
+        .unwrap()
+        .digest()
+        .unwrap();
+    fs::write(
+        f.options.root.join(CONFIG),
+        format!(
+            "[proof.required_profile]\nid={:?}\nreviewed_sources_digest={digest:?}\n",
+            profile::REQUIRED_PROFILE
+        ),
+    )
+    .unwrap();
+    run(&f.options.root, &["add", CONFIG]);
+    run(
+        &f.options.root,
+        &["commit", "-m", "declare incomplete contract"],
+    );
+    let mut h = host();
+    let report = validate(&f.options, &mut h, &Cancellation::default());
+    assert_eq!(report.exit_code(), 1);
+    assert!(
+        report
+            .blockers
+            .iter()
+            .any(|b| b.detail.contains("MISSING_PROOF_SOURCE"))
+    );
+    assert_eq!(h.called, 1);
+    assert_eq!(report.agent_guidance.next_action, "repair_and_revalidate");
+    assert!(report.evidence_path.is_none());
+}
+
+#[test]
+fn successful_validation_preserves_readiness_scope_and_existing_delivery_authority() {
+    let guidance = ValidationGuidance::for_outcome(true);
+    assert_eq!(guidance.next_action, "review_delivery_readiness");
+    assert!(guidance.instruction.contains("human intent"));
+    assert!(guidance.instruction.contains("reported readiness scope"));
+    assert!(guidance.instruction.contains("existing authorization"));
+}

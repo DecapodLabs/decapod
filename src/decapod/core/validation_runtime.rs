@@ -85,10 +85,45 @@ impl Blocker {
         }
     }
 }
+/// Agent-facing phase guidance; it never changes execution authority or proof.
+/// The configured project tools stay inside the selected validation route.
+#[derive(Debug, Serialize)]
+pub struct ValidationGuidance {
+    pub phase: &'static str,
+    pub owner: &'static str,
+    pub entry_command: &'static str,
+    pub execution: &'static str,
+    pub next_action: &'static str,
+    pub instruction: &'static str,
+    pub human_input_when: &'static str,
+}
+impl ValidationGuidance {
+    pub fn for_outcome(ready: bool) -> Self {
+        Self {
+            phase: "validation",
+            owner: "agent",
+            entry_command: "decapod validate",
+            execution: "Validation owns the configured build prerequisites, verification and tests through the selected provider and binds proof to the produced artifacts. Start once the source and required checkpoint are ready; no separate manual build is a prerequisite.",
+            next_action: if ready {
+                "review_delivery_readiness"
+            } else {
+                "repair_and_revalidate"
+            },
+            instruction: if ready {
+                "Review the exact candidate evidence against human intent and delivery constraints. Success establishes only the reported readiness scope; delivery actions remain subject to existing authorization and review requirements."
+            } else {
+                "Agent: inspect the blockers and evidence, configure or repair the project's actual build, test and CI contract within the governed scope, checkpoint the repaired source, then rerun decapod validate. Preserve required checks and artifact custody; unsupported adapters remain blockers."
+            },
+            human_input_when: "Stop for unresolved intent, a decision gate, missing authorization or unavailable access; request the specific human input without delegating ordinary configuration, build orchestration or repair to the human.",
+        }
+    }
+}
+
 #[derive(Debug, Serialize)]
 pub struct ValidationReport {
     pub ready: bool,
     pub scope: &'static str,
+    pub agent_guidance: ValidationGuidance,
     /// Governs execution intent; mocked dispositions claim no successful run.
     pub stage_dispositions: Vec<profile::StageDisposition>,
     pub blockers: Vec<Blocker>,
@@ -646,6 +681,7 @@ pub fn validate(options: &Options, host: &mut dyn Host, cancel: &Cancellation) -
     let mut report = ValidationReport {
         ready: false,
         scope: READINESS_SCOPE,
+        agent_guidance: ValidationGuidance::for_outcome(false),
         stage_dispositions: Vec::new(),
         blockers: Vec::new(),
         evidence_path: None,
@@ -823,6 +859,7 @@ fn run(
     )
     .map_err(|e| invalid(format!("NOT_READY: {e:?}")))?;
     report.ready = verdict == Verdict::Ready;
+    report.agent_guidance = ValidationGuidance::for_outcome(report.ready);
     write_new(
         &directory.join("verdict.json"),
         &serde_json::to_vec_pretty(report).map_err(io::Error::other)?,

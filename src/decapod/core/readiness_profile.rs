@@ -306,7 +306,7 @@ impl std::fmt::Display for PlanningFailure {
         match self {
             Self::MissingProfile => write!(
                 f,
-                "MISSING_PROOF_PROFILE: declare proof.required_profile in .decapod/config.toml after reviewing the complete CI and release contract"
+                "MISSING_PROOF_PROFILE: agent must configure the project build/test/CI contract and declare proof.required_profile in .decapod/config.toml after reviewing complete coverage; checkpoint and rerun decapod validate to execute configured build prerequisites and proof"
             ),
             Self::UnknownProfile(id) => write!(
                 f,
@@ -318,7 +318,11 @@ impl std::fmt::Display for PlanningFailure {
             ),
             Self::MissingBinding(key) => write!(
                 f,
-                "MISSING_REQUIRED_PROOF_ADAPTER: {key:?}; provide equivalent executed evidence, not a skip"
+                "MISSING_REQUIRED_PROOF_ADAPTER: {key:?}; agent must implement or configure the reviewed equivalent execution within the governed scope, then rerun decapod validate; do not skip the obligation or substitute a manual-build claim"
+            ),
+            Self::MissingSource(path) => write!(
+                f,
+                "MISSING_PROOF_SOURCE: {path}; agent must restore or reconcile the required build/test/CI source contract, then checkpoint and rerun decapod validate; never add placeholder successful checks"
             ),
             Self::UnsupportedSource(path) => write!(
                 f,

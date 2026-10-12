@@ -126,6 +126,12 @@ pub struct RepairTask {
     pub title: String,
     pub sources: Vec<String>,
     pub action: String,
+    /// Configuration and repair belong to the acting agent.
+    #[serde(default)]
+    pub owner: String,
+    /// Run after the task is resolved and the exact candidate is checkpointed.
+    #[serde(default)]
+    pub resume_command: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -330,6 +336,8 @@ impl ReconciliationReport {
             title: title.into(),
             sources,
             action: action.into(),
+            owner: "agent".into(),
+            resume_command: "decapod validate".into(),
         });
     }
 }
@@ -386,11 +394,11 @@ pub fn inspect(
     }
     if inventory.files.is_empty() {
         report.task("NO_BUILD_OR_CI_CONTRACT", "Declare the project's build and proof contract", vec![],
-            "Define the intended build, test, release and candidate-build requirements, then select a supported complete required profile. An empty command list is not successful proof.");
+            "Agent: interpret the human intent and inspect the project, then configure its actual build, test and CI tools and supported complete required profile. Validation executes their configured prerequisites and proof; an empty command list is not successful proof. Preserve separately scoped release requirements and stop for unresolved intent or decisions.");
     }
     match proof.required_profile.as_ref() {
         None => report.task("MISSING_REQUIRED_PROFILE", "Select and review a complete required profile", vec![".decapod/config.toml".into()],
-            "Reconcile existing build, CI, release and intended proof coverage, then explicitly declare proof.required_profile.id and reviewed_sources_digest. Do not copy a digest without reviewing its complete coverage."),
+            "Agent: reconcile existing build, test, CI and intended proof coverage, preserving separately scoped release requirements, then declare proof.required_profile.id and reviewed_sources_digest. Review complete coverage before updating a digest; checkpoint and run decapod validate to execute configured proof."),
         Some(profile) if profile.id != readiness_profile::REQUIRED_PROFILE => report.task("UNKNOWN_REQUIRED_PROFILE", "Implement or select a supported required profile", vec![".decapod/config.toml".into()],
             format!("The profile {:?} has no supported complete-suite adapter. Preserve the declared intent and add the missing adapter rather than replacing it with an empty profile.", profile.id)),
         Some(profile) => {
@@ -435,7 +443,7 @@ pub fn inspect(
         report.status = "proof_pending".into();
     }
     report.task("REQUIRED_PROOF_NOT_RUN", "Run the complete required proof suite", vec![],
-        "After reconciliation, run full validation for the exact candidate with the selected provider. Native and Buildkite must prove the same complete applicable source-PR checks and candidate-build obligations. Release-only packaging is separately scoped and has no assurance claim in the core profile. Initialization and project-check are not merge-readiness evidence.");
+        "Agent: once source and the required checkpoint are ready, run decapod validate. Validation owns configured build prerequisites, verification, tests and artifact-bound evidence through the selected provider; do not build separately first. Repair reported source or build/test/CI configuration failures and revalidate. Native and Buildkite still require the complete applicable source-PR checks and candidate-build obligations; missing adapters fail closed. Stop for unresolved human intent, decision gates, missing authorization or unavailable access. Release-only packaging remains separately scoped; validation success is not authority to distribute or deploy.");
     report
 }
 

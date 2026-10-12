@@ -13,11 +13,22 @@ ephemeral; the repository is the durable execution surface. Decapod is
 intentionally daemonless, so the agent calls it again when the work reaches a
 decision, validation, remediation, or publication boundary.
 
-The human expresses intent and provides judgment. The agent interprets the
-repository, performs the work, authors living specifications, follows validation
-feedback, and gathers evidence. Decapod maintains governance state, validates
-invariants, refreshes supported projections, and blocks publication when
-required conditions are unsatisfied.
+The human supplies intent by prompting the agent. The agent owns the engineering
+work needed to realize that intent: understanding the repository, planning and
+implementing the change, configuring builds, tests and CI, orchestrating their
+execution, authoring living specifications, gathering evidence, and preparing
+delivery. Decapod steers and governs that work through its instructions, state,
+boundaries, and proof gates. Ask the human when intent is genuinely ambiguous or
+a decision or authorization is required; do not hand routine lifecycle
+orchestration back to them.
+
+Validation is one phase of this lifecycle. Once source and required governance
+material are ready, checkpoint and commit the candidate, then run plain
+`decapod validate`. Required candidate builds and checks belong to the configured
+validation flow. Follow its report to repair source, build/test/CI configuration,
+or missing evidence, then checkpoint the repair and rerun against the exact
+candidate. Decapod maintains governance state, refreshes supported projections,
+and blocks publication while required conditions remain unsatisfied.
 
 ### Request Context and Workspace State
 
@@ -57,7 +68,7 @@ Proceed only when the command exits successfully and returns `"status": "allow"`
     - `decapod workspace ensure`
 2.  **Before Design:** Query the constitution to orient yourself within the repo's rules.
     - `decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'`
-3.  **Before Committing:** Validate that your implementation meets the project's governance gates.
+3.  **At the Validation Phase:** When source and required governance material are ready, checkpoint and commit the candidate, then run full validation against that exact candidate and accepted target. Follow its report, repair root causes, and rerun before PR creation.
     - `decapod validate`
 4.  **Before Completion:** Mark the task done to generate mandatory proof artifacts.
     - `decapod todo done --id <id>`

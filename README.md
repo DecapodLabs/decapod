@@ -26,8 +26,9 @@ and repairs failures it can resolve. Missing proof and decisions that need a
 human remain visible blockers.
 
 What was asked, what was understood, what changed, and what was proven stays
-with the project. Another agent or reviewer can pick up those records after
-the original conversation ends.
+with the project, connecting human intent, agent work, tool execution and the
+artifacts prepared for delivery. Another agent or reviewer can pick up those
+records after the original conversation ends.
 
 ## Quick start
 
@@ -49,9 +50,10 @@ cargo binstall decapod && decapod init
 ## How it works
 
 Decapod is a repo-native governance kernel. The agent interprets the request,
-writes the code and specifications, and gathers evidence. Decapod manages
-coordination, checks invariants, and blocks governed publication when required
-conditions remain unsatisfied.
+plans the work, writes code and specifications, configures builds, tests and CI
+as needed, and gathers evidence. Decapod steers that work through the project's
+rules and recorded state. It checks invariants and blocks governed publication
+when required conditions remain unsatisfied.
 
 Decapod runs on demand, without a daemon. Agents call it before inference,
 while coordinating work, at validation boundaries, and before publication.

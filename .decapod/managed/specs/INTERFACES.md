@@ -212,6 +212,13 @@ readiness. Under `GITHUB_ACTIONS=true` or `BUILDKITE=true`, public validation ru
 bounded local gates, reports `scope=ci_local` and `publication_ready=false`, and
 never submits or waits for its own preflight.
 
+Readiness reports expose `agent_guidance` for the validation phase: agent
+ownership, the plain validation entry command, the next action, and the
+conditions that require human input. Reconciliation repair tasks expose `owner`
+and `resume_command`. These fields steer the agent; they do not change the
+readiness verdict, grant authorization, or replace execution evidence. Missing
+build/test configuration and unsupported adapters remain explicit blockers.
+
 `proof.validation_buildkite_preflights=false` selects native execution; `true`
 selects the optional Buildkite adapter for the same required profile. Unknown
 profiles, unavailable adapters, and unreconciled source contracts fail explicitly.
@@ -295,7 +302,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `667a48279b6f65c06fbc010723f7c053401dbeac2ba1c589e0f17865949ef801`
+- Repository signal fingerprint: `facb5810903dc87ab8bbef7ecd3df901a264afcd0e31b55164fbd1feb1fd7156`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (186 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

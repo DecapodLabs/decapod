@@ -135,6 +135,15 @@
         "tests/project_spec_authoring.rs",
         "tests/unit/core/project_specs_tests.rs"
       ]
+    },
+    {
+      "id": "readme-product-candidate-2",
+      "summary": "Complete product specs and agent-owned validation-phase behavior with build and artifact-consumer regressions; follow source-ready validate COMMIT_AND_RERUN",
+      "input_digest": "sha256:787ec26caa572a75199f9e63c9d5d7e7bf45f8b256bd5ee2d22679ac755b66f2",
+      "proof_refs": [
+        "readme-product-source-ready-validate",
+        "runtime-steering-independent-review"
+      ]
     }
   ],
   "intents": {
@@ -161,12 +170,12 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 55,
+        "file_touch_budget": 60,
         "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Keep README human setup minimal; rewrite all canonical project specs around the configured product and fix generic generation guidance/context to preserve whole-project meaning across narrow tasks.",
+      "intent": "Keep human onboarding minimal and whole-product specs source-grounded; preserve project meaning across narrow tasks; codify agent-owned lifecycle steering and validation-phase build/check execution with actionable repair and exact proof.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -176,22 +185,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Whole-product runtime and implementation boundaries match the reviewed generic generator/context changes and accepted release 0.108.1.",
-          "reviewed_code_fingerprint": "667a48279b6f65c06fbc010723f7c053401dbeac2ba1c589e0f17865949ef801",
-          "spec_material_hash": "d6734a151806ae69562be10aca5579d697755386c64dfe56ea241406865deee5"
+          "reason": "Reviewed whole-product architecture, agent-owned lifecycle orchestration, validation as one phase, and provider-subordinate runtime against source changes",
+          "reviewed_code_fingerprint": "facb5810903dc87ab8bbef7ecd3df901a264afcd0e31b55164fbd1feb1fd7156",
+          "spec_material_hash": "c14319e9fc027b8dffd23bae88fd64b082e0794fb431f1de6f31dbab091f3db5"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Whole-product CLI/RPC, state and failure contracts; exact single human setup command with agent-owned operational duties; non-Decapod and narrow-task regressions.",
-          "reviewed_code_fingerprint": "667a48279b6f65c06fbc010723f7c053401dbeac2ba1c589e0f17865949ef801",
-          "spec_material_hash": "cce8ca059ca8b6a2a9f3553502bb382c64e7ca49a211b6ed1722a7b11283b749"
+          "reason": "Reviewed additive validation agent_guidance and backward-compatible RepairTask owner/resume_command against all report constructors and regression fixtures",
+          "reviewed_code_fingerprint": "facb5810903dc87ab8bbef7ecd3df901a264afcd0e31b55164fbd1feb1fd7156",
+          "spec_material_hash": "31c8a50dcf9a60ca3eb41fdd811eddae3dbaafb14d5fcec99f16f061d3940da6"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Actual governance trust boundaries and limits; conditional source-grounded capability obligations preserve fail-closed proof requirements.",
-          "reviewed_code_fingerprint": "667a48279b6f65c06fbc010723f7c053401dbeac2ba1c589e0f17865949ef801",
+          "reason": "Reviewed whole-product authority boundaries, untrusted inputs, artifact custody, and fail-closed validation without credential or permission changes",
+          "reviewed_code_fingerprint": "facb5810903dc87ab8bbef7ecd3df901a264afcd0e31b55164fbd1feb1fd7156",
           "spec_material_hash": "59f2f1f8a48c50141aad995f25448873a3b13bbf6e7920af210c48c5c9480a8e"
         }
       ],
@@ -205,13 +214,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791840756Z"
+      "updated_at": "1791842151Z"
     },
     "trajectory": {
       "active_boundaries": [
         "No performance integration; no merge/release/deployment/security changes; plain exact-head configured validation gates publication."
       ],
-      "artifact_hash": "sha256:7a08ac6c7bdb8d59544f0418239da97b74c2ac88dd804083ca6a9b38fd4d0fee",
+      "artifact_hash": "sha256:3e29f16a51aadbfa0ec6353fe01685755c52b8056ba459febeed7c6688b2609c",
       "checks": [
         {
           "name": "candidate_content_review",
@@ -220,9 +229,13 @@
         {
           "name": "content_review",
           "status": "passed"
+        },
+        {
+          "name": "source_ready_validation",
+          "status": "failed"
         }
       ],
-      "current_phase": "exact_candidate_checkpoint",
+      "current_phase": "publication_resumed",
       "custody": {
         "events": [
           {
@@ -257,10 +270,31 @@
             "intent_id": "intent:readme-human-setup",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:readme-human-setup",
+            "event_id": "event:7",
+            "intent_id": "intent:readme-human-setup",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
+          },
+          {
+            "detail": "trajectory:readme-human-setup",
+            "event_id": "event:8",
+            "intent_id": "intent:readme-human-setup",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
+          },
+          {
+            "detail": "trajectory:readme-human-setup",
+            "event_id": "event:9",
+            "intent_id": "intent:readme-human-setup",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "readme-human-setup": {
@@ -332,6 +366,92 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "validation_phase_steering",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "User explicitly requested source-ready plain validation, agent-owned lifecycle work, and runtime codification. Validation remains one phase; no generic execution framework, bootstrap reexecution, provider bypass or autonomous delivery authorization.",
+                  "Branch create and local publication-alignment reset remain held after cancellation/denial; separate source work explicitly resumed."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  ".decapod/managed/specs",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "AGENTS.md",
+                  "CLAUDE.md",
+                  "CODEX.md",
+                  "GEMINI.md",
+                  "README.md",
+                  "assets",
+                  "docs/agent",
+                  "src",
+                  "tests"
+                ],
+                "sequence": 7,
+                "validation_findings": []
+              },
+              {
+                "action": "source_ready_checkpoint",
+                "command": "decapod validate --format json",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "readme-product-source-ready-validate: exit 1; COMMIT_AND_RERUN; local_project_checks=not_run_provider_owned; no readiness claimed",
+                  "Independent semantic review of runtime steering and actual prerequisite/build/artifact-consumer regression fixtures; tests remain provider-owned"
+                ],
+                "proof_refs": [
+                  "source_ready_validation"
+                ],
+                "scope": [
+                  ".config/build/decapod.BUILD.bzl",
+                  ".decapod/managed/specs",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "AGENTS.md",
+                  "CLAUDE.md",
+                  "CODEX.md",
+                  "GEMINI.md",
+                  "README.md",
+                  "assets",
+                  "docs/agent",
+                  "docs/agent/api-index.md",
+                  "docs/agent/contribution-conventions.md",
+                  "src",
+                  "src/decapod/core/init_reconciliation",
+                  "src/decapod/core/readiness_profile.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "tests"
+                ],
+                "sequence": 8,
+                "validation_findings": []
+              },
+              {
+                "action": "publication_resumed",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "User explicitly approved resuming current combined candidate push; prior API commit identity aligned only after exact tree/parent verification; all source and history preserved."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  ".config/build/decapod.BUILD.bzl",
+                  ".decapod/managed/specs",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "AGENTS.md",
+                  "CLAUDE.md",
+                  "CODEX.md",
+                  "GEMINI.md",
+                  "README.md",
+                  "assets",
+                  "docs/agent",
+                  "docs/agent/api-index.md",
+                  "docs/agent/contribution-conventions.md",
+                  "src",
+                  "src/decapod/core/init_reconciliation",
+                  "src/decapod/core/readiness_profile.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "tests"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -345,14 +465,20 @@
         "decapod init --proof",
         "decapod init --proof; decapod docs build; decapod rpc --op specs.refresh",
         "decapod rpc --op context.resolve",
-        "decapod rpc --op specs.refresh"
+        "decapod rpc --op specs.refresh",
+        "decapod validate --format json"
       ],
       "evidence": [
         "Accepted release1405/master08681903 fast-forwarded on this same task branch; exact Cargo.toml/root Cargo.lock version-only delta reviewed in the canonical source inventory. CLI bootstrap passed after ENOSPC recovery; full validate remains pending.",
         "All existing success fixtures now seed explicit purpose; failure assertions and unknown-purpose guard retained. Independent fixture review passed.",
+        "Branch create and local publication-alignment reset remain held after cancellation/denial; separate source work explicitly resumed.",
         "CLI bootstrap exit 0; initialization proof_pending and full provider validation not yet run. Canonical source inventory unchanged; no performance patches integrated.",
         "Independent content and generator reviews passed; preserved source maps and patch hashes; all eight authored bodies retained through CLI refresh; existing fixture purpose seeding being reconciled.",
-        "User explicitly expanded this PR to whole-product specs and configured-project spec-generation behavior; performance proposals remain separate."
+        "Independent semantic review of runtime steering and actual prerequisite/build/artifact-consumer regression fixtures; tests remain provider-owned",
+        "User explicitly approved resuming current combined candidate push; prior API commit identity aligned only after exact tree/parent verification; all source and history preserved.",
+        "User explicitly expanded this PR to whole-product specs and configured-project spec-generation behavior; performance proposals remain separate.",
+        "User explicitly requested source-ready plain validation, agent-owned lifecycle work, and runtime codification. Validation remains one phase; no generic execution framework, bootstrap reexecution, provider bypass or autonomous delivery authorization.",
+        "readme-product-source-ready-validate: exit 1; COMMIT_AND_RERUN; local_project_checks=not_run_provider_owned; no readiness claimed"
       ],
       "inspected_files": [
         "src/decapod/core/migration.rs"
@@ -360,12 +486,16 @@
       "intent_id": "intent:readme-human-setup",
       "modified_files": [],
       "next_transitions": [
+        "Checkpoint exact source, publish same work branch, rerun plain validate and follow report",
         "exact_candidate_checkpoint",
         "full_buildkite_validation",
         "integrate_reviewed_specs_and_generator",
-        "narrow_readme_edit"
+        "integrate_runtime_steering_and_validate",
+        "narrow_readme_edit",
+        "plain full validate after exact-head branch readback"
       ],
       "repo_scope": [
+        ".config/build/decapod.BUILD.bzl",
         ".decapod/managed/specs",
         ".decapod/managed/specs/INTERFACES.md",
         "AGENTS.md",
@@ -375,7 +505,12 @@
         "README.md",
         "assets",
         "docs/agent",
+        "docs/agent/api-index.md",
+        "docs/agent/contribution-conventions.md",
         "src",
+        "src/decapod/core/init_reconciliation",
+        "src/decapod/core/readiness_profile.rs",
+        "src/decapod/core/validation_runtime.rs",
         "tests"
       ],
       "run_id": "readme-human-setup",

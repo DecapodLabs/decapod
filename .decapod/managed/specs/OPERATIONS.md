@@ -123,6 +123,13 @@ not establish real container-interruption behavior.
 
 ## Validation and publication
 
+When source and required governance material are ready, the agent enters the
+validation phase through plain `decapod validate`. The configured flow owns build
+prerequisites, verification and tests. The agent does not run a separate build
+as an entry requirement. It follows reported configuration, source or evidence
+repairs, checkpoints the repaired candidate when required, and re-enters
+validation. Human intent, decisions and access constraints still govern the work.
+
 `decapod validate` evaluates the exact work branch, accepted target, governance,
 reviewed workflow definitions, toolchain and complete applicable check profile.
 Missing, empty, stale, running, skipped-required or failed evidence returns
@@ -302,7 +309,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `667a48279b6f65c06fbc010723f7c053401dbeac2ba1c589e0f17865949ef801`
+- Repository signal fingerprint: `facb5810903dc87ab8bbef7ecd3df901a264afcd0e31b55164fbd1feb1fd7156`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (186 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

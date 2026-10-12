@@ -300,3 +300,38 @@ fn only_reviewed_toolchain_alias_binds_link_and_regular_destination() {
     symlink("/etc/passwd", root.path().join(TOOLCHAIN_TARGET)).unwrap();
     assert!(discover_source_inventory(root.path()).is_err());
 }
+
+#[test]
+fn configuration_repair_is_agent_owned_and_returns_to_plain_validation() {
+    let root = tempdir().unwrap();
+    let report = inspect(
+        root.path(),
+        &ProjectProofConfig::default(),
+        Some("product intent"),
+    );
+    assert!(!report.merge_ready);
+    assert_eq!(report.proof_status, "not_run");
+    for task in &report.repair_tasks {
+        assert_eq!(task.owner, "agent");
+        assert_eq!(task.resume_command, "decapod validate");
+    }
+    let configure = report
+        .repair_tasks
+        .iter()
+        .find(|task| task.code == "NO_BUILD_OR_CI_CONTRACT")
+        .unwrap();
+    assert!(configure.action.contains("actual build, test and CI tools"));
+    let validation = report
+        .repair_tasks
+        .iter()
+        .find(|task| task.code == "REQUIRED_PROOF_NOT_RUN")
+        .unwrap();
+    assert!(
+        validation
+            .action
+            .contains("Validation owns configured build prerequisites")
+    );
+    assert!(validation.action.contains("do not build separately first"));
+    assert!(validation.action.contains("decision gates"));
+    assert!(!root.path().join(".decapod").exists());
+}

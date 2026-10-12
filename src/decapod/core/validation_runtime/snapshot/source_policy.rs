@@ -79,6 +79,22 @@ fn version_output(measured: &MeasuredPreparation<'_>, program: &str) -> io::Resu
     String::from_utf8(bytes).map_err(io::Error::other)
 }
 
+/// Shared with the measured preparation path. Missing, substituted, duplicate or
+/// empty producer artifacts cannot authorize downstream execution evidence.
+fn verify_input_artifact<'a>(
+    row: &'a Value,
+    inputs: &mut BTreeSet<&'a str>,
+    known_inputs: &integration::Dependencies,
+) -> io::Result<()> {
+    let path = field(row, "path")?;
+    ensure(
+        inputs.insert(path)
+            && known_inputs.inputs.get(path).map(String::as_str) == Some(field(row, "sha256")?)
+            && row["bytes"].as_u64().is_some_and(|n| n > 0),
+        "missing independently authenticated producer input",
+    )
+}
+
 /// The known input map is built only from independently authenticated earlier
 /// producer artifacts. A receipt cannot supply its own expected binary hashes.
 pub(super) fn verify(
@@ -225,14 +241,7 @@ pub(super) fn verify(
                 )?;
             }
             Some("input_artifact") => {
-                let path = field(row, "path")?;
-                ensure(
-                    inputs.insert(path)
-                        && known_inputs.inputs.get(path).map(String::as_str)
-                            == Some(field(row, "sha256")?)
-                        && row["bytes"].as_u64().is_some_and(|n| n > 0),
-                    "missing independently authenticated producer input",
-                )?;
+                verify_input_artifact(row, &mut inputs, known_inputs)?;
             }
             Some("external_config") => {
                 ensure(
@@ -531,5 +540,202 @@ mod tests {
         values.insert("RUSTC_WRAPPER".into(), Value::Null);
         values.remove("RUSTC");
         assert!(verify_environment(&Value::Object(values), &recipe).is_err());
+    }
+    #[test]
+    fn build_consumers_require_the_exact_nonempty_authenticated_producer_artifact() {
+        let candidate = b"candidate produced within validation";
+        let path = "target/debug/decapod";
+        let measured = serde_json::json!({
+            "kind": "input_artifact", "path": path,
+            "sha256": hash(candidate), "bytes": candidate.len()
+        });
+        let mut known = integration::Dependencies::default();
+        assert!(verify_input_artifact(&measured, &mut BTreeSet::new(), &known).is_err());
+        known.inputs.insert(path.into(), hash(candidate));
+        let mut seen = BTreeSet::new();
+        assert!(verify_input_artifact(&measured, &mut seen, &known).is_ok());
+        assert!(verify_input_artifact(&measured, &mut seen, &known).is_err());
+        for (field, value) in [
+            ("sha256", serde_json::json!(hash(b"stale manual build"))),
+            ("bytes", serde_json::json!(0)),
+            ("path", serde_json::json!("target/release/decapod")),
+        ] {
+            let mut changed = measured.clone();
+            changed[field] = value;
+            assert!(verify_input_artifact(&changed, &mut BTreeSet::new(), &known).is_err());
+        }
+    }
+
+    #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+    #[test]
+    fn controlled_build_consumer_child() {
+        let Some(directory) = std::env::var_os("DECAPOD_PHASE_FIXTURE_ROOT") else {
+            return;
+        };
+        let directory = PathBuf::from(directory);
+        let root = directory.join("source");
+        let mode = std::env::var("DECAPOD_PHASE_FIXTURE_MODE").unwrap();
+        let base = std::env::var("SOURCE_CI_BASE").unwrap();
+        let head = std::env::var("SOURCE_CI_HEAD").unwrap();
+        let candidate = root.join("bazel-bin/decapod");
+        assert!(!candidate.exists(), "no external prebuild");
+        assert!(
+            source::run_check(
+                &root,
+                source::find_check("setup-bazel").unwrap(),
+                &[],
+                &base,
+                &head
+            )
+            .unwrap()
+        );
+        let produced = fs::read(&candidate).unwrap();
+        let produced_digest = hash(&produced);
+        let consumer_path = "target/debug/decapod";
+        fs::create_dir_all(root.join("target/debug")).unwrap();
+        fs::copy(&candidate, root.join(consumer_path)).unwrap();
+        let mut known = integration::Dependencies::default();
+        known
+            .inputs
+            .insert(consumer_path.into(), produced_digest.clone());
+        if mode == "missing" {
+            fs::remove_file(root.join(consumer_path)).unwrap();
+        } else if mode == "substituted" {
+            fs::write(root.join(consumer_path), b"unrelated manual build").unwrap();
+        }
+        // Exercise the production consumer-input guard against actual file bytes.
+        // The producer/provider is controlled here; this is not authentic CI proof.
+        let input = fs::read(root.join(consumer_path)).and_then(|bytes| {
+            let row = serde_json::json!({
+                "kind": "input_artifact", "path": consumer_path,
+                "sha256": hash(&bytes), "bytes": bytes.len()
+            });
+            verify_input_artifact(&row, &mut BTreeSet::new(), &known)
+        });
+        if mode != "complete" {
+            assert!(input.is_err());
+            assert!(!directory.join("consumer-receipt").exists());
+            return;
+        }
+        input.unwrap();
+        // Run the actual configured binary consumer and its private-checkout
+        // helper. Only Bazel and the produced Decapod executable are stand-ins.
+        assert!(
+            source::run_check(
+                &root,
+                source::find_check("governance-artifacts").unwrap(),
+                &[],
+                &base,
+                &head
+            )
+            .unwrap()
+        );
+        let receipt = fs::read_to_string(directory.join("consumer-receipt")).unwrap();
+        let mut lines = receipt.lines();
+        assert_eq!(lines.next(), Some(produced_digest.as_str()));
+        assert_eq!(lines.next(), Some(format!(
+            "govern artifacts verify-checkpoints --base-branch {base} --head-ref {head} --target-base master --publication-material"
+        ).as_str()));
+        assert_eq!(fs::read(root.join(consumer_path)).unwrap(), produced);
+        assert_eq!(
+            fs::read_to_string(directory.join("build-calls")).unwrap(),
+            "test //:cargo_inputs_policy\nbuild //:decapod //:release_projection_drift\n"
+        );
+    }
+
+    #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+    #[test]
+    fn configured_build_produces_the_exact_executable_used_by_the_binary_consumer() {
+        use std::os::unix::fs::PermissionsExt;
+        for mode in ["complete", "missing", "substituted"] {
+            let directory = tempfile::tempdir().unwrap();
+            let root = directory.path().join("source");
+            let bin = directory.path().join("bin");
+            let scratch = directory.path().join("scratch");
+            for path in [&root, &bin, &scratch] {
+                fs::create_dir(path).unwrap();
+            }
+            let check = source::find_check("governance-artifacts").unwrap();
+            for (path, bytes) in source::workflow_owned::script_sources(check) {
+                let destination = root.join(path);
+                fs::create_dir_all(destination.parent().unwrap()).unwrap();
+                fs::write(destination, bytes).unwrap();
+            }
+            fs::write(root.join(".gitignore"), "/target/\n/bazel-bin/\n").unwrap();
+            let git = |args: &[&str]| {
+                let out = Command::new("/usr/bin/git")
+                    .current_dir(&root)
+                    .env("GIT_CONFIG_GLOBAL", "/dev/null")
+                    .env("GIT_CONFIG_NOSYSTEM", "1")
+                    .env("GIT_CONFIG_COUNT", "0")
+                    .env_remove("GIT_CONFIG_PARAMETERS")
+                    .args(args)
+                    .output()
+                    .unwrap();
+                assert!(out.status.success(), "{args:?}: {out:?}");
+                String::from_utf8(out.stdout).unwrap().trim().to_string()
+            };
+            git(&["init", "-b", "work"]);
+            git(&["config", "user.name", "Validation Fixture"]);
+            git(&["config", "user.email", "fixture@example.invalid"]);
+            git(&[
+                "remote",
+                "add",
+                "origin",
+                "https://example.invalid/fixture.git",
+            ]);
+            git(&["add", "."]);
+            git(&["commit", "-m", "base"]);
+            let base = git(&["rev-parse", "HEAD"]);
+            git(&["update-ref", "refs/remotes/origin/master", &base]);
+            fs::write(root.join("source"), "ready candidate").unwrap();
+            git(&["add", "source"]);
+            git(&["commit", "-m", "candidate"]);
+            let head = git(&["rev-parse", "HEAD"]);
+            let bazel = bin.join("bazelisk");
+            fs::write(
+                &bazel,
+                r#"#!/bin/sh
+set -eu
+printf '%s\n' "$*" >> "$DECAPOD_PHASE_FIXTURE_ROOT/build-calls"
+case "$*" in
+  'test //:cargo_inputs_policy') : ;;
+  'build //:decapod //:release_projection_drift')
+    mkdir -p bazel-bin
+    cat > bazel-bin/decapod <<'CANDIDATE'
+#!/bin/sh
+set -eu
+actual=$(sha256sum "$0")
+printf 'sha256:%s\n%s\n' "${actual%% *}" "$*" > "$DECAPOD_PHASE_FIXTURE_ROOT/consumer-receipt"
+CANDIDATE
+    chmod +x bazel-bin/decapod
+    cp bazel-bin/decapod bazel-bin/release_projection_drift
+    ;;
+  *) exit 91 ;;
+esac
+"#,
+            )
+            .unwrap();
+            fs::set_permissions(&bazel, fs::Permissions::from_mode(0o755)).unwrap();
+            let python = bin.join("python3");
+            fs::write(&python, "#!/bin/sh\nexit 0\n").unwrap();
+            fs::set_permissions(&python, fs::Permissions::from_mode(0o755)).unwrap();
+            let out = Command::new(std::env::current_exe().unwrap())
+                .args(["--exact", "core::validation_runtime::snapshot::source_policy::tests::controlled_build_consumer_child", "--nocapture"])
+                .env("PATH", format!("{}:/usr/bin:/bin", bin.display()))
+                .env("DECAPOD_PHASE_FIXTURE_ROOT", directory.path())
+                .env("DECAPOD_PHASE_FIXTURE_MODE", mode)
+                .env("SOURCE_CI_EVENT", "pull_request")
+                .env("SOURCE_CI_BASE", &base)
+                .env("SOURCE_CI_HEAD", &head)
+                .env("RUNNER_TEMP", &scratch)
+                .output().unwrap();
+            assert!(out.status.success(), "{mode}: {out:?}");
+            assert!(String::from_utf8_lossy(&out.stdout).contains("1 passed"));
+            assert_eq!(
+                directory.path().join("consumer-receipt").exists(),
+                mode == "complete"
+            );
+        }
     }
 }

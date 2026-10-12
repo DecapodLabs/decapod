@@ -10,6 +10,8 @@ explicit governance gates.
 The record must preserve what was asked, how the agent understood it, what
 scope was accepted, what changed, and what remains unproven. That record stays
 with the project when a conversation, process, model, or agent harness changes.
+It connects human intent to agent work, tool execution, produced artifacts, and
+the evidence and decisions needed for delivery.
 
 ## Human and agent experience
 
@@ -24,6 +26,13 @@ and decide questions that require human judgment. The agent owns operational
 use of Decapod: orientation, Constitution retrieval, task coordination,
 workspace setup, specification authoring, evidence collection, validation,
 and supported recovery.
+
+The agent also takes on the development work needed to deliver the request:
+understanding the project, planning, configuring build and test tools and CI,
+implementing changes, repairing failures, and preparing work for review within
+the agreed scope and authority. Decapod steers that lifecycle through project
+rules, durable state, checks, and actionable feedback. Validation is one phase
+of the work.
 
 The human should not need to operate the governance CLI for each coding task.
 Unclear intent, conflicting requirements, missing permission, and unavailable
@@ -145,7 +154,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `667a48279b6f65c06fbc010723f7c053401dbeac2ba1c589e0f17865949ef801`
+- Repository signal fingerprint: `facb5810903dc87ab8bbef7ecd3df901a264afcd0e31b55164fbd1feb1fd7156`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (186 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
