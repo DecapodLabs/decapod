@@ -394,7 +394,7 @@ fn history_first_parent_identity_remains_strict() {
     history_checkpoint_commit(root.path(), "first");
     // Explicitly opening a new journal does not legitimize a mixed-identity
     // first-parent PR against the old accepted base.
-    begin_pr_from_context(root.path(), "second-change", "master", None, Some(&base)).unwrap();
+    begin_pr_from_context(root.path(), "second-change", "master", Some(&base), None).unwrap();
     history_checkpoint_commit(root.path(), "second");
     assert!(
         verify_pr_checkpoints(root.path(), &base, "HEAD")

@@ -366,6 +366,11 @@
       "id": "tenth-provider-owned-verification",
       "summary": "Move material verification into required Buildkite governance execution; preserve verified same-tree transport history and current merge proof. Current readiness awaits plain validate on this same branch.",
       "input_digest": "sha256:370d7519c492df021b999a7b56f20c6029c110bc3fd040c773ca6f8903518b1b"
+    },
+    {
+      "id": "eleventh-test-compilation-repair",
+      "summary": "Correct the three test-only compilation errors reported by Buildkite 937; preserve all verification semantics and wait for exact-candidate validation.",
+      "input_digest": "sha256:931575cdc79ab5431ac5d2ba16e2f7b26d66a43b36c7da767cb053262893b554"
     }
   ],
   "intents": {
@@ -451,24 +456,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed provider-owned verification, strict historical checkpoint continuity and explicit public metadata selection. The current candidate must pass actual Buildkite validation before PR creation.",
-          "reviewed_code_fingerprint": "79f800d9879f058477b6d23a5babf2d20647b167fd16ff666c4bf80a2f1582ce",
+          "reason": "Only three test fixture lines changed to fix the actual Buildkite lib-test compilation errors. Re-reviewed current code fingerprint; provider execution, historical custody and security semantics are unchanged.",
+          "reviewed_code_fingerprint": "61c10bbfd5d605613dd008995d3a887ddf5104c0ea267ee478f639122c9bcdde",
           "spec_material_hash": "40f3fdc655a6995e78fc7611fcd296c419290085e2417378e7c34bf0da8a0c1e"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed provider-owned verification, strict historical checkpoint continuity and explicit public metadata selection. The current candidate must pass actual Buildkite validation before PR creation.",
-          "reviewed_code_fingerprint": "79f800d9879f058477b6d23a5babf2d20647b167fd16ff666c4bf80a2f1582ce",
+          "reason": "Only three test fixture lines changed to fix the actual Buildkite lib-test compilation errors. Re-reviewed current code fingerprint; provider execution, historical custody and security semantics are unchanged.",
+          "reviewed_code_fingerprint": "61c10bbfd5d605613dd008995d3a887ddf5104c0ea267ee478f639122c9bcdde",
           "spec_material_hash": "714d3480f00a7f23c295334fc0fa34a33d31452528c0188549a3bac7211531fa"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed provider-owned verification, strict historical checkpoint continuity and explicit public metadata selection. The current candidate must pass actual Buildkite validation before PR creation.",
-          "reviewed_code_fingerprint": "79f800d9879f058477b6d23a5babf2d20647b167fd16ff666c4bf80a2f1582ce",
+          "reason": "Only three test fixture lines changed to fix the actual Buildkite lib-test compilation errors. Re-reviewed current code fingerprint; provider execution, historical custody and security semantics are unchanged.",
+          "reviewed_code_fingerprint": "61c10bbfd5d605613dd008995d3a887ddf5104c0ea267ee478f639122c9bcdde",
           "spec_material_hash": "393b95c571ce232c86507571e7b512b50567f62996508496ef2886019ebef3c5"
         }
       ],
@@ -480,7 +485,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791797374Z"
+      "updated_at": "1791797981Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -488,7 +493,7 @@
         "Preserve11 reviewed public history tips; never include10 private tainted commits or two denied fixture blobs",
         "Same workspace branch only; no new temporary refs, no force-push, no deletion, no local duplicate validation suite"
       ],
-      "artifact_hash": "sha256:a11905f91440b436694ccfa583fa641d257525ddf29f50c3ca867fa0bec59e00",
+      "artifact_hash": "sha256:7ae9b1285345e25139f9cc5a23f89e9e992d10f9b38561052006ef90e59afaaa",
       "checks": [
         {
           "name": "actual_action_12",
@@ -500,6 +505,10 @@
         },
         {
           "name": "current_full_validation",
+          "status": "partial"
+        },
+        {
+          "name": "eleventh_full_validation",
           "status": "partial"
         },
         {
@@ -521,6 +530,10 @@
         {
           "name": "same_branch_provider_170",
           "status": "passed"
+        },
+        {
+          "name": "tenth_buildkite_937",
+          "status": "failed"
         },
         {
           "name": "tenth_candidate_compilation",
@@ -559,10 +572,17 @@
             "intent_id": "intent:ninth-workbranch-preflight-20261012",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:ninth-workbranch-preflight-20261012",
+            "event_id": "event:6",
+            "intent_id": "intent:ninth-workbranch-preflight-20261012",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "ninth-workbranch-preflight-20261012": {
@@ -618,6 +638,24 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "tests/unit/lib_ci_scope_tests.rs",
+                  "tests/unit/core/governance_document_tests.rs",
+                  "Buildkite 937 Clippy lib-test compilation identified two ambiguous core imports and one swapped captured-base fixture argument; only those three test lines were corrected."
+                ],
+                "proof_refs": [
+                  "tenth_buildkite_937",
+                  "eleventh_full_validation"
+                ],
+                "scope": [
+                  "Current workspace provider transport, source CI context, transient artifact read recovery, focused regression tests and generated documentation"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -626,6 +664,7 @@
       "declared_commands": [],
       "evidence": [
         "Buildkite 932 reproduced the historical same-tree transport checkpoint failure; all other source and companion jobs passed. No proof is transferred to this changed candidate.",
+        "Buildkite 937 Clippy lib-test compilation identified two ambiguous core imports and one swapped captured-base fixture argument; only those three test lines were corrected.",
         "Buildkite927-931 passed for prior exact candidate0af18eb6; source changed afterward, so new current-branch validation remains required",
         "Current CLI compiled with provider-owned material checks and public-reader selection; new regression tests execute in the required Buildkite suite.",
         "Same-branch provider/controller and real action regressions passed; timeout-only retry baseline failed and25 reader tests passed after repair"
@@ -641,11 +680,14 @@
         "src/decapod/core/snapshot_provider/snapshot.rs",
         "src/decapod/core/validation_runtime/snapshot.rs",
         "src/decapod/core/workspace.rs",
-        "src/decapod/lib.rs"
+        "src/decapod/lib.rs",
+        "tests/unit/core/governance_document_tests.rs",
+        "tests/unit/lib_ci_scope_tests.rs"
       ],
       "next_transitions": [
         "Run actual Buildkite validation on the existing workspace branch, then create PR only after complete readiness",
-        "Run plain validate through Buildkite on the same workspace branch, repair its report, and create the PR only after complete readiness"
+        "Run plain validate through Buildkite on the same workspace branch, repair its report, and create the PR only after complete readiness",
+        "Run validate on the exact corrected branch and create the PR only after complete Buildkite proof passes"
       ],
       "repo_scope": [
         "Current workspace provider transport, source CI context, transient artifact read recovery, focused regression tests and generated documentation"

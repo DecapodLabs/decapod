@@ -56,8 +56,8 @@ fn publisher_full_boundary_cannot_be_downgraded_by_spoofed_ci_flags() {
 
 #[test]
 fn reviewed_public_buildkite_profile_selects_public_metadata_before_requests() {
-    use core::readiness_profile::{ProfileDeclaration, REQUIRED_PROFILE};
-    use core::snapshot_provider::Repository;
+    use crate::core::readiness_profile::{ProfileDeclaration, REQUIRED_PROFILE};
+    use crate::core::snapshot_provider::Repository;
     let profile = ProfileDeclaration {
         id: REQUIRED_PROFILE.into(),
         reviewed_sources_digest: "sha256:".to_owned() + &"a".repeat(64),
