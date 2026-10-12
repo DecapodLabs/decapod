@@ -455,7 +455,7 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ee61ad1ab5048f6a3b1feb91520895192ba2f9c239ef19ebb3b9de07a321174d`
+- Repository signal fingerprint: `e3584d78d15131f611c7f497eae3e00e961798587727064461fc5332169d0f64`
 - Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -568,3 +568,7 @@ The existing `govern artifacts verify-checkpoints --publication-material` interf
 ### PR event and shell portability after publication
 
 The CI context action seeds its argument vector with mandatory repository and event inputs before appending optional event-specific flags. Ordinary pull-request and push paths therefore remain valid under macOS Bash 3.2 nounset behavior without changing immutable-context checks. Once a PR exists, full workbranch validation authenticates each native build identity and selects only the required push-event execution; independent PR/manual runs for the same head neither satisfy nor replace that contract. Duplicate push executions or substitution of an already-bound event remain errors.
+
+### Governance checks from provider merge checkouts
+
+The governance recipe may normalize only its newly owned private clone from a pull-request checkout to the immutable authored head. The checkout must have exactly the ordered accepted-base and authored-head parents and the same complete tree as that head. Unrelated equal-tree commits, changed material, replacement objects and source or private-clone HEAD races fail closed. The measured provider checkout remains untouched, and the existing strict publication-material and full-history checkpoint verifier runs against the authored head without a race-guard exception.

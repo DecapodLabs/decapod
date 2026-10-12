@@ -724,3 +724,314 @@ fn measured_private_checkout_keeps_source_clean_and_retains_detached_proof() {
         ""
     );
 }
+
+#[cfg(unix)]
+fn governance_recipe_case(case: &str) {
+    use std::os::unix::fs::PermissionsExt;
+    let fixture = Fixture::new();
+    let source = fixture.0.join("source");
+    let scratch = fixture.0.join("provider temp");
+    fs::create_dir(&source).unwrap();
+    fs::create_dir(&scratch).unwrap();
+    git(&source, &["init", "-q", "--initial-branch=master"]);
+    git(&source, &["config", "user.name", "Governance fixture"]);
+    git(&source, &["config", "user.email", "ci@example.invalid"]);
+    git(
+        &source,
+        &[
+            "remote",
+            "add",
+            "origin",
+            "https://example.invalid/repository.git",
+        ],
+    );
+    let recipes = source.join("assets/tools/source_ci");
+    fs::create_dir_all(&recipes).unwrap();
+    fs::write(
+        recipes.join("private-checkout.sh"),
+        include_str!("../assets/tools/source_ci/private-checkout.sh"),
+    )
+    .unwrap();
+    fs::write(
+        recipes.join("governance-artifacts.sh"),
+        include_str!("../assets/tools/source_ci/governance-artifacts.sh"),
+    )
+    .unwrap();
+    fs::write(source.join(".gitignore"), "target/\n").unwrap();
+    git(&source, &["add", "."]);
+    git(&source, &["commit", "-qm", "accepted base"]);
+    let base = git(&source, &["rev-parse", "HEAD"]);
+    git(
+        &source,
+        &["update-ref", "refs/remotes/origin/master", &base],
+    );
+    fs::write(source.join("candidate.txt"), "authored candidate\n").unwrap();
+    git(&source, &["add", "."]);
+    git(&source, &["commit", "-qm", "candidate"]);
+    let head = git(&source, &["rev-parse", "HEAD"]);
+    let tree = git(&source, &["rev-parse", "HEAD^{tree}"]);
+    let unrelated = git(&source, &["commit-tree", &tree, "-m", "unrelated"]);
+    let merge = git(
+        &source,
+        &[
+            "commit-tree",
+            &tree,
+            "-p",
+            &base,
+            "-p",
+            &head,
+            "-m",
+            "provider merge",
+        ],
+    );
+    let checkout = match case {
+        "head" => head.clone(),
+        "unrelated" | "replacement" => unrelated.clone(),
+        "wrong-order" => git(
+            &source,
+            &[
+                "commit-tree",
+                &tree,
+                "-p",
+                &head,
+                "-p",
+                &base,
+                "-m",
+                "wrong order",
+            ],
+        ),
+        "wrong-base" => git(
+            &source,
+            &[
+                "commit-tree",
+                &tree,
+                "-p",
+                &unrelated,
+                "-p",
+                &head,
+                "-m",
+                "wrong base",
+            ],
+        ),
+        "wrong-head" => git(
+            &source,
+            &[
+                "commit-tree",
+                &tree,
+                "-p",
+                &base,
+                "-p",
+                &unrelated,
+                "-m",
+                "wrong head",
+            ],
+        ),
+        "extra-parent" => git(
+            &source,
+            &[
+                "commit-tree",
+                &tree,
+                "-p",
+                &base,
+                "-p",
+                &head,
+                "-p",
+                &unrelated,
+                "-m",
+                "extra parent",
+            ],
+        ),
+        "different-tree" => {
+            let base_tree = git(&source, &["rev-parse", &format!("{base}^{{tree}}")]);
+            git(
+                &source,
+                &[
+                    "commit-tree",
+                    &base_tree,
+                    "-p",
+                    &base,
+                    "-p",
+                    &head,
+                    "-m",
+                    "changed tree",
+                ],
+            )
+        }
+        _ => merge.clone(),
+    };
+    git(&source, &["checkout", "-q", "--detach", &checkout]);
+    if case == "replacement" {
+        git(&source, &["replace", &unrelated, &merge]);
+    }
+    let refs = git(&source, &["show-ref"]);
+    let config = fs::read(source.join(".git/config")).unwrap();
+    let record = scratch.join("verifier-call");
+    fs::create_dir_all(source.join("target/debug")).unwrap();
+    // This recorder tests the wrapper's exact command/checkout boundary, not
+    // governance acceptance. The real Rust publication/checkpoint gates stay
+    // unchanged and must still be run by the normal CI validation profile.
+    fs::write(
+        source.join("target/debug/decapod"),
+        r#"#!/usr/bin/env bash
+set -euo pipefail
+test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+test "$(git rev-parse HEAD^{tree})" = "$EXPECTED_TREE"
+test "$PWD" != "$EXPECTED_SOURCE"
+test "$#" = 10
+test "$1 $2 $3" = 'govern artifacts verify-checkpoints'
+test "$4" = --base-branch && test "$5" = "$SOURCE_CI_BASE"
+test "$6" = --head-ref && test "$7" = "$SOURCE_CI_HEAD"
+test "$8 $9 ${10}" = '--target-base master --publication-material'
+printf '%s\n' "$PWD" > "$RECIPE_RECORD"
+exit "${RECIPE_EXIT_CODE:-0}"
+"#,
+    )
+    .unwrap();
+    let mut command = Command::new("bash");
+    command
+        .arg(recipes.join("governance-artifacts.sh"))
+        .current_dir(&source)
+        .env("RUNNER_TEMP", &scratch)
+        .env(
+            "SOURCE_CI_BASE",
+            if case == "base-ref" { "master" } else { &base },
+        )
+        .env(
+            "SOURCE_CI_HEAD",
+            match case {
+                "head-ref" => "HEAD",
+                "tree-object" => &tree,
+                "same-base-head" => &base,
+                _ => &head,
+            },
+        )
+        .env(
+            "SOURCE_CI_EVENT",
+            if case == "wrong-event" {
+                "push"
+            } else {
+                "pull_request"
+            },
+        )
+        .env("EXPECTED_HEAD", &head)
+        .env("EXPECTED_TREE", &tree)
+        .env("EXPECTED_SOURCE", &source)
+        .env("RECIPE_RECORD", &record);
+    if case == "inherited-git" {
+        // Every value would redirect or break the recipe if inherited by Git.
+        command
+            .env("GIT_DIR", scratch.join("missing.git"))
+            .env("GIT_WORK_TREE", &scratch)
+            .env("GIT_INDEX_FILE", scratch.join("wrong-index"))
+            .env("GIT_OBJECT_DIRECTORY", scratch.join("wrong-objects"))
+            .env("GIT_CONFIG_COUNT", "1")
+            .env("GIT_CONFIG_KEY_0", "core.bare")
+            .env("GIT_CONFIG_VALUE_0", "true")
+            .env("GIT_NO_REPLACE_OBJECTS", "0");
+    }
+    if case == "verifier-failure" {
+        command.env("RECIPE_EXIT_CODE", "23");
+    }
+    if matches!(case, "clone-race" | "source-race") {
+        let real_git = Command::new("bash")
+            .args(["-c", "command -v git"])
+            .output()
+            .unwrap();
+        assert!(real_git.status.success());
+        let shim = scratch.join("bin");
+        fs::create_dir(&shim).unwrap();
+        fs::write(
+            shim.join("git"),
+            r#"#!/usr/bin/env bash
+set -euo pipefail
+"$REAL_GIT" "$@"
+if [ "$#" = 4 ] && [ "$1 $2 $3" = 'checkout --quiet --detach' ] && [ "$4" = "$EXPECTED_HEAD" ]; then
+  if [ "$RACE_KIND" = clone-race ]; then
+    "$REAL_GIT" update-ref HEAD "$ORIGINAL_CHECKOUT"
+  else
+    "$REAL_GIT" -C "$EXPECTED_SOURCE" update-ref HEAD "$EXPECTED_HEAD"
+  fi
+fi
+"#,
+        )
+        .unwrap();
+        fs::set_permissions(shim.join("git"), fs::Permissions::from_mode(0o700)).unwrap();
+        command
+            .env(
+                "PATH",
+                format!("{}:{}", shim.display(), std::env::var("PATH").unwrap()),
+            )
+            .env(
+                "REAL_GIT",
+                String::from_utf8(real_git.stdout).unwrap().trim(),
+            )
+            .env("RACE_KIND", case)
+            .env("ORIGINAL_CHECKOUT", &checkout);
+    }
+    let output = command.output().unwrap();
+    let reaches_verifier = matches!(
+        case,
+        "head" | "merge" | "inherited-git" | "verifier-failure"
+    );
+    assert_eq!(record.exists(), reaches_verifier, "{case}: {output:?}");
+    assert_eq!(
+        output.status.success(),
+        reaches_verifier && case != "verifier-failure",
+        "{case}: {output:?}"
+    );
+    if case == "verifier-failure" {
+        assert_eq!(output.status.code(), Some(23));
+    }
+    if reaches_verifier {
+        let clone = PathBuf::from(fs::read_to_string(&record).unwrap().trim());
+        assert!(clone.starts_with(&scratch));
+        assert_eq!(git(&clone, &["rev-parse", "HEAD"]), head);
+        assert_eq!(git(&clone, &["rev-parse", "HEAD^{tree}"]), tree);
+        assert_eq!(git(&clone, &["rev-parse", "origin/master"]), base);
+        assert_eq!(git(&clone, &["status", "--porcelain"]), "");
+        assert!(!clone.join(".git/objects/info/alternates").exists());
+    }
+    assert_eq!(git(&source, &["show-ref"]), refs);
+    assert_eq!(fs::read(source.join(".git/config")).unwrap(), config);
+    if case != "source-race" {
+        assert_eq!(
+            git(&source, &["--no-replace-objects", "rev-parse", "HEAD"]),
+            checkout
+        );
+        assert_eq!(
+            git(&source, &["--no-replace-objects", "status", "--porcelain"]),
+            ""
+        );
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn governance_recipe_normalizes_only_exact_same_tree_pr_merge() {
+    for case in ["head", "merge", "inherited-git", "verifier-failure"] {
+        governance_recipe_case(case);
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn governance_recipe_rejects_unproven_normalization_and_checkout_races() {
+    for case in [
+        "unrelated",
+        "wrong-order",
+        "wrong-base",
+        "wrong-head",
+        "extra-parent",
+        "different-tree",
+        "wrong-event",
+        "head-ref",
+        "base-ref",
+        "tree-object",
+        "same-base-head",
+        "replacement",
+        "clone-race",
+        "source-race",
+    ] {
+        governance_recipe_case(case);
+    }
+}
