@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.108.1](https://github.com/DecapodLabs/decapod/compare/v0.108.0...v0.108.1) - 2026-10-12
+
+### Other
+
+- show verifiable agent work and sync accepted release
+- *(validate)* batch custody reads and reuse runtime compilation
+
 ## [0.108.0](https://github.com/DecapodLabs/decapod/compare/v0.107.5...v0.108.0) - 2026-10-12
 
 ### Added
