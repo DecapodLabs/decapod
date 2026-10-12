@@ -379,6 +379,15 @@
       "proof_refs": [
         "https://buildkite.com/decapodlabs/decapod/builds/942"
       ]
+    },
+    {
+      "id": "thirteenth-reviewed-importer-platforms",
+      "summary": "Repair actual collector rejection using independently verified0.102.3 compiler and platform runtime pins; preserve required proof and fail-closed identity checks",
+      "input_digest": "sha256:39fb9d48af57955958af7a6a7277fb6c33fb6309caafab05f9e526a65fc5835f",
+      "proof_refs": [
+        "https://buildkite.com/decapodlabs/decapod/builds/947",
+        "https://github.com/buildkite/buildkite-gha/releases/tag/v0.102.3"
+      ]
     }
   ],
   "intents": {
@@ -466,23 +475,23 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Only the negative history-verifier test fixture changed. It now explicitly checks the supported lifecycle rejection before constructing malformed identity inside its disposable test repository. Production execution, interface and security guards are unchanged; current fingerprint reviewed.",
-          "reviewed_code_fingerprint": "636a1a22965f8b80425f743074166e220b9f37c2c4d1287a4f7759692665ed5e",
+          "reason": "Re-reviewed the current code fingerprint. Existing provider custody design remains unchanged; this repair updates independently verified importer pins and distinguishes compiler identity from the already-authored platform runtime.",
+          "reviewed_code_fingerprint": "5d93a6f2f7ce7a182c34b6fc41d527ba263489503b349c9c101681331ac623ea",
           "spec_material_hash": "40f3fdc655a6995e78fc7611fcd296c419290085e2417378e7c34bf0da8a0c1e"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Only the negative history-verifier test fixture changed. It now explicitly checks the supported lifecycle rejection before constructing malformed identity inside its disposable test repository. Production execution, interface and security guards are unchanged; current fingerprint reviewed.",
-          "reviewed_code_fingerprint": "636a1a22965f8b80425f743074166e220b9f37c2c4d1287a4f7759692665ed5e",
+          "reason": "Re-reviewed the current code fingerprint. Existing provider custody design remains unchanged; this repair updates independently verified importer pins and distinguishes compiler identity from the already-authored platform runtime.",
+          "reviewed_code_fingerprint": "5d93a6f2f7ce7a182c34b6fc41d527ba263489503b349c9c101681331ac623ea",
           "spec_material_hash": "714d3480f00a7f23c295334fc0fa34a33d31452528c0188549a3bac7211531fa"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Only the negative history-verifier test fixture changed. It now explicitly checks the supported lifecycle rejection before constructing malformed identity inside its disposable test repository. Production execution, interface and security guards are unchanged; current fingerprint reviewed.",
-          "reviewed_code_fingerprint": "636a1a22965f8b80425f743074166e220b9f37c2c4d1287a4f7759692665ed5e",
-          "spec_material_hash": "393b95c571ce232c86507571e7b512b50567f62996508496ef2886019ebef3c5"
+          "reason": "Documented independent official-release verification and distinct exact compiler and authored-platform runtime pins, with unknown identity failing closed.",
+          "reviewed_code_fingerprint": "5d93a6f2f7ce7a182c34b6fc41d527ba263489503b349c9c101681331ac623ea",
+          "spec_material_hash": "1e32c9182786be1e1e541aefb7290779e6fc7f8f63a59086612a20dd941bd329"
         }
       ],
       "state": "APPROVED",
@@ -493,7 +502,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791799029Z"
+      "updated_at": "1791803276Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -501,7 +510,7 @@
         "Preserve11 reviewed public history tips; never include10 private tainted commits or two denied fixture blobs",
         "Same workspace branch only; no new temporary refs, no force-push, no deletion, no local duplicate validation suite"
       ],
-      "artifact_hash": "sha256:de426e88e2b53c83f7b8e9883b9e18e8d8ef3c1fd323d9c0b1a3dd83d3bcae45",
+      "artifact_hash": "sha256:98d5ecc055930219f4a94a15be933f49c83af1a1648b897203d3aa078cca83c5",
       "checks": [
         {
           "name": "actual_action_12",
@@ -514,6 +523,10 @@
         {
           "name": "buildkite-942-history-fixture",
           "status": "failed"
+        },
+        {
+          "name": "buildkite-947-source-suite",
+          "status": "passed"
         },
         {
           "name": "buildkite-next-candidate",
@@ -562,6 +575,18 @@
         {
           "name": "tenth_full_validation",
           "status": "partial"
+        },
+        {
+          "name": "thirteenth-candidate-cli-build",
+          "status": "passed"
+        },
+        {
+          "name": "thirteenth-full-validation",
+          "status": "partial"
+        },
+        {
+          "name": "twelfth-validate-provider-custody",
+          "status": "failed"
         }
       ],
       "current_phase": "repairing",
@@ -606,10 +631,17 @@
             "intent_id": "intent:ninth-workbranch-preflight-20261012",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:ninth-workbranch-preflight-20261012",
+            "event_id": "event:8",
+            "intent_id": "intent:ninth-workbranch-preflight-20261012",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "ninth-workbranch-preflight-20261012": {
@@ -702,6 +734,30 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "repairing",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "src/decapod/core/validation_runtime/snapshot.rs",
+                  "src/decapod/core/validation_runtime/snapshot/source_import.rs",
+                  "src/decapod/core/snapshot_provider/public_buildkite.rs",
+                  "src/decapod/core/snapshot_provider/public_buildkite/tests.rs",
+                  "Plain validate on3094bf52 exited1: all41 required source recipes rejected the stale reviewed0.102.2 importer pin. Independently verified official Buildkite GHA0.102.3 Linux asset632925784 and Darwin arm64 asset632925785 member SHA256 values against actual compiler/runtime manifests. Compiler and authored-platform runtime now have separate exact pins; unreviewed versions, digests, platforms and wrong producers remain rejected. Full changed-candidate validation pending.",
+                  "https://github.com/buildkite/buildkite-gha/releases/tag/v0.102.3",
+                  "https://buildkite.com/decapodlabs/decapod/builds/947"
+                ],
+                "proof_refs": [
+                  "buildkite-947-source-suite",
+                  "twelfth-validate-provider-custody",
+                  "thirteenth-candidate-cli-build",
+                  "thirteenth-full-validation"
+                ],
+                "scope": [
+                  "Current workspace provider transport, source CI context, transient artifact read recovery, focused regression tests and generated documentation"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -716,7 +772,10 @@
         "Buildkite927-931 passed for prior exact candidate0af18eb6; source changed afterward, so new current-branch validation remains required",
         "Buildkite942 exact14e6f10a: 1015 library tests passed; history_first_parent_identity_remains_strict failed during second-journal setup. Supported lifecycle correctly rejected unaccepted first journal; fixture now asserts that rejection, then deliberately constructs invalid identity in its disposable Git history for independent verifier refusal. Production guards unchanged; full candidate validation pending.",
         "Current CLI compiled with provider-owned material checks and public-reader selection; new regression tests execute in the required Buildkite suite.",
-        "Same-branch provider/controller and real action regressions passed; timeout-only retry baseline failed and25 reader tests passed after repair"
+        "Plain validate on3094bf52 exited1: all41 required source recipes rejected the stale reviewed0.102.2 importer pin. Independently verified official Buildkite GHA0.102.3 Linux asset632925784 and Darwin arm64 asset632925785 member SHA256 values against actual compiler/runtime manifests. Compiler and authored-platform runtime now have separate exact pins; unreviewed versions, digests, platforms and wrong producers remain rejected. Full changed-candidate validation pending.",
+        "Same-branch provider/controller and real action regressions passed; timeout-only retry baseline failed and25 reader tests passed after repair",
+        "https://buildkite.com/decapodlabs/decapod/builds/947",
+        "https://github.com/buildkite/buildkite-gha/releases/tag/v0.102.3"
       ],
       "inspected_files": [],
       "intent_id": "intent:ninth-workbranch-preflight-20261012",
@@ -726,8 +785,10 @@
         "src/decapod/core/assets.rs",
         "src/decapod/core/governance_document.rs",
         "src/decapod/core/snapshot_provider/public_buildkite.rs",
+        "src/decapod/core/snapshot_provider/public_buildkite/tests.rs",
         "src/decapod/core/snapshot_provider/snapshot.rs",
         "src/decapod/core/validation_runtime/snapshot.rs",
+        "src/decapod/core/validation_runtime/snapshot/source_import.rs",
         "src/decapod/core/workspace.rs",
         "src/decapod/lib.rs",
         "tests/unit/core/governance_document_tests.rs",

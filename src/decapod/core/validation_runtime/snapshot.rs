@@ -30,34 +30,44 @@ pub enum SnapshotMode {
 #[derive(Clone, Debug)]
 pub struct ReviewedBuildkiteImporter {
     pub compiler_version: String,
-    pub runtime_digest: String,
+    pub compiler_digest: String,
+    pub linux_runtime_digest: String,
+    pub macos_runtime_digest: String,
 }
 impl ReviewedBuildkiteImporter {
-    /// Independently reviewed official buildkite/buildkite-gha v0.102.2:
-    /// release asset630814429 archive42867099fd4c… contains this executable.
+    /// Independently verified official buildkite/buildkite-gha v0.102.3 assets:
+    /// Linux x86_64 asset632925784 (archive831fe31a0ecb...) and Darwin arm64
+    /// asset632925785 (archive64535a3d4f65...). Digests bind executable members,
+    /// not observed job outcomes. The Linux compiler emits both runtime plans.
     pub fn reviewed() -> Self {
         Self {
-            compiler_version: "0.102.2".into(),
-            runtime_digest:
-                "sha256:37386c3efcfcda0f77f5c97ce7ed8fbb23a0ef47673aa2da1466be4258fc4126".into(),
+            compiler_version: "0.102.3".into(),
+            compiler_digest:
+                "sha256:0803b5258df3929ab975bcb00b5e49eea028c910f6c59f84c03067ce19dc32fe".into(),
+            linux_runtime_digest:
+                "sha256:0803b5258df3929ab975bcb00b5e49eea028c910f6c59f84c03067ce19dc32fe".into(),
+            macos_runtime_digest:
+                "sha256:274edf3e0086df695cf23ad1713adaa25a5ecdd1decafb16480e222e0e9aa9fa".into(),
         }
     }
     fn validate(&self) -> io::Result<()> {
-        let digest = self
-            .runtime_digest
-            .strip_prefix("sha256:")
-            .is_some_and(|d| {
-                d.len() == 64
-                    && d.bytes()
-                        .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
-            });
-        if self.compiler_version != "0.102.2"
-            || !digest
-            || self.runtime_digest != Self::reviewed().runtime_digest
+        let reviewed = Self::reviewed();
+        if self.compiler_version != reviewed.compiler_version
+            || self.compiler_digest != reviewed.compiler_digest
+            || self.linux_runtime_digest != reviewed.linux_runtime_digest
+            || self.macos_runtime_digest != reviewed.macos_runtime_digest
         {
             return Err(invalid("unsupported unreviewed Buildkite importer setup"));
         }
         Ok(())
+    }
+    /// Select from the independently authored matrix, never the observed plan.
+    fn runtime_digest_for(&self, matrix: &BTreeMap<String, String>) -> io::Result<&str> {
+        match matrix.get("os").map(String::as_str) {
+            None | Some("ubuntu-latest") => Ok(&self.linux_runtime_digest),
+            Some("macos-latest") => Ok(&self.macos_runtime_digest),
+            Some(_) => Err(invalid("unsupported unreviewed Buildkite runtime platform")),
+        }
     }
 }
 struct PublicBuildkiteReader<'a>(Box<dyn provider::public_buildkite::PublicReader + 'a>);

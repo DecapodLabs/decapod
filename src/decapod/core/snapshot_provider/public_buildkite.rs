@@ -894,6 +894,7 @@ pub struct RecipeExpectation {
     pub workflow_digest: String,
     pub logical_job: String,
     pub compiler_version: String,
+    pub compiler_digest: String,
     pub runtime_digest: String,
     pub matrix: BTreeMap<String, Value>,
     pub job_index: u64,
@@ -1077,7 +1078,9 @@ pub fn collect_located_recipe(
     budget: &Budget<'_>,
 ) -> Result<ImportedRecipe> {
     ensure(
-        digest(&expected.workflow_digest) && digest(&expected.runtime_digest),
+        digest(&expected.workflow_digest)
+            && digest(&expected.compiler_digest)
+            && digest(&expected.runtime_digest),
         "invalid expected recipe digests",
     )?;
     let RecipeLocator {
@@ -1119,12 +1122,16 @@ pub fn collect_located_recipe(
         "importer logical source mismatch",
     )?;
     ensure(
-        string(field(&plan_json, "compiler")?, "version")? == expected.compiler_version
-            && string(field(&plan_json, "compiler")?, "distribution_digest")?
-                == expected.runtime_digest
-            && string(field(&plan_json, "runtime")?, "distribution_digest")?
-                == expected.runtime_digest,
-        "importer compiler/runtime mismatch",
+        string(field(&plan_json, "compiler")?, "version")? == expected.compiler_version,
+        "importer compiler version mismatch",
+    )?;
+    ensure(
+        string(field(&plan_json, "compiler")?, "distribution_digest")? == expected.compiler_digest,
+        "importer compiler digest mismatch",
+    )?;
+    ensure(
+        string(field(&plan_json, "runtime")?, "distribution_digest")? == expected.runtime_digest,
+        "importer runtime platform digest mismatch",
     )?;
     let matrix = plan_json
         .get("matrix")

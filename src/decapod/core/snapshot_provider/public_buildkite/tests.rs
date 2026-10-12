@@ -43,7 +43,8 @@ fn recipe_expected() -> RecipeExpectation {
         workflow_path: ".github/workflows/ci.yml".into(),
         workflow_digest: hash(b"source"),
         logical_job: "test".into(),
-        compiler_version: "0.102.2".into(),
+        compiler_version: "0.102.3".into(),
+        compiler_digest: hash(b"compiler"),
         runtime_digest: hash(b"runtime"),
         matrix: Default::default(),
         job_index: 0,
@@ -65,7 +66,7 @@ fn fixture(result: &str) -> Mock {
     }
     let event = b"event bytes";
     let plan = bytes(
-        &json!({"schema":"https://buildkite.com/schemas/buildkite-gha/job-plan-v2.schema.json","workflow":{"path":"./.github/workflows/ci.yml","digest":hash(b"source"),"logical_job_id":"test"},"compiler":{"version":"0.102.2","distribution_digest":hash(b"runtime")},"runtime":{"distribution_digest":hash(b"runtime")},"target":{"step_key":"gha-test"},"strategy":{"job-index":0,"job-total":1},"event":{"provider":"github","name":"push","sha":"a".repeat(40),"repository":"owner/repo","payload_digest":hash(event),"payload_artifact":true},"program":{"version":2,"job":{"steps":[]}}}),
+        &json!({"schema":"https://buildkite.com/schemas/buildkite-gha/job-plan-v2.schema.json","workflow":{"path":"./.github/workflows/ci.yml","digest":hash(b"source"),"logical_job_id":"test"},"compiler":{"version":"0.102.3","distribution_digest":hash(b"compiler")},"runtime":{"distribution_digest":hash(b"runtime")},"target":{"step_key":"gha-test"},"strategy":{"job-index":0,"job-total":1},"event":{"provider":"github","name":"push","sha":"a".repeat(40),"repository":"owner/repo","payload_digest":hash(event),"payload_artifact":true},"program":{"version":2,"job":{"steps":[]}}}),
     );
     let pd = hash(&plan);
     let manifest = bytes(
@@ -240,7 +241,7 @@ fn modified_artifact_bytes_fail_provider_hash() {
 }
 #[test]
 fn independent_workflow_runtime_matrix_must_match() {
-    for n in 0..3 {
+    for n in 0..5 {
         let c = Cancellation::default();
         let b = budget(&c);
         let mut m = fixture("success");
@@ -249,12 +250,31 @@ fn independent_workflow_runtime_matrix_must_match() {
         match n {
             0 => e.workflow_digest = hash(b"different"),
             1 => e.runtime_digest = hash(b"different"),
+            2 => e.compiler_digest = hash(b"different compiler"),
+            3 => e.compiler_version = "0.102.2".into(),
             _ => {
                 e.matrix.insert("shard".into(), "unexpected".into());
             }
         }
         assert!(collect_recipe(&mut m, &i, JOB, &e, &b).is_err());
     }
+}
+#[test]
+fn distinct_compiler_and_platform_runtime_are_independently_pinned() {
+    let c = Cancellation::default();
+    let b = budget(&c);
+    let mut m = fixture("success");
+    let i = collect_inventory(&mut m, build(), &expected(), &b).unwrap();
+    let mut expected = recipe_expected();
+    assert_ne!(expected.compiler_digest, expected.runtime_digest);
+    collect_recipe(&mut m, &i, JOB, &expected, &b).unwrap();
+    expected.compiler_digest = expected.runtime_digest.clone();
+    assert!(
+        collect_recipe(&mut m, &i, JOB, &expected, &b)
+            .unwrap_err()
+            .to_string()
+            .contains("compiler digest mismatch")
+    );
 }
 #[test]
 fn changed_inventory_rejects_final_readback() {

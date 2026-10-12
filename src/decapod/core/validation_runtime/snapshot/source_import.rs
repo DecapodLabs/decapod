@@ -619,6 +619,7 @@ pub(super) fn buildkite_sources(
                 check.job.to_string(),
                 serde_json::to_string(&matrix).map_err(io::Error::other)?,
             );
+            let runtime_digest = contract.runtime_digest_for(&matrix)?.to_string();
             let row = expected.entry(key).or_insert_with(|| {
                 (
                     bk::RecipeExpectation {
@@ -626,7 +627,8 @@ pub(super) fn buildkite_sources(
                         workflow_digest: project.sources.files[workflow].clone(),
                         logical_job: check.job.into(),
                         compiler_version: contract.compiler_version.clone(),
-                        runtime_digest: contract.runtime_digest.clone(),
+                        compiler_digest: contract.compiler_digest.clone(),
+                        runtime_digest,
                         matrix: matrix
                             .iter()
                             .map(|(k, v)| (k.clone(), serde_json::Value::String(v.clone())))
@@ -866,10 +868,41 @@ mod tests {
         let contract = ReviewedBuildkiteImporter::reviewed();
         assert!(contract.validate().is_ok());
         let mut altered = contract.clone();
-        altered.runtime_digest = hash(b"some observed green row");
+        altered.linux_runtime_digest = hash(b"some observed green row");
+        assert!(altered.validate().is_err());
+        altered = contract.clone();
+        altered.compiler_version = "0.102.4".into();
+        assert!(altered.validate().is_err());
+        altered = contract.clone();
+        altered.compiler_digest = hash(b"different compiler");
         assert!(altered.validate().is_err());
         altered = contract;
-        altered.compiler_version = "0.102.3".into();
+        altered.macos_runtime_digest = hash(b"different platform runtime");
         assert!(altered.validate().is_err());
+    }
+    #[test]
+    fn reviewed_01023_runtime_selection_uses_authored_platform() {
+        let contract = ReviewedBuildkiteImporter::reviewed();
+        assert_eq!(contract.compiler_version, "0.102.3");
+        assert_eq!(
+            contract.compiler_digest,
+            "sha256:0803b5258df3929ab975bcb00b5e49eea028c910f6c59f84c03067ce19dc32fe"
+        );
+        assert_eq!(
+            contract.runtime_digest_for(&BTreeMap::new()).unwrap(),
+            contract.compiler_digest
+        );
+        let mut matrix = BTreeMap::from([("os".into(), "macos-latest".into())]);
+        assert_eq!(
+            contract.runtime_digest_for(&matrix).unwrap(),
+            "sha256:274edf3e0086df695cf23ad1713adaa25a5ecdd1decafb16480e222e0e9aa9fa"
+        );
+        matrix.insert("os".into(), "ubuntu-latest".into());
+        assert_eq!(
+            contract.runtime_digest_for(&matrix).unwrap(),
+            contract.compiler_digest
+        );
+        matrix.insert("os".into(), "unreviewed-platform".into());
+        assert!(contract.runtime_digest_for(&matrix).is_err());
     }
 }

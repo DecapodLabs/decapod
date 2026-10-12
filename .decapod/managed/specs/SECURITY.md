@@ -234,7 +234,7 @@ Describe the security primitives and security controls implemented in this repos
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `636a1a22965f8b80425f743074166e220b9f37c2c4d1287a4f7759692665ed5e`
+- Repository signal fingerprint: `5d93a6f2f7ce7a182c34b6fc41d527ba263489503b349c9c101681331ac623ea`
 - Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -323,3 +323,7 @@ clean exact checkout and ancestry proof; it never becomes PR-readiness evidence.
 ### Same-branch verification location
 
 Selecting Buildkite moves substantive verification to the required remote workers, preserving local ownership, decision and transport authorization. Public metadata is selected only for the reviewed public repository/profile before requests; a failed authenticated request never silently switches clients. Imported history cannot waive proof: unchanged transports require whole-tree identity, unaccepted historical bases and conflicting targets reject, and current merge checkpoints remain mandatory.
+
+## Reviewed importer compiler and runtime identity
+
+Remote execution custody pins the independently reviewed official Buildkite GHA compiler version and executable digest separately from the runtime executable selected by the authored platform matrix. The reviewed 0.102.3 Linux x86_64 compiler may emit Linux x86_64 or Darwin arm64 runtime plans; a runtime digest never substitutes for the compiler digest. Observed green jobs cannot authorize new versions, executable digests or platforms. A provider upgrade requires independent official-release verification before its exact pins are accepted. Wrong producer, altered artifacts, workflow, matrix or execution identity still fails closed.
