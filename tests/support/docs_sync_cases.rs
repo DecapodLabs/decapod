@@ -94,43 +94,40 @@ impl Fixture {
 fn fake_binary() -> &'static Path {
     static BINARY: OnceLock<PathBuf> = OnceLock::new();
     BINARY.get_or_init(|| {
+        // Bazel and relocated shards carry this test-only executable in runfiles.
+        // They intentionally do not depend on an ambient rustup home or rustc.
+        if let Some(packaged) =
+            option_env!("DECAPOD_DOCS_SYNC_TEST_FIXTURE").filter(|path| !path.is_empty())
+        {
+            let mut candidates = vec![PathBuf::from(packaged)];
+            for variable in ["RUNFILES_DIR", "TEST_SRCDIR"] {
+                if let Some(root) = std::env::var_os(variable) {
+                    candidates.push(
+                        PathBuf::from(root)
+                            .join("_main")
+                            .join(packaged.trim_start_matches("./")),
+                    );
+                }
+            }
+            return candidates
+                .into_iter()
+                .filter(|path| path.is_file())
+                .find_map(|path| path.canonicalize().ok())
+                .expect("Bazel must provide its declared test-only docs fixture in runfiles");
+        }
+        // Cargo retains the same compiled fixture without adding a shipped bin.
         let root = scratch("fake-binary");
         let source = root.join("fake_docs.rs");
-        fs::write(&source, r#"
-use std::{ffi::OsString, fs, os::unix::ffi::OsStrExt, process::Command};
-fn main() {
-    let args: Vec<OsString> = std::env::args_os().skip(1).collect();
-    assert_eq!(&args[..2], &[OsString::from("docs"), OsString::from("build")]);
-    let mut log = Vec::new();
-    for arg in &args { log.extend(arg.as_bytes()); log.push(0); }
-    fs::write(".fixture-argv", log).unwrap();
-    let mode = fs::read_to_string(".fixture-mode").unwrap_or_default();
-    if mode == "fail" { std::process::exit(37); }
-    let touched = if args.len() == 2 { &[][..] } else {
-        assert_eq!(args[2], "--touched");
-        &args[3..]
-    };
-    let contracts = touched.is_empty() || touched.iter().any(|p| {
-        let p = p.to_string_lossy();
-        p.contains("src/decapod/cli.rs") || p.contains("src/decapod/core/docs_cli.rs") || p.contains("assets/schemas/trajectory.schema.json")
-    });
-    let schema = touched.is_empty() || touched.iter().any(|p| p.to_string_lossy().contains("src/decapod/cli.rs"));
-    if contracts { fs::write("docs/agent/command-contracts.md", "generated contracts\n").unwrap(); }
-    if schema { fs::write("docs/agent/config-schema.md", "generated schema\n").unwrap(); }
-    if mode == "drift" || mode == "stage" || mode == "stage-restore" {
-        fs::write("docs/agent/command-contracts.md", "drift\n").unwrap();
-    }
-    if mode == "stage" || mode == "stage-restore" {
-        assert!(Command::new("git").args(["add", "--", "docs/agent/command-contracts.md"]).status().unwrap().success());
-    }
-    if mode == "stage-restore" { fs::write("docs/agent/command-contracts.md", "generated contracts\n").unwrap(); }
-    if mode == "switch-head" {
-        assert!(Command::new("git").args(["checkout", "--detach", "fixture-base"]).status().unwrap().success());
-    }
-}
-"#).unwrap();
+        fs::write(&source, include_str!("../fixtures/docs_sync_fixture.rs")).unwrap();
         let binary = root.join("decapod");
-        let result = Command::new("rustc").args(["--edition=2024"]).arg(source).arg("-o").arg(&binary).output().unwrap();
+        let compiler = std::env::var_os("RUSTC").unwrap_or_else(|| "rustc".into());
+        let result = Command::new(compiler)
+            .args(["--edition=2024"])
+            .arg(source)
+            .arg("-o")
+            .arg(&binary)
+            .output()
+            .unwrap();
         assert!(result.status.success(), "{result:?}");
         binary
     })

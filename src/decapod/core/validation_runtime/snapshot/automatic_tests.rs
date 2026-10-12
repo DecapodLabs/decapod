@@ -12,18 +12,14 @@ use std::rc::Rc;
 const PIPELINE: &str = "01a0bcf1-5e16-44ae-8457-04495fae8ff5";
 const JOB: &str = "33333333-3333-3333-3333-333333333333";
 const STEP: &str = "44444444-4444-4444-4444-444444444444";
-const INVALID_ZIP: &[u8] = b"fixture bytes that cannot authenticate source execution";
 
 #[derive(Clone, Copy, Debug)]
 enum Scenario {
     Progress,
-    GithubTerminal(&'static str),
     BuildkiteTerminal(&'static str),
-    MissingGithub,
     MissingBuildkite,
     DeniedMetadata,
     CancelMetadata,
-    CorruptArchive,
 }
 struct State {
     scenario: Scenario,
@@ -32,7 +28,6 @@ struct State {
     source_tree: String,
     base: String,
     published: Option<(String, String)>,
-    github: Vec<String>,
     buildkite: Vec<String>,
     cycle: usize,
     calls: BTreeMap<String, usize>,
@@ -53,14 +48,6 @@ impl State {
             .expect("publish precedes provider reads");
         (head, reference)
     }
-    fn github_status(&self) -> (&'static str, Option<&'static str>) {
-        match self.scenario {
-            Scenario::Progress if self.cycle == 1 => ("queued", None),
-            Scenario::Progress if self.cycle == 2 => ("in_progress", None),
-            Scenario::GithubTerminal(conclusion) => ("completed", Some(conclusion)),
-            _ => ("completed", Some("success")),
-        }
-    }
     fn buildkite_status(&self) -> &'static str {
         match self.scenario {
             Scenario::Progress if self.cycle == 1 => "scheduled",
@@ -68,27 +55,6 @@ impl State {
             Scenario::BuildkiteTerminal(state) => state,
             _ => "passed",
         }
-    }
-    fn github_run(&self, index: usize) -> Value {
-        let (head, reference) = self.snapshot();
-        let (status, conclusion) = self.github_status();
-        json!({"id":1000 + index,"run_attempt":1,"workflow_id":100 + index,
-            "path":self.github[index],"head_sha":head,
-            "head_branch":reference.trim_start_matches("refs/heads/"),
-            "event":"push","status":status,"conclusion":conclusion,
-            "repository":{"id":1,"full_name":"fixture/decapod"},
-            "head_repository":{"id":1,"full_name":"fixture/decapod"}})
-    }
-    fn github_artifact(&self, index: usize) -> Value {
-        let (head, reference) = self.snapshot();
-        json!({"id":700,"node_id":"fixture-artifact-700",
-            "name":source::custody::artifact_name("fmt", None, "1").unwrap(),
-            "size_in_bytes":INVALID_ZIP.len(),
-            "url":"https://api.github.com/repos/fixture/decapod/actions/artifacts/700",
-            "archive_download_url":"https://api.github.com/repos/fixture/decapod/actions/artifacts/700/zip",
-            "expired":false,"digest":hash(INVALID_ZIP),
-            "workflow_run":{"id":1000 + index,"repository_id":1,"head_repository_id":1,
-                "head_branch":reference.trim_start_matches("refs/heads/"),"head_sha":head}})
     }
 }
 
@@ -100,12 +66,14 @@ struct FixtureRunner {
 impl Runner for FixtureRunner {
     fn execute(&mut self, spec: &CommandSpec, budget: &Budget<'_>) -> io::Result<Reply> {
         budget.remaining()?;
-        if spec.program() == Program::GitLocal
-            || (spec.program() == Program::GitTransport
-                && spec.arguments().iter().any(|arg| arg == "config"))
-        {
-            // Only actual local Git/configuration commands reach a process.
+        if spec.program() == Program::GitLocal {
             return self.official.execute(spec, budget);
+        }
+        if spec.program() == Program::GitTransport
+            && spec.arguments().iter().any(|arg| arg == "config")
+        {
+            // The provider is synthetic; inspect only its actual fixture config.
+            return provider::fixture_config::execute(&mut self.official, spec, budget);
         }
         if spec.program() == Program::GitTransport {
             let mut state = self.state.borrow_mut();
@@ -165,17 +133,14 @@ impl Runner for FixtureRunner {
             .provider_request()
             .expect("typed fixture provider request")
         {
-            ProviderRequest::GithubArtifactZip { artifact_id, .. } => {
-                assert_eq!(*artifact_id, 700);
-                let mut state = self.state.borrow_mut();
-                assert!(matches!(state.scenario, Scenario::CorruptArchive));
-                state.record("github-zip:700".into());
-                Ok(Reply {
-                    exit_code: 0,
-                    stdout: INVALID_ZIP.to_vec(),
-                })
-            }
             ProviderRequest::GithubGet { path } => {
+                assert!(
+                    !path.contains("/actions/"),
+                    "Buildkite-only preflight must not read GitHub Actions execution APIs"
+                );
+                self.state
+                    .borrow_mut()
+                    .record(format!("github-read:{path}"));
                 let body = self.github_get(path)?;
                 Ok(Reply {
                     exit_code: 0,
@@ -214,6 +179,23 @@ impl FixtureRunner {
             return Ok(json!({"ref":reference,"object":{"sha":head,"type":"commit"}}));
         }
         if endpoint.contains("/statuses?") {
+            let (snapshot, _) = state.snapshot();
+            assert!(endpoint.starts_with(&format!("commits/{snapshot}/statuses?")));
+            state.cycle += 1;
+            state.record("buildkite-locators".into());
+            if matches!(state.scenario, Scenario::DeniedMetadata) {
+                return Err(io::Error::new(
+                    io::ErrorKind::PermissionDenied,
+                    "fixture locator read denied",
+                ));
+            }
+            if matches!(state.scenario, Scenario::CancelMetadata) {
+                state.cancel.cancel();
+                return Err(io::Error::new(
+                    io::ErrorKind::Interrupted,
+                    "fixture cancellation",
+                ));
+            }
             return Ok(json!([]));
         }
         if endpoint.contains("/check-runs?") {
@@ -223,89 +205,6 @@ impl FixtureRunner {
             ).map(|(i, _)| json!({"id":i + 1,"head_sha":snapshot,
                 "details_url":format!("https://buildkite.com/decapodlabs/decapod/builds/{}", i + 1)})).collect();
             return Ok(json!({"total_count":checks.len(),"check_runs":checks}));
-        }
-        if let Some(workflow) = endpoint.strip_prefix("actions/workflows/") {
-            if let Some((id, _)) = workflow.split_once("/runs?") {
-                let index = id.parse::<usize>().unwrap() - 100;
-                if index == 0 {
-                    state.cycle += 1;
-                }
-                let workflow = state.github[index].clone();
-                state.record(format!("github-run:{workflow}"));
-                if matches!(state.scenario, Scenario::DeniedMetadata) {
-                    return Err(io::Error::new(
-                        io::ErrorKind::PermissionDenied,
-                        "fixture metadata denied",
-                    ));
-                }
-                if matches!(state.scenario, Scenario::CancelMetadata) {
-                    state.cancel.cancel();
-                    return Err(io::Error::new(
-                        io::ErrorKind::Interrupted,
-                        "fixture cancellation",
-                    ));
-                }
-                if matches!(state.scenario, Scenario::MissingGithub) && index == 0 {
-                    return Ok(json!({"total_count":0,"workflow_runs":[]}));
-                }
-                let (status, _) = state.github_status();
-                state.record(format!("github-state:{status}"));
-                return Ok(json!({"total_count":1,"workflow_runs":[state.github_run(index)]}));
-            }
-            let index = state
-                .github
-                .iter()
-                .position(|path| path.ends_with(&format!("/{workflow}")))
-                .unwrap();
-            return Ok(
-                json!({"id":100 + index,"path":state.github[index],"state":"active",
-                "url":format!("https://api.github.com/repos/fixture/decapod/actions/workflows/{}", 100 + index)}),
-            );
-        }
-        if endpoint == "actions/artifacts/700" {
-            let index = state
-                .github
-                .iter()
-                .position(|workflow| workflow == ".github/workflows/ci.yml")
-                .unwrap();
-            return Ok(state.github_artifact(index));
-        }
-        if let Some(run) = endpoint.strip_prefix("actions/runs/") {
-            let (id, suffix) = run.split_once('/').unwrap_or((run, ""));
-            let index = id.parse::<usize>().unwrap() - 1000;
-            let workflow = state.github[index].clone();
-            if suffix.is_empty() {
-                return Ok(state.github_run(index));
-            }
-            assert_eq!(
-                state.github_status(),
-                ("completed", Some("success")),
-                "custody must await terminal metadata"
-            );
-            if suffix.starts_with("attempts/1/jobs?") {
-                state.record(format!("github-jobs:{workflow}"));
-                let jobs = if workflow == ".github/workflows/ci.yml" {
-                    vec![
-                        json!({"id":2000 + index,"run_id":1000 + index,"run_attempt":1,
-                        "head_sha":state.snapshot().0,"name":"Lint (fmt)","status":"completed","conclusion":"success",
-                        "steps":[{"number":1,"name":source::custody::UPLOAD_STEP_NAME,"status":"completed","conclusion":"success"}]}),
-                    ]
-                } else {
-                    vec![]
-                };
-                return Ok(json!({"total_count":jobs.len(),"jobs":jobs}));
-            }
-            if suffix.starts_with("artifacts?") {
-                state.record(format!("github-artifacts:{workflow}"));
-                let artifacts = if matches!(state.scenario, Scenario::CorruptArchive)
-                    && workflow == ".github/workflows/ci.yml"
-                {
-                    vec![state.github_artifact(index)]
-                } else {
-                    vec![]
-                };
-                return Ok(json!({"total_count":artifacts.len(),"artifacts":artifacts}));
-            }
         }
         panic!("unexpected fixture GitHub endpoint: {endpoint}");
     }
@@ -403,6 +302,10 @@ impl Fixture {
         command(&root, &["commit", "-m", "candidate"]);
         let project = project(&root);
         let plan = source_import::source_run_plan(&project).unwrap();
+        assert!(
+            plan.github_workflows.is_empty(),
+            "source preflight plan must be Buildkite-only"
+        );
         let state = Rc::new(RefCell::new(State {
             scenario,
             cancel: cancel.clone(),
@@ -410,7 +313,6 @@ impl Fixture {
             source_tree: command(&root, &["rev-parse", "HEAD^{tree}"]),
             base,
             published: None,
-            github: plan.github_workflows,
             buildkite: plan.buildkite_pipelines[0].workflows.clone(),
             cycle: 0,
             calls: BTreeMap::new(),
@@ -487,10 +389,7 @@ impl Fixture {
             state
                 .events
                 .iter()
-                .all(|event| !event.starts_with("github-jobs:")
-                    && !event.starts_with("github-artifacts:")
-                    && !event.starts_with("github-zip:")
-                    && !event.starts_with("buildkite-steps:")
+                .all(|event| !event.starts_with("buildkite-steps:")
                     && !event.starts_with("buildkite-jobs:")
                     && !event.starts_with("buildkite-artifacts:"))
         );
@@ -506,33 +405,24 @@ fn runtime_budget(cancel: &Cancellation, timeout: Duration) -> RuntimeBudget<'_>
 }
 
 #[test]
-fn automatic_publish_waits_for_queued_running_terminal_then_collects_once_and_stays_not_ready() {
+fn automatic_buildkite_publish_waits_for_terminal_then_collects_once_and_stays_not_ready() {
     let cancel = Cancellation::default();
     let fixture = Fixture::new(Scenario::Progress, &cancel);
     let mut host = fixture.host();
-    let result = host.select(
-        &fixture.project,
-        &runtime_budget(&cancel, Duration::from_secs(30)),
-    );
-    let blockers = result
+    let blockers = host
+        .select(
+            &fixture.project,
+            &runtime_budget(&cancel, Duration::from_secs(30)),
+        )
         .err()
-        .expect("aggregate provider success without custody is never readiness");
-    assert!(
-        blockers
-            .iter()
-            .any(|b| b.code == "SOURCE_EXECUTION_CUSTODY_BLOCKED"
-                && b.detail.contains("required uploaded archive absent"))
-    );
+        .expect("aggregate provider success without source custody is never readiness");
     assert!(
         blockers
             .iter()
             .any(|b| b.code == "BUILDKITE_SOURCE_CUSTODY_BLOCKED")
     );
     assert!(host.verified_checks.is_empty());
-    assert!(
-        host.terminal_sources.is_some(),
-        "the exact terminal set must be rechecked after collection"
-    );
+    assert!(host.terminal_sources.is_some());
     assert!(host.prepared_snapshot.is_some());
     let state = fixture.state.borrow();
     assert_eq!(state.count("publish"), 1);
@@ -540,33 +430,34 @@ fn automatic_publish_waits_for_queued_running_terminal_then_collects_once_and_st
     let first_custody = state
         .events
         .iter()
-        .position(|e| e.starts_with("github-jobs:"))
+        .position(|e| e.starts_with("buildkite-steps:"))
         .unwrap();
     for status in [
-        "github-state:queued",
-        "github-state:in_progress",
-        "github-state:completed",
         "buildkite-state:scheduled",
         "buildkite-state:running",
         "buildkite-state:passed",
     ] {
         assert!(
-            state.events[..first_custody].iter().any(|e| e == status),
+            state.events[..first_custody]
+                .iter()
+                .any(|event| event == status),
             "missing pre-custody transition {status}"
         );
     }
-    // Each custody collector makes one initial inventory and one immutability
-    // recheck. Repeated pending polls must not fetch jobs/artifacts/receipts.
-    for workflow in &state.github {
-        assert_eq!(state.count(&format!("github-jobs:{workflow}")), 2);
-        assert_eq!(state.count(&format!("github-artifacts:{workflow}")), 2);
-    }
+    // One collection plus its immutable inventory recheck. Pending metadata
+    // polls must never fetch jobs, steps, artifacts or execution receipts.
     for workflow in &state.buildkite {
         assert_eq!(state.count(&format!("buildkite-steps:{workflow}")), 2);
         assert_eq!(state.count(&format!("buildkite-jobs:{workflow}")), 2);
         assert_eq!(state.count(&format!("buildkite-artifacts:{workflow}")), 1);
     }
-    assert_eq!(state.count("github-zip:700"), 0);
+    assert!(
+        state
+            .events
+            .iter()
+            .filter(|e| e.starts_with("github-read:"))
+            .all(|e| !e.contains("/actions/"))
+    );
     drop(state);
     let directory = host.evidence_directory().unwrap();
     assert!(directory.join("snapshot-handoff.json").is_file());
@@ -582,14 +473,39 @@ fn automatic_publish_waits_for_queued_running_terminal_then_collects_once_and_st
 }
 
 #[test]
-fn automatic_normal_path_downloads_selected_archive_once_and_rejects_invalid_custody() {
+fn automatic_buildkite_native_green_without_actual_setup_never_supplies_candidate() {
     let cancel = Cancellation::default();
-    let fixture = Fixture::new(Scenario::CorruptArchive, &cancel);
-    let mut host = fixture.host();
+    let fixture = Fixture::new(Scenario::BuildkiteTerminal("passed"), &cancel);
+    let candidate = fixture
+        .project
+        .catalog
+        .obligations()
+        .iter()
+        .find(|obligation| obligation.kind == evidence::CheckKind::CandidateBuild)
+        .expect("complete catalog retains actual candidate build");
+    let setup = fixture
+        .project
+        .catalog
+        .obligations()
+        .iter()
+        .find(|obligation| {
+            obligation.kind == evidence::CheckKind::SourceCi
+                && obligation.key.provider == evidence::Provider::Buildkite
+                && obligation.key.profile.ends_with("/setup-bazel")
+        })
+        .expect("candidate source build remains a required actual Buildkite setup check");
     assert!(
-        host.artifact_directory.is_none(),
-        "exercise normal configured download path"
+        fixture
+            .project
+            .catalog
+            .obligations()
+            .iter()
+            .all(
+                |obligation| obligation.kind != evidence::CheckKind::SourceCi
+                    || obligation.key.provider == evidence::Provider::Buildkite
+            )
     );
+    let mut host = fixture.host();
     let blockers = host
         .select(
             &fixture.project,
@@ -597,33 +513,26 @@ fn automatic_normal_path_downloads_selected_archive_once_and_rejects_invalid_cus
         )
         .err()
         .unwrap();
-    assert_eq!(blockers.len(), 1);
-    assert_eq!(blockers[0].code, "SNAPSHOT_NOT_READY");
     assert!(
-        blockers[0]
-            .detail
-            .contains("GitHub artifact 700 for run 1000 attempt 1")
-    );
-    assert!(blockers[0].detail.contains("ZIP end record missing"));
-    let state = fixture.state.borrow();
-    assert_eq!(state.count("github-zip:700"), 1);
-    assert!(
-        !state
-            .events
+        blockers
             .iter()
-            .any(|e| e.starts_with("buildkite-steps:"))
+            .any(|blocker| blocker.check.as_ref() == Some(&candidate.key))
     );
-    drop(state);
+    assert!(
+        blockers
+            .iter()
+            .any(|blocker| blocker.check.as_ref() == Some(&setup.key)
+                && blocker.code == "BUILDKITE_SOURCE_CUSTODY_BLOCKED")
+    );
+    assert!(!host.verified_checks.contains_key(&candidate.key));
+    assert!(!host.verified_checks.contains_key(&setup.key));
     assert!(host.verified_checks.is_empty());
-    assert!(host.terminal_sources.is_none());
     fixture.assert_source_preserved();
 }
 
 #[test]
-fn automatic_provider_failure_or_cancellation_stops_before_custody() {
+fn automatic_buildkite_failure_or_cancellation_stops_before_custody() {
     for scenario in [
-        Scenario::GithubTerminal("failure"),
-        Scenario::GithubTerminal("cancelled"),
         Scenario::BuildkiteTerminal("failed"),
         Scenario::BuildkiteTerminal("canceled"),
     ] {
@@ -648,30 +557,24 @@ fn automatic_provider_failure_or_cancellation_stops_before_custody() {
 }
 
 #[test]
-fn automatic_missing_workflow_or_build_exhausts_shared_deadline_without_custody() {
-    for scenario in [Scenario::MissingGithub, Scenario::MissingBuildkite] {
-        let cancel = Cancellation::default();
-        let fixture = Fixture::new(scenario, &cancel);
-        let mut host = fixture.host();
-        let error = host
-            .stage(
-                &fixture.project,
-                &runtime_budget(&cancel, Duration::from_secs(10)),
-            )
-            .unwrap_err();
-        assert_eq!(
-            error.kind(),
-            io::ErrorKind::TimedOut,
-            "{scenario:?}: {error}"
-        );
-        assert!(host.terminal_sources.is_none());
-        fixture.assert_no_custody();
-        fixture.assert_source_preserved();
-    }
+fn automatic_missing_buildkite_build_exhausts_shared_deadline_without_custody() {
+    let cancel = Cancellation::default();
+    let fixture = Fixture::new(Scenario::MissingBuildkite, &cancel);
+    let mut host = fixture.host();
+    let error = host
+        .stage(
+            &fixture.project,
+            &runtime_budget(&cancel, Duration::from_secs(10)),
+        )
+        .unwrap_err();
+    assert_eq!(error.kind(), io::ErrorKind::TimedOut);
+    assert!(host.terminal_sources.is_none());
+    fixture.assert_no_custody();
+    fixture.assert_source_preserved();
 }
 
 #[test]
-fn automatic_authorization_denial_and_local_cancellation_are_not_retried() {
+fn automatic_buildkite_locator_denial_and_local_cancellation_are_not_retried() {
     for (scenario, kind) in [
         (Scenario::DeniedMetadata, io::ErrorKind::PermissionDenied),
         (Scenario::CancelMetadata, io::ErrorKind::Interrupted),
@@ -687,12 +590,12 @@ fn automatic_authorization_denial_and_local_cancellation_are_not_retried() {
             .unwrap_err();
         assert_eq!(error.kind(), kind);
         let state = fixture.state.borrow();
-        assert_eq!(state.count(&format!("github-run:{}", state.github[0])), 1);
+        assert_eq!(state.count("buildkite-locators"), 1);
         assert!(
             !state
                 .events
                 .iter()
-                .any(|e| e.starts_with("buildkite-state:"))
+                .any(|event| event.starts_with("buildkite-state:"))
         );
         drop(state);
         assert!(host.terminal_sources.is_none());

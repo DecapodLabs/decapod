@@ -159,7 +159,7 @@ fn success(profile: &CompiledProfile) -> SuiteEvidence {
 #[test]
 fn core_catalog_keeps_all_source_rows_platforms_and_candidate_without_release_packaging() {
     let c = catalog();
-    assert!(c.obligations.len() > 45);
+    assert!(!c.obligations.is_empty());
     assert_eq!(
         c.obligations
             .iter()
@@ -656,66 +656,88 @@ fn unknown_matrix_shape_requires_explicit_adapter_reconciliation() {
 }
 
 #[test]
-fn source_catalog_independently_requires_both_provider_instances() {
+fn source_catalog_keeps_every_logical_row_once_on_buildkite() {
     let c = catalog();
-    for obligation in c
-        .obligations
-        .iter()
-        .filter(|o| o.kind == CheckKind::SourceCi)
-    {
-        let mut counterpart = obligation.key.clone();
-        counterpart.provider = match counterpart.provider {
-            Provider::GithubActions => Provider::Buildkite,
-            Provider::Buildkite => Provider::GithubActions,
-            Provider::Native => panic!("Native cannot erase source provider identity"),
+    let paths: Vec<_> = c.facts.changed_paths.iter().cloned().collect();
+    let mut expected_required = BTreeSet::new();
+    let mut expected_excluded = BTreeSet::new();
+    for job in source::inventory(&paths, false) {
+        let members = if job.checks.is_empty() {
+            vec!["workflow-owned"]
+        } else {
+            job.checks.clone()
         };
-        let other = c.obligations.iter().find(|o| o.key == counterpart).unwrap();
-        assert_ne!(obligation.definition_digest, other.definition_digest);
-    }
-    for exclusion in &c.exclusions {
-        let mut counterpart = exclusion.key.clone();
-        counterpart.provider = match counterpart.provider {
-            Provider::GithubActions => Provider::Buildkite,
-            Provider::Buildkite => Provider::GithubActions,
-            Provider::Native => panic!("Native is not an origin provider"),
-        };
-        assert!(c.exclusions.iter().any(|e| e.key == counterpart));
-    }
-}
-
-#[test]
-fn one_providers_all_green_never_satisfies_dual_provider_inventory() {
-    for missing_provider in [Provider::GithubActions, Provider::Buildkite] {
-        let c = catalog();
-        let (mut policy, mut bindings) = bindings(&c);
-        policy.buildkite_preflights = true;
-        for (key, executor) in &mut policy.executors {
-            *executor = key.provider;
-            bindings.get_mut(key).unwrap().executor = *executor;
+        for id in members {
+            let check_key = key(
+                job.workflow,
+                job.job,
+                matrix(job.job, job.matrix).unwrap(),
+                id,
+            );
+            assert_eq!(check_key.provider, Provider::Buildkite);
+            let required = job.applicable
+                && (id == "workflow-owned"
+                    || source::selected(source::find_check(id).unwrap(), &paths, false));
+            if required {
+                assert!(expected_required.insert(check_key));
+            } else {
+                assert!(expected_excluded.insert(check_key));
+            }
         }
-        let profile =
-            compile_plan(c, &policy, &bindings, &identity(), &d("governance policy")).unwrap();
-        let mut proof = success(&profile);
-        proof.results.retain(|r| {
-            r.key.provider != missing_provider
-                || profile
-                    .plan
-                    .checks
-                    .iter()
-                    .find(|c| c.key == r.key)
-                    .unwrap()
-                    .kind
-                    != CheckKind::SourceCi
-        });
-        assert_eq!(
-            evidence::verify(profile.plan(), &identity(), profile.facts(), &proof).verdict,
-            Verdict::NotReady
-        );
     }
+    assert_eq!(
+        c.obligations
+            .iter()
+            .filter(|o| o.kind == CheckKind::SourceCi)
+            .map(|o| o.key.clone())
+            .collect::<BTreeSet<_>>(),
+        expected_required
+    );
+    assert_eq!(
+        c.exclusions
+            .iter()
+            .map(|o| o.key.clone())
+            .collect::<BTreeSet<_>>(),
+        expected_excluded
+    );
+    assert!(
+        c.obligations
+            .iter()
+            .all(|o| o.key.provider == Provider::Buildkite)
+    );
+    assert_eq!(c.obligations.len(), expected_required.len() + 1);
+    assert!(
+        c.stage_dispositions()
+            .iter()
+            .any(|row| row.stage == "github-pull-request-ci"
+                && row.disposition == StageDispositionKind::NonApplicable
+                && row.evidence_scope == "no_github_actions_execution_or_assurance_claim")
+    );
 }
 
 #[test]
-fn true_mode_cannot_route_both_provider_instances_through_only_one_provider() {
+fn github_success_never_substitutes_for_buildkite_preflight() {
+    let c = catalog();
+    let (mut policy, mut bindings) = bindings(&c);
+    policy.buildkite_preflights = true;
+    for (key, executor) in &mut policy.executors {
+        *executor = Provider::Buildkite;
+        bindings.get_mut(key).unwrap().executor = *executor;
+    }
+    let profile = compile_plan(c, &policy, &bindings, &identity(), &d("policy")).unwrap();
+    let mut proof = success(&profile);
+    for row in &mut proof.results {
+        row.key.provider = Provider::GithubActions;
+        row.executor = Provider::GithubActions;
+    }
+    assert_eq!(
+        evidence::verify(profile.plan(), &identity(), profile.facts(), &proof).verdict,
+        Verdict::NotReady
+    );
+}
+
+#[test]
+fn true_mode_routes_all_source_and_candidate_builds_only_to_buildkite() {
     for executor in [
         Provider::GithubActions,
         Provider::Buildkite,
@@ -728,21 +750,57 @@ fn true_mode_cannot_route_both_provider_instances_through_only_one_provider() {
             *route = executor;
             bindings.get_mut(key).unwrap().executor = executor;
         }
-        assert!(matches!(
-            compile_plan(c, &policy, &bindings, &identity(), &d("policy")),
-            Err(PlanningFailure::InvalidBinding(_))
-        ));
+        let result = compile_plan(c, &policy, &bindings, &identity(), &d("policy"));
+        if executor == Provider::Buildkite {
+            assert!(result.is_ok());
+        } else {
+            assert!(matches!(result, Err(PlanningFailure::InvalidBinding(_))));
+        }
     }
+    let c = catalog();
+    let (mut policy, mut bindings) = bindings(&c);
+    policy.buildkite_preflights = true;
+    for (key, route) in &mut policy.executors {
+        *route = Provider::Buildkite;
+        bindings.get_mut(key).unwrap().executor = Provider::Buildkite;
+    }
+    let candidate = c
+        .obligations()
+        .iter()
+        .find(|o| o.kind == CheckKind::CandidateBuild)
+        .unwrap()
+        .key
+        .clone();
+    policy
+        .executors
+        .insert(candidate.clone(), Provider::GithubActions);
+    bindings.get_mut(&candidate).unwrap().executor = Provider::GithubActions;
+    assert!(matches!(
+        compile_plan(c, &policy, &bindings, &identity(), &d("policy")),
+        Err(PlanningFailure::InvalidBinding(key)) if key == candidate
+    ));
 }
 
 #[test]
-fn native_mode_retains_both_provider_parity_obligations() {
+fn native_mode_retains_complete_platform_obligations() {
     let c = catalog();
     let (policy, mut bindings) = bindings(&c);
-    bindings.retain(|key, _| key.provider != Provider::Buildkite);
+    let foreign = c
+        .obligations()
+        .iter()
+        .find(|o| {
+            o.key
+                .matrix
+                .get("os")
+                .is_some_and(|os| os == "macos-latest")
+        })
+        .unwrap()
+        .key
+        .clone();
+    bindings.remove(&foreign);
     assert!(matches!(
         compile_plan(c, &policy, &bindings, &identity(), &d("policy")),
-        Err(PlanningFailure::MissingBinding(_))
+        Err(PlanningFailure::MissingBinding(key)) if key == foreign
     ));
 }
 

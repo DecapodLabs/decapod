@@ -25,8 +25,8 @@ impl SourceRunPlan {
     fn validate(&self) -> Result<()> {
         let mut paths = BTreeSet::new();
         ensure(
-            !self.github_workflows.is_empty() && self.github_workflows.len() <= 64,
-            "source GitHub workflow plan missing or oversized",
+            self.github_workflows.len() <= 64,
+            "source GitHub workflow plan oversized",
         )?;
         for path in &self.github_workflows {
             github::workflow_name(path)?;

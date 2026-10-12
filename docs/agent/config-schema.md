@@ -24,7 +24,10 @@ pub struct DecapodProjectConfig {
 
 `[proof].validation_buildkite_preflights` is a boolean, default false. False runs
 the native readiness backend; it does not disable compile, test or CI proof.
-True uses authorized temporary snapshots without publishing the work branch.
+True submits an authorized temporary snapshot to Buildkite, waits for its real
+required checks, and downloads verified Buildkite execution evidence without
+publishing the work branch. It does not run or collect GitHub Actions; normal
+PR workflows on that service remain independent.
 `[proof.required_profile]` binds the reviewed complete repository CI/release
 contract. A missing, unknown or changed contract fails readiness; an empty
 `commands` list cannot prove completion. Init and initial agent execution

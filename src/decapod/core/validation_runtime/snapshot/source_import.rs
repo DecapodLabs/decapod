@@ -25,29 +25,25 @@ impl SourceCollection {
 /// CandidateBuild is proven by its required actual setup-source check, never by
 /// adding an invented provider workflow or dropping a source obligation.
 pub(super) fn source_run_plan(project: &CurrentProject) -> io::Result<automatic::SourceRunPlan> {
-    let mut github = BTreeSet::new();
     let mut buildkite = BTreeSet::new();
     for obligation in project.catalog.obligations() {
         if obligation.kind != evidence::CheckKind::SourceCi {
             continue;
         }
         match obligation.key.provider {
-            evidence::Provider::GithubActions => {
-                github.insert(obligation.key.workflow.clone());
-            }
             evidence::Provider::Buildkite => {
                 buildkite.insert(obligation.key.workflow.clone());
             }
             _ => return Err(invalid("unsupported provider in required source catalog")),
         }
     }
-    if github.is_empty() || buildkite.is_empty() {
+    if buildkite.is_empty() {
         return Err(invalid(
-            "complete dual-provider source workflow catalog is required",
+            "complete Buildkite source workflow catalog is required",
         ));
     }
     Ok(automatic::SourceRunPlan {
-        github_workflows: github.into_iter().collect(),
+        github_workflows: Vec::new(),
         buildkite_pipelines: vec![automatic::ImportedPipeline {
             organization: "decapodlabs".into(),
             pipeline: "decapod".into(),
@@ -57,7 +53,9 @@ pub(super) fn source_run_plan(project: &CurrentProject) -> io::Result<automatic:
     })
 }
 
-#[allow(clippy::too_many_arguments)]
+// Retained adapter for ordinary GitHub CI tooling; Buildkite-only preflight
+// never calls it or accepts its results as required preflight proof.
+#[allow(dead_code, clippy::too_many_arguments)]
 pub(super) fn github_sources(
     options: &Options,
     runner: &mut impl Runner,
@@ -377,13 +375,20 @@ fn verify_check(
     }
     integration::record(project, check, &expected, files, known_inputs)?;
     let observation = execution.observation();
-    if check.id == "setup-bazel" && obligation.key.provider == evidence::Provider::GithubActions {
+    if check.id == "setup-bazel" && obligation.key.provider == evidence::Provider::Buildkite {
         let candidate = project
             .catalog
             .obligations()
             .iter()
             .find(|o| o.kind == evidence::CheckKind::CandidateBuild)
             .ok_or_else(|| invalid("candidate build obligation absent"))?;
+        if candidate.key.provider != evidence::Provider::Buildkite
+            || binding.executor != evidence::Provider::Buildkite
+        {
+            return Err(invalid(
+                "candidate build must bind authenticated Buildkite setup",
+            ));
+        }
         let artifact = execution
             .artifacts()
             .iter()

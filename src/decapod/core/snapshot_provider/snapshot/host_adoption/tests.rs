@@ -224,7 +224,11 @@ impl Runner for Host {
         }
         assert_eq!(spec.program, Program::GitTransport);
         if spec.args.iter().any(|a| a == "config") {
-            return self.local.execute(spec, b);
+            return crate::core::snapshot_provider::fixture_config::execute(
+                &mut self.local,
+                spec,
+                b,
+            );
         }
         if spec.args.iter().any(|a| a == "ls-remote") {
             let stdout = if spec.args.iter().any(|a| a == "--tags") {

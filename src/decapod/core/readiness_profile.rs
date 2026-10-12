@@ -218,6 +218,13 @@ fn source_stage_dispositions(
         evidence_scope: "source_predicate_exclusion_only".into(),
     })).collect();
     result.push(StageDisposition {
+        stage: "github-pull-request-ci".into(), key: None,
+        disposition: StageDispositionKind::NonApplicable,
+        policy: "decapod.buildkite-only-preflight.v1".into(),
+        reason: "Ordinary GitHub pull-request CI remains independent; preflight requires the complete Buildkite source contract instead".into(),
+        evidence_scope: "no_github_actions_execution_or_assurance_claim".into(),
+    });
+    result.push(StageDisposition {
         stage: "derived-release-packaging".into(), key: None,
         disposition: StageDispositionKind::NonApplicable, policy: "decapod.source-pr-scope.v1".into(),
         reason: "Predictive release-only packaging is outside the actual source PR suite; issue #1399 remains unresolved".into(),
@@ -268,8 +275,8 @@ pub struct ExecutionBinding {
 
 /// Selected before dispatch, independently of provider results. False means
 /// native equivalent execution for EVERY applicable obligation, never no proof.
-/// Source CI has separate GitHub and Buildkite obligations. True mode must use
-/// each actual source provider; selecting one cannot erase the other provider.
+/// True mode executes the complete source contract on Buildkite. Ordinary
+/// GitHub pull-request CI remains independent and is not preflight evidence.
 #[derive(Debug, Clone, Serialize)]
 pub struct ExecutionPolicy {
     pub buildkite_preflights: bool,
@@ -358,7 +365,7 @@ fn matrix(job: &str, value: Option<&str>) -> Result<BTreeMap<String, String>, Pl
 
 fn key(workflow: &str, job: &str, matrix: BTreeMap<String, String>, detail: &str) -> CheckKey {
     CheckKey {
-        provider: Provider::GithubActions,
+        provider: Provider::Buildkite,
         workflow: format!(".github/workflows/{workflow}"),
         job: job.into(),
         matrix,
@@ -378,7 +385,7 @@ pub fn required_catalog(
     required_source_catalog(declaration, discovered, facts)
 }
 
-/// Complete actual dual-provider PR source suite and real candidate build.
+/// Complete actual source suite and candidate build, remotely proven by Buildkite.
 /// Release-only packaging is an explicit non-applicable disposition, not proof.
 pub fn required_source_catalog(
     declaration: Option<&ProfileDeclaration>,
@@ -485,10 +492,10 @@ pub fn required_source_catalog(
                     }),
                 )
             };
-            // Both providers publish required checks for this project's source
-            // workflow matrix. Preserve provider identity even in native mode:
-            // a provider-specific translation/parity gap is still an obligation.
-            for provider in [Provider::GithubActions, Provider::Buildkite] {
+            // Preserve every applicable logical check and matrix instance once.
+            // Buildkite imports the authored workflow contract; normal GitHub PR
+            // execution remains a separate post-publication CI policy.
+            for provider in [Provider::Buildkite] {
                 let mut provider_key = key.clone();
                 provider_key.provider = provider;
                 if !applicable {
@@ -616,7 +623,10 @@ pub fn compile_plan(
             || binding.executor != *executor
             || (!policy.buildkite_preflights && *executor != Provider::Native)
             || (policy.buildkite_preflights
-                && obligation.kind == CheckKind::SourceCi
+                && matches!(
+                    obligation.kind,
+                    CheckKind::SourceCi | CheckKind::CandidateBuild
+                )
                 && *executor != obligation.key.provider)
             || !valid_digest(&binding.invocation_digest)
             || !valid_digest(&binding.toolchain_digest)

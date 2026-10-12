@@ -236,49 +236,74 @@
       "id": "third-current-spec-review",
       "summary": "Follow STALE_SPEC_REVIEW report and bind explicit reviews to current implementation bytes",
       "input_digest": "sha256:dc910d48e988854b03edd8cd86197a6c67c31e7c8007ed849d6540a557487f9d"
+    },
+    {
+      "id": "fourth-buildkite-only-source",
+      "summary": "Repair measured source CI failures and require actual Buildkite-only preflight before publication",
+      "input_digest": "sha256:641b59b64a5caed50b396415154c85a4243e7e9482223f4330f491a3c1bcac3f"
+    },
+    {
+      "id": "fourth-project-prerequisite-receipt",
+      "summary": "Retain actual203-pass prerequisite receipt for the fourth candidate; remote source proof remains pending",
+      "input_digest": "sha256:e33b45fdeebcb605a148b5a234df8ae3ddda3054c620913236dbf3629d9a0e42"
+    },
+    {
+      "id": "fourth-reviewed-contract-final",
+      "summary": "Keep shared workflow bytes unchanged and bind reviewed final Buildkite-only profile",
+      "input_digest": "sha256:30786ea15af0729af1b184559e68cb55bbadde05ee17a17df99bb66b7b9abff6"
+    },
+    {
+      "id": "fourth-current-epoch-source",
+      "summary": "Start fresh trajectory for final reviewed source contract as instructed by stale-evidence report",
+      "input_digest": "sha256:e4fe2788ac0d33b2431769074fa4b46a4b07eb7f1b50909a343b96d003063118"
+    },
+    {
+      "id": "fourth-current-prerequisite-receipt",
+      "summary": "Retain genuine current-epoch project prerequisites; complete Buildkite execution still pending",
+      "input_digest": "sha256:bdd3b9100e0b441d0fade6fbccb46b2f4c785bb38c2b536c79ce65da0ea29e74"
     }
   ],
   "intents": {
-    "intent:third-live-snapshot-20261012": {
+    "intent:fourth-reviewed-buildkite-20261012": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Temporary snapshot transport only until full actual readiness succeeds; no release, deploy, credentials, or weakened checks."
+        "No ordinary work branch or PR before full readiness; no release/deploy side effects"
       ],
       "constraints": [
-        "Decapod source CI custody, authenticated imported receipts, Bazel input declaration, regression tests and reviewed source inventory."
+        "Final fourth snapshot candidate and source proof"
       ],
       "created_sequence": 1,
-      "id": "intent:third-live-snapshot-20261012",
+      "id": "intent:fourth-reviewed-buildkite-20261012",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Make validation execute the complete applicable source preflight before workbranch publication or PR creation.",
-      "refined_intent": "Repair second-snapshot Buildkite imported identity, duplicated Bazel source input, and strict Clippy findings; execute a fresh exact temporary candidate and retain failed-run evidence.",
+      "raw_intent": "Run real Buildkite preflight before publishing the local work branch",
+      "refined_intent": "Use the reviewed unchanged workflow bytes, corrected source fixtures and authenticated Buildkite-only execution proof",
       "status": "refined",
       "updated_sequence": 3
     }
   },
   "epochs": {
-    "ve_2697fc32c2aa039e": {
-      "constitution_hash": "sha256:ff331a0ab0a8120397b60f60ed18df84779774a118e3779ed0d9cdc0a3d6d28f",
+    "ve_98f5c940baf28660": {
+      "constitution_hash": "sha256:36940ecf6c7d8fdf1e5ad22d21a6150f24a3cbaf55d9740da4a3c70e43be1bc5",
       "constitution_version": "embedded-docs@0.107.5",
-      "epoch_id": "ve_2697fc32c2aa039e",
+      "epoch_id": "ve_98f5c940baf28660",
       "evaluator_identity": "decapod-validate@0.107.5",
       "evaluator_set_hash": "sha256:469d3679344174bc181dfc1ff5aa43df31d5e329e307bd1225d839ae6f09331e",
-      "generated_specs_fingerprint": "592afb9100c4a6db16ad45d7309881c299e3ec432655cbb3d6365d9e48bd4f40",
-      "generated_specs_manifest_hash": "sha256:f136018d53eb75b62dc9baa449bb07d4a7f30c9977cdfa18b8ee565340554e34",
+      "generated_specs_fingerprint": "f0ecfacc3f191c348abbc2ab3295404630ff5b7e2d376b826a8a2f6e37ca988a",
+      "generated_specs_manifest_hash": "sha256:3dfa28dafea08f848cc2eb31f2a31a26bc72dfb36ae6bc09fedd701e76b9412f",
       "material_hashes": {
-        "constitution:core/DECAPOD": "sha256:ff331a0ab0a8120397b60f60ed18df84779774a118e3779ed0d9cdc0a3d6d28f",
-        "generated_spec:.decapod/managed/specs/ARCHITECTURE.md": "sha256:06cf35eaf7718736066d611bf4b1ed680b093b7f1d5ac24f2dbda9b042c56858",
-        "generated_spec:.decapod/managed/specs/INTENT.md": "sha256:ed41988b43e492f84f7e1561655af56fa774696eee85334e6630551ab19319bd",
-        "generated_spec:.decapod/managed/specs/INTERFACES.md": "sha256:36bedc49f2ff79ad82c23e9b87b97f5ae96888cb8daa1036d3af242b92aa3549",
-        "generated_spec:.decapod/managed/specs/OPERATIONS.md": "sha256:1664a2b843eddc9da5609cdb72fd9e8c2a930c96108f9cd19a3c37359a8bad04",
-        "generated_spec:.decapod/managed/specs/README.md": "sha256:29cfbd37ee5dfe43cbf0ad10a383a377b7092b1b8dde98abeeb999e41c092f75",
-        "generated_spec:.decapod/managed/specs/SECURITY.md": "sha256:bc27536ad522b8ffd700741531a2b461e4f0b13b01f362ec0862cd1e65ed4177",
-        "generated_spec:.decapod/managed/specs/SEMANTICS.md": "sha256:ad9d85ffcbe2cdbfa8d1b28c03edf3de95bb6d22b33ad646672d7f0cbf4bf6db",
-        "generated_spec:.decapod/managed/specs/VALIDATION.md": "sha256:d57d8921691e46726f39e9ea6215307579eb3994444e813fd8ca8683e32855ec",
-        "generated_specs_fingerprint": "592afb9100c4a6db16ad45d7309881c299e3ec432655cbb3d6365d9e48bd4f40",
-        "generated_specs_manifest": "sha256:f136018d53eb75b62dc9baa449bb07d4a7f30c9977cdfa18b8ee565340554e34",
+        "constitution:core/DECAPOD": "sha256:36940ecf6c7d8fdf1e5ad22d21a6150f24a3cbaf55d9740da4a3c70e43be1bc5",
+        "generated_spec:.decapod/managed/specs/ARCHITECTURE.md": "sha256:ea83a361291066d729de67b70c10421b289a33a3c351ce81c40e08391a026dfb",
+        "generated_spec:.decapod/managed/specs/INTENT.md": "sha256:06c91ee65bbc2e5eda14e67d447f0e76c82fee1f51dd720714a7831afe07aa0a",
+        "generated_spec:.decapod/managed/specs/INTERFACES.md": "sha256:95abde60f286ec5bb3bb7368564e7bd480ee53246843af203719d481e976305a",
+        "generated_spec:.decapod/managed/specs/OPERATIONS.md": "sha256:f1856aa573f6d7fb96eed9d2865f0ec6b505b39b5cd0597b44b7fe6b2bd75614",
+        "generated_spec:.decapod/managed/specs/README.md": "sha256:4b17e7d705e784f006880ea1643b5b8e15e632931d496d0a330733ecb23967d1",
+        "generated_spec:.decapod/managed/specs/SECURITY.md": "sha256:9d86a6f79c9a3b86fd2c8db9232b876f60d720176a78560129233d2c132ce783",
+        "generated_spec:.decapod/managed/specs/SEMANTICS.md": "sha256:bba49bf867a6e78bdf32269d1516143e52f0d7da3d29c0411ec8b1df84b93067",
+        "generated_spec:.decapod/managed/specs/VALIDATION.md": "sha256:03425043f43278943b6f7b127593c4f0e014419aa76f93f1b3f1975a85250dbb",
+        "generated_specs_fingerprint": "f0ecfacc3f191c348abbc2ab3295404630ff5b7e2d376b826a8a2f6e37ca988a",
+        "generated_specs_manifest": "sha256:3dfa28dafea08f848cc2eb31f2a31a26bc72dfb36ae6bc09fedd701e76b9412f",
         "governance_context": "sha256:2bc9ca8c57326265859b5a0983aa78c7127556676f0fbe18fd679a8049af5aaf",
         "governance_material:.decapod/managed/Dockerfile.decapod": "sha256:3b51684110be026f7c91ac885f5806cebe995fcb37eed251d09ac6f3bd85ebe6",
         "governance_material:AGENTS.md": "sha256:b00dc7b558355963e5fef810fab0abe4bbff4e8f26080f370c75b30c93f8ebb1",
@@ -286,13 +311,13 @@
         "governance_material:CODEX.md": "sha256:e7c577a8833c74423816d43e9e6e349dd36a11ca0e997138f87706ad78f81f69",
         "governance_material:GEMINI.md": "sha256:58436bbbe90904fd6a3ebcf4b1a94ffb3e6429b4bb97a082f62a4994318b5b9b",
         "governance_section:claims": "sha256:93c4c02108a7a16f99b109ec378dd6b7ff388ba483cdc43c8abb091451f24fba",
-        "governance_section:plan": "sha256:cf8dfbe3a5a632b71681cd9d1876d8ffb598eaf6afe4b6d979d7b5af44b76bf2",
-        "living_spec_material:.decapod/managed/specs/ARCHITECTURE.md": "sha256:b16ee1fe4244f6d1b2526858cd8697a712be135135b0b1698299d39997fc2766",
-        "living_spec_material:.decapod/managed/specs/INTENT.md": "sha256:54d83405670a3650b557e6d0efd2ff96cd6c7107e754cbffce3c628a79cdd980",
-        "living_spec_material:.decapod/managed/specs/INTERFACES.md": "sha256:a561839d31f96025b3333da3627163597816e734cea67610d4d8772e9f639c70",
+        "governance_section:plan": "sha256:e6f4bd765f3b26c3b81504cb1d8dc001ac75576b25e018526cd0be10023035ff",
+        "living_spec_material:.decapod/managed/specs/ARCHITECTURE.md": "sha256:c1662da028baf851c9c190fed922160b3c72a73dd7a36539bb9f2837eeec0296",
+        "living_spec_material:.decapod/managed/specs/INTENT.md": "sha256:648ed71fc3b0579436f86723d54cee0dc6954f4d0fc68c3dfb3481f840927886",
+        "living_spec_material:.decapod/managed/specs/INTERFACES.md": "sha256:a52c1ae6618df74c4a6d3a561e9a4d4f95e8ff83d6a6226c4117ec2c101aeedc",
         "living_spec_material:.decapod/managed/specs/OPERATIONS.md": "sha256:98a538e0c0fe76aa72fbeec0d33be5e263dd5b3cc9b6a0786627bc2d2ab0e133",
         "living_spec_material:.decapod/managed/specs/README.md": "sha256:6c4338fb8446fa04e2d7c823ff3e33c2bd4949bf6018392045993401131f690a",
-        "living_spec_material:.decapod/managed/specs/SECURITY.md": "sha256:de5e2172a6f001ec79113ab55f45877c1a64116ebbe835938793a15293fb86e3",
+        "living_spec_material:.decapod/managed/specs/SECURITY.md": "sha256:1cba8407b3a5fdc76578d3c30454d1756a54c451b39ad73b3701b002bb608b23",
         "living_spec_material:.decapod/managed/specs/SEMANTICS.md": "sha256:27cf430b3c93ff95ff84a95bf685a5682177ca1ca5a810648491f23278953d76",
         "living_spec_material:.decapod/managed/specs/VALIDATION.md": "sha256:aefd7b6f7d6ab9e40aad703cbf344e0837b55dce8d449783de55b6899da99f4a",
         "proof_rubric": "sha256:99e8ef25629da391e9b479db9fff52b82f340224f7a69d8a88d2992ae8e90466",
@@ -313,33 +338,33 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Enforce exact-current-workbranch readiness before workbranch push or PR: every applicable actual source PR compilation, test, build and required GitHub/Buildkite check must execute and pass with genuine bound evidence. Agent and Decapod explicitly classify real, mocked and non-applicable stages; mocking must never replace required code execution. Release-only packaging remains separately preserved for issue1399 with no assurance claim. Follow actionable validation-report recovery instructions until actual readiness succeeds.",
+      "intent": "Complete real pre-push readiness on the exact local work branch using Buildkite as the sole remote preflight executor; preserve independent normal GitHub PR CI and the complete native backend; repair measured third-preflight failures before publishing",
       "phases": [],
       "proof_hooks": [
-        "Full exact-candidate source suite; no empty/stale/skipped-required evidence; no PR before public validate exit0"
+        "Actual Buildkite full source suite, candidate compilation, provider-bound execution custody and exact source/base recheck must pass"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed current exact code and existing authored contracts after actual second-run failures: imported shell identity is untrusted until sealed native recipe authentication, retry mapping is checked, artifact producers remain bound, Bazel input set is preserved exactly once and Clippy findings are repaired without suppression. Full third-candidate provider proof remains pending.",
-          "reviewed_code_fingerprint": "592afb9100c4a6db16ad45d7309881c299e3ec432655cbb3d6365d9e48bd4f40",
-          "spec_material_hash": "b16ee1fe4244f6d1b2526858cd8697a712be135135b0b1698299d39997fc2766"
+          "reason": "Final reviewed Buildkite-only contract uses unchanged shared workflow definitions and a GitHub-only suppression marker solely on temporary transport commits",
+          "reviewed_code_fingerprint": "f0ecfacc3f191c348abbc2ab3295404630ff5b7e2d376b826a8a2f6e37ca988a",
+          "spec_material_hash": "c1662da028baf851c9c190fed922160b3c72a73dd7a36539bb9f2837eeec0296"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed current exact code and existing authored contracts after actual second-run failures: imported shell identity is untrusted until sealed native recipe authentication, retry mapping is checked, artifact producers remain bound, Bazel input set is preserved exactly once and Clippy findings are repaired without suppression. Full third-candidate provider proof remains pending.",
-          "reviewed_code_fingerprint": "592afb9100c4a6db16ad45d7309881c299e3ec432655cbb3d6365d9e48bd4f40",
-          "spec_material_hash": "a561839d31f96025b3333da3627163597816e734cea67610d4d8772e9f639c70"
+          "reason": "Final reviewed Buildkite-only contract uses unchanged shared workflow definitions and a GitHub-only suppression marker solely on temporary transport commits",
+          "reviewed_code_fingerprint": "f0ecfacc3f191c348abbc2ab3295404630ff5b7e2d376b826a8a2f6e37ca988a",
+          "spec_material_hash": "a52c1ae6618df74c4a6d3a561e9a4d4f95e8ff83d6a6226c4117ec2c101aeedc"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed current exact code and existing authored contracts after actual second-run failures: imported shell identity is untrusted until sealed native recipe authentication, retry mapping is checked, artifact producers remain bound, Bazel input set is preserved exactly once and Clippy findings are repaired without suppression. Full third-candidate provider proof remains pending.",
-          "reviewed_code_fingerprint": "592afb9100c4a6db16ad45d7309881c299e3ec432655cbb3d6365d9e48bd4f40",
-          "spec_material_hash": "de5e2172a6f001ec79113ab55f45877c1a64116ebbe835938793a15293fb86e3"
+          "reason": "Final reviewed Buildkite-only contract uses unchanged shared workflow definitions and a GitHub-only suppression marker solely on temporary transport commits",
+          "reviewed_code_fingerprint": "f0ecfacc3f191c348abbc2ab3295404630ff5b7e2d376b826a8a2f6e37ca988a",
+          "spec_material_hash": "1cba8407b3a5fdc76578d3c30454d1756a54c451b39ad73b3701b002bb608b23"
         }
       ],
       "state": "APPROVED",
@@ -350,165 +375,103 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791780559Z"
+      "updated_at": "1791783091Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Temporary snapshot transport only until full actual readiness succeeds; no release, deploy, credentials, or weakened checks."
+        "No ordinary work branch or PR before full readiness; no release/deploy side effects"
       ],
-      "artifact_hash": "sha256:4b6acb7a8150234a4d80a3b7b1333ec236ca32d91e8f54b3e8e3211196833f3e",
+      "artifact_hash": "sha256:493a7b2fff09e69b7e3bdae469e0f0a36e2ac5eb582438ab3937ae3ffdc4e2ec",
       "checks": [
         {
-          "name": "bazel_package_load",
-          "status": "passed"
+          "name": "actual-buildkite-suite",
+          "status": "unavailable"
         },
         {
-          "name": "candidate_build",
-          "status": "partial"
+          "name": "candidate-cli-compile",
+          "status": "passed"
         },
         {
           "name": "decapod validate",
           "status": "passed"
         },
         {
-          "name": "reviewed_inventory_reconciliation",
+          "name": "focused-runtime-profile-tests",
           "status": "passed"
-        },
-        {
-          "name": "second_github_docker_recovery",
-          "status": "passed"
-        },
-        {
-          "name": "second_github_standalone_validation",
-          "status": "passed"
-        },
-        {
-          "name": "second_github_supabase",
-          "status": "passed"
-        },
-        {
-          "name": "second_provider_suite",
-          "status": "failed"
-        },
-        {
-          "name": "source_ci_policy_36",
-          "status": "passed"
-        },
-        {
-          "name": "third_exact_suite",
-          "status": "unavailable"
         }
       ],
-      "completion_claim": "in_progress",
       "current_phase": "validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:third-live-snapshot-20261012",
+            "intent_id": "intent:fourth-reviewed-buildkite-20261012",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:third-live-snapshot-20261012",
+            "intent_id": "intent:fourth-reviewed-buildkite-20261012",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:third-live-snapshot-20261012",
+            "detail": "trajectory:fourth-reviewed-buildkite-20261012",
             "event_id": "event:4",
-            "intent_id": "intent:third-live-snapshot-20261012",
+            "intent_id": "intent:fourth-reviewed-buildkite-20261012",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:third-live-snapshot-20261012",
+            "detail": "trajectory:fourth-reviewed-buildkite-20261012",
             "event_id": "event:5",
-            "intent_id": "intent:third-live-snapshot-20261012",
+            "intent_id": "intent:fourth-reviewed-buildkite-20261012",
             "kind": "trajectory_step_recorded",
             "sequence": 5
-          },
-          {
-            "detail": "trajectory:third-live-snapshot-20261012",
-            "event_id": "event:6",
-            "intent_id": "intent:third-live-snapshot-20261012",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "third-live-snapshot-20261012": {
+          "fourth-reviewed-buildkite-20261012": {
             "evidence_only": true,
-            "id": "third-live-snapshot-20261012",
-            "intent_id": "intent:third-live-snapshot-20261012",
+            "id": "fourth-reviewed-buildkite-20261012",
+            "intent_id": "intent:fourth-reviewed-buildkite-20261012",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "https://github.com/DecapodLabs/decapod/actions/runs/38204208918",
-                  "https://buildkite.com/decapodlabs/decapod/builds/890",
-                  "/workspace/shared/release-pr-validation-evidence/third-source-policy.log"
+                  "Candidate CLI compiled; focused runtime239/0 and context40/0; real fourth provider suite pending"
                 ],
                 "proof_refs": [
-                  "source_ci_policy_36",
-                  "second_provider_suite",
-                  "second_github_standalone_validation",
-                  "second_github_docker_recovery",
-                  "second_github_supabase",
-                  "third_exact_suite"
+                  "candidate-cli-compile",
+                  "focused-runtime-profile-tests",
+                  "actual-buildkite-suite"
                 ],
                 "scope": [
-                  "Decapod source CI custody, authenticated imported receipts, Bazel input declaration, regression tests and reviewed source inventory."
+                  "Final fourth snapshot candidate and source proof"
                 ],
                 "sequence": 4,
-                "validation_findings": [
-                  "Current focused regression success is partial evidence; full third-candidate provider execution remains required."
-                ]
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "assets/tools/source_ci_custody.rs",
-                  "src/decapod/core/snapshot_provider/source_execution.rs",
-                  "src/decapod/core/validation_runtime/snapshot/source_import.rs",
-                  ".config/build/decapod.BUILD.bzl",
-                  "tests/integration_custody_policy.rs",
-                  "/workspace/shared/release-pr-validation-evidence/third-bazel-package.log",
-                  "/workspace/shared/release-pr-validation-evidence/third-reconciled.json"
-                ],
-                "proof_refs": [
-                  "bazel_package_load",
-                  "reviewed_inventory_reconciliation",
-                  "candidate_build"
-                ],
-                "scope": [
-                  "Decapod source CI custody, authenticated imported receipts, Bazel input declaration, regression tests and reviewed source inventory."
-                ],
-                "sequence": 5,
                 "validation_findings": []
               },
               {
                 "action": "validation",
                 "command": "decapod validate",
-                "custody_event_id": "event:6",
+                "custody_event_id": "event:5",
                 "observations": [
                   ".decapod/governance.json",
                   ".decapod/governance.json",
-                  "validation epoch ve_2697fc32c2aa039e completed with zero failures"
+                  "validation epoch ve_98f5c940baf28660 completed with zero failures"
                 ],
                 "proof_refs": [
                   "decapod validate"
                 ],
                 "scope": [
-                  "Decapod source CI custody, authenticated imported receipts, Bazel input declaration, regression tests and reviewed source inventory."
+                  "Final fourth snapshot candidate and source proof"
                 ],
-                "sequence": 6,
+                "sequence": 5,
                 "validation_findings": []
               }
             ]
@@ -519,38 +482,26 @@
         "decapod validate"
       ],
       "evidence": [
-        "/workspace/shared/release-pr-validation-evidence/third-bazel-package.log",
-        "/workspace/shared/release-pr-validation-evidence/third-reconciled.json",
-        "/workspace/shared/release-pr-validation-evidence/third-source-policy.log",
-        "https://buildkite.com/decapodlabs/decapod/builds/890",
-        "https://github.com/DecapodLabs/decapod/actions/runs/38204208918",
-        "validation epoch ve_2697fc32c2aa039e completed with zero failures"
+        "Candidate CLI compiled; focused runtime239/0 and context40/0; real fourth provider suite pending",
+        "validation epoch ve_98f5c940baf28660 completed with zero failures"
       ],
       "inspected_files": [],
-      "intent_id": "intent:third-live-snapshot-20261012",
+      "intent_id": "intent:fourth-reviewed-buildkite-20261012",
       "modified_files": [
-        ".config/build/decapod.BUILD.bzl",
-        ".decapod/governance.json",
-        "assets/tools/source_ci_custody.rs",
-        "src/decapod/core/snapshot_provider/source_execution.rs",
-        "src/decapod/core/validation_runtime/snapshot/source_import.rs",
-        "tests/integration_custody_policy.rs"
+        ".decapod/governance.json"
       ],
       "next_transitions": [
-        "publish",
-        "validation"
+        "publish"
       ],
       "repo_scope": [
-        "Decapod source CI custody, authenticated imported receipts, Bazel input declaration, regression tests and reviewed source inventory."
+        "Final fourth snapshot candidate and source proof"
       ],
-      "run_id": "third-live-snapshot-20261012",
+      "run_id": "fourth-reviewed-buildkite-20261012",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
       "task_id": "bugs_01m4pf92p0r108x1",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "Current focused regression success is partial evidence; full third-candidate provider execution remains required."
-      ]
+      "unresolved_assumptions": []
     },
     "validation": {
       "ci_prediction": {
@@ -563,94 +514,98 @@
       },
       "decapod_release": "0.107.5",
       "drift_findings": [],
-      "elapsed_ms": 5893,
-      "epoch_ref": "ve_2697fc32c2aa039e",
+      "elapsed_ms": 5667,
+      "epoch_ref": "ve_98f5c940baf28660",
       "fail_count": 0,
       "failures": [],
       "gate_timings": [
         {
-          "elapsed_ms": 2032,
+          "elapsed_ms": 2043,
           "name": "validate_machine_contract"
         },
         {
-          "elapsed_ms": 741,
+          "elapsed_ms": 702,
           "name": "validate_markdown_primitives_roundtrip_gate"
         },
         {
-          "elapsed_ms": 499,
+          "elapsed_ms": 491,
           "name": "validate_project_specs_docs"
         },
         {
-          "elapsed_ms": 321,
+          "elapsed_ms": 367,
           "name": "validate_stale_workspaces"
         },
         {
-          "elapsed_ms": 229,
+          "elapsed_ms": 214,
           "name": "validate_obligations"
         },
         {
-          "elapsed_ms": 161,
-          "name": "validate_git_workspace_context"
-        },
-        {
-          "elapsed_ms": 154,
-          "name": "validate_legacy_jsonl_retired"
-        },
-        {
-          "elapsed_ms": 143,
-          "name": "validate_no_legacy_namespaces"
-        },
-        {
-          "elapsed_ms": 131,
+          "elapsed_ms": 139,
           "name": "validate_schema_determinism"
         },
         {
-          "elapsed_ms": 92,
+          "elapsed_ms": 138,
+          "name": "validate_legacy_jsonl_retired"
+        },
+        {
+          "elapsed_ms": 96,
+          "name": "validate_no_legacy_namespaces"
+        },
+        {
+          "elapsed_ms": 77,
           "name": "validate_embedded_self_contained"
         },
         {
-          "elapsed_ms": 68,
+          "elapsed_ms": 72,
           "name": "validate_archive_integrity"
         },
         {
           "elapsed_ms": 68,
+          "name": "validate_git_workspace_context"
+        },
+        {
+          "elapsed_ms": 66,
           "name": "validate_control_plane_contract"
         },
         {
-          "elapsed_ms": 34,
+          "elapsed_ms": 26,
           "name": "validate_repomap_determinism"
-        },
-        {
-          "elapsed_ms": 30,
-          "name": "validate_knowledge_integrity"
         },
         {
           "elapsed_ms": 25,
           "name": "validate_canon_mutation"
         },
         {
-          "elapsed_ms": 22,
-          "name": "validate_policy_integrity"
+          "elapsed_ms": 25,
+          "name": "validate_knowledge_integrity"
         },
         {
-          "elapsed_ms": 22,
-          "name": "validate_watcher_purity"
+          "elapsed_ms": 24,
+          "name": "validate_git_protected_branch"
         },
         {
-          "elapsed_ms": 22,
-          "name": "validate_interface_contract_bootstrap"
-        },
-        {
-          "elapsed_ms": 20,
-          "name": "validate_risk_map_violations"
-        },
-        {
-          "elapsed_ms": 20,
+          "elapsed_ms": 23,
           "name": "validate_federation_gates"
         },
         {
-          "elapsed_ms": 19,
+          "elapsed_ms": 22,
           "name": "validate_lineage_hard_gate"
+        },
+        {
+          "elapsed_ms": 21,
+          "name": "validate_policy_integrity"
+        },
+        {
+          "elapsed_ms": 20,
+          "name": "validate_interface_contract_bootstrap"
+        },
+        {
+          "elapsed_ms": 19,
+          "name": "validate_watcher_purity"
+        },
+        {
+          "elapsed_ms": 19,
+          "name": "validate_risk_map_violations"
         },
         {
           "elapsed_ms": 13,
@@ -658,30 +613,26 @@
         },
         {
           "elapsed_ms": 11,
-          "name": "validate_git_protected_branch"
+          "name": "validate_plan_governed_execution_gate"
         },
         {
-          "elapsed_ms": 8,
+          "elapsed_ms": 9,
           "name": "validate_git_push_pr_gate"
         },
         {
           "elapsed_ms": 7,
+          "name": "validate_knowledge_promotions_if_present"
+        },
+        {
+          "elapsed_ms": 7,
+          "name": "validate_lcm_immutability"
+        },
+        {
+          "elapsed_ms": 6,
           "name": "validate_override_authority"
         },
         {
           "elapsed_ms": 6,
-          "name": "validate_plan_governed_execution_gate"
-        },
-        {
-          "elapsed_ms": 6,
-          "name": "validate_knowledge_promotions_if_present"
-        },
-        {
-          "elapsed_ms": 6,
-          "name": "validate_lcm_immutability"
-        },
-        {
-          "elapsed_ms": 5,
           "name": "validate_lcm_rebuild_gate"
         },
         {
@@ -693,48 +644,48 @@
           "name": "validate_trajectory_artifacts_if_present"
         },
         {
-          "elapsed_ms": 5,
-          "name": "validate_generated_artifact_whitelist"
-        },
-        {
           "elapsed_ms": 4,
           "name": "validate_validation_receipt_if_present"
-        },
-        {
-          "elapsed_ms": 4,
-          "name": "validate_jev_history_if_present"
-        },
-        {
-          "elapsed_ms": 4,
-          "name": "validate_recursive_improvement_passes_if_present"
-        },
-        {
-          "elapsed_ms": 3,
-          "name": "validate_entrypoint_invariants"
-        },
-        {
-          "elapsed_ms": 3,
-          "name": "validate_research_claims_if_present"
         },
         {
           "elapsed_ms": 3,
           "name": "validate_gatekeeper_gate"
         },
         {
-          "elapsed_ms": 2,
+          "elapsed_ms": 3,
+          "name": "validate_recursive_improvement_passes_if_present"
+        },
+        {
+          "elapsed_ms": 3,
           "name": "validate_database_schema_versions"
+        },
+        {
+          "elapsed_ms": 3,
+          "name": "validate_generated_artifact_whitelist"
+        },
+        {
+          "elapsed_ms": 2,
+          "name": "validate_jev_history_if_present"
+        },
+        {
+          "elapsed_ms": 2,
+          "name": "validate_research_claims_if_present"
+        },
+        {
+          "elapsed_ms": 2,
+          "name": "validate_entrypoint_invariants"
         },
         {
           "elapsed_ms": 2,
           "name": "validate_health_cache_integrity"
         },
         {
-          "elapsed_ms": 2,
-          "name": "validate_repo_map"
+          "elapsed_ms": 1,
+          "name": "validate_project_config_toml"
         },
         {
           "elapsed_ms": 1,
-          "name": "validate_project_config_toml"
+          "name": "validate_repo_map"
         },
         {
           "elapsed_ms": 1,
@@ -746,10 +697,6 @@
         },
         {
           "elapsed_ms": 0,
-          "name": "validate_docs_templates_bucket"
-        },
-        {
-          "elapsed_ms": 0,
           "name": "validate_context_capsule_policy_contract"
         },
         {
@@ -758,11 +705,11 @@
         },
         {
           "elapsed_ms": 0,
-          "name": "validate_state_commit_gate"
+          "name": "validate_risk_map"
         },
         {
           "elapsed_ms": 0,
-          "name": "validate_risk_map"
+          "name": "validate_state_commit_gate"
         },
         {
           "elapsed_ms": 0,
@@ -770,7 +717,19 @@
         },
         {
           "elapsed_ms": 0,
+          "name": "validate_coplayer_policy_tightening"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_context_capsules_if_present"
+        },
+        {
+          "elapsed_ms": 0,
           "name": "validate_workunit_manifests_if_present"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_docs_templates_bucket"
         },
         {
           "elapsed_ms": 0,
@@ -778,33 +737,25 @@
         },
         {
           "elapsed_ms": 0,
-          "name": "validate_eval_gate_if_required"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_coplayer_policy_tightening"
-        },
-        {
-          "elapsed_ms": 0,
           "name": "validate_tooling_gate"
         },
         {
           "elapsed_ms": 0,
-          "name": "validate_context_capsules_if_present"
+          "name": "validate_eval_gate_if_required"
         }
       ],
-      "git_revision": "4229b05312e7fc24d70ae14333031b14f3139a33",
+      "git_revision": "7d89c7182c05007a2841e70294ddbd501814cd14",
       "kind": "validation_receipt",
       "parallelism": 1,
       "pass_count": 203,
       "prediction_uses_warnings": true,
-      "receipt_hash": "sha256:4617c3b05c4844d1438a37865e42510cc2bc7ad2845e1be87999a92db563af41",
-      "repo_signal_fingerprint": "592afb9100c4a6db16ad45d7309881c299e3ec432655cbb3d6365d9e48bd4f40",
+      "receipt_hash": "sha256:9a07869dad80abc4cf9d1a19b7334d6bdf9beb70d2a418deb7222986f56908a4",
+      "repo_signal_fingerprint": "f0ecfacc3f191c348abbc2ab3295404630ff5b7e2d376b826a8a2f6e37ca988a",
       "schema_version": "1.0.0",
       "status": "ok",
       "temporary_artifacts_cleaned": 0,
-      "trajectory_artifact_hash": "sha256:4b6acb7a8150234a4d80a3b7b1333ec236ca32d91e8f54b3e8e3211196833f3e",
-      "trajectory_run_id": "third-live-snapshot-20261012",
+      "trajectory_artifact_hash": "sha256:493a7b2fff09e69b7e3bdae469e0f0a36e2ac5eb582438ab3937ae3ffdc4e2ec",
+      "trajectory_run_id": "fourth-reviewed-buildkite-20261012",
       "warn_count": 4,
       "warnings": [
         "Risk map missing (run `decapod riskmap init`)",

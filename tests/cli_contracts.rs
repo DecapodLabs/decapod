@@ -27,23 +27,35 @@ fn resolve_decapod_bin() -> PathBuf {
     PathBuf::from(cargo_bin)
 }
 
-fn resolve_repo_root() -> PathBuf {
-    let cargo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    if cargo_root.join("AGENTS.md").is_file() {
-        return cargo_root;
+fn contract_fixture() -> tempfile::TempDir {
+    let mut builder = tempfile::Builder::new();
+    builder.prefix("decapod-cli-contract-");
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        builder.permissions(std::fs::Permissions::from_mode(0o700));
     }
-    if let Ok(runfiles_dir) = std::env::var("RUNFILES_DIR") {
-        let runfiles_root = Path::new(&runfiles_dir).join("_main");
-        if runfiles_root.join("AGENTS.md").is_file() {
-            return runfiles_root;
-        }
-    }
-    cargo_root
+    builder.tempdir().expect("private CLI contract fixture")
 }
 
 fn run_decapod(args: &[&str]) -> String {
+    // Help/schema are embedded contracts, not mutations of Bazel runfiles.
+    let fixture = contract_fixture();
+    let initialized = Command::new(resolve_decapod_bin())
+        .current_dir(fixture.path())
+        .env("XDG_CONFIG_HOME", fixture.path().join(".config"))
+        .env_remove("DECAPOD_SESSION_PASSWORD")
+        .args(["init", "--force"])
+        .output()
+        .expect("initialize private contract fixture");
+    assert!(
+        initialized.status.success(),
+        "fixture init failed: {initialized:?}"
+    );
     let output = Command::new(resolve_decapod_bin())
-        .current_dir(resolve_repo_root())
+        .current_dir(fixture.path())
+        .env("XDG_CONFIG_HOME", fixture.path().join(".config"))
+        .env_remove("DECAPOD_SESSION_PASSWORD")
         .args(args)
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
         .output()
@@ -157,4 +169,19 @@ fn container_help_schema_and_docs_stay_in_sync() {
             "container schema missing field: {field}"
         );
     }
+}
+
+#[cfg(unix)]
+#[test]
+fn contract_fixture_is_private_at_creation() {
+    use std::os::unix::fs::PermissionsExt;
+    let fixture = contract_fixture();
+    assert_eq!(
+        std::fs::metadata(fixture.path())
+            .unwrap()
+            .permissions()
+            .mode()
+            & 0o777,
+        0o700
+    );
 }

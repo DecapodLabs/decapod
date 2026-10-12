@@ -406,3 +406,94 @@ fn terminal_failure_diagnostics_identify_verified_workflow_and_provider_target()
         }));
     }
 }
+
+/// GitHub remains the snapshot object/Buildkite locator provider; Actions
+/// execution and artifact endpoints must never be consulted in this mode.
+struct NoActions(Gh);
+impl Runner for NoActions {
+    fn execute(&mut self, spec: &CommandSpec, budget: &Budget<'_>) -> Result<Reply> {
+        assert!(
+            !spec.arguments().iter().any(|arg| arg.contains("/actions/")),
+            "Buildkite-only barrier requested GitHub Actions"
+        );
+        self.0.execute(spec, budget)
+    }
+}
+fn buildkite_only_plan() -> SourceRunPlan {
+    let mut plan = plan();
+    plan.github_workflows.clear();
+    plan
+}
+#[test]
+fn buildkite_only_barrier_uses_no_actions_and_rechecks_native_build_identity() {
+    let c = Cancellation::default();
+    let b = budget(&c);
+    let mut gh = NoActions(Gh::default());
+    let mut bk = Bk::default();
+    let plan = buildkite_only_plan();
+    let terminal = wait_for_source_runs(
+        &mut gh,
+        &mut bk,
+        &snapshot(),
+        &plan,
+        Duration::from_secs(1),
+        &b,
+    )
+    .unwrap();
+    assert!(terminal.github.is_empty());
+    assert_eq!(terminal.buildkite.len(), 2);
+    terminal
+        .recheck(&mut gh, &mut bk, &snapshot(), &plan, &b)
+        .unwrap();
+    bk.envelopes.get_mut(&7).unwrap()["id"] = json!("00000000-0000-0000-0000-000000000099");
+    assert!(
+        terminal
+            .recheck(&mut gh, &mut bk, &snapshot(), &plan, &b)
+            .is_err()
+    );
+}
+#[test]
+fn empty_provider_plan_is_rejected_without_external_reads() {
+    let c = Cancellation::default();
+    let b = budget(&c);
+    let mut gh = NoActions(Gh::default());
+    let mut bk = Bk::default();
+    let plan = SourceRunPlan {
+        github_workflows: Vec::new(),
+        buildkite_pipelines: Vec::new(),
+    };
+    assert!(
+        wait_for_source_runs(
+            &mut gh,
+            &mut bk,
+            &snapshot(),
+            &plan,
+            Duration::from_secs(1),
+            &b
+        )
+        .is_err()
+    );
+    assert_eq!((gh.0.calls, bk.calls), (0, 0));
+}
+#[test]
+fn buildkite_only_pending_failure_and_locator_denial_remain_blocking() {
+    let c = Cancellation::default();
+    let b = budget(&c);
+    let mut gh = NoActions(Gh::default());
+    let mut bk = Bk::default();
+    let plan = buildkite_only_plan();
+    let mut state = PollState::default();
+    bk.envelopes.get_mut(&7).unwrap()["state"] = json!("running");
+    assert!(!poll(&mut gh, &mut bk, &snapshot(), &plan, &mut state, &b).unwrap());
+    bk.envelopes.get_mut(&7).unwrap()["state"] = json!("failed");
+    assert!(poll(&mut gh, &mut bk, &snapshot(), &plan, &mut state, &b).is_err());
+    gh.0.denied = true;
+    let calls = gh.0.calls;
+    assert_eq!(
+        poll(&mut gh, &mut bk, &snapshot(), &plan, &mut state, &b)
+            .unwrap_err()
+            .kind(),
+        io::ErrorKind::PermissionDenied
+    );
+    assert_eq!(gh.0.calls, calls + 1);
+}

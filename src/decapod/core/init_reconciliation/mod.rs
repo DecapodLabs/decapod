@@ -91,6 +91,7 @@ const SOURCE_FILES: &[&str] = &[
     "MODULE.bazel",
     "MODULE.bazel.lock",
     ".bazelrc",
+    ".bazelversion",
     "flake.nix",
     "flake.lock",
     "Dockerfile",

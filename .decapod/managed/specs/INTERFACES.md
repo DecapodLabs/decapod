@@ -446,8 +446,8 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `592afb9100c4a6db16ad45d7309881c299e3ec432655cbb3d6365d9e48bd4f40`
-- Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (173 files), `tests/` (183 files)
+- Repository signal fingerprint: `f0ecfacc3f191c348abbc2ab3295404630ff5b7e2d376b826a8a2f6e37ca988a`
+- Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (174 files), `tests/` (184 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -549,3 +549,5 @@ The public validation command and RPC recognize the exact GitHub Actions or Buil
 Measured source preparation resolves the selected toolchain before freezing stable launcher diagnostics, retains cold-start logs, preserves Rust proxy invocation names, and binds Docker image digests with a compatible typed inspection. Synthetic release inputs are inert fixture files until tests materialize them. Invalid provider identity reports only failed field names and never exports arbitrary environment values.
 
 Imported Buildkite GitHub Actions shell evidence carries only identities that the reviewed importer actually exposes: the build UUID, checked native retry derived from its one-based run attempt, and the logical workflow job. It must not invent a native job UUID or step key. The collector separately authenticates the native build/job/step artifact producer and verifies the pinned importer recipe and logical job before interpreting this distinct imported-runtime receipt. Ordinary GitHub and native Buildkite identities retain their existing checks.
+
+Source execution must leave its bound tracked checkout, index and non-ignored source files unchanged; a stable HEAD alone is insufficient. Bazel uses the repository's pinned version and rejects an incompatible or stale lockfile instead of silently updating it during a proof check. Standalone validation retains both actually built binaries in custody while omitting dev debug symbols; dev assertions, overflow checks and archive-size limits remain unchanged. Fixture repositories isolate their own provider context and test-only Git configuration, and relocated docs fixtures use a declared compiled helper instead of an undeclared ambient compiler. These fixture boundaries do not relax production context, storage or Git transport guards.

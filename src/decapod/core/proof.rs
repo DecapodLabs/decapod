@@ -36,7 +36,8 @@ pub struct ProofDef {
 #[serde(deny_unknown_fields)]
 pub struct ProjectProofConfig {
     /// Select Buildkite temporary-snapshot validation instead of native Decapod
-    /// execution. Both providers must execute the full required proof suite.
+    /// execution. Native and Buildkite backends preserve required real coverage;
+    /// ordinary GitHub Actions PR runs are independent of this validation flow.
     #[serde(default)]
     pub validation_buildkite_preflights: bool,
     /// Explicitly reviewed complete-suite declaration; init never approves its digest.

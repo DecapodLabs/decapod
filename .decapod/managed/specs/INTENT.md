@@ -39,9 +39,11 @@ PR integration execution must finish each selective-test step in under five
 minutes. Shared compilation and complete parallel shards reduce elapsed time
 without dropping assertions, disabling production behavior, or hiding failures
 behind larger timeouts. Publication proof includes the final per-shard timings.
-Both GitHub Actions and Buildkite must execute those checks through their real
-provider contracts. Compatibility repair preserves every selected test and
-distinguishes source proof from unavailable credentials or publication. Unsafe
+Buildkite preflight executes those checks through its real provider contract
+before publication. Ordinary GitHub Actions PR workflows remain independent;
+Decapod does not execute or collect that service as a second preflight provider.
+Compatibility repair preserves every selected test and distinguishes source
+proof from unavailable credentials or publication. Unsafe
 provider checkout permissions are addressed by a fresh private exact-commit
 checkout, never by changing user datastores or weakening their safety policy.
 
@@ -368,8 +370,8 @@ policy ban based solely on virtiofs or FUSE filesystem identity.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `592afb9100c4a6db16ad45d7309881c299e3ec432655cbb3d6365d9e48bd4f40`
-- Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (173 files), `tests/` (183 files)
+- Repository signal fingerprint: `f0ecfacc3f191c348abbc2ab3295404630ff5b7e2d376b826a8a2f6e37ca988a`
+- Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (174 files), `tests/` (184 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

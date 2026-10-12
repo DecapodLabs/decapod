@@ -671,6 +671,12 @@ fn snapshot_roundtrips_exact_metadata_and_emits_original_candidate_context() {
         metadata
     );
     assert_eq!(text.split('\n').count(), 8);
+    assert!(text.starts_with("decapod CI preflight snapshot [skip actions]\n"));
+    assert!(
+        !repo
+            .git(&["show", "-s", "--format=%B", &metadata.source])
+            .contains("[skip actions]")
+    );
     let context = resolve(&input).unwrap();
     assert_eq!(context.event, "pull_request");
     assert_eq!(context.trigger_event, "push");
@@ -725,6 +731,8 @@ fn snapshot_parser_rejects_extra_duplicate_reordered_and_malformed_fields() {
         format!("{text}\n"),
         format!("{text}base={}\n", metadata.base),
         text.replace("schema=1", "schema=2"),
+        text.replace(" [skip actions]", ""),
+        text.replace("[skip actions]", "[skip ci]"),
         text.replace("decapod CI preflight snapshot", "ordinary commit"),
         text.replace("source_ref=", "base="),
         text.replace("source=", "source_ref="),

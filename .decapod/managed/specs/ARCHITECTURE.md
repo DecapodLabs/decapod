@@ -11,6 +11,13 @@ transports only a separately named temporary snapshot whose commit has the same
 tree as the candidate and whose sole parent is that candidate. Provider jobs
 verify this relationship and check out the candidate before executing source
 checks. The original branch reference is never the preflight transport.
+Buildkite is the sole remote readiness executor for this repository. The
+reserved transport commit carries the GitHub-specific `[skip actions]` marker;
+the source commit does not, so normal PR workflows run independently. Shared
+workflow trigger definitions remain because the Buildkite importer consumes
+them. Candidate compilation is proven by the actual Buildkite setup executor,
+using the same authenticated archive and binary lineage as downstream checks.
+GitHub check URLs may locate Buildkite runs but do not establish execution proof.
 
 Project prerequisites are acyclic components of the full proof. They do not wait
 for their own final acceptance, and their success cannot become publication
@@ -522,8 +529,8 @@ virtiofs/FUSE filesystem prohibition.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `592afb9100c4a6db16ad45d7309881c299e3ec432655cbb3d6365d9e48bd4f40`
-- Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (173 files), `tests/` (183 files)
+- Repository signal fingerprint: `f0ecfacc3f191c348abbc2ab3295404630ff5b7e2d376b826a8a2f6e37ca988a`
+- Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (174 files), `tests/` (184 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

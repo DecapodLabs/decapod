@@ -4,6 +4,8 @@
 //! Results are fresh in-process observations; serialized imports cannot mint them.
 pub mod artifact_archive;
 pub mod automatic;
+#[cfg(test)]
+pub(crate) mod fixture_config;
 pub mod github_artifacts;
 pub mod provider;
 pub mod public_buildkite;

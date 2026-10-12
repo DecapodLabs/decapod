@@ -540,10 +540,16 @@ fn private_clone_preserves_remote_only_base_for_detached_ci_checkout() {
 fn standalone_uses_strict_release_proof_and_never_label_or_branch_bypasses() {
     let recipe = include_str!("../assets/tools/source_ci/standalone-validation.sh");
     assert!(VALIDATE.contains("run-ci --check standalone-validation"));
-    assert!(
-        recipe.contains(
-            "--features build-tools --bin decapod --bin decapod-release-projection-drift"
-        )
+    // Keep the dev profile and its runtime checks; only debug info may be omitted.
+    let build_commands: Vec<_> = recipe
+        .lines()
+        .filter(|line| line.starts_with("cargo "))
+        .collect();
+    assert_eq!(
+        build_commands,
+        [
+            "cargo build --locked --quiet --config profile.dev.debug=0 --features build-tools --bin decapod --bin decapod-release-projection-drift"
+        ]
     );
     assert!(recipe.contains("./target/debug/decapod-release-projection-drift"));
     assert!(recipe.contains("SOURCE_CI_RELEASE_ONLY"));
@@ -612,4 +618,14 @@ fn ordinary_drift_checks_execute_against_head_and_reject_hidden_staged_edits() {
             );
         }
     }
+}
+
+#[test]
+fn bazel_version_and_lockfile_are_frozen_before_source_checks() {
+    assert_eq!(include_str!("../.bazelversion").trim(), "9.3.0");
+    assert!(
+        include_str!("../.config/build/bazelrc")
+            .lines()
+            .any(|line| line == "common --lockfile_mode=error")
+    );
 }

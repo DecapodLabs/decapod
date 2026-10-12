@@ -413,6 +413,26 @@ fn verify_final_revision(
             "source revision/tree changed outside the finite recipe contract",
         ));
     }
+    // A stable commit/tree alone does not prove the tested checkout stayed
+    // unchanged: build tools can update a tracked lockfile without moving HEAD.
+    for cached in [false, true] {
+        let mut args = vec!["diff", "--name-only", "--no-ext-diff", "--no-textconv"];
+        if cached {
+            args.push("--cached");
+        }
+        args.extend([expected_revision, "--"]);
+        let changed = git_value(repo, &args)?;
+        if !changed.is_empty() {
+            return Err(io::Error::other(format!(
+                "tracked checkout changed during source execution: {changed}"
+            )));
+        }
+    }
+    if !git_value(repo, &["ls-files", "--others", "--exclude-standard", "-z"])?.is_empty() {
+        return Err(io::Error::other(
+            "source execution left undeclared untracked files",
+        ));
+    }
     Ok(())
 }
 
@@ -1565,6 +1585,19 @@ mod tests {
             verify_snapshot(&repo, &ctx, &base, &head).unwrap(),
             merge_tree
         );
+        verify_final_revision(&repo, check, &head, &ctx, &validation).unwrap();
+        fs::write(repo.join("common"), "changed during execution\n").unwrap();
+        assert!(verify_final_revision(&repo, check, &head, &ctx, &validation).is_err());
+        git(&["add", "common"]);
+        fs::write(repo.join("common"), "original\n").unwrap();
+        assert!(
+            verify_final_revision(&repo, check, &head, &ctx, &validation).is_err(),
+            "a staged change cannot hide behind a restored worktree"
+        );
+        git(&["reset", "-q", "HEAD", "--", "common"]);
+        fs::write(repo.join("undeclared-source"), "new input\n").unwrap();
+        assert!(verify_final_revision(&repo, check, &head, &ctx, &validation).is_err());
+        fs::remove_file(repo.join("undeclared-source")).unwrap();
         verify_final_revision(&repo, check, &head, &ctx, &validation).unwrap();
         // Only the reviewed docs recipe intentionally selects original H.
         git(&["checkout", "-q", "--detach", &head]);

@@ -24,6 +24,14 @@ def decapod_targets():
         testonly = True,
     )
 
+    # Docs-boundary tests run in relocated shards without an ambient Rust install.
+    rust_binary(
+        name = "docs_sync_fixture",
+        srcs = ["tests/fixtures/docs_sync_fixture.rs"],
+        edition = "2024",
+        testonly = True,
+    )
+
     # This supervisor owns only test scratch, never Bazel's output/cache trees.
     rust_binary(
         name = "build_lifecycle",
@@ -228,11 +236,19 @@ def decapod_targets():
                 ".github/workflows/ci.yml",
                 "//.config/build:decapod.BUILD.bzl",
             ] if path == "tests/integration_sharding_policy.rs" else [
+                ".bazelversion",
+                "//.config/build:bazelrc",
                 ".github/actions/validation-checkout/action.yml",
                 ".github/actions/ci-context/action.yml",
                 ".github/workflows/ci.yml",
                 ".github/workflows/decapod-validate.yml",
             ] if path == "tests/ci_checkout_policy.rs" else [
+                ".github/actions/ci-context/action.yml",
+                ".github/actions/source-ci-profile/action.yml",
+                "assets/tools/source_ci_profile.rs",
+                "assets/tools/source_ci_custody.rs",
+                "assets/tools/source_ci_workflow_owned.rs",
+            ] if path == "tests/release_workflow_policy.rs" else [
                 "Cargo.toml",
                 "dist.toml",
                 "dist-workspace.toml",
@@ -244,6 +260,7 @@ def decapod_targets():
                 ".github/workflows/docs_sync.yml",
                 ".github/actions/docs-drift/action.yml",
                 "assets/tools/docs_sync.rs",
+                "tests/fixtures/docs_sync_fixture.rs",
             ] if path == "tests/docs_sync_checkpoint_boundary.rs" else [
                 ".github/actions/source-ci-profile/action.yml",
                 "tests/fixtures/derived-release/Cargo.toml.fixture",
@@ -255,6 +272,7 @@ def decapod_targets():
             rustc_env = {
                 "CARGO_BIN_EXE_decapod": "./$(rootpath //:decapod)",
                 "DECAPOD_CUSTODY_TEST_FIXTURE": "./$(rootpath //:integration_custody_fixture)" if path == "tests/integration_custody_policy.rs" else "",
+                "DECAPOD_DOCS_SYNC_TEST_FIXTURE": "./$(rootpath //:docs_sync_fixture)" if path == "tests/docs_sync_checkpoint_boundary.rs" else "",
                 "DECAPOD_NATIVE_PROOF_TEST_FIXTURE": "./$(rootpath //:native_proof_fixture)" if path == "tests/native_proof_execution.rs" else "",
             },
             data = [
@@ -288,7 +306,7 @@ def decapod_targets():
                 # tests create the managed surfaces they need at runtime.
                 ".decapod/managed/**/*",
                 ".decapod/governance.json",
-            ], allow_empty = True) + ([":native_proof_fixture"] if path == "tests/native_proof_execution.rs" else [":integration_custody_fixture"] if path == "tests/integration_custody_policy.rs" else []),
+            ], allow_empty = True) + ([":native_proof_fixture"] if path == "tests/native_proof_execution.rs" else [":integration_custody_fixture"] if path == "tests/integration_custody_policy.rs" else [":docs_sync_fixture"] if path == "tests/docs_sync_checkpoint_boundary.rs" else []),
             deps = [
                 ":decapod_lib",
             ] + all_crate_deps(normal = True, normal_dev = True),

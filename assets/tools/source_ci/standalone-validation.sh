@@ -7,9 +7,9 @@ source "$source_root/assets/tools/source_ci/private-checkout.sh"
 source_private_checkout
 cd "$SOURCE_PRIVATE_CHECKOUT"
 
-# Build Decapod from checkout
+# Build with dev checks intact, omitting only debug info from retained binaries.
 (
-cargo build --locked --quiet --features build-tools --bin decapod --bin decapod-release-projection-drift
+cargo build --locked --quiet --config profile.dev.debug=0 --features build-tools --bin decapod --bin decapod-release-projection-drift
 )
 
 # Start validation trajectory

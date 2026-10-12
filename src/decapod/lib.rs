@@ -6273,7 +6273,7 @@ impl core::snapshot_provider::Runner for ReadinessSnapshotRunner {
 fn readiness_snapshot_runner(
     options: &core::validation_runtime::Options,
     repository: &core::snapshot_provider::Repository,
-    automatic_artifacts: bool,
+    public_handoff: bool,
 ) -> Result<ReadinessSnapshotRunner, error::DecapodError> {
     use core::external_action::{self, ExternalCapability};
     use core::snapshot_provider::{OfficialCli, Program, PublicGithubReads};
@@ -6303,10 +6303,13 @@ fn readiness_snapshot_runner(
         )
         .map_err(std::io::Error::other)
     };
-    if automatic_artifacts {
+    // Prefer an installed official client for repository identity and Buildkite
+    // discovery locators. Actions artifact download is not part of this backend.
+    // A request/auth failure never changes clients or falls back to public reads.
+    if !public_handoff && let Ok(gh) = readiness_installed_tool(&options.root, "gh") {
         return Ok(ReadinessSnapshotRunner::Configured(OfficialCli::new(
             options.git.clone(),
-            readiness_installed_tool(&options.root, "gh")?,
+            gh,
             None,
             authorize,
         )?));
@@ -6385,9 +6388,7 @@ fn run_current_workbranch_readiness_with(
             let mut runner = readiness_snapshot_runner(
                 &options,
                 &repository,
-                !invocation.snapshot_prepare
-                    && invocation.snapshot_adopt.is_none()
-                    && invocation.provider_artifacts.is_none(),
+                invocation.snapshot_prepare || invocation.snapshot_resume.is_some(),
             )?;
             if let Some(observed_s) = &invocation.snapshot_adopt {
                 let handoff = runtime::snapshot::adopt_host_handoff(
@@ -6547,7 +6548,7 @@ pub(crate) fn cleanup_published_readiness_snapshot(
     options.timeout = std::time::Duration::from_secs(60);
     let repository =
         core::snapshot_provider::Repository::new(&repository.owner, &repository.repository)?;
-    let mut runner = readiness_snapshot_runner(&options, &repository, false)?;
+    let mut runner = readiness_snapshot_runner(&options, &repository, true)?;
     let mut signal_guard = core::bounded_process::SignalCancellationGuard::new()?;
     let result = core::validation_runtime::snapshot::cleanup_handoff(
         &options,

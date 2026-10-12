@@ -83,7 +83,6 @@ pub struct SnapshotHost<'a, R: Runner> {
     mode: SnapshotMode,
     resume_file: Option<PathBuf>,
     remote_plan: Option<collect::RemotePlan>,
-    artifact_directory: Option<PathBuf>,
     verified_checks: BTreeMap<CheckKey, source_import::VerifiedCheck>,
     prepared_snapshot: Option<transport::PreparedSnapshot>,
     terminal_sources: Option<(automatic::SourceRunPlan, automatic::TerminalSourceRuns)>,
@@ -125,7 +124,6 @@ impl<'a, R: Runner> SnapshotHost<'a, R> {
             mode,
             resume_file,
             remote_plan,
-            artifact_directory: None,
             verified_checks: BTreeMap::new(),
             prepared_snapshot: None,
             terminal_sources: None,
@@ -135,23 +133,12 @@ impl<'a, R: Runner> SnapshotHost<'a, R> {
             evidence_directory: None,
         })
     }
-    /// Local raw provider ZIP bytes only. Their filenames/contents are locators,
-    /// never producer authority or readiness observations.
-    pub fn with_artifact_directory(mut self, directory: PathBuf) -> io::Result<Self> {
-        let metadata = fs::symlink_metadata(&directory)?;
-        if !metadata.is_dir() || metadata.file_type().is_symlink() {
-            return Err(invalid(
-                "provider artifact directory must be a real directory",
-            ));
-        }
-        let directory = directory.canonicalize()?;
-        if directory.starts_with(self.options.root.canonicalize()?) {
-            return Err(invalid(
-                "provider artifact handoff must remain outside source",
-            ));
-        }
-        self.artifact_directory = Some(directory);
-        Ok(self)
+    /// GitHub raw ZIP handoff is outside Buildkite-only preflight. Buildkite
+    /// artifacts are collected automatically from their authenticated producer.
+    pub fn with_artifact_directory(self, _directory: PathBuf) -> io::Result<Self> {
+        Err(invalid(
+            "GITHUB_ARTIFACT_HANDOFF_NOT_APPLICABLE: preflight collects Buildkite artifacts automatically",
+        ))
     }
     /// The importer setup is reviewed compiled policy, not caller JSON. The
     /// public reader preserves the host's typed read authorization callback.
@@ -302,17 +289,6 @@ impl<'a, R: Runner> SnapshotHost<'a, R> {
                 Duration::from_secs(5),
                 &provider_budget,
             )?;
-            let collected = source_import::github_sources(
-                &self.options,
-                &mut self.runner,
-                &snapshot,
-                project,
-                &terminal,
-                self.artifact_directory.as_deref(),
-                &directory,
-                &provider_budget,
-            )?;
-            self.verified_checks = collected.checks;
             let buildkite = source_import::buildkite_sources(
                 reader,
                 contract,
@@ -322,11 +298,7 @@ impl<'a, R: Runner> SnapshotHost<'a, R> {
                 &directory,
                 &provider_budget,
             )?;
-            for (key, check) in buildkite.checks {
-                if self.verified_checks.insert(key, check).is_some() {
-                    return Err(invalid("duplicate provider source key"));
-                }
-            }
+            self.verified_checks = buildkite.checks;
             blockers.extend(buildkite.blockers);
             blockers.retain(|blocker| {
                 blocker
@@ -334,7 +306,6 @@ impl<'a, R: Runner> SnapshotHost<'a, R> {
                     .as_ref()
                     .is_none_or(|key| !self.verified_checks.contains_key(key))
             });
-            blockers.extend(collected.blockers);
             terminal.recheck(&mut self.runner, reader, &snapshot, &plan, &provider_budget)?;
             self.terminal_sources = Some((plan, terminal));
         }
@@ -803,7 +774,7 @@ mod tests {
         fn execute(&mut self, command: &CommandSpec, budget: &Budget<'_>) -> io::Result<Reply> {
             if command.program() == Program::GitTransport {
                 if command.arguments().iter().any(|arg| arg == "config") {
-                    return self.official.execute(command, budget);
+                    return provider::fixture_config::execute(&mut self.official, command, budget);
                 }
                 assert!(
                     command.arguments().iter().any(|arg| arg == "ls-remote"),
