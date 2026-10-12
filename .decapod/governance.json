@@ -216,6 +216,11 @@
       "id": "second-live-epoch",
       "summary": "Bind a fresh trajectory to preserved-history candidate after supported template-epoch recovery",
       "input_digest": "sha256:6cd500b5db30f6869ce4b4e67967d11a87158a2dacb469b5ac3438bcc2ebf1a5"
+    },
+    {
+      "id": "second-bound-prerequisites",
+      "summary": "Preserve actual prerequisite validation on exact server source; full provider proof remains pending",
+      "input_digest": "sha256:bef91268b9fe299d5cc885627b24d3b3bef0e4301136613b605e1f74fd89841e"
     }
   ],
   "intents": {
@@ -239,37 +244,37 @@
     }
   },
   "epochs": {
-    "ve_9624195bb1b909fb": {
-      "constitution_hash": "sha256:6e388c53aa753ec30cd857175990bcf4beb92faa41c87b957d173603820bc5ff",
+    "ve_c8c1f63c4c25340c": {
+      "constitution_hash": "sha256:22faebed7391d5d025441745a3810d2740d561072672d87598f44eb039fc9a22",
       "constitution_version": "embedded-docs@0.107.5",
-      "epoch_id": "ve_9624195bb1b909fb",
+      "epoch_id": "ve_c8c1f63c4c25340c",
       "evaluator_identity": "decapod-validate@0.107.5",
       "evaluator_set_hash": "sha256:469d3679344174bc181dfc1ff5aa43df31d5e329e307bd1225d839ae6f09331e",
-      "generated_specs_fingerprint": "e0f9df13a85f016b8aac91fc43cf717b7866712463c20c5756cb98e808cb3a5e",
-      "generated_specs_manifest_hash": "sha256:0d4616d43fc7d6ed16cb03575d63d8100ede00e36e61ebbb109f69340a795c8b",
+      "generated_specs_fingerprint": "79a4726a3721140bc6acb9851ecd237c2831d359af0a28691cfb2ae798587169",
+      "generated_specs_manifest_hash": "sha256:675a7c7aff66a9c1dce1ba603a3879a585d3dfbc734ab049f12aad581accf3a2",
       "material_hashes": {
-        "constitution:core/DECAPOD": "sha256:6e388c53aa753ec30cd857175990bcf4beb92faa41c87b957d173603820bc5ff",
-        "generated_spec:.decapod/managed/specs/ARCHITECTURE.md": "sha256:efcaa5c3a72dd7eee7629a7f003e3df61b250ebbe5c19bc82aea948c18016a0f",
-        "generated_spec:.decapod/managed/specs/INTENT.md": "sha256:ab019808ab6994a119498f21f0db2f76a223955c932c18bb836bac849fa313d6",
-        "generated_spec:.decapod/managed/specs/INTERFACES.md": "sha256:87da549870f1b334f28e6dda61262071564a78a0bf125a917ed2ae755951c569",
-        "generated_spec:.decapod/managed/specs/OPERATIONS.md": "sha256:6293d8079d3382d95a1e936605fa878219cdcf70fb98ea991b5002a96d6a28a1",
-        "generated_spec:.decapod/managed/specs/README.md": "sha256:747ee115a480250ba409343113cb2558cc5668192929adc7974c9b326c326766",
-        "generated_spec:.decapod/managed/specs/SECURITY.md": "sha256:59747ad1113f46a0d6ea745cc2a2359194adb8d6d7708b532bc71b40218c0d1e",
-        "generated_spec:.decapod/managed/specs/SEMANTICS.md": "sha256:e6a541bd79dd92f28588afb42f42d7677253ae61c7927be650208f37fbe41780",
-        "generated_spec:.decapod/managed/specs/VALIDATION.md": "sha256:01c7ba38a60ff76ec38c46240c7e639c239d9331a08efc2bd8d59be94fe6fa3b",
-        "generated_specs_fingerprint": "e0f9df13a85f016b8aac91fc43cf717b7866712463c20c5756cb98e808cb3a5e",
-        "generated_specs_manifest": "sha256:0d4616d43fc7d6ed16cb03575d63d8100ede00e36e61ebbb109f69340a795c8b",
+        "constitution:core/DECAPOD": "sha256:22faebed7391d5d025441745a3810d2740d561072672d87598f44eb039fc9a22",
+        "generated_spec:.decapod/managed/specs/ARCHITECTURE.md": "sha256:478d09758c9e16f1ea60f5399bc800458e264a6d45a948ff48488d8d590fe640",
+        "generated_spec:.decapod/managed/specs/INTENT.md": "sha256:db4fcaffd276b117957b4b6e2a0229a0c90c0cd26792bcd3c4b4cc069d017637",
+        "generated_spec:.decapod/managed/specs/INTERFACES.md": "sha256:00c74b8a195484f7d2e1892d7bace5a8e641aebfa440451e58e1d1d758cf3608",
+        "generated_spec:.decapod/managed/specs/OPERATIONS.md": "sha256:2fd2a4b6e2b0c745748e0c04378e898aacc433ad6bd4f875d8489a74dfef3da2",
+        "generated_spec:.decapod/managed/specs/README.md": "sha256:7b67583dbb06a859b0be957328d85a6bb4e4c5749348803b1991f957dce3fdea",
+        "generated_spec:.decapod/managed/specs/SECURITY.md": "sha256:86617e03f5450981933ea9fbfbd7635903de6e4f9f1115db6ad13e5b6e480b6c",
+        "generated_spec:.decapod/managed/specs/SEMANTICS.md": "sha256:23276b95e5540b8dd342b92910b23ed6c49c203f4d5ff6711c6cee288d645c28",
+        "generated_spec:.decapod/managed/specs/VALIDATION.md": "sha256:5014a07ef6116e41112be89a92ec9c34f7f62448e3bc1cd37b8de60f7291aae4",
+        "generated_specs_fingerprint": "79a4726a3721140bc6acb9851ecd237c2831d359af0a28691cfb2ae798587169",
+        "generated_specs_manifest": "sha256:675a7c7aff66a9c1dce1ba603a3879a585d3dfbc734ab049f12aad581accf3a2",
         "governance_context": "sha256:2bc9ca8c57326265859b5a0983aa78c7127556676f0fbe18fd679a8049af5aaf",
         "governance_material:.decapod/managed/Dockerfile.decapod": "sha256:3b51684110be026f7c91ac885f5806cebe995fcb37eed251d09ac6f3bd85ebe6",
-        "governance_material:AGENTS.md": "sha256:5bd8c3bd306c94f2a6b60580a958b3d1073cd1b5e9a179bb5d97b90715aa8531",
+        "governance_material:AGENTS.md": "sha256:b00dc7b558355963e5fef810fab0abe4bbff4e8f26080f370c75b30c93f8ebb1",
         "governance_material:CLAUDE.md": "sha256:1273c6a0a723b7f5ffd63615d35a5a11e46bf092d21eae8d4bac6c6ed49eaefc",
         "governance_material:CODEX.md": "sha256:e7c577a8833c74423816d43e9e6e349dd36a11ca0e997138f87706ad78f81f69",
         "governance_material:GEMINI.md": "sha256:58436bbbe90904fd6a3ebcf4b1a94ffb3e6429b4bb97a082f62a4994318b5b9b",
         "governance_section:claims": "sha256:93c4c02108a7a16f99b109ec378dd6b7ff388ba483cdc43c8abb091451f24fba",
-        "governance_section:plan": "sha256:455753feb84b5ec725328a4325f82955cbeb1e46ab534cfb23ad05835725f747",
+        "governance_section:plan": "sha256:cf8dfbe3a5a632b71681cd9d1876d8ffb598eaf6afe4b6d979d7b5af44b76bf2",
         "living_spec_material:.decapod/managed/specs/ARCHITECTURE.md": "sha256:b16ee1fe4244f6d1b2526858cd8697a712be135135b0b1698299d39997fc2766",
         "living_spec_material:.decapod/managed/specs/INTENT.md": "sha256:54d83405670a3650b557e6d0efd2ff96cd6c7107e754cbffce3c628a79cdd980",
-        "living_spec_material:.decapod/managed/specs/INTERFACES.md": "sha256:7624db0fe90a1a41bfdd75447ff4752dacb8f901d8cfb9bdff17ea9b57d53c8f",
+        "living_spec_material:.decapod/managed/specs/INTERFACES.md": "sha256:a561839d31f96025b3333da3627163597816e734cea67610d4d8772e9f639c70",
         "living_spec_material:.decapod/managed/specs/OPERATIONS.md": "sha256:98a538e0c0fe76aa72fbeec0d33be5e263dd5b3cc9b6a0786627bc2d2ab0e133",
         "living_spec_material:.decapod/managed/specs/README.md": "sha256:6c4338fb8446fa04e2d7c823ff3e33c2bd4949bf6018392045993401131f690a",
         "living_spec_material:.decapod/managed/specs/SECURITY.md": "sha256:de5e2172a6f001ec79113ab55f45877c1a64116ebbe835938793a15293fb86e3",
@@ -336,7 +341,7 @@
       "active_boundaries": [
         "No workbranch or PR publication before full proof; temporary CI-only snapshot transport authorized; no releases, deployment or credential changes"
       ],
-      "artifact_hash": "sha256:981ebccf9a389a093d64a6d0217be82dcda470909761eb1617d4f1d76df2bb19",
+      "artifact_hash": "sha256:77d3629ed906db6d42167b3999dbc94dc2dd2b54a1cd9bfc9272935814233ead",
       "checks": [
         {
           "name": "automatic-controller-5",
@@ -348,6 +353,10 @@
         },
         {
           "name": "ci-local-cli-rpc-integration-2",
+          "status": "passed"
+        },
+        {
+          "name": "decapod validate",
           "status": "passed"
         },
         {
@@ -372,6 +381,7 @@
         }
       ],
       "completion_claim": "in_progress",
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
@@ -392,10 +402,17 @@
             "intent_id": "intent:second-live-snapshot-20261012",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:second-live-snapshot-20261012",
+            "event_id": "event:5",
+            "intent_id": "intent:second-live-snapshot-20261012",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "second-live-snapshot-20261012": {
@@ -424,18 +441,44 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "command": "decapod validate",
+                "custody_event_id": "event:5",
+                "observations": [
+                  ".decapod/governance.json",
+                  ".decapod/governance.json",
+                  "validation epoch ve_c8c1f63c4c25340c completed with zero failures"
+                ],
+                "proof_refs": [
+                  "decapod validate"
+                ],
+                "scope": [
+                  "Decapod full source readiness and first-run CI repairs"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "decapod validate"
+      ],
       "evidence": [
-        "Real first-run logs and exact source identities preserved. Corrected focused tests pass. Second snapshot intentionally starts before pending importer-identity implementation and full green proof."
+        "Real first-run logs and exact source identities preserved. Corrected focused tests pass. Second snapshot intentionally starts before pending importer-identity implementation and full green proof.",
+        "validation epoch ve_c8c1f63c4c25340c completed with zero failures"
       ],
       "inspected_files": [],
       "intent_id": "intent:second-live-snapshot-20261012",
-      "modified_files": [],
+      "modified_files": [
+        ".decapod/governance.json"
+      ],
+      "next_transitions": [
+        "publish"
+      ],
       "repo_scope": [
         "Decapod full source readiness and first-run CI repairs"
       ],
@@ -457,94 +500,98 @@
       },
       "decapod_release": "0.107.5",
       "drift_findings": [],
-      "elapsed_ms": 3743,
-      "epoch_ref": "ve_9624195bb1b909fb",
+      "elapsed_ms": 4185,
+      "epoch_ref": "ve_c8c1f63c4c25340c",
       "fail_count": 0,
       "failures": [],
       "gate_timings": [
         {
-          "elapsed_ms": 2025,
+          "elapsed_ms": 2030,
           "name": "validate_machine_contract"
         },
         {
-          "elapsed_ms": 486,
+          "elapsed_ms": 510,
           "name": "validate_markdown_primitives_roundtrip_gate"
         },
         {
-          "elapsed_ms": 263,
+          "elapsed_ms": 270,
           "name": "validate_project_specs_docs"
         },
         {
-          "elapsed_ms": 167,
+          "elapsed_ms": 215,
           "name": "validate_stale_workspaces"
         },
         {
-          "elapsed_ms": 129,
+          "elapsed_ms": 157,
           "name": "validate_obligations"
         },
         {
-          "elapsed_ms": 86,
+          "elapsed_ms": 90,
           "name": "validate_legacy_jsonl_retired"
         },
         {
-          "elapsed_ms": 66,
+          "elapsed_ms": 74,
           "name": "validate_control_plane_contract"
         },
         {
-          "elapsed_ms": 49,
-          "name": "validate_archive_integrity"
-        },
-        {
-          "elapsed_ms": 44,
-          "name": "validate_git_workspace_context"
-        },
-        {
-          "elapsed_ms": 33,
-          "name": "validate_schema_determinism"
-        },
-        {
-          "elapsed_ms": 18,
+          "elapsed_ms": 65,
           "name": "validate_no_legacy_namespaces"
         },
         {
-          "elapsed_ms": 16,
-          "name": "validate_lineage_hard_gate"
+          "elapsed_ms": 64,
+          "name": "validate_git_workspace_context"
         },
         {
-          "elapsed_ms": 15,
-          "name": "validate_embedded_self_contained"
+          "elapsed_ms": 62,
+          "name": "validate_schema_determinism"
         },
         {
-          "elapsed_ms": 11,
+          "elapsed_ms": 47,
+          "name": "validate_archive_integrity"
+        },
+        {
+          "elapsed_ms": 28,
           "name": "validate_repomap_determinism"
         },
         {
-          "elapsed_ms": 11,
+          "elapsed_ms": 24,
+          "name": "validate_embedded_self_contained"
+        },
+        {
+          "elapsed_ms": 19,
           "name": "validate_federation_gates"
         },
         {
-          "elapsed_ms": 8,
+          "elapsed_ms": 14,
+          "name": "validate_git_protected_branch"
+        },
+        {
+          "elapsed_ms": 13,
+          "name": "validate_lineage_hard_gate"
+        },
+        {
+          "elapsed_ms": 11,
           "name": "validate_git_push_pr_gate"
         },
         {
           "elapsed_ms": 8,
-          "name": "validate_git_protected_branch"
+          "name": "validate_interface_contract_bootstrap"
         },
         {
-          "elapsed_ms": 8,
+          "elapsed_ms": 7,
+          "name": "validate_gatekeeper_gate"
+        },
+        {
+          "elapsed_ms": 7,
+          "name": "validate_risk_map_violations"
+        },
+        {
+          "elapsed_ms": 6,
           "name": "validate_watcher_audit"
         },
         {
           "elapsed_ms": 5,
-          "name": "validate_interface_contract_bootstrap"
-        },
-        {
-          "elapsed_ms": 5,
-          "name": "validate_policy_integrity"
-        },
-        {
-          "elapsed_ms": 5,
-          "name": "validate_lcm_rebuild_gate"
+          "name": "validate_knowledge_integrity"
         },
         {
           "elapsed_ms": 4,
@@ -552,7 +599,7 @@
         },
         {
           "elapsed_ms": 4,
-          "name": "validate_knowledge_integrity"
+          "name": "validate_lcm_rebuild_gate"
         },
         {
           "elapsed_ms": 4,
@@ -560,11 +607,11 @@
         },
         {
           "elapsed_ms": 4,
-          "name": "validate_watcher_purity"
+          "name": "validate_database_schema_versions"
         },
         {
           "elapsed_ms": 3,
-          "name": "validate_gatekeeper_gate"
+          "name": "validate_policy_integrity"
         },
         {
           "elapsed_ms": 3,
@@ -580,7 +627,7 @@
         },
         {
           "elapsed_ms": 2,
-          "name": "validate_database_schema_versions"
+          "name": "validate_health_purity"
         },
         {
           "elapsed_ms": 1,
@@ -588,27 +635,19 @@
         },
         {
           "elapsed_ms": 1,
-          "name": "validate_validation_receipt_if_present"
-        },
-        {
-          "elapsed_ms": 1,
           "name": "validate_override_authority"
         },
         {
           "elapsed_ms": 1,
-          "name": "validate_recursive_improvement_passes_if_present"
-        },
-        {
-          "elapsed_ms": 1,
-          "name": "validate_health_purity"
-        },
-        {
-          "elapsed_ms": 1,
-          "name": "validate_risk_map_violations"
-        },
-        {
-          "elapsed_ms": 1,
           "name": "validate_trajectory_artifacts_if_present"
+        },
+        {
+          "elapsed_ms": 1,
+          "name": "validate_repo_map"
+        },
+        {
+          "elapsed_ms": 1,
+          "name": "validate_watcher_purity"
         },
         {
           "elapsed_ms": 0,
@@ -616,15 +655,19 @@
         },
         {
           "elapsed_ms": 0,
-          "name": "validate_research_claims_if_present"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_repo_map"
+          "name": "validate_validation_receipt_if_present"
         },
         {
           "elapsed_ms": 0,
           "name": "validate_project_config_toml"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_recursive_improvement_passes_if_present"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_research_claims_if_present"
         },
         {
           "elapsed_ms": 0,
@@ -636,27 +679,15 @@
         },
         {
           "elapsed_ms": 0,
-          "name": "validate_context_capsules_if_present"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_project_scoped_state"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_internalization_artifacts_if_present"
-        },
-        {
-          "elapsed_ms": 0,
           "name": "validate_context_capsule_policy_contract"
         },
         {
           "elapsed_ms": 0,
-          "name": "validate_spec_drift"
+          "name": "validate_eval_gate_if_required"
         },
         {
           "elapsed_ms": 0,
-          "name": "validate_eval_gate_if_required"
+          "name": "validate_project_scoped_state"
         },
         {
           "elapsed_ms": 0,
@@ -668,11 +699,7 @@
         },
         {
           "elapsed_ms": 0,
-          "name": "validate_coplayer_policy_tightening"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_workunit_manifests_if_present"
+          "name": "validate_spec_drift"
         },
         {
           "elapsed_ms": 0,
@@ -680,25 +707,41 @@
         },
         {
           "elapsed_ms": 0,
+          "name": "validate_internalization_artifacts_if_present"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_workunit_manifests_if_present"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_context_capsules_if_present"
+        },
+        {
+          "elapsed_ms": 0,
           "name": "validate_root_dockerfile_seed_detection"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_coplayer_policy_tightening"
         },
         {
           "elapsed_ms": 0,
           "name": "validate_tooling_gate"
         }
       ],
-      "git_revision": "8561967a2387083477db16eb66e38a38cc2b1554",
+      "git_revision": "b3a67f32a453ea25e9b72eecdb2824d3de59e93f",
       "kind": "validation_receipt",
       "parallelism": 1,
       "pass_count": 203,
       "prediction_uses_warnings": true,
-      "receipt_hash": "sha256:54cfe00b3621c26e4c934cee932526f424cb4c7bd307164c64036cf83a38ec7b",
-      "repo_signal_fingerprint": "e0f9df13a85f016b8aac91fc43cf717b7866712463c20c5756cb98e808cb3a5e",
+      "receipt_hash": "sha256:41436a3eda96b9f95bbe061df1cc42df451ceabf737a0e26f11f4d7142abdbe9",
+      "repo_signal_fingerprint": "79a4726a3721140bc6acb9851ecd237c2831d359af0a28691cfb2ae798587169",
       "schema_version": "1.0.0",
       "status": "ok",
       "temporary_artifacts_cleaned": 0,
-      "trajectory_artifact_hash": "sha256:d1ebc23998d57cbfcea64857422192d4e7c89751fdbc6a58cd1b52ddff0ff426",
-      "trajectory_run_id": "server-source-snapshot-20261012",
+      "trajectory_artifact_hash": "sha256:77d3629ed906db6d42167b3999dbc94dc2dd2b54a1cd9bfc9272935814233ead",
+      "trajectory_run_id": "second-live-snapshot-20261012",
       "warn_count": 4,
       "warnings": [
         "Risk map missing (run `decapod riskmap init`)",
