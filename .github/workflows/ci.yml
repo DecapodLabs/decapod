@@ -1111,7 +1111,7 @@ jobs:
       - name: Run all tests
         run: bazelisk test //:gatling --test_arg=--test-threads=4
 
-  # RPC SUITE: isolated to avoid contention
+  # Runtime checks execute sequentially, sharing compilation without test contention.
   test-rpc-suite:
     name: Tests (RPC Suite)
     needs: release-metadata
@@ -1145,96 +1145,17 @@ jobs:
       - name: Prepare shared source-CI profile
         uses: ./.github/actions/source-ci-profile
 
-      - name: Run RPC suite
-        run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check rpc-suite'
-      - name: Upload measured source-CI custody
-        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
-          path: ${{ runner.temp }}/source-ci-evidence
-          if-no-files-found: ignore
-          retention-days: 1
-          compression-level: 0
-  chaos-replay:
-    name: Chaos Replay Gate
-    needs: release-metadata
-    if: needs.release-metadata.outputs.release_only != 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Verify immutable CI context
-        id: ci-context
-        uses: ./.github/actions/ci-context
-        with:
-          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
-          base: ${{ inputs.base || '' }}
-          head: ${{ inputs.head || '' }}
-      - name: Install Bazelisk
+      - name: Run independent RPC, chaos and daemonless checks
         run: |
           set -euo pipefail
-          bazelisk_dir="${HOME}/.local/bin"
-          mkdir -p "$bazelisk_dir"
-          if ! command -v bazelisk >/dev/null 2>&1; then
-            curl --fail --silent --show-error --location \
-              "https://github.com/bazelbuild/bazelisk/releases/download/v1.26.0/bazelisk-linux-amd64" \
-              --output "$bazelisk_dir/bazelisk"
-            chmod +x "$bazelisk_dir/bazelisk"
-          fi
-          echo "$bazelisk_dir" >> "$GITHUB_PATH"
-          echo "PATH=$bazelisk_dir:$PATH" >> "$GITHUB_ENV"
-      - name: Prepare shared source-CI profile
-        uses: ./.github/actions/source-ci-profile
-
-      - name: Run chaos replay determinism test
-        run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check chaos-replay'
-      - name: Upload measured source-CI custody
-        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
-          path: ${{ runner.temp }}/source-ci-evidence
-          if-no-files-found: ignore
-          retention-days: 1
-          compression-level: 0
-  daemonless-lifecycle:
-    name: Daemonless Lifecycle Gate
-    needs: release-metadata
-    if: needs.release-metadata.outputs.release_only != 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Verify immutable CI context
-        id: ci-context
-        uses: ./.github/actions/ci-context
-        with:
-          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
-          base: ${{ inputs.base || '' }}
-          head: ${{ inputs.head || '' }}
-      - name: Install Bazelisk
-        run: |
-          set -euo pipefail
-          bazelisk_dir="${HOME}/.local/bin"
-          mkdir -p "$bazelisk_dir"
-          if ! command -v bazelisk >/dev/null 2>&1; then
-            curl --fail --silent --show-error --location \
-              "https://github.com/bazelbuild/bazelisk/releases/download/v1.26.0/bazelisk-linux-amd64" \
-              --output "$bazelisk_dir/bazelisk"
-            chmod +x "$bazelisk_dir/bazelisk"
-          fi
-          echo "$bazelisk_dir" >> "$GITHUB_PATH"
-          echo "PATH=$bazelisk_dir:$PATH" >> "$GITHUB_ENV"
-      - name: Prepare shared source-CI profile
-        uses: ./.github/actions/source-ci-profile
-
-      - name: Run daemonless lifecycle test
-        run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check daemonless-lifecycle'
+          # Reuse only this checkout's Bazel compilation. Each call retains its
+          # own frozen preparation, actual test execution and source receipt.
+          # A failure must not skip the other formerly independent checks.
+          status=0
+          "$RUNNER_TEMP/source-ci-profile" run-ci --check rpc-suite || status=$?
+          "$RUNNER_TEMP/source-ci-profile" run-ci --check chaos-replay || status=$?
+          "$RUNNER_TEMP/source-ci-profile" run-ci --check daemonless-lifecycle || status=$?
+          exit "$status"
       - name: Upload measured source-CI custody
         if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
         uses: actions/upload-artifact@v4
@@ -1349,7 +1270,7 @@ jobs:
       needs.release-metadata.outputs.pre_pr == 'false' &&
       needs.release-metadata.result == 'success' && needs.health.result == 'success' &&
       !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
-    needs: [release-metadata, fmt, clippy, deps-lint, test, integration-prepare, test-integration, integration-status, test-master, test-rpc-suite, chaos-replay, daemonless-lifecycle, workspace-lifecycle-docker, contracts, health, musl-publication]
+    needs: [release-metadata, fmt, clippy, deps-lint, test, integration-prepare, test-integration, integration-status, test-master, test-rpc-suite, workspace-lifecycle-docker, contracts, health, musl-publication]
     steps:
       - uses: actions/checkout@v4
         with:

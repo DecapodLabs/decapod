@@ -493,8 +493,6 @@ fn job_name(workflow: &str, job: &str, matrix: Option<&str>) -> io::Result<Strin
         (".github/workflows/ci.yml", "integration-prepare") => "Prepare Integration Tests",
         (".github/workflows/ci.yml", "integration-status") => "Tests (integration)",
         (".github/workflows/ci.yml", "test-rpc-suite") => "Tests (RPC Suite)",
-        (".github/workflows/ci.yml", "chaos-replay") => "Chaos Replay Gate",
-        (".github/workflows/ci.yml", "daemonless-lifecycle") => "Daemonless Lifecycle Gate",
         (".github/workflows/ci.yml", "contracts") => "Contract Conformance",
         (".github/workflows/ci.yml", "migration-script-tests") => "Migration Script Tests",
         (".github/workflows/constitution-sync.yml", "validate-constitution") => {
@@ -684,17 +682,25 @@ pub(super) fn buildkite_sources(
         let mut archive_download_verify_ms = 0;
         let mut job_log_ms = 0;
         let mut source_custody_verify_ms = 0;
+        let mut custody_transfer_wall_ms = 0;
+        let mut archive_decode_ms = 0;
+        let mut parallel_custody_batches = 0;
+        let mut serial_custody_groups = 0;
         let expected_count = expected.len();
+        let mut pending = std::collections::VecDeque::new();
+        // Recipe and artifact selections need no source dependency outputs.
+        // Prepare them first; source verification remains in the exact sorted
+        // setup/integration/dependent/status order below.
         for (index, (key, (expected, obligations, matrix))) in expected.into_iter().enumerate() {
-            let imported = (|| -> io::Result<()> {
+            let prepared = (|| -> io::Result<_> {
                 let locator = matched
                     .remove(&key)
                     .ok_or_else(|| invalid("required actual imported source job absent"))?;
                 let native_job = locator.producer_job_id().to_string();
-                let stage_started = Instant::now();
+                let started = Instant::now();
                 let recipe =
                     bk::collect_located_recipe(reader, &inventory, locator, &expected, budget);
-                recipe_validation_ms += stage_started.elapsed().as_millis();
+                recipe_validation_ms += started.elapsed().as_millis();
                 let recipe = recipe?;
                 if recipe.logical_result() != "success" {
                     return Err(invalid(format!(
@@ -706,68 +712,117 @@ pub(super) fn buildkite_sources(
                     .jobs()
                     .get(&native_job)
                     .ok_or_else(|| invalid("native producer missing"))?;
-                let step_key = job
-                    .step_key()
+                job.step_key()
                     .ok_or_else(|| invalid("native producer step key missing"))?;
-                // The public inventory explicitly rejects every retried job and
-                // retried step, so this supported route has native attempt0.
+                // Inventory rejects retried jobs/steps; supported native attempt0.
                 let archive_name =
                     source::custody::artifact_name(&expected.logical_job, matrix.as_deref(), "0")?;
-                let stage_started = Instant::now();
-                let files =
-                    bk::collect_named_archive(reader, &inventory, &recipe, &archive_name, budget);
-                archive_download_verify_ms += stage_started.elapsed().as_millis();
-                let files = files?;
-                let stage_started = Instant::now();
-                let log = bk::collect_log(reader, &inventory, &native_job, budget);
-                job_log_ms += stage_started.elapsed().as_millis();
-                let log = log?;
-                write_new(
-                    &evidence_directory.join(format!("buildkite-{native_job}.log")),
-                    log.bytes(),
-                )?;
-                let context = ProducerContext {
-                    provider: "buildkite_gha",
-                    run_id: inventory.build_id(),
-                    run_attempt: "0",
-                    native_job: Some(&native_job),
-                    step_key,
-                    imported_recipe: Some(&recipe),
-                };
-                let stage_started = Instant::now();
-                for obligation in &obligations {
-                    if let Err(error) = verify_check(
-                        project,
-                        snapshot,
-                        &files,
-                        obligation,
-                        &context,
-                        &mut known_inputs,
-                        evidence_directory,
-                        &mut collection,
-                    ) {
+                let custody =
+                    bk::prepare_custody(reader, &inventory, &recipe, &archive_name, budget)?;
+                Ok((native_job, recipe, custody))
+            })();
+            match prepared {
+                Ok((native_job, recipe, custody)) => {
+                    pending.push_back((index, obligations, native_job, recipe, custody))
+                }
+                Err(error) => {
+                    for obligation in &obligations {
                         collection.failure(
                             &obligation.key,
-                            "SOURCE_EXECUTION_CUSTODY_BLOCKED",
-                            error,
+                            "BUILDKITE_SOURCE_CUSTODY_BLOCKED",
+                            &error,
                         );
                     }
                 }
-                source_custody_verify_ms += stage_started.elapsed().as_millis();
-                Ok(())
-            })();
-            if let Err(error) = imported {
-                for obligation in &obligations {
-                    collection.failure(&obligation.key, "BUILDKITE_SOURCE_CUSTODY_BLOCKED", &error);
-                }
             }
-            eprintln!(
-                "Buildkite collection: stage=custody_verification workflow={workflow} completed={}/{} elapsed_ms={}",
-                index + 1,
-                expected_count,
-                custody_started.elapsed().as_millis(),
-            );
         }
+        process_custody_batches(
+            pending,
+            |first, next| first.4.can_batch_with(&next.4),
+            |batch| {
+                if batch[0].4.parallel_bytes().is_none() {
+                    serial_custody_groups += 1;
+                } else {
+                    parallel_custody_batches += 1;
+                }
+                let requests: Vec<_> = batch.iter().map(|job| &job.4).collect();
+                let started = Instant::now();
+                let transferred = bk::collect_custody(reader, &requests, budget);
+                custody_transfer_wall_ms += started.elapsed().as_millis();
+                // Returning the transport error stops the entire collection;
+                // the helper does not verify this batch or dispatch a later one.
+                transferred
+            },
+            |(index, obligations, native_job, recipe, _), custody| {
+                let (archive_request_ms, log_request_ms) = custody.request_milliseconds();
+                archive_download_verify_ms += archive_request_ms;
+                job_log_ms += log_request_ms;
+                let imported = (|| -> io::Result<()> {
+                    let started = Instant::now();
+                    let verified = custody.into_verified(budget);
+                    let decode_ms = started.elapsed().as_millis();
+                    archive_decode_ms += decode_ms;
+                    archive_download_verify_ms += decode_ms;
+                    let (files, log) = verified?;
+                    write_new(
+                        &evidence_directory.join(format!("buildkite-{native_job}.log")),
+                        log.bytes(),
+                    )?;
+                    let job = inventory
+                        .jobs()
+                        .get(&native_job)
+                        .ok_or_else(|| invalid("native producer missing"))?;
+                    let step_key = job
+                        .step_key()
+                        .ok_or_else(|| invalid("native producer step key missing"))?;
+                    let context = ProducerContext {
+                        provider: "buildkite_gha",
+                        run_id: inventory.build_id(),
+                        run_attempt: "0",
+                        native_job: Some(&native_job),
+                        step_key,
+                        imported_recipe: Some(&recipe),
+                    };
+                    let started = Instant::now();
+                    for obligation in &obligations {
+                        if let Err(error) = verify_check(
+                            project,
+                            snapshot,
+                            &files,
+                            obligation,
+                            &context,
+                            &mut known_inputs,
+                            evidence_directory,
+                            &mut collection,
+                        ) {
+                            collection.failure(
+                                &obligation.key,
+                                "SOURCE_EXECUTION_CUSTODY_BLOCKED",
+                                error,
+                            );
+                        }
+                    }
+                    source_custody_verify_ms += started.elapsed().as_millis();
+                    Ok(())
+                })();
+                if let Err(error) = imported {
+                    for obligation in &obligations {
+                        collection.failure(
+                            &obligation.key,
+                            "BUILDKITE_SOURCE_CUSTODY_BLOCKED",
+                            &error,
+                        );
+                    }
+                }
+                eprintln!(
+                    "Buildkite collection: stage=custody_verification workflow={workflow} completed={}/{} elapsed_ms={}",
+                    index + 1,
+                    expected_count,
+                    custody_started.elapsed().as_millis(),
+                );
+                Ok(())
+            },
+        )?;
         let custody_verification_ms = custody_started.elapsed().as_millis();
         let recheck_started = Instant::now();
         bk::recheck_inventory(reader, &inventory, &expected_inventory, budget)?;
@@ -781,6 +836,13 @@ pub(super) fn buildkite_sources(
             "archive_download_verify_ms": archive_download_verify_ms,
             "job_log_ms": job_log_ms,
             "source_custody_verify_ms": source_custody_verify_ms,
+            "custody_transfer_wall_ms": custody_transfer_wall_ms,
+            "deferred_archive_decode_ms": archive_decode_ms,
+            "parallel_custody_batches": parallel_custody_batches,
+            "serial_custody_groups": serial_custody_groups,
+            "custody_timing_scope": "archive/log durations sum individual work and may overlap; custody_transfer_wall_ms is batch wall time; serial oversized archives decode within transfer",
+            "custody_parallel_allowance_sum_max_bytes": 128 * 1024 * 1024,
+            "custody_max_parallel_reads": 4,
             "inventory_recheck_ms": recheck_started.elapsed().as_millis(),
             "workflow_wall_ms": workflow_started.elapsed().as_millis()
         }));
@@ -788,7 +850,7 @@ pub(super) fn buildkite_sources(
     write_new(
         &evidence_directory.join("buildkite-collection-timing.json"),
         &serde_json::to_vec_pretty(&serde_json::json!({
-            "schema": "decapod.buildkite-collection-timing.v1",
+            "schema": "decapod.buildkite-collection-timing.v2",
             "source_head": snapshot.transport_head(),
             "measurement_only": true,
             "transport": reader.measurements(),
@@ -798,6 +860,39 @@ pub(super) fn buildkite_sources(
     )?;
     Ok(collection)
 }
+/// Own the whole source-import batch loop. A transfer error is deliberately
+/// fatal to this collection: no member of that batch reaches verification, no
+/// later batch starts, and no partially built SourceCollection is returned.
+/// Previously imported groups may have diagnostic files, never full readiness.
+fn process_custody_batches<T, U>(
+    mut pending: std::collections::VecDeque<T>,
+    mut compatible: impl FnMut(&T, &T) -> bool,
+    mut transfer: impl FnMut(&[T]) -> io::Result<Vec<U>>,
+    mut verify: impl FnMut(T, U) -> io::Result<()>,
+) -> io::Result<()> {
+    while let Some(first) = pending.pop_front() {
+        let mut batch = vec![first];
+        if pending
+            .front()
+            .is_some_and(|next| compatible(&batch[0], next))
+        {
+            batch.push(
+                pending
+                    .pop_front()
+                    .ok_or_else(|| invalid("custody queue changed"))?,
+            );
+        }
+        let transferred = transfer(&batch)?;
+        if transferred.len() != batch.len() {
+            return Err(invalid("custody group result count mismatch"));
+        }
+        for (job, custody) in batch.into_iter().zip(transferred) {
+            verify(job, custody)?;
+        }
+    }
+    Ok(())
+}
+
 fn authored_matrix_position(
     source_jobs: &[source::JobInstance],
     check: &source::Check,
@@ -871,6 +966,36 @@ fn read_buildkite_locators(path: &Path) -> io::Result<BTreeMap<String, u64>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn runtime_group_maps_one_native_job_to_three_distinct_source_checks() {
+        let jobs = source::inventory(&[], false);
+        let grouped: Vec<_> = jobs
+            .iter()
+            .filter(|job| job.job == "test-rpc-suite")
+            .collect();
+        assert_eq!(grouped.len(), 1);
+        assert_eq!(
+            grouped[0].checks,
+            ["rpc-suite", "chaos-replay", "daemonless-lifecycle"]
+        );
+        assert_eq!(
+            job_name(".github/workflows/ci.yml", "test-rpc-suite", None).unwrap(),
+            "Tests (RPC Suite)"
+        );
+        assert!(job_name(".github/workflows/ci.yml", "chaos-replay", None).is_err());
+        assert!(job_name(".github/workflows/ci.yml", "daemonless-lifecycle", None).is_err());
+        let mut invocations = BTreeSet::new();
+        for id in &grouped[0].checks {
+            let check = source::find_check(id).unwrap();
+            assert_eq!(check.job, grouped[0].job);
+            assert_eq!(check.matrix, None);
+            assert!(invocations.insert(
+                source::custody::invocation_digest(&source::commands(check, &[]).unwrap()).unwrap()
+            ));
+        }
+        assert_eq!(invocations.len(), 3);
+    }
     #[test]
     fn every_shared_check_has_reviewed_provider_job_name() {
         for check in source::CHECKS {
@@ -968,5 +1093,102 @@ mod tests {
         );
         matrix.insert("os".into(), "unreviewed-platform".into());
         assert!(contract.runtime_digest_for(&matrix).is_err());
+    }
+    #[test]
+    fn source_collection_stops_on_denied_or_cancelled_batch_without_partial_proof() {
+        for kind in [io::ErrorKind::PermissionDenied, io::ErrorKind::Interrupted] {
+            for failing_batch in [0, 1] {
+                let jobs = (0..6).collect();
+                let mut dispatched = Vec::new();
+                let mut verified = Vec::new();
+                let error = process_custody_batches(
+                    jobs,
+                    |_, _| true,
+                    |batch| {
+                        let number = dispatched.len();
+                        dispatched.push(batch.to_vec());
+                        if number == failing_batch {
+                            // Model a successful first read followed by denial or
+                            // cancellation: no partial group result may escape.
+                            let _completed_transport = batch[0];
+                            return Err(io::Error::new(kind, "fixture transport failure"));
+                        }
+                        Ok(batch.to_vec())
+                    },
+                    |job, result| {
+                        assert_eq!(job, result);
+                        verified.push(job);
+                        Ok(())
+                    },
+                )
+                .unwrap_err();
+                assert_eq!(error.kind(), kind);
+                assert_eq!(
+                    dispatched.len(),
+                    failing_batch + 1,
+                    "no later batch may start"
+                );
+                assert_eq!(
+                    verified,
+                    (0..failing_batch * 2).collect::<Vec<_>>(),
+                    "no proof callback for any member of a failed batch"
+                );
+            }
+        }
+    }
+    #[test]
+    fn source_collection_rejects_partial_batch_before_any_proof_callback() {
+        let mut dispatched = 0;
+        let mut verified = 0;
+        let error = process_custody_batches(
+            (0..4).collect(),
+            |_, _| true,
+            |batch| {
+                dispatched += 1;
+                Ok(vec![batch[0]])
+            },
+            |_, _| {
+                verified += 1;
+                Ok(())
+            },
+        )
+        .unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .contains("custody group result count mismatch")
+        );
+        assert_eq!(dispatched, 1);
+        assert_eq!(verified, 0);
+    }
+    #[test]
+    fn source_collection_verifies_setup_before_dependents_despite_batched_transport() {
+        let jobs = [
+            "setup",
+            "integration-prepare",
+            "worker",
+            "integration-status",
+        ];
+        let mut verified = Vec::new();
+        process_custody_batches(
+            jobs.into_iter().collect(),
+            |_, _| true,
+            |batch| Ok(batch.to_vec()),
+            |job, result| {
+                assert_eq!(job, result);
+                match job {
+                    "integration-prepare" => assert_eq!(verified, ["setup"]),
+                    "worker" => assert_eq!(verified, ["setup", "integration-prepare"]),
+                    "integration-status" => {
+                        assert_eq!(verified, ["setup", "integration-prepare", "worker"])
+                    }
+                    _ => (),
+                }
+                verified.push(job);
+                Ok(())
+            },
+        )
+        .unwrap();
+        assert_eq!(verified, jobs);
     }
 }

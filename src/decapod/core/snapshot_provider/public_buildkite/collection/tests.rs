@@ -192,12 +192,13 @@ fn live_inventory_and_poll_routes_are_never_cached_or_prefetched() {
     assert!(cache.cache.is_empty());
 }
 #[test]
-fn parallel_batch_is_four_ordered_joined_reads_including_failure() {
+fn parallel_metadata_batch_is_bounded_ordered_and_joined_including_failure() {
     let running = AtomicUsize::new(0);
     let peak = AtomicUsize::new(0);
     let finished = AtomicUsize::new(0);
     let barrier = Barrier::new(PUBLIC_READ_CONCURRENCY);
-    let result = bounded_parallel_reads(&[0, 1, 2, 3], |value| {
+    let requests: Vec<_> = (0..PUBLIC_READ_CONCURRENCY).collect();
+    let result = bounded_parallel_reads(&requests, |value| {
         let active = running.fetch_add(1, Ordering::SeqCst) + 1;
         peak.fetch_max(active, Ordering::SeqCst);
         barrier.wait();
@@ -211,7 +212,7 @@ fn parallel_batch_is_four_ordered_joined_reads_including_failure() {
     });
     assert!(result.is_err());
     assert_eq!(peak.load(Ordering::SeqCst), PUBLIC_READ_CONCURRENCY);
-    assert_eq!(finished.load(Ordering::SeqCst), 4);
+    assert_eq!(finished.load(Ordering::SeqCst), PUBLIC_READ_CONCURRENCY);
     assert_eq!(running.load(Ordering::SeqCst), 0);
     assert_eq!(
         bounded_parallel_reads(&[3, 2, 1, 0], |value| Ok(*value)).unwrap(),
@@ -225,7 +226,8 @@ fn cancellation_is_shared_by_all_joined_parallel_reads() {
     let budget = budget(&cancel);
     let barrier = Barrier::new(PUBLIC_READ_CONCURRENCY);
     let finished = AtomicUsize::new(0);
-    let result = bounded_parallel_reads(&[0, 1, 2, 3], |value| {
+    let requests: Vec<_> = (0..PUBLIC_READ_CONCURRENCY).collect();
+    let result = bounded_parallel_reads(&requests, |value| {
         if *value == 0 {
             cancel.cancel();
         }
@@ -250,9 +252,26 @@ fn prefetch_chunks_and_oversized_responses_remain_bounded() {
     cache
         .prefetch((0..9).map(request).collect(), &budget)
         .unwrap();
-    assert_eq!(cache.reader.batch_sizes, [4, 4, 1]);
+    assert_eq!(cache.reader.batch_sizes, [8, 1]);
     assert_eq!(cache.reader.calls, 9);
     cache.reader.bytes = vec![0; budget.max_bytes + 1];
     assert!(cache.prefetch(vec![request(20)], &budget).is_err());
     assert!(!cache.cache.contains_key(&request(20).path));
+}
+
+#[test]
+fn metadata_batch_never_uses_an_archive_sized_output_allowance() {
+    let cancel = Cancellation::default();
+    let budget = Budget {
+        deadline: Instant::now() + Duration::from_secs(1),
+        cancel: &cancel,
+        max_bytes: 17 * 1024 * 1024,
+    };
+    struct DefaultReader;
+    impl PublicReader for DefaultReader {
+        fn get(&mut self, _: &PublicRequest, _: &Budget<'_>) -> Result<Vec<u8>> {
+            panic!("oversized metadata budget must reject before transport")
+        }
+    }
+    assert!(DefaultReader.get_many(&[request(1)], &budget).is_err());
 }

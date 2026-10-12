@@ -2,30 +2,49 @@
 
 ## Bounded validation collection and release artifact staging
 
-The Buildkite collector authorizes each typed request before starting a bounded
-batch of at most four independent metadata reads. Scoped workers join before
-returning, share the existing deadline and cancellation token, and keep existing
-redirect and response-size checks. A collection-owned raw-byte memo uses complete
-build/job/artifact routes, caps entries at 1,024 and total body bytes at 32 MiB,
-and bypasses bodies larger than 1 MiB. Only successful artifact listings/content
-are eligible; provider polls, live inventories, logs, and final rechecks always
-reach the provider. Every consumer still validates producer identity, hashes,
-and its independently reviewed recipe contract.
-These are cache-body bounds, not a total-memory claim: bounded process capture,
-body copies, parsed JSON and retained recipe state add finite overhead.
+The Buildkite collector authorizes every typed request on the owner thread
+before transport begins. Metadata discovery uses at most eight joined reads,
+with the existing 16 MiB per-response allowance. Archive/log acquisition pairs
+at most two logical groups into four reads. The sum of their per-request,
+per-stream capture allowances is capped at 128 MiB; this is not a peak-memory
+claim. Process stdout/stderr storage, HTTP body copies, parsed recipes, the
+metadata cache and one expanded archive add separately bounded overhead.
 
-Recipe discovery rejects unsupported reviewed importer compiler/runtime
-contracts before advancing to another batch. Large custody ZIPs remain serial,
-and setup, integration preparation, worker and integration-status proof retain
-their deterministic dependency order. Measurements and stderr progress distinguish
-provider wait, metadata/recipe discovery, archive download/verification, log reads,
-source-custody verification and fresh terminal rechecks; none authorizes readiness.
+A collection-owned raw-byte memo uses complete build/job/artifact routes, caps
+entries at 1,024 and retained body bytes at 32 MiB, and bypasses bodies larger
+than 1 MiB. Only successful artifact listings/content are eligible. Custody ZIPs
+and logs, provider polls, live inventories and final rechecks are never cached.
+Every consumer still validates native producer identity, hashes and its reviewed
+recipe contract. Recipe discovery rejects unsupported compiler/runtime contracts
+before advancing to another bounded batch.
+
+An oversized but valid archive selects the existing serial archive/decode/log
+path before transfer; a failed batch never falls back to another route. All
+workers join under the original deadline/cancellation token. A transfer error
+aborts the complete collection without accepting any result from that batch or
+starting later batches. Archive decoding and source verification remain on the
+owner thread, one group at a time in setup, integration preparation, dependent
+job and integration-status order. Proof failures still block their individual
+obligations. Fresh inventory, terminal, source and accepted-base checks remain.
+
+Measurements separate provider wait, discovery, transfer wall time, decoding,
+per-request overlapping work and source-custody verification; none authorizes
+readiness or supplies a cached successful verdict.
 
 Release-build staging creates a fresh workspace-relative directory under
 target/buildkite-artifacts, dereferences the successful Bazel executable into an
 owned regular file, compares its bytes, and passes that relative path to the
 artifact uploader. It does not relax upload symlink checks or trigger release
 publication from a work branch.
+
+RPC, chaos and daemonless checks share the existing Linux RPC checkout and run
+sequentially against their original distinct Bazel targets. This reuses matching
+compiled outputs without sharing cross-run artifacts or cached test verdicts.
+Each check retains its own frozen preparation, command exit and receipt chain.
+The finite shell controller runs all three despite ordinary command failures
+and returns nonzero if any failed. A shared runner crash or cancellation affects
+the entire group and cannot establish readiness. The release aggregate still
+depends on this job, and all source check IDs and applicability rules remain.
 
 The Linux x86_64 dependency-lint lane obtains cargo-machete 0.9.2 and
 cargo-deny 0.20.2 from reviewed upstream musl release archives. Fixed SHA256
@@ -591,8 +610,8 @@ virtiofs/FUSE filesystem prohibition.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e6eccf8c2194508b374467ae6ea4f9afcd5f5f85b2c6afcab3be343ebcc948b3`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (178 files), `tests/` (185 files)
+- Repository signal fingerprint: `82096862eeb09ce32d87a138bd68041186df5c31df34fc65f853d2f160f81228`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

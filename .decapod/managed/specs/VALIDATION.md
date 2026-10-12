@@ -10,12 +10,26 @@ executable with exact bytes, and rejects missing input before export.
 Collector regressions cover exact-key deduplication, collection lifetime,
 request-count reduction, cache size/count ceilings, uncached live inventory
 rechecks, deadline/cancellation, no failure caching, ordered joined workers,
-authorization before spawning and early importer contract rejection. All existing
-source/custody tests remain required. Full plain decapod validate on the final
+authorization before spawning and early importer contract rejection. Custody
+regressions exercise individual/aggregate allowances, preselected serial large
+archives, no fallback, no partial failed-batch proof, fatal denied/cancelled
+transfer with no later dispatch, and actual scheduler verification order. Grouped
+runtime regressions cover all ordinary success/failure combinations and complete
+three-check imported receipts, including missing, swapped, altered and failed
+sibling evidence. All existing source/custody tests remain required. Full plain decapod validate on the final
 committed branch must return publication readiness; native green CI alone and
 failed/interrupted collection runs are not substitutes. Compare successful
-collection elapsed time separately from provider queue/runtime, and retain
+collection elapsed time separately from provider queue/runtime. Record batch
+wall time separately from summed overlapping request work, and compare unchanged
+applicability/check sets even when native job grouping changes. Confirm grouped
+Bazel targets reuse compilation while still executing distinct tests. Preserve
 sub-five-minute integration execution headroom without increasing timeouts.
+README review verifies first-use commands against the CLI contract and checks
+that the historical report excerpt matches the preserved successful report
+and linked commit/provider evidence. Its scope must not imply proof for a later
+candidate, unconfigured checks, or universal correctness. Retain required
+constitution entry links, two brief contextual Jev mentions, no dedicated Jev
+setup section, and agreement with the primary System One API and advisory adapter.
 Dependency-tool setup regression exercises the authored workflow with offline
 archives, including checksum/version/transfer failure and ambient-tool rejection.
 Actual provider validation must also authenticate and execute the pinned upstream
@@ -582,8 +596,8 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e6eccf8c2194508b374467ae6ea4f9afcd5f5f85b2c6afcab3be343ebcc948b3`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (178 files), `tests/` (185 files)
+- Repository signal fingerprint: `82096862eeb09ce32d87a138bd68041186df5c31df34fc65f853d2f160f81228`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

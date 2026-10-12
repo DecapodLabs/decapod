@@ -33,7 +33,7 @@ ordinary follow-on source work may silently rewrite the committed Bazel lock.
 
 ## Post-merge reliability boundary
 
-The same repair includes issue #1400: reduce full validation latency toward
+Issue #1400 continues after the merged release repair: reduce full validation latency toward
 approximately five minutes without deleting source obligations or weakening
 proof. Measure provider queue and execution separately from terminal detection,
 recipe discovery, archive transfer, and custody verification. Report observed
@@ -42,6 +42,27 @@ Reuse only exact-request bytes within a single collection; never reuse a green
 verdict across source candidates. Release binary upload must stage the compiled
 bytes as a regular workspace-relative file, retaining the uploader's symlink
 rejection and an explicit byte comparison.
+
+Overlap bounded independent metadata and custody reads while verifying source
+proof in its original dependency order. Reuse one checkout's compilation for
+RPC, chaos and daemonless checks without removing check IDs, distinct receipts
+or ordinary-failure isolation. Compare successful cold full invocations and
+same-head warm recollection separately; completed CI reused by recollection is
+not a second test execution, and provider queue time is not code runtime.
+
+The canonical README starts with what a reader can inspect: the request, the
+agent's understanding, the changes and the proof retained in the repository.
+Show the intent/work/validate/repair/review loop, a short first-use path, and an
+authentic historical validation excerpt with its exact commit and evidence
+links. State what the configured checks establish and keep missing proof or
+human decisions visible; do not promise correct software or guaranteed
+completion. Organize capabilities around reader outcomes and preserve useful
+technical and installation links. Use direct technical prose without hype.
+
+Mention Jev casually in the upper introduction and an existing capabilities
+callout, one short sentence in each. Describe only its supported System 1/advisory
+role, preserve Decapod's deterministic completion authority, and omit a dedicated
+section or flag/environment setup instructions.
 
 Source merges must retain full behavioral proof, including the host CLI
 lifecycle suite. Release-only metadata should avoid repeating unchanged source
@@ -388,8 +409,8 @@ policy ban based solely on virtiofs or FUSE filesystem identity.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e6eccf8c2194508b374467ae6ea4f9afcd5f5f85b2c6afcab3be343ebcc948b3`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (178 files), `tests/` (185 files)
+- Repository signal fingerprint: `82096862eeb09ce32d87a138bd68041186df5c31df34fc65f853d2f160f81228`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

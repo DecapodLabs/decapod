@@ -111,12 +111,8 @@ pub const CHECKS: &[Check] = &[
         ..check!("setup-bazel", "setup", &["bazelisk", "python3"])
     },
     check!("rpc-suite", "test-rpc-suite", &["bazelisk"]),
-    check!("chaos-replay", "chaos-replay", &["bazelisk"]),
-    check!(
-        "daemonless-lifecycle",
-        "daemonless-lifecycle",
-        &["bazelisk"]
-    ),
+    check!("chaos-replay", "test-rpc-suite", &["bazelisk"]),
+    check!("daemonless-lifecycle", "test-rpc-suite", &["bazelisk"]),
     check!("contracts", "contracts", &["bazelisk"]),
     check!("cli-contracts", "contracts", &["bazelisk"]),
     Check {
@@ -1074,8 +1070,6 @@ pub fn inventory(paths: &[String], release_only: bool) -> Vec<JobInstance> {
         "integration-prepare",
         "integration-status",
         "test-rpc-suite",
-        "chaos-replay",
-        "daemonless-lifecycle",
         "contracts",
         "migration-script-tests",
     ] {

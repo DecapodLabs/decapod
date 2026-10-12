@@ -230,6 +230,25 @@ impl<R: PublicReader> PublicReader for CollectionReader<'_, R> {
         self.remember(request, &bytes, budget)?;
         Ok(bytes)
     }
+    fn get_custody_many(
+        &mut self,
+        requests: &[CustodyRead],
+        budget: &Budget<'_>,
+    ) -> Result<Vec<CustodyResponse>> {
+        custody::validate_reads(requests, budget)?;
+        self.requests += requests.len() as u64;
+        let start = Instant::now();
+        let result = self.reader.get_custody_many(requests, budget);
+        self.transport_wall += start.elapsed();
+        let bytes = result?;
+        custody::validate_responses(requests, &bytes, budget)?;
+        self.response_bytes += bytes
+            .iter()
+            .map(|body| body.bytes.len() as u64)
+            .sum::<u64>();
+        // Never retain ZIPs or logs in the metadata cache.
+        Ok(bytes)
+    }
 }
 impl<R> Drop for CollectionReader<'_, R> {
     fn drop(&mut self) {

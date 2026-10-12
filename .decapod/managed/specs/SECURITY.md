@@ -11,6 +11,11 @@ mandatory on every consumer. All workers join under the existing shared
 cancellation/deadline. HTTP authorization failures never cause credential
 installation, alternate authentication, permissive fallback or automatic retry.
 No signed redirect query or arbitrary response header is emitted in diagnostics.
+Custody batches retain independent request limits and a 128 MiB sum of per-stream
+allowances, not a total-memory promise. Oversized valid archives select the serial
+path before acquisition; denied or cancelled transfer aborts the collection with
+no later batch, serial fallback or accepted partial proof. ZIP/log bodies are not
+cached, and only one archive is expanded for ordered verification at a time.
 Dependency-tool provenance comes from fixed reviewed official release digests,
 never a checksum selected by the downloaded artifact. Hash validation precedes
 named-member extraction and execution; missing or mismatched tooling fails closed.
@@ -24,12 +29,14 @@ capabilities. Existing process supervision bounds ordinary owned descendants;
 it is not a security sandbox against deliberate process-group escape. Unsupported
 containment requirements fail explicitly.
 
-Temporary remote transport is restricted to a fresh request-scoped preflight
-namespace. It cannot overwrite the work branch or match publishing/deployment
-triggers. Its exact remote commit and tree require readback. Credentials remain
-with their existing authorized provider or official client; success records
-supplied as arbitrary JSON are not authenticated provider evidence. Public API
-reads must retain TLS/server custody and exact run/attempt/source binding.
+Remote validation publishes or reuses the exact claimed workspace branch with
+ordinary non-forced creation/fast-forward and exact commit/tree readback. The
+same branch is used for preflight and the eventual PR; there are no temporary
+transport refs, force updates or cleanup deletions. Existing workflow event and
+branch guards keep release/deployment side effects outside source preflight.
+Credentials remain with the existing authorized provider or official client;
+arbitrary JSON success records are not authenticated provider evidence. Public
+reads retain TLS/server custody and exact run/attempt/source binding.
 
 The public reader seals finite GET routes and validates artifact redirects before
 following them. Ordinary process/API budgets remain distinct from bounded archive
@@ -249,8 +256,8 @@ Describe the security primitives and security controls implemented in this repos
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e6eccf8c2194508b374467ae6ea4f9afcd5f5f85b2c6afcab3be343ebcc948b3`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (178 files), `tests/` (185 files)
+- Repository signal fingerprint: `82096862eeb09ce32d87a138bd68041186df5c31df34fc65f853d2f160f81228`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

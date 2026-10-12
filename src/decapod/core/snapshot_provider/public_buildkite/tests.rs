@@ -52,6 +52,9 @@ fn recipe_expected() -> RecipeExpectation {
     }
 }
 fn fixture(result: &str) -> Mock {
+    fixture_for_job(result, "test")
+}
+fn fixture_for_job(result: &str, logical_job: &str) -> Mock {
     let b = build();
     let e = expected();
     let envelope = json!({"id":BUILD,"number":7,"path":b.base(),"commit_id":e.commit,"branch_name":"work","github_workflow_path":e.workflow_path,"github_webhook_event":"push","blocked_state":null,"state":"passed","account":{"slug":"org"},"project":{"id":PIPE,"slug":"pipe","public":true,"provider":{"id":"github","url":"https://github.com/owner/repo"}},"statistics":{"jobs_count":2,"steps_count":2}});
@@ -66,7 +69,7 @@ fn fixture(result: &str) -> Mock {
     }
     let event = b"event bytes";
     let plan = bytes(
-        &json!({"schema":"https://buildkite.com/schemas/buildkite-gha/job-plan-v2.schema.json","workflow":{"path":"./.github/workflows/ci.yml","digest":hash(b"source"),"logical_job_id":"test"},"compiler":{"version":"0.102.3","distribution_digest":hash(b"compiler")},"runtime":{"distribution_digest":hash(b"runtime")},"target":{"step_key":"gha-test"},"strategy":{"job-index":0,"job-total":1},"event":{"provider":"github","name":"push","sha":"a".repeat(40),"repository":"owner/repo","payload_digest":hash(event),"payload_artifact":true},"program":{"version":2,"job":{"steps":[]}}}),
+        &json!({"schema":"https://buildkite.com/schemas/buildkite-gha/job-plan-v2.schema.json","workflow":{"path":"./.github/workflows/ci.yml","digest":hash(b"source"),"logical_job_id":logical_job},"compiler":{"version":"0.102.3","distribution_digest":hash(b"compiler")},"runtime":{"distribution_digest":hash(b"runtime")},"target":{"step_key":"gha-test"},"strategy":{"job-index":0,"job-total":1},"event":{"provider":"github","name":"push","sha":"a".repeat(40),"repository":"owner/repo","payload_digest":hash(event),"payload_artifact":true},"program":{"version":2,"job":{"steps":[]}}}),
     );
     let pd = hash(&plan);
     let manifest = bytes(
@@ -479,11 +482,16 @@ fn missing_importer_result_is_only_a_locator_absence() {
 /// Synthetic provider test double only. Exercise the real inventory/recipe
 /// verifier so source tests cannot mint an imported recipe from receipt JSON.
 pub(crate) fn synthetic_source_recipe() -> ImportedRecipe {
-    let mut reader = fixture("success");
+    synthetic_source_recipe_for_job("test")
+}
+pub(crate) fn synthetic_source_recipe_for_job(job: &str) -> ImportedRecipe {
+    let mut reader = fixture_for_job("success", job);
     let cancel = Cancellation::default();
     let budget = Budget::new(Duration::from_secs(3), 1024 * 1024, &cancel).unwrap();
     let inventory = collect_inventory(&mut reader, build(), &expected(), &budget).unwrap();
-    collect_recipe(&mut reader, &inventory, JOB, &recipe_expected(), &budget).unwrap()
+    let mut expected_recipe = recipe_expected();
+    expected_recipe.logical_job = job.into();
+    collect_recipe(&mut reader, &inventory, JOB, &expected_recipe, &budget).unwrap()
 }
 
 #[cfg(unix)]
@@ -850,7 +858,7 @@ fn unsupported_compiler_stops_before_the_next_recipe_batch() {
     let cancel = Cancellation::default();
     let budget = budget(&cancel);
     let mut raw = Counted {
-        inner: many_recipe_fixture(5),
+        inner: many_recipe_fixture(9),
         routes: BTreeMap::new(),
     };
     {
@@ -866,13 +874,13 @@ fn unsupported_compiler_stops_before_the_next_recipe_batch() {
                 .to_string()
                 .contains("importer compiler version mismatch")
         );
-        assert_eq!(cached.measurements()["public_get_requests"], 16);
+        assert_eq!(cached.measurements()["public_get_requests"], 28);
     }
-    let fifth = "44444444-4444-4444-4444-000000000005";
-    assert!(
-        !raw.routes
-            .contains_key(&format!("{}/artifacts", build().job_base(fifth).unwrap()))
-    );
+    let next_batch = "44444444-4444-4444-4444-000000000009";
+    assert!(!raw.routes.contains_key(&format!(
+        "{}/artifacts",
+        build().job_base(next_batch).unwrap()
+    )));
 }
 #[test]
 fn cached_bytes_still_fail_digest_and_wrong_runtime_checks() {
@@ -923,6 +931,124 @@ fn parallel_transport_authorizes_whole_batch_before_any_process() {
     let requests = [timeout_request(), timeout_request()];
     assert_eq!(
         reader.get_many(&requests, &budget).unwrap_err().kind(),
+        io::ErrorKind::PermissionDenied
+    );
+    assert!(!Path::new(&format!("{}.count", path.display())).exists());
+}
+
+fn custody_fixture() -> Mock {
+    let mut mock = fixture("success");
+    let zip = super::super::artifact_archive::tests::zip("proof/receipt.json", b"{}", 0x8000);
+    let result_route = format!("{}/artifacts/{AID}", build().job_base(JOB).unwrap());
+    let zip_id = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
+    let zip_route = format!("{}/artifacts/{zip_id}", build().job_base(JOB).unwrap());
+    mutate(&mut mock, result_route.clone(), |result| {
+        result["artifacts"] = json!([{"name":"source-proof","id":"opaque","path":"buildkite-gha/v1/artifacts/content.zip","digest":hash(&zip),"size":zip.len(),"file_count":1}]);
+    });
+    let result_digest = hash(&mock.responses[&result_route]);
+    mutate(
+        &mut mock,
+        format!("{}/artifacts", build().job_base(JOB).unwrap()),
+        |rows| {
+            rows[0]["sha256sum"] = result_digest[7..].into();
+            rows.as_array_mut().unwrap().push(json!({"id":zip_id,"state":"finished","path":"buildkite-gha/v1/artifacts/content.zip","url":zip_route,"self_hosted":false,"sha256sum":&hash(&zip)[7..]}));
+        },
+    );
+    mock.responses.insert(zip_route, zip);
+    mock.responses.insert(
+        format!("{}/download.txt", build().job_base(JOB).unwrap()),
+        b"actual provider log".to_vec(),
+    );
+    mock
+}
+#[test]
+fn custody_transport_batch_preserves_archive_log_identity_and_verification() {
+    let cancel = Cancellation::default();
+    let budget = budget(&cancel);
+    let mut reader = custody_fixture();
+    let inventory = collect_inventory(&mut reader, build(), &expected(), &budget).unwrap();
+    let recipe = collect_recipe(&mut reader, &inventory, JOB, &recipe_expected(), &budget).unwrap();
+    let selected =
+        prepare_custody(&mut reader, &inventory, &recipe, "source-proof", &budget).unwrap();
+    let before = reader.calls;
+    let collected = collect_custody(&mut reader, &[&selected], &budget)
+        .unwrap()
+        .pop()
+        .unwrap();
+    assert_eq!(reader.calls - before, 2);
+    let (files, log) = collected.into_verified(&budget).unwrap();
+    assert_eq!(files.file("proof/receipt.json").unwrap(), b"{}");
+    assert_eq!(log.job_id(), JOB);
+    assert_eq!(log.bytes(), b"actual provider log");
+    recheck_inventory(&mut reader, &inventory, &expected(), &budget).unwrap();
+    assert_eq!(reader.calls - before, 5, "final recheck remains fresh");
+}
+#[test]
+fn transported_custody_still_rejects_wrong_archive_bytes_and_empty_log() {
+    for wrong_archive in [false, true] {
+        let cancel = Cancellation::default();
+        let budget = budget(&cancel);
+        let mut reader = custody_fixture();
+        let inventory = collect_inventory(&mut reader, build(), &expected(), &budget).unwrap();
+        let recipe =
+            collect_recipe(&mut reader, &inventory, JOB, &recipe_expected(), &budget).unwrap();
+        let selected =
+            prepare_custody(&mut reader, &inventory, &recipe, "source-proof", &budget).unwrap();
+        if wrong_archive {
+            reader.responses.insert(
+                format!(
+                    "{}/artifacts/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+                    build().job_base(JOB).unwrap()
+                ),
+                b"tampered ZIP".to_vec(),
+            );
+            let collected = collect_custody(&mut reader, &[&selected], &budget)
+                .unwrap()
+                .pop()
+                .unwrap();
+            assert!(
+                collected
+                    .into_verified(&budget)
+                    .unwrap_err()
+                    .to_string()
+                    .contains("bytes differ from provider hash")
+            );
+        } else {
+            reader.responses.insert(
+                format!("{}/download.txt", build().job_base(JOB).unwrap()),
+                Vec::new(),
+            );
+            assert!(collect_custody(&mut reader, &[&selected], &budget).is_err());
+        }
+    }
+}
+#[cfg(unix)]
+#[test]
+fn custody_batch_authorizes_every_request_before_spawning() {
+    let cancel = Cancellation::default();
+    let budget = budget(&cancel);
+    let mut fixture = custody_fixture();
+    let inventory = collect_inventory(&mut fixture, build(), &expected(), &budget).unwrap();
+    let recipe =
+        collect_recipe(&mut fixture, &inventory, JOB, &recipe_expected(), &budget).unwrap();
+    let selected =
+        prepare_custody(&mut fixture, &inventory, &recipe, "source-proof", &budget).unwrap();
+    let (_temp, path) = timeout_curl_fixture("printf 'HTTP/2 200\\r\\n\\r\\nbody'");
+    let mut count = 0;
+    let mut reader = CurlPublicReader::new(path.clone(), move |_, _| {
+        count += 1;
+        if count == 2 {
+            Err(io::Error::new(io::ErrorKind::PermissionDenied, "denied"))
+        } else {
+            Ok(())
+        }
+    })
+    .unwrap();
+    assert_eq!(
+        collect_custody(&mut reader, &[&selected], &budget)
+            .err()
+            .unwrap()
+            .kind(),
         io::ErrorKind::PermissionDenied
     );
     assert!(!Path::new(&format!("{}.count", path.display())).exists());

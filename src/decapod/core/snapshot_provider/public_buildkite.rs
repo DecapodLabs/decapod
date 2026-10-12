@@ -7,10 +7,16 @@ use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
 
 mod collection;
+mod custody;
 pub use collection::CollectionReader;
+pub use custody::{
+    CollectedCustody, CustodyRead, CustodyRequest, CustodyResponse, collect_custody,
+    prepare_custody,
+};
 
-/// One finite batch, sharing the caller's deadline and cancellation.
-pub const PUBLIC_READ_CONCURRENCY: usize = 4;
+/// Metadata-only batches share the caller's deadline/cancellation. Custody
+/// transport remains separately limited to four reads and 128 MiB aggregate.
+pub const PUBLIC_READ_CONCURRENCY: usize = 8;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PublicBuild {
@@ -48,13 +54,13 @@ impl PublicBuild {
     }
 }
 /// An exact GET destination sealed by this module; never a caller-selected URL.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct PublicRequest {
     path: String,
     artifact_redirect: bool,
     log_redirect: Option<LogRedirectIdentity>,
 }
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct LogRedirectIdentity {
     pipeline: String,
     build: String,
@@ -207,6 +213,10 @@ pub trait PublicReader {
         budget: &Budget<'_>,
     ) -> Result<Vec<Vec<u8>>> {
         ensure(
+            budget.max_bytes <= 16 * 1024 * 1024,
+            "metadata batch output allowance exceeds bound",
+        )?;
+        ensure(
             requests.len() <= PUBLIC_READ_CONCURRENCY,
             "public read batch exceeds bound",
         )?;
@@ -221,6 +231,26 @@ pub trait PublicReader {
                     "public response exceeded bound",
                 )?;
                 Ok(bytes)
+            })
+            .collect()
+    }
+    /// Typed custody requests carry individual output limits; the ordinary
+    /// metadata budget is never globally enlarged for an archive.
+    fn get_custody_many(
+        &mut self,
+        requests: &[CustodyRead],
+        budget: &Budget<'_>,
+    ) -> Result<Vec<CustodyResponse>> {
+        custody::validate_reads(requests, budget)?;
+        requests
+            .iter()
+            .map(|read| {
+                let started = Instant::now();
+                let bytes = read_request(self, &read.request, &read.budget(budget))?;
+                Ok(CustodyResponse {
+                    bytes,
+                    elapsed: started.elapsed(),
+                })
             })
             .collect()
     }
@@ -359,6 +389,10 @@ impl PublicReader for CurlPublicReader {
         budget: &Budget<'_>,
     ) -> Result<Vec<Vec<u8>>> {
         ensure(
+            budget.max_bytes <= 16 * 1024 * 1024,
+            "metadata batch output allowance exceeds bound",
+        )?;
+        ensure(
             requests.len() <= PUBLIC_READ_CONCURRENCY,
             "public read batch exceeds bound",
         )?;
@@ -372,6 +406,27 @@ impl PublicReader for CurlPublicReader {
         let curl = &self.curl;
         bounded_parallel_reads(requests, |request| {
             authorized_curl_get(curl, request, budget)
+        })
+    }
+    fn get_custody_many(
+        &mut self,
+        requests: &[CustodyRead],
+        budget: &Budget<'_>,
+    ) -> Result<Vec<CustodyResponse>> {
+        custody::validate_reads(requests, budget)?;
+        for read in requests {
+            budget.remaining()?;
+            read.request.authorize_read()?;
+            (self.authorize)(&read.request, &self.curl)?;
+        }
+        let curl = &self.curl;
+        bounded_parallel_reads(requests, |read| {
+            let started = Instant::now();
+            let bytes = authorized_curl_get(curl, &read.request, &read.budget(budget))?;
+            Ok(CustodyResponse {
+                bytes,
+                elapsed: started.elapsed(),
+            })
         })
     }
 }
@@ -532,7 +587,7 @@ fn read(
     read_request(reader, &request, budget)
 }
 fn read_request(
-    reader: &mut impl PublicReader,
+    reader: &mut (impl PublicReader + ?Sized),
     request: &PublicRequest,
     budget: &Budget<'_>,
 ) -> Result<Vec<u8>> {
@@ -1467,6 +1522,27 @@ pub fn collect_named_archive(
     expected_name: &str,
     budget: &Budget<'_>,
 ) -> Result<super::artifact_archive::ArtifactFiles> {
+    let selected = select_named_archive(reader, inventory, recipe, expected_name, budget)?;
+    selected.collect(reader, budget)
+}
+
+#[derive(Clone, Debug)]
+struct NamedArchiveSelection {
+    request: PublicRequest,
+    row: Value,
+    job: String,
+    origin: String,
+    digest: String,
+    size: usize,
+    file_count: u64,
+}
+fn select_named_archive(
+    reader: &mut impl PublicReader,
+    inventory: &PublicInventory,
+    recipe: &ImportedRecipe,
+    expected_name: &str,
+    budget: &Budget<'_>,
+) -> Result<NamedArchiveSelection> {
     ensure(
         !expected_name.is_empty()
             && expected_name.len() <= 512
@@ -1502,13 +1578,6 @@ pub fn collect_named_archive(
     )?;
     let declared_digest = string(entry, "digest")?;
     ensure(digest(declared_digest), "named artifact digest invalid")?;
-    // Shared cancellation/deadline; only this declared artifact capture receives
-    // its finite size allowance. API response bounds are not raised globally.
-    let artifact_budget = Budget {
-        deadline: budget.deadline,
-        cancel: budget.cancel,
-        max_bytes: size as usize + 64 * 1024,
-    };
     // Metadata retains the ordinary API budget; only the exact selected blob
     // receives the independently declared artifact allowance.
     let producer_id = recipe.result.job_id();
@@ -1519,33 +1588,83 @@ pub fn collect_named_archive(
         selected.len() == 1,
         "named artifact provider path missing or ambiguous",
     )?;
-    let artifact = download(
-        reader,
-        inventory,
-        producer_id,
-        selected[0],
-        &artifact_budget,
-    )?;
+
+    let row = selected[0];
     ensure(
-        artifact.digest() == declared_digest && artifact.bytes().len() as u64 == size,
-        "named artifact bytes differ from importer result",
+        string(row, "state")? == "finished" && !boolean(row, "self_hosted")?,
+        "unfinished/self-hosted artifact unsupported",
     )?;
-    let files = super::artifact_archive::ArtifactFiles::verified(
-        format!(
+    let provider_digest = format!("sha256:{}", string(row, "sha256sum")?);
+    ensure(digest(&provider_digest), "public artifact lacks SHA256")?;
+    ensure(
+        inventory.jobs.contains_key(producer_id),
+        "artifact producer missing",
+    )?;
+    let request = PublicRequest {
+        path: string(row, "url")?.into(),
+        artifact_redirect: true,
+        log_redirect: None,
+    };
+    request.authorize_read()?;
+    Ok(NamedArchiveSelection {
+        request,
+        row: row.clone(),
+        job: producer_id.into(),
+        origin: format!(
             "buildkite:{}/jobs/{}/{}",
             inventory.build_id(),
-            recipe.result.job_id(),
+            producer_id,
             expected_name
         ),
-        declared_digest,
-        artifact.bytes(),
-        budget,
-    )?;
-    ensure(
-        files.names().count() as u64 == count(entry, "file_count")?,
-        "named artifact file inventory mismatch",
-    )?;
-    Ok(files)
+        digest: declared_digest.into(),
+        size: size as usize,
+        file_count: count(entry, "file_count")?,
+    })
+}
+impl NamedArchiveSelection {
+    fn capture_limit(&self) -> usize {
+        self.size + 64 * 1024
+    }
+    fn collect(
+        &self,
+        reader: &mut impl PublicReader,
+        budget: &Budget<'_>,
+    ) -> Result<super::artifact_archive::ArtifactFiles> {
+        let artifact_budget = Budget {
+            deadline: budget.deadline,
+            cancel: budget.cancel,
+            max_bytes: self.capture_limit(),
+        };
+        let bytes = read_request(reader, &self.request, &artifact_budget)?;
+        self.verify(bytes, budget)
+    }
+    fn verify(
+        &self,
+        bytes: Vec<u8>,
+        budget: &Budget<'_>,
+    ) -> Result<super::artifact_archive::ArtifactFiles> {
+        budget.remaining()?;
+        let provider_digest = format!("sha256:{}", string(&self.row, "sha256sum")?);
+        ensure(
+            hash(&bytes) == provider_digest,
+            "public artifact bytes differ from provider hash",
+        )?;
+        ensure(
+            provider_digest == self.digest && bytes.len() == self.size,
+            "named artifact bytes differ from importer result",
+        )?;
+        let files = super::artifact_archive::ArtifactFiles::verified(
+            self.origin.clone(),
+            &self.digest,
+            &bytes,
+            budget,
+        )?;
+        ensure(
+            files.names().count() as u64 == self.file_count,
+            "named artifact file inventory mismatch",
+        )?;
+        Ok(files)
+    }
 }
 
 /// Actual raw provider log bytes for a job in the complete inventory. A log
@@ -1567,17 +1686,12 @@ impl CollectedLog {
         &self.bytes
     }
 }
-pub fn collect_log(
-    reader: &mut impl PublicReader,
-    inventory: &PublicInventory,
-    job: &str,
-    budget: &Budget<'_>,
-) -> Result<CollectedLog> {
+fn log_request(inventory: &PublicInventory, job: &str) -> Result<PublicRequest> {
     ensure(
         inventory.jobs.contains_key(job),
         "log job absent from complete inventory",
     )?;
-    let request = PublicRequest {
+    Ok(PublicRequest {
         path: format!("{}/download.txt", inventory.build.job_base(job)?),
         artifact_redirect: false,
         log_redirect: Some(LogRedirectIdentity {
@@ -1585,7 +1699,15 @@ pub fn collect_log(
             build: inventory.build_id().into(),
             job: job.into(),
         }),
-    };
+    })
+}
+pub fn collect_log(
+    reader: &mut impl PublicReader,
+    inventory: &PublicInventory,
+    job: &str,
+    budget: &Budget<'_>,
+) -> Result<CollectedLog> {
+    let request = log_request(inventory, job)?;
     let bytes = read_request(reader, &request, budget)?;
     ensure(!bytes.is_empty(), "provider job log empty or unavailable")?;
     Ok(CollectedLog {
