@@ -1,5 +1,20 @@
 # Security
 
+## Bounded public-read reuse
+
+Concurrent collection changes transport scheduling, not provider authority.
+Exact typed requests are authorized serially before any batch worker starts.
+Only successful exact-route artifact responses are reused inside one collection,
+under explicit memory/entry bounds; no verdict, provider poll or final freshness
+check is cached. Hash, producer, source, native-attempt and contract checks remain
+mandatory on every consumer. All workers join under the existing shared
+cancellation/deadline. HTTP authorization failures never cause credential
+installation, alternate authentication, permissive fallback or automatic retry.
+No signed redirect query or arbitrary response header is emitted in diagnostics.
+Dependency-tool provenance comes from fixed reviewed official release digests,
+never a checksum selected by the downloaded artifact. Hash validation precedes
+named-member extraction and execution; missing or mismatched tooling fails closed.
+
 ## Preflight custody and capabilities
 
 Preflight executes only reviewed build/test/release-verification operations. It
@@ -234,8 +249,8 @@ Describe the security primitives and security controls implemented in this repos
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e3584d78d15131f611c7f497eae3e00e961798587727064461fc5332169d0f64`
-- Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
+- Repository signal fingerprint: `e6eccf8c2194508b374467ae6ea4f9afcd5f5f85b2c6afcab3be343ebcc948b3`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (178 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -5,9 +5,12 @@ load(
     "cargo_toml_env_vars",
 )
 load("@crates//:defs.bzl", "all_crate_deps")
+load("//.config/build:cargo_inputs_tests.bzl", "cargo_inputs_test")
 
 
 def decapod_targets():
+    cargo_inputs_test(name = "cargo_inputs_policy")
+
     # Native-proof integration fixture only; never a shipped Cargo binary.
     rust_binary(
         name = "native_proof_fixture",

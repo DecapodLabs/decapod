@@ -8,11 +8,22 @@ rust.toolchain(
 )
 use_repo(rust, "rust_toolchains")
 
-# Crate universe for Cargo.toml dependencies
+# Resolve dependencies independently of release-plz's root-version-only bump.
+# The repository rule preserves every non-version byte; dependency changes still
+# require an explicit committed lock refresh under --lockfile_mode=error.
+cargo_inputs = use_repo_rule("//.config/build:cargo_inputs.bzl", "cargo_inputs")
+cargo_inputs(
+    name = "decapod_cargo_inputs",
+    manifest = "//:Cargo.toml",
+    lockfile = "//:Cargo.lock",
+)
+
+# Crate universe consumes the generated view, never a rewritten source checkout.
 crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
 crate.from_cargo(
     name = "crates",
-    cargo_lockfile = "//:Cargo.lock",
-    manifests = ["//:Cargo.toml"],
+    cargo_lockfile = "@decapod_cargo_inputs//:Cargo.lock",
+    manifests = ["@decapod_cargo_inputs//:Cargo.toml"],
+    skip_cargo_lockfile_overwrite = True,
 )
 use_repo(crate, "crates")

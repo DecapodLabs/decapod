@@ -25,7 +25,23 @@ the advancing root package version, matching root lockfile version, and optional
 changelog edits. This is an evidence-bound material-spec exception, not a reason
 to invent authored prose or weaken validation for mixed source changes.
 
+The release-only range must remain buildable through the same strict Bazel
+setup on both providers. Root package release identity is not a dependency
+change: a generated dependency-only Cargo view normalizes that one matching
+local version while preserving all other input bytes. Neither release CI nor
+ordinary follow-on source work may silently rewrite the committed Bazel lock.
+
 ## Post-merge reliability boundary
+
+The same repair includes issue #1400: reduce full validation latency toward
+approximately five minutes without deleting source obligations or weakening
+proof. Measure provider queue and execution separately from terminal detection,
+recipe discovery, archive transfer, and custody verification. Report observed
+timings rather than treating the target as a guarantee under provider queues.
+Reuse only exact-request bytes within a single collection; never reuse a green
+verdict across source candidates. Release binary upload must stage the compiled
+bytes as a regular workspace-relative file, retaining the uploader's symlink
+rejection and an explicit byte comparison.
 
 Source merges must retain full behavioral proof, including the host CLI
 lifecycle suite. Release-only metadata should avoid repeating unchanged source
@@ -372,8 +388,8 @@ policy ban based solely on virtiofs or FUSE filesystem identity.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e3584d78d15131f611c7f497eae3e00e961798587727064461fc5332169d0f64`
-- Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
+- Repository signal fingerprint: `e6eccf8c2194508b374467ae6ea4f9afcd5f5f85b2c6afcab3be343ebcc948b3`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (178 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

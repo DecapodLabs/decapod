@@ -3,6 +3,9 @@ package(default_visibility = ["//visibility:public"])
 exports_files([
     "BUILD.bazel",
     "bazelrc",
+    "cargo_inputs.bzl",
+    "cargo_inputs_tests.bzl",
+    "cargo_inputs_policy.py",
     "decapod.BUILD.bzl",
     "decapod.MODULE.bazel",
 ])

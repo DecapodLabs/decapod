@@ -1,5 +1,44 @@
 # Validation
 
+## Release setup, packaging and preflight latency
+
+The required setup policy proves stable root-version normalization and strict
+dependency drift enforcement. Release upload regression executes the actual
+workflow staging body against a Bazel-style symlink, verifies a relative regular
+executable with exact bytes, and rejects missing input before export.
+
+Collector regressions cover exact-key deduplication, collection lifetime,
+request-count reduction, cache size/count ceilings, uncached live inventory
+rechecks, deadline/cancellation, no failure caching, ordered joined workers,
+authorization before spawning and early importer contract rejection. All existing
+source/custody tests remain required. Full plain decapod validate on the final
+committed branch must return publication readiness; native green CI alone and
+failed/interrupted collection runs are not substitutes. Compare successful
+collection elapsed time separately from provider queue/runtime, and retain
+sub-five-minute integration execution headroom without increasing timeouts.
+Dependency-tool setup regression exercises the authored workflow with offline
+archives, including checksum/version/transfer failure and ambient-tool rejection.
+Actual provider validation must also authenticate and execute the pinned upstream
+archives. Setup logs expose download and verification/install time for comparison
+with previous repeated source compilation.
+Version fixtures must match the authenticated upstream command output exactly:
+cargo-machete prints its bare version, while cargo-deny includes its tool name.
+Wrong prefixes and wrong versions both fail before publishing tools on PATH;
+integrity, extraction and version failures expose distinct actionable diagnostics.
+
+## Release-only dependency-lock regression
+
+The shared setup recipe executes the actual Starlark normalizer's regression
+target before compiling the two existing Bazel binaries. Multiple genuine root
+version bumps must produce identical dependency input bytes. Dependency version,
+feature, registry and checksum changes must remain visible, while duplicate,
+mismatched or malformed root records fail closed. The executable test also
+hashes the real generated Cargo inputs and checks their exact recorded input
+digests in the committed Bazel lock. This is exercised through the configured
+full Buildkite validation, not a separate local prerequisite suite. The strict
+build remains mandatory for release-only changes and retains the real compiled
+package version from the root manifest.
+
 ## Complete current-branch proof
 
 Focused component tests, YAML parsing, a passing project-check report and an empty
@@ -543,8 +582,8 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e3584d78d15131f611c7f497eae3e00e961798587727064461fc5332169d0f64`
-- Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
+- Repository signal fingerprint: `e6eccf8c2194508b374467ae6ea4f9afcd5f5f85b2c6afcab3be343ebcc948b3`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (178 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

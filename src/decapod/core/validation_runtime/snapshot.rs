@@ -79,6 +79,13 @@ impl provider::public_buildkite::PublicReader for PublicBuildkiteReader<'_> {
     ) -> io::Result<Vec<u8>> {
         self.0.get(request, budget)
     }
+    fn get_many(
+        &mut self,
+        requests: &[provider::public_buildkite::PublicRequest],
+        budget: &provider::Budget<'_>,
+    ) -> io::Result<Vec<Vec<u8>>> {
+        self.0.get_many(requests, budget)
+    }
 }
 
 /// Real transport host. The complete source catalog selects the provider runs;
@@ -292,6 +299,8 @@ impl<'a, R: Runner> SnapshotHost<'a, R> {
                 .ok_or_else(|| invalid("reviewed Buildkite importer contract is missing"))?;
             // All provider calls and sleeps share the original deadline. The
             // barrier fetches metadata only; custody is collected exactly once.
+            eprintln!("Buildkite validation: stage=provider_terminal_wait");
+            let provider_started = Instant::now();
             let terminal = automatic::wait_for_source_runs(
                 &mut self.runner,
                 reader,
@@ -299,7 +308,13 @@ impl<'a, R: Runner> SnapshotHost<'a, R> {
                 &plan,
                 Duration::from_secs(5),
                 &provider_budget,
-            )?;
+            );
+            let provider_terminal_wait_ms = provider_started.elapsed().as_millis();
+            eprintln!(
+                "Buildkite validation: stage=provider_terminal_wait elapsed_ms={provider_terminal_wait_ms}"
+            );
+            let terminal = terminal?;
+            let collection_started = Instant::now();
             let buildkite = source_import::buildkite_sources(
                 reader,
                 contract,
@@ -308,7 +323,12 @@ impl<'a, R: Runner> SnapshotHost<'a, R> {
                 &terminal,
                 &directory,
                 &provider_budget,
-            )?;
+            );
+            let custody_collection_ms = collection_started.elapsed().as_millis();
+            eprintln!(
+                "Buildkite validation: stage=custody_collection elapsed_ms={custody_collection_ms}"
+            );
+            let buildkite = buildkite?;
             self.verified_checks = buildkite.checks;
             blockers.extend(buildkite.blockers);
             blockers.retain(|blocker| {
@@ -317,7 +337,20 @@ impl<'a, R: Runner> SnapshotHost<'a, R> {
                     .as_ref()
                     .is_none_or(|key| !self.verified_checks.contains_key(key))
             });
+            let recheck_started = Instant::now();
             terminal.recheck(&mut self.runner, reader, &snapshot, &plan, &provider_budget)?;
+            write_new(
+                &directory.join("buildkite-stage-timing.json"),
+                &serde_json::to_vec_pretty(&serde_json::json!({
+                    "schema": "decapod.buildkite-stage-timing.v1",
+                    "provider_terminal_wait_ms": provider_terminal_wait_ms,
+                    "custody_collection_ms": custody_collection_ms,
+                    "terminal_recheck_ms": recheck_started.elapsed().as_millis(),
+                    "source_head": snapshot.transport_head(),
+                    "measurement_only": true
+                }))
+                .map_err(io::Error::other)?,
+            )?;
             self.terminal_sources = Some((plan, terminal));
         }
         // Repeated validation reuses the real workspace branch and independently

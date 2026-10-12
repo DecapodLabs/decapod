@@ -1,5 +1,31 @@
 # Interfaces
 
+## Validation latency diagnostics and regular release artifacts
+
+Full configured validation still owns exact workspace-branch push/reuse,
+provider completion and all publication proof. Its stderr now reports bounded
+provider-wait, recipe-discovery and custody progress. Evidence-local
+buildkite-stage-timing.json and buildkite-collection-timing.json contain
+measurement-only durations, source/workflow identities, request counts and cache
+bounds. Counts describe sealed GET submissions, excluding redirect hops and
+timeout retries; parallel durations are wall time, never summed work.
+
+The Buildkite public-reader batch interface accepts at most four already typed
+requests and preserves result ordering. The serial default supports existing
+adapters; the curl implementation authorizes the whole batch on the caller
+thread before spawning joined workers. Error, cancellation, deadline and malformed
+input behavior remains fail closed. The release-build upload interface consumes
+RELEASE_BINARY only after regular-file and exact-byte staging succeeds.
+
+## Bazel dependency projection boundary
+
+The internal Cargo-input repository accepts the canonical manifest and matching
+local root lock entry, preserves all non-version bytes, and rejects ambiguous,
+mismatched or registry-sourced root records. Its generated files are dependency
+metadata only. Real package metadata and release classification continue to use
+the original immutable Cargo files; release-plz's three-file exception is not
+expanded to allow arbitrary Bazel lock edits.
+
 ## Validation providers and publication
 
 `decapod validate` is the PR-readiness interface: only complete current candidate
@@ -455,8 +481,8 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e3584d78d15131f611c7f497eae3e00e961798587727064461fc5332169d0f64`
-- Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
+- Repository signal fingerprint: `e6eccf8c2194508b374467ae6ea4f9afcd5f5f85b2c6afcab3be343ebcc948b3`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (178 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
