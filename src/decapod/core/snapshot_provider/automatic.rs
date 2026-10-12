@@ -185,7 +185,14 @@ fn build_number(url: &str, pipeline: &ImportedPipeline) -> Option<u64> {
         "https://buildkite.com/{}/{}/builds/",
         pipeline.organization, pipeline.pipeline
     );
-    let value = url.strip_prefix(&prefix)?;
+    let suffix = url.strip_prefix(&prefix)?;
+    // GitHub's native Buildkite checks link to a job within its build page.
+    // Retain only the build locator; job identity is authenticated separately.
+    let value = match suffix.split_once('#') {
+        Some((number, job)) if uuid(job) => number,
+        Some(_) => return None,
+        None => suffix,
+    };
     if value.is_empty() || value.starts_with('0') || !value.bytes().all(|b| b.is_ascii_digit()) {
         return None;
     }
@@ -312,12 +319,45 @@ fn poll(
             complete = false;
         }
     }
-    let urls = locators(runner, snapshot, budget)?;
+    // Once every required workflow has an independently bound native build,
+    // poll those public envelopes directly. These are locators, never cached
+    // execution states. TerminalSourceRuns::recheck uses a fresh PollState, so
+    // the final barrier always rediscovers the exact-S registry and rejects
+    // replaced, missing or additional builds before accepting this set.
+    let discovered = plan.buildkite_pipelines.iter().all(|pipeline| {
+        pipeline.workflows.iter().all(|workflow| {
+            state.buildkite.contains_key(&(
+                pipeline.organization.clone(),
+                pipeline.pipeline.clone(),
+                workflow.clone(),
+            ))
+        })
+    });
+    let urls = if discovered {
+        None
+    } else {
+        Some(locators(runner, snapshot, budget)?)
+    };
     for pipeline in &plan.buildkite_pipelines {
-        let numbers: BTreeSet<_> = urls
-            .iter()
-            .filter_map(|url| build_number(url, pipeline))
-            .collect();
+        let numbers: BTreeSet<_> = if let Some(urls) = &urls {
+            urls.iter()
+                .filter_map(|url| build_number(url, pipeline))
+                .collect()
+        } else {
+            pipeline
+                .workflows
+                .iter()
+                .map(|workflow| {
+                    state.buildkite[&(
+                        pipeline.organization.clone(),
+                        pipeline.pipeline.clone(),
+                        workflow.clone(),
+                    )]
+                        .build
+                        .number()
+                })
+                .collect()
+        };
         let mut found = BTreeMap::new();
         for number in numbers {
             let build =

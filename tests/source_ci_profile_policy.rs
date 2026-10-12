@@ -763,3 +763,18 @@ fn synthetic_release_manifest_is_materialized_only_by_its_fixture_loader() {
         ["machete"]
     );
 }
+
+#[test]
+fn golden_recipes_check_immutable_vectors_and_run_their_regressions() {
+    for id in ["golden-vectors-linux", "golden-vectors-macos"] {
+        let recipe = commands(find_check(id).unwrap(), &[]).unwrap();
+        assert!(recipe.iter().any(|command| command.program == "cargo"
+            && command.args == ["test", "--release"]
+            && command.cwd == "tests/golden_vectors"));
+        assert!(recipe.iter().any(|command| command.program == "git"
+            && command.args == ["add", "initial.txt", "target.txt"]));
+        let generator = recipe.last().unwrap();
+        assert_eq!(generator.program, "./target/release/golden_vectors");
+        assert_eq!(generator.args, ["--check"]);
+    }
+}

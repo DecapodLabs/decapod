@@ -107,6 +107,7 @@ impl Repo {
             base: base.into(),
             head: head.into(),
             pre_pr: false,
+            created: false,
             accepted_base_ref: None,
             snapshot: false,
             trigger_ref: None,
@@ -811,9 +812,186 @@ fn copy_inputs(input: &Inputs) -> Inputs {
         base: input.base.clone(),
         head: input.head.clone(),
         pre_pr: input.pre_pr,
+        created: input.created,
         accepted_base_ref: input.accepted_base_ref.clone(),
         snapshot: input.snapshot,
         trigger_ref: input.trigger_ref.clone(),
+    }
+}
+
+fn created_push(repo: &Repo, head: &str) -> Inputs {
+    Inputs {
+        created: true,
+        accepted_base_ref: Some(ACCEPTED.into()),
+        trigger_ref: Some("refs/heads/new-candidate".into()),
+        ..repo.inputs("push", &"0".repeat(head.len()), head)
+    }
+}
+
+#[test]
+fn created_push_binds_accepted_tip_without_claiming_pr_readiness() {
+    for format in ["sha1", "sha256"] {
+        let repo = Repo::with_format(format);
+        let base = repo.head();
+        let head = repo.source();
+        let context = resolve(&created_push(&repo, &head)).unwrap();
+        assert_eq!(context.event, "push");
+        assert_eq!(context.trigger_event, "push");
+        assert_eq!(context.base, base);
+        assert_eq!(context.accepted_base, base);
+        assert_eq!(context.merge_base, base);
+        assert_eq!(context.head, head);
+        assert!(!context.pre_pr);
+        assert!(context.snapshot.is_none());
+        let outputs = context.github_outputs();
+        assert!(outputs.contains("pr_like=false\n"));
+        assert!(outputs.contains("local_base_verified=true\n"));
+        assert!(outputs.contains("provider_freshness=not_checked\n"));
+        assert!(!repo.classify(&context));
+    }
+}
+
+#[test]
+fn created_push_requires_authoritative_flag_exact_zero_before_and_branch_scope() {
+    let repo = Repo::new();
+    let base = repo.head();
+    let head = repo.source();
+    let mut absent = created_push(&repo, &head);
+    absent.created = false;
+    assert!(resolve(&absent).is_err());
+    for before in ["".to_string(), "0".repeat(39), "0".repeat(64), base] {
+        let mut input = created_push(&repo, &head);
+        input.base = before;
+        assert!(resolve(&input).is_err());
+    }
+    for reference in [
+        None,
+        Some("refs/tags/new"),
+        Some(SNAPSHOT_REF),
+        Some("new-candidate"),
+    ] {
+        let mut input = created_push(&repo, &head);
+        input.trigger_ref = reference.map(str::to_string);
+        assert!(resolve(&input).is_err());
+    }
+    for mode in [
+        "pull_request",
+        "workflow_dispatch",
+        "schedule",
+        "pre_pr",
+        "snapshot",
+    ] {
+        let mut input = created_push(&repo, &head);
+        match mode {
+            "pre_pr" => input.pre_pr = true,
+            "snapshot" => input.snapshot = true,
+            _ => input.event = mode.into(),
+        }
+        assert!(resolve(&input).is_err(), "accepted {mode}");
+    }
+}
+
+#[test]
+fn created_push_rejects_missing_advanced_unrelated_or_dirty_accepted_context() {
+    for case in [
+        "missing",
+        "advanced",
+        "unrelated",
+        "dirty",
+        "wrong-head",
+        "no-ref",
+    ] {
+        let repo = Repo::new();
+        let base = repo.head();
+        let head = repo.source();
+        let mut input = created_push(&repo, &head);
+        match case {
+            "missing" => {
+                repo.git(&["update-ref", "-d", ACCEPTED]);
+            }
+            "advanced" => {
+                let advanced = repo.commit("accepted tip advanced");
+                repo.git(&["update-ref", ACCEPTED, &advanced]);
+                repo.git(&["checkout", "-q", "--detach", &head]);
+            }
+            "unrelated" => {
+                let tree = repo.git(&["rev-parse", "HEAD^{tree}"]);
+                let unrelated = repo.git(&["commit-tree", &tree, "-m", "unrelated root"]);
+                repo.git(&["update-ref", ACCEPTED, &unrelated]);
+            }
+            "dirty" => fs::write(repo.0.join("src/lib.rs"), "uncommitted\n").unwrap(),
+            "wrong-head" => {
+                repo.git(&["checkout", "-q", "--detach", &base]);
+            }
+            "no-ref" => input.accepted_base_ref = None,
+            _ => unreachable!(),
+        }
+        assert!(resolve(&input).is_err(), "accepted {case}");
+    }
+}
+
+#[test]
+fn created_cli_flag_is_explicit_boolean_and_defaults_false() {
+    let args = [
+        "--repo", ".", "--event", "push", "--base", "", "--head", "", "--pre-pr", "false",
+    ];
+    assert!(!parse_args(args.map(str::to_string)).unwrap().created);
+    let mut explicit = args.map(str::to_string).to_vec();
+    explicit.extend(["--created".into(), "true".into()]);
+    assert!(parse_args(explicit.clone()).unwrap().created);
+    for value in ["", "1", "TRUE", "true\npre_pr=true"] {
+        *explicit.last_mut().unwrap() = value.into();
+        assert!(parse_args(explicit.clone()).is_err());
+    }
+}
+
+#[test]
+fn action_created_push_adapter_never_overrides_snapshot_mode() {
+    let action = include_str!("../.github/actions/ci-context/action.yml");
+    assert!(action.contains("EVENT_CREATED: ${{ github.event.created == true }}"));
+    let selection = action
+        .split_once("        base=\"$EVENT_BASE\"")
+        .unwrap()
+        .1
+        .split_once("        private_dir=")
+        .unwrap()
+        .0;
+    let script = format!(
+        "set -eu\nbase=\"$EVENT_BASE\"{selection}\nprintf '%s\\n' \"$pre_pr\" \"$snapshot\" \"${{extra[@]}}\"\n"
+    );
+    for (reference, created, expected) in [
+        ("refs/heads/new-candidate", "true", "--created"),
+        ("refs/heads/new-candidate", "false", ""),
+        (SNAPSHOT_REF, "true", "--snapshot"),
+    ] {
+        let output = Command::new("bash")
+            .args(["-c", &script])
+            .env("RAW_EVENT", "push")
+            .env("RAW_REF", reference)
+            .env("EVENT_CREATED", created)
+            .env("EVENT_BASE", "0".repeat(40))
+            .env("EVENT_HEAD", "a".repeat(40))
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "{output:?}");
+        let text = String::from_utf8(output.stdout).unwrap();
+        match expected {
+            "--created" => {
+                assert!(text.starts_with("false\nfalse\n"));
+                assert!(text.contains("--created\ntrue\n"));
+                assert!(text.contains("--accepted-base-ref\nrefs/remotes/origin/master\n"));
+            }
+            "--snapshot" => {
+                assert!(text.starts_with("true\ntrue\n"));
+                assert!(text.contains("--snapshot\ntrue\n"));
+                assert!(!text.contains("--created"));
+            }
+            _ => {
+                assert!(text.starts_with("false\nfalse\n"));
+                assert!(!text.contains("--created"));
+                assert!(!text.contains("--accepted-base-ref"));
+            }
+        }
     }
 }
 

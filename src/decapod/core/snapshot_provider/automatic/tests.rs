@@ -489,11 +489,249 @@ fn buildkite_only_pending_failure_and_locator_denial_remain_blocking() {
     assert!(poll(&mut gh, &mut bk, &snapshot(), &plan, &mut state, &b).is_err());
     gh.0.denied = true;
     let calls = gh.0.calls;
+    // Locator authorization is checked on discovery and the fresh final barrier.
+    let mut fresh = PollState::default();
     assert_eq!(
-        poll(&mut gh, &mut bk, &snapshot(), &plan, &mut state, &b)
+        poll(&mut gh, &mut bk, &snapshot(), &plan, &mut fresh, &b)
             .unwrap_err()
             .kind(),
         io::ErrorKind::PermissionDenied
     );
     assert_eq!(gh.0.calls, calls + 1);
+}
+
+#[derive(Default)]
+struct CountMetadata {
+    inner: Gh,
+    paths: Vec<String>,
+}
+impl Runner for CountMetadata {
+    fn execute(&mut self, spec: &CommandSpec, budget: &Budget<'_>) -> Result<Reply> {
+        if let Some(ProviderRequest::GithubGet { path }) = spec.provider_request() {
+            assert!(
+                !path.contains("/actions/"),
+                "Buildkite-only poll requested Actions"
+            );
+            self.paths.push(path.clone());
+        }
+        self.inner.execute(spec, budget)
+    }
+}
+fn terminal(state: PollState, plan: &SourceRunPlan) -> TerminalSourceRuns {
+    TerminalSourceRuns {
+        source_binding: source_binding(&snapshot()).unwrap(),
+        plan_binding: plan_binding(plan),
+        github: state.github,
+        buildkite: state.buildkite,
+    }
+}
+#[test]
+fn five_workflows_one_hundred_polls_use_two_locator_reads_then_fresh_final_registry() {
+    let c = Cancellation::default();
+    let b = budget(&c);
+    let mut gh = CountMetadata::default();
+    let mut bk = Bk::default();
+    let template = bk.envelopes[&7].clone();
+    bk.envelopes.clear();
+    let mut plan = buildkite_only_plan();
+    plan.buildkite_pipelines[0].workflows.clear();
+    gh.inner.urls.clear();
+    for number in 7..12 {
+        let workflow = format!(".github/workflows/source-{number}.yml");
+        plan.buildkite_pipelines[0].workflows.push(workflow.clone());
+        gh.inner
+            .urls
+            .push(format!("https://buildkite.com/org/pipe/builds/{number}"));
+        let mut row = template.clone();
+        row["id"] = format!("00000000-0000-0000-0000-{number:012}").into();
+        row["number"] = number.into();
+        row["path"] = format!("/org/pipe/builds/{number}").into();
+        row["github_workflow_path"] = workflow.into();
+        row["state"] = "running".into();
+        bk.envelopes.insert(number, row);
+    }
+    let mut state = PollState::default();
+    for _ in 0..100 {
+        assert!(!poll(&mut gh, &mut bk, &snapshot(), &plan, &mut state, &b).unwrap());
+    }
+    assert_eq!(gh.paths.len(), 2); // one statuses page plus one check-runs page
+    assert_eq!(bk.calls, 500); // every public native build was read on every poll
+    for row in bk.envelopes.values_mut() {
+        row["state"] = "passed".into();
+    }
+    assert!(poll(&mut gh, &mut bk, &snapshot(), &plan, &mut state, &b).unwrap());
+    assert_eq!(gh.paths.len(), 2);
+    let terminal = terminal(state, &plan);
+    terminal
+        .recheck(&mut gh, &mut bk, &snapshot(), &plan, &b)
+        .unwrap();
+    assert_eq!(bk.calls, 510);
+    assert_eq!(gh.paths.len(), 8); // initial2 + fresh registry2 + final Git object/ref4
+    assert_eq!(
+        gh.paths.iter().filter(|p| p.contains("/statuses?")).count(),
+        2
+    );
+    assert_eq!(
+        gh.paths
+            .iter()
+            .filter(|p| p.contains("/check-runs?"))
+            .count(),
+        2
+    );
+}
+#[test]
+fn partial_registry_is_not_cached_until_every_required_workflow_is_bound() {
+    let c = Cancellation::default();
+    let b = budget(&c);
+    let mut gh = CountMetadata::default();
+    let mut bk = Bk::default();
+    let plan = buildkite_only_plan();
+    gh.inner.urls.pop();
+    bk.envelopes.get_mut(&7).unwrap()["state"] = "running".into();
+    let mut state = PollState::default();
+    assert!(!poll(&mut gh, &mut bk, &snapshot(), &plan, &mut state, &b).unwrap());
+    assert_eq!(gh.paths.len(), 2);
+    gh.inner
+        .urls
+        .push("https://buildkite.com/org/pipe/builds/8".into());
+    assert!(!poll(&mut gh, &mut bk, &snapshot(), &plan, &mut state, &b).unwrap());
+    assert_eq!(gh.paths.len(), 4);
+    assert!(!poll(&mut gh, &mut bk, &snapshot(), &plan, &mut state, &b).unwrap());
+    assert_eq!(gh.paths.len(), 4);
+}
+#[test]
+fn final_locator_refresh_rejects_missing_replacement_duplicate_and_denial() {
+    for mode in 0..4 {
+        let c = Cancellation::default();
+        let b = budget(&c);
+        let mut gh = CountMetadata::default();
+        let mut bk = Bk::default();
+        let plan = buildkite_only_plan();
+        let mut state = PollState::default();
+        assert!(poll(&mut gh, &mut bk, &snapshot(), &plan, &mut state, &b).unwrap());
+        match mode {
+            0 => {
+                gh.inner.urls.pop();
+            }
+            1 | 2 => {
+                let mut replacement = bk.envelopes[&7].clone();
+                replacement["id"] = "00000000-0000-0000-0000-000000000009".into();
+                replacement["number"] = 9.into();
+                replacement["path"] = "/org/pipe/builds/9".into();
+                bk.envelopes.insert(9, replacement);
+                if mode == 1 {
+                    gh.inner.urls.remove(0);
+                }
+                gh.inner
+                    .urls
+                    .push("https://buildkite.com/org/pipe/builds/9".into());
+            }
+            _ => {
+                gh.inner.denied = true;
+            }
+        }
+        let terminal = terminal(state, &plan);
+        let error = terminal
+            .recheck(&mut gh, &mut bk, &snapshot(), &plan, &b)
+            .unwrap_err();
+        if mode == 3 {
+            assert_eq!(error.kind(), io::ErrorKind::PermissionDenied);
+        }
+    }
+}
+
+// Public fourth-preflight check URLs, used only as route-parser regression data.
+const OBSERVED_JOB_LOCATORS: [(u64, &str); 5] = [
+    (
+        902,
+        "https://buildkite.com/decapodlabs/decapod/builds/902#01a12eb5-252c-4192-8384-431d42f0d29e",
+    ),
+    (
+        903,
+        "https://buildkite.com/decapodlabs/decapod/builds/903#01a12eb5-13b0-4bc4-a663-ea29cdc74b24",
+    ),
+    (
+        904,
+        "https://buildkite.com/decapodlabs/decapod/builds/904#01a12eb5-137c-45ad-917e-d56e5e281498",
+    ),
+    (
+        905,
+        "https://buildkite.com/decapodlabs/decapod/builds/905#01a12eb5-1e62-43dd-aa0c-fad1ef59849e",
+    ),
+    (
+        906,
+        "https://buildkite.com/decapodlabs/decapod/builds/906#01a12eb5-16a5-4091-8f22-727a1488e299",
+    ),
+];
+#[test]
+fn observed_job_fragments_are_locators_and_malformed_fragments_are_rejected() {
+    let mut pipeline = plan().buildkite_pipelines.remove(0);
+    pipeline.organization = "decapodlabs".into();
+    pipeline.pipeline = "decapod".into();
+    for (number, url) in OBSERVED_JOB_LOCATORS {
+        assert_eq!(build_number(url, &pipeline), Some(number));
+        assert_eq!(
+            build_number(url.split_once('#').unwrap().0, &pipeline),
+            Some(number)
+        );
+    }
+    for url in [
+        "https://buildkite.com/decapodlabs/decapod/builds/902#",
+        "https://buildkite.com/decapodlabs/decapod/builds/902#job",
+        "https://buildkite.com/decapodlabs/decapod/builds/902#00000000-0000-0000-0000-000000000000",
+        "https://buildkite.com/decapodlabs/decapod/builds/902#01A12EB5-252C-4192-8384-431D42F0D29E",
+        "https://buildkite.com/decapodlabs/decapod/builds/902#01a12eb5-252c-4192-8384-431d42f0d29e#extra",
+        "https://buildkite.com/decapodlabs/decapod/builds/902?token=hidden#01a12eb5-252c-4192-8384-431d42f0d29e",
+        "https://buildkite.com/decapodlabs/decapod/builds/902#01a12eb5-252c-4192-8384-431d42f0d29e?extra=1",
+        "https://buildkite.com/decapodlabs/decapod/builds/902%2301a12eb5-252c-4192-8384-431d42f0d29e",
+        "https://buildkite.com/decapodlabs/decapod/builds/%39%30%32#01a12eb5-252c-4192-8384-431d42f0d29e",
+        "https://buildkite.com/decapodlabs/decapod/builds/0902#01a12eb5-252c-4192-8384-431d42f0d29e",
+        "https://user@buildkite.com/decapodlabs/decapod/builds/902#01a12eb5-252c-4192-8384-431d42f0d29e",
+        "https://buildkite.com.evil.invalid/decapodlabs/decapod/builds/902#01a12eb5-252c-4192-8384-431d42f0d29e",
+        "https://buildkite.com:443/decapodlabs/decapod/builds/902#01a12eb5-252c-4192-8384-431d42f0d29e",
+    ] {
+        assert_eq!(build_number(url, &pipeline), None, "{url}");
+    }
+}
+#[test]
+fn five_job_fragment_urls_surface_native_failure_on_first_poll() {
+    let c = Cancellation::default();
+    let b = budget(&c);
+    let mut gh = CountMetadata::default();
+    let mut bk = Bk::default();
+    let template = bk.envelopes[&7].clone();
+    bk.envelopes.clear();
+    gh.inner.urls.clear();
+    let mut plan = buildkite_only_plan();
+    plan.buildkite_pipelines[0].workflows.clear();
+    for (number, url) in OBSERVED_JOB_LOCATORS {
+        let workflow = format!(".github/workflows/source-{number}.yml");
+        plan.buildkite_pipelines[0].workflows.push(workflow.clone());
+        gh.inner
+            .urls
+            .push(url.replace("/decapodlabs/decapod/", "/org/pipe/"));
+        let mut row = template.clone();
+        row["id"] = format!("00000000-0000-0000-0000-{number:012}").into();
+        row["number"] = number.into();
+        row["path"] = format!("/org/pipe/builds/{number}").into();
+        row["github_workflow_path"] = workflow.into();
+        row["state"] = if number == 904 { "failed" } else { "running" }.into();
+        bk.envelopes.insert(number, row);
+    }
+    let error = poll(
+        &mut gh,
+        &mut bk,
+        &snapshot(),
+        &plan,
+        &mut PollState::default(),
+        &b,
+    )
+    .unwrap_err()
+    .to_string();
+    assert!(error.contains("completed without success"));
+    assert!(error.contains("workflow=.github/workflows/source-904.yml"));
+    assert!(error.contains("build=904"));
+    assert!(error.contains("state=failed"));
+    assert_eq!(gh.paths.len(), 2);
+    assert_eq!(bk.calls, 5);
 }

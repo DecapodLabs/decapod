@@ -529,8 +529,8 @@ virtiofs/FUSE filesystem prohibition.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2cb4355f901b6b1f15605b26932ed0a405a491b282cce92b76f07e72f0fee607`
-- Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (174 files), `tests/` (184 files)
+- Repository signal fingerprint: `d972d4fcb9ad3d83b33d2838d3c51f39fbe3ce66729032c7afdaf7b50713acdd`
+- Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (174 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -606,3 +606,20 @@ Interruption forwards to the owned process group with a bounded grace period;
 unconfirmed descendant exit retains evidence rather than deleting live state.
 Cleanup errors retain the original failure and bounded ownership/path
 diagnostics; they never trigger automatic permission repair.
+
+### Measured source-check convergence
+
+Private validation clones live in newly created job-owned temporary directories
+outside the measured checkout. Required source custody rejects tracked, staged,
+or undeclared untracked changes after execution. Golden-vector checks execute
+the real generator against a disposable Git fixture and compare all four
+immutable v1 outputs byte-for-byte without rewriting expectations. Historical
+vector identifiers are explicit fixture data, separate from the local Git refs
+used to read the current fixture. The packageable symlink target belongs to the
+unchanged fixture base, preserving the original six-entry protocol delta.
+
+Buildkite job-fragment URLs identify their native build only. The collector
+authenticates every required workflow against the frozen source and pipeline,
+caches only the complete locator set, polls fresh native status, and rediscovers
+the registry before accepting final proof. Constitution, documentation and all
+applicable source checks remain dependencies of the single validation result.

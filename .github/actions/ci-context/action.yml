@@ -86,6 +86,7 @@ runs:
       env:
         RAW_EVENT: ${{ github.event_name }}
         RAW_REF: ${{ github.ref }}
+        EVENT_CREATED: ${{ github.event.created == true }}
         EVENT_BASE: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
         EVENT_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
         DISPATCH_PRE_PR: ${{ inputs.pre-pr }}
@@ -117,6 +118,11 @@ runs:
               pre_pr=true
               snapshot=true
               extra+=(--snapshot true --trigger-ref "$RAW_REF")
+            elif [[ "$EVENT_CREATED" == true ]]; then
+              # Only a provider-declared ordinary branch creation has no before.
+              # Snapshots above retain their independently proven B/H metadata.
+              extra+=(--created true --trigger-ref "$RAW_REF"
+                      --accepted-base-ref refs/remotes/origin/master)
             fi
             ;;
           workflow_dispatch)

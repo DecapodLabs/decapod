@@ -34,6 +34,7 @@ pub struct Inputs {
     pub base: String,
     pub head: String,
     pub pre_pr: bool,
+    pub created: bool,
     pub accepted_base_ref: Option<String>,
     pub snapshot: bool,
     pub trigger_ref: Option<String>,
@@ -259,7 +260,51 @@ fn accepted_tip(repo: &Path, reference: &str) -> Check<String> {
     Ok(oid)
 }
 
+/// A first push has no previous branch tip. Only the provider's explicit
+/// created=true marker permits comparison with a captured accepted target tip.
+/// This stays ordinary push semantics, never PR or snapshot readiness evidence.
+fn resolve_created_push(input: &Inputs) -> Check<Context> {
+    require_oid(&input.head)?;
+    if input.event != "push"
+        || input.pre_pr
+        || input.snapshot
+        || input.base.len() != input.head.len()
+        || !input.base.bytes().all(|byte| byte == b'0')
+        || !input.trigger_ref.as_deref().is_some_and(valid_source_ref)
+    {
+        return Err(
+            "created push requires an ordinary branch, exact zero before and immutable head".into(),
+        );
+    }
+    let reference = input
+        .accepted_base_ref
+        .as_deref()
+        .ok_or("created push requires an explicit accepted-base-ref")?;
+    let base = accepted_tip(&input.repo, reference)?;
+    let normalized = Inputs {
+        repo: input.repo.clone(),
+        event: "push".into(),
+        base: base.clone(),
+        head: input.head.clone(),
+        pre_pr: false,
+        created: false,
+        accepted_base_ref: None,
+        snapshot: false,
+        trigger_ref: None,
+    };
+    // Reuse every ordinary clean-checkout, exact-head and ancestor check.
+    let mut context = resolve(&normalized)?;
+    if accepted_tip(&input.repo, reference)? != base {
+        return Err("captured accepted target ref changed during verification".into());
+    }
+    context.accepted_base = base;
+    Ok(context)
+}
+
 pub fn resolve(input: &Inputs) -> Check<Context> {
+    if input.created {
+        return resolve_created_push(input);
+    }
     if !matches!(
         input.event.as_str(),
         "pull_request" | "push" | "workflow_dispatch"
@@ -576,7 +621,7 @@ impl Context {
             self.accepted_base,
             self.pre_pr,
             self.event == "pull_request",
-            self.pre_pr,
+            !self.accepted_base.is_empty(),
         );
         if let Some(metadata) = &self.snapshot {
             outputs.push_str(&format!(
@@ -599,6 +644,7 @@ pub fn parse_args(args: impl IntoIterator<Item = String>) -> Check<Inputs> {
                 | "--base"
                 | "--head"
                 | "--pre-pr"
+                | "--created"
                 | "--accepted-base-ref"
                 | "--snapshot"
                 | "--trigger-ref"
@@ -620,6 +666,11 @@ pub fn parse_args(args: impl IntoIterator<Item = String>) -> Check<Inputs> {
             "true" => true,
             "false" => false,
             _ => return Err("pre-pr must be exactly true or false".into()),
+        },
+        created: match values.remove("--created").as_deref() {
+            None | Some("false") => false,
+            Some("true") => true,
+            _ => return Err("created must be exactly true or false".into()),
         },
         accepted_base_ref: values.remove("--accepted-base-ref"),
         snapshot: match values.remove("--snapshot").as_deref() {

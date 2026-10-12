@@ -399,10 +399,26 @@ pub(crate) fn checked(
         r.stdout.len() <= budget.max_bytes,
         "provider output exceeded bound",
     )?;
-    ensure(
-        r.exit_code == 0,
-        "official CLI request failed; authentication or provider availability must be resolved without extracting tokens",
-    )?;
+    if r.exit_code != 0 {
+        // Only the typed read seal can supply an endpoint. Never echo raw argv,
+        // stdout, stderr, environment, unvalidated URLs or signed query values.
+        let operation = match spec.authorize_provider_read() {
+            Ok(read) => format!(
+                "operation={:?} method={} endpoint={}",
+                read.kind(),
+                read.method(),
+                read.initial_url()
+            ),
+            Err(_) => format!("operation={:?}", spec.program()),
+        };
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            format!(
+                "official CLI request failed: {operation} exit_code={}; authentication or provider availability must be resolved without extracting tokens",
+                r.exit_code
+            ),
+        ));
+    }
     Ok(r.stdout)
 }
 pub(crate) fn text(bytes: Vec<u8>) -> Result<String> {
@@ -539,7 +555,13 @@ impl<R: Runner> Runner for PublicGithubReads<R> {
             "--header",
             "Accept: application/vnd.github+json",
         ]);
-        command.args(["--max-redirs", "0"]);
+        command.args([
+            "--max-redirs",
+            "0",
+            "--dump-header",
+            "-",
+            "--suppress-connect-headers",
+        ]);
         command.args(["--url", &format!("https://api.github.com/{path}")]);
         let output = command.bounded_capture(
             ProcessLimits {
@@ -549,10 +571,26 @@ impl<R: Runner> Runner for PublicGithubReads<R> {
             budget.cancel,
         )?;
         match output.termination {
-            Termination::Exited => Ok(Reply {
-                exit_code: output.output.status.code().unwrap_or(-1),
-                stdout: output.output.stdout,
-            }),
+            Termination::Exited => {
+                let read = spec.authorize_provider_read()?;
+                if !output.output.status.success() {
+                    return Err(public_http_failure(
+                        &format!("{:?}", read.kind()),
+                        read.initial_url(),
+                        output.output.status.code().unwrap_or(-1),
+                        &output.output.stdout,
+                    ));
+                }
+                let (status, _, body) = public_buildkite::http_response(&output.output.stdout)?;
+                ensure(
+                    status == 200,
+                    "public GitHub endpoint did not return HTTP 200",
+                )?;
+                Ok(Reply {
+                    exit_code: 0,
+                    stdout: body.to_vec(),
+                })
+            }
             Termination::Cancelled => Err(io::Error::new(
                 io::ErrorKind::Interrupted,
                 "public API read cancelled",
@@ -562,6 +600,217 @@ impl<R: Runner> Runner for PublicGithubReads<R> {
                 "public API read timed out",
             )),
             Termination::OutputLimit => Err(invalid("public API read exceeded output bound")),
+        }
+    }
+}
+
+/// Error-only diagnostics from the original bounded response. Endpoint must come
+/// from the typed seal, never a redirect Location or curl stderr. GitHub's quota
+/// headers use decimal seconds/epoch; unsupported or duplicate values are omitted.
+fn public_http_failure(operation: &str, endpoint: &str, exit_code: i32, bytes: &[u8]) -> io::Error {
+    let status = public_buildkite::http_response(bytes)
+        .ok()
+        .map(|(status, _, _)| status);
+    let mut hints = std::collections::BTreeMap::<&str, Option<u64>>::new();
+    if let Some(end) = bytes
+        .windows(4)
+        .position(|w| w == b"\r\n\r\n")
+        .filter(|end| *end <= 64 * 1024)
+        && let Ok(headers) = std::str::from_utf8(&bytes[..end])
+    {
+        for line in headers.split("\r\n").skip(1) {
+            let Some((name, value)) = line.split_once(':') else {
+                continue;
+            };
+            let key = if name.eq_ignore_ascii_case("retry-after") {
+                "retry_after_seconds"
+            } else if name.eq_ignore_ascii_case("x-ratelimit-reset") {
+                "rate_limit_reset_unix"
+            } else {
+                continue;
+            };
+            let value = value.trim();
+            let number = (!value.is_empty()
+                && value.len() <= 20
+                && value.bytes().all(|b| b.is_ascii_digit()))
+            .then(|| value.parse::<u64>().ok())
+            .flatten();
+            hints
+                .entry(key)
+                .and_modify(|value| *value = None)
+                .or_insert(number);
+        }
+    }
+    let mut detail = format!(
+        "public provider request failed: operation={operation} method=GET endpoint={endpoint} exit_code={exit_code} http_status={}",
+        status
+            .map(|s| s.to_string())
+            .unwrap_or_else(|| "unavailable".into())
+    );
+    for (name, value) in hints {
+        if let Some(value) = value {
+            detail.push_str(&format!(" {name}={value}"));
+        }
+    }
+    detail.push_str("; no automatic retry or alternate authentication route was attempted");
+    io::Error::other(detail)
+}
+
+#[cfg(test)]
+mod request_failure_tests {
+    use super::*;
+    struct Failed(usize);
+    impl Runner for Failed {
+        fn execute(&mut self, _: &CommandSpec, _: &Budget<'_>) -> Result<Reply> {
+            self.0 += 1;
+            Ok(Reply {
+                exit_code: 22,
+                stdout: b"untrusted-response-private-value".to_vec(),
+            })
+        }
+    }
+    #[test]
+    fn failed_request_identifies_only_sealed_public_endpoint_and_exit() {
+        let cancel = Cancellation::default();
+        let budget = Budget::new(Duration::from_secs(2), 4096, &cancel).unwrap();
+        let path = format!(
+            "repos/org/repo/commits/{}/check-runs?filter=all&per_page=100&page=1",
+            "a".repeat(40)
+        );
+        let mut runner = Failed(0);
+        let error = checked(
+            &mut runner,
+            provider::gh_spec(Path::new("/tmp"), &path),
+            &budget,
+        )
+        .unwrap_err();
+        assert_eq!(error.kind(), io::ErrorKind::InvalidData);
+        let message = error.to_string();
+        assert!(message.contains("operation=GithubCommitChecks method=GET"));
+        assert!(message.contains(&format!("endpoint=https://api.github.com/{path}")));
+        assert!(message.contains("exit_code=22"));
+        assert!(!message.contains("untrusted-response-private-value"));
+        assert_eq!(runner.0, 1);
+    }
+    #[test]
+    fn unsealed_url_or_local_argv_never_enters_failure_diagnostic() {
+        let cancel = Cancellation::default();
+        let budget = Budget::new(Duration::from_secs(2), 4096, &cancel).unwrap();
+        for spec in [
+            provider::gh_spec(
+                Path::new("/tmp"),
+                "https://user:private-value@evil.invalid/private-path?token=private-value",
+            ),
+            git_spec(Path::new("/tmp"), &["show", "private-value"], false),
+        ] {
+            let mut runner = Failed(0);
+            let message = checked(&mut runner, spec, &budget).unwrap_err().to_string();
+            assert!(message.contains("exit_code=22"));
+            for hidden in [
+                "private-value",
+                "evil.invalid",
+                "private-path",
+                "untrusted-response",
+                "endpoint=",
+            ] {
+                assert!(!message.contains(hidden));
+            }
+            assert_eq!(runner.0, 1);
+        }
+    }
+    #[test]
+    fn public_http_quota_failure_preserves_only_status_and_numeric_retry_hints() {
+        let bytes = b"HTTP/2 403 Forbidden\r\nRetry-After: 60\r\nX-RateLimit-Reset: 1791787200\r\nSet-Cookie: private-cookie\r\nLocation: https://evil.invalid/?signature=private-value\r\nX-Other: private-header\r\n\r\nprivate-body";
+        let error = public_http_failure(
+            "GithubCommitChecks",
+            "https://api.github.com/repos/org/repo/commits/exact/check-runs",
+            22,
+            bytes,
+        )
+        .to_string();
+        for wanted in [
+            "http_status=403",
+            "exit_code=22",
+            "retry_after_seconds=60",
+            "rate_limit_reset_unix=1791787200",
+        ] {
+            assert!(error.contains(wanted));
+        }
+        for hidden in [
+            "private",
+            "evil.invalid",
+            "signature",
+            "Set-Cookie",
+            "Forbidden",
+        ] {
+            assert!(!error.contains(hidden));
+        }
+    }
+    #[test]
+    fn malformed_duplicate_or_absent_rate_headers_never_escape() {
+        for bytes in [
+            b"HTTP/1.1 429 Rate Limited\r\nRetry-After: private-value\r\nX-RateLimit-Reset: 18446744073709551616\r\n\r\n".as_slice(),
+            b"HTTP/1.1 429 Rate Limited\r\nRetry-After: 60\r\nRetry-After: 90\r\n\r\n".as_slice(),
+        ] {
+            let error = public_http_failure("GithubCommitChecks", "https://api.github.com/repos/org/repo/commits/exact/check-runs", 22, bytes).to_string();
+            assert!(error.contains("http_status=429"));
+            assert!(!error.contains("private-value"));
+            assert!(!error.contains("retry_after_seconds="));
+            assert!(!error.contains("rate_limit_reset_unix="));
+        }
+        let error = public_http_failure(
+            "GithubCommitChecks",
+            "https://api.github.com/repos/org/repo/commits/exact/check-runs",
+            6,
+            b"private transport output",
+        )
+        .to_string();
+        assert!(error.contains("http_status=unavailable"));
+        assert!(!error.contains("private transport output"));
+    }
+    #[cfg(unix)]
+    #[test]
+    fn public_curl_adapter_strips_success_headers_and_reports_quota_without_body_or_stderr() {
+        use std::os::unix::fs::PermissionsExt;
+        let temp = tempfile::tempdir().unwrap();
+        let curl = temp.path().join("synthetic-curl");
+        let cancel = Cancellation::default();
+        let budget = Budget::new(Duration::from_secs(3), 65536, &cancel).unwrap();
+        for failed in [false, true] {
+            let status = if failed {
+                "429 Too Many Requests"
+            } else {
+                "200 OK"
+            };
+            let exit = if failed { 22 } else { 0 };
+            std::fs::write(&curl, format!("#!/bin/sh\ncase \"$*\" in *'--dump-header - --suppress-connect-headers'*) ;; *) exit 99;; esac\nprintf 'HTTP/2 {status}\\r\\nRetry-After: 60\\r\\nX-RateLimit-Reset: 1791787200\\r\\nSet-Cookie: private-cookie\\r\\n\\r\\n{{}}'\nprintf 'private-stderr' >&2\nexit {exit}\n")).unwrap();
+            std::fs::set_permissions(&curl, std::fs::Permissions::from_mode(0o700)).unwrap();
+            let mut runner = PublicGithubReads::new(
+                curl.clone(),
+                Repository::new("org", "repo").unwrap(),
+                Failed(0),
+                |spec, _| {
+                    spec.authorize_provider_read()?;
+                    Ok(())
+                },
+            )
+            .unwrap();
+            let result = runner.execute(
+                &provider::gh_spec(temp.path(), "repos/org/repo/actions/runs/7"),
+                &budget,
+            );
+            if failed {
+                let message = result.unwrap_err().to_string();
+                assert!(message.contains("http_status=429"));
+                assert!(message.contains("retry_after_seconds=60"));
+                assert!(message.contains("rate_limit_reset_unix=1791787200"));
+                assert!(!message.contains("private"));
+                assert!(!message.contains("{}"));
+            } else {
+                let reply = result.unwrap();
+                assert_eq!(reply.exit_code, 0);
+                assert_eq!(reply.stdout, b"{}");
+            }
         }
     }
 }

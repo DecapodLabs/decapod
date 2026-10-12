@@ -225,7 +225,7 @@ fn validate_storage_redirect(request: &PublicRequest, location: &str) -> Result<
         "unsupported artifact object path",
     )
 }
-fn http_response(bytes: &[u8]) -> Result<(u16, Option<String>, &[u8])> {
+pub(super) fn http_response(bytes: &[u8]) -> Result<(u16, Option<String>, &[u8])> {
     let end = bytes
         .windows(4)
         .position(|w| w == b"\r\n\r\n")
@@ -282,7 +282,8 @@ impl PublicReader for CurlPublicReader {
                 "10",
                 "--request",
                 "GET",
-                "--include",
+                "--dump-header",
+                "-",
                 "--suppress-connect-headers",
                 "--max-redirs",
                 "0",
@@ -315,10 +316,12 @@ impl PublicReader for CurlPublicReader {
                 Termination::Exited => (),
             }
             if !out.output.status.success() {
-                return Err(io::Error::other(format!(
-                    "public endpoint unavailable (curl exit {:?}); do not attempt login or bypass",
-                    out.output.status.code()
-                )));
+                return Err(public_http_failure(
+                    &format!("{:?}", validated.kind()),
+                    &request.url(),
+                    out.output.status.code().unwrap_or(-1),
+                    &out.output.stdout,
+                ));
             }
             let (status, location, body) = http_response(&out.output.stdout)?;
             if status == 200 {

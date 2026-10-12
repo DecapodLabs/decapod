@@ -684,14 +684,17 @@ pub fn commands(check: &Check, paths: &[String]) -> io::Result<Vec<Invocation>> 
         "musl-test-aarch64" => vec![Invocation::new("cross", &["test", "--locked", "--release", "--target", "aarch64-unknown-linux-musl", "--lib", "no_replace_publication", "--", "--nocapture"])],
         "golden-vectors-linux" | "golden-vectors-macos" => vec![
             cargo(&["build", "--release"]).at("tests/golden_vectors").with("RUSTFLAGS", None),
+            cargo(&["test", "--release"]).at("tests/golden_vectors").with("RUSTFLAGS", None),
             Invocation::new("git", &["init"]).at("tests/fixtures/state_commit_repo"),
             Invocation::new("git", &["config", "user.email", "test@test.com"]).at("tests/fixtures/state_commit_repo"),
             Invocation::new("git", &["config", "user.name", "Test"]).at("tests/fixtures/state_commit_repo"),
-            Invocation::new("git", &["add", "initial.txt"]).at("tests/fixtures/state_commit_repo"),
+            // target.txt was added only to make the symlink packageable. It is
+            // unchanged fixture background, not part of the immutable v1 delta.
+            Invocation::new("git", &["add", "initial.txt", "target.txt"]).at("tests/fixtures/state_commit_repo"),
             Invocation::new("git", &["commit", "-m", "base commit"]).at("tests/fixtures/state_commit_repo"),
             Invocation::new("git", &["add", "."]).at("tests/fixtures/state_commit_repo"),
             Invocation::new("git", &["commit", "-m", "fixture commit"]).at("tests/fixtures/state_commit_repo"),
-            Invocation::new("./target/release/golden_vectors", &[]).at("tests/golden_vectors"),
+            Invocation::new("./target/release/golden_vectors", &["--check"]).at("tests/golden_vectors"),
         ],
         "docs-build" => vec![Invocation::new("mdbook", &["build", "docs/book"])],
         "constitution-schema" => vec![Invocation::new("ajv", &["validate", "-s", "assets/schemas/constitution.schema.json", "-d", "assets/constitution.json", "--strict=false"])],
@@ -824,6 +827,7 @@ pub fn private_umask() {}
 fn golden_preflight(repo: &Path) -> io::Result<()> {
     for path in [
         "tests/golden/state_commit/v1/scope_record.cbor",
+        "tests/golden/state_commit/v1/scope_record.cbor.hex",
         "tests/golden/state_commit/v1/scope_record_hash.txt",
         "tests/golden/state_commit/v1/state_commit_root.txt",
     ] {
@@ -837,8 +841,8 @@ fn golden_preflight(repo: &Path) -> io::Result<()> {
 fn golden_output_check(bytes: &[u8]) -> io::Result<()> {
     let output = String::from_utf8_lossy(bytes);
     for key in ["scope_record_hash:", "state_commit_root:"] {
-        // Keep the authored workflow's nonempty grep/awk requirement; do not
-        // silently replace it with a different fixed-value comparison.
+        // Preserve output diagnostics as well as the generator's strict byte
+        // comparison. A successful command alone must not omit either hash.
         if !output
             .lines()
             .any(|line| line.contains(key) && line.split_whitespace().nth(1).is_some())

@@ -11,7 +11,13 @@ source_private_checkout() {
   source_root="$(git rev-parse --show-toplevel)"
   source_head="$(git rev-parse --verify HEAD^{commit})"
   source_origin="$(git remote get-url origin)"
-  private_root="$(mktemp -d "$source_root/.ci-validation.XXXXXXXX")"
+  # Keep job-owned scratch outside the measured source checkout. The custody
+  # guard must still reject every undeclared source output, including clones.
+  private_parent="$(cd "${RUNNER_TEMP:?RUNNER_TEMP must name job-owned scratch}" && pwd -P)"
+  case "$private_parent/" in
+    "$source_root/"*) echo 'private checkout scratch must be outside the source checkout' >&2; return 1 ;;
+  esac
+  private_root="$(mktemp -d "$private_parent/decapod-ci-validation.XXXXXXXX")"
   git -c core.sharedRepository=false clone --quiet --no-local --no-hardlinks \
     --no-checkout -- "$source_root" "$private_root"
   # A detached provider checkout may have no local branches. Ordinary

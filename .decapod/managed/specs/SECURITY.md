@@ -227,8 +227,8 @@ Describe the security primitives and security controls implemented in this repos
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2cb4355f901b6b1f15605b26932ed0a405a491b282cce92b76f07e72f0fee607`
-- Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (174 files), `tests/` (184 files)
+- Repository signal fingerprint: `d972d4fcb9ad3d83b33d2838d3c51f39fbe3ce66729032c7afdaf7b50713acdd`
+- Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (174 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -290,3 +290,11 @@ GitHub check links are discovery locators, never authority for successful
 Buildkite execution. No service denial permits changing credentials or falling
 back to fabricated evidence. Synthetic Git fixtures isolate host authentication
 configuration without changing production transport rewrite rejection.
+
+Discovery accepts only the exact reviewed Buildkite host, organization and
+pipeline with a positive build number and optional canonical job UUID fragment.
+Queries, credentials, foreign hosts and malformed fragments cannot become
+network destinations. Cached locators never stand in for execution status or
+final freshness. A first ordinary branch push may normalize its all-zero prior
+tip only with the provider's explicit created flag, a captured accepted target,
+clean exact checkout and ancestry proof; it never becomes PR-readiness evidence.

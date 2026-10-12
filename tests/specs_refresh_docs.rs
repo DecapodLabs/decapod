@@ -91,3 +91,11 @@ fn agent_template_requires_report_driven_exact_candidate_repair() {
         );
     }
 }
+
+#[test]
+fn readiness_generator_matches_checked_in_agent_docs() {
+    let command_docs = include_str!("../docs/agent/command-contracts.md");
+    let config_docs = include_str!("../docs/agent/config-schema.md");
+    assert!(command_docs.contains(docs_cli::readiness_contract()));
+    assert!(config_docs.contains(docs_cli::readiness_config_contract()));
+}

@@ -629,3 +629,98 @@ fn bazel_version_and_lockfile_are_frozen_before_source_checks() {
             .any(|line| line == "common --lockfile_mode=error")
     );
 }
+
+#[cfg(unix)]
+#[test]
+fn measured_private_checkout_keeps_source_clean_and_retains_detached_proof() {
+    use std::os::unix::fs::PermissionsExt;
+    let fixture = Fixture::new();
+    let source = fixture.0.join("source");
+    let scratch = fixture.0.join("provider temp");
+    fs::create_dir(&source).unwrap();
+    fs::create_dir(&scratch).unwrap();
+    git(&source, &["init", "-q", "--initial-branch=master"]);
+    git(&source, &["config", "user.name", "Private fixture"]);
+    git(&source, &["config", "user.email", "ci@example.invalid"]);
+    git(
+        &source,
+        &[
+            "remote",
+            "add",
+            "origin",
+            "https://example.invalid/repository.git",
+        ],
+    );
+    fs::create_dir_all(source.join(".decapod/managed")).unwrap();
+    fs::write(source.join(".decapod/managed/proof.txt"), "base\n").unwrap();
+    git(&source, &["add", "."]);
+    git(&source, &["commit", "-qm", "accepted base"]);
+    let base = git(&source, &["rev-parse", "HEAD"]);
+    git(
+        &source,
+        &["update-ref", "refs/remotes/origin/master", &base],
+    );
+    fs::write(source.join("candidate.txt"), "candidate\n").unwrap();
+    git(&source, &["add", "."]);
+    git(&source, &["commit", "-qm", "candidate"]);
+    let head = git(&source, &["rev-parse", "HEAD"]);
+    let tree = git(&source, &["rev-parse", "HEAD^{tree}"]);
+    git(&source, &["checkout", "-q", "--detach", &head]);
+    git(&source, &["branch", "-D", "master"]);
+    let refs = git(&source, &["show-ref"]);
+    fs::set_permissions(source.join(".decapod"), fs::Permissions::from_mode(0o777)).unwrap();
+    let helper = include_str!("../assets/tools/source_ci/private-checkout.sh");
+    let run = |temp: &Path| {
+        Command::new("bash")
+            .args(["-c", &format!("umask 000\n{helper}\nsource_private_checkout\nprintf '%s' \"$SOURCE_PRIVATE_CHECKOUT\"\n")])
+            .current_dir(&source)
+            .env("RUNNER_TEMP", temp)
+            .output().unwrap()
+    };
+    let output = run(&scratch);
+    assert!(output.status.success(), "{output:?}");
+    let clone = PathBuf::from(String::from_utf8(output.stdout).unwrap());
+    assert!(clone.starts_with(fs::canonicalize(&scratch).unwrap()));
+    assert!(!clone.starts_with(&source));
+    assert_eq!(git(&clone, &["rev-parse", "HEAD"]), head);
+    assert_eq!(git(&clone, &["rev-parse", "HEAD^{tree}"]), tree);
+    assert_eq!(git(&clone, &["rev-parse", "origin/master"]), base);
+    assert_eq!(
+        git(&clone, &["remote", "get-url", "origin"]),
+        "https://example.invalid/repository.git"
+    );
+    assert!(!clone.join(".git/objects/info/alternates").exists());
+    for relative in ["", ".git", ".decapod", ".decapod/managed"] {
+        assert_eq!(
+            fs::metadata(clone.join(relative))
+                .unwrap()
+                .permissions()
+                .mode()
+                & 0o077,
+            0,
+            "{relative}"
+        );
+    }
+    assert_eq!(
+        fs::metadata(source.join(".decapod"))
+            .unwrap()
+            .permissions()
+            .mode()
+            & 0o777,
+        0o777
+    );
+    assert_eq!(git(&source, &["show-ref"]), refs);
+    assert_eq!(
+        git(&source, &["status", "--porcelain", "--untracked-files=all"]),
+        ""
+    );
+    // Misconfigured provider scratch must fail rather than make source output
+    // invisible to custody. No source path, even ignored, is an allowed clone.
+    let denied = run(&source);
+    assert!(!denied.status.success());
+    assert!(String::from_utf8_lossy(&denied.stderr).contains("outside the source checkout"));
+    assert_eq!(
+        git(&source, &["status", "--porcelain", "--untracked-files=all"]),
+        ""
+    );
+}

@@ -775,6 +775,7 @@ fn authored_range_commands_consume_real_verified_head_not_synthetic_merge_conten
             base: base.clone(),
             head: head.into(),
             pre_pr: false,
+            created: false,
             accepted_base_ref: None,
             snapshot: false,
             trigger_ref: None,

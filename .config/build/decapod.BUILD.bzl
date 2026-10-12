@@ -230,7 +230,7 @@ def decapod_targets():
                 "src/decapod/core/release_metadata.rs",
             ] if path in ["tests/source_ci_profile_policy.rs", "tests/ci_checkout_policy.rs"] else [path],
             crate_root = path,
-            compile_data = native.glob(["assets/tools/source_ci/*.sh"]) + ([".github/workflows/ci.yml"] if path == "tests/integration_custody_policy.rs" else ["tests/fixtures/native_proof_fixture.rs"] if path == "tests/native_proof_execution.rs" else ["Cargo.toml", "Cargo.lock"] if path == "tests/release_dependency_policy.rs" else [
+            compile_data = native.glob(["assets/tools/source_ci/*.sh"]) + ([".github/actions/ci-context/action.yml"] if path == "tests/ci_event_context_policy.rs" else [".github/workflows/ci.yml"] if path == "tests/integration_custody_policy.rs" else ["tests/fixtures/native_proof_fixture.rs"] if path == "tests/native_proof_execution.rs" else ["Cargo.toml", "Cargo.lock"] if path == "tests/release_dependency_policy.rs" else [
                 ".github/workflows/ci.yml",
             ] if path == "tests/release_metadata_policy.rs" else [
                 ".github/workflows/ci.yml",
@@ -257,6 +257,10 @@ def decapod_targets():
                 "docs/agent/command-contracts.md",
                 "docs/agent/payload-examples.md",
             ] if path == "tests/trajectory_docs.rs" else [
+                "src/decapod/core/assets.rs",
+                "docs/agent/command-contracts.md",
+                "docs/agent/config-schema.md",
+            ] if path == "tests/specs_refresh_docs.rs" else [
                 ".github/workflows/docs_sync.yml",
                 ".github/actions/docs-drift/action.yml",
                 "assets/tools/docs_sync.rs",

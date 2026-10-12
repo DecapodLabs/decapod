@@ -326,6 +326,7 @@ fn verify_snapshot(repo: &Path, context: &Context, base: &str, head: &str) -> io
         base: base.into(),
         head: head.into(),
         pre_pr: false,
+        created: false,
         accepted_base_ref: None,
         snapshot: false,
         trigger_ref: None,

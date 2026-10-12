@@ -35,10 +35,10 @@ fn source_check(workflow_name: &str, job_id: &str, check_id: &str) -> (String, &
         .lines()
         .skip(1)
         .take_while(|line| {
-            !(line.starts_with("  ")
-                && !line.starts_with("   ")
-                && line.ends_with(':')
-                && !line.trim_start().starts_with('#'))
+            !line.starts_with("  ")
+                || line.starts_with("   ")
+                || !line.ends_with(':')
+                || line.trim_start().starts_with('#')
         })
         .collect::<Vec<_>>()
         .join("\n");
