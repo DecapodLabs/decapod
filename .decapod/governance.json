@@ -181,39 +181,54 @@
       "id": "epoch-prerequisites-20261012",
       "summary": "Retain actual current project prerequisite receipt for source preflight, without claiming source CI readiness",
       "input_digest": "sha256:4877db0d0e366e3f30474fbe403a3ad87679d6a8483644e3b08c9aad1011607c"
+    },
+    {
+      "id": "server-source-epoch-rebind",
+      "summary": "Follow stale epoch validation report after exact server identity adoption; preserve previous source history and partial proof",
+      "input_digest": "sha256:6cc954ce737560a519e813b4ecdc8b7a26c8af5f4d9e36a9b0f71132f71598fa"
+    },
+    {
+      "id": "server-source-epoch-rebind-committed",
+      "summary": "Preserve current epoch trajectory before clean source prerequisite validation",
+      "input_digest": "sha256:6cc954ce737560a519e813b4ecdc8b7a26c8af5f4d9e36a9b0f71132f71598fa"
+    },
+    {
+      "id": "server-source-prerequisite-receipt",
+      "summary": "Retain genuine203/0 partial prerequisite result; complete source CI proof remains pending",
+      "input_digest": "sha256:e45ead20b8a933a9675c9d9ef1d953582c1acfed3a9ce6588b7d3b995e612293"
     }
   ],
   "intents": {
-    "intent:source-snapshot-20261012": {
+    "intent:server-source-snapshot-20261012": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Original workbranch and PR remain unpublished until genuine complete source proof; no production release or deploy"
+        "Temporary snapshot only; no workbranch or PR publication before complete actual required proof; no release or deploy"
       ],
       "constraints": [
-        "Source CI readiness and governed temporary snapshot execution"
+        "Decapod source readiness, observed validator and CI defects, shared source profile and temporary provider transport"
       ],
       "created_sequence": 1,
-      "id": "intent:source-snapshot-20261012",
+      "id": "intent:server-source-snapshot-20261012",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Require complete actual source PR CI proof on the current work branch before publication",
-      "refined_intent": "Execute the first authorized temporary snapshot, inspect real provider failures, and repair until full validation is green",
+      "raw_intent": "Make exact current workbranch validation prove the actual complete source CI suite before publication",
+      "refined_intent": "Bind preserved source readiness implementation to the verified server commit identity and run its reserved temporary CI snapshot",
       "status": "refined",
       "updated_sequence": 3
     }
   },
   "epochs": {
-    "ve_5c627446bbd47ef7": {
-      "constitution_hash": "sha256:9c9b203321162eb90d7ada920b2710c2f585ecfb0853772760d1726ca4d94dab",
+    "ve_9624195bb1b909fb": {
+      "constitution_hash": "sha256:6e388c53aa753ec30cd857175990bcf4beb92faa41c87b957d173603820bc5ff",
       "constitution_version": "embedded-docs@0.107.5",
-      "epoch_id": "ve_5c627446bbd47ef7",
+      "epoch_id": "ve_9624195bb1b909fb",
       "evaluator_identity": "decapod-validate@0.107.5",
       "evaluator_set_hash": "sha256:469d3679344174bc181dfc1ff5aa43df31d5e329e307bd1225d839ae6f09331e",
       "generated_specs_fingerprint": "e0f9df13a85f016b8aac91fc43cf717b7866712463c20c5756cb98e808cb3a5e",
       "generated_specs_manifest_hash": "sha256:0d4616d43fc7d6ed16cb03575d63d8100ede00e36e61ebbb109f69340a795c8b",
       "material_hashes": {
-        "constitution:core/DECAPOD": "sha256:9c9b203321162eb90d7ada920b2710c2f585ecfb0853772760d1726ca4d94dab",
+        "constitution:core/DECAPOD": "sha256:6e388c53aa753ec30cd857175990bcf4beb92faa41c87b957d173603820bc5ff",
         "generated_spec:.decapod/managed/specs/ARCHITECTURE.md": "sha256:efcaa5c3a72dd7eee7629a7f003e3df61b250ebbe5c19bc82aea948c18016a0f",
         "generated_spec:.decapod/managed/specs/INTENT.md": "sha256:ab019808ab6994a119498f21f0db2f76a223955c932c18bb836bac849fa313d6",
         "generated_spec:.decapod/managed/specs/INTERFACES.md": "sha256:87da549870f1b334f28e6dda61262071564a78a0bf125a917ed2ae755951c569",
@@ -299,101 +314,63 @@
     },
     "trajectory": {
       "active_boundaries": [
-        "Original workbranch and PR remain unpublished until genuine complete source proof; no production release or deploy"
+        "Temporary snapshot only; no workbranch or PR publication before complete actual required proof; no release or deploy"
       ],
-      "artifact_hash": "sha256:a18290cd20e33b41ad00f1ed9b031e18ddcb369ecc063d1ee7c0cab6a438a13e",
+      "artifact_hash": "sha256:d1ebc23998d57cbfcea64857422192d4e7c89751fdbc6a58cd1b52ddff0ff426",
       "checks": [
-        {
-          "name": "current-cli-build",
-          "status": "passed"
-        },
         {
           "name": "decapod validate",
           "status": "passed"
-        },
-        {
-          "name": "full-source-provider-suite",
-          "status": "unavailable"
-        },
-        {
-          "name": "strict-clippy",
-          "status": "failed"
         }
       ],
-      "completion_claim": "Implementation and required proof remain in progress; not ready to publish",
       "current_phase": "validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:source-snapshot-20261012",
+            "intent_id": "intent:server-source-snapshot-20261012",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:source-snapshot-20261012",
+            "intent_id": "intent:server-source-snapshot-20261012",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:source-snapshot-20261012",
+            "detail": "trajectory:server-source-snapshot-20261012",
             "event_id": "event:4",
-            "intent_id": "intent:source-snapshot-20261012",
+            "intent_id": "intent:server-source-snapshot-20261012",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:source-snapshot-20261012",
-            "event_id": "event:5",
-            "intent_id": "intent:source-snapshot-20261012",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "source-snapshot-20261012": {
+          "server-source-snapshot-20261012": {
             "evidence_only": true,
-            "id": "source-snapshot-20261012",
-            "intent_id": "intent:source-snapshot-20261012",
+            "id": "server-source-snapshot-20261012",
+            "intent_id": "intent:server-source-snapshot-20261012",
             "steps": [
-              {
-                "action": "prepare-first-source-snapshot",
-                "custody_event_id": "event:4",
-                "observations": [
-                  "Actual current CLI rebuilt successfully. Strict Clippy duplicate release_metadata module failure is retained for source CI red/repair iteration. No full readiness claim.",
-                  "Prior run and genuine local test/failed validation history are retained in committed governance checkpoints; this new run follows STALE_VALIDATION_EVIDENCE recovery for the actual active epoch."
-                ],
-                "proof_refs": [
-                  "current-cli-build",
-                  "strict-clippy",
-                  "full-source-provider-suite"
-                ],
-                "scope": [
-                  "Source CI readiness and governed temporary snapshot execution"
-                ],
-                "sequence": 4,
-                "validation_findings": []
-              },
               {
                 "action": "validation",
                 "command": "decapod validate",
-                "custody_event_id": "event:5",
+                "custody_event_id": "event:4",
                 "observations": [
                   ".decapod/governance.json",
                   ".decapod/governance.json",
-                  "validation epoch ve_5c627446bbd47ef7 completed with zero failures"
+                  "validation epoch ve_9624195bb1b909fb completed with zero failures"
                 ],
                 "proof_refs": [
                   "decapod validate"
                 ],
                 "scope": [
-                  "Source CI readiness and governed temporary snapshot execution"
+                  "Decapod source readiness, observed validator and CI defects, shared source profile and temporary provider transport"
                 ],
-                "sequence": 5,
+                "sequence": 4,
                 "validation_findings": []
               }
             ]
@@ -404,22 +381,21 @@
         "decapod validate"
       ],
       "evidence": [
-        "Actual current CLI rebuilt successfully. Strict Clippy duplicate release_metadata module failure is retained for source CI red/repair iteration. No full readiness claim.",
-        "Prior run and genuine local test/failed validation history are retained in committed governance checkpoints; this new run follows STALE_VALIDATION_EVIDENCE recovery for the actual active epoch.",
-        "validation epoch ve_5c627446bbd47ef7 completed with zero failures"
+        "validation epoch ve_9624195bb1b909fb completed with zero failures"
       ],
       "inspected_files": [],
-      "intent_id": "intent:source-snapshot-20261012",
+      "intent_id": "intent:server-source-snapshot-20261012",
       "modified_files": [
         ".decapod/governance.json"
       ],
       "next_transitions": [
+        "Execute exact same-tree temporary source CI snapshot; inspect actual failures",
         "publish"
       ],
       "repo_scope": [
-        "Source CI readiness and governed temporary snapshot execution"
+        "Decapod source readiness, observed validator and CI defects, shared source profile and temporary provider transport"
       ],
-      "run_id": "source-snapshot-20261012",
+      "run_id": "server-source-snapshot-20261012",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
       "task_id": "bugs_01m4pf92p0r108x1",
@@ -437,150 +413,114 @@
       },
       "decapod_release": "0.107.5",
       "drift_findings": [],
-      "elapsed_ms": 5554,
-      "epoch_ref": "ve_5c627446bbd47ef7",
+      "elapsed_ms": 3802,
+      "epoch_ref": "ve_9624195bb1b909fb",
       "fail_count": 0,
       "failures": [],
       "gate_timings": [
         {
-          "elapsed_ms": 2061,
+          "elapsed_ms": 2025,
           "name": "validate_machine_contract"
         },
         {
-          "elapsed_ms": 703,
+          "elapsed_ms": 508,
           "name": "validate_markdown_primitives_roundtrip_gate"
         },
         {
-          "elapsed_ms": 538,
+          "elapsed_ms": 264,
           "name": "validate_project_specs_docs"
         },
         {
-          "elapsed_ms": 298,
+          "elapsed_ms": 179,
           "name": "validate_stale_workspaces"
         },
         {
-          "elapsed_ms": 235,
+          "elapsed_ms": 153,
           "name": "validate_obligations"
         },
         {
-          "elapsed_ms": 148,
-          "name": "validate_schema_determinism"
-        },
-        {
-          "elapsed_ms": 143,
+          "elapsed_ms": 92,
           "name": "validate_legacy_jsonl_retired"
         },
         {
-          "elapsed_ms": 120,
-          "name": "validate_no_legacy_namespaces"
-        },
-        {
-          "elapsed_ms": 94,
-          "name": "validate_embedded_self_contained"
-        },
-        {
-          "elapsed_ms": 81,
+          "elapsed_ms": 61,
           "name": "validate_archive_integrity"
         },
         {
-          "elapsed_ms": 71,
+          "elapsed_ms": 49,
           "name": "validate_control_plane_contract"
         },
         {
-          "elapsed_ms": 56,
+          "elapsed_ms": 44,
+          "name": "validate_schema_determinism"
+        },
+        {
+          "elapsed_ms": 39,
           "name": "validate_git_workspace_context"
         },
         {
-          "elapsed_ms": 31,
-          "name": "validate_repomap_determinism"
-        },
-        {
-          "elapsed_ms": 27,
-          "name": "validate_interface_contract_bootstrap"
-        },
-        {
-          "elapsed_ms": 23,
-          "name": "validate_knowledge_integrity"
-        },
-        {
-          "elapsed_ms": 21,
-          "name": "validate_canon_mutation"
-        },
-        {
-          "elapsed_ms": 21,
-          "name": "validate_lineage_hard_gate"
-        },
-        {
-          "elapsed_ms": 19,
-          "name": "validate_federation_gates"
-        },
-        {
-          "elapsed_ms": 19,
-          "name": "validate_policy_integrity"
-        },
-        {
           "elapsed_ms": 18,
-          "name": "validate_risk_map_violations"
-        },
-        {
-          "elapsed_ms": 17,
-          "name": "validate_health_purity"
-        },
-        {
-          "elapsed_ms": 17,
-          "name": "validate_watcher_purity"
+          "name": "validate_embedded_self_contained"
         },
         {
           "elapsed_ms": 13,
+          "name": "validate_no_legacy_namespaces"
+        },
+        {
+          "elapsed_ms": 13,
+          "name": "validate_federation_gates"
+        },
+        {
+          "elapsed_ms": 11,
+          "name": "validate_repomap_determinism"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_lineage_hard_gate"
+        },
+        {
+          "elapsed_ms": 9,
           "name": "validate_git_protected_branch"
         },
         {
-          "elapsed_ms": 8,
+          "elapsed_ms": 9,
           "name": "validate_git_push_pr_gate"
         },
         {
           "elapsed_ms": 7,
-          "name": "validate_watcher_audit"
-        },
-        {
-          "elapsed_ms": 7,
-          "name": "validate_override_authority"
-        },
-        {
-          "elapsed_ms": 6,
-          "name": "validate_plan_governed_execution_gate"
-        },
-        {
-          "elapsed_ms": 6,
-          "name": "validate_generated_artifact_whitelist"
-        },
-        {
-          "elapsed_ms": 6,
-          "name": "validate_lcm_rebuild_gate"
-        },
-        {
-          "elapsed_ms": 6,
-          "name": "validate_lcm_immutability"
+          "name": "validate_interface_contract_bootstrap"
         },
         {
           "elapsed_ms": 6,
           "name": "validate_knowledge_promotions_if_present"
         },
         {
+          "elapsed_ms": 6,
+          "name": "validate_lcm_immutability"
+        },
+        {
           "elapsed_ms": 5,
-          "name": "validate_entrypoint_invariants"
+          "name": "validate_lcm_rebuild_gate"
+        },
+        {
+          "elapsed_ms": 5,
+          "name": "validate_watcher_audit"
+        },
+        {
+          "elapsed_ms": 4,
+          "name": "validate_policy_integrity"
+        },
+        {
+          "elapsed_ms": 4,
+          "name": "validate_knowledge_integrity"
         },
         {
           "elapsed_ms": 4,
           "name": "validate_trajectory_artifacts_if_present"
         },
         {
-          "elapsed_ms": 4,
-          "name": "validate_validation_receipt_if_present"
-        },
-        {
           "elapsed_ms": 3,
-          "name": "validate_recursive_improvement_passes_if_present"
+          "name": "validate_plan_governed_execution_gate"
         },
         {
           "elapsed_ms": 3,
@@ -588,35 +528,59 @@
         },
         {
           "elapsed_ms": 3,
-          "name": "validate_research_claims_if_present"
-        },
-        {
-          "elapsed_ms": 3,
-          "name": "validate_jev_history_if_present"
-        },
-        {
-          "elapsed_ms": 2,
           "name": "validate_database_schema_versions"
         },
         {
           "elapsed_ms": 2,
-          "name": "validate_project_config_toml"
+          "name": "validate_generated_artifact_whitelist"
         },
         {
           "elapsed_ms": 2,
-          "name": "validate_health_cache_integrity"
-        },
-        {
-          "elapsed_ms": 2,
-          "name": "validate_heartbeat_invocation_gate"
+          "name": "validate_research_claims_if_present"
         },
         {
           "elapsed_ms": 1,
-          "name": "validate_repo_map"
+          "name": "validate_health_cache_integrity"
+        },
+        {
+          "elapsed_ms": 1,
+          "name": "validate_risk_map_violations"
+        },
+        {
+          "elapsed_ms": 1,
+          "name": "validate_override_authority"
+        },
+        {
+          "elapsed_ms": 1,
+          "name": "validate_watcher_purity"
+        },
+        {
+          "elapsed_ms": 1,
+          "name": "validate_canon_mutation"
+        },
+        {
+          "elapsed_ms": 1,
+          "name": "validate_validation_receipt_if_present"
+        },
+        {
+          "elapsed_ms": 1,
+          "name": "validate_health_purity"
+        },
+        {
+          "elapsed_ms": 1,
+          "name": "validate_jev_history_if_present"
         },
         {
           "elapsed_ms": 0,
-          "name": "validate_context_capsule_policy_contract"
+          "name": "validate_recursive_improvement_passes_if_present"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_project_config_toml"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_repo_map"
         },
         {
           "elapsed_ms": 0,
@@ -624,7 +588,11 @@
         },
         {
           "elapsed_ms": 0,
-          "name": "validate_docs_templates_bucket"
+          "name": "validate_entrypoint_invariants"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_heartbeat_invocation_gate"
         },
         {
           "elapsed_ms": 0,
@@ -632,7 +600,7 @@
         },
         {
           "elapsed_ms": 0,
-          "name": "validate_context_capsules_if_present"
+          "name": "validate_docs_templates_bucket"
         },
         {
           "elapsed_ms": 0,
@@ -640,15 +608,7 @@
         },
         {
           "elapsed_ms": 0,
-          "name": "validate_workunit_manifests_if_present"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_internalization_artifacts_if_present"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_coplayer_policy_tightening"
+          "name": "validate_context_capsule_policy_contract"
         },
         {
           "elapsed_ms": 0,
@@ -656,7 +616,19 @@
         },
         {
           "elapsed_ms": 0,
-          "name": "validate_root_dockerfile_seed_detection"
+          "name": "validate_coplayer_policy_tightening"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_internalization_artifacts_if_present"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_workunit_manifests_if_present"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_context_capsules_if_present"
         },
         {
           "elapsed_ms": 0,
@@ -665,20 +637,24 @@
         {
           "elapsed_ms": 0,
           "name": "validate_risk_map"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_root_dockerfile_seed_detection"
         }
       ],
-      "git_revision": "daebaf4fbaa55050ad5702c834e36793942f8f49",
+      "git_revision": "f95760736429b88021db06a131f11c6f683ab4c4",
       "kind": "validation_receipt",
       "parallelism": 1,
       "pass_count": 203,
       "prediction_uses_warnings": true,
-      "receipt_hash": "sha256:3ccbabad58cc3813e2c5b368ae2dd33fce4ef1fd05301bcce8ab269f14636923",
+      "receipt_hash": "sha256:d4a5bc82792d06a8ba2d8f6bf6192f2d0047883079aad051981d1495fc361fd3",
       "repo_signal_fingerprint": "e0f9df13a85f016b8aac91fc43cf717b7866712463c20c5756cb98e808cb3a5e",
       "schema_version": "1.0.0",
       "status": "ok",
       "temporary_artifacts_cleaned": 0,
-      "trajectory_artifact_hash": "sha256:a18290cd20e33b41ad00f1ed9b031e18ddcb369ecc063d1ee7c0cab6a438a13e",
-      "trajectory_run_id": "source-snapshot-20261012",
+      "trajectory_artifact_hash": "sha256:d1ebc23998d57cbfcea64857422192d4e7c89751fdbc6a58cd1b52ddff0ff426",
+      "trajectory_run_id": "server-source-snapshot-20261012",
       "warn_count": 4,
       "warnings": [
         "Risk map missing (run `decapod riskmap init`)",
