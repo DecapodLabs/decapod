@@ -413,7 +413,16 @@ fn project_context_prefers_configured_identity_and_leaves_legacy_scope_unknown()
             .update_guidance
             .contains("leave project identity unknown")
     );
-    fs::write(dir.path().join(".decapod/config.toml"), "schema_version = \"1.0.0\"\n[repo]\nproduct_summary = \"Recipe Kit scales ingredient quantities.\"\narchitecture_direction = \"A pure Python library.\"\n").unwrap();
+    let mut config = crate::cli::DecapodProjectConfig::default();
+    config.repo.product_summary = Some("Recipe Kit scales ingredient quantities.".to_string());
+    config.repo.architecture_direction = Some("A pure Python library.".to_string());
+    fs::write(
+        dir.path().join(".decapod/config.toml"),
+        toml::to_string(&config).expect("serialize complete project config fixture"),
+    )
+    .unwrap();
+    crate::cli::DecapodProjectConfig::load(dir.path())
+        .expect("configured identity fixture must satisfy the project config schema");
     let configured = local_project_specs_context(dir.path());
     assert_eq!(
         configured.intent.as_deref(),
