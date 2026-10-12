@@ -835,7 +835,7 @@ mod tests {
                 repository: Repository::new("org", "repo").unwrap(),
                 request_id: "11111111-2222-3333-4444-555555555555".into(),
                 source_ref: "refs/heads/work".into(),
-                source_head: "b".repeat(40),
+                source_head: "a".repeat(40),
                 source_tree: "c".repeat(40),
                 accepted_base: "d".repeat(40),
                 accepted_base_ref: "refs/heads/master".into(),

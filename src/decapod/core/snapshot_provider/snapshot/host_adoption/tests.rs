@@ -210,7 +210,9 @@ impl Runner for Host {
                     "remote_base" if reference == self.request.accepted_base_ref => {
                         id = "f".repeat(40)
                     }
-                    "race" if self.fetches > 0 && reference == self.request.transport_ref() => {
+                    "race"
+                        if self.metadata_reads > 1 && reference == self.request.transport_ref() =>
+                    {
                         id = "f".repeat(40)
                     }
                     _ => {}
@@ -291,39 +293,23 @@ impl Runner for Host {
     }
 }
 #[test]
-fn adopts_actual_host_object_preserving_source_refs_index_and_old_snapshot() {
+fn adopts_only_exact_published_workspace_head_without_mutation_or_fetch() {
     let c = Cancellation::default();
     let b = Budget::new(Duration::from_secs(30), 1024 * 1024, &c).unwrap();
     let f = Fixture::new(&b);
-    let (s, raw) = f.server_commit("");
-    assert_ne!(s, f.prior.transport_head());
-    assert!(
-        !Command::new("/usr/bin/git")
-            .current_dir(&f.root)
-            .args(["cat-file", "-e", &s])
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .status()
-            .unwrap()
-            .success()
-    );
+    let s = f.prior.request().source_head.clone();
+    let raw = fixture_git(&f.remote, &["cat-file", "commit", &s], None);
     let refs = fixture_git(&f.root, &["show-ref"], None);
     let index = std::fs::read(f.root.join(".git/index")).unwrap();
-    std::fs::write(f.root.join(".git/FETCH_HEAD"), b"preserved prior fetch\n").unwrap();
     let old = serde_json::to_vec(&f.prior).unwrap();
     let mut host = Host::new(&f, s.clone(), raw);
     let adopted = adopt_host_snapshot(&mut host, &f.prior, &s, &b).unwrap();
     assert_eq!(adopted.transport_head(), s);
     assert_eq!(adopted.request(), f.prior.request());
-    assert_eq!(host.fetches, 1);
-    assert_eq!(host.metadata_reads, 4);
+    assert_eq!(host.fetches, 0);
+    assert_eq!(host.metadata_reads, 2);
     assert_eq!(refs, fixture_git(&f.root, &["show-ref"], None));
     assert_eq!(index, std::fs::read(f.root.join(".git/index")).unwrap());
-    assert_eq!(
-        std::fs::read(f.root.join(".git/FETCH_HEAD")).unwrap(),
-        b"preserved prior fetch\n"
-    );
-    assert_eq!(std::fs::read(f.root.join("input")).unwrap(), b"candidate");
     assert_eq!(old, serde_json::to_vec(&f.prior).unwrap());
 }
 #[test]
@@ -348,35 +334,24 @@ fn wrong_parent_tree_source_base_uuid_ref_and_metadata_never_adopted() {
             adopt_host_snapshot(&mut host, &f.prior, &s, &b).is_err(),
             "{mutation}"
         );
-        assert_eq!(
-            host.fetches,
-            usize::from(mutation == "missing_lf"),
-            "{mutation}"
-        );
+        assert_eq!(host.fetches, 0, "{mutation}");
     }
 }
 #[test]
 fn wrong_remote_ref_base_tags_and_midflight_race_never_adopted() {
-    for fault in [
-        "ref",
-        "remote_s",
-        "remote_base",
-        "git_ref",
-        "tags",
-        "race",
-        "deny_fetch",
-    ] {
+    for fault in ["ref", "remote_s", "remote_base", "git_ref", "tags", "race"] {
         let c = Cancellation::default();
         let b = Budget::new(Duration::from_secs(30), 1024 * 1024, &c).unwrap();
         let f = Fixture::new(&b);
-        let (s, raw) = f.server_commit("");
+        let s = f.prior.request().source_head.clone();
+        let raw = fixture_git(&f.remote, &["cat-file", "commit", &s], None);
         let mut host = Host::new(&f, s.clone(), raw);
         host.fault = fault;
         assert!(
             adopt_host_snapshot(&mut host, &f.prior, &s, &b).is_err(),
             "{fault}"
         );
-        assert_eq!(host.fetches, usize::from(fault == "race"), "{fault}");
+        assert_eq!(host.fetches, 0, "{fault}");
     }
 }
 #[test]

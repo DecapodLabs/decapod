@@ -52,7 +52,7 @@ fn local() -> OfficialCli {
     .unwrap()
 }
 #[test]
-fn exact_schema_matches_remote_helper() {
+fn legacy_metadata_is_not_a_transport_object() {
     let (_, r) = setup();
     assert_eq!(r.message().unwrap().lines().count(), 7);
     assert!(r.message().unwrap().ends_with('\n'));
@@ -64,8 +64,14 @@ fn prepare_preserves_branch_index_and_content() {
     let b = Budget::new(Duration::from_secs(10), 1024 * 1024, &cancel).unwrap();
     let index = std::fs::read(d.path().join(".git/index")).unwrap();
     let refs = std::fs::read(d.path().join(".git/refs/heads/work")).unwrap();
+    let objects = git(&mut local(), d.path(), &["count-objects", "-v"], &b).unwrap();
     let p = prepare(&mut local(), d.path(), r.clone(), &b).unwrap();
-    assert_ne!(p.transport_head(), r.source_head);
+    assert_eq!(
+        objects,
+        git(&mut local(), d.path(), &["count-objects", "-v"], &b).unwrap()
+    );
+    assert_eq!(p.transport_head(), r.source_head);
+    assert_eq!(p.request().transport_ref(), r.source_ref);
     assert_eq!(index, std::fs::read(d.path().join(".git/index")).unwrap());
     assert_eq!(
         refs,
@@ -135,6 +141,9 @@ fn metadata_inputs_reject_ref_or_argument_injection() {
         x.source_ref = v.into();
         assert!(x.validate().is_err());
     }
+    let mut x = r.clone();
+    x.source_ref = x.accepted_base_ref.clone();
+    assert!(x.validate().is_err());
     let mut x = r;
     x.request_id = x.request_id.to_uppercase().replace('1', "A");
     assert!(x.validate().is_err());
@@ -159,76 +168,42 @@ fn readback_requires_one_exact_immutable_ref() {
 struct Sim {
     calls: Vec<Vec<String>>,
     ref_id: Option<String>,
-    force_race: bool,
-    snapshot: String,
 }
 impl Runner for Sim {
     fn execute(&mut self, c: &CommandSpec, _: &Budget<'_>) -> Result<Reply> {
-        let args = &c.args;
-        if args.iter().any(|v| v == "config") {
+        if c.args.iter().any(|v| v == "config") {
             return Ok(Reply {
                 exit_code: 1,
                 stdout: vec![],
             });
         }
         self.calls.push(c.args.clone());
-        if args.iter().any(|v| v == "ls-remote") {
-            return Ok(Reply {
-                exit_code: 0,
-                stdout: self
-                    .ref_id
-                    .as_ref()
-                    .map(|s| format!("{s}\t{}\n", args.last().unwrap()).into_bytes())
-                    .unwrap_or_default(),
-            });
-        }
-        assert!(args.iter().any(|v| v == "push"));
-        assert!(args.contains(&format!(
-            "--force-with-lease={}:{}",
-            args.last().unwrap().trim_start_matches(':'),
-            self.snapshot
-        )));
-        if self.force_race {
-            return Ok(Reply {
-                exit_code: 1,
-                stdout: vec![],
-            });
-        }
-        self.ref_id = None;
+        assert!(c.args.iter().any(|v| v == "ls-remote"));
         Ok(Reply {
             exit_code: 0,
-            stdout: vec![],
+            stdout: self
+                .ref_id
+                .as_ref()
+                .map(|id| format!("{id}\t{}\n", c.args.last().unwrap()).into_bytes())
+                .unwrap_or_default(),
         })
     }
 }
 #[test]
-fn cleanup_is_exact_cas_and_recoverable() {
+fn cleanup_retains_real_workspace_without_any_remote_operation() {
     let (d, r) = setup();
-    let head = "e".repeat(40);
-    let p = PreparedSnapshot::fixture(r, head.clone(), d.path().into());
     let c = Cancellation::default();
     let b = Budget::new(Duration::from_secs(10), 1024 * 1024, &c).unwrap();
+    let p = prepare(&mut local(), d.path(), r, &b).unwrap();
     let mut sim = Sim {
         calls: vec![],
-        ref_id: Some(head.clone()),
-        force_race: false,
-        snapshot: head.clone(),
+        ref_id: None,
     };
-    assert_eq!(cleanup(&mut sim, &p, &b).unwrap(), Cleanup::Removed);
-    assert_eq!(sim.calls.len(), 3);
-    assert!(
-        sim.calls[1]
-            .last()
-            .unwrap()
-            .starts_with(":refs/heads/decapod/preflight/")
+    assert_eq!(
+        cleanup(&mut sim, &p, &b).unwrap(),
+        Cleanup::RetainedWorkbranch
     );
-    sim.ref_id = Some(head);
-    sim.force_race = true;
-    assert_eq!(cleanup(&mut sim, &p, &b).unwrap(), Cleanup::NeedsRecovery);
-    sim.ref_id = Some("f".repeat(40));
-    let n = sim.calls.len();
-    assert!(cleanup(&mut sim, &p, &b).is_err());
-    assert_eq!(sim.calls.len(), n + 1);
+    assert!(sim.calls.is_empty());
 }
 #[test]
 fn cancellation_prevents_preparation_spawn() {
@@ -282,14 +257,21 @@ impl Runner for PublishFake {
                     .unwrap_or_default(),
             });
         }
+        if a.iter().any(|v| v == "fetch") {
+            assert!(a.iter().any(|v| v == "--no-write-fetch-head"));
+            assert_eq!(a.last(), self.remote.as_ref());
+            return Ok(Reply {
+                exit_code: 0,
+                stdout: vec![],
+            });
+        }
         assert!(a.iter().any(|v| v == "push"));
         let (id, reference) = a.last().unwrap().split_once(':').unwrap();
-        assert!(oid(id) && reference.starts_with(PREFIX));
-        assert!(a.contains(&format!("--force-with-lease={reference}:")));
-        assert!(
-            !a.iter()
-                .any(|v| v == "--force" || v == "--all" || v == "--mirror" || v.starts_with('+'))
-        );
+        assert!(oid(id) && reference == "refs/heads/work");
+        assert!(!a.iter().any(|v| v.starts_with("--force")
+            || v == "--all"
+            || v == "--mirror"
+            || v.starts_with('+')));
         self.pushes.push(a.clone());
         if self.race {
             return Ok(Reply {
@@ -297,7 +279,6 @@ impl Runner for PublishFake {
                 stdout: vec![],
             });
         }
-        assert!(self.remote.is_none());
         self.remote = Some(id.into());
         Ok(Reply {
             exit_code: 0,
@@ -306,7 +287,7 @@ impl Runner for PublishFake {
     }
 }
 #[test]
-fn temporary_transport_uses_create_only_cas_not_branch_rewrite() {
+fn first_publication_is_only_exact_existing_local_branch_without_force() {
     let (d, r) = setup();
     let c = Cancellation::default();
     let b = Budget::new(Duration::from_secs(10), 1024 * 1024, &c).unwrap();
@@ -327,7 +308,7 @@ fn temporary_transport_uses_create_only_cas_not_branch_rewrite() {
     );
 }
 #[test]
-fn existing_snapshot_ref_or_changed_base_prevents_any_push() {
+fn missing_ancestor_object_or_changed_base_prevents_any_push() {
     for changed_base in [false, true] {
         let (d, r) = setup();
         let c = Cancellation::default();
@@ -496,9 +477,9 @@ fn resume_retains_exact_transport_without_recreating_commit_or_changing_refs() {
     let resumed = resume(&mut local(), d.path(), r.clone(), p.transport_head(), &b).unwrap();
     assert_eq!(resumed.transport_head(), p.transport_head());
     let mut wrong = r.clone();
-    wrong.request_id = "22222222-2222-2222-2222-222222222222".into();
+    wrong.source_tree = "e".repeat(40);
     assert!(resume(&mut local(), d.path(), wrong, p.transport_head(), &b).is_err());
-    assert!(resume(&mut local(), d.path(), r.clone(), &r.source_head, &b).is_err());
+    assert!(resume(&mut local(), d.path(), r.clone(), &r.accepted_base, &b).is_err());
     std::fs::write(d.path().join("source"), "dirty").unwrap();
     assert!(resume(&mut local(), d.path(), r, p.transport_head(), &b).is_err());
 }
@@ -510,8 +491,6 @@ fn accepted_target_lookup_is_readonly_and_rejects_temp_or_malformed_refs() {
     let mut sim = Sim {
         calls: vec![],
         ref_id: Some(r.accepted_base.clone()),
-        force_race: false,
-        snapshot: "a".repeat(40),
     };
     assert_eq!(
         accepted_target(&mut sim, d.path(), &r.repository, &r.accepted_base_ref, &b).unwrap(),
@@ -526,4 +505,60 @@ fn accepted_target_lookup_is_readonly_and_rejects_temp_or_malformed_refs() {
         assert!(accepted_target(&mut sim, d.path(), &r.repository, reference, &b).is_err());
     }
     assert_eq!(sim.calls.len(), count);
+}
+
+#[test]
+fn existing_equal_or_ancestor_workspace_can_be_reused_or_fast_forwarded() {
+    for equal in [false, true] {
+        let (d, r) = setup();
+        let c = Cancellation::default();
+        let b = Budget::new(Duration::from_secs(10), 1024 * 1024, &c).unwrap();
+        let p = prepare(&mut local(), d.path(), r.clone(), &b).unwrap();
+        let mut fake = PublishFake {
+            local: local(),
+            base: r.accepted_base.clone(),
+            remote: Some(if equal {
+                r.source_head.clone()
+            } else {
+                r.accepted_base
+            }),
+            pushes: vec![],
+            race: false,
+        };
+        let attempt = publish(&mut fake, p, &b);
+        assert!(attempt.outcome.is_ok(), "{:?}", attempt.outcome);
+        assert_eq!(fake.pushes.len(), usize::from(!equal));
+        assert_eq!(fake.remote.as_deref(), Some(r.source_head.as_str()));
+    }
+}
+
+#[test]
+fn known_diverged_workspace_is_never_force_pushed() {
+    let (d, r) = setup();
+    let c = Cancellation::default();
+    let b = Budget::new(Duration::from_secs(10), 1024 * 1024, &c).unwrap();
+    let other = git(
+        &mut local(),
+        d.path(),
+        &[
+            "commit-tree",
+            &r.source_tree,
+            "-p",
+            &r.accepted_base,
+            "-m",
+            "other",
+        ],
+        &b,
+    )
+    .unwrap();
+    let p = prepare(&mut local(), d.path(), r.clone(), &b).unwrap();
+    let mut fake = PublishFake {
+        local: local(),
+        base: r.accepted_base,
+        remote: Some(other),
+        pushes: vec![],
+        race: false,
+    };
+    assert!(publish(&mut fake, p, &b).outcome.is_err());
+    assert!(fake.pushes.is_empty());
 }

@@ -2690,8 +2690,8 @@ fn validate_material_specs_mutation(
         && provider != supplied
         && in_provider_checkout
     {
-        // A temporary snapshot is a real push whose verified source graph uses
-        // PR semantics. Recheck its immutable transport instead of trusting a
+        // A verified workbranch push uses PR semantics for its complete source
+        // range. Recheck the exact branch/commit/base instead of trusting a
         // SOURCE_CI_EVENT label or rewriting the provider's original event.
         let normalized = (|| -> Result<(), String> {
             if provider != "push" || supplied != "pull_request" {
@@ -2712,9 +2712,17 @@ fn validate_material_specs_mutation(
             } else {
                 format!("refs/heads/{accepted}")
             };
-            crate::core::readiness_profile::source::custody::ci_context::verify_normalized_snapshot(
-                repo_root, &transport, &trigger, base, head, &accepted,
-            )
+            if transport == *head {
+                crate::core::readiness_profile::source::custody::ci_context::verify_normalized_workbranch(
+                    repo_root, &trigger, base, head, &accepted,
+                )
+            } else {
+                // Existing historical snapshots remain verifiable; new runtime
+                // submissions use only the actual workspace branch and H.
+                crate::core::readiness_profile::source::custody::ci_context::verify_normalized_snapshot(
+                    repo_root, &transport, &trigger, base, head, &accepted,
+                )
+            }
         })();
         if let Err(reason) = normalized {
             fail(&format!("CI_CHANGE_CONTEXT_INVALID: {reason}"), ctx);

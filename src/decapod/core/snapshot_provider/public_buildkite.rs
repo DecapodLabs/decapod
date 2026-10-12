@@ -267,6 +267,7 @@ impl PublicReader for CurlPublicReader {
         let validated = request.authorize_read()?;
         (self.authorize)(request, &self.curl)?;
         let mut destination = request.url();
+        let mut timeout_retries = 0_u8;
         for hop in 0..=validated.max_https_redirects() {
             let mut cmd = Command::new(&self.curl);
             public_network_environment(&mut cmd);
@@ -290,39 +291,59 @@ impl PublicReader for CurlPublicReader {
                 "--url",
                 &destination,
             ]);
-            let limits = ProcessLimits {
-                timeout: budget.remaining()?.min(Duration::from_secs(30)),
-                max_output_bytes: budget.max_bytes,
-            };
-            let out = if validated.kind() == PublicReadKind::ArtifactContent {
-                cmd.bounded_artifact_capture(limits, budget.cancel)?
-            } else {
-                cmd.bounded_capture(limits, budget.cancel)?
-            };
-            match out.termination {
-                Termination::Cancelled => {
-                    return Err(io::Error::new(
-                        io::ErrorKind::Interrupted,
-                        "public read cancelled",
+            let out = loop {
+                let limits = ProcessLimits {
+                    timeout: budget.remaining()?.min(Duration::from_secs(30)),
+                    max_output_bytes: budget.max_bytes,
+                };
+                let out = if validated.kind() == PublicReadKind::ArtifactContent {
+                    cmd.bounded_artifact_capture(limits, budget.cancel)?
+                } else {
+                    cmd.bounded_capture(limits, budget.cancel)?
+                };
+                let timed_out = matches!(out.termination, Termination::TimedOut)
+                    || (matches!(out.termination, Termination::Exited)
+                        && out.output.status.code() == Some(28));
+                // Retry only a timeout of this identical, already-authorized GET.
+                // Never retry denied authorization, HTTP failures, TLS failures,
+                // cancellation, malformed responses or output-limit violations.
+                // Earlier verified downloads remain in this collection; only the
+                // current incomplete response is discarded before its retry.
+                if timed_out && timeout_retries < 2 {
+                    timeout_retries += 1;
+                    budget.wait(Duration::from_secs(u64::from(timeout_retries)))?;
+                    continue;
+                }
+                match out.termination {
+                    Termination::Cancelled => {
+                        return Err(io::Error::new(
+                            io::ErrorKind::Interrupted,
+                            "public read cancelled",
+                        ));
+                    }
+                    Termination::TimedOut => {
+                        return Err(io::Error::new(
+                            io::ErrorKind::TimedOut,
+                            format!(
+                                "public read timed out after {} bounded attempt(s)",
+                                timeout_retries + 1
+                            ),
+                        ));
+                    }
+                    Termination::OutputLimit => return Err(invalid("public read exceeded bound")),
+                    Termination::Exited => (),
+                }
+                if !out.output.status.success() {
+                    return Err(public_http_failure_after_attempts(
+                        &format!("{:?}", validated.kind()),
+                        &request.url(),
+                        out.output.status.code().unwrap_or(-1),
+                        &out.output.stdout,
+                        timeout_retries + 1,
                     ));
                 }
-                Termination::TimedOut => {
-                    return Err(io::Error::new(
-                        io::ErrorKind::TimedOut,
-                        "public read timed out",
-                    ));
-                }
-                Termination::OutputLimit => return Err(invalid("public read exceeded bound")),
-                Termination::Exited => (),
-            }
-            if !out.output.status.success() {
-                return Err(public_http_failure(
-                    &format!("{:?}", validated.kind()),
-                    &request.url(),
-                    out.output.status.code().unwrap_or(-1),
-                    &out.output.stdout,
-                ));
-            }
+                break out;
+            };
             let (status, location, body) = http_response(&out.output.stdout)?;
             if status == 200 {
                 return Ok(body.to_vec());
@@ -583,24 +604,35 @@ pub fn discover_build_status(
     };
     verify_envelope(&envelope, &build, &expected)?;
     let state = string(&envelope, "state")?.to_owned();
-    ensure(
-        matches!(
-            state.as_str(),
-            "creating"
-                | "scheduled"
-                | "running"
-                | "passed"
-                | "failing"
-                | "failed"
-                | "canceling"
-                | "canceled"
-                | "blocked"
-                | "not_run"
-                | "skipped"
-                | "broken"
-        ),
-        "unknown public Buildkite state",
-    )?;
+    if !matches!(
+        state.as_str(),
+        "creating"
+            | "scheduled"
+            | "running"
+            | "started"
+            | "passed"
+            | "failing"
+            | "failed"
+            | "canceling"
+            | "canceled"
+            | "blocked"
+            | "not_run"
+            | "skipped"
+            | "broken"
+    ) {
+        // Unknown provider values remain errors. Bound and escape the value so
+        // diagnostics cannot inject terminal controls or unbounded log content.
+        let state_label: String = state.chars().take(64).collect();
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            format!(
+                "unknown public Buildkite state: state={state_label:?} build={} uuid={} url=https://buildkite.com{}",
+                build.number(),
+                string(&envelope, "id")?,
+                build.base(),
+            ),
+        ));
+    }
     Ok(PublicBuildStatus {
         build,
         id: string(&envelope, "id")?.into(),

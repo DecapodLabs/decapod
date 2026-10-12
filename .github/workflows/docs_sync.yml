@@ -2,7 +2,7 @@ name: Documentation Sync
 
 on:
   push:
-    branches: [ "decapod/preflight/**" ]
+    branches: [ "agent/**" ]
   pull_request:
     branches: [ master ]
 
@@ -23,7 +23,7 @@ jobs:
         uses: ./.github/actions/ci-context
       - name: Prepare shared source-CI profile
         uses: ./.github/actions/source-ci-profile
-      - name: Select the same documentation obligation for PR and snapshot
+      - name: Select the same documentation obligation for PR and workspace branch
         id: changed
         env:
           CHANGE_BASE: ${{ steps.context.outputs.merge_base }}

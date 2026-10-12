@@ -3,9 +3,8 @@ name: CI
 on:
   # Keep the complete PR check suite attached to every pull-request update.
   push:
-    # Temporary snapshots transport an already-checkpointed local candidate;
-    # they do not publish the original workbranch or open a pull request.
-    branches: [ master, 'decapod/preflight/**' ]
+    # The existing Decapod workspace branch runs the same source graph as a PR.
+    branches: [ master, 'agent/**' ]
   pull_request:
     branches: [ master ]
   workflow_dispatch:

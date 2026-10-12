@@ -53,6 +53,7 @@ pub struct Context {
     pub accepted_base: String,
     pub pre_pr: bool,
     pub snapshot: Option<SnapshotMetadata>,
+    pub workbranch_ref: Option<String>,
 }
 
 /// Exact transport message (all fields mandatory, in this order; one final LF):
@@ -301,7 +302,89 @@ fn resolve_created_push(input: &Inputs) -> Check<Context> {
     Ok(context)
 }
 
+/// The workspace namespace is routing only, never a readiness claim.
+pub fn is_workbranch_ref(reference: &str) -> bool {
+    valid_source_ref(reference)
+        && reference
+            .strip_prefix("refs/heads/agent/")
+            .is_some_and(|suffix| suffix.split('/').count() >= 2)
+}
+
+fn resolve_workbranch(input: &Inputs) -> Check<Context> {
+    let trigger_ref = input
+        .trigger_ref
+        .as_deref()
+        .ok_or("workbranch requires trigger-ref")?;
+    let accepted_ref = input
+        .accepted_base_ref
+        .as_deref()
+        .ok_or("workbranch requires accepted-base-ref")?;
+    if input.created || !is_workbranch_ref(trigger_ref) {
+        return Err("workbranch requires the ordinary workspace branch identity".into());
+    }
+    let base = accepted_tip(&input.repo, accepted_ref)?;
+    if !input.base.is_empty() && input.base != base {
+        return Err("workbranch immutable base differs from the captured accepted target".into());
+    }
+    // Reuse clean checkout, exact H/tree, full history and captured-base checks.
+    let mut context = resolve(&Inputs {
+        repo: input.repo.clone(),
+        event: "workflow_dispatch".into(),
+        base: base.clone(),
+        head: input.head.clone(),
+        pre_pr: true,
+        created: false,
+        accepted_base_ref: Some(accepted_ref.into()),
+        snapshot: false,
+        trigger_ref: None,
+    })?;
+    verify_normalized_workbranch(&input.repo, trigger_ref, &base, &input.head, accepted_ref)?;
+    context.trigger_event = "push".into();
+    context.workbranch_ref = Some(trigger_ref.into());
+    Ok(context)
+}
+
+/// Recheck the exact existing-branch push after supported generated projections.
+/// No transport commit, message, detached checkout, or synthetic request exists.
+/// This verifies immutable identity only; initial resolve enforces clean source.
+pub fn verify_normalized_workbranch(
+    repo: &Path,
+    trigger_ref: &str,
+    base: &str,
+    head: &str,
+    accepted_ref: &str,
+) -> Check<()> {
+    if !is_workbranch_ref(trigger_ref) {
+        return Err("pre-PR push requires the exact workspace branch ref".into());
+    }
+    commit(repo, base)?;
+    commit(repo, head)?;
+    if base == head || accepted_tip(repo, accepted_ref)? != base {
+        return Err("workbranch requires its distinct captured accepted base".into());
+    }
+    let grafts = PathBuf::from(git(repo, &["rev-parse", "--git-path", "info/grafts"])?);
+    if repo.join(grafts).exists()
+        || git(repo, &["rev-parse", "--is-shallow-repository"])? != "false"
+        || !git(
+            repo,
+            &["for-each-ref", "--format=%(refname)", "refs/replace/"],
+        )?
+        .is_empty()
+    {
+        return Err("workbranch requires complete unmodified Git history".into());
+    }
+    ancestor(repo, base, head)?;
+    verify_unchanged_head(repo, head)?;
+    if accepted_tip(repo, accepted_ref)? != base {
+        return Err("captured accepted target ref changed during verification".into());
+    }
+    Ok(())
+}
+
 pub fn resolve(input: &Inputs) -> Check<Context> {
+    if input.event == "push" && input.pre_pr && !input.snapshot {
+        return resolve_workbranch(input);
+    }
     if input.created {
         return resolve_created_push(input);
     }
@@ -388,7 +471,7 @@ pub fn resolve(input: &Inputs) -> Check<Context> {
     if !git(&repo, &["ls-files", "--others", "--exclude-standard", "-z"])?.is_empty() {
         return Err("checkout contains untracked files".into());
     }
-    if input.snapshot {
+    if input.snapshot || input.pre_pr {
         // An assume-unchanged or sparse/skip-worktree index could hide dirty
         // tracked source from the normal comparison. A snapshot must attest a
         // complete ordinary checkout, not silently ignore those paths.
@@ -403,7 +486,9 @@ pub fn resolve(input: &Inputs) -> Check<Context> {
         {
             return Err("snapshot requires a complete index without hidden tracked paths".into());
         }
-        return resolve_snapshot(&repo, input, checkout_head, checkout_tree);
+        if input.snapshot {
+            return resolve_snapshot(&repo, input, checkout_head, checkout_tree);
+        }
     }
     let mut context = Context {
         event: if input.pre_pr {
@@ -421,6 +506,7 @@ pub fn resolve(input: &Inputs) -> Check<Context> {
         accepted_base: String::new(),
         pre_pr: input.pre_pr,
         snapshot: None,
+        workbranch_ref: None,
     };
     if manual {
         if context.checkout_head != input.head {
@@ -513,6 +599,7 @@ fn resolve_snapshot(
         accepted_base,
         pre_pr: true,
         snapshot: Some(metadata),
+        workbranch_ref: None,
     })
 }
 
@@ -628,6 +715,9 @@ impl Context {
                 "snapshot=true\ntransport_head={}\nrequest_id={}\nsource_ref={}\n",
                 self.checkout_head, metadata.request, metadata.source_ref
             ));
+        }
+        if let Some(reference) = &self.workbranch_ref {
+            outputs.push_str(&format!("workbranch=true\nsource_ref={reference}\n"));
         }
         outputs
     }

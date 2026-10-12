@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - "decapod/preflight/**"
+      - "agent/**"
   pull_request:
     branches:
       - master

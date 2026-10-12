@@ -424,7 +424,9 @@ fn poll(
             }
             match build.state() {
                 "passed" => {}
-                "creating" | "scheduled" | "running" | "failing" | "canceling" => complete = false,
+                "creating" | "scheduled" | "running" | "started" | "failing" | "canceling" => {
+                    complete = false
+                }
                 _ => {
                     return Err(io::Error::new(
                         io::ErrorKind::InvalidData,

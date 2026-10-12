@@ -234,7 +234,7 @@ Describe the security primitives and security controls implemented in this repos
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a6bddd625dd325ceaf557fe528476e7f37ff2cb5ec5e3e1b9bdfc5994a632d41`
+- Repository signal fingerprint: `b279695229d2264d265148eeeb1109a667b9364113b57952fa026914cf021391`
 - Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -290,9 +290,16 @@ outside deletion authority.
 
 ### Buildkite-only readiness transport
 
-The reserved preflight transport carries no service skip directive; existing
+The same-workspace-branch transport carries no service skip directive; existing
 GitHub Actions runs remain independent and cannot supply Buildkite readiness. Buildkite execution archives, native producer identity,
 recipe, actual command outcomes and final attempt freshness remain mandatory.
+Publication is a non-forced push or exact-tip reuse of the existing local workbranch;
+only the matching remote branch may be created on its first publication. A diverged
+remote or changed accepted target fails. Validation never creates an auxiliary
+branch, rewrites history, or deletes the real workspace branch. Public artifact
+GET timeouts receive at most two same-request retries within the original deadline;
+authentication, TLS, HTTP, cancellation and integrity failures are never retried
+through another route. Previously verified downloads remain in the active collection.
 GitHub check links are discovery locators, never authority for successful
 Buildkite execution. No service denial permits changing credentials or falling
 back to fabricated evidence. Synthetic Git fixtures isolate host authentication

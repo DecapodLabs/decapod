@@ -455,7 +455,7 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a6bddd625dd325ceaf557fe528476e7f37ff2cb5ec5e3e1b9bdfc5994a632d41`
+- Repository signal fingerprint: `b279695229d2264d265148eeeb1109a667b9364113b57952fa026914cf021391`
 - Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -553,7 +553,7 @@ enables synchronous sandbox disposal and the same test scratch supervisor.
 
 ## CI-local validation and source preflight repair
 
-The public validation command and RPC recognize the exact GitHub Actions or Buildkite runtime flag and run bounded CI-local prerequisite checks without another remote submission. Their result identifies `ci_local` scope and `publication_ready=false`; no full readiness receipt or awareness mark is issued. Source publication still invokes the full current-workbranch proof boundary independently of those flags. A normalized temporary snapshot retains the raw push event and verifies its reserved ref, transport object, sole source parent, equal trees and captured accepted base before the material-spec gate uses PR range semantics.
+The public validation command and RPC recognize the exact GitHub Actions or Buildkite runtime flag and run bounded CI-local prerequisite checks without another remote submission. Their result identifies `ci_local` scope and `publication_ready=false`; no full readiness receipt or awareness mark is issued. Source publication still invokes the full current-workbranch proof boundary independently of those flags. A normalized workspace-branch push retains the raw push event and verifies the actual managed branch, exact source commit, clean initial checkout and captured configured accepted base before the material-spec gate uses full PR range semantics. Validation and the eventual PR use this same branch; repeated runs reuse its exact commit without creating extra refs.
 
 Measured source preparation resolves the selected toolchain before freezing stable launcher diagnostics, retains cold-start logs, preserves Rust proxy invocation names, and binds Docker image digests with a compatible typed inspection. Synthetic release inputs are inert fixture files until tests materialize them. Invalid provider identity reports only failed field names and never exports arbitrary environment values.
 

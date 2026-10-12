@@ -345,7 +345,7 @@ pub fn inspect(
         schema_version: "1.0.0".into(),
         status: "needs_reconciliation".into(),
         provider: if proof.validation_buildkite_preflights {
-            "buildkite_temporary_snapshot"
+            "buildkite_workbranch"
         } else {
             "native"
         }

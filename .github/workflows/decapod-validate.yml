@@ -2,7 +2,7 @@ name: Decapod Validate
 
 on:
   push:
-    branches: [ main, master, "decapod/preflight/**" ]
+    branches: [ main, master, "agent/**" ]
   pull_request:
     branches: [ main, master ]
 

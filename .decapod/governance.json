@@ -356,26 +356,29 @@
       "id": "eighth-final-review-binding",
       "summary": "Bind publication spec reviews to the final formatted RPC correction as instructed by validate",
       "input_digest": "sha256:a65034a01b264c810321e3019ef733b995023a8fb7528cdd6293b95b277ef771"
+    },
+    {
+      "id": "ninth-same-workbranch-provider",
+      "summary": "Run validation on the actual PR workspace branch, preserve audited public development history, and retain full required Buildkite proof. Current candidate readiness is pending remote validation.",
+      "input_digest": "sha256:f7181c250695e57dc3534c75bd94cbefb37221c3cd035de5a3ec4282da1d8496"
     }
   ],
   "intents": {
-    "intent:eighth-buildkite-convergence-20261012": {
+    "intent:ninth-workbranch-preflight-20261012": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "No local project prerequisite suite before Buildkite submission; no weakened checks or publication side effects",
-        "No PR before complete current-candidate Buildkite proof"
+        "No temporary refs, no local prerequisite validation gate, no release or deploy, no ref deletion, no credentials or security changes"
       ],
       "constraints": [
-        "src/decapod/lib.rs",
-        "Generated specs and governance"
+        "Current workspace provider transport, source CI context, transient artifact read recovery, focused regression tests and generated documentation"
       ],
       "created_sequence": 1,
-      "id": "intent:eighth-buildkite-convergence-20261012",
+      "id": "intent:ninth-workbranch-preflight-20261012",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Converge the complete prescribed Buildkite validation preflight to green before creating the PR",
-      "refined_intent": "Correct the two redundant RPC path borrows reported by actual Buildkite920 strict Clippy while retaining the remote-first runtime and all required proof",
+      "raw_intent": "Run validation through Buildkite on the existing Decapod workspace branch and create the PR only after full readiness is green",
+      "refined_intent": "Reuse the exact existing workspace branch, handle native active build states, and preserve complete authenticated proof without temporary branch proliferation",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -443,25 +446,25 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Re-reviewed exact final formatted code after the transport report identified stale code-bound reviews. The two redundant borrowed-path references were removed and rustfmt condensed one expression; the authored execution, interface and security contracts remain unchanged and accurate.",
-          "reviewed_code_fingerprint": "a6bddd625dd325ceaf557fe528476e7f37ff2cb5ec5e3e1b9bdfc5994a632d41",
-          "spec_material_hash": "1bb7f497285cdf6a2327d6976245bc317b6a17b9b19cc9c258a042580af97211"
+          "reason": "Reviewed same-workspace-branch Buildkite execution, exact candidate proof, nonrecursive CI behavior and bounded transient read recovery; validation remains the single readiness mechanism.",
+          "reviewed_code_fingerprint": "b279695229d2264d265148eeeb1109a667b9364113b57952fa026914cf021391",
+          "spec_material_hash": "8b963d445db21a84e14b7ee231adb70b33ebf7add6df5401e719fda4a7f73be0"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Re-reviewed exact final formatted code after the transport report identified stale code-bound reviews. The two redundant borrowed-path references were removed and rustfmt condensed one expression; the authored execution, interface and security contracts remain unchanged and accurate.",
-          "reviewed_code_fingerprint": "a6bddd625dd325ceaf557fe528476e7f37ff2cb5ec5e3e1b9bdfc5994a632d41",
-          "spec_material_hash": "2062f7fea9677924305e53834f5c45dde6a741bb6d5d46c972e4f26dc341d607"
+          "reason": "Reviewed same-workspace-branch Buildkite execution, exact candidate proof, nonrecursive CI behavior and bounded transient read recovery; validation remains the single readiness mechanism.",
+          "reviewed_code_fingerprint": "b279695229d2264d265148eeeb1109a667b9364113b57952fa026914cf021391",
+          "spec_material_hash": "0d3c9588c5ae8420e0f5cd200956cc73178e167e805a39eaf240e2962d23976b"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Re-reviewed exact final formatted code after the transport report identified stale code-bound reviews. The two redundant borrowed-path references were removed and rustfmt condensed one expression; the authored execution, interface and security contracts remain unchanged and accurate.",
-          "reviewed_code_fingerprint": "a6bddd625dd325ceaf557fe528476e7f37ff2cb5ec5e3e1b9bdfc5994a632d41",
-          "spec_material_hash": "b4ca46eb0671790376737241d86707730d7a8bf62be16d730a966bbfeab3a10c"
+          "reason": "Reviewed same-workspace-branch Buildkite execution, exact candidate proof, nonrecursive CI behavior and bounded transient read recovery; validation remains the single readiness mechanism.",
+          "reviewed_code_fingerprint": "b279695229d2264d265148eeeb1109a667b9364113b57952fa026914cf021391",
+          "spec_material_hash": "07ca4bcc2d80fe0b6137ac7cf5ad54053774b7916fe5eb5dbfa6e97aca44f70d"
         }
       ],
       "state": "APPROVED",
@@ -472,134 +475,101 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791792724Z"
+      "updated_at": "1791796027Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "No PR before complete current-candidate Buildkite proof",
-        "No local project prerequisite suite before Buildkite submission; no weakened checks or publication side effects"
+        "No temporary refs, no local prerequisite validation gate, no release or deploy, no ref deletion, no credentials or security changes",
+        "Preserve11 reviewed public history tips; never include10 private tainted commits or two denied fixture blobs"
       ],
-      "artifact_hash": "sha256:44fd602c51d478a659bab8c35e6456256be003a37245a741c04de9c2460d7cc7",
+      "artifact_hash": "sha256:1a1d07f162391572ba72d16ac908eaa6311864210325db3be512d019e1e200f7",
       "checks": [
         {
-          "name": "eighth_actual_buildkite_suite",
-          "status": "unavailable"
-        },
-        {
-          "name": "eighth_fmt",
+          "name": "actual_action_12",
           "status": "passed"
         },
         {
-          "name": "eighth_review_binding_repair",
+          "name": "ci_context_50",
           "status": "passed"
         },
         {
-          "name": "eighth_strict_clippy_local",
+          "name": "current_full_validation",
+          "status": "partial"
+        },
+        {
+          "name": "prior_full_buildkite_927",
           "status": "passed"
         },
         {
-          "name": "seventh_actual_buildkite_suite",
-          "status": "failed"
+          "name": "public_reader_25",
+          "status": "passed"
+        },
+        {
+          "name": "same_branch_controller_19",
+          "status": "passed"
+        },
+        {
+          "name": "same_branch_provider_170",
+          "status": "passed"
         }
       ],
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:eighth-buildkite-convergence-20261012",
+            "intent_id": "intent:ninth-workbranch-preflight-20261012",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:eighth-buildkite-convergence-20261012",
+            "intent_id": "intent:ninth-workbranch-preflight-20261012",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:eighth-buildkite-convergence-20261012",
+            "detail": "trajectory:ninth-workbranch-preflight-20261012",
             "event_id": "event:4",
-            "intent_id": "intent:eighth-buildkite-convergence-20261012",
+            "intent_id": "intent:ninth-workbranch-preflight-20261012",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:eighth-buildkite-convergence-20261012",
-            "event_id": "event:5",
-            "intent_id": "intent:eighth-buildkite-convergence-20261012",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:eighth-buildkite-convergence-20261012",
-            "event_id": "event:6",
-            "intent_id": "intent:eighth-buildkite-convergence-20261012",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "eighth-buildkite-convergence-20261012": {
+          "ninth-workbranch-preflight-20261012": {
             "evidence_only": true,
-            "id": "eighth-buildkite-convergence-20261012",
-            "intent_id": "intent:eighth-buildkite-convergence-20261012",
+            "id": "ninth-workbranch-preflight-20261012",
+            "intent_id": "intent:ninth-workbranch-preflight-20261012",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "implementation",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/lib.rs",
-                  "src/decapod/lib.rs",
-                  "Actual Buildkite920 strict Clippy reported only two needless_borrow diagnostics in new RPC validation routing. Removed the redundant references; function signatures, provider selection and failure semantics are unchanged.",
-                  "The prior frozen candidate passed990 local library tests and actual CLI/alias/RPC routing regression. These results are retained as prior-candidate evidence, not substituted for the new complete provider run.",
-                  "No local project-check suite is required or executed before this configured Buildkite submission. The exact all-targets/all-features Clippy recipe is being checked independently; full current-candidate readiness remains pending."
+                  "src/decapod/core/snapshot_provider/snapshot.rs",
+                  "src/decapod/core/validation_runtime/snapshot.rs",
+                  "assets/tools/ci_event_context.rs",
+                  "src/decapod/core/snapshot_provider/public_buildkite.rs",
+                  "src/decapod/core/assets.rs",
+                  "Buildkite927-931 passed for prior exact candidate0af18eb6; source changed afterward, so new current-branch validation remains required",
+                  "Same-branch provider/controller and real action regressions passed; timeout-only retry baseline failed and25 reader tests passed after repair"
                 ],
                 "proof_refs": [
-                  "seventh_actual_buildkite_suite",
-                  "eighth_strict_clippy_local",
-                  "eighth_actual_buildkite_suite"
+                  "same_branch_provider_170",
+                  "same_branch_controller_19",
+                  "ci_context_50",
+                  "actual_action_12",
+                  "public_reader_25",
+                  "prior_full_buildkite_927",
+                  "current_full_validation"
                 ],
                 "scope": [
-                  "Generated specs and governance",
-                  "src/decapod/lib.rs"
+                  "Current workspace provider transport, source CI context, transient artifact read recovery, focused regression tests and generated documentation"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "Exact all-targets/all-features strict Clippy completed successfully after the two reference corrections. Rustfmt condensed the corrected expression; final formatting check passed. Actual fresh Buildkite execution remains required."
-                ],
-                "proof_refs": [
-                  "eighth_strict_clippy_local",
-                  "eighth_fmt"
-                ],
-                "scope": [
-                  "Generated specs and governance",
-                  "src/decapod/lib.rs"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "Actual remote-first prepare refused STALE_SPEC_REVIEW after rustfmt changed the bound code. Followed its report by re-reviewing current final bytes through the supported CLI; no validation bypass or local project-check run."
-                ],
-                "proof_refs": [
-                  "eighth_review_binding_repair"
-                ],
-                "scope": [
-                  "Generated specs and governance",
-                  "src/decapod/lib.rs"
-                ],
-                "sequence": 6,
                 "validation_findings": []
               }
             ]
@@ -608,24 +578,25 @@
       },
       "declared_commands": [],
       "evidence": [
-        "Actual Buildkite920 strict Clippy reported only two needless_borrow diagnostics in new RPC validation routing. Removed the redundant references; function signatures, provider selection and failure semantics are unchanged.",
-        "Actual remote-first prepare refused STALE_SPEC_REVIEW after rustfmt changed the bound code. Followed its report by re-reviewing current final bytes through the supported CLI; no validation bypass or local project-check run.",
-        "Exact all-targets/all-features strict Clippy completed successfully after the two reference corrections. Rustfmt condensed the corrected expression; final formatting check passed. Actual fresh Buildkite execution remains required.",
-        "No local project-check suite is required or executed before this configured Buildkite submission. The exact all-targets/all-features Clippy recipe is being checked independently; full current-candidate readiness remains pending.",
-        "The prior frozen candidate passed990 local library tests and actual CLI/alias/RPC routing regression. These results are retained as prior-candidate evidence, not substituted for the new complete provider run."
+        "Buildkite927-931 passed for prior exact candidate0af18eb6; source changed afterward, so new current-branch validation remains required",
+        "Same-branch provider/controller and real action regressions passed; timeout-only retry baseline failed and25 reader tests passed after repair"
       ],
-      "inspected_files": [
-        "src/decapod/lib.rs"
-      ],
-      "intent_id": "intent:eighth-buildkite-convergence-20261012",
+      "inspected_files": [],
+      "intent_id": "intent:ninth-workbranch-preflight-20261012",
       "modified_files": [
-        "src/decapod/lib.rs"
+        "assets/tools/ci_event_context.rs",
+        "src/decapod/core/assets.rs",
+        "src/decapod/core/snapshot_provider/public_buildkite.rs",
+        "src/decapod/core/snapshot_provider/snapshot.rs",
+        "src/decapod/core/validation_runtime/snapshot.rs"
+      ],
+      "next_transitions": [
+        "Run actual Buildkite validation on the existing workspace branch, then create PR only after complete readiness"
       ],
       "repo_scope": [
-        "Generated specs and governance",
-        "src/decapod/lib.rs"
+        "Current workspace provider transport, source CI context, transient artifact read recovery, focused regression tests and generated documentation"
       ],
-      "run_id": "eighth-buildkite-convergence-20261012",
+      "run_id": "ninth-workbranch-preflight-20261012",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
       "task_id": "bugs_01m4pf92p0r108x1",

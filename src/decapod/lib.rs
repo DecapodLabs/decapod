@@ -1853,7 +1853,7 @@ fn enrich_repo_context_interactive(
     )?;
     apply_init_proof_command_input(init, &proof_input);
     init.validation_buildkite_preflights = Some(prompt_yes_no(
-        "Use Buildkite temporary snapshots for the full required proof suite? (No runs the full suite natively in Decapod.)",
+        "Use Buildkite on the current workspace branch for the full required proof suite? (No runs the full suite natively in Decapod.)",
         init.validation_buildkite_preflights.unwrap_or(false),
     )?);
 
@@ -6367,7 +6367,7 @@ fn readiness_snapshot_runner(
         external_action::authorize(
             &git_store,
             capability,
-            "readiness.temporary-snapshot",
+            "readiness.workspace-branch",
             &executable.to_string_lossy(),
         )
         .map_err(std::io::Error::other)
@@ -6396,7 +6396,7 @@ fn readiness_snapshot_runner(
     )?))
 }
 
-/// One binary readiness boundary shared by CLI, RPC and the last pre-push gate.
+/// One binary readiness boundary shared by CLI, RPC and the last PR-creation gate.
 /// Project-only receipts and cached timestamps never enter this decision.
 fn run_current_workbranch_readiness_with(
     workspace_root: &Path,
@@ -6577,7 +6577,10 @@ pub(crate) fn enforce_workbranch_readiness_before_push(
 ) -> Result<Option<std::path::PathBuf>, error::DecapodError> {
     invocation.validate()?;
     if invocation.snapshot_prepare || invocation.snapshot_adopt.is_some() {
-        return Err(error::DecapodError::ValidationError("PUBLICATION_NOT_READY: temporary snapshot preparation/adoption cannot publish the work branch".into()));
+        return Err(error::DecapodError::ValidationError(
+            "PUBLICATION_NOT_READY: workbranch preparation/adoption alone cannot create a PR"
+                .into(),
+        ));
     }
     if !crate::cli::DecapodProjectConfig::load(workspace_root)?
         .proof
@@ -6617,7 +6620,7 @@ pub(crate) fn enforce_workbranch_readiness_before_push(
 
 /// Called only after source publication and PR identity have been verified.
 /// The handoff is an untrusted locator; cleanup reconstructs the local subject
-/// and uses compare-and-swap against the single task-owned temporary ref.
+/// and retains the real workspace branch used by validation and the PR.
 pub(crate) fn cleanup_published_readiness_snapshot(
     root: &Path,
     handoff: &Path,
@@ -6637,7 +6640,8 @@ pub(crate) fn cleanup_published_readiness_snapshot(
     );
     signal_guard.restore()?;
     match result? {
-        core::snapshot_provider::snapshot::Cleanup::AlreadyAbsent
+        core::snapshot_provider::snapshot::Cleanup::RetainedWorkbranch
+        | core::snapshot_provider::snapshot::Cleanup::AlreadyAbsent
         | core::snapshot_provider::snapshot::Cleanup::Removed => Ok(()),
         core::snapshot_provider::snapshot::Cleanup::NeedsRecovery => Err(error::DecapodError::ValidationError(
             "SNAPSHOT_CLEANUP_PENDING: preserve the private handoff and inspect its exact temporary ref; never broadly prune or force-delete refs".into())),

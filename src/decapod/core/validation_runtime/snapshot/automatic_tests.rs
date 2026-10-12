@@ -1,5 +1,5 @@
 //! Controlled provider transports exercise the actual SnapshotHost orchestration.
-//! Local Git capture, snapshot creation and exact S/H/T/ref verification are real.
+//! Local Git capture and exact same-branch H/T/ref verification are real.
 //! Metadata and custody bytes below are fixtures, never a live provider request or
 //! a replacement for the independently complete source catalog/custody adapters.
 use super::tests::{command, project};
@@ -85,15 +85,17 @@ impl Runner for FixtureRunner {
             let stdout = if spec.arguments().iter().any(|arg| arg == "push") {
                 assert!(state.published.is_none(), "one snapshot submission only");
                 let (head, reference) = spec.arguments().last().unwrap().split_once(':').unwrap();
-                assert!(reference.starts_with(transport::PREFIX));
+                assert_eq!(reference, "refs/heads/work");
+                assert_eq!(head, state.source_head);
                 assert!(
                     spec.arguments()
-                        .contains(&format!("--force-with-lease={reference}:"))
+                        .iter()
+                        .all(|arg| !arg.starts_with("--force")
+                            && arg != "--delete"
+                            && arg != "reset"
+                            && !arg.starts_with('+'))
                 );
-                assert_eq!(
-                    command(&self.root, &["show", "-s", "--format=%P", head]),
-                    state.source_head
-                );
+                assert_eq!(command(&self.root, &["rev-parse", "HEAD"]), head);
                 assert_eq!(
                     command(&self.root, &["rev-parse", &format!("{head}^{{tree}}")]),
                     state.source_tree
@@ -117,7 +119,7 @@ impl Runner for FixtureRunner {
                         state.record("snapshot-exact-readback".into());
                         stdout
                     } else {
-                        assert!(reference.starts_with(transport::PREFIX));
+                        assert_eq!(reference, "refs/heads/work");
                         Vec::new()
                     }
                 }
@@ -159,7 +161,7 @@ impl FixtureRunner {
             let (snapshot, _) = state.snapshot();
             assert!([snapshot, state.source_head.as_str()].contains(&head));
             // The returned metadata is derived from the real locally created
-            // source/snapshot object, not a made-up S/H/T tuple.
+            // current source object, not a synthetic transport commit.
             let raw = command(&self.root, &["cat-file", "commit", head]);
             let (headers, message) = raw.split_once("\n\n").unwrap();
             return Ok(json!({"sha":head,
@@ -352,6 +354,7 @@ impl Fixture {
     }
     fn host(&self) -> SnapshotHost<'static, FixtureRunner> {
         let state = self.state.clone();
+        let published_before = state.borrow().published.clone();
         let mut host = SnapshotHost::new(
             self.options.clone(),
             Repository::new("fixture", "decapod").unwrap(),
@@ -382,7 +385,7 @@ impl Fixture {
                 .unwrap(),
             ProjectPrerequisites::ProviderRequired,
         );
-        assert!(self.state.borrow().published.is_none());
+        assert_eq!(self.state.borrow().published, published_before);
         host
     }
     fn assert_source_preserved(&self) {
@@ -407,7 +410,7 @@ impl Fixture {
         let state = self.state.borrow();
         assert_eq!(state.count("provider-prerequisites-required"), 1);
         assert_eq!(state.count("publish"), 1);
-        assert_eq!(state.count("snapshot-exact-readback"), 1);
+        assert!(state.count("snapshot-exact-readback") >= 1);
         assert!(
             state
                 .events
@@ -464,7 +467,7 @@ fn automatic_buildkite_publish_waits_for_terminal_then_collects_once_and_stays_n
         Some("provider-prerequisites-required")
     );
     assert_eq!(state.count("publish"), 1);
-    assert_eq!(state.count("snapshot-exact-readback"), 1);
+    assert!(state.count("snapshot-exact-readback") >= 1);
     let first_custody = state
         .events
         .iter()
@@ -663,5 +666,75 @@ fn automatic_buildkite_locator_denial_and_local_cancellation_are_not_retried() {
         assert!(host.terminal_sources.is_none());
         fixture.assert_no_custody();
         fixture.assert_source_preserved();
+    }
+}
+
+#[test]
+fn repeated_validation_reuses_exact_workbranch_without_ref_or_commit_fanout() {
+    let cancel = Cancellation::default();
+    let fixture = Fixture::new(Scenario::BuildkiteTerminal("passed"), &cancel);
+    let objects = command(&fixture.options.root, &["count-objects", "-v"]);
+    let mut locators = Vec::new();
+    for _ in 0..2 {
+        let mut host = fixture.host();
+        let blockers = host
+            .select(
+                &fixture.project,
+                &runtime_budget(&cancel, Duration::from_secs(30)),
+            )
+            .err()
+            .expect("missing actual source custody remains non-ready");
+        assert!(
+            blockers
+                .iter()
+                .any(|b| b.code == "BUILDKITE_SOURCE_CUSTODY_BLOCKED")
+        );
+        assert!(host.verified_checks.is_empty());
+        let path = host
+            .evidence_directory()
+            .unwrap()
+            .join("snapshot-handoff.json");
+        let record = read_handoff(&path).unwrap();
+        assert_eq!(record["transport_head"], fixture.state.borrow().source_head);
+        assert_eq!(record["request"]["source_ref"], "refs/heads/work");
+        locators.push(path);
+    }
+    assert_ne!(locators[0], locators[1]);
+    assert_eq!(
+        fixture.state.borrow().count("publish"),
+        1,
+        "equal remote H is reused"
+    );
+    assert_eq!(
+        fixture.state.borrow().published.as_ref().unwrap().1,
+        "refs/heads/work"
+    );
+    assert_eq!(
+        command(&fixture.options.root, &["count-objects", "-v"]),
+        objects
+    );
+    fixture.assert_source_preserved();
+}
+
+#[test]
+fn dirty_source_and_moved_accepted_base_never_publish() {
+    for change in ["dirty", "base"] {
+        let cancel = Cancellation::default();
+        let fixture = Fixture::new(Scenario::BuildkiteTerminal("passed"), &cancel);
+        let mut host = fixture.host();
+        if change == "base" {
+            fixture.state.borrow_mut().base = "f".repeat(40);
+        } else {
+            fs::write(fixture.options.root.join("source"), "changed material").unwrap();
+        }
+        assert!(
+            host.select(
+                &fixture.project,
+                &runtime_budget(&cancel, Duration::from_secs(30))
+            )
+            .is_err()
+        );
+        assert!(host.verified_checks.is_empty());
+        assert_eq!(fixture.state.borrow().count("publish"), 0, "{change}");
     }
 }

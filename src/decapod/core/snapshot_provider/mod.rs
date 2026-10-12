@@ -608,6 +608,15 @@ impl<R: Runner> Runner for PublicGithubReads<R> {
 /// from the typed seal, never a redirect Location or curl stderr. GitHub's quota
 /// headers use decimal seconds/epoch; unsupported or duplicate values are omitted.
 fn public_http_failure(operation: &str, endpoint: &str, exit_code: i32, bytes: &[u8]) -> io::Error {
+    public_http_failure_after_attempts(operation, endpoint, exit_code, bytes, 1)
+}
+fn public_http_failure_after_attempts(
+    operation: &str,
+    endpoint: &str,
+    exit_code: i32,
+    bytes: &[u8],
+    attempts: u8,
+) -> io::Error {
     let status = public_buildkite::http_response(bytes)
         .ok()
         .map(|(status, _, _)| status);
@@ -652,7 +661,13 @@ fn public_http_failure(operation: &str, endpoint: &str, exit_code: i32, bytes: &
             detail.push_str(&format!(" {name}={value}"));
         }
     }
-    detail.push_str("; no automatic retry or alternate authentication route was attempted");
+    if attempts == 1 {
+        detail.push_str("; no automatic retry or alternate authentication route was attempted");
+    } else {
+        detail.push_str(&format!(
+            "; bounded_timeout_attempts={attempts}; no alternate authentication route was attempted"
+        ));
+    }
     io::Error::other(detail)
 }
 

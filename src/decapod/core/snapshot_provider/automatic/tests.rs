@@ -13,7 +13,7 @@ fn snapshot() -> snapshot::PreparedSnapshot {
             accepted_base_ref: "refs/heads/master".into(),
             tags: Default::default(),
         },
-        "d".repeat(40),
+        "a".repeat(40),
         "/tmp".into(),
     )
 }
@@ -83,10 +83,9 @@ impl Runner for Gh {
         let s = snapshot();
         let r = s.request();
         let body = if path.contains("/git/commits/") {
-            let transport = path.ends_with(s.transport_head());
-            json!({"sha":if transport{s.transport_head()}else{&r.source_head},"tree":{"sha":r.source_tree},"parents":if transport{vec![json!({"sha":r.source_head})]}else{vec![]},"message":if transport{r.message().unwrap()}else{"source".into()}})
+            json!({"sha":r.source_head,"tree":{"sha":r.source_tree},"parents":[{"sha":r.accepted_base}],"message":"ordinary candidate commit"})
         } else if path.contains("/git/ref/") {
-            let transport = path.contains("decapod/preflight");
+            let transport = path.ends_with("/heads/work");
             json!({"ref":if transport{r.transport_ref()}else{r.accepted_base_ref.clone()},"object":{"type":"commit","sha":if transport{s.transport_head()}else{&r.accepted_base}}})
         } else if path.contains("/statuses?") {
             json!([])
@@ -566,7 +565,7 @@ fn five_workflows_one_hundred_polls_use_two_locator_reads_then_fresh_final_regis
         .recheck(&mut gh, &mut bk, &snapshot(), &plan, &b)
         .unwrap();
     assert_eq!(bk.calls, 510);
-    assert_eq!(gh.paths.len(), 8); // initial2 + fresh registry2 + final Git object/ref4
+    assert_eq!(gh.paths.len(), 7); // initial2 + fresh registry2 + source object/ref3
     assert_eq!(
         gh.paths.iter().filter(|p| p.contains("/statuses?")).count(),
         2
@@ -734,4 +733,91 @@ fn five_job_fragment_urls_surface_native_failure_on_first_poll() {
     assert!(error.contains("state=failed"));
     assert_eq!(gh.paths.len(), 2);
     assert_eq!(bk.calls, 5);
+}
+
+#[test]
+fn buildkite_started_is_pending_until_passed_and_never_rechecks_as_terminal() {
+    let c = Cancellation::default();
+    let b = budget(&c);
+    let mut gh = NoActions(Gh::default());
+    let mut bk = Bk::default();
+    let plan = buildkite_only_plan();
+    let mut state = PollState::default();
+    // The public site reports an active build as started with no finish time.
+    // Each poll must read that native envelope, including after locator caching.
+    for active in ["scheduled", "started"] {
+        bk.envelopes.get_mut(&7).unwrap()["state"] = json!(active);
+        bk.envelopes.get_mut(&7).unwrap()["finished_at"] = Value::Null;
+        assert!(!poll(&mut gh, &mut bk, &snapshot(), &plan, &mut state, &b).unwrap());
+    }
+    bk.envelopes.get_mut(&7).unwrap()["state"] = json!("passed");
+    assert!(poll(&mut gh, &mut bk, &snapshot(), &plan, &mut state, &b).unwrap());
+    let terminal = terminal(state, &plan);
+    bk.envelopes.get_mut(&7).unwrap()["state"] = json!("started");
+    assert!(
+        terminal
+            .recheck(&mut gh, &mut bk, &snapshot(), &plan, &b)
+            .is_err()
+    );
+    c.cancel();
+    assert_eq!(
+        wait_for_source_runs(
+            &mut gh,
+            &mut bk,
+            &snapshot(),
+            &plan,
+            Duration::from_secs(1),
+            &b
+        )
+        .unwrap_err()
+        .kind(),
+        io::ErrorKind::Interrupted
+    );
+    let c = Cancellation::default();
+    let b = Budget::new(Duration::from_millis(1), 1024 * 1024, &c).unwrap();
+    std::thread::sleep(Duration::from_millis(2));
+    assert_eq!(
+        wait_for_source_runs(
+            &mut gh,
+            &mut bk,
+            &snapshot(),
+            &plan,
+            Duration::from_secs(1),
+            &b
+        )
+        .unwrap_err()
+        .kind(),
+        io::ErrorKind::TimedOut
+    );
+}
+
+#[test]
+fn unknown_public_buildkite_state_is_rejected_with_bounded_escaped_identity() {
+    let c = Cancellation::default();
+    let b = budget(&c);
+    let mut gh = NoActions(Gh::default());
+    let mut bk = Bk::default();
+    bk.envelopes.get_mut(&7).unwrap()["state"] = json!(format!("new\n\u{1b}{}", "x".repeat(10000)));
+    let error = poll(
+        &mut gh,
+        &mut bk,
+        &snapshot(),
+        &buildkite_only_plan(),
+        &mut PollState::default(),
+        &b,
+    )
+    .unwrap_err();
+    assert_eq!(error.kind(), io::ErrorKind::InvalidData);
+    let message = error.to_string();
+    for expected in [
+        "unknown public Buildkite state",
+        "state=",
+        "build=7",
+        "uuid=00000000-0000-0000-0000-000000000007",
+        "https://buildkite.com/org/pipe/builds/7",
+    ] {
+        assert!(message.contains(expected), "{expected}: {message}");
+    }
+    assert!(message.len() < 1024);
+    assert!(!message.contains(['\n', '\r', '\u{1b}']));
 }

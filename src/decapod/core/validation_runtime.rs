@@ -1458,7 +1458,7 @@ impl Host for NativeHost<'_> {
         let mut measured_closures = BTreeMap::<String, String>::new();
         for obligation in project.catalog.obligations() {
             if project.configuration.validation_buildkite_preflights {
-                blockers.push(Blocker::missing(obligation.key.clone(), "SNAPSHOT_HOST_REQUIRED: use the authenticated dual-provider temporary-snapshot host; CLI credentials are not account-rights discovery"));
+                blockers.push(Blocker::missing(obligation.key.clone(), "SNAPSHOT_HOST_REQUIRED: use the authenticated Buildkite current-workbranch host; CLI credentials are not account-rights discovery"));
                 continue;
             }
             let id = if obligation.role == InvocationRole::CandidateBuild {

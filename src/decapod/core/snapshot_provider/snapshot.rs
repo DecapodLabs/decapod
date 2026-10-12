@@ -1,4 +1,4 @@
-//! Transport commits are never publication commits. All mutations here require
+//! Submit the exact existing local workspace branch. All mutations require
 //! the caller's separately established authorization for this exact destination.
 use super::*;
 use std::collections::BTreeMap;
@@ -26,7 +26,9 @@ impl SnapshotRequest {
             "snapshot request must be a canonical lowercase nonzero UUID",
         )?;
         ensure(
-            branch(&self.source_ref) && !self.source_ref.starts_with(PREFIX),
+            branch(&self.source_ref)
+                && !self.source_ref.starts_with(PREFIX)
+                && self.source_ref != self.accepted_base_ref,
             "invalid logical source branch",
         )?;
         ensure(
@@ -56,11 +58,11 @@ impl SnapshotRequest {
         })?))
     }
     pub fn transport_ref(&self) -> String {
-        format!("{PREFIX}{}", self.request_id)
+        self.source_ref.clone()
     }
-    /// Bind the disposable transport to the exact source commit. Existing
-    /// service triggers may run independently; this readiness backend consumes
-    /// only actual Buildkite execution and never GitHub Actions results.
+    /// Historical handoff description only. This text is never written as a
+    /// commit or used to authorize source identity; the actual workspace H is
+    /// submitted unchanged.
     pub fn message(&self) -> Result<String> {
         self.validate()?;
         Ok(format!(
@@ -453,35 +455,20 @@ pub fn verify_source(
     )?;
     verify_committed_bytes(runner, root, request, budget)
 }
-/// Adds only one unreferenced Git object, never changes an index, working file,
-/// branch, tag or remote. Parent governance must have approved the clean H first.
+/// Capture the exact clean, committed local workspace branch. This creates no
+/// Git object or reference and never changes the index or worktree.
 pub fn prepare(
     runner: &mut impl Runner,
     root: &Path,
     request: SnapshotRequest,
     budget: &Budget<'_>,
 ) -> Result<PreparedSnapshot> {
-    verify_source(runner, root, &request, budget)?;
-    let message = request.message()?;
-    let transport_head = git(
-        runner,
-        root,
-        &[
-            "commit-tree",
-            &request.source_tree,
-            "-p",
-            &request.source_head,
-            "-m",
-            &message,
-        ],
-        budget,
-    )?;
-    resume(runner, root, request, &transport_head, budget)
+    let head = request.source_head.clone();
+    resume(runner, root, request, &head, budget)
 }
-/// Reconstruct a snapshot lease after independently recapturing the current
-/// source. Locator JSON cannot authorize anything: exact local S/H/T/message,
-/// actual source bytes and tags are rechecked. Caller must then invoke
-/// provider::verify_remote_binding before accepting remote observations.
+/// Reconstruct the exact workspace-branch submission after independently
+/// recapturing current source bytes, branch, base and tags. Historical synthetic
+/// transport objects cannot be adopted. Remote binding is verified separately.
 pub fn resume(
     runner: &mut impl Runner,
     root: &Path,
@@ -489,46 +476,15 @@ pub fn resume(
     observed_transport_head: &str,
     budget: &Budget<'_>,
 ) -> Result<PreparedSnapshot> {
-    verify_source(runner, root, &request, budget)?;
+    budget.remaining()?;
     ensure(
-        oid(observed_transport_head),
-        "invalid resume transport object",
-    )?;
-    let transport_head = observed_transport_head.to_owned();
-    let message = request.message()?;
-    ensure(oid(&transport_head), "commit-tree returned invalid object")?;
-    ensure(
-        git(
-            runner,
-            root,
-            &["show", "-s", "--format=%P", &transport_head],
-            budget,
-        )? == request.source_head,
-        "transport must have exactly source parent",
-    )?;
-    ensure(
-        git(
-            runner,
-            root,
-            &["rev-parse", &format!("{transport_head}^{{tree}}")],
-            budget,
-        )? == request.source_tree,
-        "transport tree differs from source",
-    )?;
-    // cat-file preserves the exact message bytes, including its one final LF.
-    let raw = text(checked(
-        runner,
-        git_spec(root, &["cat-file", "commit", &transport_head], false),
-        budget,
-    )?)?;
-    ensure(
-        raw.split_once("\n\n").map(|(_, m)| m) == Some(message.as_str()),
-        "transport metadata encoding differs",
+        oid(observed_transport_head) && observed_transport_head == request.source_head,
+        "workspace transport must equal the exact source HEAD",
     )?;
     verify_source(runner, root, &request, budget)?;
     Ok(PreparedSnapshot {
         request,
-        transport_head,
+        transport_head: observed_transport_head.into(),
         root: root.into(),
     })
 }
@@ -562,7 +518,7 @@ pub fn accepted_target(
     )?;
     parse_readback(&bytes, reference)
 }
-/// Read only the exact temporary reference owned by this validated lease.
+/// Compatibility getter: read only the exact original workspace branch.
 pub fn temporary_ref(
     runner: &mut impl Runner,
     snapshot: &PreparedSnapshot,
@@ -611,8 +567,8 @@ pub fn parse_readback(bytes: &[u8], reference: &str) -> Result<Option<String>> {
     ensure(oid(id) && name == reference, "wrong ref readback")?;
     Ok(Some(id.into()))
 }
-/// An attempted push can succeed remotely even when the local response fails.
-/// Keep the exact snapshot lease available in both cases for recoverable cleanup.
+/// A push can succeed remotely even when the local response fails. Retain the
+/// exact source identity for readback/reuse; validation never deletes the branch.
 #[derive(Debug)]
 pub struct PublishAttempt {
     pub snapshot: PreparedSnapshot,
@@ -639,28 +595,69 @@ pub fn publish(
             "accepted target moved before transport",
         )?;
         ensure(
-            read_ref(runner, &snapshot, &reference, budget)?.is_none(),
-            "snapshot ref already exists; refuse to replace it",
+            snapshot.transport_head == snapshot.request.source_head,
+            "workspace transport must equal the exact source HEAD",
         )?;
-        checked(
-            runner,
-            git_spec(
-                &snapshot.root,
-                &[
-                    "push",
-                    "--porcelain",
-                    "--no-verify",
-                    "--no-follow-tags",
-                    "--recurse-submodules=no",
-                    &format!("--force-with-lease={reference}:"),
-                    "--",
-                    &snapshot.request.repository.https_url(),
-                    &format!("{}:{reference}", snapshot.transport_head),
-                ],
-                true,
-            ),
-            budget,
-        )?;
+        let previous = read_ref(runner, &snapshot, &reference, budget)?;
+        if previous.as_deref() != Some(snapshot.transport_head.as_str()) {
+            if let Some(previous) = previous {
+                // Fetch only immutable object data, without updating any local ref.
+                // The exact current remote commit must be an ancestor of H.
+                checked(
+                    runner,
+                    git_spec(
+                        &snapshot.root,
+                        &[
+                            "fetch",
+                            "--no-tags",
+                            "--no-write-fetch-head",
+                            "--no-auto-maintenance",
+                            "--no-write-commit-graph",
+                            "--no-recurse-submodules",
+                            "--no-prune",
+                            "--no-prune-tags",
+                            "--refmap=",
+                            "--",
+                            &snapshot.request.repository.https_url(),
+                            &previous,
+                        ],
+                        true,
+                    ),
+                    budget,
+                )?;
+                git(
+                    runner,
+                    &snapshot.root,
+                    &[
+                        "merge-base",
+                        "--is-ancestor",
+                        &previous,
+                        &snapshot.transport_head,
+                    ],
+                    budget,
+                )?;
+            }
+            // Git itself rechecks fast-forward safety against the current remote
+            // during this ordinary push. Never use force, leases, or a '+' refspec.
+            checked(
+                runner,
+                git_spec(
+                    &snapshot.root,
+                    &[
+                        "push",
+                        "--porcelain",
+                        "--no-verify",
+                        "--no-follow-tags",
+                        "--recurse-submodules=no",
+                        "--",
+                        &snapshot.request.repository.https_url(),
+                        &format!("{}:{reference}", snapshot.transport_head),
+                    ],
+                    true,
+                ),
+                budget,
+            )?;
+        }
         ensure(
             read_ref(runner, &snapshot, &reference, budget)?.as_deref()
                 == Some(snapshot.transport_head.as_str()),
@@ -672,53 +669,25 @@ pub fn publish(
 }
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 pub enum Cleanup {
+    RetainedWorkbranch,
     AlreadyAbsent,
     Removed,
     NeedsRecovery,
 }
-/// Requires authorization to remove this task-owned temporary ref. No broad
-/// pruning, branch enumeration, wildcard deletion or object deletion exists.
-/// The local S object remains available to recreate the transport if authorized.
+/// Real workspace branches are never deleted by validation or recovery.
+/// Legacy result variants remain readable, but no deletion operation is emitted.
 pub fn cleanup(
-    runner: &mut impl Runner,
+    _runner: &mut impl Runner,
     snapshot: &PreparedSnapshot,
     budget: &Budget<'_>,
 ) -> Result<Cleanup> {
-    let reference = snapshot.request.transport_ref();
-    match read_ref(runner, snapshot, &reference, budget)? {
-        None => return Ok(Cleanup::AlreadyAbsent),
-        Some(id) => ensure(
-            id == snapshot.transport_head,
-            "temporary ref changed ownership; cleanup refused",
-        )?,
-    }
-    let result = checked(
-        runner,
-        git_spec(
-            &snapshot.root,
-            &[
-                "push",
-                "--porcelain",
-                "--no-verify",
-                "--no-follow-tags",
-                "--recurse-submodules=no",
-                &format!("--force-with-lease={reference}:{}", snapshot.transport_head),
-                "--",
-                &snapshot.request.repository.https_url(),
-                &format!(":{reference}"),
-            ],
-            true,
-        ),
-        budget,
-    );
-    if result.is_err() {
-        return Ok(Cleanup::NeedsRecovery);
-    }
-    if read_ref(runner, snapshot, &reference, budget)?.is_none() {
-        Ok(Cleanup::Removed)
-    } else {
-        Ok(Cleanup::NeedsRecovery)
-    }
+    budget.remaining()?;
+    snapshot.request.validate()?;
+    ensure(
+        snapshot.transport_head == snapshot.request.source_head,
+        "workspace transport must equal the exact source HEAD",
+    )?;
+    Ok(Cleanup::RetainedWorkbranch)
 }
 #[cfg(test)]
 mod tests;

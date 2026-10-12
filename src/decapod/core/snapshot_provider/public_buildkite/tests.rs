@@ -462,3 +462,108 @@ pub(crate) fn synthetic_source_recipe() -> ImportedRecipe {
     let inventory = collect_inventory(&mut reader, build(), &expected(), &budget).unwrap();
     collect_recipe(&mut reader, &inventory, JOB, &recipe_expected(), &budget).unwrap()
 }
+
+#[cfg(unix)]
+fn timeout_curl_fixture(body: &str) -> (tempfile::TempDir, PathBuf) {
+    use std::io::Write;
+    use std::os::unix::fs::OpenOptionsExt;
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path().join("curl-fixture");
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .mode(0o700)
+        .open(&path)
+        .unwrap();
+    writeln!(file, "#!/bin/sh\ncounter=\"${{0}}.count\"\nn=0\nif test -f \"$counter\"; then read -r n <\"$counter\"; fi\nn=$((n + 1))\nprintf '%s\\n' \"$n\" >\"$counter\"\n{body}").unwrap();
+    (temp, path)
+}
+
+#[cfg(unix)]
+fn timeout_request() -> PublicRequest {
+    PublicRequest {
+        path: "/org/pipe/builds/7.json".into(),
+        artifact_redirect: false,
+    }
+}
+
+#[cfg(unix)]
+fn timeout_attempts(path: &Path) -> usize {
+    std::fs::read_to_string(format!("{}.count", path.display()))
+        .unwrap()
+        .trim()
+        .parse()
+        .unwrap()
+}
+
+#[cfg(unix)]
+#[test]
+fn timeout_read_retries_only_current_get_and_discards_partial_responses() {
+    let (_temp, path) = timeout_curl_fixture(
+        "if test \"$n\" -lt 3; then printf 'incomplete response'; exit 28; fi\nprintf 'HTTP/2 200\\r\\n\\r\\ncomplete'",
+    );
+    let mut reader = CurlPublicReader::new(path.clone(), |_, _| Ok(())).unwrap();
+    let cancel = Cancellation::default();
+    let budget = Budget::new(Duration::from_secs(10), 4096, &cancel).unwrap();
+    assert_eq!(
+        reader.get(&timeout_request(), &budget).unwrap(),
+        b"complete"
+    );
+    assert_eq!(timeout_attempts(&path), 3);
+}
+
+#[cfg(unix)]
+#[test]
+fn timeout_read_exhaustion_is_nonzero_and_bounded() {
+    let (_temp, path) = timeout_curl_fixture("exit 28");
+    let mut reader = CurlPublicReader::new(path.clone(), |_, _| Ok(())).unwrap();
+    let cancel = Cancellation::default();
+    let budget = Budget::new(Duration::from_secs(10), 4096, &cancel).unwrap();
+    let error = reader.get(&timeout_request(), &budget).unwrap_err();
+    assert!(error.to_string().contains("bounded_timeout_attempts=3"));
+    assert_eq!(timeout_attempts(&path), 3);
+}
+
+#[cfg(unix)]
+#[test]
+fn timeout_read_never_retries_http_authorization_tls_or_malformed_failures() {
+    for body in [
+        "printf 'HTTP/2 401\\r\\n\\r\\n'; exit 22",
+        "printf 'HTTP/2 403\\r\\n\\r\\n'; exit 22",
+        "printf 'HTTP/2 429\\r\\nRetry-After: 60\\r\\n\\r\\n'; exit 22",
+        "exit 60",
+        "printf 'invalid provider response'",
+    ] {
+        let (_temp, path) = timeout_curl_fixture(body);
+        let mut reader = CurlPublicReader::new(path.clone(), |_, _| Ok(())).unwrap();
+        let cancel = Cancellation::default();
+        let budget = Budget::new(Duration::from_secs(10), 4096, &cancel).unwrap();
+        assert!(reader.get(&timeout_request(), &budget).is_err());
+        assert_eq!(timeout_attempts(&path), 1, "{body}");
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn timeout_retry_shares_deadline_and_respects_denied_authorization() {
+    let (_temp, path) = timeout_curl_fixture("exit 28");
+    let mut reader = CurlPublicReader::new(path.clone(), |_, _| Ok(())).unwrap();
+    let cancel = Cancellation::default();
+    let budget = Budget::new(Duration::from_millis(100), 4096, &cancel).unwrap();
+    assert_eq!(
+        reader.get(&timeout_request(), &budget).unwrap_err().kind(),
+        io::ErrorKind::TimedOut
+    );
+    assert_eq!(timeout_attempts(&path), 1);
+    let (_temp, path) = timeout_curl_fixture("exit 28");
+    let mut reader = CurlPublicReader::new(path.clone(), |_, _| {
+        Err(io::Error::new(io::ErrorKind::PermissionDenied, "denied"))
+    })
+    .unwrap();
+    let budget = Budget::new(Duration::from_secs(10), 4096, &cancel).unwrap();
+    assert_eq!(
+        reader.get(&timeout_request(), &budget).unwrap_err().kind(),
+        io::ErrorKind::PermissionDenied
+    );
+    assert!(!Path::new(&format!("{}.count", path.display())).exists());
+}

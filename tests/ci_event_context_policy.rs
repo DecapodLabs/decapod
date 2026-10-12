@@ -956,8 +956,13 @@ fn action_created_push_adapter_never_overrides_snapshot_mode() {
         .split_once("        private_dir=")
         .unwrap()
         .0;
+    let selection = selection
+        .lines()
+        .map(|line| line.strip_prefix("        ").unwrap_or(line))
+        .collect::<Vec<_>>()
+        .join("\n");
     let script = format!(
-        "set -eu\nbase=\"$EVENT_BASE\"{selection}\nprintf '%s\\n' \"$pre_pr\" \"$snapshot\" \"${{extra[@]}}\"\n"
+        "set -eu\nbase=\"$EVENT_BASE\"\n{selection}\nprintf '%s\\n' \"$pre_pr\" \"$snapshot\" \"${{extra[@]}}\"\n"
     );
     for (reference, created, expected) in [
         ("refs/heads/new-candidate", "true", "--created"),
@@ -1277,5 +1282,233 @@ fn normalized_snapshot_rejects_changed_tree_parent_and_advanced_base() {
             .is_err(),
             "{mutation}"
         );
+    }
+}
+
+const WORKBRANCH: &str = "refs/heads/agent/ci-fixture/task-123";
+
+fn workbranch(repo: &Repo, head: &str) -> Inputs {
+    Inputs {
+        pre_pr: true,
+        trigger_ref: Some(WORKBRANCH.into()),
+        accepted_base_ref: Some(ACCEPTED.into()),
+        ..repo.inputs("push", "", head)
+    }
+}
+
+#[test]
+fn workbranch_uses_actual_source_without_synthetic_commit_or_ref() {
+    for format in ["sha1", "sha256"] {
+        let repo = Repo::with_format(format);
+        let base = repo.head();
+        repo.git(&["checkout", "-qb", "agent/ci-fixture/task-123"]);
+        let head = repo.source();
+        let refs_before = repo.git(&["show-ref"]);
+        let context = resolve(&workbranch(&repo, &head)).unwrap();
+        assert_eq!(context.event, "pull_request");
+        assert_eq!(context.trigger_event, "push");
+        assert_eq!(context.base, base);
+        assert_eq!(context.merge_base, base);
+        assert_eq!(context.accepted_base, base);
+        assert_eq!(context.head, head);
+        assert_eq!(context.checkout_head, head);
+        assert_eq!(context.checkout_tree, context.head_tree);
+        assert!(context.pre_pr);
+        assert!(context.snapshot.is_none());
+        let outputs = context.github_outputs();
+        assert!(outputs.contains("workbranch=true\n"));
+        assert!(outputs.contains(&format!("source_ref={WORKBRANCH}\n")));
+        assert!(!outputs.contains("transport_head="));
+        assert!(!outputs.contains("request_id="));
+        assert_eq!(repo.git(&["show-ref"]), refs_before);
+        assert_eq!(repo.git(&["symbolic-ref", "HEAD"]), WORKBRANCH);
+    }
+}
+
+#[test]
+fn workbranch_updates_compare_all_source_work_with_captured_target() {
+    let repo = Repo::new();
+    let base = repo.head();
+    let before = repo.source();
+    repo.version("0.107.5");
+    let head = repo.commit("later version change on same branch");
+    let context = resolve(&workbranch(&repo, &head)).unwrap();
+    assert_eq!(context.base, base);
+    assert_ne!(context.base, before);
+    assert!(
+        !repo.classify(&context),
+        "source history must not get release-only exemption"
+    );
+    let mut wrong = workbranch(&repo, &head);
+    wrong.base = before;
+    assert!(resolve(&wrong).is_err());
+}
+
+#[test]
+fn workbranch_requires_exact_branch_and_accepted_source_identity() {
+    for case in [
+        "ref",
+        "missing",
+        "accepted",
+        "dirty",
+        "untracked",
+        "hidden",
+        "head",
+        "created",
+        "replacement",
+        "graft",
+    ] {
+        let repo = Repo::new();
+        let base = repo.head();
+        let head = repo.source();
+        let mut input = workbranch(&repo, &head);
+        match case {
+            "ref" => input.trigger_ref = Some("refs/heads/master".into()),
+            "missing" => input.accepted_base_ref = None,
+            "accepted" => {
+                repo.git(&["update-ref", ACCEPTED, &head]);
+            }
+            "dirty" => fs::write(repo.0.join("src/lib.rs"), "changed outside commit").unwrap(),
+            "untracked" => fs::write(repo.0.join("new.rs"), "uncommitted").unwrap(),
+            "hidden" => {
+                repo.git(&["update-index", "--assume-unchanged", "src/lib.rs"]);
+            }
+            "head" => input.head = base.clone(),
+            "created" => input.created = true,
+            "replacement" => {
+                repo.git(&["replace", &head, &base]);
+            }
+            "graft" => fs::write(repo.0.join(".git/info/grafts"), &head).unwrap(),
+            _ => unreachable!(),
+        }
+        assert!(resolve(&input).is_err(), "accepted {case}");
+    }
+    let repo = Repo::new();
+    let head = repo.source();
+    for reference in [
+        "refs/heads/agent",
+        "refs/heads/agent/name",
+        "refs/tags/agent/name/task",
+        "refs/heads/agent/name/task.lock",
+        SNAPSHOT_REF,
+    ] {
+        let mut input = workbranch(&repo, &head);
+        input.trigger_ref = Some(reference.into());
+        assert!(resolve(&input).is_err(), "accepted {reference}");
+    }
+}
+
+#[test]
+fn normalized_workbranch_rechecks_objects_without_rejecting_supported_projection_refresh() {
+    let repo = Repo::new();
+    let base = repo.head();
+    let head = repo.source();
+    resolve(&workbranch(&repo, &head)).unwrap();
+    fs::write(
+        repo.0.join("projection.txt"),
+        "supported generated projection",
+    )
+    .unwrap();
+    ci_event_context::verify_normalized_workbranch(&repo.0, WORKBRANCH, &base, &head, ACCEPTED)
+        .unwrap();
+    for (reference, supplied_base, supplied_head) in [
+        ("refs/heads/master", base.as_str(), head.as_str()),
+        (WORKBRANCH, head.as_str(), head.as_str()),
+        (WORKBRANCH, base.as_str(), base.as_str()),
+    ] {
+        assert!(
+            ci_event_context::verify_normalized_workbranch(
+                &repo.0,
+                reference,
+                supplied_base,
+                supplied_head,
+                ACCEPTED
+            )
+            .is_err()
+        );
+    }
+    repo.git(&["update-ref", ACCEPTED, &head]);
+    assert!(
+        ci_event_context::verify_normalized_workbranch(&repo.0, WORKBRANCH, &base, &head, ACCEPTED)
+            .is_err()
+    );
+}
+
+// This runs in //:ci_event_context_policy as well as Cargo: the new config
+// custody boundary is not dependent on manually running the Python fixture suite.
+#[test]
+#[cfg(unix)]
+fn action_workbranch_target_config_is_bound_to_regular_source_blob() {
+    let action = include_str!("../.github/actions/ci-context/action.yml");
+    let selection = action
+        .split_once("        base=\"$EVENT_BASE\"")
+        .unwrap()
+        .1
+        .split_once("        private_dir=")
+        .unwrap()
+        .0;
+    let selection = selection
+        .lines()
+        .map(|line| line.strip_prefix("        ").unwrap_or(line))
+        .collect::<Vec<_>>()
+        .join("\n");
+    let script = format!(
+        "set -eu\nbase=\"$EVENT_BASE\"\n{selection}\nprintf '%s\\n' \"$pre_pr\" \"$snapshot\" \"${{extra[@]}}\"\n"
+    );
+    for case in [
+        "regular",
+        "ignored",
+        "symlink",
+        "missing",
+        "malformed",
+        "integer",
+        "duplicate",
+    ] {
+        let repo = Repo::new();
+        fs::create_dir(repo.0.join(".decapod")).unwrap();
+        let config = repo.0.join(".decapod/config.toml");
+        let text = match case {
+            "malformed" => "not TOML",
+            "integer" => "[repo]\nbase_branch = 1\n",
+            "duplicate" => "[repo]\nbase_branch = 'master'\nbase_branch = 'trunk'\n",
+            _ => "[repo]\nbase_branch = 'trunk'\n",
+        };
+        match case {
+            "ignored" => {
+                fs::write(repo.0.join(".gitignore"), ".decapod/\n").unwrap();
+                fs::write(&config, text).unwrap();
+            }
+            "symlink" => std::os::unix::fs::symlink("../Cargo.toml", &config).unwrap(),
+            "missing" => {}
+            _ => fs::write(&config, text).unwrap(),
+        }
+        let head = repo.commit("config fixture");
+        let output = Command::new("bash")
+            .args(["-c", &script])
+            .env("RAW_EVENT", "push")
+            .env("RAW_REF", WORKBRANCH)
+            .env("EVENT_CREATED", "true")
+            .env("EVENT_BASE", "0".repeat(40))
+            .env("EVENT_HEAD", head)
+            .env("GITHUB_WORKSPACE", &repo.0)
+            .env("GIT_DIR", "/not/the/repository")
+            .env("GIT_INDEX_FILE", "/not/the/index")
+            .output()
+            .unwrap();
+        if case == "regular" {
+            assert!(output.status.success(), "{output:?}");
+            let text = String::from_utf8(output.stdout).unwrap();
+            assert!(text.starts_with("true\nfalse\n"));
+            assert!(text.contains("--accepted-base-ref\nrefs/remotes/origin/trunk\n"));
+            assert!(text.contains(&format!("--trigger-ref\n{WORKBRANCH}\n")));
+            assert!(!text.contains("--created"));
+            assert!(!text.contains("--snapshot"));
+        } else {
+            assert!(!output.status.success(), "accepted {case}");
+            assert!(
+                output.stdout.is_empty(),
+                "partial context escaped for {case}"
+            );
+        }
     }
 }

@@ -42,13 +42,13 @@ pub(crate) struct ValidateCli {
     /// Enable projection-consistency validation for Decapod-managed governance surfaces
     #[clap(long)]
     pub projections: bool,
-    /// Prepare a private temporary-snapshot handoff; remains non-ready until CI completes.
+    /// Prepare a private same-workbranch handoff; remains non-ready until CI completes.
     #[clap(long, conflicts_with = "snapshot_resume")]
     pub snapshot_prepare: bool,
-    /// Resume the exact temporary snapshot named by a private handoff file.
+    /// Resume the exact workspace branch commit named by a private handoff file.
     #[clap(long, value_name = "HANDOFF")]
     pub snapshot_resume: Option<std::path::PathBuf>,
-    /// Verify a host-created commit identity and write a new private handoff; remains non-ready.
+    /// Verify the exact host-pushed workspace commit and write a private handoff; remains non-ready.
     #[clap(
         long,
         value_name = "SERVER_S",
@@ -108,7 +108,7 @@ pub(crate) enum WorkspaceCommand {
         /// Description for the change
         #[clap(long)]
         description: Option<String>,
-        /// Reverify the exact validated temporary snapshot immediately before publication.
+        /// Reverify the exact validated workspace branch commit immediately before PR creation.
         #[clap(long, value_name = "HANDOFF")]
         snapshot_resume: Option<std::path::PathBuf>,
         /// Raw artifacts; every provider identity and digest is independently reverified.
@@ -260,7 +260,7 @@ pub(crate) struct InitGroupCli {
     /// Proof command in `name=command` form (repeatable/comma-separated).
     #[clap(long = "proof-command", value_delimiter = ',')]
     pub proof_commands: Vec<String>,
-    /// Select Buildkite temporary-snapshot validation (false: native Decapod).
+    /// Select Buildkite workspace-branch validation (false: native Decapod).
     /// Both providers execute the full required proof suite; omission preserves existing settings.
     #[clap(long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]
     pub validation_buildkite_preflights: Option<bool>,
@@ -405,7 +405,7 @@ pub(crate) struct InitWithCli {
     /// Preserve the authored required-profile declaration without approving it.
     #[clap(skip)]
     pub existing_required_profile: Option<crate::core::readiness_profile::ProfileDeclaration>,
-    /// Select Buildkite temporary-snapshot validation (false: native Decapod).
+    /// Select Buildkite workspace-branch validation (false: native Decapod).
     /// Both providers execute the full required proof suite; omission preserves existing settings.
     #[clap(long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]
     pub validation_buildkite_preflights: Option<bool>,

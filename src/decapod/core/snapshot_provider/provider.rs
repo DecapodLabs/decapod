@@ -314,8 +314,6 @@ struct GitObject {
 struct GitCommit {
     sha: String,
     tree: GitObject,
-    parents: Vec<GitObject>,
-    message: String,
 }
 #[derive(Debug, Deserialize)]
 struct GitRef {
@@ -456,33 +454,22 @@ fn bk<T: serde::de::DeserializeOwned>(
     Ok((decode(&bytes)?, hash(&bytes)))
 }
 
-/// Check both immutable Git objects and current provider refs. GitHub's message
-/// projection may omit the final LF; the locally checked exact S hash remains
-/// authoritative for the raw encoding. No other normalization is accepted.
+/// Check the exact original source object and both current provider refs.
+/// Source commits keep their actual message and parent history; no synthetic
+/// message or one-parent transport convention is required or accepted.
 pub fn verify_remote_binding(
     runner: &mut impl Runner,
     s: &PreparedSnapshot,
     b: &Budget<'_>,
 ) -> Result<()> {
-    super::snapshot::verify_remote_tags(runner, s, b)?;
     let r = s.request();
-    let api = r.repository.api();
-    let (transport, _): (GitCommit, _) = gh(
-        runner,
-        s,
-        &format!("{api}/git/commits/{}", s.transport_head()),
-        b,
-    )?;
-    let message = r.message()?;
+    r.validate()?;
     ensure(
-        transport.sha == s.transport_head()
-            && transport.tree.sha == r.source_tree
-            && transport.parents.len() == 1
-            && transport.parents[0].sha == r.source_head
-            && (transport.message == message
-                || transport.message == message.strip_suffix('\n').unwrap()),
-        "remote transport binding mismatch",
+        s.transport_head() == r.source_head,
+        "workspace transport must equal source HEAD",
     )?;
+    super::snapshot::verify_remote_tags(runner, s, b)?;
+    let api = r.repository.api();
     let (source, _): (GitCommit, _) = gh(
         runner,
         s,

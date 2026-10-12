@@ -7,15 +7,15 @@ actual execution evidence for the current local work branch. The complete plan
 is derived independently of results; missing adapters, capabilities or required
 rows cannot shrink the plan. Native execution uses an owned standalone snapshot
 and the existing bounded process supervisor. The optional Buildkite provider
-transports only a separately named temporary snapshot whose commit has the same
-tree as the candidate and whose sole parent is that candidate. Provider jobs
-verify this relationship and check out the candidate before executing source
-checks. The original branch reference is never the preflight transport.
+pushes or reuses the exact current workspace branch and candidate commit.
+The remote execution identity equals that source commit; no synthetic child,
+per-run ref, alternate branch, or destructive branch cleanup is permitted.
+Provider jobs verify the full accepted-base range and execute that same source.
 Ordinary workbranch pushes may precede preflight; only PR creation is held until
 the intended change is converged, mergeable and fully validated. Canonical agent
 guidance and validation reports express this same boundary.
 Buildkite is the sole remote readiness executor for this repository. The
-reserved transport commit carries no service skip directive. Existing GitHub
+workspace source commit carries no service skip directive. Existing GitHub
 workflows may run independently and are outside this readiness proof. Shared
 workflow trigger definitions remain because the Buildkite importer consumes
 them. Candidate compilation is proven by the actual Buildkite setup executor,
@@ -542,7 +542,7 @@ virtiofs/FUSE filesystem prohibition.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a6bddd625dd325ceaf557fe528476e7f37ff2cb5ec5e3e1b9bdfc5994a632d41`
+- Repository signal fingerprint: `b279695229d2264d265148eeeb1109a667b9364113b57952fa026914cf021391`
 - Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

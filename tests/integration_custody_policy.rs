@@ -434,7 +434,22 @@ fn actual_workflow_measures_before_execution_and_records_after_the_real_shard_co
 }
 #[test]
 fn source_workflow_gates_use_verified_context_and_keep_non_readiness_paths_explicit() {
-    assert!(CI.contains("branches: [ master, 'decapod/preflight/**' ]"));
+    assert!(CI.contains("branches: [ master, 'agent/**' ]"));
+    for workflow in [
+        CI,
+        include_str!("../.github/workflows/decapod-validate.yml"),
+        include_str!("../.github/workflows/docs.yml"),
+        include_str!("../.github/workflows/docs_sync.yml"),
+    ] {
+        assert!(workflow.contains("agent/**"));
+        assert!(!workflow.contains("decapod/preflight/**"));
+        assert!(workflow.contains("uses: ./.github/actions/ci-context"));
+    }
+    assert!(
+        include_str!("../.github/workflows/docs.yml")
+            .contains("if: github.ref == 'refs/heads/master'")
+    );
+    assert!(job("release-build").contains("github.ref == 'refs/heads/master'"));
     assert!(!CI.contains("github.event.before"));
     assert!(!CI.contains("github.base_ref"));
     assert!(!CI.contains("git fetch"));

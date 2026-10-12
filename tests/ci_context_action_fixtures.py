@@ -72,6 +72,7 @@ class ActionFixtures(unittest.TestCase):
             'GITHUB_ACTION_PATH': str(ACTION.parent),
             'GITHUB_OUTPUT': str(self.output),
             'GITHUB_ENV': str(self.environment),
+            'EVENT_CREATED': 'false',
             'DISPATCH_PRE_PR': 'false',
             'DISPATCH_BASE': '',
             'DISPATCH_HEAD': '',
@@ -175,6 +176,74 @@ class ActionFixtures(unittest.TestCase):
         subprocess.run(['git', '-C', str(self.repo), 'checkout', '--quiet',
                         '--detach', transport], env=self.env, check=True)
         self.assertTrue(marker.exists(), 'hook fixture was not executable')
+
+    def configure_target(self, branch='master'):
+        (self.repo / '.decapod').mkdir(exist_ok=True)
+        self.write('.decapod/config.toml', f'[repo]\nbase_branch = "{branch}"\n')
+        self.source = self.commit('configured workspace target')
+        self.tree = self.git('rev-parse', 'HEAD^{tree}')
+
+    def test_workbranch_first_and_updated_push_keep_exact_source_and_pr_range(self):
+        self.configure_target()
+        branch = 'agent/ci-fixture/task-123'
+        self.git('checkout', '-qb', branch)
+        refs = self.git('show-ref')
+        for before, created in [('0' * 40, 'true'), (self.base, 'false')]:
+            result = self.run_action(ref='refs/heads/' + branch, base=before,
+                                     EVENT_CREATED=created)
+            self.assertEqual(result['event'], 'pull_request')
+            self.assertEqual(result['trigger_event'], 'push')
+            self.assertEqual(result['base'], self.base)
+            self.assertEqual(result['head'], self.source)
+            self.assertEqual(result['checkout_head'], self.source)
+            self.assertEqual(result['validation_head'], self.source)
+            self.assertEqual(result['workbranch'], 'true')
+            self.assertEqual(result['pre_pr'], 'true')
+            self.assertNotIn('request_id', result)
+            self.assertNotIn('transport_head', result)
+            self.assertEqual(self.git('show-ref'), refs)
+            self.assertEqual(self.git('symbolic-ref', 'HEAD'), 'refs/heads/' + branch)
+
+    def test_workbranch_respects_configured_target_not_hardcoded_master(self):
+        self.configure_target('trunk')
+        self.git('update-ref', 'refs/remotes/origin/trunk', self.base)
+        self.git('update-ref', '-d', ACCEPTED)
+        result = self.run_action(ref='refs/heads/agent/ci-fixture/task-123',
+                                 base='f' * 40, EVENT_CREATED='false')
+        self.assertEqual(result['accepted_base'], self.base)
+        self.assertEqual(result['base'], self.base)
+        self.assertEqual(result['head'], self.source)
+
+    def test_workbranch_invalid_config_never_emits_partial_context(self):
+        self.configure_target()
+        for text in ['[repo]\n', '[repo]\nbase_branch = 1\n',
+                     '[repo]\nbase_branch = "master"\nbase_branch = "other"\n',
+                     '[repo]\nbase_branch = "refs/heads/master"\n',
+                     '[repo]\nbase_branch = "../master"\n',
+                     '[repo]\nbase_branch = "missing"\n']:
+            self.write('.decapod/config.toml', text)
+            self.source = self.commit('invalid target fixture')
+            self.run_action(ref='refs/heads/agent/ci-fixture/task-123',
+                            EVENT_CREATED='false', expected_success=False)
+        (self.repo / '.decapod/config.toml').unlink()
+        self.source = self.commit('missing target fixture')
+        self.run_action(ref='refs/heads/agent/ci-fixture/task-123',
+                        EVENT_CREATED='false', expected_success=False)
+
+    def test_workbranch_rejects_ignored_or_symlink_target_config(self):
+        branch = 'refs/heads/agent/ci-fixture/task-123'
+        self.write('.gitignore', '.decapod/\n')
+        self.source = self.commit('ignore synthetic config')
+        (self.repo / '.decapod').mkdir()
+        self.write('.decapod/config.toml', '[repo]\nbase_branch = "master"\n')
+        self.run_action(ref=branch, expected_success=False)
+        (self.repo / '.decapod/config.toml').unlink()
+        self.write('.gitignore', '')
+        target = self.root / 'external-config.toml'
+        target.write_text('[repo]\nbase_branch = "master"\n')
+        (self.repo / '.decapod/config.toml').symlink_to(target)
+        self.source = self.commit('symlink config fixture')
+        self.run_action(ref=branch, expected_success=False)
 
     def test_ordinary_push_preserves_its_immutable_event_range(self):
         result = self.run_action()

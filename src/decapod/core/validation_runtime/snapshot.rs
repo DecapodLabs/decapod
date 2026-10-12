@@ -1,4 +1,4 @@
-//! Concrete temporary-snapshot preparation, host handoff, resume and collection.
+//! Current-workbranch preparation, host handoff, publication and collection.
 //! A single bounded invocation owns submit, terminal polling and authenticated
 //! source custody. Missing obligations remain non-ready. No caller green is read.
 use super::*;
@@ -16,12 +16,12 @@ mod source_policy;
 
 #[derive(Debug, Clone, Copy)]
 pub enum SnapshotMode {
-    /// Persist exact S/H/T/B/ref/tags for an authorized host object-graph upload.
+    /// Persist exact H/T/B/current-ref/tags for an authorized same-branch push.
     PrepareForHost,
     /// Existing official authentication or a trusted compiled host Runner.
     PublishAndCollect,
-    /// Read only the exact externally uploaded snapshot, then collect and clean
-    /// its task-owned temporary ref through the separately authorized Runner.
+    /// Verify the externally pushed current branch, then collect exact-H proof.
+    /// The real workspace branch is retained and must never be cleaned up.
     ResumeAndCollect,
 }
 
@@ -213,8 +213,9 @@ impl<'a, R: Runner> SnapshotHost<'a, R> {
                 .get("transport_head")
                 .and_then(|v| v.as_str())
                 .ok_or_else(|| invalid("handoff lacks S locator"))?;
+            require_workbranch_head(&request, head)?;
             // All repository/branch/H/T/B/tag fields above were independently
-            // remeasured. The file only locates an existing immutable S/UUID.
+            // remeasured. The file only locates the same committed workbranch.
             let prepared = transport::resume(
                 &mut self.runner,
                 &self.options.root,
@@ -252,7 +253,7 @@ impl<'a, R: Runner> SnapshotHost<'a, R> {
         }).collect();
         if matches!(self.mode, SnapshotMode::PrepareForHost) {
             blockers.insert(0,Blocker::new("SNAPSHOT_UPLOAD_PENDING",format!(
-                "authorized host must upload the exact missing object graph and create {} at {}; resume with {} after exact readback. This does not publish the source branch or open a PR",
+                "authorized host must push the existing workspace branch {} at exact source {}; resume with {} after exact readback. Only same-name non-forced creation/fast-forward is allowed. This does not establish readiness or open a PR",
                 prepared.request().transport_ref(),prepared.transport_head(),directory.join("snapshot-handoff.json").display())));
             return Ok(blockers);
         }
@@ -309,11 +310,11 @@ impl<'a, R: Runner> SnapshotHost<'a, R> {
             terminal.recheck(&mut self.runner, reader, &snapshot, &plan, &provider_budget)?;
             self.terminal_sources = Some((plan, terminal));
         }
-        // Retain the exact task-owned ref for fresh repeated validation and the
-        // final pre-publication gate. The caller persists only this locator and
-        // invokes cleanup_handoff after authorized publication or abandonment.
+        // Repeated validation reuses the real workspace branch and independently
+        // recollects current proof. A local locator never authorizes readiness or
+        // deletion of the workbranch after publication or abandonment.
         write_new(&directory.join("cleanup-instructions.txt"), format!(
-            "Retained task-owned snapshot {} at {}. Reuse snapshot-handoff.json for fresh proof. After publication or abandonment, call the typed cleanup_handoff API; deletion uses an exact-S lease. Never delete a changed ref.\n",
+            "Retained real workspace branch {} at {}. Reuse snapshot-handoff.json for fresh proof. Cleanup is read-only and never deletes this branch. Old temporary refs require separate explicit cleanup authorization.\n",
             snapshot.request().transport_ref(), snapshot.transport_head()).as_bytes())?;
         let after = native_proof::capture_current_identity(
             &project.identity_inputs,
@@ -490,6 +491,15 @@ impl<R: Runner> Host for SnapshotHost<'_, R> {
         self.evidence_directory.as_deref()
     }
 }
+fn require_workbranch_head(request: &transport::SnapshotRequest, head: &str) -> io::Result<()> {
+    if head != request.source_head {
+        return Err(invalid(
+            "LEGACY_TEMPORARY_SNAPSHOT_UNSUPPORTED: validation must use the exact current workspace branch commit; prepare a new same-branch handoff",
+        ));
+    }
+    Ok(())
+}
+
 fn read_handoff(path: &Path) -> io::Result<serde_json::Value> {
     let metadata = fs::symlink_metadata(path)?;
     if !metadata.is_file() || metadata.file_type().is_symlink() || metadata.len() > 1024 * 1024 {
@@ -521,9 +531,9 @@ fn read_handoff(path: &Path) -> io::Result<serde_json::Value> {
     serde_json::from_slice(&fs::read(path)?).map_err(io::Error::other)
 }
 
-/// Adopt the exact host-created transport object for an existing owned request.
+/// Verify an authorized host has pushed the exact current workbranch commit.
 /// The original handoff is only a locator: rebuild current committed source and
-/// validate its prior S before the provider's authenticated object-only adoption.
+/// require H=S before the provider independently checks the same branch.
 /// Returns a NEW private handoff file, never readiness or a publication permit.
 pub fn adopt_host_handoff(
     options: &Options,
@@ -581,6 +591,8 @@ pub fn adopt_host_handoff(
         accepted_base_ref: format!("refs/heads/{}", options.base_branch),
         tags: transport::capture_local_tags(runner, &options.root, &provider_budget)?,
     };
+    require_workbranch_head(&request, locator("/transport_head")?)?;
+    require_workbranch_head(&request, observed_s)?;
     let prior = transport::resume(
         runner,
         &options.root,
@@ -636,16 +648,15 @@ fn persist_adopted_handoff(
         "request_id": adopted.request().request_id,
         "prior_transport_head": prior.transport_head(),
         "adopted_transport_head": adopted.transport_head(),
-        "next_action": "Run full validate with this new snapshot-handoff.json; previous-S proof is not reusable"
+        "next_action": "Run full validate with this snapshot-handoff.json; the same workbranch H still requires fresh complete provider evidence"
     })).map_err(io::Error::other)?)?;
     let _ = directory.keep();
     Ok(path)
 }
 
-/// Recoverable exact-lease cleanup after the caller has completed authorized
-/// publication, or explicitly abandoned this attempt. Rebuilds source identity
-/// from the unchanged local checkout and validates existing S before deletion;
-/// no deserialized request or cached green authority is accepted.
+/// Compatibility cleanup after publication or abandonment: verify the locator,
+/// then retain the real workspace branch. This API never deletes a branch and
+/// cannot be used to clean historical temporary refs.
 pub fn cleanup_handoff(
     options: &Options,
     repository: &Repository,
@@ -686,6 +697,7 @@ pub fn cleanup_handoff(
         accepted_base_ref: format!("refs/heads/{}", options.base_branch),
         tags: transport::capture_local_tags(runner, &options.root, &provider_budget)?,
     };
+    require_workbranch_head(&request, locator("/transport_head")?)?;
     let snapshot = transport::resume(
         runner,
         &options.root,
@@ -818,9 +830,9 @@ mod tests {
         String::from_utf8(output.stdout).unwrap().trim().into()
     }
     // The adopter's provider binding remains real production code. This fixture
-    // substitutes only public metadata/transport reads; both S objects and raw
-    // message/tree/parent verification are actual local Git bytes. Provider-owned
-    // tests separately exercise the bounded remote object transfer itself.
+    // substitutes only public metadata/transport reads; the exact workbranch
+    // commit/tree verification uses actual local Git bytes. No synthetic object
+    // or auxiliary branch is created or adopted.
     struct AdoptionReader {
         local: LocalOnly,
         root: PathBuf,
@@ -911,22 +923,8 @@ mod tests {
             accepted_base_ref: format!("refs/heads/{}", options.base_branch),
             tags: BTreeMap::new(),
         };
-        let server_s = command(
-            &options.root,
-            &[
-                "-c",
-                "user.name=Host fixture",
-                "-c",
-                "user.email=host@example.invalid",
-                "commit-tree",
-                &request.source_tree,
-                "-p",
-                &request.source_head,
-                "-m",
-                request.message().unwrap().trim_end(),
-            ],
-        );
-        assert_ne!(server_s, record["transport_head"].as_str().unwrap());
+        let server_s = request.source_head.clone();
+        assert_eq!(server_s, record["transport_head"].as_str().unwrap());
         let mut reader = AdoptionReader {
             local: LocalOnly {
                 official: OfficialCli::git_only(options.git.clone(), |_, _| Ok(())).unwrap(),
@@ -949,7 +947,7 @@ mod tests {
         )
         .unwrap();
         assert_ne!(adopted, handoff);
-        assert_eq!(reader.fetches, 1);
+        assert_eq!(reader.fetches, 0);
         let new_record = read_handoff(&adopted).unwrap();
         let mut expected = record.clone();
         expected["transport_head"] = serde_json::Value::String(server_s.clone());
@@ -992,6 +990,23 @@ mod tests {
                 0o700
             );
         }
+        let mut legacy = record.clone();
+        legacy["transport_head"] = serde_json::Value::String("e".repeat(40));
+        let legacy_path = handoff.with_file_name("legacy-transport-handoff.json");
+        write_new(&legacy_path, &serde_json::to_vec(&legacy).unwrap()).unwrap();
+        assert!(
+            adopt_host_handoff(
+                options,
+                repository,
+                &mut reader,
+                &legacy_path,
+                &server_s,
+                &cancel
+            )
+            .unwrap_err()
+            .to_string()
+            .contains("LEGACY_TEMPORARY_SNAPSHOT_UNSUPPORTED")
+        );
         let mut wrong = record.clone();
         wrong["request"]["source_head"] = serde_json::Value::String("f".repeat(40));
         let bad = handoff.with_file_name("adoption-wrong-handoff.json");
@@ -1029,8 +1044,8 @@ mod tests {
             .is_err()
         );
         assert_eq!(
-            reader.fetches, 1,
-            "invalid handoffs/source must fail before adoption transport"
+            reader.fetches, 0,
+            "same-branch adoption never fetches a synthetic transport object"
         );
         assert_eq!(fs::read(handoff).unwrap(), original);
     }
@@ -1082,7 +1097,7 @@ mod tests {
         }
     }
     #[test]
-    fn prepare_only_creates_real_unreferenced_snapshot_and_private_handoff_without_push() {
+    fn prepare_only_records_current_branch_and_private_handoff_without_new_commit_or_push() {
         let temp = tempfile::tempdir().unwrap();
         let root = temp.path().join("source");
         fs::create_dir(&root).unwrap();
@@ -1104,6 +1119,7 @@ mod tests {
         command(&root, &["commit", "-m", "candidate"]);
         let head = command(&root, &["rev-parse", "HEAD"]);
         let index = fs::read(root.join(".git/index")).unwrap();
+        let objects = command(&root, &["count-objects", "-v"]);
         let options = Options {
             root: root.canonicalize().unwrap(),
             git: PathBuf::from("/usr/bin/git").canonicalize().unwrap(),
@@ -1149,6 +1165,7 @@ mod tests {
         assert!(blockers.len() > 1);
         assert_eq!(head, command(&root, &["rev-parse", "HEAD"]));
         assert_eq!(index, fs::read(root.join(".git/index")).unwrap());
+        assert_eq!(objects, command(&root, &["count-objects", "-v"]));
         assert!(!root.join(".git/refs/heads/decapod").exists());
         assert!(command(&root, &["status", "--porcelain"]).is_empty());
         let path = host
@@ -1157,14 +1174,11 @@ mod tests {
             .join("snapshot-handoff.json");
         let record: serde_json::Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
         let snapshot = record["transport_head"].as_str().unwrap();
-        assert_ne!(snapshot, head);
-        assert_eq!(
-            command(&root, &["show", "-s", "--format=%P", snapshot]),
-            head
-        );
+        assert_eq!(snapshot, head);
+        assert_eq!(record["request"]["source_ref"], "refs/heads/work");
         assert_eq!(
             cleanup_handoff(&options, &host.repository, &mut host.runner, &path, &cancel).unwrap(),
-            transport::Cleanup::AlreadyAbsent
+            transport::Cleanup::RetainedWorkbranch
         );
         let mut changed = record.clone();
         changed["request"]["source_head"] = serde_json::Value::String("f".repeat(40));

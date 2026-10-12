@@ -179,7 +179,7 @@ fn provider_selection_does_not_weaken_reconciliation_obligations() {
     assert_eq!(native.repair_tasks, remote.repair_tasks);
     assert_eq!(native.discovered_sources, remote.discovered_sources);
     assert_eq!(native.provider, "native");
-    assert_eq!(remote.provider, "buildkite_temporary_snapshot");
+    assert_eq!(remote.provider, "buildkite_workbranch");
 }
 
 #[test]

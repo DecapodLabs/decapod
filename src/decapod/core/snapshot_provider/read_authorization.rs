@@ -67,8 +67,8 @@ fn decode_segment(s: &str) -> Result<String> {
     }
     String::from_utf8(out).map_err(|_| invalid("non-UTF8 API path"))
 }
-fn snapshot_branch(s: &str) -> bool {
-    decode_segment(s).is_ok_and(|s| s.strip_prefix("decapod/preflight/").is_some_and(uuid))
+fn source_branch(s: &str) -> bool {
+    decode_segment(s).is_ok_and(|s| branch(&format!("refs/heads/{s}")))
 }
 fn query<'a>(s: &'a str, names: &[&str]) -> Result<Vec<&'a str>> {
     let parts: Vec<_> = s.split('&').collect();
@@ -163,7 +163,7 @@ impl CommandSpec {
                         ensure(
                             oid(q[0])
                                 && q[1] == "push"
-                                && snapshot_branch(q[2])
+                                && source_branch(q[2])
                                 && q[3] == "100"
                                 && number(q[4], 10),
                             "unbounded/mismatched GitHub run query",
@@ -234,7 +234,7 @@ impl CommandSpec {
                     [builds] if builds.starts_with("builds?") => {
                         let q = query(&builds[7..], &["commit", "branch", "per_page", "page"])?;
                         ensure(
-                            oid(q[0]) && snapshot_branch(q[1]) && q[2] == "100" && number(q[3], 10),
+                            oid(q[0]) && source_branch(q[1]) && q[2] == "100" && number(q[3], 10),
                             "unbounded/mismatched Buildkite build query",
                         )?;
                         ProviderReadKind::BuildkiteBuilds
@@ -372,6 +372,29 @@ mod tests {
             "repos/org/repo/actions/runs/1/attempts/1/jobs?per_page=100&page=99",
         ] {
             assert!(spec(p).authorize_provider_read().is_err());
+        }
+    }
+    #[test]
+    fn original_workbranch_run_query_is_bounded_and_strict() {
+        let sha = "a".repeat(40);
+        for branch in ["work", "agent%2Fworker%2Ftask"] {
+            let path = format!(
+                "repos/org/repo/actions/workflows/17/runs?head_sha={sha}&event=push&branch={branch}&per_page=100&page=1"
+            );
+            assert!(spec(&path).authorize_provider_read().is_ok());
+        }
+        for branch in [
+            "%2Fwork",
+            "%2E%2E",
+            "work%3Fbad",
+            "work%00",
+            "work.lock",
+            "a%2F%2Fb",
+        ] {
+            let path = format!(
+                "repos/org/repo/actions/workflows/17/runs?head_sha={sha}&event=push&branch={branch}&per_page=100&page=1"
+            );
+            assert!(spec(&path).authorize_provider_read().is_err(), "{branch}");
         }
     }
 }

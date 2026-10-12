@@ -12,7 +12,7 @@ fn snapshot() -> PreparedSnapshot {
             accepted_base_ref: "refs/heads/master".into(),
             tags: Default::default(),
         },
-        "d".repeat(40),
+        "a".repeat(40),
         PathBuf::from("/tmp"),
     )
 }
@@ -33,7 +33,7 @@ fn workflow() -> GithubWorkflow {
                 source_definition_digest: hash(b"workflow job bytes"),
                 source_head: "a".repeat(40),
                 accepted_base_revision: "c".repeat(40),
-                transport_revision: "d".repeat(40),
+                transport_revision: "a".repeat(40),
                 source_tree: "b".repeat(40),
                 required_steps: vec!["Verify immutable context", "Run substantive tests"]
                     .into_iter()
@@ -70,7 +70,7 @@ fn run() -> Value {
     json!({"id":42,"run_attempt":1,"workflow_id":123,"path":".github/workflows/ci.yml","head_sha":s.transport_head(),"head_branch":s.request().transport_ref().strip_prefix("refs/heads/").unwrap(),"event":"push","status":"completed","conclusion":"success","repository":{"full_name":"owner/repo"},"head_repository":{"full_name":"owner/repo"}})
 }
 fn jobs() -> Value {
-    json!({"total_count":1,"jobs":[{"id":99,"run_id":42,"run_attempt":1,"head_sha":"d".repeat(40),"name":"test (linux)","status":"completed","conclusion":"success","steps":[{"name":"Verify immutable context","number":1,"status":"completed","conclusion":"success"},{"name":"Run substantive tests","number":2,"status":"completed","conclusion":"success"}]}]})
+    json!({"total_count":1,"jobs":[{"id":99,"run_id":42,"run_attempt":1,"head_sha":"a".repeat(40),"name":"test (linux)","status":"completed","conclusion":"success","steps":[{"name":"Verify immutable context","number":1,"status":"completed","conclusion":"success"},{"name":"Run substantive tests","number":2,"status":"completed","conclusion":"success"}]}]})
 }
 fn build() -> Value {
     let s = snapshot();
@@ -138,10 +138,9 @@ impl Runner for Mock {
         let s = snapshot();
         let r = s.request();
         let v = if endpoint.contains("/git/commits/") {
-            let transport = endpoint.ends_with(s.transport_head());
-            json!({"sha":if transport{s.transport_head()}else{r.source_head.as_str()},"tree":{"sha":r.source_tree},"parents":if transport{vec![json!({"sha":r.source_head})]}else{vec![]},"message":if transport{r.message().unwrap()}else{"source".into()}})
+            json!({"sha":r.source_head,"tree":{"sha":r.source_tree},"parents":[{"sha":r.accepted_base},{"sha":"e".repeat(40)}],"message":"ordinary merge commit, unchanged by validation"})
         } else if endpoint.contains("/git/ref/") {
-            let temp = endpoint.contains("decapod/preflight");
+            let temp = endpoint.ends_with("/heads/work");
             json!({"ref":if temp{r.transport_ref()}else{r.accepted_base_ref.clone()},"object":{"type":"commit","sha":if temp{s.transport_head().to_string()}else if self.base_changed{"e".repeat(40)}else{r.accepted_base.clone()}}})
         } else if endpoint.contains("/attempts/") {
             self.jobs.clone()
@@ -236,7 +235,7 @@ fn provider_projection_cannot_rebind_event_workflow_head_or_attempt() {
         ("event", json!("pull_request")),
         ("path", json!(".github/workflows/other.yml")),
         ("head_sha", json!("e".repeat(40))),
-        ("head_branch", json!("work")),
+        ("head_branch", json!("other")),
         ("workflow_id", json!(999)),
     ] {
         let mut raw = run();
@@ -664,4 +663,66 @@ fn imported_workflow_cannot_enter_single_native_pipeline_collector() {
     value["github_workflow_path"] = ".github/workflows/ci.yml".into();
     let observed: BkBuild = serde_json::from_value(value).unwrap();
     assert!(check_build(&observed, &snapshot(), &pipeline()).is_err());
+}
+
+#[test]
+fn exact_original_merge_commit_is_bound_without_synthetic_metadata() {
+    let c = Cancellation::default();
+    let mut m = Mock::default();
+    verify_remote_binding(&mut m, &snapshot(), &budget(&c)).unwrap();
+    assert_eq!(
+        m.calls
+            .iter()
+            .filter(|args| args.iter().any(|arg| arg.contains("/git/commits/")))
+            .count(),
+        1
+    );
+}
+
+#[test]
+fn legacy_synthetic_transport_cannot_enter_remote_binding() {
+    let c = Cancellation::default();
+    let current = snapshot();
+    let old = PreparedSnapshot::fixture(
+        current.request().clone(),
+        "d".repeat(40),
+        current.root().into(),
+    );
+    let mut m = Mock::default();
+    assert!(verify_remote_binding(&mut m, &old, &budget(&c)).is_err());
+    assert!(m.calls.is_empty());
+}
+
+#[test]
+fn remote_exact_source_hash_and_tree_must_both_match() {
+    struct ChangedCommit {
+        inner: Mock,
+        field: &'static str,
+    }
+    impl Runner for ChangedCommit {
+        fn execute(&mut self, spec: &CommandSpec, budget: &Budget<'_>) -> Result<Reply> {
+            let mut reply = self.inner.execute(spec, budget)?;
+            if spec.args.iter().any(|arg| arg.contains("/git/commits/")) {
+                let mut value: Value = serde_json::from_slice(&reply.stdout).unwrap();
+                if self.field == "sha" {
+                    value["sha"] = json!("f".repeat(40));
+                } else {
+                    value["tree"]["sha"] = json!("f".repeat(40));
+                }
+                reply.stdout = serde_json::to_vec(&value).unwrap();
+            }
+            Ok(reply)
+        }
+    }
+    let c = Cancellation::default();
+    for field in ["sha", "tree"] {
+        let mut runner = ChangedCommit {
+            inner: Mock::default(),
+            field,
+        };
+        assert!(
+            verify_remote_binding(&mut runner, &snapshot(), &budget(&c)).is_err(),
+            "{field}"
+        );
+    }
 }
