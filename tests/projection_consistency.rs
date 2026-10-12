@@ -145,6 +145,23 @@ fn run_validate(dir: &Path, password: &str, projections: bool) -> std::process::
     )
 }
 
+// Positive projection fixtures do not contain complete source/release proof.
+fn run_project_check(dir: &Path, password: &str, projections: bool) -> std::process::Output {
+    let mut args = vec!["govern", "project-check", "--format", "json"];
+    if projections {
+        args.push("--projections");
+    }
+    run_decapod(
+        dir,
+        &args,
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    )
+}
+
 fn get_valid_context_capsule(dir: &Path, password: &str) -> serde_json::Value {
     let out = run_rpc(
         dir,
@@ -175,6 +192,9 @@ fn write_context_capsule(dir: &Path, capsule: &serde_json::Value) {
 
 #[test]
 fn projection_validation_catches_stale_context_capsule_while_normal_passes() {
+    // Compare normal project prerequisites with the public typed projection refusal.
+    // This prerequisite result is not full publication-readiness proof.
+
     let (_tmp, dir, password) = setup_repo();
 
     // Get a valid context capsule from decapod
@@ -183,7 +203,7 @@ fn projection_validation_catches_stale_context_capsule_while_normal_passes() {
     write_context_capsule(&dir, &capsule);
 
     // Normal validate should pass with valid capsule
-    let normal = run_validate(&dir, &password, false);
+    let normal = run_project_check(&dir, &password, false);
     assert!(
         normal.status.success(),
         "normal validate should pass with valid context capsule; stderr:\n{}",
@@ -218,7 +238,7 @@ fn projection_validation_catches_stale_context_capsule_while_normal_passes() {
     );
 
     // Normal validate should still pass (capsule hash is still valid for its original fingerprint)
-    let normal = run_validate(&dir, &password, false);
+    let normal = run_project_check(&dir, &password, false);
     assert!(
         normal.status.success(),
         "normal validate should pass with stale context capsule fingerprint; stderr:\n{}",
@@ -320,6 +340,9 @@ fn projection_validation_rejects_missing_capsule_provenance_and_hash() {
 
 #[test]
 fn capability_survives_config_context_spec_deterministically() {
+    // Check stable config/context/spec projection prerequisites across regeneration.
+    // This prerequisite result is not full publication-readiness proof.
+
     let (_tmp, dir, _password) = setup_repo();
 
     set_capabilities(&dir, &["houseboat", "public-api"]);
@@ -372,7 +395,7 @@ fn capability_survives_config_context_spec_deterministically() {
     // Both capabilities should appear in generated specs
     let normal = run_decapod(
         &dir,
-        &["validate"],
+        &["govern", "project-check"],
         &[
             ("DECAPOD_AGENT_ID", "unknown"),
             ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
@@ -395,7 +418,13 @@ fn capability_survives_config_context_spec_deterministically() {
     // Validate with projections should pass (both capabilities known)
     let projections = run_decapod(
         &dir,
-        &["validate", "--projections", "--format", "json"],
+        &[
+            "govern",
+            "project-check",
+            "--projections",
+            "--format",
+            "json",
+        ],
         &[
             ("DECAPOD_AGENT_ID", "unknown"),
             ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
@@ -415,7 +444,13 @@ fn capability_survives_config_context_spec_deterministically() {
         .expect("read first intent");
     let second = run_decapod(
         &dir,
-        &["validate", "--projections", "--format", "json"],
+        &[
+            "govern",
+            "project-check",
+            "--projections",
+            "--format",
+            "json",
+        ],
         &[
             ("DECAPOD_AGENT_ID", "unknown"),
             ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
@@ -636,7 +671,8 @@ fn persistent_state_activates_executable_migration_gate() {
         ],
     );
     assert!(refresh_after_config.status.success());
-    let projections3 = run_validate(&dir, &password, true);
+    // The successful migration command proves this prerequisite, not the full source/release suite.
+    let projections3 = run_project_check(&dir, &password, true);
     assert!(
         projections3.status.success(),
         "configured migration proof should pass; stdout:\n{}\nstderr:\n{}",

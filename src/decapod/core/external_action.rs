@@ -13,6 +13,8 @@ pub enum ExternalCapability {
     ProofExec,
     VerificationExec,
     SystemInspect,
+    PreflightProbe,
+    PreflightRead,
 }
 
 impl ExternalCapability {
@@ -23,6 +25,8 @@ impl ExternalCapability {
             ExternalCapability::ProofExec => "proof_exec",
             ExternalCapability::VerificationExec => "verification_exec",
             ExternalCapability::SystemInspect => "system_inspect",
+            ExternalCapability::PreflightProbe => "preflight_probe",
+            ExternalCapability::PreflightRead => "preflight_read",
         }
     }
 }
@@ -168,18 +172,46 @@ fn log_event(store_root: &Path, event: &ExternalActionEvent) -> Result<(), error
     Ok(())
 }
 
-pub fn execute(
+/// Check the existing external-action policy before a separately bounded runner
+/// starts an already reviewed invocation. This does not execute, grant approval,
+/// change configuration, or accept arbitrary imported command definitions.
+pub fn authorize(
     store_root: &Path,
     capability: ExternalCapability,
     scope: &str,
     command: &str,
-    args: &[&str],
-    cwd: &Path,
-) -> Result<Output, error::DecapodError> {
+) -> Result<(), error::DecapodError> {
+    if matches!(
+        capability,
+        ExternalCapability::PreflightProbe | ExternalCapability::PreflightRead
+    ) {
+        return Err(error::DecapodError::ValidationError(
+            "Preflight operations require the sealed argument-aware authorization path".into(),
+        ));
+    }
+    authorize_checked(store_root, capability, scope, command)
+}
+
+fn authorize_checked(
+    store_root: &Path,
+    capability: ExternalCapability,
+    scope: &str,
+    command: &str,
+) -> Result<(), error::DecapodError> {
     let config = maybe_load_config(store_root);
     let allowed_bins = allowed_for_capability(&config, capability);
     let bin = command_bin(command);
-    let is_allowed = allowed_bins.iter().any(|b| b == &bin)
+    let explicitly_configured = config
+        .rules
+        .iter()
+        .any(|r| r.capability == capability.as_str());
+    let sealed_default = !explicitly_configured
+        && matches!(
+            capability,
+            ExternalCapability::PreflightProbe | ExternalCapability::PreflightRead
+        );
+    let is_allowed = sealed_default
+        || allowed_bins.iter().any(|b| b == &bin)
         || (capability == ExternalCapability::VerificationExec && bin.starts_with("decapod"));
     if !is_allowed {
         return Err(error::DecapodError::ValidationError(format!(
@@ -190,6 +222,125 @@ pub fn execute(
     }
 
     require_external_approval(store_root, capability, scope)?;
+
+    Ok(())
+}
+
+/// Authorize only a fixed read-only installed-tool probe. This cannot execute
+/// commands, install tools, evaluate shell text, or authorize provider writes.
+/// Generic `authorize`/`execute` reject this capability; the typed caller still
+/// owns the bounded process and installed-file identity checks.
+pub fn authorize_preflight_probe(
+    store_root: &Path,
+    program: &Path,
+    arguments: &[&str],
+) -> Result<(), error::DecapodError> {
+    let name = program.file_name().and_then(|n| n.to_str()).unwrap_or("");
+    let versioned = |prefix: &str| {
+        name == prefix
+            || name
+                .strip_prefix(&format!("{prefix}-"))
+                .is_some_and(|suffix| {
+                    !suffix.is_empty() && suffix.bytes().all(|c| c.is_ascii_digit() || c == b'.')
+                })
+    };
+    let compiler = [
+        "cc",
+        "gcc",
+        "clang",
+        "x86_64-linux-gnu-gcc",
+        "aarch64-linux-gnu-gcc",
+    ]
+    .iter()
+    .any(|prefix| versioned(prefix));
+    let allowed = program.is_absolute()
+        && ((name == "rustc"
+            && matches!(
+                arguments,
+                ["--version", "--verbose"] | ["--print", "sysroot"]
+            ))
+            || (name == "cargo" && arguments == ["--version", "--verbose"])
+            || (compiler && arguments == ["--version"]));
+    if !allowed {
+        return Err(error::DecapodError::ValidationError(
+            "PREFLIGHT_PROBE_REJECTED: unsupported executable or probe arguments".into(),
+        ));
+    }
+    authorize_checked(
+        store_root,
+        ExternalCapability::PreflightProbe,
+        "readiness.toolchain",
+        &program.to_string_lossy(),
+    )
+}
+
+/// Only the public-site reader may mint this route seal. Its bounded HTTP
+/// engine validates each artifact redirect before following it. No auth token,
+/// arbitrary URL, POST, cookie jar or shell command is accepted here.
+pub fn authorize_public_buildkite_read(
+    store_root: &Path,
+    program: &Path,
+    request: &crate::core::snapshot_provider::public_buildkite::AuthorizedPublicRead,
+) -> Result<(), error::DecapodError> {
+    if !program.is_absolute()
+        || program.file_name().and_then(|p| p.to_str()) != Some("curl")
+        || request.method() != "GET"
+        || !request.url().starts_with("https://buildkite.com/")
+        || request.max_https_redirects() > 3
+    {
+        return Err(error::DecapodError::ValidationError(
+            "PREFLIGHT_READ_REJECTED".into(),
+        ));
+    }
+    authorize_checked(
+        store_root,
+        ExternalCapability::PreflightRead,
+        request.scope(),
+        &program.to_string_lossy(),
+    )
+}
+
+/// Authorize the explicit zero-redirect anonymous GitHub JSON reader. Protected
+/// raw logs require a supported authenticated host; this route never upgrades
+/// to an official CLI or follows an unvalidated storage redirect.
+pub fn authorize_public_github_json_read(
+    store_root: &Path,
+    program: &Path,
+    request: &crate::core::snapshot_provider::read_authorization::AuthorizedProviderRead,
+) -> Result<(), error::DecapodError> {
+    if !program.is_absolute()
+        || program.file_name().and_then(|p| p.to_str()) != Some("curl")
+        || request.method() != "GET"
+        || !request
+            .initial_url()
+            .starts_with("https://api.github.com/repos/")
+        || request
+            .initial_url()
+            .split('?')
+            .next()
+            .is_some_and(|p| p.ends_with("/logs") || p.ends_with("/zip"))
+    {
+        return Err(error::DecapodError::ValidationError(
+            "PREFLIGHT_READ_REJECTED".into(),
+        ));
+    }
+    authorize_checked(
+        store_root,
+        ExternalCapability::PreflightRead,
+        request.scope(),
+        &program.to_string_lossy(),
+    )
+}
+
+pub fn execute(
+    store_root: &Path,
+    capability: ExternalCapability,
+    scope: &str,
+    command: &str,
+    args: &[&str],
+    cwd: &Path,
+) -> Result<Output, error::DecapodError> {
+    authorize(store_root, capability, scope, command)?;
 
     let output = Command::new(command)
         .args(args)
@@ -232,4 +383,39 @@ pub fn schema() -> serde_json::Value {
         "config": ".decapod/EXTERNAL_ACTIONS.json",
         "storage": ["decapod.db:external_actions_events"]
     })
+}
+
+#[cfg(test)]
+mod preflight_authorization_tests {
+    use super::*;
+    #[test]
+    fn probes_are_finite_and_do_not_grant_generic_execution() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        for (program, args) in [
+            ("/usr/bin/rustc", vec!["--version", "--verbose"]),
+            ("/usr/bin/rustc", vec!["--print", "sysroot"]),
+            ("/usr/bin/cargo", vec!["--version", "--verbose"]),
+            ("/usr/bin/x86_64-linux-gnu-gcc-12", vec!["--version"]),
+        ] {
+            authorize_preflight_probe(root, Path::new(program), &args).unwrap();
+        }
+        for (program, args) in [
+            ("rustc", vec!["--version", "--verbose"]),
+            ("/usr/bin/rustc", vec!["--print", "sysroot", "source.rs"]),
+            ("/usr/bin/cargo", vec!["install", "unknown"]),
+            ("/usr/bin/sh", vec!["--version"]),
+            ("/usr/bin/gcc-shell", vec!["--version"]),
+            ("/usr/bin/cc", vec!["--version", "@args"]),
+        ] {
+            assert!(authorize_preflight_probe(root, Path::new(program), &args).is_err());
+        }
+        for capability in [
+            ExternalCapability::PreflightProbe,
+            ExternalCapability::PreflightRead,
+        ] {
+            assert!(authorize(root, capability, "readiness", "cargo").is_err());
+            assert!(execute(root, capability, "readiness", "cargo", &["--version"], root).is_err());
+        }
+    }
 }

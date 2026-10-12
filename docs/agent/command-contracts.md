@@ -36,11 +36,15 @@ This document defines the normative operational contracts for the Decapod CLI.
 - **Intent:** Governance-native obligation graph
 
 ## `decapod validate`
-- **Intent:** Validate methodology compliance
-- **Intent:** Verify methodology compliance.
-- **Outcome:** Exit code 0 on success, 1 on failure.
-- **Failure State:** A failed gate leaves the task incomplete; it is not a completion signal.
-- **Recovery:** Follow supported remediation, update the violated artifact or state, and re-run validation. Escalate decision gates or unsupported recovery to the human.
+- **Intent:** Prove complete current-workbranch readiness before push or pull request
+- **Subject:** The exact current work branch, its accepted target tip, source and governance material, reviewed CI/release definitions, toolchain and applicable complete check matrix.
+- **Outcome:** Exit 0 only after all required evidence passes. Missing, empty, stale, running, skipped-required or failed proof returns nonzero. Any relevant branch or target change invalidates earlier success.
+- **Publication loop:** Follow the validation report's actionable instructions, repair reported root causes on the work branch, and rerun exact-candidate validation until it succeeds; only then push the work branch and create its PR. A draft PR is also publication and is held until success. `workspace publish` and RPC `validate.run` enforce the same readiness boundary.
+- **Prerequisites:** `decapod govern project-check` runs bounded project/governance prerequisites for bootstrap and CI. Its partial success never grants publication readiness. CI prerequisites must not recursively invoke full validate or wait for their own final aggregator.
+- **Providers:** `proof.validation_buildkite_preflights = false` selects native execution; true selects the repository-owned temporary-snapshot provider. Both enforce the same complete required profile. Unknown repositories, missing capabilities and unreconciled contracts fail explicitly.
+- **Snapshot handoff:** `validate --snapshot-prepare` prepares private transport metadata and returns nonzero while proof is pending. An authorized host may upload only that exact temporary snapshot. If its supported object API changes the commit identity, `validate --snapshot-resume <HANDOFF> --snapshot-adopt <SERVER_S>` independently verifies the exact tree, parent, source, target, metadata and owned remote ref, then writes a new private handoff and remains non-ready. Never edit a handoff to assert a different identity. `validate --snapshot-resume <HANDOFF> --provider-artifacts <DIRECTORY>` independently verifies provider identities, raw artifact digests and execution evidence; files cannot assert success. This is not a compatibility claim for a separate `bk preflight` command.
+- **Boundaries:** Validation does not publish the work branch, open a PR, create a release/tag, upload a package/image or deploy. Remote CI submission needs existing authorized access and remains subject to external-action policy. The core source-PR profile requires actual compile, test and build execution. Release-only packaging is outside this profile and has no packaging-assurance claim; publish/deploy dispositions describe simulation only, never actual delivery.
+- **Recovery:** Follow the validation report's actionable recovery instructions, preserve blockers requiring human input, repair root causes or missing proof, and rerun against the exact candidate. Do not mark unexecuted checks green, weaken the required profile to pass, or replace unavailable provider evidence with a local receipt.
 
 ## Living-spec refresh surfaces
 

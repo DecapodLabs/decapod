@@ -112,12 +112,28 @@ fn validate_with_session(dir: &Path, password: &str) -> std::process::Output {
     )
 }
 
+// Valid optional artifacts establish methodology prerequisites only.
+fn project_check_with_session(dir: &Path, password: &str) -> std::process::Output {
+    run_decapod(
+        dir,
+        &["govern", "project-check"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    )
+}
+
 #[test]
 fn validate_stubs_are_non_blocking_when_artifacts_absent() {
+    // An absent optional methodology artifact must not block the prerequisite stage.
+    // This prerequisite result is not full publication-readiness proof.
+
     let (_tmp, dir, password) = setup_repo();
     let validate = run_decapod(
         &dir,
-        &["validate"],
+        &["govern", "project-check"],
         &[
             ("DECAPOD_AGENT_ID", "unknown"),
             ("DECAPOD_SESSION_PASSWORD", &password),
@@ -133,10 +149,13 @@ fn validate_stubs_are_non_blocking_when_artifacts_absent() {
 
 #[test]
 fn validate_accepts_valid_recursive_improvement_pass() {
+    // A valid recursive-improvement record satisfies its project prerequisite.
+    // This prerequisite result is not full publication-readiness proof.
+
     let (_tmp, dir, password) = setup_repo();
     write_recursive_pass(&dir, valid_recursive_pass());
 
-    let validate = validate_with_session(&dir, &password);
+    let validate = project_check_with_session(&dir, &password);
     assert!(
         validate.status.success(),
         "validate should accept valid recursive pass; output:\n{}",

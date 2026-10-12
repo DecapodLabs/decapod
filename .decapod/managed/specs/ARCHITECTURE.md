@@ -1,5 +1,63 @@
 # Architecture
 
+## Pre-push readiness boundary
+
+Readiness joins the repository's intended build, CI and release contracts to the
+actual execution evidence for the current local work branch. The complete plan
+is derived independently of results; missing adapters, capabilities or required
+rows cannot shrink the plan. Native execution uses an owned standalone snapshot
+and the existing bounded process supervisor. The optional Buildkite provider
+transports only a separately named temporary snapshot whose commit has the same
+tree as the candidate and whose sole parent is that candidate. Provider jobs
+verify this relationship and check out the candidate before executing source
+checks. The original branch reference is never the preflight transport.
+
+Project prerequisites are acyclic components of the full proof. They do not wait
+for their own final acceptance, and their success cannot become publication
+readiness. Historical tracked governance receipts describe the project checks
+that produced them. Final full-suite evidence lives outside the Git material it
+binds, avoiding a receipt/commit hash cycle. Source, index, branch/history,
+accepted target, configuration, stable governance policy, workflows and resolved
+tools all participate in the final identity. A changed target tip invalidates
+proof even when the old target remains an ancestor.
+
+Source workflows and native execution share finite checked-in recipes rather
+than independent YAML command copies. Provider artifacts preserve preparation
+before execution, actual process outcomes, log and artifact digests, source and
+tool closure, and final unchanged-material checks. The compile-once integration
+producer and selected workers form an explicit hash-bound dependency chain;
+small manifests and measured consumer receipts avoid copying the complete test
+tar into each proof archive. The active readiness scope is the complete actual
+source PR suite, with real compile, test and build execution. Every stage has
+a governed real, mocked or non-applicable disposition and a reason. Release-only
+packaging is a separately preserved follow-up, not an actual PR requirement or
+a proven capability of this profile. Publish/deploy simulations never substitute
+for required compilation or execution.
+
+## Shared release evidence in actual validation
+
+The dependency-free immutable release classifier and exact projection verifier
+live in core and are reused by the existing CI command wrappers. Actual
+validation calls the same proof at the material-spec gate after its normal
+projection refresh. Acceptance requires the classified head tree to equal the
+candidate tree, a clean index, and byte-exact current generated entrypoints,
+Dockerfile headers, spec attestation digest, and manifest fields. Authored prose,
+source, configuration, dependencies, templates, and unrelated generated changes
+retain the ordinary material-spec requirement. Other validation gates still run.
+
+## Immutable validation checkout context
+
+Private validation clones copy local remote-tracking refs as well as the exact
+provider commit, without contacting the network or modifying source state. Both
+validation entrypoints require a complete immutable PR/push event range before
+local protected-branch or unavailable-base shortcuts can apply. Ordinary PR
+material-spec comparisons read the actual immutable head against its merge base;
+a newer synthetic-merge base cannot contribute the PR's required authored prose.
+Push validation compares the full pre-push range even when HEAD is now master.
+The strict release exception separately requires exact candidate/head tree parity.
+Its real Dockerfile generator uses a newly created private root, nested directories,
+and file, independent of inherited umask; no existing permissions are repaired.
+
 ## Shared-build integration proof
 
 Pull-request integration coverage is planned from the changed paths, compiled
@@ -464,8 +522,8 @@ virtiofs/FUSE filesystem prohibition.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ab9a11ea42af3b5496a92844b43b1fb208608acd04fed342b0a1168f3c94af27`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (11 files), `docs/` (1 files), `src/` (125 files), `tests/` (173 files)
+- Repository signal fingerprint: `e0f9df13a85f016b8aac91fc43cf717b7866712463c20c5756cb98e808cb3a5e`
+- Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (169 files), `tests/` (183 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

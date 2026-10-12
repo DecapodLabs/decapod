@@ -1003,3 +1003,438 @@ fn canonical_first_commit_can_validate_before_receipt_issuance_without_optional_
     assert_eq!(ctx.fail_count.load(Ordering::Relaxed), 0);
     assert!(ctx.pass_count.load(Ordering::Relaxed) > 0);
 }
+
+fn release_pr_material_gate_fixture() -> crate::core::release_projection_drift::tests::Fixture {
+    let fixture = crate::core::release_projection_drift::tests::Fixture::new();
+    let repo = fixture.root.path();
+    for args in [
+        vec!["checkout", "-qb", "fixture/version-only-pr"],
+        vec!["branch", "-f", "master", fixture.base.as_str()],
+    ] {
+        assert!(
+            std::process::Command::new("git")
+                .arg("-C")
+                .arg(repo)
+                .args(args)
+                .status()
+                .unwrap()
+                .success()
+        );
+    }
+    assert!(
+        !crate::core::workspace::get_workspace_status(repo)
+            .expect("read release PR fixture status")
+            .git
+            .is_protected,
+        "fixture must exercise the feature-PR material gate, not protected-branch skip"
+    );
+    fixture
+}
+
+fn run_release_pr_material_gate(
+    fixture: &crate::core::release_projection_drift::tests::Fixture,
+) -> ValidationContext {
+    let ctx = ValidationContext::new();
+    super::validate_material_specs_mutation_with_release_evidence(
+        &ctx,
+        fixture.root.path(),
+        [
+            Some("pull_request".into()),
+            Some(fixture.base.clone()),
+            Some(fixture.head.clone()),
+        ],
+        true,
+    )
+    .unwrap();
+    ctx
+}
+
+#[test]
+fn material_specs_gate_accepts_initial_version_only_release_pr() {
+    let fixture = release_pr_material_gate_fixture();
+    let ctx = run_release_pr_material_gate(&fixture);
+    assert_eq!(ctx.fail_count.load(Ordering::Relaxed), 0);
+    assert_eq!(ctx.pass_count.load(Ordering::Relaxed), 1);
+    assert_eq!(ctx.skip_count.load(Ordering::Relaxed), 0);
+}
+
+#[test]
+fn material_specs_gate_accepts_a_later_release_pr_metadata_commit() {
+    let mut fixture = release_pr_material_gate_fixture();
+    let repo = fixture.root.path();
+    fs::write(
+        repo.join("CHANGELOG.md"),
+        "# Changelog\n\nUpdated release notes.\n",
+    )
+    .unwrap();
+    for args in [
+        vec!["add", "CHANGELOG.md"],
+        vec!["commit", "-qm", "update release notes"],
+    ] {
+        assert!(
+            std::process::Command::new("git")
+                .arg("-C")
+                .arg(repo)
+                .args(args)
+                .status()
+                .unwrap()
+                .success()
+        );
+    }
+    fixture.head = String::from_utf8(
+        std::process::Command::new("git")
+            .arg("-C")
+            .arg(repo)
+            .args(["rev-parse", "HEAD"])
+            .output()
+            .unwrap()
+            .stdout,
+    )
+    .unwrap()
+    .trim()
+    .to_string();
+    fixture.refresh();
+    let ctx = run_release_pr_material_gate(&fixture);
+    assert_eq!(ctx.fail_count.load(Ordering::Relaxed), 0);
+    assert_eq!(ctx.pass_count.load(Ordering::Relaxed), 1);
+    assert_eq!(ctx.skip_count.load(Ordering::Relaxed), 0);
+}
+
+#[test]
+fn material_specs_gate_rejects_dirty_or_mixed_release_source() {
+    for committed in [false, true] {
+        let mut fixture = release_pr_material_gate_fixture();
+        let repo = fixture.root.path();
+        fs::write(repo.join("src/lib.rs"), "pub fn substantive_change() {}\n").unwrap();
+        if committed {
+            for args in [
+                vec!["add", "src/lib.rs"],
+                vec!["commit", "-qm", "mixed release source"],
+            ] {
+                assert!(
+                    std::process::Command::new("git")
+                        .arg("-C")
+                        .arg(repo)
+                        .args(args)
+                        .status()
+                        .unwrap()
+                        .success()
+                );
+            }
+            fixture.head = String::from_utf8(
+                std::process::Command::new("git")
+                    .arg("-C")
+                    .arg(repo)
+                    .args(["rev-parse", "HEAD"])
+                    .output()
+                    .unwrap()
+                    .stdout,
+            )
+            .unwrap()
+            .trim()
+            .to_string();
+        }
+        fixture.refresh();
+        let ctx = run_release_pr_material_gate(&fixture);
+        assert_eq!(
+            ctx.fail_count.load(Ordering::Relaxed),
+            1,
+            "committed={committed}"
+        );
+        assert_eq!(ctx.pass_count.load(Ordering::Relaxed), 0);
+    }
+}
+
+fn fixture_revision(repo: &Path) -> String {
+    let output = std::process::Command::new("git")
+        .arg("-C")
+        .arg(repo)
+        .args(["rev-parse", "HEAD"])
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+    String::from_utf8(output.stdout).unwrap().trim().to_string()
+}
+
+#[test]
+fn material_specs_gate_rejects_missing_or_invalid_ci_evidence_before_skips() {
+    let fixture = release_pr_material_gate_fixture();
+    let repo = fixture.root.path();
+    git(repo, &["branch", "-f", "master", &fixture.head]);
+    git(repo, &["checkout", "master"]);
+    let good = [
+        Some("push".into()),
+        Some(fixture.base.clone()),
+        Some(fixture.head.clone()),
+    ];
+    let mut cases = vec![[None, None, None]];
+    for index in 0..3 {
+        let mut absent = good.clone();
+        absent[index] = None;
+        cases.push(absent);
+        let mut blank = good.clone();
+        blank[index] = Some(String::new());
+        cases.push(blank);
+    }
+    for bad in ["0".repeat(40), "a".repeat(40), "HEAD".into()] {
+        let mut invalid = good.clone();
+        invalid[1] = Some(bad);
+        cases.push(invalid);
+    }
+    for evidence in cases {
+        let ctx = ValidationContext::new();
+        super::validate_material_specs_mutation_with_release_evidence(
+            &ctx,
+            repo,
+            evidence.clone(),
+            true,
+        )
+        .unwrap();
+        assert_eq!(ctx.fail_count.load(Ordering::Relaxed), 1, "{evidence:?}");
+        assert_eq!(ctx.pass_count.load(Ordering::Relaxed), 0);
+        assert_eq!(ctx.skip_count.load(Ordering::Relaxed), 0);
+    }
+}
+
+#[test]
+fn material_specs_gate_executes_push_range_when_protected_base_equals_head() {
+    for mixed in [false, true] {
+        let mut fixture = release_pr_material_gate_fixture();
+        let repo = fixture.root.path();
+        if mixed {
+            fs::write(
+                repo.join("src/lib.rs"),
+                "pub fn changed_without_spec() {}\n",
+            )
+            .unwrap();
+            git(repo, &["add", "src/lib.rs"]);
+            git(repo, &["commit", "-m", "source without authored spec"]);
+            fixture.head = fixture_revision(repo);
+            fixture.refresh();
+        }
+        git(repo, &["branch", "-f", "master", &fixture.head]);
+        git(repo, &["checkout", "master"]);
+        let ctx = ValidationContext::new();
+        super::validate_material_specs_mutation_with_release_evidence(
+            &ctx,
+            repo,
+            [
+                Some("push".into()),
+                Some(fixture.base.clone()),
+                Some(fixture.head.clone()),
+            ],
+            true,
+        )
+        .unwrap();
+        assert_eq!(ctx.fail_count.load(Ordering::Relaxed), u32::from(mixed));
+        assert_eq!(ctx.pass_count.load(Ordering::Relaxed), u32::from(!mixed));
+        assert_eq!(ctx.skip_count.load(Ordering::Relaxed), 0);
+    }
+}
+
+#[test]
+fn material_specs_gate_fails_when_detached_ci_base_is_unavailable() {
+    let fixture = release_pr_material_gate_fixture();
+    let repo = fixture.root.path();
+    git(repo, &["checkout", "--detach", &fixture.head]);
+    git(repo, &["branch", "-D", "master"]);
+    let ctx = run_release_pr_material_gate(&fixture);
+    assert_eq!(ctx.fail_count.load(Ordering::Relaxed), 1);
+    assert_eq!(ctx.skip_count.load(Ordering::Relaxed), 0);
+}
+
+#[test]
+fn material_specs_gate_compares_pr_head_not_new_base_specs_in_synthetic_merge() {
+    for authored_on_head in [false, true] {
+        let mut fixture = release_pr_material_gate_fixture();
+        let repo = fixture.root.path();
+        // Discard generated fixture projections before constructing immutable
+        // Git history. This repository belongs only to this isolated test.
+        git(repo, &["reset", "--hard", "HEAD"]);
+        fs::write(
+            repo.join("src/lib.rs"),
+            "pub fn substantive_pr_change() {}\n",
+        )
+        .unwrap();
+        if authored_on_head {
+            let path = repo.join(crate::core::project_specs::LOCAL_PROJECT_SPECS_INTENT);
+            let text = fs::read_to_string(&path).unwrap();
+            fs::write(
+                path,
+                text.replace("Authored obligation", "PR-authored obligation"),
+            )
+            .unwrap();
+        }
+        git(repo, &["add", "."]);
+        git(repo, &["commit", "-m", "feature change"]);
+        fixture.head = fixture_revision(repo);
+        git(repo, &["checkout", "master"]);
+        let path = repo.join(crate::core::project_specs::LOCAL_PROJECT_SPECS_ARCHITECTURE);
+        let text = fs::read_to_string(&path).unwrap();
+        fs::write(
+            path,
+            text.replace("Authored obligation", "New base obligation"),
+        )
+        .unwrap();
+        git(repo, &["add", "."]);
+        git(repo, &["commit", "-m", "independent base specs"]);
+        fixture.base = fixture_revision(repo);
+        git(
+            repo,
+            &["update-ref", "refs/remotes/origin/master", &fixture.base],
+        );
+        git(
+            repo,
+            &[
+                "merge",
+                "--no-ff",
+                "-m",
+                "synthetic PR merge",
+                &fixture.head,
+            ],
+        );
+        fixture.refresh();
+        let ctx = run_release_pr_material_gate(&fixture);
+        assert_eq!(
+            ctx.fail_count.load(Ordering::Relaxed),
+            u32::from(!authored_on_head)
+        );
+        assert_eq!(
+            ctx.pass_count.load(Ordering::Relaxed),
+            u32::from(authored_on_head)
+        );
+        assert_eq!(ctx.skip_count.load(Ordering::Relaxed), 0);
+    }
+}
+
+#[test]
+fn material_specs_gate_preserves_explicit_local_and_manual_base_behavior() {
+    let fixture = release_pr_material_gate_fixture();
+    let repo = fixture.root.path();
+    let ctx = ValidationContext::new();
+    super::validate_material_specs_mutation_with_release_evidence(
+        &ctx,
+        repo,
+        [None, None, None],
+        false,
+    )
+    .unwrap();
+    assert_eq!(ctx.fail_count.load(Ordering::Relaxed), 0);
+    assert_eq!(ctx.pass_count.load(Ordering::Relaxed), 1);
+    git(repo, &["branch", "-f", "master", &fixture.head]);
+    git(repo, &["checkout", "master"]);
+    let ctx = ValidationContext::new();
+    super::validate_material_specs_mutation_with_release_evidence(
+        &ctx,
+        repo,
+        [
+            Some("workflow_dispatch".into()),
+            Some(String::new()),
+            Some(fixture.head.clone()),
+        ],
+        false,
+    )
+    .unwrap();
+    assert_eq!(ctx.fail_count.load(Ordering::Relaxed), 0);
+    assert_eq!(ctx.skip_count.load(Ordering::Relaxed), 1);
+}
+
+#[test]
+fn material_specs_gate_provider_scope_is_canonical_and_git_root_bounded() {
+    let root = tempdir().unwrap();
+    let provider = root.path().join("provider");
+    fs::create_dir(&provider).unwrap();
+    assert!(!super::is_provider_validation_checkout(
+        &provider, &provider
+    ));
+    git(&provider, &["init", "-q"]);
+    assert!(super::is_provider_validation_checkout(&provider, &provider));
+    for (path, expected) in [
+        (provider.join(".ci-validation.owned"), true),
+        (provider.join("fixture"), false),
+        (provider.join("nested/.ci-validation.fixture"), false),
+        (root.path().join("outside"), false),
+    ] {
+        fs::create_dir_all(&path).unwrap();
+        git(&path, &["init", "-q"]);
+        assert_eq!(
+            super::is_provider_validation_checkout(&path, &provider),
+            expected
+        );
+    }
+    let nonroot = provider.join(".ci-validation.not-a-root");
+    fs::create_dir(&nonroot).unwrap();
+    assert!(!super::is_provider_validation_checkout(&nonroot, &provider));
+    #[cfg(unix)]
+    {
+        let escape = provider.join(".ci-validation.symlink");
+        std::os::unix::fs::symlink(root.path().join("outside"), &escape).unwrap();
+        assert!(!super::is_provider_validation_checkout(&escape, &provider));
+        let alias = root.path().join("alias");
+        std::os::unix::fs::symlink(&provider, &alias).unwrap();
+        assert!(super::is_provider_validation_checkout(&alias, &provider));
+    }
+}
+
+#[test]
+fn material_specs_gate_wrapper_scopes_inherited_provider_environment() {
+    const CHILD: &str = "DECAPOD_TEST_MATERIAL_SCOPE_ROOT";
+    if let Some(root) = std::env::var_os(CHILD) {
+        let ctx = ValidationContext::new();
+        super::validate_material_specs_mutation(&ctx, Path::new(&root)).unwrap();
+        let expected: u32 = std::env::var("DECAPOD_TEST_MATERIAL_SCOPE_FAILURES")
+            .unwrap()
+            .parse()
+            .unwrap();
+        assert_eq!(ctx.fail_count.load(Ordering::Relaxed), expected);
+        assert_eq!(ctx.skip_count.load(Ordering::Relaxed), 0);
+        return;
+    }
+    let fixture = release_pr_material_gate_fixture();
+    let other = tempdir().unwrap();
+    for mode in [
+        "unrelated",
+        "checkout",
+        "explicit",
+        "manual-github",
+        "manual-buildkite",
+        "conflicting",
+    ] {
+        if mode.starts_with("manual") {
+            let path = fixture
+                .root
+                .path()
+                .join(crate::core::project_specs::LOCAL_PROJECT_SPECS_INTENT);
+            let text = fs::read_to_string(&path).unwrap();
+            fs::write(path, format!("{text}\nManual source proof obligation.\n")).unwrap();
+        }
+        let root = fixture.root.path();
+        let mut command = std::process::Command::new(std::env::current_exe().unwrap());
+        command.args(["--exact", "core::validate::tests::material_specs_gate_wrapper_scopes_inherited_provider_environment", "--nocapture"])
+            .env(CHILD, root)
+            .env("DECAPOD_TEST_MATERIAL_SCOPE_FAILURES", if matches!(mode,"checkout"|"explicit"|"conflicting") {"1"} else {"0"})
+            .env("GITHUB_ACTIONS", "true").env("BUILDKITE_BUILD_ID", "fixture-build")
+            .env("GITHUB_WORKSPACE", if mode == "unrelated" || mode == "explicit" { other.path() } else { root })
+            .env_remove("BUILDKITE_BUILD_CHECKOUT_PATH")
+            .env_remove("GITHUB_EVENT_NAME")
+            .env_remove("DECAPOD_VALIDATE_REQUIRE_CHANGE_CONTEXT")
+            .env_remove("CHANGE_EVENT").env_remove("CHANGE_BASE").env_remove("CHANGE_HEAD");
+        if mode == "explicit" {
+            command.env("DECAPOD_VALIDATE_REQUIRE_CHANGE_CONTEXT", "1");
+        }
+        if mode.starts_with("manual") || mode == "conflicting" {
+            command
+                .env("CHANGE_EVENT", "workflow_dispatch")
+                .env("CHANGE_BASE", "")
+                .env("CHANGE_HEAD", &fixture.head);
+        }
+        if mode == "manual-github" {
+            command.env("GITHUB_EVENT_NAME", "workflow_dispatch");
+        }
+        if mode == "conflicting" {
+            command.env("GITHUB_EVENT_NAME", "pull_request");
+        }
+        let output = command.output().unwrap();
+        assert!(output.status.success(), "mode={mode}: {output:?}");
+    }
+}

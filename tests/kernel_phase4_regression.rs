@@ -53,6 +53,9 @@ fn setup_repo() -> (TempDir, PathBuf, String) {
 
 #[test]
 fn phase4_kernel_surfaces_work_together() {
+    // Check composition of the phase-4 project methodology artifacts.
+    // This prerequisite result is not full publication-readiness proof.
+
     let (_tmp, dir, password) = setup_repo();
     let auth = [
         ("DECAPOD_AGENT_ID", "unknown"),
@@ -235,7 +238,7 @@ fn phase4_kernel_surfaces_work_together() {
         String::from_utf8_lossy(&add_proc.stderr)
     );
 
-    let validate = run_decapod(&dir, &["validate"], &auth);
+    let validate = run_decapod(&dir, &["govern", "project-check"], &auth);
     assert!(
         validate.status.success(),
         "phase4 regression validate failed: {}",

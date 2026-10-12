@@ -1,0 +1,8 @@
+# One source for production release setup and nonpublishing derivative proof.
+# Constraints and action definitions are not measured executable identities.
+rust = "1.96.1"
+release_plz = "0.3.171"
+cargo_dist = "0.22.1"
+release_plz_action = "release-plz/action@f393a7b38aca9d9b4c58447b291dbac963901df6"
+semver_checks_constraint = "0.51"
+semver_checks_installer = "taiki-e/install-action@ab6895351a88b908e96a4697860d4ffea5e57dbe"

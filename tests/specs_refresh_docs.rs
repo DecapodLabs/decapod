@@ -14,6 +14,7 @@ fn refresh_contract_is_embedded_and_matches_cli_surfaces() {
         .collect::<Vec<_>>()
         .join("\n");
     assert!(body.contains(docs_cli::specs_refresh_contract()));
+    assert!(body.contains(docs_cli::readiness_contract()));
     let temp = tempfile::tempdir().unwrap();
     for args in [
         vec!["rpc", "--op", "specs.refresh", "--help"],
@@ -70,5 +71,23 @@ fn docs_ingest_presents_both_refresh_surfaces_and_semantic_boundary() {
     );
     let body = String::from_utf8(output.stdout).unwrap();
     assert!(body.contains(docs_cli::specs_refresh_contract()));
+    assert!(body.contains(docs_cli::readiness_contract()));
+    assert!(body.contains(docs_cli::readiness_config_contract()));
     assert!(body.contains("Refresh does not rewrite authored intent or architecture"));
+}
+
+#[test]
+fn agent_template_requires_report_driven_exact_candidate_repair() {
+    let template = include_str!("../src/decapod/core/assets.rs");
+    for required in [
+        "follow the actionable instructions and recovery steps in its validation report",
+        "repair the reported root causes on the same work branch",
+        "Never bypass a reported gate, fabricate evidence, weaken required checks",
+        "must not publish the original work branch before success",
+    ] {
+        assert!(
+            template.contains(required),
+            "missing report-driven publication contract: {required}"
+        );
+    }
 }

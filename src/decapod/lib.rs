@@ -280,6 +280,7 @@ fn infer_repo_context(target_dir: &Path) -> Result<RepoContext, error::DecapodEr
         ctx.migration_validation = existing_cfg.repo.migration_validation.clone();
     }
 
+    let authored_product_name = ctx.product_name.is_some();
     if ctx.product_name.is_none() {
         ctx.product_name = target_dir
             .file_name()
@@ -293,7 +294,8 @@ fn infer_repo_context(target_dir: &Path) -> Result<RepoContext, error::DecapodEr
     if target_dir.join("Cargo.toml").exists() {
         ctx.primary_languages.push("rust".to_string());
         ctx.detected_surfaces.push("cargo".to_string());
-        if let Ok(raw) = fs::read_to_string(target_dir.join("Cargo.toml"))
+        if !authored_product_name
+            && let Ok(raw) = fs::read_to_string(target_dir.join("Cargo.toml"))
             && let Ok(v) = toml::from_str::<toml::Value>(&raw)
             && let Some(name) = v
                 .get("package")
@@ -1582,6 +1584,9 @@ fn init_with_from_config(
             .iter()
             .map(|proof| format!("{}={}", proof.name, proof.command))
             .collect(),
+        existing_proof_commands: config.proof.commands.clone(),
+        existing_required_profile: config.proof.required_profile.clone(),
+        validation_buildkite_preflights: Some(config.proof.validation_buildkite_preflights),
         backend: if config.repo.effective_backend().is_cloud() {
             crate::cli::BackendType::Cloud
         } else {
@@ -1624,21 +1629,37 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
         .unwrap_or_else(|_| init.protected_paths.clone());
     let declared_context_sources = canonical_repo_relative_paths(&init.declared_context_sources)
         .unwrap_or_else(|_| init.declared_context_sources.clone());
-    let mut proof_commands: Vec<_> = init
-        .proof_commands
+    let mut proof_commands = init.existing_proof_commands.clone();
+    let existing_shorthand: Vec<_> = proof_commands
         .iter()
-        .enumerate()
-        .map(|(index, value)| {
-            let (name, command) = value.split_once('=').unwrap_or(("", ""));
-            proof::ProofDef {
-                name: name.trim().to_string(),
-                command: command.trim().to_string(),
-                args: Vec::new(),
-                description: format!("Guided init proof command {}", index + 1),
-                required: true,
-            }
-        })
+        .map(|proof| format!("{}={}", proof.name, proof.command))
         .collect();
+    if init.proof_commands != existing_shorthand {
+        proof_commands = init
+            .proof_commands
+            .iter()
+            .enumerate()
+            .map(|(index, value)| {
+                // The CLI's name=command shorthand cannot represent args, descriptions,
+                // or optional proofs. Keep the original definition for unchanged entries.
+                if let Some(existing) = init
+                    .existing_proof_commands
+                    .iter()
+                    .find(|proof| *value == format!("{}={}", proof.name, proof.command))
+                {
+                    return existing.clone();
+                }
+                let (name, command) = value.split_once('=').unwrap_or(("", ""));
+                proof::ProofDef {
+                    name: name.trim().to_string(),
+                    command: command.trim().to_string(),
+                    args: Vec::new(),
+                    description: format!("Guided init proof command {}", index + 1),
+                    required: true,
+                }
+            })
+            .collect();
+    }
     proof_commands.sort_by(|left, right| left.name.cmp(&right.name));
     let mut approval_categories = if init.approval_categories.is_empty() {
         vec!["destructive_operations".to_string()]
@@ -1660,6 +1681,8 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
             approval_categories,
         },
         proof: proof::ProjectProofConfig {
+            validation_buildkite_preflights: init.validation_buildkite_preflights.unwrap_or(false),
+            required_profile: init.existing_required_profile.clone(),
             commands: proof_commands,
         },
         custody: CustodyConfig {
@@ -1746,6 +1769,18 @@ fn verify_git_status(target_dir: &Path) -> Result<(), error::DecapodError> {
     Ok(())
 }
 
+fn apply_init_proof_command_input(init: &mut InitWithCli, input: &str) {
+    // An unchanged default must not split literal commas inside existing commands.
+    if input != init.proof_commands.join(",") {
+        init.proof_commands = input
+            .split(',')
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .map(ToString::to_string)
+            .collect();
+    }
+}
+
 fn enrich_repo_context_interactive(
     repo: &mut RepoContext,
     init: &mut InitWithCli,
@@ -1809,7 +1844,16 @@ fn enrich_repo_context_interactive(
     init.approval_categories = prompt_csv_default("Approval categories", &approval_default)?;
 
     let proof_default = init.proof_commands.join(",");
-    init.proof_commands = prompt_csv_default("Proof commands", &proof_default)?;
+    let proof_input = prompt_text_field(
+        "Proof commands",
+        "Enter comma-separated name=command values, or press Enter to keep all existing proof details.",
+        &proof_default,
+    )?;
+    apply_init_proof_command_input(init, &proof_input);
+    init.validation_buildkite_preflights = Some(prompt_yes_no(
+        "Use Buildkite temporary snapshots for the full required proof suite? (No runs the full suite natively in Decapod.)",
+        init.validation_buildkite_preflights.unwrap_or(false),
+    )?);
 
     if repo.external_tracker {
         let provider = init
@@ -1878,6 +1922,24 @@ fn enrich_repo_context_interactive(
     )?);
 
     Ok(())
+}
+
+fn print_init_reconciliation(report: &core::init_reconciliation::ReconciliationReport) {
+    println!(
+        "  Required proof: {} (merge-ready: false; proof: not_run)",
+        report.status
+    );
+    println!("  Full-suite provider: {}", report.provider);
+    if let Some(digest) = &report.inventory_digest {
+        println!("  Discovered source inventory: {digest}");
+    }
+    for task in &report.repair_tasks {
+        println!("TASK [{}]: {}", task.code, task.title);
+        println!("  {}", task.action);
+        if !task.sources.is_empty() {
+            println!("  Sources: {}", task.sources.join(", "));
+        }
+    }
 }
 
 fn run_init_apply(
@@ -2112,7 +2174,9 @@ fn run_init_apply(
     println!(
         "{} {}",
         "✓".bright_green().bold(),
-        "Ready".bright_green().bold()
+        "Initialized; required proof has not run"
+            .bright_white()
+            .bold()
     );
 
     Ok(target_dir)
@@ -2122,10 +2186,32 @@ pub fn run() -> Result<(), error::DecapodError> {
     let parsed_cli = Cli::parse();
     let command = match parsed_cli.command {
         Command::Eval(eval_cli) => return core::agent_eval::run_agent_eval_cli(eval_cli),
-        Command::Validate(validate_cli)
-            if std::env::var_os("DECAPOD_VALIDATE_WORKER").is_some() =>
-        {
+        Command::ProjectCheckWorker(validate_cli) => {
+            if validate_cli.snapshot_prepare
+                || validate_cli.snapshot_resume.is_some()
+                || validate_cli.snapshot_adopt.is_some()
+                || validate_cli.provider_artifacts.is_some()
+            {
+                return Err(error::DecapodError::ValidationError(
+                    "PROJECT_CHECK_SCOPE: a bounded prerequisite cannot start snapshot validation"
+                        .into(),
+                ));
+            }
+            if std::env::var("DECAPOD_VALIDATE_WORKER").as_deref() != Ok("1") {
+                return Err(error::DecapodError::ValidationError(
+                    "Project-check worker requires its bounded supervisor".into(),
+                ));
+            }
             return run_validation_worker_command(validate_cli);
+        }
+        Command::Validate(_)
+            if std::env::var_os("DECAPOD_VALIDATE_WORKER").is_some()
+                || std::env::var_os("DECAPOD_NATIVE_PROOF_ACTIVE").is_some() =>
+        {
+            return Err(error::DecapodError::ValidationError(
+                "VALIDATION_RECURSION: a prerequisite cannot invoke full readiness validation"
+                    .into(),
+            ));
         }
         command => command,
     };
@@ -2305,6 +2391,10 @@ pub fn run() -> Result<(), error::DecapodError> {
                         if !init_group.proof_commands.is_empty() {
                             with.proof_commands = init_group.proof_commands.clone();
                         }
+                        if init_group.validation_buildkite_preflights.is_some() {
+                            with.validation_buildkite_preflights =
+                                init_group.validation_buildkite_preflights;
+                        }
                         if init_group.decision_provider.is_some() {
                             with.decision_provider = init_group.decision_provider;
                         }
@@ -2348,6 +2438,10 @@ pub fn run() -> Result<(), error::DecapodError> {
                             tracker_url: init_group.tracker_url.clone(),
                             declared_context_sources: init_group.declared_context_sources.clone(),
                             proof_commands: init_group.proof_commands.clone(),
+                            existing_proof_commands: Vec::new(),
+                            existing_required_profile: None,
+                            validation_buildkite_preflights: init_group
+                                .validation_buildkite_preflights,
                             backend: init_group.backend,
                             decision_provider: init_group.decision_provider,
                             git: init_group.git,
@@ -2369,14 +2463,31 @@ pub fn run() -> Result<(), error::DecapodError> {
             } else {
                 resolve_existing_init_dir(&current_dir)?
             };
-            let configured_base_branch = load_project_config_if_present(&init_target)?
-                .and_then(|config| config.repo.base_branch);
+            let existing_config = load_project_config_if_present(&init_target)?;
+            let configured_base_branch = existing_config
+                .as_ref()
+                .and_then(|config| config.repo.base_branch.clone());
             let mut init_with = init_with;
             init_with.dir = Some(init_target.clone());
             init_with.project_dir = None;
-            if init_with.decision_provider.is_none() {
-                init_with.decision_provider = load_project_config_if_present(&init_target)?
-                    .map(|config| config.decision.provider);
+            if let Some(config) = existing_config {
+                if init_with.decision_provider.is_none() {
+                    init_with.decision_provider = Some(config.decision.provider);
+                }
+                if init_with.validation_buildkite_preflights.is_none() {
+                    init_with.validation_buildkite_preflights =
+                        Some(config.proof.validation_buildkite_preflights);
+                }
+                if init_with.proof_commands.is_empty() {
+                    init_with.proof_commands = config
+                        .proof
+                        .commands
+                        .iter()
+                        .map(|proof| format!("{}={}", proof.name, proof.command))
+                        .collect();
+                }
+                init_with.existing_required_profile = config.proof.required_profile;
+                init_with.existing_proof_commands = config.proof.commands;
             }
             let mut repo_ctx = infer_repo_context(&init_target)?;
             if configured_base_branch.is_some() {
@@ -2459,6 +2570,12 @@ pub fn run() -> Result<(), error::DecapodError> {
             }
             record_cloud_init_registration(&target_dir, &config, init_with.dry_run)?;
             seed_init_generated_state(&target_dir, init_with.dry_run)?;
+            let reconciliation = core::init_reconciliation::inspect(
+                &target_dir,
+                &config.proof,
+                config.repo.product_name.as_deref(),
+            );
+            print_init_reconciliation(&reconciliation);
             if !init_with.dry_run
                 && config.repo.effective_backend().is_cloud()
                 && let Err(error) = bootstrap_cloud_session(&target_dir)
@@ -2506,13 +2623,15 @@ pub fn run() -> Result<(), error::DecapodError> {
                         ArtifactsCommand::VerifyCheckpoints {
                             base_branch,
                             head_ref,
+                            target_base,
                         },
                 }),
         }) => {
-            core::governance_document::verify_pr_checkpoints(
+            verify_checkpoints_with_target(
                 &decapod_root_option?,
                 &base_branch,
                 &head_ref,
+                target_base.as_deref(),
             )?;
             println!(
                 "{}",
@@ -2542,7 +2661,7 @@ pub fn run() -> Result<(), error::DecapodError> {
             let workspace_root = decapod_root_option?;
             let governance_root = find_governance_root(&workspace_root);
 
-            let is_validate_cmd = matches!(&cli.command, Command::Validate(_));
+            let is_validate_cmd = is_project_validation_command(&cli.command);
             enforce_worktree_requirement(&cli.command, &workspace_root)?;
 
             // For other commands, ensure .decapod exists in the GOVERNANCE root
@@ -2657,7 +2776,11 @@ pub fn run() -> Result<(), error::DecapodError> {
                         &governance_root,
                         &workspace_root,
                         &project_store,
+                        ValidationScope::PublicationReadiness,
                     )?;
+                }
+                Command::ProjectCheckWorker(_) => {
+                    unreachable!("worker dispatched before bootstrap")
                 }
                 Command::Constitution(cli) => {
                     crate::core::constitution_cli::run_constitution_cli(cli)?
@@ -2794,8 +2917,19 @@ fn federation_argv_is_mutating(argv: &[String]) -> bool {
     )
 }
 
+fn is_project_validation_command(command: &Command) -> bool {
+    matches!(
+        command,
+        Command::Validate(_)
+            | Command::ProjectCheckWorker(_)
+            | Command::Govern(GovernCli {
+                command: GovernCommand::ProjectCheck(_)
+            })
+    )
+}
+
 fn should_auto_clock_in(command: &Command) -> bool {
-    if is_storage_independent_command(command) {
+    if is_storage_independent_command(command) || is_project_validation_command(command) {
         return false;
     }
     match command {
@@ -2841,6 +2975,9 @@ fn is_cloud_todo_command(
 }
 
 fn command_requires_worktree(command: &Command) -> bool {
+    if is_project_validation_command(command) {
+        return false;
+    }
     match command {
         Command::Govern(GovernCli {
             command:
@@ -2882,6 +3019,9 @@ fn is_canonical_decapod_worktree_path(path: &Path) -> bool {
 }
 
 fn command_requires_todo_scoped_worktree(command: &Command) -> bool {
+    if is_project_validation_command(command) {
+        return false;
+    }
     !matches!(
         command,
         Command::Validate(_)
@@ -2898,6 +3038,9 @@ fn command_requires_todo_scoped_worktree(command: &Command) -> bool {
 }
 
 fn command_requires_canonical_worktree_path(command: &Command) -> bool {
+    if is_project_validation_command(command) {
+        return false;
+    }
     !matches!(
         command,
         Command::Validate(_)
@@ -3448,6 +3591,19 @@ fn mark_constitution_context_resolved(project_root: &Path) -> Result<(), error::
 }
 
 fn mark_validation_completed(project_root: &Path) -> Result<(), error::DecapodError> {
+    mark_project_validation_scope_completed(project_root, "validate")
+}
+
+fn mark_project_prerequisites_completed(project_root: &Path) -> Result<(), error::DecapodError> {
+    mark_project_validation_scope_completed(project_root, "govern.project-check")
+}
+
+// This awareness timestamp is bootstrap state only. Publication readiness is
+// independently bound to exact current source and complete external evidence.
+fn mark_project_validation_scope_completed(
+    project_root: &Path,
+    source_op: &str,
+) -> Result<(), error::DecapodError> {
     let agent_id = current_agent_id();
     let mut rec =
         read_awareness_record(project_root, &agent_id)?.unwrap_or(ConstitutionalAwarenessRecord {
@@ -3460,8 +3616,8 @@ fn mark_validation_completed(project_root: &Path) -> Result<(), error::DecapodEr
             source_ops: Vec::new(),
         });
     rec.validated_at_epoch_secs = Some(now_epoch_secs());
-    if !rec.source_ops.iter().any(|op| op == "validate") {
-        rec.source_ops.push("validate".to_string());
+    if !rec.source_ops.iter().any(|op| op == source_op) {
+        rec.source_ops.push(source_op.to_string());
     }
     write_awareness_record(project_root, &rec)
 }
@@ -5765,13 +5921,64 @@ fn render_validation_text(
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum ValidationScope {
+    PublicationReadiness,
+    ProjectPrerequisites,
+}
+
+#[derive(Default)]
+pub(crate) struct ReadinessInvocation {
+    snapshot_prepare: bool,
+    snapshot_resume: Option<std::path::PathBuf>,
+    snapshot_adopt: Option<String>,
+    provider_artifacts: Option<std::path::PathBuf>,
+}
+
+impl ReadinessInvocation {
+    fn validate(&self) -> Result<(), error::DecapodError> {
+        if (self.snapshot_prepare && self.snapshot_resume.is_some())
+            || (self.provider_artifacts.is_some() && self.snapshot_resume.is_none())
+            || (self.snapshot_adopt.is_some()
+                && (self.snapshot_resume.is_none() || self.provider_artifacts.is_some()))
+        {
+            return Err(error::DecapodError::ValidationError(
+                "READINESS_INVOCATION_INVALID: prepare and resume are exclusive; raw artifact handoff and host adoption each require an exact resume locator and are mutually exclusive".into(),
+            ));
+        }
+        Ok(())
+    }
+    fn has_snapshot_arguments(&self) -> bool {
+        self.snapshot_prepare
+            || self.snapshot_resume.is_some()
+            || self.snapshot_adopt.is_some()
+            || self.provider_artifacts.is_some()
+    }
+}
+
 fn run_validate_command(
     validate_cli: ValidateCli,
     governance_root: &Path,
     workspace_root: &Path,
     project_store: &Store,
+    scope: ValidationScope,
 ) -> Result<(), error::DecapodError> {
     use crate::core::workspace;
+
+    let readiness_invocation = ReadinessInvocation {
+        snapshot_prepare: validate_cli.snapshot_prepare,
+        snapshot_resume: validate_cli.snapshot_resume.clone(),
+        snapshot_adopt: validate_cli.snapshot_adopt.clone(),
+        provider_artifacts: validate_cli.provider_artifacts.clone(),
+    };
+    readiness_invocation.validate()?;
+    if scope == ValidationScope::ProjectPrerequisites
+        && readiness_invocation.has_snapshot_arguments()
+    {
+        return Err(error::DecapodError::ValidationError(
+            "PROJECT_CHECK_SCOPE: snapshot execution belongs to full validate, not partial project prerequisites".into(),
+        ));
+    }
 
     if std::env::var("DECAPOD_VALIDATE_SKIP_GIT_GATES").is_ok() {
         // Skip workspace check if gates are explicitly skipped
@@ -5854,13 +6061,14 @@ fn run_validate_command(
         heal_actions.push(action);
     }
 
-    let mut report = run_validation_bounded(
+    let mut report = run_validation_bounded_with_receipt(
         &store,
         governance_root,
         workspace_root,
         validate_cli.verbose,
         true,
         validate_cli.projections,
+        scope == ValidationScope::ProjectPrerequisites,
     )?;
     for _ in 0..2 {
         if report.fail_count == 0 {
@@ -5871,21 +6079,69 @@ fn run_validate_command(
             break;
         }
         heal_actions.append(&mut round_actions);
-        report = run_validation_bounded(
+        report = run_validation_bounded_with_receipt(
             &store,
             governance_root,
             workspace_root,
             validate_cli.verbose,
             true,
             validate_cli.projections,
+            scope == ValidationScope::ProjectPrerequisites,
         )?;
     }
+
+    let readiness = if scope == ValidationScope::PublicationReadiness && report.fail_count == 0 {
+        let readiness =
+            run_current_workbranch_readiness_with(workspace_root, &readiness_invocation);
+        report.ci_prediction.result = if readiness.ready {
+            "proven_current_candidate"
+        } else {
+            "not_ready"
+        }
+        .into();
+        report.ci_prediction.confidence = if readiness.ready {
+            "measured"
+        } else {
+            "insufficient_proof"
+        }
+        .into();
+        report.ci_prediction.reasons = readiness
+            .blockers
+            .iter()
+            .map(|b| format!("{}: {}", b.code, b.detail))
+            .collect();
+        report.ci_prediction.recommendations = if readiness.ready {
+            vec![]
+        } else {
+            vec![
+                "Continue working on this branch, then rerun full validation before push or PR"
+                    .into(),
+            ]
+        };
+        if readiness.ready {
+            report.pass_count += 1;
+        } else {
+            report.status = "fail".into();
+            report.fail_count += 1;
+            report.failures.extend(
+                readiness
+                    .blockers
+                    .iter()
+                    .map(|b| format!("publication_readiness: {}: {}", b.code, b.detail)),
+            );
+        }
+        Some(readiness)
+    } else {
+        None
+    };
 
     if validate_cli.format == "json" {
         println!(
             "{}",
             serde_json::to_string_pretty(&serde_json::json!({
                 "status": report.status,
+                "scope": if scope == ValidationScope::ProjectPrerequisites { "project_prerequisites" } else { "publication_readiness" },
+                "readiness": readiness,
                 "self_heal": heal_actions,
                 "report": report,
             }))
@@ -5900,8 +6156,343 @@ fn run_validate_command(
     if report.fail_count > 0 {
         std::process::exit(1);
     }
-    mark_validation_completed(workspace_root)?;
+    if scope == ValidationScope::ProjectPrerequisites {
+        if validate_cli.format != "json" {
+            println!(
+                "Project prerequisites passed; publication readiness has not been assessed. Run decapod validate before push or PR."
+            );
+        }
+        mark_project_prerequisites_completed(workspace_root)?;
+    } else {
+        mark_validation_completed(workspace_root)?;
+    }
     Ok(())
+}
+
+fn readiness_installed_tool(
+    workspace_root: &Path,
+    name: &str,
+) -> Result<std::path::PathBuf, error::DecapodError> {
+    std::env::split_paths(&std::env::var_os("PATH").unwrap_or_default())
+        .filter(|p| p.is_absolute())
+        .filter_map(|p| p.join(name).canonicalize().ok())
+        .find(|p| p.is_file() && !p.starts_with(workspace_root))
+        .ok_or_else(|| {
+            error::DecapodError::ValidationError(format!(
+                "READINESS_TOOL_MISSING: an installed trusted {name} executable is required"
+            ))
+        })
+}
+
+fn readiness_environment(
+    workspace_root: &Path,
+) -> Result<
+    (
+        core::validation_runtime::Options,
+        core::repo_identity::RepositoryIdentity,
+    ),
+    error::DecapodError,
+> {
+    let repository = core::workspace::resolve_readiness_repository(workspace_root)?;
+    let base_branch = core::workspace::resolve_base_branch(workspace_root, None);
+    let base =
+        core::workspace::base_ref_for_branch(workspace_root, &base_branch).ok_or_else(|| {
+            error::DecapodError::ValidationError(
+                "READINESS_BASE_MISSING: fetch the accepted target before validation".into(),
+            )
+        })?;
+    let accepted_base_ref = if base.starts_with("origin/") {
+        format!("refs/remotes/{base}")
+    } else {
+        format!("refs/heads/{base}")
+    };
+    let options = core::validation_runtime::Options {
+        root: workspace_root.canonicalize()?,
+        git: readiness_installed_tool(workspace_root, "git")?,
+        repository: repository.canonical_name.clone(),
+        base_branch,
+        accepted_base_ref,
+        evidence_parent: std::env::temp_dir().canonicalize()?,
+        timeout: std::time::Duration::from_secs(7200),
+        max_input_bytes: 8 * 1024 * 1024 * 1024,
+        max_files: 200_000,
+        max_output_bytes: 16 * 1024 * 1024,
+    };
+    Ok((options, repository))
+}
+
+type ReadinessSnapshotRunner =
+    core::snapshot_provider::PublicGithubReads<core::snapshot_provider::OfficialCli>;
+fn readiness_snapshot_runner(
+    options: &core::validation_runtime::Options,
+    repository: &core::snapshot_provider::Repository,
+) -> Result<ReadinessSnapshotRunner, error::DecapodError> {
+    use core::external_action::{self, ExternalCapability};
+    use core::snapshot_provider::{OfficialCli, Program, PublicGithubReads};
+    let store = find_governance_root(&options.root).join(".decapod/data");
+    let git_store = store.clone();
+    let git = OfficialCli::git_only(options.git.clone(), move |spec, executable| {
+        let capability = match spec.program() {
+            Program::GitTransport if spec.arguments().iter().any(|a| a == "push") => {
+                ExternalCapability::VcsWrite
+            }
+            Program::GitTransport => ExternalCapability::VcsRead,
+            Program::GitLocal => ExternalCapability::ProofExec,
+            _ => return Err(std::io::Error::other("unsupported snapshot executable")),
+        };
+        external_action::authorize(
+            &git_store,
+            capability,
+            "readiness.temporary-snapshot",
+            &executable.to_string_lossy(),
+        )
+        .map_err(std::io::Error::other)
+    })?;
+    Ok(PublicGithubReads::new(
+        readiness_installed_tool(&options.root, "curl")?,
+        repository.clone(),
+        git,
+        move |spec, executable| {
+            let request = spec.authorize_provider_read()?;
+            external_action::authorize_public_github_json_read(&store, executable, &request)
+                .map_err(std::io::Error::other)
+        },
+    )?)
+}
+
+/// One binary readiness boundary shared by CLI, RPC and the last pre-push gate.
+/// Project-only receipts and cached timestamps never enter this decision.
+fn run_current_workbranch_readiness_with(
+    workspace_root: &Path,
+    invocation: &ReadinessInvocation,
+) -> core::validation_runtime::ValidationReport {
+    use core::validation_runtime as runtime;
+    let result = (|| -> Result<runtime::ValidationReport, error::DecapodError> {
+        invocation.validate()?;
+        let config = crate::cli::DecapodProjectConfig::load(workspace_root)?;
+        if invocation.has_snapshot_arguments() && !config.proof.validation_buildkite_preflights {
+            return Err(error::DecapodError::ValidationError(
+                "READINESS_PROVIDER_MISMATCH: snapshot arguments require proof.validation_buildkite_preflights = true; native validation cannot silently switch providers".into(),
+            ));
+        }
+        if config.proof.required_profile.is_none() {
+            return Err(error::DecapodError::ValidationError(
+                "READINESS_PROFILE_REQUIRED: reconcile this repository's complete build, source-CI and release contract through init/agent.init; project prerequisites alone cannot authorize push or PR".into(),
+            ));
+        }
+        core::workspace::verify_current_publication_prerequisites(workspace_root)?;
+        let (options, repository) = readiness_environment(workspace_root)?;
+        let mut signal_guard = core::bounded_process::SignalCancellationGuard::new()?;
+        let cancellation = signal_guard.cancellation().clone();
+        let store_root = find_governance_root(workspace_root).join(".decapod/data");
+        let authorize = |action: runtime::NativeAction<'_>| -> std::io::Result<()> {
+            use core::external_action::{self, ExternalCapability};
+            let result = match action {
+                runtime::NativeAction::ToolProbe { program, arguments } => {
+                    let args: Vec<_> = arguments.iter().map(String::as_str).collect();
+                    external_action::authorize_preflight_probe(&store_root, program, &args)
+                }
+                runtime::NativeAction::TargetRead { program, .. } => external_action::authorize(
+                    &store_root,
+                    ExternalCapability::VcsRead,
+                    "readiness.accepted-target",
+                    &program.to_string_lossy(),
+                ),
+                runtime::NativeAction::SourceCheck { invocation } => external_action::authorize(
+                    &store_root,
+                    ExternalCapability::ProofExec,
+                    "readiness.source-check",
+                    &invocation.program.to_string_lossy(),
+                ),
+            };
+            result.map_err(std::io::Error::other)
+        };
+        let prerequisite = |_budget: &runtime::RuntimeBudget<'_>| {
+            // The private caller has just executed the actual bounded project
+            // checks; a serialized receipt or CLI flag cannot supply this fact.
+            Ok(core::readiness_profile::ProjectPrerequisites::Passed)
+        };
+        if config.proof.validation_buildkite_preflights {
+            use runtime::snapshot::{SnapshotHost, SnapshotMode};
+            let repository = core::snapshot_provider::Repository::new(
+                &repository.owner,
+                &repository.repository,
+            )?;
+            let mut runner = readiness_snapshot_runner(&options, &repository)?;
+            if let Some(observed_s) = &invocation.snapshot_adopt {
+                let handoff = runtime::snapshot::adopt_host_handoff(
+                    &options,
+                    &repository,
+                    &mut runner,
+                    invocation.snapshot_resume.as_deref().ok_or_else(|| {
+                        error::DecapodError::ValidationError(
+                            "READINESS_INVOCATION_INVALID: host adoption requires a prior handoff"
+                                .into(),
+                        )
+                    })?,
+                    observed_s,
+                    &cancellation,
+                )?;
+                signal_guard.restore()?;
+                return Ok(runtime::ValidationReport {
+                    ready: false,
+                    scope: runtime::READINESS_SCOPE,
+                    stage_dispositions: Vec::new(),
+                    blockers: vec![runtime::Blocker::new(
+                        "READINESS_SNAPSHOT_ADOPTED_PROOF_PENDING",
+                        format!(
+                            "Verified the host snapshot identity. Full provider proof remains required; resume validation using {}",
+                            handoff.display()
+                        ),
+                    )],
+                    evidence_path: handoff.parent().map(Path::to_path_buf),
+                });
+            }
+            let mode = if invocation.snapshot_prepare {
+                SnapshotMode::PrepareForHost
+            } else if invocation.snapshot_resume.is_some() {
+                SnapshotMode::ResumeAndCollect
+            } else {
+                SnapshotMode::PublishAndCollect
+            };
+            let mut host = SnapshotHost::new(
+                options.clone(),
+                repository,
+                runner,
+                mode,
+                invocation.snapshot_resume.clone(),
+                None,
+                prerequisite,
+            )?;
+            let read_store = store_root.clone();
+            let buildkite = core::snapshot_provider::public_buildkite::CurlPublicReader::new(
+                readiness_installed_tool(workspace_root, "curl")?,
+                move |request, executable| {
+                    let seal = request.authorize_read()?;
+                    core::external_action::authorize_public_buildkite_read(
+                        &read_store,
+                        executable,
+                        &seal,
+                    )
+                    .map_err(std::io::Error::other)
+                },
+            )?;
+            host = host.with_public_buildkite_reader(
+                buildkite,
+                runtime::snapshot::ReviewedBuildkiteImporter::reviewed(),
+            )?;
+            if let Some(path) = &invocation.provider_artifacts {
+                host = host.with_artifact_directory(path.clone())?;
+            }
+            let report = runtime::validate(&options, &mut host, &cancellation);
+            signal_guard.restore()?;
+            return Ok(report);
+        }
+        let manifest: toml::Value = toml::from_str(&fs::read_to_string(
+            workspace_root.join("Cargo.toml"),
+        )?)
+        .map_err(|e| {
+            error::DecapodError::ValidationError(format!("READINESS_TOOLCHAIN_CONTRACT: {e}"))
+        })?;
+        let version = manifest
+            .get("package")
+            .and_then(|p| p.get("rust-version"))
+            .and_then(toml::Value::as_str)
+            .ok_or_else(|| {
+                error::DecapodError::ValidationError(
+                    "READINESS_TOOLCHAIN_CONTRACT: exact project Rust version is required".into(),
+                )
+            })?;
+        let mut host = runtime::NativeHost::discover(
+            options.clone(),
+            version,
+            repository.remote_url,
+            prerequisite,
+            authorize,
+            &cancellation,
+        )?;
+        let report = runtime::validate(&options, &mut host, &cancellation);
+        signal_guard.restore()?;
+        Ok(report)
+    })();
+    result.unwrap_or_else(|error| runtime::ValidationReport {
+        ready: false,
+        scope: runtime::READINESS_SCOPE,
+        stage_dispositions: Vec::new(),
+        blockers: vec![runtime::Blocker::new(
+            "READINESS_BLOCKED",
+            error.to_string(),
+        )],
+        evidence_path: None,
+    })
+}
+
+pub(crate) fn enforce_workbranch_readiness_before_push(
+    workspace_root: &Path,
+    invocation: &ReadinessInvocation,
+) -> Result<Option<std::path::PathBuf>, error::DecapodError> {
+    invocation.validate()?;
+    if invocation.snapshot_prepare || invocation.snapshot_adopt.is_some() {
+        return Err(error::DecapodError::ValidationError("PUBLICATION_NOT_READY: temporary snapshot preparation/adoption cannot publish the work branch".into()));
+    }
+    let governance_root = find_governance_root(workspace_root);
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: governance_root.join(".decapod/data"),
+    };
+    let project = run_validation_bounded_with_receipt(
+        &store,
+        &governance_root,
+        workspace_root,
+        false,
+        true,
+        false,
+        false,
+    )?;
+    if project.fail_count != 0 {
+        return Err(error::DecapodError::ValidationError("PUBLICATION_NOT_READY: project prerequisite checks failed; continue working on the branch".into()));
+    }
+    let readiness = run_current_workbranch_readiness_with(workspace_root, invocation);
+    if !readiness.ready {
+        return Err(error::DecapodError::ValidationError(format!(
+            "PUBLICATION_NOT_READY: {}",
+            serde_json::to_string(&readiness)
+                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
+        )));
+    }
+    Ok(readiness
+        .evidence_path
+        .map(|path| path.join("snapshot-handoff.json"))
+        .filter(|path| path.is_file()))
+}
+
+/// Called only after source publication and PR identity have been verified.
+/// The handoff is an untrusted locator; cleanup reconstructs the local subject
+/// and uses compare-and-swap against the single task-owned temporary ref.
+pub(crate) fn cleanup_published_readiness_snapshot(
+    root: &Path,
+    handoff: &Path,
+) -> Result<(), error::DecapodError> {
+    let (mut options, repository) = readiness_environment(root)?;
+    options.timeout = std::time::Duration::from_secs(60);
+    let repository =
+        core::snapshot_provider::Repository::new(&repository.owner, &repository.repository)?;
+    let mut runner = readiness_snapshot_runner(&options, &repository)?;
+    let mut signal_guard = core::bounded_process::SignalCancellationGuard::new()?;
+    let result = core::validation_runtime::snapshot::cleanup_handoff(
+        &options,
+        &repository,
+        &mut runner,
+        handoff,
+        signal_guard.cancellation(),
+    );
+    signal_guard.restore()?;
+    match result? {
+        core::snapshot_provider::snapshot::Cleanup::AlreadyAbsent
+        | core::snapshot_provider::snapshot::Cleanup::Removed => Ok(()),
+        core::snapshot_provider::snapshot::Cleanup::NeedsRecovery => Err(error::DecapodError::ValidationError(
+            "SNAPSHOT_CLEANUP_PENDING: preserve the private handoff and inspect its exact temporary ref; never broadly prune or force-delete refs".into())),
+    }
 }
 
 fn validate_timeout_secs() -> u64 {
@@ -6073,13 +6664,17 @@ fn is_transient_storage_error(err: &error::DecapodError) -> bool {
     err.storage_failure_kind().is_retryable()
 }
 
-fn run_validation_bounded(
+// Legacy project-prerequisite receipts are preparation evidence only. Full
+// publication readiness remains external to the frozen candidate so a receipt
+// cannot change the material that it claims to prove.
+fn run_validation_bounded_with_receipt(
     store: &Store,
     governance_root: &Path,
     workspace_root: &Path,
     verbose: bool,
     refresh_specs: bool,
     projections: bool,
+    record_receipt: bool,
 ) -> Result<validate::ValidationReport, error::DecapodError> {
     core::workspace::initialize_workbranch_governance(workspace_root, &current_agent_id(), None)?;
     let timeout_secs = validate_timeout_secs();
@@ -6105,8 +6700,10 @@ fn run_validation_bounded(
     match result {
         Ok(mut report) if report.fail_count == 0 => {
             report.temporary_artifacts_cleaned = validate::cleanup_validation_temp_paths()?;
-            record_validation_proof(workspace_root, &report)?;
-            write_validation_receipt(workspace_root, &report)?;
+            if record_receipt {
+                record_validation_proof(workspace_root, &report)?;
+                write_validation_receipt(workspace_root, &report)?;
+            }
             Ok(report)
         }
         other => other,
@@ -6135,7 +6732,13 @@ fn run_validation_in_child_process(
     let mut command = std::process::Command::new(executable);
     command
         .current_dir(workspace_root)
-        .args(["validate", "--store", store_kind, "--format", "json"])
+        .args([
+            "__project-check-worker",
+            "--store",
+            store_kind,
+            "--format",
+            "json",
+        ])
         .env("DECAPOD_VALIDATE_WORKER", "1")
         .env("DECAPOD_VALIDATE_SKIP_IMAGE_PRUNE", "1")
         .env("DECAPOD_VALIDATE_SKIP_CONTAINER_CLEANUP", "1")
@@ -6601,6 +7204,23 @@ fn collect_gatekeeper_paths(
 #[path = "../../tests/unit/lib_gatekeeper_path_tests.rs"]
 mod gatekeeper_path_tests;
 
+fn verify_checkpoints_with_target(
+    root: &Path,
+    base: &str,
+    head: &str,
+    target: Option<&str>,
+) -> Result<(), error::DecapodError> {
+    match target {
+        Some(target) if !target.is_empty() => {
+            core::governance_document::verify_pr_checkpoints_for_target(root, base, head, target)
+        }
+        Some(_) => Err(error::DecapodError::ValidationError(
+            "target-base must not be empty".into(),
+        )),
+        None => core::governance_document::verify_pr_checkpoints(root, base, head),
+    }
+}
+
 fn run_govern_command(
     govern_cli: GovernCli,
     project_store: &Store,
@@ -6608,6 +7228,13 @@ fn run_govern_command(
     workspace_root: &Path,
 ) -> Result<(), error::DecapodError> {
     match govern_cli.command {
+        GovernCommand::ProjectCheck(validate_cli) => run_validate_command(
+            validate_cli,
+            &find_governance_root(workspace_root),
+            workspace_root,
+            project_store,
+            ValidationScope::ProjectPrerequisites,
+        )?,
         GovernCommand::Policy(policy_cli) => policy::run_policy_cli(project_store, policy_cli)?,
         GovernCommand::Health(health_cli) => health::run_health_cli(project_store, health_cli)?,
         GovernCommand::Proof(proof_cli) => proof::execute_proof_cli(&proof_cli, store_root)?,
@@ -6782,11 +7409,13 @@ fn run_govern_command(
             ArtifactsCommand::VerifyCheckpoints {
                 base_branch,
                 head_ref,
+                target_base,
             } => {
-                core::governance_document::verify_pr_checkpoints(
+                verify_checkpoints_with_target(
                     workspace_root,
                     &base_branch,
                     &head_ref,
+                    target_base.as_deref(),
                 )?;
                 println!(
                     "{}",
@@ -8400,19 +9029,25 @@ fn run_workspace_command(
                 .unwrap()
             );
         }
-        WorkspaceCommand::Publish { title, description } => {
+        WorkspaceCommand::Publish {
+            title,
+            description,
+            snapshot_resume,
+            provider_artifacts,
+        } => {
             let governance_root = find_governance_root(project_root);
             let workspace_root = project_root;
             let project_store = Store {
                 kind: StoreKind::Repo,
                 root: governance_root.join(".decapod").join("data"),
             };
-            let report = run_validation_bounded(
+            let report = run_validation_bounded_with_receipt(
                 &project_store,
                 &governance_root,
                 workspace_root,
                 false,
                 true,
+                false,
                 false,
             )?;
             if report.fail_count > 0 {
@@ -8424,7 +9059,18 @@ fn run_workspace_command(
                     report.fail_count
                 )));
             }
-            let result = workspace::publish_workspace(workspace_root, title, description)?;
+            let invocation = ReadinessInvocation {
+                snapshot_prepare: false,
+                snapshot_resume,
+                snapshot_adopt: None,
+                provider_artifacts,
+            };
+            let result = workspace::publish_workspace_with_readiness(
+                workspace_root,
+                title,
+                description,
+                &invocation,
+            )?;
             println!(
                 "{}",
                 serde_json::json!({
@@ -8639,7 +9285,7 @@ mod rpc_handlers {
             Some(ContextCapsule {
                 fragments: vec![],
                 resolved_authority: core::assets::resolved_override_evidence(ctx.project_root)?,
-                spec: Some("Agent initialized successfully".to_string()),
+                spec: Some("Agent initialized; complete required proof is pending".to_string()),
                 architecture: None,
                 security: None,
                 standards: Some({
@@ -8662,7 +9308,22 @@ mod rpc_handlers {
             vec![]
         };
 
+        // First-run discovery is always fresh and never records successful proof.
+        let config = load_project_config_if_present(ctx.project_root)?.unwrap_or_default();
+        let reconciliation = core::init_reconciliation::inspect(
+            ctx.project_root,
+            &config.proof,
+            config.repo.product_name.as_deref(),
+        );
+        if reconciliation.status == "needs_reconciliation" {
+            allowed_ops.insert(0, AllowedOp {
+                op: "todo.add".to_string(),
+                reason: "Record and resolve the required-proof reconciliation repair tasks before full validation".to_string(),
+                required_params: vec!["title".to_string()],
+            });
+        }
         let result = AgentInitResult {
+            reconciliation: Some(reconciliation),
             environment_context: EnvironmentContext {
                 repo_root: ctx.project_root.to_string_lossy().to_string(),
                 workspace_path: ctx.project_root.to_string_lossy().to_string(),
@@ -8670,7 +9331,7 @@ mod rpc_handlers {
                     docker_available: workspace_status.container.docker_available,
                     in_container: workspace_status.container.in_container,
                 },
-                done_means: "decapod validate passes".to_string(),
+                done_means: "Full required proof passes for the exact candidate. Initialization and project-check are not merge-readiness evidence.".to_string(),
             },
         };
 
@@ -8769,8 +9430,18 @@ mod rpc_handlers {
         let params: WorkspacePublishParams = serde_json::from_value(ctx.request.params.clone())
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
-        let result =
-            workspace::publish_workspace(ctx.project_root, params.title, params.description)?;
+        let invocation = super::ReadinessInvocation {
+            snapshot_prepare: false,
+            snapshot_resume: params.snapshot_resume,
+            snapshot_adopt: None,
+            provider_artifacts: params.provider_artifacts,
+        };
+        let result = workspace::publish_workspace_with_readiness(
+            ctx.project_root,
+            params.title,
+            params.description,
+            &invocation,
+        )?;
 
         let rpc_result = WorkspacePublishResult {
             branch: result.branch.clone(),
@@ -9535,8 +10206,16 @@ mod rpc_handlers {
     }
 
     pub(crate) fn handle_validate_run(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
-        let _params: ValidateRunParams = serde_json::from_value(ctx.request.params.clone())
+        let params: ValidateRunParams = serde_json::from_value(ctx.request.params.clone())
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
+
+        let invocation = super::ReadinessInvocation {
+            snapshot_prepare: params.snapshot_prepare,
+            snapshot_resume: params.snapshot_resume,
+            snapshot_adopt: params.snapshot_adopt,
+            provider_artifacts: params.provider_artifacts,
+        };
+        invocation.validate()?;
 
         ensure_session_valid()?;
         let workspace_root = &ctx.project_root;
@@ -9545,17 +10224,32 @@ mod rpc_handlers {
             kind: StoreKind::Repo,
             root: governance_root.join(".decapod").join("data"),
         };
-        let res = super::run_validation_bounded(
+        let res = super::run_validation_bounded_with_receipt(
             &project_store,
             &governance_root,
             workspace_root,
             false,
             true,
             false,
+            false,
         );
 
         match res {
             Ok(report) if report.fail_count == 0 => {
+                let readiness =
+                    super::run_current_workbranch_readiness_with(workspace_root, &invocation);
+                if !readiness.ready {
+                    return Ok(error_response(
+                        ctx.request.id.clone(),
+                        ctx.request.op.clone(),
+                        ctx.request.params.clone(),
+                        "publication_not_ready".into(),
+                        serde_json::to_string(&readiness)
+                            .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
+                        None,
+                        ctx.mandates.clone(),
+                    ));
+                }
                 let result = ValidateRunResult {
                     success: true,
                     report: "All validation gates passed".to_string(),

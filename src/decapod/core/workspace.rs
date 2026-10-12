@@ -1963,6 +1963,41 @@ pub(crate) fn inherit_network_remotes_from_parent(
     }))
 }
 
+/// Resolve the same repository identity as publication without adding remotes,
+/// fetching, pushing, or changing the original work branch. A local-clone
+/// workspace may inspect its known parent remote but cannot silently rewrite it.
+pub(crate) fn resolve_readiness_repository(
+    repo_root: &Path,
+) -> Result<crate::core::repo_identity::RepositoryIdentity, DecapodError> {
+    let mut candidates = collect_network_remotes(repo_root)?;
+    if candidates.is_empty() {
+        let mut parents = local_remote_paths(repo_root)?;
+        if let Some(host) = host_repo_from_canonical_workspace(repo_root) {
+            parents.push(host);
+        }
+        for parent in parents {
+            if parent != repo_root {
+                candidates.extend(collect_network_remotes(&parent)?);
+            }
+        }
+    }
+    let remote = pick_network_remote(&candidates).ok_or_else(|| {
+        DecapodError::ValidationError(
+            "READINESS_REPOSITORY_MISSING: configure the accepted upstream repository before validation".into(),
+        )
+    })?;
+    let canonical =
+        crate::core::repo_identity::parse_github_repository(&remote.url).ok_or_else(|| {
+            DecapodError::ValidationError(
+                "READINESS_REPOSITORY_UNSUPPORTED: no reviewed provider adapter for this remote"
+                    .into(),
+            )
+        })?;
+    crate::core::repo_identity::resolve_repository_identity_from_remote(&format!(
+        "https://github.com/{canonical}.git"
+    ))
+}
+
 fn resolve_publish_remote(repo_root: &Path) -> Result<PublishRemote, DecapodError> {
     if let Some(remote) = pick_network_remote(&collect_network_remotes(repo_root)?) {
         return Ok(remote);
@@ -2011,6 +2046,21 @@ pub fn publish_workspace(
     title: Option<String>,
     description: Option<String>,
 ) -> Result<PublishResult, DecapodError> {
+    publish_workspace_with_readiness(
+        repo_root,
+        title,
+        description,
+        &crate::ReadinessInvocation::default(),
+    )
+}
+
+pub(crate) fn publish_workspace_with_readiness(
+    repo_root: &Path,
+    title: Option<String>,
+    description: Option<String>,
+    readiness_invocation: &crate::ReadinessInvocation,
+) -> Result<PublishResult, DecapodError> {
+    readiness_invocation.validate()?;
     let status = get_workspace_status(repo_root)?;
 
     // 1. Must be in a worktree on an unprotected branch
@@ -2026,8 +2076,8 @@ pub fn publish_workspace(
             status.git.current_branch
         )));
     }
-    verify_trajectory_gate_for_publish(repo_root, &status.git.current_branch)?;
-    verify_validation_artifacts_for_publish(repo_root)?;
+    verify_trajectory_binding_for_readiness(repo_root, &status.git.current_branch)?;
+    verify_current_governance_for_publish(repo_root)?;
     eval::verify_eval_gate_for_publish(&repo_root.join(".decapod").join("data"))?;
 
     // Resolve the actual network remote before committing. Decapod-created
@@ -2093,10 +2143,16 @@ pub fn publish_workspace(
         .to_string();
 
     publication::verify_committed_bundle(repo_root, &commit_hash)?;
-    verify_validation_artifacts_for_publish(repo_root)?;
+    verify_current_governance_for_publish(repo_root)?;
     // Preflight against the same base that publication will use. This runs
     // before any push or PR creation and never mutates the worktree.
     check_merge_conflicts(repo_root, &base_branch)?;
+
+    // Auto-commit above changes HEAD. Evaluate the current committed work
+    // branch now, immediately before its first publication, through the same
+    // full binary readiness contract as CLI/RPC validate.
+    let snapshot_handoff =
+        crate::enforce_workbranch_readiness_before_push(repo_root, readiness_invocation)?;
 
     // 3. Push branch to the selected network remote.
     let push_output = Command::new("git")
@@ -2131,7 +2187,7 @@ pub fn publish_workspace(
         &commit_hash,
     )
     .map_err(publication::after_push)?;
-    let (pr_url, warnings) = if let Some(slug) =
+    let (pr_url, mut warnings) = if let Some(slug) =
         github_repo_slug(&publication::redact_remote(&publish_remote.url))
     {
         let url = publication::ensure_and_verify_pr(
@@ -2158,6 +2214,12 @@ pub fn publish_workspace(
         (None, vec!["Branch verified remotely; PR verification is unavailable for this non-GitHub remote. This is not a publish-ready PR.".to_string()])
     };
 
+    if pr_url.is_some()
+        && let Some(handoff) = snapshot_handoff
+        && let Err(error) = crate::cleanup_published_readiness_snapshot(repo_root, &handoff)
+    {
+        warnings.push(format!("Publication is verified; temporary snapshot cleanup needs recovery: {error}. Preserve handoff {}", handoff.display()));
+    }
     Ok(PublishResult {
         branch: status.git.current_branch,
         commit_hash,
@@ -2170,7 +2232,7 @@ pub fn publish_workspace(
 }
 
 pub fn extract_task_ids_from_branch(branch: &str) -> Vec<String> {
-    let re = Regex::new(r"(?i)(?:aiml|apis|appl|arch|bend|bugs|cicd|code|data|desn|devx|docs|feat|fend|infr|lang|perf|plat|proj|r|refa|reft|root|secu|spec|test|todo|tool)[_-][a-z0-9]{6,}").expect("static regex");
+    let re = Regex::new(r"(?i)(?<![a-z0-9])(?:aiml|apis|appl|arch|bend|bugs|cicd|code|data|desn|devx|docs|feat|fend|infr|lang|perf|plat|proj|r|refa|reft|root|secu|spec|test|todo|tool)[_-][a-z0-9]{6,}").expect("static regex");
     let mut out: Vec<String> = re
         .find_iter(branch)
         .filter_map(|m| m.ok())
@@ -2179,6 +2241,42 @@ pub fn extract_task_ids_from_branch(branch: &str) -> Vec<String> {
     out.sort();
     out.dedup();
     out
+}
+
+/// Read-only publication prerequisites. Called by full validate as well as the
+/// last pre-push boundary, so a full green cannot hide another local publish
+/// gate. No receipt is written and no Git ref is changed here.
+pub(crate) fn verify_current_publication_prerequisites(
+    repo_root: &Path,
+) -> Result<(), DecapodError> {
+    let status = get_workspace_status(repo_root)?;
+    if !status.git.in_worktree || status.git.is_protected {
+        return Err(DecapodError::ValidationError(
+            "PUBLICATION_WORKBRANCH_REQUIRED: validate readiness in the governed feature worktree"
+                .into(),
+        ));
+    }
+    verify_trajectory_binding_for_readiness(repo_root, &status.git.current_branch)?;
+    verify_current_governance_for_publish(repo_root)?;
+    eval::verify_eval_gate_for_publish(&repo_root.join(".decapod/data"))?;
+    ensure_validation_artifacts_staged(repo_root)?;
+    let base = resolve_base_branch(repo_root, None);
+    ensure_required_governance_artifacts_in_pr(repo_root, &base)?;
+    ensure_material_specs_change_in_pr(repo_root, &base)?;
+    ensure_managed_spec_projections_in_pr(repo_root, &base)?;
+    publication::verify_spec_reviews(repo_root, &base)?;
+    let output = Command::new("git")
+        .current_dir(repo_root)
+        .args(["rev-parse", "HEAD"])
+        .bounded_output(CONTROL_TIMEOUT)?;
+    if !output.status.success() {
+        return Err(DecapodError::ValidationError(
+            "READINESS_HEAD_MISSING".into(),
+        ));
+    }
+    let head = String::from_utf8_lossy(&output.stdout).trim().to_owned();
+    publication::verify_committed_bundle(repo_root, &head)?;
+    check_merge_conflicts(repo_root, &base)
 }
 
 pub fn verify_workunit_gate_for_publish(
@@ -2214,16 +2312,25 @@ pub fn verify_workunit_gate_for_publish(
 
 /// Verify the durable publication binding for a task-owned branch.
 ///
-/// Workunit manifests and context capsules remain useful local execution
-/// material, but the checked-in trajectory cookie is the only promotion
-/// record. Git history then provides the durable sequence of prior cookies.
-pub fn verify_trajectory_gate_for_publish(
+/// Workunit manifests, context capsules and the checked-in trajectory retain
+/// execution history. They cannot replace current code-bound full-suite proof.
+/// Preparation checks ownership and explicit human blockers, not an unbound
+/// historical proof aggregate. The fresh complete source suite is mandatory at
+/// the final readiness boundary; a failed prior attempt must remain retryable.
+pub(crate) fn verify_trajectory_binding_for_readiness(
     repo_root: &Path,
     branch: &str,
 ) -> Result<(), DecapodError> {
+    load_readiness_trajectory_binding(repo_root, branch).map(|_| ())
+}
+
+fn load_readiness_trajectory_binding(
+    repo_root: &Path,
+    branch: &str,
+) -> Result<Option<trajectory::TrajectoryArtifact>, DecapodError> {
     let task_ids = extract_task_ids_from_branch(branch);
     if task_ids.is_empty() {
-        return Ok(());
+        return Ok(None);
     }
 
     let trajectory = trajectory::load_trajectory_cookie(repo_root)?.ok_or_else(|| {
@@ -2250,6 +2357,19 @@ pub fn verify_trajectory_gate_for_publish(
         }
     }
 
+    Ok(Some(trajectory))
+}
+
+/// Legacy conservative journal check. It does not establish full readiness.
+/// Public validate/publish instead check binding plus fresh code-bound evidence,
+/// so retaining an accurately failed historical attempt cannot deadlock retry.
+pub fn verify_trajectory_gate_for_publish(
+    repo_root: &Path,
+    branch: &str,
+) -> Result<(), DecapodError> {
+    let Some(trajectory) = load_readiness_trajectory_binding(repo_root, branch)? else {
+        return Ok(());
+    };
     match trajectory.proof_status {
         trajectory::TrajectoryProofStatus::Failed
         | trajectory::TrajectoryProofStatus::NoChecksRun
@@ -2265,10 +2385,9 @@ pub fn verify_trajectory_gate_for_publish(
     }
 }
 
-/// Publication is only valid when the receipt and trajectory are present and
-/// cryptographically bound to one another. This closes the gap where a PR can
-/// be created from code that passed validation while carrying stale or absent
-/// proof artifacts.
+/// Verify the legacy project-prerequisite receipt and its trajectory binding.
+/// This remains useful preparation evidence, but never authorizes publication.
+/// Full validate/publish use current governance plus exact full-suite readiness.
 pub fn verify_validation_artifacts_for_publish(repo_root: &Path) -> Result<(), DecapodError> {
     let trajectory = trajectory::load_trajectory_cookie(repo_root)?.ok_or_else(|| {
         DecapodError::ValidationError(format!(
@@ -2314,6 +2433,27 @@ pub fn verify_validation_artifacts_for_publish(repo_root: &Path) -> Result<(), D
     if !ancestor.status.success() {
         return Err(DecapodError::ValidationError("STALE_PUBLICATION_REVISION: validation is not bound to this commit history. Rerun `decapod validate`.".into()));
     }
+    if receipt.trajectory_run_id.as_deref() != Some(trajectory.run_id.as_str())
+        || receipt.trajectory_artifact_hash.as_deref() != Some(trajectory.artifact_hash.as_str())
+    {
+        return Err(DecapodError::ValidationError(
+            "Cannot publish: validation receipt is not bound to the current trajectory artifact."
+                .to_string(),
+        ));
+    }
+    verify_current_governance_for_publish(repo_root)
+}
+
+/// Current governance obligations shared by full validation and publication.
+/// This preserves plan, task, claims, decisions and Jev custody without using a
+/// legacy project-check receipt as authority for the full source-CI verdict.
+pub fn verify_current_governance_for_publish(repo_root: &Path) -> Result<(), DecapodError> {
+    let trajectory = trajectory::load_trajectory_cookie(repo_root)?.ok_or_else(|| {
+        DecapodError::ValidationError(format!(
+            "Cannot publish: missing trajectory cookie at {}.",
+            trajectory::trajectory_cookie_path(repo_root).display()
+        ))
+    })?;
     let plan = plan_governance::load_plan(repo_root)?.ok_or_else(|| {
         DecapodError::ValidationError(
             "Cannot publish: missing governed plan; run `decapod govern plan init`.".into(),
@@ -2328,14 +2468,6 @@ pub fn verify_validation_artifacts_for_publish(repo_root: &Path) -> Result<(), D
     }
     if !plan.human_questions.is_empty() || !plan.unresolved_contradictions.is_empty() {
         return Err(DecapodError::ValidationError("PUBLICATION_DECISION_REQUIRED: resolve the governed plan's human questions and contradictions before publication; do not infer approval.".into()));
-    }
-    if receipt.trajectory_run_id.as_deref() != Some(trajectory.run_id.as_str())
-        || receipt.trajectory_artifact_hash.as_deref() != Some(trajectory.artifact_hash.as_str())
-    {
-        return Err(DecapodError::ValidationError(
-            "Cannot publish: validation receipt is not bound to the current trajectory artifact."
-                .to_string(),
-        ));
     }
     for (path, present) in [
         (

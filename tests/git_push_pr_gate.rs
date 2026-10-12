@@ -155,7 +155,7 @@ fn git_push_pr_gate_warns_when_unpushed() {
 
     let validate = run_decapod(
         &dir,
-        &["validate", "-v"],
+        &["validate", "--format", "json"],
         &[
             ("DECAPOD_AGENT_ID", "unknown"),
             ("DECAPOD_SESSION_PASSWORD", &password),
@@ -171,6 +171,14 @@ fn git_push_pr_gate_warns_when_unpushed() {
     assert!(
         combined.contains("has unpushed commits or does not exist on origin"),
         "expected git-push-pr gate warning marker, got: {combined}"
+    );
+    assert!(
+        combined.contains("complete full `decapod validate` readiness"),
+        "full report: {combined}"
+    );
+    assert!(
+        !combined.contains("Run `git push origin"),
+        "validation must never advise premature publication: {combined}"
     );
 }
 

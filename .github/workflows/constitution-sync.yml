@@ -10,6 +10,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify immutable source context
+        id: context
+        uses: ./.github/actions/ci-context
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -19,5 +25,17 @@ jobs:
       - name: Install Ajv CLI
         run: npm install -g ajv-cli
 
+      - name: Prepare shared source-CI profile
+        uses: ./.github/actions/source-ci-profile
+
       - name: Validate Constitution against Schema
-        run: ajv validate -s assets/schemas/constitution.schema.json -d assets/constitution.json --strict=false
+        run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check constitution-schema'
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0

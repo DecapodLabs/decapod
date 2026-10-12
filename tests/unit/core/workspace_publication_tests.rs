@@ -684,6 +684,56 @@ fn current_receipt_accepts_proof_commit_but_rejects_stale_code_epoch_task_and_re
 }
 
 #[test]
+fn current_governance_is_receipt_independent_but_preserves_task_and_decision_gates() {
+    let dir = repo();
+    // Build the real governed context, deliberately without storing a project
+    // receipt: full readiness cannot require a receipt that mutates its subject.
+    let receipt = current_receipt_fixture(dir.path());
+    assert!(
+        crate::core::governance_document::read_section(dir.path(), "validation")
+            .unwrap()
+            .is_none()
+    );
+    verify_current_governance_for_publish(dir.path()).unwrap();
+    assert!(verify_validation_artifacts_for_publish(dir.path()).is_err());
+
+    // Even an intact old project receipt does not resolve current human gates.
+    save_receipt(dir.path(), &receipt);
+    let original = plan_governance::load_plan(dir.path()).unwrap().unwrap();
+    let mut changed = original.clone();
+    changed
+        .human_questions
+        .push("Choose the intended contract".into());
+    plan_governance::save_plan(dir.path(), &changed).unwrap();
+    assert!(
+        verify_current_governance_for_publish(dir.path())
+            .unwrap_err()
+            .to_string()
+            .contains("PUBLICATION_DECISION_REQUIRED")
+    );
+    changed = original.clone();
+    changed
+        .unresolved_contradictions
+        .push("Source and intent disagree".into());
+    plan_governance::save_plan(dir.path(), &changed).unwrap();
+    assert!(
+        verify_current_governance_for_publish(dir.path())
+            .unwrap_err()
+            .to_string()
+            .contains("PUBLICATION_DECISION_REQUIRED")
+    );
+    changed = original;
+    changed.todo_ids = vec!["wrong_task".into()];
+    plan_governance::save_plan(dir.path(), &changed).unwrap();
+    assert!(
+        verify_current_governance_for_publish(dir.path())
+            .unwrap_err()
+            .to_string()
+            .contains("STALE_PUBLICATION_TASK")
+    );
+}
+
+#[test]
 fn invalid_and_missing_artifacts_fail_real_publication_gate() {
     let dir = repo();
     crate::core::governance_document::begin_pr(dir.path(), "invalid-artifact-test", "master")

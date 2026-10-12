@@ -679,7 +679,7 @@ Run this gate once when the agent starts and again after every new prompt or use
 ```bash
 # Smart bootstrap: only install/init if a newer version is available
 (decapod capabilities --format json | grep -q '"is_latest":true') || (cargo install decapod && decapod init --proof)
-decapod docs ingest && decapod validate && decapod session acquire
+decapod docs ingest && decapod govern project-check && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status
 decapod todo add "<task>" && decapod todo claim --id <task-id>
@@ -746,7 +746,7 @@ Run this gate once when the agent starts and again after every new prompt or use
 ```bash
 # Smart bootstrap: only install/init if a newer version is available
 (decapod capabilities --format json | grep -q '"is_latest":true') || (cargo install decapod && decapod init --proof)
-decapod docs ingest && decapod validate && decapod session acquire
+decapod docs ingest && decapod govern project-check && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status
 decapod todo add "<task>" && decapod todo claim --id <task-id>
@@ -781,7 +781,7 @@ decapod constitution search --query "<problem>"
 4. **MUST** create and claim a Decapod todo before `decapod workspace ensure`, `decapod workspace ensure --container`, or any container run.
 5. **MUST NOT** work on main/master or modify the root repository's active branch. **MUST** use `decapod workspace ensure`.
 6. **MUST** read [.decapod/config.toml](.decapod/config.toml) as user-editable project context.
-7. **MUST NOT** claim done or stop after a recoverable validation failure. Follow supported remediation, re-run `decapod validate`, and continue toward publication. Every publishable commit must include the release-bound entrypoints, managed Dockerfile pin, specs manifest, governance artifacts, and a material authored spec update; workspace creation and validation refresh supported generated projections automatically when the installed release changes.
+7. **MUST NOT** push the work branch or create a PR (including a draft) until `decapod validate` succeeds against the exact current candidate and accepted target. If validation fails, follow the actionable instructions and recovery steps in its validation report, repair the reported root causes on the same work branch, and rerun `decapod validate` against the exact current candidate. Never bypass a reported gate, fabricate evidence, weaken required checks, or publish merely to obtain a green status. If the report requires unavailable access or a human decision, preserve its exact blocker and obtain that input before continuing. Any material, history, policy, workflow, toolchain or accepted-target change invalidates earlier readiness. `decapod govern project-check` only prepares and verifies project prerequisites; its success is never permission to publish. Complete and checkpoint local preparation before full validation. An enabled provider may use the explicitly scoped temporary snapshot transport, but must not publish the original work branch before success. **MUST NOT** claim done or stop after a recoverable validation failure. Every publishable commit must include the release-bound entrypoints, managed Dockerfile pin, specs manifest, governance artifacts, and a material authored spec update; workspace creation and validation refresh supported generated projections automatically when the installed release changes.
 8. **MUST NOT** invent capabilities that are not exposed by the binary.
 9. **MUST** stop if requirements conflict or intent is ambiguous.
 10. **MUST** respect the interface abstraction boundary.

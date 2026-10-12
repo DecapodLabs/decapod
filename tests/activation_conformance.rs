@@ -4,11 +4,14 @@
 //! repository-native path a host must discover from an entrypoint, and emits a
 //! structured observation report when a contract boundary is missed.
 
+use decapod::core::bounded_process::{BoundedCommand, Cancellation, ProcessLimits, Termination};
 use serde::Serialize;
 use serde_json::Value;
 use std::fs;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
+use std::time::{Duration, Instant};
 use tempfile::TempDir;
 
 const AGENT_ID: &str = "activation-fixture-agent";
@@ -30,11 +33,57 @@ struct ActivationReport {
     observations: Vec<Observation>,
 }
 
+// Keep a fixture stall attributable to one command instead of waiting for the
+// aggregate test deadline. This includes time spent in inherited child processes.
+fn run_bounded(command: &mut Command, dir: &Path, program: &str, args: &[&str]) -> Output {
+    let label = format!("{program} {} in {}", args.join(" "), dir.display());
+    let started = Instant::now();
+    // Direct writes survive libtest capture if the aggregate test is interrupted.
+    let _ = writeln!(std::io::stderr(), "activation: starting {label}");
+    let capture = command
+        .bounded_capture(
+            ProcessLimits {
+                timeout: Duration::from_secs(120),
+                max_output_bytes: 64 * 1024 * 1024,
+            },
+            &Cancellation::default(),
+        )
+        .unwrap_or_else(|error| {
+            let _ = writeln!(
+                std::io::stderr(),
+                "activation: failed {label} after {:?}: {error}",
+                started.elapsed()
+            );
+            panic!("failed to run {label}: {error}");
+        });
+    let _ = writeln!(
+        std::io::stderr(),
+        "activation: finished {label} after {:?}: {:?} ({})",
+        capture.duration,
+        capture.termination,
+        capture.output.status
+    );
+    assert_eq!(
+        capture.termination,
+        Termination::Exited,
+        "{label} did not complete within its command budget:\n{}",
+        combined(&capture.output)
+    );
+    // Nonzero command exits remain available to the original contract assertions.
+    capture.output
+}
+
 fn run_decapod(dir: &Path, args: &[&str], password: Option<&str>) -> Output {
     let mut command = Command::new(env!("CARGO_BIN_EXE_decapod"));
     command
         .current_dir(dir)
         .args(args)
+        // Match the repository's host-fixture isolation without changing HOME,
+        // which can also select the real Rust/container toolchain.
+        .env("XDG_CONFIG_HOME", dir.join(".config"))
+        .env_remove("DECAPOD_SESSION_PASSWORD")
+        // Retain real broker routing with its established serial-fixture window.
+        .env("DECAPOD_GROUP_BROKER_IDLE_SECS", "1")
         .env("DECAPOD_AGENT_ID", AGENT_ID)
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
         .env("DECAPOD_VALIDATE_SKIP_TOOLING_GATES", "1")
@@ -42,15 +91,13 @@ fn run_decapod(dir: &Path, args: &[&str], password: Option<&str>) -> Output {
     if let Some(password) = password {
         command.env("DECAPOD_SESSION_PASSWORD", password);
     }
-    command.output().expect("run decapod")
+    run_bounded(&mut command, dir, "decapod", args)
 }
 
 fn run_git(dir: &Path, args: &[&str]) -> Output {
-    Command::new("git")
-        .current_dir(dir)
-        .args(args)
-        .output()
-        .expect("run git")
+    let mut command = Command::new("git");
+    command.current_dir(dir).args(args);
+    run_bounded(&mut command, dir, "git", args)
 }
 
 fn combined(output: &Output) -> String {
@@ -150,6 +197,9 @@ fn rpc(dir: &Path, password: &str, op: &str, params: Value) -> Value {
 
 #[test]
 fn clean_checkout_activation_path_is_bounded_and_proof_gated() {
+    // Exercise activation and a bounded workunit prerequisite proof, not publication readiness.
+    // This prerequisite result is not full publication-readiness proof.
+
     let (_temp, root, password) = setup_repo();
     let mut observations = Vec::new();
 
@@ -316,7 +366,7 @@ fn clean_checkout_activation_path_is_bounded_and_proof_gated() {
                 "--task-id",
                 &task_id,
                 "--gate",
-                "validate_passes",
+                "project_prerequisites_passed",
             ],
             Some(&password),
         ),
@@ -389,11 +439,23 @@ fn clean_checkout_activation_path_is_bounded_and_proof_gated() {
         evidence: capsule.to_string(),
     });
 
-    let validate = run_decapod(&workspace_path, &["validate"], Some(&password));
+    let prerequisite = run_decapod(
+        &workspace_path,
+        &["govern", "project-check"],
+        Some(&password),
+    );
     observations.push(Observation {
-        id: "normal_validation",
-        passed: validate.status.success(),
-        evidence: combined(&validate),
+        id: "project_prerequisites",
+        passed: prerequisite.status.success(),
+        evidence: combined(&prerequisite),
+    });
+    let readiness = run_decapod(&workspace_path, &["validate"], Some(&password));
+    let readiness_output = combined(&readiness);
+    observations.push(Observation {
+        id: "missing_full_profile_refused",
+        passed: !readiness.status.success()
+            && readiness_output.contains("READINESS_PROFILE_REQUIRED"),
+        evidence: readiness_output,
     });
     require_success(
         &run_decapod(
@@ -405,11 +467,11 @@ fn clean_checkout_activation_path_is_bounded_and_proof_gated() {
                 "--task-id",
                 &task_id,
                 "--gate",
-                "validate_passes",
+                "project_prerequisites_passed",
                 "--status",
                 "pass",
                 "--artifact",
-                "decapod validate",
+                "decapod govern project-check",
             ],
             Some(&password),
         ),
@@ -432,9 +494,9 @@ fn clean_checkout_activation_path_is_bounded_and_proof_gated() {
         "workunit verified transition",
     );
     observations.push(Observation {
-        id: "proof_backed_completion",
+        id: "bounded_workunit_completion",
         passed: true,
-        evidence: format!("workunit {task_id} reached VERIFIED after validate_passes"),
+        evidence: format!("workunit {task_id} reached VERIFIED for bounded project prerequisites, not publication readiness"),
     });
 
     let report = ActivationReport {

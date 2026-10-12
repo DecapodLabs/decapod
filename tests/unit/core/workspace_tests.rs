@@ -50,6 +50,26 @@ fn test_extract_task_ids_from_branch() {
 }
 
 #[test]
+fn branch_task_ids_do_not_match_inside_agent_names() {
+    assert_eq!(
+        extract_task_ids_from_branch("agent/release-pr-validation/bugs_01m4pf92p0r108x1"),
+        vec!["bugs_01m4pf92p0r108x1".to_string()]
+    );
+    assert_eq!(
+        extract_task_ids_from_branch("agent/pr-validation/notbugs_123456"),
+        Vec::<String>::new()
+    );
+    assert_eq!(
+        extract_task_ids_from_branch("agent/worker/BUGS_123456-code_654321"),
+        vec!["bugs_123456".to_string(), "code_654321".to_string()]
+    );
+    assert_eq!(
+        extract_task_ids_from_branch("r_123456"),
+        vec!["r_123456".to_string()]
+    );
+}
+
+#[test]
 fn stale_workspace_dirty_check_collapses_untracked_directories() {
     assert!(
         WORKTREE_DIRTY_STATUS_ARGS.contains(&"--untracked-files=normal"),
@@ -1068,4 +1088,67 @@ fn legacy_container_profile_never_trusts_another_engines_empty_inventory() {
     assert!(reconcile_workspace_containers(temp.path(), Ok("podman".into())).is_err());
     assert!(reconcile_workspace_containers(temp.path(), Ok("docker".into())).is_err());
     assert!(temp.path().exists());
+}
+
+#[test]
+fn readiness_can_retry_failed_history_without_rewriting_it_or_ignoring_boundaries() {
+    let tmp = tempdir().unwrap();
+    let root = tmp.path();
+    git(root, &["init", "-q", "-b", "master"]);
+    trajectory::init_trajectory(
+        root,
+        trajectory::TrajectoryInit {
+            run_id: "retry-proof".into(),
+            task_id: Some("bugs_123456".into()),
+            intent_id: None,
+            original_intent: "Repair failing code".into(),
+            derived_intent: "Run fresh complete readiness before publication".into(),
+            active_boundaries: vec![],
+            repo_scope: vec![".".into()],
+            destination: None,
+            current_phase: None,
+            next_transitions: vec![],
+            blockers: vec![],
+        },
+    )
+    .unwrap();
+    trajectory::record_trajectory(
+        root,
+        "retry-proof",
+        trajectory::TrajectoryUpdate {
+            checks: vec![trajectory::TrajectoryCheck {
+                name: "prior validation".into(),
+                status: trajectory::TrajectoryCheckStatus::Failed,
+            }],
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let before = std::fs::read(trajectory::trajectory_cookie_path(root)).unwrap();
+    verify_trajectory_binding_for_readiness(root, "agent/test/bugs_123456").unwrap();
+    assert!(verify_trajectory_gate_for_publish(root, "agent/test/bugs_123456").is_err());
+    assert_eq!(
+        before,
+        std::fs::read(trajectory::trajectory_cookie_path(root)).unwrap()
+    );
+    assert_eq!(
+        trajectory::load_trajectory_cookie(root)
+            .unwrap()
+            .unwrap()
+            .proof_status,
+        trajectory::TrajectoryProofStatus::Failed
+    );
+    assert!(verify_trajectory_binding_for_readiness(root, "agent/test/bugs_654321").is_err());
+    trajectory::record_trajectory(
+        root,
+        "retry-proof",
+        trajectory::TrajectoryUpdate {
+            blockers: vec!["Human decision required".into()],
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let error =
+        verify_trajectory_binding_for_readiness(root, "agent/test/bugs_123456").unwrap_err();
+    assert!(error.to_string().contains("Human decision required"));
 }

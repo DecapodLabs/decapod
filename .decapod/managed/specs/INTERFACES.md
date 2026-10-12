@@ -1,5 +1,79 @@
 # Interfaces
 
+## Validation providers and publication
+
+`decapod validate` is the publication-readiness interface: only complete current
+candidate proof permits a zero exit and subsequent workbranch push or PR. A
+nonzero result means follow its actionable report, repair root causes on the same
+branch and rerun exact-candidate validation. Reports expose source_pr_readiness
+scope and reasoned real/mocked/non-applicable stage dispositions; excluded release
+packaging and simulated delivery never masquerade as actual execution.
+`decapod govern project-check` is the explicitly partial bootstrap and CI
+prerequisite command; it never establishes readiness by itself. Internal bounded
+workers have a separate hidden command, so an inherited worker environment
+cannot turn public validation into a partial success.
+
+Initialization exposes `validation_buildkite_preflights` under the canonical
+proof configuration. False selects native execution, not a disabled assurance
+contract. True selects the temporary-snapshot provider using existing authorized
+accounts. Missing tools, access, inventory or proof remains an actionable failure.
+The temporary transport is repository-owned and is not represented as literal
+compatibility with the separate `bk preflight` command.
+
+Full validation exposes explicit snapshot preparation and resume. A host object
+API that cannot preserve a commit timestamp must use the explicit snapshot-adopt
+interface with the original private handoff and observed server object ID.
+Adoption re-verifies the frozen source, parent, tree, accepted target, request,
+metadata, tags and owned remote ref, and writes a different private handoff while
+remaining non-ready. Prior-snapshot proof cannot transfer to the adopted object;
+full collection must run against that actual identity. Workspace publication
+rejects adoption arguments rather than silently interpreting them as a publish
+request. Branch task discovery requires a token boundary, so an agent name such
+as release-pr-validation cannot invent an unrelated r_validation task.
+
+Readiness preparation checks trajectory ownership and explicit human blockers,
+but does not promote a legacy historical proof aggregate to current execution
+evidence. Failed attempts remain recorded and retryable. Only newly verified
+complete code-bound suite evidence permits publication; retaining a failed
+historical attempt cannot prevent obtaining its replacement proof.
+
+Full validation preparation returns a private handoff locator and a nonzero readiness result until the suite
+is proven. Resume accepts only that locator and optional raw provider archives;
+it independently reconstructs current source identity and re-reads provider
+run/attempt/artifact bindings. RPC and workspace publication use the same
+boundary. Publication may reuse a locator but must verify it again immediately
+before push. Verified publication then attempts compare-and-swap cleanup of
+only its owned temporary ref; uncertain cleanup preserves actionable recovery.
+
+Immutable CI context carries the actual provider event, original candidate,
+accepted base, comparison merge base and optional transport identity. A complete
+verified context is required before source selection or release-only treatment.
+Checkpoint verification can bind immutable base/head commits and a separate
+named target with `--target-base`; no mutable fetch supplies the proof range.
+
+## Immutable release evidence for validation
+
+The actual validation harness accepts the complete CHANGE_EVENT, CHANGE_BASE,
+and CHANGE_HEAD environment triple used by the existing release-policy tools.
+Base and head are immutable nonzero Git object IDs, the event is supported, and
+the event base must be in the configured accepted-base ancestry. Partial or
+invalid evidence never falls back to another classification. Without any event
+metadata, local proof may resolve the configured base and a single-parent head;
+synthetic merges require explicit evidence and exact candidate/head tree parity.
+Both source CI validation entrypoints supply the complete triple and retain full
+history in their private checkouts. The existing CLI wrappers keep their flags.
+
+CI sets DECAPOD_VALIDATE_REQUIRE_CHANGE_CONTEXT=1 for PR/push validation.
+Missing, partial, malformed, unresolvable, or checkout-inconsistent evidence is
+an error, including a missing configured accepted-base ref. Automatic provider
+recognition is canonical-path and Git-root scoped to the actual checkout or its
+direct private validation clone, so inherited CI variables do not misclassify
+unrelated Git fixtures. Existing explicit manual runs retain their local behavior.
+Ordinary drift checks require both a clean index against HEAD and no unapproved
+working-material difference against HEAD; restoring only the working copy cannot
+hide staged edits. The standalone workflow uses the same strict classifier and
+actual source-built projection checker without label or branch-name exemptions.
+
 ## Integration shard tooling
 
 The repository-owned Rust integration helper exposes `plan --paths FILE`,
@@ -372,8 +446,8 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ab9a11ea42af3b5496a92844b43b1fb208608acd04fed342b0a1168f3c94af27`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (11 files), `docs/` (1 files), `src/` (125 files), `tests/` (173 files)
+- Repository signal fingerprint: `e0f9df13a85f016b8aac91fc43cf717b7866712463c20c5756cb98e808cb3a5e`
+- Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (169 files), `tests/` (183 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

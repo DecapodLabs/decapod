@@ -121,13 +121,23 @@ fn validation_temp_dirs() -> Vec<PathBuf> {
 
 #[test]
 fn successful_validation_cleans_only_its_temporary_artifacts() {
+    // Measure ownership-safe cleanup by the bounded project prerequisite stage.
+    // This prerequisite result is not full publication-readiness proof.
+
     let (_tmp, dir, password) = setup_repo();
     let unowned =
         std::env::temp_dir().join(format!("decapod_validate_unowned_{}", std::process::id()));
     fs::create_dir_all(&unowned).expect("create unowned validation-shaped temp directory");
     let validate = run_decapod(
         &dir,
-        &["validate", "--store", "user", "--format", "json"],
+        &[
+            "govern",
+            "project-check",
+            "--store",
+            "user",
+            "--format",
+            "json",
+        ],
         &[
             ("DECAPOD_AGENT_ID", "unknown"),
             ("DECAPOD_SESSION_PASSWORD", &password),
@@ -141,6 +151,8 @@ fn successful_validation_cleans_only_its_temporary_artifacts() {
     );
 
     let payload: Value = serde_json::from_slice(&validate.stdout).expect("validation JSON");
+    assert_eq!(payload["scope"], "project_prerequisites");
+    assert!(payload["readiness"].is_null());
     assert_eq!(payload["report"]["status"], "ok");
     assert!(
         payload["report"]["temporary_artifacts_cleaned"]
@@ -210,9 +222,10 @@ fn validate_terminates_with_typed_error_under_db_contention() {
         "failed validation must not create an unscoped temporary directory"
     );
 
+    // After the public timeout, rerun only the bounded cleanup prerequisite.
     let green = run_decapod(
         &dir,
-        &["validate"],
+        &["govern", "project-check"],
         &[
             ("DECAPOD_AGENT_ID", "unknown"),
             ("DECAPOD_SESSION_PASSWORD", &password),
@@ -322,6 +335,9 @@ fn validate_timeout_does_not_strand_db_for_followup_commands() {
 
 #[test]
 fn validate_json_reports_self_heal_and_structured_summary() {
+    // Test self-healing and methodology-receipt binding; retain public stale-proof rejection.
+    // This prerequisite result is not full publication-readiness proof.
+
     let (_tmp, dir, password) = setup_repo();
     // Receipt reuse requires a resolved HEAD; an unborn fixture intentionally
     // produces UNRESOLVED receipts and cannot exercise byte-stable reuse.
@@ -349,7 +365,7 @@ fn validate_json_reports_self_heal_and_structured_summary() {
 
     let validate = run_decapod(
         &dir,
-        &["validate", "--format", "json"],
+        &["govern", "project-check", "--format", "json"],
         &[
             ("DECAPOD_CONTAINER", "1"),
             ("DECAPOD_AGENT_ID", "unknown"),
@@ -366,6 +382,8 @@ fn validate_json_reports_self_heal_and_structured_summary() {
     let payload: Value =
         serde_json::from_slice(&validate.stdout).expect("validate json payload should parse");
     assert_eq!(payload["status"], "ok");
+    assert_eq!(payload["scope"], "project_prerequisites");
+    assert!(payload["readiness"].is_null());
     assert_eq!(payload["report"]["status"], "ok");
     assert!(payload["report"]["fail_count"].as_u64().unwrap_or(1) == 0);
     assert!(payload["report"]["gate_timings"].is_array());
@@ -536,7 +554,7 @@ fn validate_json_reports_self_heal_and_structured_summary() {
 
     let second_validate = run_decapod(
         &dir,
-        &["validate", "--format", "json"],
+        &["govern", "project-check", "--format", "json"],
         &[
             ("DECAPOD_CONTAINER", "1"),
             ("DECAPOD_AGENT_ID", "unknown"),
@@ -590,7 +608,7 @@ fn validate_json_reports_self_heal_and_structured_summary() {
     // unchanged rerun is stable: no receipt/trajectory rewrite chase.
     let unchanged_validate = run_decapod(
         &dir,
-        &["validate", "--format", "json"],
+        &["govern", "project-check", "--format", "json"],
         &[
             ("DECAPOD_CONTAINER", "1"),
             ("DECAPOD_AGENT_ID", "unknown"),
@@ -612,11 +630,14 @@ fn validate_json_reports_self_heal_and_structured_summary() {
 
 #[test]
 fn validation_profile_changes_validation_epoch() {
+    // Compare methodology validation epochs without a publication-proof fixture.
+    // This prerequisite result is not full publication-readiness proof.
+
     let (_tmp, dir, password) = setup_repo();
 
     let default_validate = run_decapod(
         &dir,
-        &["validate", "--format", "json"],
+        &["govern", "project-check", "--format", "json"],
         &[
             ("DECAPOD_CONTAINER", "1"),
             ("DECAPOD_AGENT_ID", "unknown"),
@@ -664,7 +685,7 @@ fn validation_profile_changes_validation_epoch() {
 
     let alternate_validate = run_decapod(
         &dir,
-        &["validate", "--format", "json"],
+        &["govern", "project-check", "--format", "json"],
         &[
             ("DECAPOD_CONTAINER", "1"),
             ("DECAPOD_AGENT_ID", "unknown"),
@@ -696,6 +717,9 @@ fn validation_profile_changes_validation_epoch() {
 
 #[test]
 fn validate_clears_stale_container_override_when_runtime_is_available() {
+    // Exercise stale runtime-override healing at the project prerequisite boundary.
+    // This prerequisite result is not full publication-readiness proof.
+
     let (_tmp, dir, password) = setup_repo();
     let override_path = dir.join(".decapod").join("OVERRIDE.md");
     fs::write(
@@ -741,7 +765,7 @@ fn validate_clears_stale_container_override_when_runtime_is_available() {
     let runtime_path = format!("{}:{}", fake_bin.display(), path);
     let validate = run_decapod(
         &dir,
-        &["validate", "--format", "json"],
+        &["govern", "project-check", "--format", "json"],
         &[
             ("DECAPOD_AGENT_ID", "unknown"),
             ("DECAPOD_SESSION_PASSWORD", &password),
@@ -1006,6 +1030,9 @@ fn validate_diagnostics_payload_is_sanitized() {
 
 #[test]
 fn validate_smoke_runtime_is_bounded_without_contention() {
+    // Time the bounded project prerequisite stage; full CI has its own execution budget.
+    // This prerequisite result is not full publication-readiness proof.
+
     let (_tmp, dir, password) = setup_repo();
     let mut durations_ms = Vec::new();
 
@@ -1013,7 +1040,7 @@ fn validate_smoke_runtime_is_bounded_without_contention() {
         let start = Instant::now();
         let output = run_decapod(
             &dir,
-            &["validate", "--format", "json"],
+            &["govern", "project-check", "--format", "json"],
             &[
                 ("DECAPOD_AGENT_ID", "unknown"),
                 ("DECAPOD_SESSION_PASSWORD", &password),

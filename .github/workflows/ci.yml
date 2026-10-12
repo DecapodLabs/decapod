@@ -3,10 +3,26 @@ name: CI
 on:
   # Keep the complete PR check suite attached to every pull-request update.
   push:
-    branches: [ master ]
+    # Temporary snapshots transport an already-checkpointed local candidate;
+    # they do not publish the original workbranch or open a pull request.
+    branches: [ master, 'decapod/preflight/**' ]
   pull_request:
     branches: [ master ]
   workflow_dispatch:
+    inputs:
+      pre-pr:
+        description: Verify an explicit immutable pre-PR candidate with the shared source graph
+        required: false
+        default: false
+        type: boolean
+      base:
+        description: Full immutable accepted base SHA for explicit pre-PR mode
+        required: false
+        type: string
+      head:
+        description: Optional full immutable candidate SHA; defaults to the dispatch commit
+        required: false
+        type: string
 
 permissions:
   # Build/test jobs never write repository contents. Buildkite applies this
@@ -31,176 +47,155 @@ jobs:
       contents: read
     outputs:
       release_only: ${{ steps.classify.outputs.release_only }}
+      event: ${{ steps.ci-context.outputs.event }}
+      trigger_event: ${{ steps.ci-context.outputs.trigger_event }}
+      base: ${{ steps.ci-context.outputs.base }}
+      head: ${{ steps.ci-context.outputs.head }}
+      merge_base: ${{ steps.ci-context.outputs.merge_base }}
+      checkout_head: ${{ steps.ci-context.outputs.checkout_head }}
+      checkout_tree: ${{ steps.ci-context.outputs.checkout_tree }}
+      head_tree: ${{ steps.ci-context.outputs.head_tree }}
+      accepted_base: ${{ steps.ci-context.outputs.accepted_base }}
+      pre_pr: ${{ steps.ci-context.outputs.pre_pr }}
+      pr_like: ${{ steps.ci-context.outputs.pr_like }}
+      provider_freshness: ${{ steps.ci-context.outputs.provider_freshness }}
+      snapshot: ${{ steps.ci-context.outputs.snapshot }}
+      transport_head: ${{ steps.ci-context.outputs.transport_head }}
+      request_id: ${{ steps.ci-context.outputs.request_id }}
+      source_ref: ${{ steps.ci-context.outputs.source_ref }}
+      validation_head: ${{ steps.ci-context.outputs.validation_head }}
+      validation_tree: ${{ steps.ci-context.outputs.validation_tree }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Verify immutable CI context
+        id: ci-context
+        uses: ./.github/actions/ci-context
+        with:
+          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
+          base: ${{ inputs.base || '' }}
+          head: ${{ inputs.head || '' }}
+      - name: Prepare shared source-CI profile
+        uses: ./.github/actions/source-ci-profile
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: 1.96.1
       - name: Classify immutable change range
         id: classify
-        env:
-          CHANGE_EVENT: ${{ github.event_name }}
-          CHANGE_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
-          CHANGE_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
-        run: |
-          set -euo pipefail
-          rustc --edition=2024 assets/tools/release_metadata.rs -o "$RUNNER_TEMP/decapod-release-metadata"
-          "$RUNNER_TEMP/decapod-release-metadata" \
-            --repo . --event "$CHANGE_EVENT" --base "$CHANGE_BASE" --head "$CHANGE_HEAD" \
-            | tee -a "$GITHUB_OUTPUT"
-
-  # COMMIT LINT: Fast check, no build dependency
+        run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check release-metadata'
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0
   commit-lint:
     name: Commit Lint
     needs: release-metadata
     runs-on: ubuntu-latest
-    if: (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && needs.release-metadata.outputs.release_only != 'true'
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Check commit messages
-        run: |
-          git log --format=%B origin/${{ github.base_ref }}..HEAD | while read -r msg; do
-            [ -z "$msg" ] && continue
-            if echo "$msg" | grep -qiE "^(wip|fixup|squash)"; then
-              echo "❌ ERROR: WIP commit found: $msg"
-              exit 1
-            fi
-          done
-          echo "✅ Commit messages look good"
-
-  # Verify the immutable PR commit range, including intermediate authored work.
-  governance-artifacts:
-    name: Governance Checkpoints (every authored commit)
-    runs-on: ubuntu-latest
-    needs: [release-metadata, setup]
-    if: (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && needs.release-metadata.outputs.release_only != 'true'
+    if: (needs.release-metadata.outputs.pr_like == 'true') && needs.release-metadata.outputs.release_only != 'true'
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Prepare private validation checkout
-        id: validation-checkout
-        uses: ./.github/actions/validation-checkout
+      - name: Verify immutable CI context
+        id: ci-context
+        uses: ./.github/actions/ci-context
+        with:
+          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
+          base: ${{ inputs.base || '' }}
+          head: ${{ inputs.head || '' }}
+      - name: Prepare shared source-CI profile
+        uses: ./.github/actions/source-ci-profile
+      - name: Check commit messages
+        run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check commit-lint'
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0
+  governance-artifacts:
+    name: Governance Checkpoints (every authored commit)
+    runs-on: ubuntu-latest
+    needs: [release-metadata, setup]
+    if: (needs.release-metadata.outputs.pr_like == 'true') && needs.release-metadata.outputs.release_only != 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify immutable CI context
+        id: ci-context
+        uses: ./.github/actions/ci-context
+        with:
+          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
+          base: ${{ inputs.base || '' }}
+          head: ${{ inputs.head || '' }}
+      - name: Prepare shared source-CI profile
+        uses: ./.github/actions/source-ci-profile
       - name: Download shared decapod binary
         uses: actions/download-artifact@v4
         with:
           name: decapod-debug-linux-${{ github.sha }}
           path: target/debug
       - name: Verify normalized governance and every authored checkpoint
-        working-directory: ${{ steps.validation-checkout.outputs.path }}
-        env:
-          GOVERNANCE_BASE_BRANCH: ${{ github.base_ref || 'master' }}
-          GOVERNANCE_HEAD_REF: ${{ github.event.pull_request.head.sha || github.sha }}
-        run: |
-          set -euo pipefail
-          chmod +x "$GITHUB_WORKSPACE/target/debug/decapod"
-          git fetch --no-tags --prune origin "$GOVERNANCE_BASE_BRANCH"
-          "$GITHUB_WORKSPACE/target/debug/decapod" govern artifacts verify-checkpoints \
-            --base-branch "origin/$GOVERNANCE_BASE_BRANCH" \
-            --head-ref "$GOVERNANCE_HEAD_REF"
-
-  # MATERIAL LIVING SPECS: Each PR must rewrite authored living-spec prose,
-  # not only refresh fingerprints/attestation blocks (GitHub #1183).
+        run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check governance-artifacts'
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0
   material-specs:
     name: Material Living Specs (beyond fingerprints)
     needs: release-metadata
     runs-on: ubuntu-latest
-    if: (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && needs.release-metadata.outputs.release_only != 'true'
+    if: (needs.release-metadata.outputs.pr_like == 'true') && needs.release-metadata.outputs.release_only != 'true'
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Verify immutable CI context
+        id: ci-context
+        uses: ./.github/actions/ci-context
+        with:
+          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
+          base: ${{ inputs.base || '' }}
+          head: ${{ inputs.head || '' }}
+      - name: Prepare shared source-CI profile
+        uses: ./.github/actions/source-ci-profile
       - name: Require material specs/*.md change versus base
-        run: |
-          set -euo pipefail
-          base_ref="${{ github.base_ref || 'master' }}"
-          git fetch --no-tags --prune origin "$base_ref"
-          python3 - <<'PY'
-          import re, subprocess, sys
-          from pathlib import Path
-
-          base_ref = """${{ github.base_ref || 'master' }}"""
-          specs_dir = Path(".decapod/managed/specs")
-          names = [
-              "INTENT.md",
-              "ARCHITECTURE.md",
-              "INTERFACES.md",
-              "VALIDATION.md",
-              "SEMANTICS.md",
-              "OPERATIONS.md",
-              "SECURITY.md",
-              "README.md",
-          ]
-          patterns = [
-              re.compile(
-                  r"<!-- decapod:codebase-attestation:start -->.*?<!-- decapod:codebase-attestation:end -->",
-                  re.S,
-              ),
-              re.compile(
-                  r"<!-- decapod:declared-capabilities:start -->.*?<!-- decapod:declared-capabilities:end -->",
-                  re.S,
-              ),
-              re.compile(
-                  r"<!-- decapod:capability-overlay:[^:]+:start -->.*?<!-- decapod:capability-overlay:[^:]+:end -->",
-                  re.S,
-              ),
-          ]
-
-          def material(text: str) -> str:
-              for pat in patterns:
-                  text = pat.sub("", text)
-              return text
-
-          def git_show(path: str) -> str:
-              proc = subprocess.run(
-                  ["git", "show", f"origin/{base_ref}:{path}"],
-                  capture_output=True,
-                  text=True,
-              )
-              return proc.stdout if proc.returncode == 0 else ""
-
-          material_hits = []
-          for name in names:
-              head_path = specs_dir / name
-              if not head_path.is_file():
-                  continue
-              rel = f"{specs_dir.as_posix()}/{name}"
-              base_mat = material(git_show(rel))
-              head_mat = material(head_path.read_text(encoding="utf-8"))
-              if base_mat != head_mat:
-                  print(f"✅ material change: {rel}")
-                  material_hits.append(rel)
-
-          if not material_hits:
-              print(
-                  f"❌ FINGERPRINT_ONLY_SPECS: no material authored-content change under "
-                  f"{specs_dir}/*.md versus origin/{base_ref}."
-              )
-              print(
-                  "Fingerprint/attestation refresh alone is insufficient. "
-                  "Update at least one living spec with prose for this PR."
-              )
-              sys.exit(1)
-
-          print(
-              f"✅ At least one living spec has a material rewrite versus origin/{base_ref}"
-          )
-          PY
-
-  # PROPODUS LIVE PROOF: Manual, protected, and explicitly opt-in only.
+        run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check material-specs'
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0
   propodus-live:
     name: Propodus Live Contract Proof
     runs-on: ubuntu-latest
     environment: propodus-live
-    if: github.event_name == 'workflow_dispatch' && vars.DECAPOD_PROPODUS_LIVE == 'true'
+    needs: release-metadata
+    if: github.event_name == 'workflow_dispatch' && needs.release-metadata.outputs.event == 'workflow_dispatch' && needs.release-metadata.outputs.pre_pr == 'false' && vars.DECAPOD_PROPODUS_LIVE == 'true'
     env:
       DECAPOD_PROPODUS_LIVE: "1"
       DECAPOD_PROPODUS_API_URL: ${{ secrets.DECAPOD_PROPODUS_API_URL }}
@@ -210,7 +205,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify immutable CI context
+        id: ci-context
+        uses: ./.github/actions/ci-context
+        with:
+          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
+          base: ${{ inputs.base || '' }}
+          head: ${{ inputs.head || '' }}
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
@@ -231,27 +234,36 @@ jobs:
     name: Detect Migration Script Changes
     needs: release-metadata
     runs-on: ubuntu-latest
-    if: (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && needs.release-metadata.outputs.release_only != 'true'
+    if: (needs.release-metadata.outputs.pr_like == 'true') && needs.release-metadata.outputs.release_only != 'true'
     outputs:
       changed: ${{ steps.diff.outputs.changed }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
+      - name: Verify immutable CI context
+        id: ci-context
+        uses: ./.github/actions/ci-context
+        with:
+          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
+          base: ${{ inputs.base || '' }}
+          head: ${{ inputs.head || '' }}
+      - name: Prepare shared source-CI profile
+        uses: ./.github/actions/source-ci-profile
+
       - name: Detect changed migration scripts
         id: diff
-        run: |
-          set -euo pipefail
-          base_ref="${{ github.base_ref || 'master' }}"
-          git fetch --no-tags --prune origin "$base_ref"
-          changed_files="$(git diff --name-only "origin/$base_ref"...HEAD)"
-          echo "$changed_files"
-          if echo "$changed_files" | grep -qE '^src/decapod/core/sql/.*\.sql$'; then
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          fi
-
+        run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check migration-detection'
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0
   supabase-consumer:
     name: Supabase consumer (offline fixtures)
     needs: release-metadata
@@ -263,32 +275,34 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          fetch-depth: 0
+      - name: Verify immutable CI context
+        id: ci-context
+        uses: ./.github/actions/ci-context
+        with:
+          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
+          base: ${{ inputs.base || '' }}
+          head: ${{ inputs.head || '' }}
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: 1.96.1
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: "ci-supabase-consumer-v1.96.1"
-      - name: Supabase HTTP and existing cloud boundaries
-        # Offline fixture remotes must retain their authored URL spelling.
-        # Isolate this process from provider Git rewrites; never edit its config.
-        # Print the filesystem probe, then execute the unchanged complete suite.
-        run: |
-          set -euo pipefail
-          umask 077
-          unset GIT_CONFIG GIT_CONFIG_PARAMETERS
-          export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_COUNT=0
-          cargo test --locked --features supabase-cloud --lib \
-            core::fs_permissions::tests::recovery_fixture_selection_rejects_incompatible_candidates \
-            -- --exact --nocapture
-          cargo test --locked --features supabase-cloud --lib \
-            --test cloud_supabase_boundary --test cloud_dactyl_boundary \
-            --test release_dependency_policy \
-            --test cloud_cli_boundary --test cloud_command_path --test cloud_todo_resume_wire --test propodus_contract \
-            --test supabase_service
-      # Real service profiles stay ignored. They require an externally owned
-      # disposable PostgreSQL fixture or protected hosted Supabase inputs.
+      - name: Prepare shared source-CI profile
+        uses: ./.github/actions/source-ci-profile
 
+      - name: Supabase HTTP and existing cloud boundaries
+        run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check supabase-consumer'
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0
   workspace-lifecycle-docker:
     name: Workspace lifecycle (actual Docker)
     needs: release-metadata
@@ -301,25 +315,36 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          fetch-depth: 0
+      - name: Verify immutable CI context
+        id: ci-context
+        uses: ./.github/actions/ci-context
+        with:
+          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
+          base: ${{ inputs.base || '' }}
+          head: ${{ inputs.head || '' }}
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: 1.96.1
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: "ci-supabase-consumer-v1.96.1"
-      - name: Prepare explicit disposable runtime fixture
+      - name: Prepare declared fixture image for toolchain custody
         run: docker pull busybox:1.37
-      - name: Prove interrupted caller and owned container recovery
-        env:
-          DECAPOD_RUN_DOCKER_LIFECYCLE_TEST: "1"
-          DECAPOD_TEST_DOCKER_IMAGE: busybox:1.37
-        run: |
-          set -euo pipefail
-          umask 077
-          cargo test --locked --lib \
-            core::workspace_lifecycle::tests::docker_parent_interrupt_recovers_owned_container \
-            -- --ignored --exact --nocapture
+      - name: Prepare shared source-CI profile
+        uses: ./.github/actions/source-ci-profile
 
+      - name: Prove interrupted caller and owned container recovery
+        run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check workspace-lifecycle-docker'
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0
   musl-publication:
     name: Musl build and atomic publication (${{ matrix.target }}, ${{ matrix.execution }})
     needs: release-metadata
@@ -345,6 +370,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          fetch-depth: 0
+      - name: Verify immutable CI context
+        id: ci-context
+        uses: ./.github/actions/ci-context
+        with:
+          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
+          base: ${{ inputs.base || '' }}
+          head: ${{ inputs.head || '' }}
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: 1.96.1
@@ -362,27 +395,26 @@ jobs:
         run: >-
           cargo install --locked --git https://github.com/cross-rs/cross
           --rev 74e99b2223de06166f8cdcc1af7f1308ec52baf4 cross
+      - name: Prepare declared ARM image for toolchain custody
+        if: matrix.target == 'aarch64-unknown-linux-musl'
+        run: docker pull ghcr.io/cross-rs/aarch64-unknown-linux-musl@sha256:ca0f4a798b756bba34c9cd2f7ceafc1d665daa6c70349a95e2eb06fb687a1ea6
+      - name: Prepare shared source-CI profile
+        uses: ./.github/actions/source-ci-profile
+
       - name: Compile the release CLI for musl
-        run: |
-          set -euo pipefail
-          if [ "${{ matrix.target }}" = aarch64-unknown-linux-musl ]; then
-            cross build --locked --release --target ${{ matrix.target }} --bin decapod
-          else
-            cargo build --locked --release --target ${{ matrix.target }} --bin decapod
-          fi
+        run: "set -euo pipefail\nif [ \"${{ matrix.target }}\" = aarch64-unknown-linux-musl ]; then\n  \"$RUNNER_TEMP/source-ci-profile\" run-ci --check musl-build-aarch64\nelse\n  \"$RUNNER_TEMP/source-ci-profile\" run-ci --check musl-build-x86_64\nfi\n"
       - name: Run musl no-replace publication regressions
         if: needs.release-metadata.outputs.release_only != 'true'
-        run: |
-          set -euo pipefail
-          if [ "${{ matrix.target }}" = aarch64-unknown-linux-musl ]; then
-            cross test --locked --release --target ${{ matrix.target }} --lib \
-              no_replace_publication -- --nocapture
-          else
-            cargo test --locked --release --target ${{ matrix.target }} --lib \
-              no_replace_publication -- --nocapture
-          fi
-
-  # FMT: Pure source check, no compile needed
+        run: "set -euo pipefail\nif [ \"${{ matrix.target }}\" = aarch64-unknown-linux-musl ]; then\n  \"$RUNNER_TEMP/source-ci-profile\" run-ci --check musl-test-aarch64\nelse\n  \"$RUNNER_TEMP/source-ci-profile\" run-ci --check musl-test-x86_64\nfi\n"
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0
   fmt:
     name: Lint (fmt)
     needs: release-metadata
@@ -391,16 +423,34 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify immutable CI context
+        id: ci-context
+        uses: ./.github/actions/ci-context
+        with:
+          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
+          base: ${{ inputs.base || '' }}
+          head: ${{ inputs.head || '' }}
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: 1.96.1
           components: rustfmt
-      - name: Format check
-        run: cargo fmt --all -- --check
+      - name: Prepare shared source-CI profile
+        uses: ./.github/actions/source-ci-profile
 
-  # CLIPPY: Compiles its own analysis pass, runs in parallel with setup
+      - name: Format check
+        run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check fmt'
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0
   clippy:
     name: Lint (clippy)
     needs: release-metadata
@@ -409,8 +459,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
           persist-credentials: false
+      - name: Verify immutable CI context
+        id: ci-context
+        uses: ./.github/actions/ci-context
+        with:
+          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
+          base: ${{ inputs.base || '' }}
+          head: ${{ inputs.head || '' }}
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
@@ -421,10 +478,20 @@ jobs:
         with:
           shared-key: "ci-build-v1.96.1"
           save-if: "false"
-      - name: Clippy
-        run: CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings
+      - name: Prepare shared source-CI profile
+        uses: ./.github/actions/source-ci-profile
 
-  # DEPS-LINT: Cargo deny and unused dependency checks
+      - name: Clippy
+        run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check clippy'
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0
   deps-lint:
     name: Lint (dependencies)
     needs: release-metadata
@@ -433,7 +500,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify immutable CI context
+        id: ci-context
+        uses: ./.github/actions/ci-context
+        with:
+          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
+          base: ${{ inputs.base || '' }}
+          head: ${{ inputs.head || '' }}
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
@@ -444,17 +519,28 @@ jobs:
           if ! command -v cargo-machete >/dev/null 2>&1; then
             cargo install --locked cargo-machete
           fi
+      - name: Prepare shared source-CI profile
+        uses: ./.github/actions/source-ci-profile
+
       - name: Run cargo-machete check
-        run: cargo machete
-      - name: Check license and duplicate dependencies
+        run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check dependencies-machete'
+      - name: Install cargo-deny
         run: |
           set -euo pipefail
           if ! command -v cargo-deny >/dev/null 2>&1; then
             cargo install --locked cargo-deny
           fi
-          cargo deny --config .config/deny.toml check
-
-  # VALIDATE: fan-out from the shared decapod binary built by setup
+      - name: Check license and duplicate dependencies
+        run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check dependencies-deny'
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0
   health:
     name: Decapod Validate
     runs-on: ubuntu-latest
@@ -464,9 +550,15 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Prepare private validation checkout
-        id: validation-checkout
-        uses: ./.github/actions/validation-checkout
+      - name: Verify immutable CI context
+        id: ci-context
+        uses: ./.github/actions/ci-context
+        with:
+          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
+          base: ${{ inputs.base || '' }}
+          head: ${{ inputs.head || '' }}
+      - name: Prepare shared source-CI profile
+        uses: ./.github/actions/source-ci-profile
       - name: Download shared decapod binary
         uses: actions/download-artifact@v4
         with:
@@ -477,98 +569,16 @@ jobs:
           chmod +x target/debug/decapod target/debug/decapod-release-projection-drift
           echo "$PWD/target/debug" >> "$GITHUB_PATH"
       - name: Start validation trajectory
-        working-directory: ${{ steps.validation-checkout.outputs.path }}
-        env:
-          # CI checkouts are detached and are not Decapod agent worktrees.
-          # Keep the normal validation gates enabled, but allow this ephemeral
-          # proof bootstrap to write its run cookie in the checkout.
-          DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
-        run: |
-          set -euo pipefail
-          run_id="ci-health-${GITHUB_RUN_ID:-${BUILDKITE_BUILD_ID:-local}}"
-          decapod govern trajectory init \
-            --run-id "$run_id" \
-            --original-intent "Validate the checked-out Decapod repository" \
-            --derived-intent "Run the bounded repository validation gates and bind the receipt to this CI run" \
-            --boundary "Repository validation and tracked proof artifacts" \
-            --scope ".decapod/governance.json" \
-            --destination "CI health validation" \
-            --phase validation \
-            --next-transition publish
-      - name: Initialize Decapod
-        working-directory: ${{ steps.validation-checkout.outputs.path }}
-        # Do not re-init an existing tree: init can invent non-idempotent churn
-        # that the drift gate below would treat as a packaging failure.
-        run: |
-          if [ ! -d .decapod ]; then
-            decapod init --proof
-          fi
-        env:
-          DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
-      - name: Acquire Decapod session
-        working-directory: ${{ steps.validation-checkout.outputs.path }}
-        run: decapod session acquire
-        env:
-          DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
-          DECAPOD_CLOUD_AUTH_MODE: mock
-      - name: Run validation harness
-        working-directory: ${{ steps.validation-checkout.outputs.path }}
-        run: decapod validate --refresh-specs
-        env:
-          DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
-          DECAPOD_VALIDATE_TIMEOUT_SECS: "120"
-      - name: Ensure no spec or entrypoint drift
-        working-directory: ${{ steps.validation-checkout.outputs.path }}
-        # validate rewrites generated metadata every run; that is not semantic
-        # drift. Normalize it to HEAD before the exit-code check.
-        # Version-only releases may refresh only proven release projections.
-        # Validation above remains mandatory, including its authoritative proofs.
-        env:
-          RELEASE_ONLY: ${{ needs.release-metadata.outputs.release_only }}
-          CHANGE_EVENT: ${{ github.event_name }}
-          CHANGE_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
-          CHANGE_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
-        run: |
-          set -euo pipefail
-          if [ "$RELEASE_ONLY" = "true" ]; then
-            decapod-release-projection-drift \
-              --repo . --event "$CHANGE_EVENT" --base "$CHANGE_BASE" --head "$CHANGE_HEAD"
-            exit 0
-          fi
-          MANIFEST=".decapod/managed/specs/.manifest.json"
-          if git cat-file -e "HEAD:${MANIFEST}" 2>/dev/null && [ -f "${MANIFEST}" ]; then
-            OLD=$(git show "HEAD:${MANIFEST}" | sed -n 's/.*"generated_at": "\([^"]*\)".*/\1/p' | head -1)
-            if [ -n "${OLD}" ]; then
-              sed -i "s/\"generated_at\": \"[^\"]*\"/\"generated_at\": \"${OLD}\"/" "${MANIFEST}"
-            fi
-            OLD_SIGNAL=$(git show "HEAD:${MANIFEST}" | sed -n 's/.*"repo_signal_fingerprint": "\([^"]*\)".*/\1/p' | head -1)
-            if [ -n "${OLD_SIGNAL}" ]; then
-              sed -i "s/\"repo_signal_fingerprint\": \"[^\"]*\"/\"repo_signal_fingerprint\": \"${OLD_SIGNAL}\"/" "${MANIFEST}"
-            fi
-          fi
-          if ! git diff --exit-code -- . ':!.decapod/governance.json'; then
-            echo "::error::Release-bound or living-spec drift detected after validate --refresh-specs."
-            echo "Commit regenerated entrypoints (AGENTS/CLAUDE/CODEX/GEMINI), managed Dockerfile, and .decapod/managed/specs/*."
-            echo "Refresh and commit release-bound projections before opening the code PR."
-            exit 1
-          fi
-      - name: Run watcher
-        working-directory: ${{ steps.validation-checkout.outputs.path }}
-        run: decapod govern watcher run
-        env:
-          DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
-      - name: Check health summary
-        working-directory: ${{ steps.validation-checkout.outputs.path }}
-        env:
-          DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
-        run: |
-          STATUS=$(decapod govern health summary)
-          echo "$STATUS"
-          if echo "$STATUS" | grep -q '"watcher_stale": true'; then
-            echo "::warning::Watcher is stale"
-          fi
-
-  # STATE_COMMIT: Builds its own golden_vectors binary, no dependency on setup
+        run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check health'
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0
   state-commit-golden-vectors:
     name: Golden Vectors (${{ matrix.os }})
     needs: release-metadata
@@ -582,65 +592,50 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
           submodules: recursive
           persist-credentials: false
+      - name: Verify immutable CI context
+        id: ci-context
+        uses: ./.github/actions/ci-context
+        with:
+          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
+          base: ${{ inputs.base || '' }}
+          head: ${{ inputs.head || '' }}
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: 1.96.1
-      - name: Verify golden vectors exist
-        run: |
-          echo "=== Verifying golden vectors exist ==="
-          test -f tests/golden/state_commit/v1/scope_record.cbor || exit 1
-          test -f tests/golden/state_commit/v1/scope_record_hash.txt || exit 1
-          test -f tests/golden/state_commit/v1/state_commit_root.txt || exit 1
-          echo "=== Expected values ==="
-          echo "scope_record_hash: 41d7e3729b6f4512887fb3cb6f10140942b600041e0d88308b0177e06ebb4b93"
-          echo "state_commit_root: 28591ac86e52ffac76d5fc3aceeceda5d8592708a8d7fcb75371567fdc481492"
-          echo "=== Actual committed values ==="
-          cat tests/golden/state_commit/v1/scope_record_hash.txt
-          cat tests/golden/state_commit/v1/state_commit_root.txt
-      - name: Build golden vectors generator
-        run: cd tests/golden_vectors && unset RUSTFLAGS && cargo build --release
-      - name: Initialize fixture repo
-        run: |
-          cd tests/fixtures/state_commit_repo
-          git init
-          git config user.email "test@test.com"
-          git config user.name "Test"
-          git add initial.txt
-          git commit -m "base commit"
-          git add .
-          git commit -m "fixture commit"
-      - name: Run golden vectors generator
-        working-directory: tests/golden_vectors
-        run: |
-          ./target/release/golden_vectors > /tmp/generated.txt 2>&1
-          GEN_HASH=$(grep "scope_record_hash:" /tmp/generated.txt | awk '{print $2}')
-          GEN_ROOT=$(grep "state_commit_root:" /tmp/generated.txt | awk '{print $2}')
-          echo "Generated hash: $GEN_HASH"
-          echo "Generated root: $GEN_ROOT"
-          test -n "$GEN_HASH" || exit 1
-          test -n "$GEN_ROOT" || exit 1
-          echo "✅ Golden vectors generator runs successfully"
-      - name: Verify no network dependencies
-        run: |
-          if grep -qE "(reqwest|hyper|ureq|http)" tests/golden_vectors/Cargo.toml; then
-            echo "ERROR: golden_vectors has network dependencies"
-            exit 1
-          fi
-          echo "✅ No network dependencies"
+      - name: Prepare shared source-CI profile
+        uses: ./.github/actions/source-ci-profile
 
-  # SETUP: Compile the shared decapod binary once and save both cache + binary artifact.
+      - name: Run platform golden vectors checks
+        run: "set -euo pipefail\nif [ \"${{ matrix.os }}\" = macos-latest ]; then\n  \"$RUNNER_TEMP/source-ci-profile\" run-ci --check golden-vectors-macos\nelse\n  \"$RUNNER_TEMP/source-ci-profile\" run-ci --check golden-vectors-linux\nfi\n"
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0
   setup:
     name: Setup & Build Shared Binary
+    needs: release-metadata
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Verify immutable CI context
+        id: ci-context
+        uses: ./.github/actions/ci-context
+        with:
+          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
+          base: ${{ inputs.base || '' }}
+          head: ${{ inputs.head || '' }}
       # Buildkite's GHA runtime does not provide the setup-bazel action's
       # cache/setup contract. Install the pinned launcher in the workflow so
       # native GitHub Actions and Buildkite execute the same command.
@@ -657,8 +652,11 @@ jobs:
           fi
           echo "$bazelisk_dir" >> "$GITHUB_PATH"
           echo "PATH=$bazelisk_dir:$PATH" >> "$GITHUB_ENV"
+      - name: Prepare shared source-CI profile
+        uses: ./.github/actions/source-ci-profile
+
       - name: Compile shared decapod binary
-        run: bazelisk build //:decapod //:release_projection_drift
+        run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check setup-bazel'
       - name: Stage shared decapod binary
         run: |
           set -euo pipefail
@@ -679,11 +677,20 @@ jobs:
           compression-level: 0
 
 # SELECTIVE TESTS: Run only tests for changed files (PRs) or all tests (master)
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0
   test:
     name: Tests (${{ matrix.target }})
     needs: release-metadata
     runs-on: ubuntu-latest
-    if: (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && needs.release-metadata.outputs.release_only != 'true'
+    if: (needs.release-metadata.outputs.pr_like == 'true') && needs.release-metadata.outputs.release_only != 'true'
     strategy:
       fail-fast: false
       max-parallel: 4
@@ -697,6 +704,13 @@ jobs:
           # the same diff semantics with a complete local history.
           fetch-depth: 0
           persist-credentials: false
+      - name: Verify immutable CI context
+        id: ci-context
+        uses: ./.github/actions/ci-context
+        with:
+          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
+          base: ${{ inputs.base || '' }}
+          head: ${{ inputs.head || '' }}
       - name: Install Bazelisk
         run: |
           set -euo pipefail
@@ -710,107 +724,54 @@ jobs:
           fi
           echo "$bazelisk_dir" >> "$GITHUB_PATH"
           echo "PATH=$bazelisk_dir:$PATH" >> "$GITHUB_ENV"
-      - name: Detect changed files
-        id: changed
-        run: |
-          set -euo pipefail
-          base_ref="${{ github.base_ref || 'master' }}"
-          if [ -n "${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-}" ]; then
-            base_ref="$BUILDKITE_PULL_REQUEST_BASE_BRANCH"
-          fi
-          if ! git fetch --no-tags --prune origin "$base_ref"; then
-            echo "::warning::PR base fetch unavailable; using refs already present in the full checkout."
-          fi
-          if base_commit=$(git rev-parse --verify "origin/$base_ref^{commit}" 2>/dev/null); then
-            chg=$(git diff --name-only "$base_commit"...HEAD | tr '\n' ',' | sed 's/,$//')
-          elif base_commit=$(git rev-parse --verify HEAD^ 2>/dev/null); then
-            echo "::warning::PR base ref unavailable; using the checked-out commit parent for selective test detection."
-            chg=$(git diff --name-only "$base_commit"...HEAD | tr '\n' ',' | sed 's/,$//')
-          else
-            echo "::error::No PR base or commit parent is available for selective test detection."
-            exit 1
-          fi
-          echo "changed=$chg" >> "$GITHUB_OUTPUT"
+      - name: Prepare shared source-CI profile
+        uses: ./.github/actions/source-ci-profile
+
       - name: Run selective tests
-        run: |
-          set -euo pipefail
-          CHANGED="${{ steps.changed.outputs.changed }}"
-          echo "Changed files: $CHANGED"
+        env:
+          CHANGE_BASE: ${{ steps.ci-context.outputs.base }}
+          CHANGE_HEAD: ${{ steps.ci-context.outputs.head }}
+        run: 'set -euo pipefail
 
-          case "${{ matrix.target }}" in
-            core)
-              if echo "$CHANGED" | grep -qE 'src/decapod/core/(todo|validate|workspace|workunit|obligation|docs|capsule|rpc|migration|gateway)'; then
-                # Time the real broker follow-up independently before the full
-                # suite so its bounded stage diagnostics survive a suite timeout.
-                time bazelisk test //:group_broker \
-                  --test_arg=committed_claim_preparation_does_not_hold_broker_or_repeat_on_retry \
-                  --test_arg=--exact --test_arg=--nocapture \
-                  --test_output=all
-                time bazelisk test //:group_broker \
-                  --test_arg=broker_no_sqlite_busy_surfaced_under_concurrent_mutators \
-                  --test_arg=--exact --test_arg=--nocapture \
-                  --test_output=all
-                bazelisk test \
-                  //:todo_enforcement \
-                  //:validate_termination \
-                  //:workspace_interlock \
-                  //:spec_workspace_ownership \
-                  //:workspace_prune_regression \
-                  //:hermes_governance_substrate \
-                  //:group_broker \
-                  //:group_broker_strict \
-                  //:workunit_cli \
-                  //:context_capsule_cli \
-                  --test_arg=--test-threads=1
-              elif echo "$CHANGED" | grep -qE 'src/decapod/core/'; then
-                bazelisk test //:entrypoint_correctness --test_arg=--test-threads=1
-              fi
-              ;;
-            plugins)
-              if echo "$CHANGED" | grep -qE 'src/decapod/plugins/'; then
-                # Todo tests exercise a process-global storage pool and
-                # already spawn their own contention workers. Keep the
-                # outer Rust test scheduler serial so unrelated fixtures
-                # cannot starve bounded lock assertions.
-                bazelisk test \
-                  //:plugins_todo_tests \
-                  //:plugins_policy_tests \
-                  //:plugins_health_tests \
-                  //:plugins_aptitude_tests \
-                  //:plugins_internalize_tests \
-                  //:plugins_federation_tests \
-                  //:plugins_decide_tests \
-                  //:plugins_obligation_tests \
-                  --test_arg=--test-threads=1
-              fi
-              ;;
-            cli)
-              if echo "$CHANGED" | grep -qE 'src/(decapod/(cli|lib)|main)'; then
-                bazelisk test \
-                  //:cli_contract_enforcement \
-                  //:entrypoint_correctness \
-                  //:cli_contracts \
-                  --test_arg=--test-threads=1
-              fi
-              ;;
-          esac
-          echo "✓ Selective tests passed"
+          "$RUNNER_TEMP/source-ci-profile" run-ci --check "selective-${{ matrix.target }}" --base "$CHANGE_BASE" --head "$CHANGE_HEAD"
 
-  # Build selected integration tests once, then distribute relocatable runfiles.
-  # Compilation is shared work, never repeated inside each timed test shard.
+          '
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0
   integration-prepare:
     name: Prepare Integration Tests
     needs: release-metadata
     runs-on: ubuntu-latest
-    if: (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && needs.release-metadata.outputs.release_only != 'true'
+    if: (needs.release-metadata.outputs.pr_like == 'true') && needs.release-metadata.outputs.release_only != 'true'
     outputs:
       shards: ${{ steps.plan.outputs.shards }}
       count: ${{ steps.plan.outputs.count }}
+      context: ${{ steps.plan.outputs.context }}
+      helper_sha256: ${{ steps.plan.outputs.helper_sha256 }}
+      archive_sha256: ${{ steps.plan.outputs.archive_sha256 }}
+      bootstrap_sha256: ${{ steps.plan.outputs.bootstrap_sha256 }}
+      profile_sha256: ${{ steps.plan.outputs.profile_sha256 }}
+      worker_script_sha256: ${{ steps.plan.outputs.worker_script_sha256 }}
+      status_script_sha256: ${{ steps.plan.outputs.status_script_sha256 }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Verify immutable CI context
+        id: ci-context
+        uses: ./.github/actions/ci-context
+        with:
+          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
+          base: ${{ inputs.base || '' }}
+          head: ${{ inputs.head || '' }}
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
@@ -828,36 +789,36 @@ jobs:
           fi
           echo "$bazelisk_dir" >> "$GITHUB_PATH"
           echo "PATH=$bazelisk_dir:$PATH" >> "$GITHUB_ENV"
-      - name: Plan integration shards from changed files
+      - name: Prepare shared source-CI profile
+        uses: ./.github/actions/source-ci-profile
+
+      - name: Plan and compile integration tests once
         id: plan
-        run: |
-          set -euo pipefail
-          base_ref="${{ github.base_ref || 'master' }}"
-          if ! git fetch --no-tags --prune origin "$base_ref"; then
-            echo "::warning::PR base fetch unavailable; using refs already present in the full checkout."
-          fi
-          if base_commit=$(git rev-parse --verify "origin/$base_ref^{commit}" 2>/dev/null); then
-            git diff --name-only -z "$base_commit"...HEAD > "$RUNNER_TEMP/integration-paths.txt"
-          elif base_commit=$(git rev-parse --verify HEAD^ 2>/dev/null); then
-            echo "::warning::PR base ref unavailable; using the checked-out commit parent for selective test detection."
-            git diff --name-only -z "$base_commit"...HEAD > "$RUNNER_TEMP/integration-paths.txt"
-          else
-            echo "::error::No PR base or commit parent is available for selective test detection."
-            exit 1
-          fi
-          rustc --edition=2024 assets/tools/integration_shards.rs -o "$RUNNER_TEMP/integration-shards"
-          "$RUNNER_TEMP/integration-shards" plan --paths "$RUNNER_TEMP/integration-paths.txt" > "$RUNNER_TEMP/integration-matrix.json"
-          echo "shards=$(jq -c '[.include[].shard]' "$RUNNER_TEMP/integration-matrix.json")" >> "$GITHUB_OUTPUT"
-          echo "count=$(jq '.include | length' "$RUNNER_TEMP/integration-matrix.json")" >> "$GITHUB_OUTPUT"
-      - name: Compile and package selected integration tests once
-        if: steps.plan.outputs.count != '0'
-        run: |
-          set -euo pipefail
-          "$RUNNER_TEMP/integration-shards" prepare \
-            --paths "$RUNNER_TEMP/integration-paths.txt" \
-            --output "$RUNNER_TEMP/integration-tests"
-          mkdir -p target/integration-artifacts
-          tar -C "$RUNNER_TEMP/integration-tests" -cf target/integration-artifacts/integration-tests.tar .
+        env:
+          CHANGE_BASE: ${{ steps.ci-context.outputs.base }}
+          CHANGE_HEAD: ${{ steps.ci-context.outputs.head }}
+          CUSTODY_EVENT: ${{ steps.ci-context.outputs.event }}
+          CUSTODY_BASE: ${{ steps.ci-context.outputs.base }}
+          CUSTODY_HEAD: ${{ steps.ci-context.outputs.head }}
+          CUSTODY_MERGE_BASE: ${{ steps.ci-context.outputs.merge_base }}
+          CUSTODY_VALIDATION_HEAD: ${{ steps.ci-context.outputs.validation_head }}
+          CUSTODY_TREE: ${{ steps.ci-context.outputs.validation_tree }}
+        run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check integration-prepare'
+      - name: Upload measured integration bootstrap
+        uses: actions/upload-artifact@v4
+        with:
+          name: decapod-integration-bootstrap-${{ github.sha }}
+          path: target/integration-bootstrap-artifacts/integration-bootstrap.tar
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
+      - name: Upload measured integration custody verifier
+        uses: actions/upload-artifact@v4
+        with:
+          name: decapod-integration-custody-${{ github.sha }}
+          path: target/integration-custody-artifacts/integration-custody
+          retention-days: 1
+          compression-level: 0
       - name: Upload shared integration tests
         if: steps.plan.outputs.count != '0'
         uses: actions/upload-artifact@v4
@@ -868,11 +829,20 @@ jobs:
           retention-days: 1
           compression-level: 0
 
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0
   test-integration:
     name: Tests (integration ${{ matrix.shard }})
     needs: [release-metadata, integration-prepare]
     runs-on: ubuntu-latest
-    if: (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && needs.release-metadata.outputs.release_only != 'true' && needs.integration-prepare.outputs.count != '0'
+    if: (needs.release-metadata.outputs.pr_like == 'true') && needs.release-metadata.outputs.release_only != 'true' && needs.integration-prepare.outputs.count != '0'
     strategy:
       fail-fast: false
       # Static scheduling preserves workflow concurrency on both CI providers.
@@ -890,63 +860,192 @@ jobs:
           - spec_conformance
           - substrate_integrity
     steps:
+      - name: Download measured integration bootstrap
+        if: contains(fromJSON(needs.integration-prepare.outputs.shards), matrix.shard)
+        uses: actions/download-artifact@v4
+        with:
+          name: decapod-integration-bootstrap-${{ github.sha }}
+          path: target/integration-bootstrap-download
+      - name: Authenticate integration executor and recipes
+        if: contains(fromJSON(needs.integration-prepare.outputs.shards), matrix.shard)
+        env:
+          CUSTODY_BOOTSTRAP_SHA256: ${{ needs.integration-prepare.outputs.bootstrap_sha256 }}
+          CUSTODY_PROFILE_SHA256: ${{ needs.integration-prepare.outputs.profile_sha256 }}
+        run: |
+          set -euo pipefail
+          [[ "$CUSTODY_BOOTSTRAP_SHA256" =~ ^[0-9a-f]{64}$ ]]
+          printf '%s  %s\n' "$CUSTODY_BOOTSTRAP_SHA256" target/integration-bootstrap-download/integration-bootstrap.tar | sha256sum --check --status
+          tar -xf target/integration-bootstrap-download/integration-bootstrap.tar
+          [[ "$CUSTODY_PROFILE_SHA256" =~ ^[0-9a-f]{64}$ ]]
+          printf '%s  %s\n' "$CUSTODY_PROFILE_SHA256" integration-bootstrap/source-ci-profile | sha256sum --check --status
+          test -x integration-bootstrap/source-ci-profile
       - name: Download shared integration tests
         if: contains(fromJSON(needs.integration-prepare.outputs.shards), matrix.shard)
         uses: actions/download-artifact@v4
         with:
           name: decapod-integration-linux-${{ github.sha }}
           path: target/integration-download
-      - name: Restore integration executables and runfiles
+      - name: Run selected integration shard and record measured success
         if: contains(fromJSON(needs.integration-prepare.outputs.shards), matrix.shard)
-        run: |
-          set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/integration-tests"
-          tar -xf target/integration-download/integration-tests.tar -C "$RUNNER_TEMP/integration-tests"
-      - name: Run selective tests
+        timeout-minutes: 6
+        env:
+          CUSTODY_EVENT: ${{ needs.release-metadata.outputs.event }}
+          CUSTODY_BASE: ${{ needs.release-metadata.outputs.base }}
+          CUSTODY_HEAD: ${{ needs.release-metadata.outputs.head }}
+          CUSTODY_MERGE_BASE: ${{ needs.release-metadata.outputs.merge_base }}
+          CUSTODY_VALIDATION_HEAD: ${{ needs.release-metadata.outputs.validation_head }}
+          CUSTODY_TREE: ${{ needs.release-metadata.outputs.validation_tree }}
+          CUSTODY_SHARDS: ${{ needs.integration-prepare.outputs.shards }}
+          CUSTODY_ARCHIVE_SHA256: ${{ needs.integration-prepare.outputs.archive_sha256 }}
+          CUSTODY_HELPER_SHA256: ${{ needs.integration-prepare.outputs.helper_sha256 }}
+          CUSTODY_SHARD: ${{ matrix.shard }}
+          SOURCE_CI_SNAPSHOT: ${{ needs.release-metadata.outputs.transport_head || needs.release-metadata.outputs.checkout_head }}
+        run: integration-bootstrap/source-ci-profile run-ci --check integration-${{ matrix.shard }}
+      - name: Upload measured integration shard receipt
         if: contains(fromJSON(needs.integration-prepare.outputs.shards), matrix.shard)
-        timeout-minutes: 5
-        run: |
-          set -euo pipefail
-          umask 077
-          "$RUNNER_TEMP/integration-tests/integration-shards" run \
-            --artifact "$RUNNER_TEMP/integration-tests" \
-            --shard "${{ matrix.shard }}"
+        uses: actions/upload-artifact@v4
+        with:
+          name: decapod-integration-receipt-${{ github.sha }}-${{ matrix.shard }}
+          path: target/integration-receipts/${{ matrix.shard }}.receipt
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
 
   # Preserve the established required-check name while aggregating every shard.
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0
   integration-status:
     name: Tests (integration)
     needs: [release-metadata, integration-prepare, test-integration]
     runs-on: ubuntu-latest
-    if: always() && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && needs.release-metadata.result == 'success' && needs.release-metadata.outputs.release_only != 'true'
+    if: always() && (needs.release-metadata.outputs.pr_like == 'true') && needs.release-metadata.result == 'success' && needs.release-metadata.outputs.release_only != 'true'
     steps:
-      - name: Require successful preparation and complete shard coverage
+      - name: Download measured integration bootstrap
+        uses: actions/download-artifact@v4
+        with:
+          name: decapod-integration-bootstrap-${{ github.sha }}
+          path: target/integration-bootstrap-download
+      - name: Authenticate integration executor and recipes
         env:
-          PREPARE_RESULT: ${{ needs.integration-prepare.result }}
-          SHARD_RESULT: ${{ needs.test-integration.result }}
-          SHARD_COUNT: ${{ needs.integration-prepare.outputs.count }}
+          CUSTODY_BOOTSTRAP_SHA256: ${{ needs.integration-prepare.outputs.bootstrap_sha256 }}
+          CUSTODY_PROFILE_SHA256: ${{ needs.integration-prepare.outputs.profile_sha256 }}
         run: |
           set -euo pipefail
-          test "$PREPARE_RESULT" = success
-          if [ "$SHARD_COUNT" = 0 ]; then
-            test "$SHARD_RESULT" = skipped
-          elif [[ "$SHARD_COUNT" =~ ^[1-9][0-9]*$ ]]; then
-            test "$SHARD_RESULT" = success
-          else
-            echo "::error::Missing or invalid integration shard count."
-            exit 1
-          fi
-
-  # MASTER: Full test suite for direct master pushes only
+          [[ "$CUSTODY_BOOTSTRAP_SHA256" =~ ^[0-9a-f]{64}$ ]]
+          printf '%s  %s\n' "$CUSTODY_BOOTSTRAP_SHA256" target/integration-bootstrap-download/integration-bootstrap.tar | sha256sum --check --status
+          tar -xf target/integration-bootstrap-download/integration-bootstrap.tar
+          [[ "$CUSTODY_PROFILE_SHA256" =~ ^[0-9a-f]{64}$ ]]
+          printf '%s  %s\n' "$CUSTODY_PROFILE_SHA256" integration-bootstrap/source-ci-profile | sha256sum --check --status
+          test -x integration-bootstrap/source-ci-profile
+      - name: Download measured integration custody verifier
+        uses: actions/download-artifact@v4
+        with:
+          name: decapod-integration-custody-${{ github.sha }}
+          path: target/integration-custody
+      - name: Download gatling-0 measured success receipt
+        if: contains(fromJSON(needs.integration-prepare.outputs.shards), 'gatling-0')
+        uses: actions/download-artifact@v4
+        with:
+          name: decapod-integration-receipt-${{ github.sha }}-gatling-0
+          path: target/integration-receipts
+      - name: Download gatling-1 measured success receipt
+        if: contains(fromJSON(needs.integration-prepare.outputs.shards), 'gatling-1')
+        uses: actions/download-artifact@v4
+        with:
+          name: decapod-integration-receipt-${{ github.sha }}-gatling-1
+          path: target/integration-receipts
+      - name: Download gatling-2 measured success receipt
+        if: contains(fromJSON(needs.integration-prepare.outputs.shards), 'gatling-2')
+        uses: actions/download-artifact@v4
+        with:
+          name: decapod-integration-receipt-${{ github.sha }}-gatling-2
+          path: target/integration-receipts
+      - name: Download gatling-3 measured success receipt
+        if: contains(fromJSON(needs.integration-prepare.outputs.shards), 'gatling-3')
+        uses: actions/download-artifact@v4
+        with:
+          name: decapod-integration-receipt-${{ github.sha }}-gatling-3
+          path: target/integration-receipts
+      - name: Download release-policies measured success receipt
+        if: contains(fromJSON(needs.integration-prepare.outputs.shards), 'release-policies')
+        uses: actions/download-artifact@v4
+        with:
+          name: decapod-integration-receipt-${{ github.sha }}-release-policies
+          path: target/integration-receipts
+      - name: Download contract_conformance measured success receipt
+        if: contains(fromJSON(needs.integration-prepare.outputs.shards), 'contract_conformance')
+        uses: actions/download-artifact@v4
+        with:
+          name: decapod-integration-receipt-${{ github.sha }}-contract_conformance
+          path: target/integration-receipts
+      - name: Download constitution_claims measured success receipt
+        if: contains(fromJSON(needs.integration-prepare.outputs.shards), 'constitution_claims')
+        uses: actions/download-artifact@v4
+        with:
+          name: decapod-integration-receipt-${{ github.sha }}-constitution_claims
+          path: target/integration-receipts
+      - name: Download spec_conformance measured success receipt
+        if: contains(fromJSON(needs.integration-prepare.outputs.shards), 'spec_conformance')
+        uses: actions/download-artifact@v4
+        with:
+          name: decapod-integration-receipt-${{ github.sha }}-spec_conformance
+          path: target/integration-receipts
+      - name: Download substrate_integrity measured success receipt
+        if: contains(fromJSON(needs.integration-prepare.outputs.shards), 'substrate_integrity')
+        uses: actions/download-artifact@v4
+        with:
+          name: decapod-integration-receipt-${{ github.sha }}-substrate_integrity
+          path: target/integration-receipts
+      - name: Require successful preparation and complete shard coverage
+        env:
+          CUSTODY_EVENT: ${{ needs.release-metadata.outputs.event }}
+          CUSTODY_BASE: ${{ needs.release-metadata.outputs.base }}
+          CUSTODY_HEAD: ${{ needs.release-metadata.outputs.head }}
+          CUSTODY_MERGE_BASE: ${{ needs.release-metadata.outputs.merge_base }}
+          CUSTODY_VALIDATION_HEAD: ${{ needs.release-metadata.outputs.validation_head }}
+          CUSTODY_TREE: ${{ needs.release-metadata.outputs.validation_tree }}
+          CUSTODY_SHARDS: ${{ needs.integration-prepare.outputs.shards }}
+          CUSTODY_ARCHIVE_SHA256: ${{ needs.integration-prepare.outputs.archive_sha256 }}
+          CUSTODY_HELPER_SHA256: ${{ needs.integration-prepare.outputs.helper_sha256 }}
+          CUSTODY_PREPARED_CONTEXT: ${{ needs.integration-prepare.outputs.context }}
+          CUSTODY_COUNT: ${{ needs.integration-prepare.outputs.count }}
+          CUSTODY_PREPARE_RESULT: ${{ needs.integration-prepare.result }}
+          CUSTODY_WORKER_RESULT: ${{ needs.test-integration.result }}
+          SOURCE_CI_SNAPSHOT: ${{ needs.release-metadata.outputs.transport_head || needs.release-metadata.outputs.checkout_head }}
+        run: integration-bootstrap/source-ci-profile run-ci --check integration-status
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0
   test-master:
     name: Tests (Full)
     needs: release-metadata
     runs-on: ubuntu-latest
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/master') && needs.release-metadata.outputs.release_only != 'true'
+    if: (needs.release-metadata.outputs.event == 'push' && github.ref == 'refs/heads/master') && needs.release-metadata.outputs.release_only != 'true'
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
           persist-credentials: false
+      - name: Verify immutable CI context
+        id: ci-context
+        uses: ./.github/actions/ci-context
+        with:
+          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
+          base: ${{ inputs.base || '' }}
+          head: ${{ inputs.head || '' }}
       - name: Install Bazelisk
         run: |
           set -euo pipefail
@@ -972,8 +1071,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
           persist-credentials: false
+      - name: Verify immutable CI context
+        id: ci-context
+        uses: ./.github/actions/ci-context
+        with:
+          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
+          base: ${{ inputs.base || '' }}
+          head: ${{ inputs.head || '' }}
       - name: Install Bazelisk
         run: |
           set -euo pipefail
@@ -987,10 +1093,20 @@ jobs:
           fi
           echo "$bazelisk_dir" >> "$GITHUB_PATH"
           echo "PATH=$bazelisk_dir:$PATH" >> "$GITHUB_ENV"
-      - name: Run RPC suite
-        run: bazelisk test //:agent_rpc_suite --test_arg=--test-threads=1
+      - name: Prepare shared source-CI profile
+        uses: ./.github/actions/source-ci-profile
 
-  # CHAOS: Multi-agent contention + deterministic replay gate
+      - name: Run RPC suite
+        run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check rpc-suite'
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0
   chaos-replay:
     name: Chaos Replay Gate
     needs: release-metadata
@@ -999,8 +1115,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
           persist-credentials: false
+      - name: Verify immutable CI context
+        id: ci-context
+        uses: ./.github/actions/ci-context
+        with:
+          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
+          base: ${{ inputs.base || '' }}
+          head: ${{ inputs.head || '' }}
       - name: Install Bazelisk
         run: |
           set -euo pipefail
@@ -1014,10 +1137,20 @@ jobs:
           fi
           echo "$bazelisk_dir" >> "$GITHUB_PATH"
           echo "PATH=$bazelisk_dir:$PATH" >> "$GITHUB_ENV"
-      - name: Run chaos replay determinism test
-        run: bazelisk test //:chaos_replay --test_arg=--test-threads=1
+      - name: Prepare shared source-CI profile
+        uses: ./.github/actions/source-ci-profile
 
-  # DAEMONLESS: ensure commands do not leave background processes
+      - name: Run chaos replay determinism test
+        run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check chaos-replay'
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0
   daemonless-lifecycle:
     name: Daemonless Lifecycle Gate
     needs: release-metadata
@@ -1026,8 +1159,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
           persist-credentials: false
+      - name: Verify immutable CI context
+        id: ci-context
+        uses: ./.github/actions/ci-context
+        with:
+          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
+          base: ${{ inputs.base || '' }}
+          head: ${{ inputs.head || '' }}
       - name: Install Bazelisk
         run: |
           set -euo pipefail
@@ -1041,10 +1181,20 @@ jobs:
           fi
           echo "$bazelisk_dir" >> "$GITHUB_PATH"
           echo "PATH=$bazelisk_dir:$PATH" >> "$GITHUB_ENV"
-      - name: Run daemonless lifecycle test
-        run: bazelisk test //:daemonless_lifecycle --test_arg=--test-threads=1
+      - name: Prepare shared source-CI profile
+        uses: ./.github/actions/source-ci-profile
 
-  # CONTRACTS: README/Constitution drift detection
+      - name: Run daemonless lifecycle test
+        run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check daemonless-lifecycle'
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0
   contracts:
     name: Contract Conformance
     needs: release-metadata
@@ -1053,8 +1203,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
           persist-credentials: false
+      - name: Verify immutable CI context
+        id: ci-context
+        uses: ./.github/actions/ci-context
+        with:
+          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
+          base: ${{ inputs.base || '' }}
+          head: ${{ inputs.head || '' }}
       - name: Install Bazelisk
         run: |
           set -euo pipefail
@@ -1068,24 +1225,39 @@ jobs:
           fi
           echo "$bazelisk_dir" >> "$GITHUB_PATH"
           echo "PATH=$bazelisk_dir:$PATH" >> "$GITHUB_ENV"
-      - name: Run contract conformance tests
-        run: |
-          bazelisk test //:contract_conformance --test_arg=--test-threads=1
-          bazelisk test //:constitution_claims --test_arg=--test-threads=1
-      - name: Run CLI contract enforcement tests
-        run: bazelisk test //:cli_contract_enforcement --test_arg=--test-threads=1
+      - name: Prepare shared source-CI profile
+        uses: ./.github/actions/source-ci-profile
 
-  # MIGRATION TESTS: Only when SQL migration scripts change
+      - name: Run contract conformance tests
+        run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check contracts'
+      - name: Run CLI contract enforcement tests
+        run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check cli-contracts'
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0
   migration-script-tests:
     name: Migration Script Tests
     runs-on: ubuntu-latest
     needs: [release-metadata, detect-migration-script-changes]
-    if: ((github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && needs.detect-migration-script-changes.outputs.changed == 'true') && needs.release-metadata.outputs.release_only != 'true'
+    if: ((needs.release-metadata.outputs.pr_like == 'true') && needs.detect-migration-script-changes.outputs.changed == 'true') && needs.release-metadata.outputs.release_only != 'true'
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
           persist-credentials: false
+      - name: Verify immutable CI context
+        id: ci-context
+        uses: ./.github/actions/ci-context
+        with:
+          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
+          base: ${{ inputs.base || '' }}
+          head: ${{ inputs.head || '' }}
       - name: Install Bazelisk
         run: |
           set -euo pipefail
@@ -1099,23 +1271,48 @@ jobs:
           fi
           echo "$bazelisk_dir" >> "$GITHUB_PATH"
           echo "PATH=$bazelisk_dir:$PATH" >> "$GITHUB_ENV"
-      - name: Run migration tests
-        run: bazelisk test //:core_tests --test_arg=migration_ --test_arg=--ignored --test_arg=--test-threads=1
+      - name: Prepare shared source-CI profile
+        uses: ./.github/actions/source-ci-profile
 
-  # RELEASE BUILD: Only on master, after all checks pass
+      - name: Run migration tests
+        env:
+          CHANGE_BASE: ${{ steps.ci-context.outputs.base }}
+          CHANGE_HEAD: ${{ steps.ci-context.outputs.head }}
+        run: 'set -euo pipefail
+
+          "$RUNNER_TEMP/source-ci-profile" run-ci --check migration-tests --base "$CHANGE_BASE" --head "$CHANGE_HEAD"
+
+          '
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0
   release-build:
     name: Release Build Check
     runs-on: ubuntu-latest
     if: >-
       always() && !cancelled() && github.ref == 'refs/heads/master' &&
+      needs.release-metadata.outputs.pre_pr == 'false' &&
       needs.release-metadata.result == 'success' && needs.health.result == 'success' &&
       !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
     needs: [release-metadata, fmt, clippy, deps-lint, test, integration-prepare, test-integration, integration-status, test-master, test-rpc-suite, chaos-replay, daemonless-lifecycle, workspace-lifecycle-docker, contracts, health, musl-publication]
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
           persist-credentials: false
+      - name: Verify immutable CI context
+        id: ci-context
+        uses: ./.github/actions/ci-context
+        with:
+          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
+          base: ${{ inputs.base || '' }}
+          head: ${{ inputs.head || '' }}
       - name: Install Bazelisk
         run: |
           set -euo pipefail

@@ -93,6 +93,8 @@ pub struct AgentInitParams {}
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct AgentInitResult {
     pub environment_context: EnvironmentContext,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reconciliation: Option<crate::core::init_reconciliation::ReconciliationReport>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -137,9 +139,12 @@ pub struct WorkspaceEnsureResult {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct WorkspacePublishParams {
     pub title: Option<String>,
     pub description: Option<String>,
+    pub snapshot_resume: Option<std::path::PathBuf>,
+    pub provider_artifacts: Option<std::path::PathBuf>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -347,6 +352,11 @@ pub struct ValidateRunParams {
     pub gate: Option<String>,
     #[serde(default)]
     pub refresh_specs: bool,
+    #[serde(default)]
+    pub snapshot_prepare: bool,
+    pub snapshot_resume: Option<std::path::PathBuf>,
+    pub snapshot_adopt: Option<String>,
+    pub provider_artifacts: Option<std::path::PathBuf>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
