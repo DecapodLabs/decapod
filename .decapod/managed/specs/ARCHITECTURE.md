@@ -542,7 +542,7 @@ virtiofs/FUSE filesystem prohibition.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9c7a5dde6d65f50fef85577b83b28e98c8125e47fef667c9d6a55375cdab7263`
+- Repository signal fingerprint: `129878e1bdf3025ac1be544758174a9e338b3366b94c6e71054e07eed81f05cd`
 - Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

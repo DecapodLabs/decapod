@@ -234,7 +234,7 @@ Describe the security primitives and security controls implemented in this repos
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9c7a5dde6d65f50fef85577b83b28e98c8125e47fef667c9d6a55375cdab7263`
+- Repository signal fingerprint: `129878e1bdf3025ac1be544758174a9e338b3366b94c6e71054e07eed81f05cd`
 - Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -331,3 +331,7 @@ Remote execution custody pins the independently reviewed official Buildkite GHA 
 ## Provider-owned job log redirects
 
 Public Buildkite job-log reads may follow one HTTPS redirect to the exact Buildkite cloud log object. The pipeline, native build and job UUIDs come from the already-verified inventory, and every storage path component must match before the redirected GET is issued. Metadata routes remain nonredirecting and artifact routes retain their separate bounded policy. Alternate hosts, changed identities, extra hops, malformed paths, authentication failures and HTTP denials fail closed; signed query values remain opaque and absent from diagnostics.
+
+## Canonical workflow identity across producer formats
+
+The source worker identifies a workflow by its canonical filename, while the authenticated importer records its repository path. The verifier joins the independently expected filename under `.github/workflows/` and compares that complete path exactly, allowing only the importer's single optional `./` prefix. It never discards an observed directory or infers the expected workflow from green provider data. Wrong filenames, path traversal, query syntax, producer IDs, native step identity and source revisions remain rejected.

@@ -322,6 +322,21 @@ impl AuthenticatedPreparation {
         &self.expected
     }
 }
+/// The source worker names a workflow file; the authenticated importer names
+/// its repository path. Join only a single canonical filename, never strip an
+/// arbitrary observed path or infer expected identity from the provider plan.
+fn source_workflow_path(name: &str) -> Result<String> {
+    ensure(
+        !name.is_empty()
+            && name.len() <= 255
+            && (name.ends_with(".yml") || name.ends_with(".yaml"))
+            && name
+                .bytes()
+                .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'.' | b'-' | b'_')),
+        "source workflow must be a canonical filename",
+    )?;
+    Ok(format!(".github/workflows/{name}"))
+}
 /// Imported shell claims require the sealed provider-authenticated recipe, not
 /// merely a UUID-shaped run ID or a caller-supplied standalone receipt.
 pub fn verify_imported_preparation(
@@ -342,12 +357,17 @@ pub fn verify_imported_preparation(
     let producer = required(&result, "producer")?;
     let plan = recipe.plan_json();
     let workflow = required(plan, "workflow")?;
+    let workflow_path = string(workflow, "path")?;
+    ensure(
+        workflow_path.strip_prefix("./").unwrap_or(workflow_path)
+            == source_workflow_path(&expected.workflow)?,
+        "imported source workflow differs from authenticated recipe",
+    )?;
     ensure(
         string(producer, "build_id")? == expected.run_id
             && string(producer, "job_id")? == expected.job_id
             && string(producer, "step_key")? == expected.step_key
             && recipe.result().job_id() == expected.job_id
-            && string(workflow, "path")?.trim_start_matches("./") == expected.workflow
             && string(workflow, "logical_job_id")? == expected.job
             && string(required(plan, "target")?, "step_key")? == expected.step_key
             && string(required(plan, "event")?, "sha")? == expected.snapshot,

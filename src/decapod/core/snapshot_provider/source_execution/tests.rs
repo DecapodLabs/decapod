@@ -363,7 +363,6 @@ fn synthetic_static_fixture_digest_chains_still_reject_tampering() {
 fn imported_fixture() -> (BTreeMap<String, Vec<u8>>, SourceExpectation) {
     let mut e = expected();
     e.provider = "buildkite_gha".into();
-    e.workflow = ".github/workflows/ci.yml".into();
     e.job = "test".into();
     e.job_id = "44444444-4444-4444-4444-444444444444".into();
     e.step_key = "gha-test".into();
@@ -407,6 +406,13 @@ fn imported_origin(e: &SourceExpectation) -> String {
 fn imported_shell_claim_requires_verified_recipe_and_exact_native_artifact() {
     let recipe = super::super::public_buildkite::tests::synthetic_source_recipe();
     let (files, e) = imported_fixture();
+    // Match the actual source worker (ci.yml), rather than changing its claim
+    // to the importer path and thereby hiding the production format boundary.
+    assert_eq!(e.workflow, "ci.yml");
+    assert_eq!(
+        recipe.plan_json()["workflow"]["path"],
+        "./.github/workflows/ci.yml"
+    );
     let artifact = ArtifactFiles::fixture(&imported_origin(&e), files);
     assert!(
         verify_preparation(&artifact, &e, policy)
@@ -432,7 +438,7 @@ fn imported_shell_claim_requires_verified_recipe_and_exact_native_artifact() {
 #[test]
 fn imported_claim_rejects_swapped_producer_logical_job_build_retry_and_source() {
     let recipe = super::super::public_buildkite::tests::synthetic_source_recipe();
-    for mode in 0..9 {
+    for mode in 0..14 {
         let (mut files, mut e) = imported_fixture();
         let mut origin = imported_origin(&e);
         match mode {
@@ -451,7 +457,12 @@ fn imported_claim_rejects_swapped_producer_logical_job_build_retry_and_source() 
             7 => mutate(&mut files, "fmt/preparation/preparation.json", |v| {
                 v["run_attempt"] = "1".into()
             }),
-            _ => origin = "github:org/repo/runs/7/attempts/1/artifacts/9".into(),
+            8 => origin = "github:org/repo/runs/7/attempts/1/artifacts/9".into(),
+            9 => e.workflow = "different.yml".into(),
+            10 => e.workflow = ".github/workflows/ci.yml".into(),
+            11 => e.workflow = "../ci.yml".into(),
+            12 => e.workflow = "ci.yml?source=other".into(),
+            _ => e.workflow = "ci%2eyml".into(),
         }
         let artifact = ArtifactFiles::fixture(&origin, files);
         assert!(

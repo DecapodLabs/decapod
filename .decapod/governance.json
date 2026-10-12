@@ -399,6 +399,16 @@
         "fourteenth-full-validation",
         "thirteenth-full-validation"
       ]
+    },
+    {
+      "id": "fifteenth-canonical-workflow-custody",
+      "summary": "Bind imported workflow paths to exact source receipt filenames and retain actual failed validation evidence",
+      "input_digest": "sha256:17e77eef8751cc639809f5388d039f369d70d83165edf387e2c649be720db5dd",
+      "proof_refs": [
+        "checks.buildkite-957-source-suite",
+        "checks.fifteenth-candidate-cli-build",
+        "checks.fourteenth-full-validation"
+      ]
     }
   ],
   "intents": {
@@ -486,23 +496,23 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed current code: one provider-owned log redirect is bound to verified pipeline/build/job identities and strict HTTPS storage path. Existing single-result validation, same-branch transport and public interfaces remain accurate; SECURITY documents the narrow redirect contract.",
-          "reviewed_code_fingerprint": "9c7a5dde6d65f50fef85577b83b28e98c8125e47fef667c9d6a55375cdab7263",
+          "reason": "The existing authenticated Buildkite producer boundary is preserved; this correction maps the independently expected workflow filename to its exact repository path without changing the execution architecture.",
+          "reviewed_code_fingerprint": "129878e1bdf3025ac1be544758174a9e338b3366b94c6e71054e07eed81f05cd",
           "spec_material_hash": "40f3fdc655a6995e78fc7611fcd296c419290085e2417378e7c34bf0da8a0c1e"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed current code: one provider-owned log redirect is bound to verified pipeline/build/job identities and strict HTTPS storage path. Existing single-result validation, same-branch transport and public interfaces remain accurate; SECURITY documents the narrow redirect contract.",
-          "reviewed_code_fingerprint": "9c7a5dde6d65f50fef85577b83b28e98c8125e47fef667c9d6a55375cdab7263",
+          "reason": "The public validate and provider interfaces remain unchanged; producer receipt filenames and plan repository paths retain their existing formats with an explicit strict comparison.",
+          "reviewed_code_fingerprint": "129878e1bdf3025ac1be544758174a9e338b3366b94c6e71054e07eed81f05cd",
           "spec_material_hash": "714d3480f00a7f23c295334fc0fa34a33d31452528c0188549a3bac7211531fa"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented one provider-owned HTTPS job-log redirect bound to all three verified inventory UUIDs, retaining separate metadata/artifact policies, bounded output, denied-host/path/hop rejection and opaque signature handling.",
-          "reviewed_code_fingerprint": "9c7a5dde6d65f50fef85577b83b28e98c8125e47fef667c9d6a55375cdab7263",
-          "spec_material_hash": "adfc78e11e0dbeb1aabc0104ab955e83b6a9d408606a208eb90edee9d5b5d6b4"
+          "reason": "Document exact canonical workflow mapping and rejection of arbitrary basename, traversal, encoded, and unknown-path equivalence while preserving native producer binding.",
+          "reviewed_code_fingerprint": "129878e1bdf3025ac1be544758174a9e338b3366b94c6e71054e07eed81f05cd",
+          "spec_material_hash": "37c99a1610c9603b39999f1153d05158366abede2ec449d1d290afc1ccbe7fcb"
         }
       ],
       "state": "APPROVED",
@@ -513,7 +523,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791807376Z"
+      "updated_at": "1791811623Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -521,7 +531,7 @@
         "Preserve11 reviewed public history tips; never include10 private tainted commits or two denied fixture blobs",
         "Same workspace branch only; no new temporary refs, no force-push, no deletion, no local duplicate validation suite"
       ],
-      "artifact_hash": "sha256:6005b50f9074db9a9e10c5e1bfc5893fa9c1a7208aad67b22728fe3811be422c",
+      "artifact_hash": "sha256:e518a4242be79a1f50e9b1356f30fd52cd79f4bf2396a01d5aad0f221d4ced47",
       "checks": [
         {
           "name": "actual_action_12",
@@ -544,6 +554,10 @@
           "status": "passed"
         },
         {
+          "name": "buildkite-957-source-suite",
+          "status": "passed"
+        },
+        {
           "name": "buildkite-next-candidate",
           "status": "partial"
         },
@@ -560,12 +574,20 @@
           "status": "partial"
         },
         {
+          "name": "fifteenth-candidate-cli-build",
+          "status": "passed"
+        },
+        {
+          "name": "fifteenth-full-validation",
+          "status": "partial"
+        },
+        {
           "name": "fourteenth-candidate-cli-build",
           "status": "passed"
         },
         {
           "name": "fourteenth-full-validation",
-          "status": "partial"
+          "status": "failed"
         },
         {
           "name": "ninth_buildkite_932",
@@ -668,10 +690,17 @@
             "intent_id": "intent:ninth-workbranch-preflight-20261012",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:ninth-workbranch-preflight-20261012",
+            "event_id": "event:10",
+            "intent_id": "intent:ninth-workbranch-preflight-20261012",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "ninth-workbranch-preflight-20261012": {
@@ -809,6 +838,29 @@
                 ],
                 "sequence": 9,
                 "validation_findings": []
+              },
+              {
+                "action": "repairing",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "src/decapod/core/snapshot_provider/source_execution.rs",
+                  "src/decapod/core/snapshot_provider/source_execution/tests.rs",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "Buildkite 957 and companions 958-961 passed all 41 actual source execution receipts on bae1144d; actual plain validate exited 1 after 2220.558 seconds because imported plan workflow path was compared directly to receipt workflow filename.",
+                  "Strict canonical mapping now derives .github/workflows/<validated filename> independently; the regression fixture uses actual ci.yml receipt shape and rejects malformed names. Candidate CLI cargo build --locked --bin decapod passed.",
+                  "Read-only saved-evidence audit matched all 41 catalog rows, preparation/execution identities and command chains; ZIP-only toolchain/member checks remain pending actual validate."
+                ],
+                "proof_refs": [
+                  "buildkite-957-source-suite",
+                  "fourteenth-full-validation",
+                  "fifteenth-candidate-cli-build",
+                  "fifteenth-full-validation"
+                ],
+                "scope": [
+                  "Current workspace provider transport, source CI context, transient artifact read recovery, focused regression tests and generated documentation"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
@@ -820,12 +872,15 @@
       "evidence": [
         "Buildkite 932 reproduced the historical same-tree transport checkpoint failure; all other source and companion jobs passed. No proof is transferred to this changed candidate.",
         "Buildkite 937 Clippy lib-test compilation identified two ambiguous core imports and one swapped captured-base fixture argument; only those three test lines were corrected.",
+        "Buildkite 957 and companions 958-961 passed all 41 actual source execution receipts on bae1144d; actual plain validate exited 1 after 2220.558 seconds because imported plan workflow path was compared directly to receipt workflow filename.",
         "Buildkite927-931 passed for prior exact candidate0af18eb6; source changed afterward, so new current-branch validation remains required",
         "Buildkite942 exact14e6f10a: 1015 library tests passed; history_first_parent_identity_remains_strict failed during second-journal setup. Supported lifecycle correctly rejected unaccepted first journal; fixture now asserts that rejection, then deliberately constructs invalid identity in its disposable Git history for independent verifier refusal. Production guards unchanged; full candidate validation pending.",
         "Buildkite952-956 passed all required source and companion executions at b4f13139. Plain validate then exited1 after2070.46seconds: all41 custody rows rejected unsupported provider HTTP status or redirect limit. An actual public JobLog GET returned302 to the provider-owned HTTPS log object. The correction permits one exact pipeline/build/job-bound log redirect; metadata and artifact routing remain separate, unknown hosts/paths/extra hops and HTTP denials fail closed. Current CLI compiled; current full provider validation remains pending.",
         "Current CLI compiled with provider-owned material checks and public-reader selection; new regression tests execute in the required Buildkite suite.",
         "Plain validate on3094bf52 exited1: all41 required source recipes rejected the stale reviewed0.102.2 importer pin. Independently verified official Buildkite GHA0.102.3 Linux asset632925784 and Darwin arm64 asset632925785 member SHA256 values against actual compiler/runtime manifests. Compiler and authored-platform runtime now have separate exact pins; unreviewed versions, digests, platforms and wrong producers remain rejected. Full changed-candidate validation pending.",
+        "Read-only saved-evidence audit matched all 41 catalog rows, preparation/execution identities and command chains; ZIP-only toolchain/member checks remain pending actual validate.",
         "Same-branch provider/controller and real action regressions passed; timeout-only retry baseline failed and25 reader tests passed after repair",
+        "Strict canonical mapping now derives .github/workflows/<validated filename> independently; the regression fixture uses actual ci.yml receipt shape and rejects malformed names. Candidate CLI cargo build --locked --bin decapod passed.",
         "https://buildkite.com/decapodlabs/decapod/builds/947",
         "https://buildkite.com/decapodlabs/decapod/builds/952",
         "https://github.com/buildkite/buildkite-gha/releases/tag/v0.102.3"
@@ -833,6 +888,7 @@
       "inspected_files": [],
       "intent_id": "intent:ninth-workbranch-preflight-20261012",
       "modified_files": [
+        ".decapod/managed/specs/SECURITY.md",
         "assets/tools/ci_event_context.rs",
         "assets/tools/source_ci/governance-artifacts.sh",
         "src/decapod/core/assets.rs",
@@ -840,6 +896,8 @@
         "src/decapod/core/snapshot_provider/public_buildkite.rs",
         "src/decapod/core/snapshot_provider/public_buildkite/tests.rs",
         "src/decapod/core/snapshot_provider/snapshot.rs",
+        "src/decapod/core/snapshot_provider/source_execution.rs",
+        "src/decapod/core/snapshot_provider/source_execution/tests.rs",
         "src/decapod/core/validation_runtime/snapshot.rs",
         "src/decapod/core/validation_runtime/snapshot/source_import.rs",
         "src/decapod/core/workspace.rs",
@@ -848,6 +906,7 @@
         "tests/unit/lib_ci_scope_tests.rs"
       ],
       "next_transitions": [
+        "Publish this exact checkpointed repair on the existing workspace branch and invoke plain validate for Buildkite-owned full verification; no PR before exit zero and publication readiness.",
         "Run actual Buildkite validation on the existing workspace branch, then create PR only after complete readiness",
         "Run plain validate on the exact corrected same-branch candidate; create PR only after complete provider readiness.",
         "Run plain validate through Buildkite on the same workspace branch, repair its report, and create the PR only after complete readiness",
