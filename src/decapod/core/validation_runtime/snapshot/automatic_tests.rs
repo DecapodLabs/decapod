@@ -181,7 +181,6 @@ impl FixtureRunner {
         if endpoint.contains("/statuses?") {
             let (snapshot, _) = state.snapshot();
             assert!(endpoint.starts_with(&format!("commits/{snapshot}/statuses?")));
-            state.cycle += 1;
             state.record("buildkite-locators".into());
             if matches!(state.scenario, Scenario::DeniedMetadata) {
                 return Err(io::Error::new(
@@ -231,6 +230,11 @@ impl provider::public_buildkite::PublicReader for FixtureBuildkite {
         let base = format!("/decapodlabs/decapod/builds/{number}");
         let body = match seal.kind() {
             PublicReadKind::BuildEnvelope => {
+                // Native envelopes advance independently of the cached GitHub
+                // locator registry. Build 1 starts each complete metadata poll.
+                if number == 1 {
+                    state.cycle += 1;
+                }
                 let status = state.buildkite_status();
                 state.record(format!("buildkite-state:{status}"));
                 let (head, reference) = state.snapshot();
@@ -419,7 +423,9 @@ fn automatic_buildkite_publish_waits_for_terminal_then_collects_once_and_stays_n
     assert!(
         blockers
             .iter()
-            .any(|b| b.code == "BUILDKITE_SOURCE_CUSTODY_BLOCKED")
+            .any(|b| b.code == "BUILDKITE_SOURCE_CUSTODY_BLOCKED"),
+        "unexpected blockers: {blockers:#?}; provider events: {:#?}",
+        fixture.state.borrow().events
     );
     assert!(host.verified_checks.is_empty());
     assert!(host.terminal_sources.is_some());
@@ -444,6 +450,30 @@ fn automatic_buildkite_publish_waits_for_terminal_then_collects_once_and_stays_n
             "missing pre-custody transition {status}"
         );
     }
+    let scheduled = state
+        .events
+        .iter()
+        .position(|event| event == "buildkite-state:scheduled")
+        .unwrap();
+    let running = state
+        .events
+        .iter()
+        .position(|event| event == "buildkite-state:running")
+        .unwrap();
+    let passed = state
+        .events
+        .iter()
+        .position(|event| event == "buildkite-state:passed")
+        .unwrap();
+    assert!(scheduled < running && running < passed && passed < first_custody);
+    assert_eq!(
+        state.events[..passed]
+            .iter()
+            .filter(|event| event.as_str() == "buildkite-locators")
+            .count(),
+        1,
+        "native progress must not require repeated locator discovery"
+    );
     // One collection plus its immutable inventory recheck. Pending metadata
     // polls must never fetch jobs, steps, artifacts or execution receipts.
     for workflow in &state.buildkite {

@@ -2,8 +2,9 @@
 
 ## Validation providers and publication
 
-`decapod validate` is the publication-readiness interface: only complete current
-candidate proof permits a zero exit and subsequent workbranch push or PR. A
+`decapod validate` is the PR-readiness interface: only complete current candidate
+proof permits a zero exit and subsequent PR creation. Workbranch pushes and
+iteration may precede preflight; a pushed branch alone is not merge readiness. A
 nonzero result means follow its actionable report, repair root causes on the same
 branch and rerun exact-candidate validation. Reports expose source_pr_readiness
 scope and reasoned real/mocked/non-applicable stage dispositions; excluded release
@@ -42,7 +43,8 @@ is proven. Resume accepts only that locator and optional raw provider archives;
 it independently reconstructs current source identity and re-reads provider
 run/attempt/artifact bindings. RPC and workspace publication use the same
 boundary. Publication may reuse a locator but must verify it again immediately
-before push. Verified publication then attempts compare-and-swap cleanup of
+before its combined push-and-PR operation. Standalone branch pushes remain
+available before preflight. Verified publication then attempts compare-and-swap cleanup of
 only its owned temporary ref; uncertain cleanup preserves actionable recovery.
 
 Immutable CI context carries the actual provider event, original candidate,
@@ -446,8 +448,8 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d972d4fcb9ad3d83b33d2838d3c51f39fbe3ce66729032c7afdaf7b50713acdd`
-- Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (174 files), `tests/` (185 files)
+- Repository signal fingerprint: `ee14bbd554c49080c5f3541beb229872ac1cb0f5d2214c10a7758f80efb5ee9e`
+- Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

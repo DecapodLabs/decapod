@@ -11,6 +11,10 @@
 //! are deliberately not derived from the files being validated or from the
 //! repository at runtime.
 
+#[path = "entrypoint_integrity/history.rs"]
+mod history;
+pub(crate) use history::{commit_path_violation, ensure_ungrafted, git as history_git};
+
 use crate::core::{assets, error};
 use sha2::{Digest, Sha256};
 use std::fmt;

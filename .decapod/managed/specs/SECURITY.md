@@ -24,6 +24,13 @@ archive handoff gains authority only through fresh provider metadata and digest
 verification. Session-health proof stores only its safe active/inactive status,
 not session credentials, and cannot self-update the candidate executable.
 
+Historical Decapod-source entrypoint proof is anchored to the published source
+lineage and the same immutable commit's package identity, release and literal
+template. It does not execute historical Rust or trust a self-declared generated
+fingerprint. Unsupported or unverifiable source fails closed; copied files in
+an unrelated consumer repository do not activate this source-history path.
+Current candidate entrypoints still require the evaluating binary's template.
+
 ## Release-only material-spec proof boundary
 
 Release names, labels, and mutable refs cannot authorize the material-spec
@@ -227,8 +234,8 @@ Describe the security primitives and security controls implemented in this repos
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d972d4fcb9ad3d83b33d2838d3c51f39fbe3ce66729032c7afdaf7b50713acdd`
-- Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (174 files), `tests/` (185 files)
+- Repository signal fingerprint: `ee14bbd554c49080c5f3541beb229872ac1cb0f5d2214c10a7758f80efb5ee9e`
+- Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

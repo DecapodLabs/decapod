@@ -865,7 +865,7 @@ pub(crate) struct GovernCli {
 #[derive(Subcommand, Debug)]
 pub(crate) enum GovernCommand {
     /// Run bounded project prerequisites only; success is not publication readiness.
-    /// Bootstrap and CI use this acyclic check. Agents must run validate before push or PR.
+    /// Bootstrap and CI use this acyclic check. Agents must run full validate before PR creation; branch pushes may precede preflight.
     ProjectCheck(ValidateCli),
 
     /// Risk classification and approvals
@@ -1633,7 +1633,7 @@ pub(crate) enum Command {
     #[clap(name = "obligation", visible_alias = "o")]
     Obligation(obligation::ObligationCli),
 
-    /// Prove complete current-workbranch readiness before push or pull request
+    /// Prove complete current-workbranch readiness before pull request creation
     #[clap(name = "validate", visible_alias = "v")]
     Validate(ValidateCli),
 

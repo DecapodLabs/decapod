@@ -3451,20 +3451,24 @@ fn validate_entrypoint_commit_discipline(
         return Ok(());
     };
 
+    if let Err(error) = crate::core::entrypoint_integrity::ensure_ungrafted(repo_root) {
+        fail(&format!("ENTRYPOINT_COMMIT_DISCIPLINE: {error}"), ctx);
+        return Ok(());
+    }
     let git_dir = repo_root.to_str().unwrap_or(".");
-    let rev_list = std::process::Command::new("git")
-        .args([
-            "-C",
-            git_dir,
-            "rev-list",
-            "--reverse",
-            &format!("{base_ref}..HEAD"),
-        ])
-        .output()
-        .map_err(error::DecapodError::IoError)?;
+    let Some(rev_list) = crate::core::entrypoint_integrity::history_git(
+        repo_root,
+        &["rev-list", "--reverse", &format!("{base_ref}..HEAD")],
+    ) else {
+        fail(
+            "ENTRYPOINT_COMMIT_DISCIPLINE: unable to run immutable commit enumeration",
+            ctx,
+        );
+        return Ok(());
+    };
     if !rev_list.status.success() {
-        skip(
-            "Unable to enumerate feature-branch commits; skipping entrypoint commit discipline gate",
+        fail(
+            "ENTRYPOINT_COMMIT_DISCIPLINE: unable to enumerate immutable feature-branch commits",
             ctx,
         );
         return Ok(());
@@ -3477,10 +3481,9 @@ fn validate_entrypoint_commit_discipline(
         .map(str::trim)
         .filter(|c| !c.is_empty())
     {
-        let changed = std::process::Command::new("git")
-            .args([
-                "-C",
-                git_dir,
+        let Some(changed) = crate::core::entrypoint_integrity::history_git(
+            repo_root,
+            &[
                 "diff-tree",
                 "--no-commit-id",
                 "--name-status",
@@ -3488,9 +3491,13 @@ fn validate_entrypoint_commit_discipline(
                 "--root",
                 "-z",
                 commit,
-            ])
-            .output()
-            .map_err(error::DecapodError::IoError)?;
+            ],
+        ) else {
+            failures.push(format!(
+                "{commit}: unable to run immutable changed-path inspection"
+            ));
+            continue;
+        };
         if !changed.status.success() {
             failures.push(format!("{commit}: unable to inspect changed paths"));
             continue;
@@ -3570,70 +3577,12 @@ fn entrypoint_commit_path_violation(
     status_code: char,
     path: &str,
 ) -> Option<String> {
-    if !crate::core::entrypoint_integrity::ENTRYPOINT_FILES.contains(&path) {
-        return None;
-    }
-    if status_code == 'D' {
-        return Some(format!(
-            "{commit}: deleted Decapod-owned entrypoint {path} (not allowed)"
-        ));
-    }
-    let Some(new_content) = git_show_blob(git_dir, commit, path) else {
-        return Some(format!(
-            "{commit}: unable to read entrypoint {path} at commit"
-        ));
-    };
-    let parent_content = git_show_blob(git_dir, &format!("{commit}^"), path);
-    if parent_content.as_deref() == Some(new_content.as_str()) {
-        return Some(format!(
-            "{commit}: non-content touch of entrypoint {path} (mode/metadata-only changes are forbidden; leave Decapod-owned entrypoints alone)"
-        ));
-    }
-    let Some(canonical) = crate::core::entrypoint_integrity::render_entrypoint(path) else {
-        return Some(format!(
-            "{commit}: no canonical template for entrypoint {path}"
-        ));
-    };
-    // Normalize to the repository's usual trailing-newline style for comparison.
-    let new_norm = normalize_entrypoint_blob(&new_content);
-    let canonical_norm = normalize_entrypoint_blob(&canonical);
-    if new_norm != canonical_norm {
-        let prior_release_canonical = new_content
-            .split('\n')
-            .next()
-            .and_then(|line| line.strip_prefix("<!-- decapod-release:"))
-            .and_then(|value| value.strip_suffix("-->"))
-            .map(str::trim)
-            .filter(|release| !release.is_empty())
-            .and_then(|release| {
-                crate::core::entrypoint_integrity::render_entrypoint_for_release(path, release)
-            })
-            .map(|rendered| normalize_entrypoint_blob(&rendered));
-        if prior_release_canonical.as_deref() == Some(new_norm.as_str()) {
-            return None;
-        }
-        return Some(format!(
-            "{commit}: entrypoint {path} is not the Decapod {release} template (hand edit or stale body). Regenerate via Decapod; do not hand-edit.",
-            release = crate::core::entrypoint_integrity::RELEASE_VERSION
-        ));
-    }
-    None
-}
-
-fn normalize_entrypoint_blob(content: &str) -> String {
-    let trimmed = content.trim_end_matches(['\r', '\n']);
-    format!("{trimmed}\n")
-}
-
-fn git_show_blob(git_dir: &str, rev: &str, path: &str) -> Option<String> {
-    let output = std::process::Command::new("git")
-        .args(["-C", git_dir, "show", &format!("{rev}:{path}")])
-        .output()
-        .ok()?;
-    if !output.status.success() {
-        return None;
-    }
-    String::from_utf8(output.stdout).ok()
+    crate::core::entrypoint_integrity::commit_path_violation(
+        Path::new(git_dir),
+        commit,
+        status_code,
+        path,
+    )
 }
 
 fn git_same_commit(repo_root: &Path, left: &str, right: &str) -> bool {
@@ -6650,7 +6599,7 @@ fn validate_git_push_pr_gate(
     if !is_pushed {
         warn(
             &format!(
-                "Workspace branch '{}' has unpushed commits or does not exist on origin. This is expected before publication; complete full `decapod validate` readiness before pushing the work branch or creating a PR.",
+                "Workspace branch '{}' has unpushed commits or does not exist on origin. Branch pushes and iteration are allowed before preflight; hold PR creation until intent is converged, the branch is mergeable, and full `decapod validate` succeeds against the exact current candidate and accepted target.",
                 current_branch
             ),
             ctx,
@@ -6663,7 +6612,7 @@ fn validate_git_push_pr_gate(
     if !pr_exists {
         warn(
             &format!(
-                "No open pull request found on GitHub for branch '{}'. Create a pull request to submit changes.",
+                "No open pull request found on GitHub for branch '{}'. Create a PR only after intent is converged, the branch is mergeable, and full exact-candidate validation succeeds against the accepted target.",
                 current_branch
             ),
             ctx,

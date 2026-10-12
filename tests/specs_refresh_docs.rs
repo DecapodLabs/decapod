@@ -83,7 +83,15 @@ fn agent_template_requires_report_driven_exact_candidate_repair() {
         "follow the actionable instructions and recovery steps in its validation report",
         "repair the reported root causes on the same work branch",
         "Never bypass a reported gate, fabricate evidence, weaken required checks",
-        "must not publish the original work branch before success",
+        "Work branch pushes and iteration are allowed before preflight",
+        "**MUST NOT** create a PR (including a draft) until intent is converged",
+        "the branch is mergeable into the accepted target",
+        "succeeds against the exact current candidate and accepted target",
+        "actual Buildkite execution evidence is required",
+        "GitHub Actions results neither satisfy nor block that profile",
+        "without submitting or waiting for another preflight",
+        "scope=ci_local",
+        "publication_ready=false",
     ] {
         assert!(
             template.contains(required),
@@ -98,4 +106,45 @@ fn readiness_generator_matches_checked_in_agent_docs() {
     let config_docs = include_str!("../docs/agent/config-schema.md");
     assert!(command_docs.contains(docs_cli::readiness_contract()));
     assert!(config_docs.contains(docs_cli::readiness_config_contract()));
+}
+
+#[test]
+fn readiness_guidance_keeps_branch_push_separate_from_pr() {
+    let contract = docs_cli::readiness_contract();
+    for required in [
+        "Work branch pushes and iteration are allowed before preflight",
+        "Hold PR creation (including a draft) until intent is converged",
+        "the branch is mergeable into the accepted target",
+        "exact current candidate and accepted target",
+        "never bypass a reported gate or fabricate evidence",
+        "`workspace publish` combines branch push and PR creation",
+        "scope=ci_local",
+        "publication_ready=false",
+        "never writes a full-readiness receipt or waits for its own suite",
+        "GitHub workflow results and artifacts never satisfy or block this Buildkite validation profile",
+    ] {
+        assert!(
+            contract.contains(required),
+            "missing readiness contract: {required}"
+        );
+    }
+    for source in [
+        include_str!("../src/decapod/core/assets.rs"),
+        include_str!("../src/decapod/core/docs_cli.rs"),
+        include_str!("../src/decapod/cli.rs"),
+        include_str!("../src/decapod/lib.rs"),
+        include_str!("../src/decapod/core/validate.rs"),
+    ] {
+        for stale in [
+            "before push or PR",
+            "before push or pull request",
+            "cannot authorize push or PR",
+            "**MUST NOT** push the work branch or create a PR",
+            "only then push the work branch and create its PR",
+            "must not publish the original work branch before success",
+            "readiness before pushing the work branch or creating a PR",
+        ] {
+            assert!(!source.contains(stale), "stale guidance: {stale}");
+        }
+    }
 }

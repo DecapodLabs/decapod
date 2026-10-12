@@ -118,7 +118,8 @@ fn fresh_init_project_prerequisites_do_not_grant_publication_readiness() {
         !stderr.contains("fail=") || stderr.contains("fail=0"),
         "expected no failures in validation output: {stderr}"
     );
-    assert!(stdout.contains("publication readiness has not been assessed"));
+    assert!(stdout.contains("PR readiness has not been assessed"));
+    assert!(stdout.contains("branch pushes may precede preflight"));
     let full = run_decapod_with_password(dir, &["validate", "--format", "json"], &password, &[]);
     assert!(
         !full.status.success(),

@@ -1,6 +1,6 @@
 # Architecture
 
-## Pre-push readiness boundary
+## PR readiness boundary
 
 Readiness joins the repository's intended build, CI and release contracts to the
 actual execution evidence for the current local work branch. The complete plan
@@ -11,6 +11,9 @@ transports only a separately named temporary snapshot whose commit has the same
 tree as the candidate and whose sole parent is that candidate. Provider jobs
 verify this relationship and check out the candidate before executing source
 checks. The original branch reference is never the preflight transport.
+Ordinary workbranch pushes may precede preflight; only PR creation is held until
+the intended change is converged, mergeable and fully validated. Canonical agent
+guidance and validation reports express this same boundary.
 Buildkite is the sole remote readiness executor for this repository. The
 reserved transport commit carries no service skip directive. Existing GitHub
 workflows may run independently and are outside this readiness proof. Shared
@@ -27,6 +30,11 @@ binds, avoiding a receipt/commit hash cycle. Source, index, branch/history,
 accepted target, configuration, stable governance policy, workflows and resolved
 tools all participate in the final identity. A changed target tip invalidates
 proof even when the old target remains an ancestor.
+
+Historical source-repository entrypoint rewrites must be checked against the
+immutable template and release that generated that historical commit, rather
+than retroactively requiring today's template body. Current material continues
+to require the evaluating binary's canonical template and fingerprint.
 
 Source workflows and native execution share finite checked-in recipes rather
 than independent YAML command copies. Provider artifacts preserve preparation
@@ -529,8 +537,8 @@ virtiofs/FUSE filesystem prohibition.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d972d4fcb9ad3d83b33d2838d3c51f39fbe3ce66729032c7afdaf7b50713acdd`
-- Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (174 files), `tests/` (185 files)
+- Repository signal fingerprint: `ee14bbd554c49080c5f3541beb229872ac1cb0f5d2214c10a7758f80efb5ee9e`
+- Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

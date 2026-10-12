@@ -258,6 +258,10 @@ def decapod_targets():
                 "docs/agent/payload-examples.md",
             ] if path == "tests/trajectory_docs.rs" else [
                 "src/decapod/core/assets.rs",
+                "src/decapod/core/docs_cli.rs",
+                "src/decapod/core/validate.rs",
+                "src/decapod/cli.rs",
+                "src/decapod/lib.rs",
                 "docs/agent/command-contracts.md",
                 "docs/agent/config-schema.md",
             ] if path == "tests/specs_refresh_docs.rs" else [

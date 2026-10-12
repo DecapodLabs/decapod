@@ -6105,7 +6105,7 @@ fn run_validate_command(
             vec![]
         } else {
             vec![
-                "Continue working on this branch, then rerun full validation before push or PR"
+                "Follow the validation report, repair root causes on this branch, and rerun exact-candidate validation before PR creation; branch pushes may precede preflight"
                     .into(),
             ]
         };
@@ -6156,7 +6156,7 @@ fn run_validate_command(
     if scope == ValidationScope::ProjectPrerequisites {
         if validate_cli.format != "json" {
             println!(
-                "Project prerequisites passed; publication readiness has not been assessed. Run decapod validate before push or PR."
+                "Project prerequisites passed; PR readiness has not been assessed. Run full decapod validate before PR creation; branch pushes may precede preflight."
             );
         }
         mark_project_prerequisites_completed(workspace_root)?;
@@ -6344,7 +6344,7 @@ fn run_current_workbranch_readiness_with(
         }
         if config.proof.required_profile.is_none() {
             return Err(error::DecapodError::ValidationError(
-                "READINESS_PROFILE_REQUIRED: reconcile this repository's complete build, source-CI and release contract through init/agent.init; project prerequisites alone cannot authorize push or PR".into(),
+                "READINESS_PROFILE_REQUIRED: reconcile this repository's complete build, source-CI and release contract through init/agent.init; project prerequisites alone cannot establish PR readiness; branch pushes may precede preflight".into(),
             ));
         }
         core::workspace::verify_current_publication_prerequisites(workspace_root)?;
