@@ -257,6 +257,12 @@ it does not directly mutate master or open a projection-healing PR. A later agen
 iteration refreshes projections for the installed release in its claimed workspace.
 Documentation drift workflows report changes without committing to PR branches.
 
+The generated universal agent contract must fit its 120-line validation budget.
+When an embedded template changes, the agent can use the exact candidate binary
+built during validation to regenerate projections through Decapod, checkpoint
+the coherent result, and validate again. An intermediate work-branch build is
+not publication readiness; the final source, projections, and proof must agree.
+
 `Cargo.toml` owns the package version. `dist.toml` selects only the `decapod` product
 binary for release archives; feature-gated contributor tools are not release
 products. The locked registry dependency must support package and publish dry-run
@@ -309,7 +315,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `facb5810903dc87ab8bbef7ecd3df901a264afcd0e31b55164fbd1feb1fd7156`
+- Repository signal fingerprint: `6d4e206dfa0674df6af372f086d810be164f50aa855b389fdd8b44b9132952ce`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (186 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

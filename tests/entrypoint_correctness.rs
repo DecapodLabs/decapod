@@ -691,6 +691,17 @@ fn test_agents_entrypoint_scopes_decapod_invocation() {
 }
 
 #[test]
+fn test_generated_agents_contract_stays_within_validation_line_budget() {
+    let content = assets::get_template("AGENTS.md").expect("generated AGENTS.md");
+    assert!(
+        content.lines().count() <= 120,
+        "the release-bound contract must fit the existing validation line budget"
+    );
+    assert!(content.contains("Living specs describe the configured project"));
+    assert!(content.contains("A narrow task updates the relevant part"));
+}
+
+#[test]
 fn test_root_entrypoints_match_scaffold_generators() {
     let repo_root = resolve_repo_root();
     for file in ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md"] {
