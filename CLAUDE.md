@@ -1,5 +1,5 @@
-<!-- decapod-release: 0.108.0 -->
-<!-- decapod-fingerprint: 9d19676495b9ce446cf889c8cb4f26e39073b3d53ce0468fdf71be3aab4e2597 -->
+<!-- decapod-release: 0.108.1 -->
+<!-- decapod-fingerprint: 45a40d2bb9e6477893c59e284d8ff59a6cc2fab042df991074003d2a4c7c895b -->
 # CLAUDE.md - Agent Entrypoint
 
 You are working in a Decapod-managed repository.
@@ -60,6 +60,8 @@ decapod data schema --deterministic
 - Read canonical router: `decapod constitution get core/DECAPOD`. Reference `docs/PLAYBOOK`, capabilities, or context.scope RPC.
 
 Treat `.decapod/managed/specs/*` as the acting agent's authored interpretation of the repository. Agents may edit its authored semantic prose directly in the isolated workspace, but must preserve generated attestations, overlays, manifests, and other machine-owned blocks. Decapod requires and validates the semantic content. Use `decapod rpc --op specs.refresh` or `decapod validate --refresh-specs` to update supported generated attestations and projections; neither rewrites authored prose. There is no top-level `decapod specs.refresh` command. Correct stale or incorrect prose, revalidate, and continue toward publication.
+
+Living specs describe the configured project from purpose to architecture to implementation depth. Lead with the whole product and its users, outcomes, and boundaries; explain components and source-grounded behavior next. A narrow task updates the relevant part without replacing project-wide identity. Cite repository paths and symbols, distinguish implemented behavior from plans and gaps, and treat generated templates/capabilities as obligations rather than proof of runtime guarantees.
 
 Stop if requirements are ambiguous or conflicting.
 <!-- decapod-validator-anchors

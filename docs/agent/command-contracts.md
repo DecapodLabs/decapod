@@ -57,6 +57,12 @@ This document defines the normative operational contracts for the Decapod CLI.
   this flag does not make unrelated gates pass.
 - **Preconditions:** Use an active session and the claimed, isolated workspace.
   Review and author the material living-spec prose before refreshing it.
+- **Authored scope:** Living specs describe the configured project from purpose
+  to architecture to implementation depth. Lead with the whole product, then
+  explain components and source-grounded behavior. A narrow task updates the
+  relevant part without replacing project-wide identity. Cite repository paths
+  and symbols; distinguish implemented behavior, plans, assumptions, and gaps.
+  Templates and capability declarations are obligations, not runtime evidence.
 - **Boundary:** Refresh does not rewrite authored intent or architecture and
   cannot substitute for the required material spec change. It does not approve
   a plan or mark a todo complete.

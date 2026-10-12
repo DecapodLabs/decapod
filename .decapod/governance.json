@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "d891d81de28621d0e5130953c329da3f86187faa",
+    "accepted_commit": "96c53abc62728fc3a54138850e216be5e59a6642",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -34,6 +34,11 @@
         "statement": "Public validate can authorize source PR publication only after all applicable actual source checks and candidate builds pass with genuine current material/provider evidence; release-only packaging is explicitly outside core source scope",
         "status": "open"
       },
+      "claim:full-proof-preserved": {
+        "falsifier": "Any missing, failed, stale, mismatched or skipped required proof can produce readiness, or an original check command is omitted",
+        "statement": "All currently applicable source checks, per-check receipts, exact-source bindings and final freshness remain required under bounded transport and same-checkout grouping",
+        "status": "open"
+      },
       "claim:governed-context:question:task-class-benefit": {
         "decision_impact": "Determines routing policy and whether context selection should optimize for class-specific outcomes.",
         "id": "task-class-benefit",
@@ -46,6 +51,11 @@
         "id": "sample-size",
         "owner": "Decapod research maintainers",
         "question": "How many tasks and agent/tool combinations are needed to separate custody effects from model variance?",
+        "status": "open"
+      },
+      "claim:measured-latency-reduction": {
+        "falsifier": "Completed comparable successful runs do not show material reduction, or queue and overlapping timings are misrepresented",
+        "statement": "The revised collector and grouped runtime lane materially reduce comparable successful preflight costs; no five-minute claim without measurement",
         "status": "open"
       },
       "claim:multi-agent-custody:question:shared-interface-scale": {
@@ -83,81 +93,67 @@
         "status": "open"
       },
       "trajectory:13217192dadb3ee3": "No local prerequisite suite run; remote full validation remains required",
-      "trajectory:7d90d3eaf34454b7": "Five-minute end-to-end target remains subject to measured queue and unavoidable execution costs."
+      "trajectory:42a30b6dcb8fd580": "Provider scheduling and ARM execution currently exceed the five-minute full target; only completed comparable runs can establish gain",
+      "trajectory:576cf7a5bf4d1081": "Accepted master a56fd2d3 is user merge of release1402; only Cargo package version and changelog changed from d891d81d",
+      "trajectory:7d90d3eaf34454b7": "Five-minute end-to-end target remains subject to measured queue and unavoidable execution costs.",
+      "trajectory:8a2fbdef1f3ce7d9": "All project tests and verification remain owned by plain decapod validate with Buildkite enabled",
+      "trajectory:d347ed41a83079c8": "Historical README report is scoped to873ab797 and f2073bd4 and is not current candidate proof"
     }
   },
   "change": {
-    "id": "change_01M4RR7BY100EZBH8P7R01V51N",
-    "base_commit": "d891d81de28621d0e5130953c329da3f86187faa",
+    "id": "change_01M4RYSDPVAQMA7FKJC1JHM2JM",
+    "base_commit": "96c53abc62728fc3a54138850e216be5e59a6642",
     "target_base": "origin/master"
   },
   "claims": {
-    "full-proof-preserved": {
-      "statement": "All currently applicable source checks, per-check receipts, exact-source bindings and final freshness remain required under bounded transport and same-checkout grouping",
-      "falsifier": "Any missing, failed, stale, mismatched or skipped required proof can produce readiness, or an original check command is omitted",
-      "status": "open"
-    },
-    "measured-latency-reduction": {
-      "statement": "The revised collector and grouped runtime lane materially reduce comparable successful preflight costs; no five-minute claim without measurement",
-      "falsifier": "Completed comparable successful runs do not show material reduction, or queue and overlapping timings are misrepresented",
-      "status": "open"
-    },
-    "readme-jev-context": {
-      "statement": "Canonical README has two brief contextual Jev mentions, preserving advisory input and deterministic completion authority without a dedicated setup section",
-      "falsifier": "README retains Jev instructions, flags or environment callouts, or gives Jev authority over completion",
+    "human-onboarding": {
+      "statement": "README assigns operational validation and Constitution use to agents and gives humans only cargo binstall decapod && decapod init.",
+      "falsifier": "README contains another human command, a validation code block, a historical results section, an arrow chain, or direct human Constitution instructions.",
       "status": "supported",
       "proof_refs": [
         "README.md",
-        "https://docs.typesafe.ai/concepts/system-one"
+        "readme-human-content-review"
       ]
     },
-    "readme-verifiable-work": {
-      "statement": "README describes portable intent, interpretation, changes and proof with documented first-use commands, an authentic historical exact-commit report and two brief casual Jev mentions",
-      "falsifier": "A command is undocumented, an example does not match captured output, scope implies unverified current readiness, or README introduces Jev setup instructions or unsupported correctness guarantees",
-      "status": "supported",
+    "project-spec-purpose": {
+      "statement": "Generic specs scaffolding and context extraction preserve the configured whole-project purpose across narrow task work; all Decapod specs describe the full product.",
+      "falsifier": "A non-Decapod fixture acquires a Decapod or provider identity, a narrow task replaces product purpose, or supported refresh rewrites authored material.",
+      "status": "open",
       "proof_refs": [
-        "/workspace/shared/release-only-validation-evidence/readme-outcome-proposal/historical-report-excerpt.json",
-        "/workspace/shared/release-only-validation-evidence/readme-outcome-proposal/proposal.json"
+        "tests/project_spec_authoring.rs",
+        "tests/unit/core/project_specs_tests.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "preflight-latency-candidate-1",
-      "summary": "Bounded Buildkite custody batching and metadata reads; reuse compilation across exact runtime checks; brief Jev README mentions. Minimal CLI bootstrap passed, full remote validation pending.",
-      "input_digest": "sha256:73b8e1281174867666bed8116716094fbf2012dff7ad19535b54791523dccd8e",
+      "id": "readme-product-candidate-1",
+      "summary": "Minimal human README, all eight whole-product specs, generic source-grounded spec generation/context and non-Decapod/narrow-task regressions; existing fixture purposes reconciled; accepted 0.108.1 projections refreshed. Bootstrap only completed; full Buildkite validation pending.",
+      "input_digest": "sha256:d6d0eec73de29cd6fe19099e855d23839caf78eba9b8e8ac40265b0348550ff7",
       "proof_refs": [
-        "/workspace/shared/release-only-validation-evidence/performance-bootstrap.timing.json",
-        "/workspace/shared/release-only-validation-evidence/performance-reviewed-source-delta.json"
-      ]
-    },
-    {
-      "id": "preflight-latency-candidate-2",
-      "summary": "Reconcile accepted release1402/version108 and supported generated pins without rewriting branch history; integrate approved concise outcome README. Bounded batching/runtime grouping unchanged; exact final full validate pending.",
-      "input_digest": "sha256:e6d9b8470cf4a18da830c84ecb0de8e260fa7a7d9f48c8b789cb21cf69d409cb",
-      "proof_refs": [
-        "/workspace/shared/release-only-validation-evidence/performance-base-bootstrap.timing.json",
-        "/workspace/shared/release-only-validation-evidence/performance-release108-reviewed-source-delta.json",
-        "/workspace/shared/release-only-validation-evidence/readme-outcome-proposal/proposal.json"
+        "README.md",
+        "tests/project_spec_authoring.rs",
+        "tests/unit/core/project_specs_tests.rs"
       ]
     }
   ],
   "intents": {
-    "intent:preflight-latency-1400": {
+    "intent:readme-human-setup": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "No merges, release triggers, tags, deployments, credentials, provider capacity or security changes; no temporary refs or force pushes"
+        "No performance integration; no merge/release/deployment/security changes; plain exact-head configured validation gates publication."
       ],
       "constraints": [
-        "Buildkite collector, shared runtime source-CI job, related regression tests, canonical README and material governed specifications"
+        "README.md",
+        ".decapod/managed/specs/INTERFACES.md"
       ],
       "created_sequence": 1,
-      "id": "intent:preflight-latency-1400",
+      "id": "intent:readme-human-setup",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Solve issue1400 validation latency and make README Jev context brief and accurately placed",
-      "refined_intent": "Reduce measured transport and duplicate compilation work while preserving exact-source full proof, and replace the dedicated Jev README section with two factual contextual mentions",
+      "raw_intent": "Remove the README results, arrows and manual agent operations; only cargo binstall decapod && decapod init is human code.",
+      "refined_intent": "Keep a minimal one-command human quickstart, describe agent-owned validation in ordinary prose, remove historical results and direct Constitution instructions, preserve other capabilities and Jev.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -165,12 +161,12 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": null,
+        "file_touch_budget": 55,
         "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Continue issue1400 with bounded custody batching and same-checkout runtime compilation; rewrite README around portable intent, understanding, changes and actual proof, retaining casual Jev mentions and concise verified first-use commands",
+      "intent": "Keep README human setup minimal; rewrite all canonical project specs around the configured product and fix generic generation guidance/context to preserve whole-project meaning across narrow tasks.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -180,289 +176,214 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Final reviewed bounded transport and grouped-check code unchanged; accepted release108 projections and concise outcome README integrated and reviewed",
-          "reviewed_code_fingerprint": "82096862eeb09ce32d87a138bd68041186df5c31df34fc65f853d2f160f81228",
-          "spec_material_hash": "6e72596643ae6f8fd1b7882e9038d1c0f97e6cf60a0eecfe7ce822fe398e54ab"
+          "reason": "Whole-product runtime and implementation boundaries match the reviewed generic generator/context changes and accepted release 0.108.1.",
+          "reviewed_code_fingerprint": "667a48279b6f65c06fbc010723f7c053401dbeac2ba1c589e0f17865949ef801",
+          "spec_material_hash": "d6734a151806ae69562be10aca5579d697755386c64dfe56ea241406865deee5"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Final reviewed bounded transport and grouped-check code unchanged; accepted release108 projections and concise outcome README integrated and reviewed",
-          "reviewed_code_fingerprint": "82096862eeb09ce32d87a138bd68041186df5c31df34fc65f853d2f160f81228",
-          "spec_material_hash": "5cb4151597ce8071f77f12e7426ddb36eb4de4b89e9854a7a20c5dd0f320709e"
+          "reason": "Whole-product CLI/RPC, state and failure contracts; exact single human setup command with agent-owned operational duties; non-Decapod and narrow-task regressions.",
+          "reviewed_code_fingerprint": "667a48279b6f65c06fbc010723f7c053401dbeac2ba1c589e0f17865949ef801",
+          "spec_material_hash": "cce8ca059ca8b6a2a9f3553502bb382c64e7ca49a211b6ed1722a7b11283b749"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Final reviewed bounded transport and grouped-check code unchanged; accepted release108 projections and concise outcome README integrated and reviewed",
-          "reviewed_code_fingerprint": "82096862eeb09ce32d87a138bd68041186df5c31df34fc65f853d2f160f81228",
-          "spec_material_hash": "615f1b40eaffc21a174239e8bfc5a381309804df1397547abe79586280fbc723"
+          "reason": "Actual governance trust boundaries and limits; conditional source-grounded capability obligations preserve fail-closed proof requirements.",
+          "reviewed_code_fingerprint": "667a48279b6f65c06fbc010723f7c053401dbeac2ba1c589e0f17865949ef801",
+          "spec_material_hash": "59f2f1f8a48c50141aad995f25448873a3b13bbf6e7920af210c48c5c9480a8e"
         }
       ],
       "state": "EXECUTING",
       "stop_conditions": [
-        "Exact-head full Buildkite-backed validate exits zero and publication_ready=true; publish ready-for-review PR with honest timing and remaining constraints, no merge or release"
+        "Full exact-head validation ready before PR; stop for missing authorization or an explicit decision gate."
       ],
-      "title": "Reduce full preflight latency and explain verifiable agent work",
+      "title": "Restore product-level specs and minimal human onboarding",
       "todo_ids": [
-        "bugs_01m4rr42p4rcdnmf"
+        "bugs_01m4ryrj8c6v7vsv"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791833590Z"
+      "updated_at": "1791840756Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "No merges, release triggers, tags, deployments, credentials, provider capacity or security changes; no temporary refs or force pushes"
+        "No performance integration; no merge/release/deployment/security changes; plain exact-head configured validation gates publication."
       ],
-      "artifact_hash": "sha256:214e159a26b813da850185754868962f0e543aa0bd4d4a8dd3a95bd66f2bf62b",
+      "artifact_hash": "sha256:7a08ac6c7bdb8d59544f0418239da97b74c2ac88dd804083ca6a9b38fd4d0fee",
       "checks": [
         {
-          "name": "baseline_full_validate",
+          "name": "candidate_content_review",
           "status": "passed"
         },
         {
-          "name": "baseline_warm_revalidation",
-          "status": "passed"
-        },
-        {
-          "name": "candidate_cli_bootstrap",
-          "status": "passed"
-        },
-        {
-          "name": "candidate_full_validate",
-          "status": "partial"
-        },
-        {
-          "name": "current_full_validate",
-          "status": "partial"
-        },
-        {
-          "name": "full_validate",
-          "status": "partial"
-        },
-        {
-          "name": "independent_static_review",
-          "status": "passed"
-        },
-        {
-          "name": "initial_full_validate",
-          "status": "failed"
-        },
-        {
-          "name": "readme_static_review",
+          "name": "content_review",
           "status": "passed"
         }
       ],
-      "current_phase": "Approved README outcome rewrite reviewed and integrated; preparing reconciled exact candidate",
+      "current_phase": "exact_candidate_checkpoint",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:preflight-latency-1400",
+            "intent_id": "intent:readme-human-setup",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:preflight-latency-1400",
+            "intent_id": "intent:readme-human-setup",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:preflight-latency-1400",
+            "detail": "trajectory:readme-human-setup",
             "event_id": "event:4",
-            "intent_id": "intent:preflight-latency-1400",
+            "intent_id": "intent:readme-human-setup",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:preflight-latency-1400",
+            "detail": "trajectory:readme-human-setup",
             "event_id": "event:5",
-            "intent_id": "intent:preflight-latency-1400",
+            "intent_id": "intent:readme-human-setup",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:preflight-latency-1400",
+            "detail": "trajectory:readme-human-setup",
             "event_id": "event:6",
-            "intent_id": "intent:preflight-latency-1400",
+            "intent_id": "intent:readme-human-setup",
             "kind": "trajectory_step_recorded",
             "sequence": 6
-          },
-          {
-            "detail": "trajectory:preflight-latency-1400",
-            "event_id": "event:7",
-            "intent_id": "intent:preflight-latency-1400",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
-          "preflight-latency-1400": {
+          "readme-human-setup": {
             "evidence_only": true,
-            "id": "preflight-latency-1400",
-            "intent_id": "intent:preflight-latency-1400",
+            "id": "readme-human-setup",
+            "intent_id": "intent:readme-human-setup",
             "steps": [
               {
-                "action": "Reviewed bounded batching, grouped compilation and README changes integrated; candidate CLI bootstrap",
-                "command": "Minimal cargo build --locked --bin decapod bootstrap; no manual local project prerequisite suite",
+                "action": "product_specs_and_generator",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/snapshot_provider/public_buildkite.rs",
-                  "src/decapod/core/validation_runtime/snapshot/source_import.rs",
-                  "assets/tools/source_ci_profile.rs",
-                  "README.md",
-                  "src/decapod/core/snapshot_provider/public_buildkite/custody.rs",
-                  "src/decapod/core/validation_runtime/snapshot/source_import.rs",
-                  ".github/workflows/ci.yml",
-                  "assets/tools/source_ci_profile.rs",
-                  "README.md",
-                  "873ab797 full report sha256:85389c067da83b897e369480798c0686eb6a5cd4cb017667a04620d342c39e18; exit0;1777.562s; Buildkite1024-1028",
-                  "873ab797 warm report sha256:8e4f4c8bc7a4e9d2e2a92f28818a0913f47c108511ee07065f1c09dd201f1cbf; exit0;1256.095s; same completed runs, not fresh CI execution",
-                  "Reviewed source delta is exactly ci.yml and source_ci_profile.rs within the existing76-path canonical inventory; symlink target bytes retained",
-                  "Independent grouping, grouped receipt, custody and metadata-width review found no blocking static issues; regression tests authored but not locally executed"
+                  "User explicitly expanded this PR to whole-product specs and configured-project spec-generation behavior; performance proposals remain separate."
                 ],
-                "proof_refs": [
-                  "baseline_full_validate",
-                  "baseline_warm_revalidation",
-                  "independent_static_review",
-                  "candidate_full_validate"
-                ],
+                "proof_refs": [],
                 "scope": [
-                  "Buildkite collector, shared runtime source-CI job, related regression tests, canonical README and material governed specifications"
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "README.md"
                 ],
                 "sequence": 4,
-                "validation_findings": [
-                  "Provider scheduling and ARM execution currently exceed the five-minute full target; only completed comparable runs can establish gain"
-                ]
+                "validation_findings": []
               },
               {
-                "action": "Reviewed candidate CLI bootstrap complete; checkpoint for exact-head remote validation",
-                "command": "cargo build --locked --bin decapod (minimal unreleased CLI bootstrap only)",
+                "action": "candidate_integration",
+                "command": "cargo build --locked --bin decapod (CLI bootstrap only)",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "/workspace/shared/release-only-validation-evidence/performance-bootstrap.timing.json"
+                  "src/decapod/core/migration.rs",
+                  "Independent content and generator reviews passed; preserved source maps and patch hashes; all eight authored bodies retained through CLI refresh; existing fixture purpose seeding being reconciled.",
+                  "CLI bootstrap exit 0; initialization proof_pending and full provider validation not yet run. Canonical source inventory unchanged; no performance patches integrated."
                 ],
                 "proof_refs": [
-                  "candidate_cli_bootstrap",
-                  "candidate_full_validate"
+                  "content_review"
                 ],
                 "scope": [
-                  "Buildkite collector, shared runtime source-CI job, related regression tests, canonical README and material governed specifications"
+                  ".decapod/managed/specs",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "README.md",
+                  "assets",
+                  "docs/agent",
+                  "src",
+                  "tests"
                 ],
                 "sequence": 5,
-                "validation_findings": [
-                  "All project tests and verification remain owned by plain decapod validate with Buildkite enabled"
-                ]
+                "validation_findings": []
               },
               {
-                "action": "Accepted release 0.108.0 integrated on existing workspace branch; stale-base validation repaired",
-                "command": "git merge --no-commit --no-ff origin/master (accepted target integration on work branch only)",
+                "action": "exact_candidate_checkpoint",
+                "command": "cargo clean -p decapod (authorized disposable package build artifacts only)",
                 "custody_event_id": "event:6",
                 "observations": [
-                  "/workspace/shared/release-only-validation-evidence/performance-validate.json",
-                  "/workspace/shared/release-only-validation-evidence/performance-base-bootstrap.timing.json",
-                  "/workspace/shared/release-only-validation-evidence/performance-release108-reviewed-source-delta.json"
+                  "Accepted release1405/master08681903 fast-forwarded on this same task branch; exact Cargo.toml/root Cargo.lock version-only delta reviewed in the canonical source inventory. CLI bootstrap passed after ENOSPC recovery; full validate remains pending.",
+                  "All existing success fixtures now seed explicit purpose; failure assertions and unknown-purpose guard retained. Independent fixture review passed."
                 ],
                 "proof_refs": [
-                  "initial_full_validate",
-                  "candidate_cli_bootstrap",
-                  "current_full_validate"
+                  "candidate_content_review"
                 ],
                 "scope": [
-                  "Buildkite collector, shared runtime source-CI job, related regression tests, canonical README and material governed specifications"
+                  ".decapod/managed/specs",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "AGENTS.md",
+                  "CLAUDE.md",
+                  "CODEX.md",
+                  "GEMINI.md",
+                  "README.md",
+                  "assets",
+                  "docs/agent",
+                  "src",
+                  "tests"
                 ],
                 "sequence": 6,
-                "validation_findings": [
-                  "Accepted master a56fd2d3 is user merge of release1402; only Cargo package version and changelog changed from d891d81d"
-                ]
-              },
-              {
-                "action": "Approved README outcome rewrite reviewed and integrated; preparing reconciled exact candidate",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "README.md",
-                  ".decapod/managed/specs/INTENT.md",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "/workspace/shared/release-only-validation-evidence/readme-outcome-proposal/proposal.json",
-                  "https://github.com/petergyang/no-ai-slop/blob/main/skills/no-ai-slop/SKILL.md"
-                ],
-                "proof_refs": [
-                  "readme_static_review",
-                  "full_validate"
-                ],
-                "scope": [
-                  "Buildkite collector, shared runtime source-CI job, related regression tests, canonical README and material governed specifications"
-                ],
-                "sequence": 7,
-                "validation_findings": [
-                  "Historical README report is scoped to873ab797 and f2073bd4 and is not current candidate proof"
-                ]
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
-        "Minimal cargo build --locked --bin decapod bootstrap; no manual local project prerequisite suite",
-        "cargo build --locked --bin decapod (minimal candidate CLI bootstrap only)",
-        "cargo build --locked --bin decapod (minimal unreleased CLI bootstrap only)",
-        "decapod workspace ensure and specs.refresh (release-bound projections)",
-        "git merge --no-commit --no-ff origin/master (accepted target integration on work branch only)"
+        "cargo build --locked --bin decapod (0.108.1 bootstrap)",
+        "cargo build --locked --bin decapod (CLI bootstrap only)",
+        "cargo clean -p decapod (authorized disposable package build artifacts only)",
+        "decapod docs build",
+        "decapod init --proof",
+        "decapod init --proof; decapod docs build; decapod rpc --op specs.refresh",
+        "decapod rpc --op context.resolve",
+        "decapod rpc --op specs.refresh"
       ],
       "evidence": [
-        "/workspace/shared/release-only-validation-evidence/performance-base-bootstrap.timing.json",
-        "/workspace/shared/release-only-validation-evidence/performance-bootstrap.timing.json",
-        "/workspace/shared/release-only-validation-evidence/performance-release108-reviewed-source-delta.json",
-        "/workspace/shared/release-only-validation-evidence/performance-validate.json",
-        "/workspace/shared/release-only-validation-evidence/readme-outcome-proposal/proposal.json",
-        "873ab797 full report sha256:85389c067da83b897e369480798c0686eb6a5cd4cb017667a04620d342c39e18; exit0;1777.562s; Buildkite1024-1028",
-        "873ab797 warm report sha256:8e4f4c8bc7a4e9d2e2a92f28818a0913f47c108511ee07065f1c09dd201f1cbf; exit0;1256.095s; same completed runs, not fresh CI execution",
-        "Independent grouping, grouped receipt, custody and metadata-width review found no blocking static issues; regression tests authored but not locally executed",
-        "Reviewed source delta is exactly ci.yml and source_ci_profile.rs within the existing76-path canonical inventory; symlink target bytes retained",
-        "https://github.com/petergyang/no-ai-slop/blob/main/skills/no-ai-slop/SKILL.md"
+        "Accepted release1405/master08681903 fast-forwarded on this same task branch; exact Cargo.toml/root Cargo.lock version-only delta reviewed in the canonical source inventory. CLI bootstrap passed after ENOSPC recovery; full validate remains pending.",
+        "All existing success fixtures now seed explicit purpose; failure assertions and unknown-purpose guard retained. Independent fixture review passed.",
+        "CLI bootstrap exit 0; initialization proof_pending and full provider validation not yet run. Canonical source inventory unchanged; no performance patches integrated.",
+        "Independent content and generator reviews passed; preserved source maps and patch hashes; all eight authored bodies retained through CLI refresh; existing fixture purpose seeding being reconciled.",
+        "User explicitly expanded this PR to whole-product specs and configured-project spec-generation behavior; performance proposals remain separate."
       ],
       "inspected_files": [
-        "README.md",
-        "assets/tools/source_ci_profile.rs",
-        "src/decapod/core/snapshot_provider/public_buildkite.rs",
-        "src/decapod/core/validation_runtime/snapshot/source_import.rs"
+        "src/decapod/core/migration.rs"
       ],
-      "intent_id": "intent:preflight-latency-1400",
-      "modified_files": [
-        ".decapod/managed/specs/INTENT.md",
-        ".decapod/managed/specs/VALIDATION.md",
-        ".github/workflows/ci.yml",
-        "README.md",
-        "assets/tools/source_ci_profile.rs",
-        "src/decapod/core/snapshot_provider/public_buildkite/custody.rs",
-        "src/decapod/core/validation_runtime/snapshot/source_import.rs"
-      ],
+      "intent_id": "intent:readme-human-setup",
+      "modified_files": [],
       "next_transitions": [
-        "Checkpoint and normal samebranch push, then full Buildkite validation",
-        "Checkpoint refreshed release surfaces and same-branch normal update, then rerun full validate",
-        "Checkpoint, publish the same new work branch, and run plain configured Buildkite validate",
-        "Commit exact reviewed tree, publish same workspace branch, then full validate",
-        "Rebuild candidate CLI, checkpoint, publish this branch normally, and run full plain validate"
+        "exact_candidate_checkpoint",
+        "full_buildkite_validation",
+        "integrate_reviewed_specs_and_generator",
+        "narrow_readme_edit"
       ],
       "repo_scope": [
-        "Buildkite collector, shared runtime source-CI job, related regression tests, canonical README and material governed specifications"
+        ".decapod/managed/specs",
+        ".decapod/managed/specs/INTERFACES.md",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "CODEX.md",
+        "GEMINI.md",
+        "README.md",
+        "assets",
+        "docs/agent",
+        "src",
+        "tests"
       ],
-      "run_id": "preflight-latency-1400",
+      "run_id": "readme-human-setup",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m4rr42p4rcdnmf",
+      "task_id": "bugs_01m4ryrj8c6v7vsv",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "Accepted master a56fd2d3 is user merge of release1402; only Cargo package version and changelog changed from d891d81d",
-        "All project tests and verification remain owned by plain decapod validate with Buildkite enabled",
-        "Historical README report is scoped to873ab797 and f2073bd4 and is not current candidate proof",
-        "Provider scheduling and ARM execution currently exceed the five-minute full target; only completed comparable runs can establish gain"
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {

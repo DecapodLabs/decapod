@@ -1,381 +1,271 @@
 # Operations
 
-## Buildkite interoperability boundaries
+## Operations Overview
 
-Buildkite imports the repository's GitHub workflows. Its matrix, runner, output,
-token and artifact contracts must be checked directly rather than inferred from
-a green GitHub Actions run. Workflow-level cancellation remains effective on
-GitHub; Buildkite's intermediate-build cancellation is a separate pipeline
-setting and is not changed by repository repairs.
-Source CI requests read-only repository contents access because its jobs build,
-test and retain artifacts without writing repository contents. This matches the
-Buildkite pull-request token ceiling; it does not grant publishing authority.
+Decapod runs on demand as a versioned CLI or structured RPC process. The agent
+operates it throughout a task; no daemon owns the task after an invocation exits.
+The repository retains intent, custody, specifications and evidence so another
+agent or reviewer can continue without the original conversation.
 
-The direct offline-consumer, Docker-lifecycle and packaged-integration test
-commands set a process-local `umask 077` before creating disposable fixtures.
-Provider runner defaults must not make new fixture stores group/world writable.
-The mask follows those test children only: existing checkout/datastore modes,
-trusted-group policy, and contributor build-supervisor defaults stay unchanged.
-Storage rejection remains a real test failure rather than a reason to relax a
-guard or retry against shared user state.
+## Human setup and agent responsibility
 
-Offline consumer fixtures also isolate process-inherited Git configuration.
-Provider URL rewrites and command-scope settings must not reinterpret a fixture's
-explicit remote; repository-local fixture configuration remains authoritative.
-Only the test command receives that isolation. Checkout transport and all other
-steps retain their normal provider configuration.
+The human starts in the project with:
 
-The two SQLite recovery permission fixtures require storage compatible with the
-published dependency's same-device guard. Probe disposable entries under the
-normal temporary root first, then a pre-existing compatible scratch filesystem
-with bounded capacity checks. Never mount a filesystem or relax recovery safety.
-If no candidate is suitable the tests fail with diagnostics; they never count
-recovery as passed without executing the original archive and mode assertions.
-
-Release planning exports only bounded scheduling decisions between jobs while
-retaining the complete cargo-dist manifest as an artifact. A failed plan cannot
-authorize the host/publish stage. Existing release ownership, provider-specific
-publishing paths, environment gates and permission maps remain unchanged. Token
-denials are reported with the failed build and requested scope; they must not be
-hidden by skipping publication, expanding grants, or treating a local importer
-check as proof that credentials work. Retrying release or deployment work is a
-separate consequential action from testing a draft repair.
-
-## Version-only release CI
-
-A release commit may carry only package-version, matching root lock-version,
-and changelog metadata. Its verified event range can reuse source lint and test
-coverage from the preceding code merge. The shared candidate binary build,
-Decapod validation, and release packaging checks remain active. Missing or
-ambiguous Git history takes the full source-check path. A push containing both
-a source change and a release change is never metadata-only, even when its last
-commit is a release. The release workflow and publication permissions do not
-change as part of this routing decision.
-
-## Release artifact selection
-
-The pinned cargo-dist configuration uses a Cargo workspace member for package
-identity, version, and compilation, with an explicit product binary list in
-`dist.toml`. Only `decapod` belongs in release archives. The feature-gated build
-supervisor and release-check tools remain contributor tools; a successful Cargo
-release build does not mean cargo-dist can package targets it never built.
-The package version stays single-sourced in Cargo.toml, so version-only release
-PRs continue to update only Cargo.toml, Cargo.lock, and CHANGELOG.md. Linux and
-macOS x86_64/aarch64 target support and publication permissions remain unchanged.
-
-## Operational Readiness Checklist
-- [ ] On-call ownership defined.
-- [ ] SLOs and alert thresholds defined.
-- [ ] Dashboards for latency/errors/throughput are live.
-- [ ] Runbooks linked for all Sev1/Sev2 alerts.
-- [ ] Rollback plan validated.
-- [ ] Capacity guardrails documented.
-
-## Deployment Model
-Decapod is a daemonless CLI installed as a versioned Rust binary. Each invocation discovers the repository-local governance store and completes bounded work before exiting.
-
-### Optional Jev provider operation
-
-The `[decision] provider` setting only changes whether `assurance.evaluate`
-attempts the bounded `trajectory_satisfies_intent` observation. `none` is the
-safe default and requires no network or service startup. `jev` reads
-`TYPESAFE_API_KEY` from the machine environment and uses bounded HTTP timeouts;
-the key is never persisted in repository state.
-
-Operationally, Jev is an advisory dependency, not a readiness dependency. If it
-is absent, unavailable, times out, or returns malformed data, the assurance
-result records `no_observation` and Decapod continues to enforce its ordinary
-interlocks and proof gates. There is no background provider process.
-
-Successful and unsuccessful Jev attempts are retained in the current run's
-`jev` section in `.decapod/governance.json`. The section is validated as a strict,
-trajectory-bound artifact before publication. It is created only when Jev is
-actually attempted, reset by a new trajectory initialization, and never stores
-the `TYPESAFE_API_KEY`.
-
-### Published Dactyl dependency
-
-Decapod consumes `dactyl-db` 0.11.1 from crates.io with the registry source and
-checksum committed in `Cargo.lock`. Nix vendors that same locked package
-without a Git-source hash. Release preparation must verify `cargo package
---locked` and `cargo publish --locked --dry-run`; a Git-only dependency lacking
-a version requirement is not publishable. The dependency transition preserves
-local SQLite, default cloud Supabase, and explicitly selected Neon. Client
-boundary regressions are required in default and no-default-feature builds;
-registry publication does not establish hosted service or production proof.
-
-### Native SQLite prerequisite for local Dactyl
-
-Stateful commands in a project configured with `repo.backend = "local"` require a host SQLite shared library for Dactyl's local adapter. The startup preflight first honors `DACTYL_SQLITE_LIBRARY`, then the machine-local `~/.config/decapod/runtime.toml` value. If neither is set, it probes the host and persists a discovered library path in that user-level file so later Decapod projects do not repeat the search. If no runtime is available, the command stops with `LOCAL_SQLITE_RUNTIME_REQUIRED` and gives platform installation commands plus a one-shell `export DACTYL_SQLITE_LIBRARY=...` fallback. Cloud-backed startup does not require or inspect SQLite.
-
-### Headless Podman machine startup
-
-When container preflight detects Podman on macOS or Windows but `podman info`
-cannot reach the service, Decapod attempts the standard machine recovery command
-with `podman machine start --quiet --no-info --update-connection=false`. The
-startup process receives no terminal input, and its output is captured for a
-failure diagnostic rather than shown as an interactive UI. Decapod does not
-launch Podman Desktop or change the default connection; it retries `podman info`
-after the machine command and leaves Docker and Linux Podman behavior unchanged.
-
-## Nix packaging support matrix
-
-The repository flake (`flake.nix`) exposes `packages.default` / `packages.decapod` via `flake-utils.lib.eachDefaultSystem`. **Evaluating an output is not the same as supporting a platform.**
-
-| System | Status |
-|---|---|
-| `x86_64-linux` | **CI-proven**: native `nix build` + `decapod system version` on Ubuntu |
-| `aarch64-darwin` | **CI-proven**: native `nix build` + `decapod system version` on GitHub `macos-latest` (Apple Silicon) |
-| `x86_64-darwin` | Exposed by the flake; **not** continuously proven in CI |
-| `aarch64-linux` | Exposed by the flake; **not** continuously proven in CI |
-
-Darwin Cargo and Nix builds share one linker story: no host absolute `-fuse-ld=/usr/bin/ld` pin; the Apple toolchain selects the system linker. The package and `checks.<system>.rust-toolchain` use the same `buildToolchain` from `rust-toolchain.toml` through the locked `rust-overlay`. CI never mutates `flake.lock`; maintainers refresh with `nix flake update rust-overlay` when the channel changes (see CONTRIBUTING.md).
-
-## Release-bound CI pins
-
-During workspace iteration, the evaluating binary rewrites release-bound
-entrypoint headers (`AGENTS.md` / `CLAUDE.md` / `CODEX.md` / `GEMINI.md`), the
-managed Dockerfile pin, and living-spec attestations via
-`validate --refresh-specs` **inside the claimed worktree**. Those projections
-**must** land on the same code branch before the PR drift gate passes. Decapod
-must not generate `.decapod/managed/specs/*` in the protected root checkout
-and later ask the agent to clean that dirt up; the agent is directed into
-`.decapod/workspaces/*` instead of stashing or resetting the host tree
-(GitHub #1255).
-
-**Release boundary:** release-only commits are excluded from push validation.
-The code PR carries the release-bound projections; after review, the release
-workflow compiles, publishes the release and tag, and uploads the packages to
-crates.io and Nix. It does not mutate master, open a post-release heal PR, or
-run `decapod validate` after the release merge. The next agent iteration
-starts by installing that release and refreshes projections for the next code
-PR.
-
-**Master ruleset delivery:** master forbids direct push (PR required, required
-signatures, update protection). Agents publish release-bound changes through
-the code PR, and release automation handles only compilation and publication.
-
-**Release matrix safety:** the release workflow declares the four targets from
-`workspace.metadata.dist.targets` as an explicit artifact matrix. Plan-only
-runs therefore validate without runtime matrix expansion because GitHub Actions
-and Buildkite validate a job matrix before applying the job-level skip
-condition. Publishing and upload-mode runs still build the same cargo-dist
-targets, while changes to the target list require an intentional workflow and
-spec update.
-
-## Buildkite GitHub Actions Migration Contract (#1340, #1344)
-
-The repository keeps `.github/workflows/*.yml` as the sole workflow contract.
-Buildkite's implemented GitHub Actions migration executes those files without
-requiring a second repository-native pipeline definition. Event triggers,
-changed-path filters, matrices, dependencies, artifacts, permissions, tokens,
-Pages/OIDC behavior, release environments, and publishing gates therefore
-remain authored and reviewed in the GitHub workflow files. Historical adapter
-failures from merge `bf98ec2e8320400964a1e84af0cc50210ac2fa6c` remain
-compatibility evidence, not reasons to remove workflow gates.
-
-The obsolete `.buildkite/` directory is not part of the repository contract.
-Buildkite service configuration owns adapter selection; repository users should
-not maintain a parallel `.buildkite/pipeline.yml` translation. When a migrated
-Buildkite step fails, capture the workflow path and job, commit, adapter/plugin
-and agent versions, complete logs, and environment or permission context.
-Classify the fix as migration support, service configuration, agent image,
-secret/permission setup, or workflow behavior before changing
-`.github/workflows/*.yml`. Verify pull requests, master pushes, release pull
-requests, documentation deployment, and tagged publication independently
-before disabling the GitHub Actions service.
-
-### Current migration compatibility cases
-
-The workflow files intentionally retain their native GitHub Actions paths and
-add a Buildkite branch only where the imported runtime cannot provide the
-GitHub-hosted behavior. The current branch is the executable record of the
-following compatibility decisions:
-
-| Workflow surface | Observed Buildkite symptom | Workflow-side compatibility path |
-|---|---|---|
-| CI dependency lint | `deps-lint` exited before producing useful Buildkite output while the native job passed | Install the pinned Rust toolchain first, then install `cargo-machete`, `cargo-deny`, and `cargo-audit` with shell commands instead of adapter-sensitive installer actions. |
-| Bazel setup and shared binary | `setup` exited after the Bazel build when the artifact path was represented by Bazel's `bazel-bin` symlink | Install the pinned Bazelisk launcher in each job, stage the binary as a regular workspace file, and use the audited `upload-artifact`/`download-artifact` v4 pair. |
-| Release plan | `Release / plan` failed on release PRs #1353 and #1355 in Buildkite while the native GitHub Actions plan passed; the imported `run` block was first interpolated before runtime, the installer path was not guaranteed to survive the non-login step boundary, and the plan job unnecessarily requested a workflow-scoped GitHub token before starting | Run cargo-dist planning only for `release-plz-*` PRs and explicit tags, keep runtime selection in `.github/scripts/release-plan.sh`, restore `${CARGO_HOME:-$HOME/.cargo}/bin` before invoking cargo-dist, remove the unused `GH_TOKEN` binding from the non-publishing plan job, treat an explicit tag as the only publishing context, default all other invocations to a non-publishing plan, and emit manifest/tag/publishing outputs from one shell step. Keep workflow-token and registry-secret bindings only on publishing paths. |
-| Nix packaging | Linux and macOS jobs appeared on an open PR even though the workflow was `pull_request: closed` and release-merge gated | Trigger from the durable master push, then gate the matrix in shell on a release merge commit or explicit dispatch. |
-| Documentation | `Deploy Docs / build` failed on the PR #1350 merge push after the Buildkite-only `buildkite-agent artifact upload` path ran | Keep the GitHub Pages action for native GitHub Actions; use the supported generic `actions/upload-artifact@v4` for the Buildkite branch. Pages deployment remains a service capability gap and is explicitly skipped there. |
-| Release publication | `Release / release-publish` failed on the PR #1350 merge push because the imported job did not statically request its GitHub workflow token or registry secret | Keep the App-token/action path for GitHub; use the release-plz CLI in Buildkite and declare `${{ secrets.GITHUB_TOKEN }}` plus `${{ secrets.CARGO_REGISTRY_TOKEN }}` in the Buildkite branch so the adapter can issue the scoped token and resolve the named registry secret. |
-| GHCR image publication | tag-only Docker setup actions were scheduled on the master push and failed in Buildkite | Use a simple tag-event condition and the Docker CLI/buildx path in Buildkite; retain the Docker actions for native GitHub Actions. |
-| Validation in detached CI checkouts | The validator's worktree guard cannot establish an agent workspace from a hosted checkout, and `validate --refresh-specs` refreshes generated manifest metadata on every run | CI initializes a run cookie with `DECAPOD_VALIDATE_SKIP_GIT_GATES=1` while retaining the validation gates; the drift check compares semantic projections and normalizes only `generated_at` and `repo_signal_fingerprint` generated metadata. |
-| Selective test diff base | Buildkite's migrated PR checkout honored the workflow's shallow `fetch-depth: 1`, so every matrix target exited before selecting tests | Request `fetch-depth: 0` for the test job, prefer `BUILDKITE_PULL_REQUEST_BASE_BRANCH`, and fall back only to refs or the parent already present locally; preserve the original path-based selection instead of running unrelated suites. |
-| Test matrix throughput | The four target jobs waited on the unrelated shared-binary setup and each ran several Bazel targets sequentially, multiplying cold analysis and extending feedback time | Let independent test gates start without `setup`, batch each target group's Bazel labels into one invocation so analysis is shared and tests execute in parallel, and cap the four-way matrix with `strategy.max-parallel: 4`. |
-
-These changes do not claim that Buildkite supplies GitHub's environments,
-Pages deployment records, GitHub App token exchange, or Docker action setup.
-Those are explicit adapter/service inputs. A green Buildkite check means the
-workflow reached the supported execution path; release secrets, Docker
-privileges, artifact storage, runner mappings, and Pages publication still
-need independent Buildkite configuration proof.
-
-### Dedicated governance follow-up boundary
-
-PR #1354 is the merged implementation reference for the Buildkite workflow
-compatibility changes. This follow-up is intentionally governance-only: it
-records the operational context and proof for that merged change without
-editing workflow behavior or reopening the implementation PR. The logical governance sections
-now share `.decapod/governance.json`; a dedicated governance PR updates its
-current claims, plan, trajectory, validation, and staged-material checkpoints
-through Decapod before publication. This separation keeps adapter behavior in the workflow PR while
-keeping the machine-facing proof contract independently reviewable.
-
-## Generated Documentation in Pull Requests
-
-The PR documentation workflow regenerates command/config documentation and
-checks for drift without committing or pushing to the PR branch. Generated
-changes must be reviewed, validated, and included in a normal staged-material
-governance checkpoint. This preserves the immutable per-commit proof chain;
-a later checkpoint cannot repair a previous uncheckpointed automation commit.
-The command-contract generator emits one final newline, preventing whitespace
-alone from creating a new documentation change.
-
-## Installed-Version Upgrade Path
-After `cargo install decapod`, the next normal governed command runs protected, idempotent schema migration and legacy-event reconciliation before runtime consumers read evidence. Existing-project `decapod init` executes the same reconciliation before regeneration. A prior successful single-datastore migration retires its JSONL inputs through a durable receipt; startup does not rescan them. Legacy local database sources are opened through the Dactyl v0.11.1 facade, while Decapod owns row translation, schema policy, the explicit maintenance command policy, and idempotency ledgers. Dactyl opens the canonical path directly through its host runtime and owns the physical backup/recovery contract; no bundled fallback or second local authority is used. Human-authored `OVERRIDE.md` content is validated but never mechanically rewritten. Fresh migration conflicts preserve source artifacts and stop with an actionable error.
-
-## Agent-Triggered Migration Runbook
-1. Let the first governed command after installing a new Decapod release run
-   the normal migration check.
-2. If the command emits a migration notice, inspect the managed migration
-   ledger and catalog before further agent mutations.
-3. Confirm the reported migration completed and the command verification
-   callback passed; do not treat the warning alone as proof.
-4. For a failed migration, follow the bounded backup/restore diagnostic,
-   preserve the source artifact, and stop for human review if supported
-   recovery cannot establish a clean state.
-5. For trajectory work, confirm the cookie parses as one object and that the
-   intended run ID is the only current cookie identity.
-
-## Service Level Objectives
-| SLI | SLO Target | Measurement Window | Owner |
-|---|---|---|---|
-| Availability | 99.9% | 30d | TBD |
-| P95 latency | TBD | 7d | TBD |
-| Error rate | < 1% | 7d | TBD |
-
-## Monitoring
-| Signal | Metric | Threshold | Alert |
-|---|---|---|---|
-| Traffic | requests/sec | baseline drift | warn |
-| Latency | p95/p99 | threshold breach | page |
-| Reliability | error ratio | threshold breach | page |
-| Saturation | cpu/memory/queue depth | sustained high | page |
-
-## Health Checks
-- Liveness:
-- Readiness:
-- Dependency health:
-- Synthetic transaction:
-
-## Incident Response
-- Detection:
-- Triage:
-- Mitigation:
-- Communication:
-- Post-mortem:
-
-## Rollout Strategy
-- Blue/green deployment:
-- Canary release:
-- Rolling update:
-- Feature flags:
-
-## Capacity Planning
-- Traffic patterns:
-- Resource utilization:
-- Scaling triggers:
-
-## Logging
-Use `tracing` + `tracing-subscriber` with structured JSON output and request correlation ids.
-
-## Storage Diagnostics and Recovery Boundary (#1313)
-
-The operator workflow for the canonical local store is:
-
-```text
-decapod data db verify
-decapod data db backup --destination <unused-database-path>
-decapod data db recover --preserve-original-at <unused-sibling-archive-path>
+```sh
+cargo binstall decapod && decapod init
 ```
 
-`verify` is read-only and uses Dactyl v0.11.1's native typed integrity API.
-`backup` uses Dactyl's SQLite online backup, including WAL/SHM correctness,
-then verifies and atomically publishes the standalone destination. `recover`
-is never implicit: it invokes Dactyl's logical dump/reload recovery, preserves
-the original and sidecars at the operator-selected unused sibling path, and
-atomically replaces the active database only after verification. Dactyl
-reports rollback and recovery failures; Decapod does not silently repair a
-store during startup, ordinary validation, event append, or connection
-creation. Successful recovery preserves application data, schema,
-`user_version`, and `application_id`, and activates DELETE journal mode.
+Then they use their coding agent normally. The agent owns orientation, task
+coordination, workspace use, specification authoring, proof collection, supported
+recovery and governed publication. The human supplies intent, reviews meaningful
+outcomes and resolves decisions the agent cannot safely make.
 
-The canonical Decapod connection holds the adjacent `decapod.db.lock` sidecar
-with bounded exclusive advisory coordination. Recovery additionally requires
-writer quiescence and no same-process Dactyl connection to the target.
-Contention, unavailable runtime/storage, corrupt or malformed databases,
-unsupported capabilities, and recovery/rollback failure are distinct JSON
-diagnostics; Dactyl's `failure_code` remains available for detail. The sidecar
-only coordinates cooperating Decapod processes. Arbitrary external SQLite
-writers, unreliable filesystems, and network/container mounts remain outside
-the guarantee, and filesystem/path limitations from Dactyl must be respected.
+The commands below describe agent operations and exceptional maintenance. They
+are not a manual workflow the human must run for every task. Agents obtain current
+syntax and preconditions from `decapod docs ingest`; they must not guess arguments
+or invent unavailable capabilities.
 
-## Governance Artifact Portability (#1314)
+## The working lifecycle
 
-Trajectory and validation output may be shared through Git, CI, or issue
-comments. Persisted path fields are normalized at write time: paths inside the
-project are relative with forward slashes, and paths outside it are rendered
-as <external-path>. Absolute paths remain available to the active operation
-for filesystem work and are not used as the artifact representation.
+1. Evaluate the incoming prompt with `decapod eval`. A nonzero exit or blocked
+   result stops work for human review.
+2. Load the agent contract and relevant constitution guidance before committing
+   to a design. Read project configuration and overrides; expose unresolved
+   intent, scope, boundary and proof questions.
+3. Acquire the local session, initialize the agent and establish task ownership.
+   Claim the task before creating or using its managed workspace. Enter that
+   workspace before edits; preserve the root checkout.
+4. Record the accepted interpretation, scope, assumptions, falsifiable claims
+   and planned checks through Decapod. Author living-spec prose as understanding
+   changes. Record inspected and changed files, actions and evidence at durable
+   work boundaries.
+5. Checkpoint the staged material and governance before committing. Refresh
+   supported generated projections through `rpc --op specs.refresh` or
+   `validate --refresh-specs`; review the result.
+6. Complete validation on the exact candidate and accepted target. Repair
+   recoverable failures on the same work branch and revalidate. Escalate decision
+   gates, unavailable access and unsupported recovery with the exact blocker.
+7. Create the PR only after full readiness succeeds. Preserve proof and complete
+   the task through the governed lifecycle. A completion statement alone is
+   insufficient.
 
-## Secrets Management
-| Secret | Source | Rotation | Consumer |
-|---|---|---|---|
-| External service auth material | managed runtime configuration | periodic | runtime services |
-| Artifact signing material | managed signing service/local secure store | periodic | release pipeline |
+A task can span many sessions and invocations. Prompt and conversation context
+remain valid inside an isolated workspace. `TODO_PROJECTION_MISSING` requires
+coordination recovery and a durable discrepancy record; it neither erases clear
+intent nor establishes permission to proceed without ownership.
 
-## Security Testing
-| Test Type | Cadence | Tooling |
-|---|---|---|
-| SAST | each PR | language linters/scanners |
-| Dependency scan | each PR + weekly | supply-chain tools |
-| DAST/pentest | scheduled | external/internal |
+## Durable state and continuity
 
-## Compliance and Audit
-- Regulatory scope:
-- Audit evidence location:
-- Exception process:
+`.decapod/governance.json` is the tracked plan, trajectory, claims, validation and
+checkpoint document. `.decapod/managed/specs/` contains the agent's reviewable
+interpretation. Project configuration and overrides supply local policy.
+Canonical local events and projections live in `.decapod/data/decapod.db` and are
+accessed through Decapod. Generated projections do not become independent
+sources of truth.
 
-## Pre-Promotion Security Checklist
+Agents edit semantic spec prose directly in the workspace. The CLI owns generated
+blocks, manifests and other control-plane state. A fingerprint refresh alone
+fails the material-spec requirement with `FINGERPRINT_ONLY_SPECS`. Refresh that
+would discard authored content stops with `SPEC_REFRESH_AUTHORED_CONTENT_LOSS`;
+preserve the document and resolve the boundary problem rather than delete its
+obligations.
 
-- [ ] Threat model updated for changed surfaces.
-- [ ] Auth/authz tests pass.
-- [ ] Dependency vulnerability scan reviewed.
-- [ ] No unresolved critical/high security findings.
+Fresh task workspaces seed a current governance template. Repeated calls, branch
+renames and rebases preserve the active journal; accepted history remains in Git.
+An explicit new-PR boundary is a deliberate reset. Handoffs retain uncertainty,
+unresolved assumptions, proof references and the exact candidate under review.
 
-## Explicit Container Workspace Snapshots
+## Local runtime and workspace operations
 
-Use the launch hint from `decapod workspace ensure --container` for an isolated
-point-in-time store. The hint creates a verified Dactyl online backup in its own
-private temporary directory, mounts it read-only, and seeds container-local
-tmpfs. Backup failure stops launch. Snapshot cleanup preserves the command's
-exit status and never removes another invocation's snapshot. State written
-to this container copy is ephemeral and is not folded back into the host.
+Local storage uses the published Dactyl dependency and a host SQLite shared
+library. Startup honors `DACTYL_SQLITE_LIBRARY`, then machine-local runtime
+configuration, then host discovery. A discovered path is saved outside the
+repository. Missing support produces `LOCAL_SQLITE_RUNTIME_REQUIRED` with the
+supported installation or library-path remedy. Cloud-backed startup does not
+probe or require local SQLite.
 
-Existing automatic container-run database sharing remains available by design.
-The snapshot hint does not disable those routes or add a blanket virtiofs/FUSE
-ban. Actual storage errors, including read-only mounts and failed write probes,
-continue to be surfaced through the existing storage checks.
+## Service Level Objectives
+
+The implemented operational limits apply to bounded invocations. This daemonless
+product does not define a measured service-availability or request-latency SLO.
+Hosted dependencies need their own project-specific objectives and evidence.
+
+Workspace/control subprocesses have a 15-second deadline; image builds have a
+600-second deadline. Output is drained without pipe backpressure and capped at
+64 MiB per stream. Failure terminates and reaps owned children. A timeout is a
+recovery error, never evidence that a branch, task or container is absent.
+
+## Workspace preparation and cleanup
+
+Task claim acknowledgment precedes optional container preparation, which runs on
+the requesting client without a broker election or datastore lock. Preparation
+failure remains a warning on the successful claim. A durable receipt prevents a
+retry from repeating an already-started launch; inspect recovery before retrying.
+`DECAPOD_CLAIM_AUTORUN=0` disables this optional preparation.
+
+On macOS/Windows, an unreachable detected Podman service may use the bounded,
+noninteractive `podman machine start --quiet --no-info --update-connection=false`
+path, followed by another service probe. This does not launch Podman Desktop or
+change the default connection.
+
+The explicit container-workspace launch hint makes a verified online backup in a
+private temporary directory, mounts it read-only and seeds container-local tmpfs.
+Backup failure prevents launch. Container-copy writes are ephemeral and are not
+merged into host state. Existing automatic container-run datastore sharing is a
+separate supported route.
+
+Cleanup preserves unknown or unverified resources. A force-prune request still
+requires exact ownership, directory identity and lifecycle evidence. Active
+claims protect local clones as well as registered worktrees. Container recovery
+uses the recorded Docker/Podman backend and immutable container identities; an
+unavailable runtime preserves the resource for later recovery. Process mocks do
+not establish real container-interruption behavior.
+
+## Validation and publication
+
+`decapod validate` evaluates the exact work branch, accepted target, governance,
+reviewed workflow definitions, toolchain and complete applicable check profile.
+Missing, empty, stale, running, skipped-required or failed evidence returns
+nonzero. Material, history, policy, workflow, toolchain or target changes invalidate
+an earlier readiness result.
+
+Branches may be pushed during iteration. PR creation, including drafts, remains
+held until intent is converged, the branch is mergeable and full validation
+succeeds. `govern project-check` proves bounded prerequisites only. In GitHub
+Actions or Buildkite, validation runs bounded local gates with `scope=ci_local`
+and `publication_ready=false`; it never submits or waits for another preflight.
+A CI flag cannot authorize publication.
+
+Native execution is the default validation route. Enabling
+`proof.validation_buildkite_preflights` moves the required checks to Buildkite on
+the same claimed workspace branch. Validation uses non-forced push or exact-tip
+reuse, collects authenticated execution evidence and rechecks candidate, target
+and attempts. It creates no temporary branch, does not run a duplicate local
+prerequisite suite, and never deletes the work branch. Independent GitHub Actions
+results neither satisfy nor block this Buildkite profile.
+
+Host handoff may transport the same exact candidate to the same branch. A pending
+handoff returns nonzero; adoption independently checks unchanged source, tree,
+target and remote tip. Different commit identity requires checkpointing and a new
+handoff. Edited success records cannot substitute for provider custody.
+
+The source-PR profile proves actual required compile, test and build execution.
+Release-only packaging is outside that profile; simulated publish/deploy steps
+never prove delivery. Validation itself does not open a PR, create a release/tag,
+upload packages or images, or deploy.
+
+## Monitoring
+
+Agents inspect supported command status, task/workspace state, trajectories,
+validation reports and maintenance diagnostics at work boundaries. Retain the
+exact result, candidate identity, failing gate and proof reference so a later
+invocation can distinguish a current blocker from historical evidence. A missing
+check, unavailable provider or timed-out operation remains visible; it is never
+recorded as a passing health signal.
+
+## Release and Migration Readiness
+
+After an upgrade, the next normal governed command performs protected,
+idempotent migration and legacy-event reconciliation before consuming runtime
+evidence. Existing-project initialization uses the same path. Successful
+migration receipts retire legacy JSONL inputs; they are not rescanned as a live
+authority. Human-authored overrides are validated, never mechanically rewritten.
+Conflicts preserve source artifacts and stop with an actionable error.
+
+When a migration notice appears, inspect the managed ledger and catalog through
+Decapod and confirm completion and verification. The notice alone is not proof.
+Failed migration follows supported backup/restore diagnostics; unresolved
+corruption or unsupported recovery requires human judgment.
+
+## Incident Response
+
+Preserve the failing operation's diagnostics and affected state. Stop dependent
+mutations when ownership, integrity or authority is unresolved. Use the supported
+recovery path, then verify its result before resuming; escalate unsupported
+repair or a required human decision with the exact blocker.
+
+The maintenance interface distinguishes three operations:
+
+- `decapod data db verify`: read-only typed integrity diagnostics
+- `decapod data db backup --destination <unused-path>`: verified SQLite online
+  backup, including WAL/SHM consistency, published atomically as a standalone file
+- `decapod data db recover --preserve-original-at <unused-sibling-path>`: explicit
+  logical rebuild with the original and sidecars preserved, followed by verified
+  activation; never implicit startup repair
+
+Recovery requires writer quiescence and no same-process Dactyl connection to the
+target. Successful recovery preserves application data, schema, `user_version`
+and `application_id`, and activates DELETE journal mode. Contention, unavailable
+runtime/storage, malformed or corrupt databases, unsupported capabilities and
+recovery/rollback failures remain distinct diagnostics with Dactyl's
+`failure_code`. A blocked rollback may leave the original at its archive path.
+Inspect preserved paths before resuming.
+
+`STORAGE_UNSAFE_PERMISSIONS` stops without changing modes. Review ownership,
+sharing and links rather than recursively chmodding state or deleting locks.
+External SQLite writers and filesystems with unreliable locking or rename
+semantics remain outside the coordination guarantee. Details are in
+`docs/storage-permissions.md`.
+
+## Optional services
+
+Jev is an optional advisory decision provider. The default `none` makes no
+provider request. Selected Jev calls use bounded HTTP and machine-local
+credentials; missing credentials, timeout, unavailability or malformed output
+produce `no_observation`. Deterministic interlocks and proof gates still apply.
+Attempted observations are retained in the trajectory-bound `jev` section of the
+governance document, without the API key. That section is created only for an
+attempt and reset with a new trajectory. There is no background provider process.
+
+Cloud storage is explicitly configured and uses separate cloud authentication.
+Availability of a client library or registry package does not prove a hosted
+service works. External access denials require resolution within existing
+authority, never automatic credential changes or permission expansion.
+
+## Maintaining Decapod's distribution
+
+The reviewed `.github/workflows/*.yml` files define this repository's CI and
+release behavior. Buildkite can import those definitions; it does not require a
+second repository pipeline. Adapter runner, matrix, artifact, secret, environment
+and deployment capabilities need independent proof. A green GitHub run does not
+prove Buildkite publication permissions, and a successful importer does not prove
+release or Pages delivery.
+
+Source CI requests read-only repository access. Disposable governance fixtures
+use private exact-tree checkouts and process-local permission isolation. Parallel
+integration runners consume their own commit's relocated test artifact; shard
+identifiers select known groups. Empty or malformed inventories fail rather than
+silently reduce coverage. Release/deployment retries require their own authority.
+
+A verified version-only range may reuse source lint/test coverage from the prior
+code merge. Candidate build, Decapod validation and release-packaging checks remain
+active. The complete immutable range must contain only package-version, matching
+root lock-version and changelog metadata; mixed source/release ranges and
+unprovable history take the ordinary source-check path. Release-only material-spec
+and projection handling use exact proofs, never branch names or labels.
+
+Code PRs carry release-bound entrypoints, the managed Dockerfile pin, specifications
+and governance. Release automation compiles and publishes approved artifacts;
+it does not directly mutate master or open a projection-healing PR. A later agent
+iteration refreshes projections for the installed release in its claimed workspace.
+Documentation drift workflows report changes without committing to PR branches.
+
+`Cargo.toml` owns the package version. `dist.toml` selects only the `decapod` product
+binary for release archives; feature-gated contributor tools are not release
+products. The locked registry dependency must support package and publish dry-run
+checks. Nix uses the locked Rust toolchain and dependency source; CI does not update
+`flake.lock`. Native Nix checks cover `x86_64-linux` and `aarch64-darwin`; exposed
+`x86_64-darwin` and `aarch64-linux` outputs are not continuous CI proof.
 
 <!-- decapod:capability-overlay:background-processing:start -->
+
+Generated capability obligations: `background-processing` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
 
 ## Background Processing Operations Overlay
 
 ### Queue Visibility
 - Queue depth, processing rate, and latency MUST be monitored
-- Dead letter queue MUST be visible and alerted
+- If a dead-letter queue exists, define visibility and alerting obligations for it
 - Worker health and processing rate metrics required
 
 ### Shutdown Behavior
@@ -391,6 +281,8 @@ continue to be surfaced through the existing storage checks.
 
 <!-- decapod:capability-overlay:persistent-state:start -->
 
+Generated capability obligations: `persistent-state` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
+
 ## Persistent State Operations Overlay
 
 ### Backup & Recovery
@@ -402,7 +294,7 @@ continue to be surfaced through the existing storage checks.
 ### Migration Operations
 - All schema changes via migration files
 - Migration rollback procedures documented
-- Zero-downtime migration strategy for production
+- Migration downtime and availability effects MUST be declared; zero downtime requires project-specific proof
 - Migration health checks and rollback triggers
 <!-- decapod:capability-overlay:persistent-state:end -->
 
@@ -410,21 +302,7 @@ continue to be surfaced through the existing storage checks.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `82096862eeb09ce32d87a138bd68041186df5c31df34fc65f853d2f160f81228`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (185 files)
+- Repository signal fingerprint: `667a48279b6f65c06fbc010723f7c053401dbeac2ba1c589e0f17865949ef801`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (186 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
-
-## Conservative workspace recovery
-
-A force-prune request relaxes lifecycle selection only after workspace ownership
-is established; it does not authorize removing arbitrary directories beneath
-`.decapod/workspaces`. Unknown or unowned directories remain preserved. An unregistered local clone
-can be recovered only with a canonical event-store invocation receipt, matching
-directory identity and an inactive per-path lease; a task-like name is never
-ownership evidence. Active claims protect local clones as well as registered
-worktrees. Task lookup,
-branch inspection, runtime discovery, container ownership or deletion failures
-produce a preserved/skipped result rather than a fabricated successful cleanup.
-Container-profile workspaces are retained when the runtime is missing, so a
-later supported recovery can verify and remove the owned container first.

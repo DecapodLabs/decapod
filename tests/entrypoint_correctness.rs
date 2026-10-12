@@ -237,7 +237,15 @@ fn test_validate_passes_after_init() {
     let temp_path = temp_dir.path().to_path_buf();
 
     // Run decapod init
-    let (success, _) = run_decapod(&temp_path, &["init", "--force"]);
+    let (success, _) = run_decapod(
+        &temp_path,
+        &[
+            "init",
+            "--force",
+            "--product-summary",
+            "Local Records stores and retrieves structured records for project contributors.",
+        ],
+    );
     assert!(success, "decapod init should succeed");
     acquire_session(&temp_path);
 
@@ -263,7 +271,17 @@ fn test_validate_passes_after_init_without_git_repo() {
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
     let temp_path = temp_dir.path().to_path_buf();
 
-    let init = run_raw(&temp_path, &["init", "--force", "--no-git"], &[]);
+    let init = run_raw(
+        &temp_path,
+        &[
+            "init",
+            "--force",
+            "--product-summary",
+            "Local Records stores and retrieves structured records for project contributors.",
+            "--no-git",
+        ],
+        &[],
+    );
     assert!(
         init.status.success(),
         "decapod init should succeed. Output:\n{}{}",
@@ -788,7 +806,15 @@ fn test_validate_migrates_valid_legacy_entrypoint_metadata() {
 
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
     let temp_path = temp_dir.path().to_path_buf();
-    let (success, _) = run_decapod(&temp_path, &["init", "--force"]);
+    let (success, _) = run_decapod(
+        &temp_path,
+        &[
+            "init",
+            "--force",
+            "--product-summary",
+            "Local Records stores and retrieves structured records for project contributors.",
+        ],
+    );
     assert!(success, "decapod init should succeed");
     acquire_session(&temp_path);
 
@@ -911,7 +937,15 @@ fn test_validate_rejects_malformed_entrypoint_metadata() {
 fn test_validate_does_not_overwrite_payload_tamper() {
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
     let temp_path = temp_dir.path().to_path_buf();
-    let (success, _) = run_decapod(&temp_path, &["init", "--force"]);
+    let (success, _) = run_decapod(
+        &temp_path,
+        &[
+            "init",
+            "--force",
+            "--product-summary",
+            "Local Records stores and retrieves structured records for project contributors.",
+        ],
+    );
     assert!(success, "decapod init should succeed");
 
     let path = temp_path.join("CODEX.md");

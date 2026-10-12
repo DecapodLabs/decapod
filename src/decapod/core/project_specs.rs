@@ -125,6 +125,102 @@ pub fn first_markdown_content_line(markdown: &str) -> Option<String> {
     None
 }
 
+/// The specs describe the configured repository, while the current task only
+/// selects the changed part of that description. Keep this guidance shared by
+/// scaffold generation and context.resolve so both entry points teach the same
+/// authoring boundary. It is guidance, not a semantic correctness verdict.
+pub const PROJECT_SPEC_AUTHORING_GUIDANCE: &str = "Describe the configured project from purpose to architecture to implementation depth. Start with the whole product: its users, problem, outcomes, and boundaries; then explain the system and its components, interfaces, state, operations, security, and proof. Ground factual prose in the repository's config, README/product documentation, source paths and symbols, contracts, and tests. Distinguish implemented behavior, intended behavior, assumptions, and unresolved gaps. A narrow task changes the relevant part of this whole-project account; it must not replace project-wide identity with the latest task, release workflow, or tooling. Record task-specific scope and evidence in the current change's governance record. Templates and declared capabilities are authoring/proof obligations, not evidence that a runtime guarantee exists. Preserve authored prose during generated refreshes. If configured metadata and explicit project-level sections are absent, leave project identity unknown and ask for or author grounded context rather than promoting an arbitrary legacy/task line.";
+
+/// Prefer an explicitly named project-level section over a leading task update.
+/// Ignore generated projections and fenced examples when locating headings.
+fn project_section_summary(markdown: &str, headings: &[&str]) -> Option<String> {
+    let authored = strip_auto_generated_spec_blocks(markdown);
+    for wanted in headings {
+        let mut in_fence = false;
+        let mut active = false;
+        let mut section = String::new();
+        for line in authored.lines() {
+            let trimmed = line.trim();
+            if trimmed.starts_with("```") || trimmed.starts_with("~~~") {
+                in_fence = !in_fence;
+            } else if !in_fence && trimmed.starts_with('#') {
+                if active {
+                    if let Some(summary) = first_markdown_content_line(&section) {
+                        return Some(summary);
+                    }
+                    section.clear();
+                }
+                let title = trimmed.trim_start_matches('#');
+                let depth = trimmed.len() - title.len();
+                active = depth <= 2 && title.trim().eq_ignore_ascii_case(wanted);
+                continue;
+            }
+            if active {
+                section.push_str(line);
+                section.push('\n');
+            }
+        }
+        if active && let Some(summary) = first_markdown_content_line(&section) {
+            return Some(summary);
+        }
+    }
+    // Do not promote arbitrary legacy prose or a task update to project identity.
+    // Documents without a named project section remain intact and readable, but
+    // need authoritative configuration or an authored project-level section.
+    None
+}
+
+pub fn project_purpose_summary(markdown: &str) -> Option<String> {
+    project_section_summary(
+        markdown,
+        &[
+            "Project Purpose",
+            "Product Purpose",
+            "Product Outcome",
+            "What This Project Is",
+            "Product Overview",
+            "Introduction",
+            "Purpose",
+            "Overview",
+        ],
+    )
+}
+
+/// A README may introduce the product directly beneath its title. Preserve
+/// that established input without searching arbitrary task/changelog sections.
+pub fn readme_project_summary(markdown: &str) -> Option<String> {
+    if let Some(summary) = project_purpose_summary(markdown) {
+        return Some(summary);
+    }
+    let mut introduction = String::new();
+    let mut in_fence = false;
+    for line in markdown.lines() {
+        let trimmed = line.trim();
+        if trimmed.starts_with("```") || trimmed.starts_with("~~~") {
+            in_fence = !in_fence;
+        } else if !in_fence && trimmed.starts_with("##") {
+            break;
+        }
+        introduction.push_str(line);
+        introduction.push('\n');
+    }
+    first_markdown_content_line(&introduction)
+}
+
+pub fn project_architecture_summary(markdown: &str) -> Option<String> {
+    project_section_summary(
+        markdown,
+        &[
+            "Architecture Overview",
+            "Direction",
+            "Architecture Direction",
+            "Integrated Surface",
+            "System Overview",
+            "What This Project Is",
+        ],
+    )
+}
+
 pub fn local_project_specs_context(project_root: &Path) -> LocalProjectSpecsContext {
     let mut ctx = LocalProjectSpecsContext::default();
     for spec in LOCAL_PROJECT_SPECS {
@@ -135,21 +231,73 @@ pub fn local_project_specs_context(project_root: &Path) -> LocalProjectSpecsCont
     ctx.constitution_refs.sort();
     ctx.constitution_refs.dedup();
 
-    ctx.intent = read_if_exists(project_root, LOCAL_PROJECT_SPECS_INTENT)
-        .and_then(|s| first_markdown_content_line(&s));
-    ctx.architecture = read_if_exists(project_root, LOCAL_PROJECT_SPECS_ARCHITECTURE)
-        .and_then(|s| first_markdown_content_line(&s));
-    ctx.interfaces = read_if_exists(project_root, LOCAL_PROJECT_SPECS_INTERFACES)
-        .and_then(|s| first_markdown_content_line(&s));
-    ctx.validation = read_if_exists(project_root, LOCAL_PROJECT_SPECS_VALIDATION)
-        .and_then(|s| first_markdown_content_line(&s));
-    ctx.semantics = read_if_exists(project_root, LOCAL_PROJECT_SPECS_SEMANTICS)
-        .and_then(|s| first_markdown_content_line(&s));
-    ctx.operations = read_if_exists(project_root, LOCAL_PROJECT_SPECS_OPERATIONS)
-        .and_then(|s| first_markdown_content_line(&s));
-    ctx.security = read_if_exists(project_root, LOCAL_PROJECT_SPECS_SECURITY)
-        .and_then(|s| first_markdown_content_line(&s));
-    ctx.update_guidance = "Treat .decapod/managed/specs/*.md as living project contracts: when user intent, interfaces, architecture, or proof gates change, update these specs before implementation proceeds.".to_string();
+    // Match init's authority ordering: configured project identity wins over
+    // inferred snippets. Failure to read it does not authorize task-line inference.
+    let configured = crate::cli::DecapodProjectConfig::load(project_root).ok();
+    ctx.intent = configured
+        .as_ref()
+        .and_then(|config| config.repo.product_summary.clone())
+        .filter(|summary| !summary.trim().is_empty())
+        .or_else(|| {
+            read_if_exists(project_root, LOCAL_PROJECT_SPECS_INTENT)
+                .and_then(|s| project_purpose_summary(&s))
+        });
+    ctx.architecture = configured
+        .as_ref()
+        .and_then(|config| config.repo.architecture_direction.clone())
+        .filter(|summary| !summary.trim().is_empty())
+        .or_else(|| {
+            read_if_exists(project_root, LOCAL_PROJECT_SPECS_ARCHITECTURE)
+                .and_then(|s| project_architecture_summary(&s))
+        });
+    ctx.interfaces = read_if_exists(project_root, LOCAL_PROJECT_SPECS_INTERFACES).and_then(|s| {
+        project_section_summary(
+            &s,
+            &[
+                "Interface Overview",
+                "Contract Overview",
+                "Contract Principles",
+                "Inbound Contracts",
+            ],
+        )
+    });
+    ctx.validation = read_if_exists(project_root, LOCAL_PROJECT_SPECS_VALIDATION).and_then(|s| {
+        project_section_summary(
+            &s,
+            &[
+                "Validation Overview",
+                "Validation Philosophy",
+                "Validation Strategy",
+                "Proof Surfaces",
+                "Validation Harness",
+            ],
+        )
+    });
+    ctx.semantics = read_if_exists(project_root, LOCAL_PROJECT_SPECS_SEMANTICS).and_then(|s| {
+        project_section_summary(&s, &["Semantics Overview", "State Machines", "Invariants"])
+    });
+    ctx.operations = read_if_exists(project_root, LOCAL_PROJECT_SPECS_OPERATIONS).and_then(|s| {
+        project_section_summary(
+            &s,
+            &[
+                "Operations Overview",
+                "Deployment Model",
+                "Operational Readiness Checklist",
+            ],
+        )
+    });
+    ctx.security = read_if_exists(project_root, LOCAL_PROJECT_SPECS_SECURITY).and_then(|s| {
+        project_section_summary(
+            &s,
+            &[
+                "Security Overview",
+                "Threat Model",
+                "Security Posture",
+                "Authentication",
+            ],
+        )
+    });
+    ctx.update_guidance = PROJECT_SPEC_AUTHORING_GUIDANCE.to_string();
     ctx
 }
 

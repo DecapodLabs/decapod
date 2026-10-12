@@ -156,7 +156,15 @@ fn setup_workspace() -> (TempDir, PathBuf) {
         .unwrap();
 
     // Keep initialization and the session in the same host-only fixture policy.
-    let out = host_output(&dir, &["init", "--force"]);
+    let out = host_output(
+        &dir,
+        &[
+            "init",
+            "--force",
+            "--product-summary",
+            "Project Ledger coordinates local tasks, project context, and reviewable evidence.",
+        ],
+    );
     assert!(out.status.success(), "decapod init --force failed");
 
     let session = host_output(&dir, &["session", "acquire"]);

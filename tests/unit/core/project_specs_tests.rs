@@ -374,3 +374,129 @@ fn codebase_attestation_names_the_executable_refresh_surface() {
     assert!(!updated.contains("by `decapod specs.refresh`"));
     assert!(updated.contains("Authored purpose."));
 }
+
+#[test]
+fn project_summaries_skip_task_preambles_generated_blocks_and_fenced_headings() {
+    let intent = "# Intent\n\n<!-- decapod:declared-capabilities:start -->\n## Declared Capability Surfaces\n- background-processing\n<!-- decapod:declared-capabilities:end -->\n\n## Current Task\nFix fractional servings.\n\n```markdown\n## Product Outcome\nThis is only an example.\n```\n\n## Product Outcome\nRecipe Kit helps home cooks scale ingredient quantities.\n";
+    assert_eq!(
+        project_purpose_summary(intent).as_deref(),
+        Some("Recipe Kit helps home cooks scale ingredient quantities.")
+    );
+    let architecture = "# Architecture\n\n## Current Task\nFix fractional servings.\n\n## Direction\nA pure Python scaling core exposed as a library.\n";
+    assert_eq!(
+        project_architecture_summary(architecture).as_deref(),
+        Some("A pure Python scaling core exposed as a library.")
+    );
+    assert!(project_purpose_summary("# Intent\n\nUnscoped legacy prose.\n").is_none());
+    assert!(project_purpose_summary("<!-- decapod:declared-capabilities:start -->\n- background-processing\n<!-- decapod:declared-capabilities:end -->").is_none());
+}
+
+#[test]
+fn project_context_prefers_configured_identity_and_leaves_legacy_scope_unknown() {
+    let dir = tempfile::tempdir().unwrap();
+    fs::create_dir_all(dir.path().join(LOCAL_PROJECT_SPECS_DIR)).unwrap();
+    fs::write(
+        dir.path().join(LOCAL_PROJECT_SPECS_INTENT),
+        "# Intent\n\nFix one rounding branch.\n",
+    )
+    .unwrap();
+    fs::write(
+        dir.path().join(LOCAL_PROJECT_SPECS_ARCHITECTURE),
+        "# Architecture\n\nAdjust the import parser.\n",
+    )
+    .unwrap();
+    let unknown = local_project_specs_context(dir.path());
+    assert!(unknown.intent.is_none());
+    assert!(unknown.architecture.is_none());
+    assert!(
+        unknown
+            .update_guidance
+            .contains("leave project identity unknown")
+    );
+    fs::write(dir.path().join(".decapod/config.toml"), "schema_version = \"1.0.0\"\n[repo]\nproduct_summary = \"Recipe Kit scales ingredient quantities.\"\narchitecture_direction = \"A pure Python library.\"\n").unwrap();
+    let configured = local_project_specs_context(dir.path());
+    assert_eq!(
+        configured.intent.as_deref(),
+        Some("Recipe Kit scales ingredient quantities.")
+    );
+    assert_eq!(
+        configured.architecture.as_deref(),
+        Some("A pure Python library.")
+    );
+}
+
+#[test]
+fn nested_task_headings_cannot_establish_project_identity() {
+    let body = "# Intent\n\n## Current Task\n### Overview\nFix parser rounding.\n### Direction\nEdit the parser.\n";
+    assert!(project_purpose_summary(body).is_none());
+    assert!(project_architecture_summary(body).is_none());
+}
+
+#[test]
+fn purpose_first_specs_keep_distinct_domain_context() {
+    let dir = tempfile::tempdir().unwrap();
+    fs::create_dir_all(dir.path().join(LOCAL_PROJECT_SPECS_DIR)).unwrap();
+    for (path, section, summary) in [
+        (
+            LOCAL_PROJECT_SPECS_INTERFACES,
+            "Contract Overview",
+            "The scaling API accepts quantities and a serving ratio.",
+        ),
+        (
+            LOCAL_PROJECT_SPECS_VALIDATION,
+            "Validation Strategy",
+            "Golden recipes and fractional-serving tests exercise scaling.",
+        ),
+        (
+            LOCAL_PROJECT_SPECS_SEMANTICS,
+            "Semantics Overview",
+            "Scaling preserves ingredient order and unit labels.",
+        ),
+        (
+            LOCAL_PROJECT_SPECS_OPERATIONS,
+            "Deployment Model",
+            "The library runs inside its caller's Python process.",
+        ),
+        (
+            LOCAL_PROJECT_SPECS_SECURITY,
+            "Threat Model",
+            "Untrusted text enters through the recipe import boundary.",
+        ),
+    ] {
+        fs::write(dir.path().join(path), format!("# Spec\n\n## Project Purpose\nRecipe Kit scales ingredients.\n\n## {section}\n{summary}\n")).unwrap();
+    }
+    let ctx = local_project_specs_context(dir.path());
+    assert_eq!(
+        ctx.interfaces.as_deref(),
+        Some("The scaling API accepts quantities and a serving ratio.")
+    );
+    assert_eq!(
+        ctx.validation.as_deref(),
+        Some("Golden recipes and fractional-serving tests exercise scaling.")
+    );
+    assert_eq!(
+        ctx.semantics.as_deref(),
+        Some("Scaling preserves ingredient order and unit labels.")
+    );
+    assert_eq!(
+        ctx.operations.as_deref(),
+        Some("The library runs inside its caller's Python process.")
+    );
+    assert_eq!(
+        ctx.security.as_deref(),
+        Some("Untrusted text enters through the recipe import boundary.")
+    );
+}
+
+#[test]
+fn readme_identity_uses_product_section_or_intro_never_task_section_fallback() {
+    let scoped = "# Recipe Kit\n\n## Current Task\nFix parser rounding.\n\n## Introduction\nRecipe Kit scales ingredients.\n";
+    assert_eq!(
+        readme_project_summary(scoped).as_deref(),
+        Some("Recipe Kit scales ingredients.")
+    );
+    assert!(
+        readme_project_summary("# Recipe Kit\n\n## Current Task\nFix parser rounding.\n").is_none()
+    );
+    assert_eq!(readme_project_summary("# Recipe Kit\n\nRecipe Kit scales ingredients.\n\n## Current Task\nFix parser rounding.\n").as_deref(), Some("Recipe Kit scales ingredients."));
+}

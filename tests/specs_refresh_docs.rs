@@ -74,6 +74,12 @@ fn docs_ingest_presents_both_refresh_surfaces_and_semantic_boundary() {
     assert!(body.contains(docs_cli::readiness_contract()));
     assert!(body.contains(docs_cli::readiness_config_contract()));
     assert!(body.contains("Refresh does not rewrite authored intent or architecture"));
+    assert!(body.contains("without replacing project-wide identity"));
+    assert!(
+        body.contains(
+            "Templates and capability declarations are obligations, not runtime evidence"
+        )
+    );
 }
 
 #[test]
@@ -147,4 +153,22 @@ fn readiness_guidance_keeps_branch_push_separate_from_pr() {
             assert!(!source.contains(stale), "stale guidance: {stale}");
         }
     }
+}
+
+#[test]
+fn living_spec_authoring_contract_survives_template_and_docs_generation() {
+    for name in ["AGENTS.md", "CLAUDE.md", "CODEX.md", "GEMINI.md"] {
+        let template = assets::get_template(name).unwrap();
+        assert!(
+            template.contains("purpose to architecture to implementation depth"),
+            "{name}"
+        );
+        assert!(
+            template.contains("without replacing project-wide identity"),
+            "{name}"
+        );
+        assert!(template.contains("source-grounded behavior"), "{name}");
+    }
+    let contract = docs_cli::specs_refresh_contract();
+    assert!(include_str!("../docs/agent/command-contracts.md").contains(contract));
 }

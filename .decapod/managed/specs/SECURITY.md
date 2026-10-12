@@ -1,359 +1,235 @@
 # Security
 
-## Bounded public-read reuse
-
-Concurrent collection changes transport scheduling, not provider authority.
-Exact typed requests are authorized serially before any batch worker starts.
-Only successful exact-route artifact responses are reused inside one collection,
-under explicit memory/entry bounds; no verdict, provider poll or final freshness
-check is cached. Hash, producer, source, native-attempt and contract checks remain
-mandatory on every consumer. All workers join under the existing shared
-cancellation/deadline. HTTP authorization failures never cause credential
-installation, alternate authentication, permissive fallback or automatic retry.
-No signed redirect query or arbitrary response header is emitted in diagnostics.
-Custody batches retain independent request limits and a 128 MiB sum of per-stream
-allowances, not a total-memory promise. Oversized valid archives select the serial
-path before acquisition; denied or cancelled transfer aborts the collection with
-no later batch, serial fallback or accepted partial proof. ZIP/log bodies are not
-cached, and only one archive is expanded for ordered verification at a time.
-Dependency-tool provenance comes from fixed reviewed official release digests,
-never a checksum selected by the downloaded artifact. Hash validation precedes
-named-member extraction and execution; missing or mismatched tooling fails closed.
-
-## Preflight custody and capabilities
-
-Preflight executes only reviewed build/test/release-verification operations. It
-must not evaluate arbitrary imported YAML as a local shell program, inherit
-publishing credentials into local proof children, or silently install missing
-capabilities. Existing process supervision bounds ordinary owned descendants;
-it is not a security sandbox against deliberate process-group escape. Unsupported
-containment requirements fail explicitly.
-
-Remote validation publishes or reuses the exact claimed workspace branch with
-ordinary non-forced creation/fast-forward and exact commit/tree readback. The
-same branch is used for preflight and the eventual PR; there are no temporary
-transport refs, force updates or cleanup deletions. Existing workflow event and
-branch guards keep release/deployment side effects outside source preflight.
-Credentials remain with the existing authorized provider or official client;
-arbitrary JSON success records are not authenticated provider evidence. Public
-reads retain TLS/server custody and exact run/attempt/source binding.
-
-The public reader seals finite GET routes and validates artifact redirects before
-following them. Ordinary process/API budgets remain distinct from bounded archive
-transfer budgets. ZIP members are verified in memory with explicit size, count,
-path, type and expansion limits, never extracted or executed as evidence. A raw
-archive handoff gains authority only through fresh provider metadata and digest
-verification. Session-health proof stores only its safe active/inactive status,
-not session credentials, and cannot self-update the candidate executable.
-
-Historical Decapod-source entrypoint proof is anchored to the published source
-lineage and the same immutable commit's package identity, release and literal
-template. It does not execute historical Rust or trust a self-declared generated
-fingerprint. Unsupported or unverifiable source fails closed; copied files in
-an unrelated consumer repository do not activate this source-history path.
-Current candidate entrypoints still require the evaluating binary's template.
-
-## Release-only material-spec proof boundary
-
-Release names, labels, and mutable refs cannot authorize the material-spec
-exception. The shared proof rejects a staged edit even if the working tree was
-reverted, malformed event metadata, a foreign configured-base ancestry, and a
-synthetic merge with additional source changes. Exact generated hashes cannot
-launder altered authored prose, template payload, configuration, or dependencies.
-This proof changes no credential, publication permission, or external grant.
-
-## CI checkout and provider authority
-
-CI must not repair permissive provider checkout modes by recursively changing
-existing state or enabling trusted-group access implicitly. Direct governance
-checks recreate the exact committed tree in a new privately owned checkout with
-umask 077, without copying runtime databases, sharing object-file hard links, or
-mutating the source permissions. User-configured trusted datastore groups retain
-their existing explicit policy. Source CI requests read-only repository contents
-access; release token denials do not authorize broader app grants or publishing.
-ARM musl proof uses a pinned official image and direct QEMU user-mode execution,
-with no privileged container or host binfmt registration introduced by this lane.
-
-Required immutable CI context is checked before local-only skip paths. A missing
-base ref, protected branch, malformed event, or different checkout cannot silently
-omit the material-spec gate. Local-only ref transfer preserves provider state.
-Scratch projection proof creates private files and directories at creation time;
-it never relaxes storage checks or repairs existing user/runtime permissions.
-
-## Integration artifact custody
-
-Parallel integration runners consume only the artifact produced by their own
-workflow commit. Preparation dereferences declared test runfiles before transport;
-execution uses those relocated files through the existing scratch/process-group
-supervisor. Shard IDs select known test groups, never arbitrary shell commands.
-An empty or malformed Gatling inventory must fail rather than silently dropping
-coverage or invoking the full suite without filters.
-
 ## Threat Model
-```mermaid
-flowchart LR
-   U[User/Client] --> A[Application Boundary]
-   A --> D[(Data Stores)]
-   A --> X[External Dependencies]
-   I[Identity Provider] --> A
-   A --> L[Audit Logs]
-```
 
-## STRIDE Table
-| Threat | Surface | Mitigation | Verification |
-|---|---|---|---|
-| Spoofing | Auth boundary | strong auth + token validation | auth tests |
-| Tampering | State mutation APIs | integrity checks + RBAC | integration tests |
-| Repudiation | Critical actions | immutable audit logs | log review |
-| Information disclosure | Data at rest/in transit | encryption + classification | security scans |
-| Denial of service | Hot paths | rate limit + backpressure | load tests |
-| Elevation of privilege | Admin interfaces | least privilege + policy checks | authz tests |
+Decapod governs accepted agent work inside a repository. Its security boundary
+covers task custody, project policy, isolated execution, durable state and the
+proof required for governed publication. The human supplies intent and decisions;
+the agent interprets and performs the work. Decapod checks the configured
+invariants and records their outcomes.
 
-## Authentication
-- Identity source:
-- Token/session lifetime:
-- Rotation and revocation:
-
-## Authorization
-- Role model:
-- Resource-level policy:
-- Privilege escalation controls:
-
-## Governance Artifact Trust Boundaries
-- Prompt and issue text is untrusted input; the agent safety gate evaluates it
-  before repository instructions are followed.
-- Migration ledgers and trajectory files are evidence artifacts, not authority
-  to broaden task scope or bypass a human decision gate.
-- The migration notice instructs the agent to inspect the ledger; it does not
-  silently grant permission to apply an unrequested breaking product change.
-- Trajectory hashes protect artifact integrity, while Git history preserves
-  prior runs; neither substitutes for authorization or validation.
-- Absolute local paths are treated as information-disclosure material at the
-  governance-artifact boundary. Internal paths are reduced to project-relative
-  names and external paths are replaced with <external-path> before they
-  enter trajectory or validation output. This is redaction, not encryption;
-  the active filesystem operation retains its private absolute path.
-- The data db verify diagnostic has read-only access and no repair authority.
-  Corruption cannot grant permission for raw SQLite, REINDEX, or dump/reload;
-  recovery is available only through the explicit, authenticated Decapod
-  operator command backed by Dactyl v0.11.1's supported contract.
-- The local datastore sidecar lock is a coordination primitive, not an
-  authorization boundary. Decapod holds it for canonical connection lifetime,
-  reports bounded contention, and never deletes it as stale; OS lock release
-  handles process exit. External clients that ignore the contract remain
-  outside Decapod's corruption-prevention guarantee.
-
-## Data Classification
-| Data Class | Examples | Storage Rules | Access Rules |
-|---|---|---|---|
-| Public | docs, non-sensitive metadata | standard | unrestricted |
-| Internal | operational telemetry | controlled | team access |
-| Sensitive | tokens, PII, secrets | encrypted | least privilege |
-
-## Sensitive Data Handling
-- Encryption at rest:
-- Encryption in transit:
-- Redaction in logs:
-- Retention + deletion policy:
-
-## Supply Chain Security
-- Recommended scanners: `cargo audit`, `cargo deny`, `cargo vet`
-- Dependency update cadence:
-- Signed artifact/provenance strategy:
-
-## Secrets Management
-Gatekeeper recognizes literal bearer credentials after header/assignment
-delimiters, at the start of quoted or backticked values (with optional leading
-whitespace), at the start of line/block comments, and on standalone scheme
-lines. The word bearer inside an ordinary sentence is not
-itself authentication-scheme syntax. Short values and dictionary words in
-explicit credential syntax remain findings; token spelling, entropy, test
-filenames, and synthetic-fixture labels do not grant an exemption. Secret
-scanning remains line-based and heuristic rather than a complete parser or
-dataflow analysis: a value described only in arbitrary prose is outside this
-bearer-scheme recognizer. A quoted value beginning with a newline is covered
-when the scheme and credential occupy the same subsequent line; concatenated
-values or schemes split from their credentials across lines are not covered.
-
-Rust password-value candidates additionally use conservative, byte-span-bound
-formatting context. A complete basic named replacement field is excluded from
-hardcoded-password findings only when an absolute standard formatting macro
-receives that named argument directly from `::std::env::var` with a literal key,
-optionally through parentheses and at most one `?` or argument-free `unwrap`
-extraction. Further methods could be custom extension traits. This is runtime
-source evidence, not an exemption based on the credential's spelling. Every
-other match on the same line, including the environment-key literal, is still
-scanned. Arguments with literal defaults, unknown calls, or captured-variable
-provenance remain findings; a recognized unresolved replacement field receives
-a specific diagnostic rather than a safety waiver.
-
-This deliberately partial Rust classifier does not expand macros or resolve
-whole-program dataflow. Unqualified macros do not grant exemptions. Opaque
-macro bodies, ambiguous standard-library namespaces, transforming attributes,
-malformed source, cooked string escapes, unsupported format grammar, BOMs, and
-shebangs retain the ordinary findings. Absolute standard paths assume the
-standard extern-prelude names; local bindings visible in the scanned file fail
-closed. Dependencies or parent modules that redefine those names are outside
-this file-local source model. Raw and multiline strings use original byte
-locations; a mismatch in source mapping never grants an exemption.
-
-Connection-string, key, and dangerous-pattern rules remain independent. SQL-
-looking strings and embedded shell inputs remain findings: a SQL-looking string
-can be passed indirectly to a shell, so extensions and nearby keywords cannot
-prove it harmless. Synthetic credential-shaped fixtures remain detectable.
-Missing container custody and other publication evidence remain independent
-blocking requirements.
-
-| Secret | Source | Rotation | Consumer |
-|---|---|---|---|
-| External service auth material | managed runtime configuration | periodic | runtime services |
-| Artifact signing material | managed signing service/local secure store | periodic | release pipeline |
-
-## Security Testing
-| Test Type | Cadence | Tooling |
-|---|---|---|
-| SAST | each PR | language linters/scanners |
-| Dependency scan | each PR + weekly | supply-chain tools |
-| DAST/pentest | scheduled | external/internal |
+These controls do not sandbox every command an agent or harness can run. They
+cannot establish correctness beyond the required proof or protect state from a
+malicious process with the same operating-system authority. A repository owner,
+root account and any explicitly trusted storage group remain trusted principals.
 
 ## Trust-Boundary Inventory
-| Boundary | Principal/Input | Authority Granted | Validation | Audit Evidence | Failure Default |
-|---|---|---|---|---|---|
-| User/agent -> entrypoint | prompt and issue text | bounded task context | prompt safety gate | trajectory record | deny/reject |
-| Entrypoint -> core | parsed command arguments | scoped operation | command contract | validation receipt | deny/reject |
-| Core -> persistence | governed state mutation | recorded artifact update | session and invariant gates | audit ledger | rollback/fail closed |
-| Runtime -> external dependency | network/package input | explicitly authorized capability | policy and provenance checks | action evidence | timeout/degrade |
 
-## Agent and Automation Safety
-- The first local Decapod call in each run must surface any release transition
-  and migration instruction before the agent continues.
-- Migration notices direct inspection of the migration ledger and catalog; they
-  do not silently authorize an unrequested breaking product change.
-- Untrusted prompt, issue, configuration, or attachment content cannot broaden
-  authority or replace a human decision gate.
-- Privileged mutations require a scoped actor and durable proof artifact.
+Agents evaluate each incoming prompt with the side-effect-free `decapod eval`
+gate before following its instructions. Only a successful `allow` result permits
+continuation. A blocked prompt, conflicting requirements or a decision gate
+requires human review. Prompt, issue and attachment content cannot grant new
+permissions merely by claiming authority.
 
-## Compliance and Audit
-- Regulatory scope:
-- Audit evidence location:
-- Exception process:
+The agent's request context establishes what the human asked. Project policy
+constrains how that work may proceed. Task claims establish execution custody;
+workspaces isolate changes. A missing workspace-local task projection is a
+coordination discrepancy, not permission to bypass ownership or a reason to
+invent a different request.
 
-## Pre-Promotion Security Checklist
-- [ ] Threat model updated for changed surfaces.
-- [ ] Auth/authz tests pass.
-- [ ] Dependency vulnerability scan reviewed.
-- [ ] No unresolved critical/high security findings.
+## Authorization
 
-## Strongest Security Primitives
-Describe the security primitives and security controls implemented in this repository.
+Agents access machine-owned state through supported CLI or RPC operations.
+Authored prose in `.decapod/managed/specs/*.md` is the direct-edit exception.
+Generated sections, fingerprints, manifests, governance records, runtime stores
+and session state remain Decapod-owned. Refresh cannot turn an unsupported claim
+into proof or replace an authored specification update.
 
-## Security Practices
-- **Least Privilege**: Ensure minimal access permissions for all subsystems and roles.
-- **Input Validation**: Strictly validate all inputs at trust boundaries.
-- **Secure Storage**: Encrypt sensitive data at rest and in transit.
+## Authentication
+
+Most mutations require an active local session. Session credentials establish
+repository-local custody and correlation. They do not authenticate an agent's
+model provider, harness, organization or human identity. Local handshake hashes
+make declarations tamper-evident; environment-supplied identity assertions remain
+self-declared and unverified without a configured trust root. The current binary
+exposes CLI and structured process RPC, not a native MCP server.
+
+Local session credentials prefer private machine-local storage, with a secure
+workspace-local fallback. Cloud authentication and optional Jev credentials use
+separate machine-local records. The TypeSafe key resolves from the environment
+before the machine secret file and never belongs in project state. Session-health
+proof records active or inactive status only. Credentials must not enter source,
+trajectory records, validation artifacts or diagnostics.
+
+## Data Classification
+
+Authored specifications and tracked governance are reviewable project records
+that may travel through Git or CI. Runtime stores contain local coordination and
+evidence; session and provider credentials require separate private storage.
+Project content may itself be sensitive. A generated artifact or projection does
+not establish that its contents are public, encrypted or safe to disclose.
+
+## State and filesystem boundary
+
+On Unix, new private state directories use at most `0700`; files use at most
+`0600`, set before writing bytes. Datastore checks reject unsafe ancestry,
+state-file symlinks, hard links, non-regular files and unintended writable modes,
+including SQLite and coordination sidecars. Existing installations are never
+silently repaired with chmod. Atomic writes remove only their own temporaries.
+
+Explicit `DECAPOD_STORAGE_SHARED_GROUP=1` trusts the datastore directory's group
+and requests `0770` directories and `0660` storage files, subject to umask and
+configured ownership. It never permits world-write access or shared machine
+credentials, sessions or runtime configuration. The group broker's runtime socket
+directory follows the same private or explicitly shared boundary.
+
+POSIX mode checks do not inspect extended ACLs or mount policy. On Windows,
+inherited ACLs remain the owner's responsibility; Unix checks do not establish
+Windows DACL security. Filesystems must provide the required permission, locking,
+sync and atomic-rename behavior. There is no blanket FUSE or virtiofs ban.
+
+The adjacent database lock coordinates cooperating Decapod processes. It is not
+an authorization mechanism or a guarantee against external SQLite writers. The
+kernel releases advisory locks on process exit; deleting a lock file is not
+recovery. Broker election uses its stable lock inode, never a persisted PID as
+authority to signal a process.
+
+## Workspace ownership and cleanup
+
+Task work stays outside the main checkout. Tracked governance and specifications
+remain branch-local; governance files aliased to the host by symlink, shared inode
+or direct bind mount are rejected. Containers may share the approved datastore
+and migration ledger while mounting accepted host policy read-only.
+
+Cleanup requires ownership evidence for the exact resource. `workspace prune
+--force` relaxes lifecycle selection, not ownership. Unregistered directories
+require a durable invocation receipt, matching directory identity and an inactive
+lease. Names, task-like paths and an empty inventory from a different container
+engine prove nothing. Unknown resources, active claims and unverifiable ownership
+remain preserved with diagnostics. Container removal checks ownership labels and
+immutable IDs using the recorded runtime backend.
+
+Build/test cleanup is restricted to invocation-owned scratch with its original
+filesystem identity. Replaced roots, unconfirmed live process groups, shared
+caches and proof artifacts are outside deletion authority. Process supervision
+bounds ordinary owned descendants; it is not a sandbox against deliberate
+process-group escape. Unsupported containment requirements fail explicitly.
+
+## Evidence and publication
+
+Plans, claims, trajectories and hashes preserve interpretation and custody; none
+proves that the work succeeded. Required evidence must bind to the exact candidate,
+accepted target, toolchain and applicable checks. `passed`, `failed`, `partial`,
+`unavailable` and `no_checks_run` remain distinct. No executed checks means an
+unsupported completion verdict. CI-local success never establishes publication
+readiness.
+
+Governed branch publication uses ordinary non-forced creation or fast-forward,
+or exact-tip reuse. Divergence and changed accepted targets block publication.
+Validation does not authorize releases, package uploads, deployments or new
+credentials. A service denial cannot be repaired by changing credentials,
+weakening gates or substituting fabricated evidence.
+
+Release-only exceptions require immutable event history and exact material
+classification. Names, labels and mutable refs provide no authority. Staged edits,
+malformed events, unrelated base ancestry and synthetic merges with additional
+source changes cannot obtain the exception. Generated hashes cannot hide changed
+prose, templates, configuration or dependencies. Historical source-entrypoint
+proof requires published Decapod lineage and the same immutable commit's package,
+release and literal template; copied files in a consumer repository do not qualify.
+Current candidate entrypoints still match the evaluating binary's template.
+
+Persisted governance paths are project-relative with forward slashes, or
+`<external-path>` for external locations. This is redaction, not encryption. The
+active operation retains the actual path it needs.
+
+## Storage maintenance and recovery
+
+Integrity verification is read-only. Backup and recovery use the supported Dactyl
+contract; ordinary opens, writes, migration notices and validation never authorize
+raw SQLite edits, `REINDEX` or ad hoc database replacement.
+
+Explicit recovery requires quiesced connections and filesystem writers. On
+supported Linux/Android paths, Dactyl rebuilds in private same-filesystem staging,
+preserves the original and sidecars at an unused sibling archive, retains owner,
+group and safe mode, and activates only after verification with no-replace rename.
+Decapod does not change the shared parent or chmod the active replacement.
+
+Unsupported platform, ownership or metadata conditions are capability refusals,
+distinct from a recovery that executed and failed. Codes such as
+`secure_recovery_unsupported`, `recovery_ownership_unavailable` and
+`recovery_metadata_unsupported` retain that distinction. `recovery_rollback_failed`
+may leave the original at its archive path. Inspect that evidence before resuming; an error is never proof that
+restoration succeeded. See `docs/storage-permissions.md` for the supported modes,
+platforms and failure contract.
+
+## Secret and dangerous-pattern checks
+
+Gatekeeper's scanners are bounded heuristics, not complete parsing or dataflow
+analysis. Explicit bearer syntax remains a finding even for short, dictionary or
+fixture values. It recognizes supported header, assignment, quoted, backticked,
+comment and standalone-line forms. Ordinary prose containing “bearer” is not
+scheme syntax; concatenated credentials and schemes split from values across
+lines remain outside this recognizer.
+
+The Rust password classifier permits a narrowly proven environment-sourced named
+format field only for an absolute standard formatting macro, a literal-key
+`::std::env::var` call, optional parentheses and at most one `?` or argument-free
+`unwrap`. Other matches on the line remain scanned. Literal defaults, unknown
+calls, unproven captures and unresolved fields do not become exemptions.
+Unsupported syntax, ambiguous namespaces, transforming attributes, malformed
+source or uncertain byte mapping retain findings. The file-local model does not
+expand macros or resolve parent-module and dependency namespace changes.
+
+`govern gatekeeper check --paths` accepts one explicit file per repeated option;
+missing, non-file or unreadable UTF-8 inputs fail closed. Staged-file discovery
+checks Git's status and uses NUL-delimited paths, retaining removals for path
+policy. Literal Rust `include_str!` dependencies are scanned inside the repository
+with a 1,024-file bound; dynamic, missing, unreadable or escaping dependencies
+cannot establish success. Classifiers discharge only the exact supported span.
+SQL positional parameters require a terminal Dactyl connection sink or a
+source-verified strict forwarding wrapper; constructing an operation or letting
+its SQL escape is insufficient. Credential analysis can recognize supported
+immutable runtime-generator and local Option/tuple flows, but literal alternatives,
+mutation, ambiguous bindings and unavailable evidence retain findings. Primitive
+comparison results can be inert text consumers; native shell and Dockerfile
+rules still detect actual substitution and dangerous operations. Source analysis
+cannot authenticate dependency downloads or infer unsupported whole-program flow.
+
+Connection strings, keys and dangerous shell patterns are independent checks.
+A SQL-looking string or a test filename cannot prove shell input harmless.
+Passing a scanner cannot replace session, workspace, evidence or publication gates.
+
+## Optional external execution
+
+When selected, a validation provider supplies evidence for the same required
+profile. Buildkite is one such provider. Check links locate runs; successful JSON
+or a green result from another service does not authenticate execution. Reviewed
+workflow, producer, source revision, native attempt, recipe and command outcomes
+must match, with fresh final candidate and provider checks. Compiler and runtime
+digests are independent pins; observed green jobs cannot authorize an upgrade.
+Expected workflow filenames are joined under `.github/workflows/` and compared
+exactly to the producer path, allowing only one optional `./` prefix. Observed
+directories, traversal or green provider data cannot redefine that identity.
+
+The public reader permits finite, reviewed GET routes. Artifact redirects are
+bounded; job logs allow one HTTPS redirect to the exact verified provider object.
+Foreign hosts, changed identities and extra hops fail closed. Signed query values
+and arbitrary response headers stay out of diagnostics. Only identical artifact
+GET timeouts may retry, at most twice within the original deadline; authorization,
+HTTP, TLS, cancellation and integrity failures do not retry through another route.
+
+Requests are authorized before concurrent collection. Only successful exact-route
+responses are reused within bounded per-collection storage; verdicts, polls,
+freshness checks, ZIP bodies and logs are not cached. Custody batches cap the sum
+of per-stream allowances at 128 MiB, not total process memory. Larger supported
+archives choose serial acquisition in advance. Denial or cancellation aborts
+without later fallback or accepted partial proof. Archives are checked in memory
+under size, count, type, path and expansion limits, one expansion at a time;
+evidence members are never extracted or executed. Downloaded executable tools
+require independently reviewed official digests before named-member extraction.
+
+Source CI uses read-only repository access. Private scratch checkouts preserve the
+exact committed tree without sharing object hard links, runtime databases or
+relaxing source permissions. Reviewed build/test recipes must not execute arbitrary
+imported YAML, inherit publication credentials or silently install missing tools.
+Release and deployment authority remains separate.
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `82096862eeb09ce32d87a138bd68041186df5c31df34fc65f853d2f160f81228`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (185 files)
+- Repository signal fingerprint: `667a48279b6f65c06fbc010723f7c053401dbeac2ba1c589e0f17865949ef801`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (186 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
-
-## Storage filesystem permission boundary
-
-Decapod-owned creation uses explicit Unix directory/file modes before writing
-state. Datastore entrypoints validate existing SQLite and coordination
-sidecars, leaf links and directory ancestry without silently chmodding an
-installation. Explicit trusted-group datastore sharing is bounded to the
-storage directory's group; machine credentials and sessions remain private.
-Atomic and migration copies use the same owned-state creation boundary.
-Online-backup temporaries are confined to a private staging directory before
-safe final publication. Published Dactyl 0.11.1 owns private recovery staging
-and preserves source owner, group and mode before atomic activation, so the
-explicit trusted-group recovery path is supported on Linux and Android under
-the constraints below. Unix mode checks are not Windows ACL enforcement. `docs/storage-permissions.md`
-defines the supported boundary, operator recovery and subprocess-umask proof.
-
-## Secure shared-directory recovery
-
-The explicit recovery command uses the published Dactyl 0.11.1 primitive.
-On Linux and Android it supports an intentionally shared 0660 database beneath
-2770 group storage, subject to Decapod's existing opt-in and ancestry policy.
-Dactyl confines new rebuild, rollback-journal and retained failure artifacts in
-same-filesystem private staging, preserves the original inode in an unused
-archive, restores the original owner/group/safe mode on the new inode, and
-activates without clobbering a competing destination. Decapod does not chmod
-the active database after replacement or change the shared parent directory.
-
-Unsupported platform, ownership and extended-metadata conditions fail closed
-with their original typed codes. Capability and conflict refusals remain
-distinct from a recovery that ran and failed. Recovery requires all connection,
-filesystem-name, content and metadata writers to be quiesced. Process failure
-can leave private diagnostics; blocked rollback may leave the preserved original
-at its archive path. Operators inspect those paths before resuming. Ordinary
-open, read, write and backup never automatically trigger recovery.
-
-## Branch-local governance and shared policy
-
-A work branch cannot initialize or mutate a governance document aliased to the
-host checkout by a symlink, shared inode, or direct bind mount. The document
-and its advisory lock remain on the branch volume. Container mounts retain the
-shared datastore and applied-migration ledger, expose accepted host policy
-configuration read-only, and keep tracked governance/specs branch-local.
-Datastore approval categories resolve from that host authority even without
-host Git metadata. Unresolved base, task, or recovery evidence fails closed.
-
-Build/test cleanup is limited to an atomically created invocation-owned scratch
-directory with the original filesystem identity. Replaced roots and unconfirmed
-live process groups are preserved; shared build caches and proof artifacts are
-outside deletion authority.
-
-### Buildkite-only readiness transport
-
-The same-workspace-branch transport carries no service skip directive; existing
-GitHub Actions runs remain independent and cannot supply Buildkite readiness. Buildkite execution archives, native producer identity,
-recipe, actual command outcomes and final attempt freshness remain mandatory.
-Publication is a non-forced push or exact-tip reuse of the existing local workbranch;
-only the matching remote branch may be created on its first publication. A diverged
-remote or changed accepted target fails. Validation never creates an auxiliary
-branch, rewrites history, or deletes the real workspace branch. Public artifact
-GET timeouts receive at most two same-request retries within the original deadline;
-authentication, TLS, HTTP, cancellation and integrity failures are never retried
-through another route. Previously verified downloads remain in the active collection.
-GitHub check links are discovery locators, never authority for successful
-Buildkite execution. No service denial permits changing credentials or falling
-back to fabricated evidence. Synthetic Git fixtures isolate host authentication
-configuration without changing production transport rewrite rejection.
-
-Remote preparation does not require a fresh legacy local validation receipt.
-That receipt cannot prove remote success, and its absence or stale trajectory
-binding must not force a duplicate local suite. Current plan, claims, trajectory,
-checkpoint, material, review, ownership and transport safeguards still apply;
-malformed governance remains invalid. Final readiness still requires every
-applicable authenticated Buildkite execution and an unchanged candidate/target.
-
-Discovery accepts only the exact reviewed Buildkite host, organization and
-pipeline with a positive build number and optional canonical job UUID fragment.
-Queries, credentials, foreign hosts and malformed fragments cannot become
-network destinations. Cached locators never stand in for execution status or
-final freshness. A first ordinary branch push may normalize its all-zero prior
-tip only with the provider's explicit created flag, a captured accepted target,
-clean exact checkout and ancestry proof; it never becomes PR-readiness evidence.
-
-### Same-branch verification location
-
-Selecting Buildkite moves substantive verification to the required remote workers, preserving local ownership, decision and transport authorization. Public metadata is selected only for the reviewed public repository/profile before requests; a failed authenticated request never silently switches clients. Imported history cannot waive proof: unchanged transports require whole-tree identity, unaccepted historical bases and conflicting targets reject, and current merge checkpoints remain mandatory.
-
-## Reviewed importer compiler and runtime identity
-
-Remote execution custody pins the independently reviewed official Buildkite GHA compiler version and executable digest separately from the runtime executable selected by the authored platform matrix. The reviewed 0.102.3 Linux x86_64 compiler may emit Linux x86_64 or Darwin arm64 runtime plans; a runtime digest never substitutes for the compiler digest. Observed green jobs cannot authorize new versions, executable digests or platforms. A provider upgrade requires independent official-release verification before its exact pins are accepted. Wrong producer, altered artifacts, workflow, matrix or execution identity still fails closed.
-
-## Provider-owned job log redirects
-
-Public Buildkite job-log reads may follow one HTTPS redirect to the exact Buildkite cloud log object. The pipeline, native build and job UUIDs come from the already-verified inventory, and every storage path component must match before the redirected GET is issued. Metadata routes remain nonredirecting and artifact routes retain their separate bounded policy. Alternate hosts, changed identities, extra hops, malformed paths, authentication failures and HTTP denials fail closed; signed query values remain opaque and absent from diagnostics.
-
-## Canonical workflow identity across producer formats
-
-The source worker identifies a workflow by its canonical filename, while the authenticated importer records its repository path. The verifier joins the independently expected filename under `.github/workflows/` and compares that complete path exactly, allowing only the importer's single optional `./` prefix. It never discards an observed directory or infers the expected workflow from green provider data. Wrong filenames, path traversal, query syntax, producer IDs, native step identity and source revisions remain rejected.

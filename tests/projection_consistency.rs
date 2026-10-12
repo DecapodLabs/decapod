@@ -26,7 +26,16 @@ fn setup_repo() -> (TempDir, PathBuf, String) {
         .expect("git init");
     assert!(init.status.success(), "git init failed");
 
-    let out = run_decapod(&dir, &["init", "--force"], &[]);
+    let out = run_decapod(
+        &dir,
+        &[
+            "init",
+            "--force",
+            "--product-summary",
+            "Context Library keeps project information available as consistent local projections.",
+        ],
+        &[],
+    );
     assert!(
         out.status.success(),
         "decapod init failed: {}",

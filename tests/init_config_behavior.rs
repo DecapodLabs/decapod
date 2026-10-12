@@ -434,9 +434,18 @@ fn init_with_project_dir_creates_directory_and_initializes_inside_it() {
 #[test]
 fn init_uses_existing_config_for_noninteractive_defaults() {
     let tmp = tempdir().expect("tempdir");
+    let product_summary = "Recipe Kit helps home cooks scale ingredient quantities.";
     let out1 = run_decapod(
         tmp.path(),
-        &["init", "with", "--force", "--diagram-style", "mermaid"],
+        &[
+            "init",
+            "with",
+            "--force",
+            "--diagram-style",
+            "mermaid",
+            "--product-summary",
+            product_summary,
+        ],
     );
     assert!(
         out1.status.success(),
@@ -465,6 +474,13 @@ fn init_uses_existing_config_for_noninteractive_defaults() {
         !intent.contains("Define the user-visible outcome in one paragraph."),
         "re-init should preserve intent-first seeded outcome"
     );
+    assert!(
+        intent.contains(product_summary),
+        "re-init should preserve the explicit whole-project outcome"
+    );
+    let config =
+        fs::read_to_string(tmp.path().join(".decapod/config.toml")).expect("read preserved config");
+    assert!(config.contains(product_summary));
 }
 
 #[test]
@@ -887,6 +903,8 @@ fn init_supports_and_preserves_declared_capabilities() {
         &[
             "init",
             "with",
+            "--product-summary",
+            "Job Ledger stores scheduled work and records its outcomes.",
             "--declared-capability",
             "persistent-state",
             "--declared-capability",
@@ -936,6 +954,11 @@ fn init_supports_and_preserves_declared_capabilities() {
         config_content.contains("persistent-state"),
         "config should preserve persistent-state capability after force re-init: {}",
         config_content
+    );
+
+    assert!(
+        config_content.contains("Job Ledger stores scheduled work and records its outcomes."),
+        "re-init should preserve the explicit product purpose alongside capabilities"
     );
 
     // 3. Verify validation passes successfully

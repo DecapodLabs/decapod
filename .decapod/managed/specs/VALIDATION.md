@@ -1,563 +1,290 @@
 # Validation
 
-## Release setup, packaging and preflight latency
-
-The required setup policy proves stable root-version normalization and strict
-dependency drift enforcement. Release upload regression executes the actual
-workflow staging body against a Bazel-style symlink, verifies a relative regular
-executable with exact bytes, and rejects missing input before export.
-
-Collector regressions cover exact-key deduplication, collection lifetime,
-request-count reduction, cache size/count ceilings, uncached live inventory
-rechecks, deadline/cancellation, no failure caching, ordered joined workers,
-authorization before spawning and early importer contract rejection. Custody
-regressions exercise individual/aggregate allowances, preselected serial large
-archives, no fallback, no partial failed-batch proof, fatal denied/cancelled
-transfer with no later dispatch, and actual scheduler verification order. Grouped
-runtime regressions cover all ordinary success/failure combinations and complete
-three-check imported receipts, including missing, swapped, altered and failed
-sibling evidence. All existing source/custody tests remain required. Full plain decapod validate on the final
-committed branch must return publication readiness; native green CI alone and
-failed/interrupted collection runs are not substitutes. Compare successful
-collection elapsed time separately from provider queue/runtime. Record batch
-wall time separately from summed overlapping request work, and compare unchanged
-applicability/check sets even when native job grouping changes. Confirm grouped
-Bazel targets reuse compilation while still executing distinct tests. Preserve
-sub-five-minute integration execution headroom without increasing timeouts.
-README review verifies first-use commands against the CLI contract and checks
-that the historical report excerpt matches the preserved successful report
-and linked commit/provider evidence. Its scope must not imply proof for a later
-candidate, unconfigured checks, or universal correctness. Retain required
-constitution entry links, two brief contextual Jev mentions, no dedicated Jev
-setup section, and agreement with the primary System One API and advisory adapter.
-Dependency-tool setup regression exercises the authored workflow with offline
-archives, including checksum/version/transfer failure and ambient-tool rejection.
-Actual provider validation must also authenticate and execute the pinned upstream
-archives. Setup logs expose download and verification/install time for comparison
-with previous repeated source compilation.
-Version fixtures must match the authenticated upstream command output exactly:
-cargo-machete prints its bare version, while cargo-deny includes its tool name.
-Wrong prefixes and wrong versions both fail before publishing tools on PATH;
-integrity, extraction and version failures expose distinct actionable diagnostics.
-
-## Release-only dependency-lock regression
-
-The shared setup recipe executes the actual Starlark normalizer's regression
-target before compiling the two existing Bazel binaries. Multiple genuine root
-version bumps must produce identical dependency input bytes. Dependency version,
-feature, registry and checksum changes must remain visible, while duplicate,
-mismatched or malformed root records fail closed. The executable test also
-hashes the real generated Cargo inputs and checks their exact recorded input
-digests in the committed Bazel lock. This is exercised through the configured
-full Buildkite validation, not a separate local prerequisite suite. The strict
-build remains mandatory for release-only changes and retains the real compiled
-package version from the root manifest.
-
-## Complete current-branch proof
-
-Focused component tests, YAML parsing, a passing project-check report and an empty
-proof registry are insufficient for readiness. Required source jobs, platform
-matrix instances and selected integration shards in the actual PR suite must
-have genuine terminal successful execution bound to the candidate. Missing,
-failed, canceled, stale, running or skipped-required results fail. Non-applicability
-is computed independently from the current immutable source range and recorded
-as such; provider wrapper success cannot manufacture execution.
-
-The evidence regressions cover empty and duplicate plans, missing or extra rows,
-source/base/toolchain drift, self-dependent validation and unproved exclusions.
-Snapshot regressions execute the actual context action and verify exact H/tree,
-stale target rejection, unchanged source branch tips and suppressed checkout
-hooks. Native executor tests measure real exits and outputs, deadlines,
-cancellation, artifact freshness, source/snapshot mutation and unsupported
-platforms. Provider fixtures remain fixtures until the actual complete candidate
-suite runs; they do not establish remote CI acceptance.
-
-The active profile explicitly scopes release-only four-platform packaging outside
-source-PR readiness. Issue #1399 retains that work and its unproven real execution;
-a green core report makes no packaging or actual publishing claim. Publish/deploy
-side effects may be simulated with explicit disposition, but required code tests,
-compilations and builds must execute. Agents follow the actionable validation
-report, repair root causes and rerun exact-candidate validation. They cannot weaken
-the selected profile or mark a blocked, skipped-required or simulated check real.
-
-## Dual-provider workflow proof
-
-GitHub Actions and the Buildkite workflow importer schedule the same exhaustive
-static integration shard inventory. A bounded producer output selects the active
-shards; inactive workers perform no artifact download or test execution. Tests
-must prove that the static inventory equals every shard the planner can produce,
-including empty selections. Shared compilation, exact non-overlapping Gatling
-partitions, five-minute test-only budgets and the aggregate integration check
-remain mandatory. Workflow and checkout repairs select their executable policy
-regressions in the shared release-policy shard.
-
-Direct CI governance commands operate in a fresh private clone of the exact
-provider checkout commit. The clone is created with a restrictive umask and no
-local hard-link or alternate-object borrowing; its commit and tree are checked
-against the source before use. Existing provider checkout permissions and runtime
-databases are not changed or copied. A permissive-checkout regression proves
-private directory modes, exact Git identity, clean runtime state and unchanged
-source permissions. The shared-group storage policy stays intact.
-
-Fresh test-fixture creation also has a process boundary. Tests start from a
-permissive inherited umask, execute the three direct CI test-command prefixes,
-and verify private new directory/file modes without changing pre-existing
-shared state. The packaged policy artifact must reproduce the unsafe-fixture
-failure without that boundary and pass with it; changing existing permissions
-or suppressing the storage check cannot satisfy this proof.
-
-Git fixture tests poison inherited provider configuration and prove that only
-the offline test child ignores global/system and inherited command settings;
-existing configuration files and the parent environment remain unchanged.
-SQLite recovery fixtures must reject unsuitable scratch candidates and execute
-the complete recovery proof on a checked, owned same-device candidate. Overlay
-filesystems may expose different directory/file device IDs; recognizing that
-fixture limitation must not disable the dependency's production safety guard.
-
-Musl publication regressions retain x86_64 native execution and aarch64 binary
-execution through QEMU user-mode on a supported Linux runner. The ARM lane pins
-both the official Cross source revision and its matching compiler/runtime image
-digest. It compiles the release CLI and executes the no-replace publication
-tests; a cross-compile-only result is insufficient. Direct qemu-aarch64 execution
-must not introduce privileged Docker, host binfmt registration, or a security
-policy override. Emulated execution is reported separately from native proof.
-
-Cargo-dist manifests remain files and uploaded artifacts. Cross-job decisions
-are bounded booleans and tag values rather than the full manifest; malformed,
-empty or multiple JSON documents fail before output publication. The host job
-requires a successful plan in addition to successful or intentionally skipped
-artifact jobs. Tests use isolated fake cargo executables and never publish a
-release. Static importer admission is distinct from executed CI proof, and
-rejected workflow tokens remain unresolved authorization failures.
-
-Required-context regressions invoke the actual material gate for PR creation,
-updates, and protected postmerge pushes. Missing or invalid evidence fails before
-local skips; remote-only accepted-base refs survive the real private-clone script.
-A synthetic merge containing newer base prose cannot satisfy a head-only authored
-spec requirement. Public-wrapper tests isolate inherited provider context and
-exercise explicit required and manual paths. Executable drift scripts reject
-unstaged, staged-only, and staged-then-worktree-reverted edits on both workflows.
-Permissive-umask child tests exercise the real Dockerfile projection generator at
-000 and 002, retaining production storage guards and parent process state.
-These are scoped regression proofs, not a substitute for the complete current-
-candidate readiness suite tracked by the repository's validation work.
-
-## Post-merge source and release proof
-
-Gatling is a host CLI contract suite. Its shared fixture suppresses optional
-claim-triggered container startup, including initialization and task lookup,
-while dedicated container tests retain the production startup path. Fixtures
-issue their commands serially and set the existing broker idle window to one
-second; broker mutation dispatch, durable receipts, and shared database behavior
-remain enabled. The production three-second batching default and dedicated
-concurrent-broker tests are unchanged. Socket-capable CI must exercise this
-path because constrained local hosts may fall back to direct execution. Each
-stateful fixture command emits uncaptured start/end diagnostics naming its
-fixture and elapsed time, so an aggregate timeout identifies unfinished stages.
-Children stay in the invocation supervisor's process group for cancellation and
-scratch cleanup. The aggregate Bazel budget stays at 300 seconds. A passing isolated decision lifecycle is not
-proof that a parallel full-suite timeout has been reproduced or repaired; the
-complete Gatling inventory must pass, either in the full target or its exact,
-non-overlapping shard union. Ignored cases remain explicitly ignored.
-
-PR integration proof separates one shared compilation from parallel execution.
-Each `Run selective tests` matrix step must succeed in less than 300 seconds;
-raising a deadline, suppressing a case, or merely reporting an unmeasured budget
-does not establish this bound. Regression tests cover routing equivalence,
-complete shard coverage, no overlap, relocated runfiles, and supervisor invocation.
-The final evidence includes actual exact-head step durations and selected test
-counts. The unsharded master target remains available as full-suite coverage.
-
-Release routing is determined from the immutable Git event range, not release
-labels, branch names, or commit messages. Only an advancing root package version,
-the matching root lockfile version, and optional changelog content qualify for
-the slim source-check path. Source, dependency, feature, template, file-mode,
-add/delete, mixed-range, or unresolvable-base changes retain normal checks.
-The candidate binary is still built and `decapod validate` still executes for
-version-only releases. Any tolerated post-validation drift must be reproduced
-by the actual projection generator from the accepted version-only inputs;
-authored prose and unrelated generated surfaces cannot be normalized away.
-Actual material-spec gate regressions exercise release PR creation and later
-metadata-only updates, plus a mixed-source rejection. Shared proof regressions
-cover staged edits hidden by a worktree revert, partial/invalid evidence,
-configured-base ancestry, equal-tree synthetic merges with explicit event IDs,
-and synthetic merges containing new base code. Both Cargo library execution
-and the established Bazel projection-policy target exercise these boundaries;
-the offline consumer job runs the complete library suite. No validation step is
-replaced by a classifier-only success.
-
-The release-routing workflow fixture is embedded from a declared compile-time
-input. Its policy assertions must pass under Bazel's isolated test sandbox as
-well as Cargo; a compile-time checkout path is not a runtime filesystem contract.
-
-Release planning tests must inspect the pinned cargo-dist plan for all four
-configured targets and verify that every archive selects only the product
-executable. A version-bump-only fixture verifies that the package overlay does
-not pin a second product version. Native packaging evidence and foreign-target
-runner evidence are reported separately; selecting an artifact is not proof
-that every target compiled or shipped.
-
-## Context classifier regression proof (#1370)
-
-Each supported safe case requires a neighboring adversarial control and an
-independent occurrence check. The corpus covers short explicit credentials,
-literal fallback, mutable/shadowed captures, custom macros, random-source
-helper tampering, tuple/option/match uncertainty, operation SQL extraction,
-changed or missing wrapper modules, manifest substitution, quoted shell
-function overrides, unsafe re-parsing, missing includes and mixed lines.
-Credential-shaped fixtures continue to be expected findings.
-
-Native template extraction requires both exact original bytes and rendered
-script/Dockerfile equivalence. Cargo packaging must retain every included
-asset. Classifier tests and genuine ordinary-host validation do not establish
-container custody, live Supabase access, or actual PostgreSQL transactions;
-those evidence states are recorded independently. A candidate scanner cannot
-serve as its own publication authorization evaluator.
-
-## Supabase consumer evidence (#1369)
-
-Default SQLite and Neon regressions remain distinct from Supabase HTTP fixture
-coverage. The opt-in actual PostgreSQL and hosted Supabase service profiles
-are ignored without authorized disposable fixtures; ignored is unavailable
-proof, not a pass. Consumer fixtures verify command dispatch, typed results,
-credential scope, redacted diagnostics, redirect refusal and bounded timeouts.
-Service-owned tests must independently verify schema, authorization and the
-atomic task/event ledger before any hosted readiness claim.
-
-The Supabase HTTP contract profile exercises real CLI add/get/show/claim/release/
-done dispatch. Mutations carry an ordered task write, event write and task read
-in one request with matching explicit task IDs and timestamps; both write counts
-must equal one before a returned task is treated as success. Read commands
-preserve normalized fields and explicit not-found results. Rejected mutation
-responses remain redacted and cannot create local databases. Validated completion
-must fail before any data request. Scripted responses establish client composition,
-not actual transaction commit, service authorization or cleanup.
-
-The separate service profile requires second-principal list/get/show visibility,
-missing-task transition failures, non-owner release/completion failures and safe
-observations after completion retries. Every denied principal is checked against
-all supported mutations, not only creation; fully denied principals also cannot
-list/get/show. These extra failed attempts must preserve the existing single-task,
-version-five and exactly-five-event ledger expectation. The profile remains
-unrun until an authorized actual PostgreSQL or protected hosted fixture is present.
-
-## Reliability Proof Budget
-
-Shared-database regression tests verify that standalone read-completion audits
-acquire the pool operation lock before waiting for the audit mutex. A test-only
-read-only mutex observer checks that ordering directly while the audit mutex
-is held. A separate parallel read/repair regression checks one abandonment
-acknowledgment, all successful read audits, retained history and clean replay.
-The production operation-lock timeout is unchanged.
-
-Validation must remain bounded even when host maintenance services are
-unavailable. The parent supervisor records the active gate and elapsed time
-for timeout diagnostics. Workspace status performs only its direct Git and
-container-context observation; it does not invoke the full validator. Container
-image retention and stale-worktree image cleanup are maintenance operations,
-not required validation proof work.
-
-Projection reliability is covered by two bounded regressions: an attestation
-fixture containing duplicate blocks and orphan sentinels must collapse to one
-fresh block while retaining authored sections, and a Git repository with an
-ignored Markdown tree must produce a document graph containing visible files
-without traversing or linking the ignored tree. Repeating either refresh path
-must not introduce additional output.
-
-## Validation Philosophy
-> Validation is a release gate, not documentation theater.
-
-## Decision-Provider Proof
-
-The provider seam is covered by focused tests for disabled operation, typed
-boundary probabilities, labeled governance-state serialization, unavailable
-transport, non-success responses, malformed/invalid responses, and missing
-credentials. The assurance harness verifies that the default local path
-surfaces `no_observation` without changing the existing policy interlock. The
-ignored `decision_provider_live` corpus covers clearly aligned and violating
-trajectories, partial/missing proof, wrong-target proof, contradictions,
-ambiguity, boundary violations, adversarial state text, and degraded state. It
-emits comparison-ready JSON records only when explicitly enabled with a Jev key;
-it does not define a production threshold or claim live evidence by default.
-
-## Governance Input and Proof Currency (#1325, #1327)
-The specs manifest hashes both project authority inputs: `.decapod/config.toml`
-and `.decapod/OVERRIDE.md`. A mismatch is not ignored. The normal bounded
-validation path refreshes the manifest in the claimed workspace, then checks
-whether the active validation epoch is still represented in the bound
-trajectory. The non-refresh validation branch reports `STALE_CONFIG_INPUT_HASH`
-and names `decapod rpc --op specs.refresh` as the supported repair.
-
-An epoch change is intentional proof invalidation, not a receipt rewrite. If a
-trajectory already contains successful validation for another epoch, validation
-returns `STALE_VALIDATION_EVIDENCE`, leaves the canonical trajectory and
-validation sections unchanged, and instructs the operator to initialize a new
-run before retrying. Same-epoch validation remains idempotent. Force re-init is
-allowed to stay green only when it preserves existing config authority,
-manifest state, and authored living specs.
-
-## Governance Normalization and PR Proof
-The canonical document must preserve every unresolved obligation and live proof
-reference through migration and PR reset. Tests cover conflicting legacy and
-canonical authorities, shared-directory locking, concurrent writers, interrupted
-cleanup, fresh initialization, and symlink/path escape rejection. Normalization
-must preserve logical information rather than merely rename files.
-
-Every commit after canonical adoption requires a checkpoint bound to its actual
-material and semantic inputs. Verification includes merge commits and the exact
-PR head, rejects reused prior-PR identity and altered checkpoint history, and
-does not hash a receipt into itself. Legacy commits before adoption remain
-explicitly unverified. A new PR may retire accepted current-PR claims only after
-Git proves the prior change is accepted; unresolved obligations remain active
-until evidence-bound resolution. Health Engine runtime claims are unchanged.
-
-## Validation Harness
-Define the test and verification harness used by this project.
-Key features:
-- **Automated Tests**: Unit and integration test suites.
-- **Linting & Formatting**: Static analysis tools and checkers.
-- **CI/CD Integration**: Automatic execution of validation gates on push.
-
-### Project-Facing Decapod Validation Workflow
-The GitHub Actions workflow scaffolded into Decapod-managed projects installs the
-published `decapod` binary with `cargo binstall` instead of compiling the
-checked-out project. It caches both `cargo-binstall` and the Decapod executable
-under `~/.cargo/bin`, keyed by the generated `AGENTS.md` release/fingerprint
-surface, so repeated validation runs reuse the tools until the pinned Decapod
-release changes. Decapod's own `.github/workflows/decapod-validate.yml` remains
-a source-build workflow because it validates the current repository tree.
-
-## Generated Spec Refresh Gates
-Decapod must keep generated specs synchronized at governance pressure points. Fresh `decapod init` may scaffold a missing specs directory. After initialization, refresh must re-evaluate the existing codebase, preserve authored spec content, update codebase-derived attestations, and refresh the manifest rather than rendering scaffold replacements.
-
-Refresh is a **workspace-owned write**. `refresh_specs_from_codebase`, validation self-heal, and `specs.refresh` identify custody from the Git toplevel (`rev-parse --show-toplevel`) and write only when that root is a claimed isolated path under `.decapod/workspaces/*` that is not `main`/`master`. A protected-root invocation fails closed with `workspace_required` and must leave pre-existing root files, including unrelated dirt, byte-for-byte untouched. `decapod workspace status` is observational: it may report stale projections, but it must not refresh them (the 0.96.0 contract; GitHub #1255). Workspace creation still aligns release-bound surfaces inside the new worktree.
-
-Refresh-capable paths:
-- `decapod validate` / `decapod validate --refresh-specs` (inside the claimed workspace only)
-- `decapod rpc --op specs.refresh` (inside the claimed workspace only)
-- `decapod workspace ensure` (writes only to the created worktree)
-- fresh initialization only: scaffold `.decapod/managed/specs/*.md` when the directory is absent
-
-Refresh output requirements:
-- Preserve all authored canonical spec content.
-- Re-evaluate repo surfaces and update codebase-derived attestation blocks.
-- Update `.decapod/managed/specs/.manifest.json` after writing files.
-- Avoid adding parallel project-state or architecture-survey documents outside the canonical spec set.
-
-## Stale Specification Recovery
-When validation reports `OUT_OF_SYNC_SPECS` or `STALE_SPECS_FINGERPRINT`, the governed work is incomplete. Inspect the automatically refreshed artifacts (or run `decapod rpc --op specs.refresh` explicitly), then retry validation. A stale-spec error does not justify claiming completion or publishing an unvalidated state.
-
-## Compatibility Regression Proof for #1311–#1314
-
-- A malformed local decapod.db must not prevent an isolated
-  rpc --op specs.refresh from refreshing managed specs.
-- Initializing a second trajectory must leave the first run loadable from its
-  per-run archive while the legacy cookie points to the one current workspace
-  run; same-workspace parallel jobs are represented by subagent loops.
-- Standalone event append paths must execute through the shared write pool,
-  and data db verify must report an intact store through Dactyl without
-  modifying it.
-- Absolute trajectory inputs and validation messages must not persist a home
-  directory or external filesystem path; internal paths remain portable
-  relative values.
-- A failed integrity probe remains a diagnostic result, not proof that an
-  automatic recovery action is safe or supported.
-- Canonical local read/write connection factories must acquire the bounded
-  sidecar coordination lock, and lock contention must classify as storage
-  contention without deleting the lock file.
-
-## Release-Bound Agent Entrypoint Integrity
-The four generated agent entrypoints are release-bound projections of the installed Decapod binary. Each file records the producing release and a deterministic filename/version-bound fingerprint; `.decapod/managed/specs/.manifest.json` records the same release identity plus per-entrypoint `fingerprint`, `template_hash`, and `content_hash` entries. Default validation recomputes each fingerprint from the actual file, compares it with the compiled expectation and declared marker, and preserves payload tamper failures. Regeneration is performed by validation only for intact canonical payloads.
-
-## Validation Receipt Without Skip-Git-Gates (#1259)
-The first successful `decapod validate` writes the validation section of
-`.decapod/governance.json`. The receipt binds logical input sections rather
-than whole-file bytes, so adding the receipt cannot invalidate its own hash.
-`GOVERNANCE_PR_UPDATES` recognizes working-tree canonical participation;
-`DECAPOD_VALIDATE_SKIP_GIT_GATES` is not a sanctioned agent path.
-
-Sequence: claim a fetched base and enter its isolated workspace → explicitly
-begin the PR → author source/specs and record plan/trajectory/current claims →
-validate → stage material → record a unique exact-input checkpoint → stage the
-canonical document and commit → publish through the inherited network remote.
-Each later commit repeats the checkpoint step; immutable-tree verification
-covers merge commits and the exact published head.
-
-Host-vs-container validate stickiness after `ensure --container` remains a
-documented deferred question: prefer staying in the printed container when
-`container_workspaces = true`, but host validate is not permanently sticky
-once the workspace exists.
-
-## Publication Bundle Currency Gate (#1232)
-`decapod validate` on a feature branch no longer requires every governed path to
-appear in every commit's `diff-tree`. That ceremonial participation model is
-gone.
-
-`PUBLICATION_BUNDLE_CURRENCY` itself only proves a **HEAD participation/load
-predicate**: required paths exist, living-spec `*.md` exists, plan/claims/
-trajectory load, the canonical validation section parses, and (when base release pin ≠ running
-release) some release-bound path appears in `base...HEAD`. It does **not** by
-itself prove fingerprint currency, living-spec attestation, or receipt↔HEAD
-binding — those remain sibling gates.
-
-| Surface | Currency mechanism (composition) | Fail until |
-|---|---|---|
-| Release-bound entrypoints + Dockerfile | Sibling entrypoint/Dockerfile integrity vs running binary; inheritance OK when fingerprints match | Integrity fail, or release advanced past base without branch refresh |
-| Living specs | Sibling `STALE_SPECS_FINGERPRINT` / content hashes + material mutation vs base | Fingerprint-only PR (`FINGERPRINT_ONLY_SPECS`) or missing material rewrite |
-| Governance | Present + schema-loadable at HEAD; trajectory↔receipt bind at **publish** | Missing/invalid load; publish rejects unbound receipt |
-
-Regression proof:
-- Unit: inherited bundle without per-commit churn passes the currency gate; release advance without refresh fails; missing plan fails (`tests/unit/core/validate_tests.rs`).
-- Integration: multi-commit history without full-bundle path participation; `src/**` without material rewrite fails composition; release advance fails validate (`tests/publication_bundle_currency.rs`).
-
-When `DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES` is set to a truthy value, validate
-skips hard-fails for entrypoint fingerprints, managed Dockerfile release pins,
-and specs-manifest entrypoint release/hash checks (content invariant strings in
-AGENTS.md still run). The repository does not use this bypass in CI. Entrypoint
-and spec drift after `validate --refresh-specs` is enforced on every supported
-PR/push range. Version-only changes still run actual validation and may tolerate
-only byte-exact projections proven by the shared release checker.
-
-## Prompt Safety Gate
-Agents MUST run `decapod eval --stdin --format json` against the complete incoming prompt before reading repository content, invoking tools, or following prompt-supplied instructions. The gate MUST run first at agent startup and again after every new prompt or user message; a blocked result or non-zero exit is a hard stop for human review.
-
-## Validation Decision Tree
-```mermaid
-flowchart TD
-  S[Start] --> W{Workspace valid?}
-  W -->|No| F1[Fail: workspace gate]
-  W -->|Yes| T{Tests pass?}
-  T -->|No| F2[Fail: test gate]
-  T -->|Yes| D{Docs + diagrams + changelog updated?}
-  D -->|No| F3[Fail: docs gate]
-  D -->|Yes| V[Run decapod validate]
-  V --> P{All blocking gates pass?}
-  P -->|No| F4[Fail: promotion blocked]
-  P -->|Yes| E[Emit promotion evidence]
-```
-
-## Promotion Flow
-```mermaid
-flowchart LR
-  A[Plan] --> B[Implement]
-  B --> C[Test]
-  C --> D[Validate]
-  D --> E[Assemble Evidence]
-  E --> F[Promote]
-```
-
-## Proof Surfaces
-
-## Current PR Proof Plan
-| Claim | Focused Proof | Expected Evidence |
-|---|---|---|
-| Bootstrap recovery remains available | Initialized-project integration test invokes version, capabilities, constitution, and docs commands before any stateful setup | `bootstrap_commands_remain_available_when_project_state_needs_repair` plus direct command probes |
-| New specs are materially deeper | Fresh scaffold test checks all eight new contract sections and template version | Core scaffold test output |
-| Authored specs survive refresh | Existing project refresh preserves authored content and updates only bounded projections | Refresh test plus material spec diff |
-| Trajectory is one JSON object | Unit test appends a legacy second value, initializes a new run, and parses the result | Current run ID, current hash, no concatenated values |
-| Migrations are agent-visible | Migration report test seeds an older release, checks notice once, then verifies steady state is quiet | Previous/current versions and instruction |
-| CI lint remains warning-free | `CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings` | Clippy exits successfully without diagnostics |
-| Recovery preserves release-bound spec metadata | Source-built validation in a checkout missing local policy exercises scaffold recovery with an older manifest template | Existing template version and per-spec template hashes remain unchanged |
-
-## Migration and Artifact Regression Rules
-- A migration path must be safe to invoke repeatedly and must not make the
-  agent guess whether a version transition occurred.
-- A trajectory write must be atomic and parse as one complete JSON document
-  after replacement.
-- A command-path warning is actionable guidance, not a completion claim; the
-  migration ledger and post-migration verification remain authoritative.
-
-- `decapod validate`
-- Required test command: `cargo test`
-- Required integration/e2e commands: `cargo test --test context_capsule_schema`, `cargo test --test init_validate_green_field`
-- Nix packaging (when flake/Cargo/toolchain paths change): `.github/workflows/nix-flake.yml` runs, on native **x86_64-linux** and **aarch64-darwin**, (1) `checks.<system>.rust-toolchain` proving the locked `rust-overlay` supplies the channel in `rust-toolchain.toml`, then (2) `nix build` of `packages.default`, then (3) `./result/bin/decapod system version`. Evaluating a flake output alone is not packaging proof. CI does not mutate `flake.lock`.
-
-## Epistemic Integrity Regression Proof
-- Nested H3/H4 headings, slash prose, fenced directive examples, and arbitrary Markdown survive through final resolved context.
-- Duplicate exact directive IDs and non-empty unknown Decapod-namespaced IDs fail closed; empty retired generated sections remain upgrade-compatible.
-- A structurally healthy spec-drift fixture increments neither warning nor failure counts.
-- A watcher record imported by existing-project init is observed by validation, health, heartbeat, and flight recorder after the source JSONL is removed.
-- Re-running event reconciliation imports zero additional rows; malformed or conflicting fresh records return visible errors, and a proven consolidation receipt prevents retired archives from being reinterpreted.
-- Event migration regression proof includes a canonical-only store with 17,392 broker rows, 1,240 duplicate sequence groups, no legacy stream tables, and no structural unique index; it must normalize to a contiguous unique sequence and install the canonical index. A forced residual duplicate must fail with the typed normalization marker before index creation. Broker replay proof separately exercises the reported 20,384-row scale with 9,785 pending and 10,599 terminal events through the paged query path.
-- Local Dactyl v0.11.1 conformance covers explicit IDs, event-atomic todo transitions with rollback, read-only enforcement, ordinary file close/reopen persistence, backend-neutral schema inspection, native integrity verification, WAL-aware online backup, explicit logical recovery, metadata/data preservation, DELETE journal mode, archive/path safety, open-connection quiescence, and bounded coordination when the host SQLite runtime is available. A missing host runtime is a typed `sqlite_runtime_unavailable` storage-I/O result and never activates a bundled or second driver; hosted Propodus/Neon and tenancy/concurrency proof remain separate checks.
-- Local startup proof also covers the agent-facing `LOCAL_SQLITE_RUNTIME_REQUIRED` remediation, supported library-name discovery, machine-local runtime configuration serialization, and the cloud-path exclusion from the native SQLite preflight.
+## Validation Overview
+
+Decapod validates whether identified work satisfies the project's stated
+boundaries and required proof. Validation preserves the difference between what
+the human requested, what the agent understood, what ran, and what the evidence
+supports. It cannot establish correctness outside the configured requirements or
+control commands an agent runs outside Decapod.
+
+The agent owns the operational loop: establish intent and scope, work in a
+claimed workspace, record falsifiable claims, gather evidence, repair supported
+failures, and revalidate. Human decisions and unavailable proof remain explicit
+blockers. Human onboarding requires only installation and initialization; the
+agent performs validation and coordination.
+
+## Evidence Artifacts
+
+Evidence must identify the input state, evaluator, executed check, result, and
+relevant artifact. Plans, checkpoint records, provider probabilities, wrapper
+success, and an agent saying “done” cannot substitute for execution evidence.
+
+- `passed` means the identified check has supporting successful evidence
+- `failed` means a check ran and did not satisfy its condition
+- `partial` means only part of the required proof is available
+- `unavailable` means the required evidence could not be obtained
+- `no_checks_run` is a computed absence of proof, with an unsupported completion
+  verdict; it is not a passing check input
+
+A required check that is missing, empty, duplicate, stale, running, canceled,
+failed, or skipped cannot establish readiness. Non-applicability must be derived
+from the current immutable source range and reviewed policy, independently of a
+provider's skipped result. Mocked or simulated stages retain that disposition.
+Required check invocations must actually execute. Reuse of compiled artifacts
+follows the declared, source-bound proof contract.
+
+Verification loops require non-empty proof references for `grader_result: pass`
+and non-empty feedback for `grader_result: fail`. Loop result `pass`/`fail` is
+separate from lifecycle status `passed`/`failed`. Retry attempts remain contiguous,
+and feedback is bounded. Failed historical attempts remain visible when new
+successful evidence replaces their blocking condition.
+
+## Governance invariants
+
+The agent contract requires prompt evaluation before repository/tool actions.
+The agent must respect the result and stop for human review when blocked. The
+validator cannot certify every prior action taken through an external tool.
+
+Validation checks repository evidence for these product contracts:
+
+1. Human intent, the agent's recorded interpretation, task binding, allowed scope,
+   unresolved questions, and proof hooks remain consistent enough to execute
+2. Mutations use an active session and the correct owned workspace. Root files,
+   the root index, other task workspaces, and unowned resources remain untouched
+3. Required approvals and decision gates remain binding. Advisory observations,
+   inferred intent, and missing coordination state cannot satisfy them
+4. Plans, current claims, trajectories, receipts, and unresolved obligations
+   remain loadable and preserve their custody across restarts and handoffs
+5. Specifications reflect the agent's current interpretation; generated metadata
+   is current and never replaces substantive authored content
+6. Completion and publication bind their proof to the actual candidate and active
+   policy, rather than a historical receipt or a different source tree
+7. Execution and recovery remain bounded, with owned subprocesses terminated and
+   reaped and uncertainty preserved on timeout or interruption
+
+`TODO_PROJECTION_MISSING` is a coordination blocker with
+`execution_ready: false`, not lost request meaning. Its recovery must prove the
+intended task, agent ownership, lease, and control plane before execution resumes.
+A storage error must not be relabeled as an absent projection.
 
 ## Promotion Gates
 
-## Blocking Gates
-| Gate | Command | Evidence |
-|---|---|---|
-| Architecture + interface drift check | `decapod validate` | Gate output |
-| Tests pass | project test command | CI + local logs |
-| Docs + changelog current | repo docs checks | PR diff |
-| Security critical checks pass | security scanner suite | scanner reports |
+Full `decapod validate` outside CI proves the exact current workbranch against
+its accepted target and complete applicable profile. It binds source, governance,
+reviewed CI/release definitions, toolchain, and execution identities. Changes to
+those inputs or the accepted target invalidate prior readiness.
 
-## Warning Gates
-| Gate | Trigger | Follow-up SLA |
-|---|---|---|
-| Coverage regression warning | Coverage drops below target | 48h |
-| Non-blocking perf drift | P95 regression below hard threshold | 72h |
+Workbranch pushes and iteration may precede validation. Creating a PR, including
+a draft, requires converged intent, mergeability, and successful full validation.
+A focused test, passing `govern project-check`, empty proof registry, or green
+provider summary is insufficient. The publisher invokes the full boundary
+independently before its combined push-and-PR operation.
 
-## Evidence Artifacts
-| Artifact | Path | Required For |
-|---|---|---|
-| Validation report | `.decapod/managed/artifacts/provenance/*` | Current-run diagnostics; not a tracked promotion record |
-| Test logs | CI artifact store | Promotion |
-| Architecture diagram snapshot | `ARCHITECTURE.md` | Promotion |
-| Changelog entry | `CHANGELOG.md` | Promotion |
+The source-readiness profile is finite and reviewed. Its source inventory,
+required platform/matrix instances, and selected integration shards must match
+the current repository. Missing adapters, unknown repositories/profiles, altered
+workflow contracts, unproved exclusions, or self-dependent validation fail
+explicitly. Profile declarations are reviewed policy and cannot be silently
+updated to match whatever evidence happens to exist.
+
+The current core profile reports `source_pr_readiness`. Release-only
+four-platform packaging is outside that profile. A passing source report makes
+no packaging or delivery claim. Publishing and deployment simulations must be
+labeled; they are not actual uploads, tags, releases, or deployments.
+
+## Local and remote execution scopes
+
+`govern project-check` executes bounded project/governance prerequisites. It is
+useful during bootstrap and inside finite recipes, but grants no publication
+readiness on its own.
+
+Inside GitHub Actions or Buildkite, public CLI, alias, and RPC validation run
+real bounded CI-local checks. Reports state `scope=ci_local` and
+`publication_ready=false`. They do not write a full-readiness receipt, recursively
+submit another suite, or accept snapshot transport arguments. Provider environment
+flags alone cannot authorize publication.
+
+Native execution and optional Buildkite execution enforce the same complete
+required profile. The canonical `proof.validation_buildkite_preflights` setting
+selects the route. The Buildkite route executes its prerequisites remotely and
+reports local project checks as `not_run_provider_owned`. It pushes or reuses the
+exact existing workspace-branch commit and collects authenticated execution
+artifacts. GitHub Actions results neither satisfy nor block that selected profile.
+
+Remote proof must authenticate the expected event, build, attempt, logical job,
+artifact producer, raw bytes, and reviewed execution recipe. Once a PR exists,
+independent PR/manual runs for the same head do not replace required push-event
+execution. Duplicate matching runs and changed attempt bindings are errors.
+Imported runtime identity and native provider identity remain distinct; a receipt
+must not invent native fields the importer cannot expose.
+
+Collection uses bounded authorized reads, a shared deadline, cancellation,
+explicit capture limits, and final uncached identity checks. Failed or denied
+transfers cannot yield partial-batch proof or authorize another route. Timing
+reports are diagnostics, not evidence of correctness; overlapping request work
+must not be summed as wall time. Fixture collectors do not prove live provider
+acceptance.
+
+## Authority, specifications, and proof currency
+
+The specs manifest binds both project authority inputs, `config.toml` and
+`OVERRIDE.md`, as well as supported release-bound projections. Validation checks
+actual entrypoint content, declared fingerprints, compiled expectations, and the
+managed Dockerfile pin. Inheriting intact current material is permitted; every
+commit need not manufacture a change to every governed path.
+
+`PUBLICATION_BUNDLE_CURRENCY` proves required HEAD participation and loadability.
+Sibling gates separately prove fingerprint integrity, authored material change,
+epoch currency, and receipt binding. Presence alone is insufficient.
+
+Refresh runs only in the supported isolated workspace and preserves authored
+content. Supported surfaces are `rpc --op specs.refresh`, validation refresh,
+and workspace creation; fresh initialization may scaffold absent specifications.
+A protected-root refresh reports `workspace_required` and leaves existing root
+material untouched. `workspace status` never refreshes. Malformed generated
+boundaries that risk prose loss report `SPEC_REFRESH_AUTHORED_CONTENT_LOSS` before
+any spec or manifest write.
+
+A governed source change requires a material authored living-spec update against
+the PR base. Attestations, capability declarations, and capability overlays are
+excluded from the material comparison. Fingerprint-only change fails with
+`FINGERPRINT_ONLY_SPECS`. Not every spec must change, but affected contracts must
+be accurate. Release-only treatment depends on strict immutable change
+classification, never a label or branch name.
+
+`STALE_CONFIG_INPUT_HASH`, `OUT_OF_SYNC_SPECS`, and `STALE_SPECS_FINGERPRINT`
+identify projection/authority drift and require supported refresh and revalidation.
+`STALE_VALIDATION_EVIDENCE` identifies a different active validation epoch. Prior
+evidence is preserved; the agent initializes a new run and obtains fresh proof
+rather than relabeling an old receipt. Same-epoch validation is idempotent.
+
+Epoch bindings cover plan/review, claims, authored spec digests, entrypoints, and
+managed Dockerfile while excluding the receipt itself. A proof-only receipt commit
+must not invalidate its own inputs. Checkpoints bind staged material and semantic
+inputs and are verified through the exact head, including merges. A later
+checkpoint cannot retroactively prove an earlier unchecked commit.
 
 ## Regression Guardrails
-- Baseline references:
-- Statistical thresholds (if non-deterministic):
-- Rollback criteria:
 
-## Bounded Execution
-| Operation | Timeout | Failure Mode |
-|---|---|---|
-| Validation | 30s | timeout or lock |
-| Unit test suite | project-defined | non-zero exit |
-| Integration suite | project-defined | non-zero exit |
+CI source selection uses a complete immutable event/base/head context. Required
+contexts reject missing, partial, malformed, unresolvable, or checkout-inconsistent
+evidence, including a missing accepted-base ref. Base ancestry and synthetic
+merge parent/tree identity must be verified. Provider context recognition is
+scoped to the actual checkout and its owned validation clone so inherited
+variables cannot classify unrelated test repositories.
 
-## Coverage Checklist
-- [ ] Unit tests cover critical branches.
-- [ ] Integration tests cover key user flows.
-- [ ] Failure-path tests cover retries/timeouts.
-- [ ] Docs/diagram/changelog updates included.
+Release-only classification permits an advancing root package version, its
+matching root lockfile version, and optional changelog content. Source,
+dependency, feature, registry, checksum, file-mode, add/delete, or mixed-range
+changes retain normal checks. Version-only releases still compile the candidate
+and execute actual validation. A narrow dependency-metadata projection may
+normalize only the matching local root version; malformed, duplicate,
+mismatched, or registry-sourced root records fail closed. Original Cargo inputs
+remain authoritative for product version and release classification.
 
-## Material Living-Spec Mutation Gate (#1183)
-Living specs are **evidence material for proof completion**, not optional documentation. Fingerprint/attestation refresh is necessary but insufficient for PR promotion and for verified workunit completion packages.
+Proof execution must preserve its bound checkout, index, and non-ignored source
+material. A stable HEAD is insufficient. Drift checks reject staged-only changes
+and staged changes hidden by restoring the worktree. Any permitted generated
+release drift must be reproduced byte-for-byte by the actual projection generator
+from accepted inputs, without normalizing authored prose or unrelated surfaces.
 
-Feature-branch validation and workspace publication require at least one **material** authored-content change under `.decapod/managed/specs/*.md` versus the PR base after stripping:
+Provider governance checks use a newly owned private clone with exact Git
+identity and full history. A supported merge-checkout normalization must verify
+ordered accepted-base/authored-head parents and exact head-tree parity, then run
+strict checkpoint/material verification. It must not mutate the provider checkout
+or ignore source/private-clone races.
 
-- codebase attestation blocks (`decapod:codebase-attestation`)
-- declared capability blocks (`decapod:declared-capabilities`)
-- capability overlay blocks (`decapod:capability-overlay`)
+## Evidence Matrix
 
-Failure mode: `FINGERPRINT_ONLY_SPECS`. Not every living-spec file must change; at least one of INTENT, ARCHITECTURE, INTERFACES, VALIDATION, SEMANTICS, OPERATIONS, SECURITY, or README must carry prose that reflects the change under review. Release-labeled PRs may skip the CI job; the binary publish gate still prefers material rewrites when a PR delta exists.
-Proof-completion bindings:
-- Validation epochs record `living_spec_material:<path>` digests of authored prose (excluding auto-generated blocks).- VERIFIED workunits must bind at least one `.decapod/managed/specs/*` path in `spec_refs` when the living-specs surface exists.- Completion evidence verification fails closed when living-spec material digests diverge from the active epoch or when living-spec refs are omitted.
+Required test selection comes from reviewed project policy. These proof areas
+must remain covered as implementations evolve:
 
-### Audit repair and authored spec regression proof
+- Interfaces: prompt evaluation, CLI/RPC envelopes, typed failures, bootstrap
+  availability, schema compatibility, and accurate agent documentation
+- Intent and context: plan interlocks, task/scope binding, override precedence,
+  malformed authority rejection, deterministic capsules, and evidence portability
+- Coordination: exclusive claims, conditional conflicts, event-atomic mutation,
+  retries, competing clients, crash replay, and committed-claim/container follow-up
+- Isolation: dirty-root preservation, correct canonical store resolution,
+  branch-local governance, destination collisions, symlink rejection, invocation
+  ownership, and safe cleanup after interruption
+- Persistence: explicit IDs, transaction rollback, read-only enforcement,
+  close/reopen durability, idempotent event migration, replay determinism,
+  integrity diagnostics, bounded locking, backup, and operator-directed recovery
+- Specifications: material-change detection, release-bound integrity, authored
+  prose preservation, idempotent refresh, config drift, and epoch invalidation
+- Publication and completion: full range/checkpoint verification, remote head/base
+  and PR-file verification, partial/unknown outcomes, idempotent retry, current
+  workunit proof, and rejection of stale or omitted living-spec references
+- Proof execution: complete check inventories, real exits/logs/artifacts,
+  toolchain custody, deadlines/cancellation, unchanged source, adversarial provider
+  bindings, missing or duplicate evidence, and independently proved exclusions
 
-- `cargo test --test crash_consistency` covers read-only preview, exact-event
-  selection, preserved audit history and committed data, mutation-policy denial,
-  recent/completed/unknown target refusal, concurrent retry, and CLI verification.
-- `cargo test --lib project_specs` covers repeated refresh, preserved named
-  sections, inline and consecutive generated boundaries, and preflight refusal
-  before any spec or manifest write on detected authored loss.
-- `cargo test --test substrate_integrity` verifies config-driven updates still
-  reach untouched scaffolds while authored content survives refreshed manifests.
-- `cargo test --test core_tests scaffold` checks existing scaffold contracts.
-- Formatting and all-target Clippy must pass. The full library suite reproduces
-  four pre-existing failures on baseline `efdb493b`; those failures are recorded
-  separately from the targeted issue proofs.
+Integration preparation builds selected executables once; workers consume those
+artifacts without compiling. Shards must form the exact selected inventory with
+no overlap, use executable libtest names, preserve normal ignored-test behavior,
+and propagate every child failure. The repository's selective integration steps
+retain their 300-second execution budget. Raising a timeout, omitting a test, or
+passing one isolated case does not prove the complete suite fits that budget.
+
+Source-owned shell, checkout, setup, release, and dependency-policy regressions
+must exercise the actual authored helper or workflow body. Tool setup verifies
+pinned official bytes and exact version output before adding tools to PATH.
+Regular-file release staging preserves executable bytes. Tests do not publish
+real packages merely to establish routing or archive policy.
+
+## Proof Surfaces
+
+Process tests and container mocks cannot establish behavior against a Docker
+daemon. Actual interrupted-container recovery requires a provisioned runtime and
+checks receipt-bound cleanup while preserving unrelated files and containers.
+Absent runtime evidence remains unavailable.
+
+SQLite, Neon, Supabase HTTP fixtures, actual PostgreSQL transactions, and hosted
+Propodus authorization are separate proof scopes. Cloud fixtures cannot establish
+server-side tenant isolation, deployment membership policy, or event atomicity.
+Missing host SQLite runtime is an explicit availability failure; it does not
+activate a bundled fallback driver.
+
+The optional Jev adapter requires tests for disabled operation, missing or invalid
+state, credentials, malformed/out-of-range observations, transport failure, and
+interlock preservation. A live provider corpus is opt-in and must report its own
+execution; it does not establish a production approval threshold.
+
+Platform proof must state where it executed. Native, emulated, and cross-compiled
+results are distinct. Packaging checks must build and run the promised artifact
+on the applicable native or explicitly emulated target; evaluating metadata or
+selecting an archive is insufficient. Unrun release targets remain unproven.
+
+## Recovery and final acceptance
+
+Validation failures leave the task open. Follow the report's supported repair,
+preserve failed evidence, and rerun against the exact candidate. Stop for human
+judgment when a decision is required, access is unavailable, authority conflicts,
+or remediation is unsupported. Never weaken the profile, fabricate green checks,
+edit machine-owned evidence, or use a local receipt to replace missing remote
+proof.
+
+Audit abandonment retains an unknown original mutation outcome. Integrity probes
+do not authorize database repair, and failed runtime inspection does not authorize
+resource deletion. Timeout diagnostics identify the active stage when available;
+no universal short wall-time claim covers a full provider suite.
+
+Final acceptance requires current complete evidence, satisfied execution and
+publication gates, verified remote publication when requested, and proof-bound
+completion. Report the exact scope and unresolved limitations. A successful
+check of this specification, or a previous candidate, makes no claim that a later
+candidate has passed.
 
 <!-- decapod:capability-overlay:background-processing:start -->
+
+Generated capability obligations: `background-processing` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
 
 ## Background Processing Validation Overlay
 
 ### Duplicate Delivery Tests
-- Same message delivered multiple times MUST produce same result
+- Test repeated delivery against the declared duplicate-handling semantics, including side effects and limitations
 - Idempotency key verification
 - Verify the declared delivery guarantee; do not claim exactly-once behavior without proof
 
@@ -569,10 +296,12 @@ Proof-completion bindings:
 ### Shutdown Tests
 - Graceful drain on signal
 - In-flight job completion or safe requeue
-- No data loss on forced termination
+- Verify the declared durability and loss boundary on forced termination; record unsupported guarantees
 <!-- decapod:capability-overlay:background-processing:end -->
 
 <!-- decapod:capability-overlay:persistent-state:start -->
+
+Generated capability obligations: `persistent-state` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
 
 ## Persistent State Validation Overlay
 
@@ -596,65 +325,7 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `82096862eeb09ce32d87a138bd68041186df5c31df34fc65f853d2f160f81228`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (185 files)
+- Repository signal fingerprint: `667a48279b6f65c06fbc010723f7c053401dbeac2ba1c589e0f17865949ef801`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (186 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
-
-## Approval and bounded-runtime regression proof (#1361)
-
-Approval regressions exercise a Git repository with destructive-operation approval
-policy enabled, so domain and broker checks must both accept the same resource
-fingerprint. Cross-target, cross-scope, expired, and revoked grants remain denied;
-intentional action-wide grants retain their compatibility behavior.
-
-The validation termination suite keeps its 10-second individual and 20-second
-aggregate smoke budgets. Bazel schedules this suite exclusively after other build
-and test work. The GitHub Actions core test command additionally sets
-`--test-threads=1` to serialize tests within the Rust harness. JSON reports
-record worker gate timings alongside full process wall time, allowing budget
-failures to distinguish gate execution from startup and receipt overhead.
-
-Broker crash-replay fixtures use the canonical datastore for both writes and
-verification. Observation-ledger tests validate explicit sequence numbers and
-their associated operations; ULID-key iteration order is not append order.
-
-## Five-issue recovery regression surfaces
-
-Dirty-root isolation is checked with committed Git fixtures containing staged
-and unstaged tracked changes, untracked names with quotes/newlines, ignored
-private files and governance changes. Tests compare original file bytes and the
-index, create independent workspaces, verify only committed content appears in
-them and reject ownership/symlink collisions. A CLI fixture exercises actual
-`todo claim` and `workspace ensure` twice from dirty master while preserving
-root notes, configuration and managed specification bytes. Status and governance
-inventory must return the same source-isolation ownership records.
-
-Lifecycle process tests use real short-lived helpers for excessive output,
-timeouts, reaping and interruption; container protocol fixtures test command and
-ownership handling. Fixture success does not establish execution in a Docker
-container or against a hosted Supabase service. Those proofs require their own
-explicitly provisioned runtime and fixture and must be reported unavailable
-when not run.
-
-The actual Docker lifecycle profile is opt-in locally and explicit in the
-Ubuntu Actions job. It uses a pre-pulled official disposable fixture, interrupts
-the foreground caller, then verifies that receipt-bound recovery removes the
-matching immutable container while preserving unrelated state. Local runs that
-lack Docker leave this profile ignored; only its recorded Actions result can
-establish the actual daemon-backed behavior.
-
-The broker claim follow-up regression has bounded setup, competing mutation,
-completion and retry stages with timestamps and phase diagnostics. Its child
-output is file-backed so an inherited pipe cannot hide process completion.
-Actions runs the exact real-socket regression independently before the unchanged
-full core gate, distinguishing its own latency from the aggregate test budget.
-Only an explicit local AF_UNIX permission denial makes that proof unavailable;
-other transport or command failures must fail the test.
-
-The twenty-client contention fixture reports credential setup and individual
-client/retry durations and bounds its child collection. Actions also measures
-that case independently before the full suite. The broker target's finite
-900-second diagnostic budget does not alter runtime timeouts or establish
-correctness by itself: all twenty clients and the existing no-busy, exactly-once,
-cleanup and responsiveness assertions must complete successfully.

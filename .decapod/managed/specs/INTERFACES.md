@@ -1,612 +1,301 @@
 # Interfaces
 
-## Validation latency diagnostics and regular release artifacts
+## Interface Overview
 
-Full configured validation owns exact workspace-branch push/reuse, provider
-completion and publication proof. Its stderr reports provider wait, recipe
-discovery and custody progress. Evidence-local buildkite-stage-timing.json and
-buildkite-collection-timing.json are measurement-only and bind source/workflow
-identities, counts and bounds. Counts describe sealed GET submissions, excluding
-redirect hops and timeout retries.
+Decapod's interfaces connect human intent, agent work, repository state, and
+proof. The human supplies the requested outcome and resolves decisions. The
+agent interprets that request, performs the work, and calls Decapod at planning,
+coordination, validation, and publication boundaries. Decapod exposes the state,
+constraints, evidence, and blockers that govern those transitions. Each CLI or
+RPC invocation is ephemeral; repository state preserves continuity between calls.
 
-Collection timing schema v2 distinguishes batch transfer wall time from sums of
-individual archive/log durations, which can overlap and must not be added to
-infer wall time. Deferred archive decoding and serial oversized groups have
-explicit counters. Timing values never replace execution or custody evidence.
+## Human and agent entrypoints
 
-The public-reader metadata batch interface accepts at most eight typed requests
-with at most 16 MiB per response. The separate custody interface accepts at most
-four individually bounded archive/log reads and at most two logical groups,
-under a 128 MiB sum of per-request/per-stream capture allowances. Serial defaults
-preserve adapter compatibility; production wrappers forward both batch methods.
-The curl reader authorizes the complete batch before spawning joined workers.
-Failed transfers abort collection without retry/fallback or partial-batch proof;
-ordered source-proof failures retain their existing obligation-level blockers.
+Human setup is `cargo binstall decapod && decapod init` in the project, followed
+by a task given to the person's coding agent. The README keeps this path short.
+Operational commands belong in the agent contract and agent documentation.
 
-The grouped runtime job preserves the RPC display name and three unchanged
-source check IDs with distinct preparation/execution artifacts. Its final status
-is nonzero if any command failed, even though later commands still execute.
-The release-build upload interface consumes RELEASE_BINARY only after regular
-file and exact-byte staging succeeds.
+Agents discover the installed interface with `capabilities`, ingest its command
+contracts with `docs ingest`, and retrieve engineering guidance with
+`constitution get` or constitution search. `docs` serves `docs/agent/`; the
+Constitution supplies broader engineering doctrine. Version, capabilities,
+Constitution lookup, and embedded documentation remain available when project
+state needs recovery. Documentation ingestion can update an existing local
+awareness marker; it is not an implementation or completion proof.
 
-## Bazel dependency projection boundary
-
-The internal Cargo-input repository accepts the canonical manifest and matching
-local root lock entry, preserves all non-version bytes, and rejects ambiguous,
-mismatched or registry-sourced root records. Its generated files are dependency
-metadata only. Real package metadata and release classification continue to use
-the original immutable Cargo files; release-plz's three-file exception is not
-expanded to allow arbitrary Bazel lock edits.
-
-## Validation providers and publication
-
-`decapod validate` is the PR-readiness interface: only complete current candidate
-proof permits a zero exit and subsequent PR creation. Workbranch pushes and
-iteration may precede preflight; a pushed branch alone is not merge readiness. A
-nonzero result means follow its actionable report, repair root causes on the same
-branch and rerun exact-candidate validation. Reports expose source_pr_readiness
-scope and reasoned real/mocked/non-applicable stage dispositions; excluded release
-packaging and simulated delivery never masquerade as actual execution.
-`decapod govern project-check` is the explicitly partial bootstrap and CI
-prerequisite command; it never establishes readiness by itself. Internal bounded
-workers have a separate hidden command, so an inherited worker environment
-cannot turn public validation into a partial success.
-
-Initialization exposes `validation_buildkite_preflights` under the canonical
-proof configuration. False selects native execution, not a disabled assurance
-contract. True selects the temporary-snapshot provider using existing authorized
-accounts. Missing tools, access, inventory or proof remains an actionable failure.
-The temporary transport is repository-owned and is not represented as literal
-compatibility with the separate `bk preflight` command.
-
-Outside CI, enabled public CLI, alias and RPC validation dispatch directly to
-Buildkite preparation and execution without a local project-check pass or a
-fresh local prerequisite receipt. Their report identifies local project checks
-as `not_run_provider_owned`, with no local check report. Missing or failed remote
-proof remains non-ready. An unsuccessful `rpc --op validate.run` preserves its
-structured error envelope and returns a nonzero process exit status.
-
-Full validation exposes explicit snapshot preparation and resume. A host object
-API that cannot preserve a commit timestamp must use the explicit snapshot-adopt
-interface with the original private handoff and observed server object ID.
-Adoption re-verifies the frozen source, parent, tree, accepted target, request,
-metadata, tags and owned remote ref, and writes a different private handoff while
-remaining non-ready. Prior-snapshot proof cannot transfer to the adopted object;
-full collection must run against that actual identity. Workspace publication
-rejects adoption arguments rather than silently interpreting them as a publish
-request. Branch task discovery requires a token boundary, so an agent name such
-as release-pr-validation cannot invent an unrelated r_validation task.
-
-Readiness preparation checks trajectory ownership and explicit human blockers,
-but does not promote a legacy historical proof aggregate to current execution
-evidence. Failed attempts remain recorded and retryable. Only newly verified
-complete code-bound suite evidence permits publication; retaining a failed
-historical attempt cannot prevent obtaining its replacement proof.
-
-Full validation preparation returns a private handoff locator and a nonzero readiness result until the suite
-is proven. Resume accepts only that locator and optional raw provider archives;
-it independently reconstructs current source identity and re-reads provider
-run/attempt/artifact bindings. RPC and workspace publication use the same
-boundary. Publication may reuse a locator but must verify it again immediately
-before its combined push-and-PR operation. Standalone branch pushes remain
-available before preflight. Validation and the eventual PR retain the same owned
-workspace branch; neither a temporary transport ref nor ref cleanup is used.
-
-Immutable CI context carries the actual provider event, original candidate,
-accepted base, comparison merge base and optional transport identity. A complete
-verified context is required before source selection or release-only treatment.
-Checkpoint verification can bind immutable base/head commits and a separate
-named target with `--target-base`; no mutable fetch supplies the proof range.
-
-## Immutable release evidence for validation
-
-The actual validation harness accepts the complete CHANGE_EVENT, CHANGE_BASE,
-and CHANGE_HEAD environment triple used by the existing release-policy tools.
-Base and head are immutable nonzero Git object IDs, the event is supported, and
-the event base must be in the configured accepted-base ancestry. Partial or
-invalid evidence never falls back to another classification. Without any event
-metadata, local proof may resolve the configured base and a single-parent head;
-synthetic merges require explicit evidence and exact candidate/head tree parity.
-Both source CI validation entrypoints supply the complete triple and retain full
-history in their private checkouts. The existing CLI wrappers keep their flags.
-
-CI sets DECAPOD_VALIDATE_REQUIRE_CHANGE_CONTEXT=1 for PR/push validation.
-Missing, partial, malformed, unresolvable, or checkout-inconsistent evidence is
-an error, including a missing configured accepted-base ref. Automatic provider
-recognition is canonical-path and Git-root scoped to the actual checkout or its
-direct private validation clone, so inherited CI variables do not misclassify
-unrelated Git fixtures. Existing explicit manual runs retain their local behavior.
-Ordinary drift checks require both a clean index against HEAD and no unapproved
-working-material difference against HEAD; restoring only the working copy cannot
-hide staged edits. The standalone workflow uses the same strict classifier and
-actual source-built projection checker without label or branch-name exemptions.
-
-## Integration shard tooling
-
-The repository-owned Rust integration helper exposes `plan --paths FILE`,
-`prepare --paths FILE --output DIR`, and `run --artifact DIR --shard ID`.
-Planning emits the selected matrix; preparation builds and packages those test
-executables once; running consumes the prepared artifact without invoking a
-compiler. Gatling selection comes from the executable's libtest inventory and
-uses exact test names. Invalid shard identities, duplicate or empty inventories,
-missing artifact inputs, and failed child tests fail the invocation. Each test
-uses its relocated runfiles root and the existing lifecycle supervisor, preserving
-normal ignored-test semantics and child failure propagation. Artifact names are
-bound to the current workflow commit, not a mutable latest-build alias.
-The workflow projects the planned matrix into a bounded `shards` JSON array and
-`count`, then gates every static worker's download, restore and execution on
-membership. Cargo-dist similarly exposes only `has-local-artifacts`, `pr-upload`,
-tag and publishing decisions between jobs; the complete manifest stays in the
-existing artifact contract. The private validation-checkout composite returns a
-workspace-relative `path` for subsequent governance and drift commands.
-
-## Canonical Governance Lifecycle
-
-Agents populate the document in dependency order: establish intent, scope, and
-boundaries; declare current claims and planned checks; record work and measured
-evidence at meaningful boundaries; then validate and checkpoint the staged
-material. Related section updates share one atomic write. Unchanged semantic
-state is a no-op, and derived summaries are computed rather than repeatedly
-persisted. This reduces duplicate writes without deferring all evidence until
-the end of a PR.
-
-`govern artifacts status` reads without migration. `migrate` imports legacy
-artifacts losslessly under a cross-process lock. Archive dirty legacy evidence
-in Git before `begin-pr --id <stable-id> --base-branch <target>` resets accepted
-history to a compact baseline. The target must prove acceptance of an existing
-PR before it can be replaced. Repeating the same ID is idempotent only for the
-same base identity. Merge acceptance never invents a release tag.
-
-Read-only artifact inventory retains structured schema errors for malformed or
-unsupported authority and identifies safe legacy source-byte divergence without
-migrating it. Optional size diagnostics cannot discard that report. Repair,
-migration, and publication still reject the same invalid authority.
-
-`claim --id <id> --statement <text> --falsifier <text> --status <status>` records
-only current-PR claims, with repeatable `--proof-ref` values for supported proof.
-`resolve-obligation --id <carried-id> --resolution <text> --proof-ref <ref>`
-explicitly retires a carried obligation with evidence. Historical accepted
-claims are not copied into the baseline.
-
-After authoring and validation, stage source/spec material, then call
-`checkpoint --id <unique-id> --summary <text> --proof-ref <ref>` and stage
-`.decapod/governance.json`. `verify-checkpoints --base-branch <target>
---head-ref <head>` verifies the immutable commit range, including merges and
-the exact head. A checkpoint cannot stand in for a passed test or a human
-approval; unavailable and failed evidence retain their actual status.
-
-## Gatekeeper evidence and input contract (#1370)
-
-`govern gatekeeper check --paths` accepts one explicit file per repeated option.
-Missing/non-file inputs fail closed. Git discovery is status-checked and NUL-
-delimited, retaining removed/renamed source paths for protected-path policy.
-Literal Rust `include_str!` dependencies are resolved inside the repository, traversed with a
-bound, and scanned under the same credential and path checks. Dynamic,
-missing, unreadable, or escaping includes cannot establish scan success.
-
-Supported classifiers may discharge only the exact matched span. SQL proof
-requires real terminal connection use or a source-verified strict forwarding
-wrapper, and rejects operation-string escape. Password proof distinguishes
-immutable runtime provenance from literal fallbacks, mutation, ambiguous
-binding and unsupported flow. Standard primitive comparison results are
-non-executable text consumers; native shell/Dockerfile rules preserve actual
-command-substitution and dangerous-operation findings.
-
-## Supabase preview contract (#1369)
-
-`repo.backend = "cloud"` selects Supabase through Dactyl when the optional
-machine-runtime selector `DECAPOD_CLOUD_DATASTORE` is omitted. An explicit
-`neon` value preserves the Neon alternative. Standard builds enable the
-`supabase-cloud` feature by default; builds that disable it fail closed for
-Supabase. Supabase requires an explicit `DECAPOD_PROPODUS_API_URL` pointing to a compatible authenticated
-service. It is not a Supabase REST URL or a PostgreSQL DSN. The ordinary
-onboarding/session flow supplies user credentials outside the repository.
-Unknown selectors, unsupported builds and missing explicit preview routes
-fail closed before authentication or todo dispatch.
-
-Supabase machine sessions are endpoint-scoped; a different endpoint cannot
-reuse or refresh the legacy Neon machine session. Supabase authentication
-and data transports refuse redirects.
-
-The Dactyl wire context remains version 1 and does not serialize the client
-selector or bearer. Debug formatting redacts credentials. Caller-supplied
-repository identifiers remain routing hints, never authorization. The service
-permission contract is tested by observed permitted and denied outcomes;
-Decapod does not implement organizational access policy.
-
-## Worktree and Validation Interface
-
-`workspace status` is an observational, bounded operation and reports
-validation as unavailable until an explicit validation command is requested.
-`infer orientation --task-id`, RPC operations, and workspace creation use the
-same canonical repository store, so a newly created worktree cannot diverge
-into an empty or partial task database. A validation timeout identifies the
-active gate and elapsed time when that evidence is available.
-
-## Decision-Provider Interface
-
-| Interface | Owner and semantics | Failure/authority boundary |
-|---|---|---|
-| `DecisionProvider::observe` | Decapod supplies declared intent, current trajectory, reconstructed obligations, proof hooks, constraints, workspace context, and labeled plan/claims/trajectory/validation artifact snapshots; the provider returns a typed `trajectory_satisfies_intent` probability or `NoObservation` | The result is advisory data only. It cannot clear `resolve_interlock`, alter claims/trajectory/validation/boundaries, satisfy proof, or declare completion |
-| `provider = "none"` | Default local implementation; performs no external call | Returns `no_observation` with `disabled`; normal Decapod operation remains provider-independent |
-| `provider = "jev"` | Jev adapter calls TypeSafe System One with `TYPESAFE_API_KEY` from the machine environment | Missing credentials, transport/service failure, timeout, malformed response, or invalid probability returns `no_observation`; no failure is converted to approval |
-
-## Authored Living-Spec Boundary (#1197)
-
-The authored semantic prose in `.decapod/managed/specs/*.md` is maintained
-directly by the acting agent in its isolated workspace. Generated attestation,
-declared-capability, capability-overlay, and manifest blocks remain
-machine-owned and must be refreshed through the Decapod CLI/RPC. All other
-control-plane state, including data, governance, sessions, and workspaces,
-remains CLI/RPC-owned; validation and material-spec proof gates are unchanged.
-
-## Governance Evidence Interfaces (#1093, #1163, #1325, #1326, #1327)
-
-| Interface | Owner and semantics | Recovery/error boundary |
-|---|---|---|
-| `govern artifacts migrate` / `begin-pr` | CLI performs lossless legacy migration and an explicit Git-bound new-PR transition in `.decapod/governance.json` | Conflicting authority or unarchived state fails closed; unresolved obligations survive reset |
-| `govern artifacts claim` / `resolve-obligation` | Current-PR claims carry a statement, falsifier, status, and proof references; carried obligations require explicit evidence-bound resolution | Completed history remains in Git; machine state is never hand-edited |
-| Governance claims vs Health Engine claims | Current-PR claims live in `.decapod/governance.json`; Health Engine runtime claims live in `.decapod/data/decapod.db` and use `govern health claim/proof` | The two stores are not interchangeable and are never silently merged |
-| Specs input authority | `config.toml` and `OVERRIDE.md` feed the manifest `config_input_hash` | Authority drift is refreshed in the isolated workspace; the non-refresh validation branch reports `STALE_CONFIG_INPUT_HASH` |
-| Validation epoch binding | A successful `decapod validate` records the active epoch in the bound trajectory and receipt | If the active epoch changes, `STALE_VALIDATION_EVIDENCE` preserves prior evidence and requires explicit `govern trajectory init` before revalidation |
-
-## Projection and Repository-Map Contracts (#1303, #1304)
-
-`specs.refresh` owns one `decapod:codebase-attestation` slot per managed
-specification. Refresh replaces that slot, removes recognized duplicate or
-orphan generated residue from older releases, preserves authored prose, and
-is byte-stable when the repository signals have not changed.
-
-`repomap` consumes tracked and non-ignored Markdown paths from Git when run in
-a Git repository. Ignored dependency or build output is not a document-graph
-input; a non-Git directory receives the bounded fallback exclusions instead.
-
-## Compatibility Interfaces (#1311–#1314)
-
-| Interface | Compatibility behavior | Failure/authority boundary |
-|---|---|---|
-| rpc --op specs.refresh | Performs the existing filesystem projection after worktree/session checks without unrelated datastore migration, presence, or mandate reads | Projection writes stay workspace-owned; best-effort trace remains non-blocking |
-| data db verify / data database verify | Uses Dactyl v0.11.1's read-only native integrity API | Emits typed healthy/unavailable/locked/corrupt/unsupported diagnostics; corruption is reported, never repaired |
-| data db backup | Uses Dactyl v0.11.1 online backup through the canonical, bounded-coordinated bridge | Destination is a verified standalone snapshot; WAL/SHM handling remains Dactyl-owned and failures are explicit |
-| data db recover | Uses Dactyl v0.11.1 logical dump/reload with an operator-selected archive path | Requires explicit invocation and writer quiescence; atomic replacement, rollback, archive, and DELETE journal mode remain Dactyl-owned |
-| events::append | Uses StoragePool::with_write before schema preparation and append; canonical connection retains an exclusive datastore sidecar lock | Serializes standalone writers in-process and across cooperating Decapod processes; Dactyl remains the physical boundary |
-| db_connect / db_connect_pooled / db_connect_read_pooled | Retain a bounded exclusive `decapod.db.lock` sidecar guard for the connection lifetime | Conservative serialization makes lock timeout typed contention; lock files are never deleted as stale-lock repair |
-| trajectory::load_trajectory(project_root, run_id) | Reads and validates the logical current trajectory from the canonical document | `.decapod/governance.json` is the sole tracked authority; Git history provides accepted context and subagent jobs use loops |
-| Persisted path fields | Project-internal absolute paths become relative; external absolute paths become <external-path> | JSON field types and trajectory schema remain unchanged |
-
-## Contract Principles
-- Prefer explicit schemas over implicit behavior.
-- Every mutating interface defines idempotency semantics.
-- Every failure path maps to a typed, documented error code.
-
-## Federation Policy Approval Contract (#1323)
-
-`federation.rebuild` and `federation.supersede` enter the broker as their
-operation names and retain the verified-trust check. The configured
-`destructive_operations` classifier, when enabled in `.decapod/config.toml`,
-uses that exact operation name as its approval target. `govern policy approve
---id <operation>` and the fingerprint printed by `govern policy eval` both
-produce an approval record that the corresponding broker check can consume.
-
-The configured category gate and risk-zone policy are independent interfaces:
-an empty `approval_categories` list disables only the category-driven check,
-while a risk zone with `requires_approval` still controls its own zone-keyed
-approval. A denied operation remains a typed policy validation error, and no
-approval path weakens trust, audit, or transaction boundaries.
-
-## Generated Contract Depth
-Generated interface specs should include:
-- API/CLI contracts with request/response schemas.
-- Read/write ownership for each storage path.
-- Idempotency and retry behavior for mutations.
-- Typed failure classes and recovery instructions.
-
-## API / RPC Contracts
-| Interface | Method | Request Schema | Response Schema | Errors | Idempotency |
-|---|---|---|---|---|---|
-| `TODO` | `TODO` | `TODO` | `TODO` | `TODO` | `TODO` |
-
-## Storage Boundary Contracts
-| Trajectory writer | Trajectory recorder | Governance trajectory file | Writes one canonical JSON object with a recomputed hash through atomic replacement |
-| Migration report | Local command path | Migration ledger and datastore | Returns version transition and applied migration evidence after verification succeeds |
-
-| Interface | Producer | Consumer | Contract |
-|---|---|---|---|
-| `DecapodError::storage_failure_kind` | Current storage adapter | Retry, validation, and governance policy | Backend-neutral failure class; only bounded retryable contention/storage-I/O classes may be retried |
-| `migration::plan_pending_migrations` | Decapod migration catalog and applied ledger | Migration executor | Deterministic version/sequence filtering with no datastore access |
-| `DbBroker::execute_write_sync` | Broker caller | Storage write path | Returns affected rows; stable IDs are supplied by the caller and no ambient generated-ID lookup is allowed |
-| `DbBroker::with_transaction` | Decapod domain mutation | Dactyl-backed local transaction facade | Commits state and its canonical event together; rolls both back on failure; no physical connection handle crosses the application boundary |
-| `core::backend::BackendSelection` / `BackendRoute` | `.decapod/config.toml` backend plus Git origin identity | Local datastore or authenticated Dactyl session | `local` binds `.decapod/data/decapod.db`; `cloud` binds the GitHub owner/repository and accepts only an opaque remote URI supplied by the session boundary; provider names and URI construction are outside ordinary Decapod persistence |
-| `core::backend::StorageContext` | `BackendSelection`, opaque route, and optional session bearer | Dactyl bridge or future physical driver | Version 1 distinguishes local and remote targets; local has no cloud scope or credential, remote requires an authenticated bearer, credentials are never serialized, and unsupported future versions fail closed before I/O; Propodus owns effective membership/repository authorization |
-| `core::dactyl_db::Connection` | Decapod relational caller, SQL text, typed parameters | Dactyl v0.11.1 local connection | Provides the only application-facing connection facade; it seeds a new empty read-write filesystem target for Dactyl's pre-open validation, while Dactyl owns physical execution, access mode, normalized rows/results, typed errors, schema inspection, host-runtime availability, and physical maintenance. No direct SQL-driver dependency, raw SQLite handle, or maintenance PRAGMA is exposed |
-| `core::dactyl::DactylBridge` | Backend route, access mode, optional opaque credential, or explicit maintenance request | Dactyl operation/context contract and local maintenance capabilities | Constructs explicit SQLite, Neon HTTP, or feature-gated Supabase HTTP routes without changing ambient process routing; provides reads, writes, atomic batches, portable schema inspection, access-mode enforcement, typed integrity verification, online backup, logical recovery, and Decapod-normalized errors; local existing files open directly and cloud construction fails closed without a credential |
-| Explicit route construction | `StorageContext` plus its client-only cloud capability selector | `DactylBridge` connection | Context, route and credential requirements are checked before physical opening. Supabase transport policy is also validated before session lookup or refresh. Each connection receives its own explicit route; unrelated ambient `DATASTORE*` values are neither used nor changed |
-| `core::dactyl_todo::DactylTodoStore` | Cloud `TodoStore` command boundary plus versioned storage context | Dactyl `/query` and `/batch` handlers | Lists canonical task columns; keyed get uses a direct query; add/claim/release/complete use conditional SQL write, matching event, and row observation in one batch; zero affected rows are conflicts; no per-query backend, tenant, provider, or repository input is accepted |
-| Propodus cloud session boundary | Cloud runtime config, Git-derived repository identity, machine-local credential | `StorageContext` bearer and opaque Dactyl route | Propodus authenticates and authorizes the principal/repository; authentication failures are surfaced as cloud diagnostics; bearer material is never serialized into repository state |
-| Local SQLite runtime preflight | Project backend plus `DACTYL_SQLITE_LIBRARY` and `~/.config/decapod/runtime.toml` | Dactyl local adapter startup | Runs only for `backend=local`; an explicit shell/config value is reused without discovery, a discovered host library is persisted at user scope, and a missing runtime returns `LOCAL_SQLITE_RUNTIME_REQUIRED` with installation/export remediation. Cloud startup does not probe SQLite |
-| Container runtime preflight | Docker/Podman executable and runtime access | Container workspace startup | Docker and Linux Podman retain direct `info` probing; macOS/Windows Podman may recover a stopped machine with the captured, non-interactive `machine start --quiet --no-info --update-connection=false` path and then retry `info` |
-
-Read callers must not invoke schema DDL or migration repair through a read-only connection. Decapod initialization owns that write-side preparation, and the facade exposes the connection access mode so compatibility helpers can avoid prohibited writes before issuing a read.
-| Decapod agent session | Backend selection and machine-local session directory | Canonical Dactyl store or authenticated cloud command path | Machine-local session records use a backend discriminator (`local_` or `cloud_`) and default to a four-hour lifetime, bounded to 30 minutes minimum and six hours maximum; cloud bearer credentials remain separate opaque machine-local material |
-| `todo::update_status` | Decapod lifecycle caller | Dactyl-backed local transaction facade | Requires expected status and revision; returns `ok`, `not_found`, or `conflict` and emits an event only after the conditional update wins |
-| `todo` lease/ownership mutations | Decapod coordination caller | Dactyl-backed local transaction facade | Claim, yield, handoff, owner, heartbeat, cleanup, and expertise state plus their events share the broker transaction boundary; cloud atomic-envelope proof remains downstream |
-| `events::append_on_conn` | Canonical Decapod event writer | Dactyl-backed local transaction facade | Replaying the same event identity is idempotent; divergent content fails with `EVENT_ID_CONFLICT`; Dactyl executes the write while Decapod owns sequence and event policy |
-| `events::query(..., usize::MAX)` | Broker replay and validation | Dactyl-backed read connection | Returns the same newest-first stream contract as a bounded query, but obtains rows with ascending `(seq,event_id)` keyset pages of fixed size and reverses only the accumulated semantic result; no audit rows are discarded |
-| Legacy event reconciliation | Startup migration | Canonical `events` table and unique `(stream,seq)` index | Imports legacy rows and rebuilds sequence uniqueness in one immediate transaction; all structural stream/sequence unique indexes are removed before renumbering and restored only after normalization succeeds |
-| Bounded validation worker | Validation command parent | Child Decapod process | Runs migration plus validation behind the configured deadline, uses a short worker lock budget, emits typed contention/validation results, and is killed and reaped on timeout so no validation thread remains attached to datastore state |
-| Cloud todo mutation | `DactylTodoStore` | Dactyl batch endpoint | State write and committed task observation are one ordered physical operation; hosted event atomicity, server-managed versioning, and tenant isolation require Propodus deployment proof |
-| `workspace::ensure_isolated_workspace_for_projection_mutation` | Git toplevel of the invoking checkout | `refresh_specs_from_codebase`, validate self-heal, `specs.refresh` | Writes `.decapod/managed/specs/*` only when the Git worktree root is a non-protected path under `.decapod/workspaces/*`; protected `main`/`master` fails closed with `workspace_required` and does not touch root files (GitHub #1255) |
-| `workspace::get_main_repo_root` / `host_repo_from_canonical_workspace` | Cwd inside `.decapod/workspaces/*` | Todo store, session, `find_governance_root` | Local-clone workspaces resolve the host checkout so `todo done` sees the claim that created them (GitHub #1259) |
-| `verify::resolve_artifact_path_for_todo` | `--artifact` path plus optional todo id | `todo done --validated` | Resolves first against cwd, then the newest workspace directory matching the todo id |
-| `workspace::resolve_publish_remote` | Workspace remotes, then parent filesystem remotes | `workspace publish` | Inherits a GitHub remote from the local-clone parent as `upstream`; never treats a path `origin` as publication |
-| `workspace::prune_workspaces_report` | Host checkout, Git worktree registry, task state, and current process path | `workspace prune` | Reports stale registered and unregistered candidates; preserves the current workspace for safety and returns it in `skipped` as `current_workspace` with a host-checkout recovery instruction |
-| `validate::governance_paths_updated_vs_base` | `base...HEAD` plus working tree | `GOVERNANCE_PR_UPDATES` | The canonical document and just-written validation section count; final checkpoint proof is verified separately |
-
-## Event Consumers
-| Consumer | Event | Ordering Requirement | Retry Policy | DLQ Policy |
-|---|---|---|---|---|
-| `TODO` | `TODO` | `TODO` | `TODO` | `TODO` |
-
-## Outbound Dependencies
-| Dependency | Purpose | SLA | Timeout | Circuit-Breaker |
-|---|---|---|---|---|
-| `TODO` | `TODO` | `TODO` | `TODO` | `TODO` |
+`eval --stdin --format json` accepts the complete incoming prompt. The agent
+proceeds only after exit 0 and `status: allow`. A blocked result or nonzero exit
+requires human review. This gate applies at startup and to each new prompt.
 
 ## Inbound Contracts
-- API / RPC entrypoints:
-- CLI surfaces:
-- Event/webhook consumers:
-- Repository-detected surfaces: cargo, rust
 
-## Data Ownership
-- Source-of-truth tables/collections:
-- Cross-boundary read models:
-- Consistency expectations:
+The CLI is the operational surface. `decapod rpc` provides Decapod-specific
+JSON request and response envelopes over process stdin/stdout. The binary does
+not currently provide an MCP server, MCP lifecycle, or MCP discovery. Future
+adapters are separate contracts.
 
-## Epistemic Integrity Contracts
-| Interface | Input | Output | Failure semantics |
-|---|---|---|---|
-| `OVERRIDE.md` resolution | Markdown or another documentation style inside each generated subsection's four-backtick source block | Extracted body without wrapper plus derived authority evidence | Unclosed wrappers, duplicate exact IDs, or non-empty unknown Decapod-namespaced IDs reject the complete overlay |
-| `context.resolve` / capsule query | Repository root and context request | Applied directive ID, source, source/body hashes, bytes, precedence | No partial authority result on structural ambiguity |
-| `core::events::{query,latest,exists,actors}` | Semantic stream and bounded filter/limit | Dactyl-backed canonical event observations | Unknown stream, malformed canonical payload, unsupported physical operation, or unavailable host runtime is a typed failure; no catalog query or second store is used |
-| startup reconciliation | Unproven legacy JSONL or a legacy local database source | Dactyl-backed canonical rows plus Decapod retirement receipts | Dactyl owns physical reads/writes; Decapod owns schema compatibility, row translation, backup, and idempotency. Fresh malformed input or same-ID/different-event conflict stops migration |
-
-## Error Taxonomy Example (service_or_library)
-```rust
-#[derive(Debug, thiserror::Error)]
-pub enum ApiError {
-    #[error("validation failed: {0}")]
-    Validation(String),
-    #[error("upstream timeout")]
-    UpstreamTimeout,
-    #[error("conflict: {0}")]
-    Conflict(String),
-}
-```
+An RPC request contains `op`, `params`, a correlation `id`, and an optional
+`session`; omitted parameters default to JSON null and omitted IDs are generated. The response includes `id`, `success`, a `receipt`, and
+`allowed_next_ops`. Depending on the operation it also carries `result`,
+`mandates`, `context_capsule`, `blocked_by`, `interlock`, `advisory`,
+`attestation`, or `error`. A receipt records the operation, time, input/output
+hashes, touched paths, and governing anchors. An operation receipt establishes
+what that call recorded, not the correctness of the whole task.
 
 ## Failure Semantics
-| Failure Class | Retry/Backoff | Client Contract | Observability |
-|---|---|---|---|
-| Validation | No retry | 4xx typed error | warn log + metric |
-| Dependency timeout | Exponential backoff | 503 with retryable code | error log + alert |
-| Conflict | Conditional retry | 409 with conflict detail | info log + metric |
-| Storage contention | Bounded retry with explicit budget | Actionable validation/governance outcome | warning with retry classification |
 
-## Timeout Budget
-| Hop | Budget (ms) | Notes |
-|---|---|---|
-| Client -> Edge/API | 500 | Includes auth + routing |
-| API -> Domain | 300 | Includes validation |
-| Domain -> Store/Dependency | 200 | Includes retry overhead |
+Blockers distinguish `missing_answer`, `missing_proof`, `unauthorized`,
+`conflict`, `validation_failed`, `workspace_required`, and `protected_branch`.
+Errors carry a code, message, and optional details. Callers inspect these fields
+rather than infer domain error kinds from exit status:
 
-## Interface Versioning
+- `0`: the requested operation succeeded within its reported scope
+- `1`: a domain, validation, configuration, session, I/O, or storage failure
+- `2`: CLI syntax rejected before execution
+- `127`: the calling shell could not locate a command; this is not a Decapod
+  domain error
 
-## Current PR Contract Details
-### Trajectory Cookie
-- Input: a valid run identifier and trajectory fields.
-- Output: one schema-valid logical trajectory section in `.decapod/governance.json`.
-- Update semantics: same-run initialization is rejected when the existing
-  object is valid; a different or malformed legacy cookie is replaced.
-- Historical semantics: Git commits preserve prior cookies; the file is not an
-  append-only JSONL stream.
-- Historical lookup: agents use the PR or commit SHA and Git tooling such as
-  `git show <sha>:.decapod/governance.json` to recover prior committed context
-  (pre-migration commits retain their legacy artifact paths). Decapod does not
-  create a second trajectory history surface inside the repository.
+The CLI, aliases, and RPC share their underlying execution gates. In particular,
+a failed `validate.run` retains its structured response and returns nonzero.
+Agents use the installed command contracts and schemas rather than inventing
+operations or treating a listed next operation as approval to bypass its gates.
 
-### Local datastore coordination
-- Local Decapod connection factories retain an exclusive sidecar lock beside
-  the datastore for the connection lifetime. Dactyl still enforces the
-  requested read-only or read-write access mode; Decapod serializes the local
-  physical file conservatively across host/container processes.
-- Acquisition is bounded and reports `STORAGE_LOCK_TIMEOUT` on contention.
-  The operating system releases descriptor-backed locks when the owner exits,
-  so Decapod never removes lock files based on age or guesses at ownership.
-- This is a Decapod coordination contract for cooperating processes. It does
-  not provide arbitrary SQLite-client coordination, restore a corrupt file, or
-  change cloud-route semantics.
+## Intent, authority, and context
 
-### Migration Notice
-- Trigger: every local command performs the version/ledger check; a previously
-  recorded release differing from the installed release, or newly applied
-  migrations, requires notice.
-- Output: a warning naming previous/current release, applied IDs, and the
-  applied ledger and catalog inspection paths.
-- Failure: migration or verification errors remain typed and block command
-  continuation; a notice is never used as proof that migration succeeded.
+The prompt, conversation, and explicit human clarifications establish request
+meaning. An isolated workspace supplies the execution filesystem; a todo
+supplies ownership and coordination. Entering a workspace does not erase the
+agent's request context.
 
-### Bootstrap Diagnostics
-- `capabilities`, `system capabilities`, `constitution get`, and `system
-  version` are bootstrap-safe and do not require a project session, datastore,
-  or migration reconciliation before returning their output.
-- `docs list`, `docs show`, and `docs ingest` are dispatched before the
-  stateful command path so embedded agent guidance remains available when
-  project state needs repair. `docs ingest` may update the existing
-  project-local constitutional-awareness marker after successfully emitting
-  the embedded documents.
-- Stateful commands retain the migration, session, worktree, and validation
-  gates; this exception is limited to discovery and diagnostics needed to
-  recover those gates.
+`infer orientation` exposes the goal, task binding, governed plan, allowed and
+forbidden scope, relevant areas, proof requirements, known unknowns, decision
+gates, and next action. `context.resolve`, capsule queries, and context bundles
+carry selected project specifications and Constitution material with their
+sources. A retrieved recommendation or advisory observation is not permission
+to cross an execution boundary.
 
-- Version strategy (`v1`, date-based, semver):
-- Backward-compatibility guarantees:
-- Deprecation window and removal policy:
+Project authority comes from `.decapod/config.toml` and `.decapod/OVERRIDE.md`.
+Each registered override directive owns a fenced source body. Resolution
+preserves nested Markdown and examples, removes the outer wrapper, and exposes
+`directive_id`, `source`, `source_hash`, `body_hash`, `byte_count`, and
+`precedence`. Duplicate exact directives, unclosed wrappers, and non-empty
+unknown Decapod-namespaced directives invalidate the whole overlay. Empty
+retired generated directives remain upgrade-compatible. Partial application
+must not conceal ambiguous authority.
 
-## Verification recovery contract
+## Sessions, tasks, and workspaces
 
-A stale validation epoch reports an executable aggregate-proof recovery sequence: prune the stale verification record with `decapod qa verify prune <ID>`, obtain passing validation in the governed container workspace, reclaim the reopened TODO, and complete it again with `decapod todo done --id <ID> --validated`. Diagnostics must not advertise nonexistent subcommands or recapture a known-failing aggregate baseline.
+Most mutations require an active repository-local session. Local session
+credentials establish custody and correlation; they do not authenticate a model
+provider or human principal. Cloud authentication credentials are separate,
+machine-local material. Session records and credentials must not become tracked
+project content.
 
-## Orphan audit acknowledgment
+Todos have durable IDs, lifecycle state, and explicit ownership. Exclusive
+claim mode takes the assignment; shared mode joins as a secondary owner. Claim,
+yield, handoff, heartbeat, and completion use governed operations. Conditional
+status changes distinguish success, not-found, and conflict, and emit their event
+only when the state transition wins. External trackers may remain the
+organizational system of record; they do not replace Decapod execution claims.
 
-`decapod data broker repair --event-id <pending-id> --reason <reason>` returns a
-preview; `--apply` requests the governed mutation. The original writer must be
-known to have stopped. Events younger than 300 seconds, future-dated events,
-unknown event IDs, empty reasons, and normally completed targets are refused.
-Results distinguish `preview`, `abandoned`, and `already_abandoned`, expose the
-acknowledgment event ID, and retain `original_outcome: unknown`. `broker verify`
-checks audit lifecycle evidence, not SQLite integrity. Malformed images and
-unsupported recovery require human escalation without direct database access.
+`workspace ensure` requires a claimed task and creates or reuses a matching
+isolated workspace. It starts from committed source, preserves dirty root files
+and the root index, and never imports uncommitted root changes implicitly.
+Existing destinations require verified ownership, Git registration, and branch
+identity. Unknown or symlinked destinations fail with preservation guidance.
+`root_isolation` metadata describes this separation; it is not permission to
+copy root material. `workspace status` is bounded observation and does not run
+validation or refresh specifications.
 
-`SPEC_REFRESH_AUTHORED_CONTENT_LOSS` identifies the affected spec and refuses
-the refresh before spec or manifest writes. Ordinary named sections are authored;
-only paired attestation, capability-declaration, and capability-overlay comment
-blocks are generated/non-authorable. Inline marker neighbors remain authored.
+A committed claim is acknowledged before optional container preparation. The
+preparation runs outside broker/datastore locks; its failure is a warning on the
+successful claim, not a rollback of ownership. A durable request-bound receipt
+prevents automatic duplicate launches. `DECAPOD_CLAIM_AUTORUN=0` disables this
+optional preparation. Interrupted preparation requires supported workspace
+recovery before an explicit retry.
 
-## Snapshot-Backed Workspace Launch
+`TODO_PROJECTION_MISSING` means the selected control plane lacks the expected
+coordination projection. It reports `kind: coordination_projection_missing` and
+`execution_ready: false`; it is distinct from missing human intent and from a
+storage read failure. Preserve the request, inspect the original claim and
+workspace through Decapod, resolve ownership or store selection, and rerun the
+execution gate. Never manufacture a duplicate task or copy a database to hide
+this discrepancy.
 
-- The `workspace ensure --container` hint runs `decapod data database backup`
-  on the host, mounts the verified snapshot read-only, overlays the canonical
-  data path with container-local tmpfs, and seeds `decapod.db` before the shell.
-- Every execution owns a fresh private directory under the worktree target
-  directory. A subshell trap removes only that invocation's snapshot and
-  preserves backup/runtime exit status, including handled termination signals.
-  Reusing the hint cannot delete a pre-existing snapshot.
-- Colons, commas, double quotes, control characters, and non-UTF-8 mount paths
-  are rejected when constructing this hint because runtime mount parsers
-  interpret those characters independently of shell quoting.
-- Linux mountinfo matching decodes escaped whitespace and backslashes and
-  selects the most specific component-boundary mount. Existing filesystem
-  restrictions and write/read-only errors remain in effect; virtiofs, FUSE,
-  and automatic-run shared stores are not newly banned by this change.
+Cleanup requires ownership evidence. Task-like names, old timestamps, and an
+empty inventory from a different container engine do not establish permission
+to delete. Managed invocation receipts bind the exact path, directory generation,
+lease, and creating runtime; uncertain resources are preserved for review.
+Workspace/control subprocesses have a 15-second deadline and image builds a
+600-second deadline, with bounded output and owned-child termination/reaping.
+A timeout does not prove that a task, branch, or container is absent.
+
+## Governance and living specifications
+
+`.decapod/governance.json` is the sole tracked governance document. Its plan,
+trajectory, claims, validation, and optional decision-provider sections share
+normalized intent and epoch state. Agents update them through CLI/RPC in
+work-sized batches: intent and scope, claims and proof hooks, work and evidence,
+then validation and checkpoints. Unchanged semantic updates are no-ops.
+
+Fresh governed branches receive a task-bound DRAFT plan without inherited
+completion claims or validation receipts. Repeated initialization and branch
+renames preserve the active journal. Explicit `begin-pr` verifies acceptance of
+the previous work before resetting it; unarchived work, ambiguous task/base
+identity, and conflicting authorities block replacement. Unresolved obligations
+survive until explicit evidence-bound resolution. Accepted history stays in Git.
+
+A current-PR claim has a statement, falsifier, status, and proof references.
+Health Engine runtime claims remain a separate datastore surface. A trajectory
+records intent, boundaries, assumptions, inspected/modified files, commands,
+checks, and typed loop attempts. Verification passes require non-empty proof
+references; failed verification requires feedback. Attempts start at 1 and are
+contiguous. Event or improvement records do not apply their mutation proposals.
+
+`govern artifacts checkpoint` binds staged material and semantic inputs before
+a commit. `verify-checkpoints` checks the immutable range, including merges and
+the exact head; `--target-base` can identify the accepted target separately.
+Checkpoints do not substitute for tests, human decisions, or missing earlier
+checkpoints. `review-spec` binds contract review to current code and authored
+INTERFACES, ARCHITECTURE, and SECURITY hashes. `requires-decision` remains open
+until the explicit resolution surface records a human decision reference and
+rationale; that record does not authenticate the human or prove semantic truth.
+
+Agents directly author semantic prose in `.decapod/managed/specs/*.md` inside
+their isolated workspace. Generated attestations, capability blocks, overlays,
+fingerprints, and manifests remain CLI-owned, as does all other machine-owned
+control-plane state. Supported refresh is `rpc --op specs.refresh` or
+`validate --refresh-specs`; there is no top-level `specs.refresh` command.
+Refresh preserves authored content and refuses `SPEC_REFRESH_AUTHORED_CONTENT_LOSS`
+before writing any specification or manifest. A material authored change remains
+required where the publication profile requires living-spec proof.
+
+## Data Ownership
+
+Application persistence crosses the Dactyl-backed facade. Decapod owns domain
+schemas, conditional mutations, event identities, migrations, and policy;
+Dactyl owns physical execution, access mode, typed results, and maintenance.
+No raw SQLite connection or alternate driver is an application interface.
+Read-only callers do not perform schema writes or migration repair.
+
+The local backend uses the canonical `.decapod/data/decapod.db`. Shared workspace
+lookup resolves its owning control plane rather than creating a divergent task
+store. Local connection factories hold a bounded exclusive sidecar coordination
+lock; contention reports `STORAGE_LOCK_TIMEOUT`. Locks are descriptor-owned and
+released by the operating system, never deleted based on age. This coordinates
+cooperating Decapod processes, not arbitrary external SQLite clients.
+
+State and its canonical event commit together at the local transaction boundary.
+Event replay with the same identity and content is idempotent; divergent content
+fails with `EVENT_ID_CONFLICT`. Canonical streams and projections live in the
+datastore. Legacy JSONL and split databases are migration inputs, not parallel
+runtime authority. Migration is lossless, bounded, and idempotent; conflicting or
+malformed evidence blocks rather than being silently discarded.
+
+`data db verify` reports healthy, unavailable, locked, corrupt, or unsupported
+integrity results without repairing them. Backup produces a verified standalone
+snapshot. Recovery is an explicit operator-selected archive-and-reload action
+requiring writer quiescence. `data broker verify` checks audit lifecycle, not
+physical database integrity. Orphan audit repair previews the exact event,
+requires a stopped writer and a reason, rejects recent/future/completed targets,
+and appends an idempotent abandonment acknowledgment while retaining
+`original_outcome: unknown`. It neither retries the original mutation nor proves
+the database healthy.
+
+## Validation, publication, and completion
+
+`validate` outside CI is the complete current-workbranch readiness boundary.
+It binds the exact candidate, accepted target, source and governance material,
+reviewed workflow definitions, toolchain, and complete applicable check matrix.
+`govern project-check` is a bounded prerequisite check and cannot establish PR
+readiness. Under `GITHUB_ACTIONS=true` or `BUILDKITE=true`, public validation runs
+bounded local gates, reports `scope=ci_local` and `publication_ready=false`, and
+never submits or waits for its own preflight.
+
+`proof.validation_buildkite_preflights=false` selects native execution; `true`
+selects the optional Buildkite adapter for the same required profile. Unknown
+profiles, unavailable adapters, and unreconciled source contracts fail explicitly.
+The remote route pushes or reuses the exact existing workspace branch, executes
+its project checks remotely, and verifies authenticated build, attempt, artifact,
+and final source/target identities. It does not run duplicate local prerequisites,
+create a temporary branch, or treat GitHub Actions results as Buildkite proof.
+Existing authorized access is required; denial does not authorize credential
+installation or fallback.
+
+Snapshot preparation/resume is a private evidence handoff on that same branch.
+Preparation remains non-ready. Resume reconstructs source/tree/target identity
+and rechecks actual provider evidence. Adoption cannot assert a different source
+commit into validity; a changed host object identity requires checkpointed source
+and a fresh handoff. Publishing rejects adoption arguments. The transport does
+not claim compatibility with a separate `bk preflight` command.
+
+Branch pushes may precede readiness. PR creation, including draft creation, waits
+for converged intent, mergeability, and full exact-candidate proof. Material,
+history, target, policy, workflow, or toolchain changes invalidate earlier proof.
+`workspace publish` independently enforces this boundary, performs a normal
+non-forced push, and verifies remote head/base and the complete PR material.
+It reports `remote_verified`, `pr_verified`, and warnings separately. Confirmed
+push with incomplete PR verification returns `PUBLICATION_INCOMPLETE`; an
+ambiguous push acknowledgment remains an unknown outcome. Reconcile and retry
+idempotently without destructive rollback.
+
+Workunit states are `DRAFT`, `EXECUTING`, `CLAIMED`, and `VERIFIED`. A `VERIFIED`
+workunit requires passed proof-plan gates. Verified completion binds task, intent,
+specifications, proof plan/results,
+context capsule, repository identity, and validation epoch. `passed`, `failed`,
+`partial`, `unavailable`, and `no_checks_run` remain distinct. A claim of completion
+is not evidence, and no checks produce an unsupported verdict. Portable evidence
+retains source identity and artifact digests; the receiving repository makes its
+own acceptance decision.
+
+## Outbound Dependencies
+
+Cloud storage uses an explicit versioned storage context, Git-derived repository
+routing, and an authenticated opaque route. Caller-supplied repository identifiers
+are routing hints; Propodus owns effective authorization. Credentials are never
+serialized into that context or repository state. Unsupported versions and
+missing authentication fail before I/O. Cloud `todo done --validated` is
+unsupported until the remote contract supplies proof-capture data.
+
+With the cloud backend selected, Supabase is the default runtime selector and
+Neon is an explicit alternative. Supabase requires its compiled feature and an
+explicit compatible authenticated Propodus endpoint; a database DSN or Supabase
+REST URL is not that endpoint. Endpoint-scoped sessions cannot reuse another
+endpoint's credentials, and Supabase authentication/data transports reject
+redirects. Fixture tests alone do not establish hosted authorization or atomicity.
+
+`DecisionProvider::observe` returns a typed `trajectory_satisfies_intent`
+probability or `no_observation`. The default `none` provider makes no external
+call. Jev is optional; missing credentials, timeout, transport errors, and invalid
+responses remain no-observation results. Observations cannot approve an action,
+clear an interlock, rewrite authority, satisfy proof, or declare completion.
+
+Local handshake hashes make declarations tamper-evident. Self-declared model,
+provider, and agent identity remain unverified without a configured trust root.
+Policy approvals retain exact action/target scope and expiry; category approval
+and risk-zone approval are independent gates. No provider or approval record
+expands Decapod's control to commands the agent executes outside its interfaces.
+
+## Compatibility Matrix
+
+Compatibility is established by the exposed operation and versioned data
+contract, rather than by an agent's chosen provider or harness:
+
+- CLI and process JSON RPC use the installed command schemas and the same gates
+- Storage context version 1 separates local and authenticated cloud targets;
+  unknown versions fail before I/O
+- Native and Buildkite readiness implement the reviewed required profile;
+  missing platform or provider capabilities remain blockers
+- Local handshake declarations provide tamper evidence without authenticated
+  provider identity; MCP and other planned adapters are not current binary APIs
+- Cloud task completion and local verified completion remain distinct while the
+  cloud contract lacks proof-capture support
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `82096862eeb09ce32d87a138bd68041186df5c31df34fc65f853d2f160f81228`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (185 files)
+- Repository signal fingerprint: `667a48279b6f65c06fbc010723f7c053401dbeac2ba1c589e0f17865949ef801`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (186 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
-
-## Target approval correction (#1361)
-
-`govern policy eval --command <action> --path <target>` prints a matching approval command. `approve --id <fingerprint> --expires-in-seconds <seconds>` defaults to 900 seconds and preserves `Action Approved (ID: <approval-id>)` on its own line, followed by `ExpiresAt`. `revoke --id <approval-id>` removes that grant. Invalid, expired, or revoked grants do not authorize actions; legacy grants without expiry remain valid until revoked.
-
-## Source isolation inventory
-
-`workspace status`, `workspace ensure` and governance artifact inventory expose
-optional `root_isolation` metadata. The strategy is
-`committed_base_only_preserve_source`, with the source root and deterministic
-path/status/ownership records. Git status paths are parsed with NUL delimiters,
-including both sides of a rename; ignored directory trees are represented at
-their boundary rather than recursively enumerating build outputs or other
-workspaces. Metadata describes preservation, never authorization to import
-uncommitted source content.
-
-An explicit task branch has a stable destination independent of other tasks
-claimed by the same coordinating agent. Existing targets are reused only when
-Git registration and branch identity match. Setup refuses unowned destinations,
-symlinked workspace parents and unavailable committed bases with a concrete
-preserve-and-resolve diagnostic. Protected-root implementation remains blocked;
-only creation of the separate governed workspace is permitted.
-
-## Current publication review and remote proof
-
-Workspace publication reports `remote_verified`, `pr_verified` and non-blocking
-`warnings` separately. A pushed branch alone is not proof of an open, correctly
-targeted PR. The publisher verifies the exact push destination's immutable head
-and base, the complete GitHub PR file list, all four governance artifacts,
-material living specs and unchanged remote state before returning PR success.
-Failure after a confirmed push is `PUBLICATION_INCOMPLETE`; an ambiguous push
-acknowledgment is an unknown outcome. In either case reconcile the target and
-retry idempotently, without force-push or destructive rollback.
-
-`govern plan review-spec` records agent-authored contract review for INTERFACES,
-ARCHITECTURE and SECURITY against current code and authored-spec hashes. The
-dispositions are updated, unchanged-with-reason and requires-decision. Ordinary
-reviews cannot silently approve pending decisions. The separate
-`govern plan resolve-spec-review` operation records an explicit human decision
-reference and rationale under the existing declared plan-approval authority; it
-does not authenticate a human or prove semantic correctness automatically.
-Changed code or spec material invalidates the previous review. Validation epochs
-bind review/plan, claims, specs, entrypoints and managed Dockerfile while
-excluding the receipt itself, permitting a proof-only receipt commit.
-
-### Claim acknowledgement and container follow-up
-
-A brokered exclusive claim commits before optional automatic container preparation. The client acknowledges the committed task on stderr, then runs the existing bounded launcher outside the broker election and datastore lock. Stdout remains one structured claim result. Preparation failure preserves the successful claim and reports recovery guidance; a durable request-bound follow-up receipt prevents interrupted or repeated requests from launching the command twice. Direct callers retain automatic launch behavior.
-
-## Executable living-spec refresh instructions
-
-Agent documentation and generated entrypoints name both supported interfaces:
-`decapod rpc --op specs.refresh` and `decapod validate --refresh-specs`.
-The former refreshes supported generated projections and manifests; the latter
-requests that refresh during ordinary validation. Neither changes authored
-intent or replaces the material living-spec review. There is no top-level
-`decapod specs.refresh` command. Generated codebase attestations use the RPC
-invocation, and documentation regeneration retains this contract.
-
-## Fresh branch governance lifecycle
-
-`workspace ensure`, `agent.init`, and validation initialize a new work branch
-from the embedded governance template and its claimed task title, intent, and
-scope. A template has a DRAFT plan and no validation receipt or completion
-claim. `begin-pr` remains the explicit recovery boundary on an isolated
-unprotected work branch. Status and plain inventory are sessionless readers.
-Missing, conflicting, or ambiguous task/base context preserves the journal and
-returns recovery guidance; successful validation must supply fresh bound proof.
-Generated branch names include the exact primary owned task ID, so tasks with
-the same compact hash cannot redirect initialization. Explicit hash-only names
-remain ambiguous when they match multiple tasks; an active journal keeps its
-task binding across later claims, repeated calls, and branch renames.
-
-Automatic container workspaces expose host `.decapod/data` at both the canonical
-host path and the clone path, together with the authoritative applied-migration
-ledger directory. The clone retains its accepted project configuration and overrides, and
-its own tracked governance and runtime session files. Existing workspaces with
-whole-directory governance aliases fail closed with `GOVERNANCE_WORKSPACE_ALIAS`
-and must be recreated using the supported branch-local layout.
-
-Host-root runtime lookups alias the branch's managed directory, with only
-`managed/migrations` overlaid from the shared host ledger. This preserves
-atomic ledger updates and prevents historical migrations from rerunning, while
-version counters and tracked specs remain branch-local. Existing host config
-and overrides are available read-only for shared-datastore policy decisions;
-branch files remain the input to source and document validation.
-
-`cargo build-main` and `cargo test-main` invoke the optional lifecycle supervisor
-without changing ordinary Cargo commands. Bazel's checked-in build/test config
-enables synchronous sandbox disposal and the same test scratch supervisor.
-`CARGO_INCREMENTAL=1` explicitly opts back into incremental compilation.
-
-## CI-local validation and source preflight repair
-
-The public validation command and RPC recognize the exact GitHub Actions or Buildkite runtime flag and run bounded CI-local prerequisite checks without another remote submission. Their result identifies `ci_local` scope and `publication_ready=false`; no full readiness receipt or awareness mark is issued. Source publication still invokes the full current-workbranch proof boundary independently of those flags. A normalized workspace-branch push retains the raw push event and verifies the actual managed branch, exact source commit, clean initial checkout and captured configured accepted base before the material-spec gate uses full PR range semantics. Validation and the eventual PR use this same branch; repeated runs reuse its exact commit without creating extra refs.
-
-Measured source preparation resolves the selected toolchain before freezing stable launcher diagnostics, retains cold-start logs, preserves Rust proxy invocation names, and binds Docker image digests with a compatible typed inspection. Synthetic release inputs are inert fixture files until tests materialize them. Invalid provider identity reports only failed field names and never exports arbitrary environment values.
-
-Imported Buildkite GitHub Actions shell evidence carries only identities that the reviewed importer actually exposes: the build UUID, checked native retry derived from its one-based run attempt, and the logical workflow job. It must not invent a native job UUID or step key. The collector separately authenticates the native build/job/step artifact producer and verifies the pinned importer recipe and logical job before interpreting this distinct imported-runtime receipt. Ordinary GitHub and native Buildkite identities retain their existing checks.
-
-Source execution must leave its bound tracked checkout, index and non-ignored source files unchanged; a stable HEAD alone is insufficient. Bazel uses the repository's pinned version and rejects an incompatible or stale lockfile instead of silently updating it during a proof check. Standalone validation retains both actually built binaries in custody while omitting dev debug symbols; dev assertions, overflow checks and archive-size limits remain unchanged. Fixture repositories isolate their own provider context and test-only Git configuration, and relocated docs fixtures use a declared compiled helper instead of an undeclared ambient compiler. These fixture boundaries do not relax production context, storage or Git transport guards.
-
-### Remote material verification
-
-The existing `govern artifacts verify-checkpoints --publication-material` interface is invoked by the mandatory Buildkite governance recipe with immutable base/head and an explicit target. It verifies the clean committed candidate before and after the shared publication-material checks. It never submits another build or establishes standalone readiness; the outer `validate` result still requires the complete provider suite.
-
-### PR event and shell portability after publication
-
-The CI context action seeds its argument vector with mandatory repository and event inputs before appending optional event-specific flags. Ordinary pull-request and push paths therefore remain valid under macOS Bash 3.2 nounset behavior without changing immutable-context checks. Once a PR exists, full workbranch validation authenticates each native build identity and selects only the required push-event execution; independent PR/manual runs for the same head neither satisfy nor replace that contract. Duplicate push executions or substitution of an already-bound event remain errors.
-
-### Governance checks from provider merge checkouts
-
-The governance recipe may normalize only its newly owned private clone from a pull-request checkout to the immutable authored head. The checkout must have exactly the ordered accepted-base and authored-head parents and the same complete tree as that head. Unrelated equal-tree commits, changed material, replacement objects and source or private-clone HEAD races fail closed. The measured provider checkout remains untouched, and the existing strict publication-material and full-history checkpoint verifier runs against the authored head without a race-guard exception.
