@@ -234,7 +234,7 @@ Describe the security primitives and security controls implemented in this repos
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ee14bbd554c49080c5f3541beb229872ac1cb0f5d2214c10a7758f80efb5ee9e`
+- Repository signal fingerprint: `dd3e75a9aa9a596aaf23360b33bd0dc3226013002d7d4637d50e9017e3b2c701`
 - Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -297,6 +297,13 @@ GitHub check links are discovery locators, never authority for successful
 Buildkite execution. No service denial permits changing credentials or falling
 back to fabricated evidence. Synthetic Git fixtures isolate host authentication
 configuration without changing production transport rewrite rejection.
+
+Remote preparation does not require a fresh legacy local validation receipt.
+That receipt cannot prove remote success, and its absence or stale trajectory
+binding must not force a duplicate local suite. Current plan, claims, trajectory,
+checkpoint, material, review, ownership and transport safeguards still apply;
+malformed governance remains invalid. Final readiness still requires every
+applicable authenticated Buildkite execution and an unchanged candidate/target.
 
 Discovery accepts only the exact reviewed Buildkite host, organization and
 pipeline with a positive build number and optional canonical job UUID fragment.

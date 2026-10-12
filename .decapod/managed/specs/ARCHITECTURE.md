@@ -24,7 +24,12 @@ GitHub check URLs may locate Buildkite runs but do not establish execution proof
 
 Project prerequisites are acyclic components of the full proof. They do not wait
 for their own final acceptance, and their success cannot become publication
-readiness. Historical tracked governance receipts describe the project checks
+readiness. Buildkite-enabled full validation selects the remote owner before any
+local prerequisite execution or healing. Its pending prerequisite state is not a
+local pass: required remote project-check rows and every other applicable source
+row must supply complete authenticated execution evidence. Native validation and
+bounded CI-local validation retain their local execution paths.
+Historical tracked governance receipts describe the project checks
 that produced them. Final full-suite evidence lives outside the Git material it
 binds, avoiding a receipt/commit hash cycle. Source, index, branch/history,
 accepted target, configuration, stable governance policy, workflows and resolved
@@ -537,7 +542,7 @@ virtiofs/FUSE filesystem prohibition.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ee14bbd554c49080c5f3541beb229872ac1cb0f5d2214c10a7758f80efb5ee9e`
+- Repository signal fingerprint: `dd3e75a9aa9a596aaf23360b33bd0dc3226013002d7d4637d50e9017e3b2c701`
 - Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

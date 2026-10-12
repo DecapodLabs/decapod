@@ -723,3 +723,147 @@ fn ci_local_validate_rejects_snapshot_execution_in_cli_and_rpc() {
         );
     }
 }
+
+#[test]
+fn buildkite_validate_alias_and_rpc_skip_local_suite_and_preserve_projections() {
+    use decapod::core::bounded_process::BoundedCommand;
+    use std::collections::BTreeMap;
+    use std::time::Duration;
+
+    fn snapshot(dir: &Path) -> BTreeMap<String, Vec<u8>> {
+        fn collect(root: &Path, path: &Path, files: &mut BTreeMap<String, Vec<u8>>) {
+            let Ok(metadata) = fs::symlink_metadata(path) else {
+                return;
+            };
+            assert!(!metadata.file_type().is_symlink());
+            if metadata.is_dir() {
+                for entry in fs::read_dir(path).unwrap() {
+                    collect(root, &entry.unwrap().path(), files);
+                }
+            } else {
+                files.insert(
+                    path.strip_prefix(root)
+                        .unwrap()
+                        .to_string_lossy()
+                        .into_owned(),
+                    fs::read(path).unwrap(),
+                );
+            }
+        }
+        let mut files = BTreeMap::new();
+        for path in [
+            "AGENTS.md",
+            "CLAUDE.md",
+            "CODEX.md",
+            "GEMINI.md",
+            ".decapod/managed",
+            ".decapod/governance.json",
+        ] {
+            collect(dir, &dir.join(path), &mut files);
+        }
+        files
+    }
+    let root = TempDir::new().unwrap();
+    let _ = setup_initialized_repo(&root); // Initialization only; no project-check preparation.
+    enable_remote_validation_fixture(root.path());
+    for args in [
+        vec!["config", "user.name", "Remote routing fixture"],
+        vec!["config", "user.email", "fixture@example.invalid"],
+        vec!["add", "."],
+        vec!["commit", "-qm", "initialized fixture"],
+    ] {
+        let output = Command::new("git")
+            .current_dir(root.path())
+            .args(args)
+            .bounded_output(Duration::from_secs(30))
+            .unwrap();
+        assert!(output.status.success(), "{output:?}");
+    }
+    let worktree = TempDir::new().unwrap();
+    let output = Command::new("git")
+        .current_dir(root.path())
+        .args(["worktree", "add", "-b", "work/remote-routing"])
+        .arg(worktree.path())
+        .bounded_output(Duration::from_secs(30))
+        .unwrap();
+    assert!(output.status.success(), "{output:?}");
+    let dir = worktree.path();
+    let acquired = run_decapod(
+        dir,
+        &["session", "acquire"],
+        &[("DECAPOD_AGENT_ID", "init-validate-test")],
+    );
+    assert!(acquired.status.success(), "{acquired:?}");
+    let password = String::from_utf8_lossy(&acquired.stdout)
+        .lines()
+        .find_map(|line| {
+            line.strip_prefix("Password: ")
+                .map(|value| value.trim().to_string())
+        })
+        .unwrap();
+    let validation = decapod::core::governance_document::read_section(dir, "validation").unwrap();
+    assert!(
+        validation.is_none(),
+        "init must not have run project validation"
+    );
+    let before = snapshot(dir);
+    for args in [
+        vec!["validate", "--format", "json"],
+        vec!["v", "--format", "json"],
+        vec!["rpc", "--op", "validate.run"],
+    ] {
+        let rpc = args[0] == "rpc";
+        let mut command = Command::new(env!("CARGO_BIN_EXE_decapod"));
+        for name in [
+            "GITHUB_ACTIONS",
+            "BUILDKITE",
+            "DECAPOD_VALIDATE_SKIP_GIT_GATES",
+            "GITHUB_EVENT_NAME",
+            "GITHUB_WORKSPACE",
+            "BUILDKITE_BUILD_CHECKOUT_PATH",
+            "CHANGE_EVENT",
+            "CHANGE_BASE",
+            "CHANGE_HEAD",
+            "DECAPOD_VALIDATE_REQUIRE_CHANGE_CONTEXT",
+        ] {
+            command.env_remove(name);
+        }
+        let output = command
+            .current_dir(dir)
+            .args(&args)
+            .env("DECAPOD_AGENT_ID", "init-validate-test")
+            .env("DECAPOD_SESSION_PASSWORD", &password)
+            .bounded_output(Duration::from_secs(30))
+            .unwrap();
+        assert!(
+            !output.status.success(),
+            "{args:?} must fail incomplete readiness: {output:?}"
+        );
+        let text = String::from_utf8_lossy(&output.stdout);
+        assert!(
+            text.contains("READINESS_PROFILE_REQUIRED"),
+            "{args:?}: {output:?}"
+        );
+        let envelope: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+        let result = if rpc {
+            assert_eq!(envelope["success"], false);
+            &envelope["result"]
+        } else {
+            &envelope
+        };
+        assert_eq!(result["publication_ready"], false);
+        assert_eq!(result["scope"], "publication_readiness");
+        assert_eq!(result["local_project_checks"], "not_run_provider_owned");
+        assert_eq!(result["readiness"]["ready"], false);
+        assert!(result[if rpc { "checks" } else { "report" }].is_null());
+        assert_eq!(
+            decapod::core::governance_document::read_section(dir, "validation").unwrap(),
+            validation
+        );
+        assert_eq!(
+            snapshot(dir),
+            before,
+            "{args:?} must not heal projections or write a local receipt"
+        );
+    }
+}

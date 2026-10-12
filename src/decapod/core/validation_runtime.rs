@@ -190,7 +190,8 @@ pub trait Host {
     fn evidence_directory(&self) -> Option<&Path> {
         None
     }
-    /// Invoke the existing explicitly partial `govern project-check` route.
+    /// Native execution requires the actual partial project checks. Buildkite
+    /// returns ProviderRequired and proves those checks within its source graph.
     /// A legacy receipt is never read, returned or treated as readiness here.
     fn project_check(&mut self, budget: &RuntimeBudget<'_>) -> io::Result<ProjectPrerequisites>;
     /// Fresh provider-authenticated accepted branch query. Do not read a cached
@@ -680,10 +681,15 @@ fn run(
     };
     validate_options(options, &budget)?;
     let prerequisites = host.project_check(&budget)?;
-    if prerequisites != ProjectPrerequisites::Passed {
+    if prerequisites == ProjectPrerequisites::Failed {
         return Err(invalid("PROJECT_PREREQUISITES_FAILED"));
     }
     let project = load_project(options, &mut budget)?;
+    if prerequisites == ProjectPrerequisites::ProviderRequired
+        && !project.configuration.validation_buildkite_preflights
+    {
+        return Err(invalid("PROJECT_PREREQUISITES_PROVIDER_MISMATCH"));
+    }
     report.stage_dispositions = project.catalog.stage_dispositions().to_vec();
     // Freeze source/governance/accepted target before any remote preparation or
     // useful partial native execution performed by adapter selection. Execution

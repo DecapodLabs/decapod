@@ -331,24 +331,35 @@
       "proof_refs": [
         "local:sixth-final-remote-project-203-pass"
       ]
+    },
+    {
+      "id": "seventh-remote-first-source",
+      "summary": "Route configured validation directly through Buildkite and repair the observed guidance assertion; actual full provider proof remains pending",
+      "input_digest": "sha256:80a75fd5e2e422fab400ee9a5491c555bc2fa242de7879e5c21a09877c81d25b"
+    },
+    {
+      "id": "seventh-remote-first-tested-source",
+      "summary": "Retain actual990-test library pass and remote-first CLI/controller proof before Buildkite execution",
+      "input_digest": "sha256:3c358cda5b830c278f31417693173f3328b0390122067a307083bd7f0d853f7e"
     }
   ],
   "intents": {
-    "intent:sixth-buildkite-convergence-20261012": {
+    "intent:seventh-buildkite-convergence-20261012": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Workbranch pushes allowed; PR requires exact-candidate full green proof and accepted-target mergeability; no release/deploy or account changes"
+        "No local project prerequisite suite before Buildkite submission; native and CI-local behavior retained",
+        "No PR before complete real required Buildkite proof; no publish or deploy side effects"
       ],
       "constraints": [
-        "Observed fifth-run synthetic poll failure and required canonical guidance consistency"
+        "src/decapod, tests, authored specs and generated governance/docs"
       ],
       "created_sequence": 1,
-      "id": "intent:sixth-buildkite-convergence-20261012",
+      "id": "intent:seventh-buildkite-convergence-20261012",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Make complete Buildkite validation green, then create a merge-ready PR",
-      "refined_intent": "Repair the sole fifth-run polling fixture failure and correct canonical push-first guidance with immutable historical template verification",
+      "raw_intent": "Complete the prescribed Buildkite-owned validate runtime and converge actual preflight to green before creating the PR",
+      "refined_intent": "Route configured validation directly to remote submission, waiting and complete proof collection; fix only observed sixth-run failures",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -418,23 +429,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Align pushed-branch iteration with PR-only readiness and bind historical source templates to immutable commit/version without weakening current candidate or provider proof",
-          "reviewed_code_fingerprint": "ee14bbd554c49080c5f3541beb229872ac1cb0f5d2214c10a7758f80efb5ee9e",
-          "spec_material_hash": "e64a0e33fa6faf9111498373de226898c8bebfa901e7930d5e89bd82cb9c17f1"
+          "reason": "Reviewed remote-first dispatch, provider-owned prerequisite state, complete evidence aggregation and unchanged native/CI-local execution against the source patch",
+          "reviewed_code_fingerprint": "dd3e75a9aa9a596aaf23360b33bd0dc3226013002d7d4637d50e9017e3b2c701",
+          "spec_material_hash": "1bb7f497285cdf6a2327d6976245bc317b6a17b9b19cc9c258a042580af97211"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Align pushed-branch iteration with PR-only readiness and bind historical source templates to immutable commit/version without weakening current candidate or provider proof",
-          "reviewed_code_fingerprint": "ee14bbd554c49080c5f3541beb229872ac1cb0f5d2214c10a7758f80efb5ee9e",
-          "spec_material_hash": "8de2b44e068dbe8c18e90a49cb96a80c33b1e11b57f72a512c941c258b0fa64c"
+          "reason": "Reviewed direct public CLI/alias/RPC routing, honest unrun local report fields and nonzero unsuccessful validate.run process behavior",
+          "reviewed_code_fingerprint": "dd3e75a9aa9a596aaf23360b33bd0dc3226013002d7d4637d50e9017e3b2c701",
+          "spec_material_hash": "2062f7fea9677924305e53834f5c45dde6a741bb6d5d46c972e4f26dc341d607"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Align pushed-branch iteration with PR-only readiness and bind historical source templates to immutable commit/version without weakening current candidate or provider proof",
-          "reviewed_code_fingerprint": "ee14bbd554c49080c5f3541beb229872ac1cb0f5d2214c10a7758f80efb5ee9e",
-          "spec_material_hash": "634b1f9b43dc30e45154f3aa8744ee4d4fb7dfcbd38cbf4e68f38a437c55309d"
+          "reason": "Reviewed removal of legacy local receipt freshness as provider preparation authority while preserving governed material, ownership, checkpoints, full source evidence and exact target checks",
+          "reviewed_code_fingerprint": "dd3e75a9aa9a596aaf23360b33bd0dc3226013002d7d4637d50e9017e3b2c701",
+          "spec_material_hash": "b4ca46eb0671790376737241d86707730d7a8bf62be16d730a966bbfeab3a10c"
         }
       ],
       "state": "APPROVED",
@@ -445,205 +456,209 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791789005Z"
+      "updated_at": "1791791469Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Latest user explicitly allows branch push before preflight; PR remains held until full green validation and mergeability",
-        "Workbranch pushes allowed; PR requires exact-candidate full green proof and accepted-target mergeability; no release/deploy or account changes"
+        "No PR before complete real required Buildkite proof; no publish or deploy side effects",
+        "No local project prerequisite suite before Buildkite submission; native and CI-local behavior retained"
       ],
-      "artifact_hash": "sha256:61b584515fd62811b7ab90a1a263a56c74164b5372c4876791d50a7c5712c4f4",
+      "artifact_hash": "sha256:feb09cdd4cab9beca6f9106904757f2a6c62dd14d4a38c0370c7f4c91af0ac36",
       "checks": [
         {
-          "name": "actual fifth public validate provider resume",
-          "status": "failed"
-        },
-        {
-          "name": "canonical generator governance preservation",
+          "name": "actual_cli_alias_rpc_remote_first_regression",
           "status": "passed"
         },
         {
-          "name": "complete sixth Buildkite proof",
+          "name": "complete_seventh_buildkite_preflight",
           "status": "unavailable"
         },
         {
-          "name": "decapod validate",
+          "name": "dirty_candidate_transport_refusal",
           "status": "passed"
         },
         {
-          "name": "final candidate CLI compile",
+          "name": "final_remote_first_product_build",
           "status": "passed"
         },
         {
-          "name": "historical template focused regressions",
+          "name": "remote_first_candidate_compilation",
           "status": "passed"
         },
         {
-          "name": "integrated historical template regressions",
+          "name": "remote_first_controlled_snapshot_controller",
           "status": "passed"
         },
         {
-          "name": "native polling fixture scenarios",
+          "name": "remote_first_profile_unit_tests",
           "status": "passed"
         },
         {
-          "name": "previous fifth complete Buildkite suite",
+          "name": "remote_first_scope_unit_tests",
+          "status": "passed"
+        },
+        {
+          "name": "seventh_source_preflight",
+          "status": "unavailable"
+        },
+        {
+          "name": "seventh_supabase_library_local",
+          "status": "passed"
+        },
+        {
+          "name": "sixth_actual_buildkite_suite",
           "status": "failed"
-        },
-        {
-          "name": "synthetic native polling regression",
-          "status": "passed"
         }
       ],
-      "current_phase": "validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:sixth-buildkite-convergence-20261012",
+            "intent_id": "intent:seventh-buildkite-convergence-20261012",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:sixth-buildkite-convergence-20261012",
+            "intent_id": "intent:seventh-buildkite-convergence-20261012",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:sixth-buildkite-convergence-20261012",
+            "detail": "trajectory:seventh-buildkite-convergence-20261012",
             "event_id": "event:4",
-            "intent_id": "intent:sixth-buildkite-convergence-20261012",
+            "intent_id": "intent:seventh-buildkite-convergence-20261012",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:sixth-buildkite-convergence-20261012",
+            "detail": "trajectory:seventh-buildkite-convergence-20261012",
             "event_id": "event:5",
-            "intent_id": "intent:sixth-buildkite-convergence-20261012",
+            "intent_id": "intent:seventh-buildkite-convergence-20261012",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:sixth-buildkite-convergence-20261012",
+            "detail": "trajectory:seventh-buildkite-convergence-20261012",
             "event_id": "event:6",
-            "intent_id": "intent:sixth-buildkite-convergence-20261012",
+            "intent_id": "intent:seventh-buildkite-convergence-20261012",
             "kind": "trajectory_step_recorded",
             "sequence": 6
-          },
-          {
-            "detail": "trajectory:sixth-buildkite-convergence-20261012",
-            "event_id": "event:7",
-            "intent_id": "intent:sixth-buildkite-convergence-20261012",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
-          "sixth-buildkite-convergence-20261012": {
+          "seventh-buildkite-convergence-20261012": {
             "evidence_only": true,
-            "id": "sixth-buildkite-convergence-20261012",
-            "intent_id": "intent:sixth-buildkite-convergence-20261012",
+            "id": "seventh-buildkite-convergence-20261012",
+            "intent_id": "intent:seventh-buildkite-convergence-20261012",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "Fifth exact S a7e5136c/H b5ea2001: Buildkite908 one failed orchestration fixture;909-912 passed. Actual validate identified terminal build908 as SNAPSHOT_NOT_READY. The test wrongly advanced synthetic states through a locator request now correctly cached. Baseline30.08s deadline failure reproduced; test-only native-envelope progression passed five scenarios twice with production sleeps and deadlines unchanged."
+                  "src/decapod/lib.rs",
+                  "src/decapod/core/workspace.rs",
+                  "src/decapod/core/readiness_profile.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/validation_scope.rs",
+                  "Actual product binary built; 8 routing tests, 24 profile tests and 5 controlled SnapshotHost tests passed. These tests are not live provider readiness.",
+                  "Actual configured public validate returned nonzero for unstaged governance with local_project_checks=not_run_provider_owned, report=null and self_heal=[]; no local prerequisite suite executed.",
+                  "Sixth Buildkite source run914 reports failed Supabase consumer; raw log diagnosis is awaiting approved read resumption. Companion runs915-918 passed their measured executions."
                 ],
                 "proof_refs": [
-                  "previous fifth complete Buildkite suite",
-                  "actual fifth public validate provider resume",
-                  "synthetic native polling regression"
+                  "remote_first_candidate_compilation",
+                  "remote_first_scope_unit_tests",
+                  "remote_first_profile_unit_tests",
+                  "remote_first_controlled_snapshot_controller",
+                  "dirty_candidate_transport_refusal",
+                  "complete_seventh_buildkite_preflight"
                 ],
                 "scope": [
-                  "Observed fifth-run synthetic poll failure and required canonical guidance consistency"
+                  "src/decapod, tests, authored specs and generated governance/docs"
                 ],
                 "sequence": 4,
                 "validation_findings": []
               },
               {
-                "action": "validation",
+                "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "Final candidate CLI compiled70s. Historical reader isolated harness16/0 includes actual6f32b093 four-path replay; independent review found no remaining blocker after Git environment/ancestry hardening. Five native-poll scenarios passed twice with unchanged production timing. Actual init regenerated AGENTS with identical governance bytes; actual docs build produced current contract. Integrated local Cargo checks and complete new Buildkite suite remain pending."
+                  "src/decapod/lib.rs",
+                  "src/decapod/core/workspace.rs",
+                  "tests/init_validate_green_field.rs",
+                  "tests/unit/cli_tests.rs",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "Final actual product compilation passed. Controlled actual CLI, alias and RPC regression passed1/0: no local project suite/receipt/healing, missing required profile remains nonzero, governance/projection bytes preserved. Provider controller5/0 and profile24/0 are focused tests only.",
+                  "Sixth exact snapshot1bc744c34a435642197d732034f65ef5af2e1b02: Buildkite914 failed only stale guidance assertion; 982 library tests passed, including repaired automatic controller. Source receipts36/37 passed and companion915-918 passed. The stale assertion is now aligned to permitted branch pushes and PR-only readiness.",
+                  "No local project-check prerequisite suite was executed in this seventh iteration. Live complete Buildkite proof remains required before PR creation."
                 ],
                 "proof_refs": [
-                  "final candidate CLI compile",
-                  "historical template focused regressions",
-                  "native polling fixture scenarios",
-                  "canonical generator governance preservation",
-                  "complete sixth Buildkite proof"
+                  "final_remote_first_product_build",
+                  "actual_cli_alias_rpc_remote_first_regression",
+                  "sixth_actual_buildkite_suite",
+                  "seventh_source_preflight"
                 ],
                 "scope": [
-                  "Observed fifth-run synthetic poll failure and required canonical guidance consistency"
+                  "src/decapod, tests, authored specs and generated governance/docs"
                 ],
                 "sequence": 5,
                 "validation_findings": []
               },
               {
-                "action": "validation",
-                "command": "decapod validate",
+                "action": "trajectory.record",
                 "custody_event_id": "event:6",
                 "observations": [
-                  ".decapod/governance.json",
-                  ".decapod/governance.json",
-                  "validation epoch ve_5d6ef468eab0f64f completed with zero failures"
+                  "Full actual Supabase-feature library run passed990/0 with3 existing ignored tests. Local test optimization was0 for faster compilation; the provider recipe remains unchanged. Required Docker/platform/integration/source proof still belongs to the fresh Buildkite run."
                 ],
                 "proof_refs": [
-                  "decapod validate"
+                  "seventh_supabase_library_local"
                 ],
                 "scope": [
-                  "Observed fifth-run synthetic poll failure and required canonical guidance consistency"
+                  "src/decapod, tests, authored specs and generated governance/docs"
                 ],
                 "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "Integrated current library historical entrypoint tests passed15/0. Full Buildkite proof remains unrun and therefore non-ready; this is execution pending, not an unresolved human decision or permission blocker. Previous failed provider attempts remain recorded."
-                ],
-                "proof_refs": [
-                  "integrated historical template regressions"
-                ],
-                "scope": [
-                  "Observed fifth-run synthetic poll failure and required canonical guidance consistency"
-                ],
-                "sequence": 7,
                 "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "decapod validate"
-      ],
-      "destination": "DecapodLabs/decapod branch and Buildkite preflight",
+      "declared_commands": [],
       "evidence": [
-        "Fifth exact S a7e5136c/H b5ea2001: Buildkite908 one failed orchestration fixture;909-912 passed. Actual validate identified terminal build908 as SNAPSHOT_NOT_READY. The test wrongly advanced synthetic states through a locator request now correctly cached. Baseline30.08s deadline failure reproduced; test-only native-envelope progression passed five scenarios twice with production sleeps and deadlines unchanged.",
-        "Final candidate CLI compiled70s. Historical reader isolated harness16/0 includes actual6f32b093 four-path replay; independent review found no remaining blocker after Git environment/ancestry hardening. Five native-poll scenarios passed twice with unchanged production timing. Actual init regenerated AGENTS with identical governance bytes; actual docs build produced current contract. Integrated local Cargo checks and complete new Buildkite suite remain pending.",
-        "Integrated current library historical entrypoint tests passed15/0. Full Buildkite proof remains unrun and therefore non-ready; this is execution pending, not an unresolved human decision or permission blocker. Previous failed provider attempts remain recorded.",
-        "validation epoch ve_5d6ef468eab0f64f completed with zero failures"
+        "Actual configured public validate returned nonzero for unstaged governance with local_project_checks=not_run_provider_owned, report=null and self_heal=[]; no local prerequisite suite executed.",
+        "Actual product binary built; 8 routing tests, 24 profile tests and 5 controlled SnapshotHost tests passed. These tests are not live provider readiness.",
+        "Final actual product compilation passed. Controlled actual CLI, alias and RPC regression passed1/0: no local project suite/receipt/healing, missing required profile remains nonzero, governance/projection bytes preserved. Provider controller5/0 and profile24/0 are focused tests only.",
+        "Full actual Supabase-feature library run passed990/0 with3 existing ignored tests. Local test optimization was0 for faster compilation; the provider recipe remains unchanged. Required Docker/platform/integration/source proof still belongs to the fresh Buildkite run.",
+        "No local project-check prerequisite suite was executed in this seventh iteration. Live complete Buildkite proof remains required before PR creation.",
+        "Sixth Buildkite source run914 reports failed Supabase consumer; raw log diagnosis is awaiting approved read resumption. Companion runs915-918 passed their measured executions.",
+        "Sixth exact snapshot1bc744c34a435642197d732034f65ef5af2e1b02: Buildkite914 failed only stale guidance assertion; 982 library tests passed, including repaired automatic controller. Source receipts36/37 passed and companion915-918 passed. The stale assertion is now aligned to permitted branch pushes and PR-only readiness."
       ],
-      "inspected_files": [],
-      "intent_id": "intent:sixth-buildkite-convergence-20261012",
+      "inspected_files": [
+        "src/decapod/core/workspace.rs",
+        "src/decapod/lib.rs"
+      ],
+      "intent_id": "intent:seventh-buildkite-convergence-20261012",
       "modified_files": [
-        ".decapod/governance.json"
-      ],
-      "next_transitions": [
-        "publish",
-        "validation"
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/SECURITY.md",
+        "src/decapod/core/readiness_profile.rs",
+        "src/decapod/core/validation_runtime.rs",
+        "src/decapod/core/workspace.rs",
+        "src/decapod/lib.rs",
+        "src/decapod/validation_scope.rs",
+        "tests/init_validate_green_field.rs",
+        "tests/unit/cli_tests.rs"
       ],
       "repo_scope": [
-        "Observed fifth-run synthetic poll failure and required canonical guidance consistency"
+        "src/decapod, tests, authored specs and generated governance/docs"
       ],
-      "run_id": "sixth-buildkite-convergence-20261012",
+      "run_id": "seventh-buildkite-convergence-20261012",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
       "task_id": "bugs_01m4pf92p0r108x1",

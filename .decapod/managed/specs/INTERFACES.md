@@ -21,6 +21,13 @@ accounts. Missing tools, access, inventory or proof remains an actionable failur
 The temporary transport is repository-owned and is not represented as literal
 compatibility with the separate `bk preflight` command.
 
+Outside CI, enabled public CLI, alias and RPC validation dispatch directly to
+Buildkite preparation and execution without a local project-check pass or a
+fresh local prerequisite receipt. Their report identifies local project checks
+as `not_run_provider_owned`, with no local check report. Missing or failed remote
+proof remains non-ready. An unsuccessful `rpc --op validate.run` preserves its
+structured error envelope and returns a nonzero process exit status.
+
 Full validation exposes explicit snapshot preparation and resume. A host object
 API that cannot preserve a commit timestamp must use the explicit snapshot-adopt
 interface with the original private handoff and observed server object ID.
@@ -448,7 +455,7 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ee14bbd554c49080c5f3541beb229872ac1cb0f5d2214c10a7758f80efb5ee9e`
+- Repository signal fingerprint: `dd3e75a9aa9a596aaf23360b33bd0dc3226013002d7d4637d50e9017e3b2c701`
 - Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

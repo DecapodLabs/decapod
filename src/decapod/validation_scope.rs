@@ -36,6 +36,22 @@ impl ValidationScope {
         self == Self::PublicationReadiness
     }
 
+    /// Pick the execution owner before invoking either path. Provider flags only
+    /// select partial CI scope; they cannot mint full publication readiness.
+    pub(crate) fn dispatch<T, R>(
+        self,
+        buildkite_enabled: bool,
+        input: T,
+        local: impl FnOnce(T) -> R,
+        remote: impl FnOnce(T) -> R,
+    ) -> R {
+        if self.requires_publication_proof() && buildkite_enabled {
+            remote(input)
+        } else {
+            local(input)
+        }
+    }
+
     pub(crate) fn records_receipt(self) -> bool {
         self == Self::ProjectPrerequisites
     }
@@ -115,5 +131,111 @@ mod tests {
                 String::from_utf8_lossy(&output.stdout)
             );
         }
+    }
+    #[test]
+    fn full_buildkite_dispatch_submits_without_local_prerequisites() {
+        let events = std::cell::RefCell::new(Vec::new());
+        let ready = Scope::PublicationReadiness.dispatch(
+            true,
+            (),
+            |_| panic!("local 203-gate suite must not run before remote submission"),
+            |_| {
+                events.borrow_mut().extend(["submit", "wait", "collect"]);
+                false // Missing authenticated execution remains non-ready.
+            },
+        );
+        assert!(!ready);
+        assert_eq!(*events.borrow(), ["submit", "wait", "collect"]);
+    }
+
+    #[test]
+    fn native_project_and_ci_dispatch_keep_actual_local_checks() {
+        for (scope, enabled) in [
+            (Scope::PublicationReadiness, false),
+            (Scope::ProjectPrerequisites, true),
+            (Scope::ProjectPrerequisites, false),
+            (Scope::CiLocal, true),
+            (Scope::CiLocal, false),
+        ] {
+            let calls = std::cell::Cell::new(0);
+            scope.dispatch(
+                enabled,
+                (),
+                |_| calls.set(calls.get() + 1),
+                |_| panic!("partial/native route must not submit a snapshot"),
+            );
+            assert_eq!(calls.get(), 1);
+        }
+        for flags in [(Some("true"), None), (None, Some("true"))] {
+            let scope = Scope::from_provider_flags(flags.0, flags.1);
+            assert!(!scope.requires_publication_proof());
+            scope.dispatch(true, (), |_| (), |_| panic!("CI must not recurse"));
+        }
+    }
+
+    #[test]
+    fn cli_rpc_and_publish_wiring_leave_local_suite_outside_true_path() {
+        let source = include_str!("lib.rs");
+        for (entry, end) in [
+            ("fn run_validate_command(", "/// Buildkite owns"),
+            (
+                "pub(crate) fn handle_validate_run(",
+                "fn handle_validate_run_remote(",
+            ),
+        ] {
+            let body = source
+                .split_once(entry)
+                .unwrap()
+                .1
+                .split_once(end)
+                .unwrap()
+                .0;
+            assert!(body.contains("scope.dispatch("));
+            assert!(!body.contains("run_validation_bounded_with_receipt("));
+        }
+        for (entry, end) in [
+            (
+                "fn run_validate_command_remote(",
+                "fn run_validate_command_local(",
+            ),
+            (
+                "fn handle_validate_run_remote(",
+                "fn handle_validate_run_local(",
+            ),
+        ] {
+            let body = source
+                .split_once(entry)
+                .unwrap()
+                .1
+                .split_once(end)
+                .unwrap()
+                .0;
+            assert!(body.contains("run_current_workbranch_readiness_with("));
+            assert!(body.contains("not_run_provider_owned"));
+            assert!(!body.contains("run_validation_bounded_with_receipt("));
+            assert!(!body.contains("heal_"));
+        }
+        let publish = source
+            .split_once("pub(crate) fn enforce_workbranch_readiness_before_push(")
+            .unwrap()
+            .1
+            .split_once("/// Called only after source publication")
+            .unwrap()
+            .0;
+        assert!(publish.contains("if !crate::cli::DecapodProjectConfig::load(workspace_root)?"));
+        assert!(publish.contains(".validation_buildkite_preflights"));
+        assert!(publish.contains("run_current_workbranch_readiness_with("));
+        let command = source
+            .split_once("fn run_workspace_command(")
+            .unwrap()
+            .1
+            .split_once("WorkspaceCommand::Publish {")
+            .unwrap()
+            .1
+            .split_once("let invocation = ReadinessInvocation {")
+            .unwrap()
+            .0;
+        assert!(command.contains("if !crate::cli::DecapodProjectConfig::load(workspace_root)?"));
+        assert!(command.contains(".validation_buildkite_preflights"));
     }
 }

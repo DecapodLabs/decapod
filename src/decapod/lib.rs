@@ -5959,6 +5959,75 @@ fn run_validate_command(
     project_store: &Store,
     scope: ValidationScope,
 ) -> Result<(), error::DecapodError> {
+    let enabled = crate::cli::DecapodProjectConfig::load(workspace_root)?
+        .proof
+        .validation_buildkite_preflights;
+    scope.dispatch(
+        enabled,
+        validate_cli,
+        |cli| {
+            run_validate_command_local(cli, governance_root, workspace_root, project_store, scope)
+        },
+        |cli| run_validate_command_remote(cli, workspace_root, scope),
+    )
+}
+
+/// Buildkite owns the actual source project-check instances. This route performs
+/// no local project suite, healing, temporary store creation or receipt writing.
+fn run_validate_command_remote(
+    cli: ValidateCli,
+    workspace_root: &Path,
+    scope: ValidationScope,
+) -> Result<(), error::DecapodError> {
+    let invocation = ReadinessInvocation {
+        snapshot_prepare: cli.snapshot_prepare,
+        snapshot_resume: cli.snapshot_resume,
+        snapshot_adopt: cli.snapshot_adopt,
+        provider_artifacts: cli.provider_artifacts,
+    };
+    invocation.validate()?;
+    reject_remote_arguments_in_partial_scope(scope, &invocation)?;
+    let readiness = run_current_workbranch_readiness_with(workspace_root, &invocation);
+    if cli.format == "json" {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&serde_json::json!({
+                "status": if readiness.ready { "pass" } else { "fail" },
+                "scope": scope.label(),
+                "publication_ready": readiness.ready,
+                "local_project_checks": "not_run_provider_owned",
+                "report": serde_json::Value::Null,
+                "self_heal": [],
+                "readiness": readiness,
+            }))
+            .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?
+        );
+    } else {
+        println!("Validation backend: Buildkite; local project checks are provider-owned.");
+        if readiness.ready {
+            println!("Complete current-candidate Buildkite proof passed.");
+        } else {
+            for blocker in &readiness.blockers {
+                eprintln!("{}: {}", blocker.code, blocker.detail);
+            }
+            if let Some(path) = &readiness.evidence_path {
+                eprintln!("Evidence: {}", path.display());
+            }
+        }
+    }
+    if !readiness.ready {
+        std::process::exit(1);
+    }
+    mark_validation_completed(workspace_root)
+}
+
+fn run_validate_command_local(
+    validate_cli: ValidateCli,
+    governance_root: &Path,
+    workspace_root: &Path,
+    project_store: &Store,
+    scope: ValidationScope,
+) -> Result<(), error::DecapodError> {
     use crate::core::workspace;
 
     let readiness_invocation = ReadinessInvocation {
@@ -6375,9 +6444,13 @@ fn run_current_workbranch_readiness_with(
             result.map_err(std::io::Error::other)
         };
         let prerequisite = |_budget: &runtime::RuntimeBudget<'_>| {
-            // The private caller has just executed the actual bounded project
-            // checks; a serialized receipt or CLI flag cannot supply this fact.
-            Ok(core::readiness_profile::ProjectPrerequisites::Passed)
+            // Remote source project-check rows must be authenticated with the
+            // complete provider suite; this is not a claimed local pass.
+            Ok(if config.proof.validation_buildkite_preflights {
+                core::readiness_profile::ProjectPrerequisites::ProviderRequired
+            } else {
+                core::readiness_profile::ProjectPrerequisites::Passed
+            })
         };
         if config.proof.validation_buildkite_preflights {
             use runtime::snapshot::{SnapshotHost, SnapshotMode};
@@ -6506,22 +6579,27 @@ pub(crate) fn enforce_workbranch_readiness_before_push(
     if invocation.snapshot_prepare || invocation.snapshot_adopt.is_some() {
         return Err(error::DecapodError::ValidationError("PUBLICATION_NOT_READY: temporary snapshot preparation/adoption cannot publish the work branch".into()));
     }
-    let governance_root = find_governance_root(workspace_root);
-    let store = Store {
-        kind: StoreKind::Repo,
-        root: governance_root.join(".decapod/data"),
-    };
-    let project = run_validation_bounded_with_receipt(
-        &store,
-        &governance_root,
-        workspace_root,
-        false,
-        true,
-        false,
-        false,
-    )?;
-    if project.fail_count != 0 {
-        return Err(error::DecapodError::ValidationError("PUBLICATION_NOT_READY: project prerequisite checks failed; continue working on the branch".into()));
+    if !crate::cli::DecapodProjectConfig::load(workspace_root)?
+        .proof
+        .validation_buildkite_preflights
+    {
+        let governance_root = find_governance_root(workspace_root);
+        let store = Store {
+            kind: StoreKind::Repo,
+            root: governance_root.join(".decapod/data"),
+        };
+        let project = run_validation_bounded_with_receipt(
+            &store,
+            &governance_root,
+            workspace_root,
+            false,
+            true,
+            false,
+            false,
+        )?;
+        if project.fail_count != 0 {
+            return Err(error::DecapodError::ValidationError("PUBLICATION_NOT_READY: project prerequisite checks failed; continue working on the branch".into()));
+        }
     }
     let readiness = run_current_workbranch_readiness_with(workspace_root, invocation);
     if !readiness.ready {
@@ -9106,29 +9184,34 @@ fn run_workspace_command(
             snapshot_resume,
             provider_artifacts,
         } => {
-            let governance_root = find_governance_root(project_root);
             let workspace_root = project_root;
-            let project_store = Store {
-                kind: StoreKind::Repo,
-                root: governance_root.join(".decapod").join("data"),
-            };
-            let report = run_validation_bounded_with_receipt(
-                &project_store,
-                &governance_root,
-                workspace_root,
-                false,
-                true,
-                false,
-                false,
-            )?;
-            if report.fail_count > 0 {
-                for failure in &report.failures {
-                    eprintln!("Publish validation failure: {failure}");
+            if !crate::cli::DecapodProjectConfig::load(workspace_root)?
+                .proof
+                .validation_buildkite_preflights
+            {
+                let governance_root = find_governance_root(project_root);
+                let project_store = Store {
+                    kind: StoreKind::Repo,
+                    root: governance_root.join(".decapod").join("data"),
+                };
+                let report = run_validation_bounded_with_receipt(
+                    &project_store,
+                    &governance_root,
+                    workspace_root,
+                    false,
+                    true,
+                    false,
+                    false,
+                )?;
+                if report.fail_count > 0 {
+                    for failure in &report.failures {
+                        eprintln!("Publish validation failure: {failure}");
+                    }
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "{} test(s) failed before workspace publish.",
+                        report.fail_count
+                    )));
                 }
-                return Err(error::DecapodError::ValidationError(format!(
-                    "{} test(s) failed before workspace publish.",
-                    report.fail_count
-                )));
             }
             let invocation = ReadinessInvocation {
                 snapshot_prepare: false,
@@ -10277,6 +10360,68 @@ mod rpc_handlers {
     }
 
     pub(crate) fn handle_validate_run(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+        let scope = super::ValidationScope::public_validate();
+        let enabled = crate::cli::DecapodProjectConfig::load(&ctx.project_root)?
+            .proof
+            .validation_buildkite_preflights;
+        scope.dispatch(
+            enabled,
+            ctx,
+            handle_validate_run_local,
+            handle_validate_run_remote,
+        )
+    }
+
+    fn handle_validate_run_remote(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+        let params: ValidateRunParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
+        let invocation = super::ReadinessInvocation {
+            snapshot_prepare: params.snapshot_prepare,
+            snapshot_resume: params.snapshot_resume,
+            snapshot_adopt: params.snapshot_adopt,
+            provider_artifacts: params.provider_artifacts,
+        };
+        invocation.validate()?;
+        ensure_session_valid()?;
+        let readiness =
+            super::run_current_workbranch_readiness_with(&ctx.project_root, &invocation);
+        let payload = serde_json::json!({
+            "success": readiness.ready,
+            "report": if readiness.ready { "Complete Buildkite source proof passed" } else { "Buildkite source proof is not ready" },
+            "scope": super::ValidationScope::PublicationReadiness.label(),
+            "publication_ready": readiness.ready,
+            "local_project_checks": "not_run_provider_owned",
+            "checks": serde_json::Value::Null,
+            "readiness": readiness,
+        });
+        let mut response = if readiness.ready {
+            success_response(
+                ctx.request.id.clone(),
+                ctx.request.op.clone(),
+                ctx.request.params.clone(),
+                Some(payload.clone()),
+                vec![],
+                None,
+                vec![],
+                ctx.mandates.clone(),
+            )
+        } else {
+            error_response(
+                ctx.request.id.clone(),
+                ctx.request.op.clone(),
+                ctx.request.params.clone(),
+                "publication_not_ready".into(),
+                serde_json::to_string(&readiness)
+                    .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
+                None,
+                ctx.mandates.clone(),
+            )
+        };
+        response.result = Some(payload);
+        Ok(response)
+    }
+
+    fn handle_validate_run_local(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
         let params: ValidateRunParams = serde_json::from_value(ctx.request.params.clone())
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
@@ -10890,6 +11035,31 @@ mod rpc_handlers {
 }
 
 /// Run RPC command
+fn rpc_validation_exit_status(op: &str, success: bool) -> Result<(), error::DecapodError> {
+    if op == "validate.run" && !success {
+        return Err(error::DecapodError::ValidationError(
+            "VALIDATION_NOT_READY: validate.run failed; see the JSON error envelope".into(),
+        ));
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+#[test]
+fn unsuccessful_validate_rpc_is_nonzero_without_changing_other_rpc_exit_semantics() {
+    assert!(rpc_validation_exit_status("validate.run", false).is_err());
+    assert!(rpc_validation_exit_status("validate.run", true).is_ok());
+    for op in [
+        "workspace.status",
+        "workspace.publish",
+        "store.query",
+        "unknown.op",
+    ] {
+        assert!(rpc_validation_exit_status(op, false).is_ok());
+        assert!(rpc_validation_exit_status(op, true).is_ok());
+    }
+}
+
 fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::DecapodError> {
     use crate::core::rpc::*;
 
@@ -10981,7 +11151,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             mandates,
         );
         println!("{}", serde_json::to_string_pretty(&response).unwrap());
-        return Ok(());
+        return rpc_validation_exit_status(&request.op, response.success);
     }
 
     let rpc_ctx = RpcCtx {
@@ -11044,7 +11214,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
     let _ = trace::append_trace(project_root, trace_event);
 
     println!("{}", serde_json::to_string_pretty(&response).unwrap());
-    Ok(())
+    rpc_validation_exit_status(&request.op, response.success)
 }
 
 /// Execute HTTP requests through the exact local stdin RPC path. This keeps

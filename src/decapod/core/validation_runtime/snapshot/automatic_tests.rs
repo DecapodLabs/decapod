@@ -294,7 +294,11 @@ impl Fixture {
         command(&root, &["init", "-b", "work"]);
         command(&root, &["config", "user.name", "Automatic Runtime Fixture"]);
         command(&root, &["config", "user.email", "fixture@example.invalid"]);
-        fs::write(root.join(CONFIG), "[proof]\n").unwrap();
+        fs::write(
+            root.join(CONFIG),
+            "[proof]\nvalidation_buildkite_preflights=true\n",
+        )
+        .unwrap();
         fs::write(root.join(GOVERNANCE), "{}\n").unwrap();
         fs::write(root.join("source"), "base").unwrap();
         command(&root, &["add", "."]);
@@ -347,7 +351,8 @@ impl Fixture {
         }
     }
     fn host(&self) -> SnapshotHost<'static, FixtureRunner> {
-        SnapshotHost::new(
+        let state = self.state.clone();
+        let mut host = SnapshotHost::new(
             self.options.clone(),
             Repository::new("fixture", "decapod").unwrap(),
             FixtureRunner {
@@ -358,14 +363,27 @@ impl Fixture {
             SnapshotMode::PublishAndCollect,
             None,
             None,
-            |_| Ok(ProjectPrerequisites::Passed),
+            move |_| {
+                state
+                    .borrow_mut()
+                    .record("provider-prerequisites-required".into());
+                Ok(ProjectPrerequisites::ProviderRequired)
+            },
         )
         .unwrap()
         .with_public_buildkite_reader(
             FixtureBuildkite(self.state.clone()),
             ReviewedBuildkiteImporter::reviewed(),
         )
-        .unwrap()
+        .unwrap();
+        let cancel = self.state.borrow().cancel.clone();
+        assert_eq!(
+            host.project_check(&runtime_budget(&cancel, Duration::from_secs(30)))
+                .unwrap(),
+            ProjectPrerequisites::ProviderRequired,
+        );
+        assert!(self.state.borrow().published.is_none());
+        host
     }
     fn assert_source_preserved(&self) {
         assert_eq!(
@@ -387,6 +405,7 @@ impl Fixture {
     }
     fn assert_no_custody(&self) {
         let state = self.state.borrow();
+        assert_eq!(state.count("provider-prerequisites-required"), 1);
         assert_eq!(state.count("publish"), 1);
         assert_eq!(state.count("snapshot-exact-readback"), 1);
         assert!(
@@ -413,6 +432,10 @@ fn automatic_buildkite_publish_waits_for_terminal_then_collects_once_and_stays_n
     let cancel = Cancellation::default();
     let fixture = Fixture::new(Scenario::Progress, &cancel);
     let mut host = fixture.host();
+    let governance = fs::read(fixture.options.root.join(GOVERNANCE)).unwrap();
+    // Exercise the real controller with provider-owned prerequisites. No local
+    // project suite or receipt exists; queued/running/terminal metadata and
+    // source custody still determine its outcome.
     let blockers = host
         .select(
             &fixture.project,
@@ -427,10 +450,19 @@ fn automatic_buildkite_publish_waits_for_terminal_then_collects_once_and_stays_n
         "unexpected blockers: {blockers:#?}; provider events: {:#?}",
         fixture.state.borrow().events
     );
+    assert_eq!(
+        fs::read(fixture.options.root.join(GOVERNANCE)).unwrap(),
+        governance
+    );
     assert!(host.verified_checks.is_empty());
     assert!(host.terminal_sources.is_some());
     assert!(host.prepared_snapshot.is_some());
     let state = fixture.state.borrow();
+    assert_eq!(state.count("provider-prerequisites-required"), 1);
+    assert_eq!(
+        state.events.first().map(String::as_str),
+        Some("provider-prerequisites-required")
+    );
     assert_eq!(state.count("publish"), 1);
     assert_eq!(state.count("snapshot-exact-readback"), 1);
     let first_custody = state

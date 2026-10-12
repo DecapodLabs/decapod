@@ -978,3 +978,102 @@ fn staged_publication_requires_fresh_checkpoint_before_creating_history() {
     )
     .unwrap();
 }
+
+#[test]
+fn buildkite_publication_inventory_does_not_require_local_validation_receipt() {
+    let dir = repo();
+    crate::core::governance_document::begin_pr(dir.path(), "provider-owned-proof", "master")
+        .unwrap();
+    let receipt = current_receipt_fixture(dir.path());
+    let mut config = crate::cli::DecapodProjectConfig::default();
+    config.proof.validation_buildkite_preflights = true;
+    write(
+        dir.path(),
+        ".decapod/config.toml",
+        &toml::to_string(&config).unwrap(),
+    );
+    assert!(
+        crate::core::governance_document::read_section(dir.path(), "validation")
+            .unwrap()
+            .is_none()
+    );
+    git(dir.path(), &["add", "."]);
+    crate::core::governance_document::checkpoint(
+        dir.path(),
+        "remote-preparation",
+        "Prepare remote proof without a local receipt",
+        vec!["test:remote-routing".into()],
+    )
+    .unwrap();
+    git(dir.path(), &["add", "."]);
+    git(dir.path(), &["commit", "-qm", "provider-owned proof"]);
+    ensure_required_governance_artifacts_in_pr(dir.path(), "master").unwrap();
+    verify_current_governance_for_publish(dir.path()).unwrap();
+
+    // An intact stale local receipt cannot become a prerequisite or proof.
+    let mut stale = receipt;
+    stale.trajectory_artifact_hash = Some("0".repeat(64));
+    save_receipt(dir.path(), &stale.with_recomputed_hash().unwrap());
+    ensure_required_governance_artifacts_in_pr(dir.path(), "master").unwrap();
+    assert!(verify_validation_artifacts_for_publish(dir.path()).is_err());
+    config.proof.validation_buildkite_preflights = false;
+    write(
+        dir.path(),
+        ".decapod/config.toml",
+        &toml::to_string(&config).unwrap(),
+    );
+    assert!(ensure_required_governance_artifacts_in_pr(dir.path(), "master").is_err());
+
+    config.proof.validation_buildkite_preflights = true;
+    write(
+        dir.path(),
+        ".decapod/config.toml",
+        &toml::to_string(&config).unwrap(),
+    );
+    let original = std::fs::read(
+        dir.path()
+            .join(crate::core::governance_document::GOVERNANCE_PATH),
+    )
+    .unwrap();
+    for section in ["plan", "claims", "trajectory"] {
+        let mut doc: serde_json::Value = serde_json::from_slice(&original).unwrap();
+        if section == "claims" {
+            doc["claims"] = serde_json::Value::Null;
+        } else {
+            doc["sections"].as_object_mut().unwrap().remove(section);
+        }
+        std::fs::write(
+            dir.path()
+                .join(crate::core::governance_document::GOVERNANCE_PATH),
+            serde_json::to_vec(&doc).unwrap(),
+        )
+        .unwrap();
+        assert!(
+            ensure_required_governance_artifacts_in_pr(dir.path(), "master").is_err(),
+            "{section}"
+        );
+    }
+}
+
+#[test]
+fn publication_inventory_absent_config_is_native_but_malformed_config_fails() {
+    let dir = repo();
+    bundle(dir.path());
+    let config_path = dir.path().join(".decapod/config.toml");
+    assert!(!config_path.exists());
+    ensure_required_governance_artifacts_in_pr(dir.path(), "master").unwrap();
+
+    write(dir.path(), ".decapod/config.toml", "invalid = [");
+    assert!(matches!(
+        ensure_required_governance_artifacts_in_pr(dir.path(), "master"),
+        Err(DecapodError::Config(_))
+    ));
+    std::fs::remove_file(config_path).unwrap();
+    let mut stale = current_receipt_fixture(dir.path());
+    stale.trajectory_artifact_hash = Some("0".repeat(64));
+    save_receipt(dir.path(), &stale.with_recomputed_hash().unwrap());
+    let error = ensure_required_governance_artifacts_in_pr(dir.path(), "master")
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("#/sections/validation"), "{error}");
+}

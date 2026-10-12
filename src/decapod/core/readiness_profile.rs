@@ -571,6 +571,7 @@ pub struct CompiledProfile {
     configuration_digest: String,
     compiled_identity: MaterialIdentity,
     governance_policy_digest: String,
+    provider_prerequisites_required: bool,
 }
 impl CompiledProfile {
     pub fn plan(&self) -> &ExpectedPlan {
@@ -644,6 +645,12 @@ pub fn compile_plan(
             requirement: Requirement::Execute,
         });
     }
+    let provider_prerequisites_required = policy.buildkite_preflights
+        && catalog.obligations.iter().any(|row| {
+            row.role == InvocationRole::ProjectPrerequisites
+                && row.kind == CheckKind::SourceCi
+                && row.key.provider == Provider::Buildkite
+        });
     let executors: Vec<_> = policy.executors.iter().collect();
     let plan = ExpectedPlan {
         schema_version: evidence::SCHEMA_VERSION.into(),
@@ -684,14 +691,18 @@ pub fn compile_plan(
         configuration_digest: configuration_digest.into(),
         compiled_identity: current.clone(),
         governance_policy_digest: governance_policy_digest.into(),
+        provider_prerequisites_required,
     })
 }
 
-/// Internal project-check result. It never converts to full readiness.
+/// Internal prerequisite result or provider obligation. Never full readiness.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ProjectPrerequisites {
     Passed,
     Failed,
+    /// No local suite ran. The full Buildkite source plan must include and
+    /// authenticate its actual project-check rows before readiness can pass.
+    ProviderRequired,
 }
 impl ProjectPrerequisites {
     pub fn readiness_verdict(self) -> Verdict {
@@ -779,7 +790,11 @@ pub fn freeze(
     if invocation_id.trim().is_empty() {
         return Err(LifecycleFailure::InvalidInvocation);
     }
-    if prerequisites != ProjectPrerequisites::Passed {
+    if prerequisites != ProjectPrerequisites::Passed
+        && !(prerequisites == ProjectPrerequisites::ProviderRequired
+            && profile.provider_prerequisites_required
+            && profile.plan.buildkite_enabled)
+    {
         return Err(LifecycleFailure::PrerequisitesFailed);
     }
     stable_state(profile, state)?;

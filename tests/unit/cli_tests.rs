@@ -320,7 +320,11 @@ fn prerequisite_bootstrap_guidance_holds_publication_for_full_validation() {
     ));
     assert!(!source.contains("decapod docs ingest && decapod validate && decapod session acquire"));
     assert!(source.contains("including a draft"));
-    assert!(source.contains("its success is never permission to publish"));
+    assert!(source.contains("its success is never permission to create a PR"));
+    assert!(source.contains("Work branch pushes and iteration are allowed before preflight"));
+    assert!(
+        source.contains("intent is converged, the branch is mergeable into the accepted target")
+    );
     assert!(source.contains("accepted-target change invalidates earlier readiness"));
 }
 

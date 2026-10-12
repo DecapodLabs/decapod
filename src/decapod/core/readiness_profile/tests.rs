@@ -850,3 +850,91 @@ fn core_dispositions_require_real_source_builds_and_claim_no_release_assurance()
     assert!(release.reason.contains("#1399"));
     assert_eq!(release.evidence_scope, "no_release_packaging_assurance");
 }
+
+#[test]
+fn provider_owned_prerequisites_require_remote_rows_and_complete_actual_evidence() {
+    let c = catalog();
+    let (mut policy, mut bindings) = bindings(&c);
+    policy.buildkite_preflights = true;
+    for (key, binding) in &mut bindings {
+        binding.executor = Provider::Buildkite;
+        policy.executors.insert(key.clone(), Provider::Buildkite);
+    }
+    let profile =
+        compile_plan(c, &policy, &bindings, &identity(), &d("governance policy")).unwrap();
+    assert_eq!(
+        ProjectPrerequisites::ProviderRequired.readiness_verdict(),
+        Verdict::NotReady
+    );
+    let frozen = freeze(
+        "run-1",
+        ProjectPrerequisites::ProviderRequired,
+        &profile,
+        &state(),
+        &target(),
+    )
+    .unwrap();
+    assert!(
+        finish(
+            &frozen,
+            &profile,
+            &state(),
+            &target(),
+            ProviderOutcome::Pending
+        )
+        .is_err()
+    );
+    let mut evidence = success(&profile);
+    let row = evidence
+        .results
+        .iter()
+        .position(|row| {
+            row.key.profile.ends_with("/health")
+                || row.key.profile.ends_with("/standalone-validation")
+        })
+        .unwrap();
+    evidence.results.remove(row);
+    assert!(
+        finish(
+            &frozen,
+            &profile,
+            &state(),
+            &target(),
+            ProviderOutcome::Complete(&evidence)
+        )
+        .is_err()
+    );
+    assert_eq!(
+        finish(
+            &frozen,
+            &profile,
+            &state(),
+            &target(),
+            ProviderOutcome::Complete(&success(&profile))
+        )
+        .unwrap(),
+        Verdict::Ready
+    );
+    assert!(
+        freeze(
+            "run-1",
+            ProjectPrerequisites::ProviderRequired,
+            &compiled(),
+            &state(),
+            &target()
+        )
+        .is_err()
+    );
+    let mut without_project_rows = profile;
+    without_project_rows.provider_prerequisites_required = false;
+    assert!(
+        freeze(
+            "run-1",
+            ProjectPrerequisites::ProviderRequired,
+            &without_project_rows,
+            &state(),
+            &target()
+        )
+        .is_err()
+    );
+}
