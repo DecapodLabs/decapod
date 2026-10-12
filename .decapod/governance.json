@@ -315,6 +315,14 @@
       "proof_refs": [
         "local:sixth-project-check-203-pass"
       ]
+    },
+    {
+      "id": "sixth-ready-to-execute",
+      "summary": "Preserve failed prior attempts and completed prerequisite evidence; required preflight is pending execution with no unresolved human decision",
+      "input_digest": "sha256:c48670da70d6b6339a8f717b46f2b058e12b3b75e27e215a6eddcbcd73ccaf01",
+      "proof_refs": [
+        "local:sixth-history-tests-15-pass"
+      ]
     }
   ],
   "intents": {
@@ -436,11 +444,7 @@
         "Latest user explicitly allows branch push before preflight; PR remains held until full green validation and mergeability",
         "Workbranch pushes allowed; PR requires exact-candidate full green proof and accepted-target mergeability; no release/deploy or account changes"
       ],
-      "artifact_hash": "sha256:00081146bca6dabfb6222934ad1a77ffa36d68ff5ad1caa37963ce87cb1ca457",
-      "blockers": [
-        "Exact sixth candidate complete Buildkite proof has not run; no PR readiness claim",
-        "New candidate complete Buildkite proof is unrun"
-      ],
+      "artifact_hash": "sha256:61b584515fd62811b7ab90a1a263a56c74164b5372c4876791d50a7c5712c4f4",
       "checks": [
         {
           "name": "actual fifth public validate provider resume",
@@ -464,6 +468,10 @@
         },
         {
           "name": "historical template focused regressions",
+          "status": "passed"
+        },
+        {
+          "name": "integrated historical template regressions",
           "status": "passed"
         },
         {
@@ -514,10 +522,17 @@
             "intent_id": "intent:sixth-buildkite-convergence-20261012",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:sixth-buildkite-convergence-20261012",
+            "event_id": "event:7",
+            "intent_id": "intent:sixth-buildkite-convergence-20261012",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "sixth-buildkite-convergence-20261012": {
@@ -578,6 +593,21 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Integrated current library historical entrypoint tests passed15/0. Full Buildkite proof remains unrun and therefore non-ready; this is execution pending, not an unresolved human decision or permission blocker. Previous failed provider attempts remain recorded."
+                ],
+                "proof_refs": [
+                  "integrated historical template regressions"
+                ],
+                "scope": [
+                  "Observed fifth-run synthetic poll failure and required canonical guidance consistency"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -590,6 +620,7 @@
       "evidence": [
         "Fifth exact S a7e5136c/H b5ea2001: Buildkite908 one failed orchestration fixture;909-912 passed. Actual validate identified terminal build908 as SNAPSHOT_NOT_READY. The test wrongly advanced synthetic states through a locator request now correctly cached. Baseline30.08s deadline failure reproduced; test-only native-envelope progression passed five scenarios twice with production sleeps and deadlines unchanged.",
         "Final candidate CLI compiled70s. Historical reader isolated harness16/0 includes actual6f32b093 four-path replay; independent review found no remaining blocker after Git environment/ancestry hardening. Five native-poll scenarios passed twice with unchanged production timing. Actual init regenerated AGENTS with identical governance bytes; actual docs build produced current contract. Integrated local Cargo checks and complete new Buildkite suite remain pending.",
+        "Integrated current library historical entrypoint tests passed15/0. Full Buildkite proof remains unrun and therefore non-ready; this is execution pending, not an unresolved human decision or permission blocker. Previous failed provider attempts remain recorded.",
         "validation epoch ve_5d6ef468eab0f64f completed with zero failures"
       ],
       "inspected_files": [],
@@ -622,158 +653,154 @@
       },
       "decapod_release": "0.107.5",
       "drift_findings": [],
-      "elapsed_ms": 7813,
+      "elapsed_ms": 9708,
       "epoch_ref": "ve_5d6ef468eab0f64f",
       "fail_count": 0,
       "failures": [],
       "gate_timings": [
         {
-          "elapsed_ms": 2069,
-          "name": "validate_machine_contract"
-        },
-        {
-          "elapsed_ms": 1315,
+          "elapsed_ms": 3999,
           "name": "validate_project_specs_docs"
         },
         {
-          "elapsed_ms": 712,
+          "elapsed_ms": 2066,
+          "name": "validate_machine_contract"
+        },
+        {
+          "elapsed_ms": 762,
           "name": "validate_markdown_primitives_roundtrip_gate"
         },
         {
-          "elapsed_ms": 537,
+          "elapsed_ms": 412,
           "name": "validate_stale_workspaces"
         },
         {
-          "elapsed_ms": 216,
+          "elapsed_ms": 259,
           "name": "validate_obligations"
         },
         {
-          "elapsed_ms": 211,
-          "name": "validate_no_legacy_namespaces"
-        },
-        {
-          "elapsed_ms": 182,
-          "name": "validate_schema_determinism"
-        },
-        {
-          "elapsed_ms": 170,
-          "name": "validate_embedded_self_contained"
-        },
-        {
-          "elapsed_ms": 141,
+          "elapsed_ms": 192,
           "name": "validate_legacy_jsonl_retired"
         },
         {
-          "elapsed_ms": 109,
-          "name": "validate_git_workspace_context"
+          "elapsed_ms": 157,
+          "name": "validate_schema_determinism"
+        },
+        {
+          "elapsed_ms": 143,
+          "name": "validate_no_legacy_namespaces"
+        },
+        {
+          "elapsed_ms": 82,
+          "name": "validate_embedded_self_contained"
+        },
+        {
+          "elapsed_ms": 79,
+          "name": "validate_control_plane_contract"
         },
         {
           "elapsed_ms": 78,
           "name": "validate_archive_integrity"
         },
         {
-          "elapsed_ms": 68,
-          "name": "validate_control_plane_contract"
-        },
-        {
-          "elapsed_ms": 66,
-          "name": "validate_interface_contract_bootstrap"
-        },
-        {
-          "elapsed_ms": 45,
-          "name": "validate_repomap_determinism"
+          "elapsed_ms": 72,
+          "name": "validate_git_workspace_context"
         },
         {
           "elapsed_ms": 43,
-          "name": "validate_federation_gates"
+          "name": "validate_repomap_determinism"
         },
         {
-          "elapsed_ms": 27,
-          "name": "validate_watcher_purity"
+          "elapsed_ms": 33,
+          "name": "validate_federation_gates"
         },
         {
           "elapsed_ms": 27,
           "name": "validate_knowledge_integrity"
         },
         {
-          "elapsed_ms": 27,
-          "name": "validate_canon_mutation"
-        },
-        {
-          "elapsed_ms": 24,
-          "name": "validate_risk_map_violations"
-        },
-        {
-          "elapsed_ms": 24,
+          "elapsed_ms": 26,
           "name": "validate_policy_integrity"
         },
         {
-          "elapsed_ms": 24,
-          "name": "validate_lineage_hard_gate"
+          "elapsed_ms": 26,
+          "name": "validate_generated_artifact_whitelist"
         },
         {
-          "elapsed_ms": 21,
-          "name": "validate_health_purity"
+          "elapsed_ms": 26,
+          "name": "validate_canon_mutation"
         },
         {
-          "elapsed_ms": 20,
-          "name": "validate_entrypoint_invariants"
-        },
-        {
-          "elapsed_ms": 15,
-          "name": "validate_trajectory_artifacts_if_present"
-        },
-        {
-          "elapsed_ms": 14,
+          "elapsed_ms": 25,
           "name": "validate_git_push_pr_gate"
         },
         {
-          "elapsed_ms": 12,
+          "elapsed_ms": 23,
+          "name": "validate_watcher_purity"
+        },
+        {
+          "elapsed_ms": 23,
+          "name": "validate_interface_contract_bootstrap"
+        },
+        {
+          "elapsed_ms": 23,
+          "name": "validate_risk_map_violations"
+        },
+        {
+          "elapsed_ms": 21,
+          "name": "validate_lineage_hard_gate"
+        },
+        {
+          "elapsed_ms": 18,
           "name": "validate_git_protected_branch"
         },
         {
-          "elapsed_ms": 11,
-          "name": "validate_jev_history_if_present"
+          "elapsed_ms": 13,
+          "name": "validate_health_purity"
         },
         {
           "elapsed_ms": 10,
-          "name": "validate_override_authority"
+          "name": "validate_research_claims_if_present"
         },
         {
           "elapsed_ms": 9,
-          "name": "validate_watcher_audit"
+          "name": "validate_plan_governed_execution_gate"
+        },
+        {
+          "elapsed_ms": 9,
+          "name": "validate_lcm_rebuild_gate"
+        },
+        {
+          "elapsed_ms": 8,
+          "name": "validate_jev_history_if_present"
         },
         {
           "elapsed_ms": 8,
           "name": "validate_validation_receipt_if_present"
         },
         {
-          "elapsed_ms": 8,
-          "name": "validate_plan_governed_execution_gate"
+          "elapsed_ms": 7,
+          "name": "validate_override_authority"
         },
         {
           "elapsed_ms": 7,
-          "name": "validate_knowledge_promotions_if_present"
+          "name": "validate_gatekeeper_gate"
         },
         {
           "elapsed_ms": 7,
-          "name": "validate_research_claims_if_present"
+          "name": "validate_watcher_audit"
         },
         {
           "elapsed_ms": 6,
           "name": "validate_lcm_immutability"
         },
         {
-          "elapsed_ms": 5,
-          "name": "validate_lcm_rebuild_gate"
+          "elapsed_ms": 6,
+          "name": "validate_knowledge_promotions_if_present"
         },
         {
-          "elapsed_ms": 5,
-          "name": "validate_generated_artifact_whitelist"
-        },
-        {
-          "elapsed_ms": 4,
-          "name": "validate_database_schema_versions"
+          "elapsed_ms": 6,
+          "name": "validate_trajectory_artifacts_if_present"
         },
         {
           "elapsed_ms": 4,
@@ -781,19 +808,23 @@
         },
         {
           "elapsed_ms": 3,
+          "name": "validate_entrypoint_invariants"
+        },
+        {
+          "elapsed_ms": 3,
+          "name": "validate_database_schema_versions"
+        },
+        {
+          "elapsed_ms": 2,
           "name": "validate_project_config_toml"
-        },
-        {
-          "elapsed_ms": 3,
-          "name": "validate_gatekeeper_gate"
-        },
-        {
-          "elapsed_ms": 3,
-          "name": "validate_repo_map"
         },
         {
           "elapsed_ms": 2,
           "name": "validate_health_cache_integrity"
+        },
+        {
+          "elapsed_ms": 1,
+          "name": "validate_repo_map"
         },
         {
           "elapsed_ms": 1,
@@ -809,23 +840,11 @@
         },
         {
           "elapsed_ms": 0,
-          "name": "validate_project_scoped_state"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_docs_templates_bucket"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_internalization_artifacts_if_present"
-        },
-        {
-          "elapsed_ms": 0,
           "name": "validate_state_commit_gate"
         },
         {
           "elapsed_ms": 0,
-          "name": "validate_workunit_manifests_if_present"
+          "name": "validate_project_scoped_state"
         },
         {
           "elapsed_ms": 0,
@@ -833,7 +852,7 @@
         },
         {
           "elapsed_ms": 0,
-          "name": "validate_root_dockerfile_seed_detection"
+          "name": "validate_docs_templates_bucket"
         },
         {
           "elapsed_ms": 0,
@@ -845,19 +864,31 @@
         },
         {
           "elapsed_ms": 0,
-          "name": "validate_context_capsules_if_present"
+          "name": "validate_workunit_manifests_if_present"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_internalization_artifacts_if_present"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_root_dockerfile_seed_detection"
         },
         {
           "elapsed_ms": 0,
           "name": "validate_coplayer_policy_tightening"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_context_capsules_if_present"
         }
       ],
-      "git_revision": "0f0e3c4e9135fee8b33362e0da1b8b4e65fa0992",
+      "git_revision": "55cc1fb0cdc7810ef4dd76d8ca05da40e5a80a37",
       "kind": "validation_receipt",
       "parallelism": 1,
       "pass_count": 203,
       "prediction_uses_warnings": true,
-      "receipt_hash": "sha256:4485e6bd43497045eb04fee348800e3c5f9de77311893454ca718a594582f2ca",
+      "receipt_hash": "sha256:2a283cb44be89d89291f3c3042a355fbad5adda2dd4a8d97dc8a13e32db9679f",
       "repo_signal_fingerprint": "ee14bbd554c49080c5f3541beb229872ac1cb0f5d2214c10a7758f80efb5ee9e",
       "schema_version": "1.0.0",
       "status": "ok",
