@@ -1,5 +1,45 @@
 # Security
 
+## Preflight custody and capabilities
+
+Preflight executes only reviewed build/test/release-verification operations. It
+must not evaluate arbitrary imported YAML as a local shell program, inherit
+publishing credentials into local proof children, or silently install missing
+capabilities. Existing process supervision bounds ordinary owned descendants;
+it is not a security sandbox against deliberate process-group escape. Unsupported
+containment requirements fail explicitly.
+
+Temporary remote transport is restricted to a fresh request-scoped preflight
+namespace. It cannot overwrite the work branch or match publishing/deployment
+triggers. Its exact remote commit and tree require readback. Credentials remain
+with their existing authorized provider or official client; success records
+supplied as arbitrary JSON are not authenticated provider evidence. Public API
+reads must retain TLS/server custody and exact run/attempt/source binding.
+
+The public reader seals finite GET routes and validates artifact redirects before
+following them. Ordinary process/API budgets remain distinct from bounded archive
+transfer budgets. ZIP members are verified in memory with explicit size, count,
+path, type and expansion limits, never extracted or executed as evidence. A raw
+archive handoff gains authority only through fresh provider metadata and digest
+verification. Session-health proof stores only its safe active/inactive status,
+not session credentials, and cannot self-update the candidate executable.
+
+Historical Decapod-source entrypoint proof is anchored to the published source
+lineage and the same immutable commit's package identity, release and literal
+template. It does not execute historical Rust or trust a self-declared generated
+fingerprint. Unsupported or unverifiable source fails closed; copied files in
+an unrelated consumer repository do not activate this source-history path.
+Current candidate entrypoints still require the evaluating binary's template.
+
+## Release-only material-spec proof boundary
+
+Release names, labels, and mutable refs cannot authorize the material-spec
+exception. The shared proof rejects a staged edit even if the working tree was
+reverted, malformed event metadata, a foreign configured-base ancestry, and a
+synthetic merge with additional source changes. Exact generated hashes cannot
+launder altered authored prose, template payload, configuration, or dependencies.
+This proof changes no credential, publication permission, or external grant.
+
 ## CI checkout and provider authority
 
 CI must not repair permissive provider checkout modes by recursively changing
@@ -11,6 +51,12 @@ their existing explicit policy. Source CI requests read-only repository contents
 access; release token denials do not authorize broader app grants or publishing.
 ARM musl proof uses a pinned official image and direct QEMU user-mode execution,
 with no privileged container or host binfmt registration introduced by this lane.
+
+Required immutable CI context is checked before local-only skip paths. A missing
+base ref, protected branch, malformed event, or different checkout cannot silently
+omit the material-spec gate. Local-only ref transfer preserves provider state.
+Scratch projection proof creates private files and directories at creation time;
+it never relaxes storage checks or repairs existing user/runtime permissions.
 
 ## Integration artifact custody
 
@@ -188,8 +234,8 @@ Describe the security primitives and security controls implemented in this repos
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ab9a11ea42af3b5496a92844b43b1fb208608acd04fed342b0a1168f3c94af27`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (11 files), `docs/` (1 files), `src/` (125 files), `tests/` (173 files)
+- Repository signal fingerprint: `e3584d78d15131f611c7f497eae3e00e961798587727064461fc5332169d0f64`
+- Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -241,3 +287,51 @@ Build/test cleanup is limited to an atomically created invocation-owned scratch
 directory with the original filesystem identity. Replaced roots and unconfirmed
 live process groups are preserved; shared build caches and proof artifacts are
 outside deletion authority.
+
+### Buildkite-only readiness transport
+
+The same-workspace-branch transport carries no service skip directive; existing
+GitHub Actions runs remain independent and cannot supply Buildkite readiness. Buildkite execution archives, native producer identity,
+recipe, actual command outcomes and final attempt freshness remain mandatory.
+Publication is a non-forced push or exact-tip reuse of the existing local workbranch;
+only the matching remote branch may be created on its first publication. A diverged
+remote or changed accepted target fails. Validation never creates an auxiliary
+branch, rewrites history, or deletes the real workspace branch. Public artifact
+GET timeouts receive at most two same-request retries within the original deadline;
+authentication, TLS, HTTP, cancellation and integrity failures are never retried
+through another route. Previously verified downloads remain in the active collection.
+GitHub check links are discovery locators, never authority for successful
+Buildkite execution. No service denial permits changing credentials or falling
+back to fabricated evidence. Synthetic Git fixtures isolate host authentication
+configuration without changing production transport rewrite rejection.
+
+Remote preparation does not require a fresh legacy local validation receipt.
+That receipt cannot prove remote success, and its absence or stale trajectory
+binding must not force a duplicate local suite. Current plan, claims, trajectory,
+checkpoint, material, review, ownership and transport safeguards still apply;
+malformed governance remains invalid. Final readiness still requires every
+applicable authenticated Buildkite execution and an unchanged candidate/target.
+
+Discovery accepts only the exact reviewed Buildkite host, organization and
+pipeline with a positive build number and optional canonical job UUID fragment.
+Queries, credentials, foreign hosts and malformed fragments cannot become
+network destinations. Cached locators never stand in for execution status or
+final freshness. A first ordinary branch push may normalize its all-zero prior
+tip only with the provider's explicit created flag, a captured accepted target,
+clean exact checkout and ancestry proof; it never becomes PR-readiness evidence.
+
+### Same-branch verification location
+
+Selecting Buildkite moves substantive verification to the required remote workers, preserving local ownership, decision and transport authorization. Public metadata is selected only for the reviewed public repository/profile before requests; a failed authenticated request never silently switches clients. Imported history cannot waive proof: unchanged transports require whole-tree identity, unaccepted historical bases and conflicting targets reject, and current merge checkpoints remain mandatory.
+
+## Reviewed importer compiler and runtime identity
+
+Remote execution custody pins the independently reviewed official Buildkite GHA compiler version and executable digest separately from the runtime executable selected by the authored platform matrix. The reviewed 0.102.3 Linux x86_64 compiler may emit Linux x86_64 or Darwin arm64 runtime plans; a runtime digest never substitutes for the compiler digest. Observed green jobs cannot authorize new versions, executable digests or platforms. A provider upgrade requires independent official-release verification before its exact pins are accepted. Wrong producer, altered artifacts, workflow, matrix or execution identity still fails closed.
+
+## Provider-owned job log redirects
+
+Public Buildkite job-log reads may follow one HTTPS redirect to the exact Buildkite cloud log object. The pipeline, native build and job UUIDs come from the already-verified inventory, and every storage path component must match before the redirected GET is issued. Metadata routes remain nonredirecting and artifact routes retain their separate bounded policy. Alternate hosts, changed identities, extra hops, malformed paths, authentication failures and HTTP denials fail closed; signed query values remain opaque and absent from diagnostics.
+
+## Canonical workflow identity across producer formats
+
+The source worker identifies a workflow by its canonical filename, while the authenticated importer records its repository path. The verifier joins the independently expected filename under `.github/workflows/` and compares that complete path exactly, allowing only the importer's single optional `./` prefix. It never discards an observed directory or infers the expected workflow from green provider data. Wrong filenames, path traversal, query syntax, producer IDs, native step identity and source revisions remain rejected.

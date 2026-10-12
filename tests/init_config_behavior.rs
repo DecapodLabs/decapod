@@ -876,6 +876,9 @@ fn init_preserves_manually_added_custody_fields_in_intent_md() {
 
 #[test]
 fn init_supports_and_preserves_declared_capabilities() {
+    // Check scaffolded capability prerequisites without asserting source/release proof.
+    // This prerequisite result is not full publication-readiness proof.
+
     let tmp = tempdir().expect("tempdir");
 
     // 1. Init with custom declared capabilities
@@ -936,7 +939,7 @@ fn init_supports_and_preserves_declared_capabilities() {
     );
 
     // 3. Verify validation passes successfully
-    let out = run_decapod(tmp.path(), &["validate"]);
+    let out = run_decapod(tmp.path(), &["govern", "project-check"]);
     assert!(
         out.status.success(),
         "decapod validate failed: {}",
@@ -1032,5 +1035,114 @@ fn init_validation_rejects_traversal_in_guided_paths() {
         "stdout: {}\nstderr: {}",
         String::from_utf8_lossy(&validate.stdout),
         String::from_utf8_lossy(&validate.stderr)
+    );
+}
+
+fn read_init_proof_config(dir: &std::path::Path) -> toml::Value {
+    let raw = fs::read_to_string(dir.join(".decapod/config.toml")).expect("read config");
+    let config: toml::Value = toml::from_str(&raw).expect("parse config");
+    config["proof"].clone()
+}
+
+fn assert_init_success(dir: &std::path::Path, args: &[&str]) {
+    let output = run_decapod(dir, args);
+    assert!(
+        output.status.success(),
+        "init {args:?} failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+#[test]
+fn init_buildkite_preflights_defaults_and_overrides_on_both_surfaces() {
+    for surface in [vec!["init"], vec!["init", "with"]] {
+        let project = tempdir().expect("project");
+        let mut args = surface.clone();
+        args.extend(["--proof", "--force"]);
+        assert_init_success(project.path(), &args);
+        assert_eq!(
+            read_init_proof_config(project.path())["validation_buildkite_preflights"].as_bool(),
+            Some(false)
+        );
+        for value in [true, false] {
+            let flag = format!("--validation-buildkite-preflights={value}");
+            let mut override_args = args.clone();
+            override_args.push(&flag);
+            assert_init_success(project.path(), &override_args);
+            assert_eq!(
+                read_init_proof_config(project.path())["validation_buildkite_preflights"].as_bool(),
+                Some(value)
+            );
+            // Unset is not an explicit false, including on init with.
+            assert_init_success(project.path(), &args);
+            assert_eq!(
+                read_init_proof_config(project.path())["validation_buildkite_preflights"].as_bool(),
+                Some(value)
+            );
+        }
+    }
+}
+
+#[test]
+fn init_refresh_preserves_buildkite_provider_and_structured_proofs() {
+    for args in [
+        vec!["init", "--refresh", "--force"],
+        vec!["init", "with", "--force"],
+    ] {
+        let project = tempdir().expect("project");
+        assert_init_success(
+            project.path(),
+            &[
+                "init",
+                "with",
+                "--validation-buildkite-preflights",
+                "--force",
+            ],
+        );
+        let path = project.path().join(".decapod/config.toml");
+        let raw = fs::read_to_string(&path).expect("read config");
+        let mut config: toml::Value = toml::from_str(&raw).expect("parse config");
+        config["proof"]["commands"] = toml::Value::Array(vec![
+            toml::Value::try_from(serde_json::json!({
+                "name": "optional",
+                "command": "cargo",
+                "args": ["test", "--lib", "argument with spaces,commas=equals"],
+                "description": "Keep this authored description",
+                "required": false
+            }))
+            .expect("proof definition"),
+            toml::Value::try_from(serde_json::json!({
+                "name": "required",
+                "command": "printf 'a,b=c'",
+                "args": [],
+                "description": "Required proof",
+                "required": true
+            }))
+            .expect("required proof definition"),
+        ]);
+        let expected = config["proof"].clone();
+        fs::write(&path, toml::to_string_pretty(&config).unwrap())
+            .expect("write structured config");
+        assert_init_success(project.path(), &args);
+        assert_eq!(read_init_proof_config(project.path()), expected);
+    }
+}
+
+#[test]
+fn init_refresh_upgrades_legacy_proof_config_to_native_default() {
+    let project = tempdir().expect("project");
+    assert_init_success(project.path(), &["init", "with", "--force"]);
+    let path = project.path().join(".decapod/config.toml");
+    let raw = fs::read_to_string(&path).expect("read config");
+    let mut config: toml::Value = toml::from_str(&raw).expect("parse config");
+    config["proof"]
+        .as_table_mut()
+        .unwrap()
+        .remove("validation_buildkite_preflights");
+    fs::write(&path, toml::to_string_pretty(&config).unwrap()).expect("write legacy config");
+    assert_init_success(project.path(), &["init", "--refresh", "--force"]);
+    assert_eq!(
+        read_init_proof_config(project.path())["validation_buildkite_preflights"].as_bool(),
+        Some(false)
     );
 }

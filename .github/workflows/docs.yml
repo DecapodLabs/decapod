@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - "agent/**"
   pull_request:
     branches:
       - master
@@ -18,6 +19,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify immutable source context
+        id: context
+        uses: ./.github/actions/ci-context
 
       - name: Install mdBook
         run: |
@@ -25,11 +32,11 @@ jobs:
           curl -sSL https://github.com/rust-lang/mdBook/releases/download/v0.4.40/mdbook-v0.4.40-x86_64-unknown-linux-gnu.tar.gz | tar -xz -C $HOME/mdbook
           echo "${HOME}/mdbook" >> $GITHUB_PATH
 
-      - name: Build with mdBook
-        run: mdbook build docs/book
+      - name: Prepare shared source-CI profile
+        uses: ./.github/actions/source-ci-profile
 
-      # upload-pages-artifact is GitHub Pages-specific and is not implemented
-      # by the Buildkite GHA runtime. Keep it for native GitHub Actions.
+      - name: Build with mdBook
+        run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check docs-build'
       - name: Upload artifact (GitHub Pages)
         if: github.ref == 'refs/heads/master' && env.BUILDKITE_BUILD_ID == ''
         uses: actions/upload-pages-artifact@v3
@@ -45,6 +52,15 @@ jobs:
           name: docs-site
           path: docs/book/book
 
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0
   deploy:
     # Keep the event gate in a GitHub context: Buildkite does not expose env in
     # job-level conditions. The step-level split below handles the runtime.

@@ -67,13 +67,18 @@ or evidence changes without resetting the PR identity.
    explicit `govern artifacts begin-pr --id <change> --base-branch <base>` recovery
    only after establishing the accepted boundary. Legacy migration stays lossless.
 3. Refine the plan, record trajectory and proof, review material living specs,
-   refresh supported projections, and run `decapod validate` without skipping gates.
+   and refresh supported projections.
 4. Stage authored code/spec changes, record `govern artifacts checkpoint --id <unique-id>
    --summary "..." --proof-ref <evidence>`, then stage governance.json and commit.
    Repeat for every authored commit, including merges; later proof cannot repair a
    missing historical checkpoint.
-5. Run `workspace publish`. It checks staged proof before auto-commit, then verifies
-   every checkpoint against the immutable pushed commit graph and exact PR target.
+5. Branch pushes and iteration are allowed before preflight. Run full
+   `decapod validate` against the exact committed candidate and accepted target.
+   Follow a failing report, repair root causes, and rerun without bypassing gates.
+6. Hold PR creation, including drafts, until intent is converged, the branch is
+   mergeable, and full validation succeeds. `workspace publish` combines branch
+   push and PR creation, so it remains held at that boundary. It checks staged
+   proof and every checkpoint against the immutable commit graph and PR target.
 
 Inventory is read-only unless a repair/compact/note option is explicitly used.
 Repair initializes absent empty claims without overwriting existing evidence;

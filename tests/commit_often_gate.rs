@@ -142,6 +142,9 @@ fn commit_often_gate_fails_when_dirty_files_exceed_threshold() {
 
 #[test]
 fn commit_often_gate_passes_when_dirty_files_within_threshold() {
+    // Exercise the commit-frequency prerequisite below its dirty-file threshold.
+    // This prerequisite result is not full publication-readiness proof.
+
     let (_tmp, dir, password) = setup_repo();
 
     for i in 0..2 {
@@ -151,7 +154,7 @@ fn commit_often_gate_passes_when_dirty_files_within_threshold() {
 
     let validate = run_decapod(
         &dir,
-        &["validate"],
+        &["govern", "project-check"],
         &[
             ("DECAPOD_AGENT_ID", "unknown"),
             ("DECAPOD_SESSION_PASSWORD", &password),

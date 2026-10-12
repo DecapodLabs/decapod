@@ -18,6 +18,199 @@ fn repository_root() -> std::path::PathBuf {
     }
 }
 
+// Follow the workflow's specific job through the finite catalog before checking
+// its recipe. A command, condition or context export in another job is no proof.
+fn source_check(workflow_name: &str, job_id: &str, check_id: &str) -> (String, &'static str, bool) {
+    let root = repository_root();
+    let workflow = fs::read_to_string(root.join(".github/workflows").join(workflow_name))
+        .expect("read workflow");
+    let header = format!("  {job_id}:\n");
+    let jobs = workflow.split_once("\njobs:\n").expect("workflow jobs").1;
+    let start = jobs
+        .match_indices(&header)
+        .find(|(offset, _)| *offset == 0 || jobs.as_bytes()[offset - 1] == b'\n')
+        .expect("required workflow job")
+        .0;
+    let job = jobs[start..]
+        .lines()
+        .skip(1)
+        .take_while(|line| {
+            !line.starts_with("  ")
+                || line.starts_with("   ")
+                || !line.ends_with(':')
+                || line.trim_start().starts_with('#')
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    let invocation = format!("run: '\"$RUNNER_TEMP/source-ci-profile\" run-ci --check {check_id}'");
+    for required in [
+        "fetch-depth: 0",
+        "uses: ./.github/actions/ci-context",
+        "uses: ./.github/actions/source-ci-profile",
+        &invocation,
+    ] {
+        assert!(
+            job.lines().any(|line| line.trim() == required),
+            "{workflow_name}/{job_id} must bind {check_id}: missing {required}"
+        );
+    }
+    assert!(
+        job.find("uses: ./.github/actions/ci-context").unwrap() < job.find(&invocation).unwrap()
+    );
+    assert!(
+        job.find("uses: ./.github/actions/source-ci-profile")
+            .unwrap()
+            < job.find(&invocation).unwrap()
+    );
+    let preparation = include_str!("../.github/actions/source-ci-profile/action.yml");
+    assert!(preparation.lines().any(|line| line.trim()
+        == "rustc --edition=2024 -O assets/tools/source_ci_profile.rs -o \"$RUNNER_TEMP/source-ci-profile\""));
+
+    let context = include_str!("../.github/actions/ci-context/action.yml");
+    for (key, variable) in [
+        ("event", "EVENT"),
+        ("base", "BASE"),
+        ("head", "HEAD"),
+        ("merge_base", "MERGE_BASE"),
+    ] {
+        let export =
+            format!("{key}) printf 'SOURCE_CI_{variable}=%s\\n' \"$value\" >> \"$GITHUB_ENV\" ;;");
+        assert!(
+            context.lines().any(|line| line.trim() == export),
+            "missing verified {key} export"
+        );
+    }
+    for forbidden in [
+        "startsWith(github.head_ref",
+        "github.event.pull_request.labels",
+    ] {
+        assert!(
+            !workflow.contains(forbidden),
+            "workflow must not infer release status from {forbidden}"
+        );
+    }
+
+    let profile = include_str!("../assets/tools/source_ci_profile.rs");
+    let catalog = profile
+        .split_once("pub const CHECKS: &[Check] = &[\n")
+        .unwrap()
+        .1
+        .split_once("\n];")
+        .unwrap()
+        .0;
+    let check_header = format!("        id: \"{check_id}\",\n");
+    let entries = catalog
+        .split("    Check {\n")
+        .filter_map(|entry| entry.split_once("\n    },").map(|(entry, _)| entry))
+        .filter(|entry| entry.starts_with(&check_header))
+        .collect::<Vec<_>>();
+    assert_eq!(
+        entries.len(),
+        1,
+        "{check_id} must have one finite catalog entry"
+    );
+    for field in [
+        format!("workflow: \"{workflow_name}\","),
+        format!("job: \"{job_id}\","),
+    ] {
+        assert!(
+            entries[0].lines().any(|line| line.trim() == field),
+            "wrong {check_id} catalog binding: {field}"
+        );
+    }
+    let skipped = match entries[0]
+        .lines()
+        .map(str::trim)
+        .find_map(|line| line.strip_prefix("skipped_for_release_only: "))
+    {
+        Some("true,") => true,
+        Some("false,") => false,
+        other => panic!("missing explicit release policy for {check_id}: {other:?}"),
+    };
+    let dispatch = profile
+        .split_once("pub fn commands(")
+        .unwrap()
+        .1
+        .split_once("\nfn executable(")
+        .unwrap()
+        .0;
+    assert!(dispatch.contains("let mut result = if let Some(script) = workflow_owned::script(check) {\n        vec![Invocation::new(\"bash\", &[script])]"));
+    let run_ci = profile
+        .split_once("    if mode == \"run-ci\" {\n")
+        .unwrap()
+        .1
+        .split_once("\n    }")
+        .unwrap()
+        .0;
+    assert!(run_ci.contains("return custody::run_ci(\n            &repo,\n            selected_check.unwrap(),\n            base.as_deref(),\n            head.as_deref(),\n        );"));
+    let custody = include_str!("../assets/tools/source_ci_custody.rs");
+    let runner = custody
+        .split_once("pub fn run_ci(\n")
+        .unwrap()
+        .1
+        .split_once("\n#[cfg(test)]")
+        .unwrap()
+        .0;
+    for required in [
+        "let base = variable(\"SOURCE_CI_BASE\", \"CUSTODY_BASE\")?;",
+        "let head = variable(\"SOURCE_CI_HEAD\", \"CUSTODY_HEAD\")?;",
+        "let recipe = commands(check, &paths)?;",
+    ] {
+        assert!(
+            runner.lines().any(|line| line.trim() == required),
+            "run-ci must preserve {required}"
+        );
+    }
+    let bindings = custody
+        .split_once("fn context_bindings(\n")
+        .unwrap()
+        .1
+        .split_once("\nfn ")
+        .unwrap()
+        .0;
+    assert!(bindings.lines().any(|line| line.trim() == "let release_only = !artifact && workflow_owned::release_only(repo, &event, base, head);"));
+    assert!(bindings.lines().any(
+        |line| line.trim() == "(\"SOURCE_CI_RELEASE_ONLY\".into(), release_only.to_string()),"
+    ));
+    let recipes = include_str!("../assets/tools/source_ci_workflow_owned.rs");
+    let script_map = recipes
+        .split_once("pub fn script(check: &Check)")
+        .unwrap()
+        .1
+        .split_once("\npub fn artifact_worker(")
+        .unwrap()
+        .0;
+    let path = format!("assets/tools/source_ci/{check_id}.sh");
+    let arm = format!("\"{check_id}\" => \"{path}\",");
+    assert_eq!(
+        script_map.lines().filter(|line| line.trim() == arm).count(),
+        1
+    );
+    let recipe = match check_id {
+        "standalone-validation" => {
+            include_str!("../assets/tools/source_ci/standalone-validation.sh")
+        }
+        "governance-artifacts" => include_str!("../assets/tools/source_ci/governance-artifacts.sh"),
+        "material-specs" => include_str!("../assets/tools/source_ci/material-specs.sh"),
+        "health" => include_str!("../assets/tools/source_ci/health.sh"),
+        _ => panic!("unreviewed policy recipe: {check_id}"),
+    };
+    (job, recipe, skipped)
+}
+
+fn assert_verified_change_bindings(recipe: &str) {
+    for binding in [
+        "export CHANGE_EVENT=\"${SOURCE_CI_EVENT:?}\"",
+        "export CHANGE_BASE=\"${SOURCE_CI_BASE?}\"",
+        "export CHANGE_HEAD=\"${SOURCE_CI_HEAD:?}\"",
+    ] {
+        assert!(
+            recipe.lines().any(|line| line == binding),
+            "missing recipe binding: {binding}"
+        );
+    }
+}
+
 #[test]
 fn release_workflow_lets_release_plz_update_the_manifest() {
     let workflow_path = repository_root().join(".github/workflows/release.yml");
@@ -317,25 +510,21 @@ fn release_artifact_sync_workflow_is_removed() {
 }
 
 #[test]
-fn post_merge_validate_skips_fingerprint_evaluation() {
-    // A tree-local post-merge binary cannot match the last published
-    // entrypoint fingerprint; enforce pins on PRs, not on push to master.
-    let path = repository_root().join(".github/workflows/decapod-validate.yml");
-    let workflow = fs::read_to_string(&path).expect("read decapod-validate workflow");
+fn post_merge_and_pr_prerequisites_use_verified_immutable_context() {
+    let (job, recipe, _) =
+        source_check("decapod-validate.yml", "validate", "standalone-validation");
     assert!(
-        workflow.contains("DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES"),
-        "decapod-validate must support skipping fingerprint gates post-merge"
+        recipe
+            .lines()
+            .any(|line| line == "./target/debug/decapod govern project-check --refresh-specs")
     );
-    assert!(
-        workflow.contains("github.event_name == 'push'"),
-        "fingerprint skip must be limited to push/post-merge events"
-    );
-    assert!(
-        workflow.contains(
-            "if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'release') && !startsWith(github.head_ref, 'release-plz-')",
-        ),
-        "entrypoint/spec drift gate must skip release-plz and release-labelled PRs"
-    );
+    assert_verified_change_bindings(recipe);
+    assert!(recipe.contains("export DECAPOD_VALIDATE_REQUIRE_CHANGE_CONTEXT=\"1\""));
+    for source in [&job, recipe] {
+        assert!(!source.contains("DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES"));
+        assert!(!source.contains("github.event.pull_request.labels"));
+        assert!(!source.contains("startsWith(github.head_ref"));
+    }
 }
 
 #[test]
@@ -497,72 +686,86 @@ fn public_release_surface_has_no_private_propodus_dependency() {
 
 #[test]
 fn governance_artifact_gate_skips_only_proven_release_metadata() {
-    let root = repository_root();
-    let workflow =
-        fs::read_to_string(root.join(".github/workflows/ci.yml")).expect("read CI workflow");
-
+    let (job, recipe, skipped) =
+        source_check("ci.yml", "governance-artifacts", "governance-artifacts");
     assert!(
-        workflow.contains("governance-artifacts:"),
-        "CI must retain the governance artifact job"
-    );
-    assert!(
-        workflow.contains("needs.release-metadata.outputs.release_only != 'true'"),
+        job.lines().any(|line| line.trim() == "if: (needs.release-metadata.outputs.pr_like == 'true') && needs.release-metadata.outputs.release_only != 'true'"),
         "only proven version-only PRs retain the checkpoint-policy exemption"
     );
-    for required in [
-        "govern artifacts verify-checkpoints",
-        "--base-branch \"origin/$GOVERNANCE_BASE_BRANCH\"",
-        "--head-ref \"$GOVERNANCE_HEAD_REF\"",
-        "github.event.pull_request.head.sha",
-        "fetch-depth: 0",
-    ] {
-        assert!(
-            workflow.contains(required),
-            "governance job must verify the full immutable PR range: missing {required}"
-        );
-    }
+    assert!(skipped);
+    assert!(recipe.lines().any(|line| line == "export GOVERNANCE_BASE=\"${SOURCE_CI_BASE?}\" GOVERNANCE_HEAD_REF=\"${SOURCE_CI_HEAD:?}\""));
+    assert!(
+        recipe.contains("\"$source_root/target/debug/decapod\" govern artifacts verify-checkpoints \\\n  --base-branch \"$GOVERNANCE_BASE\" \\\n  --head-ref \"$GOVERNANCE_HEAD_REF\" --target-base master"),
+        "governance recipe must verify the full immutable PR range"
+    );
 }
 
 #[test]
 fn material_specs_gate_skips_only_proven_release_metadata() {
-    let root = repository_root();
-    let workflow =
-        fs::read_to_string(root.join(".github/workflows/ci.yml")).expect("read CI workflow");
-
+    let (job, recipe, skipped) = source_check("ci.yml", "material-specs", "material-specs");
     assert!(
-        workflow.contains("material-specs:"),
-        "CI must retain the material living-specs job (#1183)"
-    );
-    assert!(
-        workflow.contains("FINGERPRINT_ONLY_SPECS"),
-        "material-specs job must fail closed on fingerprint-only refreshes"
-    );
-    assert!(
-        workflow.contains("needs.release-metadata.outputs.release_only != 'true'"),
+        job.lines().any(|line| line.trim() == "if: (needs.release-metadata.outputs.pr_like == 'true') && needs.release-metadata.outputs.release_only != 'true'"),
         "only proven version-only PRs skip the material living-specs gate"
     );
+    assert!(skipped);
+    for binding in [
+        "export CHANGE_BASE=\"${SOURCE_CI_MERGE_BASE:?}\"",
+        "export CHANGE_HEAD=\"${SOURCE_CI_HEAD:?}\"",
+        "base_ref = os.environ[\"CHANGE_BASE\"]",
+        "head_ref = os.environ[\"CHANGE_HEAD\"]",
+        "    base_mat = material(git_show(base_ref, rel) or \"\")",
+        "    head_mat = material(head_text)",
+    ] {
+        assert!(
+            recipe.lines().any(|line| line == binding),
+            "missing material proof: {binding}"
+        );
+    }
+    let failure = recipe
+        .split_once("if not material_hits:\n")
+        .expect("fail-closed material gate")
+        .1
+        .split_once("\nprint(")
+        .expect("end of failure branch")
+        .0;
+    assert!(failure.contains("FINGERPRINT_ONLY_SPECS"));
+    assert!(failure.lines().any(|line| line == "    sys.exit(1)"));
 }
 
 #[test]
-fn release_pr_skips_spec_entrypoint_drift_gate() {
-    // Regression for release PR #1236 / actions run 31461500432:
-    // release-plz bumps Cargo.toml (repo_signal changes) without entrypoint
-    // pins; validate --refresh-specs rewrites the manifest and the drift gate
-    // must not hard-fail the release PR. Pin advancement is deferred to the next user/agent PR (Release Artifact Sync removed).
-    let root = repository_root();
-    let validate = fs::read_to_string(root.join(".github/workflows/decapod-validate.yml"))
-        .expect("read decapod-validate workflow");
-    let ci = fs::read_to_string(root.join(".github/workflows/ci.yml")).expect("read CI workflow");
-
-    assert!(
-        validate.contains("startsWith(github.head_ref, 'release-plz-')")
-            && validate.contains("!contains(github.event.pull_request.labels.*.name, 'release')"),
-        "decapod-validate drift gate must skip release-plz / release-labeled PRs"
-    );
-    assert!(
-        ci.contains("RELEASE_ONLY: ${{ needs.release-metadata.outputs.release_only }}")
-            && ci.contains("decapod-release-projection-drift")
-            && ci.contains("Ensure no spec or entrypoint drift"),
-        "CI must verify expected projection drift only for proven version-only releases"
-    );
+fn proven_release_prs_verify_projection_drift_instead_of_skipping_the_gate() {
+    for (workflow, job_id, check_id, binary) in [
+        (
+            "decapod-validate.yml",
+            "validate",
+            "standalone-validation",
+            "./target/debug/decapod-release-projection-drift",
+        ),
+        (
+            "ci.yml",
+            "health",
+            "health",
+            "decapod-release-projection-drift",
+        ),
+    ] {
+        let (job, recipe, skipped) = source_check(workflow, job_id, check_id);
+        assert!(!skipped);
+        assert!(!job.contains("release_only != 'true'"));
+        assert_verified_change_bindings(recipe);
+        assert!(recipe.lines().any(|line| line
+            == "export RELEASE_ONLY=\"${SOURCE_CI_RELEASE_ONLY:-${RELEASE_ONLY:-false}}\""));
+        let release_branch = format!(
+            "if [ \"$RELEASE_ONLY\" = \"true\" ]; then\n  {binary} \\\n    --repo . --event \"$CHANGE_EVENT\" --base \"$CHANGE_BASE\" --head \"$CHANGE_HEAD\"\n  exit 0\nfi"
+        );
+        assert!(
+            recipe.contains(&release_branch),
+            "{check_id} must verify release drift before success"
+        );
+        assert!(recipe.contains("# Ensure no spec or entrypoint drift"));
+        assert!(recipe.contains("set -euo pipefail"));
+        for source in [&job, recipe] {
+            assert!(!source.contains("startsWith(github.head_ref"));
+            assert!(!source.contains("github.event.pull_request.labels"));
+        }
+    }
 }

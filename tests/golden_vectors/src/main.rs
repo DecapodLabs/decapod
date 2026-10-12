@@ -6,14 +6,13 @@ const FIXTURE_REPO: &str = "../fixtures/state_commit_repo";
 const GOLDEN_DIR: &str = "../golden/state_commit/v1";
 const SPEC_VERSION: &str = "v1";
 
-// Get base/head from env vars or use defaults for CI
-fn base_sha() -> String {
-    std::env::var("GOLDEN_base_sha().as_str()").unwrap_or_else(|_| "HEAD~1".to_string())
-}
-
-fn head_sha() -> String {
-    std::env::var("GOLDEN_head_sha().as_str()").unwrap_or_else(|_| "HEAD".to_string())
-}
+// The immutable v1 vector encodes these historical fixture identifiers. They
+// are protocol test data, not claims about the new local fixture's commit IDs.
+// Local Git refs select actual fixture bytes; they must not replace vector IDs.
+const BASE_VECTOR_ID: &str = "6eb442a";
+const HEAD_VECTOR_ID: &str = "58b7c5f";
+const BASE_REF: &str = "HEAD~1";
+const HEAD_REF: &str = "HEAD";
 
 fn run_git(args: &[&str]) -> String {
     let output = Command::new("git")
@@ -21,7 +20,15 @@ fn run_git(args: &[&str]) -> String {
         .current_dir(FIXTURE_REPO)
         .output()
         .expect("git failed - is the fixture repo available?");
-    String::from_utf8_lossy(&output.stdout).trim().to_string()
+    assert!(
+        output.status.success(),
+        "fixture git {args:?} failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    String::from_utf8(output.stdout)
+        .expect("fixture Git output must be UTF-8")
+        .trim()
+        .to_string()
 }
 
 fn git_show(sha: &str, path: &str) -> String {
@@ -45,8 +52,8 @@ fn get_path_set() -> Vec<String> {
         "core.quotepath=false",
         "diff",
         "--name-only",
-        base_sha().as_str(),
-        head_sha().as_str(),
+        BASE_REF,
+        HEAD_REF,
     ]);
     output
         .lines()
@@ -75,13 +82,13 @@ fn parse_ls_tree_line(line: &str) -> (String, String, String, String) {
 }
 
 fn get_entry(path: &str) -> Entry {
-    let line = git_ls_tree(head_sha().as_str(), path);
+    let line = git_ls_tree(HEAD_REF, path);
     let (mode, _obj_type, _oid, _path) = parse_ls_tree_line(&line);
 
     let kind = if mode == "120000" { 1 } else { 0 };
     let mode_exec = mode == "100755";
 
-    let content = git_show(head_sha().as_str(), path);
+    let content = git_show(HEAD_REF, path);
     let content_bytes = content.as_bytes();
     let size = content_bytes.len() as u64;
 
@@ -176,8 +183,8 @@ fn build_canonical_scope_record(entries: &[Entry]) -> Vec<u8> {
 
     encode_map(&[
         (1, encode_string("state_commit.v1")),
-        (2, encode_string(base_sha().as_str())),
-        (3, encode_string(head_sha().as_str())),
+        (2, encode_string(BASE_VECTOR_ID)),
+        (3, encode_string(HEAD_VECTOR_ID)),
         (4, encode_uint(1)),
         (5, encode_string("da39a3ee5e6b4b0d3255bfef95601890afd80709")),
         (6, entries_bytes),
@@ -229,10 +236,15 @@ impl Hex for Vec<u8> {
 }
 
 fn main() {
+    let args: Vec<_> = std::env::args().skip(1).collect();
+    assert!(
+        args.is_empty() || args == ["--check"],
+        "usage: golden_vectors [--check]"
+    );
     println!("STATE_COMMIT SPEC_VERSION: {}", SPEC_VERSION);
     println!("Fixture repo: {}", FIXTURE_REPO);
-    println!("base_sha: {}", base_sha().as_str());
-    println!("head_sha: {}", head_sha().as_str());
+    println!("base_ref: {} (v1 ID: {})", BASE_REF, BASE_VECTOR_ID);
+    println!("head_ref: {} (v1 ID: {})", HEAD_REF, HEAD_VECTOR_ID);
     println!();
 
     let paths = get_path_set();
@@ -267,18 +279,32 @@ fn main() {
     println!();
 
     let out_dir = PathBuf::from(GOLDEN_DIR);
-    std::fs::create_dir_all(&out_dir).unwrap();
-
-    std::fs::write(out_dir.join("scope_record.cbor"), &cbor_bytes).unwrap();
-    std::fs::write(out_dir.join("scope_record.cbor.hex"), cbor_bytes.hex()).unwrap();
-    std::fs::write(
-        out_dir.join("scope_record_hash.txt"),
-        scope_record_hash.clone(),
-    )
-    .unwrap();
-    std::fs::write(out_dir.join("state_commit_root.txt"), merkle_root.clone()).unwrap();
-
-    println!("Written to {}/", out_dir.display());
+    // Verification never writes expectations. Missing or changed vectors fail
+    // closed; a protocol change needs a separately reviewed versioned fixture.
+    for (name, generated) in [
+        ("scope_record.cbor", cbor_bytes.clone()),
+        ("scope_record.cbor.hex", cbor_bytes.hex().into_bytes()),
+        (
+            "scope_record_hash.txt",
+            format!("{scope_record_hash}\n").into_bytes(),
+        ),
+        (
+            "state_commit_root.txt",
+            format!("{merkle_root}\n").into_bytes(),
+        ),
+    ] {
+        let path = out_dir.join(name);
+        let expected = std::fs::read(&path)
+            .unwrap_or_else(|error| panic!("missing golden vector {}: {error}", path.display()));
+        assert_eq!(
+            generated, expected,
+            "immutable {SPEC_VERSION} golden vector differs: {name}"
+        );
+    }
+    println!(
+        "Verified all four immutable vectors in {}/",
+        out_dir.display()
+    );
 
     // Verify immutability contract
     println!("\n=== IMMUTABILITY CONTRACT ===");

@@ -1,77 +1,51 @@
 name: Documentation Sync
 
 on:
+  push:
+    branches: [ "agent/**" ]
   pull_request:
     branches: [ master ]
-    paths:
-      - 'src/**/*.rs'
-      - 'docs/**/*.md'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   sync-docs:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - name: Generate GitHub App token
-        uses: actions/create-github-app-token@v2
-        id: generate-token
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          owner: DecapodLabs
-
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
-
-      - name: Check out pull request head
-        if: github.event_name == 'pull_request'
+      - name: Verify immutable source context
+        id: context
+        uses: ./.github/actions/ci-context
+      - name: Prepare shared source-CI profile
+        uses: ./.github/actions/source-ci-profile
+      - name: Select the same documentation obligation for PR and workspace branch
+        id: changed
         env:
-          APP_TOKEN: ${{ steps.generate-token.outputs.token }}
-          HEAD_REF: ${{ github.head_ref }}
-        run: |
-          git fetch --no-tags "https://x-access-token:${APP_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
-            "refs/heads/${HEAD_REF}:refs/remotes/origin/${HEAD_REF}"
-          git checkout --detach "refs/remotes/origin/${HEAD_REF}"
-
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Build Decapod
-        env:
-          CARGO_NET_GIT_FETCH_WITH_CLI: "true"
-          GIT_TERMINAL_PROMPT: "0"
-        run: cargo build --all-features
-
-      - name: Get changed files
-        id: changed-files
-        run: |
-          git fetch origin master
-          FILES=$(git diff --name-only origin/master HEAD | xargs)
-          echo "files=$FILES" >> $GITHUB_OUTPUT
-
-      - name: Run Docs Build
-        run: |
-          FILES="${{ steps.changed-files.outputs.files }}"
-          if [ -n "$FILES" ]; then
-            ./target/debug/decapod docs build --touched $FILES
-          else
-            ./target/debug/decapod docs build
-          fi
-
-      - name: Verify generated documentation has no drift
+          CHANGE_BASE: ${{ steps.context.outputs.merge_base }}
+          CHANGE_HEAD: ${{ steps.context.outputs.head }}
         run: |
           set -euo pipefail
-          if ! git diff --exit-code HEAD -- docs/agent/command-contracts.md docs/agent/config-schema.md; then
-            echo "::error::Generated documentation differs from the reviewed PR commit."
-            echo "Run decapod docs build with the source-built binary and review the generated changes."
-            echo "Update the governed trajectory and run decapod validate against the final material."
-            echo "Stage authored/generated changes, record a unique decapod govern artifacts checkpoint,"
-            echo "then stage .decapod/governance.json and create a governed commit before retrying CI."
-            echo "This workflow reports drift; it does not author commits or push changes."
-            exit 1
-          fi
-          echo "Generated documentation matches the reviewed PR commit."
+          "$RUNNER_TEMP/source-ci-profile" docs-changed --base "$CHANGE_BASE" --head "$CHANGE_HEAD" >> "$GITHUB_OUTPUT"
+      - name: Prove immutable PR documentation
+        if: steps.changed.outputs.changed == 'true'
+        uses: ./.github/actions/docs-drift
+        with:
+          base-sha: ${{ steps.context.outputs.base }}
+          head-sha: ${{ steps.context.outputs.head }}
+      - name: Record proven documentation non-applicability
+        if: steps.changed.outputs.changed == 'false'
+        run: echo 'No documentation inputs changed in the verified immutable source range; documentation generation is not applicable.'
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0

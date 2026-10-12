@@ -17,6 +17,14 @@
 
 <!-- decapod:declared-capabilities:end -->
 
+## Version-only release validation
+
+A release PR created or updated by the existing release automation must execute
+actual validation successfully when its immutable change range contains only
+the advancing root package version, matching root lockfile version, and optional
+changelog edits. This is an evidence-bound material-spec exception, not a reason
+to invent authored prose or weaken validation for mixed source changes.
+
 ## Post-merge reliability boundary
 
 Source merges must retain full behavioral proof, including the host CLI
@@ -31,9 +39,13 @@ PR integration execution must finish each selective-test step in under five
 minutes. Shared compilation and complete parallel shards reduce elapsed time
 without dropping assertions, disabling production behavior, or hiding failures
 behind larger timeouts. Publication proof includes the final per-shard timings.
-Both GitHub Actions and Buildkite must execute those checks through their real
-provider contracts. Compatibility repair preserves every selected test and
-distinguishes source proof from unavailable credentials or publication. Unsafe
+Buildkite preflight executes those checks through its real provider contract
+before PR creation. Branch pushes and iteration are allowed beforehand; the PR
+requires converged intent, accepted-target mergeability and full green validation.
+Ordinary GitHub Actions PR workflows remain independent;
+Decapod does not execute or collect that service as a second preflight provider.
+Compatibility repair preserves every selected test and distinguishes source
+proof from unavailable credentials or publication. Unsafe
 provider checkout permissions are addressed by a fresh private exact-commit
 checkout, never by changing user datastores or weakening their safety policy.
 
@@ -360,8 +372,8 @@ policy ban based solely on virtiofs or FUSE filesystem identity.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ab9a11ea42af3b5496a92844b43b1fb208608acd04fed342b0a1168f3c94af27`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (11 files), `docs/` (1 files), `src/` (125 files), `tests/` (173 files)
+- Repository signal fingerprint: `e3584d78d15131f611c7f497eae3e00e961798587727064461fc5332169d0f64`
+- Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

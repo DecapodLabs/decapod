@@ -31,8 +31,25 @@ fn resolve_decapod_bin() -> PathBuf {
     PathBuf::from(cargo_bin)
 }
 
-fn run_decapod(dir: &Path, args: &[&str], envs: &[(&str, &str)]) -> std::process::Output {
+// These subprocesses validate independently initialized scratch repositories.
+// Provider context belongs to the outer CI checkout; explicit test values win.
+const PARENT_CI_CONTEXT: &[&str] = &[
+    "GITHUB_ACTIONS",
+    "BUILDKITE",
+    "GITHUB_EVENT_NAME",
+    "GITHUB_WORKSPACE",
+    "BUILDKITE_BUILD_CHECKOUT_PATH",
+    "CHANGE_EVENT",
+    "CHANGE_BASE",
+    "CHANGE_HEAD",
+    "DECAPOD_VALIDATE_REQUIRE_CHANGE_CONTEXT",
+];
+
+fn decapod_command(dir: &Path, args: &[&str], envs: &[(&str, &str)]) -> Command {
     let mut cmd = Command::new(resolve_decapod_bin());
+    for name in PARENT_CI_CONTEXT {
+        cmd.env_remove(name);
+    }
     cmd.current_dir(dir).args(args);
     for (k, v) in envs {
         cmd.env(k, v);
@@ -42,7 +59,37 @@ fn run_decapod(dir: &Path, args: &[&str], envs: &[(&str, &str)]) -> std::process
         dir.hash(&mut hasher);
         cmd.env("DECAPOD_TASK_ID", format!("test_{:016x}", hasher.finish()));
     }
-    cmd.output().expect("run decapod")
+    cmd
+}
+
+fn run_decapod(dir: &Path, args: &[&str], envs: &[(&str, &str)]) -> std::process::Output {
+    decapod_command(dir, args, envs)
+        .output()
+        .expect("run decapod")
+}
+
+#[test]
+fn scratch_validation_children_remove_inherited_ci_context() {
+    let command = decapod_command(Path::new("fixture"), &["validate"], &[]);
+    for name in PARENT_CI_CONTEXT {
+        assert_eq!(
+            command.get_envs().find(|(key, _)| key == name),
+            Some((std::ffi::OsStr::new(name), None)),
+            "scratch child must remove inherited {name}"
+        );
+    }
+    let command = decapod_command(
+        Path::new("fixture"),
+        &["validate"],
+        &[("GITHUB_ACTIONS", "true")],
+    );
+    assert_eq!(
+        command
+            .get_envs()
+            .find(|(name, _)| *name == "GITHUB_ACTIONS")
+            .and_then(|(_, value)| value),
+        Some(std::ffi::OsStr::new("true"))
+    );
 }
 
 fn setup_repo() -> (TempDir, PathBuf, String) {
@@ -121,13 +168,23 @@ fn validation_temp_dirs() -> Vec<PathBuf> {
 
 #[test]
 fn successful_validation_cleans_only_its_temporary_artifacts() {
+    // Measure ownership-safe cleanup by the bounded project prerequisite stage.
+    // This prerequisite result is not full publication-readiness proof.
+
     let (_tmp, dir, password) = setup_repo();
     let unowned =
         std::env::temp_dir().join(format!("decapod_validate_unowned_{}", std::process::id()));
     fs::create_dir_all(&unowned).expect("create unowned validation-shaped temp directory");
     let validate = run_decapod(
         &dir,
-        &["validate", "--store", "user", "--format", "json"],
+        &[
+            "govern",
+            "project-check",
+            "--store",
+            "user",
+            "--format",
+            "json",
+        ],
         &[
             ("DECAPOD_AGENT_ID", "unknown"),
             ("DECAPOD_SESSION_PASSWORD", &password),
@@ -141,6 +198,8 @@ fn successful_validation_cleans_only_its_temporary_artifacts() {
     );
 
     let payload: Value = serde_json::from_slice(&validate.stdout).expect("validation JSON");
+    assert_eq!(payload["scope"], "project_prerequisites");
+    assert!(payload["readiness"].is_null());
     assert_eq!(payload["report"]["status"], "ok");
     assert!(
         payload["report"]["temporary_artifacts_cleaned"]
@@ -210,9 +269,10 @@ fn validate_terminates_with_typed_error_under_db_contention() {
         "failed validation must not create an unscoped temporary directory"
     );
 
+    // After the public timeout, rerun only the bounded cleanup prerequisite.
     let green = run_decapod(
         &dir,
-        &["validate"],
+        &["govern", "project-check"],
         &[
             ("DECAPOD_AGENT_ID", "unknown"),
             ("DECAPOD_SESSION_PASSWORD", &password),
@@ -322,6 +382,9 @@ fn validate_timeout_does_not_strand_db_for_followup_commands() {
 
 #[test]
 fn validate_json_reports_self_heal_and_structured_summary() {
+    // Test self-healing and methodology-receipt binding; retain public stale-proof rejection.
+    // This prerequisite result is not full publication-readiness proof.
+
     let (_tmp, dir, password) = setup_repo();
     // Receipt reuse requires a resolved HEAD; an unborn fixture intentionally
     // produces UNRESOLVED receipts and cannot exercise byte-stable reuse.
@@ -349,7 +412,7 @@ fn validate_json_reports_self_heal_and_structured_summary() {
 
     let validate = run_decapod(
         &dir,
-        &["validate", "--format", "json"],
+        &["govern", "project-check", "--format", "json"],
         &[
             ("DECAPOD_CONTAINER", "1"),
             ("DECAPOD_AGENT_ID", "unknown"),
@@ -366,6 +429,8 @@ fn validate_json_reports_self_heal_and_structured_summary() {
     let payload: Value =
         serde_json::from_slice(&validate.stdout).expect("validate json payload should parse");
     assert_eq!(payload["status"], "ok");
+    assert_eq!(payload["scope"], "project_prerequisites");
+    assert!(payload["readiness"].is_null());
     assert_eq!(payload["report"]["status"], "ok");
     assert!(payload["report"]["fail_count"].as_u64().unwrap_or(1) == 0);
     assert!(payload["report"]["gate_timings"].is_array());
@@ -495,15 +560,46 @@ fn validate_json_reports_self_heal_and_structured_summary() {
         !stale_validate.status.success(),
         "changed Dockerfile material cannot reuse the previous validation epoch"
     );
+    // Public full validation does not write methodology receipts. An earlier
+    // prerequisite receipt cannot satisfy the missing current readiness profile.
+    let public_refusal: Value =
+        serde_json::from_slice(&stale_validate.stdout).expect("public readiness refusal JSON");
+    assert_eq!(public_refusal["scope"], "publication_readiness");
+    assert_eq!(public_refusal["publication_ready"], false);
+    assert_eq!(public_refusal["readiness"]["ready"], false);
     assert!(
-        String::from_utf8_lossy(&stale_validate.stderr).contains("STALE_VALIDATION_EVIDENCE"),
-        "expected stale-proof recovery, got: {}",
-        String::from_utf8_lossy(&stale_validate.stderr)
+        String::from_utf8_lossy(&stale_validate.stdout).contains("READINESS_PROFILE_REQUIRED"),
+        "expected full-proof refusal, got: {public_refusal}"
     );
     assert_eq!(
         fs::read(&governance_path).expect("preserved governance"),
         prior_governance,
-        "stale validation must preserve the entire document, including the prior receipt and trajectory"
+        "public refusal must preserve the entire document, including the prior receipt and trajectory"
+    );
+
+    // The explicit methodology stage still refuses to relabel an old epoch as
+    // new proof. Exercise that separate receipt contract before real recovery.
+    let stale_prerequisites = run_decapod(
+        &dir,
+        &["govern", "project-check", "--format", "json"],
+        &[
+            ("DECAPOD_CONTAINER", "1"),
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(!stale_prerequisites.status.success());
+    assert!(
+        String::from_utf8_lossy(&stale_prerequisites.stderr).contains("STALE_VALIDATION_EVIDENCE"),
+        "expected stale-proof recovery, got stdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&stale_prerequisites.stdout),
+        String::from_utf8_lossy(&stale_prerequisites.stderr)
+    );
+    assert_eq!(
+        fs::read(&governance_path).expect("preserved stale methodology proof"),
+        prior_governance,
+        "stale project-check must preserve the prior receipt and trajectory byte-for-byte"
     );
     let recovery = run_decapod(
         &dir,
@@ -536,7 +632,7 @@ fn validate_json_reports_self_heal_and_structured_summary() {
 
     let second_validate = run_decapod(
         &dir,
-        &["validate", "--format", "json"],
+        &["govern", "project-check", "--format", "json"],
         &[
             ("DECAPOD_CONTAINER", "1"),
             ("DECAPOD_AGENT_ID", "unknown"),
@@ -590,7 +686,7 @@ fn validate_json_reports_self_heal_and_structured_summary() {
     // unchanged rerun is stable: no receipt/trajectory rewrite chase.
     let unchanged_validate = run_decapod(
         &dir,
-        &["validate", "--format", "json"],
+        &["govern", "project-check", "--format", "json"],
         &[
             ("DECAPOD_CONTAINER", "1"),
             ("DECAPOD_AGENT_ID", "unknown"),
@@ -612,11 +708,14 @@ fn validate_json_reports_self_heal_and_structured_summary() {
 
 #[test]
 fn validation_profile_changes_validation_epoch() {
+    // Compare methodology validation epochs without a publication-proof fixture.
+    // This prerequisite result is not full publication-readiness proof.
+
     let (_tmp, dir, password) = setup_repo();
 
     let default_validate = run_decapod(
         &dir,
-        &["validate", "--format", "json"],
+        &["govern", "project-check", "--format", "json"],
         &[
             ("DECAPOD_CONTAINER", "1"),
             ("DECAPOD_AGENT_ID", "unknown"),
@@ -664,7 +763,7 @@ fn validation_profile_changes_validation_epoch() {
 
     let alternate_validate = run_decapod(
         &dir,
-        &["validate", "--format", "json"],
+        &["govern", "project-check", "--format", "json"],
         &[
             ("DECAPOD_CONTAINER", "1"),
             ("DECAPOD_AGENT_ID", "unknown"),
@@ -696,6 +795,9 @@ fn validation_profile_changes_validation_epoch() {
 
 #[test]
 fn validate_clears_stale_container_override_when_runtime_is_available() {
+    // Exercise stale runtime-override healing at the project prerequisite boundary.
+    // This prerequisite result is not full publication-readiness proof.
+
     let (_tmp, dir, password) = setup_repo();
     let override_path = dir.join(".decapod").join("OVERRIDE.md");
     fs::write(
@@ -741,7 +843,7 @@ fn validate_clears_stale_container_override_when_runtime_is_available() {
     let runtime_path = format!("{}:{}", fake_bin.display(), path);
     let validate = run_decapod(
         &dir,
-        &["validate", "--format", "json"],
+        &["govern", "project-check", "--format", "json"],
         &[
             ("DECAPOD_AGENT_ID", "unknown"),
             ("DECAPOD_SESSION_PASSWORD", &password),
@@ -1006,6 +1108,9 @@ fn validate_diagnostics_payload_is_sanitized() {
 
 #[test]
 fn validate_smoke_runtime_is_bounded_without_contention() {
+    // Time the bounded project prerequisite stage; full CI has its own execution budget.
+    // This prerequisite result is not full publication-readiness proof.
+
     let (_tmp, dir, password) = setup_repo();
     let mut durations_ms = Vec::new();
 
@@ -1013,7 +1118,7 @@ fn validate_smoke_runtime_is_bounded_without_contention() {
         let start = Instant::now();
         let output = run_decapod(
             &dir,
-            &["validate", "--format", "json"],
+            &["govern", "project-check", "--format", "json"],
             &[
                 ("DECAPOD_AGENT_ID", "unknown"),
                 ("DECAPOD_SESSION_PASSWORD", &password),

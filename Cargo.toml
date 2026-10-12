@@ -52,6 +52,21 @@ name = "decapod-integration-shards"
 path = "assets/tools/integration_shards.rs"
 required-features = ["build-tools"]
 
+[[bin]]
+name = "decapod-docs-sync"
+path = "assets/tools/docs_sync.rs"
+required-features = ["build-tools"]
+
+[[bin]]
+name = "decapod-release-artifacts"
+path = "assets/tools/release_artifacts.rs"
+required-features = ["build-tools"]
+
+[[bin]]
+name = "decapod-derived-release-proof"
+path = "assets/tools/derived_release_proof.rs"
+required-features = ["build-tools"]
+
 [build-dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"

@@ -225,6 +225,218 @@ fn a_new_name_does_not_bless_an_old_material_digest() {
     assert!(verify_pr_checkpoints(root.path(), &base, "HEAD").is_err());
 }
 
+fn history_checkpoint_commit(root: &Path, id: &str) -> String {
+    git(root, &["add", "-A"]).unwrap();
+    checkpoint(root, id, "Measured history fixture", vec![]).unwrap();
+    git(root, &["add", GOVERNANCE_PATH]).unwrap();
+    commit(root, id);
+    git(root, &["rev-parse", "HEAD"]).unwrap()
+}
+
+fn history_tree_commit(root: &Path, parents: &[&str]) -> String {
+    let tree = git(root, &["write-tree"]).unwrap();
+    let mut args = vec![
+        "-c",
+        "user.name=Governance Tests",
+        "-c",
+        "user.email=test@example.invalid",
+        "commit-tree",
+        &tree,
+        "-m",
+        "arbitrary history message, not a trusted transport marker",
+    ];
+    for parent in parents {
+        args.extend(["-p", parent]);
+    }
+    git(root, &args).unwrap()
+}
+
+#[test]
+fn history_same_tree_transport_reuses_only_verified_source_checkpoint() {
+    let root = repo();
+    let base = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
+    begin_pr(root.path(), "current", "master").unwrap();
+    let source = history_checkpoint_commit(root.path(), "source");
+    let transport = history_tree_commit(root.path(), &[&source]);
+    assert_ne!(source, transport);
+    verify_pr_checkpoints(root.path(), &base, &transport).unwrap();
+
+    fs::write(
+        root.path().join("source.rs"),
+        "fn uncheckpointed_edit() {}\n",
+    )
+    .unwrap();
+    git(root.path(), &["add", "source.rs"]).unwrap();
+    let changed = history_tree_commit(root.path(), &[&source]);
+    assert!(
+        verify_pr_checkpoints(root.path(), &base, &changed)
+            .unwrap_err()
+            .to_string()
+            .contains("CHECKPOINT_MISSING")
+    );
+}
+
+#[test]
+fn history_same_tree_transport_does_not_bless_uncheckpointed_source() {
+    let root = repo();
+    let base = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
+    begin_pr(root.path(), "current", "master").unwrap();
+    git(root.path(), &["add", GOVERNANCE_PATH]).unwrap();
+    commit(root.path(), "source without checkpoint");
+    let source = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
+    let transport = history_tree_commit(root.path(), &[&source]);
+    assert!(
+        verify_pr_checkpoints(root.path(), &base, &transport)
+            .unwrap_err()
+            .to_string()
+            .contains("CHECKPOINT_MISSING")
+    );
+}
+
+#[test]
+fn history_transport_equality_includes_governance_and_merges_need_new_proof() {
+    let root = repo();
+    let base = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
+    begin_pr(root.path(), "current", "master").unwrap();
+    let source = history_checkpoint_commit(root.path(), "source");
+    let merge = history_tree_commit(root.path(), &[&source, &base]);
+    assert!(
+        verify_pr_checkpoints(root.path(), &base, &merge)
+            .unwrap_err()
+            .to_string()
+            .contains("CHECKPOINT_MISSING")
+    );
+    let mut document = load(root.path()).unwrap().unwrap();
+    document.checkpoints[0]
+        .proof_refs
+        .push("proof:rewritten".into());
+    save(root.path(), &document).unwrap();
+    git(root.path(), &["add", GOVERNANCE_PATH]).unwrap();
+    let changed_governance = history_tree_commit(root.path(), &[&source]);
+    assert!(
+        verify_pr_checkpoints(root.path(), &base, &changed_governance)
+            .unwrap_err()
+            .to_string()
+            .contains("HISTORY_CHANGED")
+    );
+}
+
+fn history_independent_lineage_fixture(
+    side_checkpoint: bool,
+    side_target: &str,
+) -> (TempDir, String, String) {
+    let root = repo();
+    let base = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
+    if side_target != "master" {
+        git(root.path(), &["branch", side_target, &base]).unwrap();
+    }
+    git(root.path(), &["checkout", "-b", "imported"]).unwrap();
+    begin_pr(root.path(), "imported-change", side_target).unwrap();
+    fs::write(root.path().join("source.rs"), "fn imported() {}\n").unwrap();
+    let side = if side_checkpoint {
+        history_checkpoint_commit(root.path(), "side-source")
+    } else {
+        git(root.path(), &["add", "-A"]).unwrap();
+        commit(root.path(), "unproven side source");
+        git(root.path(), &["rev-parse", "HEAD"]).unwrap()
+    };
+    git(root.path(), &["checkout", "-b", "current", &base]).unwrap();
+    begin_pr(root.path(), "current-change", "master").unwrap();
+    let current = history_checkpoint_commit(root.path(), "current-source");
+    checkpoint(
+        root.path(),
+        "current-merge",
+        "Current merge checkpoint",
+        vec![],
+    )
+    .unwrap();
+    git(root.path(), &["add", GOVERNANCE_PATH]).unwrap();
+    let merged = history_tree_commit(root.path(), &[&current, &side]);
+    (root, base, merged)
+}
+
+#[test]
+fn history_imported_lineage_keeps_its_own_verified_journal() {
+    let (root, base, merged) = history_independent_lineage_fixture(true, "master");
+    let document = load(root.path()).unwrap().unwrap();
+    assert!(
+        !document
+            .checkpoints
+            .iter()
+            .any(|entry| entry.id == "side-source")
+    );
+    verify_pr_checkpoints_for_target(root.path(), &base, &merged, "master").unwrap();
+}
+
+#[test]
+fn history_imported_lineage_requires_source_proof_and_matching_target() {
+    let (root, base, merged) = history_independent_lineage_fixture(false, "master");
+    assert!(
+        verify_pr_checkpoints_for_target(root.path(), &base, &merged, "master")
+            .unwrap_err()
+            .to_string()
+            .contains("CHECKPOINT_MISSING")
+    );
+    let (root, base, merged) = history_independent_lineage_fixture(true, "other-target");
+    assert!(
+        verify_pr_checkpoints_for_target(root.path(), &base, &merged, "master")
+            .unwrap_err()
+            .to_string()
+            .contains("TARGET_MISMATCH")
+    );
+}
+
+#[test]
+fn history_first_parent_identity_remains_strict() {
+    let root = repo();
+    let base = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
+    begin_pr(root.path(), "first-change", "master").unwrap();
+    history_checkpoint_commit(root.path(), "first");
+    // The supported lifecycle rejects replacing an unaccepted journal.
+    let error = begin_pr_from_context(root.path(), "second-change", "master", Some(&base), None)
+        .unwrap_err();
+    assert!(error.to_string().contains("GOVERNANCE_PR_NOT_ACCEPTED"));
+
+    // Deliberately construct malformed history in this disposable fixture to
+    // exercise the verifier independently of the lifecycle guard above.
+    let mut document = load(root.path()).unwrap().unwrap();
+    document.change.as_mut().unwrap().id = "second-change".into();
+    save(root.path(), &document).unwrap();
+    history_checkpoint_commit(root.path(), "second");
+    assert!(
+        verify_pr_checkpoints(root.path(), &base, "HEAD")
+            .unwrap_err()
+            .to_string()
+            .contains("IDENTITY_CONFLICT")
+    );
+}
+
+#[test]
+fn history_accepted_squash_equivalent_lineage_still_verifies_original_proof() {
+    let root = repo();
+    let original_base = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
+    git(root.path(), &["checkout", "-b", "historical"]).unwrap();
+    begin_pr(root.path(), "historical-change", "master").unwrap();
+    let historical = history_checkpoint_commit(root.path(), "historical-source");
+    // The accepted commit has exactly the historical tree but a different ID.
+    let accepted = history_tree_commit(root.path(), &[&original_base]);
+    assert_ne!(historical, accepted);
+    git(root.path(), &["checkout", "-B", "master", &accepted]).unwrap();
+    git(root.path(), &["checkout", "-b", "current"]).unwrap();
+    begin_pr(root.path(), "current-change", "master").unwrap();
+    let current = history_checkpoint_commit(root.path(), "current-source");
+    checkpoint(
+        root.path(),
+        "current-merge",
+        "Merge original chronology",
+        vec![],
+    )
+    .unwrap();
+    git(root.path(), &["add", GOVERNANCE_PATH]).unwrap();
+    let merged = history_tree_commit(root.path(), &[&current, &historical]);
+    verify_pr_checkpoints_for_target(root.path(), &accepted, &merged, "master").unwrap();
+}
+
 #[test]
 fn stored_cleanup_paths_cannot_delete_other_files() {
     let root = TempDir::new().unwrap();

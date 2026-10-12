@@ -69,7 +69,14 @@ fn runner_changes_cover_the_runner_and_workflow_retains_release_policies() {
         "BUILD.bazel",
     ] {
         let selection = plan(&paths(&[changed]));
-        assert_eq!(selection.targets(), ["integration_sharding_policy"]);
+        let mut expected = vec!["integration_sharding_policy"];
+        if changed == ".config/build/decapod.BUILD.bzl" {
+            expected.push("integration_custody_policy");
+        }
+        if [".config/build/decapod.BUILD.bzl", "BUILD.bazel"].contains(&changed) {
+            expected.push("source_ci_profile_policy");
+        }
+        assert_eq!(selection.targets(), expected);
         assert_eq!(selection.shards(), ["release-policies"]);
     }
     assert_eq!(
@@ -79,7 +86,10 @@ fn runner_changes_cover_the_runner_and_workflow_retains_release_policies() {
             "release_projection_drift_policy",
             "integration_sharding_policy",
             "ci_checkout_policy",
-            "release_workflow_policy"
+            "integration_custody_policy",
+            "ci_event_context_policy",
+            "release_workflow_policy",
+            "source_ci_profile_policy"
         ]
     );
 }
@@ -97,7 +107,7 @@ fn combined_selection_is_deterministic_and_each_target_is_unique() {
     reversed.reverse();
     assert_eq!(selection, plan(&reversed));
     let targets = selection.targets();
-    assert_eq!(targets.len(), 11);
+    assert_eq!(targets.len(), 14);
     assert_eq!(targets.len(), targets.iter().collect::<BTreeSet<_>>().len());
     assert_eq!(
         selection.shards(),
@@ -122,7 +132,11 @@ fn workflow_repairs_select_their_executable_regressions() {
         ".github/workflows/decapod-validate.yml",
         "tests/ci_checkout_policy.rs",
     ] {
-        assert_eq!(plan(&paths(&[changed])).targets(), ["ci_checkout_policy"]);
+        let mut expected = vec!["ci_checkout_policy"];
+        if changed.starts_with(".github/workflows/") {
+            expected.push("source_ci_profile_policy");
+        }
+        assert_eq!(plan(&paths(&[changed])).targets(), expected);
     }
     for changed in [
         ".github/workflows/release.yml",
@@ -131,9 +145,47 @@ fn workflow_repairs_select_their_executable_regressions() {
     ] {
         assert_eq!(
             plan(&paths(&[changed])).targets(),
-            ["release_workflow_policy"]
+            if changed.starts_with(".github/workflows/") {
+                vec!["release_workflow_policy", "source_ci_profile_policy"]
+            } else {
+                vec!["release_workflow_policy"]
+            }
         );
     }
+}
+
+#[test]
+fn preflight_context_and_docs_changes_select_real_policy_tests() {
+    for changed in [
+        "assets/tools/ci_event_context.rs",
+        "tests/ci_event_context_policy.rs",
+    ] {
+        assert_eq!(
+            plan(&paths(&[changed])).targets(),
+            ["ci_event_context_policy"]
+        );
+    }
+    for changed in [
+        "assets/tools/docs_sync.rs",
+        ".github/actions/docs-drift/action.yml",
+        ".github/workflows/docs_sync.yml",
+        "tests/docs_sync_checkpoint_boundary.rs",
+        "tests/support/docs_sync_cases.rs",
+    ] {
+        assert_eq!(
+            plan(&paths(&[changed])).targets(),
+            if changed.starts_with(".github/workflows/") {
+                vec!["docs_sync_checkpoint_boundary", "source_ci_profile_policy"]
+            } else {
+                vec!["docs_sync_checkpoint_boundary"]
+            }
+        );
+    }
+    assert!(
+        plan(&paths(&["src/decapod/core/docs_cli.rs"]))
+            .targets()
+            .contains(&"docs_sync_checkpoint_boundary")
+    );
 }
 
 fn workflow_job<'a>(workflow: &'a str, name: &str) -> &'a str {
@@ -210,42 +262,58 @@ fn static_workers_preserve_selection_shared_build_and_five_minute_test_budget() 
     let workflow = include_str!("../.github/workflows/ci.yml");
     let prepare = workflow_job(workflow, "integration-prepare");
     let worker = workflow_job(workflow, "test-integration");
+    let prepare_recipe = include_str!("../assets/tools/source_ci/integration-prepare.sh");
+    let worker_recipe = include_str!("../assets/tools/source_ci/integration-worker.sh");
     assert!(prepare.contains("shards: ${{ steps.plan.outputs.shards }}"));
-    assert!(prepare.contains("jq -c '[.include[].shard]'"));
-    assert!(prepare.contains("jq '.include | length'"));
+    assert!(prepare.contains("archive_sha256: ${{ steps.plan.outputs.archive_sha256 }}"));
+    assert!(prepare.contains("run-ci --check integration-prepare"));
+    assert!(prepare_recipe.contains("jq -c '[.include[].shard]'"));
+    assert!(prepare_recipe.contains("jq '.include | length'"));
     assert_eq!(
-        prepare
+        prepare_recipe
             .matches("\"$RUNNER_TEMP/integration-shards\" prepare")
             .count(),
         1
     );
     assert!(prepare.contains("uses: actions/upload-artifact@v4"));
     assert!(prepare.contains("path: target/integration-artifacts/integration-tests.tar"));
+    assert!(
+        prepare.contains("path: target/integration-bootstrap-artifacts/integration-bootstrap.tar")
+    );
     assert!(worker.contains("needs: [release-metadata, integration-prepare]"));
     assert!(worker.contains("needs.integration-prepare.outputs.count != '0'"));
     assert!(worker.contains("needs.release-metadata.outputs.release_only != 'true'"));
     let selection =
         "        if: contains(fromJSON(needs.integration-prepare.outputs.shards), matrix.shard)\n";
     for step in [
+        "Download measured integration bootstrap",
+        "Authenticate integration executor and recipes",
         "Download shared integration tests",
-        "Restore integration executables and runfiles",
-        "Run selective tests",
+        "Run selected integration shard and record measured success",
+        "Upload measured integration shard receipt",
     ] {
         assert!(
             worker.contains(&format!("      - name: {step}\n{selection}")),
             "{step}"
         );
     }
-    assert_eq!(worker.matches(selection).count(), 3);
-    assert!(worker.contains(&format!("{selection}        timeout-minutes: 5\n")));
-    assert!(worker.contains("\"$RUNNER_TEMP/integration-tests/integration-shards\" run"));
-    assert!(worker.contains("--shard \"${{ matrix.shard }}\""));
+    assert_eq!(worker.matches(selection).count(), 5);
+    assert!(worker.contains("        timeout-minutes: 6\n"));
+    assert!(worker_recipe.contains("timeout --signal=TERM --kill-after=30s 300s"));
+    assert!(worker_recipe.contains("\"$RUNNER_TEMP/integration-tests/integration-shards\" run"));
+    assert!(worker_recipe.contains("--shard \"$CUSTODY_SHARD\""));
+    assert!(worker_recipe.contains("trap stop_shard EXIT"));
+    assert!(worker.contains("CUSTODY_SHARD: ${{ matrix.shard }}"));
+    assert!(worker.contains("integration-bootstrap/source-ci-profile run-ci --check"));
+    assert!(worker.contains("integration-${{ matrix.shard }}"));
     assert!(!worker.contains("bazelisk"));
     assert!(!worker.contains("cargo "));
     assert!(!worker.contains("rustc "));
     assert!(!worker.contains("actions/checkout"));
+    assert!(!worker_recipe.contains("cargo "));
+    assert!(!worker_recipe.contains("rustc "));
+    assert!(!worker_recipe.contains("bazelisk"));
 }
-
 #[test]
 fn paths_support_commas_spaces_and_nul_without_silently_narrowing_selection() {
     assert_eq!(

@@ -58,7 +58,12 @@ protected_paths = []
 approval_categories = ["destructive_operations"]
 
 [proof]
+validation_buildkite_preflights = true
 commands = []
+
+[proof.required_profile]
+id = "decapod.pr-readiness.v1"
+reviewed_sources_digest = "sha256:062a05066f85913224daa7c3c2f48e084d6da40c8b6a594ccf5efdc8be4d9512"
 
 [custody]
 isolation = "container"

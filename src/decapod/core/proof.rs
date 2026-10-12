@@ -35,6 +35,14 @@ pub struct ProofDef {
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct ProjectProofConfig {
+    /// Select Buildkite temporary-snapshot validation instead of native Decapod
+    /// execution. Native and Buildkite backends preserve required real coverage;
+    /// ordinary GitHub Actions PR runs are independent of this validation flow.
+    #[serde(default)]
+    pub validation_buildkite_preflights: bool,
+    /// Explicitly reviewed complete-suite declaration; init never approves its digest.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub required_profile: Option<crate::core::readiness_profile::ProfileDeclaration>,
     #[serde(default)]
     pub commands: Vec<ProofDef>,
 }
@@ -295,6 +303,12 @@ pub fn run_proofs(
 ) -> Result<ProofRunSummary, DecapodError> {
     let project_root = resolve_project_root(path)?;
     let resolved = resolve_proof_config(path)?;
+    if resolved.config.proof.is_empty() {
+        return Err(DecapodError::ValidationError(
+            "PROOF_PLAN_EMPTY: no proof commands are configured; reconcile the repository's required build/test/CI contract before requesting proof success".into(),
+        ));
+    }
+    let has_required = resolved.config.proof.iter().any(|proof| proof.required);
     let run_id = crate::core::ulid::new_ulid();
     let ts = format!(
         "{}Z",
@@ -360,7 +374,7 @@ pub fn run_proofs(
         passed,
         failed,
         skipped: 0,
-        all_passed: failed == 0,
+        all_passed: has_required && failed == 0,
         results,
         stop_conditions: None,
         proof_requirements: None,
@@ -417,7 +431,7 @@ pub fn execute_proof_cli(cli: &ProofCommandCli, store_root: &Path) -> Result<(),
                 store_root,
                 "cli",
             )?;
-            if result.failed == 0 {
+            if result.all_passed {
                 println!("✅ All required proofs passed for Epoch 1!");
             } else {
                 for proof_result in &result.results {
@@ -428,11 +442,10 @@ pub fn execute_proof_cli(cli: &ProofCommandCli, store_root: &Path) -> Result<(),
                         );
                     }
                 }
-                return Err(DecapodError::NotImplemented(
-                    "Proof validation failed".to_string(),
+                return Err(DecapodError::ValidationError(
+                    "Required proof plan is incomplete or failed".to_string(),
                 ));
             }
-            println!("✅ All required proofs passed for Epoch 1!");
             Ok(())
         }
         crate::ProofSubCommand::Test { name } => {
@@ -471,6 +484,11 @@ pub fn schema() -> serde_json::Value {
         "authority_policy": "single_source_fail_closed",
         "config_schema": {
             "proof": {
+                "required_profile": {
+                    "id": "string (supported complete required profile)",
+                    "reviewed_sources_digest": "sha256 string (explicitly reviewed inventory; never auto-blessed by init)"
+                },
+                "validation_buildkite_preflights": "bool (default: false; false = native Decapod full required proof, true = Buildkite temporary-snapshot full required proof; neither disables proof)",
                 "commands": [{
                     "name": "string (required)",
                     "command": "string (required)",

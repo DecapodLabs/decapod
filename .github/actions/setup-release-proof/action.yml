@@ -1,0 +1,34 @@
+name: Set up nonpublishing release proof
+description: Install the same reviewed release tools without invoking any publishing action
+runs:
+  using: composite
+  steps:
+    - id: versions
+      shell: bash
+      run: python3 .github/scripts/release-tool-versions.py >> "$GITHUB_OUTPUT"
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: ${{ steps.versions.outputs.rust }}
+    # This is the identical immutable installer and constraint used internally
+    # by the pinned production release-plz action. The constraint is not a receipt.
+    - uses: taiki-e/install-action@ab6895351a88b908e96a4697860d4ffea5e57dbe
+      with:
+        tool: cargo-semver-checks@${{ steps.versions.outputs.semver_checks_constraint }}
+    - uses: cargo-bins/cargo-binstall@c06f6a0003f7c6165a00c89d1697731c9e8a5c72
+      env:
+        BINSTALL_VERSION: 1.25.2
+    - shell: bash
+      env:
+        RELEASE_PLZ_VERSION: ${{ steps.versions.outputs.release_plz }}
+      run: cargo-binstall "release-plz@${RELEASE_PLZ_VERSION}" --force --strategies=crate-meta-data,compile --no-confirm
+    - shell: bash
+      run: bash .github/scripts/install-release-dist.sh
+    - name: Measure installed release tools
+      shell: bash
+      run: |
+        set -euo pipefail
+        rustc --version
+        cargo --version
+        release-plz --version
+        cargo semver-checks --version
+        cargo dist --version

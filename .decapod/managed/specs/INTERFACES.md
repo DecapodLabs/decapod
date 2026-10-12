@@ -1,5 +1,88 @@
 # Interfaces
 
+## Validation providers and publication
+
+`decapod validate` is the PR-readiness interface: only complete current candidate
+proof permits a zero exit and subsequent PR creation. Workbranch pushes and
+iteration may precede preflight; a pushed branch alone is not merge readiness. A
+nonzero result means follow its actionable report, repair root causes on the same
+branch and rerun exact-candidate validation. Reports expose source_pr_readiness
+scope and reasoned real/mocked/non-applicable stage dispositions; excluded release
+packaging and simulated delivery never masquerade as actual execution.
+`decapod govern project-check` is the explicitly partial bootstrap and CI
+prerequisite command; it never establishes readiness by itself. Internal bounded
+workers have a separate hidden command, so an inherited worker environment
+cannot turn public validation into a partial success.
+
+Initialization exposes `validation_buildkite_preflights` under the canonical
+proof configuration. False selects native execution, not a disabled assurance
+contract. True selects the temporary-snapshot provider using existing authorized
+accounts. Missing tools, access, inventory or proof remains an actionable failure.
+The temporary transport is repository-owned and is not represented as literal
+compatibility with the separate `bk preflight` command.
+
+Outside CI, enabled public CLI, alias and RPC validation dispatch directly to
+Buildkite preparation and execution without a local project-check pass or a
+fresh local prerequisite receipt. Their report identifies local project checks
+as `not_run_provider_owned`, with no local check report. Missing or failed remote
+proof remains non-ready. An unsuccessful `rpc --op validate.run` preserves its
+structured error envelope and returns a nonzero process exit status.
+
+Full validation exposes explicit snapshot preparation and resume. A host object
+API that cannot preserve a commit timestamp must use the explicit snapshot-adopt
+interface with the original private handoff and observed server object ID.
+Adoption re-verifies the frozen source, parent, tree, accepted target, request,
+metadata, tags and owned remote ref, and writes a different private handoff while
+remaining non-ready. Prior-snapshot proof cannot transfer to the adopted object;
+full collection must run against that actual identity. Workspace publication
+rejects adoption arguments rather than silently interpreting them as a publish
+request. Branch task discovery requires a token boundary, so an agent name such
+as release-pr-validation cannot invent an unrelated r_validation task.
+
+Readiness preparation checks trajectory ownership and explicit human blockers,
+but does not promote a legacy historical proof aggregate to current execution
+evidence. Failed attempts remain recorded and retryable. Only newly verified
+complete code-bound suite evidence permits publication; retaining a failed
+historical attempt cannot prevent obtaining its replacement proof.
+
+Full validation preparation returns a private handoff locator and a nonzero readiness result until the suite
+is proven. Resume accepts only that locator and optional raw provider archives;
+it independently reconstructs current source identity and re-reads provider
+run/attempt/artifact bindings. RPC and workspace publication use the same
+boundary. Publication may reuse a locator but must verify it again immediately
+before its combined push-and-PR operation. Standalone branch pushes remain
+available before preflight. Verified publication then attempts compare-and-swap cleanup of
+only its owned temporary ref; uncertain cleanup preserves actionable recovery.
+
+Immutable CI context carries the actual provider event, original candidate,
+accepted base, comparison merge base and optional transport identity. A complete
+verified context is required before source selection or release-only treatment.
+Checkpoint verification can bind immutable base/head commits and a separate
+named target with `--target-base`; no mutable fetch supplies the proof range.
+
+## Immutable release evidence for validation
+
+The actual validation harness accepts the complete CHANGE_EVENT, CHANGE_BASE,
+and CHANGE_HEAD environment triple used by the existing release-policy tools.
+Base and head are immutable nonzero Git object IDs, the event is supported, and
+the event base must be in the configured accepted-base ancestry. Partial or
+invalid evidence never falls back to another classification. Without any event
+metadata, local proof may resolve the configured base and a single-parent head;
+synthetic merges require explicit evidence and exact candidate/head tree parity.
+Both source CI validation entrypoints supply the complete triple and retain full
+history in their private checkouts. The existing CLI wrappers keep their flags.
+
+CI sets DECAPOD_VALIDATE_REQUIRE_CHANGE_CONTEXT=1 for PR/push validation.
+Missing, partial, malformed, unresolvable, or checkout-inconsistent evidence is
+an error, including a missing configured accepted-base ref. Automatic provider
+recognition is canonical-path and Git-root scoped to the actual checkout or its
+direct private validation clone, so inherited CI variables do not misclassify
+unrelated Git fixtures. Existing explicit manual runs retain their local behavior.
+Ordinary drift checks require both a clean index against HEAD and no unapproved
+working-material difference against HEAD; restoring only the working copy cannot
+hide staged edits. The standalone workflow uses the same strict classifier and
+actual source-built projection checker without label or branch-name exemptions.
+
 ## Integration shard tooling
 
 The repository-owned Rust integration helper exposes `plan --paths FILE`,
@@ -372,8 +455,8 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ab9a11ea42af3b5496a92844b43b1fb208608acd04fed342b0a1168f3c94af27`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (11 files), `docs/` (1 files), `src/` (125 files), `tests/` (173 files)
+- Repository signal fingerprint: `e3584d78d15131f611c7f497eae3e00e961798587727064461fc5332169d0f64`
+- Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -467,3 +550,25 @@ branch files remain the input to source and document validation.
 without changing ordinary Cargo commands. Bazel's checked-in build/test config
 enables synchronous sandbox disposal and the same test scratch supervisor.
 `CARGO_INCREMENTAL=1` explicitly opts back into incremental compilation.
+
+## CI-local validation and source preflight repair
+
+The public validation command and RPC recognize the exact GitHub Actions or Buildkite runtime flag and run bounded CI-local prerequisite checks without another remote submission. Their result identifies `ci_local` scope and `publication_ready=false`; no full readiness receipt or awareness mark is issued. Source publication still invokes the full current-workbranch proof boundary independently of those flags. A normalized workspace-branch push retains the raw push event and verifies the actual managed branch, exact source commit, clean initial checkout and captured configured accepted base before the material-spec gate uses full PR range semantics. Validation and the eventual PR use this same branch; repeated runs reuse its exact commit without creating extra refs.
+
+Measured source preparation resolves the selected toolchain before freezing stable launcher diagnostics, retains cold-start logs, preserves Rust proxy invocation names, and binds Docker image digests with a compatible typed inspection. Synthetic release inputs are inert fixture files until tests materialize them. Invalid provider identity reports only failed field names and never exports arbitrary environment values.
+
+Imported Buildkite GitHub Actions shell evidence carries only identities that the reviewed importer actually exposes: the build UUID, checked native retry derived from its one-based run attempt, and the logical workflow job. It must not invent a native job UUID or step key. The collector separately authenticates the native build/job/step artifact producer and verifies the pinned importer recipe and logical job before interpreting this distinct imported-runtime receipt. Ordinary GitHub and native Buildkite identities retain their existing checks.
+
+Source execution must leave its bound tracked checkout, index and non-ignored source files unchanged; a stable HEAD alone is insufficient. Bazel uses the repository's pinned version and rejects an incompatible or stale lockfile instead of silently updating it during a proof check. Standalone validation retains both actually built binaries in custody while omitting dev debug symbols; dev assertions, overflow checks and archive-size limits remain unchanged. Fixture repositories isolate their own provider context and test-only Git configuration, and relocated docs fixtures use a declared compiled helper instead of an undeclared ambient compiler. These fixture boundaries do not relax production context, storage or Git transport guards.
+
+### Remote material verification
+
+The existing `govern artifacts verify-checkpoints --publication-material` interface is invoked by the mandatory Buildkite governance recipe with immutable base/head and an explicit target. It verifies the clean committed candidate before and after the shared publication-material checks. It never submits another build or establishes standalone readiness; the outer `validate` result still requires the complete provider suite.
+
+### PR event and shell portability after publication
+
+The CI context action seeds its argument vector with mandatory repository and event inputs before appending optional event-specific flags. Ordinary pull-request and push paths therefore remain valid under macOS Bash 3.2 nounset behavior without changing immutable-context checks. Once a PR exists, full workbranch validation authenticates each native build identity and selects only the required push-event execution; independent PR/manual runs for the same head neither satisfy nor replace that contract. Duplicate push executions or substitution of an already-bound event remain errors.
+
+### Governance checks from provider merge checkouts
+
+The governance recipe may normalize only its newly owned private clone from a pull-request checkout to the immutable authored head. The checkout must have exactly the ordered accepted-base and authored-head parents and the same complete tree as that head. Unrelated equal-tree commits, changed material, replacement objects and source or private-clone HEAD races fail closed. The measured provider checkout remains untouched, and the existing strict publication-material and full-history checkpoint verifier runs against the authored head without a race-guard exception.

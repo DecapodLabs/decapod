@@ -2,6 +2,7 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
+use std::process::Command;
 
 use crate::core::capabilities::reconcile_capability_overlays;
 use crate::core::error;
@@ -607,18 +608,42 @@ pub fn material_specs_change_vs_base(
     project_root: &Path,
     base_ref: &str,
 ) -> Result<MaterialSpecsChangeReport, error::DecapodError> {
+    material_specs_change(project_root, base_ref, None)
+}
+
+/// Compare authored specs in two immutable revisions, not a synthetic merge's
+/// working files. The caller must first resolve and validate both revisions.
+pub fn material_specs_change_between_refs(
+    project_root: &Path,
+    base_ref: &str,
+    head_ref: &str,
+) -> Result<MaterialSpecsChangeReport, error::DecapodError> {
+    material_specs_change(project_root, base_ref, Some(head_ref))
+}
+
+fn material_specs_change(
+    project_root: &Path,
+    base_ref: &str,
+    head_ref: Option<&str>,
+) -> Result<MaterialSpecsChangeReport, error::DecapodError> {
     let mut material_changed_paths = Vec::new();
     let mut fingerprint_only_changed_paths = Vec::new();
     let mut unchanged_paths = Vec::new();
 
     for spec in LOCAL_PROJECT_SPECS {
         let path = project_root.join(spec.path);
-        let head_body = if path.is_file() {
+        let head_body = if let Some(head_ref) = head_ref {
+            immutable_spec_text(project_root, head_ref, spec.path)?
+        } else if path.is_file() {
             fs::read_to_string(&path).map_err(error::DecapodError::IoError)?
         } else {
             String::new()
         };
-        let base_body = git_show_text(project_root, base_ref, spec.path).unwrap_or_default();
+        let base_body = if head_ref.is_some() {
+            immutable_spec_text(project_root, base_ref, spec.path)?
+        } else {
+            git_show_text(project_root, base_ref, spec.path).unwrap_or_default()
+        };
 
         if material_spec_bodies_differ(&base_body, &head_body) {
             material_changed_paths.push(spec.path.to_string());
@@ -641,6 +666,38 @@ pub fn material_specs_change_vs_base(
         fingerprint_only_changed_paths,
         unchanged_paths,
     })
+}
+
+// Missing files represent an addition/deletion; a failed Git read does not.
+fn immutable_spec_text(
+    root: &Path,
+    revision: &str,
+    path: &str,
+) -> Result<String, error::DecapodError> {
+    let run = |args: &[&str]| -> Result<Vec<u8>, error::DecapodError> {
+        let output = Command::new("git")
+            .arg("-C")
+            .arg(root)
+            .args(args)
+            .output()?;
+        if !output.status.success() {
+            return Err(error::DecapodError::ValidationError(format!(
+                "Cannot read immutable living spec {revision}:{path}"
+            )));
+        }
+        Ok(output.stdout)
+    };
+    let entry = run(&["ls-tree", "--full-name", "-z", revision, "--", path])?;
+    if entry.is_empty() {
+        return Ok(String::new());
+    }
+    if !entry.starts_with(b"100644 blob ") {
+        return Err(error::DecapodError::ValidationError(format!(
+            "Immutable living spec {revision}:{path} must be a regular non-executable file"
+        )));
+    }
+    String::from_utf8(run(&["show", &format!("{revision}:{path}")])?)
+        .map_err(|_| error::DecapodError::ValidationError("Living specs must be UTF-8".into()))
 }
 
 fn strip_all_marked_blocks(body: &str, start_marker: &str, end_marker: &str) -> String {

@@ -1,0 +1,20 @@
+name: Immutable documentation drift proof
+description: Build the captured source head and verify its generated agent documentation without credentials or writes to a remote
+inputs:
+  base-sha:
+    description: Full immutable base commit SHA from the event or verified pre-PR context
+    required: true
+  head-sha:
+    description: Full immutable head commit SHA from the event or verified pre-PR context
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+    - name: Execute measured immutable documentation drift proof
+      shell: bash
+      env:
+        BASE_SHA: ${{ inputs.base-sha }}
+        HEAD_SHA: ${{ inputs.head-sha }}
+      run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check docs-drift --base "$BASE_SHA" --head "$HEAD_SHA"'

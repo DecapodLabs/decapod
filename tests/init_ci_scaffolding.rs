@@ -61,16 +61,13 @@ fn init_scaffolds_github_action_workflow() {
 }
 
 #[test]
-fn init_force_updates_existing_workflow() {
+fn init_force_preserves_existing_authored_workflow() {
     let tmp = tempdir().expect("tempdir");
     let workflow_dir = tmp.path().join(".github/workflows");
     fs::create_dir_all(&workflow_dir).expect("create workflow dir");
     let workflow_path = workflow_dir.join("decapod-validate.yml");
     fs::write(&workflow_path, "old content").expect("write old content");
 
-    // Without --force, it should not overwrite (but decapod init might not fail if it's just one file)
-    // Actually decapod init --proof might skip it or fail.
-    // Let's check if --force overwrites it.
     let out = run_decapod(tmp.path(), &["init", "--proof", "--force"]);
     assert!(
         out.status.success(),
@@ -79,10 +76,11 @@ fn init_force_updates_existing_workflow() {
     );
 
     let content = fs::read_to_string(workflow_path).expect("read workflow file");
-    assert!(
-        content.contains("name: Decapod Validate"),
-        "workflow should be updated with --force"
+    assert_eq!(
+        content, "old content",
+        "force-init must preserve authored CI"
     );
+    assert!(String::from_utf8_lossy(&out.stdout).contains("MISSING_REQUIRED_PROFILE"));
 }
 
 #[test]

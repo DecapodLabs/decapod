@@ -1,5 +1,5 @@
-<!-- decapod-release: 0.107.4 -->
-<!-- decapod-fingerprint: e1fbced9c913a8d963f81a07f1cbafb4e0e2c9e6bbc4cdd33e3cdfc804fbd0ad -->
+<!-- decapod-release: 0.107.5 -->
+<!-- decapod-fingerprint: 8ad06402cf35d174f68e687ae1d5043519aa14a894f08088119bc70d65f598ef -->
 # CODEX.md - Agent Entrypoint
 
 You are working in a Decapod-managed repository.
@@ -31,7 +31,7 @@ Run this gate once when the agent starts and again after every new prompt or use
 ```bash
 # Smart bootstrap: only install/init if a newer version is available
 (decapod capabilities --format json | grep -q '"is_latest":true') || (cargo install decapod && decapod init --proof)
-decapod docs ingest && decapod validate && decapod session acquire
+decapod docs ingest && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status
 decapod todo add "<task>" && decapod todo claim --id <task-id>

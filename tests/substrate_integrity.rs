@@ -26,15 +26,62 @@ fn resolve_decapod_bin() -> PathBuf {
     PathBuf::from(cargo_bin)
 }
 
-fn run_decapod(dir: &Path, args: &[&str], envs: &[(&str, &str)]) -> std::process::Output {
+// These children own unrelated temporary repositories, not the CI source checkout.
+// Keep the parent provider context untouched; explicit test overrides are applied last.
+const PARENT_CI_CONTEXT: &[&str] = &[
+    "GITHUB_ACTIONS",
+    "BUILDKITE",
+    "GITHUB_EVENT_NAME",
+    "GITHUB_WORKSPACE",
+    "BUILDKITE_BUILD_CHECKOUT_PATH",
+    "CHANGE_EVENT",
+    "CHANGE_BASE",
+    "CHANGE_HEAD",
+    "DECAPOD_VALIDATE_REQUIRE_CHANGE_CONTEXT",
+];
+
+fn decapod_command(dir: &Path, args: &[&str], envs: &[(&str, &str)]) -> Command {
     let mut cmd = Command::new(resolve_decapod_bin());
+    for name in PARENT_CI_CONTEXT {
+        cmd.env_remove(name);
+    }
     cmd.current_dir(dir)
         .args(args)
         .env("XDG_CONFIG_HOME", dir.join(".config"));
     for (k, v) in envs {
         cmd.env(k, v);
     }
-    cmd.output().expect("run decapod")
+    cmd
+}
+
+fn run_decapod(dir: &Path, args: &[&str], envs: &[(&str, &str)]) -> std::process::Output {
+    decapod_command(dir, args, envs)
+        .output()
+        .expect("run decapod")
+}
+
+#[test]
+fn scratch_children_remove_parent_ci_context_and_allow_explicit_test_context() {
+    let command = decapod_command(Path::new("fixture"), &["govern", "project-check"], &[]);
+    for name in PARENT_CI_CONTEXT {
+        assert_eq!(
+            command.get_envs().find(|(key, _)| key == name),
+            Some((std::ffi::OsStr::new(name), None)),
+            "scratch child must remove inherited {name}"
+        );
+    }
+    let command = decapod_command(
+        Path::new("fixture"),
+        &["govern", "project-check"],
+        &[("DECAPOD_VALIDATE_REQUIRE_CHANGE_CONTEXT", "1")],
+    );
+    assert_eq!(
+        command
+            .get_envs()
+            .find(|(name, _)| *name == "DECAPOD_VALIDATE_REQUIRE_CHANGE_CONTEXT")
+            .and_then(|(_, value)| value),
+        Some(std::ffi::OsStr::new("1"))
+    );
 }
 
 fn setup_repo(tmp: &TempDir) -> (String, String) {
@@ -96,8 +143,9 @@ fn test_decapod_uses_config_toml_for_validation() {
         ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
     ];
 
-    // 1. Initial validate should pass
-    let out = run_decapod(dir, &["validate"], &envs);
+    // 1. The initial project configuration passes its prerequisite checks.
+    // Corrupt configuration below must still be rejected by public validate.
+    let out = run_decapod(dir, &["govern", "project-check"], &envs);
     assert!(
         out.status.success(),
         "Initial validate should pass, output: {}",
@@ -285,6 +333,9 @@ fn test_override_md_changes_flow_to_specs() {
 
 #[test]
 fn test_regression_against_known_good_substrate() {
+    // Check the known-good configuration/override substrate, not publication readiness.
+    // This prerequisite result is not full publication-readiness proof.
+
     let tmp = TempDir::new().unwrap();
     let dir = tmp.path();
     Command::new("git")
@@ -340,7 +391,7 @@ This intent from OVERRIDE must win.
     ];
 
     // 3. Validate should pass against this substrate
-    let out = run_decapod(dir, &["validate"], &envs);
+    let out = run_decapod(dir, &["govern", "project-check"], &envs);
     assert!(
         out.status.success(),
         "Validate should pass against known-good substrate. Output: {}",

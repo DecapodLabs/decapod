@@ -83,6 +83,19 @@ fn run_decapod_validate(
     cmd.output().expect("decapod validate")
 }
 
+// Successful disabled-container fixtures exercise project prerequisites only.
+fn run_decapod_project_check(
+    dir: &std::path::Path,
+    extra_envs: &[(&str, &str)],
+) -> std::process::Output {
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_decapod"));
+    cmd.args(["govern", "project-check", "-v"]).current_dir(dir);
+    for (k, v) in extra_envs {
+        cmd.env(k, v);
+    }
+    cmd.output().expect("decapod govern project-check")
+}
+
 fn acquire_session(dir: &std::path::Path) -> String {
     let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .args(["session", "acquire"])
@@ -301,13 +314,16 @@ fn test_todo_operations_with_container_workspaces_disabled() {
 
 #[test]
 fn test_e2e_validate_passes_with_no_container_workspaces() {
+    // Check the disabled-container project prerequisite without source/release fixtures.
+    // This prerequisite result is not full publication-readiness proof.
+
     let tmp = TempDir::new().expect("tempdir");
     let base_dir = tmp.path();
     let worktree_dir = setup_isolated_repo_with_worktree(base_dir);
 
     set_container_workspaces_in_config(&worktree_dir, false);
 
-    let out = run_decapod_validate(&worktree_dir, &[]);
+    let out = run_decapod_project_check(&worktree_dir, &[]);
 
     let stdout = String::from_utf8_lossy(&out.stdout);
 
@@ -363,6 +379,9 @@ fn test_e2e_validate_container_sequences_never_fire_when_disabled() {
 
 #[test]
 fn test_e2e_init_then_validate_flow_with_workspaces_disabled() {
+    // Check the disabled-container project prerequisite without source/release fixtures.
+    // This prerequisite result is not full publication-readiness proof.
+
     let tmp = TempDir::new().expect("tempdir");
     let base_dir = tmp.path();
 
@@ -433,7 +452,7 @@ fn test_e2e_init_then_validate_flow_with_workspaces_disabled() {
         .status()
         .expect("git worktree add");
 
-    let validate_out = run_decapod_validate(&worktree_dir, &[]);
+    let validate_out = run_decapod_project_check(&worktree_dir, &[]);
     let stdout = String::from_utf8_lossy(&validate_out.stdout);
     let stderr = String::from_utf8_lossy(&validate_out.stderr);
 

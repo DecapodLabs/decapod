@@ -1,5 +1,83 @@
 # Architecture
 
+## PR readiness boundary
+
+Readiness joins the repository's intended build, CI and release contracts to the
+actual execution evidence for the current local work branch. The complete plan
+is derived independently of results; missing adapters, capabilities or required
+rows cannot shrink the plan. Native execution uses an owned standalone snapshot
+and the existing bounded process supervisor. The optional Buildkite provider
+pushes or reuses the exact current workspace branch and candidate commit.
+The remote execution identity equals that source commit; no synthetic child,
+per-run ref, alternate branch, or destructive branch cleanup is permitted.
+Provider jobs verify the full accepted-base range and execute that same source.
+Ordinary workbranch pushes may precede preflight; only PR creation is held until
+the intended change is converged, mergeable and fully validated. Canonical agent
+guidance and validation reports express this same boundary.
+Buildkite is the sole remote readiness executor for this repository. The
+workspace source commit carries no service skip directive. Existing GitHub
+workflows may run independently and are outside this readiness proof. Shared
+workflow trigger definitions remain because the Buildkite importer consumes
+them. Candidate compilation is proven by the actual Buildkite setup executor,
+using the same authenticated archive and binary lineage as downstream checks.
+GitHub check URLs may locate Buildkite runs but do not establish execution proof.
+
+Project prerequisites are acyclic components of the full proof. They do not wait
+for their own final acceptance, and their success cannot become publication
+readiness. Buildkite-enabled full validation selects the remote owner before any
+local prerequisite execution or healing. Its pending prerequisite state is not a
+local pass: required remote project-check rows and every other applicable source
+row must supply complete authenticated execution evidence. Native validation and
+bounded CI-local validation retain their local execution paths.
+Historical tracked governance receipts describe the project checks
+that produced them. Final full-suite evidence lives outside the Git material it
+binds, avoiding a receipt/commit hash cycle. Source, index, branch/history,
+accepted target, configuration, stable governance policy, workflows and resolved
+tools all participate in the final identity. A changed target tip invalidates
+proof even when the old target remains an ancestor.
+
+Historical source-repository entrypoint rewrites must be checked against the
+immutable template and release that generated that historical commit, rather
+than retroactively requiring today's template body. Current material continues
+to require the evaluating binary's canonical template and fingerprint.
+
+Source workflows and native execution share finite checked-in recipes rather
+than independent YAML command copies. Provider artifacts preserve preparation
+before execution, actual process outcomes, log and artifact digests, source and
+tool closure, and final unchanged-material checks. The compile-once integration
+producer and selected workers form an explicit hash-bound dependency chain;
+small manifests and measured consumer receipts avoid copying the complete test
+tar into each proof archive. The active readiness scope is the complete actual
+source PR suite, with real compile, test and build execution. Every stage has
+a governed real, mocked or non-applicable disposition and a reason. Release-only
+packaging is a separately preserved follow-up, not an actual PR requirement or
+a proven capability of this profile. Publish/deploy simulations never substitute
+for required compilation or execution.
+
+## Shared release evidence in actual validation
+
+The dependency-free immutable release classifier and exact projection verifier
+live in core and are reused by the existing CI command wrappers. Actual
+validation calls the same proof at the material-spec gate after its normal
+projection refresh. Acceptance requires the classified head tree to equal the
+candidate tree, a clean index, and byte-exact current generated entrypoints,
+Dockerfile headers, spec attestation digest, and manifest fields. Authored prose,
+source, configuration, dependencies, templates, and unrelated generated changes
+retain the ordinary material-spec requirement. Other validation gates still run.
+
+## Immutable validation checkout context
+
+Private validation clones copy local remote-tracking refs as well as the exact
+provider commit, without contacting the network or modifying source state. Both
+validation entrypoints require a complete immutable PR/push event range before
+local protected-branch or unavailable-base shortcuts can apply. Ordinary PR
+material-spec comparisons read the actual immutable head against its merge base;
+a newer synthetic-merge base cannot contribute the PR's required authored prose.
+Push validation compares the full pre-push range even when HEAD is now master.
+The strict release exception separately requires exact candidate/head tree parity.
+Its real Dockerfile generator uses a newly created private root, nested directories,
+and file, independent of inherited umask; no existing permissions are repaired.
+
 ## Shared-build integration proof
 
 Pull-request integration coverage is planned from the changed paths, compiled
@@ -464,8 +542,8 @@ virtiofs/FUSE filesystem prohibition.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ab9a11ea42af3b5496a92844b43b1fb208608acd04fed342b0a1168f3c94af27`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (11 files), `docs/` (1 files), `src/` (125 files), `tests/` (173 files)
+- Repository signal fingerprint: `e3584d78d15131f611c7f497eae3e00e961798587727064461fc5332169d0f64`
+- Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -541,3 +619,26 @@ Interruption forwards to the owned process group with a bounded grace period;
 unconfirmed descendant exit retains evidence rather than deleting live state.
 Cleanup errors retain the original failure and bounded ownership/path
 diagnostics; they never trigger automatic permission repair.
+
+### Measured source-check convergence
+
+Private validation clones live in newly created job-owned temporary directories
+outside the measured checkout. Required source custody rejects tracked, staged,
+or undeclared untracked changes after execution. Golden-vector checks execute
+the real generator against a disposable Git fixture and compare all four
+immutable v1 outputs byte-for-byte without rewriting expectations. Historical
+vector identifiers are explicit fixture data, separate from the local Git refs
+used to read the current fixture. The packageable symlink target belongs to the
+unchanged fixture base, preserving the original six-entry protocol delta.
+
+Buildkite job-fragment URLs identify their native build only. The collector
+authenticates every required workflow against the frozen source and pipeline,
+caches only the complete locator set, polls fresh native status, and rediscovers
+the registry before accepting final proof. Constitution, documentation and all
+applicable source checks remain dependencies of the single validation result.
+
+### Provider-owned verification and historical custody
+
+`validate` is the single readiness mechanism. In Buildkite mode, local preparation is limited to workspace ownership, human-decision authorization and immutable transport identity; the existing mandatory governance worker executes candidate material, committed-bundle, spec-review, checkpoint and merge verification. Native mode retains the equivalent local verification boundary. The reviewed public Decapod profile selects credential-free public metadata reads before making requests, without fallback after authentication failure.
+
+Historical single-parent transport commits may reuse a source checkpoint only when the complete Git tree, including governance, is identical to their independently verified parent. Imported lineages retain independently verified original journals with accepted ancestor bases and the same target. The active first-parent identity and journal remain strict, and every material edit or merge requires its own exact checkpoint.

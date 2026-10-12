@@ -684,6 +684,56 @@ fn current_receipt_accepts_proof_commit_but_rejects_stale_code_epoch_task_and_re
 }
 
 #[test]
+fn current_governance_is_receipt_independent_but_preserves_task_and_decision_gates() {
+    let dir = repo();
+    // Build the real governed context, deliberately without storing a project
+    // receipt: full readiness cannot require a receipt that mutates its subject.
+    let receipt = current_receipt_fixture(dir.path());
+    assert!(
+        crate::core::governance_document::read_section(dir.path(), "validation")
+            .unwrap()
+            .is_none()
+    );
+    verify_current_governance_for_publish(dir.path()).unwrap();
+    assert!(verify_validation_artifacts_for_publish(dir.path()).is_err());
+
+    // Even an intact old project receipt does not resolve current human gates.
+    save_receipt(dir.path(), &receipt);
+    let original = plan_governance::load_plan(dir.path()).unwrap().unwrap();
+    let mut changed = original.clone();
+    changed
+        .human_questions
+        .push("Choose the intended contract".into());
+    plan_governance::save_plan(dir.path(), &changed).unwrap();
+    assert!(
+        verify_current_governance_for_publish(dir.path())
+            .unwrap_err()
+            .to_string()
+            .contains("PUBLICATION_DECISION_REQUIRED")
+    );
+    changed = original.clone();
+    changed
+        .unresolved_contradictions
+        .push("Source and intent disagree".into());
+    plan_governance::save_plan(dir.path(), &changed).unwrap();
+    assert!(
+        verify_current_governance_for_publish(dir.path())
+            .unwrap_err()
+            .to_string()
+            .contains("PUBLICATION_DECISION_REQUIRED")
+    );
+    changed = original;
+    changed.todo_ids = vec!["wrong_task".into()];
+    plan_governance::save_plan(dir.path(), &changed).unwrap();
+    assert!(
+        verify_current_governance_for_publish(dir.path())
+            .unwrap_err()
+            .to_string()
+            .contains("STALE_PUBLICATION_TASK")
+    );
+}
+
+#[test]
 fn invalid_and_missing_artifacts_fail_real_publication_gate() {
     let dir = repo();
     crate::core::governance_document::begin_pr(dir.path(), "invalid-artifact-test", "master")
@@ -927,4 +977,237 @@ fn staged_publication_requires_fresh_checkpoint_before_creating_history() {
         "master",
     )
     .unwrap();
+}
+
+#[test]
+fn buildkite_publication_inventory_does_not_require_local_validation_receipt() {
+    let dir = repo();
+    crate::core::governance_document::begin_pr(dir.path(), "provider-owned-proof", "master")
+        .unwrap();
+    let receipt = current_receipt_fixture(dir.path());
+    let mut config = crate::cli::DecapodProjectConfig::default();
+    config.proof.validation_buildkite_preflights = true;
+    write(
+        dir.path(),
+        ".decapod/config.toml",
+        &toml::to_string(&config).unwrap(),
+    );
+    assert!(
+        crate::core::governance_document::read_section(dir.path(), "validation")
+            .unwrap()
+            .is_none()
+    );
+    git(dir.path(), &["add", "."]);
+    crate::core::governance_document::checkpoint(
+        dir.path(),
+        "remote-preparation",
+        "Prepare remote proof without a local receipt",
+        vec!["test:remote-routing".into()],
+    )
+    .unwrap();
+    git(dir.path(), &["add", "."]);
+    git(dir.path(), &["commit", "-qm", "provider-owned proof"]);
+    ensure_required_governance_artifacts_in_pr(dir.path(), "master").unwrap();
+    verify_current_governance_for_publish(dir.path()).unwrap();
+
+    // An intact stale local receipt cannot become a prerequisite or proof.
+    let mut stale = receipt;
+    stale.trajectory_artifact_hash = Some("0".repeat(64));
+    save_receipt(dir.path(), &stale.with_recomputed_hash().unwrap());
+    ensure_required_governance_artifacts_in_pr(dir.path(), "master").unwrap();
+    assert!(verify_validation_artifacts_for_publish(dir.path()).is_err());
+    config.proof.validation_buildkite_preflights = false;
+    write(
+        dir.path(),
+        ".decapod/config.toml",
+        &toml::to_string(&config).unwrap(),
+    );
+    assert!(ensure_required_governance_artifacts_in_pr(dir.path(), "master").is_err());
+
+    config.proof.validation_buildkite_preflights = true;
+    write(
+        dir.path(),
+        ".decapod/config.toml",
+        &toml::to_string(&config).unwrap(),
+    );
+    let original = std::fs::read(
+        dir.path()
+            .join(crate::core::governance_document::GOVERNANCE_PATH),
+    )
+    .unwrap();
+    for section in ["plan", "claims", "trajectory"] {
+        let mut doc: serde_json::Value = serde_json::from_slice(&original).unwrap();
+        if section == "claims" {
+            doc["claims"] = serde_json::Value::Null;
+        } else {
+            doc["sections"].as_object_mut().unwrap().remove(section);
+        }
+        std::fs::write(
+            dir.path()
+                .join(crate::core::governance_document::GOVERNANCE_PATH),
+            serde_json::to_vec(&doc).unwrap(),
+        )
+        .unwrap();
+        assert!(
+            ensure_required_governance_artifacts_in_pr(dir.path(), "master").is_err(),
+            "{section}"
+        );
+    }
+}
+
+#[test]
+fn publication_inventory_absent_config_is_native_but_malformed_config_fails() {
+    let dir = repo();
+    bundle(dir.path());
+    let config_path = dir.path().join(".decapod/config.toml");
+    assert!(!config_path.exists());
+    ensure_required_governance_artifacts_in_pr(dir.path(), "master").unwrap();
+
+    write(dir.path(), ".decapod/config.toml", "invalid = [");
+    assert!(matches!(
+        ensure_required_governance_artifacts_in_pr(dir.path(), "master"),
+        Err(DecapodError::Config(_))
+    ));
+    std::fs::remove_file(config_path).unwrap();
+    let mut stale = current_receipt_fixture(dir.path());
+    stale.trajectory_artifact_hash = Some("0".repeat(64));
+    save_receipt(dir.path(), &stale.with_recomputed_hash().unwrap());
+    let error = ensure_required_governance_artifacts_in_pr(dir.path(), "master")
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("#/sections/validation"), "{error}");
+}
+
+fn provider_material_fixture() -> TempDir {
+    let dir = repo();
+    let mut config = crate::cli::DecapodProjectConfig::default();
+    config.proof.validation_buildkite_preflights = true;
+    write(
+        dir.path(),
+        ".decapod/config.toml",
+        &toml::to_string(&config).unwrap(),
+    );
+    crate::core::governance_document::begin_pr(dir.path(), "provider-material", "master").unwrap();
+    let _ = current_receipt_fixture(dir.path());
+    write(dir.path(), "api/contract.rs", "pub fn contract() {}\n");
+    git(dir.path(), &["add", "."]);
+    review_all(dir.path());
+    git(dir.path(), &["add", "."]);
+    crate::core::governance_document::checkpoint(
+        dir.path(),
+        "provider-material",
+        "Current provider-owned material",
+        vec!["test:provider-material".into()],
+    )
+    .unwrap();
+    git(dir.path(), &["add", "."]);
+    git(dir.path(), &["commit", "-qm", "checkpointed material"]);
+    dir
+}
+
+#[test]
+fn provider_material_checks_require_clean_exact_commits_and_current_spec_reviews() {
+    let dir = provider_material_fixture();
+    let base = git(dir.path(), &["rev-parse", "master"]);
+    let head = git(dir.path(), &["rev-parse", "HEAD"]);
+    verify_provider_publication_material(dir.path(), &base, &head, "master").unwrap();
+    assert!(verify_provider_publication_material(dir.path(), "master", &head, "master").is_err());
+    assert!(verify_provider_publication_material(dir.path(), &base, "HEAD", "master").is_err());
+    assert!(verify_provider_publication_material(dir.path(), &head, &head, "master").is_err());
+    write(dir.path(), "uncommitted.txt", "material not in H");
+    assert!(
+        verify_provider_publication_material(dir.path(), &base, &head, "master")
+            .unwrap_err()
+            .to_string()
+            .contains("UNCOMMITTED_PUBLICATION_CONTENT")
+    );
+    std::fs::remove_file(dir.path().join("uncommitted.txt")).unwrap();
+    let mut plan = plan_governance::load_plan(dir.path()).unwrap().unwrap();
+    plan.spec_reviews.clear();
+    plan_governance::save_plan(dir.path(), &plan).unwrap();
+    git(dir.path(), &["add", "."]);
+    git(dir.path(), &["commit", "-qm", "missing current reviews"]);
+    let changed = git(dir.path(), &["rev-parse", "HEAD"]);
+    assert!(
+        verify_provider_publication_material(dir.path(), &base, &changed, "master")
+            .unwrap_err()
+            .to_string()
+            .contains("SPEC_REVIEW_REQUIRED")
+    );
+}
+
+#[test]
+fn transport_admits_unverified_history_but_remote_material_still_rejects_it() {
+    let root = provider_material_fixture();
+    let worktree = TempDir::new().unwrap();
+    git(
+        root.path(),
+        &[
+            "worktree",
+            "add",
+            "-b",
+            "agent/test/bugs_current",
+            worktree.path().to_str().unwrap(),
+        ],
+    );
+    let dir = worktree.path();
+    write(dir, "README.md", "An uncheckpointed authored commit\n");
+    git(dir, &["add", "."]);
+    git(dir, &["commit", "-qm", "uncheckpointed history"]);
+    let base = git(dir, &["rev-parse", "master"]);
+    let head = git(dir, &["rev-parse", "HEAD"]);
+    let before =
+        std::fs::read(dir.join(crate::core::governance_document::GOVERNANCE_PATH)).unwrap();
+    verify_readiness_transport_prerequisites(dir).unwrap();
+    assert!(
+        verify_current_publication_prerequisites(dir).is_err(),
+        "native retains local verification"
+    );
+    assert!(
+        verify_provider_publication_material(dir, &base, &head, "master").is_err(),
+        "the existing remote governance obligation must reject uncheckpointed history"
+    );
+    assert_eq!(
+        std::fs::read(dir.join(crate::core::governance_document::GOVERNANCE_PATH)).unwrap(),
+        before
+    );
+    let mut plan = plan_governance::load_plan(dir).unwrap().unwrap();
+    plan.human_questions
+        .push("Choose the intended action".into());
+    plan_governance::save_plan(dir, &plan).unwrap();
+    assert!(
+        verify_readiness_transport_prerequisites(dir)
+            .unwrap_err()
+            .to_string()
+            .contains("PUBLICATION_DECISION_REQUIRED")
+    );
+}
+
+#[test]
+fn publication_material_cli_is_explicit_and_requires_target_binding() {
+    use clap::Parser;
+    let args = [
+        "decapod",
+        "govern",
+        "artifacts",
+        "verify-checkpoints",
+        "--base-branch",
+        "master",
+        "--publication-material",
+    ];
+    assert!(crate::cli::Cli::try_parse_from(args).is_err());
+    let parsed =
+        crate::cli::Cli::try_parse_from(args.into_iter().chain(["--target-base", "master"]))
+            .unwrap();
+    assert!(matches!(
+        parsed.command,
+        crate::cli::Command::Govern(crate::cli::GovernCli {
+            command: crate::cli::GovernCommand::Artifacts(crate::cli::ArtifactsCli {
+                command: crate::cli::ArtifactsCommand::VerifyCheckpoints {
+                    publication_material: true,
+                    ..
+                }
+            })
+        })
+    ));
 }

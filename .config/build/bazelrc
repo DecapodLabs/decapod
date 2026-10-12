@@ -1,3 +1,5 @@
+# CI and local proof must not silently rewrite the committed dependency lock.
+common --lockfile_mode=error
 build --announce_rc
 build --color=yes
 build --curses=yes

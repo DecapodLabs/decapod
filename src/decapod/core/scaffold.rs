@@ -1971,7 +1971,9 @@ pub fn scaffold_project_entrypoints(
     if opts.generate_ci {
         let github_workflow_rel = ".github/workflows/decapod-validate.yml";
         let dest = opts.target_dir.join(github_workflow_rel);
-        if dest.exists() && !opts.force {
+        // Existing CI is authored repository policy. Even force-init must not
+        // replace it; reconciliation reports any missing proof integration.
+        if dest.exists() {
             ci_preserved += 1;
         } else {
             let github_workflow_content = assets::get_template("decapod-validate.yml")

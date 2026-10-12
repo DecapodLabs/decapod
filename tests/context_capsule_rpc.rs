@@ -30,6 +30,9 @@ fn run_git(dir: &Path, args: &[&str]) -> std::process::Output {
 }
 
 fn setup_repo() -> (TempDir, std::path::PathBuf) {
+    // Seed a methodology receipt for context-capsule fixture setup only.
+    // This prerequisite result is not full publication-readiness proof.
+
     let tmp = TempDir::new().expect("tmpdir");
     let dir = tmp.path().to_path_buf();
 
@@ -84,7 +87,7 @@ fn setup_repo() -> (TempDir, std::path::PathBuf) {
 
     let validate = run_decapod_with_env(
         &dir,
-        &["validate"],
+        &["govern", "project-check"],
         &[("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")],
     );
     assert!(
