@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.109.0](https://github.com/DecapodLabs/decapod/compare/v0.108.1...v0.109.0) - 2026-10-12
+
+### Fixed
+
+- restore product-level specs and agent-owned validation ([#1406](https://github.com/DecapodLabs/decapod/pull/1406))
+
 ## [0.108.1](https://github.com/DecapodLabs/decapod/compare/v0.108.0...v0.108.1) - 2026-10-12
 
 ### Other
