@@ -330,7 +330,15 @@ fn test_agent_session_requires_password() {
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
     let temp_path = temp_dir.path().to_path_buf();
 
-    let (success, _) = run_decapod(&temp_path, &["init", "--force"]);
+    let (success, _) = run_decapod(
+        &temp_path,
+        &[
+            "init",
+            "--force",
+            "--product-summary",
+            "Project Ledger coordinates local tasks, project context, and reviewable evidence.",
+        ],
+    );
     assert!(success, "decapod init should succeed");
 
     let (success, acquire_out) = run_decapod_with_env(

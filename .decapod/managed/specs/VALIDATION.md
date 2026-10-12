@@ -215,6 +215,12 @@ or ignore source/private-clone races.
 Required test selection comes from reviewed project policy. These proof areas
 must remain covered as implementations evolve:
 
+Public-provider timeout tests exercise the production retry decision with
+controlled process results and waits. They distinguish the three-attempt limit
+from exhaustion of the shared deadline, while real execution retains its bounded
+process capture, backoff, cancellation, and authorization checks. Scheduler load
+must not decide which independent bound a unit test expects to observe.
+
 - Interfaces: prompt evaluation, CLI/RPC envelopes, typed failures, bootstrap
   availability, schema compatibility, and accurate agent documentation
 - Intent and context: plan interlocks, task/scope binding, override precedence,
@@ -340,7 +346,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `001bdd307043cd58daad7ccee31fdab85596ba2273af45c69f2349deaa62ddfb`
+- Repository signal fingerprint: `0531ff30ad77e32e256de7e0db7ea313ff89b0c1981a700e06ec3107aff11076`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (186 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

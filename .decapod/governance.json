@@ -162,6 +162,15 @@
         "GitHub38313886520/job115025944153",
         "readme-product-fixture-source-ready-validate"
       ]
+    },
+    {
+      "id": "readme-product-coherent-final-1",
+      "summary": "Regenerate canonical entrypoint with exact validation-built binary and repair purpose/timeout regression fixtures without weakening policy",
+      "input_digest": "sha256:12594dd7a2156c96594addf2eaa8a679bf2bb78009a3b7146293a4278b81bd9a",
+      "proof_refs": [
+        "readme-product-repair-artifact/verification-report.json",
+        "timeout-retry-determinism-proposal/manifest.json"
+      ]
     }
   ],
   "intents": {
@@ -203,22 +212,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The configured project identity regression now serializes the real complete config schema; production behavior, project identity authority, unknown-purpose refusal and all proof boundaries remain unchanged",
-          "reviewed_code_fingerprint": "001bdd307043cd58daad7ccee31fdab85596ba2273af45c69f2349deaa62ddfb",
+          "reason": "Reviewed coherent validation-built template regeneration and deterministic retry-policy tests; existing retry/deadline/authentication limits and whole-product contracts preserved",
+          "reviewed_code_fingerprint": "0531ff30ad77e32e256de7e0db7ea313ff89b0c1981a700e06ec3107aff11076",
           "spec_material_hash": "c14319e9fc027b8dffd23bae88fd64b082e0794fb431f1de6f31dbab091f3db5"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The configured project identity regression now serializes the real complete config schema; production behavior, project identity authority, unknown-purpose refusal and all proof boundaries remain unchanged",
-          "reviewed_code_fingerprint": "001bdd307043cd58daad7ccee31fdab85596ba2273af45c69f2349deaa62ddfb",
+          "reason": "Reviewed coherent validation-built template regeneration and deterministic retry-policy tests; existing retry/deadline/authentication limits and whole-product contracts preserved",
+          "reviewed_code_fingerprint": "0531ff30ad77e32e256de7e0db7ea313ff89b0c1981a700e06ec3107aff11076",
           "spec_material_hash": "31c8a50dcf9a60ca3eb41fdd811eddae3dbaafb14d5fcec99f16f061d3940da6"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The configured project identity regression now serializes the real complete config schema; production behavior, project identity authority, unknown-purpose refusal and all proof boundaries remain unchanged",
-          "reviewed_code_fingerprint": "001bdd307043cd58daad7ccee31fdab85596ba2273af45c69f2349deaa62ddfb",
+          "reason": "Reviewed coherent validation-built template regeneration and deterministic retry-policy tests; existing retry/deadline/authentication limits and whole-product contracts preserved",
+          "reviewed_code_fingerprint": "0531ff30ad77e32e256de7e0db7ea313ff89b0c1981a700e06ec3107aff11076",
           "spec_material_hash": "59f2f1f8a48c50141aad995f25448873a3b13bbf6e7920af210c48c5c9480a8e"
         }
       ],
@@ -232,13 +241,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791842874Z"
+      "updated_at": "1791843734Z"
     },
     "trajectory": {
       "active_boundaries": [
         "No performance integration; no merge/release/deployment/security changes; plain exact-head configured validation gates publication."
       ],
-      "artifact_hash": "sha256:50f85d4b4a424cebcd9ac38bf631ba9d484ed4908867e9ffca5762e6a7bf037b",
+      "artifact_hash": "sha256:07e42d77251de65dd347327bfdb78d5cb36afd174915774914226f23f95830de",
       "checks": [
         {
           "name": "candidate_content_review",
@@ -259,9 +268,13 @@
         {
           "name": "standalone_validation",
           "status": "failed"
+        },
+        {
+          "name": "validation_artifact_custody",
+          "status": "passed"
         }
       ],
-      "current_phase": "config_fixture_repair",
+      "current_phase": "final_validation_repair",
       "custody": {
         "events": [
           {
@@ -331,10 +344,17 @@
             "intent_id": "intent:readme-human-setup",
             "kind": "trajectory_step_recorded",
             "sequence": 11
+          },
+          {
+            "detail": "trajectory:readme-human-setup",
+            "event_id": "event:12",
+            "intent_id": "intent:readme-human-setup",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 11,
+        "next_sequence": 12,
         "schema_version": "1.0.0",
         "trajectories": {
           "readme-human-setup": {
@@ -555,6 +575,38 @@
                 ],
                 "sequence": 11,
                 "validation_findings": []
+              },
+              {
+                "action": "final_validation_repair",
+                "custody_event_id": "event:12",
+                "observations": [
+                  "Buildkite1101 setup artifact exact760e1e98/tree3bb7fb6b verified through provider/archive/custody/log/artifact hash chain; SHA256e27c01544edc5c45ad3b21690162ac70bd1326ad3482ee7f5e8e649a64e322c6. That validation-built binary regenerated AGENTS through init --proof to120lines; prior canonical backup preserved outsideworkspace.",
+                  "Exact corrected CI exposed auth fixture lacking explicit purpose and timeout test racing10s shared deadline. Purpose fixture repaired without changing auth assertions; independently reviewed private retry executor seam makes policy tests deterministic while preserving production limits."
+                ],
+                "proof_refs": [
+                  "validation_artifact_custody"
+                ],
+                "scope": [
+                  ".config/build/decapod.BUILD.bzl",
+                  ".decapod/managed/specs",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "AGENTS.md",
+                  "CLAUDE.md",
+                  "CODEX.md",
+                  "GEMINI.md",
+                  "README.md",
+                  "assets",
+                  "docs/agent",
+                  "docs/agent/api-index.md",
+                  "docs/agent/contribution-conventions.md",
+                  "src",
+                  "src/decapod/core/init_reconciliation",
+                  "src/decapod/core/readiness_profile.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "tests"
+                ],
+                "sequence": 12,
+                "validation_findings": []
               }
             ]
           }
@@ -577,7 +629,9 @@
         "All existing success fixtures now seed explicit purpose; failure assertions and unknown-purpose guard retained. Independent fixture review passed.",
         "Branch create and local publication-alignment reset remain held after cancellation/denial; separate source work explicitly resumed.",
         "Buildkite1098 and GitHub standalone both report AGENTS.md 121 lines > 120; canonical source compacted without removing guidance, generated-budget regression added",
+        "Buildkite1101 setup artifact exact760e1e98/tree3bb7fb6b verified through provider/archive/custody/log/artifact hash chain; SHA256e27c01544edc5c45ad3b21690162ac70bd1326ad3482ee7f5e8e649a64e322c6. That validation-built binary regenerated AGENTS through init --proof to120lines; prior canonical backup preserved outsideworkspace.",
         "CLI bootstrap exit 0; initialization proof_pending and full provider validation not yet run. Canonical source inventory unchanged; no performance patches integrated.",
+        "Exact corrected CI exposed auth fixture lacking explicit purpose and timeout test racing10s shared deadline. Purpose fixture repaired without changing auth assertions; independently reviewed private retry executor seam makes policy tests deterministic while preserving production limits.",
         "Existing controller cannot render newly compiled templates. Source-only checkpoint leaves entrypoints untouched; full-history checker inspects changed entrypoint paths. Use exact validation-built artifact for supported regeneration, then checkpoint and rerun.",
         "Independent content and generator reviews passed; preserved source maps and patch hashes; all eight authored bodies retained through CLI refresh; existing fixture purpose seeding being reconciled.",
         "Independent semantic review of runtime steering and actual prerequisite/build/artifact-consumer regression fixtures; tests remain provider-owned",
@@ -593,6 +647,7 @@
       "modified_files": [],
       "next_transitions": [
         "Checkpoint exact source, publish same work branch, rerun plain validate and follow report",
+        "checkpoint coherent exact source; samebranch push; plain full validate and all-proof gate before PR",
         "exact_candidate_checkpoint",
         "full_buildkite_validation",
         "integrate_reviewed_specs_and_generator",
