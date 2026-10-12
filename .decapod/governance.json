@@ -351,6 +351,11 @@
       "id": "eighth-rpc-formatted-repair",
       "summary": "Retain strict Clippy pass and canonical formatting for the RPC borrow repair",
       "input_digest": "sha256:a9f3d1e571a9fe690e7d8937901b963a322b852bbeb0c292f9bc8779abfe13bc"
+    },
+    {
+      "id": "eighth-final-review-binding",
+      "summary": "Bind publication spec reviews to the final formatted RPC correction as instructed by validate",
+      "input_digest": "sha256:a65034a01b264c810321e3019ef733b995023a8fb7528cdd6293b95b277ef771"
     }
   ],
   "intents": {
@@ -440,22 +445,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed the two Clippy-reported redundant references around an existing borrowed RPC project path. This type-preserving cleanup changes no execution, interface or trust boundary; the current authored contract remains accurate.",
-          "reviewed_code_fingerprint": "c168978de2258d550c03392cd065fc558b77d0d6045c72452fd6f143eaeb65e8",
+          "reason": "Re-reviewed exact final formatted code after the transport report identified stale code-bound reviews. The two redundant borrowed-path references were removed and rustfmt condensed one expression; the authored execution, interface and security contracts remain unchanged and accurate.",
+          "reviewed_code_fingerprint": "a6bddd625dd325ceaf557fe528476e7f37ff2cb5ec5e3e1b9bdfc5994a632d41",
           "spec_material_hash": "1bb7f497285cdf6a2327d6976245bc317b6a17b9b19cc9c258a042580af97211"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed the two Clippy-reported redundant references around an existing borrowed RPC project path. This type-preserving cleanup changes no execution, interface or trust boundary; the current authored contract remains accurate.",
-          "reviewed_code_fingerprint": "c168978de2258d550c03392cd065fc558b77d0d6045c72452fd6f143eaeb65e8",
+          "reason": "Re-reviewed exact final formatted code after the transport report identified stale code-bound reviews. The two redundant borrowed-path references were removed and rustfmt condensed one expression; the authored execution, interface and security contracts remain unchanged and accurate.",
+          "reviewed_code_fingerprint": "a6bddd625dd325ceaf557fe528476e7f37ff2cb5ec5e3e1b9bdfc5994a632d41",
           "spec_material_hash": "2062f7fea9677924305e53834f5c45dde6a741bb6d5d46c972e4f26dc341d607"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed the two Clippy-reported redundant references around an existing borrowed RPC project path. This type-preserving cleanup changes no execution, interface or trust boundary; the current authored contract remains accurate.",
-          "reviewed_code_fingerprint": "c168978de2258d550c03392cd065fc558b77d0d6045c72452fd6f143eaeb65e8",
+          "reason": "Re-reviewed exact final formatted code after the transport report identified stale code-bound reviews. The two redundant borrowed-path references were removed and rustfmt condensed one expression; the authored execution, interface and security contracts remain unchanged and accurate.",
+          "reviewed_code_fingerprint": "a6bddd625dd325ceaf557fe528476e7f37ff2cb5ec5e3e1b9bdfc5994a632d41",
           "spec_material_hash": "b4ca46eb0671790376737241d86707730d7a8bf62be16d730a966bbfeab3a10c"
         }
       ],
@@ -467,14 +472,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791792289Z"
+      "updated_at": "1791792724Z"
     },
     "trajectory": {
       "active_boundaries": [
         "No PR before complete current-candidate Buildkite proof",
         "No local project prerequisite suite before Buildkite submission; no weakened checks or publication side effects"
       ],
-      "artifact_hash": "sha256:0b00135bb2d6258af18e79968cdb5ae742a06b2db86ff361f5623d709872b38d",
+      "artifact_hash": "sha256:44fd602c51d478a659bab8c35e6456256be003a37245a741c04de9c2460d7cc7",
       "checks": [
         {
           "name": "eighth_actual_buildkite_suite",
@@ -482,6 +487,10 @@
         },
         {
           "name": "eighth_fmt",
+          "status": "passed"
+        },
+        {
+          "name": "eighth_review_binding_repair",
           "status": "passed"
         },
         {
@@ -520,10 +529,17 @@
             "intent_id": "intent:eighth-buildkite-convergence-20261012",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:eighth-buildkite-convergence-20261012",
+            "event_id": "event:6",
+            "intent_id": "intent:eighth-buildkite-convergence-20261012",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "eighth-buildkite-convergence-20261012": {
@@ -569,6 +585,22 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Actual remote-first prepare refused STALE_SPEC_REVIEW after rustfmt changed the bound code. Followed its report by re-reviewing current final bytes through the supported CLI; no validation bypass or local project-check run."
+                ],
+                "proof_refs": [
+                  "eighth_review_binding_repair"
+                ],
+                "scope": [
+                  "Generated specs and governance",
+                  "src/decapod/lib.rs"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -577,6 +609,7 @@
       "declared_commands": [],
       "evidence": [
         "Actual Buildkite920 strict Clippy reported only two needless_borrow diagnostics in new RPC validation routing. Removed the redundant references; function signatures, provider selection and failure semantics are unchanged.",
+        "Actual remote-first prepare refused STALE_SPEC_REVIEW after rustfmt changed the bound code. Followed its report by re-reviewing current final bytes through the supported CLI; no validation bypass or local project-check run.",
         "Exact all-targets/all-features strict Clippy completed successfully after the two reference corrections. Rustfmt condensed the corrected expression; final formatting check passed. Actual fresh Buildkite execution remains required.",
         "No local project-check suite is required or executed before this configured Buildkite submission. The exact all-targets/all-features Clippy recipe is being checked independently; full current-candidate readiness remains pending.",
         "The prior frozen candidate passed990 local library tests and actual CLI/alias/RPC routing regression. These results are retained as prior-candidate evidence, not substituted for the new complete provider run."
