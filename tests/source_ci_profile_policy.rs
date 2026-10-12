@@ -415,8 +415,8 @@ fn any_new_workflow_requires_explicit_inventory_review() {
 #[test]
 fn finite_inventory_exactly_covers_pr_jobs_and_explicitly_excludes_other_jobs() {
     let full = inventory(&full_paths(), false);
-    assert_eq!(full.len(), 39);
-    assert_eq!(full.iter().filter(|j| j.workflow == "ci.yml").count(), 35);
+    assert_eq!(full.len(), 37);
+    assert_eq!(full.iter().filter(|j| j.workflow == "ci.yml").count(), 33);
     assert!(full.iter().all(|j| j.applicable));
     let excluded: BTreeMap<&str, &[&str]> = BTreeMap::from([
         (
@@ -560,6 +560,128 @@ fn every_shared_check_is_called_by_the_actual_workflow_job() {
     assert!(!SOURCE.contains("Command::new(\"sh\")"));
     assert!(!SOURCE.contains("Command::new(\"bash\")"));
     assert!(!SOURCE.contains("serde_yaml"));
+}
+
+#[test]
+fn grouped_runtime_checks_keep_each_recipe_receipt_and_applicability() {
+    let ids = ["rpc-suite", "chaos-replay", "daemonless-lifecycle"];
+    let full = inventory(&full_paths(), false);
+    let grouped: Vec<_> = full.iter().filter(|j| j.job == "test-rpc-suite").collect();
+    assert_eq!(grouped.len(), 1);
+    assert_eq!(grouped[0].checks, ids);
+    assert!(grouped[0].applicable);
+    assert!(
+        !inventory(&full_paths(), true)
+            .iter()
+            .find(|j| j.job == "test-rpc-suite")
+            .unwrap()
+            .applicable
+    );
+    let scheduled: BTreeSet<_> = full.iter().flat_map(|j| j.checks.iter().copied()).collect();
+    assert_eq!(scheduled, CHECKS.iter().map(|c| c.id).collect());
+    for (id, target) in ids.into_iter().zip([
+        "//:agent_rpc_suite",
+        "//:chaos_replay",
+        "//:daemonless_lifecycle",
+    ]) {
+        let check = find_check(id).unwrap();
+        assert_eq!(check.job, "test-rpc-suite");
+        assert_eq!(check.platform, Platform::LinuxX86_64);
+        assert_eq!(check.selection, profile::Selection::Always);
+        assert!(check.matrix.is_none());
+        assert_eq!(check.capabilities, ["bazelisk"]);
+        assert!(selected(check, &[], false));
+        assert!(!selected(check, &full_paths(), true));
+        let recipe = commands(check, &[]).unwrap();
+        assert_eq!(recipe.len(), 1);
+        assert_eq!(recipe[0].program, "bazelisk");
+        assert_eq!(
+            recipe[0].args,
+            ["test", target, "--test_arg=--test-threads=1"]
+        );
+    }
+    let body = job(CI, "test-rpc-suite");
+    assert!(body.contains("needs: release-metadata"));
+    assert!(body.contains("needs.release-metadata.outputs.release_only != 'true'"));
+    assert_eq!(body.matches("uses: actions/checkout@v4").count(), 1);
+    assert_eq!(
+        body.matches("uses: ./.github/actions/source-ci-profile")
+            .count(),
+        1
+    );
+    assert_eq!(body.matches(profile::custody::UPLOAD_STEP_NAME).count(), 1);
+    assert!(body.contains("if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''"));
+    assert!(!body.contains("continue-on-error"));
+    assert!(!body.contains("actions/cache"));
+    assert!(!body.contains("download-artifact"));
+    assert!(!CI.contains("\n  chaos-replay:\n"));
+    assert!(!CI.contains("\n  daemonless-lifecycle:\n"));
+    assert!(job(CI, "release-build").contains("test-rpc-suite"));
+}
+
+#[cfg(unix)]
+#[test]
+fn grouped_runtime_failure_never_skips_a_check_or_becomes_success() {
+    use std::os::unix::fs::PermissionsExt;
+    let body = job(CI, "test-rpc-suite");
+    let script = body
+        .split_once(
+            "      - name: Run independent RPC, chaos and daemonless checks\n        run: |\n",
+        )
+        .unwrap()
+        .1
+        .split_once("      - name: Upload measured source-CI custody")
+        .unwrap()
+        .0
+        .lines()
+        .map(|line| line.strip_prefix("          ").unwrap())
+        .collect::<Vec<_>>()
+        .join("\n");
+    for failures in 0..8 {
+        let root = tempfile::tempdir().unwrap();
+        let executor = root.path().join("source-ci-profile");
+        fs::write(
+            &executor,
+            r#"#!/usr/bin/env bash
+set -euo pipefail
+[[ $# == 3 && "$1" == run-ci && "$2" == --check ]]
+printf '%s\n' "$3" >> "$RUNNER_TEMP/calls"
+case "$3" in
+  rpc-suite) bit=1; code=23;;
+  chaos-replay) bit=2; code=37;;
+  daemonless-lifecycle) bit=4; code=43;;
+  *) exit 99;;
+esac
+if (( FAILURES & bit )); then exit "$code"; fi
+"#,
+        )
+        .unwrap();
+        fs::set_permissions(&executor, fs::Permissions::from_mode(0o755)).unwrap();
+        let output = Command::new("bash")
+            .args(["-e", "-c", &script])
+            .env("RUNNER_TEMP", root.path())
+            .env("FAILURES", failures.to_string())
+            .output()
+            .unwrap();
+        let expected = if failures & 4 != 0 {
+            43
+        } else if failures & 2 != 0 {
+            37
+        } else if failures & 1 != 0 {
+            23
+        } else {
+            0
+        };
+        assert_eq!(
+            output.status.code(),
+            Some(expected),
+            "failure mask {failures}: {output:?}"
+        );
+        assert_eq!(
+            fs::read_to_string(root.path().join("calls")).unwrap(),
+            "rpc-suite\nchaos-replay\ndaemonless-lifecycle\n"
+        );
+    }
 }
 
 #[test]

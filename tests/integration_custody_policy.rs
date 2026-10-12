@@ -488,8 +488,6 @@ fn source_workflow_gates_use_verified_context_and_keep_non_readiness_paths_expli
         "integration-prepare",
         "test-master",
         "test-rpc-suite",
-        "chaos-replay",
-        "daemonless-lifecycle",
         "contracts",
         "migration-script-tests",
         "release-build",

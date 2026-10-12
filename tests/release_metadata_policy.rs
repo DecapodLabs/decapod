@@ -330,8 +330,6 @@ fn workflow_keeps_validation_and_release_build_on_the_slim_path() {
         "integration-status",
         "test-master",
         "test-rpc-suite",
-        "chaos-replay",
-        "daemonless-lifecycle",
         "contracts",
         "supabase-consumer",
         "workspace-lifecycle-docker",

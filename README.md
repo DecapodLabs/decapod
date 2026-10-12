@@ -12,6 +12,7 @@
 <p align="center">
   Work in Cursor, Claude Code, Codex, Antigravity, Grok, or any harness you prefer.
   Decapod governs the work without replacing the agent or its harness.
+  Decapod can use <a href="https://docs.typesafe.ai/introduction">Jev</a> for System 1 decisions.
 </p>
 
 <p align="center">
@@ -161,66 +162,6 @@ again. Not every failure is recoverable; unresolved decision gates and
 contradictions remain visible for human judgment. Publication is a governed
 state transition, and agent-reported completion is not proof that it occurred.
 
-### Optional Jev decision observations
-
-Decapod can optionally use [Jev](https://docs.typesafe.ai/introduction) as a
-structured decision provider during `assurance.evaluate`. Jev answers one
-bounded question: how likely the current proposed trajectory is to satisfy the
-declared intent given the reconstructed governance and repository context. The
-result is a typed probability, not prose and not an approval.
-
-The provider is disabled by default and normal local Decapod operation does not
-need Jev, a network connection, or an API key. To opt in:
-
-```toml
-[decision]
-provider = "jev"
-```
-
-Set `TYPESAFE_API_KEY` in the machine environment; do not commit credentials to
-`.decapod/config.toml`. When initializing with
-`decapod init --decision-provider jev`, an explicitly supplied environment key
-is copied into the machine-local `~/.local/share/decapod/secrets.json` file
-(or the `XDG_DATA_HOME` equivalent) with restrictive permissions. The file is
-separate from the Propodus `session_token.json` and is never committed. Jev uses TypeSafe's documented
-[System One endpoint](https://docs.typesafe.ai/api). If Jev is unavailable,
-unconfigured, times out, or returns an invalid response, Decapod records
-`no_observation` and keeps its existing governance and proof rules unchanged.
-Decapod remains the authority for boundaries, interlocks, policy, and
-completion.
-
-To revisit an initialized setup without replacing it, run `decapod init
---refresh` from a terminal. Decapod reopens the initialization questionnaire
-with the current configuration as the defaults; press Enter to keep a value,
-or choose a different option to enable/disable it. This includes the optional
-decision provider. The refresh path preserves repository state and does not
-require `--force`; it requires an existing `.decapod` setup. In a non-terminal
-environment, `--refresh` keeps the current configuration without prompting.
-
-Initialization also preserves an existing decision-provider selection during
-non-interactive refreshes; use `--decision-provider none` to explicitly disable
-it. A missing machine key does not make initialization fail because Jev remains
-optional.
-
-When Jev is enabled and a trajectory run is active, each assurance call also
-appends its typed Jev result (including explicit `no_observation` failures) to
-the `jev` section of `.decapod/governance.json`. The ledger is keyed by the active trajectory
-run, validated before publication, and committed with the PR so the complete
-observation history is recoverable through Git. Starting a new trajectory run
-removes the prior working-tree ledger; its committed history remains in Git.
-
-For developer-only semantic evaluation, the ignored corpus can be run with an
-explicit opt-in and credential:
-
-```bash
-DECAPOD_RUN_JEV_EVAL=1 TYPESAFE_API_KEY=... \
-  cargo test --test decision_provider_live -- --ignored --nocapture
-```
-
-It emits one machine-readable JSON record per case with the human expectation,
-observation status, probability, latency, and TypeSafe token usage when
-available. It does not assert a threshold or affect ordinary tests or CI.
-
 ---
 
 ## Capabilities
@@ -231,7 +172,7 @@ available. It does not assert a threshold or affect ordinary tests or CI.
 4. **Trajectory** — Durable events for handoff across sessions and harnesses.
 5. **Boundaries** — Protected branches and sensitive modules stay protected.
 6. **Adaptation** — Instruction changes go through explicit review.
-7. **Proof** — Completion requires deterministic verification.
+7. **Proof** — Decapod requires deterministic verification for completion; Jev can add advisory input.
 
 ---
 

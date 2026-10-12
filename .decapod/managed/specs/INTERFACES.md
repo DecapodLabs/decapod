@@ -2,20 +2,32 @@
 
 ## Validation latency diagnostics and regular release artifacts
 
-Full configured validation still owns exact workspace-branch push/reuse,
-provider completion and all publication proof. Its stderr now reports bounded
-provider-wait, recipe-discovery and custody progress. Evidence-local
-buildkite-stage-timing.json and buildkite-collection-timing.json contain
-measurement-only durations, source/workflow identities, request counts and cache
-bounds. Counts describe sealed GET submissions, excluding redirect hops and
-timeout retries; parallel durations are wall time, never summed work.
+Full configured validation owns exact workspace-branch push/reuse, provider
+completion and publication proof. Its stderr reports provider wait, recipe
+discovery and custody progress. Evidence-local buildkite-stage-timing.json and
+buildkite-collection-timing.json are measurement-only and bind source/workflow
+identities, counts and bounds. Counts describe sealed GET submissions, excluding
+redirect hops and timeout retries.
 
-The Buildkite public-reader batch interface accepts at most four already typed
-requests and preserves result ordering. The serial default supports existing
-adapters; the curl implementation authorizes the whole batch on the caller
-thread before spawning joined workers. Error, cancellation, deadline and malformed
-input behavior remains fail closed. The release-build upload interface consumes
-RELEASE_BINARY only after regular-file and exact-byte staging succeeds.
+Collection timing schema v2 distinguishes batch transfer wall time from sums of
+individual archive/log durations, which can overlap and must not be added to
+infer wall time. Deferred archive decoding and serial oversized groups have
+explicit counters. Timing values never replace execution or custody evidence.
+
+The public-reader metadata batch interface accepts at most eight typed requests
+with at most 16 MiB per response. The separate custody interface accepts at most
+four individually bounded archive/log reads and at most two logical groups,
+under a 128 MiB sum of per-request/per-stream capture allowances. Serial defaults
+preserve adapter compatibility; production wrappers forward both batch methods.
+The curl reader authorizes the complete batch before spawning joined workers.
+Failed transfers abort collection without retry/fallback or partial-batch proof;
+ordered source-proof failures retain their existing obligation-level blockers.
+
+The grouped runtime job preserves the RPC display name and three unchanged
+source check IDs with distinct preparation/execution artifacts. Its final status
+is nonzero if any command failed, even though later commands still execute.
+The release-build upload interface consumes RELEASE_BINARY only after regular
+file and exact-byte staging succeeds.
 
 ## Bazel dependency projection boundary
 
@@ -77,8 +89,8 @@ it independently reconstructs current source identity and re-reads provider
 run/attempt/artifact bindings. RPC and workspace publication use the same
 boundary. Publication may reuse a locator but must verify it again immediately
 before its combined push-and-PR operation. Standalone branch pushes remain
-available before preflight. Verified publication then attempts compare-and-swap cleanup of
-only its owned temporary ref; uncertain cleanup preserves actionable recovery.
+available before preflight. Validation and the eventual PR retain the same owned
+workspace branch; neither a temporary transport ref nor ref cleanup is used.
 
 Immutable CI context carries the actual provider event, original candidate,
 accepted base, comparison merge base and optional transport identity. A complete
@@ -481,8 +493,8 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e6eccf8c2194508b374467ae6ea4f9afcd5f5f85b2c6afcab3be343ebcc948b3`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (178 files), `tests/` (185 files)
+- Repository signal fingerprint: `fcee2f5c4479d35338874a0fb52a9c56f3b2a3941173c5c5b2803fe5555b034c`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

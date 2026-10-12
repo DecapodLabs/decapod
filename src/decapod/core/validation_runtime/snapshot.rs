@@ -86,6 +86,13 @@ impl provider::public_buildkite::PublicReader for PublicBuildkiteReader<'_> {
     ) -> io::Result<Vec<Vec<u8>>> {
         self.0.get_many(requests, budget)
     }
+    fn get_custody_many(
+        &mut self,
+        requests: &[provider::public_buildkite::CustodyRead],
+        budget: &provider::Budget<'_>,
+    ) -> io::Result<Vec<provider::public_buildkite::CustodyResponse>> {
+        self.0.get_custody_many(requests, budget)
+    }
 }
 
 /// Real transport host. The complete source catalog selects the provider runs;

@@ -33,23 +33,29 @@ fn log(path: &str, data: &[u8]) -> Value {
     json!({"path":path,"bytes":data.len(),"stored_bytes":data.len(),"truncated":false,"sha256":hash(data),"stored_sha256":hash(data)})
 }
 fn fixture() -> BTreeMap<String, Vec<u8>> {
-    let e = expected();
+    fixture_for(expected())
+}
+fn fixture_for(e: SourceExpectation) -> BTreeMap<String, Vec<u8>> {
+    let invocations = value(&e.invocations).unwrap();
+    let program = invocations[0]["program"].as_str().unwrap();
+    let executable = format!("/tools/{program}");
+    let version = format!("{program} fixture-version\n");
     let mut files = BTreeMap::new();
     let context = bytes(&json!({"RUST_BACKTRACE":"1"}));
-    let exe = hash(b"actual cargo file");
+    let exe = hash(format!("actual {program} file").as_bytes());
     let toolchain = bytes(
-        &json!([{"program":"cargo","executable_sha256":exe,"version_args":["--version"],"exit_code":0,"signal":null,"success":true,"stdout_sha256":hash(b"cargo fixture-version\n"),"stdout_bytes":22,"stderr_sha256":hash(b""),"stderr_bytes":0}]),
+        &json!([{"program":program,"executable_sha256":exe,"version_args":["--version"],"exit_code":0,"signal":null,"success":true,"stdout_sha256":hash(version.as_bytes()),"stdout_bytes":22,"stderr_sha256":hash(b""),"stderr_bytes":0}]),
     );
     let mut prep = json!({"schema":"decapod.source-ci.preparation.v1","authenticated":false,"complete_pr_profile":false,"preparation_complete":true,"workflow":e.workflow,"job":e.job,"check":e.check,"matrix":null,"platform":e.platform,"base":e.base,"head":e.head,"snapshot":e.snapshot,"execution_revision":e.execution_revision,"tree":e.tree,"provider":e.provider,"run_id":e.run_id,"run_attempt":e.run_attempt,"job_id":e.job_id,"step_key":e.step_key,"profile_digest":e.profile_digest,"invocation_digest":hash(&e.invocations),"toolchain_digest":hash(&toolchain),"context_digest":hash(&context),"executor_digest":hash(b"executor")});
     // Count from the actual fixture stream, never a duplicated invented length.
     let mut tc = value(&toolchain).unwrap();
-    tc[0]["stdout_bytes"] = (b"cargo fixture-version\n".len() as u64).into();
+    tc[0]["stdout_bytes"] = (version.len() as u64).into();
     let toolchain = bytes(&tc);
     prep["toolchain_digest"] = hash(&toolchain).into();
     let mut prepbytes = bytes(&prep);
     prepbytes.push(b'\n');
     for phase in ["preparation", "execution"] {
-        let root = format!("fmt/{phase}/");
+        let root = format!("{}/{phase}/", e.check);
         for (name, data) in [
             ("preparation.json", prepbytes.clone()),
             ("context.json", context.clone()),
@@ -66,22 +72,22 @@ fn fixture() -> BTreeMap<String, Vec<u8>> {
             let stdout = format!("{stem}tool-0.stdout.log");
             let stderr = format!("{stem}tool-0.stderr.log");
             let logs = bytes(
-                &json!([{"program":"cargo","executable":"/tools/cargo","stdout":log(&stdout,b"cargo fixture-version\n"),"stderr":log(&stderr,b"")}]),
+                &json!([{"program":program,"executable":executable,"stdout":log(&stdout,version.as_bytes()),"stderr":log(&stderr,b"")}]),
             );
             files.insert(format!("{root}{stem}tool-logs.json"), logs);
-            files.insert(
-                format!("{root}{stdout}"),
-                b"cargo fixture-version\n".to_vec(),
-            );
+            files.insert(format!("{root}{stdout}"), version.as_bytes().to_vec());
             files.insert(format!("{root}{stderr}"), vec![]);
         }
     }
     files.insert(
-        "fmt/execution/frozen-preparation.json".into(),
+        format!("{}/execution/frozen-preparation.json", e.check),
         prepbytes.clone(),
     );
-    files.insert("fmt/execution/after-toolchain.json".into(), toolchain);
-    let record = json!({"previous_record_sha256":hash(&prepbytes),"invocation":value(&e.invocations).unwrap()[0],"executable":"/tools/cargo","executable_sha256":exe,"exit_code":0,"signal":null,"success":true,"elapsed_ms":1,"stdout":log("command-0.stdout.log",b""),"stderr":log("command-0.stderr.log",b"")});
+    files.insert(
+        format!("{}/execution/after-toolchain.json", e.check),
+        toolchain,
+    );
+    let record = json!({"previous_record_sha256":hash(&prepbytes),"invocation":value(&e.invocations).unwrap()[0],"executable":executable,"executable_sha256":exe,"exit_code":0,"signal":null,"success":true,"elapsed_ms":1,"stdout":log("command-0.stdout.log",b""),"stderr":log("command-0.stderr.log",b"")});
     let mut execution = prep;
     let obj = execution.as_object_mut().unwrap();
     for key in ["preparation_complete", "tree", "executor_digest"] {
@@ -108,9 +114,18 @@ fn fixture() -> BTreeMap<String, Vec<u8>> {
     ] {
         obj.insert(k.into(), v);
     }
-    files.insert("fmt/execution/execution.json".into(), bytes(&execution));
-    files.insert("fmt/execution/command-0.stdout.log".into(), vec![]);
-    files.insert("fmt/execution/command-0.stderr.log".into(), vec![]);
+    files.insert(
+        format!("{}/execution/execution.json", e.check),
+        bytes(&execution),
+    );
+    files.insert(
+        format!("{}/execution/command-0.stdout.log", e.check),
+        vec![],
+    );
+    files.insert(
+        format!("{}/execution/command-0.stderr.log", e.check),
+        vec![],
+    );
     files
 }
 fn policy(p: MeasuredPreparation<'_>) -> Result<()> {
@@ -367,8 +382,12 @@ fn imported_fixture() -> (BTreeMap<String, Vec<u8>>, SourceExpectation) {
     e.job_id = "44444444-4444-4444-4444-444444444444".into();
     e.step_key = "gha-test".into();
     e.snapshot = "a".repeat(40);
-    let mut files = fixture();
-    let mut preparation = value(&files["fmt/preparation/preparation.json"]).unwrap();
+    imported_fixture_for(e)
+}
+fn imported_fixture_for(e: SourceExpectation) -> (BTreeMap<String, Vec<u8>>, SourceExpectation) {
+    let mut files = fixture_for(e.clone());
+    let mut preparation =
+        value(&files[&format!("{}/preparation/preparation.json", e.check)]).unwrap();
     for (k, v) in [
         ("provider", e.provider.as_str()),
         ("workflow", e.workflow.as_str()),
@@ -381,13 +400,13 @@ fn imported_fixture() -> (BTreeMap<String, Vec<u8>>, SourceExpectation) {
     }
     let prep = bytes(&preparation);
     for path in [
-        "fmt/preparation/preparation.json",
-        "fmt/execution/preparation.json",
-        "fmt/execution/frozen-preparation.json",
+        format!("{}/preparation/preparation.json", e.check),
+        format!("{}/execution/preparation.json", e.check),
+        format!("{}/execution/frozen-preparation.json", e.check),
     ] {
-        files.insert(path.into(), prep.clone());
+        files.insert(path, prep.clone());
     }
-    let mut execution = value(&files["fmt/execution/execution.json"]).unwrap();
+    let mut execution = value(&files[&format!("{}/execution/execution.json", e.check)]).unwrap();
     for k in [
         "provider", "workflow", "job", "job_id", "step_key", "snapshot",
     ] {
@@ -396,12 +415,147 @@ fn imported_fixture() -> (BTreeMap<String, Vec<u8>>, SourceExpectation) {
     execution["preparation_digest"] = hash(&prep).into();
     execution["results"][0]["previous_record_sha256"] = hash(&prep).into();
     execution["terminal_record_sha256"] = hash(&bytes(&execution["results"][0])).into();
-    files.insert("fmt/execution/execution.json".into(), bytes(&execution));
+    files.insert(
+        format!("{}/execution/execution.json", e.check),
+        bytes(&execution),
+    );
     (files, e)
 }
 fn imported_origin(e: &SourceExpectation) -> String {
     format!("buildkite:{}/jobs/{}/source-proof", e.run_id, e.job_id)
 }
+
+// Synthetic source-custody parser vectors only. The provider recipe is sealed
+// through the existing Mock reader; none of these bytes claim remote readiness.
+fn grouped_imported_fixture() -> (BTreeMap<String, Vec<u8>>, Vec<SourceExpectation>) {
+    let mut files = BTreeMap::new();
+    let mut expectations = Vec::new();
+    for (check, target) in [
+        ("rpc-suite", "//:agent_rpc_suite"),
+        ("chaos-replay", "//:chaos_replay"),
+        ("daemonless-lifecycle", "//:daemonless_lifecycle"),
+    ] {
+        let mut e = expected();
+        e.provider = "buildkite_gha".into();
+        e.job = "test-rpc-suite".into();
+        e.check = check.into();
+        e.job_id = "44444444-4444-4444-4444-444444444444".into();
+        e.step_key = "gha-test".into();
+        e.snapshot = "a".repeat(40);
+        e.profile_digest = hash(b"independent grouped source profile");
+        e.invocations = bytes(&json!([{
+            "program":"bazelisk", "args":["test", target, "--test_arg=--test-threads=1"],
+            "cwd":".", "env":{"RUST_BACKTRACE":"1"}
+        }]));
+        let (content, e) = imported_fixture_for(e);
+        for (path, data) in content {
+            assert!(files.insert(path, data).is_none());
+        }
+        expectations.push(e);
+    }
+    (files, expectations)
+}
+
+fn grouped_policy(p: MeasuredPreparation<'_>) -> Result<()> {
+    ensure(
+        p.toolchain.as_array().is_some_and(|r| r.len() == 1)
+            && p.toolchain[0]["program"] == "bazelisk"
+            && p.context == &json!({"RUST_BACKTRACE":"1"}),
+        "grouped fixture policy mismatch",
+    )
+}
+
+#[test]
+fn imported_runtime_group_authenticates_three_distinct_receipts_in_one_archive() {
+    let recipe =
+        super::super::public_buildkite::tests::synthetic_source_recipe_for_job("test-rpc-suite");
+    let (content, expectations) = grouped_imported_fixture();
+    let artifact = ArtifactFiles::fixture(&imported_origin(&expectations[0]), content);
+    let mut preparations = BTreeSet::new();
+    let mut executions = BTreeSet::new();
+    for e in &expectations {
+        assert!(verify_preparation(&artifact, e, grouped_policy).is_err());
+        let prepared = verify_imported_preparation(&artifact, e, &recipe, grouped_policy).unwrap();
+        let executed = verify_execution(&artifact, &prepared).unwrap();
+        assert!(preparations.insert(prepared.preparation_digest().to_string()));
+        assert!(executions.insert(executed.execution_digest().to_string()));
+        assert_eq!(executed.invocation_digest(), hash(&e.invocations));
+        assert!(matches!(
+            executed.observation(),
+            readiness_evidence::Observation::Executed {
+                exit_code: Some(0),
+                ..
+            }
+        ));
+    }
+    assert_eq!(preparations.len(), 3);
+    assert_eq!(executions.len(), 3);
+}
+
+#[test]
+fn grouped_sibling_receipts_never_fill_a_missing_swapped_changed_or_failed_check() {
+    let recipe =
+        super::super::public_buildkite::tests::synthetic_source_recipe_for_job("test-rpc-suite");
+    for target in 0..3 {
+        for mode in 0..5 {
+            let (mut content, expectations) = grouped_imported_fixture();
+            let prefix = format!("{}/", expectations[target].check);
+            match mode {
+                0 => content.retain(|path, _| !path.starts_with(&prefix)),
+                1 => {
+                    content = content
+                        .into_iter()
+                        .map(|(path, data)| {
+                            let path = path
+                                .strip_prefix(&prefix)
+                                .map_or_else(|| path.clone(), |tail| format!("wrong-check/{tail}"));
+                            (path, data)
+                        })
+                        .collect();
+                }
+                2 => {
+                    let sibling = format!("{}/", expectations[(target + 1) % 3].check);
+                    let replacements: Vec<_> = content
+                        .iter()
+                        .filter_map(|(path, data)| {
+                            path.strip_prefix(&sibling)
+                                .map(|tail| (format!("{prefix}{tail}"), data.clone()))
+                        })
+                        .collect();
+                    content.extend(replacements);
+                }
+                _ => mutate(
+                    &mut content,
+                    &format!("{prefix}execution/execution.json"),
+                    |v| {
+                        if mode == 3 {
+                            v["results"][0]["invocation"]["args"][1] = "//:other_test".into();
+                        } else {
+                            v["results"][0]["exit_code"] = 23.into();
+                            v["results"][0]["success"] = false.into();
+                        }
+                        // Even a self-consistent record hash cannot replace the
+                        // independent invocation or turn a real nonzero exit green.
+                        v["terminal_record_sha256"] = hash(&bytes(&v["results"][0])).into();
+                    },
+                ),
+            }
+            let artifact = ArtifactFiles::fixture(&imported_origin(&expectations[0]), content);
+            let results: Vec<_> = expectations
+                .iter()
+                .map(|e| {
+                    verify_imported_preparation(&artifact, e, &recipe, grouped_policy)
+                        .and_then(|prepared| verify_execution(&artifact, &prepared))
+                        .is_ok()
+                })
+                .collect();
+            assert!(!results[target], "target={target} mode={mode}");
+            assert_eq!(results.iter().filter(|passed| **passed).count(), 2);
+            assert!(!results.iter().all(|passed| *passed));
+        }
+    }
+}
+
 #[test]
 fn imported_shell_claim_requires_verified_recipe_and_exact_native_artifact() {
     let recipe = super::super::public_buildkite::tests::synthetic_source_recipe();
