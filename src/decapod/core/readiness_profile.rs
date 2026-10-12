@@ -55,7 +55,7 @@ pub fn reviewed_workflow_digests() -> &'static [(&'static str, &'static str)] {
     &[
         (
             ".github/workflows/ci.yml",
-            "sha256:25ae1d91dacc5716c7a2bfe5fae03175e9b22d316edddd7aaefaa21a05810228",
+            "sha256:334ccbdc873a33f2ddb77947d4545209dab281ddf5ee215f1517bcbda16388e2",
         ),
         (
             ".github/workflows/constitution-sync.yml",

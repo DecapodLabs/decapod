@@ -72,7 +72,7 @@ mod dependency_tool_installation {
         fs::set_permissions(path, fs::Permissions::from_mode(0o755)).unwrap();
     }
 
-    fn fixture(wrong_version: bool) -> (tempfile::TempDir, String) {
+    fn fixture(version_override: Option<&str>) -> (tempfile::TempDir, String) {
         let root = tempfile::tempdir().unwrap();
         let mock = root.path().join("mock-bin");
         fs::create_dir(&mock).unwrap();
@@ -95,15 +95,17 @@ mod dependency_tool_installation {
         let mut script = installer();
         for (tool, tag, version, pin) in [
             ("cargo-machete", "v0.9.2", "0.9.2", MACHETE_SHA),
-            ("cargo-deny", "0.20.2", "0.20.2", DENY_SHA),
+            ("cargo-deny", "0.20.2", "cargo-deny 0.20.2", DENY_SHA),
         ] {
             let package = format!("{tool}-{tag}-x86_64-unknown-linux-musl");
             fs::create_dir(root.path().join(&package)).unwrap();
-            let reported = if wrong_version { "wrong" } else { version };
+            // Match the actual tagged upstream CLIs: machete prints the bare
+            // version, while deny's clap command prints its name and version.
+            let reported = version_override.unwrap_or(version);
             executable(
                 &root.path().join(&package).join(tool),
                 &format!(
-                    "#!/bin/sh\necho {tool} >> \"$TOOL_FIXTURES/executed\"\nprintf '%s\\n' '{tool} {reported}'\n"
+                    "#!/bin/sh\necho {tool} >> \"$TOOL_FIXTURES/executed\"\nprintf '%s\\n' '{reported}'\n"
                 ),
             );
             let archive = root.path().join(format!("{tool}.tar.gz"));
@@ -155,11 +157,12 @@ mod dependency_tool_installation {
         assert_eq!(script.matches(DENY_SHA).count(), 1);
         assert!(script.contains("--proto '=https' --proto-redir '=https'"));
         assert!(script.contains("--max-time 90 --retry 2 --retry-max-time 180"));
-        assert!(
-            script.find("sha256sum --check --status").unwrap() < script.find("tar -xzOf").unwrap()
-        );
+        assert!(script.find("sha256sum --check").unwrap() < script.find("tar -xzOf").unwrap());
+        assert!(!script.contains("sha256sum --check --status"));
+        assert!(script.contains("cargo-machete '0.9.2'"));
+        assert!(script.contains("cargo-deny 'cargo-deny 0.20.2'"));
         assert!(script.find("tar -xzOf").unwrap() < script.find("--version").unwrap());
-        let (root, script) = fixture(false);
+        let (root, script) = fixture(None);
         let result = run(root.path(), &script, false);
         assert!(result.status.success(), "{result:?}");
         for tool in ["cargo-machete", "cargo-deny"] {
@@ -197,8 +200,12 @@ mod dependency_tool_installation {
 
     #[test]
     fn wrong_digest_wrong_version_and_failed_download_publish_no_tools_or_path() {
-        for failure in ["digest", "version", "download"] {
-            let (root, script) = fixture(failure == "version");
+        for failure in ["digest", "version", "wrong-format", "download"] {
+            let (root, script) = fixture(match failure {
+                "version" => Some("0.9.1"),
+                "wrong-format" => Some("cargo-machete 0.9.2"),
+                _ => None,
+            });
             let script = if failure == "digest" {
                 installer()
             } else {
@@ -218,7 +225,13 @@ mod dependency_tool_installation {
                     .unwrap()
                     .is_empty()
             );
-            if failure != "version" {
+            let diagnostic = String::from_utf8_lossy(&result.stderr);
+            if failure == "digest" {
+                assert!(diagnostic.contains("cargo-machete archive SHA256 verification failed"));
+            }
+            if matches!(failure, "version" | "wrong-format") {
+                assert!(diagnostic.contains("cargo-machete version mismatch: expected 0.9.2, got"));
+            } else {
                 assert!(!root.path().join("executed").exists());
             }
         }

@@ -104,6 +104,11 @@
       "id": "bounded-preflight-and-release-staging",
       "summary": "Add bounded same-collection request reuse and four-way metadata reads with independent custody/freshness verification, pinned authenticated dependency tooling, regular workspace-relative release staging, and explicit regressions. Bootstrap compiled; full exact-head Buildkite validate remains required.",
       "input_digest": "sha256:a3164f4956a453f2faacff9860d70aaa5a766b4d607a496e64d8c58a86fe5c94"
+    },
+    {
+      "id": "upstream-tool-version-output",
+      "summary": "Correct exact cargo-machete upstream version output, preserve strict digest and version checks, add actionable diagnostics and realistic wrong-prefix regressions. Required remote CI caught the defect; final full validation still pending.",
+      "input_digest": "sha256:98fc121b46e213af546058f19ba0aab27a5a242e1491c997eb245ce925bbd96e"
     }
   ],
   "intents": {
@@ -142,24 +147,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed bounded collection transport/cache authority, exact pinned dependency tooling, relative regular release staging, measured-only timing diagnostics and unchanged proof/freshness requirements",
-          "reviewed_code_fingerprint": "2fd819d335775731c17c8728cb09c6d557eb7821f6011c9da73acc973065119a",
+          "reason": "Reviewed exact upstream version-output correction and diagnostics; existing semantic contract already requires strict authenticated exact-version tooling, with no trust, transport or interface change",
+          "reviewed_code_fingerprint": "e6eccf8c2194508b374467ae6ea4f9afcd5f5f85b2c6afcab3be343ebcc948b3",
           "spec_material_hash": "e68a8473765852cece61ad47178b4b328445400975c515a4b24591b4e44c8e39"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed bounded collection transport/cache authority, exact pinned dependency tooling, relative regular release staging, measured-only timing diagnostics and unchanged proof/freshness requirements",
-          "reviewed_code_fingerprint": "2fd819d335775731c17c8728cb09c6d557eb7821f6011c9da73acc973065119a",
+          "reason": "Reviewed exact upstream version-output correction and diagnostics; existing semantic contract already requires strict authenticated exact-version tooling, with no trust, transport or interface change",
+          "reviewed_code_fingerprint": "e6eccf8c2194508b374467ae6ea4f9afcd5f5f85b2c6afcab3be343ebcc948b3",
           "spec_material_hash": "96f0204d8710aebf8516f9be09a2bc1791b2da78bf9fce2f39c6f4b2252f2556"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed bounded collection transport/cache authority, exact pinned dependency tooling, relative regular release staging, measured-only timing diagnostics and unchanged proof/freshness requirements",
-          "reviewed_code_fingerprint": "2fd819d335775731c17c8728cb09c6d557eb7821f6011c9da73acc973065119a",
+          "reason": "Reviewed exact upstream version-output correction and diagnostics; existing semantic contract already requires strict authenticated exact-version tooling, with no trust, transport or interface change",
+          "reviewed_code_fingerprint": "e6eccf8c2194508b374467ae6ea4f9afcd5f5f85b2c6afcab3be343ebcc948b3",
           "spec_material_hash": "6efdf46597e8211561afcb4171a6d74af308e8fcd51c75d0458c5ccfc8bf680f"
         }
       ],
@@ -173,15 +178,19 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791827623Z"
+      "updated_at": "1791828416Z"
     },
     "trajectory": {
       "active_boundaries": [
         "No merges, releases, tags, deployments, credentials, force pushes, or temporary transport refs",
         "No paid runner capacity, account, credential, security, merge, release or deployment mutations"
       ],
-      "artifact_hash": "sha256:397419885547654eb3df6353b0b015efc37902353b6a158be1a746d5d3b0e2f0",
+      "artifact_hash": "sha256:bc9a32f25f7193744da47e9a40c455844d7e9ead065a65ab3c1980d4f1705029",
       "checks": [
+        {
+          "name": "authenticated_upstream_version_probe",
+          "status": "passed"
+        },
         {
           "name": "baseline_full_validate",
           "status": "failed"
@@ -189,6 +198,10 @@
         {
           "name": "collector_cli_bootstrap",
           "status": "passed"
+        },
+        {
+          "name": "combined_dependency_lint_CI",
+          "status": "failed"
         },
         {
           "name": "combined_regressions",
@@ -203,7 +216,7 @@
           "status": "passed"
         }
       ],
-      "current_phase": "Combined implementation ready for exact-head provider validation",
+      "current_phase": "Correct provider-discovered dependency-tool version contract",
       "custody": {
         "events": [
           {
@@ -238,10 +251,17 @@
             "intent_id": "intent:release-only-validation-1402",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:release-only-validation-1402",
+            "event_id": "event:7",
+            "intent_id": "intent:release-only-validation-1402",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "release-only-validation-1402": {
@@ -322,6 +342,25 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "Correct provider-discovered dependency-tool version contract",
+                "custody_event_id": "event:7",
+                "observations": [
+                  ".github/workflows/ci.yml",
+                  "tests/source_ci_profile_policy.rs",
+                  "GitHub job114939489917 and Buildkite1019 deps-lint failed after download: installer incorrectly expected cargo-machete name prefix. Authenticated pinned upstream archive prints bare0.9.2; cargo-deny prints cargo-deny0.20.2 with its normal separator. Exact checksums retained; diagnostics and realistic regressions corrected."
+                ],
+                "proof_refs": [
+                  "combined_dependency_lint_CI",
+                  "authenticated_upstream_version_probe"
+                ],
+                "scope": [
+                  ".config/build/**, MODULE.bazel.lock, release/Bazel regression tests and governed specifications",
+                  "Issue1400 collector and repository CI critical path; release-build regular file staging"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -335,6 +374,7 @@
       "evidence": [
         "Both requested setup logs: strict Bazel exit 48, stale Cargo.lock input after release root-version increase",
         "Full 76-path source inventory reviewed; exact declared digest 74654c5afa4fc045f44f0dca3112f8c2667a2272729f8d652a98a71041ebc08f",
+        "GitHub job114939489917 and Buildkite1019 deps-lint failed after download: installer incorrectly expected cargo-machete name prefix. Authenticated pinned upstream archive prints bare0.9.2; cargo-deny prints cargo-deny0.20.2 with its normal separator. Exact checksums retained; diagnostics and realistic regressions corrected.",
         "Independent static review found no custody bypass; relative staging and atomic batch insertion corrections applied",
         "Reconciled 76-source inventory: only reviewed ci.yml bytes changed, compiled workflow pin and declaration updated",
         "Reviewed official upstream archive assets 397131172 and471598214 with exact SHA256 pins; unchanged source commands",
@@ -362,6 +402,7 @@
         "tests/source_ci_profile_policy.rs"
       ],
       "next_transitions": [
+        "Checkpoint correction and rerun same-branch full validate against new exact head",
         "Checkpoint, same-branch push, full plain decapod validate; no local prerequisite suite",
         "Push this task branch and run full configured Buildkite validate"
       ],
