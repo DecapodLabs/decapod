@@ -323,6 +323,14 @@
       "proof_refs": [
         "local:sixth-history-tests-15-pass"
       ]
+    },
+    {
+      "id": "sixth-remote-prerequisites",
+      "summary": "Actual current prerequisites bind remote ancestor0dc54dda; complete new Buildkite suite remains pending",
+      "input_digest": "sha256:c48670da70d6b6339a8f717b46f2b058e12b3b75e27e215a6eddcbcd73ccaf01",
+      "proof_refs": [
+        "local:sixth-final-remote-project-203-pass"
+      ]
     }
   ],
   "intents": {
@@ -653,130 +661,134 @@
       },
       "decapod_release": "0.107.5",
       "drift_findings": [],
-      "elapsed_ms": 9708,
+      "elapsed_ms": 7242,
       "epoch_ref": "ve_5d6ef468eab0f64f",
       "fail_count": 0,
       "failures": [],
       "gate_timings": [
         {
-          "elapsed_ms": 3999,
-          "name": "validate_project_specs_docs"
-        },
-        {
-          "elapsed_ms": 2066,
+          "elapsed_ms": 2094,
           "name": "validate_machine_contract"
         },
         {
-          "elapsed_ms": 762,
+          "elapsed_ms": 1370,
+          "name": "validate_project_specs_docs"
+        },
+        {
+          "elapsed_ms": 841,
           "name": "validate_markdown_primitives_roundtrip_gate"
         },
         {
-          "elapsed_ms": 412,
+          "elapsed_ms": 341,
           "name": "validate_stale_workspaces"
         },
         {
-          "elapsed_ms": 259,
+          "elapsed_ms": 210,
           "name": "validate_obligations"
+        },
+        {
+          "elapsed_ms": 205,
+          "name": "validate_schema_determinism"
         },
         {
           "elapsed_ms": 192,
           "name": "validate_legacy_jsonl_retired"
         },
         {
-          "elapsed_ms": 157,
-          "name": "validate_schema_determinism"
-        },
-        {
-          "elapsed_ms": 143,
+          "elapsed_ms": 141,
           "name": "validate_no_legacy_namespaces"
         },
         {
-          "elapsed_ms": 82,
-          "name": "validate_embedded_self_contained"
-        },
-        {
-          "elapsed_ms": 79,
-          "name": "validate_control_plane_contract"
-        },
-        {
-          "elapsed_ms": 78,
+          "elapsed_ms": 98,
           "name": "validate_archive_integrity"
         },
         {
-          "elapsed_ms": 72,
+          "elapsed_ms": 90,
+          "name": "validate_control_plane_contract"
+        },
+        {
+          "elapsed_ms": 83,
+          "name": "validate_embedded_self_contained"
+        },
+        {
+          "elapsed_ms": 62,
+          "name": "validate_risk_map_violations"
+        },
+        {
+          "elapsed_ms": 51,
+          "name": "validate_knowledge_integrity"
+        },
+        {
+          "elapsed_ms": 49,
           "name": "validate_git_workspace_context"
         },
         {
-          "elapsed_ms": 43,
+          "elapsed_ms": 38,
           "name": "validate_repomap_determinism"
         },
         {
           "elapsed_ms": 33,
-          "name": "validate_federation_gates"
-        },
-        {
-          "elapsed_ms": 27,
-          "name": "validate_knowledge_integrity"
-        },
-        {
-          "elapsed_ms": 26,
-          "name": "validate_policy_integrity"
-        },
-        {
-          "elapsed_ms": 26,
-          "name": "validate_generated_artifact_whitelist"
-        },
-        {
-          "elapsed_ms": 26,
           "name": "validate_canon_mutation"
         },
         {
-          "elapsed_ms": 25,
-          "name": "validate_git_push_pr_gate"
+          "elapsed_ms": 33,
+          "name": "validate_policy_integrity"
         },
         {
-          "elapsed_ms": 23,
+          "elapsed_ms": 32,
+          "name": "validate_recursive_improvement_passes_if_present"
+        },
+        {
+          "elapsed_ms": 29,
           "name": "validate_watcher_purity"
         },
         {
-          "elapsed_ms": 23,
-          "name": "validate_interface_contract_bootstrap"
-        },
-        {
-          "elapsed_ms": 23,
-          "name": "validate_risk_map_violations"
-        },
-        {
-          "elapsed_ms": 21,
+          "elapsed_ms": 28,
           "name": "validate_lineage_hard_gate"
         },
         {
-          "elapsed_ms": 18,
-          "name": "validate_git_protected_branch"
+          "elapsed_ms": 22,
+          "name": "validate_federation_gates"
+        },
+        {
+          "elapsed_ms": 22,
+          "name": "validate_interface_contract_bootstrap"
+        },
+        {
+          "elapsed_ms": 21,
+          "name": "validate_research_claims_if_present"
+        },
+        {
+          "elapsed_ms": 17,
+          "name": "validate_validation_receipt_if_present"
+        },
+        {
+          "elapsed_ms": 17,
+          "name": "validate_trajectory_artifacts_if_present"
+        },
+        {
+          "elapsed_ms": 15,
+          "name": "validate_watcher_audit"
         },
         {
           "elapsed_ms": 13,
           "name": "validate_health_purity"
         },
         {
-          "elapsed_ms": 10,
-          "name": "validate_research_claims_if_present"
-        },
-        {
-          "elapsed_ms": 9,
-          "name": "validate_plan_governed_execution_gate"
-        },
-        {
-          "elapsed_ms": 9,
-          "name": "validate_lcm_rebuild_gate"
-        },
-        {
-          "elapsed_ms": 8,
+          "elapsed_ms": 12,
           "name": "validate_jev_history_if_present"
         },
         {
+          "elapsed_ms": 9,
+          "name": "validate_git_protected_branch"
+        },
+        {
+          "elapsed_ms": 9,
+          "name": "validate_git_push_pr_gate"
+        },
+        {
           "elapsed_ms": 8,
-          "name": "validate_validation_receipt_if_present"
+          "name": "validate_knowledge_promotions_if_present"
         },
         {
           "elapsed_ms": 7,
@@ -784,47 +796,47 @@
         },
         {
           "elapsed_ms": 7,
-          "name": "validate_gatekeeper_gate"
-        },
-        {
-          "elapsed_ms": 7,
-          "name": "validate_watcher_audit"
+          "name": "validate_plan_governed_execution_gate"
         },
         {
           "elapsed_ms": 6,
+          "name": "validate_lcm_rebuild_gate"
+        },
+        {
+          "elapsed_ms": 5,
           "name": "validate_lcm_immutability"
         },
         {
-          "elapsed_ms": 6,
-          "name": "validate_knowledge_promotions_if_present"
-        },
-        {
-          "elapsed_ms": 6,
-          "name": "validate_trajectory_artifacts_if_present"
+          "elapsed_ms": 4,
+          "name": "validate_gatekeeper_gate"
         },
         {
           "elapsed_ms": 4,
-          "name": "validate_recursive_improvement_passes_if_present"
+          "name": "validate_database_schema_versions"
+        },
+        {
+          "elapsed_ms": 3,
+          "name": "validate_generated_artifact_whitelist"
         },
         {
           "elapsed_ms": 3,
           "name": "validate_entrypoint_invariants"
         },
         {
-          "elapsed_ms": 3,
-          "name": "validate_database_schema_versions"
-        },
-        {
-          "elapsed_ms": 2,
-          "name": "validate_project_config_toml"
-        },
-        {
           "elapsed_ms": 2,
           "name": "validate_health_cache_integrity"
         },
         {
-          "elapsed_ms": 1,
+          "elapsed_ms": 2,
           "name": "validate_repo_map"
+        },
+        {
+          "elapsed_ms": 2,
+          "name": "validate_context_capsule_policy_contract"
+        },
+        {
+          "elapsed_ms": 1,
+          "name": "validate_project_config_toml"
         },
         {
           "elapsed_ms": 1,
@@ -832,27 +844,7 @@
         },
         {
           "elapsed_ms": 0,
-          "name": "validate_context_capsule_policy_contract"
-        },
-        {
-          "elapsed_ms": 0,
           "name": "validate_spec_drift"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_state_commit_gate"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_project_scoped_state"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_risk_map"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_docs_templates_bucket"
         },
         {
           "elapsed_ms": 0,
@@ -860,7 +852,15 @@
         },
         {
           "elapsed_ms": 0,
-          "name": "validate_eval_gate_if_required"
+          "name": "validate_project_scoped_state"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_state_commit_gate"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_docs_templates_bucket"
         },
         {
           "elapsed_ms": 0,
@@ -868,11 +868,7 @@
         },
         {
           "elapsed_ms": 0,
-          "name": "validate_internalization_artifacts_if_present"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_root_dockerfile_seed_detection"
+          "name": "validate_eval_gate_if_required"
         },
         {
           "elapsed_ms": 0,
@@ -880,20 +876,32 @@
         },
         {
           "elapsed_ms": 0,
+          "name": "validate_internalization_artifacts_if_present"
+        },
+        {
+          "elapsed_ms": 0,
           "name": "validate_context_capsules_if_present"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_risk_map"
+        },
+        {
+          "elapsed_ms": 0,
+          "name": "validate_root_dockerfile_seed_detection"
         }
       ],
-      "git_revision": "55cc1fb0cdc7810ef4dd76d8ca05da40e5a80a37",
+      "git_revision": "0dc54dda6c418359fc69886ed97f5c32f60452e6",
       "kind": "validation_receipt",
       "parallelism": 1,
       "pass_count": 203,
       "prediction_uses_warnings": true,
-      "receipt_hash": "sha256:2a283cb44be89d89291f3c3042a355fbad5adda2dd4a8d97dc8a13e32db9679f",
+      "receipt_hash": "sha256:103243715999f2ed5878b7586d331ac622ef2726895bf62b3d147a9f28076c41",
       "repo_signal_fingerprint": "ee14bbd554c49080c5f3541beb229872ac1cb0f5d2214c10a7758f80efb5ee9e",
       "schema_version": "1.0.0",
       "status": "ok",
       "temporary_artifacts_cleaned": 0,
-      "trajectory_artifact_hash": "sha256:00081146bca6dabfb6222934ad1a77ffa36d68ff5ad1caa37963ce87cb1ca457",
+      "trajectory_artifact_hash": "sha256:61b584515fd62811b7ab90a1a263a56c74164b5372c4876791d50a7c5712c4f4",
       "trajectory_run_id": "sixth-buildkite-convergence-20261012",
       "warn_count": 4,
       "warnings": [
