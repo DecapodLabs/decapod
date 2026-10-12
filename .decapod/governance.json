@@ -231,6 +231,11 @@
       "id": "third-bound-prerequisites",
       "summary": "Retain actual 203/0 prerequisite result on exact remote candidate source; full provider proof remains required",
       "input_digest": "sha256:900cf22163d258c89c3ae55aff14b48eaa36f5c8fa9348098ed103119924d58d"
+    },
+    {
+      "id": "third-current-spec-review",
+      "summary": "Follow STALE_SPEC_REVIEW report and bind explicit reviews to current implementation bytes",
+      "input_digest": "sha256:dc910d48e988854b03edd8cd86197a6c67c31e7c8007ed849d6540a557487f9d"
     }
   ],
   "intents": {
@@ -318,22 +323,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed real first-preflight failures, scoped CI-local validation, automatic exact-snapshot collection, strict provider custody and unchanged full publication gates; remaining native importer identity repair and fresh full CI proof are pending",
-          "reviewed_code_fingerprint": "79a4726a3721140bc6acb9851ecd237c2831d359af0a28691cfb2ae798587169",
+          "reason": "Reviewed current exact code and existing authored contracts after actual second-run failures: imported shell identity is untrusted until sealed native recipe authentication, retry mapping is checked, artifact producers remain bound, Bazel input set is preserved exactly once and Clippy findings are repaired without suppression. Full third-candidate provider proof remains pending.",
+          "reviewed_code_fingerprint": "592afb9100c4a6db16ad45d7309881c299e3ec432655cbb3d6365d9e48bd4f40",
           "spec_material_hash": "b16ee1fe4244f6d1b2526858cd8697a712be135135b0b1698299d39997fc2766"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed real first-preflight failures, scoped CI-local validation, automatic exact-snapshot collection, strict provider custody and unchanged full publication gates; remaining native importer identity repair and fresh full CI proof are pending",
-          "reviewed_code_fingerprint": "79a4726a3721140bc6acb9851ecd237c2831d359af0a28691cfb2ae798587169",
+          "reason": "Reviewed current exact code and existing authored contracts after actual second-run failures: imported shell identity is untrusted until sealed native recipe authentication, retry mapping is checked, artifact producers remain bound, Bazel input set is preserved exactly once and Clippy findings are repaired without suppression. Full third-candidate provider proof remains pending.",
+          "reviewed_code_fingerprint": "592afb9100c4a6db16ad45d7309881c299e3ec432655cbb3d6365d9e48bd4f40",
           "spec_material_hash": "a561839d31f96025b3333da3627163597816e734cea67610d4d8772e9f639c70"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed real first-preflight failures, scoped CI-local validation, automatic exact-snapshot collection, strict provider custody and unchanged full publication gates; remaining native importer identity repair and fresh full CI proof are pending",
-          "reviewed_code_fingerprint": "79a4726a3721140bc6acb9851ecd237c2831d359af0a28691cfb2ae798587169",
+          "reason": "Reviewed current exact code and existing authored contracts after actual second-run failures: imported shell identity is untrusted until sealed native recipe authentication, retry mapping is checked, artifact producers remain bound, Bazel input set is preserved exactly once and Clippy findings are repaired without suppression. Full third-candidate provider proof remains pending.",
+          "reviewed_code_fingerprint": "592afb9100c4a6db16ad45d7309881c299e3ec432655cbb3d6365d9e48bd4f40",
           "spec_material_hash": "de5e2172a6f001ec79113ab55f45877c1a64116ebbe835938793a15293fb86e3"
         }
       ],
@@ -345,7 +350,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791778363Z"
+      "updated_at": "1791780559Z"
     },
     "trajectory": {
       "active_boundaries": [
