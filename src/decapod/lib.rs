@@ -2626,6 +2626,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             base_branch,
                             head_ref,
                             target_base,
+                            publication_material,
                         },
                 }),
         }) => {
@@ -2634,6 +2635,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                 &base_branch,
                 &head_ref,
                 target_base.as_deref(),
+                publication_material,
             )?;
             println!(
                 "{}",
@@ -6339,6 +6341,18 @@ impl core::snapshot_provider::Runner for ReadinessSnapshotRunner {
         }
     }
 }
+/// This source-owned profile targets a reviewed public repository. Select its
+/// credential-free metadata transport before requests; never switch clients in
+/// response to an authentication failure. Other repositories retain the
+/// configured official-client path or fail explicitly when it is unavailable.
+fn readiness_profile_uses_public_metadata(
+    repository: &core::snapshot_provider::Repository,
+    profile: Option<&core::readiness_profile::ProfileDeclaration>,
+) -> bool {
+    repository.full_name() == "DecapodLabs/decapod"
+        && profile.is_some_and(|p| p.id == core::readiness_profile::REQUIRED_PROFILE)
+}
+
 fn readiness_snapshot_runner(
     options: &core::validation_runtime::Options,
     repository: &core::snapshot_provider::Repository,
@@ -6416,7 +6430,11 @@ fn run_current_workbranch_readiness_with(
                 "READINESS_PROFILE_REQUIRED: reconcile this repository's complete build, source-CI and release contract through init/agent.init; project prerequisites alone cannot establish PR readiness; branch pushes may precede preflight".into(),
             ));
         }
-        core::workspace::verify_current_publication_prerequisites(workspace_root)?;
+        if config.proof.validation_buildkite_preflights {
+            core::workspace::verify_readiness_transport_prerequisites(workspace_root)?;
+        } else {
+            core::workspace::verify_current_publication_prerequisites(workspace_root)?;
+        }
         let (options, repository) = readiness_environment(workspace_root)?;
         let mut signal_guard = core::bounded_process::SignalCancellationGuard::new()?;
         let cancellation = signal_guard.cancellation().clone();
@@ -6461,7 +6479,12 @@ fn run_current_workbranch_readiness_with(
             let mut runner = readiness_snapshot_runner(
                 &options,
                 &repository,
-                invocation.snapshot_prepare || invocation.snapshot_resume.is_some(),
+                invocation.snapshot_prepare
+                    || invocation.snapshot_resume.is_some()
+                    || readiness_profile_uses_public_metadata(
+                        &repository,
+                        config.proof.required_profile.as_ref(),
+                    ),
             )?;
             if let Some(observed_s) = &invocation.snapshot_adopt {
                 let handoff = runtime::snapshot::adopt_host_handoff(
@@ -7362,7 +7385,16 @@ fn verify_checkpoints_with_target(
     base: &str,
     head: &str,
     target: Option<&str>,
+    publication_material: bool,
 ) -> Result<(), error::DecapodError> {
+    if publication_material {
+        let target = target.filter(|target| !target.is_empty()).ok_or_else(|| {
+            error::DecapodError::ValidationError(
+                "PUBLICATION_MATERIAL_BINDING_REQUIRED: --publication-material requires an explicit --target-base and immutable base/head commits".into(),
+            )
+        })?;
+        return core::workspace::verify_provider_publication_material(root, base, head, target);
+    }
     match target {
         Some(target) if !target.is_empty() => {
             core::governance_document::verify_pr_checkpoints_for_target(root, base, head, target)
@@ -7563,12 +7595,14 @@ fn run_govern_command(
                 base_branch,
                 head_ref,
                 target_base,
+                publication_material,
             } => {
                 verify_checkpoints_with_target(
                     workspace_root,
                     &base_branch,
                     &head_ref,
                     target_base.as_deref(),
+                    publication_material,
                 )?;
                 println!(
                     "{}",

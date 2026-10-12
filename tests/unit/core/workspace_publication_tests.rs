@@ -1077,3 +1077,137 @@ fn publication_inventory_absent_config_is_native_but_malformed_config_fails() {
         .to_string();
     assert!(error.contains("#/sections/validation"), "{error}");
 }
+
+fn provider_material_fixture() -> TempDir {
+    let dir = repo();
+    let mut config = crate::cli::DecapodProjectConfig::default();
+    config.proof.validation_buildkite_preflights = true;
+    write(
+        dir.path(),
+        ".decapod/config.toml",
+        &toml::to_string(&config).unwrap(),
+    );
+    crate::core::governance_document::begin_pr(dir.path(), "provider-material", "master").unwrap();
+    let _ = current_receipt_fixture(dir.path());
+    write(dir.path(), "api/contract.rs", "pub fn contract() {}\n");
+    git(dir.path(), &["add", "."]);
+    review_all(dir.path());
+    git(dir.path(), &["add", "."]);
+    crate::core::governance_document::checkpoint(
+        dir.path(),
+        "provider-material",
+        "Current provider-owned material",
+        vec!["test:provider-material".into()],
+    )
+    .unwrap();
+    git(dir.path(), &["add", "."]);
+    git(dir.path(), &["commit", "-qm", "checkpointed material"]);
+    dir
+}
+
+#[test]
+fn provider_material_checks_require_clean_exact_commits_and_current_spec_reviews() {
+    let dir = provider_material_fixture();
+    let base = git(dir.path(), &["rev-parse", "master"]);
+    let head = git(dir.path(), &["rev-parse", "HEAD"]);
+    verify_provider_publication_material(dir.path(), &base, &head, "master").unwrap();
+    assert!(verify_provider_publication_material(dir.path(), "master", &head, "master").is_err());
+    assert!(verify_provider_publication_material(dir.path(), &base, "HEAD", "master").is_err());
+    assert!(verify_provider_publication_material(dir.path(), &head, &head, "master").is_err());
+    write(dir.path(), "uncommitted.txt", "material not in H");
+    assert!(
+        verify_provider_publication_material(dir.path(), &base, &head, "master")
+            .unwrap_err()
+            .to_string()
+            .contains("UNCOMMITTED_PUBLICATION_CONTENT")
+    );
+    std::fs::remove_file(dir.path().join("uncommitted.txt")).unwrap();
+    let mut plan = plan_governance::load_plan(dir.path()).unwrap().unwrap();
+    plan.spec_reviews.clear();
+    plan_governance::save_plan(dir.path(), &plan).unwrap();
+    git(dir.path(), &["add", "."]);
+    git(dir.path(), &["commit", "-qm", "missing current reviews"]);
+    let changed = git(dir.path(), &["rev-parse", "HEAD"]);
+    assert!(
+        verify_provider_publication_material(dir.path(), &base, &changed, "master")
+            .unwrap_err()
+            .to_string()
+            .contains("SPEC_REVIEW_REQUIRED")
+    );
+}
+
+#[test]
+fn transport_admits_unverified_history_but_remote_material_still_rejects_it() {
+    let root = provider_material_fixture();
+    let worktree = TempDir::new().unwrap();
+    git(
+        root.path(),
+        &[
+            "worktree",
+            "add",
+            "-b",
+            "agent/test/bugs_current",
+            worktree.path().to_str().unwrap(),
+        ],
+    );
+    let dir = worktree.path();
+    write(dir, "README.md", "An uncheckpointed authored commit\n");
+    git(dir, &["add", "."]);
+    git(dir, &["commit", "-qm", "uncheckpointed history"]);
+    let base = git(dir, &["rev-parse", "master"]);
+    let head = git(dir, &["rev-parse", "HEAD"]);
+    let before =
+        std::fs::read(dir.join(crate::core::governance_document::GOVERNANCE_PATH)).unwrap();
+    verify_readiness_transport_prerequisites(dir).unwrap();
+    assert!(
+        verify_current_publication_prerequisites(dir).is_err(),
+        "native retains local verification"
+    );
+    assert!(
+        verify_provider_publication_material(dir, &base, &head, "master").is_err(),
+        "the existing remote governance obligation must reject uncheckpointed history"
+    );
+    assert_eq!(
+        std::fs::read(dir.join(crate::core::governance_document::GOVERNANCE_PATH)).unwrap(),
+        before
+    );
+    let mut plan = plan_governance::load_plan(dir).unwrap().unwrap();
+    plan.human_questions
+        .push("Choose the intended action".into());
+    plan_governance::save_plan(dir, &plan).unwrap();
+    assert!(
+        verify_readiness_transport_prerequisites(dir)
+            .unwrap_err()
+            .to_string()
+            .contains("PUBLICATION_DECISION_REQUIRED")
+    );
+}
+
+#[test]
+fn publication_material_cli_is_explicit_and_requires_target_binding() {
+    use clap::Parser;
+    let args = [
+        "decapod",
+        "govern",
+        "artifacts",
+        "verify-checkpoints",
+        "--base-branch",
+        "master",
+        "--publication-material",
+    ];
+    assert!(crate::cli::Cli::try_parse_from(args).is_err());
+    let parsed =
+        crate::cli::Cli::try_parse_from(args.into_iter().chain(["--target-base", "master"]))
+            .unwrap();
+    assert!(matches!(
+        parsed.command,
+        crate::cli::Command::Govern(crate::cli::GovernCli {
+            command: crate::cli::GovernCommand::Artifacts(crate::cli::ArtifactsCli {
+                command: crate::cli::ArtifactsCommand::VerifyCheckpoints {
+                    publication_material: true,
+                    ..
+                }
+            })
+        })
+    ));
+}

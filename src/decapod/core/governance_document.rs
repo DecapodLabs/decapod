@@ -1691,6 +1691,20 @@ fn verify_pr_checkpoints_inner(
             &format!("{base_ref}..{head_ref}"),
         ],
     )?;
+    // The active PR owns its first-parent journal. Imported parents retain their
+    // independently governed journals in Git instead of being rewritten to the
+    // active PR identity or copied into its checkpoint list.
+    let first_parent_history = git(
+        root,
+        &[
+            "rev-list",
+            "--first-parent",
+            &format!("{base_ref}..{head_ref}"),
+        ],
+    )?;
+    let first_parent_commits: BTreeSet<_> = first_parent_history.lines().collect();
+    let accepted_history = git(root, &["rev-list", base_ref])?;
+    let accepted_commits: BTreeSet<_> = accepted_history.lines().collect();
     let base_has_document = Command::new("git")
         .args(["cat-file", "-e", &format!("{base_ref}:{GOVERNANCE_PATH}")])
         .current_dir(root)
@@ -1704,6 +1718,7 @@ fn verify_pr_checkpoints_inner(
             Ok(content) => content,
             Err(_)
                 if !base_has_document
+                    && first_parent_commits.contains(commit)
                     && git(
                         root,
                         &["log", "-1", "--format=%H", commit, "--", GOVERNANCE_PATH],
@@ -1719,34 +1734,74 @@ fn verify_pr_checkpoints_inner(
             }
         };
         let document = parse(content.as_bytes())?;
-        if document
+        let change = document
             .change
             .as_ref()
-            .map(|change| (&change.base_commit, &change.target_base))
-            != head
+            .ok_or_else(|| invalid(format!("GOVERNANCE_PR_IDENTITY_MISSING: commit {commit}")))?;
+        if first_parent_commits.contains(commit) {
+            if document
                 .change
                 .as_ref()
                 .map(|change| (&change.base_commit, &change.target_base))
-        {
-            return Err(invalid(
-                "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
-            ));
-        }
-        if document.change.as_ref().map(|change| change.id.as_str()) != Some(identity.as_str()) {
-            return Err(invalid(format!(
-                "GOVERNANCE_PR_IDENTITY_CONFLICT: commit {commit} belongs to a different PR"
-            )));
+                != head
+                    .change
+                    .as_ref()
+                    .map(|change| (&change.base_commit, &change.target_base))
+            {
+                return Err(invalid(
+                    "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
+                ));
+            }
+            if change.id != identity {
+                return Err(invalid(format!(
+                    "GOVERNANCE_PR_IDENTITY_CONFLICT: commit {commit} belongs to a different PR"
+                )));
+            }
+        } else {
+            // A historical lineage must start from an immutable, already
+            // accepted base and prove its own original checkpoints. Neither a
+            // branch name nor equality with a later accepted tree is a waiver.
+            if !accepted_commits.contains(change.base_commit.as_str()) {
+                return Err(invalid(format!(
+                    "GOVERNANCE_PR_BASE_MISMATCH: imported commit {commit} has an unaccepted base"
+                )));
+            }
+            verify_base_binding(
+                root,
+                &document,
+                &change.base_commit,
+                commit,
+                head.change
+                    .as_ref()
+                    .map(|change| change.target_base.as_str()),
+            )?;
         }
         let parent_line = git(root, &["rev-list", "--parents", "-n", "1", commit])?;
+        let parents: Vec<_> = parent_line.split_whitespace().skip(1).collect();
         let mut prior_ids = BTreeSet::new();
-        for parent in parent_line.split_whitespace().skip(1) {
+        for parent in parents.iter().take(1) {
             let Ok(parent_text) = git(root, &["show", &format!("{parent}:{GOVERNANCE_PATH}")])
             else {
                 continue;
             };
             let prior = parse(parent_text.as_bytes())?;
-            if prior.change.as_ref().map(|change| change.id.as_str()) != Some(identity.as_str()) {
+            if prior.change.as_ref().map(|change| change.id.as_str()) != Some(change.id.as_str()) {
+                if prior.change.is_some() && !accepted_commits.contains(parent) {
+                    return Err(invalid(format!(
+                        "GOVERNANCE_PR_IDENTITY_CONFLICT: commit {commit} changed identity inside an unaccepted lineage"
+                    )));
+                }
                 continue;
+            }
+            if prior
+                .change
+                .as_ref()
+                .map(|change| (&change.base_commit, &change.target_base))
+                != Some((&change.base_commit, &change.target_base))
+            {
+                return Err(invalid(format!(
+                    "GOVERNANCE_PR_BASE_MISMATCH: commit {commit} changed its first-parent base identity"
+                )));
             }
             for old in &prior.checkpoints {
                 prior_ids.insert(old.id.clone());
@@ -1762,12 +1817,18 @@ fn verify_pr_checkpoints_inner(
                 }
             }
         }
+        // Transport commits may reuse proof only for exact whole-tree equality,
+        // including the governance document, and only with one source parent.
+        // That source is independently checked in this topological walk (or is
+        // already accepted). Material edits and all merges need a new checkpoint.
+        let unchanged_transport = parents.len() == 1
+            && git(root, &["rev-parse", &format!("{commit}^{{tree}}")])?
+                == git(root, &["rev-parse", &format!("{}^{{tree}}", parents[0])])?;
         let expected = material_digest(root, &document, Some(commit))?;
-        if !document
-            .checkpoints
-            .iter()
-            .any(|entry| entry.input_digest == expected && !prior_ids.contains(&entry.id))
-        {
+        if !document.checkpoints.iter().any(|entry| {
+            entry.input_digest == expected
+                && (unchanged_transport || !prior_ids.contains(&entry.id))
+        }) {
             return Err(invalid(format!(
                 "GOVERNANCE_CHECKPOINT_MISSING: commit {commit} needs a new checkpoint bound to its exact material tree and governance inputs"
             )));

@@ -542,7 +542,7 @@ virtiofs/FUSE filesystem prohibition.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b279695229d2264d265148eeeb1109a667b9364113b57952fa026914cf021391`
+- Repository signal fingerprint: `79f800d9879f058477b6d23a5babf2d20647b167fd16ff666c4bf80a2f1582ce`
 - Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -636,3 +636,9 @@ authenticates every required workflow against the frozen source and pipeline,
 caches only the complete locator set, polls fresh native status, and rediscovers
 the registry before accepting final proof. Constitution, documentation and all
 applicable source checks remain dependencies of the single validation result.
+
+### Provider-owned verification and historical custody
+
+`validate` is the single readiness mechanism. In Buildkite mode, local preparation is limited to workspace ownership, human-decision authorization and immutable transport identity; the existing mandatory governance worker executes candidate material, committed-bundle, spec-review, checkpoint and merge verification. Native mode retains the equivalent local verification boundary. The reviewed public Decapod profile selects credential-free public metadata reads before making requests, without fallback after authentication failure.
+
+Historical single-parent transport commits may reuse a source checkpoint only when the complete Git tree, including governance, is identical to their independently verified parent. Imported lineages retain independently verified original journals with accepted ancestor bases and the same target. The active first-parent identity and journal remain strict, and every material edit or merge requires its own exact checkpoint.

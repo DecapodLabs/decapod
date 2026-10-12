@@ -969,6 +969,9 @@ pub(crate) enum ArtifactsCommand {
         /// Bind the declared PR target name when base-branch is an immutable SHA.
         #[clap(long = "target-base")]
         target_base: Option<String>,
+        /// Also verify committed publication material in a clean exact-head CI checkout.
+        #[clap(long, requires = "target_base")]
+        publication_material: bool,
     },
     /// Inventory logical plan, claims, trajectory, and validation sections
     Inventory {

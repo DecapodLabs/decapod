@@ -11,4 +11,4 @@ set -euo pipefail
 chmod +x "$source_root/target/debug/decapod"
 "$source_root/target/debug/decapod" govern artifacts verify-checkpoints \
   --base-branch "$GOVERNANCE_BASE" \
-  --head-ref "$GOVERNANCE_HEAD_REF" --target-base master
+  --head-ref "$GOVERNANCE_HEAD_REF" --target-base master --publication-material

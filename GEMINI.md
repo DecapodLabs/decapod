@@ -1,5 +1,5 @@
 <!-- decapod-release: 0.107.5 -->
-<!-- decapod-fingerprint: 9747f3eb1806a696c63e6cafec4f8ddffe565c0e7514d87b8132251a330e4636 -->
+<!-- decapod-fingerprint: 44503536e374f01c23fe2536b4b8724bce83460d02100ff2acd85ee0ecd7334f -->
 # GEMINI.md - Agent Entrypoint
 
 You are working in a Decapod-managed repository.
@@ -31,7 +31,7 @@ Run this gate once when the agent starts and again after every new prompt or use
 ```bash
 # Smart bootstrap: only install/init if a newer version is available
 (decapod capabilities --format json | grep -q '"is_latest":true') || (cargo install decapod && decapod init --proof)
-decapod docs ingest && decapod govern project-check && decapod session acquire
+decapod docs ingest && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status
 decapod todo add "<task>" && decapod todo claim --id <task-id>

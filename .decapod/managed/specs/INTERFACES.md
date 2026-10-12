@@ -455,7 +455,7 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b279695229d2264d265148eeeb1109a667b9364113b57952fa026914cf021391`
+- Repository signal fingerprint: `79f800d9879f058477b6d23a5babf2d20647b167fd16ff666c4bf80a2f1582ce`
 - Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -560,3 +560,7 @@ Measured source preparation resolves the selected toolchain before freezing stab
 Imported Buildkite GitHub Actions shell evidence carries only identities that the reviewed importer actually exposes: the build UUID, checked native retry derived from its one-based run attempt, and the logical workflow job. It must not invent a native job UUID or step key. The collector separately authenticates the native build/job/step artifact producer and verifies the pinned importer recipe and logical job before interpreting this distinct imported-runtime receipt. Ordinary GitHub and native Buildkite identities retain their existing checks.
 
 Source execution must leave its bound tracked checkout, index and non-ignored source files unchanged; a stable HEAD alone is insufficient. Bazel uses the repository's pinned version and rejects an incompatible or stale lockfile instead of silently updating it during a proof check. Standalone validation retains both actually built binaries in custody while omitting dev debug symbols; dev assertions, overflow checks and archive-size limits remain unchanged. Fixture repositories isolate their own provider context and test-only Git configuration, and relocated docs fixtures use a declared compiled helper instead of an undeclared ambient compiler. These fixture boundaries do not relax production context, storage or Git transport guards.
+
+### Remote material verification
+
+The existing `govern artifacts verify-checkpoints --publication-material` interface is invoked by the mandatory Buildkite governance recipe with immutable base/head and an explicit target. It verifies the clean committed candidate before and after the shared publication-material checks. It never submits another build or establishes standalone readiness; the outer `validate` result still requires the complete provider suite.

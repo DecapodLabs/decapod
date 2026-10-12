@@ -315,9 +315,8 @@ fn immutable_checkpoint_range_can_keep_its_named_target_binding() {
 #[test]
 fn prerequisite_bootstrap_guidance_holds_publication_for_full_validation() {
     let source = include_str!("../../src/decapod/core/assets.rs");
-    assert!(source.contains(
-        "decapod docs ingest && decapod govern project-check && decapod session acquire"
-    ));
+    assert!(source.contains("decapod docs ingest && decapod session acquire"));
+    assert!(!source.contains("decapod docs ingest && decapod govern project-check"));
     assert!(!source.contains("decapod docs ingest && decapod validate && decapod session acquire"));
     assert!(source.contains("including a draft"));
     assert!(source.contains("its success is never permission to create a PR"));

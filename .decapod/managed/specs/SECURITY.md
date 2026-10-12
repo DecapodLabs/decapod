@@ -234,7 +234,7 @@ Describe the security primitives and security controls implemented in this repos
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b279695229d2264d265148eeeb1109a667b9364113b57952fa026914cf021391`
+- Repository signal fingerprint: `79f800d9879f058477b6d23a5babf2d20647b167fd16ff666c4bf80a2f1582ce`
 - Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -319,3 +319,7 @@ network destinations. Cached locators never stand in for execution status or
 final freshness. A first ordinary branch push may normalize its all-zero prior
 tip only with the provider's explicit created flag, a captured accepted target,
 clean exact checkout and ancestry proof; it never becomes PR-readiness evidence.
+
+### Same-branch verification location
+
+Selecting Buildkite moves substantive verification to the required remote workers, preserving local ownership, decision and transport authorization. Public metadata is selected only for the reviewed public repository/profile before requests; a failed authenticated request never silently switches clients. Imported history cannot waive proof: unchanged transports require whole-tree identity, unaccepted historical bases and conflicting targets reject, and current merge checkpoints remain mandatory.

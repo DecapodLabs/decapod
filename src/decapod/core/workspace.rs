@@ -2243,9 +2243,26 @@ pub fn extract_task_ids_from_branch(branch: &str) -> Vec<String> {
     out
 }
 
-/// Read-only publication prerequisites. Called by full validate as well as the
-/// last pre-push boundary, so a full green cannot hide another local publish
-/// gate. No receipt is written and no Git ref is changed here.
+/// Local authorization/ownership only. Provider-owned validation performs its
+/// material, history, spec and merge checks on the configured CI workers.
+/// Exact clean source/base identity remains enforced by the transport itself.
+pub(crate) fn verify_readiness_transport_prerequisites(
+    repo_root: &Path,
+) -> Result<(), DecapodError> {
+    let status = get_workspace_status(repo_root)?;
+    if !status.git.in_worktree || status.git.is_protected {
+        return Err(DecapodError::ValidationError(
+            "PUBLICATION_WORKBRANCH_REQUIRED: validate readiness in the governed feature worktree"
+                .into(),
+        ));
+    }
+    verify_trajectory_binding_for_readiness(repo_root, &status.git.current_branch)?;
+    verify_current_governance_ownership(repo_root)?;
+    eval::verify_eval_gate_for_publish(&repo_root.join(".decapod/data"))
+}
+
+/// Native readiness retains its existing full local publication verification.
+/// No receipt is written and no Git ref is changed here.
 pub(crate) fn verify_current_publication_prerequisites(
     repo_root: &Path,
 ) -> Result<(), DecapodError> {
@@ -2277,6 +2294,58 @@ pub(crate) fn verify_current_publication_prerequisites(
     let head = String::from_utf8_lossy(&output.stdout).trim().to_owned();
     publication::verify_committed_bundle(repo_root, &head)?;
     check_merge_conflicts(repo_root, &base)
+}
+
+/// Existing governance-artifacts CI recipe calls this on its clean private
+/// clone, before health can initialize a different trajectory. It never submits
+/// CI, mutates governance, imports a receipt, or authorizes publication itself.
+pub(crate) fn verify_provider_publication_material(
+    repo_root: &Path,
+    base: &str,
+    head: &str,
+    target: &str,
+) -> Result<(), DecapodError> {
+    let oid = |value: &str| {
+        matches!(value.len(), 40 | 64)
+            && value.bytes().all(|byte| byte.is_ascii_hexdigit())
+            && value.bytes().any(|byte| byte != b'0')
+    };
+    if !oid(base) || !oid(head) || base.len() != head.len() || target.is_empty() {
+        return Err(DecapodError::ValidationError(
+            "PUBLICATION_MATERIAL_BINDING_REQUIRED: use immutable base/head commit IDs and the declared target branch".into(),
+        ));
+    }
+    let verify_base = || -> Result<(), DecapodError> {
+        let reference = base_ref_for_branch(repo_root, target).ok_or_else(|| {
+            DecapodError::ValidationError("PUBLICATION_MATERIAL_BASE_MISSING".into())
+        })?;
+        let output = Command::new("git")
+            .current_dir(repo_root)
+            .args([
+                "--no-replace-objects",
+                "rev-parse",
+                "--verify",
+                &format!("{reference}^{{commit}}"),
+            ])
+            .bounded_output(CONTROL_TIMEOUT)?;
+        if !output.status.success() || String::from_utf8_lossy(&output.stdout).trim() != base {
+            return Err(DecapodError::ValidationError(
+                "PUBLICATION_MATERIAL_BASE_CHANGED: declared target differs from immutable accepted base".into(),
+            ));
+        }
+        Ok(())
+    };
+    verify_base()?;
+    publication::verify_committed_bundle(repo_root, head)?;
+    verify_current_governance_for_publish(repo_root)?;
+    publication::verify_spec_reviews(repo_root, base)?;
+    ensure_validation_artifacts_staged(repo_root)?;
+    ensure_required_governance_artifacts_in_pr(repo_root, target)?;
+    ensure_material_specs_change_in_pr(repo_root, target)?;
+    ensure_managed_spec_projections_in_pr(repo_root, target)?;
+    check_merge_conflicts_for_branch(repo_root, target, head)?;
+    verify_base()?;
+    publication::verify_committed_bundle(repo_root, head)
 }
 
 pub fn verify_workunit_gate_for_publish(
@@ -2447,7 +2516,9 @@ pub fn verify_validation_artifacts_for_publish(repo_root: &Path) -> Result<(), D
 /// Current governance obligations shared by full validation and publication.
 /// This preserves plan, task, claims, decisions and Jev custody without using a
 /// legacy project-check receipt as authority for the full source-CI verdict.
-pub fn verify_current_governance_for_publish(repo_root: &Path) -> Result<(), DecapodError> {
+fn verify_current_governance_ownership(
+    repo_root: &Path,
+) -> Result<trajectory::TrajectoryArtifact, DecapodError> {
     let trajectory = trajectory::load_trajectory_cookie(repo_root)?.ok_or_else(|| {
         DecapodError::ValidationError(format!(
             "Cannot publish: missing trajectory cookie at {}.",
@@ -2469,6 +2540,11 @@ pub fn verify_current_governance_for_publish(repo_root: &Path) -> Result<(), Dec
     if !plan.human_questions.is_empty() || !plan.unresolved_contradictions.is_empty() {
         return Err(DecapodError::ValidationError("PUBLICATION_DECISION_REQUIRED: resolve the governed plan's human questions and contradictions before publication; do not infer approval.".into()));
     }
+    Ok(trajectory)
+}
+
+pub fn verify_current_governance_for_publish(repo_root: &Path) -> Result<(), DecapodError> {
+    let trajectory = verify_current_governance_ownership(repo_root)?;
     for (path, present) in [
         (
             ".decapod/governance.json#/sections/plan",

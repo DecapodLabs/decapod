@@ -174,6 +174,25 @@ mod tests {
     }
 
     #[test]
+    fn provider_readiness_routes_only_transport_authorization_before_submission() {
+        let source = include_str!("lib.rs");
+        let readiness = source
+            .split_once("fn run_current_workbranch_readiness_with(")
+            .unwrap()
+            .1
+            .split_once("pub(crate) fn enforce_workbranch_readiness_before_push(")
+            .unwrap()
+            .0;
+        assert!(readiness.contains("if config.proof.validation_buildkite_preflights {\n            core::workspace::verify_readiness_transport_prerequisites(workspace_root)?;\n        } else {\n            core::workspace::verify_current_publication_prerequisites(workspace_root)?;\n        }"));
+        let boundary = readiness
+            .find("core::workspace::verify_readiness_transport_prerequisites")
+            .unwrap();
+        assert!(boundary < readiness.find("SnapshotHost::new(").unwrap());
+        assert!(readiness.contains("ProjectPrerequisites::ProviderRequired"));
+        assert!(!readiness.contains("run_validation_bounded_with_receipt("));
+    }
+
+    #[test]
     fn cli_rpc_and_publish_wiring_leave_local_suite_outside_true_path() {
         let source = include_str!("lib.rs");
         for (entry, end) in [

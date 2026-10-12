@@ -679,7 +679,7 @@ Run this gate once when the agent starts and again after every new prompt or use
 ```bash
 # Smart bootstrap: only install/init if a newer version is available
 (decapod capabilities --format json | grep -q '"is_latest":true') || (cargo install decapod && decapod init --proof)
-decapod docs ingest && decapod govern project-check && decapod session acquire
+decapod docs ingest && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status
 decapod todo add "<task>" && decapod todo claim --id <task-id>
@@ -746,7 +746,7 @@ Run this gate once when the agent starts and again after every new prompt or use
 ```bash
 # Smart bootstrap: only install/init if a newer version is available
 (decapod capabilities --format json | grep -q '"is_latest":true') || (cargo install decapod && decapod init --proof)
-decapod docs ingest && decapod govern project-check && decapod session acquire
+decapod docs ingest && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status
 decapod todo add "<task>" && decapod todo claim --id <task-id>
