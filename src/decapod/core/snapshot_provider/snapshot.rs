@@ -58,13 +58,13 @@ impl SnapshotRequest {
     pub fn transport_ref(&self) -> String {
         format!("{PREFIX}{}", self.request_id)
     }
-    /// Suppress only GitHub Actions on the disposable transport commit. The
-    /// source commit and future PR retain normal checks; Buildkite imports the
-    /// same workflows using its independent webhook and native job execution.
+    /// Bind the disposable transport to the exact source commit. Existing
+    /// service triggers may run independently; this readiness backend consumes
+    /// only actual Buildkite execution and never GitHub Actions results.
     pub fn message(&self) -> Result<String> {
         self.validate()?;
         Ok(format!(
-            "decapod CI preflight snapshot [skip actions]\n\nschema=1\nrequest={}\nsource={}\nbase={}\nsource_ref={}\n",
+            "decapod CI preflight snapshot\n\nschema=1\nrequest={}\nsource={}\nbase={}\nsource_ref={}\n",
             self.request_id, self.source_head, self.accepted_base, self.source_ref
         ))
     }

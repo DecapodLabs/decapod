@@ -102,7 +102,7 @@ class ActionFixtures(unittest.TestCase):
         return self.git('rev-parse', 'HEAD')
 
     def snapshot(self):
-        message = ('decapod CI preflight snapshot [skip actions]\n\nschema=1\n'
+        message = ('decapod CI preflight snapshot\n\nschema=1\n'
                    f'request={REQUEST}\nsource={self.source}\nbase={self.base}\n'
                    'source_ref=refs/heads/feature/ci-proof\n')
         transport = self.git('commit-tree', self.tree, '-p', self.source, '-m', message)

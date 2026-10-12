@@ -227,7 +227,7 @@ Describe the security primitives and security controls implemented in this repos
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f0ecfacc3f191c348abbc2ab3295404630ff5b7e2d376b826a8a2f6e37ca988a`
+- Repository signal fingerprint: `2cb4355f901b6b1f15605b26932ed0a405a491b282cce92b76f07e72f0fee607`
 - Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (174 files), `tests/` (184 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -283,9 +283,8 @@ outside deletion authority.
 
 ### Buildkite-only readiness transport
 
-The reserved preflight transport suppresses GitHub Actions only through its
-exact transport commit marker; ordinary source commits and PR checks retain
-their normal behavior. Buildkite execution archives, native producer identity,
+The reserved preflight transport carries no service skip directive; existing
+GitHub Actions runs remain independent and cannot supply Buildkite readiness. Buildkite execution archives, native producer identity,
 recipe, actual command outcomes and final attempt freshness remain mandatory.
 GitHub check links are discovery locators, never authority for successful
 Buildkite execution. No service denial permits changing credentials or falling

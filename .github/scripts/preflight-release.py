@@ -42,7 +42,7 @@ def source_context():
     if not re.fullmatch(r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}",request) or set(request.replace('-',''))=={'0'}: fail("invalid snapshot request")
     if os.environ.get("GITHUB_EVENT_NAME") != "push" or os.environ.get("GITHUB_REF") != "refs/heads/decapod/preflight/"+request or os.environ.get("GITHUB_SHA")!=s:
         fail("release proof is restricted to verified snapshot pushes")
-    message = f"decapod CI preflight snapshot [skip actions]\n\nschema=1\nrequest={request}\nsource={h}\nbase={b}\nsource_ref={context['SOURCE_REF']}\n"
+    message = f"decapod CI preflight snapshot\n\nschema=1\nrequest={request}\nsource={h}\nbase={b}\nsource_ref={context['SOURCE_REF']}\n"
     if git("show","-s","--format=%B",s)+"\n" != message: fail("snapshot metadata differs from verified context")
     if git("show","-s","--format=%P",s)!=h or git("rev-parse",s+"^{tree}")!=t or git("rev-parse",h+"^{tree}")!=t or git("rev-parse","HEAD")!=h:
         fail("snapshot/source parent or tree mismatch")

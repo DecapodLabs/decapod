@@ -12,8 +12,8 @@ tree as the candidate and whose sole parent is that candidate. Provider jobs
 verify this relationship and check out the candidate before executing source
 checks. The original branch reference is never the preflight transport.
 Buildkite is the sole remote readiness executor for this repository. The
-reserved transport commit carries the GitHub-specific `[skip actions]` marker;
-the source commit does not, so normal PR workflows run independently. Shared
+reserved transport commit carries no service skip directive. Existing GitHub
+workflows may run independently and are outside this readiness proof. Shared
 workflow trigger definitions remain because the Buildkite importer consumes
 them. Candidate compilation is proven by the actual Buildkite setup executor,
 using the same authenticated archive and binary lineage as downstream checks.
@@ -529,7 +529,7 @@ virtiofs/FUSE filesystem prohibition.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f0ecfacc3f191c348abbc2ab3295404630ff5b7e2d376b826a8a2f6e37ca988a`
+- Repository signal fingerprint: `2cb4355f901b6b1f15605b26932ed0a405a491b282cce92b76f07e72f0fee607`
 - Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (174 files), `tests/` (184 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

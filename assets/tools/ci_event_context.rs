@@ -56,7 +56,7 @@ pub struct Context {
 
 /// Exact transport message (all fields mandatory, in this order; one final LF):
 /// ```text
-/// decapod CI preflight snapshot [skip actions]
+/// decapod CI preflight snapshot
 ///
 /// schema=1
 /// request=<canonical lowercase UUID>
@@ -122,7 +122,7 @@ impl SnapshotMetadata {
     pub fn encode(&self) -> Check<String> {
         self.validate()?;
         Ok(format!(
-            "decapod CI preflight snapshot [skip actions]\n\nschema=1\nrequest={}\nsource={}\nbase={}\nsource_ref={}\n",
+            "decapod CI preflight snapshot\n\nschema=1\nrequest={}\nsource={}\nbase={}\nsource_ref={}\n",
             self.request, self.source, self.base, self.source_ref
         ))
     }
@@ -133,7 +133,7 @@ impl SnapshotMetadata {
         }
         let lines: Vec<_> = message.split('\n').collect();
         if lines.len() != 8
-            || lines[0] != "decapod CI preflight snapshot [skip actions]"
+            || lines[0] != "decapod CI preflight snapshot"
             || !lines[1].is_empty()
             || lines[2] != "schema=1"
             || !lines[7].is_empty()
