@@ -341,25 +341,36 @@
       "id": "seventh-remote-first-tested-source",
       "summary": "Retain actual990-test library pass and remote-first CLI/controller proof before Buildkite execution",
       "input_digest": "sha256:3c358cda5b830c278f31417693173f3328b0390122067a307083bd7f0d853f7e"
+    },
+    {
+      "id": "eighth-rpc-borrow-repair",
+      "summary": "Fix actual Buildkite strict Clippy RPC borrows without changing readiness behavior",
+      "input_digest": "sha256:a70ed9de3354dab6e7ff39bff55a567226c6d3f3bf1463736399a574a21723cc"
+    },
+    {
+      "id": "eighth-rpc-formatted-repair",
+      "summary": "Retain strict Clippy pass and canonical formatting for the RPC borrow repair",
+      "input_digest": "sha256:a9f3d1e571a9fe690e7d8937901b963a322b852bbeb0c292f9bc8779abfe13bc"
     }
   ],
   "intents": {
-    "intent:seventh-buildkite-convergence-20261012": {
+    "intent:eighth-buildkite-convergence-20261012": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "No local project prerequisite suite before Buildkite submission; native and CI-local behavior retained",
-        "No PR before complete real required Buildkite proof; no publish or deploy side effects"
+        "No local project prerequisite suite before Buildkite submission; no weakened checks or publication side effects",
+        "No PR before complete current-candidate Buildkite proof"
       ],
       "constraints": [
-        "src/decapod, tests, authored specs and generated governance/docs"
+        "src/decapod/lib.rs",
+        "Generated specs and governance"
       ],
       "created_sequence": 1,
-      "id": "intent:seventh-buildkite-convergence-20261012",
+      "id": "intent:eighth-buildkite-convergence-20261012",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Complete the prescribed Buildkite-owned validate runtime and converge actual preflight to green before creating the PR",
-      "refined_intent": "Route configured validation directly to remote submission, waiting and complete proof collection; fix only observed sixth-run failures",
+      "raw_intent": "Converge the complete prescribed Buildkite validation preflight to green before creating the PR",
+      "refined_intent": "Correct the two redundant RPC path borrows reported by actual Buildkite920 strict Clippy while retaining the remote-first runtime and all required proof",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -427,24 +438,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed remote-first dispatch, provider-owned prerequisite state, complete evidence aggregation and unchanged native/CI-local execution against the source patch",
-          "reviewed_code_fingerprint": "dd3e75a9aa9a596aaf23360b33bd0dc3226013002d7d4637d50e9017e3b2c701",
+          "reason": "Reviewed the two Clippy-reported redundant references around an existing borrowed RPC project path. This type-preserving cleanup changes no execution, interface or trust boundary; the current authored contract remains accurate.",
+          "reviewed_code_fingerprint": "c168978de2258d550c03392cd065fc558b77d0d6045c72452fd6f143eaeb65e8",
           "spec_material_hash": "1bb7f497285cdf6a2327d6976245bc317b6a17b9b19cc9c258a042580af97211"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed direct public CLI/alias/RPC routing, honest unrun local report fields and nonzero unsuccessful validate.run process behavior",
-          "reviewed_code_fingerprint": "dd3e75a9aa9a596aaf23360b33bd0dc3226013002d7d4637d50e9017e3b2c701",
+          "reason": "Reviewed the two Clippy-reported redundant references around an existing borrowed RPC project path. This type-preserving cleanup changes no execution, interface or trust boundary; the current authored contract remains accurate.",
+          "reviewed_code_fingerprint": "c168978de2258d550c03392cd065fc558b77d0d6045c72452fd6f143eaeb65e8",
           "spec_material_hash": "2062f7fea9677924305e53834f5c45dde6a741bb6d5d46c972e4f26dc341d607"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed removal of legacy local receipt freshness as provider preparation authority while preserving governed material, ownership, checkpoints, full source evidence and exact target checks",
-          "reviewed_code_fingerprint": "dd3e75a9aa9a596aaf23360b33bd0dc3226013002d7d4637d50e9017e3b2c701",
+          "reason": "Reviewed the two Clippy-reported redundant references around an existing borrowed RPC project path. This type-preserving cleanup changes no execution, interface or trust boundary; the current authored contract remains accurate.",
+          "reviewed_code_fingerprint": "c168978de2258d550c03392cd065fc558b77d0d6045c72452fd6f143eaeb65e8",
           "spec_material_hash": "b4ca46eb0671790376737241d86707730d7a8bf62be16d730a966bbfeab3a10c"
         }
       ],
@@ -456,57 +467,29 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791791469Z"
+      "updated_at": "1791792289Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "No PR before complete real required Buildkite proof; no publish or deploy side effects",
-        "No local project prerequisite suite before Buildkite submission; native and CI-local behavior retained"
+        "No PR before complete current-candidate Buildkite proof",
+        "No local project prerequisite suite before Buildkite submission; no weakened checks or publication side effects"
       ],
-      "artifact_hash": "sha256:feb09cdd4cab9beca6f9106904757f2a6c62dd14d4a38c0370c7f4c91af0ac36",
+      "artifact_hash": "sha256:0b00135bb2d6258af18e79968cdb5ae742a06b2db86ff361f5623d709872b38d",
       "checks": [
         {
-          "name": "actual_cli_alias_rpc_remote_first_regression",
-          "status": "passed"
-        },
-        {
-          "name": "complete_seventh_buildkite_preflight",
+          "name": "eighth_actual_buildkite_suite",
           "status": "unavailable"
         },
         {
-          "name": "dirty_candidate_transport_refusal",
+          "name": "eighth_fmt",
           "status": "passed"
         },
         {
-          "name": "final_remote_first_product_build",
+          "name": "eighth_strict_clippy_local",
           "status": "passed"
         },
         {
-          "name": "remote_first_candidate_compilation",
-          "status": "passed"
-        },
-        {
-          "name": "remote_first_controlled_snapshot_controller",
-          "status": "passed"
-        },
-        {
-          "name": "remote_first_profile_unit_tests",
-          "status": "passed"
-        },
-        {
-          "name": "remote_first_scope_unit_tests",
-          "status": "passed"
-        },
-        {
-          "name": "seventh_source_preflight",
-          "status": "unavailable"
-        },
-        {
-          "name": "seventh_supabase_library_local",
-          "status": "passed"
-        },
-        {
-          "name": "sixth_actual_buildkite_suite",
+          "name": "seventh_actual_buildkite_suite",
           "status": "failed"
         }
       ],
@@ -514,70 +497,58 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:seventh-buildkite-convergence-20261012",
+            "intent_id": "intent:eighth-buildkite-convergence-20261012",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:seventh-buildkite-convergence-20261012",
+            "intent_id": "intent:eighth-buildkite-convergence-20261012",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:seventh-buildkite-convergence-20261012",
+            "detail": "trajectory:eighth-buildkite-convergence-20261012",
             "event_id": "event:4",
-            "intent_id": "intent:seventh-buildkite-convergence-20261012",
+            "intent_id": "intent:eighth-buildkite-convergence-20261012",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:seventh-buildkite-convergence-20261012",
+            "detail": "trajectory:eighth-buildkite-convergence-20261012",
             "event_id": "event:5",
-            "intent_id": "intent:seventh-buildkite-convergence-20261012",
+            "intent_id": "intent:eighth-buildkite-convergence-20261012",
             "kind": "trajectory_step_recorded",
             "sequence": 5
-          },
-          {
-            "detail": "trajectory:seventh-buildkite-convergence-20261012",
-            "event_id": "event:6",
-            "intent_id": "intent:seventh-buildkite-convergence-20261012",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "seventh-buildkite-convergence-20261012": {
+          "eighth-buildkite-convergence-20261012": {
             "evidence_only": true,
-            "id": "seventh-buildkite-convergence-20261012",
-            "intent_id": "intent:seventh-buildkite-convergence-20261012",
+            "id": "eighth-buildkite-convergence-20261012",
+            "intent_id": "intent:eighth-buildkite-convergence-20261012",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
                   "src/decapod/lib.rs",
-                  "src/decapod/core/workspace.rs",
-                  "src/decapod/core/readiness_profile.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "src/decapod/validation_scope.rs",
-                  "Actual product binary built; 8 routing tests, 24 profile tests and 5 controlled SnapshotHost tests passed. These tests are not live provider readiness.",
-                  "Actual configured public validate returned nonzero for unstaged governance with local_project_checks=not_run_provider_owned, report=null and self_heal=[]; no local prerequisite suite executed.",
-                  "Sixth Buildkite source run914 reports failed Supabase consumer; raw log diagnosis is awaiting approved read resumption. Companion runs915-918 passed their measured executions."
+                  "src/decapod/lib.rs",
+                  "Actual Buildkite920 strict Clippy reported only two needless_borrow diagnostics in new RPC validation routing. Removed the redundant references; function signatures, provider selection and failure semantics are unchanged.",
+                  "The prior frozen candidate passed990 local library tests and actual CLI/alias/RPC routing regression. These results are retained as prior-candidate evidence, not substituted for the new complete provider run.",
+                  "No local project-check suite is required or executed before this configured Buildkite submission. The exact all-targets/all-features Clippy recipe is being checked independently; full current-candidate readiness remains pending."
                 ],
                 "proof_refs": [
-                  "remote_first_candidate_compilation",
-                  "remote_first_scope_unit_tests",
-                  "remote_first_profile_unit_tests",
-                  "remote_first_controlled_snapshot_controller",
-                  "dirty_candidate_transport_refusal",
-                  "complete_seventh_buildkite_preflight"
+                  "seventh_actual_buildkite_suite",
+                  "eighth_strict_clippy_local",
+                  "eighth_actual_buildkite_suite"
                 ],
                 "scope": [
-                  "src/decapod, tests, authored specs and generated governance/docs"
+                  "Generated specs and governance",
+                  "src/decapod/lib.rs"
                 ],
                 "sequence": 4,
                 "validation_findings": []
@@ -586,42 +557,17 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/decapod/lib.rs",
-                  "src/decapod/core/workspace.rs",
-                  "tests/init_validate_green_field.rs",
-                  "tests/unit/cli_tests.rs",
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  ".decapod/managed/specs/SECURITY.md",
-                  "Final actual product compilation passed. Controlled actual CLI, alias and RPC regression passed1/0: no local project suite/receipt/healing, missing required profile remains nonzero, governance/projection bytes preserved. Provider controller5/0 and profile24/0 are focused tests only.",
-                  "Sixth exact snapshot1bc744c34a435642197d732034f65ef5af2e1b02: Buildkite914 failed only stale guidance assertion; 982 library tests passed, including repaired automatic controller. Source receipts36/37 passed and companion915-918 passed. The stale assertion is now aligned to permitted branch pushes and PR-only readiness.",
-                  "No local project-check prerequisite suite was executed in this seventh iteration. Live complete Buildkite proof remains required before PR creation."
+                  "Exact all-targets/all-features strict Clippy completed successfully after the two reference corrections. Rustfmt condensed the corrected expression; final formatting check passed. Actual fresh Buildkite execution remains required."
                 ],
                 "proof_refs": [
-                  "final_remote_first_product_build",
-                  "actual_cli_alias_rpc_remote_first_regression",
-                  "sixth_actual_buildkite_suite",
-                  "seventh_source_preflight"
+                  "eighth_strict_clippy_local",
+                  "eighth_fmt"
                 ],
                 "scope": [
-                  "src/decapod, tests, authored specs and generated governance/docs"
+                  "Generated specs and governance",
+                  "src/decapod/lib.rs"
                 ],
                 "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "Full actual Supabase-feature library run passed990/0 with3 existing ignored tests. Local test optimization was0 for faster compilation; the provider recipe remains unchanged. Required Docker/platform/integration/source proof still belongs to the fresh Buildkite run."
-                ],
-                "proof_refs": [
-                  "seventh_supabase_library_local"
-                ],
-                "scope": [
-                  "src/decapod, tests, authored specs and generated governance/docs"
-                ],
-                "sequence": 6,
                 "validation_findings": []
               }
             ]
@@ -630,35 +576,23 @@
       },
       "declared_commands": [],
       "evidence": [
-        "Actual configured public validate returned nonzero for unstaged governance with local_project_checks=not_run_provider_owned, report=null and self_heal=[]; no local prerequisite suite executed.",
-        "Actual product binary built; 8 routing tests, 24 profile tests and 5 controlled SnapshotHost tests passed. These tests are not live provider readiness.",
-        "Final actual product compilation passed. Controlled actual CLI, alias and RPC regression passed1/0: no local project suite/receipt/healing, missing required profile remains nonzero, governance/projection bytes preserved. Provider controller5/0 and profile24/0 are focused tests only.",
-        "Full actual Supabase-feature library run passed990/0 with3 existing ignored tests. Local test optimization was0 for faster compilation; the provider recipe remains unchanged. Required Docker/platform/integration/source proof still belongs to the fresh Buildkite run.",
-        "No local project-check prerequisite suite was executed in this seventh iteration. Live complete Buildkite proof remains required before PR creation.",
-        "Sixth Buildkite source run914 reports failed Supabase consumer; raw log diagnosis is awaiting approved read resumption. Companion runs915-918 passed their measured executions.",
-        "Sixth exact snapshot1bc744c34a435642197d732034f65ef5af2e1b02: Buildkite914 failed only stale guidance assertion; 982 library tests passed, including repaired automatic controller. Source receipts36/37 passed and companion915-918 passed. The stale assertion is now aligned to permitted branch pushes and PR-only readiness."
+        "Actual Buildkite920 strict Clippy reported only two needless_borrow diagnostics in new RPC validation routing. Removed the redundant references; function signatures, provider selection and failure semantics are unchanged.",
+        "Exact all-targets/all-features strict Clippy completed successfully after the two reference corrections. Rustfmt condensed the corrected expression; final formatting check passed. Actual fresh Buildkite execution remains required.",
+        "No local project-check suite is required or executed before this configured Buildkite submission. The exact all-targets/all-features Clippy recipe is being checked independently; full current-candidate readiness remains pending.",
+        "The prior frozen candidate passed990 local library tests and actual CLI/alias/RPC routing regression. These results are retained as prior-candidate evidence, not substituted for the new complete provider run."
       ],
       "inspected_files": [
-        "src/decapod/core/workspace.rs",
         "src/decapod/lib.rs"
       ],
-      "intent_id": "intent:seventh-buildkite-convergence-20261012",
+      "intent_id": "intent:eighth-buildkite-convergence-20261012",
       "modified_files": [
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/SECURITY.md",
-        "src/decapod/core/readiness_profile.rs",
-        "src/decapod/core/validation_runtime.rs",
-        "src/decapod/core/workspace.rs",
-        "src/decapod/lib.rs",
-        "src/decapod/validation_scope.rs",
-        "tests/init_validate_green_field.rs",
-        "tests/unit/cli_tests.rs"
+        "src/decapod/lib.rs"
       ],
       "repo_scope": [
-        "src/decapod, tests, authored specs and generated governance/docs"
+        "Generated specs and governance",
+        "src/decapod/lib.rs"
       ],
-      "run_id": "seventh-buildkite-convergence-20261012",
+      "run_id": "eighth-buildkite-convergence-20261012",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
       "task_id": "bugs_01m4pf92p0r108x1",

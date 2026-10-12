@@ -10361,7 +10361,7 @@ mod rpc_handlers {
 
     pub(crate) fn handle_validate_run(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
         let scope = super::ValidationScope::public_validate();
-        let enabled = crate::cli::DecapodProjectConfig::load(&ctx.project_root)?
+        let enabled = crate::cli::DecapodProjectConfig::load(ctx.project_root)?
             .proof
             .validation_buildkite_preflights;
         scope.dispatch(
@@ -10383,8 +10383,7 @@ mod rpc_handlers {
         };
         invocation.validate()?;
         ensure_session_valid()?;
-        let readiness =
-            super::run_current_workbranch_readiness_with(&ctx.project_root, &invocation);
+        let readiness = super::run_current_workbranch_readiness_with(ctx.project_root, &invocation);
         let payload = serde_json::json!({
             "success": readiness.ready,
             "report": if readiness.ready { "Complete Buildkite source proof passed" } else { "Buildkite source proof is not ready" },

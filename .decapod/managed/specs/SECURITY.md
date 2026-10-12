@@ -234,7 +234,7 @@ Describe the security primitives and security controls implemented in this repos
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `dd3e75a9aa9a596aaf23360b33bd0dc3226013002d7d4637d50e9017e3b2c701`
+- Repository signal fingerprint: `a6bddd625dd325ceaf557fe528476e7f37ff2cb5ec5e3e1b9bdfc5994a632d41`
 - Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
