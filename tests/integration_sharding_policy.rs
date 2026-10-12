@@ -463,6 +463,54 @@ fn real_libtest_executable_inventory_is_read_through_the_supervisor() {
 
 #[cfg(unix)]
 #[test]
+fn failed_inventory_preserves_exit_126_and_captured_diagnostics_without_retry() {
+    let fixture = Fixture::new();
+    let artifact = fixture.artifact();
+    fake_supervisor(&artifact);
+    fs::create_dir_all(artifact.join("gatling.runfiles/_main")).unwrap();
+    script(
+        &artifact.join("gatling"),
+        "printf 'fixture stdout detail\\n'\nprintf 'fixture exec failure\\n' >&2\nexit 126",
+    );
+    let error = integration_shards::inventory(&artifact).unwrap_err();
+    assert_eq!(error.kind(), std::io::ErrorKind::Other);
+    let detail = error.to_string();
+    assert!(detail.contains("supervised Gatling inventory failed: exit status: 126"));
+    assert!(detail.contains("stdout=\"fixture stdout detail\\n\""));
+    assert!(detail.contains("stderr=\"fixture exec failure\\n\""));
+    assert_eq!(
+        fs::read_to_string(artifact.join("calls.log")).unwrap(),
+        "supervisor\n"
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn failed_inventory_bounds_both_diagnostic_stream_excerpts() {
+    let fixture = Fixture::new();
+    let artifact = fixture.artifact();
+    fake_supervisor(&artifact);
+    fs::create_dir_all(artifact.join("gatling.runfiles/_main")).unwrap();
+    let stdout = format!("stdout-start{}stdout-tail", "x".repeat(8192));
+    let stderr = format!("stderr-start{}stderr-tail", "y".repeat(8192));
+    script(
+        &artifact.join("gatling"),
+        &format!("printf '%s' '{stdout}'\nprintf '%s' '{stderr}' >&2\nexit 126"),
+    );
+    let detail = integration_shards::inventory(&artifact)
+        .unwrap_err()
+        .to_string();
+    assert!(detail.contains("exit status: 126"));
+    assert!(detail.contains("stdout-start"));
+    assert!(detail.contains("stderr-start"));
+    assert!(!detail.contains("stdout-tail"));
+    assert!(!detail.contains("stderr-tail"));
+    assert_eq!(detail.matches("(truncated;").count(), 2);
+    assert!(detail.len() < 3 * 4096);
+}
+
+#[cfg(unix)]
+#[test]
 fn relocated_gatling_shards_route_exact_filters_and_preserve_runfiles() {
     let fixture = Fixture::new();
     let artifact = fixture.artifact();
