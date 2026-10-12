@@ -215,6 +215,7 @@ pub(super) fn github_sources(
                     run_attempt: &inventory.run_attempt().to_string(),
                     native_job: None,
                     step_key: "",
+                    imported_recipe: None,
                 };
                 for obligation in &obligations {
                     if let Err(error) = verify_check(
@@ -279,6 +280,7 @@ struct ProducerContext<'a> {
     run_attempt: &'a str,
     native_job: Option<&'a str>,
     step_key: &'a str,
+    imported_recipe: Option<&'a provider::public_buildkite::ImportedRecipe>,
 }
 #[allow(clippy::too_many_arguments)]
 fn verify_check(
@@ -332,9 +334,15 @@ fn verify_check(
     // The expected binding is frozen from authenticated,
     // independently policy-checked preparation BEFORE accepting
     // substantive results. No green row chooses its own tools.
-    let preparation = custody::verify_preparation(files, &expected, |measured| {
-        source_policy::verify(project, check, &expected, measured, known_inputs)
-    })?;
+    let preparation = if let Some(recipe) = context.imported_recipe {
+        custody::verify_imported_preparation(files, &expected, recipe, |measured| {
+            source_policy::verify(project, check, &expected, measured, known_inputs)
+        })?
+    } else {
+        custody::verify_preparation(files, &expected, |measured| {
+            source_policy::verify(project, check, &expected, measured, known_inputs)
+        })?
+    };
     let binding = ExecutionBinding {
         role: obligation.role,
         definition_digest: obligation.definition_digest.clone(),
@@ -682,11 +690,12 @@ pub(super) fn buildkite_sources(
                     log.bytes(),
                 )?;
                 let context = ProducerContext {
-                    provider: "buildkite",
+                    provider: "buildkite_gha",
                     run_id: inventory.build_id(),
                     run_attempt: "0",
                     native_job: Some(&native_job),
                     step_key,
+                    imported_recipe: Some(&recipe),
                 };
                 for obligation in &obligations {
                     if let Err(error) = verify_check(

@@ -221,24 +221,29 @@
       "id": "second-bound-prerequisites",
       "summary": "Preserve actual prerequisite validation on exact server source; full provider proof remains pending",
       "input_digest": "sha256:bef91268b9fe299d5cc885627b24d3b3bef0e4301136613b605e1f74fd89841e"
+    },
+    {
+      "id": "third-live-source",
+      "summary": "Repair observed imported identity, Bazel data duplication and Clippy failures; retain actual second-run evidence and pending full third-candidate proof",
+      "input_digest": "sha256:7d379215046cf1ddf31aa7d37fc91cf94e24f3a232056309004217925c160010"
     }
   ],
   "intents": {
-    "intent:second-live-snapshot-20261012": {
+    "intent:third-live-snapshot-20261012": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "No workbranch or PR publication before full proof; temporary CI-only snapshot transport authorized; no releases, deployment or credential changes"
+        "Temporary snapshot transport only until full actual readiness succeeds; no release, deploy, credentials, or weakened checks."
       ],
       "constraints": [
-        "Decapod full source readiness and first-run CI repairs"
+        "Decapod source CI custody, authenticated imported receipts, Bazel input declaration, regression tests and reviewed source inventory."
       ],
       "created_sequence": 1,
-      "id": "intent:second-live-snapshot-20261012",
+      "id": "intent:third-live-snapshot-20261012",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Make validation prove the complete current source CI suite before workbranch or PR publication",
-      "refined_intent": "Run the second actual temporary snapshot now, preserve observed failures, and iterate from its provider evidence",
+      "raw_intent": "Make validation execute the complete applicable source preflight before workbranch publication or PR creation.",
+      "refined_intent": "Repair second-snapshot Buildkite imported identity, duplicated Bazel source input, and strict Clippy findings; execute a fresh exact temporary candidate and retain failed-run evidence.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -339,74 +344,74 @@
     },
     "trajectory": {
       "active_boundaries": [
-        "No workbranch or PR publication before full proof; temporary CI-only snapshot transport authorized; no releases, deployment or credential changes"
+        "Temporary snapshot transport only until full actual readiness succeeds; no release, deploy, credentials, or weakened checks."
       ],
-      "artifact_hash": "sha256:77d3629ed906db6d42167b3999dbc94dc2dd2b54a1cd9bfc9272935814233ead",
+      "artifact_hash": "sha256:3cca34803f5b3dbde6a586daa773018822c2904dde1e2315d060a3549237a41a",
       "checks": [
         {
-          "name": "automatic-controller-5",
+          "name": "bazel_package_load",
           "status": "passed"
         },
         {
-          "name": "ci-context-40",
-          "status": "passed"
-        },
-        {
-          "name": "ci-local-cli-rpc-integration-2",
-          "status": "passed"
-        },
-        {
-          "name": "decapod validate",
-          "status": "passed"
-        },
-        {
-          "name": "first-provider-snapshot",
-          "status": "failed"
-        },
-        {
-          "name": "fresh-complete-provider-proof",
+          "name": "candidate_build",
           "status": "partial"
         },
         {
-          "name": "material-gates-11",
+          "name": "reviewed_inventory_reconciliation",
           "status": "passed"
         },
         {
-          "name": "publisher-ci-spoof-2",
+          "name": "second_github_docker_recovery",
           "status": "passed"
         },
         {
-          "name": "source-policy-35",
+          "name": "second_github_standalone_validation",
           "status": "passed"
+        },
+        {
+          "name": "second_github_supabase",
+          "status": "passed"
+        },
+        {
+          "name": "second_provider_suite",
+          "status": "failed"
+        },
+        {
+          "name": "source_ci_policy_36",
+          "status": "passed"
+        },
+        {
+          "name": "third_exact_suite",
+          "status": "unavailable"
         }
       ],
       "completion_claim": "in_progress",
-      "current_phase": "validation",
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:second-live-snapshot-20261012",
+            "intent_id": "intent:third-live-snapshot-20261012",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:second-live-snapshot-20261012",
+            "intent_id": "intent:third-live-snapshot-20261012",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:second-live-snapshot-20261012",
+            "detail": "trajectory:third-live-snapshot-20261012",
             "event_id": "event:4",
-            "intent_id": "intent:second-live-snapshot-20261012",
+            "intent_id": "intent:third-live-snapshot-20261012",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:second-live-snapshot-20261012",
+            "detail": "trajectory:third-live-snapshot-20261012",
             "event_id": "event:5",
-            "intent_id": "intent:second-live-snapshot-20261012",
+            "intent_id": "intent:third-live-snapshot-20261012",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           }
@@ -415,47 +420,54 @@
         "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "second-live-snapshot-20261012": {
+          "third-live-snapshot-20261012": {
             "evidence_only": true,
-            "id": "second-live-snapshot-20261012",
-            "intent_id": "intent:second-live-snapshot-20261012",
+            "id": "third-live-snapshot-20261012",
+            "intent_id": "intent:third-live-snapshot-20261012",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "Real first-run logs and exact source identities preserved. Corrected focused tests pass. Second snapshot intentionally starts before pending importer-identity implementation and full green proof."
+                  "https://github.com/DecapodLabs/decapod/actions/runs/38204208918",
+                  "https://buildkite.com/decapodlabs/decapod/builds/890",
+                  "/workspace/shared/release-pr-validation-evidence/third-source-policy.log"
                 ],
                 "proof_refs": [
-                  "material-gates-11",
-                  "ci-context-40",
-                  "source-policy-35",
-                  "automatic-controller-5",
-                  "publisher-ci-spoof-2",
-                  "ci-local-cli-rpc-integration-2",
-                  "first-provider-snapshot",
-                  "fresh-complete-provider-proof"
+                  "source_ci_policy_36",
+                  "second_provider_suite",
+                  "second_github_standalone_validation",
+                  "second_github_docker_recovery",
+                  "second_github_supabase",
+                  "third_exact_suite"
                 ],
                 "scope": [
-                  "Decapod full source readiness and first-run CI repairs"
+                  "Decapod source CI custody, authenticated imported receipts, Bazel input declaration, regression tests and reviewed source inventory."
                 ],
                 "sequence": 4,
-                "validation_findings": []
+                "validation_findings": [
+                  "Current focused regression success is partial evidence; full third-candidate provider execution remains required."
+                ]
               },
               {
-                "action": "validation",
-                "command": "decapod validate",
+                "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  ".decapod/governance.json",
-                  ".decapod/governance.json",
-                  "validation epoch ve_c8c1f63c4c25340c completed with zero failures"
+                  "assets/tools/source_ci_custody.rs",
+                  "src/decapod/core/snapshot_provider/source_execution.rs",
+                  "src/decapod/core/validation_runtime/snapshot/source_import.rs",
+                  ".config/build/decapod.BUILD.bzl",
+                  "tests/integration_custody_policy.rs",
+                  "/workspace/shared/release-pr-validation-evidence/third-bazel-package.log",
+                  "/workspace/shared/release-pr-validation-evidence/third-reconciled.json"
                 ],
                 "proof_refs": [
-                  "decapod validate"
+                  "bazel_package_load",
+                  "reviewed_inventory_reconciliation",
+                  "candidate_build"
                 ],
                 "scope": [
-                  "Decapod full source readiness and first-run CI repairs"
+                  "Decapod source CI custody, authenticated imported receipts, Bazel input declaration, regression tests and reviewed source inventory."
                 ],
                 "sequence": 5,
                 "validation_findings": []
@@ -464,30 +476,37 @@
           }
         }
       },
-      "declared_commands": [
-        "decapod validate"
-      ],
+      "declared_commands": [],
       "evidence": [
-        "Real first-run logs and exact source identities preserved. Corrected focused tests pass. Second snapshot intentionally starts before pending importer-identity implementation and full green proof.",
-        "validation epoch ve_c8c1f63c4c25340c completed with zero failures"
+        "/workspace/shared/release-pr-validation-evidence/third-bazel-package.log",
+        "/workspace/shared/release-pr-validation-evidence/third-reconciled.json",
+        "/workspace/shared/release-pr-validation-evidence/third-source-policy.log",
+        "https://buildkite.com/decapodlabs/decapod/builds/890",
+        "https://github.com/DecapodLabs/decapod/actions/runs/38204208918"
       ],
       "inspected_files": [],
-      "intent_id": "intent:second-live-snapshot-20261012",
+      "intent_id": "intent:third-live-snapshot-20261012",
       "modified_files": [
-        ".decapod/governance.json"
+        ".config/build/decapod.BUILD.bzl",
+        "assets/tools/source_ci_custody.rs",
+        "src/decapod/core/snapshot_provider/source_execution.rs",
+        "src/decapod/core/validation_runtime/snapshot/source_import.rs",
+        "tests/integration_custody_policy.rs"
       ],
       "next_transitions": [
-        "publish"
+        "validation"
       ],
       "repo_scope": [
-        "Decapod full source readiness and first-run CI repairs"
+        "Decapod source CI custody, authenticated imported receipts, Bazel input declaration, regression tests and reviewed source inventory."
       ],
-      "run_id": "second-live-snapshot-20261012",
+      "run_id": "third-live-snapshot-20261012",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
       "task_id": "bugs_01m4pf92p0r108x1",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Current focused regression success is partial evidence; full third-candidate provider execution remains required."
+      ]
     },
     "validation": {
       "ci_prediction": {

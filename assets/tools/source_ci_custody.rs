@@ -266,6 +266,16 @@ impl Context {
                 ("job_id", self.job_id == check.job),
                 ("step_key", self.step_key.is_empty()),
             ],
+            // The compatibility runtime exposes the build and logical job,
+            // but deliberately withholds native job UUID/step key from shells.
+            // This remains an unauthenticated claim until outer importer custody.
+            "buildkite_gha" => [
+                ("provider", true),
+                ("run_id", uuid(&self.run_id)),
+                ("run_attempt", self.run_attempt.parse::<u32>().is_ok()),
+                ("job_id", self.job_id == check.job),
+                ("step_key", self.step_key.is_empty()),
+            ],
             "buildkite" => [
                 ("provider", true),
                 ("run_id", uuid(&self.run_id)),
@@ -1113,6 +1123,18 @@ pub fn run(
 /// Workflow convenience entrypoint: freeze expectations from this reviewed
 /// source catalog before preparation or check commands. Provider collection must
 /// independently compare this compiled definition to the captured source plan.
+// buildkite-gha v0.102.2 internal/runtime/runtime.go RunIdentity.githubValues
+// maps native retry N to GITHUB_RUN_ATTEMPT=N+1. No absent/zero/overflow default.
+fn imported_native_retry(mapped_attempt: &str) -> io::Result<String> {
+    mapped_attempt
+        .parse::<u32>()
+        .ok()
+        .filter(|value| value.to_string() == mapped_attempt)
+        .and_then(|value| value.checked_sub(1))
+        .map(|value| value.to_string())
+        .ok_or_else(|| io::Error::other("invalid imported runtime attempt mapping"))
+}
+
 pub fn run_ci(
     repo: &Path,
     check: &Check,
@@ -1157,13 +1179,22 @@ pub fn run_ci(
             variable("BUILDKITE_STEP_KEY", "BUILDKITE_STEP_KEY")?,
         )
     } else {
-        (
-            "github".into(),
-            variable("GITHUB_RUN_ID", "GITHUB_RUN_ID")?,
-            variable("GITHUB_RUN_ATTEMPT", "GITHUB_RUN_ATTEMPT")?,
-            variable("GITHUB_JOB", "GITHUB_JOB")?,
-            String::new(),
-        )
+        let run_id = variable("GITHUB_RUN_ID", "GITHUB_RUN_ID")?;
+        let attempt = variable("GITHUB_RUN_ATTEMPT", "GITHUB_RUN_ATTEMPT")?;
+        let logical_job = variable("GITHUB_JOB", "GITHUB_JOB")?;
+        if uuid(&run_id) {
+            // Shape selects an honest imported-shell claim, never authority.
+            // Native UUID/key are authenticated only by the external collector.
+            (
+                "buildkite_gha".into(),
+                run_id,
+                imported_native_retry(&attempt)?,
+                logical_job,
+                String::new(),
+            )
+        } else {
+            ("github".into(), run_id, attempt, logical_job, String::new())
+        }
     };
     // Export the actual native-attempt identity, rather than asking imported
     // workflow expression contexts to infer which provider env is available.
@@ -1323,6 +1354,39 @@ mod tests {
         assert!(
             ctx.validate(check, &"1".repeat(40), &"2".repeat(40), &recipe)
                 .is_ok()
+        );
+    }
+    #[test]
+    fn official_importer_identity_is_logical_and_checked_retry_mapping() {
+        let check = find_check("fmt").unwrap();
+        let recipe = commands(check, &[]).unwrap();
+        let mut ctx = context(&recipe);
+        ctx.provider = "buildkite_gha".into();
+        ctx.run_id = "12345678-abcd-abcd-abcd-123456789abc".into();
+        ctx.run_attempt = imported_native_retry("1").unwrap();
+        assert_eq!(ctx.run_attempt, "0");
+        assert_eq!(imported_native_retry("4").unwrap(), "3");
+        assert!(
+            ctx.validate(check, &"1".repeat(40), &"2".repeat(40), &recipe)
+                .is_ok()
+        );
+        assert_eq!(
+            artifact_name(check.job, check.matrix, &ctx.run_attempt).unwrap(),
+            "source-ci-custody-fmt-singleton-attempt-0"
+        );
+        for bad in ["", "0", "01", "-1", "4294967296", "unknown"] {
+            assert!(imported_native_retry(bad).is_err(), "{bad}");
+        }
+        ctx.job_id = "12345678-abcd-abcd-abcd-123456789def".into();
+        assert!(
+            ctx.validate(check, &"1".repeat(40), &"2".repeat(40), &recipe)
+                .is_err()
+        );
+        ctx.job_id = check.job.into();
+        ctx.step_key = "invented-native-key".into();
+        assert!(
+            ctx.validate(check, &"1".repeat(40), &"2".repeat(40), &recipe)
+                .is_err()
         );
     }
     #[test]

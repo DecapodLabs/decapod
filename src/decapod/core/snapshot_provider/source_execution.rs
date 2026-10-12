@@ -21,6 +21,8 @@ pub struct SourceExpectation {
     pub provider: String,
     pub run_id: String,
     pub run_attempt: String,
+    /// Authenticated native producer for Buildkite, including buildkite_gha.
+    /// Imported shell receipts instead expose the independently expected logical job.
     pub job_id: String,
     pub step_key: String,
     pub profile_digest: String,
@@ -145,7 +147,7 @@ fn file<'a>(files: &'a ArtifactFiles, prefix: &str, path: &str) -> Result<&'a [u
 }
 fn identity(v: &Value, e: &SourceExpectation) -> Result<()> {
     for (k, expected) in [
-        ("workflow", &e.workflow),
+        ("workflow", e.workflow.as_str()),
         ("job", &e.job),
         ("check", &e.check),
         ("platform", &e.platform),
@@ -156,8 +158,22 @@ fn identity(v: &Value, e: &SourceExpectation) -> Result<()> {
         ("provider", &e.provider),
         ("run_id", &e.run_id),
         ("run_attempt", &e.run_attempt),
-        ("job_id", &e.job_id),
-        ("step_key", &e.step_key),
+        (
+            "job_id",
+            if e.provider == "buildkite_gha" {
+                &e.job
+            } else {
+                &e.job_id
+            },
+        ),
+        (
+            "step_key",
+            if e.provider == "buildkite_gha" {
+                ""
+            } else {
+                &e.step_key
+            },
+        ),
         ("profile_digest", &e.profile_digest),
     ] {
         ensure(
@@ -306,7 +322,51 @@ impl AuthenticatedPreparation {
         &self.expected
     }
 }
+/// Imported shell claims require the sealed provider-authenticated recipe, not
+/// merely a UUID-shaped run ID or a caller-supplied standalone receipt.
+pub fn verify_imported_preparation(
+    files: &ArtifactFiles,
+    expected: &SourceExpectation,
+    recipe: &super::public_buildkite::ImportedRecipe,
+    verify_policy: impl FnOnce(MeasuredPreparation<'_>) -> Result<()>,
+) -> Result<AuthenticatedPreparation> {
+    ensure(
+        expected.provider == "buildkite_gha"
+            && expected.run_attempt == "0"
+            && recipe.logical_result() == "success",
+        "unsupported imported producer/attempt/result",
+    )?;
+    // The current public inventory adapter rejects all retries. Do not derive
+    // native attempt authority from the receipt or assume a later retry is zero.
+    let result = value(recipe.result().bytes())?;
+    let producer = required(&result, "producer")?;
+    let plan = recipe.plan_json();
+    let workflow = required(plan, "workflow")?;
+    ensure(
+        string(producer, "build_id")? == expected.run_id
+            && string(producer, "job_id")? == expected.job_id
+            && string(producer, "step_key")? == expected.step_key
+            && recipe.result().job_id() == expected.job_id
+            && string(workflow, "path")?.trim_start_matches("./") == expected.workflow
+            && string(workflow, "logical_job_id")? == expected.job
+            && string(required(plan, "target")?, "step_key")? == expected.step_key
+            && string(required(plan, "event")?, "sha")? == expected.snapshot,
+        "imported source claim differs from authenticated native recipe producer",
+    )?;
+    verify_preparation_inner(files, expected, verify_policy)
+}
 pub fn verify_preparation(
+    files: &ArtifactFiles,
+    expected: &SourceExpectation,
+    verify_policy: impl FnOnce(MeasuredPreparation<'_>) -> Result<()>,
+) -> Result<AuthenticatedPreparation> {
+    ensure(
+        expected.provider != "buildkite_gha",
+        "imported runtime receipt requires authenticated ImportedRecipe",
+    )?;
+    verify_preparation_inner(files, expected, verify_policy)
+}
+fn verify_preparation_inner(
     files: &ArtifactFiles,
     expected: &SourceExpectation,
     verify_policy: impl FnOnce(MeasuredPreparation<'_>) -> Result<()>,
@@ -332,7 +392,7 @@ pub fn verify_preparation(
         "unsupported source execution mode",
     )?;
     match expected.provider.as_str() {
-        "buildkite" => {
+        "buildkite" | "buildkite_gha" => {
             ensure(
                 uuid(&expected.run_id)
                     && uuid(&expected.job_id)

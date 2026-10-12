@@ -796,13 +796,13 @@ fn authored_range_commands_consume_real_verified_head_not_synthetic_merge_conten
             .output()
             .unwrap()
     };
-    let result = run(&material, &context);
+    let result = run(material, &context);
     assert!(
         !result.status.success(),
         "target-only prose was mistaken for authored candidate work"
     );
     assert!(String::from_utf8_lossy(&result.stdout).contains("FINGERPRINT_ONLY_SPECS"));
-    assert!(run(&lint, &context).status.success());
+    assert!(run(lint, &context).status.success());
     git(&["checkout", "-q", "candidate"]);
     fs::write(
         repo.join(".decapod/managed/specs/INTENT.md"),
@@ -812,7 +812,7 @@ fn authored_range_commands_consume_real_verified_head_not_synthetic_merge_conten
     git(&["add", "."]);
     git(&["commit", "-qm", "material candidate spec"]);
     let context = resolve(&git(&["rev-parse", "HEAD"]));
-    let result = run(&material, &context);
+    let result = run(material, &context);
     assert!(result.status.success(), "{result:?}");
     git(&[
         "commit",
@@ -821,9 +821,9 @@ fn authored_range_commands_consume_real_verified_head_not_synthetic_merge_conten
         "wip: incomplete candidate",
     ]);
     let context = resolve(&git(&["rev-parse", "HEAD"]));
-    assert!(!run(&lint, &context).status.success());
+    assert!(!run(lint, &context).status.success());
     let result = Command::new("bash")
-        .args(["-c", &lint])
+        .args(["-c", lint])
         .current_dir(&repo)
         .env("SOURCE_CI_EVENT", "pull_request")
         .env("SOURCE_CI_MERGE_BASE", "f".repeat(40))

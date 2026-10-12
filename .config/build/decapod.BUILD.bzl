@@ -283,7 +283,7 @@ def decapod_targets():
                 "assets/Dockerfile.workspace",
             ] if path == "tests/release_workflow_policy.rs" else native.glob([
                 ".github/workflows/*.yml",
-            ]) if path == "tests/source_ci_profile_policy.rs" else []) + native.glob([
+            ], exclude = [".github/workflows/ci.yml"]) if path == "tests/source_ci_profile_policy.rs" else []) + native.glob([
                 # Runtime state is intentionally absent from a clean checkout;
                 # tests create the managed surfaces they need at runtime.
                 ".decapod/managed/**/*",

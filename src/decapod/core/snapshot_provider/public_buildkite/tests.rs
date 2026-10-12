@@ -452,3 +452,13 @@ fn missing_importer_result_is_only_a_locator_absence() {
     assert!(locate_recipe(&mut m, &i, JOB, &b).unwrap().is_none());
     assert!(collect_recipe(&mut m, &i, JOB, &recipe_expected(), &b).is_err());
 }
+
+/// Synthetic provider test double only. Exercise the real inventory/recipe
+/// verifier so source tests cannot mint an imported recipe from receipt JSON.
+pub(crate) fn synthetic_source_recipe() -> ImportedRecipe {
+    let mut reader = fixture("success");
+    let cancel = Cancellation::default();
+    let budget = Budget::new(Duration::from_secs(3), 1024 * 1024, &cancel).unwrap();
+    let inventory = collect_inventory(&mut reader, build(), &expected(), &budget).unwrap();
+    collect_recipe(&mut reader, &inventory, JOB, &recipe_expected(), &budget).unwrap()
+}

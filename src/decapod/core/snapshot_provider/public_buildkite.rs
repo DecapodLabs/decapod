@@ -1310,4 +1310,4 @@ pub fn recheck_inventory(
     )
 }
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;
