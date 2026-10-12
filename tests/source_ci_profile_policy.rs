@@ -33,6 +33,28 @@ fn full_paths() -> Vec<String> {
     ])
 }
 
+#[test]
+fn setup_proves_release_stable_inputs_before_the_strict_shared_build() {
+    let check = find_check("setup-bazel").unwrap();
+    assert!(!check.skipped_for_release_only);
+    assert!(check.capabilities.contains(&"python3"));
+    let recipe = commands(check, &full_paths()).unwrap();
+    assert_eq!(recipe.len(), 2);
+    assert_eq!(recipe[0].program, "bazelisk");
+    assert_eq!(recipe[0].args, ["test", "//:cargo_inputs_policy"]);
+    assert_eq!(recipe[1].program, "bazelisk");
+    assert_eq!(
+        recipe[1].args,
+        ["build", "//:decapod", "//:release_projection_drift"]
+    );
+    assert!(recipe.iter().all(|command| {
+        command
+            .args
+            .iter()
+            .all(|arg| !arg.starts_with("--lockfile_mode"))
+    }));
+}
+
 fn workflow(name: &str) -> &'static str {
     match name {
         "ci.yml" => CI,

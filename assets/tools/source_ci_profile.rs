@@ -108,7 +108,7 @@ pub const CHECKS: &[Check] = &[
     ),
     Check {
         skipped_for_release_only: false,
-        ..check!("setup-bazel", "setup", &["bazelisk"])
+        ..check!("setup-bazel", "setup", &["bazelisk", "python3"])
     },
     check!("rpc-suite", "test-rpc-suite", &["bazelisk"]),
     check!("chaos-replay", "chaos-replay", &["bazelisk"]),
@@ -654,7 +654,7 @@ pub fn commands(check: &Check, paths: &[String]) -> io::Result<Vec<Invocation>> 
         "clippy" => vec![cargo(&["clippy", "--all-targets", "--all-features", "--", "-D", "warnings"]).with("CLIPPY_CONF_DIR", Some(".config"))],
         "dependencies-machete" => vec![cargo(&["machete"])],
         "dependencies-deny" => vec![cargo(&["deny", "--config", ".config/deny.toml", "check"])],
-        "setup-bazel" => vec![bazel(&["build", "//:decapod", "//:release_projection_drift"])],
+        "setup-bazel" => vec![bazel(&["test", "//:cargo_inputs_policy"]), bazel(&["build", "//:decapod", "//:release_projection_drift"])],
         "rpc-suite" => vec![bazel(&["test", "//:agent_rpc_suite", "--test_arg=--test-threads=1"])],
         "chaos-replay" => vec![bazel(&["test", "//:chaos_replay", "--test_arg=--test-threads=1"])],
         "daemonless-lifecycle" => vec![bazel(&["test", "//:daemonless_lifecycle", "--test_arg=--test-threads=1"])],

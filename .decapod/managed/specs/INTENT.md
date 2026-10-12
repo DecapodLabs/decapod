@@ -25,6 +25,12 @@ the advancing root package version, matching root lockfile version, and optional
 changelog edits. This is an evidence-bound material-spec exception, not a reason
 to invent authored prose or weaken validation for mixed source changes.
 
+The release-only range must remain buildable through the same strict Bazel
+setup on both providers. Root package release identity is not a dependency
+change: a generated dependency-only Cargo view normalizes that one matching
+local version while preserving all other input bytes. Neither release CI nor
+ordinary follow-on source work may silently rewrite the committed Bazel lock.
+
 ## Post-merge reliability boundary
 
 Source merges must retain full behavioral proof, including the host CLI
@@ -372,8 +378,8 @@ policy ban based solely on virtiofs or FUSE filesystem identity.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e3584d78d15131f611c7f497eae3e00e961798587727064461fc5332169d0f64`
-- Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
+- Repository signal fingerprint: `f3688002bd0d6f07225d0f5dc7ebf83402a900f0e25d30450602c94ede29a0f7`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

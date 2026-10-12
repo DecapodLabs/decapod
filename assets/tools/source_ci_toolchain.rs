@@ -875,6 +875,10 @@ mod live_runner_regressions {
             );
         } else if mode == "bazel" {
             executable(
+                &root.join("bin/python3"),
+                "#!/bin/sh\nprintf 'Python 3.12.3\\n'\n",
+            );
+            executable(
                 &root.join("bin/bazelisk"),
                 "#!/bin/sh\nif [ ! -e \"$HOME/warmed\" ]; then\n printf 'Downloading declared Bazel on cold cache\\n' >&2\n : > \"$HOME/warmed\"\nfi\nprintf 'bazel 9.3.0\\n'\n",
             );
