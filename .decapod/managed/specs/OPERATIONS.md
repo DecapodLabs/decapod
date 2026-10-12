@@ -410,7 +410,7 @@ continue to be surfaced through the existing storage checks.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `61c10bbfd5d605613dd008995d3a887ddf5104c0ea267ee478f639122c9bcdde`
+- Repository signal fingerprint: `636a1a22965f8b80425f743074166e220b9f37c2c4d1287a4f7759692665ed5e`
 - Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

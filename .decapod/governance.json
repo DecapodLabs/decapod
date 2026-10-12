@@ -371,6 +371,14 @@
       "id": "eleventh-test-compilation-repair",
       "summary": "Correct the three test-only compilation errors reported by Buildkite 937; preserve all verification semantics and wait for exact-candidate validation.",
       "input_digest": "sha256:931575cdc79ab5431ac5d2ba16e2f7b26d66a43b36c7da767cb053262893b554"
+    },
+    {
+      "id": "twelfth-history-fixture-setup",
+      "summary": "Repair negative history fixture setup while preserving lifecycle and verifier rejection guards; full Buildkite validation pending",
+      "input_digest": "sha256:4161b3fa4c7de820cea7ed69fcc651697f8bb800768dee8ddfc0f2ef980fb3aa",
+      "proof_refs": [
+        "https://buildkite.com/decapodlabs/decapod/builds/942"
+      ]
     }
   ],
   "intents": {
@@ -458,22 +466,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Only three test fixture lines changed to fix the actual Buildkite lib-test compilation errors. Re-reviewed current code fingerprint; provider execution, historical custody and security semantics are unchanged.",
-          "reviewed_code_fingerprint": "61c10bbfd5d605613dd008995d3a887ddf5104c0ea267ee478f639122c9bcdde",
+          "reason": "Only the negative history-verifier test fixture changed. It now explicitly checks the supported lifecycle rejection before constructing malformed identity inside its disposable test repository. Production execution, interface and security guards are unchanged; current fingerprint reviewed.",
+          "reviewed_code_fingerprint": "636a1a22965f8b80425f743074166e220b9f37c2c4d1287a4f7759692665ed5e",
           "spec_material_hash": "40f3fdc655a6995e78fc7611fcd296c419290085e2417378e7c34bf0da8a0c1e"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Only three test fixture lines changed to fix the actual Buildkite lib-test compilation errors. Re-reviewed current code fingerprint; provider execution, historical custody and security semantics are unchanged.",
-          "reviewed_code_fingerprint": "61c10bbfd5d605613dd008995d3a887ddf5104c0ea267ee478f639122c9bcdde",
+          "reason": "Only the negative history-verifier test fixture changed. It now explicitly checks the supported lifecycle rejection before constructing malformed identity inside its disposable test repository. Production execution, interface and security guards are unchanged; current fingerprint reviewed.",
+          "reviewed_code_fingerprint": "636a1a22965f8b80425f743074166e220b9f37c2c4d1287a4f7759692665ed5e",
           "spec_material_hash": "714d3480f00a7f23c295334fc0fa34a33d31452528c0188549a3bac7211531fa"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Only three test fixture lines changed to fix the actual Buildkite lib-test compilation errors. Re-reviewed current code fingerprint; provider execution, historical custody and security semantics are unchanged.",
-          "reviewed_code_fingerprint": "61c10bbfd5d605613dd008995d3a887ddf5104c0ea267ee478f639122c9bcdde",
+          "reason": "Only the negative history-verifier test fixture changed. It now explicitly checks the supported lifecycle rejection before constructing malformed identity inside its disposable test repository. Production execution, interface and security guards are unchanged; current fingerprint reviewed.",
+          "reviewed_code_fingerprint": "636a1a22965f8b80425f743074166e220b9f37c2c4d1287a4f7759692665ed5e",
           "spec_material_hash": "393b95c571ce232c86507571e7b512b50567f62996508496ef2886019ebef3c5"
         }
       ],
@@ -485,7 +493,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791797981Z"
+      "updated_at": "1791799029Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -493,11 +501,23 @@
         "Preserve11 reviewed public history tips; never include10 private tainted commits or two denied fixture blobs",
         "Same workspace branch only; no new temporary refs, no force-push, no deletion, no local duplicate validation suite"
       ],
-      "artifact_hash": "sha256:7ae9b1285345e25139f9cc5a23f89e9e992d10f9b38561052006ef90e59afaaa",
+      "artifact_hash": "sha256:de426e88e2b53c83f7b8e9883b9e18e8d8ef3c1fd323d9c0b1a3dd83d3bcae45",
       "checks": [
         {
           "name": "actual_action_12",
           "status": "passed"
+        },
+        {
+          "name": "buildkite-942-clippy",
+          "status": "passed"
+        },
+        {
+          "name": "buildkite-942-history-fixture",
+          "status": "failed"
+        },
+        {
+          "name": "buildkite-next-candidate",
+          "status": "partial"
         },
         {
           "name": "ci_context_50",
@@ -544,7 +564,7 @@
           "status": "partial"
         }
       ],
-      "current_phase": "validation",
+      "current_phase": "repairing",
       "custody": {
         "events": [
           {
@@ -579,10 +599,17 @@
             "intent_id": "intent:ninth-workbranch-preflight-20261012",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:ninth-workbranch-preflight-20261012",
+            "event_id": "event:7",
+            "intent_id": "intent:ninth-workbranch-preflight-20261012",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "ninth-workbranch-preflight-20261012": {
@@ -656,16 +683,38 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "repairing",
+                "command": "decapod validate --format json",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "tests/unit/core/governance_document_tests.rs",
+                  "Buildkite942 exact14e6f10a: 1015 library tests passed; history_first_parent_identity_remains_strict failed during second-journal setup. Supported lifecycle correctly rejected unaccepted first journal; fixture now asserts that rejection, then deliberately constructs invalid identity in its disposable Git history for independent verifier refusal. Production guards unchanged; full candidate validation pending."
+                ],
+                "proof_refs": [
+                  "buildkite-942-history-fixture",
+                  "buildkite-942-clippy",
+                  "buildkite-next-candidate"
+                ],
+                "scope": [
+                  "Current workspace provider transport, source CI context, transient artifact read recovery, focused regression tests and generated documentation"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "decapod validate --format json"
+      ],
       "evidence": [
         "Buildkite 932 reproduced the historical same-tree transport checkpoint failure; all other source and companion jobs passed. No proof is transferred to this changed candidate.",
         "Buildkite 937 Clippy lib-test compilation identified two ambiguous core imports and one swapped captured-base fixture argument; only those three test lines were corrected.",
         "Buildkite927-931 passed for prior exact candidate0af18eb6; source changed afterward, so new current-branch validation remains required",
+        "Buildkite942 exact14e6f10a: 1015 library tests passed; history_first_parent_identity_remains_strict failed during second-journal setup. Supported lifecycle correctly rejected unaccepted first journal; fixture now asserts that rejection, then deliberately constructs invalid identity in its disposable Git history for independent verifier refusal. Production guards unchanged; full candidate validation pending.",
         "Current CLI compiled with provider-owned material checks and public-reader selection; new regression tests execute in the required Buildkite suite.",
         "Same-branch provider/controller and real action regressions passed; timeout-only retry baseline failed and25 reader tests passed after repair"
       ],

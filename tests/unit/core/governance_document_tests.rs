@@ -392,9 +392,16 @@ fn history_first_parent_identity_remains_strict() {
     let base = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
     begin_pr(root.path(), "first-change", "master").unwrap();
     history_checkpoint_commit(root.path(), "first");
-    // Explicitly opening a new journal does not legitimize a mixed-identity
-    // first-parent PR against the old accepted base.
-    begin_pr_from_context(root.path(), "second-change", "master", Some(&base), None).unwrap();
+    // The supported lifecycle rejects replacing an unaccepted journal.
+    let error = begin_pr_from_context(root.path(), "second-change", "master", Some(&base), None)
+        .unwrap_err();
+    assert!(error.to_string().contains("GOVERNANCE_PR_NOT_ACCEPTED"));
+
+    // Deliberately construct malformed history in this disposable fixture to
+    // exercise the verifier independently of the lifecycle guard above.
+    let mut document = load(root.path()).unwrap().unwrap();
+    document.change.as_mut().unwrap().id = "second-change".into();
+    save(root.path(), &document).unwrap();
     history_checkpoint_commit(root.path(), "second");
     assert!(
         verify_pr_checkpoints(root.path(), &base, "HEAD")
