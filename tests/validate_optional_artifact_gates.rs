@@ -34,7 +34,16 @@ fn setup_repo() -> (TempDir, PathBuf, String) {
         .expect("git init");
     assert!(init.status.success(), "git init failed");
 
-    let decapod_init = run_decapod(&dir, &["init", "--force"], &[]);
+    let decapod_init = run_decapod(
+        &dir,
+        &[
+            "init",
+            "--force",
+            "--product-summary",
+            "Evidence Ledger records reviewable claims and their supporting artifacts.",
+        ],
+        &[],
+    );
     assert!(
         decapod_init.status.success(),
         "decapod init failed: {}",

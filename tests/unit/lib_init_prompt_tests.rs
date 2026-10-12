@@ -476,3 +476,46 @@ fn init_config_roundtrip_does_not_use_shorthand_as_structured_proof_authority() 
         serde_json::to_value(&config.proof).unwrap(),
     );
 }
+
+#[test]
+fn project_identity_inference_prefers_product_sections_over_narrow_task() {
+    let tmp = tempdir().unwrap();
+    let specs = tmp.path().join(".decapod/managed/specs");
+    fs::create_dir_all(&specs).unwrap();
+    fs::write(
+        tmp.path().join("recipe.py"),
+        "def scale(amount, ratio): return amount * ratio\n",
+    )
+    .unwrap();
+    fs::write(specs.join("INTENT.md"), "# Intent\n\n## Current Task\nFix fractional servings in the parser.\n\n## Product Outcome\nRecipe Kit helps home cooks scale ingredient quantities.\n").unwrap();
+    fs::write(specs.join("ARCHITECTURE.md"), "# Architecture\n\n## Recent Change\nAdjust the rounding branch.\n\n## Direction\nA Python library with a pure ingredient-scaling core.\n").unwrap();
+    let ctx = infer_repo_context(tmp.path()).unwrap();
+    assert_eq!(
+        ctx.product_summary.as_deref(),
+        Some("Recipe Kit helps home cooks scale ingredient quantities.")
+    );
+    assert_eq!(
+        ctx.architecture_direction.as_deref(),
+        Some("A Python library with a pure ingredient-scaling core.")
+    );
+}
+
+#[test]
+fn repository_shape_does_not_invent_product_or_runtime_guarantees() {
+    let tmp = tempdir().unwrap();
+    fs::create_dir(tmp.path().join("backend")).unwrap();
+    fs::write(
+        tmp.path().join("recipe.py"),
+        "def scale(amount, ratio): return amount * ratio\n",
+    )
+    .unwrap();
+    let ctx = infer_repo_context(tmp.path()).unwrap();
+    assert_eq!(
+        ctx.product_summary.as_deref(),
+        Some("Define the user-visible outcome in one paragraph.")
+    );
+    let direction = ctx.architecture_direction.unwrap();
+    assert!(direction.contains("confirm interfaces"));
+    assert!(!direction.contains("durable state ownership"));
+    assert!(!direction.contains("proof-gated releases"));
+}

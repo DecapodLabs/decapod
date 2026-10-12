@@ -25,7 +25,16 @@ fn setup_repo() -> (TempDir, PathBuf, String) {
         .expect("git init");
     assert!(init.status.success(), "git init failed");
 
-    let out = run_decapod(&repo_dir, &["init", "--force"], &[]);
+    let out = run_decapod(
+        &repo_dir,
+        &[
+            "init",
+            "--force",
+            "--product-summary",
+            "Local Records stores and retrieves structured records for project contributors.",
+        ],
+        &[],
+    );
     assert!(
         out.status.success(),
         "decapod init failed: {}",

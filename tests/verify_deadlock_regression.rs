@@ -52,7 +52,17 @@ fn test_verify_deadlock_prevention() {
     init_git_repo(&main_repo);
 
     // Initialize decapod in main repo
-    let init = run_cmd(&main_repo, &["init", "--dir", "."], &[]);
+    let init = run_cmd(
+        &main_repo,
+        &[
+            "init",
+            "--dir",
+            ".",
+            "--product-summary",
+            "Work Ledger tracks task outcomes and their supporting verification evidence.",
+        ],
+        &[],
+    );
     assert!(
         init.status.success(),
         "init failed: {}",

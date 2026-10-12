@@ -938,3 +938,21 @@ fn provider_owned_prerequisites_require_remote_rows_and_complete_actual_evidence
         .is_err()
     );
 }
+
+#[test]
+fn missing_required_build_and_test_contracts_never_compile_an_empty_profile() {
+    for path in [
+        "assets/tools/source_ci_profile.rs",
+        ".github/workflows/ci.yml",
+    ] {
+        let (mut declaration, mut sources, facts, _) = inputs();
+        sources.files.remove(path);
+        // Even a matching inventory declaration cannot bless missing coverage.
+        declaration.reviewed_sources_digest = sources.digest().unwrap();
+        let error = required_source_catalog(Some(&declaration), &sources, &facts).unwrap_err();
+        assert_eq!(error, PlanningFailure::MissingSource(path.into()));
+        let diagnostic = error.to_string();
+        assert!(diagnostic.contains("agent must restore or reconcile"));
+        assert!(diagnostic.contains("rerun decapod validate"));
+    }
+}

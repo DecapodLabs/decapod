@@ -2,6 +2,7 @@
 //! Complete native job inventory and content-addressed importer provenance do
 //! not prove substantive source checks. Only measured execution custody may do
 //! that; this module deliberately cannot mint a readiness Observation.
+use super::super::bounded_process::ProcessCapture;
 use super::*;
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
@@ -461,6 +462,63 @@ fn bounded_parallel_reads<T: Sync, U: Send>(
     })
 }
 
+/// Execute one already-authorized hop. Capture and wait stay bound to the
+/// caller's original Budget; separate closures let policy tests model timeout,
+/// cancellation and deadline exhaustion without racing the CI wall clock.
+fn read_with_timeout_retries(
+    kind: PublicReadKind,
+    endpoint: &str,
+    timeout_retries: &mut u8,
+    mut capture: impl FnMut() -> Result<ProcessCapture>,
+    mut wait: impl FnMut(Duration) -> Result<()>,
+) -> Result<ProcessCapture> {
+    loop {
+        let out = capture()?;
+        let timed_out = matches!(out.termination, Termination::TimedOut)
+            || (matches!(out.termination, Termination::Exited)
+                && out.output.status.code() == Some(28));
+        // Retry only a timeout of this identical, already-authorized GET.
+        // Never retry denied authorization, HTTP failures, TLS failures,
+        // cancellation, malformed responses or output-limit violations.
+        // Earlier verified downloads remain in this collection; only the
+        // current incomplete response is discarded before its retry.
+        if timed_out && *timeout_retries < 2 {
+            *timeout_retries += 1;
+            wait(Duration::from_secs(u64::from(*timeout_retries)))?;
+            continue;
+        }
+        match out.termination {
+            Termination::Cancelled => {
+                return Err(io::Error::new(
+                    io::ErrorKind::Interrupted,
+                    "public read cancelled",
+                ));
+            }
+            Termination::TimedOut => {
+                return Err(io::Error::new(
+                    io::ErrorKind::TimedOut,
+                    format!(
+                        "public read timed out after {} bounded attempt(s)",
+                        *timeout_retries + 1
+                    ),
+                ));
+            }
+            Termination::OutputLimit => return Err(invalid("public read exceeded bound")),
+            Termination::Exited => (),
+        }
+        if !out.output.status.success() {
+            return Err(public_http_failure_after_attempts(
+                &format!("{kind:?}"),
+                endpoint,
+                out.output.status.code().unwrap_or(-1),
+                &out.output.stdout,
+                *timeout_retries + 1,
+            ));
+        }
+        return Ok(out);
+    }
+}
+
 fn authorized_curl_get(
     curl: &Path,
     request: &PublicRequest,
@@ -493,59 +551,23 @@ fn authorized_curl_get(
             "--url",
             &destination,
         ]);
-        let out = loop {
-            let limits = ProcessLimits {
-                timeout: budget.remaining()?.min(Duration::from_secs(30)),
-                max_output_bytes: budget.max_bytes,
-            };
-            let out = if validated.kind() == PublicReadKind::ArtifactContent {
-                cmd.bounded_artifact_capture(limits, budget.cancel)?
-            } else {
-                cmd.bounded_capture(limits, budget.cancel)?
-            };
-            let timed_out = matches!(out.termination, Termination::TimedOut)
-                || (matches!(out.termination, Termination::Exited)
-                    && out.output.status.code() == Some(28));
-            // Retry only a timeout of this identical, already-authorized GET.
-            // Never retry denied authorization, HTTP failures, TLS failures,
-            // cancellation, malformed responses or output-limit violations.
-            // Earlier verified downloads remain in this collection; only the
-            // current incomplete response is discarded before its retry.
-            if timed_out && timeout_retries < 2 {
-                timeout_retries += 1;
-                budget.wait(Duration::from_secs(u64::from(timeout_retries)))?;
-                continue;
-            }
-            match out.termination {
-                Termination::Cancelled => {
-                    return Err(io::Error::new(
-                        io::ErrorKind::Interrupted,
-                        "public read cancelled",
-                    ));
+        let out = read_with_timeout_retries(
+            validated.kind(),
+            &request.url(),
+            &mut timeout_retries,
+            || {
+                let limits = ProcessLimits {
+                    timeout: budget.remaining()?.min(Duration::from_secs(30)),
+                    max_output_bytes: budget.max_bytes,
+                };
+                if validated.kind() == PublicReadKind::ArtifactContent {
+                    cmd.bounded_artifact_capture(limits, budget.cancel)
+                } else {
+                    cmd.bounded_capture(limits, budget.cancel)
                 }
-                Termination::TimedOut => {
-                    return Err(io::Error::new(
-                        io::ErrorKind::TimedOut,
-                        format!(
-                            "public read timed out after {} bounded attempt(s)",
-                            timeout_retries + 1
-                        ),
-                    ));
-                }
-                Termination::OutputLimit => return Err(invalid("public read exceeded bound")),
-                Termination::Exited => (),
-            }
-            if !out.output.status.success() {
-                return Err(public_http_failure_after_attempts(
-                    &format!("{:?}", validated.kind()),
-                    &request.url(),
-                    out.output.status.code().unwrap_or(-1),
-                    &out.output.stdout,
-                    timeout_retries + 1,
-                ));
-            }
-            break out;
-        };
+            },
+            |duration| budget.wait(duration),
+        )?;
         let (status, location, body) = http_response(&out.output.stdout)?;
         if status == 200 {
             return Ok(body.to_vec());

@@ -79,6 +79,7 @@ def decapod_targets():
             "docs/agent/api-index.md",
             "docs/agent/command-contracts.md",
             "docs/agent/config-schema.md",
+            "docs/agent/contribution-conventions.md",
             "docs/agent/error-recovery.md",
             "docs/agent/llms.txt",
             "docs/agent/mcp.md",
@@ -265,8 +266,10 @@ def decapod_targets():
                 "src/decapod/core/validate.rs",
                 "src/decapod/cli.rs",
                 "src/decapod/lib.rs",
+                "docs/agent/api-index.md",
                 "docs/agent/command-contracts.md",
                 "docs/agent/config-schema.md",
+                "docs/agent/contribution-conventions.md",
             ] if path == "tests/specs_refresh_docs.rs" else [
                 ".github/workflows/docs_sync.yml",
                 ".github/actions/docs-drift/action.yml",

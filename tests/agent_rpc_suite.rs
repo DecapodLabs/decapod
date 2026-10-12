@@ -53,7 +53,7 @@ fn test_repo_root() -> &'static PathBuf {
         let exe = resolve_decapod_bin();
         let init = Command::new(exe)
             .current_dir(&dir)
-            .args(["init", "--force"])
+            .args(["init", "--force", "--product-summary", "Record Service exposes structured local record operations for client applications."])
             .output()
             .expect("decapod init");
         assert!(

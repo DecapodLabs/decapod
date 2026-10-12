@@ -33,7 +33,12 @@ fn setup_isolated_repo_with_worktree(base_dir: &std::path::Path) -> std::path::P
         .expect("git commit");
 
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["init", "--force"])
+        .args([
+            "init",
+            "--force",
+            "--product-summary",
+            "Local Records stores and retrieves structured records for project contributors.",
+        ])
         .current_dir(base_dir)
         .output()
         .expect("decapod init");
@@ -414,7 +419,13 @@ fn test_e2e_init_then_validate_flow_with_workspaces_disabled() {
         .expect("git commit");
 
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["init", "--force", "--no-container-workspaces"])
+        .args([
+            "init",
+            "--force",
+            "--product-summary",
+            "Local Records stores and retrieves structured records for project contributors.",
+            "--no-container-workspaces",
+        ])
         .current_dir(base_dir)
         .output()
         .expect("decapod init --no-container-workspaces");

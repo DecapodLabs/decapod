@@ -49,7 +49,7 @@ pub struct ScaffoldOptions {
     pub generate_ci: bool,
     /// Diagram style for generated architecture document.
     pub diagram_style: DiagramStyle,
-    /// Intent/architecture seed captured from inferred or user-confirmed repo context.
+    /// Whole-project intent/architecture seed from repository context, never a task summary.
     pub specs_seed: Option<SpecsSeed>,
     /// Capabilities declared for the project (for scaffolding proposals)
     pub capabilities: Vec<String>,
@@ -91,7 +91,7 @@ pub struct SpecsSeed {
     pub capabilities: Vec<String>,
 }
 
-pub const PROJECT_SPEC_TEMPLATE_VERSION: &str = "scaffold-v4";
+pub const PROJECT_SPEC_TEMPLATE_VERSION: &str = "scaffold-v5";
 
 fn joined_or_fallback(items: &[String], fallback: &str) -> String {
     if items.is_empty() {
@@ -260,153 +260,42 @@ fn language_specific_logging_hint(seed: Option<&SpecsSeed>) -> String {
     "Use structured logging (pino/winston) with request_id, actor, latency_ms, and error_code fields.".to_string()
 }
 
-fn adaptive_topology_diagram(style: DiagramStyle, seed: Option<&SpecsSeed>) -> String {
-    let product_type = seed
-        .and_then(|s| s.product_type.as_deref())
-        .unwrap_or("service");
+// A detected language or product type does not prove stores, queues, APIs,
+// transactionality, or deployment topology. These diagrams are explicitly
+// illustrative authoring prompts until replaced using repository evidence.
+fn project_topology_example(style: DiagramStyle) -> &'static str {
     match style {
         DiagramStyle::Ascii => {
-            if product_type.contains("cli") {
-                r#"```text
-User -> CLI Entrypoint -> Command Router -> Core Engine -> Local Store
-                                      \-> External API / Filesystem
-```"#
-                    .to_string()
-            } else if product_type.contains("frontend") {
-                r#"```text
-Browser -> UI Shell -> API Client -> Backend Gateway -> Datastores / Events
-```"#
-                    .to_string()
-            } else if product_type.contains("library") {
-                r#"```text
-Host Application -> Library API -> Domain Core -> Adapters (Store / Network)
-```"#
-                    .to_string()
-            } else {
-                r#"```text
-Client -> API Gateway -> Service Core -> Worker Queue -> Datastores
-```"#
-                    .to_string()
-            }
+            "```text\nActor / Input -> Project Entrypoint -> Component Boundary -> Observable Outcome\n```"
         }
         DiagramStyle::Mermaid => {
-            if product_type.contains("cli") {
-                r#"```mermaid
-flowchart LR
-  U[User] --> C[CLI Entrypoint]
-  C --> R[Command Router]
-  R --> E[Core Engine]
-  E --> S[(Local Store)]
-  E --> X[External APIs / Filesystem]
-```"#
-                    .to_string()
-            } else if product_type.contains("frontend") {
-                r#"```mermaid
-flowchart LR
-  B[Browser] --> UI[UI Shell]
-  UI --> A[API Client]
-  A --> G[Backend Gateway]
-  G --> DB[(Datastore)]
-  G --> Q[(Event Bus)]
-```"#
-                    .to_string()
-            } else if product_type.contains("library") {
-                r#"```mermaid
-flowchart LR
-  H[Host Application] --> L[Library API]
-  L --> D[Domain Core]
-  D --> AD[Adapter Layer]
-  AD --> DB[(Store)]
-  AD --> N[Network]
-```"#
-                    .to_string()
-            } else {
-                r#"```mermaid
-flowchart LR
-  C[Client] --> G[API Gateway]
-  G --> S[Service Core]
-  S --> W[Workers]
-  S --> DB[(Primary Datastore)]
-  W --> Q[(Queue)]
-```"#
-                    .to_string()
-            }
+            "```mermaid\nflowchart LR\n  A[Actor or Input] --> E[Project Entrypoint]\n  E --> C[Component Boundary]\n  C --> O[Observable Outcome]\n```"
         }
     }
 }
 
-fn adaptive_happy_path_sequence(style: DiagramStyle, seed: Option<&SpecsSeed>) -> String {
-    let product_type = seed
-        .and_then(|s| s.product_type.as_deref())
-        .unwrap_or("service");
+fn project_sequence_example(style: DiagramStyle) -> &'static str {
     match style {
         DiagramStyle::Ascii => {
-            if product_type.contains("cli") {
-                r#"```text
-User invokes command -> CLI parses args -> Core executes action -> state persists -> result printed
-```"#
-                    .to_string()
-            } else if product_type.contains("frontend") {
-                r#"```text
-User action -> UI validates input -> API request -> backend persists -> UI renders success
-```"#
-                    .to_string()
-            } else {
-                r#"```text
-Client request -> API validation -> domain execution -> persistence -> response with trace id
-```"#
-                    .to_string()
-            }
+            "```text\nActor -> Project: Input (confirm contract)\nProject -> Actor: Outcome (confirm behavior)\n```"
         }
         DiagramStyle::Mermaid => {
-            if product_type.contains("cli") {
-                r#"```mermaid
-sequenceDiagram
-  participant U as User
-  participant C as CLI
-  participant E as Core Engine
-  participant S as Store
-  U->>C: Run command
-  C->>E: Parse + validate
-  E->>S: Persist mutation
-  S-->>E: Ack
-  E-->>C: Result
-  C-->>U: Structured output
-```"#
-                    .to_string()
-            } else if product_type.contains("frontend") {
-                r#"```mermaid
-sequenceDiagram
-  participant U as User
-  participant UI as Frontend
-  participant API as Backend API
-  participant DB as Datastore
-  U->>UI: Submit action
-  UI->>API: Authenticated request
-  API->>DB: Write transaction
-  DB-->>API: Commit ok
-  API-->>UI: 200 + payload
-  UI-->>U: Updated view
-```"#
-                    .to_string()
-            } else {
-                r#"```mermaid
-sequenceDiagram
-  participant C as Client
-  participant G as API
-  participant D as Domain
-  participant DB as Datastore
-  C->>G: Request
-  G->>D: Validate + execute
-  D->>DB: Commit transaction
-  DB-->>D: Commit ok
-  D-->>G: Domain result
-  G-->>C: Response + trace_id
-```"#
-                    .to_string()
-            }
+            "```mermaid\nsequenceDiagram\n  participant A as Actor\n  participant P as Project\n  A->>P: Input (confirm contract)\n  P-->>A: Outcome (confirm behavior)\n```"
         }
     }
+}
+
+fn project_spec_preamble(seed: Option<&SpecsSeed>) -> String {
+    let product = seed
+        .and_then(|s| s.product_name.as_deref())
+        .unwrap_or("this repository");
+    let purpose = seed
+        .and_then(|s| s.product_summary.as_deref())
+        .unwrap_or("Define the user-visible outcome in one paragraph.");
+    format!(
+        "## Project Purpose\n{purpose}\n\n## Authoring Scope and Evidence\nProject: {product}. This is an initial authoring scaffold, not an implementation attestation.\n\n{}\n\nUse the seeded context below as a starting point to verify against repository sources. Replace example diagrams, suggested controls, targets, tables, and blank fields with source-grounded prose; mark non-applicable topics with a reason. Do not adopt a store, queue, server, CI provider, replay guarantee, or service level merely because it appears in a template.\n",
+        crate::core::project_specs::PROJECT_SPEC_AUTHORING_GUIDANCE
+    )
 }
 
 fn specs_readme_template(seed: Option<&SpecsSeed>) -> String {
@@ -672,14 +561,11 @@ fn specs_architecture_template(style: DiagramStyle, seed: Option<&SpecsSeed>) ->
 ## Direction
 {summary}
 
-## What This Project Is
-{product_name} is a {product_type} project built using {runtime_langs}.
-{summary}
-
-Architectural principles:
-- **Simplicity**: Keep components focused and reusable.
-- **Modularity**: Clearly defined interface boundaries and dependency separation.
-- **Reliability**: Graceful failure handling and thorough verification.
+## System Overview
+Explain how {product_name}'s main components fulfill the project purpose above.
+Start at the whole-system boundary, then trace the primary workflows down to
+implementation paths and symbols. Explain why the boundaries exist and which
+tradeoffs or limitations they create. Link to evidence for each factual claim.
 
 ## Current Facts
 - Runtime/languages: {runtime_langs}
@@ -687,43 +573,32 @@ Architectural principles:
 - Product type: {product_type}
 
 ## Architecture Map
-This project's architecture consists of the following key layers/directories:
-- `src/`: Main source directory containing primary logic.
-- `tests/`: Integration and unit test suite.
+Document the actual component boundaries and source paths in this repository.
+Do not infer a directory layout from the project's language or product type.
 
 ## Data Flows
-- Inbound request/command parses and validates at the entrypoint.
-- Core runtime handles business logic and initiates queries or state changes.
-- Storage adapter reads or writes data to the underlying persistence layers.
+Trace real inputs through the owning components to observable outcomes.
+Name each source path or symbol, state owner if any, and failure boundary;
+distinguish verified behavior from proposed changes and unresolved questions.
 
 ## Strongest Existing Primitives
 - Define the strongest existing primitives in the codebase (e.g., helper utilities, base controllers, data access layers).
 
 ## Topology
+Illustrative shape only; replace with the observed whole-project topology.
 {topology}
 
 ## Store Boundaries
-```mermaid
-flowchart LR
-  I[Inbound Requests] --> C[Core Logic]
-  C --> W[(Write Store)]
-  C --> R[(Read Store)]
-```
+Describe state ownership and consistency only where supported by source evidence;
+if the project has no persistent store, say so and identify the relevant sources.
 
 ## Happy Path Sequence
+Illustrative shape only; replace with a source-grounded end-to-end workflow.
 {happy_path}
 
 ## Error Path
-```mermaid
-sequenceDiagram
-  participant Client
-  participant Service
-  participant Store
-  Client->>Service: Request
-  Service->>Store: Database Query
-  Store--xService: Error/Timeout
-  Service-->>Client: Typed Error / Recovery Instructions
-```
+Trace an actual failure from its origin to the caller-visible result and recovery.
+Do not assume database transactions, automatic retries, or side-effect rollback.
 
 ## Execution Path
 - Ingress parse + validation:
@@ -766,14 +641,11 @@ sequenceDiagram
 | Temporary execution state | | | | | |
 
 ## Failure Containment
-- Invalid input is rejected before side effects.
-- Policy/interlock failures leave canonical state unchanged.
-- A partial persistence failure is recoverable or explicitly surfaced; it is
-  never silently converted into success.
-- External dependency failure has a bounded timeout, retry policy, and operator
-  action.
-- Evidence generation failure blocks promotion when the affected proof is
-  required by [VALIDATION.md](./VALIDATION.md).
+- For each boundary, describe what can fail and which side effects remain.
+- Cite the code and tests for rejection, retry, rollback, or compensation claims.
+- Record unsupported guarantees and unresolved recovery gaps explicitly.
+- Distinguish product runtime failures from delivery/proof failures in
+  [VALIDATION.md](./VALIDATION.md).
 
 ## Change Propagation Checklist
 - [ ] Component ownership remains singular and explicit.
@@ -798,8 +670,8 @@ sequenceDiagram
 | Contract drift across components | Medium | High | Spec + schema checks in CI |
 | Runtime saturation under peak load | Medium | High | Capacity model + load tests |
 "#,
-        topology = adaptive_topology_diagram(style, seed),
-        happy_path = adaptive_happy_path_sequence(style, seed),
+        topology = project_topology_example(style),
+        happy_path = project_sequence_example(style),
     )
 }
 
@@ -1067,24 +939,18 @@ fn specs_semantics_template(seed: Option<&SpecsSeed>) -> String {
         r#"# Semantics
 
 ## State Machines
-```mermaid
-stateDiagram-v2
-  [*] --> Draft
-  Draft --> InProgress
-  InProgress --> Verified
-  InProgress --> Blocked
-  Blocked --> InProgress
-  Verified --> [*]
-```
+Describe the project's actual entities, states, transitions, and externally
+observable behavior. Cite implementation symbols and tests; do not substitute
+the agent's task lifecycle for the product's state model.
 
 ## Invariants
-| Invariant | Type | Validation |
-|---|---|---|
-| No promoted change without proof | System | validation gate |
-| Canonical source-of-truth per entity | Data | interface/spec review |
-| Mutation events are replayable | Data | deterministic replay |
+| Invariant | Scope | Implementation Source | Proof or Gap |
+|---|---|---|---|
+| Identify a project-specific invariant | | | |
 
 ## Event Sourcing Schema
+Only applicable if the repository actually implements event sourcing. Otherwise
+record that it is not applicable; this example is not a replay guarantee.
 | Field | Type | Description |
 |---|---|---|
 | event_id | string | globally unique event id |
@@ -1112,8 +978,7 @@ stateDiagram-v2
 ## Idempotency Contracts
 | Operation | Idempotency Key | Duplicate Behavior |
 |---|---|---|
-| create/update mutation | request_id | return original result |
-| async enqueue | event_id | ignore duplicate enqueue |
+| Actual operation and source | Declared key, if any | Observed duplicate behavior and proof |
 
 ## Transition Contract
 | Current State | Trigger | Preconditions | State Mutation | Emitted Evidence | Next State |
@@ -1166,9 +1031,9 @@ Describe the operational runtime model, scheduling, and system deployment archit
 ## Service Level Objectives
 | SLI | SLO Target | Measurement Window | Owner |
 |---|---|---|---|
-| Availability | 99.9% | 30d | TBD |
+| Availability, if applicable | Select and justify | Select | TBD |
 | P95 latency | TBD | 7d | TBD |
-| Error rate | < 1% | 7d | TBD |
+| Error rate, if applicable | Select and justify | Select | TBD |
 
 ## Monitoring
 | Signal | Metric | Threshold | Alert |
@@ -1415,6 +1280,15 @@ fn render_project_spec_content(
         _ => None,
     };
     base_content.map(|content| {
+        let content = if let Some((title, body)) = content.split_once('\n') {
+            format!(
+                "{title}\n\n{}\n{}",
+                project_spec_preamble(seed),
+                body.trim_start()
+            )
+        } else {
+            content
+        };
         let content = apply_capability_overlays(rel_path, content, capabilities);
         normalize_markdown_heading_boundaries(&content)
     })

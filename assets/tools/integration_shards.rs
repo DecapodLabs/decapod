@@ -416,11 +416,30 @@ pub fn test_command(artifact: &Path, target: &str) -> io::Result<Command> {
     Ok(command)
 }
 
+fn inventory_output_excerpt(bytes: &[u8]) -> String {
+    const LIMIT: usize = 4096;
+    let preview = String::from_utf8_lossy(&bytes[..bytes.len().min(LIMIT)]);
+    if bytes.len() > LIMIT {
+        format!("{preview:?} (truncated; {} bytes total)", bytes.len())
+    } else {
+        format!("{preview:?}")
+    }
+}
+
 pub fn inventory(artifact: &Path) -> io::Result<Vec<String>> {
     let output = test_command(artifact, "gatling")?
         .args(["--list", "--format", "terse"])
         .output()?;
-    successful(output.status, "supervised Gatling inventory")?;
+    if !output.status.success() {
+        // Keep the real failure and bounded, escaped stream excerpts. In
+        // particular, a shell's exit 126 alone loses its exec error detail.
+        return Err(io::Error::other(format!(
+            "supervised Gatling inventory failed: {}; stdout={}; stderr={}",
+            output.status,
+            inventory_output_excerpt(&output.stdout),
+            inventory_output_excerpt(&output.stderr),
+        )));
+    }
     parse_inventory(&String::from_utf8(output.stdout).map_err(io::Error::other)?)
 }
 

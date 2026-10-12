@@ -948,7 +948,9 @@ fn apply_overlay(content: String, capability_id: &str, spec_path: &str) -> Strin
 
     if let Some(overlay) = overlay {
         let overlay = normalize_overlay_language(overlay);
-        let overlay = format!("{start_marker}\n{overlay}\n{end_marker}");
+        let overlay = format!(
+            "{start_marker}\n\nGenerated capability obligations: `{capability_id}` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.\n{overlay}\n{end_marker}"
+        );
         // Always insert immediately before the codebase attestation block (or
         // append when attestation is absent). Mid-document `## ` anchors are
         // unstable on compacted living specs and caused CI drift: each refresh
@@ -989,6 +991,58 @@ fn capability_overlay_insert_pos(content: &str) -> Option<usize> {
 /// service levels, or delivery guarantees for the project.
 fn normalize_overlay_language(mut overlay: String) -> String {
     let replacements = [
+        (
+            "All multi-entity mutations MUST occur within explicit transactions",
+            "Multi-entity mutation atomicity and partial-failure treatment MUST be documented and proven for the selected store",
+        ),
+        (
+            "All multi-entity operations MUST be atomic",
+            "Atomicity boundaries and any non-atomic operations MUST be declared with source and test evidence",
+        ),
+        (
+            "Read-after-write consistency within transaction boundaries",
+            "Document observed read-after-write behavior; do not infer consistency from a capability declaration",
+        ),
+        (
+            "Schema migrations MUST be backward-compatible",
+            "Migration compatibility, any breaking changes, and their recovery path MUST be explicit and tested",
+        ),
+        (
+            "Compensating transactions for distributed operations",
+            "Document compensation or other partial-failure treatment if distributed operations exist",
+        ),
+        (
+            "Point-in-time recovery capability",
+            "Document supported recovery mechanisms and evidence; point-in-time recovery is not implied by persistent-state",
+        ),
+        (
+            "Zero-downtime migration strategy for production",
+            "Migration downtime and availability effects MUST be declared; zero downtime requires project-specific proof",
+        ),
+        (
+            "Messages failing after max retries go to dead letter queue",
+            "Document the actual terminal-failure behavior for exhausted or non-retryable work; a dead-letter queue is not implied",
+        ),
+        (
+            "DLQ MUST be monitored and alerted",
+            "If a dead-letter queue exists, document its monitoring, alerting, and ownership",
+        ),
+        (
+            "Manual replay capability for DLQ messages",
+            "If manual replay is supported, document authorization and duplicate-side-effect proof; otherwise record the limitation",
+        ),
+        (
+            "Dead letter queue MUST be visible and alerted",
+            "If a dead-letter queue exists, define visibility and alerting obligations for it",
+        ),
+        (
+            "Same message delivered multiple times MUST produce same result",
+            "Test repeated delivery against the declared duplicate-handling semantics, including side effects and limitations",
+        ),
+        (
+            "No data loss on forced termination",
+            "Verify the declared durability and loss boundary on forced termination; record unsupported guarantees",
+        ),
         (
             "Deprecation window: minimum 90 days before removal",
             "Deprecation and removal policy MUST be selected for this project and proven against its consumers",
@@ -1118,16 +1172,16 @@ fn apply_capability_declaration(mut content: String, capabilities: &[String]) ->
         .map(|capability| format!("- `{capability}`"))
         .collect::<Vec<_>>()
         .join("\n");
-    let section = format!("{start}\n\n## Declared Capability Surfaces\n\n{body}\n\n{end}");
-    if let Some(pos) = content.find("\n## ") {
-        let mut result = content[..pos].to_string();
-        result.push_str("\n\n");
-        result.push_str(&section);
-        result.push_str(&content[pos..]);
-        result
-    } else {
-        format!("{}\n\n{}\n", content.trim_end(), section)
-    }
+    let section = format!(
+        "{start}\n\n## Declared Capability Surfaces\n\nThese declarations select authoring and proof obligations; they do not attest implemented runtime guarantees.\n\n{body}\n\n{end}"
+    );
+    let pos = capability_overlay_insert_pos(&content).unwrap_or(content.len());
+    format!(
+        "{}\n\n{}\n\n{}",
+        content[..pos].trim_end(),
+        section,
+        content[pos..].trim_start_matches('\n')
+    )
 }
 
 fn remove_marked_block(mut content: String, start_pos: usize, end_pos: usize) -> String {

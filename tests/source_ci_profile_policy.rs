@@ -1197,3 +1197,94 @@ fn golden_recipes_check_immutable_vectors_and_run_their_regressions() {
         assert_eq!(generator.args, ["--check"]);
     }
 }
+
+#[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+fn execute_setup_fixture(root: &Path, failure: &str, include_tool: bool) -> std::process::Output {
+    let bin = root.join("bin");
+    fs::create_dir_all(&bin).unwrap();
+    fake_tool(&bin.join("python3"), "exit 0");
+    if include_tool {
+        // Only the tool is controlled. The production finite recipe and runner
+        // choose commands, order, failure propagation and subprocess execution.
+        fake_tool(
+            &bin.join("bazelisk"),
+            r#"
+printf '%s\n' "$*" >> "$SOURCE_CI_FIXTURE_ROOT/calls"
+case "$*" in
+  'test //:cargo_inputs_policy')
+    [ "$SOURCE_CI_FIXTURE_FAILURE" != policy ] || exit 21
+    printf 'checked\n' > "$SOURCE_CI_FIXTURE_ROOT/policy-checked"
+    ;;
+  'build //:decapod //:release_projection_drift')
+    [ -f "$SOURCE_CI_FIXTURE_ROOT/policy-checked" ] || exit 90
+    [ "$SOURCE_CI_FIXTURE_FAILURE" != build ] || exit 22
+    /bin/mkdir -p "$SOURCE_CI_FIXTURE_ROOT/bazel-bin"
+    printf 'current candidate bytes\n' > "$SOURCE_CI_FIXTURE_ROOT/bazel-bin/decapod"
+    printf 'current drift checker bytes\n' > "$SOURCE_CI_FIXTURE_ROOT/bazel-bin/release_projection_drift"
+    ;;
+  *) exit 91 ;;
+esac
+"#,
+        );
+    }
+    Command::new(std::env::current_exe().unwrap())
+        .args(["--exact", "isolated_profile_execution_child", "--nocapture"])
+        .env("PATH", bin)
+        .env("SOURCE_CI_FIXTURE_ROOT", root)
+        .env("SOURCE_CI_FIXTURE_CHECK", "setup-bazel")
+        .env("SOURCE_CI_FIXTURE_FAILURE", failure)
+        .output()
+        .unwrap()
+}
+
+#[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+#[test]
+fn validation_recipe_executes_check_then_build_without_a_prebuilt_candidate() {
+    let root = Temp::new();
+    assert!(!root.0.join("bazel-bin/decapod").exists());
+    let output = execute_setup_fixture(&root.0, "none", true);
+    assert!(output.status.success(), "{output:?}");
+    assert_eq!(
+        fs::read_to_string(root.0.join("calls")).unwrap(),
+        "test //:cargo_inputs_policy\nbuild //:decapod //:release_projection_drift\n"
+    );
+    assert_eq!(
+        fs::read(root.0.join("bazel-bin/decapod")).unwrap(),
+        b"current candidate bytes\n"
+    );
+    let metadata = String::from_utf8(output.stdout).unwrap();
+    assert!(metadata.contains("\"status\":\"passed\""), "{metadata}");
+    assert_eq!(metadata.matches("\"exit_code\":0").count(), 2);
+}
+
+#[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+#[test]
+fn validation_recipe_fails_closed_on_failed_prerequisite_build_or_missing_tool() {
+    for failure in ["policy", "build", "missing_tool"] {
+        let root = Temp::new();
+        let output = execute_setup_fixture(&root.0, failure, failure != "missing_tool");
+        assert!(!output.status.success(), "{failure}: {output:?}");
+        assert!(!root.0.join("bazel-bin/decapod").exists());
+        let metadata = String::from_utf8(output.stdout).unwrap();
+        if failure == "missing_tool" {
+            assert!(
+                metadata.contains("\"status\":\"unavailable\""),
+                "{metadata}"
+            );
+            assert!(metadata.contains("missing required tool: bazelisk"));
+            assert!(!root.0.join("calls").exists());
+        } else {
+            assert!(metadata.contains("\"status\":\"failed\""), "{metadata}");
+            let calls = fs::read_to_string(root.0.join("calls")).unwrap();
+            assert_eq!(
+                calls.lines().count(),
+                if failure == "policy" { 1 } else { 2 }
+            );
+            assert!(metadata.contains(if failure == "policy" {
+                "\"exit_code\":21"
+            } else {
+                "\"exit_code\":22"
+            }));
+        }
+    }
+}

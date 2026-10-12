@@ -529,31 +529,135 @@ fn timeout_attempts(path: &Path) -> usize {
 }
 
 #[cfg(unix)]
+fn timeout_capture(termination: Termination, exit: i32, stdout: &[u8]) -> ProcessCapture {
+    use std::os::unix::process::ExitStatusExt;
+    ProcessCapture {
+        output: std::process::Output {
+            status: std::process::ExitStatus::from_raw(exit << 8),
+            stdout: stdout.to_vec(),
+            stderr: Vec::new(),
+        },
+        termination,
+        duration: Duration::ZERO,
+    }
+}
+
+#[cfg(unix)]
 #[test]
 fn timeout_read_retries_only_current_get_and_discards_partial_responses() {
-    let (_temp, path) = timeout_curl_fixture(
-        "if test \"$n\" -lt 3; then printf 'incomplete response'; exit 28; fi\nprintf 'HTTP/2 200\\r\\n\\r\\ncomplete'",
-    );
-    let mut reader = CurlPublicReader::new(path.clone(), |_, _| Ok(())).unwrap();
-    let cancel = Cancellation::default();
-    let budget = Budget::new(Duration::from_secs(10), 4096, &cancel).unwrap();
-    assert_eq!(
-        reader.get(&timeout_request(), &budget).unwrap(),
-        b"complete"
-    );
-    assert_eq!(timeout_attempts(&path), 3);
+    let mut attempts = 0;
+    let mut delays = Vec::new();
+    let mut retries = 0;
+    let out = read_with_timeout_retries(
+        PublicReadKind::BuildEnvelope,
+        &timeout_request().url(),
+        &mut retries,
+        || {
+            attempts += 1;
+            Ok(if attempts < 3 {
+                timeout_capture(Termination::Exited, 28, b"incomplete response")
+            } else {
+                timeout_capture(Termination::Exited, 0, b"HTTP/2 200\r\n\r\ncomplete")
+            })
+        },
+        |delay| {
+            delays.push(delay);
+            Ok(())
+        },
+    )
+    .unwrap();
+    assert_eq!(http_response(&out.output.stdout).unwrap().2, b"complete");
+    assert_eq!(attempts, 3);
+    assert_eq!(retries, 2);
+    assert_eq!(delays, [Duration::from_secs(1), Duration::from_secs(2)]);
 }
 
 #[cfg(unix)]
 #[test]
 fn timeout_read_exhaustion_is_nonzero_and_bounded() {
-    let (_temp, path) = timeout_curl_fixture("exit 28");
-    let mut reader = CurlPublicReader::new(path.clone(), |_, _| Ok(())).unwrap();
-    let cancel = Cancellation::default();
-    let budget = Budget::new(Duration::from_secs(10), 4096, &cancel).unwrap();
-    let error = reader.get(&timeout_request(), &budget).unwrap_err();
-    assert!(error.to_string().contains("bounded_timeout_attempts=3"));
-    assert_eq!(timeout_attempts(&path), 3);
+    let mut attempts = 0;
+    let mut delays = Vec::new();
+    let mut retries = 0;
+    let error = read_with_timeout_retries(
+        PublicReadKind::BuildEnvelope,
+        &timeout_request().url(),
+        &mut retries,
+        || {
+            attempts += 1;
+            Ok(timeout_capture(Termination::Exited, 28, b""))
+        },
+        |delay| {
+            delays.push(delay);
+            Ok(())
+        },
+    )
+    .unwrap_err();
+    assert!(
+        error.to_string().contains("bounded_timeout_attempts=3"),
+        "{error}"
+    );
+    assert!(error.to_string().contains("exit_code=28"), "{error}");
+    assert_eq!(attempts, 3);
+    assert_eq!(retries, 2);
+    assert_eq!(delays, [Duration::from_secs(1), Duration::from_secs(2)]);
+}
+
+#[cfg(unix)]
+#[test]
+fn timeout_retry_stops_before_another_attempt_when_shared_wait_fails() {
+    for kind in [io::ErrorKind::TimedOut, io::ErrorKind::Interrupted] {
+        let mut attempts = 0;
+        let mut delays = Vec::new();
+        let mut retries = 0;
+        let error = read_with_timeout_retries(
+            PublicReadKind::BuildEnvelope,
+            &timeout_request().url(),
+            &mut retries,
+            || {
+                attempts += 1;
+                Ok(timeout_capture(Termination::Exited, 28, b"incomplete"))
+            },
+            |delay| {
+                delays.push(delay);
+                Err(io::Error::new(kind, "shared budget stopped"))
+            },
+        )
+        .unwrap_err();
+        assert_eq!(error.kind(), kind, "{error}");
+        assert_eq!(attempts, 1);
+        assert_eq!(delays, [Duration::from_secs(1)]);
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn timeout_retry_keeps_process_timeout_bounded_and_other_terminations_final() {
+    for (termination, expected_kind, expected_attempts) in [
+        (Termination::TimedOut, io::ErrorKind::TimedOut, 3),
+        (Termination::Cancelled, io::ErrorKind::Interrupted, 1),
+        (Termination::OutputLimit, io::ErrorKind::InvalidData, 1),
+    ] {
+        let mut attempts = 0;
+        let mut delays = Vec::new();
+        let mut retries = 0;
+        let error = read_with_timeout_retries(
+            PublicReadKind::BuildEnvelope,
+            &timeout_request().url(),
+            &mut retries,
+            || {
+                attempts += 1;
+                Ok(timeout_capture(termination, 28, b""))
+            },
+            |delay| {
+                delays.push(delay);
+                Ok(())
+            },
+        )
+        .unwrap_err();
+        assert_eq!(error.kind(), expected_kind, "{error}");
+        assert_eq!(attempts, expected_attempts);
+        assert_eq!(delays.len(), expected_attempts - 1);
+    }
 }
 
 #[cfg(unix)]
@@ -578,15 +682,21 @@ fn timeout_read_never_retries_http_authorization_tls_or_malformed_failures() {
 #[cfg(unix)]
 #[test]
 fn timeout_retry_shares_deadline_and_respects_denied_authorization() {
+    // Expiry before capture must start no process. Retry-wait deadline and
+    // cancellation are covered deterministically above, without a 100ms race.
     let (_temp, path) = timeout_curl_fixture("exit 28");
     let mut reader = CurlPublicReader::new(path.clone(), |_, _| Ok(())).unwrap();
     let cancel = Cancellation::default();
-    let budget = Budget::new(Duration::from_millis(100), 4096, &cancel).unwrap();
+    let budget = Budget {
+        deadline: Instant::now(),
+        cancel: &cancel,
+        max_bytes: 4096,
+    };
     assert_eq!(
         reader.get(&timeout_request(), &budget).unwrap_err().kind(),
         io::ErrorKind::TimedOut
     );
-    assert_eq!(timeout_attempts(&path), 1);
+    assert!(!Path::new(&format!("{}.count", path.display())).exists());
     let (_temp, path) = timeout_curl_fixture("exit 28");
     let mut reader = CurlPublicReader::new(path.clone(), |_, _| {
         Err(io::Error::new(io::ErrorKind::PermissionDenied, "denied"))

@@ -171,3 +171,47 @@ fn capability_overlays_are_not_nested_inside_codebase_attestation() {
         "overlay reconciliation must be byte-stable after the first apply"
     );
 }
+
+#[test]
+fn generated_capabilities_preserve_purpose_first_and_do_not_invent_guarantees() {
+    let authored = "# Intent\n\n## Product Outcome\nRecipe Kit scales ingredient quantities.\n";
+    let declared = apply_capability_overlays(
+        "INTENT.md",
+        authored.to_string(),
+        &["background-processing".to_string()],
+    );
+    assert!(declared.starts_with(authored));
+    assert!(declared.contains("do not attest implemented runtime guarantees"));
+    let semantics = apply_capability_overlays(
+        "SEMANTICS.md",
+        "# Semantics\n\nAuthored project behavior.\n".to_string(),
+        &[
+            "persistent-state".to_string(),
+            "background-processing".to_string(),
+        ],
+    );
+    for forbidden in [
+        "Point-in-time recovery capability",
+        "Messages failing after max retries go to dead letter queue",
+        "Manual replay capability for DLQ messages",
+        "All multi-entity operations MUST be atomic",
+        "Read-after-write consistency within transaction boundaries",
+    ] {
+        assert!(!semantics.contains(forbidden), "{forbidden}");
+    }
+    assert!(semantics.contains("not claims of implemented behavior"));
+    assert!(semantics.contains("point-in-time recovery is not implied"));
+    assert!(semantics.contains("a dead-letter queue is not implied"));
+    assert!(semantics.contains("If manual replay is supported"));
+    assert_eq!(
+        semantics,
+        reconcile_capability_overlays(
+            "SEMANTICS.md",
+            semantics.clone(),
+            &[
+                "persistent-state".to_string(),
+                "background-processing".to_string()
+            ]
+        )
+    );
+}

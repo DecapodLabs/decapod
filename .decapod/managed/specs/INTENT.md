@@ -1,8 +1,141 @@
 # Intent
 
+## Product Outcome
+
+Decapod keeps AI coding work tied to the human request, the repository's rules,
+and evidence of what was actually checked. Its product outcome is work that
+people can inspect, agents can continue, and the project can accept through
+explicit governance gates.
+
+The record must preserve what was asked, how the agent understood it, what
+scope was accepted, what changed, and what remains unproven. That record stays
+with the project when a conversation, process, model, or agent harness changes.
+It connects human intent to agent work, tool execution, produced artifacts, and
+the evidence and decisions needed for delivery.
+
+## Human and agent experience
+
+The human installs and initializes Decapod in the project:
+
+```bash
+cargo binstall decapod && decapod init
+```
+
+They then give work to their coding agent, review its understanding and results,
+and decide questions that require human judgment. The agent owns operational
+use of Decapod: orientation, Constitution retrieval, task coordination,
+workspace setup, specification authoring, evidence collection, validation,
+and supported recovery.
+
+The agent also takes on the development work needed to deliver the request:
+understanding the project, planning, configuring build and test tools and CI,
+implementing changes, repairing failures, and preparing work for review within
+the agreed scope and authority. Decapod steers that lifecycle through project
+rules, durable state, checks, and actionable feedback. Validation is one phase
+of the work.
+
+The human should not need to operate the governance CLI for each coding task.
+Unclear intent, conflicting requirements, missing permission, and unavailable
+proof must become clear questions or blockers rather than hidden assumptions.
+
+## User and Actor Contract
+
+- The human supplies intent, constraints, authorization, and judgment
+- The agent interprets the request and repository, plans and performs the
+  work, maintains specifications, and records evidence through Decapod
+- Decapod maintains governance and coordination state, resolves supported
+  project authority, checks invariants, and gates supported transitions
+- The repository preserves source, specifications, accepted history, and
+  durable records needed for later review and continuation
+
+An agent-authored specification exposes the agent's understanding. Its presence
+does not establish that the interpretation is correct. Likewise, a passing
+check supports the behavior that check covers; it does not prove all possible
+properties of the product.
+
+## Scope
+
+### Intent and context before implementation
+
+Agents consult Decapod before committing to a design when intent, boundaries,
+interfaces, or proof requirements are uncertain. The embedded Constitution,
+project overrides, orientation, and scoped context help the agent identify
+the next useful question or action. Resolved authority and context sources
+remain inspectable.
+
+### Bounded, coordinated work
+
+Tasks, claims, sessions, and isolated workspaces establish who owns the work
+and where it may run. Concurrent agents must not silently acquire one another's
+assignments or overwrite the main checkout. Existing issue trackers may remain
+the organizational record; Decapod coordinates accepted repository execution.
+
+### Durable understanding and continuity
+
+Living specifications describe the product. Plans and trajectories describe
+the current work. Claims state conditions that evidence can support or falsify.
+Knowledge and context records preserve useful project information across
+sessions. These records must retain unresolved assumptions and obligations so
+the next agent can continue without inventing a clean history.
+
+### Evidence and accepted work
+
+Agents define proof expectations, run the required checks, preserve results,
+and repair recoverable failures. Decapod binds supported evidence to the task,
+repository state, policy, and validation epoch. Governed publication remains
+blocked while required checks, evidence, or approvals are unsatisfied.
+
+### Local operation with explicit integrations
+
+Decapod runs on demand without a daemon and uses local repository state by
+default. Cloud storage, container execution, remote validation, and advisory
+decision providers have separate access and proof requirements. They extend
+particular boundaries of the product without owning its intent or governance.
+
+## Acceptance Criteria
+
+The implementation and its tests must establish that:
+
+1. Project intent, local authority, and the agent's interpretation are available
+   for review before publication
+2. Required session, claim, workspace, and boundary checks reject invalid
+   transitions with actionable diagnostics
+3. Durable state and required lifecycle evidence commit together; stale
+   updates and ownership conflicts remain visible
+4. A later invocation can recover current work, its evidence, and unresolved
+   obligations from supported repository records
+5. Required proof cannot be replaced by a completion claim, generated
+   fingerprint, provider probability, or unrelated successful check
+6. Validation distinguishes failure, missing evidence, partial proof, and
+   readiness for the exact candidate and accepted target
+7. Recovery preserves user work and historical evidence, stays bounded, and
+   escalates conditions that the supported interface cannot resolve
+
+The concrete proof surfaces are defined in [VALIDATION.md](VALIDATION.md).
+These expectations specify behavior; this document is not a test receipt.
+
+## Constraints
+
+Decapod does not supply a model's intelligence, write the implementation on
+the agent's behalf, or replace the coding harness and human review. It governs
+operations routed through its supported interfaces; it cannot prevent an
+agent from issuing unrelated shell, Git, or service commands outside them.
+
+Deterministic records and checks do not certify arbitrary natural-language
+meaning. Local session custody does not authenticate an external model
+provider. Local fixtures do not establish hosted tenancy, deployment, or
+live-container behavior. No fixed full-validation latency or service-availability
+SLO is asserted here.
+
+Requests that change consequential scope or contradict the accepted contract
+require a decision. A recoverable check failure requires more work. Neither
+condition is completion.
+
 <!-- decapod:declared-capabilities:start -->
 
 ## Declared Capability Surfaces
+
+These declarations select authoring and proof obligations; they do not attest implemented runtime guarantees.
 
 - `agent-helper`
 - `authentication`
@@ -17,462 +150,11 @@
 
 <!-- decapod:declared-capabilities:end -->
 
-## Version-only release validation
-
-A release PR created or updated by the existing release automation must execute
-actual validation successfully when its immutable change range contains only
-the advancing root package version, matching root lockfile version, and optional
-changelog edits. This is an evidence-bound material-spec exception, not a reason
-to invent authored prose or weaken validation for mixed source changes.
-
-The release-only range must remain buildable through the same strict Bazel
-setup on both providers. Root package release identity is not a dependency
-change: a generated dependency-only Cargo view normalizes that one matching
-local version while preserving all other input bytes. Neither release CI nor
-ordinary follow-on source work may silently rewrite the committed Bazel lock.
-
-## Post-merge reliability boundary
-
-Issue #1400 continues after the merged release repair: reduce full validation latency toward
-approximately five minutes without deleting source obligations or weakening
-proof. Measure provider queue and execution separately from terminal detection,
-recipe discovery, archive transfer, and custody verification. Report observed
-timings rather than treating the target as a guarantee under provider queues.
-Reuse only exact-request bytes within a single collection; never reuse a green
-verdict across source candidates. Release binary upload must stage the compiled
-bytes as a regular workspace-relative file, retaining the uploader's symlink
-rejection and an explicit byte comparison.
-
-Overlap bounded independent metadata and custody reads while verifying source
-proof in its original dependency order. Reuse one checkout's compilation for
-RPC, chaos and daemonless checks without removing check IDs, distinct receipts
-or ordinary-failure isolation. Compare successful cold full invocations and
-same-head warm recollection separately; completed CI reused by recollection is
-not a second test execution, and provider queue time is not code runtime.
-
-The canonical README starts with what a reader can inspect: the request, the
-agent's understanding, the changes and the proof retained in the repository.
-Show the intent/work/validate/repair/review loop, a short first-use path, and an
-authentic historical validation excerpt with its exact commit and evidence
-links. State what the configured checks establish and keep missing proof or
-human decisions visible; do not promise correct software or guaranteed
-completion. Organize capabilities around reader outcomes and preserve useful
-technical and installation links. Use direct technical prose without hype.
-
-Mention Jev casually in the upper introduction and an existing capabilities
-callout, one short sentence in each. Describe only its supported System 1/advisory
-role, preserve Decapod's deterministic completion authority, and omit a dedicated
-section or flag/environment setup instructions.
-
-Source merges must retain full behavioral proof, including the host CLI
-lifecycle suite. Release-only metadata should avoid repeating unchanged source
-lint and tests while preserving candidate validation and packaging evidence.
-Release classification must fail closed for substantive or ambiguous changes,
-and release projection refresh must not require fabricated authored spec prose
-in a version-only release PR. Test fixtures may explicitly suppress optional
-container preparation; production task claims and container isolation keep
-their existing behavior.
-PR integration execution must finish each selective-test step in under five
-minutes. Shared compilation and complete parallel shards reduce elapsed time
-without dropping assertions, disabling production behavior, or hiding failures
-behind larger timeouts. Publication proof includes the final per-shard timings.
-Buildkite preflight executes those checks through its real provider contract
-before PR creation. Branch pushes and iteration are allowed beforehand; the PR
-requires converged intent, accepted-target mergeability and full green validation.
-Ordinary GitHub Actions PR workflows remain independent;
-Decapod does not execute or collect that service as a second preflight provider.
-Compatibility repair preserves every selected test and distinguishes source
-proof from unavailable credentials or publication. Unsafe
-provider checkout permissions are addressed by a fresh private exact-commit
-checkout, never by changing user datastores or weakening their safety policy.
-
-## Contextual safety outcome (#1370)
-
-Source context must distinguish supported non-secret values and non-shell uses
-without making credential-shaped fixtures safe by convention. Password fields
-need exact-span runtime provenance; SQL parameters need terminal database-use
-evidence; native quoted expansions need shell-language evidence. Unknown or
-escaping values remain findings. Literal `include_str!` dependencies participate in the same
-scan, and explicit missing paths cannot produce a successful empty result.
-Publication policy and container custody remain independent requirements.
-
-## Supabase consumer validation (#1369)
-
-Decapod retains `repo.backend = local|cloud`. Cloud defaults to Dactyl's
-Supabase authenticated HTTP transport; explicit Neon remains available and
-local remains SQLite. Ordinary builds include the Supabase capability. The
-client never receives a database connection or a service-role credential. The
-preview requires its own explicit service endpoint and a machine-local user
-session. Invalid selectors and unavailable features fail before local todo
-SQLite is opened. No remote failure authorizes local fallback.
-
-Task and event state is service-owned through Dactyl. Governance documents,
-plans, claims, trajectory, proof receipts and living specs remain in Git.
-The preview does not synchronize a SQLite file or remove the cloud
-`todo done --validated` restriction. Hosted Supabase proof remains separate
-from deterministic mocks and actual local PostgreSQL service proof.
-
-## Reliability Outcome
-
-Issues #1294–#1300 establish a single reliability outcome for Decapod: every
-managed worktree must reach the same canonical control-plane state, and
-diagnostic commands must remain bounded and explain where proof work stopped.
-Validation, inference, and workspace creation are user-facing reliability
-contracts rather than incidental implementation details.
-
-Issues #1303 and #1304 extend that outcome to generated projections: spec
-refresh must converge malformed historical attestation output to one stable
-block without erasing authored guidance, and repository-map generation must
-ignore dependency/build trees through Git's own exclusion rules. A successful
-refresh and validation should be repeatable, bounded, and independent of
-ordinary ignored dependency installs.
-
-## Product Outcome
-- Decapod is a repo-native governance kernel for bounded, provable, shippable AI coding work. It turns human intent into durable, proof-backed agent execution that can leave the branch as a reviewable, publishable change—not only agent activity in a session.
-- Living-spec projections are part of that publishable change: when code changes the attestation, Decapod writes `.decapod/managed/specs/*` only inside the claimed isolated workspace so the same PR carries both the code and its specs. Root-checkout generation is a custody failure (GitHub #1255), not a cleanup chore.
-- Public positioning (README tagline, 0.96.18 era): governance for **bounded** work (explicit intent and boundaries), **provable** work (evidence and gates before completion claims), and **shippable** work (publication as a governed state transition, not thrash of already-current release surfaces).
-- Reliable convergence is the outcome: the agent preserves accepted intent, stays within explicit boundaries, maintains durable state, responds to validation, remediates supported failures, and produces evidence before completion.
-- Product ontology: models produce intelligence; agents perform work; repositories preserve state; Decapod governs the transition from intent to proof.
-- Reliability is designed, not hoped for. Trust in generated work follows from explicit intent, boundaries, durable state, validation, supported recovery, and evidence rather than generation capability alone.
-- Optional external intelligence may inform a Decapod assurance result through a typed Jev observation, while Decapod remains the sole authority for policy, boundaries, interlocks, proof requirements, and completion.
-
-## Optional Decision-Provider Intent
-
-The first probabilistic seam is intentionally narrow. After governance context
-reconstruction, an optional provider may report the probability that the
-proposed trajectory satisfies the declared intent. Jev is the first adapter;
-`provider = "none"` remains the default. Provider absence or failure must
-produce no observation rather than implicit approval, and no provider may
-mutate intent, claims, trajectory, validation state, or boundaries.
-
-## Current Storage Cutover Intent
-- The canonical `.decapod/data/decapod.db` path is a Dactyl-backed physical store. Decapod has no direct SQL driver dependency, subprocess connector, backend handle, or second local authority. Every canonical read, write, schema inspection, transaction, migration step, and validation probe crosses the `core::dactyl_db` facade into Dactyl.
-- Decapod owns domain schemas, migration ordering and ledgers, stable identifier generation, bounded retry policy, the explicit backup/recovery command policy, and the decision to admit legacy rows. Dactyl v0.11.1 owns host-runtime loading, physical execution, access mode, atomicity, normalized results, typed physical errors, native integrity verification, online backup, logical dump/reload recovery, route selection, and backend-neutral schema inspection. Propodus remains the hosted/authenticated route boundary.
-- The current dependency pins published Dactyl v0.11.1 and removes the old direct SQL-driver, bundled-SQLite, and legacy-import assumptions. New read-write paths receive only the empty filesystem target needed by Dactyl's pre-open header validation; the physical connection remains Dactyl-owned. Existing local database files are opened directly by Dactyl without conversion to a second format; Decapod migration code opens any legacy source through the same facade and owns row translation and ledgers, while Dactyl owns the physical backup/recovery contract invoked by explicit operator commands.
-- The local proof boundary is explicit: host-runtime availability, ordinary close/reopen persistence, read-only enforcement, schema inspection, explicit IDs, atomic rollback, and broker/event routing are local checks. Propodus/Neon deployment, hosted tenancy, credential, and cross-organization concurrency proof remain separate downstream evidence and are not claimed by this local slice.
-- `core::backend::BackendSelection` maps the project `repo.backend` choice to a repository-scoped route. Local resolves to `.decapod/data/decapod.db`; cloud derives `owner/repository` from the Git `origin` remote and accepts an opaque remote URI only after the authenticated/session boundary supplies it. Decapod does not assemble or interpret a provider-specific cloud URI for ordinary state.
-- Local and cloud Decapod agent sessions are machine-local, backend-discriminated (`local_` or `cloud_`), and long-lived enough for an agent run: four hours by default, with a 30-minute minimum and six-hour maximum. Cloud access/refresh credentials remain opaque and are persisted separately from repository state.
-- The explicit cloud todo path authenticates through the service, then constructs Dactyl's default Supabase HTTP route or the explicit Neon HTTP alternative with an opaque session credential and versioned `StorageContext` containing the target org/repo scope. It does not mutate ambient Dactyl route variables. Dactyl owns `/query` and `/batch` transport; Decapod does not add a backend, tenant, provider, or repository query parameter to individual operations.
-- Cloud todo add, claim, release, and complete use Dactyl atomic write-plus-event-plus-observation batches and fail closed on zero-row state conflicts. A compatible service must gate the matching event on the preceding task mutation's affected count; a timestamp match alone is insufficient. Local fixtures do not prove PostgreSQL transaction semantics, hosted authorization, schema parity, or live Neon/Supabase behavior. These remain separate service proof obligations until authorized fixtures are available.
-
-## Shared-State Durability Intent
-- Material TODO lifecycle mutations are compare-and-swap operations over `(task.id, task.status, task.revision)`. A stale agent receives an explicit conflict and must not create a success event.
-- Decapod increments task revisions for durable task mutations, attributes lifecycle events to the actor supplied by the operation or `DECAPOD_AGENT_ID`, and commits state-plus-event writes atomically through the broker transaction boundary.
-- The local coordination slice applies that same atomicity rule to agent category/expertise registration, heartbeats, stale-session cleanup, lease yield/handoff, and task-owner add/remove; read-only fleet, presence, ownership, and expertise projections remain non-mutating reads.
-- Event stream sequence allocation is idempotent by event identity and protected by a unique `(stream, seq)` invariant. These are Decapod semantics that the Dactyl physical operation batch and Propodus hosted route must preserve; they are not Propodus governance rules.
-- Migration must preserve every non-conflicting legacy event while rebuilding sequence uniqueness atomically; validation must fail within its configured budget without leaving an active worker behind. Large broker histories are valid durable state, so replay validation must bound each physical read without truncating or sampling the audit stream.
-
-## Compatibility Slice for Issues #1311–#1314
-- specs.refresh is a filesystem projection operation. It retains worktree, session, and constitutional safety checks but skips unrelated local-database migration, presence clock-in, and mandate-store reads when invoked as the explicit specs.refresh RPC operation. Best-effort trace failure remains non-blocking.
-- The trajectory section in `.decapod/governance.json` is the current-run validation/publication authority. A workspace has one active agent authority; subagent jobs are loops within that trajectory. The current PR retains cumulative proof checkpoints; prior accepted PR evidence is recovered from Git history rather than a repository-side historical claim catalog.
-- Standalone event appends route through the shared Dactyl-backed write pool. Canonical local Dactyl connections retain a bounded exclusive sidecar advisory lock (`decapod.db.lock`), conservatively serializing read and write connection lifetimes so cooperating host/container Decapod processes do not overlap access to the same file. `data db verify` uses Dactyl v0.11.1's read-only integrity API; explicit `data db backup` and `data db recover` expose Dactyl's online backup and verified logical dump/reload contract. Diagnostics distinguish healthy, unavailable/locked, corrupt/malformed, unsupported, and recovery/rollback failure. None performs automatic repair.
-- Absolute paths entering trajectory path fields become project-relative paths when inside the project and <external-path> otherwise. Validation prose receives the same final-boundary redaction. Operational code may still use absolute paths locally.
-- The maintenance boundary is intentionally explicit rather than automatic: recovery requires writer quiescence, an unused same-filesystem archive path, and Dactyl's atomic replacement/rollback contract. The single-workspace trajectory authority and Decapod-side coordination lock are settled here; the lock coordinates cooperating Decapod processes but does not certify arbitrary external SQLite writers or unreliable filesystems or repair corruption silently.
-
-## Release pin flywheel
-- Master entrypoint/Dockerfile/manifest pins record the Decapod version that generated that tip. Cargo-only releases do not rewrite pins. Release Artifact Sync is removed. The first user/agent PR evaluating a newer installed Decapod must refresh all four entrypoints, the managed Dockerfile pin, and the specs manifest.
-
-## Current Governance Artifact Intent
-- Managed specs are living project contracts: fresh scaffolds must be
-  substantially explanatory, while refresh must preserve authored meaning and
-  update only bounded Decapod-owned projections.
-- A trajectory is a single run cookie for the current branch/PR. It is
-  replaced atomically when a new run is initialized; historical runs belong in
-  Git history and must never be represented by concatenated JSON documents.
-- Migration work is agent-visible. The first governed command after a detected
-  Decapod version transition reports the previous/current release, applied
-  migrations, and the ledger/catalog paths the agent must inspect.
-
-## Governance Issue Resolution Contract (#1093, #1163, #1219, #1324–#1327)
-- The human-facing `.decapod/README.md` is a short orientation to project
-  authority: `config.toml`, `OVERRIDE.md`, the control-plane hierarchy, the
-  canonical datastore, and the official documentation. Agent operating
-  commands belong in the generated entrypoints and official docs, not in this
-  human scaffold.
-- A hand-trimmed `.decapod/OVERRIDE.md` is a valid minimal scaffold. Re-init
-  upgrades selected legacy directive bodies but does not re-expand omitted
-  sections or erase authored meaning.
-- `.decapod/governance.json` is the sole tracked governance authority. A PR
-  accumulates its own claims and per-commit proof checkpoints; the next PR
-  starts from a compact accepted baseline plus unresolved obligations.
-  Completed historical claims are recoverable from Git. Health Engine claims
-  remain separate runtime records in `.decapod/data/decapod.db`.
-- Validation input authority includes both `.decapod/config.toml` and
-  `.decapod/OVERRIDE.md`. A changed authority refreshes the specs manifest, but
-  a bound trajectory may not silently adopt a new validation epoch. The old
-  receipt and trajectory remain auditable and recovery requires an explicit new
-  trajectory run.
-
-## First-PR Publication Sequence (#1259)
-- Agents establish the current PR with `govern artifacts begin-pr`, then use
-  the existing plan and trajectory commands plus current-PR claims. Successful
-  `decapod validate` writes the validation section of the same canonical
-  document. After staging material, a checkpoint binds the exact inputs before
-  each commit; publication verifies the complete PR DAG and exact head.
-- Local-clone workspaces inherit the parent checkout's GitHub remote as
-  `upstream`. `workspace publish` walks a filesystem `origin` to that parent
-  and publishes there; agents must not invent a raw `git push` + `gh pr create`
-  bypass when the prescribed command can now resolve the network remote.
-- Workspace snapshots fetch `origin/<base_branch>` before cloning or adding a
-  worktree so a stale local protected branch is not the start point.
-- `todo done` and `--artifact` use the host todo store and the workspace
-  worktree that owns the claim.
-
-## Publication Bundle Currency Intent (#1232)
-- Publication and validation prove that release-bound entrypoints, the managed
-  Dockerfile pin, the specs manifest, living specs, and governance artifacts are
-  **present and current for the published repository state**.
-- Unchanged artifacts inherited from the base branch are sufficient when their
-  release pins and provenance still validate. Consumer repos that stay on one
-  Decapod release for a long time must not be forced to invent textual or mode
-  churn solely so those paths appear in every commit or PR diff.
-- When the installed Decapod release advances past the base pin, or when a code
-  change invalidates an artifact's governed dependency surface, prior proof is
-  insufficient: the affected surfaces must be refreshed and revalidated before
-  publication.
-- Material authored living-spec rewrites remain required for non-release PRs;
-  fingerprint-only attestation refresh is never enough (`FINGERPRINT_ONLY_SPECS`).
-
-## Issue Acceptance Contract (#1226 and #1228)
-| Requirement | Implementation Obligation | Proof |
-|---|---|---|
-| Verbose managed specs | Bump the scaffold contract and add explicit intent, topology, interface, proof, state, operations, and security sections | Fresh-init scaffold regression |
-| Iterative spec hygiene | Preserve authored prose while refreshing bounded attestations/manifests | Existing refresh-preservation tests plus material spec diff |
-| Single trajectory JSON | Replace the cookie atomically and recover from legacy appended/malformed content on explicit init | Unit regression plus CLI trajectory coverage |
-| Agent-triggered migrations | Run the migration check on every local command and announce version/migration transitions | Migration report regression and command-path review |
-
-## What This Project Is
-Decapod is a Rust governance kernel invoked by agents through ephemeral CLI and structured RPC processes. It is intentionally daemonless. The repository is the durable execution surface, so one task can continue across processes, models, harnesses, and Decapod invocations.
-
-The human expresses intent and provides judgment. The agent interprets the repository, performs the work, authors living specifications, follows validation feedback, and gathers evidence. Decapod governs accepted work, validates invariants, maintains governance state, refreshes supported projections, and blocks publication while required conditions are unsatisfied.
-
-Decapod is not an autonomous coding agent, LLM, inference engine, orchestration framework, daemon, prompt library, coding assistant, project-management system, or replacement for an agent harness.
-
-Key operating facts:
-- **Primary languages**: Rust, rust
-- **Detected surfaces**: cargo, rust
-
-## Product View
-```mermaid
-flowchart LR
-  U[Primary User] --> P[decapod]
-  P --> O[User-visible Outcome]
-  P --> G[Proof Gates]
-  G --> E[Evidence Artifacts]
-```
-
-## Inferred Baseline
-- Repository: decapod
-- Product type: service_or_library
-- Primary languages: Rust, rust
-- Detected surfaces: cargo, rust
-
-## Scope
-| Area | In Scope | Proof Surface |
-|---|---|---|
-| Governed execution | Preserve intent and boundaries through interpretation, execution, validation, supported remediation, revalidation, and publication | Plans, todos, trajectories, living specs, and lifecycle tests |
-| Durable state | Keep authoritative state, generated projections, custody, evidence, and receipts distinguishable and repository-native | [ARCHITECTURE.md](./ARCHITECTURE.md), [INTERFACES.md](./INTERFACES.md), and schema checks |
-| Publication quality | Block publication while required invariants or evidence are unsatisfied | [VALIDATION.md](./VALIDATION.md) blocking gates and validation receipts |
-
-## Non-Goals (Falsifiable)
-| Non-goal | How to falsify |
-|---|---|
-| Feature creep beyond the primary outcome | Any PR adds capability not tied to outcome criteria |
-| Shipping without evidence | Missing validation artifacts for promoted changes |
-| Ambiguous ownership boundaries | Missing owner/system-of-record in interfaces |
-| Performing the agent's work | Documentation or interfaces claim Decapod interprets requirements, writes implementation code, or authors repository meaning |
-| Replacing agents, harnesses, orchestrators, or task trackers | Product surfaces schedule agent execution, perform inference, or require Decapod to become the organizational system of record |
-
-## Constraints
-- Technical: runtime, dependency, and topology boundaries are explicit.
-- Operational: deployment, rollback, and incident ownership are defined.
-- Security/compliance: sensitive data handling and authz are mandatory.
-
-## Acceptance Criteria (must be objectively testable)
-- [ ] Decapod validate passes, required tests pass, and promotion-relevant artifacts are present.
-- [ ] Non-functional targets are met (latency, reliability, cost, etc.).
-- [ ] Validation gates pass and artifacts are attached.
-- [ ] `cargo test` passes for unit/integration coverage
-- [ ] `cargo clippy -- -D warnings` passes with no denied lints
-- [ ] `cargo fmt --check` passes on the repo
-- [ ] Resolved context proves every applied repository override by directive ID, source, hashes, bytes, and precedence.
-- [ ] A healthy spec-drift gate emits no warning; every remaining warning names an observed condition.
-- [ ] Runtime governance consumers observe canonical Dactyl events after legacy JSONL removal.
-- [ ] `workspace prune` makes every preserved candidate visible in `skipped`, including the current workspace, with a recovery action that releases it safely from the host checkout.
-
-## Federation Policy Gate Intent (#1323)
-
-Federation projection mutations retain their verified-trust requirement and
-must remain auditable. When `governance.approval_categories` includes
-`destructive_operations`, `federation.rebuild` and `federation.supersede`
-require an approval for that exact operation identity; the approval command,
-fingerprint shown by policy evaluation, and broker check must address the same
-action. An empty approval-category list means that this configuration-driven
-approval gate is not enabled; it does not remove trust or any independently
-configured risk-zone policy.
-
-Policy evaluation reports the same federation operation risk classification and
-configured approval requirement used by the broker. This slice does not broaden
-approval scope, bypass zone-level controls, or change federation state
-transitions.
-
-## Epistemic Custody Fields
-
-### Active Assumptions
-- Host has functional `git` (verified in workspace preflight)
-- Host has functional `docker`/`podman` for container workspaces (optional but gated)
-- Agent has write access to `.decapod/` directory
-- DECAPOD_SESSION_PASSWORD set per-agent for session acquisition
-- Project is a git repository (workspace ensure requires it)
-
-### Confidence & Risk Level
-- **Confidence**: High (local coordination, deterministic rebuild, proven workspace isolation)
-- **Risk**: Low (local isolation limits blast radius; no background processes)
-
-### Measured vs Inferred Facts
-| Fact | Source (Provenance) | Type |
-|------|---------------------|------|
-| Git is installed | `Command::new("git")` check in workspace.rs | Measured |
-| SQLite WAL mode works | `db_connect` with journal_mode=WAL fallback | Measured |
-| Isolated branch naming | `workspace::ensure` execution with agent/todo scoping | Measured |
-| Deterministic DB rebuild | `todo::rebuild_db_from_events` round-trip test | Measured |
-| Capsule hash determinism | `context_capsule::canonical_json_bytes` + SHA256 | Measured |
-
-### Unresolved Contradictions
-- Cloud backend experimental opt-in exists but sync/migration not implemented
-- Federation (multi-repo knowledge graph) vs single-repo governance boundaries need clarification
-
-### Deferred Questions
-- Full cloud synchronization protocol (beyond init registration)
-- Cross-repository obligation graphs
-- Long-term capsule storage tiering
-
-### Stop Conditions
-- SQLite lock contention exceeding retry budget (5 retries with exponential backoff)
-- Conflicting todo claims by another active agent session
-- Workspace on protected branch with local modifications
-- Validation epoch drift detected without refresh
-
-### Proof Required Before Completion
-- Green `cargo test` suite (unit + integration)
-- Complete spec verification manifest generation
-- `decapod validate --refresh-specs` passes
-- All promotion gates satisfied with attached evidence
-- Final hosted stability claims require a successful container-workspace validation receipt and independent Neon/Vercel deployment evidence; local protocol proof is intentionally not a substitute.
-
-## Tradeoffs Register
-| Decision | Benefit | Cost | Review Trigger |
-|---|---|---|---|
-| Simplicity vs extensibility | Faster iteration | Potential rework | Feature set expands |
-| Strict gates vs dev speed | Higher confidence | More upfront discipline | Lead time regressions |
-
-## First Implementation Slice
-- [ ] Define the smallest user-visible workflow to ship first.
-- [ ] Define required data/contracts for that workflow.
-- [ ] Define what is intentionally postponed until v2.
-
-## Open Questions (with decision deadlines)
-| Question | Owner | Deadline | Decision |
-|---|---|---|---|
-| Which interfaces are versioned at launch? | TBD | YYYY-MM-DD | |
-| Which non-functional target is hardest to hit? | TBD | YYYY-MM-DD | |
-
-## Bounded validation and actionable recovery
-
-Routine validation must classify stale workspaces from workspace count and Git metadata, without recursively enumerating nested untracked payloads. When verification evidence is stale, every emitted recovery instruction must name supported CLI commands and preserve a clear route back to passing, container-backed proof.
-
-### Audit incident recovery and authored evidence preservation
-
-Agents have a governed path to acknowledge an orphaned broker audit entry
-without directly manipulating the datastore. `data broker repair` previews one
-selected pending event and, with `--apply`, appends an abandonment acknowledgment
-that preserves the original evidence and records the actor and reason. The
-underlying mutation outcome remains unknown. Database corruption requires human
-escalation and is not repaired or certified by audit reconciliation.
-
-Authored living-spec obligations, including `Proof Surfaces` bullets, survive
-repeated refreshes, capability reconciliation, and configuration changes. Only
-explicit generated marker pairs confer regeneration ownership. A transformation
-that would lose authored content fails visibly before writing any refreshed spec
-or manifest.
-
-## Workspace Snapshot Intent
-
-Provide an explicit snapshot-backed container workspace launch through
-`workspace ensure --container`, while preserving intentional database sharing
-on existing automatic-run and local routes. A backup failure prevents this
-snapshot launch, and container-copy changes remain ephemeral. Improve snapshot
-ownership, cleanup, quoting, and mount matching without introducing a new
-policy ban based solely on virtiofs or FUSE filesystem identity.
-
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `82096862eeb09ce32d87a138bd68041186df5c31df34fc65f853d2f160f81228`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (185 files)
+- Repository signal fingerprint: `4a22c1131f4bdf292132ddd5b0a9a19a786b04652954203254c0541f9b821e1a`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (186 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
-
-## Honest composition note (#1233 review)
-`PUBLICATION_BUNDLE_CURRENCY` is a HEAD load/presence predicate; fingerprint and living-spec attestation remain sibling gates.
-
-## Release-bound sync for release-plz PRs (#1236)
-release-plz version bumps change `Cargo.toml` (and thus `repo_signal_fingerprint`) without regenerating entrypoint pins. Validation must not hard-fail those PRs on drift; `release-artifact-sync` and the post-release-plz heal step regenerate pins/specs and commit them.
-
-## Three-tier project PR contract (#1234 / #1232)
-
-1. **Governance JSON** — always update every PR (`claims`, `plan`, `trajectory`, `validation`).
-2. **Living specs** — unique material prose for the change under review; fingerprint/attestation
-   re-verify always, but fingerprint *value* need only change when the evaluating Decapod version
-   is newer than the project base.
-3. **Entrypoints** — Decapod-owned. Always verify early against the evaluating binary. When pins
-   match (same Decapod version as base), leave files untouched. When pins mismatch (version bump),
-   Decapod rewrites them and the PR must include those diffs. Hand edits and mode-only touches fail.
-
-## Apple Docker Image (#1269)
-The GitHub Actions release workflow now publishes a multi-architecture docker image for Decapod by adding `linux/arm64` to the Docker build platforms, satisfying the requirement to publish an "apple docker image" for Apple Silicon hardware.
-
-## Target approval correction (#1361)
-
-Target-scoped operator approvals authorize the identified todo without authorizing a different todo. Operators may deliberately grant action-wide approvals as a compatibility fallback, inspect grants, and revoke them. CLI grants expire after 900 seconds by default.
-
-## Critical control-plane recovery and isolation
-
-Workspace setup starts from a committed base and retains unrelated source-checkout
-changes in place. Tracked, staged, untracked, ignored and governance paths are
-reported with their ownership classification; setup does not stash, discard,
-copy or commit user changes. An unowned destination, a symlinked workspace
-parent or an unresolved base is a blocking ownership error, not permission to
-reuse another directory or branch. Full task IDs take precedence over colliding
-short hashes so concurrent tasks cannot acquire one another by prefix.
-
-Lifecycle helpers must finish within explicit deadlines, drain output without
-pipe deadlocks and reap owned subprocesses. Recovery must preserve workspaces
-when runtime cleanup, branch inspection or task ownership cannot be established.
-Persistent numeric PID records alone never authorize signalling a process.
-
-Cloud task retries retain the accepted operation identity across authentication
-handoffs and ambiguous outcomes, without creating a local SQLite fallback.
-State files and runtime configuration have an explicit filesystem permission
-boundary. Publication must establish local proof currency and read back the
-published remote state; a pushed branch, a draft PR, validation success and
-actual external-service/container proof remain separate outcomes.
-
-## Fresh branch governance lifecycle
-
-Beginning the next work branch must replace the inherited accepted journal with
-a fresh versioned template describing the current claimed task. Main/master
-retains its accepted document. Repeated invocations and branch renames or
-rebases preserve the current workstream; they are not new intent boundaries.
-Durable policy and unresolved obligations carry forward. Historical claims and
-proof remain in Git, and publication still requires genuine current validation.
-
-## Build and test cleanup
-
-Build/test runs own their temporary files and clean that invocation's scratch
-on success, failure, and handled interruption. Bazel disposes its action-owned
-sandboxes synchronously; the Rust lifecycle supervisor bounds child shutdown
-and refuses to remove replaced or unconfirmed-live scratch. Cargo incremental
-state is opt-in. Shared dependency caches, other runs, sources, and proof logs
-remain outside cleanup authority. Cleanup belongs in local build/test tooling.

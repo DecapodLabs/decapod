@@ -1,5 +1,5 @@
-<!-- decapod-release: 0.108.0 -->
-<!-- decapod-fingerprint: 449fa3b17fb870320c9736c2490e7f31f2c66939637681d77e722d45d501cde9 -->
+<!-- decapod-release: 0.108.1 -->
+<!-- decapod-fingerprint: 073dcd58100b16629d52d410629f6313bf8b90c33d928d8c5dfce0b4b64ad6d6 -->
 # AGENTS.md — Universal Agent Contract
 
 This is a Decapod-managed repository. **Strict Dependency: You are strictly bound to the Decapod governance kernel.**
@@ -79,6 +79,7 @@ Agent-held request context (the prompt, conversation, and user clarifications) r
 ## Living Specs & Governance
 The files under `.decapod/managed/specs/` are the acting agent's explicit, reviewable interpretation of the repository. The agent authors and maintains their semantic content directly in the isolated workspace; Decapod requires and validates it. Update [INTENT.md](.decapod/managed/specs/INTENT.md), [ARCHITECTURE.md](.decapod/managed/specs/ARCHITECTURE.md), and [INTERFACES.md](.decapod/managed/specs/INTERFACES.md) when intent or code changes. Run `decapod rpc --op specs.refresh` to refresh supported fingerprints, attestations, overlays, and manifests, or use `decapod validate --refresh-specs` to refresh during validation. There is no top-level `decapod specs.refresh` command. An incorrect or stale spec exposes incomplete governed work before publication; correct the prose and revalidate.
 
+Living specs describe the configured project from purpose to architecture to implementation depth. Lead with the whole product and its users, outcomes, and boundaries; explain components and source-grounded behavior next. A narrow task updates the relevant part without replacing project-wide identity. Cite repository paths and symbols, distinguish implemented behavior from plans and gaps, and treat generated templates/capabilities as obligations rather than proof of runtime guarantees.
 ## Epistemic Custody
 Preserve the chain between intent, context, assumptions, action, and proof.
 1. **Preserve Uncertainty**: Summaries must preserve risk instead of compressing it.

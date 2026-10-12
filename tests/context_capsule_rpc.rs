@@ -50,6 +50,8 @@ fn setup_repo() -> (TempDir, std::path::PathBuf) {
         &[
             "init",
             "--force",
+            "--product-summary",
+            "Context Library packages repository information for project contributors.",
             "--no-container-workspaces",
             "--isolation-mode",
             "worktree",

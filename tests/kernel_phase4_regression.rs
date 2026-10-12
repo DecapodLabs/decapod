@@ -23,7 +23,16 @@ fn setup_repo() -> (TempDir, PathBuf, String) {
         .expect("git init");
     assert!(git_init.status.success(), "git init failed");
 
-    let init = run_decapod(&dir, &["init", "--force"], &[]);
+    let init = run_decapod(
+        &dir,
+        &[
+            "init",
+            "--force",
+            "--product-summary",
+            "Work Ledger preserves tasks, claims, and evidence for project contributors.",
+        ],
+        &[],
+    );
     assert!(
         init.status.success(),
         "decapod init failed: {}",

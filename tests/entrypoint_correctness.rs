@@ -237,7 +237,15 @@ fn test_validate_passes_after_init() {
     let temp_path = temp_dir.path().to_path_buf();
 
     // Run decapod init
-    let (success, _) = run_decapod(&temp_path, &["init", "--force"]);
+    let (success, _) = run_decapod(
+        &temp_path,
+        &[
+            "init",
+            "--force",
+            "--product-summary",
+            "Local Records stores and retrieves structured records for project contributors.",
+        ],
+    );
     assert!(success, "decapod init should succeed");
     acquire_session(&temp_path);
 
@@ -263,7 +271,17 @@ fn test_validate_passes_after_init_without_git_repo() {
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
     let temp_path = temp_dir.path().to_path_buf();
 
-    let init = run_raw(&temp_path, &["init", "--force", "--no-git"], &[]);
+    let init = run_raw(
+        &temp_path,
+        &[
+            "init",
+            "--force",
+            "--product-summary",
+            "Local Records stores and retrieves structured records for project contributors.",
+            "--no-git",
+        ],
+        &[],
+    );
     assert!(
         init.status.success(),
         "decapod init should succeed. Output:\n{}{}",
@@ -312,7 +330,15 @@ fn test_agent_session_requires_password() {
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
     let temp_path = temp_dir.path().to_path_buf();
 
-    let (success, _) = run_decapod(&temp_path, &["init", "--force"]);
+    let (success, _) = run_decapod(
+        &temp_path,
+        &[
+            "init",
+            "--force",
+            "--product-summary",
+            "Project Ledger coordinates local tasks, project context, and reviewable evidence.",
+        ],
+    );
     assert!(success, "decapod init should succeed");
 
     let (success, acquire_out) = run_decapod_with_env(
@@ -673,6 +699,17 @@ fn test_agents_entrypoint_scopes_decapod_invocation() {
 }
 
 #[test]
+fn test_generated_agents_contract_stays_within_validation_line_budget() {
+    let content = assets::get_template("AGENTS.md").expect("generated AGENTS.md");
+    assert!(
+        content.lines().count() <= 120,
+        "the release-bound contract must fit the existing validation line budget"
+    );
+    assert!(content.contains("Living specs describe the configured project"));
+    assert!(content.contains("A narrow task updates the relevant part"));
+}
+
+#[test]
 fn test_root_entrypoints_match_scaffold_generators() {
     let repo_root = resolve_repo_root();
     for file in ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md"] {
@@ -788,7 +825,15 @@ fn test_validate_migrates_valid_legacy_entrypoint_metadata() {
 
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
     let temp_path = temp_dir.path().to_path_buf();
-    let (success, _) = run_decapod(&temp_path, &["init", "--force"]);
+    let (success, _) = run_decapod(
+        &temp_path,
+        &[
+            "init",
+            "--force",
+            "--product-summary",
+            "Local Records stores and retrieves structured records for project contributors.",
+        ],
+    );
     assert!(success, "decapod init should succeed");
     acquire_session(&temp_path);
 
@@ -911,7 +956,15 @@ fn test_validate_rejects_malformed_entrypoint_metadata() {
 fn test_validate_does_not_overwrite_payload_tamper() {
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
     let temp_path = temp_dir.path().to_path_buf();
-    let (success, _) = run_decapod(&temp_path, &["init", "--force"]);
+    let (success, _) = run_decapod(
+        &temp_path,
+        &[
+            "init",
+            "--force",
+            "--product-summary",
+            "Local Records stores and retrieves structured records for project contributors.",
+        ],
+    );
     assert!(success, "decapod init should succeed");
 
     let path = temp_path.join("CODEX.md");
