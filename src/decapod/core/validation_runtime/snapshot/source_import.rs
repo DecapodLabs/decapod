@@ -557,6 +557,9 @@ pub(super) fn buildkite_sources(
 ) -> io::Result<SourceCollection> {
     use provider::public_buildkite as bk;
     contract.validate()?;
+    let mut cached_reader = bk::CollectionReader::new(reader);
+    let reader = &mut cached_reader;
+    let mut workflow_timings = Vec::new();
     let mut collection = SourceCollection::default();
     let obligations: Vec<_> = project
         .catalog
@@ -574,6 +577,8 @@ pub(super) fn buildkite_sources(
     let paths: Vec<_> = project.facts.changed_paths.iter().cloned().collect();
     let source_jobs = source::inventory(&paths, false);
     for workflow in workflows {
+        let workflow_started = Instant::now();
+        eprintln!("Buildkite collection: stage=metadata_discovery workflow={workflow}");
         let pinned = terminal
             .buildkite("decapodlabs", "decapod", workflow)
             .ok_or_else(|| {
@@ -597,6 +602,7 @@ pub(super) fn buildkite_sources(
         if inventory.build_id() != pinned.build_id() {
             return Err(invalid("Buildkite build changed after terminal barrier"));
         }
+        let metadata_ms = workflow_started.elapsed().as_millis();
         type JobKey = (String, String);
         let mut expected = BTreeMap::<
             JobKey,
@@ -642,20 +648,30 @@ pub(super) fn buildkite_sources(
             });
             row.1.push(obligation);
         }
+        let discovery_started = Instant::now();
+        eprintln!("Buildkite collection: stage=recipe_discovery workflow={workflow}");
         let mut matched = BTreeMap::new();
-        for job in inventory.jobs().values() {
-            if let Some(locator) = bk::locate_recipe(reader, &inventory, job.id(), budget)? {
-                let key = (
-                    locator.logical_job().to_string(),
-                    serde_json::to_string(locator.matrix()).map_err(io::Error::other)?,
-                );
-                if expected.contains_key(&key) && matched.insert(key, locator).is_some() {
+        reader.locate_recipes(&inventory, budget, |locator| {
+            // The reviewed global compiler identity is independent of measured
+            // plans. Reject before the next batch, not after the full inventory.
+            locator.verify_compiler(&contract.compiler_version, &contract.compiler_digest)?;
+            let key = (
+                locator.logical_job().to_string(),
+                serde_json::to_string(locator.matrix()).map_err(io::Error::other)?,
+            );
+            if let Some((expected, _, _)) = expected.get(&key) {
+                locator.verify_runtime(&expected.runtime_digest)?;
+                if matched.insert(key, locator).is_some() {
                     return Err(invalid(
                         "multiple imported native jobs claim the same required source matrix",
                     ));
                 }
             }
-        }
+            Ok(())
+        })?;
+        let recipe_discovery_ms = discovery_started.elapsed().as_millis();
+        let custody_started = Instant::now();
+        eprintln!("Buildkite collection: stage=custody_verification workflow={workflow}");
         let mut expected: Vec<_> = expected.into_iter().collect();
         expected.sort_by_key(|((job, _), _)| match job.as_str() {
             "setup" => 0,
@@ -664,14 +680,22 @@ pub(super) fn buildkite_sources(
             _ => 2,
         });
         let mut known_inputs = integration::Dependencies::default();
-        for (key, (expected, obligations, matrix)) in expected {
+        let mut recipe_validation_ms = 0;
+        let mut archive_download_verify_ms = 0;
+        let mut job_log_ms = 0;
+        let mut source_custody_verify_ms = 0;
+        let expected_count = expected.len();
+        for (index, (key, (expected, obligations, matrix))) in expected.into_iter().enumerate() {
             let imported = (|| -> io::Result<()> {
                 let locator = matched
                     .remove(&key)
                     .ok_or_else(|| invalid("required actual imported source job absent"))?;
                 let native_job = locator.producer_job_id().to_string();
+                let stage_started = Instant::now();
                 let recipe =
-                    bk::collect_located_recipe(reader, &inventory, locator, &expected, budget)?;
+                    bk::collect_located_recipe(reader, &inventory, locator, &expected, budget);
+                recipe_validation_ms += stage_started.elapsed().as_millis();
+                let recipe = recipe?;
                 if recipe.logical_result() != "success" {
                     return Err(invalid(format!(
                         "required logical source result is {}",
@@ -689,9 +713,15 @@ pub(super) fn buildkite_sources(
                 // retried step, so this supported route has native attempt0.
                 let archive_name =
                     source::custody::artifact_name(&expected.logical_job, matrix.as_deref(), "0")?;
+                let stage_started = Instant::now();
                 let files =
-                    bk::collect_named_archive(reader, &inventory, &recipe, &archive_name, budget)?;
-                let log = bk::collect_log(reader, &inventory, &native_job, budget)?;
+                    bk::collect_named_archive(reader, &inventory, &recipe, &archive_name, budget);
+                archive_download_verify_ms += stage_started.elapsed().as_millis();
+                let files = files?;
+                let stage_started = Instant::now();
+                let log = bk::collect_log(reader, &inventory, &native_job, budget);
+                job_log_ms += stage_started.elapsed().as_millis();
+                let log = log?;
                 write_new(
                     &evidence_directory.join(format!("buildkite-{native_job}.log")),
                     log.bytes(),
@@ -704,6 +734,7 @@ pub(super) fn buildkite_sources(
                     step_key,
                     imported_recipe: Some(&recipe),
                 };
+                let stage_started = Instant::now();
                 for obligation in &obligations {
                     if let Err(error) = verify_check(
                         project,
@@ -722,6 +753,7 @@ pub(super) fn buildkite_sources(
                         );
                     }
                 }
+                source_custody_verify_ms += stage_started.elapsed().as_millis();
                 Ok(())
             })();
             if let Err(error) = imported {
@@ -729,9 +761,41 @@ pub(super) fn buildkite_sources(
                     collection.failure(&obligation.key, "BUILDKITE_SOURCE_CUSTODY_BLOCKED", &error);
                 }
             }
+            eprintln!(
+                "Buildkite collection: stage=custody_verification workflow={workflow} completed={}/{} elapsed_ms={}",
+                index + 1,
+                expected_count,
+                custody_started.elapsed().as_millis(),
+            );
         }
+        let custody_verification_ms = custody_started.elapsed().as_millis();
+        let recheck_started = Instant::now();
         bk::recheck_inventory(reader, &inventory, &expected_inventory, budget)?;
+        workflow_timings.push(serde_json::json!({
+            "workflow": workflow,
+            "build_number": pinned.build().number(),
+            "metadata_discovery_ms": metadata_ms,
+            "recipe_discovery_ms": recipe_discovery_ms,
+            "custody_verification_ms": custody_verification_ms,
+            "recipe_validation_ms": recipe_validation_ms,
+            "archive_download_verify_ms": archive_download_verify_ms,
+            "job_log_ms": job_log_ms,
+            "source_custody_verify_ms": source_custody_verify_ms,
+            "inventory_recheck_ms": recheck_started.elapsed().as_millis(),
+            "workflow_wall_ms": workflow_started.elapsed().as_millis()
+        }));
     }
+    write_new(
+        &evidence_directory.join("buildkite-collection-timing.json"),
+        &serde_json::to_vec_pretty(&serde_json::json!({
+            "schema": "decapod.buildkite-collection-timing.v1",
+            "source_head": snapshot.transport_head(),
+            "measurement_only": true,
+            "transport": reader.measurements(),
+            "workflows": workflow_timings
+        }))
+        .map_err(io::Error::other)?,
+    )?;
     Ok(collection)
 }
 fn authored_matrix_position(

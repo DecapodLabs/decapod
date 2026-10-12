@@ -1,5 +1,20 @@
 # Security
 
+## Bounded public-read reuse
+
+Concurrent collection changes transport scheduling, not provider authority.
+Exact typed requests are authorized serially before any batch worker starts.
+Only successful exact-route artifact responses are reused inside one collection,
+under explicit memory/entry bounds; no verdict, provider poll or final freshness
+check is cached. Hash, producer, source, native-attempt and contract checks remain
+mandatory on every consumer. All workers join under the existing shared
+cancellation/deadline. HTTP authorization failures never cause credential
+installation, alternate authentication, permissive fallback or automatic retry.
+No signed redirect query or arbitrary response header is emitted in diagnostics.
+Dependency-tool provenance comes from fixed reviewed official release digests,
+never a checksum selected by the downloaded artifact. Hash validation precedes
+named-member extraction and execution; missing or mismatched tooling fails closed.
+
 ## Preflight custody and capabilities
 
 Preflight executes only reviewed build/test/release-verification operations. It
@@ -234,8 +249,8 @@ Describe the security primitives and security controls implemented in this repos
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f3688002bd0d6f07225d0f5dc7ebf83402a900f0e25d30450602c94ede29a0f7`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
+- Repository signal fingerprint: `2fd819d335775731c17c8728cb09c6d557eb7821f6011c9da73acc973065119a`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (178 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

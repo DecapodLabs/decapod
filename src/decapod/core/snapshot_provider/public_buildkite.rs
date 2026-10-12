@@ -6,6 +6,12 @@ use super::*;
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
 
+mod collection;
+pub use collection::CollectionReader;
+
+/// One finite batch, sharing the caller's deadline and cancellation.
+pub const PUBLIC_READ_CONCURRENCY: usize = 4;
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PublicBuild {
     organization: String,
@@ -192,6 +198,32 @@ impl PublicRequest {
 }
 pub trait PublicReader {
     fn get(&mut self, request: &PublicRequest, budget: &Budget<'_>) -> Result<Vec<u8>>;
+
+    /// Serial fallback for readers without concurrent transport. Implementations
+    /// must retain order and join every owned read before returning an error.
+    fn get_many(
+        &mut self,
+        requests: &[PublicRequest],
+        budget: &Budget<'_>,
+    ) -> Result<Vec<Vec<u8>>> {
+        ensure(
+            requests.len() <= PUBLIC_READ_CONCURRENCY,
+            "public read batch exceeds bound",
+        )?;
+        requests
+            .iter()
+            .map(|request| {
+                budget.remaining()?;
+                request.authorize_read()?;
+                let bytes = self.get(request, budget)?;
+                ensure(
+                    bytes.len() <= budget.max_bytes,
+                    "public response exceeded bound",
+                )?;
+                Ok(bytes)
+            })
+            .collect()
+    }
 }
 type PublicAuthorization = Box<dyn FnMut(&PublicRequest, &Path) -> Result<()>>;
 /// Choose this mode explicitly for a public pipeline before any auth attempt.
@@ -316,112 +348,173 @@ pub(super) fn http_response(bytes: &[u8]) -> Result<(u16, Option<String>, &[u8])
 impl PublicReader for CurlPublicReader {
     fn get(&mut self, request: &PublicRequest, budget: &Budget<'_>) -> Result<Vec<u8>> {
         budget.remaining()?;
-        let validated = request.authorize_read()?;
+        request.authorize_read()?;
         (self.authorize)(request, &self.curl)?;
-        let mut destination = request.url();
-        let mut timeout_retries = 0_u8;
-        for hop in 0..=validated.max_https_redirects() {
-            let mut cmd = Command::new(&self.curl);
-            public_network_environment(&mut cmd);
-            // No -L: each Location is checked before the next process exists.
-            cmd.current_dir("/").args([
-                "-q",
-                "--fail",
-                "--silent",
-                "--show-error",
-                "--proto",
-                "=https",
-                "--connect-timeout",
-                "10",
-                "--request",
-                "GET",
-                "--dump-header",
-                "-",
-                "--suppress-connect-headers",
-                "--max-redirs",
-                "0",
-                "--url",
-                &destination,
-            ]);
-            let out = loop {
-                let limits = ProcessLimits {
-                    timeout: budget.remaining()?.min(Duration::from_secs(30)),
-                    max_output_bytes: budget.max_bytes,
-                };
-                let out = if validated.kind() == PublicReadKind::ArtifactContent {
-                    cmd.bounded_artifact_capture(limits, budget.cancel)?
-                } else {
-                    cmd.bounded_capture(limits, budget.cancel)?
-                };
-                let timed_out = matches!(out.termination, Termination::TimedOut)
-                    || (matches!(out.termination, Termination::Exited)
-                        && out.output.status.code() == Some(28));
-                // Retry only a timeout of this identical, already-authorized GET.
-                // Never retry denied authorization, HTTP failures, TLS failures,
-                // cancellation, malformed responses or output-limit violations.
-                // Earlier verified downloads remain in this collection; only the
-                // current incomplete response is discarded before its retry.
-                if timed_out && timeout_retries < 2 {
-                    timeout_retries += 1;
-                    budget.wait(Duration::from_secs(u64::from(timeout_retries)))?;
-                    continue;
-                }
-                match out.termination {
-                    Termination::Cancelled => {
-                        return Err(io::Error::new(
-                            io::ErrorKind::Interrupted,
-                            "public read cancelled",
-                        ));
-                    }
-                    Termination::TimedOut => {
-                        return Err(io::Error::new(
-                            io::ErrorKind::TimedOut,
-                            format!(
-                                "public read timed out after {} bounded attempt(s)",
-                                timeout_retries + 1
-                            ),
-                        ));
-                    }
-                    Termination::OutputLimit => return Err(invalid("public read exceeded bound")),
-                    Termination::Exited => (),
-                }
-                if !out.output.status.success() {
-                    return Err(public_http_failure_after_attempts(
-                        &format!("{:?}", validated.kind()),
-                        &request.url(),
-                        out.output.status.code().unwrap_or(-1),
-                        &out.output.stdout,
-                        timeout_retries + 1,
+        authorized_curl_get(&self.curl, request, budget)
+    }
+
+    fn get_many(
+        &mut self,
+        requests: &[PublicRequest],
+        budget: &Budget<'_>,
+    ) -> Result<Vec<Vec<u8>>> {
+        ensure(
+            requests.len() <= PUBLIC_READ_CONCURRENCY,
+            "public read batch exceeds bound",
+        )?;
+        // Authorization stays on the owner thread. No read starts unless every
+        // exact request is authorized; no FnMut policy is sent to a worker.
+        for request in requests {
+            budget.remaining()?;
+            request.authorize_read()?;
+            (self.authorize)(request, &self.curl)?;
+        }
+        let curl = &self.curl;
+        bounded_parallel_reads(requests, |request| {
+            authorized_curl_get(curl, request, budget)
+        })
+    }
+}
+
+fn bounded_parallel_reads<T: Sync, U: Send>(
+    requests: &[T],
+    read: impl Fn(&T) -> Result<U> + Sync,
+) -> Result<Vec<U>> {
+    ensure(
+        requests.len() <= PUBLIC_READ_CONCURRENCY,
+        "public read batch exceeds bound",
+    )?;
+    std::thread::scope(|scope| {
+        let handles: Vec<_> = requests
+            .iter()
+            .map(|request| {
+                let read = &read;
+                scope.spawn(move || read(request))
+            })
+            .collect();
+        // Join all workers, including after an earlier failure. No background
+        // work survives this call and ordered errors cannot yield partial proof.
+        let results: Vec<_> = handles
+            .into_iter()
+            .map(|handle| {
+                handle
+                    .join()
+                    .unwrap_or_else(|_| Err(io::Error::other("public read worker panicked")))
+            })
+            .collect();
+        results.into_iter().collect()
+    })
+}
+
+fn authorized_curl_get(
+    curl: &Path,
+    request: &PublicRequest,
+    budget: &Budget<'_>,
+) -> Result<Vec<u8>> {
+    budget.remaining()?;
+    let validated = request.authorize_read()?;
+    let mut destination = request.url();
+    let mut timeout_retries = 0_u8;
+    for hop in 0..=validated.max_https_redirects() {
+        let mut cmd = Command::new(curl);
+        public_network_environment(&mut cmd);
+        // No -L: each Location is checked before the next process exists.
+        cmd.current_dir("/").args([
+            "-q",
+            "--fail",
+            "--silent",
+            "--show-error",
+            "--proto",
+            "=https",
+            "--connect-timeout",
+            "10",
+            "--request",
+            "GET",
+            "--dump-header",
+            "-",
+            "--suppress-connect-headers",
+            "--max-redirs",
+            "0",
+            "--url",
+            &destination,
+        ]);
+        let out = loop {
+            let limits = ProcessLimits {
+                timeout: budget.remaining()?.min(Duration::from_secs(30)),
+                max_output_bytes: budget.max_bytes,
+            };
+            let out = if validated.kind() == PublicReadKind::ArtifactContent {
+                cmd.bounded_artifact_capture(limits, budget.cancel)?
+            } else {
+                cmd.bounded_capture(limits, budget.cancel)?
+            };
+            let timed_out = matches!(out.termination, Termination::TimedOut)
+                || (matches!(out.termination, Termination::Exited)
+                    && out.output.status.code() == Some(28));
+            // Retry only a timeout of this identical, already-authorized GET.
+            // Never retry denied authorization, HTTP failures, TLS failures,
+            // cancellation, malformed responses or output-limit violations.
+            // Earlier verified downloads remain in this collection; only the
+            // current incomplete response is discarded before its retry.
+            if timed_out && timeout_retries < 2 {
+                timeout_retries += 1;
+                budget.wait(Duration::from_secs(u64::from(timeout_retries)))?;
+                continue;
+            }
+            match out.termination {
+                Termination::Cancelled => {
+                    return Err(io::Error::new(
+                        io::ErrorKind::Interrupted,
+                        "public read cancelled",
                     ));
                 }
-                break out;
-            };
-            let (status, location, body) = http_response(&out.output.stdout)?;
-            if status == 200 {
-                return Ok(body.to_vec());
+                Termination::TimedOut => {
+                    return Err(io::Error::new(
+                        io::ErrorKind::TimedOut,
+                        format!(
+                            "public read timed out after {} bounded attempt(s)",
+                            timeout_retries + 1
+                        ),
+                    ));
+                }
+                Termination::OutputLimit => return Err(invalid("public read exceeded bound")),
+                Termination::Exited => (),
             }
-            if !matches!(status, 301 | 302 | 303 | 307 | 308)
-                || hop >= validated.max_https_redirects()
-            {
-                return Err(io::Error::new(
-                    io::ErrorKind::InvalidData,
-                    format!(
-                        "unsupported public {:?} HTTP status {status} at redirect hop {hop} (limit {})",
-                        validated.kind(),
-                        validated.max_https_redirects()
-                    ),
+            if !out.output.status.success() {
+                return Err(public_http_failure_after_attempts(
+                    &format!("{:?}", validated.kind()),
+                    &request.url(),
+                    out.output.status.code().unwrap_or(-1),
+                    &out.output.stdout,
+                    timeout_retries + 1,
                 ));
             }
-            let location = location.ok_or_else(|| invalid("provider redirect location absent"))?;
-            match validated.kind() {
-                PublicReadKind::ArtifactContent => validate_storage_redirect(request, &location)?,
-                PublicReadKind::JobLog => validate_log_redirect(request, &location)?,
-                _ => return Err(invalid("redirect on non-content public read")),
-            }
-            destination = location;
+            break out;
+        };
+        let (status, location, body) = http_response(&out.output.stdout)?;
+        if status == 200 {
+            return Ok(body.to_vec());
         }
-        Err(invalid("public artifact redirect limit"))
+        if !matches!(status, 301 | 302 | 303 | 307 | 308) || hop >= validated.max_https_redirects()
+        {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!(
+                    "unsupported public {:?} HTTP status {status} at redirect hop {hop} (limit {})",
+                    validated.kind(),
+                    validated.max_https_redirects()
+                ),
+            ));
+        }
+        let location = location.ok_or_else(|| invalid("provider redirect location absent"))?;
+        match validated.kind() {
+            PublicReadKind::ArtifactContent => validate_storage_redirect(request, &location)?,
+            PublicReadKind::JobLog => validate_log_redirect(request, &location)?,
+            _ => return Err(invalid("redirect on non-content public read")),
+        }
+        destination = location;
     }
+    Err(invalid("public artifact redirect limit"))
 }
 
 fn read(
@@ -1020,6 +1113,16 @@ pub fn locate_recipe(
     job: &str,
     budget: &Budget<'_>,
 ) -> Result<Option<RecipeLocator>> {
+    locate_recipe_result(reader, inventory, job, budget)?
+        .map(|partial| finish_recipe_locator(reader, inventory, partial, budget))
+        .transpose()
+}
+fn recipe_result_row(
+    reader: &mut impl PublicReader,
+    inventory: &PublicInventory,
+    job: &str,
+    budget: &Budget<'_>,
+) -> Result<Option<Value>> {
     let job_record = inventory
         .jobs
         .get(job)
@@ -1041,7 +1144,23 @@ pub fn locate_recipe(
         return Ok(None);
     }
     ensure(results.len() == 1, "importer result missing or ambiguous")?;
-    let result = download(reader, inventory, job, results[0], budget)?;
+    Ok(Some(results[0].clone()))
+}
+fn locate_recipe_result(
+    reader: &mut impl PublicReader,
+    inventory: &PublicInventory,
+    job: &str,
+    budget: &Budget<'_>,
+) -> Result<Option<RecipeResult>> {
+    let Some(row) = recipe_result_row(reader, inventory, job, budget)? else {
+        return Ok(None);
+    };
+    let job_record = &inventory.jobs[job];
+    let step_key = job_record
+        .step_key()
+        .ok_or_else(|| invalid("recipe step key absent"))?;
+    let prefix = format!("buildkite-gha/v1/results/{step_key}/");
+    let result = download(reader, inventory, job, &row, budget)?;
     let manifest = json(result.bytes())?;
     ensure(
         string(&manifest, "schema")? == "buildkite-gha/result-manifest/v2",
@@ -1071,10 +1190,33 @@ pub fn locate_recipe(
         "importer upload producer missing or ambiguous",
     )?;
     let importer = importer_jobs[0].id();
+    let plan_digest = plan_digest.to_owned();
+    Ok(Some(RecipeResult {
+        result,
+        importer: importer.into(),
+        plan_digest,
+    }))
+}
+struct RecipeResult {
+    result: CollectedArtifact,
+    importer: String,
+    plan_digest: String,
+}
+fn finish_recipe_locator(
+    reader: &mut impl PublicReader,
+    inventory: &PublicInventory,
+    partial: RecipeResult,
+    budget: &Budget<'_>,
+) -> Result<RecipeLocator> {
+    let RecipeResult {
+        result,
+        importer,
+        plan_digest,
+    } = partial;
     let plan = collect_artifact(
         reader,
         inventory,
-        importer,
+        &importer,
         &format!(".buildkite-gha/plans/{}.json", &plan_digest[7..]),
         budget,
     )?;
@@ -1103,16 +1245,16 @@ pub fn locate_recipe(
         !logical_job.is_empty() && job_total > 0 && job_index < job_total,
         "invalid importer logical locator",
     )?;
-    Ok(Some(RecipeLocator {
+    Ok(RecipeLocator {
         result,
         plan,
         plan_json,
-        importer: importer.into(),
+        importer,
         logical_job,
         matrix,
         job_index,
         job_total,
-    }))
+    })
 }
 /// Verified provider result/plan custody used only to locate an independently
 /// expected logical job. No caller JSON constructor or readiness conversion.
@@ -1128,6 +1270,22 @@ pub struct RecipeLocator {
     job_total: u64,
 }
 impl RecipeLocator {
+    /// Reject an unsupported reviewed compiler before collecting other jobs.
+    /// This checks policy against authenticated bytes; it never derives policy.
+    pub fn verify_compiler(&self, version: &str, distribution_digest: &str) -> Result<()> {
+        verify_compiler(&self.plan_json, version, distribution_digest)
+    }
+    pub fn verify_runtime(&self, distribution_digest: &str) -> Result<()> {
+        ensure(
+            digest(distribution_digest),
+            "invalid expected runtime digest",
+        )?;
+        ensure(
+            string(field(&self.plan_json, "runtime")?, "distribution_digest")?
+                == distribution_digest,
+            "importer runtime platform digest mismatch",
+        )
+    }
     pub fn producer_job_id(&self) -> &str {
         self.result.job_id()
     }
@@ -1143,6 +1301,20 @@ impl RecipeLocator {
     pub fn job_total(&self) -> u64 {
         self.job_total
     }
+}
+fn verify_compiler(plan: &Value, version: &str, distribution_digest: &str) -> Result<()> {
+    ensure(
+        digest(distribution_digest),
+        "invalid expected compiler digest",
+    )?;
+    ensure(
+        string(field(plan, "compiler")?, "version")? == version,
+        "importer compiler version mismatch",
+    )?;
+    ensure(
+        string(field(plan, "compiler")?, "distribution_digest")? == distribution_digest,
+        "importer compiler digest mismatch",
+    )
 }
 pub fn collect_recipe(
     reader: &mut impl PublicReader,
@@ -1208,13 +1380,10 @@ pub fn collect_located_recipe(
             && string(field(&plan_json, "target")?, "step_key")? == step_key,
         "importer logical source mismatch",
     )?;
-    ensure(
-        string(field(&plan_json, "compiler")?, "version")? == expected.compiler_version,
-        "importer compiler version mismatch",
-    )?;
-    ensure(
-        string(field(&plan_json, "compiler")?, "distribution_digest")? == expected.compiler_digest,
-        "importer compiler digest mismatch",
+    verify_compiler(
+        &plan_json,
+        &expected.compiler_version,
+        &expected.compiler_digest,
     )?;
     ensure(
         string(field(&plan_json, "runtime")?, "distribution_digest")? == expected.runtime_digest,

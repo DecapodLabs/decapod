@@ -1,5 +1,40 @@
 # Architecture
 
+## Bounded validation collection and release artifact staging
+
+The Buildkite collector authorizes each typed request before starting a bounded
+batch of at most four independent metadata reads. Scoped workers join before
+returning, share the existing deadline and cancellation token, and keep existing
+redirect and response-size checks. A collection-owned raw-byte memo uses complete
+build/job/artifact routes, caps entries at 1,024 and total body bytes at 32 MiB,
+and bypasses bodies larger than 1 MiB. Only successful artifact listings/content
+are eligible; provider polls, live inventories, logs, and final rechecks always
+reach the provider. Every consumer still validates producer identity, hashes,
+and its independently reviewed recipe contract.
+These are cache-body bounds, not a total-memory claim: bounded process capture,
+body copies, parsed JSON and retained recipe state add finite overhead.
+
+Recipe discovery rejects unsupported reviewed importer compiler/runtime
+contracts before advancing to another batch. Large custody ZIPs remain serial,
+and setup, integration preparation, worker and integration-status proof retain
+their deterministic dependency order. Measurements and stderr progress distinguish
+provider wait, metadata/recipe discovery, archive download/verification, log reads,
+source-custody verification and fresh terminal rechecks; none authorizes readiness.
+
+Release-build staging creates a fresh workspace-relative directory under
+target/buildkite-artifacts, dereferences the successful Bazel executable into an
+owned regular file, compares its bytes, and passes that relative path to the
+artifact uploader. It does not relax upload symlink checks or trigger release
+publication from a work branch.
+
+The Linux x86_64 dependency-lint lane obtains cargo-machete 0.9.2 and
+cargo-deny 0.20.2 from reviewed upstream musl release archives. Fixed SHA256
+pins authenticate each archive before extracting its single named executable;
+exact version checks precede publishing the private tool directory on PATH.
+Cargo's home bin is explicit after that directory so Cargo subcommand lookup
+cannot prefer an ambient plugin. Both existing measured lint commands remain
+fresh executions; no check result or unverified executable is cached.
+
 ## Release-stable Bazel dependency inputs
 
 The root Cargo manifest and lock remain canonical. A Bazel repository rule reads
@@ -556,8 +591,8 @@ virtiofs/FUSE filesystem prohibition.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f3688002bd0d6f07225d0f5dc7ebf83402a900f0e25d30450602c94ede29a0f7`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
+- Repository signal fingerprint: `2fd819d335775731c17c8728cb09c6d557eb7821f6011c9da73acc973065119a`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (178 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

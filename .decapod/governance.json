@@ -72,6 +72,16 @@
     "target_base": "origin/master"
   },
   "claims": {
+    "bounded-preflight-latency": {
+      "statement": "The collector removes repeated exact-request reads and overlaps bounded independent metadata retrieval, while preserving all exact-source and terminal custody checks; CI optimizations reduce measured critical-path overhead without skipping applicable execution.",
+      "falsifier": "A stale, missing, malformed, denied, cancelled, failed or mismatched input yields readiness; any applicable source obligation is dropped; bounded resource use is exceeded; or comparable measured collection has no material improvement.",
+      "status": "open"
+    },
+    "regular-release-artifact": {
+      "statement": "The release-build uploader consumes an owned regular file containing exactly the successfully built Bazel binary.",
+      "falsifier": "The staged upload path is a symlink or differs in bytes from the compiled Bazel output.",
+      "status": "open"
+    },
     "release-version-stable-bazel": {
       "statement": "A version-only release with unchanged dependency resolution can build through strict Bazel setup while dependency drift remains fail-closed",
       "falsifier": "A version-only candidate fails stale-lock setup, or changed dependencies build without a reviewed lock refresh",
@@ -89,6 +99,11 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/pull/1402"
       ]
+    },
+    {
+      "id": "bounded-preflight-and-release-staging",
+      "summary": "Add bounded same-collection request reuse and four-way metadata reads with independent custody/freshness verification, pinned authenticated dependency tooling, regular workspace-relative release staging, and explicit regressions. Bootstrap compiled; full exact-head Buildkite validate remains required.",
+      "input_digest": "sha256:a3164f4956a453f2faacff9860d70aaa5a766b4d607a496e64d8c58a86fe5c94"
     }
   ],
   "intents": {
@@ -119,7 +134,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Repair the exact release-only Bazel setup failure observed in PR1402 on both GitHub Actions and Buildkite. Keep strict lockfile enforcement and immutable measured source. Prefer a deterministic version-neutral dependency input projection so release-plz root-version changes do not invalidate unchanged dependency resolution; ordinary dependency changes must still fail until explicitly regenerated. Verify via regression coverage and configured full exact-head Buildkite decapod validate before creating a ready-for-review PR.",
+      "intent": "Repair PR1402 release-only strict Bazel lock failure, stage the Bazel release binary as an owned regular file for artifact upload, and address issue1400 full Buildkite preflight latency toward the user target of about five minutes. Reduce request amplification and measured CI critical-path costs without dropping obligations, widening evidence trust, caching green results, weakening identity/freshness/digests, or changing paid capacity, credentials, security or deployment. Validate owns same-branch publication and full verification; publish a ready-for-review PR only after exact final-head plain decapod validate reports publication_ready=true. Report actual before/after timing and queue limitations honestly.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -129,49 +144,66 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed current authored release-stable dependency input contract, strict locking, real-version metadata and provider-owned regression proof",
-          "reviewed_code_fingerprint": "f3688002bd0d6f07225d0f5dc7ebf83402a900f0e25d30450602c94ede29a0f7",
-          "spec_material_hash": "1fb58fb8a9622d59c4e8d7942d95a34ff5180d7b5f22a38e2ebcc824f8e415f1"
+          "reason": "Reviewed bounded collection transport/cache authority, exact pinned dependency tooling, relative regular release staging, measured-only timing diagnostics and unchanged proof/freshness requirements",
+          "reviewed_code_fingerprint": "2fd819d335775731c17c8728cb09c6d557eb7821f6011c9da73acc973065119a",
+          "spec_material_hash": "e68a8473765852cece61ad47178b4b328445400975c515a4b24591b4e44c8e39"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed current authored release-stable dependency input contract, strict locking, real-version metadata and provider-owned regression proof",
-          "reviewed_code_fingerprint": "f3688002bd0d6f07225d0f5dc7ebf83402a900f0e25d30450602c94ede29a0f7",
-          "spec_material_hash": "72e3197d723379163c54acefe2f9e7892a03a18a754c5c61b948b77ab8a8721b"
+          "reason": "Reviewed bounded collection transport/cache authority, exact pinned dependency tooling, relative regular release staging, measured-only timing diagnostics and unchanged proof/freshness requirements",
+          "reviewed_code_fingerprint": "2fd819d335775731c17c8728cb09c6d557eb7821f6011c9da73acc973065119a",
+          "spec_material_hash": "96f0204d8710aebf8516f9be09a2bc1791b2da78bf9fce2f39c6f4b2252f2556"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Dependency metadata is generated outside the measured checkout with every non-version byte preserved; no credential, permission, isolation, trust or source-custody policy changes are needed",
-          "reviewed_code_fingerprint": "f3688002bd0d6f07225d0f5dc7ebf83402a900f0e25d30450602c94ede29a0f7",
-          "spec_material_hash": "37c99a1610c9603b39999f1153d05158366abede2ec449d1d290afc1ccbe7fcb"
+          "reason": "Reviewed bounded collection transport/cache authority, exact pinned dependency tooling, relative regular release staging, measured-only timing diagnostics and unchanged proof/freshness requirements",
+          "reviewed_code_fingerprint": "2fd819d335775731c17c8728cb09c6d557eb7821f6011c9da73acc973065119a",
+          "spec_material_hash": "6efdf46597e8211561afcb4171a6d74af308e8fcd51c75d0458c5ccfc8bf680f"
         }
       ],
       "state": "EXECUTING",
       "stop_conditions": [
         "Stop for unsupported control-plane recovery, authorization denial, or a source-custody weakening requirement"
       ],
-      "title": "Fix release-only Bazel validation",
+      "title": "Fix release validation and reduce preflight latency",
       "todo_ids": [
         "bugs_01m4rfpmatza6pmf"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791824130Z"
+      "updated_at": "1791827623Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "No merges, releases, tags, deployments, credentials, force pushes, or temporary transport refs"
+        "No merges, releases, tags, deployments, credentials, force pushes, or temporary transport refs",
+        "No paid runner capacity, account, credential, security, merge, release or deployment mutations"
       ],
-      "artifact_hash": "sha256:10158adf5675020e50d083b96cf420d238c25b1931b63311b846889212758373",
+      "artifact_hash": "sha256:397419885547654eb3df6353b0b015efc37902353b6a158be1a746d5d3b0e2f0",
       "checks": [
+        {
+          "name": "baseline_full_validate",
+          "status": "failed"
+        },
+        {
+          "name": "collector_cli_bootstrap",
+          "status": "passed"
+        },
+        {
+          "name": "combined_regressions",
+          "status": "unavailable"
+        },
         {
           "name": "full_buildkite_validation",
           "status": "unavailable"
+        },
+        {
+          "name": "release_fix_native_CI",
+          "status": "passed"
         }
       ],
-      "current_phase": "implementation",
+      "current_phase": "Combined implementation ready for exact-head provider validation",
       "custody": {
         "events": [
           {
@@ -192,10 +224,24 @@
             "intent_id": "intent:release-only-validation-1402",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:release-only-validation-1402",
+            "event_id": "event:5",
+            "intent_id": "intent:release-only-validation-1402",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
+          },
+          {
+            "detail": "trajectory:release-only-validation-1402",
+            "event_id": "event:6",
+            "intent_id": "intent:release-only-validation-1402",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "release-only-validation-1402": {
@@ -232,6 +278,50 @@
                 "validation_findings": [
                   "No local prerequisite suite run; remote full validation remains required"
                 ]
+              },
+              {
+                "action": "User-authorized performance and packaging expansion",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "https://buildkite.com/decapodlabs/decapod/builds/1014",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/38284198330"
+                ],
+                "proof_refs": [
+                  "release_fix_native_CI",
+                  "baseline_full_validate"
+                ],
+                "scope": [
+                  ".config/build/**, MODULE.bazel.lock, release/Bazel regression tests and governed specifications"
+                ],
+                "sequence": 5,
+                "validation_findings": [
+                  "Five-minute end-to-end target remains subject to measured queue and unavoidable execution costs."
+                ]
+              },
+              {
+                "action": "Combined implementation ready for exact-head provider validation",
+                "command": "cargo build --locked --bin decapod (unreleased CLI bootstrap only)",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "src/decapod/core/snapshot_provider/public_buildkite.rs",
+                  "src/decapod/core/snapshot_provider/public_buildkite/collection.rs",
+                  "src/decapod/core/validation_runtime/snapshot/source_import.rs",
+                  ".github/workflows/ci.yml",
+                  "tests/source_ci_profile_policy.rs",
+                  "Reviewed official upstream archive assets 397131172 and471598214 with exact SHA256 pins; unchanged source commands",
+                  "Independent static review found no custody bypass; relative staging and atomic batch insertion corrections applied",
+                  "Reconciled 76-source inventory: only reviewed ci.yml bytes changed, compiled workflow pin and declaration updated"
+                ],
+                "proof_refs": [
+                  "collector_cli_bootstrap",
+                  "combined_regressions"
+                ],
+                "scope": [
+                  ".config/build/**, MODULE.bazel.lock, release/Bazel regression tests and governed specifications",
+                  "Issue1400 collector and repository CI critical path; release-build regular file staging"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -239,12 +329,18 @@
       },
       "declared_commands": [
         "bazelisk --batch mod deps --lockfile_mode=update (generated lock authoring only)",
+        "cargo build --locked --bin decapod (unreleased CLI bootstrap only)",
         "cargo build --locked --bin decapod (unreleased validator bootstrap only)"
       ],
       "evidence": [
         "Both requested setup logs: strict Bazel exit 48, stale Cargo.lock input after release root-version increase",
         "Full 76-path source inventory reviewed; exact declared digest 74654c5afa4fc045f44f0dca3112f8c2667a2272729f8d652a98a71041ebc08f",
-        "Reviewed supported use_repo_rule and rules_rust 0.71.2 input mapping; generated lock retains all 242 external dependency specs byte-for-byte, only local Decapod aliases become version-neutral"
+        "Independent static review found no custody bypass; relative staging and atomic batch insertion corrections applied",
+        "Reconciled 76-source inventory: only reviewed ci.yml bytes changed, compiled workflow pin and declaration updated",
+        "Reviewed official upstream archive assets 397131172 and471598214 with exact SHA256 pins; unchanged source commands",
+        "Reviewed supported use_repo_rule and rules_rust 0.71.2 input mapping; generated lock retains all 242 external dependency specs byte-for-byte, only local Decapod aliases become version-neutral",
+        "https://buildkite.com/decapodlabs/decapod/builds/1014",
+        "https://github.com/DecapodLabs/decapod/actions/runs/38284198330"
       ],
       "inspected_files": [
         ".config/build/decapod.MODULE.bazel",
@@ -256,16 +352,22 @@
         ".config/build/cargo_inputs.bzl",
         ".config/build/cargo_inputs_policy.py",
         ".config/build/cargo_inputs_tests.bzl",
+        ".github/workflows/ci.yml",
         "MODULE.bazel.lock",
         "assets/tools/source_ci_profile.rs",
         "assets/tools/source_ci_toolchain.rs",
+        "src/decapod/core/snapshot_provider/public_buildkite.rs",
+        "src/decapod/core/snapshot_provider/public_buildkite/collection.rs",
+        "src/decapod/core/validation_runtime/snapshot/source_import.rs",
         "tests/source_ci_profile_policy.rs"
       ],
       "next_transitions": [
+        "Checkpoint, same-branch push, full plain decapod validate; no local prerequisite suite",
         "Push this task branch and run full configured Buildkite validate"
       ],
       "repo_scope": [
-        ".config/build/**, MODULE.bazel.lock, release/Bazel regression tests and governed specifications"
+        ".config/build/**, MODULE.bazel.lock, release/Bazel regression tests and governed specifications",
+        "Issue1400 collector and repository CI critical path; release-build regular file staging"
       ],
       "run_id": "release-only-validation-1402",
       "schema_version": "1.1.0",
@@ -273,6 +375,7 @@
       "task_id": "bugs_01m4rfpmatza6pmf",
       "tool_calls": [],
       "unresolved_assumptions": [
+        "Five-minute end-to-end target remains subject to measured queue and unavoidable execution costs.",
         "No local prerequisite suite run; remote full validation remains required"
       ]
     }

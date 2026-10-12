@@ -18,6 +18,213 @@ const DOCS_SYNC: &str = include_str!("../.github/workflows/docs_sync.yml");
 const PREPARE: &str = include_str!("../.github/actions/source-ci-profile/action.yml");
 const SOURCE: &str = include_str!("../assets/tools/source_ci_profile.rs");
 
+#[test]
+fn dependency_tool_preparation_keeps_both_fresh_measured_checks() {
+    let lint = job(CI, "deps-lint");
+    assert!(lint.contains("needs: release-metadata"));
+    assert!(lint.contains("if: needs.release-metadata.outputs.release_only != 'true'"));
+    assert!(!lint.contains("cargo install"));
+    assert!(!lint.contains("command -v cargo-"));
+    assert!(!lint.contains("actions/cache"));
+    let installation = lint
+        .find("- name: Install verified dependency lint tools")
+        .unwrap();
+    for check in ["dependencies-machete", "dependencies-deny"] {
+        let marker = format!("run-ci --check {check}");
+        assert_eq!(lint.matches(&marker).count(), 1);
+        assert!(installation < lint.find(&marker).unwrap());
+    }
+    let machete = commands(find_check("dependencies-machete").unwrap(), &[]).unwrap();
+    let deny = commands(find_check("dependencies-deny").unwrap(), &[]).unwrap();
+    assert_eq!(machete[0].program, "cargo");
+    assert_eq!(machete[0].args, ["machete"]);
+    assert_eq!(deny[0].program, "cargo");
+    assert_eq!(
+        deny[0].args,
+        ["deny", "--config", ".config/deny.toml", "check"]
+    );
+}
+
+#[cfg(target_os = "linux")]
+mod dependency_tool_installation {
+    use super::*;
+    use std::os::unix::fs::PermissionsExt;
+
+    const MACHETE_SHA: &str = "48200087f54c55aabcd4db4af1e25742b49846c02a1b1bfa134711945b35b2e9";
+    const DENY_SHA: &str = "9f12ed4c49936e09b48bf862b595cde2fe64fcbd9d74dfacac6131ca824c8d5f";
+
+    fn installer() -> String {
+        job(CI, "deps-lint")
+            .split_once("      - name: Install verified dependency lint tools\n        run: |\n")
+            .unwrap()
+            .1
+            .split_once("      - name: Prepare shared source-CI profile")
+            .unwrap()
+            .0
+            .lines()
+            .map(|line| line.strip_prefix("          ").unwrap())
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+
+    fn executable(path: &Path, contents: &str) {
+        fs::write(path, contents).unwrap();
+        fs::set_permissions(path, fs::Permissions::from_mode(0o755)).unwrap();
+    }
+
+    fn fixture(wrong_version: bool) -> (tempfile::TempDir, String) {
+        let root = tempfile::tempdir().unwrap();
+        let mock = root.path().join("mock-bin");
+        fs::create_dir(&mock).unwrap();
+        executable(
+            &mock.join("uname"),
+            "#!/bin/sh\ncase \"$1\" in -s) echo Linux;; -m) echo x86_64;; *) exit 9;; esac\n",
+        );
+        executable(
+            &mock.join("curl"),
+            "#!/bin/sh\n[ \"${FAIL_DOWNLOAD:-0}\" = 0 ] || exit 22\nwhile [ \"$#\" -gt 0 ]; do\n  if [ \"$1\" = --output ]; then shift; output=$1; fi\n  shift\ndone\ncp \"$TOOL_FIXTURES/$(basename \"$output\")\" \"$output\"\n",
+        );
+        for tool in ["cargo-machete", "cargo-deny"] {
+            executable(
+                &mock.join(tool),
+                "#!/bin/sh\necho ambient >> \"$TOOL_FIXTURES/ambient-executed\"\nexit 97\n",
+            );
+        }
+        fs::write(root.path().join("github-path"), "").unwrap();
+        fs::write(root.path().join("github-env"), "").unwrap();
+        let mut script = installer();
+        for (tool, tag, version, pin) in [
+            ("cargo-machete", "v0.9.2", "0.9.2", MACHETE_SHA),
+            ("cargo-deny", "0.20.2", "0.20.2", DENY_SHA),
+        ] {
+            let package = format!("{tool}-{tag}-x86_64-unknown-linux-musl");
+            fs::create_dir(root.path().join(&package)).unwrap();
+            let reported = if wrong_version { "wrong" } else { version };
+            executable(
+                &root.path().join(&package).join(tool),
+                &format!(
+                    "#!/bin/sh\necho {tool} >> \"$TOOL_FIXTURES/executed\"\nprintf '%s\\n' '{tool} {reported}'\n"
+                ),
+            );
+            let archive = root.path().join(format!("{tool}.tar.gz"));
+            let packed = Command::new("tar")
+                .args(["-czf"])
+                .arg(&archive)
+                .arg("-C")
+                .arg(root.path())
+                .arg(&package)
+                .status()
+                .unwrap();
+            assert!(packed.success());
+            let digest = Command::new("sha256sum").arg(&archive).output().unwrap();
+            assert!(digest.status.success());
+            let digest = String::from_utf8(digest.stdout).unwrap();
+            // Test fixtures replace the checked-in trust values only in this
+            // private shell string. Production always uses the official pins.
+            script = script.replace(pin, digest.split_whitespace().next().unwrap());
+        }
+        (root, script)
+    }
+
+    fn run(root: &Path, script: &str, fail_download: bool) -> std::process::Output {
+        Command::new("bash")
+            .args(["-c", script])
+            .current_dir(root)
+            .env("RUNNER_TEMP", root)
+            .env("GITHUB_PATH", root.join("github-path"))
+            .env("GITHUB_ENV", root.join("github-env"))
+            .env("CARGO_HOME", root.join("cargo-home"))
+            .env("TOOL_FIXTURES", root)
+            .env("FAIL_DOWNLOAD", if fail_download { "1" } else { "0" })
+            .env(
+                "PATH",
+                format!(
+                    "{}:{}",
+                    root.join("mock-bin").display(),
+                    std::env::var("PATH").unwrap()
+                ),
+            )
+            .output()
+            .unwrap()
+    }
+
+    #[test]
+    fn official_pins_are_fixed_and_authentication_precedes_extraction_and_execution() {
+        let script = installer();
+        assert_eq!(script.matches(MACHETE_SHA).count(), 1);
+        assert_eq!(script.matches(DENY_SHA).count(), 1);
+        assert!(script.contains("--proto '=https' --proto-redir '=https'"));
+        assert!(script.contains("--max-time 90 --retry 2 --retry-max-time 180"));
+        assert!(
+            script.find("sha256sum --check --status").unwrap() < script.find("tar -xzOf").unwrap()
+        );
+        assert!(script.find("tar -xzOf").unwrap() < script.find("--version").unwrap());
+        let (root, script) = fixture(false);
+        let result = run(root.path(), &script, false);
+        assert!(result.status.success(), "{result:?}");
+        for tool in ["cargo-machete", "cargo-deny"] {
+            let installed = root.path().join("verified-dependency-tools").join(tool);
+            assert!(fs::symlink_metadata(&installed).unwrap().is_file());
+            assert_eq!(
+                fs::metadata(installed).unwrap().permissions().mode() & 0o777,
+                0o755
+            );
+        }
+        assert!(!root.path().join("ambient-executed").exists());
+        assert_eq!(
+            fs::read_to_string(root.path().join("executed")).unwrap(),
+            "cargo-machete\ncargo-deny\n"
+        );
+        assert_eq!(
+            fs::read_to_string(root.path().join("github-path"))
+                .unwrap()
+                .trim(),
+            root.path()
+                .join("verified-dependency-tools")
+                .to_str()
+                .unwrap()
+        );
+        assert!(
+            fs::read_to_string(root.path().join("github-env"))
+                .unwrap()
+                .starts_with(&format!(
+                    "PATH={}/verified-dependency-tools:{}/cargo-home/bin:",
+                    root.path().display(),
+                    root.path().display()
+                ))
+        );
+    }
+
+    #[test]
+    fn wrong_digest_wrong_version_and_failed_download_publish_no_tools_or_path() {
+        for failure in ["digest", "version", "download"] {
+            let (root, script) = fixture(failure == "version");
+            let script = if failure == "digest" {
+                installer()
+            } else {
+                script
+            };
+            let result = run(root.path(), &script, failure == "download");
+            assert!(!result.status.success(), "{failure}: {result:?}");
+            assert!(!root.path().join("verified-dependency-tools").exists());
+            assert!(!root.path().join("ambient-executed").exists());
+            assert!(
+                fs::read_to_string(root.path().join("github-path"))
+                    .unwrap()
+                    .is_empty()
+            );
+            assert!(
+                fs::read_to_string(root.path().join("github-env"))
+                    .unwrap()
+                    .is_empty()
+            );
+            if failure != "version" {
+                assert!(!root.path().join("executed").exists());
+            }
+        }
+    }
+}
+
 fn paths(values: &[&str]) -> Vec<String> {
     values.iter().map(|s| s.to_string()).collect()
 }
@@ -53,6 +260,61 @@ fn setup_proves_release_stable_inputs_before_the_strict_shared_build() {
             .iter()
             .all(|arg| !arg.starts_with("--lockfile_mode"))
     }));
+}
+
+#[cfg(unix)]
+#[test]
+fn release_upload_stages_exact_binary_bytes_as_a_regular_file() {
+    use std::os::unix::fs::{PermissionsExt, symlink};
+
+    let release = job(CI, "release-build");
+    let staging = release
+        .split_once("      - name: Stage regular release binary\n        run: |\n")
+        .unwrap()
+        .1
+        .split_once("      - name: Upload binary")
+        .unwrap()
+        .0
+        .lines()
+        .map(|line| line.strip_prefix("          ").unwrap())
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(release.contains("path: ${{ env.RELEASE_BINARY }}"));
+    assert!(!release.contains("path: bazel-bin/decapod"));
+    let root = tempfile::tempdir().unwrap();
+    fs::create_dir(root.path().join("bazel-bin")).unwrap();
+    let executable = root.path().join("actual-bazel-binary");
+    fs::write(&executable, b"exact compiled binary bytes\0\xff").unwrap();
+    symlink(&executable, root.path().join("bazel-bin/decapod")).unwrap();
+    let environment = root.path().join("github-env");
+    fs::write(&environment, "").unwrap();
+    let output = Command::new("bash")
+        .args(["-c", &staging])
+        .current_dir(root.path())
+        .env("GITHUB_ENV", &environment)
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "{output:?}");
+    let export = fs::read_to_string(&environment).unwrap();
+    let staged = PathBuf::from(export.trim().strip_prefix("RELEASE_BINARY=").unwrap());
+    assert!(staged.is_relative());
+    assert!(staged.starts_with("target/buildkite-artifacts"));
+    let staged = root.path().join(staged);
+    let metadata = fs::symlink_metadata(&staged).unwrap();
+    assert!(metadata.is_file() && !metadata.file_type().is_symlink());
+    assert_eq!(metadata.permissions().mode() & 0o777, 0o755);
+    assert_eq!(fs::read(staged).unwrap(), fs::read(executable).unwrap());
+
+    fs::remove_file(root.path().join("bazel-bin/decapod")).unwrap();
+    fs::write(&environment, "").unwrap();
+    let missing = Command::new("bash")
+        .args(["-c", &staging])
+        .current_dir(root.path())
+        .env("GITHUB_ENV", &environment)
+        .output()
+        .unwrap();
+    assert!(!missing.status.success());
+    assert!(fs::read_to_string(environment).unwrap().is_empty());
 }
 
 fn workflow(name: &str) -> &'static str {

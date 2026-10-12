@@ -1,5 +1,27 @@
 # Validation
 
+## Release setup, packaging and preflight latency
+
+The required setup policy proves stable root-version normalization and strict
+dependency drift enforcement. Release upload regression executes the actual
+workflow staging body against a Bazel-style symlink, verifies a relative regular
+executable with exact bytes, and rejects missing input before export.
+
+Collector regressions cover exact-key deduplication, collection lifetime,
+request-count reduction, cache size/count ceilings, uncached live inventory
+rechecks, deadline/cancellation, no failure caching, ordered joined workers,
+authorization before spawning and early importer contract rejection. All existing
+source/custody tests remain required. Full plain decapod validate on the final
+committed branch must return publication readiness; native green CI alone and
+failed/interrupted collection runs are not substitutes. Compare successful
+collection elapsed time separately from provider queue/runtime, and retain
+sub-five-minute integration execution headroom without increasing timeouts.
+Dependency-tool setup regression exercises the authored workflow with offline
+archives, including checksum/version/transfer failure and ambient-tool rejection.
+Actual provider validation must also authenticate and execute the pinned upstream
+archives. Setup logs expose download and verification/install time for comparison
+with previous repeated source compilation.
+
 ## Release-only dependency-lock regression
 
 The shared setup recipe executes the actual Starlark normalizer's regression
@@ -556,8 +578,8 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f3688002bd0d6f07225d0f5dc7ebf83402a900f0e25d30450602c94ede29a0f7`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
+- Repository signal fingerprint: `2fd819d335775731c17c8728cb09c6d557eb7821f6011c9da73acc973065119a`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (178 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

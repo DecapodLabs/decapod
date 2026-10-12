@@ -696,3 +696,234 @@ fn log_reader_rejects_escape_second_hop_and_http_denial_without_retry() {
         assert_eq!(timeout_attempts(&path), 2);
     }
 }
+
+fn many_recipe_fixture(count: usize) -> Mock {
+    let mut mock = fixture("success");
+    let b = build();
+    let steps_route = format!("{}/data/steps", b.base());
+    let jobs_route = format!(
+        "{}/data/jobs?include_retried_jobs=true&paginate=false",
+        b.base()
+    );
+    let mut steps = json(&mock.responses[&steps_route]).unwrap();
+    let mut jobs = json(&mock.responses[&jobs_route]).unwrap();
+    let template_step = steps[1].clone();
+    let template_job = jobs["records"][1].clone();
+    steps.as_array_mut().unwrap().truncate(1);
+    jobs["records"].as_array_mut().unwrap().truncate(1);
+    let importer_route = format!("{}/artifacts", b.job_base(IMPORTER).unwrap());
+    let mut importer_rows = json(&mock.responses[&importer_route]).unwrap();
+    importer_rows
+        .as_array_mut()
+        .unwrap()
+        .retain(|row| row["id"] == EID);
+    let plan_template =
+        json(&mock.responses[&format!("{}/artifacts/{PID}", b.job_base(IMPORTER).unwrap())])
+            .unwrap();
+    for index in 0..count {
+        let suffix = index + 1;
+        let job = format!("44444444-4444-4444-4444-{suffix:012x}");
+        let step = format!("66666666-6666-6666-6666-{suffix:012x}");
+        let result_id = format!("aaaaaaaa-aaaa-aaaa-aaaa-{suffix:012x}");
+        let plan_id = format!("bbbbbbbb-bbbb-bbbb-bbbb-{suffix:012x}");
+        let key = format!("gha-test-{index}");
+        let mut step_row = template_step.clone();
+        step_row["uuid"] = step.clone().into();
+        step_row["key"] = key.clone().into();
+        step_row["statistics"]["latest_job_id"] = job.clone().into();
+        steps.as_array_mut().unwrap().push(step_row);
+        let mut job_row = template_job.clone();
+        job_row["id"] = job.clone().into();
+        job_row["step_uuid"] = step.into();
+        job_row["step_key"] = key.clone().into();
+        job_row["base_path"] = b.job_base(&job).unwrap().into();
+        jobs["records"].as_array_mut().unwrap().push(job_row);
+        let mut plan = plan_template.clone();
+        plan["target"]["step_key"] = key.clone().into();
+        plan["strategy"]["job-index"] = index.into();
+        plan["strategy"]["job-total"] = count.into();
+        plan["matrix"] = json!({"partition": index});
+        let plan = bytes(&plan);
+        let plan_digest = hash(&plan);
+        let manifest = bytes(&json!({
+            "schema": "buildkite-gha/result-manifest/v2", "plan_digest": plan_digest,
+            "producer": {"build_id": BUILD, "job_id": job, "step_key": key},
+            "result": "success", "outputs": [], "artifacts": []
+        }));
+        let result_url = format!("{}/artifacts/{result_id}", b.job_base(&job).unwrap());
+        let plan_url = format!("{}/artifacts/{plan_id}", b.job_base(IMPORTER).unwrap());
+        mock.responses.insert(
+            format!("{}/artifacts", b.job_base(&job).unwrap()),
+            bytes(&json!([{
+                "id": result_id, "state": "finished", "self_hosted": false,
+                "path": format!("buildkite-gha/v1/results/{key}/{}.json", &plan_digest[7..]),
+                "url": result_url, "sha256sum": &hash(&manifest)[7..]
+            }])),
+        );
+        importer_rows.as_array_mut().unwrap().push(json!({
+            "id": plan_id, "state": "finished", "self_hosted": false,
+            "path": format!(".buildkite-gha/plans/{}.json", &plan_digest[7..]),
+            "url": plan_url, "sha256sum": &plan_digest[7..]
+        }));
+        mock.responses.insert(result_url, manifest);
+        mock.responses.insert(plan_url, plan);
+    }
+    mutate(&mut mock, format!("{}.json", b.base()), |envelope| {
+        envelope["statistics"]["jobs_count"] = (count + 1).into();
+        envelope["statistics"]["steps_count"] = (count + 1).into();
+    });
+    mock.responses.insert(steps_route, bytes(&steps));
+    mock.responses.insert(jobs_route, bytes(&jobs));
+    mock.responses.insert(importer_route, bytes(&importer_rows));
+    mock
+}
+
+struct Counted {
+    inner: Mock,
+    routes: BTreeMap<String, usize>,
+}
+impl PublicReader for Counted {
+    fn get(&mut self, request: &PublicRequest, budget: &Budget<'_>) -> Result<Vec<u8>> {
+        *self.routes.entry(request.path.clone()).or_default() += 1;
+        self.inner.get(request, budget)
+    }
+}
+#[test]
+fn staged_discovery_deduplicates_importer_event_and_exact_bytes_with_fresh_inventory_recheck() {
+    let cancel = Cancellation::default();
+    let budget = budget(&cancel);
+    let mut raw = Counted {
+        inner: many_recipe_fixture(5),
+        routes: BTreeMap::new(),
+    };
+    {
+        let mut cached = CollectionReader::new(&mut raw);
+        let inventory = collect_inventory(&mut cached, build(), &expected(), &budget).unwrap();
+        let mut locators = Vec::new();
+        cached
+            .locate_recipes(&inventory, &budget, |locator| {
+                locator.verify_compiler("0.102.3", &hash(b"compiler"))?;
+                locator.verify_runtime(&hash(b"runtime"))?;
+                locators.push(locator);
+                Ok(())
+            })
+            .unwrap();
+        assert_eq!(locators.len(), 5);
+        for locator in locators {
+            let mut expected = recipe_expected();
+            expected.matrix = locator.matrix().clone();
+            expected.job_index = locator.job_index();
+            expected.job_total = locator.job_total();
+            assert_eq!(
+                collect_located_recipe(&mut cached, &inventory, locator, &expected, &budget)
+                    .unwrap()
+                    .logical_result(),
+                "success"
+            );
+        }
+        // 3 inventory + 5 job lists + 5 results + 1 importer list + 5 plans + 1 event.
+        assert_eq!(cached.measurements()["public_get_requests"], 20);
+        recheck_inventory(&mut cached, &inventory, &expected(), &budget).unwrap();
+        assert_eq!(cached.measurements()["public_get_requests"], 23);
+    }
+    let b = build();
+    assert_eq!(
+        raw.routes[&format!("{}/artifacts", b.job_base(IMPORTER).unwrap())],
+        1
+    );
+    assert_eq!(
+        raw.routes[&format!("{}/artifacts/{EID}", b.job_base(IMPORTER).unwrap())],
+        1
+    );
+    assert_eq!(raw.routes[&format!("{}.json", b.base())], 2);
+    assert_eq!(raw.routes[&format!("{}/data/steps", b.base())], 2);
+    assert_eq!(
+        raw.routes[&format!(
+            "{}/data/jobs?include_retried_jobs=true&paginate=false",
+            b.base()
+        )],
+        2
+    );
+}
+#[test]
+fn unsupported_compiler_stops_before_the_next_recipe_batch() {
+    let cancel = Cancellation::default();
+    let budget = budget(&cancel);
+    let mut raw = Counted {
+        inner: many_recipe_fixture(5),
+        routes: BTreeMap::new(),
+    };
+    {
+        let mut cached = CollectionReader::new(&mut raw);
+        let inventory = collect_inventory(&mut cached, build(), &expected(), &budget).unwrap();
+        let error = cached
+            .locate_recipes(&inventory, &budget, |locator| {
+                locator.verify_compiler("unsupported-review", &hash(b"compiler"))
+            })
+            .unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .contains("importer compiler version mismatch")
+        );
+        assert_eq!(cached.measurements()["public_get_requests"], 16);
+    }
+    let fifth = "44444444-4444-4444-4444-000000000005";
+    assert!(
+        !raw.routes
+            .contains_key(&format!("{}/artifacts", build().job_base(fifth).unwrap()))
+    );
+}
+#[test]
+fn cached_bytes_still_fail_digest_and_wrong_runtime_checks() {
+    let cancel = Cancellation::default();
+    let budget = budget(&cancel);
+    let mut raw = fixture("success");
+    let plan_route = format!("{}/artifacts/{PID}", build().job_base(IMPORTER).unwrap());
+    raw.responses.insert(plan_route, b"tampered plan".to_vec());
+    let mut cached = CollectionReader::new(&mut raw);
+    let inventory = collect_inventory(&mut cached, build(), &expected(), &budget).unwrap();
+    assert!(
+        cached
+            .locate_recipes(&inventory, &budget, |_| Ok(()))
+            .unwrap_err()
+            .to_string()
+            .contains("bytes differ from provider hash")
+    );
+    drop(cached);
+    let mut raw = fixture("success");
+    let mut cached = CollectionReader::new(&mut raw);
+    let inventory = collect_inventory(&mut cached, build(), &expected(), &budget).unwrap();
+    assert!(
+        cached
+            .locate_recipes(&inventory, &budget, |locator| {
+                locator.verify_runtime(&hash(b"wrong platform runtime"))
+            })
+            .unwrap_err()
+            .to_string()
+            .contains("runtime platform digest mismatch")
+    );
+}
+#[cfg(unix)]
+#[test]
+fn parallel_transport_authorizes_whole_batch_before_any_process() {
+    let (_temp, path) = timeout_curl_fixture("printf 'HTTP/2 200\\r\\n\\r\\nbody'");
+    let mut calls = 0;
+    let mut reader = CurlPublicReader::new(path.clone(), move |_, _| {
+        calls += 1;
+        if calls == 2 {
+            Err(io::Error::new(io::ErrorKind::PermissionDenied, "denied"))
+        } else {
+            Ok(())
+        }
+    })
+    .unwrap();
+    let cancel = Cancellation::default();
+    let budget = budget(&cancel);
+    let requests = [timeout_request(), timeout_request()];
+    assert_eq!(
+        reader.get_many(&requests, &budget).unwrap_err().kind(),
+        io::ErrorKind::PermissionDenied
+    );
+    assert!(!Path::new(&format!("{}.count", path.display())).exists());
+}

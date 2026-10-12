@@ -150,8 +150,8 @@ Neither backend decides whether a Decapod transition is valid.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f3688002bd0d6f07225d0f5dc7ebf83402a900f0e25d30450602c94ede29a0f7`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
+- Repository signal fingerprint: `2fd819d335775731c17c8728cb09c6d557eb7821f6011c9da73acc973065119a`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (178 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

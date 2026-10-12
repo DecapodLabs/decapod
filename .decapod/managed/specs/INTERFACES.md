@@ -1,5 +1,22 @@
 # Interfaces
 
+## Validation latency diagnostics and regular release artifacts
+
+Full configured validation still owns exact workspace-branch push/reuse,
+provider completion and all publication proof. Its stderr now reports bounded
+provider-wait, recipe-discovery and custody progress. Evidence-local
+buildkite-stage-timing.json and buildkite-collection-timing.json contain
+measurement-only durations, source/workflow identities, request counts and cache
+bounds. Counts describe sealed GET submissions, excluding redirect hops and
+timeout retries; parallel durations are wall time, never summed work.
+
+The Buildkite public-reader batch interface accepts at most four already typed
+requests and preserves result ordering. The serial default supports existing
+adapters; the curl implementation authorizes the whole batch on the caller
+thread before spawning joined workers. Error, cancellation, deadline and malformed
+input behavior remains fail closed. The release-build upload interface consumes
+RELEASE_BINARY only after regular-file and exact-byte staging succeeds.
+
 ## Bazel dependency projection boundary
 
 The internal Cargo-input repository accepts the canonical manifest and matching
@@ -464,8 +481,8 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f3688002bd0d6f07225d0f5dc7ebf83402a900f0e25d30450602c94ede29a0f7`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
+- Repository signal fingerprint: `2fd819d335775731c17c8728cb09c6d557eb7821f6011c9da73acc973065119a`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (178 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
