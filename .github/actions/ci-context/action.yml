@@ -1,0 +1,199 @@
+name: Verify immutable CI context
+description: Verify source-context custody after a credential-free, fetch-depth-zero checkout; normalize a proven temporary snapshot to its original candidate
+inputs:
+  pre-pr:
+    description: Explicit pre-PR workflow_dispatch mode only; snapshot pushes derive their mode from the reserved trigger ref
+    required: false
+    default: 'false'
+  base:
+    description: Immutable accepted base for explicit pre-PR workflow_dispatch; never a mutable ref
+    required: false
+    default: ''
+  head:
+    description: Optional immutable workflow_dispatch candidate; otherwise use the provider event SHA
+    required: false
+    default: ''
+outputs:
+  event:
+    description: Verified logical event for the shared CI graph
+    value: ${{ steps.context.outputs.event }}
+  trigger_event:
+    description: Actual provider event, preserved through snapshot normalization
+    value: ${{ steps.context.outputs.trigger_event }}
+  base:
+    description: Immutable comparison base; empty for ordinary manual dispatch
+    value: ${{ steps.context.outputs.base }}
+  head:
+    description: Original immutable candidate, excluding the temporary transport commit
+    value: ${{ steps.context.outputs.head }}
+  merge_base:
+    description: Verified merge base for authored-range checks
+    value: ${{ steps.context.outputs.merge_base }}
+  checkout_head:
+    description: Checkout commit verified before optional snapshot detachment
+    value: ${{ steps.context.outputs.checkout_head }}
+  checkout_tree:
+    description: Tree verified before optional snapshot detachment
+    value: ${{ steps.context.outputs.checkout_tree }}
+  head_tree:
+    description: Original immutable candidate tree
+    value: ${{ steps.context.outputs.head_tree }}
+  accepted_base:
+    description: Captured local accepted target tip, when pre-PR verification requires it
+    value: ${{ steps.context.outputs.accepted_base }}
+  pre_pr:
+    description: Explicit verified pre-PR profile
+    value: ${{ steps.context.outputs.pre_pr }}
+  pr_like:
+    description: Whether the shared graph should apply pull-request source semantics
+    value: ${{ steps.context.outputs.pr_like }}
+  local_base_verified:
+    description: Captured local target equality was checked; this does not prove provider freshness
+    value: ${{ steps.context.outputs.local_base_verified }}
+  provider_freshness:
+    description: Always not_checked; the orchestrator owns the later provider freshness check
+    value: ${{ steps.context.outputs.provider_freshness }}
+  snapshot:
+    description: Whether the checkout was a verified temporary snapshot
+    value: ${{ steps.context.outputs.snapshot || 'false' }}
+  transport_head:
+    description: Immutable temporary transport commit, only for snapshots
+    value: ${{ steps.context.outputs.transport_head }}
+  request_id:
+    description: Verified temporary snapshot request UUID
+    value: ${{ steps.context.outputs.request_id }}
+  source_ref:
+    description: Original branch identity from verified snapshot metadata; never resolved as a fallback
+    value: ${{ steps.context.outputs.source_ref }}
+  validation_head:
+    description: Actual checkout after optional snapshot detachment
+    value: ${{ steps.context.outputs.validation_head }}
+  validation_tree:
+    description: Actual checkout tree after optional snapshot detachment
+    value: ${{ steps.context.outputs.validation_tree }}
+runs:
+  using: composite
+  steps:
+    # The caller owns checkout and must set fetch-depth: 0 and
+    # persist-credentials: false. This action never fetches or stores credentials.
+    - name: Install context-verifier Rust toolchain
+      uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: 1.96.1
+    - name: Verify immutable source context
+      id: context
+      shell: bash
+      env:
+        RAW_EVENT: ${{ github.event_name }}
+        RAW_REF: ${{ github.ref }}
+        EVENT_BASE: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
+        EVENT_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        DISPATCH_PRE_PR: ${{ inputs.pre-pr }}
+        DISPATCH_BASE: ${{ inputs.base }}
+        DISPATCH_HEAD: ${{ inputs.head }}
+      run: |
+        set -euo pipefail
+        case "$DISPATCH_PRE_PR" in
+          true|false) ;;
+          *) echo "pre-pr must be exactly true or false" >&2; exit 1 ;;
+        esac
+        if [[ "$RAW_EVENT" != workflow_dispatch ]] && \
+           [[ "$DISPATCH_PRE_PR" != false || -n "$DISPATCH_BASE" || -n "$DISPATCH_HEAD" ]]; then
+          echo "Explicit context inputs are restricted to workflow_dispatch" >&2
+          exit 1
+        fi
+
+        base="$EVENT_BASE"
+        head="$EVENT_HEAD"
+        pre_pr=false
+        snapshot=false
+        extra=()
+        case "$RAW_EVENT" in
+          pull_request) ;;
+          push)
+            if [[ "$RAW_REF" == refs/heads/decapod/preflight/* ]]; then
+              # Never use event.before to identify a snapshot's accepted base.
+              base=''
+              pre_pr=true
+              snapshot=true
+              extra+=(--snapshot true --trigger-ref "$RAW_REF")
+            fi
+            ;;
+          workflow_dispatch)
+            base="$DISPATCH_BASE"
+            head="${DISPATCH_HEAD:-$EVENT_HEAD}"
+            pre_pr="$DISPATCH_PRE_PR"
+            ;;
+          *) echo "Unsupported CI context event" >&2; exit 1 ;;
+        esac
+        if [[ "$pre_pr" == true ]]; then
+          extra+=(--accepted-base-ref refs/remotes/origin/master)
+        fi
+
+        private_dir="$(mktemp -d "$RUNNER_TEMP/decapod-ci-context.XXXXXX")"
+        trap 'rm -rf -- "$private_dir"' EXIT
+        rustc +1.96.1 --edition=2024 -D warnings \
+          "$GITHUB_ACTION_PATH/../../../assets/tools/ci_event_context.rs" \
+          -o "$private_dir/ci-event-context"
+        "$private_dir/ci-event-context" \
+          --repo "$GITHUB_WORKSPACE" --event "$RAW_EVENT" \
+          --base "$base" --head "$head" --pre-pr "$pre_pr" \
+          "${extra[@]}" > "$private_dir/outputs"
+
+        verified_head=''
+        verified_tree=''
+        verified_checkout=''
+        while IFS='=' read -r key value; do
+          case "$key" in
+            head) verified_head="$value" ;;
+            checkout_head) verified_checkout="$value" ;;
+            checkout_tree) verified_tree="$value" ;;
+          esac
+        done < "$private_dir/outputs"
+        for oid in "$verified_head" "$verified_checkout" "$verified_tree"; do
+          if [[ ! "$oid" =~ ^([0-9a-f]{40}|[0-9a-f]{64})$ ]]; then
+            echo "Context verifier did not emit a complete immutable checkout" >&2
+            exit 1
+          fi
+        done
+
+        # Match the helper's isolated Git view. No persistent config changes,
+        # credential setup, fetch, or branch-tip updates are needed here.
+        while IFS= read -r name; do
+          unset "$name"
+        done < <(compgen -e GIT_ || true)
+        export GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null
+        export GIT_NO_LAZY_FETCH=1 GIT_TERMINAL_PROMPT=0
+        git_local() {
+          git --no-replace-objects -c core.hooksPath=/dev/null \
+            -c core.fsmonitor=false -c core.untrackedCache=false \
+            -C "$GITHUB_WORKSPACE" "$@"
+        }
+        if [[ "$snapshot" == true ]]; then
+          git_local checkout --quiet --detach "$verified_head"
+          expected_head="$verified_head"
+        else
+          expected_head="$verified_checkout"
+        fi
+        validation_head="$(git_local rev-parse --verify HEAD)"
+        validation_tree="$(git_local rev-parse --verify 'HEAD^{tree}')"
+        if [[ "$validation_head" != "$expected_head" || "$validation_tree" != "$verified_tree" ]]; then
+          echo "Checkout changed after immutable context verification" >&2
+          exit 1
+        fi
+        # Publish no partial context if verification or normalization failed.
+        cat "$private_dir/outputs" >> "$GITHUB_OUTPUT"
+        printf 'validation_head=%s\nvalidation_tree=%s\n' \
+          "$validation_head" "$validation_tree" >> "$GITHUB_OUTPUT"
+        # Export only verified immutable context for the finite measured source
+        # executor. Provider-native IDs remain in their original namespaces.
+        while IFS='=' read -r key value; do
+          case "$key" in
+            event) printf 'SOURCE_CI_EVENT=%s\n' "$value" >> "$GITHUB_ENV" ;;
+            base) printf 'SOURCE_CI_BASE=%s\n' "$value" >> "$GITHUB_ENV" ;;
+            head) printf 'SOURCE_CI_HEAD=%s\n' "$value" >> "$GITHUB_ENV" ;;
+            merge_base) printf 'SOURCE_CI_MERGE_BASE=%s\n' "$value" >> "$GITHUB_ENV" ;;
+          esac
+        done < "$private_dir/outputs"
+        printf 'SOURCE_CI_SNAPSHOT=%s\nSOURCE_CI_VALIDATION_HEAD=%s\nSOURCE_CI_TREE=%s\n' \
+          "$verified_checkout" "$validation_head" "$validation_tree" >> "$GITHUB_ENV"

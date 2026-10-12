@@ -1,0 +1,15 @@
+# Synthetic Cargo lockfile. Parser fixture only, never a package build input.
+version = 4
+
+[[package]]
+name = "decapod"
+version = "0.107.5"
+dependencies = [
+ "fixture-dependency",
+]
+
+[[package]]
+name = "fixture-dependency"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"

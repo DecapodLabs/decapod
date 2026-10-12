@@ -1,0 +1,114 @@
+name: Prepare shared source-CI profile
+description: Compile the reviewed direct-argv catalog; optionally run one measured source check
+inputs:
+  check:
+    description: Finite source check ID; empty compiles only (no readiness claim)
+    required: false
+    default: ''
+  base:
+    description: Independently bound immutable logical base B
+    required: false
+  head:
+    description: Independently bound immutable authored head H; ordinary PR checkout may be merge V
+    required: false
+  snapshot:
+    description: Verified pre-normalization checkout S; transport parent/message binding is independently verified
+    required: false
+  validation-head:
+    description: Trusted actual execution revision V, H for snapshot transport
+    required: false
+  tree:
+    description: Actual execution tree T; normalized transport requires identical H/S trees
+    required: false
+  provider:
+    description: Native provider namespace, github or buildkite
+    required: false
+  run-id:
+    description: Native GitHub run ID or Buildkite build UUID
+    required: false
+  run-attempt:
+    description: GitHub run attempt or Buildkite retry count
+    required: false
+  job-id:
+    description: GitHub logical GITHUB_JOB or native Buildkite job UUID
+    required: false
+  step-key:
+    description: Native Buildkite pipeline step key; empty for GitHub
+    required: false
+  expected-profile-sha256:
+    description: Independently reviewed sha256-prefixed source profile digest
+    required: false
+  expected-invocation-sha256:
+    description: Independently reviewed sha256-prefixed invocation digest for this check
+    required: false
+  expected-toolchain-sha256:
+    description: Optional independently frozen preparation digest; otherwise freeze source-validated preparation before running
+    required: false
+  evidence-directory:
+    description: Fresh directory whose parent exists; upload it even on failure
+    required: false
+outputs:
+  evidence-directory:
+    description: Requested measured evidence directory; caller owns authenticated artifact upload
+    value: ${{ inputs.evidence-directory }}
+runs:
+  using: composite
+  steps:
+    - uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: 1.96.1
+    - name: Compile shared source-CI profile
+      shell: bash
+      run: |
+        umask 077
+        rustc --edition=2024 -O assets/tools/source_ci_profile.rs -o "$RUNNER_TEMP/source-ci-profile"
+    - name: Execute reviewed source check with measured custody
+      if: inputs.check != ''
+      shell: bash
+      env:
+        SOURCE_CHECK: ${{ inputs.check }}
+        SOURCE_BASE: ${{ inputs.base }}
+        SOURCE_HEAD: ${{ inputs.head }}
+        SOURCE_SNAPSHOT: ${{ inputs.snapshot }}
+        SOURCE_VALIDATION_HEAD: ${{ inputs.validation-head }}
+        SOURCE_TREE: ${{ inputs.tree }}
+        SOURCE_PROVIDER: ${{ inputs.provider }}
+        SOURCE_RUN_ID: ${{ inputs.run-id }}
+        SOURCE_RUN_ATTEMPT: ${{ inputs.run-attempt }}
+        SOURCE_JOB_ID: ${{ inputs.job-id }}
+        SOURCE_STEP_KEY: ${{ inputs.step-key }}
+        SOURCE_EXPECTED_PROFILE: ${{ inputs.expected-profile-sha256 }}
+        SOURCE_EXPECTED_INVOCATION: ${{ inputs.expected-invocation-sha256 }}
+        SOURCE_EXPECTED_TOOLCHAIN: ${{ inputs.expected-toolchain-sha256 }}
+        SOURCE_EVIDENCE: ${{ inputs.evidence-directory }}
+      run: |
+        # Freeze source-validated preparation before any substantive check. The
+        # collector must authenticate both manifests and this reviewed ordering.
+        umask 077
+        mkdir -- "$SOURCE_EVIDENCE"
+        context=(
+          --check "$SOURCE_CHECK" --base "$SOURCE_BASE" --head "$SOURCE_HEAD"
+          --snapshot "$SOURCE_SNAPSHOT" --validation-head "$SOURCE_VALIDATION_HEAD"
+          --tree "$SOURCE_TREE" --provider "$SOURCE_PROVIDER" --run-id "$SOURCE_RUN_ID"
+          --run-attempt "$SOURCE_RUN_ATTEMPT" --job-id "$SOURCE_JOB_ID"
+          --step-key "$SOURCE_STEP_KEY" --expected-profile-sha256 "$SOURCE_EXPECTED_PROFILE"
+          --expected-invocation-sha256 "$SOURCE_EXPECTED_INVOCATION"
+        )
+        "$RUNNER_TEMP/source-ci-profile" prepare-evidence "${context[@]}" \
+          --evidence-dir "$SOURCE_EVIDENCE/preparation"
+        frozen_toolchain=$(python3 - "$SOURCE_EVIDENCE/preparation/preparation.json" <<'PY'
+        import json, sys
+        with open(sys.argv[1], encoding="utf-8") as source:
+            preparation = json.load(source)
+        assert preparation["preparation_complete"] is True
+        print(preparation["toolchain_digest"])
+        PY
+        )
+        if [[ -n "$SOURCE_EXPECTED_TOOLCHAIN" && "$SOURCE_EXPECTED_TOOLCHAIN" != "$frozen_toolchain" ]]; then
+          echo 'Prepared toolchain differs from independently frozen expectation' >&2
+          exit 1
+        fi
+        "$RUNNER_TEMP/source-ci-profile" run-evidence "${context[@]}" \
+          --expected-toolchain-sha256 "$frozen_toolchain" \
+          --preparation-file "$SOURCE_EVIDENCE/preparation/preparation.json" \
+          --evidence-dir "$SOURCE_EVIDENCE/execution"

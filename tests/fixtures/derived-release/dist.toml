@@ -1,0 +1,4 @@
+# The release archives contain only the runtime. Feature-gated build and
+# release-maintenance tools remain available to contributors through Cargo.
+[package]
+binaries = ["decapod"]

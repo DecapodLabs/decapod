@@ -47,6 +47,25 @@ pub fn parse_paths(bytes: &[u8]) -> io::Result<Vec<String>> {
 }
 
 pub fn plan(paths: &[String]) -> Plan {
+    let expanded;
+    let paths = if paths.iter().any(|path| {
+        path.starts_with("assets/tools/source_ci/")
+            || [
+                "assets/tools/source_ci_workflow_owned.rs",
+                "assets/tools/source_ci_custody.rs",
+                "assets/tools/source_ci_toolchain.rs",
+            ]
+            .contains(&path.as_str())
+    }) {
+        expanded = paths
+            .iter()
+            .cloned()
+            .chain(std::iter::once(".github/workflows/ci.yml".to_string()))
+            .collect::<Vec<_>>();
+        &expanded
+    } else {
+        paths
+    };
     let has = |names: &[&str]| paths.iter().any(|path| names.contains(&path.as_str()));
     let mut result = Plan {
         gatling: has(&["tests/gatling.rs"]),
@@ -93,12 +112,50 @@ pub fn plan(paths: &[String]) -> Plan {
         result.policies.push("ci_checkout_policy");
     }
     if has(&[
+        "assets/tools/integration_custody.rs",
+        "tests/integration_custody_policy.rs",
+        ".github/workflows/ci.yml",
+        ".config/build/decapod.BUILD.bzl",
+    ]) {
+        result.policies.push("integration_custody_policy");
+    }
+    if has(&[
+        "assets/tools/ci_event_context.rs",
+        "tests/ci_event_context_policy.rs",
+        ".github/workflows/ci.yml",
+    ]) {
+        result.policies.push("ci_event_context_policy");
+    }
+    if has(&[
+        "assets/tools/docs_sync.rs",
+        "tests/docs_sync_checkpoint_boundary.rs",
+        "tests/support/docs_sync_cases.rs",
+        ".github/actions/docs-drift/action.yml",
+        ".github/workflows/docs_sync.yml",
+        "src/decapod/core/docs_cli.rs",
+    ]) {
+        result.policies.push("docs_sync_checkpoint_boundary");
+    }
+    if has(&[
         ".github/workflows/release.yml",
         ".github/workflows/ci.yml",
         ".github/scripts/release-plan.sh",
         "tests/release_workflow_policy.rs",
     ]) {
         result.policies.push("release_workflow_policy");
+    }
+    if paths
+        .iter()
+        .any(|path| path.starts_with(".github/workflows/") && path.ends_with(".yml"))
+        || has(&[
+            "assets/tools/source_ci_profile.rs",
+            ".github/actions/source-ci-profile/action.yml",
+            "tests/source_ci_profile_policy.rs",
+            ".config/build/decapod.BUILD.bzl",
+            "BUILD.bazel",
+        ])
+    {
+        result.policies.push("source_ci_profile_policy");
     }
     result
 }

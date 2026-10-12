@@ -60,6 +60,7 @@ fn run_decapod_with_env(
     envs: &[(&str, &str)],
 ) -> (bool, String) {
     let mut cmd = Command::new(resolve_decapod_bin());
+    cmd.env_remove("GITHUB_ACTIONS").env_remove("BUILDKITE");
     cmd.current_dir(temp_dir).args(args);
     let mut has_xdg = false;
     for (k, v) in envs {
@@ -82,6 +83,7 @@ fn run_decapod_with_env(
 
 fn run_raw(temp_dir: &PathBuf, args: &[&str], envs: &[(&str, &str)]) -> Output {
     let mut cmd = Command::new(resolve_decapod_bin());
+    cmd.env_remove("GITHUB_ACTIONS").env_remove("BUILDKITE");
     cmd.current_dir(temp_dir).args(args);
     let mut has_xdg = false;
     for (k, v) in envs {
@@ -228,6 +230,9 @@ fn embedded_orientation_separates_request_context_from_projection_recovery() {
 
 #[test]
 fn test_validate_passes_after_init() {
+    // Fresh initialization establishes entrypoint prerequisites, not merge readiness.
+    // This prerequisite result is not full publication-readiness proof.
+
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
     let temp_path = temp_dir.path().to_path_buf();
 
@@ -237,7 +242,7 @@ fn test_validate_passes_after_init() {
     acquire_session(&temp_path);
 
     // Run decapod validate
-    let (success, output) = run_decapod(&temp_path, &["validate"]);
+    let (success, output) = run_decapod(&temp_path, &["govern", "project-check"]);
     assert!(
         success,
         "decapod validate should pass after init. Output:\n{output}"
@@ -252,6 +257,9 @@ fn test_validate_passes_after_init() {
 
 #[test]
 fn test_validate_passes_after_init_without_git_repo() {
+    // A non-Git initialization can satisfy project prerequisites only.
+    // This prerequisite result is not full publication-readiness proof.
+
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
     let temp_path = temp_dir.path().to_path_buf();
 
@@ -263,7 +271,7 @@ fn test_validate_passes_after_init_without_git_repo() {
         String::from_utf8_lossy(&init.stderr)
     );
 
-    let validate = run_raw(&temp_path, &["validate"], &[]);
+    let validate = run_raw(&temp_path, &["govern", "project-check"], &[]);
     let output = format!(
         "{}{}",
         String::from_utf8_lossy(&validate.stdout),
@@ -351,9 +359,14 @@ fn test_agent_session_requires_password() {
             ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
         ],
     );
+    // Correct authentication reaches readiness, but this fixture has no full proof profile.
     assert!(
-        ok_good,
-        "validate should pass with correct agent+password: {out_good}"
+        !ok_good,
+        "authentication alone must not imply readiness: {out_good}"
+    );
+    assert!(
+        out_good.contains("READINESS_PROFILE_REQUIRED"),
+        "correct agent+password must reach the typed readiness refusal: {out_good}"
     );
 }
 
@@ -770,6 +783,9 @@ fn test_validate_rejects_changes_to_every_root_markdown_entrypoint() {
 
 #[test]
 fn test_validate_migrates_valid_legacy_entrypoint_metadata() {
+    // Exercise canonical legacy-entrypoint self-healing as a prerequisite check.
+    // This prerequisite result is not full publication-readiness proof.
+
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
     let temp_path = temp_dir.path().to_path_buf();
     let (success, _) = run_decapod(&temp_path, &["init", "--force"]);
@@ -795,7 +811,8 @@ fn test_validate_migrates_valid_legacy_entrypoint_metadata() {
             "<!-- decapod-binary-sha256: legacy-release-contract -->",
         );
     fs::write(&path, rewritten).expect("rewrite binary sha");
-    let (success, output) = run_decapod(&temp_path, &["validate", "--format", "json"]);
+    let (success, output) =
+        run_decapod(&temp_path, &["govern", "project-check", "--format", "json"]);
     assert!(success, "validate should refresh legacy metadata: {output}");
     assert!(output.contains("heal_release_bound_entrypoints"));
 
@@ -913,8 +930,12 @@ fn test_validate_does_not_overwrite_payload_tamper() {
         "explicit regeneration should restore entrypoint: {output}"
     );
     acquire_session(&temp_path);
-    let (success, output) = run_decapod(&temp_path, &["validate"]);
-    assert!(success, "regenerated entrypoint should validate: {output}");
+    // Regeneration repairs the entrypoint prerequisite only; the tamper refusal above stays public.
+    let (success, output) = run_decapod(&temp_path, &["govern", "project-check"]);
+    assert!(
+        success,
+        "regenerated entrypoint prerequisite should pass: {output}"
+    );
 }
 
 #[cfg(unix)]

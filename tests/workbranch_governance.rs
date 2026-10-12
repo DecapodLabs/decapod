@@ -206,6 +206,9 @@ fn validation_preflight_initializes_without_fabricating_success() {
 
 #[test]
 fn successful_validation_issues_new_bound_receipt_after_template_generation() {
+    // Bind the current branch methodology receipt without claiming full readiness.
+    // This prerequisite result is not full publication-readiness proof.
+
     let (root, id) = fixture();
     let path = manual_worktree(root.path(), &id);
     success(cli(&path, &["rpc", "--op", "agent.init"]));
@@ -242,13 +245,16 @@ fn successful_validation_issues_new_bound_receipt_after_template_generation() {
     .unwrap();
     git(&path, &["add", governance::GOVERNANCE_PATH]);
     git(&path, &["commit", "-m", "current task"]);
-    let output = cli(&path, &["validate", "--format", "json"]);
+    let output = cli(&path, &["govern", "project-check", "--format", "json"]);
     assert!(
         output.status.success(),
         "{}\n{}",
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr)
     );
+    let result: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(result["scope"], "project_prerequisites");
+    assert!(result["readiness"].is_null());
     let doc = governance::load(&path).unwrap().unwrap();
     assert_eq!(
         doc.change.as_ref().unwrap().id,

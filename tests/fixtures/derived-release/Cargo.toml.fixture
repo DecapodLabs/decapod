@@ -1,0 +1,172 @@
+[package]
+name = "decapod"
+default-run = "decapod"
+version = "0.107.5"
+edition = "2024"
+rust-version = "1.96.1"
+build = "assets/build/compress_constitution.rs"
+description = "Decapod is a Rust-built governance runtime for AI agents: repo-native state, enforced workflow, proof gates, safe coordination."
+license = "MIT"
+repository = "https://github.com/DecapodLabs/decapod"
+homepage = "https://github.com/DecapodLabs/decapod"
+readme = "README.md"
+keywords = ["governance", "ai", "ai-agents", "control-plane", "orchestration"]
+categories = ["artificial-intelligence", "command-line-utilities", "development-tools"]
+
+[workspace]
+resolver = "2"
+exclude = [
+    ".decapod/*",
+    "dist/*",
+    "target/*",
+    "constitution_embed/*",
+    "assets/*.mp4",
+    "tests/fixtures/*",
+    "tests/golden_vectors/*"
+]
+
+[lib]
+path = "src/decapod/lib.rs"
+
+[[bin]]
+name = "decapod"
+path = "src/main.rs"
+
+[[bin]]
+name = "decapod-build"
+path = "assets/tools/build_lifecycle.rs"
+required-features = ["build-tools"]
+
+[[bin]]
+name = "decapod-release-metadata"
+path = "assets/tools/release_metadata.rs"
+required-features = ["build-tools"]
+
+[[bin]]
+name = "decapod-release-projection-drift"
+path = "assets/tools/release_projection_drift.rs"
+required-features = ["build-tools"]
+
+[[bin]]
+name = "decapod-integration-shards"
+path = "assets/tools/integration_shards.rs"
+required-features = ["build-tools"]
+
+[[bin]]
+name = "decapod-docs-sync"
+path = "assets/tools/docs_sync.rs"
+required-features = ["build-tools"]
+
+[build-dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+flate2 = "1.0"
+
+[dependencies]
+flate2 = "1.0"
+dactyl-db = { version = "0.11.1", features = ["sqlite", "neon"] }
+fs2 = "0.4"
+tempfile = "3.10"
+fancy-regex = "0.13"
+proc-macro2 = { version = "1.0", features = ["span-locations"] }
+syn = { version = "2.0", features = ["full", "visit"] }
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tiktoken-rs = "0.9"
+sha2 = "0.10"
+thiserror = "2"
+toml = "1.0"
+
+tokio = { version = "1", features = ["full"] }
+anyhow = "1"
+async-trait = "0.1"
+chrono = { version = "0.4", features = ["serde"] }
+walkdir = "2.5.0"
+
+[package.metadata.cargo-machete]
+ignored = ["flate2"]
+
+[features]
+default = ["supabase-cloud"]
+build-tools = []
+cloud = []
+# Cloud uses Supabase by default; local SQLite and explicit Neon remain available.
+supabase-cloud = ["dactyl-db/supabase"]
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[dev-dependencies]
+decapod = { path = ".", default-features = false }
+criterion = { version = "0.5", features = ["html_reports"] }
+serde_json = "1.0"
+regex = "1.10"
+
+[[test]]
+name = "plugins_todo_tests"
+path = "tests/plugins/todo.rs"
+
+[[test]]
+name = "plugins_policy_tests"
+path = "tests/plugins/policy.rs"
+
+[[test]]
+name = "plugins_health_tests"
+path = "tests/plugins/health.rs"
+
+[[test]]
+name = "plugins_aptitude_tests"
+path = "tests/plugins/aptitude.rs"
+
+[[test]]
+name = "plugins_internalize_tests"
+path = "tests/plugins/internalize.rs"
+
+[[test]]
+name = "plugins_federation_tests"
+path = "tests/plugins/federation.rs"
+
+[[test]]
+name = "plugins_decide_tests"
+path = "tests/plugins/decide.rs"
+
+[[test]]
+name = "plugins_obligation_tests"
+path = "tests/plugins/obligation.rs"
+
+[[test]]
+name = "gatling"
+path = "tests/gatling.rs"
+
+[[test]]
+name = "core_tests"
+path = "tests/core/core.rs"
+
+[[test]]
+name = "workspace_prune_regression"
+path = "tests/workspace_prune_regression.rs"
+
+[[test]]
+name = "verify_deadlock_regression"
+path = "tests/verify_deadlock_regression.rs"
+
+[[bench]]
+name = "perf_1_1"
+path = "assets/benches/perf_1_1.rs"
+harness = false
+
+[[bench]]
+name = "perf_1_2"
+path = "assets/benches/perf_1_2.rs"
+harness = false
+
+[[bench]]
+name = "perf_1_3"
+path = "assets/benches/perf_1_3.rs"
+harness = false
+
+# The profile that 'cargo dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"

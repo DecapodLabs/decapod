@@ -1,4 +1,8 @@
 //! CI storage isolation must preserve the source checkout and exact Git proof.
+#[allow(dead_code)]
+#[path = "../assets/tools/source_ci_profile.rs"]
+mod source_ci_profile;
+
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -162,39 +166,27 @@ fn action_does_not_relax_storage_policy_or_reuse_existing_state() {
 
 #[test]
 fn all_direct_governance_steps_use_private_checkout() {
-    for (workflow, step) in [
-        (VALIDATE, "Build Decapod from checkout"),
-        (VALIDATE, "Start validation trajectory"),
-        (VALIDATE, "Decapod Validate"),
-        (VALIDATE, "Ensure no spec or entrypoint drift"),
-        (
-            CI,
-            "Verify normalized governance and every authored checkpoint",
-        ),
-        (CI, "Start validation trajectory"),
-        (CI, "Initialize Decapod"),
-        (CI, "Acquire Decapod session"),
-        (CI, "Run validation harness"),
-        (CI, "Ensure no spec or entrypoint drift"),
-        (CI, "Run watcher"),
-        (CI, "Check health summary"),
+    for (workflow, id) in [
+        (CI, "health"),
+        (CI, "governance-artifacts"),
+        (VALIDATE, "standalone-validation"),
     ] {
-        assert!(workflow.contains(&format!("      - name: {step}\n        working-directory: ${{{{ steps.validation-checkout.outputs.path }}}}\n")), "{step}");
+        assert!(workflow.contains(&format!("run-ci --check {id}")));
+        let check = source_ci_profile::find_check(id).unwrap();
+        let script = source_ci_profile::workflow_owned::script_sources(check);
+        assert!(
+            script
+                .iter()
+                .any(|(path, _)| path.ends_with("private-checkout.sh"))
+        );
+        let primary = script
+            .iter()
+            .find(|(path, _)| !path.ends_with("private-checkout.sh"))
+            .unwrap();
+        let body = std::str::from_utf8(primary.1).unwrap();
+        assert!(body.contains("source_private_checkout"));
+        assert!(body.contains("cd \"$SOURCE_PRIVATE_CHECKOUT\""));
     }
-    assert_eq!(
-        CI.matches("uses: ./.github/actions/validation-checkout")
-            .count(),
-        2
-    );
-    assert_eq!(
-        VALIDATE
-            .matches("uses: ./.github/actions/validation-checkout")
-            .count(),
-        1
-    );
-    assert!(CI.contains(
-        "\"$GITHUB_WORKSPACE/target/debug/decapod\" govern artifacts verify-checkpoints"
-    ));
     assert!(!CI.contains("path: ${{ steps.validation-checkout.outputs.path }}"));
 }
 
@@ -208,37 +200,20 @@ fn source_ci_requests_only_read_access_to_repository_contents() {
     assert!(!CI.contains("gh release"));
 }
 
-const PRIVATE_TEST_STEPS: [(&str, &str, &str); 3] = [
-    (
-        "supabase-consumer",
-        "Supabase HTTP and existing cloud boundaries",
-        "cargo test --locked --features supabase-cloud --lib",
-    ),
-    (
-        "workspace-lifecycle-docker",
-        "Prove interrupted caller and owned container recovery",
-        "cargo test --locked --lib",
-    ),
-    (
-        "test-integration",
-        "Run selective tests",
-        "\"$RUNNER_TEMP/integration-tests/integration-shards\" run",
-    ),
-];
+// The shared helper owns Supabase/Docker process setup; executable helper
+// regressions live in source_ci_profile_policy. This remaining shell preamble
+// belongs to the already-shared integration artifact runner.
+const PRIVATE_TEST_STEPS: [(&str, &str, &str); 1] = [(
+    "test-integration",
+    "Run selective tests",
+    "\"$RUNNER_TEMP/integration-tests/integration-shards\" run",
+)];
 
 fn test_step_preamble(job: &str, step: &str, command: &str) -> String {
-    let job = CI.split_once(&format!("\n  {job}:\n")).unwrap().1;
-    let step = job
-        .split_once(&format!("      - name: {step}\n"))
-        .unwrap()
-        .1;
-    let body = step.split_once("        run: |\n").unwrap().1;
-    let prefix = body.split_once(&format!("          {command}")).unwrap().0;
-    prefix
-        .lines()
-        .map(|line| line.strip_prefix("          ").unwrap())
-        .collect::<Vec<_>>()
-        .join("\n")
+    assert_eq!((job, step, command), PRIVATE_TEST_STEPS[0]);
+    let script = include_str!("../assets/tools/source_ci/integration-worker.sh");
+    assert!(script.contains("set -euo pipefail\numask 077"));
+    "set -euo pipefail\numask 077".into()
 }
 
 #[test]
@@ -273,8 +248,9 @@ fn offline_git_fixture_isolation_preserves_local_config_and_provider_settings() 
     let provider_body = "[url \"https://provider.invalid/\"]\n\tinsteadOf = git@github.com:\n[user]\n\tname = Provider owner\n";
     fs::write(&provider_config, provider_body).unwrap();
     let local_before = fs::read(root.join(".git/config")).unwrap();
-    let (job, step, cargo) = PRIVATE_TEST_STEPS[0];
-    let preamble = test_step_preamble(job, step, cargo);
+    let check = source_ci_profile::find_check("supabase-consumer").unwrap();
+    let recipe = source_ci_profile::commands(check, &[]).unwrap();
+    assert!(CI.contains("run-ci --check supabase-consumer"));
     // Each inherited source can independently poison fixtures. No process-wide
     // environment mutations or real user/provider configuration are needed.
     for layer in ["global", "system", "count", "parameters", "config"] {
@@ -340,9 +316,18 @@ fn offline_git_fixture_isolation_preserves_local_config_and_provider_settings() 
         );
         let mut command = Command::new("bash");
         configure(&mut command);
+        // Apply the exact typed environment that actual CI/native execution
+        // consumes, not a copied shell preamble.
+        for (key, value) in &recipe[0].env {
+            if let Some(value) = value {
+                command.env(key, value);
+            } else {
+                command.env_remove(key);
+            }
+        }
         command.args([
             "-c",
-            &format!("{preamble}\ngit remote get-url origin\ngit config --get user.name"),
+            "git remote get-url origin\ngit config --get user.name",
         ]);
         let output = command.output().unwrap();
         assert!(output.status.success(), "{layer}: {output:?}");
@@ -359,11 +344,13 @@ fn offline_git_fixture_isolation_preserves_local_config_and_provider_settings() 
             "{layer}: isolation leaked outside the child process"
         );
     }
-    assert_eq!(CI.matches("GIT_CONFIG_GLOBAL=/dev/null").count(), 1);
-    assert_eq!(
-        CI.matches("unset GIT_CONFIG GIT_CONFIG_PARAMETERS").count(),
-        1
-    );
+    assert!(!CI.contains("GIT_CONFIG_GLOBAL=/dev/null"));
+    assert!(!CI.contains("unset GIT_CONFIG GIT_CONFIG_PARAMETERS"));
+    assert!(recipe.iter().all(|command| {
+        command
+            .env
+            .contains(&("GIT_CONFIG_GLOBAL", Some("/dev/null")))
+    }));
 }
 
 #[test]
@@ -454,5 +441,175 @@ fn test_step_umask_is_inherited_by_children_without_changing_shared_state() {
             "unchanged shared state",
             "{job}"
         );
+    }
+}
+
+#[test]
+fn actual_validation_receives_complete_immutable_release_evidence() {
+    let context_action = include_str!("../.github/actions/ci-context/action.yml");
+    for (workflow, recipe) in [
+        (CI, include_str!("../assets/tools/source_ci/health.sh")),
+        (
+            VALIDATE,
+            include_str!("../assets/tools/source_ci/standalone-validation.sh"),
+        ),
+    ] {
+        assert!(workflow.contains("uses: ./.github/actions/ci-context"));
+        assert!(workflow.contains("fetch-depth: 0"));
+        for field in ["EVENT", "BASE", "HEAD"] {
+            assert!(context_action.contains(&format!("SOURCE_CI_{field}=%s")));
+            assert!(recipe.contains(&format!("export CHANGE_{field}=\"${{SOURCE_CI_{field}")));
+        }
+        assert!(recipe.contains("decapod govern project-check --refresh-specs"));
+        assert!(!recipe.contains("decapod validate --refresh-specs"));
+    }
+}
+
+#[test]
+fn private_clone_preserves_remote_only_base_for_detached_ci_checkout() {
+    let fixture = Fixture::new();
+    let source = fixture.0.join("source");
+    fs::create_dir(&source).unwrap();
+    git(&source, &["init", "-q", "--initial-branch=master"]);
+    git(&source, &["config", "user.name", "Detached CI fixture"]);
+    git(&source, &["config", "user.email", "ci@example.invalid"]);
+    git(
+        &source,
+        &[
+            "remote",
+            "add",
+            "origin",
+            "https://example.invalid/repository.git",
+        ],
+    );
+    fs::write(source.join("source.txt"), "accepted base\n").unwrap();
+    git(&source, &["add", "."]);
+    git(&source, &["commit", "-qm", "accepted base"]);
+    let base = git(&source, &["rev-parse", "HEAD"]);
+    git(
+        &source,
+        &["update-ref", "refs/remotes/origin/master", &base],
+    );
+    git(
+        &source,
+        &["update-ref", "refs/remotes/origin/accepted-base", &base],
+    );
+    fs::write(source.join("source.txt"), "candidate tree\n").unwrap();
+    git(&source, &["commit", "-qam", "candidate"]);
+    let head = git(&source, &["rev-parse", "HEAD"]);
+    git(&source, &["checkout", "-q", "--detach", &head]);
+    git(&source, &["branch", "-D", "master"]);
+    assert!(
+        git(
+            &source,
+            &["for-each-ref", "--format=%(refname)", "refs/heads/"]
+        )
+        .is_empty()
+    );
+    let before = git(&source, &["show-ref"]);
+    let output = fixture.0.join("output");
+    let result = Command::new("bash")
+        .args(["-c", &script()])
+        .current_dir(&source)
+        .env("GITHUB_OUTPUT", &output)
+        .output()
+        .unwrap();
+    assert!(result.status.success(), "{result:?}");
+    let path = fs::read_to_string(output).unwrap();
+    let clone = source.join(path.trim().strip_prefix("path=").unwrap());
+    assert_eq!(git(&clone, &["rev-parse", "HEAD"]), head);
+    for reference in [
+        "refs/remotes/origin/master",
+        "refs/remotes/origin/accepted-base",
+    ] {
+        assert_eq!(
+            git(&clone, &["rev-parse", "--verify", reference]),
+            base,
+            "configured base history must survive detached checkout isolation"
+        );
+    }
+    assert_eq!(
+        git(&source, &["show-ref"]),
+        before,
+        "source refs must remain untouched"
+    );
+    assert!(!clone.join(".git/objects/info/alternates").exists());
+}
+
+#[test]
+fn standalone_uses_strict_release_proof_and_never_label_or_branch_bypasses() {
+    let recipe = include_str!("../assets/tools/source_ci/standalone-validation.sh");
+    assert!(VALIDATE.contains("run-ci --check standalone-validation"));
+    assert!(
+        recipe.contains(
+            "--features build-tools --bin decapod --bin decapod-release-projection-drift"
+        )
+    );
+    assert!(recipe.contains("./target/debug/decapod-release-projection-drift"));
+    assert!(recipe.contains("SOURCE_CI_RELEASE_ONLY"));
+    assert!(
+        include_str!("../assets/tools/source_ci_workflow_owned.rs")
+            .contains("release_classifier::classify(repo, event, base, head)")
+    );
+    for shortcut in [
+        "SKIP_FINGERPRINT_GATES",
+        "pull_request.labels",
+        "startsWith(github.head_ref",
+    ] {
+        assert!(!VALIDATE.contains(shortcut));
+        assert!(!recipe.contains(shortcut));
+    }
+    assert!(recipe.contains("set -euo pipefail"));
+}
+
+fn ordinary_drift_script(workflow: &str) -> String {
+    let recipe = if workflow == CI {
+        include_str!("../assets/tools/source_ci/health.sh")
+    } else {
+        include_str!("../assets/tools/source_ci/standalone-validation.sh")
+    };
+    let block = recipe
+        .split_once("# Ensure no spec or entrypoint drift\n")
+        .unwrap()
+        .1;
+    format!("{}\n)", block.split_once("\n)\n").unwrap().0)
+}
+
+#[test]
+fn ordinary_drift_checks_execute_against_head_and_reject_hidden_staged_edits() {
+    for workflow in [CI, VALIDATE] {
+        for kind in ["clean", "unstaged", "staged", "staged-reverted"] {
+            let fixture = Fixture::new();
+            let root = &fixture.0;
+            git(root, &["init", "-q"]);
+            git(root, &["config", "user.name", "Drift fixture"]);
+            git(root, &["config", "user.email", "fixture@example.invalid"]);
+            fs::write(root.join("source.rs"), "accepted\n").unwrap();
+            git(root, &["add", "."]);
+            git(root, &["commit", "-qm", "baseline"]);
+            if kind != "clean" {
+                fs::write(root.join("source.rs"), "changed\n").unwrap();
+            }
+            if kind.starts_with("staged") {
+                git(root, &["add", "source.rs"]);
+            }
+            if kind == "staged-reverted" {
+                fs::write(root.join("source.rs"), "accepted\n").unwrap();
+            }
+            let output = Command::new("bash")
+                .args(["-c", &ordinary_drift_script(workflow)])
+                .current_dir(root)
+                .env("RELEASE_ONLY", "false")
+                .env("SOURCE_CI_EVENT", "pull_request")
+                .env("SOURCE_CI_BASE", "1".repeat(40))
+                .env("SOURCE_CI_HEAD", "2".repeat(40))
+                .output()
+                .unwrap();
+            assert_eq!(
+                output.status.success(),
+                kind == "clean",
+                "{kind}: {output:?}"
+            );
+        }
     }
 }

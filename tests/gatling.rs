@@ -43,6 +43,7 @@ fn resolve_decapod_bin() -> PathBuf {
 // or populate the test supervisor's disposable HOME with rootless overlays.
 fn host_command(dir: &Path, args: &[&str]) -> Command {
     let mut command = Command::new(resolve_decapod_bin());
+    command.env_remove("GITHUB_ACTIONS").env_remove("BUILDKITE");
     command
         .args(args)
         .current_dir(dir)
@@ -542,28 +543,44 @@ fn t053_todo_rebuild() {
 
 #[test]
 fn t060_validate() {
+    // Store/format combinations here cover bootstrap project prerequisites only.
+    // This prerequisite result is not full publication-readiness proof.
+
     let (_tmp, dir) = setup_workspace();
-    // T060: default validate
-    ok(&dir, &["validate"]);
+    // T060: default project prerequisites
+    ok(&dir, &["govern", "project-check"]);
     // T061: --store user
-    ok(&dir, &["validate", "--store", "user"]);
+    ok(&dir, &["govern", "project-check", "--store", "user"]);
     // T062: --store repo
-    ok(&dir, &["validate", "--store", "repo"]);
+    ok(&dir, &["govern", "project-check", "--store", "repo"]);
     // T063: --format json
-    ok(&dir, &["validate", "--format", "json"]);
+    ok(&dir, &["govern", "project-check", "--format", "json"]);
     // T064: --format text
-    ok(&dir, &["validate", "--format", "text"]);
-    // T065: alias v
-    ok(&dir, &["v"]);
+    ok(&dir, &["govern", "project-check", "--format", "text"]);
+    // T065: public validate and its alias both require a full proof profile.
+    for command in ["validate", "v"] {
+        let (success, output) = run(&dir, &[command]);
+        assert!(
+            !success,
+            "{command} must reject missing full proof: {output}"
+        );
+        assert!(
+            output.contains("READINESS_PROFILE_REQUIRED"),
+            "{command} must reach the same full-readiness boundary: {output}"
+        );
+    }
 }
 
 #[test]
 fn t066_validate_errors() {
+    // Invalid store/format fallback belongs to the shared bounded prerequisite parser.
+    // This prerequisite result is not full publication-readiness proof.
+
     let (_tmp, dir) = setup_workspace();
     // T066: invalid store falls through to repo (not an error)
-    ok(&dir, &["validate", "--store", "invalid"]);
+    ok(&dir, &["govern", "project-check", "--store", "invalid"]);
     // T067: invalid format falls through to text (not an error)
-    ok(&dir, &["validate", "--format", "invalid"]);
+    ok(&dir, &["govern", "project-check", "--format", "invalid"]);
 }
 
 // ---------------------------------------------------------------------------

@@ -229,8 +229,9 @@ fn test_verify_deadlock_prevention() {
         String::from_utf8_lossy(&prune_2.stderr)
     );
 
-    // 4. Standard validate should now PASS since both tasks are 'open' again!
-    let val_post_prune = run_cmd(&wt_path, &["validate"], &[]);
+    // 4. The missing-proof prerequisite clears after both tasks return to open.
+    // This does not claim complete publication readiness; the earlier refusal stays public.
+    let val_post_prune = run_cmd(&wt_path, &["govern", "project-check"], &[]);
     assert!(
         val_post_prune.status.success(),
         "validate failed post-prune: stdout:\n{}\nstderr:\n{}",

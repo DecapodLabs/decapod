@@ -3,17 +3,17 @@ use serde_json::json;
 
 const OLD: &str = "0.0.1";
 
-struct Fixture {
-    root: tempfile::TempDir,
-    base: String,
-    head: String,
+pub(crate) struct Fixture {
+    pub(crate) root: tempfile::TempDir,
+    pub(crate) base: String,
+    pub(crate) head: String,
 }
 
 impl Fixture {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         let root = tempfile::tempdir().unwrap();
         let repo = root.path();
-        git(repo, &["init", "-q"]).unwrap();
+        git(repo, &["init", "-q", "-b", "master"]).unwrap();
         git(repo, &["config", "user.name", "Projection Test"]).unwrap();
         git(
             repo,
@@ -44,6 +44,7 @@ impl Fixture {
         for spec in specs::LOCAL_PROJECT_SPECS {
             fs::write(repo.join(spec.path), format!("# Fixture\n\nAuthored obligation stays byte-identical.\n\n{ATTESTATION_START}\n## Codebase Attestation\n\n- Repository signal fingerprint: `{}`\n- Significant implementation surfaces: `src/` (1 files)\n- Refreshed from the current codebase by `decapod rpc --op specs.refresh`\n{ATTESTATION_END}\n", "0".repeat(64))).unwrap();
         }
+        fs::write(repo.join("CHANGELOG.md"), "# Changelog\n").unwrap();
         Self::version(repo, OLD);
         let manifest = specs::refresh_specs_manifest(repo, &[]).unwrap();
         let mut manifest = serde_json::to_value(manifest).unwrap();
@@ -88,7 +89,7 @@ impl Fixture {
         .unwrap();
     }
 
-    fn refresh(&self) {
+    pub(crate) fn refresh(&self) {
         let repo = self.root.path();
         entrypoints::refresh_entrypoint_metadata(repo).unwrap();
         container::refresh_managed_dockerfile_release(repo).unwrap();
@@ -274,4 +275,189 @@ fn rejects_ambiguous_attestations() {
     );
     assert!(expected_spec(&(valid.clone() + &valid), &"a".repeat(64)).is_err());
     assert!(expected_spec(&valid.replace(ATTESTATION_END, ""), &"a".repeat(64)).is_err());
+}
+
+#[test]
+fn rejects_staged_source_hidden_by_a_worktree_revert() {
+    let fixture = Fixture::new();
+    let repo = fixture.root.path();
+    let original = fs::read(repo.join("src/lib.rs")).unwrap();
+    fs::write(repo.join("src/lib.rs"), "pub fn staged_change() {}\n").unwrap();
+    git(repo, &["add", "src/lib.rs"]).unwrap();
+    fs::write(repo.join("src/lib.rs"), original).unwrap();
+    assert!(git(repo, &["diff", "--quiet", "HEAD", "--", "src/lib.rs"]).is_ok());
+    assert!(fixture.verify().is_err());
+}
+
+#[test]
+fn validation_release_evidence_is_complete_and_base_bound() {
+    let fixture = Fixture::new();
+    let repo = fixture.root.path();
+    let valid = [
+        Some("pull_request".into()),
+        Some(fixture.base.clone()),
+        Some(fixture.head.clone()),
+    ];
+    verify_for_validation(repo, &fixture.base, valid.clone()).unwrap();
+    verify_for_validation(repo, &fixture.base, [None, None, None]).unwrap();
+    for missing in 0..3 {
+        let mut partial = valid.clone();
+        partial[missing] = None;
+        assert!(verify_for_validation(repo, &fixture.base, partial).is_err());
+    }
+    for bad in ["", "master", "0000000000000000000000000000000000000000"] {
+        let mut invalid = valid.clone();
+        invalid[1] = Some(bad.into());
+        assert!(verify_for_validation(repo, &fixture.base, invalid).is_err());
+    }
+    let mut unknown = valid;
+    unknown[0] = Some("workflow_dispatch".into());
+    assert!(verify_for_validation(repo, &fixture.base, unknown).is_err());
+    assert!(verify_for_validation(repo, "missing-base", [None, None, None]).is_err());
+}
+
+#[test]
+fn validation_rejects_a_synthetic_merge_with_new_base_code() {
+    let fixture = Fixture::new();
+    let repo = fixture.root.path();
+    // Discard only this disposable fixture's generated projection changes.
+    git(repo, &["reset", "--hard", "HEAD"]).unwrap();
+    git(repo, &["checkout", "-qb", "base-advance", &fixture.base]).unwrap();
+    fs::write(repo.join("src/new.rs"), "pub fn new_base_code() {}\n").unwrap();
+    git(repo, &["add", "src/new.rs"]).unwrap();
+    git(repo, &["commit", "-qm", "new accepted base code"]).unwrap();
+    let base = git(repo, &["rev-parse", "HEAD"])
+        .unwrap()
+        .trim()
+        .to_string();
+    git(repo, &["checkout", "-qb", "synthetic", &fixture.head]).unwrap();
+    git(
+        repo,
+        &["merge", "--no-ff", "-m", "synthetic PR merge", &base],
+    )
+    .unwrap();
+    fixture.refresh();
+    assert!(
+        verify_for_validation(
+            repo,
+            &base,
+            [
+                Some("pull_request".into()),
+                Some(base.clone()),
+                Some(fixture.head.clone())
+            ]
+        )
+        .is_err()
+    );
+    assert!(verify_for_validation(repo, &base, [None, None, None]).is_err());
+}
+
+#[test]
+fn validation_accepts_equal_tree_synthetic_merge_with_explicit_event_evidence() {
+    let fixture = Fixture::new();
+    let repo = fixture.root.path();
+    let tree = git(repo, &["rev-parse", "HEAD^{tree}"]).unwrap();
+    let merge = git(
+        repo,
+        &[
+            "commit-tree",
+            tree.trim(),
+            "-p",
+            &fixture.base,
+            "-p",
+            &fixture.head,
+            "-m",
+            "synthetic release PR merge",
+        ],
+    )
+    .unwrap();
+    git(repo, &["reset", "--soft", merge.trim()]).unwrap();
+    verify_for_validation(
+        repo,
+        &fixture.base,
+        [
+            Some("pull_request".into()),
+            Some(fixture.base.clone()),
+            Some(fixture.head.clone()),
+        ],
+    )
+    .unwrap();
+    assert!(verify_for_validation(repo, &fixture.base, [None, None, None]).is_err());
+}
+
+#[test]
+fn validation_rejects_valid_release_evidence_outside_configured_base_ancestry() {
+    let fixture = Fixture::new();
+    let repo = fixture.root.path();
+    let tree = git(repo, &["rev-parse", &format!("{}^{{tree}}", fixture.base)]).unwrap();
+    let unrelated = git(
+        repo,
+        &[
+            "commit-tree",
+            tree.trim(),
+            "-m",
+            "unrelated configured base",
+        ],
+    )
+    .unwrap();
+    assert!(
+        verify_for_validation(
+            repo,
+            unrelated.trim(),
+            [
+                Some("pull_request".into()),
+                Some(fixture.base.clone()),
+                Some(fixture.head.clone())
+            ]
+        )
+        .is_err()
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn expected_dockerfile_uses_private_scratch_under_permissive_umask() {
+    const CHILD: &str = "DECAPOD_PROJECTION_UMASK_CHILD";
+    if std::env::var_os(CHILD).is_some() {
+        // Only the process-local child inherits the deliberately permissive
+        // umask. Do not change permissions on any existing checkout or state.
+        let root = tempfile::tempdir().unwrap();
+        let old = container::generated_dockerfile_for_repo(root.path())
+            .replace(entrypoints::RELEASE_VERSION, OLD);
+        let refreshed = expected_dockerfile(&old, OLD).unwrap();
+        container::managed_dockerfile_matches_release(&refreshed, entrypoints::RELEASE_VERSION)
+            .unwrap();
+        println!("private scratch refresh completed");
+        return;
+    }
+
+    let test_name = std::thread::current()
+        .name()
+        .expect("libtest names this test thread")
+        .to_string();
+    for mask in ["000", "002"] {
+        let output = Command::new("/bin/sh")
+            .args([
+                "-c",
+                "umask \"$1\"; shift; exec \"$@\"",
+                "projection-umask",
+                mask,
+            ])
+            .arg(std::env::current_exe().unwrap())
+            .args(["--exact", &test_name, "--nocapture", "--test-threads=1"])
+            .env(CHILD, "1")
+            .env_remove("DECAPOD_STORAGE_SHARED_GROUP")
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "umask {mask}:\n{}\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert!(
+            String::from_utf8_lossy(&output.stdout).contains("private scratch refresh completed"),
+            "umask {mask}: child must execute the exact helper regression"
+        );
+    }
 }

@@ -42,6 +42,23 @@ pub(crate) struct ValidateCli {
     /// Enable projection-consistency validation for Decapod-managed governance surfaces
     #[clap(long)]
     pub projections: bool,
+    /// Prepare a private temporary-snapshot handoff; remains non-ready until CI completes.
+    #[clap(long, conflicts_with = "snapshot_resume")]
+    pub snapshot_prepare: bool,
+    /// Resume the exact temporary snapshot named by a private handoff file.
+    #[clap(long, value_name = "HANDOFF")]
+    pub snapshot_resume: Option<std::path::PathBuf>,
+    /// Verify a host-created commit identity and write a new private handoff; remains non-ready.
+    #[clap(
+        long,
+        value_name = "SERVER_S",
+        requires = "snapshot_resume",
+        conflicts_with = "provider_artifacts"
+    )]
+    pub snapshot_adopt: Option<String>,
+    /// Raw provider artifacts for independent ID, digest and execution verification.
+    #[clap(long, value_name = "DIRECTORY", requires = "snapshot_resume")]
+    pub provider_artifacts: Option<std::path::PathBuf>,
 }
 
 #[derive(clap::Args, Debug)]
@@ -91,6 +108,12 @@ pub(crate) enum WorkspaceCommand {
         /// Description for the change
         #[clap(long)]
         description: Option<String>,
+        /// Reverify the exact validated temporary snapshot immediately before publication.
+        #[clap(long, value_name = "HANDOFF")]
+        snapshot_resume: Option<std::path::PathBuf>,
+        /// Raw artifacts; every provider identity and digest is independently reverified.
+        #[clap(long, value_name = "DIRECTORY", requires = "snapshot_resume")]
+        provider_artifacts: Option<std::path::PathBuf>,
     },
     /// Prune stale/unused agent workspaces
     Prune {
@@ -237,6 +260,10 @@ pub(crate) struct InitGroupCli {
     /// Proof command in `name=command` form (repeatable/comma-separated).
     #[clap(long = "proof-command", value_delimiter = ',')]
     pub proof_commands: Vec<String>,
+    /// Select Buildkite temporary-snapshot validation (false: native Decapod).
+    /// Both providers execute the full required proof suite; omission preserves existing settings.
+    #[clap(long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]
+    pub validation_buildkite_preflights: Option<bool>,
     /// Init storage backend: 'local' (default) or 'cloud' (experimental, account required).
     ///
     /// Cloud backend records non-secret Decapod Cloud intent in `.decapod/config.toml`.
@@ -372,6 +399,16 @@ pub(crate) struct InitWithCli {
     /// Proof command in `name=command` form (repeatable/comma-separated).
     #[clap(long = "proof-command", value_delimiter = ',')]
     pub proof_commands: Vec<String>,
+    /// Structured definitions retained when re-init leaves a proof command unchanged.
+    #[clap(skip)]
+    pub existing_proof_commands: Vec<crate::core::proof::ProofDef>,
+    /// Preserve the authored required-profile declaration without approving it.
+    #[clap(skip)]
+    pub existing_required_profile: Option<crate::core::readiness_profile::ProfileDeclaration>,
+    /// Select Buildkite temporary-snapshot validation (false: native Decapod).
+    /// Both providers execute the full required proof suite; omission preserves existing settings.
+    #[clap(long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]
+    pub validation_buildkite_preflights: Option<bool>,
     /// Init storage backend: 'local' (default) or 'cloud' (experimental, account required).
     ///
     /// Cloud backend records non-secret Decapod Cloud intent in `.decapod/config.toml`.
@@ -827,6 +864,10 @@ pub(crate) struct GovernCli {
 
 #[derive(Subcommand, Debug)]
 pub(crate) enum GovernCommand {
+    /// Run bounded project prerequisites only; success is not publication readiness.
+    /// Bootstrap and CI use this acyclic check. Agents must run validate before push or PR.
+    ProjectCheck(ValidateCli),
+
     /// Risk classification and approvals
     Policy(policy::PolicyCli),
 
@@ -925,6 +966,9 @@ pub(crate) enum ArtifactsCommand {
         base_branch: String,
         #[clap(long = "head-ref", default_value = "HEAD")]
         head_ref: String,
+        /// Bind the declared PR target name when base-branch is an immutable SHA.
+        #[clap(long = "target-base")]
+        target_base: Option<String>,
     },
     /// Inventory logical plan, claims, trajectory, and validation sections
     Inventory {
@@ -1589,9 +1633,13 @@ pub(crate) enum Command {
     #[clap(name = "obligation", visible_alias = "o")]
     Obligation(obligation::ObligationCli),
 
-    /// Validate methodology compliance
+    /// Prove complete current-workbranch readiness before push or pull request
     #[clap(name = "validate", visible_alias = "v")]
     Validate(ValidateCli),
+
+    /// Internal bounded project-check worker; never a publication-readiness result.
+    #[clap(name = "__project-check-worker", hide = true)]
+    ProjectCheckWorker(ValidateCli),
 
     /// Governance: policy, health, proofs, audits
     #[clap(name = "govern", visible_alias = "g")]

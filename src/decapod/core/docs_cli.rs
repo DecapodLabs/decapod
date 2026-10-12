@@ -71,7 +71,7 @@ pub enum DocsCommand {
     /// Autogenerate/Sync documentation from code implementation.
     Build {
         /// Only update docs for specific files that were touched.
-        #[clap(long, num_args(1..), value_delimiter = ' ')]
+        #[clap(long, num_args(1..))]
         touched: Option<Vec<PathBuf>>,
     },
 }
@@ -330,6 +330,34 @@ use clap::CommandFactory;
 use std::io::Write;
 
 /// Shared by the generated command contracts and their regression tests.
+pub fn readiness_contract() -> &'static str {
+    r#"- **Subject:** The exact current work branch, its accepted target tip, source and governance material, reviewed CI/release definitions, toolchain and applicable complete check matrix.
+- **Outcome:** Exit 0 only after all required evidence passes. Missing, empty, stale, running, skipped-required or failed proof returns nonzero. Any relevant branch or target change invalidates earlier success.
+- **Publication loop:** Follow the validation report's actionable instructions, repair reported root causes on the work branch, and rerun exact-candidate validation until it succeeds; only then push the work branch and create its PR. A draft PR is also publication and is held until success. `workspace publish` and RPC `validate.run` enforce the same readiness boundary.
+- **CI context:** Inside GitHub Actions (`GITHUB_ACTIONS=true`) or Buildkite (`BUILDKITE=true`), public CLI/alias/RPC validation executes the real bounded local gates and ignores remote preflight configuration. It reports `scope=ci_local` and `publication_ready=false`, never writes a full-readiness receipt or waits for its own suite, and rejects snapshot transport arguments. Provider environment flags alone cannot authorize publication: the publisher independently invokes the complete workbranch readiness boundary.
+- **Prerequisites:** `decapod govern project-check` runs bounded project/governance prerequisites for bootstrap and finite native/CI recipe execution. Its partial success never grants publication readiness. Complete workbranch validation runs outside CI and aggregates actual source checks without recursion.
+- **Providers:** `proof.validation_buildkite_preflights = false` selects native execution; true selects the repository-owned temporary-snapshot provider. Both enforce the same complete required profile. Unknown repositories, missing capabilities and unreconciled contracts fail explicitly.
+- **Automatic provider execution:** With Buildkite validation enabled outside CI, `validate` submits the reserved same-tree snapshot, waits for every required GitHub workflow and imported Buildkite workflow, collects authenticated execution artifacts once, and rechecks the candidate, accepted target and provider attempt identities before returning success. It uses already configured official Git and GitHub CLI access plus the reviewed public Buildkite reader; missing tools, access denial, timeout, cancellation, failed jobs or incomplete custody return nonzero. It never installs credentials or falls back after an authorization failure.
+- **Snapshot handoff:** `validate --snapshot-prepare` prepares private transport metadata and returns nonzero while proof is pending. An authorized host may upload only that exact temporary snapshot. If its supported object API changes the commit identity, `validate --snapshot-resume <HANDOFF> --snapshot-adopt <SERVER_S>` independently verifies the exact tree, parent, source, target, metadata and owned remote ref, then writes a new private handoff and remains non-ready. Never edit a handoff to assert a different identity. `validate --snapshot-resume <HANDOFF> --provider-artifacts <DIRECTORY>` independently verifies provider identities, raw artifact digests and execution evidence; files cannot assert success. This is not a compatibility claim for a separate `bk preflight` command.
+- **Boundaries:** Validation does not publish the work branch, open a PR, create a release/tag, upload a package/image or deploy. Remote CI submission needs existing authorized access and remains subject to external-action policy. The core source-PR profile requires actual compile, test and build execution. Release-only packaging is outside this profile and has no packaging-assurance claim; publish/deploy dispositions describe simulation only, never actual delivery.
+- **Recovery:** Follow the validation report's actionable recovery instructions, preserve blockers requiring human input, repair root causes or missing proof, and rerun against the exact candidate. Do not mark unexecuted checks green, weaken the required profile to pass, or replace unavailable provider evidence with a local receipt."#
+}
+
+pub fn readiness_config_contract() -> &'static str {
+    r#"## Required proof and execution provider
+
+`[proof].validation_buildkite_preflights` is a boolean, default false. False runs
+the native readiness backend; it does not disable compile, test or CI proof.
+True uses authorized temporary snapshots without publishing the work branch.
+`[proof.required_profile]` binds the reviewed complete repository CI/release
+contract. A missing, unknown or changed contract fails readiness; an empty
+`commands` list cannot prove completion. Init and initial agent execution
+reconcile existing repository contracts, preserve user-authored choices, and
+report missing or conflicting obligations for repair. Successful init is not
+successful validation. Existing repositories must reconcile their contract and
+provide the required capabilities before validate can authorize publication."#
+}
+
 pub fn specs_refresh_contract() -> &'static str {
     r#"## Living-spec refresh surfaces
 
@@ -477,16 +505,7 @@ fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
                     )?;
                 }
                 "validate" => {
-                    writeln!(file, "- **Intent:** Verify methodology compliance.")?;
-                    writeln!(file, "- **Outcome:** Exit code 0 on success, 1 on failure.")?;
-                    writeln!(
-                        file,
-                        "- **Failure State:** A failed gate leaves the task incomplete; it is not a completion signal."
-                    )?;
-                    writeln!(
-                        file,
-                        "- **Recovery:** Follow supported remediation, update the violated artifact or state, and re-run validation. Escalate decision gates or unsupported recovery to the human."
-                    )?;
+                    writeln!(file, "{}", readiness_contract())?;
                 }
                 _ => {}
             }
@@ -531,6 +550,7 @@ fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
             let fields = &config_src[start..start + end + 1];
             writeln!(file, "```rust\n{fields}\n```")?;
         }
+        writeln!(file, "\n{}", readiness_config_contract())?;
     }
 
     Ok(())
@@ -682,5 +702,58 @@ mod governance_contract_tests {
             contract.contains("Read operations never")
                 || contract.contains("read-only and never migrate")
         );
+    }
+}
+
+#[cfg(test)]
+mod touched_path_tests {
+    use super::{DocsCli, DocsCommand};
+    use clap::Parser;
+    use std::path::PathBuf;
+
+    #[derive(Parser)]
+    struct DocsParser {
+        #[command(flatten)]
+        docs: DocsCli,
+    }
+
+    #[test]
+    fn touched_keeps_each_argv_path_whole() {
+        let paths = [
+            "./a path with spaces.rs",
+            "./tab\tand\nnewline.rs",
+            "./--help",
+            "./second.rs",
+        ];
+        let args = ["docs", "build", "--touched"].into_iter().chain(paths);
+        let parsed = DocsParser::try_parse_from(args).unwrap();
+        let DocsCommand::Build {
+            touched: Some(touched),
+        } = parsed.docs.command
+        else {
+            panic!("expected touched paths")
+        };
+        assert_eq!(touched, paths.map(PathBuf::from));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn touched_preserves_non_utf8_filename_bytes() {
+        use std::{ffi::OsString, os::unix::ffi::OsStringExt};
+        let path = OsString::from_vec(b"./non-utf8-\xff.rs".to_vec());
+        let parsed = DocsParser::try_parse_from([
+            OsString::from("docs"),
+            OsString::from("build"),
+            OsString::from("--touched"),
+            path.clone(),
+        ])
+        .unwrap();
+        let DocsCommand::Build {
+            touched: Some(touched),
+        } = parsed.docs.command
+        else {
+            panic!("expected touched paths")
+        };
+        assert_eq!(touched, [PathBuf::from(path)]);
     }
 }

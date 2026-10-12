@@ -1,5 +1,38 @@
 # Security
 
+## Preflight custody and capabilities
+
+Preflight executes only reviewed build/test/release-verification operations. It
+must not evaluate arbitrary imported YAML as a local shell program, inherit
+publishing credentials into local proof children, or silently install missing
+capabilities. Existing process supervision bounds ordinary owned descendants;
+it is not a security sandbox against deliberate process-group escape. Unsupported
+containment requirements fail explicitly.
+
+Temporary remote transport is restricted to a fresh request-scoped preflight
+namespace. It cannot overwrite the work branch or match publishing/deployment
+triggers. Its exact remote commit and tree require readback. Credentials remain
+with their existing authorized provider or official client; success records
+supplied as arbitrary JSON are not authenticated provider evidence. Public API
+reads must retain TLS/server custody and exact run/attempt/source binding.
+
+The public reader seals finite GET routes and validates artifact redirects before
+following them. Ordinary process/API budgets remain distinct from bounded archive
+transfer budgets. ZIP members are verified in memory with explicit size, count,
+path, type and expansion limits, never extracted or executed as evidence. A raw
+archive handoff gains authority only through fresh provider metadata and digest
+verification. Session-health proof stores only its safe active/inactive status,
+not session credentials, and cannot self-update the candidate executable.
+
+## Release-only material-spec proof boundary
+
+Release names, labels, and mutable refs cannot authorize the material-spec
+exception. The shared proof rejects a staged edit even if the working tree was
+reverted, malformed event metadata, a foreign configured-base ancestry, and a
+synthetic merge with additional source changes. Exact generated hashes cannot
+launder altered authored prose, template payload, configuration, or dependencies.
+This proof changes no credential, publication permission, or external grant.
+
 ## CI checkout and provider authority
 
 CI must not repair permissive provider checkout modes by recursively changing
@@ -11,6 +44,12 @@ their existing explicit policy. Source CI requests read-only repository contents
 access; release token denials do not authorize broader app grants or publishing.
 ARM musl proof uses a pinned official image and direct QEMU user-mode execution,
 with no privileged container or host binfmt registration introduced by this lane.
+
+Required immutable CI context is checked before local-only skip paths. A missing
+base ref, protected branch, malformed event, or different checkout cannot silently
+omit the material-spec gate. Local-only ref transfer preserves provider state.
+Scratch projection proof creates private files and directories at creation time;
+it never relaxes storage checks or repairs existing user/runtime permissions.
 
 ## Integration artifact custody
 
@@ -188,8 +227,8 @@ Describe the security primitives and security controls implemented in this repos
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ab9a11ea42af3b5496a92844b43b1fb208608acd04fed342b0a1168f3c94af27`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (11 files), `docs/` (1 files), `src/` (125 files), `tests/` (173 files)
+- Repository signal fingerprint: `79a4726a3721140bc6acb9851ecd237c2831d359af0a28691cfb2ae798587169`
+- Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (173 files), `tests/` (183 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

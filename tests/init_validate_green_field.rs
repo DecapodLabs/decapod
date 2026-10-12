@@ -1,3 +1,5 @@
+// These fixtures exercise project-methodology preparation. Only the first
+// regression calls public validate/RPC and proves empty CI evidence is non-ready.
 use decapod::core::db::Connection;
 use std::fs;
 use std::path::Path;
@@ -6,6 +8,7 @@ use tempfile::TempDir;
 
 fn run_decapod(dir: &Path, args: &[&str], envs: &[(&str, &str)]) -> std::process::Output {
     let mut cmd = Command::new(env!("CARGO_BIN_EXE_decapod"));
+    cmd.env_remove("GITHUB_ACTIONS").env_remove("BUILDKITE");
     cmd.current_dir(dir).args(args);
     for (k, v) in envs {
         cmd.env(k, v);
@@ -86,14 +89,14 @@ fn setup_initialized_repo(tmp: &tempfile::TempDir) -> String {
 }
 
 #[test]
-fn fresh_init_validate_comes_back_green() {
+fn fresh_init_project_prerequisites_do_not_grant_publication_readiness() {
     let tmp = TempDir::new().expect("tmpdir");
     let dir = tmp.path();
     let password = setup_initialized_repo(&tmp);
 
     let validate = run_decapod_with_password(
         dir,
-        &["validate"],
+        &["govern", "project-check"],
         &password,
         &[("DECAPOD_VALIDATE_TIMEOUT_SECS", "120")],
     );
@@ -115,6 +118,43 @@ fn fresh_init_validate_comes_back_green() {
         !stderr.contains("fail=") || stderr.contains("fail=0"),
         "expected no failures in validation output: {stderr}"
     );
+    assert!(stdout.contains("publication readiness has not been assessed"));
+    let full = run_decapod_with_password(dir, &["validate", "--format", "json"], &password, &[]);
+    assert!(
+        !full.status.success(),
+        "empty required profile must never be ready"
+    );
+    let report: serde_json::Value = serde_json::from_slice(&full.stdout).unwrap();
+    assert_eq!(report["status"], "fail");
+    assert_eq!(report["readiness"]["ready"], false);
+    assert!(String::from_utf8_lossy(&full.stdout).contains("READINESS_PROFILE_REQUIRED"));
+
+    let rpc = run_decapod_with_password(dir, &["rpc", "--op", "validate.run"], &password, &[]);
+    let output = String::from_utf8_lossy(&rpc.stdout);
+    assert!(
+        output.contains("publication_not_ready"),
+        "RPC must use full readiness: {output}"
+    );
+    assert!(output.contains("READINESS_PROFILE_REQUIRED"));
+
+    let wrong_scope = run_decapod_with_password(
+        dir,
+        &["govern", "project-check", "--snapshot-prepare"],
+        &password,
+        &[],
+    );
+    assert!(!wrong_scope.status.success());
+    assert!(String::from_utf8_lossy(&wrong_scope.stderr).contains("PROJECT_CHECK_SCOPE"));
+    let wrong_provider = run_decapod_with_password(
+        dir,
+        &["validate", "--snapshot-prepare", "--format", "json"],
+        &password,
+        &[],
+    );
+    assert!(!wrong_provider.status.success());
+    assert!(
+        String::from_utf8_lossy(&wrong_provider.stdout).contains("READINESS_PROVIDER_MISMATCH")
+    );
 }
 
 #[test]
@@ -125,7 +165,7 @@ fn authority_change_cannot_leave_specs_manifest_config_hash_stale() {
 
     let initial = run_decapod_with_password(
         dir,
-        &["validate"],
+        &["govern", "project-check"],
         &password,
         &[("DECAPOD_VALIDATE_TIMEOUT_SECS", "120")],
     );
@@ -156,7 +196,7 @@ fn authority_change_cannot_leave_specs_manifest_config_hash_stale() {
 
     let stale = run_decapod_with_password(
         dir,
-        &["validate"],
+        &["govern", "project-check"],
         &password,
         &[("DECAPOD_VALIDATE_TIMEOUT_SECS", "120")],
     );
@@ -195,7 +235,7 @@ fn changed_validation_epoch_preserves_bound_proof_and_requires_new_run() {
 
     let initial = run_decapod_with_password(
         dir,
-        &["validate"],
+        &["govern", "project-check"],
         &password,
         &[("DECAPOD_VALIDATE_TIMEOUT_SECS", "120")],
     );
@@ -216,7 +256,7 @@ fn changed_validation_epoch_preserves_bound_proof_and_requires_new_run() {
 
     let changed_epoch = run_decapod_with_password(
         dir,
-        &["validate"],
+        &["govern", "project-check"],
         &password,
         &[
             ("DECAPOD_VALIDATE_TIMEOUT_SECS", "120"),
@@ -280,7 +320,7 @@ fn existing_project_init_migrates_watcher_before_runtime_reads() {
     );
     let validate = run_decapod_with_password(
         dir,
-        &["validate"],
+        &["govern", "project-check"],
         &password,
         &[("DECAPOD_VALIDATE_TIMEOUT_SECS", "120")],
     );
@@ -324,7 +364,7 @@ fn fresh_init_validate_with_real_git_workspace() {
 
     let validate = run_decapod_with_password(
         dir,
-        &["validate"],
+        &["govern", "project-check"],
         &password,
         &[("DECAPOD_VALIDATE_TIMEOUT_SECS", "120")],
     );
@@ -346,7 +386,7 @@ fn re_init_preserves_validation_green() {
 
     let validate1 = run_decapod_with_password(
         dir,
-        &["validate"],
+        &["govern", "project-check"],
         &password,
         &[("DECAPOD_VALIDATE_TIMEOUT_SECS", "120")],
     );
@@ -385,7 +425,7 @@ fn re_init_preserves_validation_green() {
 
     let validate2 = run_decapod_with_password(
         dir,
-        &["validate"],
+        &["govern", "project-check"],
         &password,
         &[("DECAPOD_VALIDATE_TIMEOUT_SECS", "120")],
     );
@@ -462,7 +502,7 @@ fn upgrade_from_older_config_version_reports_clear_error() {
 
     let validate = run_decapod_with_password(
         dir,
-        &["validate"],
+        &["govern", "project-check"],
         &password,
         &[("DECAPOD_VALIDATE_TIMEOUT_SECS", "120")],
     );
@@ -540,7 +580,7 @@ fn init_validate_with_various_config_options() {
 
     let validate = run_decapod_with_password(
         dir,
-        &["validate"],
+        &["govern", "project-check"],
         &password,
         &[("DECAPOD_VALIDATE_TIMEOUT_SECS", "120")],
     );
@@ -551,4 +591,134 @@ fn init_validate_with_various_config_options() {
         validate.status.success(),
         "validate should succeed with complex init options.\nstderr: {stderr}"
     );
+}
+
+fn enable_remote_validation_fixture(dir: &Path) {
+    let path = dir.join(".decapod/config.toml");
+    let mut config: toml::Value = toml::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+    let table = config.as_table_mut().unwrap();
+    let proof = table
+        .entry("proof")
+        .or_insert_with(|| toml::Value::Table(Default::default()));
+    proof.as_table_mut().unwrap().insert(
+        "validation_buildkite_preflights".into(),
+        toml::Value::Boolean(true),
+    );
+    fs::write(path, toml::to_string_pretty(&config).unwrap()).unwrap();
+}
+
+#[test]
+fn ci_local_validate_and_rpc_run_real_checks_without_remote_readiness_or_receipts() {
+    use decapod::core::governance_document::read_section;
+    for provider in ["GITHUB_ACTIONS", "BUILDKITE"] {
+        let tmp = TempDir::new().unwrap();
+        let dir = tmp.path();
+        let password = setup_initialized_repo(&tmp);
+        enable_remote_validation_fixture(dir);
+        // Existing partial evidence must neither be renewed nor promoted by CI-local validate.
+        let prepared = run_decapod_with_password(dir, &["govern", "project-check"], &password, &[]);
+        assert!(
+            prepared.status.success(),
+            "{}",
+            String::from_utf8_lossy(&prepared.stderr)
+        );
+        let receipt = read_section(dir, "validation").unwrap();
+        let trajectory = read_section(dir, "trajectory").unwrap();
+        let awareness_path = dir.join(".decapod/managed/awareness/init-validate-test.json");
+        let awareness = fs::read(&awareness_path).unwrap();
+        for command in ["validate", "v"] {
+            let output = run_decapod_with_password(
+                dir,
+                &[command, "--format", "json"],
+                &password,
+                &[(provider, "true")],
+            );
+            assert!(
+                output.status.success(),
+                "{provider}: {}\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            );
+            let result: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+            assert_eq!(result["scope"], "ci_local");
+            assert_eq!(result["publication_ready"], false);
+            assert!(result["readiness"].is_null());
+            assert_eq!(result["report"]["fail_count"], 0);
+            assert!(result["report"]["pass_count"].as_u64().unwrap() > 0);
+            assert!(
+                !result["report"]["gate_timings"]
+                    .as_array()
+                    .unwrap()
+                    .is_empty()
+            );
+            assert_eq!(
+                result["report"]["ci_prediction"]["result"],
+                "ci_local_checks_passed"
+            );
+        }
+        let output = run_decapod_with_password(
+            dir,
+            &["rpc", "--op", "validate.run"],
+            &password,
+            &[(provider, "true")],
+        );
+        let rpc: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(rpc["success"], true, "{rpc}");
+        assert_eq!(rpc["result"]["scope"], "ci_local");
+        assert_eq!(rpc["result"]["publication_ready"], false);
+        assert!(rpc["result"]["checks"]["pass_count"].as_u64().unwrap() > 0);
+        assert_eq!(read_section(dir, "validation").unwrap(), receipt);
+        assert_eq!(read_section(dir, "trajectory").unwrap(), trajectory);
+        assert_eq!(fs::read(awareness_path).unwrap(), awareness);
+        // The same local repository cannot reuse CI-local success as whole proof.
+        let outside_ci = run_decapod_with_password(
+            dir,
+            &["validate", "--format", "json"],
+            &password,
+            &[("CI", "true")],
+        );
+        assert!(!outside_ci.status.success());
+        let full: serde_json::Value = serde_json::from_slice(&outside_ci.stdout).unwrap();
+        assert_eq!(full["scope"], "publication_readiness");
+        assert_eq!(full["publication_ready"], false);
+        assert_eq!(full["readiness"]["ready"], false);
+        assert!(String::from_utf8_lossy(&outside_ci.stdout).contains("READINESS_PROFILE_REQUIRED"));
+    }
+}
+
+#[test]
+fn ci_local_validate_rejects_snapshot_execution_in_cli_and_rpc() {
+    let tmp = TempDir::new().unwrap();
+    let password = setup_initialized_repo(&tmp);
+    enable_remote_validation_fixture(tmp.path());
+    for provider in ["GITHUB_ACTIONS", "BUILDKITE"] {
+        let output = run_decapod_with_password(
+            tmp.path(),
+            &["validate", "--snapshot-prepare"],
+            &password,
+            &[(provider, "true")],
+        );
+        assert!(!output.status.success());
+        assert!(String::from_utf8_lossy(&output.stderr).contains("CI_LOCAL_SCOPE"));
+        let output = run_decapod_with_password(
+            tmp.path(),
+            &[
+                "rpc",
+                "--op",
+                "validate.run",
+                "--params",
+                r#"{"snapshot_prepare":true}"#,
+            ],
+            &password,
+            &[(provider, "true")],
+        );
+        assert!(
+            format!(
+                "{}{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            )
+            .contains("CI_LOCAL_SCOPE")
+        );
+    }
 }

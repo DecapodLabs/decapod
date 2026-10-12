@@ -382,3 +382,97 @@ fn dockerfile_orientation_separates_workspace_and_application_containers() {
             .any(|proof| proof.contains("root Dockerfile"))
     );
 }
+
+fn structured_init_proof_config() -> DecapodProjectConfig {
+    let mut config = DecapodProjectConfig::default();
+    config.proof.validation_buildkite_preflights = true;
+    config.proof.required_profile = Some(core::readiness_profile::ProfileDeclaration {
+        id: "authored.profile.v1".to_string(),
+        reviewed_sources_digest: format!("sha256:{}", "0".repeat(64)),
+    });
+    config.proof.commands = vec![
+        proof::ProofDef {
+            name: "lint".to_string(),
+            command: "cargo".to_string(),
+            args: vec!["test".to_string(), "--lib".to_string()],
+            description: "Preserve the authored description".to_string(),
+            required: false,
+        },
+        proof::ProofDef {
+            name: "smoke".to_string(),
+            command: "printf 'a,b=c'".to_string(),
+            args: vec!["argument with spaces".to_string()],
+            description: "Required smoke proof".to_string(),
+            required: true,
+        },
+    ];
+    config
+}
+
+#[test]
+fn init_config_roundtrip_preserves_structured_proof_definitions() {
+    let config = structured_init_proof_config();
+    let init = init_with_from_config(&config, PathBuf::from("."), false, false);
+    let roundtrip = config_from_init_with(&init, config.repo.clone());
+    assert_eq!(
+        serde_json::to_value(&roundtrip.proof).unwrap(),
+        serde_json::to_value(&config.proof).unwrap(),
+    );
+}
+
+#[test]
+fn init_guided_default_preserves_literal_commas_and_structured_proofs() {
+    let config = structured_init_proof_config();
+    let mut init = init_with_from_config(&config, PathBuf::from("."), false, false);
+    let unchanged_input = init.proof_commands.join(",");
+    apply_init_proof_command_input(&mut init, &unchanged_input);
+    let roundtrip = config_from_init_with(&init, config.repo.clone());
+    assert_eq!(
+        serde_json::to_value(&roundtrip.proof).unwrap(),
+        serde_json::to_value(&config.proof).unwrap(),
+    );
+}
+
+#[test]
+fn init_guided_proof_edit_preserves_only_unchanged_definitions() {
+    let config = structured_init_proof_config();
+    let mut init = init_with_from_config(&config, PathBuf::from("."), false, false);
+    apply_init_proof_command_input(&mut init, "lint=cargo,smoke=echo replacement");
+    let updated = config_from_init_with(&init, config.repo.clone());
+    assert_eq!(
+        serde_json::to_value(&updated.proof.commands[0]).unwrap(),
+        serde_json::to_value(&config.proof.commands[0]).unwrap(),
+    );
+    assert_eq!(updated.proof.commands[1].command, "echo replacement");
+    assert!(updated.proof.commands[1].args.is_empty());
+    assert!(updated.proof.commands[1].required);
+}
+
+#[test]
+fn init_config_explicit_false_overrides_buildkite_without_removing_proofs() {
+    let config = structured_init_proof_config();
+    let mut init = init_with_from_config(&config, PathBuf::from("."), false, false);
+    init.validation_buildkite_preflights = Some(false);
+    let updated = config_from_init_with(&init, config.repo.clone());
+    assert!(!updated.proof.validation_buildkite_preflights);
+    assert_eq!(
+        serde_json::to_value(&updated.proof.commands).unwrap(),
+        serde_json::to_value(&config.proof.commands).unwrap(),
+    );
+}
+
+#[test]
+fn init_config_roundtrip_does_not_use_shorthand_as_structured_proof_authority() {
+    let mut config = structured_init_proof_config();
+    config.proof.commands[0].name = "a".to_string();
+    config.proof.commands[0].command = "b=c".to_string();
+    config.proof.commands[1].name = "a=b".to_string();
+    config.proof.commands[1].command = "c".to_string();
+    let init = init_with_from_config(&config, PathBuf::from("."), false, false);
+    assert_eq!(init.proof_commands[0], init.proof_commands[1]);
+    let roundtrip = config_from_init_with(&init, config.repo.clone());
+    assert_eq!(
+        serde_json::to_value(&roundtrip.proof).unwrap(),
+        serde_json::to_value(&config.proof).unwrap(),
+    );
+}

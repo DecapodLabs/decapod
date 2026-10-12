@@ -216,3 +216,91 @@ fn resolve_project_root_rejects_unrelated_path() {
     let msg = err.to_string();
     assert!(msg.contains("PROOF_PROJECT_ROOT_UNRESOLVED"), "got: {msg}");
 }
+
+#[test]
+fn buildkite_preflights_defaults_to_native_required_proof() {
+    let proof: ProjectProofConfig = toml::from_str("").expect("legacy proof section");
+    assert!(!proof.validation_buildkite_preflights);
+    assert!(!ProjectProofConfig::default().validation_buildkite_preflights);
+
+    let project: crate::cli::DecapodProjectConfig =
+        toml::from_str(SAMPLE_CONFIG).expect("legacy project config");
+    assert!(!project.proof.validation_buildkite_preflights);
+    assert!(project.proof.commands[0].required);
+    let without_proof = SAMPLE_CONFIG.split("[proof]").next().unwrap();
+    let project: crate::cli::DecapodProjectConfig =
+        toml::from_str(without_proof).expect("project without proof section");
+    assert!(!project.proof.validation_buildkite_preflights);
+}
+
+#[test]
+fn buildkite_preflights_runtime_loading_preserves_required_commands() {
+    for enabled in [false, true] {
+        let tmp = tempdir().expect("tempdir");
+        let body = SAMPLE_CONFIG.replace(
+            "[proof]",
+            &format!("[proof]\nvalidation_buildkite_preflights = {enabled}"),
+        );
+        write_project_with_config(&tmp, &body);
+        let project = crate::cli::DecapodProjectConfig::load(tmp.path()).expect("runtime config");
+        assert_eq!(project.proof.validation_buildkite_preflights, enabled);
+        let resolved = resolve_proof_config(tmp.path()).expect("proof commands");
+        assert_eq!(resolved.config.proof.len(), 1);
+        assert!(resolved.config.proof[0].required);
+        assert_eq!(resolved.config.proof[0].args, ["test", "--lib"]);
+        let serialized = toml::to_string(&project).expect("serialize config");
+        let roundtrip: crate::cli::DecapodProjectConfig =
+            toml::from_str(&serialized).expect("reload config");
+        assert_eq!(roundtrip.proof.validation_buildkite_preflights, enabled);
+    }
+}
+
+#[test]
+fn buildkite_preflights_is_valid_without_project_commands() {
+    let proof: ProjectProofConfig =
+        toml::from_str("validation_buildkite_preflights = true").expect("provider config");
+    assert!(proof.validation_buildkite_preflights);
+    assert!(proof.commands.is_empty());
+}
+
+#[test]
+fn buildkite_preflights_rejects_non_boolean_config_values() {
+    for value in ["\"false\"", "1", "[]"] {
+        let config = format!("validation_buildkite_preflights = {value}");
+        assert!(toml::from_str::<ProjectProofConfig>(&config).is_err());
+    }
+}
+
+#[test]
+fn proof_agent_schema_describes_both_required_proof_providers() {
+    let schema = schema();
+    let field = schema["config_schema"]["proof"]["validation_buildkite_preflights"]
+        .as_str()
+        .expect("agent schema provider field");
+    assert!(field.contains("default: false"));
+    assert!(field.contains("native Decapod full required proof"));
+    assert!(field.contains("Buildkite temporary-snapshot full required proof"));
+    assert!(field.contains("neither disables proof"));
+}
+
+#[test]
+fn executing_empty_proof_plan_fails_before_storage_or_success_events() {
+    let tmp = tempdir().unwrap();
+    let config = format!(
+        "{}[proof]\ncommands = []\n",
+        SAMPLE_CONFIG.split("[proof]").next().unwrap()
+    );
+    write_project_with_config(&tmp, &config);
+    let root = tmp.path().join(".decapod/data");
+    let store = Store {
+        kind: crate::core::store::StoreKind::Repo,
+        root: root.clone(),
+    };
+    let error = run_proofs(&store, tmp.path(), "empty-proof-regression").unwrap_err();
+    assert!(error.to_string().contains("PROOF_PLAN_EMPTY"), "{error}");
+    assert_eq!(
+        fs::read_dir(root).unwrap().count(),
+        0,
+        "no proof or health event may be manufactured"
+    );
+}

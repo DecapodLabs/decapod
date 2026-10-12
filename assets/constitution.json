@@ -15551,7 +15551,7 @@
           "Use when determining next agent actions, evaluating ambiguity, or performing mutations."
         ],
         "concepts": [
-          "Mandatory agent bootstrapping sequence: (decapod capabilities --format json | grep -q '\"is_latest\":true') || (cargo install decapod && decapod init --proof) && decapod docs ingest && decapod validate && decapod session acquire && decapod rpc --op agent.init && decapod workspace status && decapod todo add \"<task>\" && decapod todo claim --id <task-id> && decapod infer orientation --task-id <task-id> && decapod workspace ensure && cd .decapod/workspaces/<your-worktree> && decapod constitution get core/DECAPOD && decapod rpc --op context.resolve",
+          "Mandatory agent bootstrapping sequence: (decapod capabilities --format json | grep -q '\"is_latest\":true') || (cargo install decapod && decapod init --proof) && decapod docs ingest && decapod govern project-check && decapod session acquire && decapod rpc --op agent.init && decapod workspace status && decapod todo add \"<task>\" && decapod todo claim --id <task-id> && decapod infer orientation --task-id <task-id> && decapod workspace ensure && cd .decapod/workspaces/<your-worktree> && decapod constitution get core/DECAPOD && decapod rpc --op context.resolve",
           "Pre-Inference Governance: Retrieve core/DECAPOD and domain nodes before planning or coding. Stop and query human if Decapod emits a Decision Gate.",
           "Epistemic Custody: Preserve uncertainty in specs/issue logs. Carry forward assumptions recursively. Tie completion claims directly to measured proof.",
           "Call Decapod Early: The constitution is pre-inference faculty; retrieve doctrine before plan hardening.",

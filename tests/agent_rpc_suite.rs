@@ -101,6 +101,9 @@ where
 }
 
 fn bootstrap_session() -> &'static str {
+    // Bootstrap only the project prerequisites needed by unrelated RPC tests.
+    // This prerequisite result is not full publication-readiness proof.
+
     SESSION_PASSWORD.get_or_init(|| {
         let agent_id = "unknown";
 
@@ -128,7 +131,7 @@ fn bootstrap_session() -> &'static str {
 
         let validate_out = run_cmd_with_lock_retry(|| {
             run_decapod(
-                &["validate"],
+                &["govern", "project-check"],
                 &[
                     ("DECAPOD_AGENT_ID", agent_id),
                     ("DECAPOD_CLAIM_AUTORUN", "0"),

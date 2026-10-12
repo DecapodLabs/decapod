@@ -317,25 +317,21 @@ fn release_artifact_sync_workflow_is_removed() {
 }
 
 #[test]
-fn post_merge_validate_skips_fingerprint_evaluation() {
-    // A tree-local post-merge binary cannot match the last published
-    // entrypoint fingerprint; enforce pins on PRs, not on push to master.
+fn post_merge_and_pr_prerequisites_use_verified_immutable_context() {
     let path = repository_root().join(".github/workflows/decapod-validate.yml");
     let workflow = fs::read_to_string(&path).expect("read decapod-validate workflow");
-    assert!(
-        workflow.contains("DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES"),
-        "decapod-validate must support skipping fingerprint gates post-merge"
-    );
-    assert!(
-        workflow.contains("github.event_name == 'push'"),
-        "fingerprint skip must be limited to push/post-merge events"
-    );
-    assert!(
-        workflow.contains(
-            "if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'release') && !startsWith(github.head_ref, 'release-plz-')",
-        ),
-        "entrypoint/spec drift gate must skip release-plz and release-labelled PRs"
-    );
+    assert!(workflow.contains("uses: ./.github/actions/ci-context"));
+    assert!(workflow.contains("decapod govern project-check --refresh-specs"));
+    for binding in [
+        "CHANGE_EVENT: ${{ steps.context.outputs.event }}",
+        "CHANGE_BASE: ${{ steps.context.outputs.base }}",
+        "CHANGE_HEAD: ${{ steps.context.outputs.head }}",
+    ] {
+        assert!(workflow.contains(binding), "missing {binding}");
+    }
+    assert!(!workflow.contains("DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES"));
+    assert!(!workflow.contains("github.event.pull_request.labels"));
+    assert!(!workflow.contains("startsWith(github.head_ref"));
 }
 
 #[test]
@@ -511,9 +507,10 @@ fn governance_artifact_gate_skips_only_proven_release_metadata() {
     );
     for required in [
         "govern artifacts verify-checkpoints",
-        "--base-branch \"origin/$GOVERNANCE_BASE_BRANCH\"",
+        "--base-branch \"$GOVERNANCE_BASE\"",
         "--head-ref \"$GOVERNANCE_HEAD_REF\"",
-        "github.event.pull_request.head.sha",
+        "GOVERNANCE_HEAD_REF: ${{ steps.ci-context.outputs.head }}",
+        "--target-base master",
         "fetch-depth: 0",
     ] {
         assert!(
@@ -544,25 +541,21 @@ fn material_specs_gate_skips_only_proven_release_metadata() {
 }
 
 #[test]
-fn release_pr_skips_spec_entrypoint_drift_gate() {
-    // Regression for release PR #1236 / actions run 31461500432:
-    // release-plz bumps Cargo.toml (repo_signal changes) without entrypoint
-    // pins; validate --refresh-specs rewrites the manifest and the drift gate
-    // must not hard-fail the release PR. Pin advancement is deferred to the next user/agent PR (Release Artifact Sync removed).
+fn proven_release_prs_verify_projection_drift_instead_of_skipping_the_gate() {
     let root = repository_root();
-    let validate = fs::read_to_string(root.join(".github/workflows/decapod-validate.yml"))
-        .expect("read decapod-validate workflow");
-    let ci = fs::read_to_string(root.join(".github/workflows/ci.yml")).expect("read CI workflow");
-
-    assert!(
-        validate.contains("startsWith(github.head_ref, 'release-plz-')")
-            && validate.contains("!contains(github.event.pull_request.labels.*.name, 'release')"),
-        "decapod-validate drift gate must skip release-plz / release-labeled PRs"
-    );
-    assert!(
-        ci.contains("RELEASE_ONLY: ${{ needs.release-metadata.outputs.release_only }}")
-            && ci.contains("decapod-release-projection-drift")
-            && ci.contains("Ensure no spec or entrypoint drift"),
-        "CI must verify expected projection drift only for proven version-only releases"
-    );
+    for path in [
+        ".github/workflows/decapod-validate.yml",
+        ".github/workflows/ci.yml",
+    ] {
+        let workflow = fs::read_to_string(root.join(path)).expect("read validation workflow");
+        assert!(workflow.contains("RELEASE_ONLY: ${{ "));
+        assert!(workflow.contains("if [ \"$RELEASE_ONLY\" = \"true\" ]; then"));
+        assert!(workflow.contains("decapod-release-projection-drift"));
+        assert!(workflow.contains(
+            "--repo . --event \"$CHANGE_EVENT\" --base \"$CHANGE_BASE\" --head \"$CHANGE_HEAD\""
+        ));
+        assert!(workflow.contains("Ensure no spec or entrypoint drift"));
+        assert!(!workflow.contains("startsWith(github.head_ref"));
+        assert!(!workflow.contains("github.event.pull_request.labels"));
+    }
 }

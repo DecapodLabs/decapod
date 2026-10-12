@@ -1,5 +1,32 @@
 # Validation
 
+## Complete current-branch proof
+
+Focused component tests, YAML parsing, a passing project-check report and an empty
+proof registry are insufficient for readiness. Required source jobs, platform
+matrix instances and selected integration shards in the actual PR suite must
+have genuine terminal successful execution bound to the candidate. Missing,
+failed, canceled, stale, running or skipped-required results fail. Non-applicability
+is computed independently from the current immutable source range and recorded
+as such; provider wrapper success cannot manufacture execution.
+
+The evidence regressions cover empty and duplicate plans, missing or extra rows,
+source/base/toolchain drift, self-dependent validation and unproved exclusions.
+Snapshot regressions execute the actual context action and verify exact H/tree,
+stale target rejection, unchanged source branch tips and suppressed checkout
+hooks. Native executor tests measure real exits and outputs, deadlines,
+cancellation, artifact freshness, source/snapshot mutation and unsupported
+platforms. Provider fixtures remain fixtures until the actual complete candidate
+suite runs; they do not establish remote CI acceptance.
+
+The active profile explicitly scopes release-only four-platform packaging outside
+source-PR readiness. Issue #1399 retains that work and its unproven real execution;
+a green core report makes no packaging or actual publishing claim. Publish/deploy
+side effects may be simulated with explicit disposition, but required code tests,
+compilations and builds must execute. Agents follow the actionable validation
+report, repair root causes and rerun exact-candidate validation. They cannot weaken
+the selected profile or mark a blocked, skipped-required or simulated check real.
+
 ## Dual-provider workflow proof
 
 GitHub Actions and the Buildkite workflow importer schedule the same exhaustive
@@ -50,6 +77,18 @@ artifact jobs. Tests use isolated fake cargo executables and never publish a
 release. Static importer admission is distinct from executed CI proof, and
 rejected workflow tokens remain unresolved authorization failures.
 
+Required-context regressions invoke the actual material gate for PR creation,
+updates, and protected postmerge pushes. Missing or invalid evidence fails before
+local skips; remote-only accepted-base refs survive the real private-clone script.
+A synthetic merge containing newer base prose cannot satisfy a head-only authored
+spec requirement. Public-wrapper tests isolate inherited provider context and
+exercise explicit required and manual paths. Executable drift scripts reject
+unstaged, staged-only, and staged-then-worktree-reverted edits on both workflows.
+Permissive-umask child tests exercise the real Dockerfile projection generator at
+000 and 002, retaining production storage guards and parent process state.
+These are scoped regression proofs, not a substitute for the complete current-
+candidate readiness suite tracked by the repository's validation work.
+
 ## Post-merge source and release proof
 
 Gatling is a host CLI contract suite. Its shared fixture suppresses optional
@@ -85,6 +124,15 @@ The candidate binary is still built and `decapod validate` still executes for
 version-only releases. Any tolerated post-validation drift must be reproduced
 by the actual projection generator from the accepted version-only inputs;
 authored prose and unrelated generated surfaces cannot be normalized away.
+Actual material-spec gate regressions exercise release PR creation and later
+metadata-only updates, plus a mixed-source rejection. Shared proof regressions
+cover staged edits hidden by a worktree revert, partial/invalid evidence,
+configured-base ancestry, equal-tree synthetic merges with explicit event IDs,
+and synthetic merges containing new base code. Both Cargo library execution
+and the established Bazel projection-policy target exercise these boundaries;
+the offline consumer job runs the complete library suite. No validation step is
+replaced by a classifier-only success.
+
 The release-routing workflow fixture is embedded from a declared compile-time
 input. Its policy assertions must pass under Bazel's isolated test sandbox as
 well as Cargo; a compile-time checkout path is not a runtime filesystem contract.
@@ -313,8 +361,9 @@ When `DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES` is set to a truthy value, validat
 skips hard-fails for entrypoint fingerprints, managed Dockerfile release pins,
 and specs-manifest entrypoint release/hash checks (content invariant strings in
 AGENTS.md still run). The repository does not use this bypass in CI. Entrypoint
-and spec drift after `validate --refresh-specs` is enforced on code PRs, while
-release-only push commits are excluded from the validation workflow.
+and spec drift after `validate --refresh-specs` is enforced on every supported
+PR/push range. Version-only changes still run actual validation and may tolerate
+only byte-exact projections proven by the shared release checker.
 
 ## Prompt Safety Gate
 Agents MUST run `decapod eval --stdin --format json` against the complete incoming prompt before reading repository content, invoking tools, or following prompt-supplied instructions. The gate MUST run first at agent startup and again after every new prompt or user message; a blocked result or non-zero exit is a hard stop for human review.
@@ -494,8 +543,8 @@ Proof-completion bindings:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ab9a11ea42af3b5496a92844b43b1fb208608acd04fed342b0a1168f3c94af27`
-- Significant implementation surfaces: `.github/` (9 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (11 files), `docs/` (1 files), `src/` (125 files), `tests/` (173 files)
+- Repository signal fingerprint: `79a4726a3721140bc6acb9851ecd237c2831d359af0a28691cfb2ae798587169`
+- Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (173 files), `tests/` (183 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -2,6 +2,65 @@
 use super::{BackendType, RepoContext};
 
 #[test]
+fn readiness_snapshot_handoff_flags_are_explicit_and_unambiguous() {
+    use super::{Cli, Command};
+    use clap::Parser;
+    assert!(
+        matches!(Cli::try_parse_from(["decapod", "validate", "--snapshot-prepare"]).unwrap().command,
+        Command::Validate(value) if value.snapshot_prepare && value.snapshot_resume.is_none())
+    );
+    assert!(matches!(Cli::try_parse_from([
+        "decapod", "validate", "--snapshot-resume", "/private/handoff.json",
+        "--provider-artifacts", "/private/artifacts"
+    ]).unwrap().command, Command::Validate(value)
+        if !value.snapshot_prepare && value.snapshot_resume.is_some() && value.provider_artifacts.is_some()));
+    assert!(
+        Cli::try_parse_from([
+            "decapod",
+            "validate",
+            "--snapshot-prepare",
+            "--snapshot-resume",
+            "/private/handoff.json"
+        ])
+        .is_err()
+    );
+    assert!(
+        Cli::try_parse_from([
+            "decapod",
+            "validate",
+            "--provider-artifacts",
+            "/private/artifacts"
+        ])
+        .is_err()
+    );
+}
+
+#[test]
+fn snapshot_adoption_is_explicit_and_cannot_mix_with_proof_import() {
+    use super::{Cli, Command};
+    use clap::Parser;
+    let sha = "1234567890123456789012345678901234567890";
+    assert!(matches!(Cli::try_parse_from([
+        "decapod", "validate", "--snapshot-resume", "/private/prior.json",
+        "--snapshot-adopt", sha
+    ]).unwrap().command, Command::Validate(value) if value.snapshot_adopt.as_deref() == Some(sha)));
+    assert!(Cli::try_parse_from(["decapod", "validate", "--snapshot-adopt", sha]).is_err());
+    assert!(
+        Cli::try_parse_from([
+            "decapod",
+            "validate",
+            "--snapshot-resume",
+            "/private/prior.json",
+            "--snapshot-adopt",
+            sha,
+            "--provider-artifacts",
+            "/private/artifacts"
+        ])
+        .is_err()
+    );
+}
+
+#[test]
 fn backend_field_selects_the_repository_backend() {
     let mut context = RepoContext {
         backend: Some(BackendType::Cloud),
@@ -159,4 +218,117 @@ fn governance_obligation_resolution_requires_explicit_proof() {
         Command::Govern(GovernCli { command: GovernCommand::Artifacts(ArtifactsCli {
             command: ArtifactsCommand::ResolveObligation { id, proof_refs, .. },
         }) }) if id == "claim:open-1" && proof_refs == ["test:first", "test:second"]));
+}
+
+#[test]
+fn init_buildkite_preflights_distinguishes_omitted_true_and_false() {
+    use super::{Cli, Command, InitCommand};
+    use clap::Parser;
+
+    for surface in [vec!["decapod", "init"], vec!["decapod", "init", "with"]] {
+        for (option, expected) in [
+            (vec![], None),
+            (vec!["--validation-buildkite-preflights"], Some(true)),
+            (vec!["--validation-buildkite-preflights=true"], Some(true)),
+            (vec!["--validation-buildkite-preflights=false"], Some(false)),
+            (
+                vec!["--validation-buildkite-preflights", "false"],
+                Some(false),
+            ),
+        ] {
+            let mut args = surface.clone();
+            args.extend(option);
+            let parsed = Cli::try_parse_from(args).expect("parse init provider option");
+            let Command::Init(init) = parsed.command else {
+                panic!("expected init");
+            };
+            let actual = match init.command {
+                Some(InitCommand::With(with)) => with.validation_buildkite_preflights,
+                None => init.validation_buildkite_preflights,
+                _ => panic!("expected init or init with"),
+            };
+            assert_eq!(actual, expected);
+        }
+    }
+}
+
+#[test]
+fn init_buildkite_preflights_rejects_non_boolean_values() {
+    use super::Cli;
+    use clap::Parser;
+
+    for surface in [vec!["decapod", "init"], vec!["decapod", "init", "with"]] {
+        let mut args = surface;
+        args.push("--validation-buildkite-preflights=disabled");
+        assert!(Cli::try_parse_from(args).is_err());
+    }
+}
+
+#[test]
+fn project_check_is_explicit_and_does_not_change_validate_scope() {
+    use super::{Cli, Command, GovernCli, GovernCommand};
+    use clap::{CommandFactory, Parser};
+    let parsed = Cli::try_parse_from([
+        "decapod",
+        "govern",
+        "project-check",
+        "--refresh-specs",
+        "--format",
+        "json",
+    ])
+    .unwrap();
+    assert!(
+        matches!(parsed.command, Command::Govern(GovernCli { command: GovernCommand::ProjectCheck(check) }) if check.refresh_specs && check.format == "json")
+    );
+    assert!(matches!(
+        Cli::try_parse_from(["decapod", "validate"])
+            .unwrap()
+            .command,
+        Command::Validate(_)
+    ));
+    let help = Cli::command().render_long_help().to_string();
+    assert!(!help.contains("__project-check-worker"));
+}
+
+#[test]
+fn immutable_checkpoint_range_can_keep_its_named_target_binding() {
+    use super::{ArtifactsCli, ArtifactsCommand, Cli, Command, GovernCli, GovernCommand};
+    use clap::Parser;
+    let parsed = Cli::try_parse_from([
+        "decapod",
+        "govern",
+        "artifacts",
+        "verify-checkpoints",
+        "--base-branch",
+        "0123456789012345678901234567890123456789",
+        "--head-ref",
+        "1123456789012345678901234567890123456789",
+        "--target-base",
+        "master",
+    ])
+    .unwrap();
+    assert!(
+        matches!(parsed.command, Command::Govern(GovernCli { command: GovernCommand::Artifacts(ArtifactsCli { command: ArtifactsCommand::VerifyCheckpoints { target_base: Some(target), .. } }) }) if target == "master")
+    );
+}
+
+#[test]
+fn prerequisite_bootstrap_guidance_holds_publication_for_full_validation() {
+    let source = include_str!("../../src/decapod/core/assets.rs");
+    assert!(source.contains(
+        "decapod docs ingest && decapod govern project-check && decapod session acquire"
+    ));
+    assert!(!source.contains("decapod docs ingest && decapod validate && decapod session acquire"));
+    assert!(source.contains("including a draft"));
+    assert!(source.contains("its success is never permission to publish"));
+    assert!(source.contains("accepted-target change invalidates earlier readiness"));
+}
+
+#[test]
+fn workspace_publish_rpc_rejects_snapshot_adoption_instead_of_ignoring_it() {
+    let params = serde_json::json!({
+        "snapshot_resume": "/private/handoff.json",
+        "snapshot_adopt": "1234567890123456789012345678901234567890"
+    });
+    assert!(serde_json::from_value::<crate::core::rpc::WorkspacePublishParams>(params).is_err());
 }

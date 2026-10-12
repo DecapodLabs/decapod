@@ -1,7 +1,8 @@
 //! The release fast path is a proof about Git objects, not PR labels or titles.
 #![allow(dead_code)]
-#[path = "../assets/tools/release_metadata.rs"]
-mod release_metadata;
+#[path = "../assets/tools/source_ci_profile.rs"]
+mod source_ci_profile;
+use source_ci_profile::workflow_owned::release_classifier as release_metadata;
 
 use std::fs;
 use std::path::PathBuf;
@@ -343,15 +344,23 @@ fn workflow_keeps_validation_and_release_build_on_the_slim_path() {
         );
     }
     let health = workflow_job(workflow, "health");
-    assert!(health.contains("run: decapod validate --refresh-specs"));
+    assert!(health.contains("run-ci --check health"));
+    assert!(
+        include_str!("../assets/tools/source_ci/health.sh")
+            .contains("decapod govern project-check --refresh-specs")
+    );
     assert!(!health.contains("SKIP_FINGERPRINT"));
     assert!(!health.contains("startsWith(github.head_ref"));
-    assert!(health.contains("decapod-release-projection-drift"));
+    assert!(
+        include_str!("../assets/tools/source_ci/health.sh")
+            .contains("decapod-release-projection-drift")
+    );
     assert!(!health.contains("if: needs.release-metadata.outputs.release_only"));
     let setup = workflow_job(workflow, "setup");
     assert!(!setup.contains("release_only"));
     let musl = workflow_job(workflow, "musl-publication");
-    assert!(musl.contains("cargo build --locked --release"));
+    assert!(musl.contains("run-ci --check musl-build-x86_64"));
+    assert!(musl.contains("run-ci --check musl-build-aarch64"));
     assert!(musl.contains("      - name: Run musl no-replace publication regressions\n        if: needs.release-metadata.outputs.release_only != 'true'"));
     assert!(!musl.contains("\n    if: needs.release-metadata.outputs.release_only"));
     let release = workflow_job(workflow, "release-build");
@@ -368,15 +377,14 @@ fn workflow_keeps_validation_and_release_build_on_the_slim_path() {
     assert!(
         integration.contains("needs: [release-metadata, integration-prepare, test-integration]")
     );
-    assert!(integration.contains("test \"$PREPARE_RESULT\" = success"));
-    assert!(integration.contains("test \"$SHARD_RESULT\" = success"));
-    assert!(integration.contains("if [ \"$SHARD_COUNT\" = 0 ]; then"));
-    assert!(integration.contains("test \"$SHARD_RESULT\" = skipped"));
+    assert!(integration.contains("run-ci --check integration-status"));
+    assert!(
+        include_str!("../assets/tools/source_ci/integration-status.sh")
+            .contains("integration-custody aggregate --receipts")
+    );
     let classifier = workflow_job(workflow, "release-metadata");
-    assert!(classifier.contains("github.event.before"));
-    assert!(classifier.contains("github.event.pull_request.base.sha"));
-    assert!(classifier.contains("github.event.pull_request.head.sha"));
-    assert!(classifier.contains("rustc --edition=2024"));
+    assert!(classifier.contains("uses: ./.github/actions/ci-context"));
+    assert!(classifier.contains("run-ci --check release-metadata"));
 }
 
 #[test]
@@ -397,11 +405,25 @@ fn musl_workflow_preserves_native_x86_and_executed_arm_regressions() {
     assert!(musl.contains("ghcr.io/cross-rs/aarch64-unknown-linux-musl@sha256:ca0f4a798b756bba34c9cd2f7ceafc1d665daa6c70349a95e2eb06fb687a1ea6"));
     assert!(musl.contains("cargo install --locked --git https://github.com/cross-rs/cross"));
     assert!(musl.contains("--rev 74e99b2223de06166f8cdcc1af7f1308ec52baf4 cross"));
-    for runner in ["cargo", "cross"] {
-        assert!(musl.contains(&format!(
-            "{runner} build --locked --release --target ${{{{ matrix.target }}}} --bin decapod"
-        )));
-        assert!(musl.contains(&format!("{runner} test --locked --release --target ${{{{ matrix.target }}}} --lib \\\n              no_replace_publication -- --nocapture")));
+    for (arch, runner, target) in [
+        ("x86_64", "cargo", "x86_64-unknown-linux-musl"),
+        ("aarch64", "cross", "aarch64-unknown-linux-musl"),
+    ] {
+        for action in ["build", "test"] {
+            let id = format!("musl-{action}-{arch}");
+            assert!(musl.contains(&format!("run-ci --check {id}")));
+            let recipe =
+                source_ci_profile::commands(source_ci_profile::find_check(&id).unwrap(), &[])
+                    .unwrap();
+            assert_eq!(recipe[0].program, runner);
+            let mut expected = vec![action, "--locked", "--release", "--target", target];
+            if action == "build" {
+                expected.extend(["--bin", "decapod"]);
+            } else {
+                expected.extend(["--lib", "no_replace_publication", "--", "--nocapture"]);
+            }
+            assert_eq!(recipe[0].args, expected);
+        }
     }
     for forbidden in [
         "--no-run",

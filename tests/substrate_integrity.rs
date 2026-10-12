@@ -96,8 +96,9 @@ fn test_decapod_uses_config_toml_for_validation() {
         ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
     ];
 
-    // 1. Initial validate should pass
-    let out = run_decapod(dir, &["validate"], &envs);
+    // 1. The initial project configuration passes its prerequisite checks.
+    // Corrupt configuration below must still be rejected by public validate.
+    let out = run_decapod(dir, &["govern", "project-check"], &envs);
     assert!(
         out.status.success(),
         "Initial validate should pass, output: {}",
@@ -285,6 +286,9 @@ fn test_override_md_changes_flow_to_specs() {
 
 #[test]
 fn test_regression_against_known_good_substrate() {
+    // Check the known-good configuration/override substrate, not publication readiness.
+    // This prerequisite result is not full publication-readiness proof.
+
     let tmp = TempDir::new().unwrap();
     let dir = tmp.path();
     Command::new("git")
@@ -340,7 +344,7 @@ This intent from OVERRIDE must win.
     ];
 
     // 3. Validate should pass against this substrate
-    let out = run_decapod(dir, &["validate"], &envs);
+    let out = run_decapod(dir, &["govern", "project-check"], &envs);
     assert!(
         out.status.success(),
         "Validate should pass against known-good substrate. Output: {}",

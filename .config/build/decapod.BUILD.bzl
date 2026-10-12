@@ -8,6 +8,22 @@ load("@crates//:defs.bzl", "all_crate_deps")
 
 
 def decapod_targets():
+    # Native-proof integration fixture only; never a shipped Cargo binary.
+    rust_binary(
+        name = "native_proof_fixture",
+        srcs = ["tests/fixtures/native_proof_fixture.rs"],
+        edition = "2024",
+        testonly = True,
+    )
+
+    # Compile the real verifier for its shell-boundary test without ambient rustc.
+    rust_binary(
+        name = "integration_custody_fixture",
+        srcs = ["assets/tools/integration_custody.rs"],
+        edition = "2024",
+        testonly = True,
+    )
+
     # This supervisor owns only test scratch, never Bazel's output/cache trees.
     rust_binary(
         name = "build_lifecycle",
@@ -65,8 +81,28 @@ def decapod_targets():
         name = "decapod_lib",
         srcs = native.glob(["src/**/*.rs"], exclude = ["src/main.rs", "src/bin/*.rs"]),
         compile_data = native.glob(["src/**/*.sql"])
+        + [
+            # Synthetic release inputs are materialized only inside test fixtures.
+            "tests/fixtures/derived-release/Cargo.toml.fixture",
+            "tests/fixtures/derived-release/Cargo.lock",
+            "tests/fixtures/derived-release/CHANGELOG.md",
+            "tests/fixtures/derived-release/.github_release.toml",
+            "tests/fixtures/derived-release/dist-workspace.toml",
+            "tests/fixtures/derived-release/dist.toml",
+        ]
+        + native.glob(["src/decapod/core/snapshot_provider/source_execution/*.json"])
+        + native.glob(["assets/tools/source_ci/*.sh"])
         + native.glob(["assets/schemas/*.schema.json"])
         + [
+            "assets/tools/source_ci_profile.rs",
+                "assets/tools/source_ci_custody.rs",
+                "assets/tools/source_ci_toolchain.rs",
+                "assets/tools/source_ci_workflow_owned.rs",
+                "assets/tools/release_metadata.rs",
+                "assets/tools/docs_sync.rs",
+                "assets/tools/integration_custody.rs",
+                "assets/tools/ci_event_context.rs",
+            "assets/tools/integration_shards.rs",
             "assets/templates/claims.json",
             "assets/templates/governance.json",
             "src/decapod/hooks/commit-msg.sh",
@@ -100,8 +136,8 @@ def decapod_targets():
     rust_binary(
         name = "release_projection_drift",
         srcs = [
-            "assets/tools/release_metadata.rs",
             "assets/tools/release_projection_drift.rs",
+            "src/decapod/core/release_projection_drift.rs",
         ],
         crate_root = "assets/tools/release_projection_drift.rs",
         edition = "2024",
@@ -112,8 +148,8 @@ def decapod_targets():
     rust_test(
         name = "release_projection_drift_policy",
         srcs = [
-            "assets/tools/release_metadata.rs",
             "assets/tools/release_projection_drift.rs",
+            "src/decapod/core/release_projection_drift.rs",
             "assets/tools/release_projection_drift_tests.rs",
         ],
         crate_root = "assets/tools/release_projection_drift.rs",
@@ -153,17 +189,47 @@ def decapod_targets():
             tags = ["exclusive"] if path == "tests/validate_termination.rs" else [],
             srcs = [path] + [
                 "assets/tools/release_metadata.rs",
+                "src/decapod/core/release_metadata.rs",
+                "assets/tools/source_ci_profile.rs",
+                "assets/tools/source_ci_custody.rs",
+                "assets/tools/source_ci_toolchain.rs",
+                "assets/tools/source_ci_workflow_owned.rs",
+                "assets/tools/docs_sync.rs",
+                "assets/tools/integration_custody.rs",
+                "assets/tools/ci_event_context.rs",
+                "assets/tools/integration_shards.rs",
             ] if path == "tests/release_metadata_policy.rs" else [path] + [
                 "assets/tools/integration_shards.rs",
-            ] if path == "tests/integration_sharding_policy.rs" else [path],
+            ] if path == "tests/integration_sharding_policy.rs" else [path] + [
+                "assets/tools/ci_event_context.rs",
+                "src/decapod/core/release_metadata.rs",
+            ] if path == "tests/ci_event_context_policy.rs" else [path] + [
+                "assets/tools/integration_custody.rs",
+                "assets/tools/ci_event_context.rs",
+            ] if path == "tests/integration_custody_policy.rs" else [path] + [
+                "assets/tools/docs_sync.rs",
+                "tests/support/docs_sync_cases.rs",
+            ] if path == "tests/docs_sync_checkpoint_boundary.rs" else [path] + [
+                "assets/tools/source_ci_profile.rs",
+                "assets/tools/source_ci_custody.rs",
+                "assets/tools/source_ci_toolchain.rs",
+                "assets/tools/source_ci_workflow_owned.rs",
+                "assets/tools/release_metadata.rs",
+                "assets/tools/docs_sync.rs",
+                "assets/tools/integration_custody.rs",
+                "assets/tools/ci_event_context.rs",
+                "assets/tools/integration_shards.rs",
+                "src/decapod/core/release_metadata.rs",
+            ] if path in ["tests/source_ci_profile_policy.rs", "tests/ci_checkout_policy.rs"] else [path],
             crate_root = path,
-            compile_data = ["Cargo.toml", "Cargo.lock"] if path == "tests/release_dependency_policy.rs" else [
+            compile_data = native.glob(["assets/tools/source_ci/*.sh"]) + ([".github/workflows/ci.yml"] if path == "tests/integration_custody_policy.rs" else ["tests/fixtures/native_proof_fixture.rs"] if path == "tests/native_proof_execution.rs" else ["Cargo.toml", "Cargo.lock"] if path == "tests/release_dependency_policy.rs" else [
                 ".github/workflows/ci.yml",
             ] if path == "tests/release_metadata_policy.rs" else [
                 ".github/workflows/ci.yml",
                 "//.config/build:decapod.BUILD.bzl",
             ] if path == "tests/integration_sharding_policy.rs" else [
                 ".github/actions/validation-checkout/action.yml",
+                ".github/actions/ci-context/action.yml",
                 ".github/workflows/ci.yml",
                 ".github/workflows/decapod-validate.yml",
             ] if path == "tests/ci_checkout_policy.rs" else [
@@ -176,12 +242,20 @@ def decapod_targets():
                 "docs/agent/payload-examples.md",
             ] if path == "tests/trajectory_docs.rs" else [
                 ".github/workflows/docs_sync.yml",
-            ] if path == "tests/docs_sync_checkpoint_boundary.rs" else [],
+                ".github/actions/docs-drift/action.yml",
+                "assets/tools/docs_sync.rs",
+            ] if path == "tests/docs_sync_checkpoint_boundary.rs" else [
+                ".github/actions/source-ci-profile/action.yml",
+                "tests/fixtures/derived-release/Cargo.toml.fixture",
+                "src/decapod/core/derived_release_profile_tests.rs",
+            ] + native.glob([".github/workflows/*.yml"]) if path == "tests/source_ci_profile_policy.rs" else []),
             edition = "2024",
             crate_features = ["supabase-cloud"],
             rustc_env_files = [":cargo_pkg_env"],
             rustc_env = {
                 "CARGO_BIN_EXE_decapod": "./$(rootpath //:decapod)",
+                "DECAPOD_CUSTODY_TEST_FIXTURE": "./$(rootpath //:integration_custody_fixture)" if path == "tests/integration_custody_policy.rs" else "",
+                "DECAPOD_NATIVE_PROOF_TEST_FIXTURE": "./$(rootpath //:native_proof_fixture)" if path == "tests/native_proof_execution.rs" else "",
             },
             data = [
                 "//:decapod",
@@ -207,12 +281,14 @@ def decapod_targets():
                 ".github/workflows/decapod-validate.yml",
                 ".github/workflows/docs_sync.yml",
                 "assets/Dockerfile.workspace",
-            ] if path == "tests/release_workflow_policy.rs" else []) + native.glob([
+            ] if path == "tests/release_workflow_policy.rs" else native.glob([
+                ".github/workflows/*.yml",
+            ]) if path == "tests/source_ci_profile_policy.rs" else []) + native.glob([
                 # Runtime state is intentionally absent from a clean checkout;
                 # tests create the managed surfaces they need at runtime.
                 ".decapod/managed/**/*",
                 ".decapod/governance.json",
-            ], allow_empty = True),
+            ], allow_empty = True) + ([":native_proof_fixture"] if path == "tests/native_proof_execution.rs" else [":integration_custody_fixture"] if path == "tests/integration_custody_policy.rs" else []),
             deps = [
                 ":decapod_lib",
             ] + all_crate_deps(normal = True, normal_dev = True),

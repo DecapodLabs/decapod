@@ -17,9 +17,9 @@ use crate::core::project_specs::{
     LOCAL_PROJECT_SPECS_INTENT, LOCAL_PROJECT_SPECS_INTERFACES, LOCAL_PROJECT_SPECS_MANIFEST,
     LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA, LOCAL_PROJECT_SPECS_OPERATIONS,
     LOCAL_PROJECT_SPECS_SECURITY, LOCAL_PROJECT_SPECS_SEMANTICS, LOCAL_PROJECT_SPECS_VALIDATION,
-    config_input_hash, hash_text, material_specs_change_vs_base, mermaid_syntax_errors,
-    normalize_markdown_heading_boundaries, read_specs_manifest, repo_signal_fingerprint,
-    spec_input_hash,
+    config_input_hash, hash_text, material_specs_change_between_refs,
+    material_specs_change_vs_base, mermaid_syntax_errors, normalize_markdown_heading_boundaries,
+    read_specs_manifest, repo_signal_fingerprint, spec_input_hash,
 };
 use crate::core::research_claims;
 use crate::core::scaffold::DECAPOD_GITIGNORE_RULES;
@@ -2664,67 +2664,210 @@ fn validate_machine_contract(
 /// Require material living-spec rewrites on feature branches versus base.
 ///
 /// Fingerprint attestation and capability overlays are excluded from the
-/// material body. When the working tree is on a protected base branch, or the
-/// base ref cannot be resolved, the gate is skipped.
+/// material body. Required CI ranges fail closed before any local-only skip;
+/// local validation retains its protected-branch and unavailable-base behavior.
 fn validate_material_specs_mutation(
     ctx: &ValidationContext,
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
+    let evidence = ["CHANGE_EVENT", "CHANGE_BASE", "CHANGE_HEAD"]
+        .map(|name| std::env::var_os(name).map(|value| value.to_string_lossy().into_owned()));
+    // Test fixtures inherit provider variables but are not the provider's
+    // validation checkout. Scope automatic enforcement to that checkout and
+    // its fresh private clone; workflows also bind the requirement explicitly.
+    let in_provider_checkout = ["GITHUB_WORKSPACE", "BUILDKITE_BUILD_CHECKOUT_PATH"]
+        .into_iter()
+        .filter_map(std::env::var_os)
+        .map(std::path::PathBuf::from)
+        .any(|root| is_provider_validation_checkout(repo_root, &root));
+    let provider_event = std::env::var("GITHUB_EVENT_NAME").ok();
+    let manual = provider_event.as_deref().or(evidence[0].as_deref()) == Some("workflow_dispatch");
+    let required = std::env::var("DECAPOD_VALIDATE_REQUIRE_CHANGE_CONTEXT")
+        .is_ok_and(|value| value == "1")
+        || (in_provider_checkout && !manual);
+    if let (Some(provider), Some(supplied)) = (provider_event.as_deref(), evidence[0].as_deref())
+        && matches!(provider, "pull_request" | "push")
+        && provider != supplied
+        && in_provider_checkout
+    {
+        // A temporary snapshot is a real push whose verified source graph uses
+        // PR semantics. Recheck its immutable transport instead of trusting a
+        // SOURCE_CI_EVENT label or rewriting the provider's original event.
+        let normalized = (|| -> Result<(), String> {
+            if provider != "push" || supplied != "pull_request" {
+                return Err("supplied event differs from the provider event".into());
+            }
+            let [Some(_), Some(base), Some(head)] = &evidence else {
+                return Err("normalized snapshot lacks immutable source range".into());
+            };
+            let transport = std::env::var("GITHUB_SHA")
+                .map_err(|_| "normalized snapshot lacks provider transport SHA")?;
+            let trigger = std::env::var("GITHUB_REF")
+                .map_err(|_| "normalized snapshot lacks provider trigger ref")?;
+            let branch = workspace::resolve_base_branch(repo_root, None);
+            let accepted = workspace::base_ref_for_branch(repo_root, &branch)
+                .ok_or("normalized snapshot lacks accepted base ref")?;
+            let accepted = if accepted.starts_with("origin/") {
+                format!("refs/remotes/{accepted}")
+            } else {
+                format!("refs/heads/{accepted}")
+            };
+            crate::core::readiness_profile::source::custody::ci_context::verify_normalized_snapshot(
+                repo_root, &transport, &trigger, base, head, &accepted,
+            )
+        })();
+        if let Err(reason) = normalized {
+            fail(&format!("CI_CHANGE_CONTEXT_INVALID: {reason}"), ctx);
+            return Ok(());
+        }
+    }
+    validate_material_specs_mutation_with_release_evidence(ctx, repo_root, evidence, required)
+}
+
+fn is_provider_validation_checkout(repo: &Path, provider: &Path) -> bool {
+    let (Ok(repo), Ok(provider)) = (repo.canonicalize(), provider.canonicalize()) else {
+        return false;
+    };
+    let Ok(top) = std::process::Command::new("git")
+        .arg("-C")
+        .arg(&repo)
+        .args(["rev-parse", "--show-toplevel"])
+        .output()
+    else {
+        return false;
+    };
+    if !top.status.success() || Path::new(String::from_utf8_lossy(&top.stdout).trim()) != repo {
+        return false;
+    }
+    repo == provider
+        || (repo.parent() == Some(provider.as_path())
+            && repo
+                .file_name()
+                .and_then(|name| name.to_str())
+                .is_some_and(|name| name.starts_with(".ci-validation.")))
+}
+
+fn validate_material_specs_mutation_with_release_evidence(
+    ctx: &ValidationContext,
+    repo_root: &Path,
+    evidence: [Option<String>; 3],
+    require_ci_context: bool,
+) -> Result<(), error::DecapodError> {
     info("Living Specs Material Mutation Gate", ctx);
 
-    if !is_inside_git_work_tree(repo_root) {
-        skip(
-            "Not inside a git work tree; skipping material living-spec mutation gate",
-            ctx,
-        );
-        return Ok(());
-    }
-
-    let status = match workspace::get_workspace_status(repo_root) {
-        Ok(status) => status,
-        Err(_) => {
-            skip(
-                "Workspace status unavailable; skipping material living-spec mutation gate",
+    // Required CI evidence must be checked before every local-only skip path.
+    // A missing remote ref or protected postmerge checkout is not proof that
+    // the immutable event carried no authored change.
+    let immutable = match &evidence {
+        [Some(event), Some(base), Some(head)]
+            if matches!(event.as_str(), "pull_request" | "push") =>
+        {
+            Some((event.as_str(), base.as_str(), head.as_str()))
+        }
+        [None, None, None] if !require_ci_context => None,
+        [Some(event), Some(_), Some(_)] if !require_ci_context && event == "workflow_dispatch" => {
+            None
+        }
+        _ => {
+            fail(
+                "CI_CHANGE_CONTEXT_INVALID: complete immutable PR/push event, base and head are required",
                 ctx,
             );
             return Ok(());
         }
     };
-    if status.git.is_protected {
-        skip(
-            "On protected base branch; material living-spec mutation is enforced on feature PRs",
-            ctx,
-        );
+    if !is_inside_git_work_tree(repo_root) {
+        if immutable.is_some() || require_ci_context {
+            fail(
+                "CI_CHANGE_CONTEXT_INVALID: immutable validation requires a Git work tree",
+                ctx,
+            );
+        } else {
+            skip(
+                "Not inside a git work tree; skipping material living-spec mutation gate",
+                ctx,
+            );
+        }
         return Ok(());
+    }
+
+    if immutable.is_none() {
+        let status = match workspace::get_workspace_status(repo_root) {
+            Ok(status) => status,
+            Err(_) => {
+                skip(
+                    "Workspace status unavailable; skipping material living-spec mutation gate",
+                    ctx,
+                );
+                return Ok(());
+            }
+        };
+        if status.git.is_protected {
+            skip(
+                "On protected base branch; material living-spec mutation is enforced on feature PRs",
+                ctx,
+            );
+            return Ok(());
+        }
     }
 
     let base_branch = workspace::resolve_base_branch(repo_root, None);
     let Some(base_ref) = workspace::base_ref_for_branch(repo_root, &base_branch) else {
-        skip(
-            &format!(
-                "Base branch '{base_branch}' unavailable; skipping material living-spec mutation gate"
-            ),
-            ctx,
-        );
+        if immutable.is_some() || require_ci_context {
+            fail(
+                &format!(
+                    "CI_CHANGE_CONTEXT_INVALID: configured base '{base_branch}' is unavailable"
+                ),
+                ctx,
+            );
+        } else {
+            skip(
+                &format!(
+                    "Base branch '{base_branch}' unavailable; skipping material living-spec mutation gate"
+                ),
+                ctx,
+            );
+        }
         return Ok(());
     };
 
-    // No delta versus base: nothing to enforce yet.
-    if git_same_commit(repo_root, &base_ref, "HEAD") {
-        skip(
-            "HEAD matches base ref; no PR delta for material living-spec mutation",
-            ctx,
-        );
-        return Ok(());
-    }
-
-    let report = material_specs_change_vs_base(repo_root, &base_ref)?;
+    let report = if let Some((event, base, head)) = immutable {
+        let comparison_base = match crate::core::release_metadata::validation_change_base(
+            repo_root, event, base, head, &base_ref,
+        ) {
+            Ok(base) => base,
+            Err(reason) => {
+                fail(&format!("CI_CHANGE_CONTEXT_INVALID: {reason}"), ctx);
+                return Ok(());
+            }
+        };
+        material_specs_change_between_refs(repo_root, &comparison_base, head)?
+    } else {
+        if git_same_commit(repo_root, &base_ref, "HEAD") {
+            skip(
+                "HEAD matches base ref; no PR delta for material living-spec mutation",
+                ctx,
+            );
+            return Ok(());
+        }
+        material_specs_change_vs_base(repo_root, &base_ref)?
+    };
     if report.has_material_change {
         pass(
             &format!(
-                "Living specs include material authored changes versus {base_ref}: {}",
+                "Living specs include material authored changes versus {}: {}",
+                report.base_ref,
                 report.material_changed_paths.join(", ")
             ),
+            ctx,
+        );
+    } else if crate::core::release_projection_drift::verify_for_validation(
+        repo_root, &base_ref, evidence,
+    )
+    .is_ok()
+    {
+        pass(
+            "Version-only release metadata and exact generated projections verified; no authored spec rewrite required",
             ctx,
         );
     } else {
@@ -6507,8 +6650,8 @@ fn validate_git_push_pr_gate(
     if !is_pushed {
         warn(
             &format!(
-                "Workspace branch '{}' has unpushed commits or does not exist on origin. Run `git push origin {}`.",
-                current_branch, current_branch
+                "Workspace branch '{}' has unpushed commits or does not exist on origin. This is expected before publication; complete full `decapod validate` readiness before pushing the work branch or creating a PR.",
+                current_branch
             ),
             ctx,
         );
@@ -6533,7 +6676,7 @@ fn validate_git_push_pr_gate(
             ),
             ctx,
         );
-        match workspace::verify_trajectory_gate_for_publish(repo_root, &current_branch) {
+        match workspace::verify_trajectory_binding_for_readiness(repo_root, &current_branch) {
             Ok(()) => pass(
                 &format!(
                     "Workspace branch '{}' has a verified trajectory cookie for PR review.",
