@@ -224,7 +224,7 @@ fn foreign_base_source_pipeline_event_and_blocked_pass_reject() {
     for (key, value) in [
         ("commit_id", json!("e".repeat(40))),
         ("branch_name", json!("master")),
-        ("github_webhook_event", json!("pull_request")),
+        ("github_webhook_event", json!("unreviewed_event")),
         ("blocked_state", json!("blocked")),
         ("state", json!("skipped")),
         ("state", json!("unknown")),
@@ -820,4 +820,96 @@ fn unknown_public_buildkite_state_is_rejected_with_bounded_escaped_identity() {
     }
     assert!(message.len() < 1024);
     assert!(!message.contains(['\n', '\r', '\u{1b}']));
+}
+
+#[test]
+fn same_head_pr_builds_do_not_replace_or_ambiguate_required_push_proof() {
+    for event in ["pull_request", "workflow_dispatch"] {
+        let c = Cancellation::default();
+        let b = budget(&c);
+        let mut gh = Gh::default();
+        gh.urls
+            .push("https://buildkite.com/org/pipe/builds/9".into());
+        let mut bk = Bk::default();
+        let mut extra = bk.envelopes[&7].clone();
+        extra["id"] = "00000000-0000-0000-0000-000000000009".into();
+        extra["number"] = 9.into();
+        extra["path"] = "/org/pipe/builds/9".into();
+        extra["github_webhook_event"] = event.into();
+        extra["state"] = "failed".into();
+        bk.envelopes.insert(9, extra);
+        let result = wait_for_source_runs(
+            &mut gh,
+            &mut bk,
+            &snapshot(),
+            &plan(),
+            Duration::from_secs(1),
+            &b,
+        )
+        .unwrap();
+        assert_eq!(
+            result
+                .buildkite("org", "pipe", ".github/workflows/ci.yml")
+                .unwrap()
+                .build()
+                .number(),
+            7
+        );
+        result
+            .recheck(&mut gh, &mut bk, &snapshot(), &plan(), &b)
+            .unwrap();
+
+        // A green other-event build never fills a missing push obligation.
+        gh.urls.retain(|url| !url.ends_with("/7"));
+        bk.envelopes.get_mut(&9).unwrap()["state"] = "passed".into();
+        assert!(
+            !poll(
+                &mut gh,
+                &mut bk,
+                &snapshot(),
+                &plan(),
+                &mut PollState::default(),
+                &b
+            )
+            .unwrap()
+        );
+        // Event substitution after a bound push is never treated as pending.
+        gh.urls
+            .push("https://buildkite.com/org/pipe/builds/7".into());
+        let mut state = PollState::default();
+        assert!(poll(&mut gh, &mut bk, &snapshot(), &plan(), &mut state, &b).unwrap());
+        bk.envelopes.get_mut(&7).unwrap()["github_webhook_event"] = event.into();
+        assert!(poll(&mut gh, &mut bk, &snapshot(), &plan(), &mut state, &b).is_err());
+    }
+}
+#[test]
+fn other_event_is_authenticated_before_filtering_and_duplicate_push_still_rejects() {
+    for foreign_source in [false, true] {
+        let c = Cancellation::default();
+        let b = budget(&c);
+        let mut gh = Gh::default();
+        gh.urls
+            .push("https://buildkite.com/org/pipe/builds/9".into());
+        let mut bk = Bk::default();
+        let mut extra = bk.envelopes[&7].clone();
+        extra["id"] = "00000000-0000-0000-0000-000000000009".into();
+        extra["number"] = 9.into();
+        extra["path"] = "/org/pipe/builds/9".into();
+        if foreign_source {
+            extra["github_webhook_event"] = "pull_request".into();
+            extra["commit_id"] = "e".repeat(40).into();
+        }
+        bk.envelopes.insert(9, extra);
+        assert!(
+            poll(
+                &mut gh,
+                &mut bk,
+                &snapshot(),
+                &plan(),
+                &mut PollState::default(),
+                &b
+            )
+            .is_err()
+        );
+    }
 }

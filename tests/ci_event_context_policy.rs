@@ -946,9 +946,13 @@ fn created_cli_flag_is_explicit_boolean_and_defaults_false() {
 }
 
 #[test]
-fn action_created_push_adapter_never_overrides_snapshot_mode() {
+fn action_argument_vector_is_nonempty_and_preserves_event_context() {
     let action = include_str!("../.github/actions/ci-context/action.yml");
     assert!(action.contains("EVENT_CREATED: ${{ github.event.created == true }}"));
+    // This structural invariant also catches the Bash 3.2 nounset regression
+    // when the fixture is executed by a newer Bash that accepts empty arrays.
+    assert!(action.contains("args=(--repo \"$GITHUB_WORKSPACE\" --event \"$RAW_EVENT\")"));
+    assert!(action.contains("\"${args[@]}\" > \"$private_dir/outputs\""));
     let selection = action
         .split_once("        base=\"$EVENT_BASE\"")
         .unwrap()
@@ -962,41 +966,73 @@ fn action_created_push_adapter_never_overrides_snapshot_mode() {
         .collect::<Vec<_>>()
         .join("\n");
     let script = format!(
-        "set -eu\nbase=\"$EVENT_BASE\"\n{selection}\nprintf '%s\\n' \"$pre_pr\" \"$snapshot\" \"${{extra[@]}}\"\n"
+        "set -eu\nbase=\"$EVENT_BASE\"\n{selection}\nprintf '%s\\n' \"$pre_pr\" \"$snapshot\" \"${{args[@]}}\"\n"
     );
-    for (reference, created, expected) in [
-        ("refs/heads/new-candidate", "true", "--created"),
-        ("refs/heads/new-candidate", "false", ""),
-        (SNAPSHOT_REF, "true", "--snapshot"),
+    for (event, reference, created, optional) in [
+        ("pull_request", "refs/pull/1401/merge", "false", vec![]),
+        ("push", "refs/heads/new-candidate", "false", vec![]),
+        (
+            "push",
+            "refs/heads/new-candidate",
+            "true",
+            vec![
+                "--created",
+                "true",
+                "--trigger-ref",
+                "refs/heads/new-candidate",
+                "--accepted-base-ref",
+                ACCEPTED,
+            ],
+        ),
+        (
+            "push",
+            SNAPSHOT_REF,
+            "true",
+            vec![
+                "--snapshot",
+                "true",
+                "--trigger-ref",
+                SNAPSHOT_REF,
+                "--accepted-base-ref",
+                ACCEPTED,
+            ],
+        ),
     ] {
         let output = Command::new("bash")
             .args(["-c", &script])
-            .env("RAW_EVENT", "push")
+            .env("RAW_EVENT", event)
             .env("RAW_REF", reference)
             .env("EVENT_CREATED", created)
             .env("EVENT_BASE", "0".repeat(40))
             .env("EVENT_HEAD", "a".repeat(40))
+            .env("GITHUB_WORKSPACE", "/fixture with spaces")
             .output()
             .unwrap();
         assert!(output.status.success(), "{output:?}");
+        let snapshot = reference == SNAPSHOT_REF;
+        let flag = if snapshot { "true" } else { "false" };
+        let base = if snapshot {
+            String::new()
+        } else {
+            "0".repeat(40)
+        };
+        let head = "a".repeat(40);
+        let mut expected = vec![
+            flag,
+            flag,
+            "--repo",
+            "/fixture with spaces",
+            "--event",
+            event,
+        ];
+        expected.extend(optional);
+        expected.extend(["--base", &base, "--head", &head, "--pre-pr", flag]);
         let text = String::from_utf8(output.stdout).unwrap();
-        match expected {
-            "--created" => {
-                assert!(text.starts_with("false\nfalse\n"));
-                assert!(text.contains("--created\ntrue\n"));
-                assert!(text.contains("--accepted-base-ref\nrefs/remotes/origin/master\n"));
-            }
-            "--snapshot" => {
-                assert!(text.starts_with("true\ntrue\n"));
-                assert!(text.contains("--snapshot\ntrue\n"));
-                assert!(!text.contains("--created"));
-            }
-            _ => {
-                assert!(text.starts_with("false\nfalse\n"));
-                assert!(!text.contains("--created"));
-                assert!(!text.contains("--accepted-base-ref"));
-            }
-        }
+        assert_eq!(
+            text,
+            format!("{}\n", expected.join("\n")),
+            "{event} {reference} {created}"
+        );
     }
 }
 
@@ -1453,7 +1489,7 @@ fn action_workbranch_target_config_is_bound_to_regular_source_blob() {
         .collect::<Vec<_>>()
         .join("\n");
     let script = format!(
-        "set -eu\nbase=\"$EVENT_BASE\"\n{selection}\nprintf '%s\\n' \"$pre_pr\" \"$snapshot\" \"${{extra[@]}}\"\n"
+        "set -eu\nbase=\"$EVENT_BASE\"\n{selection}\nprintf '%s\\n' \"$pre_pr\" \"$snapshot\" \"${{args[@]}}\"\n"
     );
     for case in [
         "regular",
@@ -1489,7 +1525,7 @@ fn action_workbranch_target_config_is_bound_to_regular_source_blob() {
             .env("RAW_REF", WORKBRANCH)
             .env("EVENT_CREATED", "true")
             .env("EVENT_BASE", "0".repeat(40))
-            .env("EVENT_HEAD", head)
+            .env("EVENT_HEAD", &head)
             .env("GITHUB_WORKSPACE", &repo.0)
             .env("GIT_DIR", "/not/the/repository")
             .env("GIT_INDEX_FILE", "/not/the/index")
@@ -1498,11 +1534,15 @@ fn action_workbranch_target_config_is_bound_to_regular_source_blob() {
         if case == "regular" {
             assert!(output.status.success(), "{output:?}");
             let text = String::from_utf8(output.stdout).unwrap();
-            assert!(text.starts_with("true\nfalse\n"));
-            assert!(text.contains("--accepted-base-ref\nrefs/remotes/origin/trunk\n"));
-            assert!(text.contains(&format!("--trigger-ref\n{WORKBRANCH}\n")));
-            assert!(!text.contains("--created"));
-            assert!(!text.contains("--snapshot"));
+            assert_eq!(
+                text,
+                format!(
+                    "true\nfalse\n--repo\n{}\n--event\npush\n--trigger-ref\n{WORKBRANCH}\n\
+                     --accepted-base-ref\nrefs/remotes/origin/trunk\n--base\n\n\
+                     --head\n{head}\n--pre-pr\ntrue\n",
+                    repo.0.display()
+                )
+            );
         } else {
             assert!(!output.status.success(), "accepted {case}");
             assert!(

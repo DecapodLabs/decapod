@@ -112,7 +112,9 @@ runs:
         pre_pr=false
         snapshot=false
         workbranch=false
-        extra=()
+        # Bash 3.2 treats an empty array as unset under nounset. Keep the
+        # verifier argument vector nonempty even when no optional flags apply.
+        args=(--repo "$GITHUB_WORKSPACE" --event "$RAW_EVENT")
         case "$RAW_EVENT" in
           pull_request) ;;
           push)
@@ -122,17 +124,17 @@ runs:
               base=''
               pre_pr=true
               workbranch=true
-              extra+=(--trigger-ref "$RAW_REF")
+              args+=(--trigger-ref "$RAW_REF")
             elif [[ "$RAW_REF" == refs/heads/decapod/preflight/* ]]; then
               # Never use event.before to identify a snapshot's accepted base.
               base=''
               pre_pr=true
               snapshot=true
-              extra+=(--snapshot true --trigger-ref "$RAW_REF")
+              args+=(--snapshot true --trigger-ref "$RAW_REF")
             elif [[ "$EVENT_CREATED" == true ]]; then
               # Only a provider-declared ordinary branch creation has no before.
               # Snapshots above retain their independently proven B/H metadata.
-              extra+=(--created true --trigger-ref "$RAW_REF"
+              args+=(--created true --trigger-ref "$RAW_REF"
                       --accepted-base-ref refs/remotes/origin/master)
             fi
             ;;
@@ -172,10 +174,12 @@ runs:
         print('refs/remotes/origin/' + branch)
         PYCONFIG
           )"
-          extra+=(--accepted-base-ref "$accepted_base_ref")
+          args+=(--accepted-base-ref "$accepted_base_ref")
         elif [[ "$pre_pr" == true ]]; then
-          extra+=(--accepted-base-ref refs/remotes/origin/master)
+          args+=(--accepted-base-ref refs/remotes/origin/master)
         fi
+
+        args+=(--base "$base" --head "$head" --pre-pr "$pre_pr")
 
         private_dir="$(mktemp -d "$RUNNER_TEMP/decapod-ci-context.XXXXXX")"
         trap 'rm -rf -- "$private_dir"' EXIT
@@ -183,9 +187,7 @@ runs:
           "$GITHUB_ACTION_PATH/../../../assets/tools/ci_event_context.rs" \
           -o "$private_dir/ci-event-context"
         "$private_dir/ci-event-context" \
-          --repo "$GITHUB_WORKSPACE" --event "$RAW_EVENT" \
-          --base "$base" --head "$head" --pre-pr "$pre_pr" \
-          "${extra[@]}" > "$private_dir/outputs"
+          "${args[@]}" > "$private_dir/outputs"
 
         verified_head=''
         verified_tree=''

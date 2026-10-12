@@ -369,6 +369,12 @@ fn poll(
                 &pipeline.pipeline_id,
                 budget,
             )?;
+            // An open PR also emits provider-native pull_request builds for
+            // this same head. Their fully authenticated event cannot satisfy
+            // or replace the independently required workspace push execution.
+            if status.trigger_event() != "push" {
+                continue;
+            }
             if !pipeline
                 .workflows
                 .iter()

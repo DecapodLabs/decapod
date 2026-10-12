@@ -455,7 +455,7 @@ blocks are generated/non-authorable. Inline marker neighbors remain authored.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `129878e1bdf3025ac1be544758174a9e338b3366b94c6e71054e07eed81f05cd`
+- Repository signal fingerprint: `ee61ad1ab5048f6a3b1feb91520895192ba2f9c239ef19ebb3b9de07a321174d`
 - Significant implementation surfaces: `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (176 files), `tests/` (185 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -564,3 +564,7 @@ Source execution must leave its bound tracked checkout, index and non-ignored so
 ### Remote material verification
 
 The existing `govern artifacts verify-checkpoints --publication-material` interface is invoked by the mandatory Buildkite governance recipe with immutable base/head and an explicit target. It verifies the clean committed candidate before and after the shared publication-material checks. It never submits another build or establishes standalone readiness; the outer `validate` result still requires the complete provider suite.
+
+### PR event and shell portability after publication
+
+The CI context action seeds its argument vector with mandatory repository and event inputs before appending optional event-specific flags. Ordinary pull-request and push paths therefore remain valid under macOS Bash 3.2 nounset behavior without changing immutable-context checks. Once a PR exists, full workbranch validation authenticates each native build identity and selects only the required push-event execution; independent PR/manual runs for the same head neither satisfy nor replace that contract. Duplicate push executions or substitution of an already-bound event remain errors.

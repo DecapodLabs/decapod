@@ -626,6 +626,7 @@ pub struct PublicBuildStatus {
     build: PublicBuild,
     id: String,
     workflow: String,
+    trigger_event: String,
     state: String,
     blocked: bool,
 }
@@ -638,6 +639,9 @@ impl PublicBuildStatus {
     }
     pub fn workflow_path(&self) -> &str {
         &self.workflow
+    }
+    pub fn trigger_event(&self) -> &str {
+        &self.trigger_event
     }
     pub fn state(&self) -> &str {
         &self.state
@@ -662,6 +666,14 @@ pub fn discover_build_status(
     )?)?;
     let workflow = string(&envelope, "github_workflow_path")?.to_owned();
     super::github_artifacts::workflow_name(&workflow)?;
+    let trigger_event = string(&envelope, "github_webhook_event")?.to_owned();
+    ensure(
+        matches!(
+            trigger_event.as_str(),
+            "push" | "pull_request" | "workflow_dispatch"
+        ),
+        "unsupported public Buildkite trigger event",
+    )?;
     let expected = InventoryExpectation {
         repository: snapshot.request().repository.clone(),
         pipeline_id: pipeline_id.into(),
@@ -672,7 +684,9 @@ pub fn discover_build_status(
             .trim_start_matches("refs/heads/")
             .into(),
         workflow_path: workflow.clone(),
-        event: "push".into(),
+        // Authenticate the observed event alongside the immutable source before
+        // the caller selects the independently required push contract.
+        event: trigger_event.clone(),
     };
     verify_envelope(&envelope, &build, &expected)?;
     let state = string(&envelope, "state")?.to_owned();
@@ -709,6 +723,7 @@ pub fn discover_build_status(
         build,
         id: string(&envelope, "id")?.into(),
         workflow,
+        trigger_event,
         state,
         blocked: !envelope["blocked_state"].is_null(),
     })
