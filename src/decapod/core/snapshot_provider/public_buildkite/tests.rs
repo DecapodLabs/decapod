@@ -38,6 +38,104 @@ fn expected() -> InventoryExpectation {
         event: "push".into(),
     }
 }
+
+#[test]
+fn complete_inventory_uses_one_fresh_ordered_batch_through_collection_reader() {
+    struct Batched {
+        inner: Mock,
+        batches: Vec<Vec<PublicReadKind>>,
+    }
+    impl PublicReader for Batched {
+        fn get(&mut self, _: &PublicRequest, _: &Budget<'_>) -> Result<Vec<u8>> {
+            panic!("inventory must forward the fresh metadata batch")
+        }
+        fn get_many(
+            &mut self,
+            requests: &[PublicRequest],
+            budget: &Budget<'_>,
+        ) -> Result<Vec<Vec<u8>>> {
+            self.batches.push(
+                requests
+                    .iter()
+                    .map(|request| request.authorize_read().unwrap().kind())
+                    .collect(),
+            );
+            requests
+                .iter()
+                .map(|request| self.inner.get(request, budget))
+                .collect()
+        }
+    }
+    let cancel = Cancellation::default();
+    let budget = budget(&cancel);
+    let mut raw = Batched {
+        inner: fixture("success"),
+        batches: Vec::new(),
+    };
+    let mut reader = CollectionReader::new(&mut raw);
+    let inventory = collect_inventory(&mut reader, build(), &expected(), &budget).unwrap();
+    recheck_inventory(&mut reader, &inventory, &expected(), &budget).unwrap();
+    assert_eq!(reader.measurements()["public_get_requests"], 6);
+    assert_eq!(reader.measurements()["cache_entries"], 0);
+    drop(reader);
+    assert_eq!(
+        raw.batches,
+        vec![
+            vec![
+                PublicReadKind::BuildEnvelope,
+                PublicReadKind::FullSteps,
+                PublicReadKind::FullJobs
+            ];
+            2
+        ]
+    );
+}
+
+#[test]
+fn inventory_rejects_partial_reordered_malformed_and_oversized_batches() {
+    struct Broken {
+        inner: Mock,
+        mode: u8,
+        calls: usize,
+    }
+    impl PublicReader for Broken {
+        fn get(&mut self, _: &PublicRequest, _: &Budget<'_>) -> Result<Vec<u8>> {
+            panic!("invalid batch must not fall back to individual reads")
+        }
+        fn get_many(
+            &mut self,
+            requests: &[PublicRequest],
+            budget: &Budget<'_>,
+        ) -> Result<Vec<Vec<u8>>> {
+            self.calls += 1;
+            let mut bodies = requests
+                .iter()
+                .map(|request| self.inner.get(request, budget))
+                .collect::<Result<Vec<_>>>()?;
+            match self.mode {
+                0 => {
+                    bodies.pop();
+                }
+                1 => bodies.swap(0, 1),
+                2 => bodies[1] = b"not JSON".to_vec(),
+                3 => bodies[2] = vec![0; budget.max_bytes + 1],
+                _ => unreachable!(),
+            }
+            Ok(bodies)
+        }
+    }
+    for mode in 0..4 {
+        let cancel = Cancellation::default();
+        let budget = budget(&cancel);
+        let mut reader = Broken {
+            inner: fixture("success"),
+            mode,
+            calls: 0,
+        };
+        assert!(collect_inventory(&mut reader, build(), &expected(), &budget).is_err());
+        assert_eq!(reader.calls, 1);
+    }
+}
 fn recipe_expected() -> RecipeExpectation {
     RecipeExpectation {
         workflow_path: ".github/workflows/ci.yml".into(),

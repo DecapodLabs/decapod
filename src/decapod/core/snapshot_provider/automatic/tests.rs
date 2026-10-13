@@ -118,11 +118,12 @@ impl Runner for Gh {
 struct Bk {
     envelopes: BTreeMap<u64, Value>,
     calls: usize,
+    batches: Vec<usize>,
 }
 impl Default for Bk {
     fn default() -> Self {
         let s = snapshot();
-        Self { calls:0, envelopes:[7,8].into_iter().map(|number|(number,json!({
+        Self { calls:0, batches: Vec::new(), envelopes:[7,8].into_iter().map(|number|(number,json!({
             "id":format!("00000000-0000-0000-0000-{number:012}"),"number":number,"path":format!("/org/pipe/builds/{number}"),
             "commit_id":s.transport_head(),"branch_name":s.request().transport_ref().trim_start_matches("refs/heads/"),
             "github_workflow_path":if number==7{".github/workflows/ci.yml"}else{".github/workflows/security.yml"},"github_webhook_event":"push",
@@ -147,6 +148,17 @@ impl buildkite::PublicReader for Bk {
             .parse::<u64>()
             .unwrap();
         Ok(serde_json::to_vec(self.envelopes.get(&n).unwrap()).unwrap())
+    }
+    fn get_many(
+        &mut self,
+        requests: &[buildkite::PublicRequest],
+        budget: &Budget<'_>,
+    ) -> Result<Vec<Vec<u8>>> {
+        self.batches.push(requests.len());
+        requests
+            .iter()
+            .map(|request| self.get(request, budget))
+            .collect()
     }
 }
 fn budget(c: &Cancellation) -> Budget<'_> {
@@ -183,6 +195,101 @@ fn multiple_imported_workflows_in_one_pipeline_complete_without_artifact_writes(
         .recheck(&mut gh, &mut bk, &snapshot(), &plan(), &b)
         .unwrap();
     assert_eq!(bk.calls, 6); // envelopes only: initial, barrier recheck, caller recheck
+    assert_eq!(bk.batches, [2, 2, 2]);
+}
+
+#[test]
+fn build_envelope_batches_are_bounded_and_remain_fresh_on_later_polls() {
+    let cancel = Cancellation::default();
+    let budget = budget(&cancel);
+    let mut gh = Gh::default();
+    let mut bk = Bk::default();
+    let template = bk.envelopes[&7].clone();
+    let mut plan = plan();
+    plan.github_workflows.clear();
+    plan.buildkite_pipelines[0].workflows.clear();
+    gh.urls.clear();
+    bk.envelopes.clear();
+    for number in 1..=9 {
+        let workflow = format!(".github/workflows/source-{number}.yml");
+        let mut envelope = template.clone();
+        envelope["id"] = format!("00000000-0000-0000-0000-{number:012}").into();
+        envelope["number"] = number.into();
+        envelope["path"] = format!("/org/pipe/builds/{number}").into();
+        envelope["github_workflow_path"] = workflow.clone().into();
+        bk.envelopes.insert(number, envelope);
+        plan.buildkite_pipelines[0].workflows.push(workflow);
+        gh.urls
+            .push(format!("https://buildkite.com/org/pipe/builds/{number}"));
+    }
+    let mut state = PollState::default();
+    assert!(poll(&mut gh, &mut bk, &snapshot(), &plan, &mut state, &budget).unwrap());
+    assert_eq!(bk.batches, [8, 1]);
+    bk.envelopes.get_mut(&1).unwrap()["state"] = "running".into();
+    assert!(!poll(&mut gh, &mut bk, &snapshot(), &plan, &mut state, &budget).unwrap());
+    assert_eq!(bk.batches, [8, 1, 8, 1]);
+    assert_eq!(bk.calls, 18);
+}
+
+#[test]
+fn denied_partial_reordered_and_cancelled_envelope_batches_do_not_become_terminal() {
+    struct Broken<'a> {
+        inner: Bk,
+        mode: u8,
+        calls: usize,
+        cancel: &'a Cancellation,
+    }
+    impl buildkite::PublicReader for Broken<'_> {
+        fn get(&mut self, _: &buildkite::PublicRequest, _: &Budget<'_>) -> Result<Vec<u8>> {
+            panic!("batch failures must not fall back to serial reads")
+        }
+        fn get_many(
+            &mut self,
+            requests: &[buildkite::PublicRequest],
+            budget: &Budget<'_>,
+        ) -> Result<Vec<Vec<u8>>> {
+            self.calls += 1;
+            if self.mode == 0 {
+                return Err(io::Error::new(io::ErrorKind::PermissionDenied, "denied"));
+            }
+            let mut responses = self.inner.get_many(requests, budget)?;
+            match self.mode {
+                1 => {
+                    responses.pop();
+                }
+                2 => responses.reverse(),
+                3 => self.cancel.cancel(),
+                _ => unreachable!(),
+            }
+            Ok(responses)
+        }
+    }
+    for mode in 0..4 {
+        let cancel = Cancellation::default();
+        let budget = budget(&cancel);
+        let mut reader = Broken {
+            inner: Bk::default(),
+            mode,
+            calls: 0,
+            cancel: &cancel,
+        };
+        let mut plan = plan();
+        plan.github_workflows.clear();
+        let mut state = PollState::default();
+        assert!(
+            poll(
+                &mut Gh::default(),
+                &mut reader,
+                &snapshot(),
+                &plan,
+                &mut state,
+                &budget
+            )
+            .is_err()
+        );
+        assert_eq!(reader.calls, 1);
+        assert!(state.buildkite.is_empty());
+    }
 }
 #[test]
 fn missing_and_running_are_pending_then_terminal_without_repeated_receipts() {

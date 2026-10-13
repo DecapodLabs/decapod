@@ -622,6 +622,42 @@ fn read_request(
     )?;
     Ok(bytes)
 }
+/// Fresh ordered metadata reads. Validate the entire response batch before any
+/// caller can interpret an envelope; partial results never become observations.
+fn read_many(
+    reader: &mut impl PublicReader,
+    requests: &[PublicRequest],
+    budget: &Budget<'_>,
+) -> Result<Vec<Vec<u8>>> {
+    budget.remaining()?;
+    ensure(
+        requests.len() <= PUBLIC_READ_CONCURRENCY && budget.max_bytes <= 16 * 1024 * 1024,
+        "public metadata batch exceeds bound",
+    )?;
+    for request in requests {
+        request.authorize_read()?;
+    }
+    let bytes = reader.get_many(requests, budget)?;
+    ensure(
+        bytes.len() == requests.len(),
+        "public batch response count mismatch",
+    )?;
+    for body in &bytes {
+        ensure(
+            body.len() <= budget.max_bytes,
+            "public response exceeded bound",
+        )?;
+    }
+    budget.remaining()?;
+    Ok(bytes)
+}
+fn metadata_request(path: String) -> PublicRequest {
+    PublicRequest {
+        path,
+        artifact_redirect: false,
+        log_redirect: None,
+    }
+}
 fn json(bytes: &[u8]) -> Result<Value> {
     serde_json::from_slice(bytes).map_err(|_| invalid("invalid public JSON"))
 }
@@ -828,12 +864,38 @@ pub fn discover_build_status(
     budget: &Budget<'_>,
 ) -> Result<PublicBuildStatus> {
     ensure(uuid(pipeline_id), "invalid reviewed pipeline UUID")?;
-    let envelope = json(&read(
-        reader,
-        format!("{}.json", build.base()),
-        false,
-        budget,
-    )?)?;
+    let bytes = read(reader, format!("{}.json", build.base()), false, budget)?;
+    verify_build_status(build, &bytes, snapshot, pipeline_id)
+}
+/// Authenticate every discovered build in a finite fresh batch. The provider
+/// set remains independently discovered; batching never selects a winning run.
+pub fn discover_build_statuses(
+    reader: &mut impl PublicReader,
+    builds: &[PublicBuild],
+    snapshot: &snapshot::PreparedSnapshot,
+    pipeline_id: &str,
+    budget: &Budget<'_>,
+) -> Result<Vec<PublicBuildStatus>> {
+    ensure(uuid(pipeline_id), "invalid reviewed pipeline UUID")?;
+    let requests: Vec<_> = builds
+        .iter()
+        .map(|build| metadata_request(format!("{}.json", build.base())))
+        .collect();
+    let bodies = read_many(reader, &requests, budget)?;
+    builds
+        .iter()
+        .cloned()
+        .zip(bodies)
+        .map(|(build, body)| verify_build_status(build, &body, snapshot, pipeline_id))
+        .collect()
+}
+fn verify_build_status(
+    build: PublicBuild,
+    bytes: &[u8],
+    snapshot: &snapshot::PreparedSnapshot,
+    pipeline_id: &str,
+) -> Result<PublicBuildStatus> {
+    let envelope = json(bytes)?;
     let workflow = string(&envelope, "github_workflow_path")?.to_owned();
     super::github_artifacts::workflow_name(&workflow)?;
     let trigger_event = string(&envelope, "github_webhook_event")?.to_owned();
@@ -915,22 +977,19 @@ pub fn collect_inventory(
             ),
         "invalid expected public identity",
     )?;
-    let envelope_bytes = read(reader, format!("{}.json", build.base()), false, budget)?;
-    let steps_bytes = read(
-        reader,
+    let requests = [
+        format!("{}.json", build.base()),
         format!("{}/data/steps", build.base()),
-        false,
-        budget,
-    )?;
-    let jobs_bytes = read(
-        reader,
         format!(
             "{}/data/jobs?include_retried_jobs=true&paginate=false",
             build.base()
         ),
-        false,
-        budget,
-    )?;
+    ]
+    .map(metadata_request);
+    let [envelope_bytes, steps_bytes, jobs_bytes]: [Vec<u8>; 3] =
+        read_many(reader, &requests, budget)?
+            .try_into()
+            .map_err(|_| invalid("public inventory response count mismatch"))?;
     let envelope = json(&envelope_bytes)?;
     verify_envelope(&envelope, &build, expected)?;
     let statistics = field(&envelope, "statistics")?;

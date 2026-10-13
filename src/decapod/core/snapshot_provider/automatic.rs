@@ -359,35 +359,41 @@ fn poll(
                 .collect()
         };
         let mut found = BTreeMap::new();
-        for number in numbers {
-            let build =
-                buildkite::PublicBuild::new(&pipeline.organization, &pipeline.pipeline, number)?;
-            let status = buildkite::discover_build_status(
+        let builds: Vec<_> = numbers
+            .into_iter()
+            .map(|number| {
+                buildkite::PublicBuild::new(&pipeline.organization, &pipeline.pipeline, number)
+            })
+            .collect::<Result<_>>()?;
+        for batch in builds.chunks(buildkite::PUBLIC_READ_CONCURRENCY) {
+            let statuses = buildkite::discover_build_statuses(
                 reader,
-                build,
+                batch,
                 snapshot,
                 &pipeline.pipeline_id,
                 budget,
             )?;
-            // An open PR also emits provider-native pull_request builds for
-            // this same head. Their fully authenticated event cannot satisfy
-            // or replace the independently required workspace push execution.
-            if status.trigger_event() != "push" {
-                continue;
+            for status in statuses {
+                // An open PR also emits provider-native pull_request builds for
+                // this same head. Their fully authenticated event cannot satisfy
+                // or replace the independently required workspace push execution.
+                if status.trigger_event() != "push" {
+                    continue;
+                }
+                if !pipeline
+                    .workflows
+                    .iter()
+                    .any(|w| w == status.workflow_path())
+                {
+                    continue;
+                }
+                ensure(
+                    found
+                        .insert(status.workflow_path().to_owned(), status)
+                        .is_none(),
+                    "multiple imported builds for one exact snapshot workflow",
+                )?;
             }
-            if !pipeline
-                .workflows
-                .iter()
-                .any(|w| w == status.workflow_path())
-            {
-                continue;
-            }
-            ensure(
-                found
-                    .insert(status.workflow_path().to_owned(), status)
-                    .is_none(),
-                "multiple imported builds for one exact snapshot workflow",
-            )?;
         }
         for workflow in &pipeline.workflows {
             let key = (
