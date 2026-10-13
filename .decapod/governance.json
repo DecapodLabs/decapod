@@ -152,6 +152,14 @@
         "src/decapod/core/validation_runtime/executor_contract.rs"
       ]
     },
+    "release-pr-provider-parity": {
+      "statement": "Native GitHub Actions is the sole release mutation owner; Buildkite imports skip credential-bearing release jobs and do not count as publication proof. Explicit PR-only dispatch preserves normal native push behavior.",
+      "falsifier": "An imported Buildkite job retrieves release secrets or executes a release mutation, a native release path loses its owner gate, or PR-only dispatch invokes package publishing.",
+      "status": "open",
+      "proof_refs": [
+        "tests/release_workflow_policy.rs"
+      ]
+    },
     "strict-protocol-rollout": {
       "statement": "Initial protocol rollout preserves strict independently pinned single-root compatibility, and unsupported workflow or execution contracts remain actionable blockers rather than self-authorizing a candidate controller.",
       "falsifier": "The fallback accepts altered or new carrier content after only changing the review digest, supported R failure falls back to H, or an old released executable is claimed to acquire unimplemented bootstrap behavior.",
@@ -167,6 +175,11 @@
       "id": "accepted-executor-initial",
       "summary": "Separate accepted execution authority from candidate build inputs, pin the complete carrier in both protocol modes, and preserve controller-owned full validation with versioned custody and regressions.",
       "input_digest": "sha256:78f9a4cf24e66584f09541b3efe229bdc1e27b9b84651f6d46811ffee7a21ddb"
+    },
+    {
+      "id": "validation-orchestration-repair",
+      "summary": "Repair provider compile inputs and Clippy, add single native release ownership and safe PR-only dispatch, refresh reviewed declaration and supported specs/docs.",
+      "input_digest": "sha256:e7430aff6bf35f6dfa170310aec685c739c4a6496de782ebf6f074c45162f994"
     }
   ],
   "intents": {
@@ -198,7 +211,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Implement issue779 as the existing validation automation layer: source-ready governed work enters plain validate, which owns configured candidate build, required tests, provider execution, evidence and final readiness. Reuse the existing execution/collection stack; earlier issue mechanisms are hypotheses. Preserve independent verifier authority, full required coverage, same-branch transport, exact source/base/artifact custody and bounded nonrecursive execution.",
+      "intent": "Implement issue779 through the existing validation automation layer with independently captured accepted execution authority, candidate build/test inputs, complete provider proof and controller-owned readiness. Also fix verified release workflow defects requested in this same PR, including missing Buildkite release-PR creation, without guessing why external postmerge triggers were absent or changing credentials/settings.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -206,8 +219,7 @@
       "schema_version": "1.1.0",
       "state": "APPROVED",
       "stop_conditions": [
-        "Stop before any credential, account, persistent pipeline trust, runner privilege or paid capacity change and request the exact required authorization.",
-        "Do not weaken required checks, accept candidate self-attested readiness, or claim live support from test doubles."
+        "Do not dispatch a publishing-capable release workflow, change credentials/provider settings, merge, release or deploy without the separately required explicit authority."
       ],
       "title": "Make validation own candidate build orchestration",
       "todo_ids": [
@@ -218,7 +230,7 @@
         "An already shipped controller cannot retroactively implement this code; distinguish one-time controller rollout from future older-catalog compatibility proof."
       ],
       "unresolved_contradictions": [],
-      "updated_at": "1791906901Z"
+      "updated_at": "1791908431Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -226,7 +238,11 @@
         "Fresh governed branch only; no master edits, merge, release, deploy, credentials, paid capacity, or unapproved persistent access changes.",
         "Reviewed-transitive-code model only; dual roots are not hostile-code OS isolation."
       ],
-      "artifact_hash": "sha256:9b24017c1febd35e78174bfd624fe6dbc4b9e7c44fc751756eab399beeb2e03a",
+      "artifact_hash": "sha256:3d209669f781931c2e1c151010704cce109d2c1e949f9113214c4be7ac4953b6",
+      "blockers": [
+        "Initial controller cannot admit the new protocol; the first candidate static-musl artifact cannot use the host SQLite dynamic library. Corrected Bazel inputs must produce the glibc candidate controller.",
+        "Initial controller lacks new protocol; provider-built supported controller and generated entrypoint/documentation repair pending."
+      ],
       "checks": [
         {
           "name": "imported-program-source-coverage",
@@ -237,12 +253,32 @@
           "status": "passed"
         },
         {
+          "name": "initial-provider-clippy",
+          "status": "failed"
+        },
+        {
+          "name": "initial-provider-graph",
+          "status": "failed"
+        },
+        {
+          "name": "initial-provider-projections",
+          "status": "failed"
+        },
+        {
+          "name": "initial-validation",
+          "status": "failed"
+        },
+        {
           "name": "regression-execution",
+          "status": "unavailable"
+        },
+        {
+          "name": "release-owner-regressions",
           "status": "unavailable"
         }
       ],
       "completion_claim": "Implementation and regression sources are reviewed; tests and readiness remain unproven until validation executes.",
-      "current_phase": "validation",
+      "current_phase": "repair",
       "custody": {
         "events": [
           {
@@ -270,10 +306,24 @@
             "intent_id": "intent:validation-orchestration-779",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:validation-orchestration-779",
+            "event_id": "event:6",
+            "intent_id": "intent:validation-orchestration-779",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
+          },
+          {
+            "detail": "trajectory:validation-orchestration-779",
+            "event_id": "event:7",
+            "intent_id": "intent:validation-orchestration-779",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "validation-orchestration-779": {
@@ -323,6 +373,41 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "https://buildkite.com/decapodlabs/decapod/builds/1220",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/38428617075"
+                ],
+                "proof_refs": [
+                  "initial-validation",
+                  "initial-provider-clippy",
+                  "initial-provider-projections"
+                ],
+                "scope": [
+                  "validation runtime, execution/custody boundaries, provider adapter, canonical guidance, regression tests, relevant authored specs and existing issue reconciliation"
+                ],
+                "sequence": 6,
+                "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "https://buildkite.com/decapodlabs/decapod/builds/1220"
+                ],
+                "proof_refs": [
+                  "initial-provider-graph",
+                  "release-owner-regressions"
+                ],
+                "scope": [
+                  "Verified release code defects within the same PR; missing external trigger remains unproven.",
+                  "validation runtime, execution/custody boundaries, provider adapter, canonical guidance, regression tests, relevant authored specs and existing issue reconciliation"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -332,6 +417,8 @@
         "decapod rpc --op agent.init"
       ],
       "evidence": [
+        "https://buildkite.com/decapodlabs/decapod/builds/1220",
+        "https://github.com/DecapodLabs/decapod/actions/runs/38428617075",
         "https://github.com/DecapodLabs/decapod/issues/779#issuecomment-6148469287",
         "src/decapod/core/readiness_profile/tests.rs",
         "src/decapod/core/snapshot_provider/public_buildkite/program.rs",
@@ -349,11 +436,14 @@
         "src/decapod/core/validation_runtime/executor_contract.rs"
       ],
       "next_transitions": [
+        "Checkpoint the repaired source and run plain validation; use the next exact provider-built glibc controller for supported entrypoint regeneration.",
+        "Collect remaining concrete CI failures, regenerate projections with the authenticated candidate artifact, integrate the authorized release workflow repair, then checkpoint and rerun plain validation.",
         "Finish bounded source review, checkpoint and run plain validate; repair reported failures using the same branch.",
         "Review minimal safe execution design, then implement bounded shared primitives and regression coverage.",
         "Run plain validate on the committed candidate, preserve any controller compatibility blocker, and use only authenticated configured-provider artifacts for the initial protocol rollout."
       ],
       "repo_scope": [
+        "Verified release code defects within the same PR; missing external trigger remains unproven.",
         "validation runtime, execution/custody boundaries, provider adapter, canonical guidance, regression tests, relevant authored specs and existing issue reconciliation"
       ],
       "run_id": "validation-orchestration-779",

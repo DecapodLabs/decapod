@@ -131,6 +131,14 @@ def decapod_targets():
             "tests/fixtures/derived-release/dist.toml",
         ]
         + native.glob(["src/decapod/core/snapshot_provider/source_execution/*.json"])
+        # The controller embeds the complete reviewed carrier, and runtime
+        # admission fixtures materialize the same workflow bytes. Keep these
+        # explicit sandbox inputs aligned with readiness_profile::carrier_files.
+        + native.glob([
+            ".github/actions/**",
+            ".github/scripts/**",
+            ".github/workflows/*.yml",
+        ])
         + native.glob(["assets/tools/source_ci/*.sh"])
         + native.glob(["assets/schemas/*.schema.json"])
         + [
