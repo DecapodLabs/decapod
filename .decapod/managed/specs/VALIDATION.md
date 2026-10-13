@@ -411,8 +411,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d9c54de51bc75796bf5b598dd437252a2a578400f5d3cafb50c496c0a84a0b46`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (182 files), `tests/` (188 files)
+- Repository signal fingerprint: `0df4b59635eab783bf2525bf9c7f5913174361caa137d73e6fa75f390d5804d9`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (183 files), `tests/` (188 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -442,3 +442,21 @@ reviewed controller adapter. Native validation retains its existing strict
 contract. Initial rollout uses the strict legacy path until the accepted target
 contains this protocol; automatic replacement of an already installed old
 controller is not claimed.
+
+The Linux source-policy regression also exercises a real, dependency-free Cargo
+fixture through the unchanged production golden-vector recipe. Its accepted Git
+executor R and edited candidate H are separate clean worktrees. R compiles H,
+runs its assertions and executes the resulting ELF binary; the consumer then
+applies the full preparation policy and verifies the actual artifact and logs.
+Compile errors, failing assertions, changed executor material, and tampered
+artifacts or receipts must be rejected. The fixture uses the installed declared
+Rust toolchain and bounded child-process capture, with no successful skip path.
+Fixture setup generates the dependency-free lockfile offline before the accepted
+R commit, so compilation must leave the complete tracked candidate unchanged.
+
+This regression runs in the required Supabase library-test recipe. It proves
+local runner and independent custody behavior, not provider authentication or a
+complete hosted dual-root rollout. Provider authentication remains covered by
+its own checks. A hosted opt-in proof requires a subsequent ordinary work branch
+whose accepted target already contains the protocol, followed by full plain
+validation against that branch; release dispatch is unnecessary.

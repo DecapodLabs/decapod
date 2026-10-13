@@ -200,6 +200,16 @@
       "id": "validation-policy-fixture-repair",
       "summary": "Repair actual remote integration failures by isolating synthetic executor roots and asserting the current executor-aware release policy path.",
       "input_digest": "sha256:2768dd0ba2dbc980b97d7d5d911ea344f04cbe5383179d0f96c69b5ab4b4637a"
+    },
+    {
+      "id": "real-compiler-custody-779",
+      "summary": "Exercise real candidate compilation, tests and executable custody under accepted executor authority; preserve explicit hosted rollout boundary.",
+      "input_digest": "sha256:54601ed50864bee9f4c6001405ac8c30d46aa55d10c66fb40ca9c6dcb3bbccb8"
+    },
+    {
+      "id": "real-compiler-custody-repair-779",
+      "summary": "Checkpoint real compiler dual-root custody regression with canonical offline fixture lock and preserve strict historical and tracked-source proof rules.",
+      "input_digest": "sha256:16efb68d2f7e0482db7b55b84cb462e19c522ff32c3182e60e2240cc34e0cb86"
     }
   ],
   "intents": {
@@ -239,24 +249,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed current executor protocol implementation after fixture repair; production accepted-root verification and independent final graph remain unchanged.",
-          "reviewed_code_fingerprint": "d9c54de51bc75796bf5b598dd437252a2a578400f5d3cafb50c496c0a84a0b46",
+          "reason": "The repaired real compiler fixture retains the accepted executor and candidate architecture; canonical lock generation occurs before immutable R capture.",
+          "reviewed_code_fingerprint": "0df4b59635eab783bf2525bf9c7f5913174361caa137d73e6fa75f390d5804d9",
           "spec_material_hash": "ec960d5117e65fef6ea0ee63367fb51a57560f2c439302fdae12f13111e65a4e"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed current dual-root context and authorization guidance; policy regression now asserts exact executor context propagation instead of the obsolete signature.",
-          "reviewed_code_fingerprint": "d9c54de51bc75796bf5b598dd437252a2a578400f5d3cafb50c496c0a84a0b46",
+          "reason": "Canonical fixture setup repairs the demonstrated tracked lock rewrite without changing source-CI recipes, schemas or public interfaces.",
+          "reviewed_code_fingerprint": "0df4b59635eab783bf2525bf9c7f5913174361caa137d73e6fa75f390d5804d9",
           "spec_material_hash": "58c045c5b7aecc82b99be8060d28862dbd7ef54edd20a16f8665d5a7b3d16f00"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Fixture-owned source roots prevent ambient test contamination; production accepted executor, access and command seal enforcement are unchanged.",
-          "reviewed_code_fingerprint": "d9c54de51bc75796bf5b598dd437252a2a578400f5d3cafb50c496c0a84a0b46",
+          "reason": "Strict source immutability correctly caught the fixture lock rewrite; its rejection remains unchanged. Original invalid history is preserved and user authorized only bounded workbranch history repair.",
+          "reviewed_code_fingerprint": "0df4b59635eab783bf2525bf9c7f5913174361caa137d73e6fa75f390d5804d9",
           "spec_material_hash": "3a32d010c700db35158c28ad9660375581eec104456f3a9ecf0231a9801fcc70"
         }
       ],
@@ -273,7 +283,7 @@
         "An already shipped controller cannot retroactively implement this code; distinguish one-time controller rollout from future older-catalog compatibility proof."
       ],
       "unresolved_contradictions": [],
-      "updated_at": "1791911202Z"
+      "updated_at": "1791914511Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -281,7 +291,7 @@
         "Fresh governed branch only; no master edits, merge, release, deploy, credentials, paid capacity, or unapproved persistent access changes.",
         "Reviewed-transitive-code model only; dual roots are not hostile-code OS isolation."
       ],
-      "artifact_hash": "sha256:a3d7f4443ae75a82df4ee8bee1d5fa9b468c5dd71d62fd9aab4ff1731e28a567",
+      "artifact_hash": "sha256:48302d92ba542642489065cde5b0b9bd3623054602653297a41014ecc6595444",
       "checks": [
         {
           "name": "approval-free-runtime-review",
@@ -298,6 +308,10 @@
         {
           "name": "generated-guidance",
           "status": "partial"
+        },
+        {
+          "name": "history-repair-authority",
+          "status": "passed"
         },
         {
           "name": "imported-program-source-coverage",
@@ -336,6 +350,18 @@
           "status": "failed"
         },
         {
+          "name": "real-compiler-execution",
+          "status": "failed"
+        },
+        {
+          "name": "real-compiler-lock-repair",
+          "status": "partial"
+        },
+        {
+          "name": "real-compiler-static-review",
+          "status": "passed"
+        },
+        {
           "name": "regression-execution",
           "status": "unavailable"
         },
@@ -349,7 +375,7 @@
         }
       ],
       "completion_claim": "Implementation and regression sources are reviewed; tests and readiness remain unproven until validation executes.",
-      "current_phase": "validation",
+      "current_phase": "repair",
       "custody": {
         "events": [
           {
@@ -419,10 +445,24 @@
             "intent_id": "intent:validation-orchestration-779",
             "kind": "trajectory_step_recorded",
             "sequence": 11
+          },
+          {
+            "detail": "trajectory:validation-orchestration-779",
+            "event_id": "event:12",
+            "intent_id": "intent:validation-orchestration-779",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
+          },
+          {
+            "detail": "trajectory:validation-orchestration-779",
+            "event_id": "event:13",
+            "intent_id": "intent:validation-orchestration-779",
+            "kind": "trajectory_step_recorded",
+            "sequence": 13
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 11,
+        "next_sequence": 13,
         "schema_version": "1.0.0",
         "trajectories": {
           "validation-orchestration-779": {
@@ -584,6 +624,41 @@
                 ],
                 "sequence": 11,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:12",
+                "observations": [
+                  "Independent source review found no blocking fixture or policy defects. Exact named regression execution and final readiness remain for provider-owned plain validation."
+                ],
+                "proof_refs": [
+                  "real-compiler-static-review",
+                  "real-compiler-execution"
+                ],
+                "scope": [
+                  "Verified release code defects within the same PR; missing external trigger remains unproven.",
+                  "validation runtime, execution/custody boundaries, provider adapter, canonical guidance, regression tests, relevant authored specs and existing issue reconciliation"
+                ],
+                "sequence": 12,
+                "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:13",
+                "observations": [
+                  "Buildkite1240 and GitHub38439790071 caught missing intermediate checkpoint and canonical Cargo.lock rewrite. User authorized bounded same-branch force-with-lease repair; original commits retained in verified bundle with failure reports. No governance or source-mutation gate weakened."
+                ],
+                "proof_refs": [
+                  "real-compiler-execution",
+                  "real-compiler-lock-repair",
+                  "history-repair-authority"
+                ],
+                "scope": [
+                  "Verified release code defects within the same PR; missing external trigger remains unproven.",
+                  "validation runtime, execution/custody boundaries, provider adapter, canonical guidance, regression tests, relevant authored specs and existing issue reconciliation"
+                ],
+                "sequence": 13,
+                "validation_findings": []
               }
             ]
           }
@@ -594,6 +669,8 @@
         "decapod rpc --op agent.init"
       ],
       "evidence": [
+        "Buildkite1240 and GitHub38439790071 caught missing intermediate checkpoint and canonical Cargo.lock rewrite. User authorized bounded same-branch force-with-lease repair; original commits retained in verified bundle with failure reports. No governance or source-mutation gate weakened.",
+        "Independent source review found no blocking fixture or policy defects. Exact named regression execution and final readiness remain for provider-owned plain validation.",
         "https://buildkite.com/decapodlabs/decapod/builds/1220",
         "https://buildkite.com/decapodlabs/decapod/builds/1225",
         "https://buildkite.com/decapodlabs/decapod/builds/1232",
@@ -628,8 +705,10 @@
         "Review minimal safe execution design, then implement bounded shared primitives and regression coverage.",
         "Run plain validate on the committed candidate, preserve any controller compatibility blocker, and use only authenticated configured-provider artifacts for the initial protocol rollout.",
         "Run plain validate on the repaired exact candidate, using its configured Buildkite build/test graph and final proof collection.",
+        "Run plain validation against the corrected exact candidate and accepted base; require actual compiler regression and full readiness.",
         "Run plain validation on the regenerated exact candidate; repair any reported failure before creating the review PR.",
-        "Run validation on the completed guidance change and obtain the exact provider-built controller to regenerate canonical entrypoints and docs."
+        "Run validation on the completed guidance change and obtain the exact provider-built controller to regenerate canonical entrypoints and docs.",
+        "Validate the exact checkpoint with real compiler custody regression in the required Supabase library suite."
       ],
       "repo_scope": [
         "Verified release code defects within the same PR; missing external trigger remains unproven.",
