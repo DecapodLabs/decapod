@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.110.0](https://github.com/DecapodLabs/decapod/compare/v0.109.0...v0.110.0) - 2026-10-13
+
+### Fixed
+
+- keep governed validation push noninteractive
+
+### Other
+
+- batch fresh validation metadata reads
+- verify documented security nodes exist
+- clarify contribution and security guidance
+- reconcile reviewed v0.109.0 source inventory
+- make the README clear and useful at a glance
+
 ## [0.109.0](https://github.com/DecapodLabs/decapod/compare/v0.108.1...v0.109.0) - 2026-10-12
 
 ### Fixed
