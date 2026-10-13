@@ -148,7 +148,7 @@ impl<'a, R: PublicReader> CollectionReader<'a, R> {
         Ok(())
     }
 
-    /// Discover at most four recipes at a time, then let the caller reject an
+    /// Discover at most eight recipes at a time, then let the caller reject an
     /// unsupported contract before fetching another batch. Each phase reuses
     /// the ordinary verifier; prefetch never replaces any custody/digest check.
     pub fn locate_recipes(
@@ -229,6 +229,44 @@ impl<R: PublicReader> PublicReader for CollectionReader<'_, R> {
         let bytes = bytes?;
         self.remember(request, &bytes, budget)?;
         Ok(bytes)
+    }
+    fn get_many(
+        &mut self,
+        requests: &[PublicRequest],
+        budget: &Budget<'_>,
+    ) -> Result<Vec<Vec<u8>>> {
+        budget.remaining()?;
+        ensure(
+            requests.len() <= PUBLIC_READ_CONCURRENCY && budget.max_bytes <= 16 * 1024 * 1024,
+            "public metadata batch exceeds bound",
+        )?;
+        let kinds = requests
+            .iter()
+            .map(|request| request.authorize_read().map(|read| read.kind()))
+            .collect::<Result<Vec<_>>>()?;
+        if !kinds.iter().all(|kind| {
+            matches!(
+                kind,
+                PublicReadKind::BuildEnvelope
+                    | PublicReadKind::FullSteps
+                    | PublicReadKind::FullJobs
+            )
+        }) {
+            // Preserve the prior trait default for other request kinds. This
+            // dispatch is chosen before any transport, never after a failure.
+            return requests
+                .iter()
+                .map(|request| self.get(request, budget))
+                .collect();
+        }
+        self.requests += requests.len() as u64;
+        let started = Instant::now();
+        let bodies = read_many(self.reader, requests, budget);
+        self.transport_wall += started.elapsed();
+        let bodies = bodies?;
+        self.response_bytes += bodies.iter().map(|body| body.len() as u64).sum::<u64>();
+        // Live inventories and build states are never cached or deduplicated.
+        Ok(bodies)
     }
     fn get_custody_many(
         &mut self,

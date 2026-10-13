@@ -69,6 +69,174 @@ fn exact_paths_deduplicate_within_one_collection_only() {
         .unwrap();
     assert_eq!(raw.calls, 3, "no cache survives collection lifetime");
 }
+
+#[test]
+fn forwarding_batches_reuse_only_collection_artifacts_and_preserve_request_order() {
+    let cancel = Cancellation::default();
+    let budget = budget(&cancel);
+    let mut raw = Reader {
+        bytes: b"cached".to_vec(),
+        ..Default::default()
+    };
+    let mut reader = CollectionReader::new(&mut raw);
+    reader.get(&request(1), &budget).unwrap();
+    reader.reader.bytes = b"fresh".to_vec();
+    let live = metadata_request("/org/pipe/builds/7.json".into());
+    assert_eq!(
+        reader
+            .get_many(std::slice::from_ref(&live), &budget)
+            .unwrap(),
+        vec![b"fresh".to_vec()]
+    );
+    assert_eq!(
+        reader
+            .get_many(&[request(1), request(2), request(2)], &budget)
+            .unwrap(),
+        vec![b"cached".to_vec(), b"fresh".to_vec(), b"fresh".to_vec()]
+    );
+    reader.reader.bytes = b"new live state".to_vec();
+    assert_eq!(
+        reader.get_many(&[live], &budget).unwrap(),
+        vec![b"new live state".to_vec()]
+    );
+    assert_eq!(reader.reader.batch_sizes, [1, 1]);
+    assert_eq!(reader.measurements()["public_get_requests"], 4);
+    assert_eq!(reader.measurements()["cache_entries"], 2);
+    assert_eq!(reader.measurements()["response_bytes"], 30);
+}
+
+#[test]
+fn forwarding_rejects_denied_partial_oversized_and_cancelled_batches_without_cache_insertion() {
+    struct Broken<'a> {
+        mode: u8,
+        calls: usize,
+        cancel: &'a Cancellation,
+    }
+    impl PublicReader for Broken<'_> {
+        fn get(&mut self, _: &PublicRequest, _: &Budget<'_>) -> Result<Vec<u8>> {
+            panic!("failed batch must not retry serially")
+        }
+        fn get_many(
+            &mut self,
+            requests: &[PublicRequest],
+            budget: &Budget<'_>,
+        ) -> Result<Vec<Vec<u8>>> {
+            self.calls += 1;
+            if self.mode == 0 {
+                return Err(io::Error::new(io::ErrorKind::PermissionDenied, "denied"));
+            }
+            let mut bodies = vec![b"bytes".to_vec(); requests.len()];
+            match self.mode {
+                1 => {
+                    bodies.pop();
+                }
+                2 => bodies[0] = vec![0; budget.max_bytes + 1],
+                3 => self.cancel.cancel(),
+                _ => unreachable!(),
+            }
+            Ok(bodies)
+        }
+    }
+    for mode in 0..4 {
+        let cancel = Cancellation::default();
+        let budget = budget(&cancel);
+        let mut raw = Broken {
+            mode,
+            calls: 0,
+            cancel: &cancel,
+        };
+        let mut reader = CollectionReader::new(&mut raw);
+        assert!(
+            reader
+                .get_many(
+                    &[
+                        metadata_request("/org/pipe/builds/7.json".into()),
+                        metadata_request("/org/pipe/builds/7/data/steps".into()),
+                    ],
+                    &budget
+                )
+                .is_err()
+        );
+        assert!(reader.cache.is_empty());
+        assert_eq!(reader.measurements()["response_bytes"], 0);
+        assert_eq!(reader.reader.calls, 1);
+    }
+}
+
+#[test]
+fn forwarding_checks_whole_batch_routes_and_limits_before_transport() {
+    let cancel = Cancellation::default();
+    let budget = budget(&cancel);
+    let mut raw = Reader::default();
+    let mut reader = CollectionReader::new(&mut raw);
+    let invalid = metadata_request("/unreviewed/route".into());
+    assert!(reader.get_many(&[request(1), invalid], &budget).is_err());
+    assert!(
+        reader
+            .get_many(&vec![request(1); PUBLIC_READ_CONCURRENCY + 1], &budget)
+            .is_err()
+    );
+    assert_eq!(reader.reader.calls, 0);
+    assert!(reader.reader.batch_sizes.is_empty());
+}
+
+#[test]
+fn fresh_inventory_forwarding_preserves_actual_transport_overlap_and_response_order() {
+    struct Concurrent {
+        active: AtomicUsize,
+        peak: AtomicUsize,
+        completed: AtomicUsize,
+    }
+    impl PublicReader for Concurrent {
+        fn get(&mut self, _: &PublicRequest, _: &Budget<'_>) -> Result<Vec<u8>> {
+            panic!("fresh metadata forwarding must use concurrent transport")
+        }
+        fn get_many(
+            &mut self,
+            requests: &[PublicRequest],
+            budget: &Budget<'_>,
+        ) -> Result<Vec<Vec<u8>>> {
+            budget.remaining()?;
+            let barrier = Barrier::new(requests.len());
+            bounded_parallel_reads(requests, |request| {
+                let active = self.active.fetch_add(1, Ordering::SeqCst) + 1;
+                self.peak.fetch_max(active, Ordering::SeqCst);
+                barrier.wait();
+                self.active.fetch_sub(1, Ordering::SeqCst);
+                self.completed.fetch_add(1, Ordering::SeqCst);
+                Ok(request.path.as_bytes().to_vec())
+            })
+        }
+    }
+    let cancel = Cancellation::default();
+    let budget = budget(&cancel);
+    let mut raw = Concurrent {
+        active: AtomicUsize::new(0),
+        peak: AtomicUsize::new(0),
+        completed: AtomicUsize::new(0),
+    };
+    let requests = [
+        metadata_request("/org/pipe/builds/7/data/steps".into()),
+        metadata_request("/org/pipe/builds/7.json".into()),
+        metadata_request(
+            "/org/pipe/builds/7/data/jobs?include_retried_jobs=true&paginate=false".into(),
+        ),
+    ];
+    let mut reader = CollectionReader::new(&mut raw);
+    let bodies = reader.get_many(&requests, &budget).unwrap();
+    assert_eq!(
+        bodies,
+        requests
+            .iter()
+            .map(|request| request.path.as_bytes().to_vec())
+            .collect::<Vec<_>>()
+    );
+    assert!(reader.cache.is_empty());
+    drop(reader);
+    assert_eq!(raw.active.load(Ordering::SeqCst), 0);
+    assert_eq!(raw.peak.load(Ordering::SeqCst), 3);
+    assert_eq!(raw.completed.load(Ordering::SeqCst), 3);
+}
 #[test]
 fn failure_never_enters_cache_and_cached_reads_still_obey_deadline_cancel_and_limit() {
     let cancel = Cancellation::default();

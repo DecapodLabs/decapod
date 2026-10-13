@@ -154,6 +154,14 @@ reports are diagnostics, not evidence of correctness; overlapping request work
 must not be summed as wall time. Fixture collectors do not prove live provider
 acceptance.
 
+Independent build envelopes and each build's envelope, steps, and jobs inventory
+are fetched in ordered batches through the same sealed public reader. The
+collection adapter forwards those batches instead of serializing them. Every
+live metadata read remains fresh, including the final complete run-set recheck;
+batching changes transport scheduling, not which checks establish readiness.
+An interrupted controller has no final verdict, even when provider jobs passed.
+No transport timing or process heartbeat can replace the completed report.
+
 ## Authority, specifications, and proof currency
 
 The specs manifest binds both project authority inputs, `config.toml` and
@@ -359,7 +367,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8a26b4742f16587504768acf9c900fdcafe71e5e48661675738d4c3e2a9a8e67`
+- Repository signal fingerprint: `7878f6ed8607d2a1102eb78788025fb7ecdd4c76b313a8bd4107f457e19bd161`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (186 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

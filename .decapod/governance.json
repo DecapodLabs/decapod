@@ -116,6 +116,11 @@
     "target_base": "origin/master"
   },
   "claims": {
+    "fresh-provider-metadata-batching": {
+      "statement": "Independent current provider metadata reads use bounded authorized batches; all identity, cancellation, output-bound and final freshness checks remain mandatory.",
+      "falsifier": "An invalid or denied batch falls back to another route, a metadata response is reused across invocations, changed source/provider identity passes, or batching exceeds the existing concurrency/deadline bound.",
+      "status": "open"
+    },
     "readme-capability-boundaries": {
       "statement": "README distinguishes separate-task concurrency from same-PR tool switching, scopes remote execution to validation, and describes Jev as advisory input without code or CI changes.",
       "falsifier": "Prose promises automatic multi-agent merging, migrated chat memory, authoritative Jev approvals, or remote execution of all Decapod.",
@@ -172,6 +177,11 @@
       "id": "readme-clarity-5",
       "summary": "Fix stale security documentation regression to verify real embedded constitution nodes while retaining access-boundary assertions.",
       "input_digest": "sha256:a4c526b48bc08bf000b2a7b9336245700a9e2f6193d5da2990084643d8476fbe"
+    },
+    {
+      "id": "fresh-metadata-batching",
+      "summary": "Batch independent live provider reads while retaining all source and custody checks; add eight regressions. No final readiness claimed before actual validate completion.",
+      "input_digest": "sha256:f705b567aa91bd29a715343ce6b15b095633b729f805ce130be8f77153b39dab"
     }
   ],
   "intents": {
@@ -199,12 +209,12 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 28,
+        "file_touch_budget": 35,
         "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Clarify README, CONTRIBUTING and SECURITY around human intent and human review/merge, with agents owning engineering work. Remove redundant local operator approval from configured validation-owned exact workspace branch push, preserving source custody, provider permissions and unrelated action policy.",
+      "intent": "Clarify README, CONTRIBUTING and SECURITY around human intent and human review/merge, with agents owning engineering work. Remove redundant local operator approval from configured validation-owned exact workspace branch push. Complete the final validation report by batching fresh provider metadata without weakening source custody, provider permissions, freshness barriers or unrelated action policy.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -214,42 +224,40 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Regression repair now verifies the actual embedded security nodes already described in the reviewed docs/specs; no additional runtime or contract change.",
-          "reviewed_code_fingerprint": "8a26b4742f16587504768acf9c900fdcafe71e5e48661675738d4c3e2a9a8e67",
+          "reason": "Reviewed fresh metadata batching changes transport scheduling only. Existing architecture, public interface and security boundaries remain accurate; every remote identity/freshness observation and custody check is preserved. Detailed collection contract updated in VALIDATION.md.",
+          "reviewed_code_fingerprint": "7878f6ed8607d2a1102eb78788025fb7ecdd4c76b313a8bd4107f457e19bd161",
           "spec_material_hash": "a8f50cd106058535e9496f907f0612d8a8645d5aacb5e1b5d03aa83450106d01"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Regression repair now verifies the actual embedded security nodes already described in the reviewed docs/specs; no additional runtime or contract change.",
-          "reviewed_code_fingerprint": "8a26b4742f16587504768acf9c900fdcafe71e5e48661675738d4c3e2a9a8e67",
+          "reason": "Reviewed fresh metadata batching changes transport scheduling only. Existing architecture, public interface and security boundaries remain accurate; every remote identity/freshness observation and custody check is preserved. Detailed collection contract updated in VALIDATION.md.",
+          "reviewed_code_fingerprint": "7878f6ed8607d2a1102eb78788025fb7ecdd4c76b313a8bd4107f457e19bd161",
           "spec_material_hash": "7f606e094cf647d09672894a3baa4ec9ee76779b6c3532342149e09f36b7667d"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Regression repair now verifies the actual embedded security nodes already described in the reviewed docs/specs; no additional runtime or contract change.",
-          "reviewed_code_fingerprint": "8a26b4742f16587504768acf9c900fdcafe71e5e48661675738d4c3e2a9a8e67",
+          "reason": "Reviewed fresh metadata batching changes transport scheduling only. Existing architecture, public interface and security boundaries remain accurate; every remote identity/freshness observation and custody check is preserved. Detailed collection contract updated in VALIDATION.md.",
+          "reviewed_code_fingerprint": "7878f6ed8607d2a1102eb78788025fb7ecdd4c76b313a8bd4107f457e19bd161",
           "spec_material_hash": "3a32d010c700db35158c28ad9660375581eec104456f3a9ecf0231a9801fcc70"
         }
       ],
       "state": "EXECUTING",
-      "stop_conditions": [
-        "No PR before exact-head full validation succeeds; stop for missing access or authorization; no merge or unrelated CI/security changes."
-      ],
+      "stop_conditions": [],
       "title": "Make the README clear and useful at a glance",
       "todo_ids": [
         "docs_01m4saqn58m57xkt"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791853866Z"
+      "updated_at": "1791861847Z"
     },
     "trajectory": {
       "active_boundaries": [
         "README plus required spec and release-projection consistency only; no code, CI, auth, releases or merge."
       ],
-      "artifact_hash": "sha256:4c4a420af7d9eb1776672629db10e81e4ae7267868cacea1fd7d9a3f120d8432",
+      "artifact_hash": "sha256:151eb33e6dfa0282e271ba79b2fbea8db77e1d46e887c47cc18567cd0a2bf6a7",
       "checks": [
         {
           "name": "accepted-release-source-review",
@@ -260,8 +268,16 @@
           "status": "failed"
         },
         {
+          "name": "collection-source-review",
+          "status": "passed"
+        },
+        {
           "name": "editorial_review",
           "status": "passed"
+        },
+        {
+          "name": "final-controller-readiness",
+          "status": "unavailable"
         },
         {
           "name": "initial-full-validation",
@@ -358,10 +374,31 @@
             "intent_id": "intent:readme-clarity",
             "kind": "trajectory_step_recorded",
             "sequence": 11
+          },
+          {
+            "detail": "trajectory:readme-clarity",
+            "event_id": "event:12",
+            "intent_id": "intent:readme-clarity",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
+          },
+          {
+            "detail": "trajectory:readme-clarity",
+            "event_id": "event:13",
+            "intent_id": "intent:readme-clarity",
+            "kind": "trajectory_step_recorded",
+            "sequence": 13
+          },
+          {
+            "detail": "trajectory:readme-clarity",
+            "event_id": "event:14",
+            "intent_id": "intent:readme-clarity",
+            "kind": "trajectory_step_recorded",
+            "sequence": 14
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 11,
+        "next_sequence": 14,
         "schema_version": "1.0.0",
         "trajectories": {
           "readme-clarity": {
@@ -531,6 +568,74 @@
                 ],
                 "sequence": 11,
                 "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:12",
+                "observations": [
+                  "src/decapod/core/snapshot_provider/automatic.rs",
+                  "src/decapod/core/snapshot_provider/public_buildkite/collection.rs",
+                  "src/decapod/core/snapshot_provider/public_buildkite.rs",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "PR1408 head5694d931 passed all41 Buildkite push checks and36 GitHub push checks, with5 expected skips. Final full CLI readiness remains unavailable: supported foreground status calls returned automatic approval review cancelled, then Unknown process. Preserve final-terminal-validate progress200.033s and recipe32/38, no exit0 claimed. User explicitly directed publication then final-report completion; PR1408 created under that updated instruction.",
+                  "Independent host and collector reviews found no alternate supported durable executor. Implement only bounded fresh metadata batching and forwarding, with existing final rechecks. No persistence feature or weakened proof. Tests remain owned by plain validate."
+                ],
+                "proof_refs": [
+                  "final-controller-readiness"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "README.md",
+                  "README.md, CONTRIBUTING.md, SECURITY.md, directly related authored interface/security specs, and required generated consistency; no runtime, provider, credential or distribution changes",
+                  "User explicitly expanded scope to typed validation-owned push policy source and regression tests plus directly related specs/docs; preserve exact branch/head/base, noforce/tags, provider access and nonvalidation policy.",
+                  "required generated release projections"
+                ],
+                "sequence": 12,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:13",
+                "observations": [
+                  "src/decapod/core/snapshot_provider/automatic.rs",
+                  "src/decapod/core/snapshot_provider/automatic/tests.rs",
+                  "src/decapod/core/snapshot_provider/public_buildkite.rs",
+                  "src/decapod/core/snapshot_provider/public_buildkite/tests.rs",
+                  "src/decapod/core/snapshot_provider/public_buildkite/collection.rs",
+                  "src/decapod/core/snapshot_provider/public_buildkite/collection/tests.rs",
+                  "All100 newly triggered PR1408 provider checks terminal at5694d931:88passed12expectedskips. Full readiness still unavailable. Narrow source review preserves all three remote-binding observations: removing the middle check would lose transient ref/base/tag-movement detection. Only independent fresh envelope/inventory reads are batched; eight regressions cover boundedness/freshness/ordering/denial/malformed or partial responses/cancellation/actual concurrency. No build or test ran outside validation."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "README.md",
+                  "README.md, CONTRIBUTING.md, SECURITY.md, directly related authored interface/security specs, and required generated consistency; no runtime, provider, credential or distribution changes",
+                  "User explicitly expanded scope to typed validation-owned push policy source and regression tests plus directly related specs/docs; preserve exact branch/head/base, noforce/tags, provider access and nonvalidation policy.",
+                  "User explicitly requested actual final-report completion; batch only independent fresh provider reads, preserve all proof authority and source/base freshness checks.",
+                  "required generated release projections"
+                ],
+                "sequence": 13,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:14",
+                "observations": [
+                  "Independent final source review found no blocking issues; six-file source/test diff SHA2567388523f7e7ec9688f83384a3cebeba489e4ea15139a70d3bc196ecc6ada86f1. Concurrency fixture cannot strand workers before its barrier. All three binding observations preserved. Compilation/tests/live latency/final CLI report remain unverified and are owned by plain validate."
+                ],
+                "proof_refs": [
+                  "collection-source-review"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "README.md",
+                  "README.md, CONTRIBUTING.md, SECURITY.md, directly related authored interface/security specs, and required generated consistency; no runtime, provider, credential or distribution changes",
+                  "User explicitly expanded scope to typed validation-owned push policy source and regression tests plus directly related specs/docs; preserve exact branch/head/base, noforce/tags, provider access and nonvalidation policy.",
+                  "User explicitly requested actual final-report completion; batch only independent fresh provider reads, preserve all proof authority and source/base freshness checks.",
+                  "required generated release projections"
+                ],
+                "sequence": 14,
+                "validation_findings": []
               }
             ]
           }
@@ -542,9 +647,13 @@
       "evidence": [
         "Actual second validate exit1 SNAPSHOT_UPLOAD_INCOMPLETE: frozen local tags lacked newly published v0.109.0. Fetched existing remote tag history without publishing or replacing tags. User expanded same PR to CONTRIBUTING and SECURITY before preflight began.",
         "Actual1150 core receipt failed entrypoint_correctness solely because the existing test expected nonexistent constitution.json#core/SECURITY. Updated regression to verify referenced core/DECAPOD, architecture/SECURITY and architecture/SECRETS nodes exist in assets/constitution.json, while retaining direct-file-access prohibition and rejecting legacy missing node. Preserve1150 raw log; no test bypass or local prerequisite suite.",
+        "All100 newly triggered PR1408 provider checks terminal at5694d931:88passed12expectedskips. Full readiness still unavailable. Narrow source review preserves all three remote-binding observations: removing the middle check would lose transient ref/base/tag-movement detection. Only independent fresh envelope/inventory reads are batched; eight regressions cover boundedness/freshness/ordering/denial/malformed or partial responses/cancellation/actual concurrency. No build or test ran outside validation.",
         "Independent editorial and source review approved draft; corrected Jev advisory input and unverified-versus-done state; parent approved final wording with validation-only remote scope.",
         "Independent editorial reviewer read final README, CONTRIBUTING, SECURITY and approved clarity, factual boundaries, preserved policies, no unsupported reporting promises. Final contribution prose simplified to proposed change and target branch. All project builds and tests remain owned by plain validate.",
+        "Independent final source review found no blocking issues; six-file source/test diff SHA2567388523f7e7ec9688f83384a3cebeba489e4ea15139a70d3bc196ecc6ada86f1. Concurrency fixture cannot strand workers before its barrier. All three binding observations preserved. Compilation/tests/live latency/final CLI report remain unverified and are owned by plain validate.",
+        "Independent host and collector reviews found no alternate supported durable executor. Implement only bounded fresh metadata batching and forwarding, with existing final rechecks. No persistence feature or weakened proof. Tests remain owned by plain validate.",
         "Integrator reviewed opaque request construction after source/base/tag/ancestry checks and callback exact-argv identity verification. Tests added for no-receipt create/fastforward/reuse, sixteen malformed requests, invalid executable, unsealed/unrelated writes, explicit executable denial and provider denial. Tests not yet executed; plain validate owns execution.",
+        "PR1408 head5694d931 passed all41 Buildkite push checks and36 GitHub push checks, with5 expected skips. Final full CLI readiness remains unavailable: supported foreground status calls returned automatic approval review cancelled, then Unknown process. Preserve final-terminal-validate progress200.033s and recipe32/38, no exit0 claimed. User explicitly directed publication then final-report completion; PR1408 created under that updated instruction.",
         "Plain validate reported PROOF_PROFILE_RECONCILIATION_REQUIRED; preserved initial-validate.json and exit1. Explicit review compared all76 canonical entries: accepted83eea72 only changes root package version0.108.1 to0.109.0 in Cargo.toml/Cargo.lock; dependency list and every adapter/workflow unchanged. Updated reviewed declaration only, preserving required coverage.",
         "User: Update the code in this as well— never require the human to approve validation. Ordinary human role is prompt intent then review and merge; agent owns build/test configuration, source changes, validation/repair and PR preparation. Previous controller final outcome unknown after host poll cancellation; no proof transferred.",
         "Verified actual architecture/SECURITY and architecture/SECRETS nodes in assets/constitution.json; old core/SECURITY reference nonexistent. Existing private reporting route preserved without inventing address or SLA. Public security page fetched200 but exposes no reporting form; not claimed enabled/disabled. All contribution reference paths exist. No manual validation or access-token setup recipes remain."
@@ -554,6 +663,9 @@
         "Cargo.toml",
         "README.md",
         "src/decapod/core/decision_provider.rs",
+        "src/decapod/core/snapshot_provider/automatic.rs",
+        "src/decapod/core/snapshot_provider/public_buildkite.rs",
+        "src/decapod/core/snapshot_provider/public_buildkite/collection.rs",
         "src/decapod/core/todo.rs",
         "src/decapod/core/workspace.rs"
       ],
@@ -562,17 +674,25 @@
         ".decapod/config.toml",
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/SECURITY.md",
+        ".decapod/managed/specs/VALIDATION.md",
         "CONTRIBUTING.md",
         "README.md",
         "SECURITY.md",
         "src/decapod/core/external_action.rs",
+        "src/decapod/core/snapshot_provider/automatic.rs",
+        "src/decapod/core/snapshot_provider/automatic/tests.rs",
         "src/decapod/core/snapshot_provider/mod.rs",
+        "src/decapod/core/snapshot_provider/public_buildkite.rs",
+        "src/decapod/core/snapshot_provider/public_buildkite/collection.rs",
+        "src/decapod/core/snapshot_provider/public_buildkite/collection/tests.rs",
+        "src/decapod/core/snapshot_provider/public_buildkite/tests.rs",
         "src/decapod/core/snapshot_provider/snapshot.rs",
         "src/decapod/core/snapshot_provider/snapshot/tests.rs",
         "src/decapod/lib.rs",
         "tests/entrypoint_correctness.rs"
       ],
       "next_transitions": [
+        "Checkpoint batching candidate and invoke plain validate; verify actual completed report through provider-built controller.",
         "Checkpoint ready source and invoke plain validate"
       ],
       "repo_scope": [
@@ -580,6 +700,7 @@
         "README.md",
         "README.md, CONTRIBUTING.md, SECURITY.md, directly related authored interface/security specs, and required generated consistency; no runtime, provider, credential or distribution changes",
         "User explicitly expanded scope to typed validation-owned push policy source and regression tests plus directly related specs/docs; preserve exact branch/head/base, noforce/tags, provider access and nonvalidation policy.",
+        "User explicitly requested actual final-report completion; batch only independent fresh provider reads, preserve all proof authority and source/base freshness checks.",
         "required generated release projections"
       ],
       "run_id": "readme-clarity",
