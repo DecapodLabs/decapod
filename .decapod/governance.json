@@ -185,6 +185,11 @@
       "id": "validation-authorized-retry-guidance",
       "summary": "Codify reuse of existing validation-push authority and safely replayable retries while preserving cancellation, denial, scope and exact-source checks.",
       "input_digest": "sha256:1344d8300e1bc9fa82a028280e0eb9ff822b18f6bc895ea8da2aad774dfe7a82"
+    },
+    {
+      "id": "validation-provider-repair",
+      "summary": "Use the authenticated provider-built controller, regenerate supported entrypoints, declare the release policy compile input, and review current authored specs.",
+      "input_digest": "sha256:d969f7854ae51c15b10cca7b98b31046a60653c48469ab61374f8a9ee2af02e9"
     }
   ],
   "intents": {
@@ -222,6 +227,29 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Reviewed accepted executor R versus candidate H authority, transitive closure, existing provider execution, independent final verification and honest rollout limits against the implementation.",
+          "reviewed_code_fingerprint": "c33bc58905862223bd336a0cb676997c4d9c7e5c779a4ebf94a3d265fe78b913",
+          "spec_material_hash": "ec960d5117e65fef6ea0ee63367fb51a57560f2c439302fdae12f13111e65a4e"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Reviewed dual-root custody and configured validation authority reuse; explicit cancellations and authorization denials remain blockers, with no candidate self-approval.",
+          "reviewed_code_fingerprint": "c33bc58905862223bd336a0cb676997c4d9c7e5c779a4ebf94a3d265fe78b913",
+          "spec_material_hash": "53c762bfa40742480bee9389d3e2b6543d3e37ad5e49975f7a695a4e28dd3663"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "The reviewed-code threat model is preserved: exact independently captured executor authority and complete final proof remain mandatory; separate roots are not hostile-code OS isolation, and no credential or persistent access changes are made.",
+          "reviewed_code_fingerprint": "c33bc58905862223bd336a0cb676997c4d9c7e5c779a4ebf94a3d265fe78b913",
+          "spec_material_hash": "3a32d010c700db35158c28ad9660375581eec104456f3a9ecf0231a9801fcc70"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [
         "Do not dispatch a publishing-capable release workflow, change credentials/provider settings, merge, release or deploy without the separately required explicit authority."
@@ -235,7 +263,7 @@
         "An already shipped controller cannot retroactively implement this code; distinguish one-time controller rollout from future older-catalog compatibility proof."
       ],
       "unresolved_contradictions": [],
-      "updated_at": "1791908431Z"
+      "updated_at": "1791910211Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -243,15 +271,19 @@
         "Fresh governed branch only; no master edits, merge, release, deploy, credentials, paid capacity, or unapproved persistent access changes.",
         "Reviewed-transitive-code model only; dual roots are not hostile-code OS isolation."
       ],
-      "artifact_hash": "sha256:b049f8f09292476b69b9d47cc6b1cdef4fe455b260b79ef60ea010ddb30629e4",
-      "blockers": [
-        "Initial controller cannot admit the new protocol; the first candidate static-musl artifact cannot use the host SQLite dynamic library. Corrected Bazel inputs must produce the glibc candidate controller.",
-        "Initial controller lacks new protocol; provider-built supported controller and generated entrypoint/documentation repair pending."
-      ],
+      "artifact_hash": "sha256:fe5d2b4fb3528aee00e0b7a27c6f1fda6bf02a92b88843e84852d42eb69d8f22",
       "checks": [
         {
           "name": "approval-free-runtime-review",
           "status": "passed"
+        },
+        {
+          "name": "candidate-controller-build",
+          "status": "passed"
+        },
+        {
+          "name": "generated-guidance",
+          "status": "partial"
         },
         {
           "name": "imported-program-source-coverage",
@@ -284,10 +316,14 @@
         {
           "name": "release-owner-regressions",
           "status": "unavailable"
+        },
+        {
+          "name": "release-workflow-compile-input",
+          "status": "partial"
         }
       ],
       "completion_claim": "Implementation and regression sources are reviewed; tests and readiness remain unproven until validation executes.",
-      "current_phase": "repair",
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
@@ -336,10 +372,17 @@
             "intent_id": "intent:validation-orchestration-779",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:validation-orchestration-779",
+            "event_id": "event:9",
+            "intent_id": "intent:validation-orchestration-779",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "validation-orchestration-779": {
@@ -443,6 +486,26 @@
                 "validation_findings": [
                   "Existing exact-source branch create, fast-forward and reuse already need no operator receipt; this change adds explicit authorized retry guidance, not a policy bypass."
                 ]
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/actions/runs/38432434956/job/115417995387"
+                ],
+                "proof_refs": [
+                  "candidate-controller-build",
+                  "release-workflow-compile-input",
+                  "generated-guidance"
+                ],
+                "scope": [
+                  "Verified release code defects within the same PR; missing external trigger remains unproven.",
+                  "validation runtime, execution/custody boundaries, provider adapter, canonical guidance, regression tests, relevant authored specs and existing issue reconciliation"
+                ],
+                "sequence": 9,
+                "validation_findings": [
+                  "The new already-authorized retry wording still needs generation by its exact updated binary; the existing controller can now admit the source catalog and own remote verification."
+                ]
               }
             ]
           }
@@ -455,6 +518,7 @@
         "https://buildkite.com/decapodlabs/decapod/builds/1220",
         "https://buildkite.com/decapodlabs/decapod/builds/1225",
         "https://github.com/DecapodLabs/decapod/actions/runs/38428617075",
+        "https://github.com/DecapodLabs/decapod/actions/runs/38432434956/job/115417995387",
         "https://github.com/DecapodLabs/decapod/issues/779#issuecomment-6148469287",
         "src/decapod/core/readiness_profile/tests.rs",
         "src/decapod/core/snapshot_provider/public_buildkite/program.rs",
@@ -473,6 +537,7 @@
         "src/decapod/core/validation_runtime/executor_contract.rs"
       ],
       "next_transitions": [
+        "Checkpoint the repaired candidate and run plain validate with the authenticated provider-built controller; follow any projection or provider repair report.",
         "Checkpoint the repaired source and run plain validation; use the next exact provider-built glibc controller for supported entrypoint regeneration.",
         "Collect remaining concrete CI failures, regenerate projections with the authenticated candidate artifact, integrate the authorized release workflow repair, then checkpoint and rerun plain validation.",
         "Finish bounded source review, checkpoint and run plain validate; repair reported failures using the same branch.",
@@ -491,7 +556,8 @@
       "tool_calls": [],
       "unresolved_assumptions": [
         "Existing exact-source branch create, fast-forward and reuse already need no operator receipt; this change adds explicit authorized retry guidance, not a policy bypass.",
-        "First rollout cannot retroactively teach the existing released controller this new protocol; use independently built supported controller custody without claiming automatic replacement."
+        "First rollout cannot retroactively teach the existing released controller this new protocol; use independently built supported controller custody without claiming automatic replacement.",
+        "The new already-authorized retry wording still needs generation by its exact updated binary; the existing controller can now admit the source catalog and own remote verification."
       ]
     }
   },
