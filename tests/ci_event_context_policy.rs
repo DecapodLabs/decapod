@@ -502,7 +502,7 @@ fn github_outputs_are_fixed_bounded_single_line_records() {
         .lines()
         .map(|line| line.split_once('=').unwrap())
         .collect();
-    assert_eq!(records.len(), 13);
+    assert_eq!(records.len(), 14);
     let expected = [
         "event",
         "trigger_event",
@@ -517,7 +517,9 @@ fn github_outputs_are_fixed_bounded_single_line_records() {
         "pr_like",
         "local_base_verified",
         "provider_freshness",
+        "no_change",
     ];
+    assert!(output.ends_with("no_change=false\n"));
     for ((key, value), expected_key) in records.into_iter().zip(expected) {
         assert_eq!(key, expected_key);
         assert!(

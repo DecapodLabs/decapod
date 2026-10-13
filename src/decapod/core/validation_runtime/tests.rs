@@ -741,3 +741,90 @@ fn successful_validation_preserves_readiness_scope_and_existing_delivery_authori
     assert!(guidance.instruction.contains("reported readiness scope"));
     assert!(guidance.instruction.contains("existing authorization"));
 }
+
+#[test]
+fn reviewed_controller_mismatch_is_actionable_without_provider_dispatch_or_readiness() {
+    for buildkite in [false, true] {
+        let f = Fixture::new("[proof]\n");
+        // Complete but unsupported workflow bytes distinguish an actual
+        // controller mismatch from missing sources or an unreconciled pin.
+        for path in profile::catalog_source_paths() {
+            let file = f.options.root.join(path);
+            fs::create_dir_all(file.parent().unwrap()).unwrap();
+            fs::write(file, b"# changed source contract\n").unwrap();
+        }
+        for (path, bytes) in profile::definition_files() {
+            let file = f.options.root.join(path);
+            fs::create_dir_all(file.parent().unwrap()).unwrap();
+            fs::write(file, bytes).unwrap();
+        }
+        let inventory = discover_source_inventory(&f.options, &Cancellation::default()).unwrap();
+        let reviewed = inventory.digest().unwrap();
+        for (digest, expected_code, expected_action) in [
+            (
+                hash(b"unreviewed inventory"),
+                "READINESS_BLOCKED",
+                "repair_and_revalidate",
+            ),
+            (
+                reviewed,
+                "CONTROLLER_CONTRACT_UNSUPPORTED",
+                "obtain_supported_controller",
+            ),
+        ] {
+            fs::write(
+                f.options.root.join(CONFIG),
+                format!(
+                    "[proof]\nvalidation_buildkite_preflights={buildkite}\n[proof.required_profile]\nid={:?}\nreviewed_sources_digest={digest:?}\n",
+                    profile::REQUIRED_PROFILE
+                ),
+            )
+            .unwrap();
+            run(&f.options.root, &["add", "."]);
+            run(&f.options.root, &["commit", "-m", "review source contract"]);
+            // StopHost panics on target queries, selection or execution.
+            let mut h = host();
+            h.prerequisites = if buildkite {
+                ProjectPrerequisites::ProviderRequired
+            } else {
+                ProjectPrerequisites::Passed
+            };
+            let report = validate(&f.options, &mut h, &Cancellation::default());
+            assert_eq!(h.called, 1);
+            assert!(!report.ready);
+            assert_eq!(report.exit_code(), 1);
+            assert_eq!(report.blockers.len(), 1);
+            assert_eq!(report.blockers[0].code, expected_code);
+            assert_eq!(report.agent_guidance.next_action, expected_action);
+            assert!(report.stage_dispositions.is_empty());
+            assert!(report.evidence_path.is_none());
+            assert!(!f.options.root.join("target").exists());
+            assert_eq!(fs::read_dir(&f.options.evidence_parent).unwrap().count(), 0);
+            if expected_code == "CONTROLLER_CONTRACT_UNSUPPORTED" {
+                assert!(
+                    report.blockers[0]
+                        .detail
+                        .contains(".github/workflows/ci.yml")
+                );
+                let instruction = report.agent_guidance.instruction;
+                assert!(
+                    instruction
+                        .contains("controller does not support this reviewed source contract")
+                );
+                assert!(instruction.contains("Rerunning the same controller, repinning configuration or running a manual build cannot resolve"));
+                assert!(instruction.contains("independently supported controller"));
+                assert!(instruction.contains("preserve the blocker if none is available"));
+                assert!(instruction.contains("No automatic controller bootstrap is implemented"));
+                let value = serde_json::to_value(&report).unwrap();
+                assert_eq!(value["ready"], false);
+                assert_eq!(value["blockers"][0]["code"], expected_code);
+            } else {
+                assert!(
+                    report.blockers[0]
+                        .detail
+                        .starts_with("PROOF_PROFILE_RECONCILIATION_REQUIRED:")
+                );
+            }
+        }
+    }
+}

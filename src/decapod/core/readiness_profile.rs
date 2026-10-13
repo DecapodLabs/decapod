@@ -288,6 +288,7 @@ pub enum PlanningFailure {
     MissingProfile,
     UnknownProfile(String),
     SourceContractChanged,
+    ControllerContractUnsupported(String),
     MissingSource(String),
     UnsupportedSource(String),
     InvalidFacts,
@@ -314,7 +315,11 @@ impl std::fmt::Display for PlanningFailure {
             ),
             Self::SourceContractChanged => write!(
                 f,
-                "PROOF_PROFILE_RECONCILIATION_REQUIRED: source definitions or compiled catalog changed; review inventory and adapters before explicitly updating the declaration"
+                "PROOF_PROFILE_RECONCILIATION_REQUIRED: source inventory differs from the reviewed declaration or the source adapter requires reconciliation; review complete inventory and adapters before explicitly updating the declaration"
+            ),
+            Self::ControllerContractUnsupported(path) => write!(
+                f,
+                "CONTROLLER_CONTRACT_UNSUPPORTED: controller does not support this reviewed source contract at {path}; the declaration matches the discovered inventory, but compiled workflow/helper bytes differ. Rerunning the same controller, repinning configuration or running a manual build cannot resolve this blocker. Use an independently supported controller for this exact contract; preserve the blocker if none is available"
             ),
             Self::MissingBinding(key) => write!(
                 f,
@@ -459,12 +464,14 @@ pub fn required_source_catalog(
     }
     for (path, expected) in reviewed_workflow_digests() {
         if discovered.files.get(*path).map(String::as_str) != Some(*expected) {
-            return Err(PlanningFailure::SourceContractChanged);
+            return Err(PlanningFailure::ControllerContractUnsupported(
+                (*path).into(),
+            ));
         }
     }
     for (path, compiled) in definition_files() {
         if discovered.files.get(path) != Some(&bytes_digest(compiled)) {
-            return Err(PlanningFailure::SourceContractChanged);
+            return Err(PlanningFailure::ControllerContractUnsupported(path.into()));
         }
     }
     let source_digest = discovered.digest()?;

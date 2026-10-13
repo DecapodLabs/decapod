@@ -151,6 +151,15 @@
         "tests/created_branch_workflow_policy.rs",
         "tests/release_cpu_policy.rs"
       ]
+    },
+    {
+      "id": "release-context-controller-diagnostics",
+      "summary": "Repair initial CI assertion and spec reviews; distinguish unsupported controllers and codify validation-owned execution in canonical templates without claiming remote bootstrap",
+      "input_digest": "sha256:6bdec75a01967d854996cbe06b084ff4636181f484b24b107548feb3c3ee700d",
+      "proof_refs": [
+        "https://buildkite.com/decapodlabs/decapod/builds/1199",
+        "https://github.com/DecapodLabs/decapod/actions/runs/38372362158/job/115214285712"
+      ]
     }
   ],
   "intents": {
@@ -181,12 +190,35 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Fix verified ordinary branch creation at the accepted target without treating it as a candidate or granting readiness; retain immutable checks for changed sources. Use runner-effective CPU parallelism only in the existing release artifact matrix, preserving resource and publishing boundaries.",
+      "intent": "Fix verified ordinary branch creation at the accepted target without treating it as a candidate or granting readiness; retain immutable checks for changed sources. Use runner-effective CPU parallelism only in the existing release artifact matrix. Codify source-ready plain-validation guidance and distinguish unsupported compiled controllers from inventory reconciliation; preserve the separately unresolved remote harness gap.",
       "phases": [],
       "proof_hooks": [
-        "decapod validate with CI context adversarial fixtures and release artifact resource/matrix regressions"
+        "Plain decapod validate; adversarial CI context, release CPU/matrix, typed controller mismatch and canonical template regressions"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Reviewed accepted-tip no-delta route, pre/post identity checks and finite compiled-controller boundary; configured validation owns execution while absent independent remote bootstrap remains explicit",
+          "reviewed_code_fingerprint": "7655a00105008bd2e8a5a8b8fd95208cc5dbb191c951b2cddc5f2ce21602189b",
+          "spec_material_hash": "f8dfd4a65a73efabeac3c3160afe1557fd3a6596adbcc8d9098364a3048650ce"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Reviewed no_change output and strict candidate endpoints plus typed CONTROLLER_CONTRACT_UNSUPPORTED and obtain_supported_controller guidance; neither no-change context nor controller diagnostics grants readiness",
+          "reviewed_code_fingerprint": "7655a00105008bd2e8a5a8b8fd95208cc5dbb191c951b2cddc5f2ce21602189b",
+          "spec_material_hash": "ae5de3cd8fa13e0c1eac7da07df4afaecf48bb66965945e592d30d20279f7048"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Reviewed exact source and accepted-target identity, no-change isolation from measured candidate proof, release CPU scope, and fail-closed controller mismatch. No authorization, credential, provider access, self-attested readiness or publication boundary changes are introduced; existing security prose remains accurate",
+          "reviewed_code_fingerprint": "7655a00105008bd2e8a5a8b8fd95208cc5dbb191c951b2cddc5f2ce21602189b",
+          "spec_material_hash": "3a32d010c700db35158c28ad9660375581eec104456f3a9ecf0231a9801fcc70"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [
         "Unavailable provider access, required credentials, or resource constraints requiring human decision"
@@ -197,27 +229,48 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791880476Z"
+      "updated_at": "1791883201Z"
     },
     "trajectory": {
       "active_boundaries": [
         "No merges, release publication, deploys, credentials, paid capacity, force pushes or temporary refs"
       ],
-      "artifact_hash": "sha256:fc9b1f2e8864240c1e5ecf16fd7614980879846fe2dc5babe9a239c668e91a0b",
+      "artifact_hash": "sha256:e96b044b9d9b3f5200c30e7f9b2c8ad13afae7db1656a7dc8454b6843aaa21d5",
       "checks": [
         {
           "name": "CI context independent source review",
           "status": "passed"
         },
         {
+          "name": "CI context output contract",
+          "status": "failed"
+        },
+        {
           "name": "Configured proof execution",
           "status": "unavailable"
+        },
+        {
+          "name": "Controller diagnostic source review",
+          "status": "passed"
+        },
+        {
+          "name": "Governance spec review",
+          "status": "failed"
+        },
+        {
+          "name": "No-change whole-command regressions",
+          "status": "passed"
+        },
+        {
+          "name": "Release CPU and matrix regressions",
+          "status": "passed"
         },
         {
           "name": "source review",
           "status": "partial"
         }
       ],
+      "current_phase": "repair",
       "custody": {
         "events": [
           {
@@ -245,10 +298,24 @@
             "intent_id": "intent:release-context-1397-1049",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:release-context-1397-1049",
+            "event_id": "event:6",
+            "intent_id": "intent:release-context-1397-1049",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
+          },
+          {
+            "detail": "trajectory:release-context-1397-1049",
+            "event_id": "event:7",
+            "intent_id": "intent:release-context-1397-1049",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "release-context-1397-1049": {
@@ -299,6 +366,51 @@
                 "validation_findings": [
                   "No actual four-target release artifact build is scheduled by ordinary source preflight;1049 latency improvement remains unmeasured"
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "GitHub job115214285712:52 context fixtures passed; existing output count expected13 rather than14, now corrected with exact no_change=false assertion",
+                  "GitHub job115214285712:2 whole-command tests passed in4.63s; actual verifier/profile binaries with explicit Ajv/Node doubles",
+                  "GitHub job115214285712:6 CPU/matrix/wrapper regression tests passed; not actual release packaging speed evidence",
+                  "GitHub job115214384022 reported SPEC_REVIEW_REQUIRED for INTERFACES; supported content-bound review recorded"
+                ],
+                "proof_refs": [
+                  "CI context output contract",
+                  "No-change whole-command regressions",
+                  "Release CPU and matrix regressions",
+                  "Governance spec review"
+                ],
+                "scope": [
+                  "CI context source/action/constitution workflow/tests, release artifact helper/workflow/tests, directly related specs and generated consistency"
+                ],
+                "sequence": 6,
+                "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/readiness_profile.rs",
+                  "src/decapod/core/assets.rs",
+                  "src/decapod/core/docs_cli.rs",
+                  "tests/ci_event_context_policy.rs",
+                  "Independent source review: typed failure occurs only after complete inventory equality and missing/unknown-source rejection; no dispatch, readiness or trust fallback is added",
+                  "Initial exact b0fc82 graph terminal:71success,5skipped,6failure entries from output-count assertion and missing spec review only; Buildkite1199 ended2026-10-13T09:05:03.312Z",
+                  "Provider-built b0fc82 controller ZIP artifact11799827610 SHA256 2a4691cf2522760bf688c48bcfcbbb844e4424373192cfc8012f764d0e44cfb9; executable SHA256 d1f3613f8a38e3cd80e29c6f68582cd294506680d568302aa324cba2a5c72006"
+                ],
+                "proof_refs": [
+                  "Controller diagnostic source review"
+                ],
+                "scope": [
+                  "CI context source/action/constitution workflow/tests, release artifact helper/workflow/tests, directly related specs and generated consistency"
+                ],
+                "sequence": 7,
+                "validation_findings": [
+                  "Automatic trusted remote controller bootstrap is absent; a two-revision independent provider harness requires separate scope decision. Diagnostics do not claim to close that gap."
+                ]
               }
             ]
           }
@@ -306,8 +418,15 @@
       },
       "declared_commands": [],
       "evidence": [
+        "GitHub job115214285712:2 whole-command tests passed in4.63s; actual verifier/profile binaries with explicit Ajv/Node doubles",
+        "GitHub job115214285712:52 context fixtures passed; existing output count expected13 rather than14, now corrected with exact no_change=false assertion",
+        "GitHub job115214285712:6 CPU/matrix/wrapper regression tests passed; not actual release packaging speed evidence",
+        "GitHub job115214384022 reported SPEC_REVIEW_REQUIRED for INTERFACES; supported content-bound review recorded",
         "Historical failure: https://github.com/DecapodLabs/decapod/actions/runs/38343792522/job/115120460402 and Buildkite1183 at exact ef7ab8bc accepted-head branch creation",
         "Independent review preserved measured distinct endpoints and required before/after no-change identity rechecks; whole-command fixture results pending validate",
+        "Independent source review: typed failure occurs only after complete inventory equality and missing/unknown-source rejection; no dispatch, readiness or trust fallback is added",
+        "Initial exact b0fc82 graph terminal:71success,5skipped,6failure entries from output-count assertion and missing spec review only; Buildkite1199 ended2026-10-13T09:05:03.312Z",
+        "Provider-built b0fc82 controller ZIP artifact11799827610 SHA256 2a4691cf2522760bf688c48bcfcbbb844e4424373192cfc8012f764d0e44cfb9; executable SHA256 d1f3613f8a38e3cd80e29c6f68582cd294506680d568302aa324cba2a5c72006",
         "Reviewed release0.110 accepted delta contains only Cargo root package/lock version and changelog; current source inventory includes8 intended helper/workflow/build edits"
       ],
       "inspected_files": [
@@ -315,16 +434,24 @@
         ".github/workflows/release.yml",
         "assets/tools/ci_event_context.rs",
         "assets/tools/source_ci_custody.rs",
-        "src/decapod/core/readiness_profile.rs"
+        "src/decapod/core/readiness_profile.rs",
+        "src/decapod/core/validation_runtime.rs"
       ],
       "intent_id": "intent:release-context-1397-1049",
       "modified_files": [
         ".github/actions/ci-context/action.yml",
         ".github/workflows/constitution-sync.yml",
-        "assets/tools/ci_event_context.rs"
+        "assets/tools/ci_event_context.rs",
+        "src/decapod/core/assets.rs",
+        "src/decapod/core/docs_cli.rs",
+        "tests/ci_event_context_policy.rs"
+      ],
+      "next_transitions": [
+        "Checkpoint repaired source and invoke plain validation through the reviewed provider-built controller"
       ],
       "repo_scope": [
-        "CI context source/action/constitution workflow/tests, release artifact helper/workflow/tests, directly related specs and generated consistency"
+        "CI context source/action/constitution workflow/tests, release artifact helper/workflow/tests, directly related specs and generated consistency",
+        "Canonical agent templates and typed validation-controller mismatch diagnostics with regression tests"
       ],
       "run_id": "release-context-1397-1049",
       "schema_version": "1.1.0",
@@ -332,6 +459,7 @@
       "task_id": "bugs_01m4t62e629se07y",
       "tool_calls": [],
       "unresolved_assumptions": [
+        "Automatic trusted remote controller bootstrap is absent; a two-revision independent provider harness requires separate scope decision. Diagnostics do not claim to close that gap.",
         "Four-platform release packaging is outside current source readiness; genuine artifact proof and resource limits must remain explicit",
         "No actual four-target release artifact build is scheduled by ordinary source preflight;1049 latency improvement remains unmeasured"
       ]

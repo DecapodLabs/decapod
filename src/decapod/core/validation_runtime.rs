@@ -117,6 +117,15 @@ impl ValidationGuidance {
             human_input_when: "Stop for unresolved intent, a decision gate, missing authorization or unavailable access; request the specific human input without delegating ordinary configuration, build orchestration or repair to the human.",
         }
     }
+
+    fn for_controller_contract_unsupported() -> Self {
+        Self {
+            next_action: "obtain_supported_controller",
+            instruction: "The controller does not support this reviewed source contract. Rerunning the same controller, repinning configuration or running a manual build cannot resolve this blocker. Use an independently supported controller for this exact contract, then run plain decapod validate; preserve the blocker if none is available. No automatic controller bootstrap is implemented.",
+            human_input_when: "Request the specific access, authorization or controller-support decision needed if no independently supported controller is available; do not weaken the contract or substitute manual-build evidence.",
+            ..Self::for_outcome(false)
+        }
+    }
 }
 
 #[derive(Debug, Serialize)]
@@ -486,7 +495,7 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
     let release = None;
     let catalog =
         profile::required_source_catalog(configuration.required_profile.as_ref(), &sources, &facts)
-            .map_err(|error| invalid(error.to_string()))?;
+            .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?;
     let configuration_paths = tracked
         .iter()
         .filter(|p| {
@@ -688,9 +697,19 @@ pub fn validate(options: &Options, host: &mut dyn Host, cancel: &Cancellation) -
     };
     let result = run(options, host, cancel, &mut report);
     if let Err(error) = result {
-        report
-            .blockers
-            .push(Blocker::new("READINESS_BLOCKED", error.to_string()));
+        let unsupported_controller = matches!(
+            error
+                .get_ref()
+                .and_then(|cause| cause.downcast_ref::<profile::PlanningFailure>()),
+            Some(profile::PlanningFailure::ControllerContractUnsupported(_))
+        );
+        let code = if unsupported_controller {
+            report.agent_guidance = ValidationGuidance::for_controller_contract_unsupported();
+            "CONTROLLER_CONTRACT_UNSUPPORTED"
+        } else {
+            "READINESS_BLOCKED"
+        };
+        report.blockers.push(Blocker::new(code, error.to_string()));
     }
     report
 }

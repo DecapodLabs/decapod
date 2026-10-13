@@ -241,7 +241,8 @@ fn edited_compiled_selection_helper_and_unknown_provider_cannot_be_auto_blessed(
     decl.reviewed_sources_digest = files.digest().unwrap();
     assert!(matches!(
         required_catalog(Some(&decl), &files, &facts, &release),
-        Err(PlanningFailure::SourceContractChanged)
+        Err(PlanningFailure::ControllerContractUnsupported(path))
+            if path == "assets/tools/source_ci_profile.rs"
     ));
     let (mut decl, mut files, facts, release) = inputs();
     files
@@ -612,10 +613,15 @@ fn modified_known_workflow_cannot_be_blessed_by_only_repinning_project_config() 
         ".github/workflows/docs_autosync.yml".into(),
         d("new pull_request trigger"),
     );
-    decl.reviewed_sources_digest = files.digest().unwrap();
     assert!(matches!(
         required_catalog(Some(&decl), &files, &facts, &release),
         Err(PlanningFailure::SourceContractChanged)
+    ));
+    decl.reviewed_sources_digest = files.digest().unwrap();
+    assert!(matches!(
+        required_catalog(Some(&decl), &files, &facts, &release),
+        Err(PlanningFailure::ControllerContractUnsupported(path))
+            if path == ".github/workflows/docs_autosync.yml"
     ));
 }
 
@@ -954,5 +960,50 @@ fn missing_required_build_and_test_contracts_never_compile_an_empty_profile() {
         let diagnostic = error.to_string();
         assert!(diagnostic.contains("agent must restore or reconcile"));
         assert!(diagnostic.contains("rerun decapod validate"));
+    }
+}
+
+#[test]
+fn controller_mismatch_is_distinct_only_after_complete_inventory_review() {
+    for path in [
+        ".github/workflows/ci.yml",
+        "assets/tools/source_ci_profile.rs",
+        "assets/tools/ci_event_context.rs",
+    ] {
+        let (mut declaration, mut sources, facts, _) = inputs();
+        sources.files.insert(path.into(), d("candidate contract"));
+        let error = required_source_catalog(Some(&declaration), &sources, &facts).unwrap_err();
+        assert_eq!(error, PlanningFailure::SourceContractChanged);
+        assert!(
+            error
+                .to_string()
+                .starts_with("PROOF_PROFILE_RECONCILIATION_REQUIRED:")
+        );
+        declaration.reviewed_sources_digest = sources.digest().unwrap();
+        let error = required_source_catalog(Some(&declaration), &sources, &facts).unwrap_err();
+        assert_eq!(
+            error,
+            PlanningFailure::ControllerContractUnsupported(path.into())
+        );
+        let detail = error.to_string();
+        assert!(detail.starts_with("CONTROLLER_CONTRACT_UNSUPPORTED:"));
+        assert!(detail.contains("controller does not support this reviewed source contract"));
+        assert!(detail.contains("independently supported controller"));
+        assert!(detail.contains("preserve the blocker if none is available"));
+
+        sources
+            .files
+            .insert(".github/workflows/new.yml".into(), d("unknown workflow"));
+        declaration.reviewed_sources_digest = sources.digest().unwrap();
+        assert!(matches!(
+            required_source_catalog(Some(&declaration), &sources, &facts),
+            Err(PlanningFailure::UnsupportedSource(_))
+        ));
+        sources.files.remove(".github/workflows/ci.yml");
+        declaration.reviewed_sources_digest = sources.digest().unwrap();
+        assert!(matches!(
+            required_source_catalog(Some(&declaration), &sources, &facts),
+            Err(PlanningFailure::MissingSource(_))
+        ));
     }
 }

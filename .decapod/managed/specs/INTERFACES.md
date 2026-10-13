@@ -234,6 +234,13 @@ and `resume_command`. These fields steer the agent; they do not change the
 readiness verdict, grant authorization, or replace execution evidence. Missing
 build/test configuration and unsupported adapters remain explicit blockers.
 
+`CONTROLLER_CONTRACT_UNSUPPORTED` distinguishes a reviewed inventory from a
+workflow or helper contract the running controller cannot interpret. Its
+`next_action` is `obtain_supported_controller`, and readiness remains false.
+Repeating validation with that controller, changing the declaration or building
+manually cannot repair this incompatibility. The current runtime does not
+bootstrap a replacement controller or accept a candidate's own readiness claim.
+
 `proof.validation_buildkite_preflights=false` selects native execution; `true`
 selects the optional Buildkite adapter for the same required profile. Unknown
 profiles, unavailable adapters, and unreconciled source contracts fail explicitly.
@@ -329,7 +336,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6a672fd9414a59a2a71e7cdc521fa11f6e58ea0fa33483c18e2fee3962c9df67`
+- Repository signal fingerprint: `7655a00105008bd2e8a5a8b8fd95208cc5dbb191c951b2cddc5f2ce21602189b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (180 files), `tests/` (188 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

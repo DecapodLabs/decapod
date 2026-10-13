@@ -186,6 +186,13 @@ check profiles. Buildkite is a provider of execution evidence. Its presence
 does not change the ownership of intent, policy, or proof requirements.
 Provider details belong in [VALIDATION.md](VALIDATION.md).
 
+The controller's finite source adapters are separate from the configured
+project's reviewed inventory. `readiness_profile::required_source_catalog`
+checks both before execution selection. A matching declaration cannot authorize
+different compiled workflow or helper semantics; this case returns a typed
+controller-support blocker rather than asking the agent to repin and repeat.
+There is no independently pinned remote controller-bootstrap harness today.
+
 Governed publication requires current readiness and uses a normal non-forced
 push. Remote divergence requires reconciliation and fresh proof. Branch push,
 pull-request creation, merge, packaging, release, and deployment remain
@@ -273,7 +280,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6a672fd9414a59a2a71e7cdc521fa11f6e58ea0fa33483c18e2fee3962c9df67`
+- Repository signal fingerprint: `7655a00105008bd2e8a5a8b8fd95208cc5dbb191c951b2cddc5f2ce21602189b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (180 files), `tests/` (188 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

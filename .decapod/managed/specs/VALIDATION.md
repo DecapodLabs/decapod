@@ -117,6 +117,16 @@ workflow contracts, unproved exclusions, or self-dependent validation fail
 explicitly. Profile declarations are reviewed policy and cannot be silently
 updated to match whatever evidence happens to exist.
 
+After source and required governance material are ready, the agent checkpoints
+and commits the candidate, then invokes plain validation. Configured build
+prerequisites and tests belong inside that route. Canonical agent templates in
+`src/decapod/core/assets.rs` forbid a separate manual build or shadow preflight.
+An unreviewed inventory requires reconciliation. A reviewed inventory that
+differs from the running controller's compiled adapters instead reports
+`CONTROLLER_CONTRACT_UNSUPPORTED` and requires an independently supported
+controller. The current runtime does not automatically build or promote a new
+controller to resolve that incompatibility. Neither outcome grants readiness.
+
 The current core profile reports `source_pr_readiness`. Release-only
 four-platform packaging is outside that profile. A passing source report makes
 no packaging or delivery claim. Publishing and deployment simulations must be
@@ -375,7 +385,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6a672fd9414a59a2a71e7cdc521fa11f6e58ea0fa33483c18e2fee3962c9df67`
+- Repository signal fingerprint: `7655a00105008bd2e8a5a8b8fd95208cc5dbb191c951b2cddc5f2ce21602189b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (180 files), `tests/` (188 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

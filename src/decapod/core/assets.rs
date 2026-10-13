@@ -656,7 +656,7 @@ See `AGENTS.md` for the universal contract.
 ## Orientation & Documentation
 - **Run `decapod docs ingest` before using Decapod beyond help/version checks.**
 - Use `decapod docs` command output instead of guessing command arguments.
-- Treat Decapod errors as recovery instructions.
+- Treat Decapod errors as recovery instructions. Once source and required governance material are ready, checkpoint and commit the candidate, then run plain `decapod validate`. Validation owns configured build prerequisites and tests; do not run a separate manual build or shadow preflight. `CONTROLLER_CONTRACT_UNSUPPORTED` means the controller does not support this reviewed source contract. Rerunning the same controller, repinning configuration or running a manual build cannot resolve it; use an independently supported controller for this exact contract, and preserve the blocker if none is available.
 - Respect repo-local config policy and workspace boundaries.
 - Do not bypass Decapod boundaries to appear productive. Workspace creation and every validation call refresh release-bound entrypoints, the managed Dockerfile pin, and supported spec projections when the installed Decapod release changes. Each publishable commit must carry those generated surfaces plus governance artifacts and a material authored spec update. Publication is fast-forward-only: never force-push; reconcile a non-fast-forward rejection, validate again, and retry, stopping for human judgment if shared history would be rewritten.
 ## Mandatory Prompt Safety Gate
@@ -783,7 +783,7 @@ decapod constitution search --query "<problem>"
 4. **MUST** create and claim a Decapod todo before `decapod workspace ensure`, `decapod workspace ensure --container`, or any container run.
 5. **MUST NOT** work on main/master or modify the root repository's active branch. **MUST** use `decapod workspace ensure`.
 6. **MUST** read [.decapod/config.toml](.decapod/config.toml) as user-editable project context.
-7. Work branch pushes and iteration are allowed before preflight. **MUST NOT** create a PR (including a draft) until intent is converged, the branch is mergeable into the accepted target, and `decapod validate` succeeds against the exact current candidate and accepted target. If validation fails, follow the actionable instructions and recovery steps in its validation report, repair the reported root causes on the same work branch, and rerun `decapod validate` against the exact current candidate. Never bypass a reported gate, fabricate evidence, weaken required checks, or create a PR merely to obtain a green status. If the report requires unavailable access or a human decision, preserve its exact blocker and obtain that input before continuing. Any material, history, policy, workflow, toolchain or accepted-target change invalidates earlier readiness. `decapod govern project-check` only prepares and verifies project prerequisites; its success is never permission to create a PR. Inside GitHub Actions or Buildkite, `decapod validate` runs bounded CI-local checks without submitting or waiting for another preflight; its report explicitly says `scope=ci_local` and `publication_ready=false`. Only full workbranch validation outside CI can establish PR readiness. When Buildkite validation is enabled, actual Buildkite execution evidence is required; GitHub Actions results neither satisfy nor block that profile. Complete and checkpoint the current candidate before full validation; pushing that candidate first is allowed. When enabled, validation pushes or reuses the exact current Decapod workspace branch, waits for Buildkite execution on that same commit, and requires the complete proof before PR creation. It does not create a temporary preflight branch or run a duplicate local prerequisite suite first. The eventual PR uses this same workspace branch. **MUST NOT** claim done or stop after a recoverable validation failure. Every publishable commit must include the release-bound entrypoints, managed Dockerfile pin, specs manifest, governance artifacts, and a material authored spec update; workspace creation and validation refresh supported generated projections automatically when the installed release changes.
+7. Work branch pushes and iteration are allowed before preflight. **MUST NOT** create a PR (including a draft) until intent is converged, the branch is mergeable into the accepted target, and `decapod validate` succeeds against the exact current candidate and accepted target. If validation fails, follow the actionable instructions and recovery steps in its validation report, repair the reported root causes on the same work branch, and rerun `decapod validate` against the exact current candidate. Never bypass a reported gate, fabricate evidence, weaken required checks, or create a PR merely to obtain a green status. If the report requires unavailable access or a human decision, preserve its exact blocker and obtain that input before continuing. Any material, history, policy, workflow, toolchain or accepted-target change invalidates earlier readiness. `decapod govern project-check` only prepares and verifies project prerequisites; its success is never permission to create a PR. Inside GitHub Actions or Buildkite, `decapod validate` runs bounded CI-local checks without submitting or waiting for another preflight; its report explicitly says `scope=ci_local` and `publication_ready=false`. Only full workbranch validation outside CI can establish PR readiness. When Buildkite validation is enabled, actual Buildkite execution evidence is required; GitHub Actions results neither satisfy nor block that profile. Once source and required governance material are ready, checkpoint and commit the candidate, then run plain `decapod validate`. Validation owns configured build prerequisites and tests; do not run a separate manual build or shadow preflight. Pushing that candidate first is allowed. `CONTROLLER_CONTRACT_UNSUPPORTED` means the controller does not support this reviewed source contract. Rerunning the same controller, repinning configuration or running a manual build cannot resolve it; use an independently supported controller for this exact contract, and preserve the blocker if none is available. When enabled, validation pushes or reuses the exact current Decapod workspace branch, waits for Buildkite execution on that same commit, and requires the complete proof before PR creation. It does not create a temporary preflight branch or run a duplicate local prerequisite suite first. The eventual PR uses this same workspace branch. **MUST NOT** claim done or stop after a recoverable validation failure. Every publishable commit must include the release-bound entrypoints, managed Dockerfile pin, specs manifest, governance artifacts, and a material authored spec update; workspace creation and validation refresh supported generated projections automatically when the installed release changes.
 8. **MUST NOT** invent capabilities that are not exposed by the binary.
 9. **MUST** stop if requirements conflict or intent is ambiguous.
 10. **MUST** respect the interface abstraction boundary.
@@ -1056,4 +1056,34 @@ jobs:
           fi
 "#
     .to_string()
+}
+
+#[cfg(test)]
+mod validation_contract_tests {
+    #[test]
+    fn canonical_entrypoints_keep_validation_owned_execution_within_line_budgets() {
+        for (name, limit) in [
+            ("AGENTS.md", 120),
+            ("CLAUDE.md", 70),
+            ("GEMINI.md", 70),
+            ("CODEX.md", 70),
+        ] {
+            let body = crate::core::entrypoint_integrity::render_entrypoint(name).unwrap();
+            for phrase in [
+                "Once source and required governance material are ready, checkpoint and commit the candidate, then run plain `decapod validate`",
+                "Validation owns configured build prerequisites and tests",
+                "do not run a separate manual build or shadow preflight",
+                "CONTROLLER_CONTRACT_UNSUPPORTED",
+                "controller does not support this reviewed source contract",
+                "independently supported controller",
+                "preserve the blocker if none is available",
+            ] {
+                assert!(body.contains(phrase), "{name} lacks {phrase}");
+            }
+            assert!(
+                body.lines().count() <= limit,
+                "{name} exceeds {limit} lines"
+            );
+        }
+    }
 }
