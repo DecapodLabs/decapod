@@ -2,7 +2,7 @@
 
 Keep each change focused, explain the behavior it should improve, and include
 evidence reviewers can inspect. Your coding agent handles the engineering
-workflow; you set the scope and review the outcome.
+workflow; you describe the change, then review and merge the PR.
 
 ## Non-Negotiable PR Rules
 
@@ -78,7 +78,7 @@ verification and records its evidence with the PR.
 
 ## Before You Open a PR
 
-Ask your agent to prepare a reviewable change:
+The agent prepares a reviewable change:
 
 - Work in a claimed, isolated workspace and leave `master` unchanged
 - Update the relevant authored specifications along with the implementation

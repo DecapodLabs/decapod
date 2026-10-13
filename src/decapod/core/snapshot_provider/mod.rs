@@ -166,6 +166,7 @@ pub enum Program {
 /// Opaque to external callers. There is deliberately no arbitrary argv constructor.
 #[derive(Debug)]
 pub enum ProviderRequest {
+    WorkspaceBranchPush(snapshot::AuthorizedWorkspaceBranchPush),
     GithubGet {
         path: String,
     },
@@ -289,6 +290,12 @@ impl Runner for OfficialCli {
             )
         ) {
             spec.authorize_provider_read()?;
+        }
+        if matches!(
+            spec.provider_request(),
+            Some(ProviderRequest::WorkspaceBranchPush(_))
+        ) {
+            spec.authorize_workspace_branch_push()?;
         }
         (self.authorize)(spec, program)?;
         let mut c = Command::new(program);

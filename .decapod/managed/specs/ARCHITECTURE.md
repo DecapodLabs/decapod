@@ -189,7 +189,10 @@ Provider details belong in [VALIDATION.md](VALIDATION.md).
 Governed publication requires current readiness and uses a normal non-forced
 push. Remote divergence requires reconciliation and fresh proof. Branch push,
 pull-request creation, merge, packaging, release, and deployment remain
-distinct external outcomes.
+distinct external outcomes. The human supplies intent and reviews and merges
+the prepared PR; the agent owns the engineering work and validation phase. The
+checked validation push uses narrowly bound authorization rather than a separate
+local operator-approval ceremony.
 
 ## Optional advisory intelligence
 
@@ -263,7 +266,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a3ffe79fc50f186fc07d685a3846a948c9f57811f8cdf81f0f9f45c90486210e`
+- Repository signal fingerprint: `a8675f753f846c78c0819e8d9887a1ef4f775e2f454be3e115a42de0db9a5edc`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (186 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

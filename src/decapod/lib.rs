@@ -6375,38 +6375,54 @@ fn readiness_profile_uses_public_metadata(
         && profile.is_some_and(|p| p.id == core::readiness_profile::REQUIRED_PROFILE)
 }
 
+fn authorize_readiness_snapshot_command(
+    store: &Path,
+    spec: &core::snapshot_provider::CommandSpec,
+    executable: &Path,
+) -> std::io::Result<()> {
+    use core::external_action::{self, ExternalCapability};
+    use core::snapshot_provider::{Program, ProviderRequest};
+    if matches!(
+        spec.provider_request(),
+        Some(ProviderRequest::WorkspaceBranchPush(_))
+    ) {
+        let request = spec.authorize_workspace_branch_push()?;
+        return external_action::authorize_workspace_branch_push(store, executable, request)
+            .map_err(std::io::Error::other);
+    }
+    let capability = match spec.program() {
+        Program::GitTransport if spec.arguments().iter().any(|a| a == "push") => {
+            ExternalCapability::VcsWrite
+        }
+        Program::GitTransport => ExternalCapability::VcsRead,
+        Program::GitLocal => ExternalCapability::ProofExec,
+        Program::Github => {
+            let request = spec.authorize_provider_read()?;
+            return external_action::authorize_official_github_read(store, executable, &request)
+                .map_err(std::io::Error::other);
+        }
+        _ => return Err(std::io::Error::other("unsupported snapshot executable")),
+    };
+    external_action::authorize(
+        store,
+        capability,
+        "readiness.workspace-branch",
+        &executable.to_string_lossy(),
+    )
+    .map_err(std::io::Error::other)
+}
+
 fn readiness_snapshot_runner(
     options: &core::validation_runtime::Options,
     repository: &core::snapshot_provider::Repository,
     public_handoff: bool,
 ) -> Result<ReadinessSnapshotRunner, error::DecapodError> {
-    use core::external_action::{self, ExternalCapability};
-    use core::snapshot_provider::{OfficialCli, Program, PublicGithubReads};
+    use core::external_action;
+    use core::snapshot_provider::{OfficialCli, PublicGithubReads};
     let store = find_governance_root(&options.root).join(".decapod/data");
     let git_store = store.clone();
     let authorize = move |spec: &core::snapshot_provider::CommandSpec, executable: &Path| {
-        let capability = match spec.program() {
-            Program::GitTransport if spec.arguments().iter().any(|a| a == "push") => {
-                ExternalCapability::VcsWrite
-            }
-            Program::GitTransport => ExternalCapability::VcsRead,
-            Program::GitLocal => ExternalCapability::ProofExec,
-            Program::Github => {
-                let request = spec.authorize_provider_read()?;
-                return external_action::authorize_official_github_read(
-                    &git_store, executable, &request,
-                )
-                .map_err(std::io::Error::other);
-            }
-            _ => return Err(std::io::Error::other("unsupported snapshot executable")),
-        };
-        external_action::authorize(
-            &git_store,
-            capability,
-            "readiness.workspace-branch",
-            &executable.to_string_lossy(),
-        )
-        .map_err(std::io::Error::other)
+        authorize_readiness_snapshot_command(&git_store, spec, executable)
     };
     // Prefer an installed official client for repository identity and Buildkite
     // discovery locators. Actions artifact download is not part of this backend.

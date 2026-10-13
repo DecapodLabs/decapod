@@ -134,6 +134,14 @@
         "Independent editorial review and static content review",
         "README.md"
       ]
+    },
+    "validation-without-operator-receipt": {
+      "statement": "Configured validation can create, fast-forward or reuse its exact governed workspace branch without asking the human for a separate local policy receipt; unrelated writes, altered requests and provider/executable denials remain blocked.",
+      "falsifier": "The first checked validation push needs an operator receipt; a changed command/root/head/ref/repository inherits the seal; or unrelated write/provider restrictions are bypassed.",
+      "status": "open",
+      "proof_refs": [
+        "src/decapod/core/snapshot_provider/snapshot/tests.rs"
+      ]
     }
   },
   "checkpoints": [
@@ -154,6 +162,11 @@
       "id": "readme-clarity-3",
       "summary": "Clarify CONTRIBUTING and SECURITY alongside README; preserve agent-owned verification, private reporting expectations and implemented security limits.",
       "input_digest": "sha256:1d2fe022076db4df6c034c0341aab11fe0cb068493dae9983472d2418fe6fd6f"
+    },
+    {
+      "id": "readme-clarity-4",
+      "summary": "Make the checked validation-owned workspace push noninteractive with an opaque exact-command seal; retain other write/provider controls and add regression coverage; reflect human intent and review/merge in docs.",
+      "input_digest": "sha256:d57e255999c0ea8f60f9c13597780cf196a72ab2983f8c4ae717807184950427"
     }
   ],
   "intents": {
@@ -181,12 +194,12 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 20,
+        "file_touch_budget": 28,
         "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Rewrite README, CONTRIBUTING and SECURITY in clear human prose: preserve README structure and visuals, show whole-product value, keep human setup minimal and engineering agent-owned, and preserve accurate security boundaries and private reporting commitments.",
+      "intent": "Clarify README, CONTRIBUTING and SECURITY around human intent and human review/merge, with agents owning engineering work. Remove redundant local operator approval from configured validation-owned exact workspace branch push, preserving source custody, provider permissions and unrelated action policy.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -194,25 +207,25 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Human documentation clarification and accepted release declaration reconciliation do not change product architecture or provider execution.",
-          "reviewed_code_fingerprint": "a3ffe79fc50f186fc07d685a3846a948c9f57811f8cdf81f0f9f45c90486210e",
-          "spec_material_hash": "c14319e9fc027b8dffd23bae88fd64b082e0794fb431f1de6f31dbab091f3db5"
+          "reason": "User requires ordinary human intent then review/merge, agent-owned engineering and validation, and narrowly authorized validation branch submission without a separate operator receipt; unrelated provider and action boundaries retained.",
+          "reviewed_code_fingerprint": "a8675f753f846c78c0819e8d9887a1ef4f775e2f454be3e115a42de0db9a5edc",
+          "spec_material_hash": "a8f50cd106058535e9496f907f0612d8a8645d5aacb5e1b5d03aa83450106d01"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented human README and contribution interfaces, agent-owned engineering/validation, and minimal human setup.",
-          "reviewed_code_fingerprint": "a3ffe79fc50f186fc07d685a3846a948c9f57811f8cdf81f0f9f45c90486210e",
-          "spec_material_hash": "aa92b7139b91893a6366b4f88d5b3c1692d291301e52437cefe48043ac24b791"
+          "reason": "User requires ordinary human intent then review/merge, agent-owned engineering and validation, and narrowly authorized validation branch submission without a separate operator receipt; unrelated provider and action boundaries retained.",
+          "reviewed_code_fingerprint": "a8675f753f846c78c0819e8d9887a1ef4f775e2f454be3e115a42de0db9a5edc",
+          "spec_material_hash": "7f606e094cf647d09672894a3baa4ec9ee76779b6c3532342149e09f36b7667d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented root security guidance scope, existing private reporting expectation, no invented service promises, and owner-defined credential lifecycle.",
-          "reviewed_code_fingerprint": "a3ffe79fc50f186fc07d685a3846a948c9f57811f8cdf81f0f9f45c90486210e",
-          "spec_material_hash": "b366e1c5fe36af5413bcf7594357a8fc111d6f8f73c0e55f1b873af7c2898a17"
+          "reason": "User requires ordinary human intent then review/merge, agent-owned engineering and validation, and narrowly authorized validation branch submission without a separate operator receipt; unrelated provider and action boundaries retained.",
+          "reviewed_code_fingerprint": "a8675f753f846c78c0819e8d9887a1ef4f775e2f454be3e115a42de0db9a5edc",
+          "spec_material_hash": "3a32d010c700db35158c28ad9660375581eec104456f3a9ecf0231a9801fcc70"
         }
       ],
       "state": "EXECUTING",
@@ -225,13 +238,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791852266Z"
+      "updated_at": "1791853061Z"
     },
     "trajectory": {
       "active_boundaries": [
         "README plus required spec and release-projection consistency only; no code, CI, auth, releases or merge."
       ],
-      "artifact_hash": "sha256:c1097a487aa60190a2aaec4b0e744d12266c1a6717dd62a961ce5334ebb50700",
+      "artifact_hash": "sha256:8daaaa3b6b27debc8bbe1a45deab4bbc88285b408c16c702326e289ad107d474",
       "checks": [
         {
           "name": "accepted-release-source-review",
@@ -259,6 +272,10 @@
         },
         {
           "name": "three-docs-editorial-review",
+          "status": "passed"
+        },
+        {
+          "name": "typed-validation-policy-source-review",
           "status": "passed"
         }
       ],
@@ -311,10 +328,24 @@
             "intent_id": "intent:readme-clarity",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:readme-clarity",
+            "event_id": "event:9",
+            "intent_id": "intent:readme-clarity",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
+          },
+          {
+            "detail": "trajectory:readme-clarity",
+            "event_id": "event:10",
+            "intent_id": "intent:readme-clarity",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "readme-clarity": {
@@ -424,6 +455,46 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "authoring",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "User: Update the code in this as well— never require the human to approve validation. Ordinary human role is prompt intent then review and merge; agent owns build/test configuration, source changes, validation/repair and PR preparation. Previous controller final outcome unknown after host poll cancellation; no proof transferred."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "README.md",
+                  "README.md, CONTRIBUTING.md, SECURITY.md, directly related authored interface/security specs, and required generated consistency; no runtime, provider, credential or distribution changes",
+                  "required generated release projections"
+                ],
+                "sequence": 9,
+                "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "src/decapod/core/external_action.rs",
+                  "src/decapod/core/snapshot_provider/mod.rs",
+                  "src/decapod/core/snapshot_provider/snapshot.rs",
+                  "src/decapod/core/snapshot_provider/snapshot/tests.rs",
+                  "src/decapod/lib.rs",
+                  "Integrator reviewed opaque request construction after source/base/tag/ancestry checks and callback exact-argv identity verification. Tests added for no-receipt create/fastforward/reuse, sixteen malformed requests, invalid executable, unsealed/unrelated writes, explicit executable denial and provider denial. Tests not yet executed; plain validate owns execution."
+                ],
+                "proof_refs": [
+                  "typed-validation-policy-source-review"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "README.md",
+                  "README.md, CONTRIBUTING.md, SECURITY.md, directly related authored interface/security specs, and required generated consistency; no runtime, provider, credential or distribution changes",
+                  "User explicitly expanded scope to typed validation-owned push policy source and regression tests plus directly related specs/docs; preserve exact branch/head/base, noforce/tags, provider access and nonvalidation policy.",
+                  "required generated release projections"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
@@ -436,7 +507,9 @@
         "Actual second validate exit1 SNAPSHOT_UPLOAD_INCOMPLETE: frozen local tags lacked newly published v0.109.0. Fetched existing remote tag history without publishing or replacing tags. User expanded same PR to CONTRIBUTING and SECURITY before preflight began.",
         "Independent editorial and source review approved draft; corrected Jev advisory input and unverified-versus-done state; parent approved final wording with validation-only remote scope.",
         "Independent editorial reviewer read final README, CONTRIBUTING, SECURITY and approved clarity, factual boundaries, preserved policies, no unsupported reporting promises. Final contribution prose simplified to proposed change and target branch. All project builds and tests remain owned by plain validate.",
+        "Integrator reviewed opaque request construction after source/base/tag/ancestry checks and callback exact-argv identity verification. Tests added for no-receipt create/fastforward/reuse, sixteen malformed requests, invalid executable, unsealed/unrelated writes, explicit executable denial and provider denial. Tests not yet executed; plain validate owns execution.",
         "Plain validate reported PROOF_PROFILE_RECONCILIATION_REQUIRED; preserved initial-validate.json and exit1. Explicit review compared all76 canonical entries: accepted83eea72 only changes root package version0.108.1 to0.109.0 in Cargo.toml/Cargo.lock; dependency list and every adapter/workflow unchanged. Updated reviewed declaration only, preserving required coverage.",
+        "User: Update the code in this as well— never require the human to approve validation. Ordinary human role is prompt intent then review and merge; agent owns build/test configuration, source changes, validation/repair and PR preparation. Previous controller final outcome unknown after host poll cancellation; no proof transferred.",
         "Verified actual architecture/SECURITY and architecture/SECRETS nodes in assets/constitution.json; old core/SECURITY reference nonexistent. Existing private reporting route preserved without inventing address or SLA. Public security page fetched200 but exposes no reporting form; not claimed enabled/disabled. All contribution reference paths exist. No manual validation or access-token setup recipes remain."
       ],
       "inspected_files": [
@@ -454,7 +527,12 @@
         ".decapod/managed/specs/SECURITY.md",
         "CONTRIBUTING.md",
         "README.md",
-        "SECURITY.md"
+        "SECURITY.md",
+        "src/decapod/core/external_action.rs",
+        "src/decapod/core/snapshot_provider/mod.rs",
+        "src/decapod/core/snapshot_provider/snapshot.rs",
+        "src/decapod/core/snapshot_provider/snapshot/tests.rs",
+        "src/decapod/lib.rs"
       ],
       "next_transitions": [
         "Checkpoint ready source and invoke plain validate"
@@ -463,6 +541,7 @@
         ".decapod/managed/specs/INTERFACES.md",
         "README.md",
         "README.md, CONTRIBUTING.md, SECURITY.md, directly related authored interface/security specs, and required generated consistency; no runtime, provider, credential or distribution changes",
+        "User explicitly expanded scope to typed validation-owned push policy source and regression tests plus directly related specs/docs; preserve exact branch/head/base, noforce/tags, provider access and nonvalidation policy.",
         "required generated release projections"
       ],
       "run_id": "readme-clarity",

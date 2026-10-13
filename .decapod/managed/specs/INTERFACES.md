@@ -3,7 +3,8 @@
 ## Interface Overview
 
 Decapod's interfaces connect human intent, agent work, repository state, and
-proof. The human supplies the requested outcome and resolves decisions. The
+proof. The human supplies intent and reviews and merges the resulting pull request,
+resolving exceptional decisions when needed. The
 agent interprets that request, performs the work, and calls Decapod at planning,
 coordination, validation, and publication boundaries. Decapod exposes the state,
 constraints, evidence, and blockers that govern those transitions. Each CLI or
@@ -240,8 +241,11 @@ The remote route pushes or reuses the exact existing workspace branch, executes
 its project checks remotely, and verifies authenticated build, attempt, artifact,
 and final source/target identities. It does not run duplicate local prerequisites,
 create a temporary branch, or treat GitHub Actions results as Buildkite proof.
-Existing authorized access is required; denial does not authorize credential
-installation or fallback.
+Configured validation does not ask the human for a separate local approval to
+push that checked work branch. The bounded validation push authorization does
+not grant permission for unrelated Git writes, merges, releases or deployments.
+Existing authorized provider access is required; denial does not authorize
+credential installation or fallback.
 
 Snapshot preparation/resume is a private evidence handoff on that same branch.
 Preparation remains non-ready. Resume reconstructs source/tree/target identity
@@ -316,7 +320,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a3ffe79fc50f186fc07d685a3846a948c9f57811f8cdf81f0f9f45c90486210e`
+- Repository signal fingerprint: `a8675f753f846c78c0819e8d9887a1ef4f775e2f454be3e115a42de0db9a5edc`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (186 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
