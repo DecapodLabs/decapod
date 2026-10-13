@@ -23,6 +23,12 @@ an agent responsibility; its optional remote execution applies to that phase,
 not to Decapod as a whole. The README does not add operating instructions or
 historical proof reports to the single-command setup path.
 
+`CONTRIBUTING.md` gives human contributors the review expectations and project
+layout. The agent contract and linked technical references carry the operational
+workflow. Contribution guidance assigns build orchestration, verification and
+repair to the agent, without requiring a human to expand credential permissions
+or run a manual prerequisite suite.
+
 Agents discover the installed interface with `capabilities`, ingest its command
 contracts with `docs ingest`, and retrieve engineering guidance with
 `constitution get` or constitution search. `docs` serves `docs/agent/`; the
