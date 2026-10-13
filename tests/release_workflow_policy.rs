@@ -356,13 +356,77 @@ fn release_owner_selector_is_credential_free_and_fails_closed() {
         .map(|line| line.strip_prefix("          ").unwrap_or(line))
         .collect::<Vec<_>>()
         .join("\n");
-    for (github_actions, buildkite, build_id, expected) in [
-        ("true", "", "", "true"),
-        ("true", "true", "build-fixture", "false"),
-        ("true", "", "build-fixture", "false"),
-        ("true", "true", "", "false"),
-        ("", "", "", "false"),
-        ("false", "", "", "false"),
+    // buildkite-gha v0.102.3 exposes GITHUB_ACTIONS=true and the protected
+    // RUNNER_ENVIRONMENT=self-hosted, without inheriting BUILDKITE markers.
+    // Reproduce that sanitized process, rather than a full Buildkite host env.
+    // https://github.com/buildkite/buildkite-gha/blob/v0.102.3/internal/expression/engine.go#L893-L894
+    for (case, github_actions, runner, buildkite, build_id, expected) in [
+        (
+            "native hosted",
+            Some("true"),
+            Some("github-hosted"),
+            None,
+            None,
+            "true",
+        ),
+        (
+            "sanitized importer",
+            Some("true"),
+            Some("self-hosted"),
+            None,
+            None,
+            "false",
+        ),
+        ("missing runner", Some("true"), None, None, None, "false"),
+        ("empty runner", Some("true"), Some(""), None, None, "false"),
+        (
+            "unknown runner",
+            Some("true"),
+            Some("unknown"),
+            None,
+            None,
+            "false",
+        ),
+        (
+            "missing GitHub",
+            None,
+            Some("github-hosted"),
+            None,
+            None,
+            "false",
+        ),
+        (
+            "false GitHub",
+            Some("false"),
+            Some("github-hosted"),
+            None,
+            None,
+            "false",
+        ),
+        (
+            "Buildkite host",
+            Some("true"),
+            Some("github-hosted"),
+            Some("true"),
+            Some("build-fixture"),
+            "false",
+        ),
+        (
+            "Buildkite build ID",
+            Some("true"),
+            Some("github-hosted"),
+            None,
+            Some("build-fixture"),
+            "false",
+        ),
+        (
+            "Buildkite marker",
+            Some("true"),
+            Some("github-hosted"),
+            Some("true"),
+            None,
+            "false",
+        ),
     ] {
         let temp = tempdir().unwrap();
         let bin = temp.path().join("bin");
@@ -380,22 +444,30 @@ fn release_owner_selector_is_credential_free_and_fails_closed() {
         }
         let output_file = temp.path().join("github-output");
         let command_log = temp.path().join("commands");
-        let output = Command::new("/bin/bash")
+        let mut command = Command::new("/bin/bash");
+        command
             .args(["--noprofile", "--norc", "-c", &script])
             .env_clear()
             .env("PATH", &bin)
             .env("GITHUB_OUTPUT", &output_file)
             .env("COMMAND_LOG", &command_log)
-            .env("GITHUB_ACTIONS", github_actions)
-            .env("BUILDKITE", buildkite)
-            .env("BUILDKITE_BUILD_ID", build_id)
-            .current_dir(temp.path())
-            .output()
-            .unwrap();
-        assert!(output.status.success(), "{output:?}");
+            .current_dir(temp.path());
+        for (name, value) in [
+            ("GITHUB_ACTIONS", github_actions),
+            ("RUNNER_ENVIRONMENT", runner),
+            ("BUILDKITE", buildkite),
+            ("BUILDKITE_BUILD_ID", build_id),
+        ] {
+            if let Some(value) = value {
+                command.env(name, value);
+            }
+        }
+        let output = command.output().unwrap();
+        assert!(output.status.success(), "{case}: {output:?}");
         assert_eq!(
             fs::read_to_string(output_file).unwrap(),
-            format!("native_owner={expected}\n")
+            format!("native_owner={expected}\n"),
+            "{case}"
         );
         assert!(
             !command_log.exists(),

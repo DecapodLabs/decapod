@@ -349,8 +349,15 @@ other tests' process environment. Release-policy assertions follow the actual
 executor-aware entrypoint and its preparation/execution context propagation.
 
 The release workflow (`.github/workflows/release.yml`) selects native GitHub
-Actions as its sole mutation owner in a credential-free job. Every release job
-requires that positive ownership result, including planning, artifact building,
+Actions as its sole mutation owner in a credential-free job. Ownership requires
+`GITHUB_ACTIONS=true` and the protected `RUNNER_ENVIRONMENT=github-hosted` value
+used by its `ubuntu-latest` owner job, with no Buildkite host markers. The
+importer also exposes GitHub-compatible variables, so absent Buildkite variables
+alone cannot establish ownership. Its sanitized `self-hosted` identity, missing
+or unknown runner identity, and conflicting provider markers must all be rejected
+by the exact-script regression. Future native self-hosted release runners require
+an explicitly reviewed policy change. Every release job requires that positive
+ownership result, including planning, artifact building,
 container publication, hosting and announcement. Imported Buildkite execution
 therefore skips those jobs before their ordinary secret retrieval. These skips
 are not release or publication evidence. Provider resolver capability checks can
@@ -411,7 +418,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0df4b59635eab783bf2525bf9c7f5913174361caa137d73e6fa75f390d5804d9`
+- Repository signal fingerprint: `1664bbc78e858f90e0b310627567067118d153b3f77ba1fabf82c40d822b21c1`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (183 files), `tests/` (188 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

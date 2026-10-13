@@ -72,7 +72,9 @@ jobs:
         run: |
           set -euo pipefail
           native_owner=false
-          if [ -z "${BUILDKITE_BUILD_ID:-}" ] && [ "${BUILDKITE:-}" != "true" ] && [ "${GITHUB_ACTIONS:-}" = "true" ]; then
+          # The importer exposes GitHub-compatible variables while removing
+          # Buildkite host variables. Require the protected hosted identity.
+          if [ "${RUNNER_ENVIRONMENT:-}" = "github-hosted" ] && [ -z "${BUILDKITE_BUILD_ID:-}" ] && [ "${BUILDKITE:-}" != "true" ] && [ "${GITHUB_ACTIONS:-}" = "true" ]; then
             native_owner=true
           fi
           printf 'native_owner=%s\n' "$native_owner" >> "$GITHUB_OUTPUT"
