@@ -1110,6 +1110,26 @@ fn native_snapshot_preserves_only_reviewed_toolchain_alias_and_target() {
 }
 
 #[test]
+fn validation_guidance_reuses_existing_authority_without_overriding_cancellation() {
+    for ready in [false, true] {
+        let guidance = ValidationGuidance::for_outcome(ready);
+        let value = serde_json::to_value(&guidance).unwrap();
+        let execution = value["execution"].as_str().unwrap();
+        for phrase in [
+            "Do not ask again before an already-authorized configured validation push",
+            "supported, safely replayable retry to the same repository and workspace branch",
+            "Recheck the exact source and accepted target",
+            "stop on explicit cancellation, access or authorization denial",
+            "a change that requires new authority",
+        ] {
+            assert!(execution.contains(phrase), "missing guidance: {phrase}");
+        }
+        assert!(guidance.human_input_when.contains("missing authorization"));
+        assert!(guidance.human_input_when.contains("unavailable access"));
+    }
+}
+
+#[test]
 fn validation_phase_assigns_missing_configuration_to_agent_and_never_requests_prebuild() {
     for buildkite in [false, true] {
         let f = Fixture::new(&format!(

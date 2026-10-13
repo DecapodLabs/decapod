@@ -180,6 +180,11 @@
       "id": "validation-orchestration-repair",
       "summary": "Repair provider compile inputs and Clippy, add single native release ownership and safe PR-only dispatch, refresh reviewed declaration and supported specs/docs.",
       "input_digest": "sha256:e7430aff6bf35f6dfa170310aec685c739c4a6496de782ebf6f074c45162f994"
+    },
+    {
+      "id": "validation-authorized-retry-guidance",
+      "summary": "Codify reuse of existing validation-push authority and safely replayable retries while preserving cancellation, denial, scope and exact-source checks.",
+      "input_digest": "sha256:1344d8300e1bc9fa82a028280e0eb9ff822b18f6bc895ea8da2aad774dfe7a82"
     }
   ],
   "intents": {
@@ -238,12 +243,16 @@
         "Fresh governed branch only; no master edits, merge, release, deploy, credentials, paid capacity, or unapproved persistent access changes.",
         "Reviewed-transitive-code model only; dual roots are not hostile-code OS isolation."
       ],
-      "artifact_hash": "sha256:3d209669f781931c2e1c151010704cce109d2c1e949f9113214c4be7ac4953b6",
+      "artifact_hash": "sha256:b049f8f09292476b69b9d47cc6b1cdef4fe455b260b79ef60ea010ddb30629e4",
       "blockers": [
         "Initial controller cannot admit the new protocol; the first candidate static-musl artifact cannot use the host SQLite dynamic library. Corrected Bazel inputs must produce the glibc candidate controller.",
         "Initial controller lacks new protocol; provider-built supported controller and generated entrypoint/documentation repair pending."
       ],
       "checks": [
+        {
+          "name": "approval-free-runtime-review",
+          "status": "passed"
+        },
         {
           "name": "imported-program-source-coverage",
           "status": "passed"
@@ -320,10 +329,17 @@
             "intent_id": "intent:validation-orchestration-779",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:validation-orchestration-779",
+            "event_id": "event:8",
+            "intent_id": "intent:validation-orchestration-779",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "validation-orchestration-779": {
@@ -408,6 +424,25 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "src/decapod/core/validation_runtime/snapshot/tests.rs",
+                  "https://buildkite.com/decapodlabs/decapod/builds/1225"
+                ],
+                "proof_refs": [
+                  "approval-free-runtime-review"
+                ],
+                "scope": [
+                  "Verified release code defects within the same PR; missing external trigger remains unproven.",
+                  "validation runtime, execution/custody boundaries, provider adapter, canonical guidance, regression tests, relevant authored specs and existing issue reconciliation"
+                ],
+                "sequence": 8,
+                "validation_findings": [
+                  "Existing exact-source branch create, fast-forward and reuse already need no operator receipt; this change adds explicit authorized retry guidance, not a policy bypass."
+                ]
               }
             ]
           }
@@ -418,10 +453,12 @@
       ],
       "evidence": [
         "https://buildkite.com/decapodlabs/decapod/builds/1220",
+        "https://buildkite.com/decapodlabs/decapod/builds/1225",
         "https://github.com/DecapodLabs/decapod/actions/runs/38428617075",
         "https://github.com/DecapodLabs/decapod/issues/779#issuecomment-6148469287",
         "src/decapod/core/readiness_profile/tests.rs",
         "src/decapod/core/snapshot_provider/public_buildkite/program.rs",
+        "src/decapod/core/validation_runtime/snapshot/tests.rs",
         "src/decapod/core/validation_runtime/tests.rs",
         "tests/source_ci_profile_policy.rs"
       ],
@@ -440,7 +477,8 @@
         "Collect remaining concrete CI failures, regenerate projections with the authenticated candidate artifact, integrate the authorized release workflow repair, then checkpoint and rerun plain validation.",
         "Finish bounded source review, checkpoint and run plain validate; repair reported failures using the same branch.",
         "Review minimal safe execution design, then implement bounded shared primitives and regression coverage.",
-        "Run plain validate on the committed candidate, preserve any controller compatibility blocker, and use only authenticated configured-provider artifacts for the initial protocol rollout."
+        "Run plain validate on the committed candidate, preserve any controller compatibility blocker, and use only authenticated configured-provider artifacts for the initial protocol rollout.",
+        "Run validation on the completed guidance change and obtain the exact provider-built controller to regenerate canonical entrypoints and docs."
       ],
       "repo_scope": [
         "Verified release code defects within the same PR; missing external trigger remains unproven.",
@@ -452,6 +490,7 @@
       "task_id": "feat_01m4txfvt0ncj3d7",
       "tool_calls": [],
       "unresolved_assumptions": [
+        "Existing exact-source branch create, fast-forward and reuse already need no operator receipt; this change adds explicit authorized retry guidance, not a policy bypass.",
         "First rollout cannot retroactively teach the existing released controller this new protocol; use independently built supported controller custody without claiming automatic replacement."
       ]
     }

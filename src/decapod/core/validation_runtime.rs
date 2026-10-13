@@ -103,7 +103,7 @@ impl ValidationGuidance {
             phase: "validation",
             owner: "agent",
             entry_command: "decapod validate",
-            execution: "Validation owns the configured build prerequisites, verification and tests through the selected provider and binds proof to the produced artifacts. Start once the source and required checkpoint are ready; no separate manual build is a prerequisite.",
+            execution: "Validation owns the configured build prerequisites, verification and tests through the selected provider and binds proof to the produced artifacts. Start once the source and required checkpoint are ready; no separate manual build is a prerequisite. Do not ask again before an already-authorized configured validation push or a supported, safely replayable retry to the same repository and workspace branch. Recheck the exact source and accepted target; stop on explicit cancellation, access or authorization denial, or a change that requires new authority.",
             next_action: if ready {
                 "review_delivery_readiness"
             } else {
