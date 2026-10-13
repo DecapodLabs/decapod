@@ -842,12 +842,123 @@ fn created_push_binds_accepted_tip_without_claiming_pr_readiness() {
         assert_eq!(context.merge_base, base);
         assert_eq!(context.head, head);
         assert!(!context.pre_pr);
+        assert!(!context.no_change);
         assert!(context.snapshot.is_none());
         let outputs = context.github_outputs();
         assert!(outputs.contains("pr_like=false\n"));
         assert!(outputs.contains("local_base_verified=true\n"));
         assert!(outputs.contains("provider_freshness=not_checked\n"));
         assert!(!repo.classify(&context));
+    }
+}
+
+#[test]
+fn new_branch_at_accepted_tip_is_explicit_no_change_not_a_candidate() {
+    for format in ["sha1", "sha256"] {
+        let repo = Repo::with_format(format);
+        let head = repo.head();
+        let mut input = created_push(&repo, &head);
+        input.trigger_ref = Some("refs/heads/release-plz-2026-10-13T03-53-01Z".into());
+        let refs = repo.git(&["show-ref"]);
+        let context = resolve(&input).unwrap();
+        assert!(context.no_change);
+        assert_eq!(context.event, "push");
+        assert_eq!(context.base, head);
+        assert_eq!(context.head, head);
+        assert_eq!(context.merge_base, head);
+        assert_eq!(context.accepted_base, head);
+        assert_eq!(context.checkout_head, head);
+        assert_eq!(context.checkout_tree, context.head_tree);
+        assert!(!context.pre_pr);
+        assert!(context.snapshot.is_none());
+        assert!(context.workbranch_ref.is_none());
+        let outputs = context.github_outputs();
+        for marker in [
+            "no_change=true\n",
+            "pre_pr=false\n",
+            "pr_like=false\n",
+            "provider_freshness=not_checked\n",
+        ] {
+            assert!(outputs.contains(marker));
+        }
+        assert_eq!(repo.git(&["show-ref"]), refs);
+        for event in ["push", "pull_request"] {
+            assert!(resolve(&repo.inputs(event, &head, &head)).is_err());
+        }
+        assert!(resolve(&repo.pre_pr(&head, &head)).is_err());
+        assert!(resolve(&workbranch(&repo, &head)).is_err());
+    }
+}
+
+#[test]
+fn no_change_requires_complete_untampered_creation_and_clean_accepted_checkout() {
+    for case in [
+        "missing-created",
+        "nonzero-before",
+        "missing-before",
+        "tag",
+        "snapshot",
+        "missing-base-ref",
+        "missing-base",
+        "wrong-head",
+        "dirty",
+        "staged",
+        "untracked",
+        "hidden-index",
+        "graft",
+        "shallow",
+        "unrelated-fork",
+    ] {
+        let repo = Repo::new();
+        let head = repo.head();
+        let mut input = created_push(&repo, &head);
+        match case {
+            "missing-created" => input.created = false,
+            "nonzero-before" => input.base = head.clone(),
+            "missing-before" => input.base.clear(),
+            "tag" => input.trigger_ref = Some("refs/tags/v0.110.0".into()),
+            "snapshot" => input.trigger_ref = Some(SNAPSHOT_REF.into()),
+            "missing-base-ref" => input.accepted_base_ref = None,
+            "missing-base" => {
+                repo.git(&["update-ref", "-d", ACCEPTED]);
+            }
+            "wrong-head" => {
+                repo.source();
+            }
+            "dirty" => fs::write(repo.0.join("src/lib.rs"), "dirty\n").unwrap(),
+            "staged" => {
+                fs::write(repo.0.join("src/lib.rs"), "staged\n").unwrap();
+                repo.git(&["add", "src/lib.rs"]);
+            }
+            "untracked" => fs::write(repo.0.join("untracked"), "dirty\n").unwrap(),
+            "hidden-index" => {
+                repo.git(&["update-index", "--assume-unchanged", "src/lib.rs"]);
+                fs::write(repo.0.join("src/lib.rs"), "hidden\n").unwrap();
+            }
+            "graft" => fs::write(repo.0.join(".git/info/grafts"), &head).unwrap(),
+            "shallow" => fs::write(repo.0.join(".git/shallow"), format!("{head}\n")).unwrap(),
+            "unrelated-fork" => {
+                let tree = repo.git(&["rev-parse", "HEAD^{tree}"]);
+                let fork = repo.git(&["commit-tree", &tree, "-m", "unrelated root"]);
+                repo.git(&["checkout", "-q", "--detach", &fork]);
+                input.head = fork;
+            }
+            _ => unreachable!(),
+        }
+        assert!(resolve(&input).is_err(), "accepted {case}");
+    }
+}
+
+#[test]
+fn a_new_commit_even_with_the_same_tree_never_gets_no_change_disposition() {
+    let repo = Repo::new();
+    let base = repo.head();
+    for head in [repo.commit("same tree, new commit"), repo.source()] {
+        repo.git(&["checkout", "-q", "--detach", &head]);
+        let context = resolve(&created_push(&repo, &head)).unwrap();
+        assert!(!context.no_change);
+        assert_eq!(context.base, base);
+        assert_ne!(context.base, context.head);
     }
 }
 
@@ -868,6 +979,7 @@ fn created_push_requires_authoritative_flag_exact_zero_before_and_branch_scope()
         None,
         Some("refs/tags/new"),
         Some(SNAPSHOT_REF),
+        Some(WORKBRANCH),
         Some("new-candidate"),
     ] {
         let mut input = created_push(&repo, &head);

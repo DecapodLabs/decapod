@@ -28,8 +28,45 @@ jobs:
       - name: Prepare shared source-CI profile
         uses: ./.github/actions/source-ci-profile
 
+      - name: Recheck accepted branch before schema validation
+        if: steps.context.outputs.no_change == 'true'
+        id: before-schema
+        uses: ./.github/actions/ci-context
+
       - name: Validate Constitution against Schema
-        run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check constitution-schema'
+        env:
+          NO_CHANGE: ${{ steps.context.outputs.no_change }}
+          RECHECK_NO_CHANGE: ${{ steps.before-schema.outputs.no_change }}
+          ORIGINAL_CONTEXT: ${{ steps.context.outputs.base }}:${{ steps.context.outputs.head }}:${{ steps.context.outputs.checkout_tree }}
+          RECHECK_CONTEXT: ${{ steps.before-schema.outputs.base }}:${{ steps.before-schema.outputs.head }}:${{ steps.before-schema.outputs.checkout_tree }}
+        run: |
+          set -euo pipefail
+          case "$NO_CHANGE" in
+            false) "$RUNNER_TEMP/source-ci-profile" run-ci --check constitution-schema ;;
+            true)
+              [[ "$RECHECK_NO_CHANGE" == true && "$RECHECK_CONTEXT" == "$ORIGINAL_CONTEXT" ]]
+              # A newly created ref at the accepted commit has no candidate
+              # range. Still run the identical schema check, without emitting
+              # a measured candidate receipt or claiming PR readiness.
+              "$RUNNER_TEMP/source-ci-profile" run --check constitution-schema
+              ;;
+            *) echo 'Missing or invalid verified change disposition' >&2; exit 1 ;;
+          esac
+
+      - name: Recheck accepted branch after schema validation
+        if: always() && steps.context.outputs.no_change == 'true'
+        id: after-schema
+        uses: ./.github/actions/ci-context
+
+      - name: Confirm accepted branch remained unchanged
+        if: always() && steps.context.outputs.no_change == 'true'
+        env:
+          RECHECK_NO_CHANGE: ${{ steps.after-schema.outputs.no_change }}
+          ORIGINAL_CONTEXT: ${{ steps.context.outputs.base }}:${{ steps.context.outputs.head }}:${{ steps.context.outputs.checkout_tree }}
+          RECHECK_CONTEXT: ${{ steps.after-schema.outputs.base }}:${{ steps.after-schema.outputs.head }}:${{ steps.after-schema.outputs.checkout_tree }}
+        run: |
+          set -euo pipefail
+          [[ "$RECHECK_NO_CHANGE" == true && "$RECHECK_CONTEXT" == "$ORIGINAL_CONTEXT" ]]
       - name: Upload measured source-CI custody
         if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
         uses: actions/upload-artifact@v4

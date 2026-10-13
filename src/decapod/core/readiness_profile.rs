@@ -59,7 +59,7 @@ pub fn reviewed_workflow_digests() -> &'static [(&'static str, &'static str)] {
         ),
         (
             ".github/workflows/constitution-sync.yml",
-            "sha256:36c04f68c23574218f4ea27d03f4d6dab7c6f5b24f18d943f18fdc7cb12d8669",
+            "sha256:1742466d162dff4b654516e451401650fbf5f64ea6aecfc01158d7e371562f50",
         ),
         (
             ".github/workflows/decapod-validate.yml",
@@ -83,7 +83,7 @@ pub fn reviewed_workflow_digests() -> &'static [(&'static str, &'static str)] {
         ),
         (
             ".github/workflows/release.yml",
-            "sha256:440e58f4de5b57bc53944600067ed939b80ad4a3a0b1680d672dd51e49a65a6b",
+            "sha256:ba1382b8e6bdd7cf1ffda70e18202449179ceb6739d52e21a92be5f46606da9d",
         ),
         (
             ".github/workflows/security-audit.yml",

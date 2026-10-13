@@ -51,6 +51,9 @@ pub struct Context {
     pub checkout_tree: String,
     pub head_tree: String,
     pub accepted_base: String,
+    /// A provider-declared new ordinary branch at the captured accepted tip.
+    /// This is no candidate delta and can never establish PR readiness.
+    pub no_change: bool,
     pub pre_pr: bool,
     pub snapshot: Option<SnapshotMetadata>,
     pub workbranch_ref: Option<String>,
@@ -272,6 +275,7 @@ fn resolve_created_push(input: &Inputs) -> Check<Context> {
         || input.base.len() != input.head.len()
         || !input.base.bytes().all(|byte| byte == b'0')
         || !input.trigger_ref.as_deref().is_some_and(valid_source_ref)
+        || input.trigger_ref.as_deref().is_some_and(is_workbranch_ref)
     {
         return Err(
             "created push requires an ordinary branch, exact zero before and immutable head".into(),
@@ -293,8 +297,10 @@ fn resolve_created_push(input: &Inputs) -> Check<Context> {
         snapshot: false,
         trigger_ref: None,
     };
-    // Reuse every ordinary clean-checkout, exact-head and ancestor check.
-    let mut context = resolve(&normalized)?;
+    // A bot may create its branch at the already accepted commit before writing
+    // its release change. Only this verified creation path may have B == H.
+    // Reuse clean-checkout, exact-head and ancestor checks in both cases.
+    let mut context = resolve_range(&normalized, base == input.head)?;
     if accepted_tip(&input.repo, reference)? != base {
         return Err("captured accepted target ref changed during verification".into());
     }
@@ -388,6 +394,12 @@ pub fn resolve(input: &Inputs) -> Check<Context> {
     if input.created {
         return resolve_created_push(input);
     }
+    resolve_range(input, false)
+}
+
+// The sole caller enabling no_change has verified a zero-before creation and
+// captured the accepted target. Ordinary callers cannot supply this disposition.
+fn resolve_range(input: &Inputs, no_change: bool) -> Check<Context> {
     if !matches!(
         input.event.as_str(),
         "pull_request" | "push" | "workflow_dispatch"
@@ -416,7 +428,7 @@ pub fn resolve(input: &Inputs) -> Check<Context> {
     require_oid(&input.head)?;
     if !manual && !input.snapshot {
         require_oid(&input.base)?;
-        if input.base == input.head {
+        if input.base == input.head && !no_change {
             return Err("base and head must be distinct immutable commits".into());
         }
     }
@@ -471,7 +483,7 @@ pub fn resolve(input: &Inputs) -> Check<Context> {
     if !git(&repo, &["ls-files", "--others", "--exclude-standard", "-z"])?.is_empty() {
         return Err("checkout contains untracked files".into());
     }
-    if input.snapshot || input.pre_pr {
+    if input.snapshot || input.pre_pr || no_change {
         // An assume-unchanged or sparse/skip-worktree index could hide dirty
         // tracked source from the normal comparison. A snapshot must attest a
         // complete ordinary checkout, not silently ignore those paths.
@@ -504,6 +516,7 @@ pub fn resolve(input: &Inputs) -> Check<Context> {
         checkout_tree,
         head_tree,
         accepted_base: String::new(),
+        no_change,
         pre_pr: input.pre_pr,
         snapshot: None,
         workbranch_ref: None,
@@ -597,6 +610,7 @@ fn resolve_snapshot(
         checkout_tree,
         head_tree,
         accepted_base,
+        no_change: false,
         pre_pr: true,
         snapshot: Some(metadata),
         workbranch_ref: None,
@@ -696,7 +710,7 @@ impl Context {
     /// string so failures cannot leave partially valid GitHub outputs behind.
     pub fn github_outputs(&self) -> String {
         let mut outputs = format!(
-            "event={}\ntrigger_event={}\nbase={}\nhead={}\nmerge_base={}\ncheckout_head={}\ncheckout_tree={}\nhead_tree={}\naccepted_base={}\npre_pr={}\npr_like={}\nlocal_base_verified={}\nprovider_freshness=not_checked\n",
+            "event={}\ntrigger_event={}\nbase={}\nhead={}\nmerge_base={}\ncheckout_head={}\ncheckout_tree={}\nhead_tree={}\naccepted_base={}\npre_pr={}\npr_like={}\nlocal_base_verified={}\nprovider_freshness=not_checked\nno_change={}\n",
             self.event,
             self.trigger_event,
             self.base,
@@ -709,6 +723,7 @@ impl Context {
             self.pre_pr,
             self.event == "pull_request",
             !self.accepted_base.is_empty(),
+            self.no_change,
         );
         if let Some(metadata) = &self.snapshot {
             outputs.push_str(&format!(

@@ -92,6 +92,11 @@ default. Cloud storage, container execution, remote validation, and advisory
 decision providers have separate access and proof requirements. They extend
 particular boundaries of the product without owning its intent or governance.
 
+Release automation may create an ordinary branch at the accepted target before
+authoring a change. That event must retain its verified identity without becoming
+a candidate, a release exemption, or publication proof. Source changes on that
+branch still require the normal immutable-range checks.
+
 ## Acceptance Criteria
 
 The implementation and its tests must establish that:
@@ -154,7 +159,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7878f6ed8607d2a1102eb78788025fb7ecdd4c76b313a8bd4107f457e19bd161`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (186 files)
+- Repository signal fingerprint: `6a672fd9414a59a2a71e7cdc521fa11f6e58ea0fa33483c18e2fee3962c9df67`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (180 files), `tests/` (188 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

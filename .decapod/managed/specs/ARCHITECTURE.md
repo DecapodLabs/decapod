@@ -194,6 +194,13 @@ the prepared PR; the agent owns the engineering work and validation phase. The
 checked validation push uses narrowly bound authorization rather than a separate
 local operator-approval ceremony.
 
+The dependency-free `assets/tools/ci_event_context.rs` distinguishes a real
+change range from a verified ordinary branch creation at the captured accepted
+tip. Only the latter emits `no_change=true`; workspace/pre-PR and ordinary update
+contexts retain distinct immutable endpoints. The constitution workflow rechecks
+the same accepted commit and tree before and after running its schema command.
+This no-delta execution produces no measured candidate custody receipt.
+
 ## Optional advisory intelligence
 
 The assurance engine reconstructs obligations and workspace state before
@@ -266,7 +273,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7878f6ed8607d2a1102eb78788025fb7ecdd4c76b313a8bd4107f457e19bd161`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (186 files)
+- Repository signal fingerprint: `6a672fd9414a59a2a71e7cdc521fa11f6e58ea0fa33483c18e2fee3962c9df67`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (180 files), `tests/` (188 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

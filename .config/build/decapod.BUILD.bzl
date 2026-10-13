@@ -27,6 +27,34 @@ def decapod_targets():
         testonly = True,
     )
 
+    # Created-branch workflow tests execute real CLIs in relocated shards.
+    rust_binary(
+        name = "created_context_fixture",
+        srcs = ["assets/tools/ci_event_context.rs"],
+        edition = "2024",
+        testonly = True,
+    )
+
+    rust_binary(
+        name = "created_profile_fixture",
+        srcs = [
+            "assets/tools/source_ci_profile.rs",
+            "assets/tools/source_ci_custody.rs",
+            "assets/tools/source_ci_toolchain.rs",
+            "assets/tools/source_ci_workflow_owned.rs",
+            "assets/tools/integration_shards.rs",
+            "assets/tools/integration_custody.rs",
+            "assets/tools/ci_event_context.rs",
+            "assets/tools/release_metadata.rs",
+            "assets/tools/docs_sync.rs",
+            "src/decapod/core/release_metadata.rs",
+        ],
+        crate_root = "assets/tools/source_ci_profile.rs",
+        compile_data = native.glob(["assets/tools/source_ci/*.sh"]),
+        edition = "2024",
+        testonly = True,
+    )
+
     # Docs-boundary tests run in relocated shards without an ambient Rust install.
     rust_binary(
         name = "docs_sync_fixture",
@@ -211,6 +239,8 @@ def decapod_targets():
                 "assets/tools/ci_event_context.rs",
                 "assets/tools/integration_shards.rs",
             ] if path == "tests/release_metadata_policy.rs" else [path] + [
+                "assets/tools/release_cpu.rs",
+            ] if path == "tests/release_cpu_policy.rs" else [path] + [
                 "assets/tools/integration_shards.rs",
             ] if path == "tests/integration_sharding_policy.rs" else [path] + [
                 "assets/tools/ci_event_context.rs",
@@ -253,6 +283,14 @@ def decapod_targets():
                 "assets/tools/source_ci_custody.rs",
                 "assets/tools/source_ci_workflow_owned.rs",
             ] if path == "tests/release_workflow_policy.rs" else [
+                ".github/actions/ci-context/action.yml",
+                ".github/workflows/constitution-sync.yml",
+            ] if path == "tests/created_branch_workflow_policy.rs" else [
+                ".github/workflows/release.yml",
+                ".github/scripts/release-build.sh",
+                "dist-workspace.toml",
+                "//:.cargo/config.toml",
+            ] if path == "tests/release_cpu_policy.rs" else [
                 "Cargo.toml",
                 "dist.toml",
                 "dist-workspace.toml",
@@ -288,6 +326,8 @@ def decapod_targets():
                 "DECAPOD_CUSTODY_TEST_FIXTURE": "./$(rootpath //:integration_custody_fixture)" if path == "tests/integration_custody_policy.rs" else "",
                 "DECAPOD_DOCS_SYNC_TEST_FIXTURE": "./$(rootpath //:docs_sync_fixture)" if path == "tests/docs_sync_checkpoint_boundary.rs" else "",
                 "DECAPOD_NATIVE_PROOF_TEST_FIXTURE": "./$(rootpath //:native_proof_fixture)" if path == "tests/native_proof_execution.rs" else "",
+                "DECAPOD_CREATED_CONTEXT_TEST_FIXTURE": "./$(rootpath //:created_context_fixture)" if path == "tests/created_branch_workflow_policy.rs" else "",
+                "DECAPOD_CREATED_PROFILE_TEST_FIXTURE": "./$(rootpath //:created_profile_fixture)" if path == "tests/created_branch_workflow_policy.rs" else "",
             },
             data = [
                 "//:decapod",
@@ -320,7 +360,7 @@ def decapod_targets():
                 # tests create the managed surfaces they need at runtime.
                 ".decapod/managed/**/*",
                 ".decapod/governance.json",
-            ], allow_empty = True) + ([":native_proof_fixture"] if path == "tests/native_proof_execution.rs" else [":integration_custody_fixture"] if path == "tests/integration_custody_policy.rs" else [":docs_sync_fixture"] if path == "tests/docs_sync_checkpoint_boundary.rs" else []),
+            ], allow_empty = True) + ([":native_proof_fixture"] if path == "tests/native_proof_execution.rs" else [":integration_custody_fixture"] if path == "tests/integration_custody_policy.rs" else [":docs_sync_fixture"] if path == "tests/docs_sync_checkpoint_boundary.rs" else [":created_context_fixture", ":created_profile_fixture"] if path == "tests/created_branch_workflow_policy.rs" else []),
             deps = [
                 ":decapod_lib",
             ] + all_crate_deps(normal = True, normal_dev = True),

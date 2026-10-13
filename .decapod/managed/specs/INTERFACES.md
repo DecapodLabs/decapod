@@ -273,6 +273,15 @@ is not evidence, and no checks produce an unsupported verdict. Portable evidence
 retains source identity and artifact digests; the receiving repository makes its
 own acceptance decision.
 
+The CI context action exposes a required boolean `no_change` disposition. It is
+true only after an explicit created push with an exact zero before value names
+an ordinary branch whose head equals the captured accepted target. Missing or
+malformed event data, unavailable base history, dirty or hidden source, and
+unrelated heads fail verification. Consumers must not infer this disposition
+from a release-looking branch name or equal caller-supplied IDs. Constitution
+schema validation runs for both dispositions; only real ranges use candidate
+custody. Full validation and measured receipt APIs still reject equal endpoints.
+
 ## Outbound Dependencies
 
 Cloud storage uses an explicit versioned storage context, Git-derived repository
@@ -320,7 +329,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7878f6ed8607d2a1102eb78788025fb7ecdd4c76b313a8bd4107f457e19bd161`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (186 files)
+- Repository signal fingerprint: `6a672fd9414a59a2a71e7cdc521fa11f6e58ea0fa33483c18e2fee3962c9df67`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (180 files), `tests/` (188 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
