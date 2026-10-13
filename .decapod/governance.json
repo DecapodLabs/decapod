@@ -160,6 +160,15 @@
         "https://buildkite.com/decapodlabs/decapod/builds/1199",
         "https://github.com/DecapodLabs/decapod/actions/runs/38372362158/job/115214285712"
       ]
+    },
+    {
+      "id": "release-context-template-projections",
+      "summary": "Regenerate canonical entrypoints and agent docs with provider-built candidate; preserve exact 14-field context output suffix and current spec reviews",
+      "input_digest": "sha256:976731df66f7475277db1acf91df894a67c742e780f2bf89e4ff41ee5440616f",
+      "proof_refs": [
+        "https://buildkite.com/decapodlabs/decapod/builds/1204",
+        "https://github.com/DecapodLabs/decapod/actions/runs/38376258621/job/115227195069"
+      ]
     }
   ],
   "intents": {
@@ -200,22 +209,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed accepted-tip no-delta route, pre/post identity checks and finite compiled-controller boundary; configured validation owns execution while absent independent remote bootstrap remains explicit",
-          "reviewed_code_fingerprint": "7655a00105008bd2e8a5a8b8fd95208cc5dbb191c951b2cddc5f2ce21602189b",
+          "reason": "Verified accepted-tip no-delta execution remains distinct from candidate proof; canonical templates assign configured execution to validation and finite controller mismatch fails closed without auto-bootstrap",
+          "reviewed_code_fingerprint": "a311bb876ab115a084d4baef25da4e9d093491eff1d2241911abda03924d05c7",
           "spec_material_hash": "f8dfd4a65a73efabeac3c3160afe1557fd3a6596adbcc8d9098364a3048650ce"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed no_change output and strict candidate endpoints plus typed CONTROLLER_CONTRACT_UNSUPPORTED and obtain_supported_controller guidance; neither no-change context nor controller diagnostics grants readiness",
-          "reviewed_code_fingerprint": "7655a00105008bd2e8a5a8b8fd95208cc5dbb191c951b2cddc5f2ce21602189b",
+          "reason": "Reviewed the fixed 14-line CI context output including final no_change boolean, typed unsupported-controller report, and regenerated canonical agent guidance; no candidate readiness or source-identity exception added",
+          "reviewed_code_fingerprint": "a311bb876ab115a084d4baef25da4e9d093491eff1d2241911abda03924d05c7",
           "spec_material_hash": "ae5de3cd8fa13e0c1eac7da07df4afaecf48bb66965945e592d30d20279f7048"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed exact source and accepted-target identity, no-change isolation from measured candidate proof, release CPU scope, and fail-closed controller mismatch. No authorization, credential, provider access, self-attested readiness or publication boundary changes are introduced; existing security prose remains accurate",
-          "reviewed_code_fingerprint": "7655a00105008bd2e8a5a8b8fd95208cc5dbb191c951b2cddc5f2ce21602189b",
+          "reason": "Re-reviewed exact-source and accepted-target binding, no-change proof boundary, scoped CPU limits and fail-closed controller diagnostics against final source; no credentials, authorization or distribution permissions changed",
+          "reviewed_code_fingerprint": "a311bb876ab115a084d4baef25da4e9d093491eff1d2241911abda03924d05c7",
           "spec_material_hash": "3a32d010c700db35158c28ad9660375581eec104456f3a9ecf0231a9801fcc70"
         }
       ],
@@ -229,13 +238,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791883201Z"
+      "updated_at": "1791884160Z"
     },
     "trajectory": {
       "active_boundaries": [
         "No merges, release publication, deploys, credentials, paid capacity, force pushes or temporary refs"
       ],
-      "artifact_hash": "sha256:e96b044b9d9b3f5200c30e7f9b2c8ad13afae7db1656a7dc8454b6843aaa21d5",
+      "artifact_hash": "sha256:d41a5a333e789751b227e0643e10c4c55af10d855ed923f5ccc58c1c6842cf3a",
       "checks": [
         {
           "name": "CI context independent source review",
@@ -246,12 +255,20 @@
           "status": "failed"
         },
         {
+          "name": "CI context output suffix",
+          "status": "failed"
+        },
+        {
           "name": "Configured proof execution",
           "status": "unavailable"
         },
         {
           "name": "Controller diagnostic source review",
           "status": "passed"
+        },
+        {
+          "name": "Current generated projections",
+          "status": "failed"
         },
         {
           "name": "Governance spec review",
@@ -312,10 +329,17 @@
             "intent_id": "intent:release-context-1397-1049",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:release-context-1397-1049",
+            "event_id": "event:8",
+            "intent_id": "intent:release-context-1397-1049",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "release-context-1397-1049": {
@@ -411,6 +435,31 @@
                 "validation_findings": [
                   "Automatic trusted remote controller bootstrap is absent; a two-revision independent provider harness requires separate scope decision. Diagnostics do not claim to close that gap."
                 ]
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "AGENTS.md",
+                  "CLAUDE.md",
+                  "CODEX.md",
+                  "GEMINI.md",
+                  "docs/agent/command-contracts.md",
+                  "Second head1b714ee3 provider build succeeded; exact artifact11801821617 ZIP SHA256 5ac5cdd868f14cd909a3860f46ecd44226360eb24139cd1dd7e4e387ac3d7b95 and CLI SHA256 2782028dadedcf34bdfaf968c3024d9b1c4d72d5beb8bc2963616b59313fda9c",
+                  "CI reported four entrypoint mismatches and docs/agent/command-contracts drift; init --proof, docs build --touched src/decapod/core/docs_cli.rs and specs.refresh regenerated through the exact provider-built candidate; authored config and overrides unchanged; original entrypoints preserved",
+                  "Existing output-schema test also expected provider_freshness as final line; corrected to exact provider_freshness plus no_change=false suffix, preserving ordered keys/count",
+                  "Plain validate reached provider_terminal_wait for exact1b714ee3; host session disappeared at45s after status review cancellation; no final report or exit exists and controller was not restarted against the running graph"
+                ],
+                "proof_refs": [
+                  "Current generated projections",
+                  "CI context output suffix"
+                ],
+                "scope": [
+                  "CI context source/action/constitution workflow/tests, release artifact helper/workflow/tests, directly related specs and generated consistency",
+                  "Canonical agent templates and typed validation-controller mismatch diagnostics with regression tests"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -418,6 +467,8 @@
       },
       "declared_commands": [],
       "evidence": [
+        "CI reported four entrypoint mismatches and docs/agent/command-contracts drift; init --proof, docs build --touched src/decapod/core/docs_cli.rs and specs.refresh regenerated through the exact provider-built candidate; authored config and overrides unchanged; original entrypoints preserved",
+        "Existing output-schema test also expected provider_freshness as final line; corrected to exact provider_freshness plus no_change=false suffix, preserving ordered keys/count",
         "GitHub job115214285712:2 whole-command tests passed in4.63s; actual verifier/profile binaries with explicit Ajv/Node doubles",
         "GitHub job115214285712:52 context fixtures passed; existing output count expected13 rather than14, now corrected with exact no_change=false assertion",
         "GitHub job115214285712:6 CPU/matrix/wrapper regression tests passed; not actual release packaging speed evidence",
@@ -426,8 +477,10 @@
         "Independent review preserved measured distinct endpoints and required before/after no-change identity rechecks; whole-command fixture results pending validate",
         "Independent source review: typed failure occurs only after complete inventory equality and missing/unknown-source rejection; no dispatch, readiness or trust fallback is added",
         "Initial exact b0fc82 graph terminal:71success,5skipped,6failure entries from output-count assertion and missing spec review only; Buildkite1199 ended2026-10-13T09:05:03.312Z",
+        "Plain validate reached provider_terminal_wait for exact1b714ee3; host session disappeared at45s after status review cancellation; no final report or exit exists and controller was not restarted against the running graph",
         "Provider-built b0fc82 controller ZIP artifact11799827610 SHA256 2a4691cf2522760bf688c48bcfcbbb844e4424373192cfc8012f764d0e44cfb9; executable SHA256 d1f3613f8a38e3cd80e29c6f68582cd294506680d568302aa324cba2a5c72006",
-        "Reviewed release0.110 accepted delta contains only Cargo root package/lock version and changelog; current source inventory includes8 intended helper/workflow/build edits"
+        "Reviewed release0.110 accepted delta contains only Cargo root package/lock version and changelog; current source inventory includes8 intended helper/workflow/build edits",
+        "Second head1b714ee3 provider build succeeded; exact artifact11801821617 ZIP SHA256 5ac5cdd868f14cd909a3860f46ecd44226360eb24139cd1dd7e4e387ac3d7b95 and CLI SHA256 2782028dadedcf34bdfaf968c3024d9b1c4d72d5beb8bc2963616b59313fda9c"
       ],
       "inspected_files": [
         ".github/workflows/constitution-sync.yml",
@@ -441,12 +494,18 @@
       "modified_files": [
         ".github/actions/ci-context/action.yml",
         ".github/workflows/constitution-sync.yml",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "CODEX.md",
+        "GEMINI.md",
         "assets/tools/ci_event_context.rs",
+        "docs/agent/command-contracts.md",
         "src/decapod/core/assets.rs",
         "src/decapod/core/docs_cli.rs",
         "tests/ci_event_context_policy.rs"
       ],
       "next_transitions": [
+        "Checkpoint regenerated projections and corrected suffix assertion, then plain validate",
         "Checkpoint repaired source and invoke plain validation through the reviewed provider-built controller"
       ],
       "repo_scope": [

@@ -1,5 +1,5 @@
 <!-- decapod-release: 0.110.0 -->
-<!-- decapod-fingerprint: 48611791a2ced9ae0e12607053f01b79f4a15f7319e47e903d8e1feba9db5925 -->
+<!-- decapod-fingerprint: 63be624f42aba840dee3fc602c1564d2c42d72597d46cd2e222f530e0a4e2a77 -->
 # CLAUDE.md - Agent Entrypoint
 
 You are working in a Decapod-managed repository.
@@ -8,7 +8,7 @@ See `AGENTS.md` for the universal contract.
 ## Orientation & Documentation
 - **Run `decapod docs ingest` before using Decapod beyond help/version checks.**
 - Use `decapod docs` command output instead of guessing command arguments.
-- Treat Decapod errors as recovery instructions.
+- Treat Decapod errors as recovery instructions. Once source and required governance material are ready, checkpoint and commit the candidate, then run plain `decapod validate`. Validation owns configured build prerequisites and tests; do not run a separate manual build or shadow preflight. `CONTROLLER_CONTRACT_UNSUPPORTED` means the controller does not support this reviewed source contract. Rerunning the same controller, repinning configuration or running a manual build cannot resolve it; use an independently supported controller for this exact contract, and preserve the blocker if none is available.
 - Respect repo-local config policy and workspace boundaries.
 - Do not bypass Decapod boundaries to appear productive. Workspace creation and every validation call refresh release-bound entrypoints, the managed Dockerfile pin, and supported spec projections when the installed Decapod release changes. Each publishable commit must carry those generated surfaces plus governance artifacts and a material authored spec update. Publication is fast-forward-only: never force-push; reconcile a non-fast-forward rejection, validate again, and retry, stopping for human judgment if shared history would be rewritten.
 ## Mandatory Prompt Safety Gate

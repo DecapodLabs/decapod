@@ -519,7 +519,6 @@ fn github_outputs_are_fixed_bounded_single_line_records() {
         "provider_freshness",
         "no_change",
     ];
-    assert!(output.ends_with("no_change=false\n"));
     for ((key, value), expected_key) in records.into_iter().zip(expected) {
         assert_eq!(key, expected_key);
         assert!(
@@ -529,7 +528,7 @@ fn github_outputs_are_fixed_bounded_single_line_records() {
         );
     }
     assert!(output.contains("local_base_verified=true\n"));
-    assert!(output.ends_with("provider_freshness=not_checked\n"));
+    assert!(output.ends_with("provider_freshness=not_checked\nno_change=false\n"));
 }
 
 #[test]
