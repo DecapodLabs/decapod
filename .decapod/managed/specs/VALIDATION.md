@@ -342,7 +342,11 @@ candidate has passed.
 
 Release ownership regression fixtures embed the workflow as a declared Bazel
 compile input, so sandboxed test compilation and execution inspect the same
-reviewed configuration.
+reviewed configuration. Synthetic checkout fixtures bind their own executor
+root explicitly, including when a checkout-less shard inherits a different
+provider root. A subprocess regression verifies this isolation without mutating
+other tests' process environment. Release-policy assertions follow the actual
+executor-aware entrypoint and its preparation/execution context propagation.
 
 The release workflow (`.github/workflows/release.yml`) selects native GitHub
 Actions as its sole mutation owner in a credential-free job. Every release job
@@ -407,7 +411,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c33bc58905862223bd336a0cb676997c4d9c7e5c779a4ebf94a3d265fe78b913`
+- Repository signal fingerprint: `d9c54de51bc75796bf5b598dd437252a2a578400f5d3cafb50c496c0a84a0b46`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (182 files), `tests/` (188 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
