@@ -1109,7 +1109,10 @@ mod tests {
         for (path, digest) in profile::reviewed_workflow_digests() {
             files.insert((*path).into(), (*digest).into());
         }
-        for (path, bytes) in profile::definition_files() {
+        for (path, bytes) in profile::definition_files()
+            .into_iter()
+            .chain(profile::carrier_files())
+        {
             files.insert(path.into(), hash(bytes));
         }
         let sources = SourceInventory { files };
@@ -1130,6 +1133,7 @@ mod tests {
                 required_profile: Some(declaration),
             },
             sources,
+            executor: None,
             facts,
             release: None,
             catalog,

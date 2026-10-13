@@ -280,7 +280,39 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a311bb876ab115a084d4baef25da4e9d093491eff1d2241911abda03924d05c7`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (180 files), `tests/` (188 files)
+- Repository signal fingerprint: `06f16a3cd87a37ae874c9424f28f238a28d44fc7c4f645494336351ed6622fa4`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (182 files), `tests/` (188 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Accepted executor and candidate source
+
+The remote validation adapter separates the accepted executor revision R from
+candidate source H. `validation_runtime/executor_contract.rs` captures R from
+the accepted target’s immutable Git objects before provider dispatch. Its entire
+helper, selector, aggregation and recipe closure must match the installed
+controller. The candidate’s workflow, local-action and carrier-script bytes stay
+independently pinned. Updating a reviewed inventory does not admit a new carrier
+or remove a required check.
+
+The existing source-CI carrier stages R separately and compiles its executor.
+Fixed R commands build candidate H with H’s configured build inputs and execute
+its tests. The integration preparation job packages the measured R helpers with
+H’s built test artifacts; downstream workers authenticate that producer chain
+rather than compiling a different verifier. Versioned custody binds executor and
+subject identities before and after execution. The original controller imports
+provider-authenticated results and rechecks the current source, target and full
+expected graph before reporting readiness.
+
+This is a reviewed-transitive-code boundary. Separate directories and closure
+measurements prevent accidental authority substitution; they are not an OS
+sandbox against hostile build scripts sharing the provider account. The trusted
+provider importer compiles the pinned workflow, and its authenticated producer
+records remain part of the trust model. Validation does not accept a candidate
+CLI’s JSON as its verdict or install that candidate as its controller.
+
+The protocol preserves strict single-root operation for the initial rollout
+when the accepted base predates dual-root support. That path still requires H’s
+helper closure to match the controller. Unknown carrier semantics, unsupported
+R, and native-controller mismatches remain explicit blockers. A released binary
+cannot acquire new protocol code merely because its repository source changed.

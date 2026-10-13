@@ -9,6 +9,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 mod collection;
 mod custody;
+mod program;
 pub use collection::CollectionReader;
 pub use custody::{
     CollectedCustody, CustodyRead, CustodyRequest, CustodyResponse, collect_custody,
@@ -1242,7 +1243,10 @@ impl ImportedRecipe {
     }
 }
 /// Bind importer result -> actual producer -> plan -> raw source workflow and
-/// event bytes. A successful result here is still NOT per-step execution proof.
+/// event bytes. The provider-owned importer is the trusted compilation producer;
+/// authenticated compiler digest declarations are not cryptographic compiler
+/// attestations. The controller must independently pin the complete workflow
+/// and local-action carrier closure. This is NOT per-step execution proof.
 pub fn locate_recipe(
     reader: &mut impl PublicReader,
     inventory: &PublicInventory,
@@ -1326,6 +1330,11 @@ fn locate_recipe_result(
         "importer upload producer missing or ambiguous",
     )?;
     let importer = importer_jobs[0].id();
+    ensure(
+        importer != job
+            && field(&inventory.steps[producer_step], "uploaded_by_step_uuid")?.is_null(),
+        "importer must be an independent root producer; deferred import stages unsupported",
+    )?;
     let plan_digest = plan_digest.to_owned();
     Ok(Some(RecipeResult {
         result,
@@ -1366,6 +1375,7 @@ fn finish_recipe_locator(
             == "https://buildkite.com/schemas/buildkite-gha/job-plan-v2.schema.json",
         "unsupported importer plan schema",
     )?;
+    program::verify(&plan_json)?;
     let workflow = field(&plan_json, "workflow")?;
     let logical_job = string(workflow, "logical_job_id")?.to_owned();
     let matrix = plan_json
@@ -1582,9 +1592,11 @@ pub fn collect_located_recipe(
         ),
         "unknown importer logical result",
     )?;
-    // Program/actions/strategy remain measured data, never copied into an
-    // independently expected contract. Caller must validate actual executor
-    // attestations and setup/action/toolchain closure before accepting any row.
+    // Program shape is checked, not recompiled. The provider-owned importer is
+    // trusted to compile the independently pinned workflow/action carrier. The
+    // digest fields alone are not a compiler attestation or per-step proof.
+    // Caller must still verify actual executor custody and setup/toolchain
+    // closure before accepting any substantive row.
     Ok(ImportedRecipe {
         result,
         plan,

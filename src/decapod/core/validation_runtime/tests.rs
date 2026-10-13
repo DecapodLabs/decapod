@@ -91,6 +91,15 @@ struct StopHost {
     prerequisites: ProjectPrerequisites,
     called: usize,
     modify: Option<PathBuf>,
+    target: Option<String>,
+    target_calls: usize,
+    selected: Option<SelectedProject>,
+}
+struct SelectedProject {
+    executor: Option<profile::AcceptedExecutor>,
+    sources: SourceInventory,
+    facts: ApplicabilityFacts,
+    catalog: RequiredCatalog,
 }
 impl Host for StopHost {
     fn project_check(&mut self, _: &RuntimeBudget<'_>) -> io::Result<ProjectPrerequisites> {
@@ -101,14 +110,26 @@ impl Host for StopHost {
         Ok(self.prerequisites)
     }
     fn accepted_target(&mut self, _: &str, _: &str, _: &RuntimeBudget<'_>) -> io::Result<String> {
-        panic!("must not query target")
+        self.target_calls += 1;
+        Ok(self.target.clone().expect("must not query target"))
     }
     fn select(
         &mut self,
-        _: &CurrentProject,
+        project: &CurrentProject,
         _: &RuntimeBudget<'_>,
     ) -> Result<ExecutionSelection, Vec<Blocker>> {
-        panic!("must not select adapters")
+        assert!(self.target.is_some(), "must not select adapters");
+        self.selected = Some(SelectedProject {
+            executor: project.executor.clone(),
+            sources: project.sources.clone(),
+            facts: project.facts.clone(),
+            catalog: project.catalog.clone(),
+        });
+        // This is an admission observation, not a substitute execution receipt.
+        Err(vec![Blocker::new(
+            "ADAPTER_SELECTION_REACHED",
+            "test stops before execution",
+        )])
     }
     fn execute(
         &mut self,
@@ -127,7 +148,441 @@ fn host() -> StopHost {
         prerequisites: ProjectPrerequisites::Passed,
         called: 0,
         modify: None,
+        target: None,
+        target_calls: 0,
+        selected: None,
     }
+}
+
+fn write_source(fixture: &Fixture, path: &str, bytes: &[u8]) {
+    let file = fixture.options.root.join(path);
+    fs::create_dir_all(file.parent().unwrap()).unwrap();
+    fs::write(file, bytes).unwrap();
+}
+
+fn review_and_commit(fixture: &Fixture, remote: bool, message: &str) {
+    let digest = discover_source_inventory(&fixture.options, &Cancellation::default())
+        .unwrap()
+        .digest()
+        .unwrap();
+    write_source(fixture, CONFIG, format!(
+        "[proof]\nvalidation_buildkite_preflights={remote}\n[proof.required_profile]\nid={:?}\nreviewed_sources_digest={digest:?}\n",
+        profile::REQUIRED_PROFILE,
+    ).as_bytes());
+    run(&fixture.options.root, &["add", "."]);
+    run(&fixture.options.root, &["commit", "-m", message]);
+}
+
+fn accept_current_base(fixture: &Fixture) -> String {
+    run(
+        &fixture.options.root,
+        &["update-ref", &fixture.options.accepted_base_ref, "HEAD"],
+    );
+    run(&fixture.options.root, &["rev-parse", "HEAD"])
+}
+
+fn accepted_executor_fixture() -> Fixture {
+    let fixture = Fixture::new("[proof]\n");
+    // R is the older installed controller's actual embedded closure. H is a
+    // later source commit and must not replace that controller's authority.
+    for (path, bytes) in profile::definition_files()
+        .into_iter()
+        .chain(profile::carrier_files())
+    {
+        write_source(&fixture, path, bytes);
+    }
+    for (path, bytes) in [
+        (
+            ".github/workflows/ci.yml",
+            include_bytes!("../../../../.github/workflows/ci.yml").as_slice(),
+        ),
+        (
+            ".github/workflows/constitution-sync.yml",
+            include_bytes!("../../../../.github/workflows/constitution-sync.yml").as_slice(),
+        ),
+        (
+            ".github/workflows/decapod-validate.yml",
+            include_bytes!("../../../../.github/workflows/decapod-validate.yml").as_slice(),
+        ),
+        (
+            ".github/workflows/docs.yml",
+            include_bytes!("../../../../.github/workflows/docs.yml").as_slice(),
+        ),
+        (
+            ".github/workflows/docs_sync.yml",
+            include_bytes!("../../../../.github/workflows/docs_sync.yml").as_slice(),
+        ),
+        (
+            ".github/workflows/release.yml",
+            include_bytes!("../../../../.github/workflows/release.yml").as_slice(),
+        ),
+        (
+            ".github/workflows/docs_autosync.yml",
+            include_bytes!("../../../../.github/workflows/docs_autosync.yml").as_slice(),
+        ),
+        (
+            ".github/workflows/nix-flake.yml",
+            include_bytes!("../../../../.github/workflows/nix-flake.yml").as_slice(),
+        ),
+        (
+            ".github/workflows/security-audit.yml",
+            include_bytes!("../../../../.github/workflows/security-audit.yml").as_slice(),
+        ),
+    ] {
+        assert_eq!(
+            profile::reviewed_workflow_digests()
+                .iter()
+                .find(|(known, _)| *known == path)
+                .unwrap()
+                .1,
+            hash(bytes),
+            "fixture must use the reviewed workflow: {path}",
+        );
+        write_source(&fixture, path, bytes);
+    }
+    review_and_commit(&fixture, true, "accepted executor closure");
+    accept_current_base(&fixture);
+    fixture
+}
+
+fn change_candidate_helpers(fixture: &Fixture, remote: bool) {
+    for path in [
+        "assets/tools/source_ci_profile.rs",
+        "assets/tools/source_ci/health.sh",
+    ] {
+        let mut bytes = fs::read(fixture.options.root.join(path)).unwrap();
+        bytes.extend_from_slice(if path.ends_with(".rs") {
+            b"\n// candidate revision after installed controller\n"
+        } else {
+            b"\n# candidate revision after installed controller\n"
+        });
+        write_source(fixture, path, &bytes);
+    }
+    review_and_commit(fixture, remote, "review newer candidate helpers");
+}
+
+fn assert_admission_blocked(fixture: &Fixture, remote: bool, expected: &str) {
+    let mut host = host();
+    host.prerequisites = if remote {
+        ProjectPrerequisites::ProviderRequired
+    } else {
+        ProjectPrerequisites::Passed
+    };
+    let report = validate(&fixture.options, &mut host, &Cancellation::default());
+    assert!(!report.ready);
+    assert_eq!(report.exit_code(), 1);
+    assert!(
+        report
+            .blockers
+            .iter()
+            .any(|blocker| blocker.detail.contains(expected)),
+        "{report:?}"
+    );
+    assert_eq!(host.called, 1);
+    assert_eq!(host.target_calls, 0);
+    assert!(host.selected.is_none());
+    assert!(report.evidence_path.is_none());
+    assert!(report.stage_dispositions.is_empty());
+    assert!(!fixture.options.root.join("target").exists());
+    assert_eq!(
+        fs::read_dir(&fixture.options.evidence_parent)
+            .unwrap()
+            .count(),
+        0
+    );
+}
+
+#[test]
+fn plain_validation_admits_newer_reviewed_candidate_against_accepted_executor() {
+    let fixture = accepted_executor_fixture();
+    let accepted = run(&fixture.options.root, &["rev-parse", "HEAD"]);
+    let accepted_tree = run(&fixture.options.root, &["rev-parse", "HEAD^{tree}"]);
+    change_candidate_helpers(&fixture, true);
+    let mut host = host();
+    host.prerequisites = ProjectPrerequisites::ProviderRequired;
+    host.target = Some(accepted.clone());
+    let report = validate(&fixture.options, &mut host, &Cancellation::default());
+    assert_eq!(report.blockers.len(), 1, "{report:?}");
+    assert_eq!(
+        report.blockers[0].code, "ADAPTER_SELECTION_REACHED",
+        "{report:?}"
+    );
+    assert_eq!(host.called, 1);
+    assert_eq!(host.target_calls, 1);
+    let selected = host.selected.unwrap();
+    let executor = selected.executor.unwrap();
+    assert_eq!(executor.revision(), accepted);
+    assert_eq!(executor.tree(), accepted_tree);
+    assert_eq!(
+        executor.profile_digest(),
+        source::custody::profile_digest().unwrap()
+    );
+    let mut older_sources = selected.sources.clone();
+    for (path, bytes) in profile::definition_files() {
+        older_sources.files.insert(path.into(), hash(bytes));
+    }
+    for path in [
+        "assets/tools/source_ci_profile.rs",
+        "assets/tools/source_ci/health.sh",
+    ] {
+        assert!(selected.facts.changed_paths.contains(path));
+        assert_ne!(selected.sources.files[path], older_sources.files[path]);
+    }
+    let older_declaration = ProfileDeclaration {
+        id: profile::REQUIRED_PROFILE.into(),
+        reviewed_sources_digest: older_sources.digest().unwrap(),
+    };
+    let older =
+        profile::required_source_catalog(Some(&older_declaration), &older_sources, &selected.facts)
+            .unwrap();
+    let shape = |catalog: &RequiredCatalog| {
+        catalog
+            .obligations()
+            .iter()
+            .map(|row| (row.key.clone(), row.kind, row.role))
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(shape(&selected.catalog), shape(&older));
+    assert_eq!(selected.catalog.exclusions(), older.exclusions());
+    assert_eq!(
+        selected.catalog.stage_dispositions(),
+        older.stage_dispositions()
+    );
+    assert!(!report.ready, "admission is not execution evidence");
+    assert!(report.evidence_path.is_none());
+    assert!(!fixture.options.root.join("target").exists());
+    assert_eq!(
+        fs::read_dir(&fixture.options.evidence_parent)
+            .unwrap()
+            .count(),
+        0
+    );
+}
+
+#[test]
+fn accepted_executor_tampering_never_falls_back_to_matching_candidate_helpers() {
+    for missing in [false, true] {
+        let fixture = accepted_executor_fixture();
+        let path = "assets/tools/source_ci_profile.rs";
+        let original = fs::read(fixture.options.root.join(path)).unwrap();
+        if missing {
+            fs::remove_file(fixture.options.root.join(path)).unwrap();
+        } else {
+            write_source(&fixture, path, b"// tampered accepted executor\n");
+        }
+        review_and_commit(&fixture, true, "tampered accepted executor");
+        accept_current_base(&fixture);
+        // H exactly matches this controller. Once R advertises the protocol,
+        // mismatched or incomplete R must still fail instead of using H.
+        write_source(&fixture, path, &original);
+        review_and_commit(&fixture, true, "restore candidate helper");
+        assert_admission_blocked(&fixture, true, "CONTROLLER_CONTRACT_UNSUPPORTED");
+    }
+}
+
+#[test]
+fn accepted_executor_does_not_authorize_changed_candidate_carriers() {
+    for path in [
+        ".github/workflows/ci.yml",
+        ".github/actions/source-ci-profile/action.yml",
+        ".github/scripts/release-build.sh",
+        "assets/tools/ci_event_context.rs",
+    ] {
+        let fixture = accepted_executor_fixture();
+        write_source(&fixture, path, b"changed candidate carrier\n");
+        review_and_commit(&fixture, true, "review altered carrier");
+        assert_admission_blocked(&fixture, true, path);
+    }
+}
+
+#[test]
+#[cfg(unix)]
+fn accepted_executor_rejects_candidate_carrier_and_accepted_helper_mode_changes() {
+    use std::os::unix::fs::PermissionsExt;
+    for path in [
+        ".github/actions/source-ci-profile/action.yml",
+        ".github/scripts/release-build.sh",
+        "assets/tools/ci_event_context.rs",
+    ] {
+        let fixture = accepted_executor_fixture();
+        let before = discover_source_inventory(&fixture.options, &Cancellation::default()).unwrap();
+        fs::set_permissions(
+            fixture.options.root.join(path),
+            fs::Permissions::from_mode(0o755),
+        )
+        .unwrap();
+        review_and_commit(&fixture, true, "candidate carrier executable mode");
+        let after = discover_source_inventory(&fixture.options, &Cancellation::default()).unwrap();
+        assert_eq!(
+            before, after,
+            "byte inventory alone cannot reject changed mode"
+        );
+        assert_admission_blocked(&fixture, true, path);
+    }
+    for path in [
+        "assets/tools/source_ci_profile.rs",
+        "assets/tools/source_ci_custody.rs",
+    ] {
+        let fixture = accepted_executor_fixture();
+        fs::set_permissions(
+            fixture.options.root.join(path),
+            fs::Permissions::from_mode(0o755),
+        )
+        .unwrap();
+        review_and_commit(&fixture, true, "accepted helper executable mode");
+        accept_current_base(&fixture);
+        fs::set_permissions(
+            fixture.options.root.join(path),
+            fs::Permissions::from_mode(0o644),
+        )
+        .unwrap();
+        review_and_commit(&fixture, true, "restore candidate helper mode");
+        assert_admission_blocked(&fixture, true, "CONTROLLER_CONTRACT_UNSUPPORTED");
+    }
+}
+
+#[test]
+#[cfg(unix)]
+fn legacy_and_native_validation_reject_carrier_modes_without_accepted_executor() {
+    use std::os::unix::fs::PermissionsExt;
+    for remote in [false, true] {
+        let fixture = accepted_executor_fixture();
+        let marker = "assets/tools/source_ci_custody.rs";
+        let original = fs::read(fixture.options.root.join(marker)).unwrap();
+        write_source(&fixture, marker, b"// legacy base\n");
+        review_and_commit(&fixture, remote, "accepted base without protocol");
+        accept_current_base(&fixture);
+        write_source(&fixture, marker, &original);
+        let path = ".github/actions/source-ci-profile/action.yml";
+        fs::set_permissions(
+            fixture.options.root.join(path),
+            fs::Permissions::from_mode(0o755),
+        )
+        .unwrap();
+        review_and_commit(&fixture, remote, "candidate carrier mode");
+        assert_admission_blocked(&fixture, remote, path);
+    }
+}
+
+#[test]
+fn accepted_executor_rejects_unknown_workflow_provider_action_and_script() {
+    for path in [
+        ".github/workflows/unknown.yml",
+        ".buildkite/pipeline.yml",
+        ".github/actions/unknown/action.yml",
+        ".github/scripts/unknown.sh",
+    ] {
+        let fixture = accepted_executor_fixture();
+        write_source(&fixture, path, b"unknown execution source\n");
+        review_and_commit(&fixture, true, "review unknown execution source");
+        assert_admission_blocked(&fixture, true, path);
+    }
+}
+
+#[test]
+fn native_validation_does_not_silently_use_remote_accepted_executor() {
+    let fixture = accepted_executor_fixture();
+    change_candidate_helpers(&fixture, false);
+    assert_admission_blocked(&fixture, false, "CONTROLLER_CONTRACT_UNSUPPORTED");
+}
+
+#[test]
+fn absent_or_lookalike_accepted_protocol_cannot_authorize_changed_candidate_helpers() {
+    let marker_path = "assets/tools/source_ci_custody.rs";
+    for marker in [
+        None,
+        Some("// pub const DUAL_ROOT_SCHEMA: &str = \"decapod.source-ci.dual-root.v1\";\n"),
+        Some("pub const DUAL_ROOT_SCHEMA: &str = \"decapod.source-ci.dual-root.v99\";\n"),
+    ] {
+        let fixture = accepted_executor_fixture();
+        let original = fs::read(fixture.options.root.join(marker_path)).unwrap();
+        match marker {
+            None => fs::remove_file(fixture.options.root.join(marker_path)).unwrap(),
+            Some(marker) => write_source(&fixture, marker_path, marker.as_bytes()),
+        }
+        review_and_commit(&fixture, true, "accepted base without supported protocol");
+        accept_current_base(&fixture);
+        write_source(&fixture, marker_path, &original);
+        change_candidate_helpers(&fixture, true);
+        assert_admission_blocked(&fixture, true, "CONTROLLER_CONTRACT_UNSUPPORTED");
+    }
+}
+
+#[test]
+fn accepted_base_without_protocol_retains_strict_matching_candidate_rollout() {
+    let fixture = accepted_executor_fixture();
+    let path = "assets/tools/source_ci_custody.rs";
+    let original = fs::read(fixture.options.root.join(path)).unwrap();
+    write_source(
+        &fixture,
+        path,
+        b"// legacy accepted base without dual-root protocol\n",
+    );
+    review_and_commit(&fixture, true, "legacy accepted base");
+    let accepted = accept_current_base(&fixture);
+    write_source(&fixture, path, &original);
+    review_and_commit(&fixture, true, "strict matching candidate for rollout");
+    let mut host = host();
+    host.prerequisites = ProjectPrerequisites::ProviderRequired;
+    host.target = Some(accepted);
+    let report = validate(&fixture.options, &mut host, &Cancellation::default());
+    assert_eq!(report.blockers.len(), 1, "{report:?}");
+    assert_eq!(
+        report.blockers[0].code, "ADAPTER_SELECTION_REACHED",
+        "{report:?}"
+    );
+    assert!(host.selected.unwrap().executor.is_none());
+    assert!(!report.ready);
+}
+
+#[test]
+fn accepted_executor_requires_present_ancestor_base_and_fresh_remote_target() {
+    let fixture = accepted_executor_fixture();
+    change_candidate_helpers(&fixture, true);
+    run(
+        &fixture.options.root,
+        &["update-ref", "-d", &fixture.options.accepted_base_ref],
+    );
+    assert_admission_blocked(&fixture, true, "Git");
+
+    let fixture = accepted_executor_fixture();
+    let base = run(&fixture.options.root, &["rev-parse", "HEAD"]);
+    change_candidate_helpers(&fixture, true);
+    let tree = run(&fixture.options.root, &["rev-parse", "HEAD^{tree}"]);
+    let moved = run(
+        &fixture.options.root,
+        &[
+            "commit-tree",
+            &tree,
+            "-p",
+            &base,
+            "-m",
+            "new accepted sibling",
+        ],
+    );
+    run(
+        &fixture.options.root,
+        &["update-ref", &fixture.options.accepted_base_ref, &moved],
+    );
+    assert_admission_blocked(&fixture, true, "ACCEPTED_BASE_NOT_ANCESTOR");
+
+    let fixture = accepted_executor_fixture();
+    change_candidate_helpers(&fixture, true);
+    let mut host = host();
+    host.prerequisites = ProjectPrerequisites::ProviderRequired;
+    host.target = Some("f".repeat(40));
+    let report = validate(&fixture.options, &mut host, &Cancellation::default());
+    assert!(!report.ready);
+    assert!(
+        report
+            .blockers
+            .iter()
+            .any(|blocker| blocker.detail.contains("STALE_ACCEPTED_BASE")),
+        "{report:?}"
+    );
+    assert_eq!(host.target_calls, 1);
+    assert!(host.selected.is_none());
+    assert!(report.evidence_path.is_none());
 }
 
 #[test]
@@ -807,14 +1262,13 @@ fn reviewed_controller_mismatch_is_actionable_without_provider_dispatch_or_readi
                         .contains(".github/workflows/ci.yml")
                 );
                 let instruction = report.agent_guidance.instruction;
-                assert!(
-                    instruction
-                        .contains("controller does not support this reviewed source contract")
-                );
-                assert!(instruction.contains("Rerunning the same controller, repinning configuration or running a manual build cannot resolve"));
+                assert!(instruction.contains(
+                    "controller cannot admit this carrier, protocol or accepted executor"
+                ));
+                assert!(instruction.contains("rerunning the same controller, repinning configuration or running a manual build cannot resolve"));
                 assert!(instruction.contains("independently supported controller"));
                 assert!(instruction.contains("preserve the blocker if none is available"));
-                assert!(instruction.contains("No automatic controller bootstrap is implemented"));
+                assert!(instruction.contains("No automatic controller replacement is performed"));
                 let value = serde_json::to_value(&report).unwrap();
                 assert_eq!(value["ready"], false);
                 assert_eq!(value["blockers"][0]["code"], expected_code);

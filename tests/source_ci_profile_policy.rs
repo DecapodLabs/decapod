@@ -1288,3 +1288,778 @@ fn validation_recipe_fails_closed_on_failed_prerequisite_build_or_missing_tool()
         }
     }
 }
+
+#[test]
+fn dual_root_context_is_explicit_versioned_and_all_or_none() {
+    use profile::custody::{DUAL_ROOT_SCHEMA, ExecutorContext};
+    let flags = BTreeMap::from([
+        ("--execution-context".into(), DUAL_ROOT_SCHEMA.into()),
+        ("--executor-root".into(), "/independent/executor".into()),
+        ("--executor-revision".into(), "1".repeat(40)),
+        ("--executor-tree".into(), "2".repeat(40)),
+    ]);
+    assert!(
+        ExecutorContext::from_flags(&BTreeMap::new())
+            .unwrap()
+            .is_none()
+    );
+    let context = ExecutorContext::from_flags(&flags).unwrap().unwrap();
+    assert_eq!(context.revision, "1".repeat(40));
+    for key in flags.keys() {
+        let mut incomplete = flags.clone();
+        incomplete.remove(key);
+        assert!(ExecutorContext::from_flags(&incomplete).is_err(), "{key}");
+    }
+    for (key, bad) in [
+        ("--execution-context", "decapod.source-ci.dual-root.v999"),
+        ("--executor-root", ""),
+        ("--executor-revision", "HEAD"),
+        ("--executor-tree", "refs/heads/master"),
+    ] {
+        let mut invalid = flags.clone();
+        invalid.insert(key.into(), bad.into());
+        assert!(ExecutorContext::from_flags(&invalid).is_err(), "{key}");
+    }
+}
+
+fn dual_root_fixture() -> (Temp, profile::custody::ExecutorContext, PathBuf) {
+    let temp = Temp::new();
+    let executor = temp.0.join("executor");
+    let subject = temp.0.join("subject");
+    fs::create_dir(&executor).unwrap();
+    fs::create_dir(&subject).unwrap();
+    for (name, bytes) in profile::custody::profile_sources() {
+        let path = executor.join(profile::custody::profile_source_path(name));
+        fs::create_dir_all(path.parent().unwrap()).unwrap();
+        fs::write(path, bytes).unwrap();
+    }
+    git(&executor, &["init", "-q"]);
+    git(&executor, &["config", "user.name", "Executor fixture"]);
+    git(
+        &executor,
+        &["config", "user.email", "executor@example.invalid"],
+    );
+    git(&executor, &["config", "commit.gpgsign", "false"]);
+    git(&executor, &["config", "core.hooksPath", "/dev/null"]);
+    git(&executor, &["add", "."]);
+    git(&executor, &["commit", "-qm", "reviewed executor closure"]);
+    let context = profile::custody::ExecutorContext {
+        revision: git(&executor, &["rev-parse", "HEAD"]),
+        tree: git(&executor, &["rev-parse", "HEAD^{tree}"]),
+        root: executor,
+    };
+    (temp, context, subject)
+}
+
+#[test]
+fn dual_root_verifies_complete_executor_closure_without_treating_candidate_recipes_as_authority() {
+    use profile::custody::{profile_digest, verify_executor_root};
+    let (_temp, context, subject) = dual_root_fixture();
+    let candidate_recipe = subject.join("assets/tools/source_ci/integration-prepare.sh");
+    fs::create_dir_all(candidate_recipe.parent().unwrap()).unwrap();
+    fs::write(&candidate_recipe, "candidate helper must not run\n").unwrap();
+    let actual = verify_executor_root(&subject, &context).unwrap();
+    assert_eq!(actual.closure_digest, profile_digest().unwrap());
+    let identity: serde_json::Value =
+        serde_json::from_str(&actual.context_json(&"3".repeat(40), &"4".repeat(40))).unwrap();
+    assert_eq!(identity["schema"], "decapod.source-ci.dual-root.v1");
+    assert_eq!(identity["executor_revision"], context.revision);
+    assert_eq!(identity["executor_tree"], context.tree);
+    assert_eq!(identity["executor_profile_digest"], actual.closure_digest);
+    assert_eq!(identity["executor_closure_digest"], actual.closure_digest);
+    assert_eq!(identity["subject_revision"], "3".repeat(40));
+    assert_eq!(identity["subject_tree"], "4".repeat(40));
+    assert!(!identity.to_string().contains(actual.root.to_str().unwrap()));
+    assert_eq!(
+        fs::read_to_string(&candidate_recipe).unwrap(),
+        "candidate helper must not run\n"
+    );
+    for id in [
+        "integration-prepare",
+        "integration-gatling-0",
+        "integration-status",
+    ] {
+        let recipe = commands(find_check(id).unwrap(), &full_paths()).unwrap();
+        let args = profile::custody::configured_arguments(&recipe[0], &actual.root);
+        assert!(Path::new(&args[0]).starts_with(&actual.root));
+    }
+    let recipe = commands(find_check("setup-bazel").unwrap(), &[]).unwrap();
+    for command in &recipe {
+        let args = profile::custody::configured_arguments(command, &actual.root);
+        assert_eq!(
+            args,
+            command
+                .args
+                .iter()
+                .map(|arg| std::ffi::OsString::from(*arg))
+                .collect::<Vec<_>>()
+        );
+        assert_eq!(command.cwd, ".");
+    }
+}
+
+#[test]
+fn dual_root_rejects_aliases_missing_or_altered_closure_and_identity_drift() {
+    use profile::custody::verify_executor_root;
+    let (_temp, context, subject) = dual_root_fixture();
+    assert!(verify_executor_root(&context.root, &context).is_err());
+    let nested = context.root.join("subject");
+    fs::create_dir(&nested).unwrap();
+    assert!(verify_executor_root(&nested, &context).is_err());
+    fs::remove_dir(&nested).unwrap();
+    let mut wrong = context.clone();
+    wrong.revision = "1".repeat(40);
+    assert!(verify_executor_root(&subject, &wrong).is_err());
+    wrong = context.clone();
+    wrong.tree = "2".repeat(40);
+    assert!(verify_executor_root(&subject, &wrong).is_err());
+    for relative in [
+        "assets/tools/source_ci/integration-worker.sh",
+        "assets/tools/integration_shards.rs",
+        "assets/tools/integration_custody.rs",
+        "assets/tools/source_ci/private-checkout.sh",
+        "assets/tools/docs_sync.rs",
+        "src/decapod/core/release_metadata.rs",
+    ] {
+        let file = context.root.join(relative);
+        let original = fs::read(&file).unwrap();
+        fs::remove_file(&file).unwrap();
+        assert!(
+            verify_executor_root(&subject, &context).is_err(),
+            "missing {relative}"
+        );
+        fs::write(&file, b"changed authority\n").unwrap();
+        assert!(
+            verify_executor_root(&subject, &context).is_err(),
+            "changed {relative}"
+        );
+        fs::write(&file, original).unwrap();
+    }
+    verify_executor_root(&subject, &context).unwrap();
+    let hidden = "assets/tools/integration_shards.rs";
+    git(
+        &context.root,
+        &["update-index", "--assume-unchanged", hidden],
+    );
+    assert!(verify_executor_root(&subject, &context).is_err());
+    git(
+        &context.root,
+        &["update-index", "--no-assume-unchanged", hidden],
+    );
+    fs::write(context.root.join(hidden), "different committed executor\n").unwrap();
+    git(&context.root, &["add", hidden]);
+    git(&context.root, &["commit", "-qm", "altered closure"]);
+    assert!(verify_executor_root(&subject, &context).is_err(), "moved R");
+    wrong.revision = git(&context.root, &["rev-parse", "HEAD"]);
+    wrong.tree = git(&context.root, &["rev-parse", "HEAD^{tree}"]);
+    assert!(
+        verify_executor_root(&subject, &wrong).is_err(),
+        "compiled closure mismatch even at clean R"
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn dual_root_rejects_root_and_transitive_helper_symlinks() {
+    use profile::custody::verify_executor_root;
+    use std::os::unix::fs::symlink;
+    let (temp, context, subject) = dual_root_fixture();
+    let alias = temp.0.join("alias");
+    symlink(&context.root, &alias).unwrap();
+    let mut wrong = context.clone();
+    wrong.root = alias;
+    assert!(verify_executor_root(&subject, &wrong).is_err());
+    let subject_alias = temp.0.join("subject-alias");
+    symlink(&subject, &subject_alias).unwrap();
+    assert!(verify_executor_root(&subject_alias, &context).is_err());
+    let helpers = context.root.join("assets/tools/source_ci");
+    let saved = temp.0.join("external-helpers");
+    fs::rename(&helpers, &saved).unwrap();
+    symlink(&saved, &helpers).unwrap();
+    assert!(verify_executor_root(&subject, &context).is_err());
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn integration_preparation_uses_and_packages_executor_helpers_while_writing_subject_outputs() {
+    let temp = Temp::new();
+    let subject = temp.0.join("subject");
+    let executor = temp.0.join("executor");
+    let scratch = temp.0.join("scratch");
+    let bin = temp.0.join("bin");
+    for path in [&subject, &executor, &scratch, &bin] {
+        fs::create_dir(path).unwrap();
+        fs::create_dir_all(path.join("assets/tools/source_ci")).unwrap();
+    }
+    for name in ["integration-worker.sh", "integration-status.sh"] {
+        fs::write(
+            executor.join("assets/tools/source_ci").join(name),
+            format!("executor {name}\n"),
+        )
+        .unwrap();
+        fs::write(
+            subject.join("assets/tools/source_ci").join(name),
+            format!("candidate {name}\n"),
+        )
+        .unwrap();
+    }
+    for name in ["integration_shards.rs", "integration_custody.rs"] {
+        fs::write(
+            executor.join("assets/tools").join(name),
+            "executor helper\n",
+        )
+        .unwrap();
+        fs::write(
+            subject.join("assets/tools").join(name),
+            "candidate helper must not compile\n",
+        )
+        .unwrap();
+    }
+    fake_tool(
+        &executor.join("profile"),
+        "[ \"$1\" = paths ] || exit 19; printf 'src/example.rs\\0'",
+    );
+    fake_tool(&scratch.join("source-ci-profile"), "exit 99");
+    fake_tool(
+        &bin.join("jq"),
+        "case \"$1\" in -c) printf '[]\\n';; *) printf '0\\n';; esac",
+    );
+    fake_tool(
+        &bin.join("rustc"),
+        r#"
+set -eu
+printf '%s\n' "$@" >> "$MOCK_LOG"
+source=''
+output=''
+while [ "$#" -gt 0 ]; do
+  case "$1" in *.rs) source="$1";; -o) shift; output="$1";; esac
+  shift
+done
+case "$source" in "$SOURCE_CI_EXECUTOR_ROOT"/assets/tools/*.rs) ;; *) exit 94;; esac
+case "$source" in
+  */integration_shards.rs)
+    printf '#!/bin/sh\n[ "$1" = plan ] || exit 92\nprintf '\''{"include":[]}\\n'\''\n' > "$output";;
+  */integration_custody.rs)
+    cat > "$output" <<'HELPER'
+#!/bin/sh
+case "$1" in
+  context) printf 'context=fixture\n';;
+  digest) sha256sum "$3" | cut -d ' ' -f1;;
+  describe-preparation) printf 'fixture descriptor\n';;
+  *) exit 93;;
+esac
+HELPER
+    ;;
+  *) exit 95;;
+esac
+chmod +x "$output"
+"#,
+    );
+    let output = Command::new("bash")
+        .args([
+            "-c",
+            include_str!("../assets/tools/source_ci/integration-prepare.sh"),
+        ])
+        .current_dir(&subject)
+        .env("RUNNER_TEMP", &scratch)
+        .env("GITHUB_OUTPUT", scratch.join("outputs"))
+        .env("CHANGE_BASE", "base")
+        .env("CUSTODY_BASE", "base")
+        .env("CHANGE_HEAD", "head")
+        .env("CUSTODY_HEAD", "head")
+        .env("SOURCE_CI_EXECUTOR_ROOT", &executor)
+        .env("SOURCE_CI_PROFILE_EXECUTABLE", executor.join("profile"))
+        .env("MOCK_LOG", scratch.join("compiler-inputs"))
+        .env(
+            "PATH",
+            format!("{}:{}", bin.display(), std::env::var("PATH").unwrap()),
+        )
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "{output:?}");
+    let compiler_inputs = fs::read_to_string(scratch.join("compiler-inputs")).unwrap();
+    for name in ["integration_shards.rs", "integration_custody.rs"] {
+        assert!(
+            compiler_inputs.contains(executor.join("assets/tools").join(name).to_str().unwrap())
+        );
+        assert!(
+            !compiler_inputs.contains(subject.join("assets/tools").join(name).to_str().unwrap())
+        );
+    }
+    for name in ["integration-worker.sh", "integration-status.sh"] {
+        assert_eq!(
+            fs::read_to_string(
+                scratch
+                    .join("integration-bootstrap-package/assets/tools/source_ci")
+                    .join(name)
+            )
+            .unwrap(),
+            format!("executor {name}\n")
+        );
+        assert_eq!(
+            fs::read_to_string(subject.join("assets/tools/source_ci").join(name)).unwrap(),
+            format!("candidate {name}\n")
+        );
+    }
+    assert_eq!(
+        fs::read(
+            scratch.join("integration-bootstrap-package/integration-bootstrap/source-ci-profile")
+        )
+        .unwrap(),
+        fs::read(executor.join("profile")).unwrap()
+    );
+    assert!(
+        subject
+            .join("target/integration-bootstrap-artifacts/integration-bootstrap.tar")
+            .is_file()
+    );
+    assert!(
+        subject
+            .join("target/integration-custody-artifacts/preparation.v1")
+            .is_file()
+    );
+    assert!(!executor.join("target").exists());
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn measured_dual_root_execution_binds_subject_and_never_runs_candidate_recipe() {
+    use profile::custody::{self, Context};
+    // Isolate toolchain policy probes from Cargo/Bazel's test-runner overrides.
+    if std::env::var("SOURCE_CI_DUAL_ROOT_CHILD").as_deref() != Ok("1") {
+        let home = Temp::new();
+        fs::create_dir(home.0.join("cargo-home")).unwrap();
+        let mut child = Command::new(std::env::current_exe().unwrap());
+        child
+            .args([
+                "--exact",
+                "measured_dual_root_execution_binds_subject_and_never_runs_candidate_recipe",
+                "--nocapture",
+            ])
+            .env("SOURCE_CI_DUAL_ROOT_CHILD", "1")
+            .env("HOME", &home.0)
+            .env("CARGO_HOME", home.0.join("cargo-home"));
+        for key in custody::declared_toolchain::ENVIRONMENT_KEYS {
+            child.env_remove(key);
+        }
+        for (key, _) in std::env::vars_os() {
+            if key.to_string_lossy().starts_with("CARGO_TARGET_") {
+                child.env_remove(key);
+            }
+        }
+        let output = child.output().unwrap();
+        assert!(output.status.success(), "{output:?}");
+        assert!(
+            String::from_utf8_lossy(&output.stdout).contains("1 passed"),
+            "{output:?}"
+        );
+        return;
+    }
+    let (temp, executor, subject) = dual_root_fixture();
+    git(&subject, &["init", "-q"]);
+    git(&subject, &["config", "user.name", "Subject fixture"]);
+    git(
+        &subject,
+        &["config", "user.email", "subject@example.invalid"],
+    );
+    git(&subject, &["config", "commit.gpgsign", "false"]);
+    git(&subject, &["config", "core.hooksPath", "/dev/null"]);
+    fs::write(subject.join("source.txt"), "base\n").unwrap();
+    git(&subject, &["add", "."]);
+    git(&subject, &["commit", "-qm", "base"]);
+    let base = git(&subject, &["rev-parse", "HEAD"]);
+    let candidate_recipe = subject.join("assets/tools/source_ci/commit-lint.sh");
+    fs::create_dir_all(candidate_recipe.parent().unwrap()).unwrap();
+    fs::write(&candidate_recipe, "#!/bin/sh\nexit 99\n").unwrap();
+    git(&subject, &["add", "."]);
+    git(&subject, &["commit", "-qm", "candidate source"]);
+    let head = git(&subject, &["rev-parse", "HEAD"]);
+    let tree = git(&subject, &["rev-parse", "HEAD^{tree}"]);
+    let check = find_check("commit-lint").unwrap();
+    let paths = profile::changed_paths(&subject, &base, &head).unwrap();
+    let recipe = commands(check, &paths).unwrap();
+    let mut context = Context {
+        snapshot: head.clone(),
+        validation_head: head.clone(),
+        tree: tree.clone(),
+        provider: "github".into(),
+        run_id: "12".into(),
+        run_attempt: "1".into(),
+        job_id: check.job.into(),
+        step_key: String::new(),
+        expected_profile: custody::profile_digest().unwrap(),
+        expected_invocation: custody::invocation_digest(&recipe).unwrap(),
+        expected_toolchain: None,
+        preparation_file: None,
+        evidence_dir: temp.0.join("preparation"),
+        executor: Some(executor.clone()),
+    };
+    assert!(custody::run(&subject, check, &paths, &base, &head, &context, true).unwrap());
+    let preparation: serde_json::Value =
+        serde_json::from_slice(&fs::read(context.evidence_dir.join("preparation.json")).unwrap())
+            .unwrap();
+    assert_eq!(preparation["schema"], custody::DUAL_ROOT_PREPARATION_SCHEMA);
+    assert_eq!(preparation["execution_context"]["subject_revision"], head);
+    assert_eq!(preparation["execution_context"]["subject_tree"], tree);
+    context.expected_toolchain = Some(format!(
+        "sha256:{}",
+        custody::integration_custody::file_sha256(&context.evidence_dir.join("toolchain.json"),)
+            .unwrap()
+    ));
+    context.preparation_file = Some(context.evidence_dir.join("preparation.json"));
+    context.evidence_dir = temp.0.join("execution");
+    assert!(custody::run(&subject, check, &paths, &base, &head, &context, false).unwrap());
+    let execution: serde_json::Value =
+        serde_json::from_slice(&fs::read(context.evidence_dir.join("execution.json")).unwrap())
+            .unwrap();
+    assert_eq!(execution["schema"], custody::DUAL_ROOT_EXECUTION_SCHEMA);
+    assert_eq!(execution["execution_complete"], true);
+    assert_eq!(execution["authenticated"], false);
+    assert_eq!(execution["complete_pr_profile"], false);
+    assert_eq!(
+        execution["execution_context"],
+        preparation["execution_context"]
+    );
+    assert_eq!(
+        execution["final_executor_closure_digest"],
+        context.expected_profile
+    );
+    assert_eq!(
+        fs::read_to_string(&candidate_recipe).unwrap(),
+        "#!/bin/sh\nexit 99\n"
+    );
+    context.tree = "2".repeat(40);
+    context.evidence_dir = temp.0.join("wrong-subject");
+    assert!(custody::run(&subject, check, &paths, &base, &head, &context, true).is_err());
+    assert!(!context.evidence_dir.exists());
+    context.tree = tree;
+    fs::write(
+        executor.root.join("assets/tools/source_ci/commit-lint.sh"),
+        "changed after freeze\n",
+    )
+    .unwrap();
+    context.evidence_dir = temp.0.join("changed-executor");
+    assert!(custody::run(&subject, check, &paths, &base, &head, &context, false).is_err());
+    assert!(!context.evidence_dir.exists());
+}
+
+fn source_profile_compile_recipe() -> String {
+    PREPARE
+        .split_once("      run: |\n")
+        .unwrap()
+        .1
+        .split_once("    - name: Execute reviewed source check with measured custody\n")
+        .unwrap()
+        .0
+        .lines()
+        .map(|line| line.strip_prefix("        ").unwrap_or(line))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+#[test]
+fn provider_carrier_selects_only_immutable_opted_in_executor_and_keeps_legacy_rollout() {
+    let recipe = source_profile_compile_recipe();
+    assert!(recipe.contains("base=\"${SOURCE_CI_BASE:-}\""));
+    assert!(recipe.contains("SOURCE_INPUT_BASE\" != \"$base"));
+    assert!(recipe.contains("git_local ls-tree \"$base\" -- assets/tools/source_ci_custody.rs"));
+    assert!(recipe.contains(
+        "grep -Fqx 'pub const DUAL_ROOT_SCHEMA: &str = \"decapod.source-ci.dual-root.v1\";'"
+    ));
+    assert!(recipe.contains("worktree add --quiet --detach \"$executor_root\" \"$base\""));
+    assert!(
+        recipe.contains(
+            "rustc --edition=2024 -O \"$executor_root/assets/tools/source_ci_profile.rs\""
+        )
+    );
+    assert!(recipe.contains("run-ci|prepare-evidence|run-evidence)"));
+    assert!(recipe.contains("--execution-context decapod.source-ci.dual-root.v1"));
+    assert!(recipe.contains(
+        "--executor-root \"$root\" --executor-revision \"$revision\" --executor-tree \"$tree\""
+    ));
+    assert!(recipe.contains("*) exec \"$executor\" \"$@\""));
+    assert!(!recipe.contains("origin/master"));
+    assert!(!recipe.contains("git_local fetch"));
+    assert!(!recipe.contains("SOURCE_CI_EXECUTOR_ROOT="));
+    let fallback = recipe
+        .find("rustc --edition=2024 -O assets/tools/source_ci_profile.rs")
+        .unwrap();
+    let stage = recipe.find("worktree add --quiet --detach").unwrap();
+    assert!(fallback < stage);
+    assert!(recipe[fallback..stage].contains("exit 0\nfi"));
+}
+
+#[cfg(unix)]
+struct ProfileCarrierFixture {
+    _temp: Temp,
+    subject: PathBuf,
+    scratch: PathBuf,
+    bin: PathBuf,
+    base: String,
+    head: String,
+}
+#[cfg(unix)]
+impl ProfileCarrierFixture {
+    fn new(supported_base: bool) -> Self {
+        let temp = Temp::new();
+        let subject = temp.0.join("subject");
+        let scratch = temp.0.join("scratch with space");
+        let bin = temp.0.join("bin");
+        for path in [&subject, &scratch, &bin] {
+            fs::create_dir(path).unwrap();
+        }
+        fs::create_dir_all(subject.join("assets/tools")).unwrap();
+        let marker = "pub const DUAL_ROOT_SCHEMA: &str = \"decapod.source-ci.dual-root.v1\";\n";
+        fs::write(
+            subject.join("assets/tools/source_ci_custody.rs"),
+            if supported_base {
+                marker
+            } else {
+                "legacy custody\n"
+            },
+        )
+        .unwrap();
+        fs::write(
+            subject.join("assets/tools/source_ci_profile.rs"),
+            "reviewed executor R\n",
+        )
+        .unwrap();
+        git(&subject, &["init", "-q"]);
+        git(&subject, &["config", "user.name", "Carrier fixture"]);
+        git(
+            &subject,
+            &["config", "user.email", "carrier@example.invalid"],
+        );
+        git(&subject, &["config", "commit.gpgsign", "false"]);
+        git(&subject, &["config", "core.hooksPath", "/dev/null"]);
+        git(&subject, &["add", "."]);
+        git(&subject, &["commit", "-qm", "accepted executor"]);
+        let base = git(&subject, &["rev-parse", "HEAD"]);
+        // Opposite H marker proves that only the captured B object opts in.
+        fs::write(
+            subject.join("assets/tools/source_ci_custody.rs"),
+            if supported_base {
+                "candidate has no authority marker\n"
+            } else {
+                marker
+            },
+        )
+        .unwrap();
+        fs::write(
+            subject.join("assets/tools/source_ci_profile.rs"),
+            "candidate subject H\n",
+        )
+        .unwrap();
+        git(&subject, &["add", "."]);
+        git(&subject, &["commit", "-qm", "candidate subject"]);
+        let head = git(&subject, &["rev-parse", "HEAD"]);
+        fake_tool(
+            &bin.join("mock-profile"),
+            "printf '%s\\0' \"$@\" > \"$MOCK_ARGV\"; exit \"${MOCK_EXIT_CODE:-0}\"",
+        );
+        fake_tool(
+            &bin.join("rustc"),
+            r#"
+set -eu
+source=''
+output=''
+while [ "$#" -gt 0 ]; do
+  case "$1" in *.rs) source="$1";; -o) shift; output="$1";; esac
+  shift
+done
+printf '%s\n' "$source" >> "$MOCK_COMPILES"
+cat "$source" >> "$MOCK_COMPILED_SOURCE"
+[ "${FAIL_COMPILATION:-0}" = 0 ] || exit 19
+cp "$MOCK_EXECUTABLE" "$output"
+chmod +x "$output"
+"#,
+        );
+        Self {
+            _temp: temp,
+            subject,
+            scratch,
+            bin,
+            base,
+            head,
+        }
+    }
+    fn compile(&self) -> Command {
+        let mut command = Command::new("bash");
+        command
+            .args(["-c", &source_profile_compile_recipe()])
+            .current_dir(&self.subject)
+            .env("SOURCE_CI_BASE", &self.base)
+            .env("SOURCE_CI_HEAD", &self.head)
+            .env("SOURCE_INPUT_BASE", "")
+            .env("RUNNER_TEMP", &self.scratch)
+            .env("MOCK_COMPILES", self.scratch.join("compiles"))
+            .env("MOCK_COMPILED_SOURCE", self.scratch.join("compiled-source"))
+            .env("MOCK_EXECUTABLE", self.bin.join("mock-profile"))
+            .env(
+                "PATH",
+                format!("{}:{}", self.bin.display(), std::env::var("PATH").unwrap()),
+            );
+        command
+    }
+    fn invoke(&self, mode: &str, code: i32) -> (std::process::Output, Vec<String>) {
+        let output = Command::new(self.scratch.join("source-ci-profile"))
+            .args([mode, "--check", "fmt"])
+            .current_dir(&self.subject)
+            .env("MOCK_ARGV", self.scratch.join("argv"))
+            .env("MOCK_EXIT_CODE", code.to_string())
+            // Frozen explicit values win; ambient source/helper overrides have no role.
+            .env("SOURCE_CI_BASE", "f".repeat(40))
+            .env("SOURCE_CI_EXECUTOR_ROOT", "/not-the-executor")
+            .output()
+            .unwrap();
+        let bytes = fs::read(self.scratch.join("argv")).unwrap();
+        let args = bytes
+            .split(|b| *b == 0)
+            .filter(|v| !v.is_empty())
+            .map(|arg| String::from_utf8(arg.to_vec()).unwrap())
+            .collect();
+        (output, args)
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn provider_carrier_executes_immutable_r_and_wrapper_preserves_fixed_context_and_failure() {
+    let fixture = ProfileCarrierFixture::new(true);
+    let output = fixture
+        .compile()
+        .env("SOURCE_INPUT_BASE", &fixture.base)
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "{output:?}");
+    assert_eq!(
+        fs::read_to_string(fixture.scratch.join("compiled-source")).unwrap(),
+        "reviewed executor R\n"
+    );
+    let compiled = fs::read_to_string(fixture.scratch.join("compiles")).unwrap();
+    let source = Path::new(compiled.trim());
+    let executor = source.ancestors().nth(3).unwrap();
+    assert!(executor.starts_with(&fixture.scratch));
+    assert!(!executor.starts_with(&fixture.subject));
+    assert_eq!(git(executor, &["rev-parse", "HEAD"]), fixture.base);
+    let tree = git(executor, &["rev-parse", "HEAD^{tree}"]);
+    assert_eq!(git(&fixture.subject, &["rev-parse", "HEAD"]), fixture.head);
+    for mode in ["run-ci", "prepare-evidence", "run-evidence"] {
+        let (output, args) = fixture.invoke(mode, 0);
+        assert!(output.status.success(), "{output:?}");
+        assert_eq!(
+            args,
+            [
+                mode,
+                "--execution-context",
+                profile::custody::DUAL_ROOT_SCHEMA,
+                "--executor-root",
+                executor.to_str().unwrap(),
+                "--executor-revision",
+                &fixture.base,
+                "--executor-tree",
+                &tree,
+                "--check",
+                "fmt"
+            ]
+        );
+    }
+    for mode in ["plan", "paths", "migration-changed", "docs-changed", "run"] {
+        let (output, args) = fixture.invoke(mode, 0);
+        assert!(output.status.success(), "{output:?}");
+        assert_eq!(args, [mode, "--check", "fmt"]);
+    }
+    let (output, _) = fixture.invoke("run-evidence", 23);
+    assert_eq!(output.status.code(), Some(23));
+    assert_eq!(
+        fs::read_to_string(fixture.scratch.join("compiles"))
+            .unwrap()
+            .lines()
+            .count(),
+        1
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn provider_carrier_never_falls_back_after_supported_r_compilation_failure() {
+    let fixture = ProfileCarrierFixture::new(true);
+    let output = fixture
+        .compile()
+        .env("FAIL_COMPILATION", "1")
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(19), "{output:?}");
+    assert_eq!(
+        fs::read_to_string(fixture.scratch.join("compiled-source")).unwrap(),
+        "reviewed executor R\n"
+    );
+    assert_eq!(
+        fs::read_to_string(fixture.scratch.join("compiles"))
+            .unwrap()
+            .lines()
+            .count(),
+        1
+    );
+    assert!(!fixture.scratch.join("source-ci-profile").exists());
+}
+
+#[cfg(unix)]
+#[test]
+fn provider_carrier_legacy_rollout_manual_and_no_change_keep_original_subject_compilation() {
+    for mode in ["legacy", "manual", "no-change"] {
+        let fixture = ProfileCarrierFixture::new(false);
+        let mut command = fixture.compile();
+        match mode {
+            "manual" => {
+                command.env("SOURCE_CI_BASE", "");
+            }
+            "no-change" => {
+                command.env("SOURCE_CI_BASE", &fixture.head);
+            }
+            _ => (),
+        }
+        let output = command.output().unwrap();
+        assert!(output.status.success(), "{mode}: {output:?}");
+        assert_eq!(
+            fs::read_to_string(fixture.scratch.join("compiled-source")).unwrap(),
+            "candidate subject H\n"
+        );
+        assert_eq!(
+            fs::read_to_string(fixture.scratch.join("compiles")).unwrap(),
+            "assets/tools/source_ci_profile.rs\n"
+        );
+        let (output, args) = fixture.invoke("run-ci", 0);
+        assert!(output.status.success(), "{output:?}");
+        assert_eq!(args, ["run-ci", "--check", "fmt"]);
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn provider_carrier_rejects_mismatched_mutable_or_nested_executor_inputs_before_compilation() {
+    for mode in ["mismatched", "mutable", "nested", "missing-head"] {
+        let fixture = ProfileCarrierFixture::new(true);
+        let mut command = fixture.compile();
+        match mode {
+            "mismatched" => {
+                command.env("SOURCE_INPUT_BASE", &fixture.head);
+            }
+            "mutable" => {
+                command.env("SOURCE_CI_BASE", "HEAD");
+            }
+            "nested" => {
+                let nested = fixture.subject.join("runner");
+                fs::create_dir(&nested).unwrap();
+                command.env("RUNNER_TEMP", nested);
+            }
+            "missing-head" => {
+                command.env_remove("SOURCE_CI_HEAD");
+            }
+            _ => unreachable!(),
+        }
+        let output = command.output().unwrap();
+        assert!(!output.status.success(), "{mode}: {output:?}");
+        assert!(!fixture.scratch.join("compiles").exists(), "{mode}");
+    }
+}

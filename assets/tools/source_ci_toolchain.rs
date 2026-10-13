@@ -866,6 +866,7 @@ mod live_runner_regressions {
                 expected_toolchain: None,
                 preparation_file: None,
                 evidence_dir: root.join("preparation"),
+                executor: None,
             };
             assert!(!super::super::run(&root, check, &[], &base, &head, &ctx, true).unwrap());
             assert!(
@@ -904,8 +905,8 @@ mod live_runner_regressions {
             let second = root.join("second");
             fs::create_dir(&first).unwrap();
             fs::create_dir(&second).unwrap();
-            let a = super::super::measure_tools(check, &recipe, &root, &first, "").unwrap();
-            let b = super::super::measure_tools(check, &recipe, &root, &second, "").unwrap();
+            let a = super::super::measure_tools(check, &recipe, &root, &first, "", &root).unwrap();
+            let b = super::super::measure_tools(check, &recipe, &root, &second, "", &root).unwrap();
             assert_eq!(
                 a.0, b.0,
                 "cold setup must not change stable toolchain identity"
@@ -921,8 +922,8 @@ mod live_runner_regressions {
             fs::write(selected, "different executable bytes").unwrap();
             let changed = root.join("changed");
             fs::create_dir(&changed).unwrap();
-            let error =
-                super::super::measure_tools(check, &recipe, &root, &changed, "").unwrap_err();
+            let error = super::super::measure_tools(check, &recipe, &root, &changed, "", &root)
+                .unwrap_err();
             assert!(
                 error.to_string().contains("selected Bazel bytes differ"),
                 "{error}"

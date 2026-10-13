@@ -121,8 +121,9 @@ After source and required governance material are ready, the agent checkpoints
 and commits the candidate, then invokes plain validation. Configured build
 prerequisites and tests belong inside that route. Canonical agent templates in
 `src/decapod/core/assets.rs` forbid a separate manual build or shadow preflight.
-An unreviewed inventory requires reconciliation. A reviewed inventory that
-differs from the running controller's compiled adapters instead reports
+An unreviewed inventory requires reconciliation. A reviewed inventory can change candidate helper inputs while the remote
+adapter uses its independently supported accepted executor. An unsupported
+carrier, protocol or accepted executor instead reports
 `CONTROLLER_CONTRACT_UNSUPPORTED` and requires an independently supported
 controller. The current runtime does not automatically build or promote a new
 controller to resolve that incompatibility. Neither outcome grants readiness.
@@ -385,7 +386,34 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a311bb876ab115a084d4baef25da4e9d093491eff1d2241911abda03924d05c7`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (180 files), `tests/` (188 files)
+- Repository signal fingerprint: `06f16a3cd87a37ae874c9424f28f238a28d44fc7c4f645494336351ed6622fa4`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (182 files), `tests/` (188 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+### Validation-owned candidate execution
+
+For the supported remote source-CI profile, plain validation captures the
+accepted executor contract before selecting the provider. Candidate helper
+changes do not require a separate local compile or a shadow preflight when the
+accepted R closure and unchanged carrier are supported by the controller.
+Validation pushes or reuses the same governed work branch, requires the full
+candidate build and applicable test graph, authenticates their artifacts, and
+returns its own final report. Build failure, missing custody, altered R/H
+identity, or a moved accepted target leaves readiness false.
+
+The source executor’s dual-root preparation.v2 and execution.v3 envelopes bind
+R, its tree and profile closure separately from the actual subject revision and
+tree. Their schema is not authorization: the importer constructs expectations
+from independent source capture and requires matching final closure. Legacy
+preparation.v1/execution.v2 cannot carry an ignored dual-root field. Authenticated
+integration workers retain their artifact-only mode and inherit the verified R
+executor through the measured preparation dependency. No candidate receipt can
+choose the expected recipe, required suite or readiness outcome.
+
+The protocol is finite and provider-specific. Changed workflow/local-action
+semantics, new providers and unsupported accepted executor contracts require a
+reviewed controller adapter. Native validation retains its existing strict
+contract. Initial rollout uses the strict legacy path until the accepted target
+contains this protocol; automatic replacement of an already installed old
+controller is not claimed.

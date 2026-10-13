@@ -340,7 +340,7 @@ pub fn readiness_contract() -> &'static str {
 - **Automatic provider execution:** With Buildkite validation enabled outside CI, `validate` pushes or reuses the exact current workspace branch commit, waits for every required imported Buildkite workflow, collects authenticated execution artifacts once, and rechecks the candidate, accepted target and provider attempt identities before returning success. The required project checks execute on Buildkite; this route neither runs a duplicate local prerequisite suite nor requires a fresh local validation receipt before submission. It uses already configured official Git access, repository check URLs only to locate Buildkite runs, and the reviewed Buildkite reader; missing tools, access denial, timeout, cancellation, failed jobs or incomplete custody return nonzero. It never installs credentials or falls back after an authorization failure.
 - **Host handoff:** `validate --snapshot-prepare` prepares private metadata for the existing workspace branch and returns nonzero while proof is pending. An authorized host may push only the same exact candidate commit to that branch. `validate --snapshot-resume <HANDOFF> --snapshot-adopt <H>` independently verifies the unchanged source/tree/target and the exact remote branch tip; it cannot accept a different commit or a temporary branch. If a host object API changes commit identity, first checkpoint and review that real source identity before preparing a new handoff. Never edit a handoff to assert success. `validate --snapshot-resume <HANDOFF>` independently verifies Buildkite identities, raw artifact digests and execution evidence. No per-run branch or synthetic commit is created, and validation cleanup never deletes the workspace branch. Existing GitHub workflows may run independently; their results and artifacts neither satisfy nor block this Buildkite profile. This is not a compatibility claim for a separate `bk preflight` command.
 - **Boundaries:** Validation may perform the authorized non-forced push of its existing workspace branch. It does not open a PR, create a release/tag, upload a package/image or deploy. Remote CI submission needs existing authorized access and remains subject to external-action policy. The core source-PR profile requires actual compile, test and build execution. Release-only packaging is outside this profile and has no packaging-assurance claim; publish/deploy dispositions describe simulation only, never actual delivery.
-- **Recovery:** Follow the validation report's actionable recovery instructions, preserve blockers requiring human input, repair root causes or missing proof, and rerun against the exact candidate. `CONTROLLER_CONTRACT_UNSUPPORTED` means the controller does not support this reviewed source contract. Rerunning the same controller, repinning configuration or running a manual build cannot resolve it; use an independently supported controller for this exact contract, and preserve the blocker if none is available. No automatic controller bootstrap is implemented. Do not mark unexecuted checks green, weaken the required profile to pass, or replace unavailable provider evidence with a local receipt."#
+- **Recovery:** Follow the validation report's actionable recovery instructions, preserve blockers requiring human input, repair root causes or missing proof, and rerun against the exact candidate. For supported remote source-CI contracts, validation uses the accepted target’s independently verified executor to build and test the candidate, even when candidate helper bytes change. The controller keeps the required graph and final verdict; candidate output cannot authorize itself. `CONTROLLER_CONTRACT_UNSUPPORTED` identifies an unsupported carrier, protocol or accepted executor. Rerunning the same controller, repinning configuration or running a manual build cannot resolve that blocker; use an independently supported controller for this exact contract, and preserve the blocker if none is available. No automatic controller replacement is performed. Do not mark unexecuted checks green, weaken the required profile to pass, or replace unavailable provider evidence with a local receipt."#
 }
 
 pub fn readiness_config_contract() -> &'static str {
@@ -360,7 +360,7 @@ report missing or conflicting obligations for repair. Successful init is not
 successful validation. Existing repositories must reconcile their contract and
 provide the required capabilities before validate can authorize publication.
 A declaration matching the current inventory does not override the controller's
-compiled workflow/helper contract. `CONTROLLER_CONTRACT_UNSUPPORTED` means the controller does not support this reviewed source contract. Rerunning the same controller, repinning configuration or running a manual build cannot resolve it; use an independently supported controller for this exact contract, and preserve the blocker if none is available. No automatic controller bootstrap is implemented."#
+compiled workflow/helper contract. For supported remote source-CI contracts, validation uses the accepted target’s independently verified executor to build and test the candidate, even when candidate helper bytes change. The controller keeps the required graph and final verdict; candidate output cannot authorize itself. `CONTROLLER_CONTRACT_UNSUPPORTED` identifies an unsupported carrier, protocol or accepted executor. Rerunning the same controller, repinning configuration or running a manual build cannot resolve that blocker; use an independently supported controller for this exact contract, and preserve the blocker if none is available. No automatic controller replacement is performed."#
 }
 
 pub fn specs_refresh_contract() -> &'static str {
@@ -779,11 +779,13 @@ mod validation_contract_tests {
         assert!(contract.contains("do not run a separate manual build or shadow preflight"));
         for body in [contract, super::readiness_config_contract()] {
             assert!(body.contains("CONTROLLER_CONTRACT_UNSUPPORTED"));
-            assert!(body.contains("controller does not support this reviewed source contract"));
+            assert!(
+                body.contains("identifies an unsupported carrier, protocol or accepted executor")
+            );
             assert!(body.contains("Rerunning the same controller, repinning configuration or running a manual build cannot resolve"));
             assert!(body.contains("independently supported controller"));
             assert!(body.contains("preserve the blocker if none is available"));
-            assert!(body.contains("No automatic controller bootstrap is implemented"));
+            assert!(body.contains("No automatic controller replacement is performed"));
         }
     }
 }

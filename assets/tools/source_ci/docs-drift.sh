@@ -6,7 +6,7 @@ export BASE_SHA="${SOURCE_CI_BASE?}" HEAD_SHA="${SOURCE_CI_HEAD:?}"
 
 # Select the captured documentation source head
 set -euo pipefail
-rustc --edition=2024 assets/tools/docs_sync.rs -o "$RUNNER_TEMP/decapod-docs-sync"
+rustc --edition=2024 "${SOURCE_CI_EXECUTOR_ROOT:-.}/assets/tools/docs_sync.rs" -o "$RUNNER_TEMP/decapod-docs-sync"
 "$RUNNER_TEMP/decapod-docs-sync" select --repo . --base "$BASE_SHA" --head "$HEAD_SHA"
 
 

@@ -6,4 +6,4 @@ export CHANGE_EVENT="${SOURCE_CI_EVENT:?}"
 export CHANGE_BASE="${SOURCE_CI_BASE?}"
 export CHANGE_HEAD="${SOURCE_CI_HEAD:?}"
 set -euo pipefail
-"$RUNNER_TEMP/source-ci-profile" migration-changed --base "$CHANGE_BASE" --head "$CHANGE_HEAD" >> "$GITHUB_OUTPUT"
+"${SOURCE_CI_PROFILE_EXECUTABLE:-$RUNNER_TEMP/source-ci-profile}" migration-changed --base "$CHANGE_BASE" --head "$CHANGE_HEAD" >> "$GITHUB_OUTPUT"
