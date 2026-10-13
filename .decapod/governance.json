@@ -144,6 +144,11 @@
       "proof_refs": [
         "README.md"
       ]
+    },
+    {
+      "id": "readme-clarity-2",
+      "summary": "Review and reconcile the accepted0.109.0 root package version-only proof inventory, following actual validation report; no adapter or coverage change.",
+      "input_digest": "sha256:381279c3ca69bb9e8437d5f43e8f84c5e056f4852563aa2b04d6acaf3317845f"
     }
   ],
   "intents": {
@@ -186,21 +191,21 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "README prose changes only; code and architectural/security contracts unchanged. Required release-bound projections refreshed by Decapod0.109.0.",
+          "reason": "README prose clarification and explicit accepted-release version-only source inventory reconciliation do not alter this contract.",
           "reviewed_code_fingerprint": "a3ffe79fc50f186fc07d685a3846a948c9f57811f8cdf81f0f9f45c90486210e",
           "spec_material_hash": "c14319e9fc027b8dffd23bae88fd64b082e0794fb431f1de6f31dbab091f3db5"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Added the directly requested human-facing README contract: glanceable product prose, one-command onboarding, agent-owned validation, and precise concurrency versus same-PR continuity.",
+          "reason": "Human README interface now states the approved glanceable product overview, single-command setup, owned-task concurrency and same-PR continuity, with validation as an agent phase.",
           "reviewed_code_fingerprint": "a3ffe79fc50f186fc07d685a3846a948c9f57811f8cdf81f0f9f45c90486210e",
           "spec_material_hash": "0e2b7fd5d5809891e175594ff7b93abc66d590af5da3c193c1d16415af4a507d"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "README prose changes only; code and architectural/security contracts unchanged. Required release-bound projections refreshed by Decapod0.109.0.",
+          "reason": "README prose clarification and explicit accepted-release version-only source inventory reconciliation do not alter this contract.",
           "reviewed_code_fingerprint": "a3ffe79fc50f186fc07d685a3846a948c9f57811f8cdf81f0f9f45c90486210e",
           "spec_material_hash": "59f2f1f8a48c50141aad995f25448873a3b13bbf6e7920af210c48c5c9480a8e"
         }
@@ -215,24 +220,32 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791851737Z"
+      "updated_at": "1791852046Z"
     },
     "trajectory": {
       "active_boundaries": [
         "README plus required spec and release-projection consistency only; no code, CI, auth, releases or merge."
       ],
-      "artifact_hash": "sha256:5373f978a7510bac3c7d6433af3038b85e3ba753e678e1aca3d48820444729e8",
+      "artifact_hash": "sha256:6699ea0622f58a70f71f158b4ca11b734e0de66cb4155ac0bcd0919fe54d133c",
       "checks": [
+        {
+          "name": "accepted-release-source-review",
+          "status": "passed"
+        },
         {
           "name": "editorial_review",
           "status": "passed"
+        },
+        {
+          "name": "initial-full-validation",
+          "status": "failed"
         },
         {
           "name": "source_claim_review",
           "status": "passed"
         }
       ],
-      "current_phase": "implementation",
+      "current_phase": "repair",
       "custody": {
         "events": [
           {
@@ -253,10 +266,17 @@
             "intent_id": "intent:readme-clarity",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:readme-clarity",
+            "event_id": "event:5",
+            "intent_id": "intent:readme-clarity",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "readme-clarity": {
@@ -288,6 +308,27 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  ".decapod/config.toml",
+                  "Plain validate reported PROOF_PROFILE_RECONCILIATION_REQUIRED; preserved initial-validate.json and exit1. Explicit review compared all76 canonical entries: accepted83eea72 only changes root package version0.108.1 to0.109.0 in Cargo.toml/Cargo.lock; dependency list and every adapter/workflow unchanged. Updated reviewed declaration only, preserving required coverage."
+                ],
+                "proof_refs": [
+                  "initial-full-validation",
+                  "accepted-release-source-review"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "README.md",
+                  "required generated release projections"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -297,9 +338,12 @@
         "decapod rpc --op specs.refresh"
       ],
       "evidence": [
-        "Independent editorial and source review approved draft; corrected Jev advisory input and unverified-versus-done state; parent approved final wording with validation-only remote scope."
+        "Independent editorial and source review approved draft; corrected Jev advisory input and unverified-versus-done state; parent approved final wording with validation-only remote scope.",
+        "Plain validate reported PROOF_PROFILE_RECONCILIATION_REQUIRED; preserved initial-validate.json and exit1. Explicit review compared all76 canonical entries: accepted83eea72 only changes root package version0.108.1 to0.109.0 in Cargo.toml/Cargo.lock; dependency list and every adapter/workflow unchanged. Updated reviewed declaration only, preserving required coverage."
       ],
       "inspected_files": [
+        "Cargo.lock",
+        "Cargo.toml",
         "README.md",
         "src/decapod/core/decision_provider.rs",
         "src/decapod/core/todo.rs",
@@ -307,6 +351,7 @@
       ],
       "intent_id": "intent:readme-clarity",
       "modified_files": [
+        ".decapod/config.toml",
         ".decapod/managed/specs/INTERFACES.md",
         "README.md"
       ],
