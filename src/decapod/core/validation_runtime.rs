@@ -281,7 +281,11 @@ fn text(bytes: Vec<u8>) -> io::Result<String> {
         .trim_end_matches('\n')
         .into())
 }
-fn git(options: &Options, budget: &RuntimeBudget<'_>, args: &[&str]) -> io::Result<Vec<u8>> {
+fn git_output(
+    options: &Options,
+    budget: &RuntimeBudget<'_>,
+    args: &[&str],
+) -> io::Result<std::process::Output> {
     let mut command = Command::new(&options.git);
     command
         .current_dir(&options.root)
@@ -308,7 +312,7 @@ fn git(options: &Options, budget: &RuntimeBudget<'_>, args: &[&str]) -> io::Resu
         },
         budget.cancel,
     )?;
-    if capture.termination != Termination::Exited || !capture.output.status.success() {
+    if capture.termination != Termination::Exited {
         return Err(invalid(format!(
             "bounded Git {} failed ({:?}, {:?})",
             args.first().unwrap_or(&"read"),
@@ -316,7 +320,18 @@ fn git(options: &Options, budget: &RuntimeBudget<'_>, args: &[&str]) -> io::Resu
             capture.output.status.code()
         )));
     }
-    Ok(capture.output.stdout)
+    Ok(capture.output)
+}
+fn git(options: &Options, budget: &RuntimeBudget<'_>, args: &[&str]) -> io::Result<Vec<u8>> {
+    let output = git_output(options, budget, args)?;
+    if !output.status.success() {
+        return Err(invalid(format!(
+            "bounded Git {} failed ({:?})",
+            args.first().unwrap_or(&"read"),
+            output.status.code()
+        )));
+    }
+    Ok(output.stdout)
 }
 fn paths(bytes: &[u8]) -> io::Result<BTreeSet<String>> {
     if !bytes.is_empty() && bytes.last() != Some(&0) {
@@ -494,6 +509,24 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
             ],
         )?)?,
     };
+    // Scope remains an acceptance condition even when compiler/tests are green.
+    // Reuse the exact accepted-base/candidate delta on initial and final discovery.
+    let governance: serde_json::Value =
+        serde_json::from_slice(&budget.read(&file(&options.root, GOVERNANCE)?)?)
+            .map_err(io::Error::other)?;
+    if let Some(constraints) = governance.pointer("/sections/plan/constraints") {
+        let constraints: crate::plan_governance::ScopeConstraints =
+            serde_json::from_value(constraints.clone()).map_err(io::Error::other)?;
+        crate::plan_governance::enforce_scope_paths(&constraints, &facts.changed_paths)
+            .map_err(io::Error::other)?;
+    }
+    crate::core::entrypoint_integrity::validate_committed_history_with(
+        &options.root,
+        &base,
+        &head,
+        &mut |args| git_output(options, budget, args).map_err(|error| error.to_string()),
+    )
+    .map_err(invalid)?;
     let release = None;
     let executor = executor_contract::capture(
         options,

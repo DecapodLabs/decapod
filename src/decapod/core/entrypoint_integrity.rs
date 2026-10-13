@@ -13,7 +13,10 @@
 
 #[path = "entrypoint_integrity/history.rs"]
 mod history;
-pub(crate) use history::{commit_path_violation, ensure_ungrafted, git as history_git};
+pub(crate) use history::{
+    ensure_ungrafted, git as history_git, validate_committed_history,
+    validate_committed_history_with,
+};
 
 use crate::core::{assets, error};
 use sha2::{Digest, Sha256};

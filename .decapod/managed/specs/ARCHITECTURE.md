@@ -138,6 +138,14 @@ accepted policy and unresolved obligations forward. Ordinary repeated calls,
 renames, and rebases preserve the active workstream. An accepted merge and a
 published release are separate facts.
 
+Starting another trajectory run is a guarded journal transition. Under the same
+governance-document lock, `trajectory::init_trajectory` proves that the complete
+predecessor document is recoverable from Git before replacing trajectory,
+intent custody, or Jev observations. An uncommitted failed or interrupted run
+cannot be discarded by choosing another run ID; the agent continues that run
+or checkpoints and commits it before starting another. Git remains the history
+store rather than a second snapshot database.
+
 Governance document writers lock the complete read-modify-write operation and
 write atomically. Related sections share intent and epoch references instead
 of creating competing copies. Generated views remain projections of their
@@ -280,7 +288,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1664bbc78e858f90e0b310627567067118d153b3f77ba1fabf82c40d822b21c1`
+- Repository signal fingerprint: `8db770925a4a896ca4938495d83d2ab15176b5010768008d0aaf88b74c3e783a`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (183 files), `tests/` (188 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

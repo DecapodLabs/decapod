@@ -1078,31 +1078,11 @@ pub fn marker_error(
     }
 }
 
-fn enforce_scope_constraints(
-    project_root: &Path,
+/// Check declared scope against the complete accepted-base/candidate inventory.
+pub(crate) fn enforce_scope_paths(
     constraints: &ScopeConstraints,
+    changed_files: &std::collections::BTreeSet<String>,
 ) -> Result<(), error::DecapodError> {
-    if constraints.file_touch_budget.is_none() && constraints.forbidden_paths.is_empty() {
-        return Ok(());
-    }
-    let output = Command::new("git")
-        .args(["status", "--short", "--untracked-files=no"])
-        .current_dir(project_root)
-        .output()
-        .map_err(error::DecapodError::IoError)?;
-    if !output.status.success() {
-        return Ok(());
-    }
-    let changed_files: Vec<String> = String::from_utf8_lossy(&output.stdout)
-        .lines()
-        .filter_map(|line| {
-            if line.len() < 4 {
-                return None;
-            }
-            Some(line[3..].trim().to_string())
-        })
-        .collect();
-
     if let Some(limit) = constraints.file_touch_budget
         && changed_files.len() > limit
     {
@@ -1117,7 +1097,7 @@ fn enforce_scope_constraints(
     }
 
     let mut forbidden_hits = Vec::new();
-    for file in &changed_files {
+    for file in changed_files {
         if constraints
             .forbidden_paths
             .iter()
@@ -1135,6 +1115,88 @@ fn enforce_scope_constraints(
     }
     Ok(())
 }
+pub(crate) fn enforce_scope_constraints(
+    project_root: &Path,
+    constraints: &ScopeConstraints,
+) -> Result<(), error::DecapodError> {
+    use crate::core::bounded_process::BoundedCommand;
+    if constraints.file_touch_budget.is_none() && constraints.forbidden_paths.is_empty() {
+        return Ok(());
+    }
+    let base_branch = crate::core::workspace::resolve_base_branch(project_root, None);
+    let base = crate::core::workspace::base_ref_for_branch(project_root, &base_branch).ok_or_else(
+        || {
+            marker_error(
+                "SCOPE_EVIDENCE_UNAVAILABLE",
+                "Fetch the accepted base before checking the complete change scope.",
+                None,
+            )
+        },
+    )?;
+    let mut changed_files = std::collections::BTreeSet::new();
+    // Include committed, staged, unstaged and untracked work. Disabling rename
+    // detection counts source and destination. NUL framing preserves path bytes.
+    for args in [
+        vec![
+            "diff",
+            "--name-only",
+            "-z",
+            "--no-renames",
+            &base,
+            "HEAD",
+            "--",
+        ],
+        vec!["diff", "--name-only", "-z", "--no-renames", &base, "--"],
+        vec![
+            "diff",
+            "--cached",
+            "--name-only",
+            "-z",
+            "--no-renames",
+            &base,
+            "--",
+        ],
+        vec!["ls-files", "--others", "--exclude-standard", "-z"],
+    ] {
+        let mut command = Command::new("git");
+        for (key, _) in std::env::vars_os() {
+            if key.to_string_lossy().starts_with("GIT_") {
+                command.env_remove(key);
+            }
+        }
+        let output = command
+            .arg("--no-replace-objects")
+            .args(&args)
+            .current_dir(project_root)
+            .bounded_output(std::time::Duration::from_secs(30))
+            .map_err(error::DecapodError::IoError)?;
+        if !output.status.success()
+            || (!output.stdout.is_empty() && output.stdout.last() != Some(&0))
+        {
+            return Err(marker_error(
+                "SCOPE_EVIDENCE_UNAVAILABLE",
+                "Cannot read the complete candidate path inventory; repair Git state and retry.",
+                None,
+            ));
+        }
+        for path in output
+            .stdout
+            .split(|byte| *byte == 0)
+            .filter(|path| !path.is_empty())
+        {
+            let path = std::str::from_utf8(path).map_err(|_| {
+                marker_error(
+                    "SCOPE_EVIDENCE_UNAVAILABLE",
+                    "Non-UTF-8 candidate paths cannot be checked against declared scope.",
+                    None,
+                )
+            })?;
+            changed_files.insert(path.to_owned());
+        }
+    }
+    enforce_scope_paths(constraints, &changed_files)
+}
+
 #[cfg(test)]
 #[path = "../../tests/unit/plan_governance_tests.rs"]
 mod tests;

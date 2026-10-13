@@ -3459,138 +3459,28 @@ fn validate_entrypoint_commit_discipline(
         return Ok(());
     };
 
-    if let Err(error) = crate::core::entrypoint_integrity::ensure_ungrafted(repo_root) {
-        fail(&format!("ENTRYPOINT_COMMIT_DISCIPLINE: {error}"), ctx);
-        return Ok(());
-    }
-    let git_dir = repo_root.to_str().unwrap_or(".");
-    let Some(rev_list) = crate::core::entrypoint_integrity::history_git(
-        repo_root,
-        &["rev-list", "--reverse", &format!("{base_ref}..HEAD")],
-    ) else {
-        fail(
-            "ENTRYPOINT_COMMIT_DISCIPLINE: unable to run immutable commit enumeration",
+    match crate::core::entrypoint_integrity::validate_committed_history(
+        repo_root, &base_ref, "HEAD",
+    ) {
+        Ok(0) => pass(
+            "No feature-branch commits hand-edit root agent entrypoints",
             ctx,
-        );
-        return Ok(());
-    };
-    if !rev_list.status.success() {
-        fail(
-            "ENTRYPOINT_COMMIT_DISCIPLINE: unable to enumerate immutable feature-branch commits",
-            ctx,
-        );
-        return Ok(());
-    }
-
-    let mut failures = Vec::new();
-    let mut canonical_rewrites = 0usize;
-    for commit in String::from_utf8_lossy(&rev_list.stdout)
-        .lines()
-        .map(str::trim)
-        .filter(|c| !c.is_empty())
-    {
-        let Some(changed) = crate::core::entrypoint_integrity::history_git(
-            repo_root,
-            &[
-                "diff-tree",
-                "--no-commit-id",
-                "--name-status",
-                "-r",
-                "--root",
-                "-z",
-                commit,
-            ],
-        ) else {
-            failures.push(format!(
-                "{commit}: unable to run immutable changed-path inspection"
-            ));
-            continue;
-        };
-        if !changed.status.success() {
-            failures.push(format!("{commit}: unable to inspect changed paths"));
-            continue;
-        }
-        let raw = changed.stdout;
-        // --name-status -z yields: STATUS\0PATH\0STATUS\0PATH\0...
-        // renames: R100\0old\0new\0
-        let mut parts = raw.split(|b| *b == 0).filter(|p| !p.is_empty());
-        while let Some(status_bytes) = parts.next() {
-            let status = String::from_utf8_lossy(status_bytes);
-            let status_code = status.chars().next().unwrap_or('?');
-            let path = match parts.next() {
-                Some(p) => String::from_utf8_lossy(p).into_owned(),
-                None => break,
-            };
-            // Skip rename old path; only inspect the destination for renames.
-            if status_code == 'R' || status_code == 'C' {
-                let _old = path;
-                let Some(new_path) = parts.next() else {
-                    break;
-                };
-                let new_path = String::from_utf8_lossy(new_path).into_owned();
-                if let Some(msg) =
-                    entrypoint_commit_path_violation(git_dir, commit, status_code, &new_path)
-                {
-                    failures.push(msg);
-                } else if crate::core::entrypoint_integrity::ENTRYPOINT_FILES
-                    .contains(&new_path.as_str())
-                {
-                    canonical_rewrites += 1;
-                }
-                continue;
-            }
-            if !crate::core::entrypoint_integrity::ENTRYPOINT_FILES.contains(&path.as_str()) {
-                continue;
-            }
-            if let Some(msg) = entrypoint_commit_path_violation(git_dir, commit, status_code, &path)
-            {
-                failures.push(msg);
-            } else {
-                canonical_rewrites += 1;
-            }
-        }
-    }
-
-    if failures.is_empty() {
-        if canonical_rewrites == 0 {
-            pass(
-                "No feature-branch commits hand-edit root agent entrypoints",
-                ctx,
-            );
-        } else {
-            pass(
-                &format!(
-                    "Feature-branch entrypoint rewrites are canonical for Decapod {} ({canonical_rewrites} path update(s))",
-                    crate::core::entrypoint_integrity::RELEASE_VERSION
-                ),
-                ctx,
-            );
-        }
-    } else {
-        fail(
+        ),
+        Ok(canonical_rewrites) => pass(
             &format!(
-                "ENTRYPOINT_COMMIT_DISCIPLINE: root agent entrypoints (AGENTS.md, CLAUDE.md, CODEX.md, GEMINI.md) are Decapod-owned templates. They must never be hand-edited in PRs. Only Decapod may rewrite them so content is byte-identical to the installed release template and fingerprint. {}. Drop entrypoint changes from the commit, or regenerate with `decapod init` / validate heal after a real template/release update.",
-                failures.join("; ")
+                "Feature-branch entrypoint rewrites are canonical for Decapod {} ({canonical_rewrites} path update(s))",
+                crate::core::entrypoint_integrity::RELEASE_VERSION
             ),
             ctx,
-        );
+        ),
+        Err(error) => fail(
+            &format!(
+                "{error}. Root agent entrypoints are Decapod-owned templates. Drop hand-edited commits or regenerate via Decapod after a real template/release update."
+            ),
+            ctx,
+        ),
     }
     Ok(())
-}
-
-/// Return a failure message when `path` at `commit` is not a pure Decapod template rewrite.
-fn entrypoint_commit_path_violation(
-    git_dir: &str,
-    commit: &str,
-    status_code: char,
-    path: &str,
-) -> Option<String> {
-    crate::core::entrypoint_integrity::commit_path_violation(
-        Path::new(git_dir),
-        commit,
-        status_code,
-        path,
-    )
 }
 
 fn git_same_commit(repo_root: &Path, left: &str, right: &str) -> bool {
@@ -6269,6 +6159,10 @@ fn validate_plan_governed_execution_gate(
 
     let plan = plan_governance::load_plan(main_root)?;
     if let Some(plan) = plan {
+        match plan_governance::enforce_scope_constraints(main_root, &plan.constraints) {
+            Ok(()) => pass("Complete candidate scope satisfies the governed plan", ctx),
+            Err(error) => fail(&error.to_string(), ctx),
+        }
         if plan.state != plan_governance::PlanState::Approved
             && plan.state != plan_governance::PlanState::Done
         {

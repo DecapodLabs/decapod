@@ -271,3 +271,122 @@ fn projection_query_failure_is_not_reported_as_absence() {
     assert!(matches!(error, error::DecapodError::StorageError(_)));
     assert!(!error.to_string().contains("TODO_PROJECTION_MISSING"));
 }
+
+fn scope_repo() -> tempfile::TempDir {
+    let dir = tempfile::tempdir().unwrap();
+    scope_git(dir.path(), &["init", "-q", "-b", "master"]);
+    scope_git(dir.path(), &["config", "user.name", "Scope Test"]);
+    scope_git(
+        dir.path(),
+        &["config", "user.email", "scope@example.invalid"],
+    );
+    fs::create_dir(dir.path().join("protected")).unwrap();
+    fs::write(dir.path().join("protected/original file.txt"), "base\n").unwrap();
+    scope_git(dir.path(), &["add", "."]);
+    scope_git(dir.path(), &["commit", "-qm", "accepted base"]);
+    scope_git(dir.path(), &["checkout", "-qb", "candidate"]);
+    dir
+}
+fn scope_git(root: &Path, args: &[&str]) {
+    let out = Command::new("git")
+        .current_dir(root)
+        .args(args)
+        .output()
+        .unwrap();
+    assert!(
+        out.status.success(),
+        "{:?}: {}",
+        args,
+        String::from_utf8_lossy(&out.stderr)
+    );
+}
+#[test]
+fn scope_rejects_clean_committed_rename_and_deleted_forbidden_source() {
+    let dir = scope_repo();
+    scope_git(
+        dir.path(),
+        &["mv", "protected/original file.txt", "allowed.txt"],
+    );
+    scope_git(dir.path(), &["commit", "-qm", "rename forbidden source"]);
+    let constraints = ScopeConstraints {
+        forbidden_paths: vec!["protected".into()],
+        file_touch_budget: None,
+    };
+    let error = enforce_scope_constraints(dir.path(), &constraints)
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("SCOPE_VIOLATION"));
+    assert!(error.contains("protected/original file.txt"));
+    let budget = ScopeConstraints {
+        forbidden_paths: vec![],
+        file_touch_budget: Some(1),
+    };
+    assert!(
+        enforce_scope_constraints(dir.path(), &budget)
+            .unwrap_err()
+            .to_string()
+            .contains("file-touch budget")
+    );
+}
+#[test]
+fn scope_counts_union_of_committed_staged_unstaged_and_untracked_paths() {
+    let dir = scope_repo();
+    fs::write(dir.path().join("committed.txt"), "committed").unwrap();
+    scope_git(dir.path(), &["add", "."]);
+    scope_git(dir.path(), &["commit", "-qm", "committed path"]);
+    fs::write(dir.path().join("staged.txt"), "staged").unwrap();
+    scope_git(dir.path(), &["add", "staged.txt"]);
+    fs::write(dir.path().join("protected/original file.txt"), "unstaged").unwrap();
+    fs::write(dir.path().join("untracked.txt"), "untracked").unwrap();
+    let mut budget = ScopeConstraints {
+        forbidden_paths: vec![],
+        file_touch_budget: Some(3),
+    };
+    assert!(enforce_scope_constraints(dir.path(), &budget).is_err());
+    budget.file_touch_budget = Some(4);
+    enforce_scope_constraints(dir.path(), &budget).unwrap();
+}
+#[test]
+fn scope_preserves_quoted_paths_and_directory_boundaries_and_fails_without_base() {
+    let dir = scope_repo();
+    fs::write(dir.path().join("protected/quoted\"name\n.txt"), "new").unwrap();
+    let constraints = ScopeConstraints {
+        forbidden_paths: vec!["protected".into()],
+        file_touch_budget: None,
+    };
+    assert!(enforce_scope_constraints(dir.path(), &constraints).is_err());
+    let paths = std::collections::BTreeSet::from(["protected-other/file".into()]);
+    enforce_scope_paths(&constraints, &paths).unwrap();
+    scope_git(dir.path(), &["branch", "-D", "master"]);
+    assert!(
+        enforce_scope_constraints(dir.path(), &constraints)
+            .unwrap_err()
+            .to_string()
+            .contains("SCOPE_EVIDENCE_UNAVAILABLE")
+    );
+}
+
+#[test]
+fn staged_revert_cannot_hide_a_forbidden_committed_head_from_execution_scope() {
+    let dir = scope_repo();
+    fs::write(
+        dir.path().join("protected/original file.txt"),
+        "forbidden commit",
+    )
+    .unwrap();
+    scope_git(dir.path(), &["commit", "-am", "forbidden edit"]);
+    scope_git(
+        dir.path(),
+        &["checkout", "master", "--", "protected/original file.txt"],
+    );
+    let constraints = ScopeConstraints {
+        forbidden_paths: vec!["protected".into()],
+        file_touch_budget: None,
+    };
+    assert!(
+        enforce_scope_constraints(dir.path(), &constraints)
+            .unwrap_err()
+            .to_string()
+            .contains("SCOPE_VIOLATION")
+    );
+}

@@ -42,6 +42,18 @@ Generated sections, fingerprints, manifests, governance records, runtime stores
 and session state remain Decapod-owned. Refresh cannot turn an unsupported claim
 into proof or replace an authored specification update.
 
+Declared scope and committed instruction integrity are checked independently of
+provider execution results. These checks detect a candidate that violates an
+explicit forbidden path/file budget or contains a noncanonical instruction
+rewrite in its history, even if its final code tests pass. They do not prove that
+an agent's recorded interpretation exhausts the original human request.
+
+A new trajectory ID cannot erase an uncommitted failure journal through the
+supported initializer: replacement requires the prior complete governance
+document in Git. This protects recoverability for cooperative CLI/RPC writers;
+it does not authenticate the truth of agent-authored observations or prevent a
+principal with unrestricted filesystem/Git access from rewriting history.
+
 ## Authentication
 
 Most mutations require an active local session. Session credentials establish
@@ -239,7 +251,7 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1664bbc78e858f90e0b310627567067118d153b3f77ba1fabf82c40d822b21c1`
+- Repository signal fingerprint: `8db770925a4a896ca4938495d83d2ab15176b5010768008d0aaf88b74c3e783a`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (183 files), `tests/` (188 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

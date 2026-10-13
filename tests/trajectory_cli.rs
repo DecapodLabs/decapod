@@ -184,22 +184,57 @@ fn trajectory_cli_replaces_current_section_and_resets_only_prior_jev_history() {
     )
     .expect("record Jev logical section");
 
-    let replacement = run_decapod(
-        &root,
-        &[
-            "govern",
-            "trajectory",
-            "init",
-            "--run-id",
-            "run_cli_new",
-            "--original-intent",
-            "preserve one cookie",
-            "--derived-intent",
-            "replace the current run",
+    let replacement_args = [
+        "govern",
+        "trajectory",
+        "init",
+        "--run-id",
+        "run_cli_new",
+        "--original-intent",
+        "preserve one cookie",
+        "--derived-intent",
+        "replace the current run",
+    ];
+    let governance_path = root.join(decapod::core::governance_document::GOVERNANCE_PATH);
+    let predecessor = fs::read(&governance_path).expect("read previous journal");
+    let blocked = run_decapod(&root, &replacement_args, env_password);
+    assert!(!blocked.status.success());
+    assert!(String::from_utf8_lossy(&blocked.stderr).contains("TRAJECTORY_UNARCHIVED_WORK"));
+    assert_eq!(fs::read(&governance_path).unwrap(), predecessor);
+    for args in [
+        vec!["add", ".decapod/governance.json"],
+        vec![
+            "-c",
+            "user.name=Trajectory Test",
+            "-c",
+            "user.email=trajectory@example.com",
+            "-c",
+            "commit.gpgsign=false",
+            "commit",
+            "-m",
+            "Preserve prior trajectory and Jev evidence",
         ],
-        env_password,
-    );
+    ] {
+        let output = Command::new("git")
+            .current_dir(&root)
+            .args(args)
+            .output()
+            .expect("archive fixture governance");
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+    let replacement = run_decapod(&root, &replacement_args, env_password);
     json(&replacement, "new trajectory init");
+    let archived = Command::new("git")
+        .current_dir(&root)
+        .args(["show", "HEAD:.decapod/governance.json"])
+        .output()
+        .expect("read archived governance");
+    assert!(archived.status.success());
+    assert_eq!(archived.stdout, predecessor);
 
     let raw =
         std::fs::read_to_string(root.join(decapod::core::governance_document::GOVERNANCE_PATH))
