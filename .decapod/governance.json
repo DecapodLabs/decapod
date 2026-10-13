@@ -190,6 +190,11 @@
       "id": "validation-provider-repair",
       "summary": "Use the authenticated provider-built controller, regenerate supported entrypoints, declare the release policy compile input, and review current authored specs.",
       "input_digest": "sha256:d969f7854ae51c15b10cca7b98b31046a60653c48469ab61374f8a9ee2af02e9"
+    },
+    {
+      "id": "validation-final-projections",
+      "summary": "Regenerate canonical entrypoints and docs from the authenticated updated provider binary and bind current spec reviews to the completed repair.",
+      "input_digest": "sha256:f04acdbe5f5be986a41c14245c1de5c899b3c67ef90321a2c86a3983f86937de"
     }
   ],
   "intents": {
@@ -231,21 +236,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed accepted executor R versus candidate H authority, transitive closure, existing provider execution, independent final verification and honest rollout limits against the implementation.",
+          "reason": "Accepted executor and candidate remain independently bound; canonical projection regeneration adds no authority and does not replace the complete final verification graph.",
           "reviewed_code_fingerprint": "c33bc58905862223bd336a0cb676997c4d9c7e5c779a4ebf94a3d265fe78b913",
           "spec_material_hash": "ec960d5117e65fef6ea0ee63367fb51a57560f2c439302fdae12f13111e65a4e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed dual-root custody and configured validation authority reuse; explicit cancellations and authorization denials remain blockers, with no candidate self-approval.",
+          "reason": "Reviewed exact same-branch retries, fresh identity checks and retained denials against the typed validation push and current generated guidance.",
           "reviewed_code_fingerprint": "c33bc58905862223bd336a0cb676997c4d9c7e5c779a4ebf94a3d265fe78b913",
-          "spec_material_hash": "53c762bfa40742480bee9389d3e2b6543d3e37ad5e49975f7a695a4e28dd3663"
+          "spec_material_hash": "58c045c5b7aecc82b99be8060d28862dbd7ef54edd20a16f8665d5a7b3d16f00"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The reviewed-code threat model is preserved: exact independently captured executor authority and complete final proof remain mandatory; separate roots are not hostile-code OS isolation, and no credential or persistent access changes are made.",
+          "reason": "No credential, access or threat model change; all source, executor, command seal and provider custody requirements remain in force.",
           "reviewed_code_fingerprint": "c33bc58905862223bd336a0cb676997c4d9c7e5c779a4ebf94a3d265fe78b913",
           "spec_material_hash": "3a32d010c700db35158c28ad9660375581eec104456f3a9ecf0231a9801fcc70"
         }
@@ -263,7 +268,7 @@
         "An already shipped controller cannot retroactively implement this code; distinguish one-time controller rollout from future older-catalog compatibility proof."
       ],
       "unresolved_contradictions": [],
-      "updated_at": "1791910211Z"
+      "updated_at": "1791910779Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -271,7 +276,7 @@
         "Fresh governed branch only; no master edits, merge, release, deploy, credentials, paid capacity, or unapproved persistent access changes.",
         "Reviewed-transitive-code model only; dual roots are not hostile-code OS isolation."
       ],
-      "artifact_hash": "sha256:fe5d2b4fb3528aee00e0b7a27c6f1fda6bf02a92b88843e84852d42eb69d8f22",
+      "artifact_hash": "sha256:2ae60356a3ecf5d65a7a40bcbc2ae5939c3ce9bedcda855655992ae405d39f17",
       "checks": [
         {
           "name": "approval-free-runtime-review",
@@ -279,6 +284,10 @@
         },
         {
           "name": "candidate-controller-build",
+          "status": "passed"
+        },
+        {
+          "name": "canonical-projection-regeneration",
           "status": "passed"
         },
         {
@@ -307,6 +316,10 @@
         },
         {
           "name": "initial-validation",
+          "status": "failed"
+        },
+        {
+          "name": "previous-provider-readiness",
           "status": "failed"
         },
         {
@@ -379,10 +392,17 @@
             "intent_id": "intent:validation-orchestration-779",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:validation-orchestration-779",
+            "event_id": "event:10",
+            "intent_id": "intent:validation-orchestration-779",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "validation-orchestration-779": {
@@ -506,19 +526,41 @@
                 "validation_findings": [
                   "The new already-authorized retry wording still needs generation by its exact updated binary; the existing controller can now admit the source catalog and own remote verification."
                 ]
+              },
+              {
+                "action": "validation",
+                "command": "decapod init --proof; decapod docs build; decapod rpc --op specs.refresh",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "https://buildkite.com/decapodlabs/decapod/builds/1232",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/38434001475/job/115423563842"
+                ],
+                "proof_refs": [
+                  "previous-provider-readiness",
+                  "canonical-projection-regeneration"
+                ],
+                "scope": [
+                  "Verified release code defects within the same PR; missing external trigger remains unproven.",
+                  "validation runtime, execution/custody boundaries, provider adapter, canonical guidance, regression tests, relevant authored specs and existing issue reconciliation"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
+        "decapod init --proof; decapod docs build; decapod rpc --op specs.refresh",
         "decapod rpc --op agent.init"
       ],
       "evidence": [
         "https://buildkite.com/decapodlabs/decapod/builds/1220",
         "https://buildkite.com/decapodlabs/decapod/builds/1225",
+        "https://buildkite.com/decapodlabs/decapod/builds/1232",
         "https://github.com/DecapodLabs/decapod/actions/runs/38428617075",
         "https://github.com/DecapodLabs/decapod/actions/runs/38432434956/job/115417995387",
+        "https://github.com/DecapodLabs/decapod/actions/runs/38434001475/job/115423563842",
         "https://github.com/DecapodLabs/decapod/issues/779#issuecomment-6148469287",
         "src/decapod/core/readiness_profile/tests.rs",
         "src/decapod/core/snapshot_provider/public_buildkite/program.rs",
@@ -543,6 +585,7 @@
         "Finish bounded source review, checkpoint and run plain validate; repair reported failures using the same branch.",
         "Review minimal safe execution design, then implement bounded shared primitives and regression coverage.",
         "Run plain validate on the committed candidate, preserve any controller compatibility blocker, and use only authenticated configured-provider artifacts for the initial protocol rollout.",
+        "Run plain validation on the regenerated exact candidate; repair any reported failure before creating the review PR.",
         "Run validation on the completed guidance change and obtain the exact provider-built controller to regenerate canonical entrypoints and docs."
       ],
       "repo_scope": [
