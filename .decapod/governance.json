@@ -167,6 +167,11 @@
       "id": "readme-clarity-4",
       "summary": "Make the checked validation-owned workspace push noninteractive with an opaque exact-command seal; retain other write/provider controls and add regression coverage; reflect human intent and review/merge in docs.",
       "input_digest": "sha256:d57e255999c0ea8f60f9c13597780cf196a72ab2983f8c4ae717807184950427"
+    },
+    {
+      "id": "readme-clarity-5",
+      "summary": "Fix stale security documentation regression to verify real embedded constitution nodes while retaining access-boundary assertions.",
+      "input_digest": "sha256:a4c526b48bc08bf000b2a7b9336245700a9e2f6193d5da2990084643d8476fbe"
     }
   ],
   "intents": {
@@ -207,24 +212,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "User requires ordinary human intent then review/merge, agent-owned engineering and validation, and narrowly authorized validation branch submission without a separate operator receipt; unrelated provider and action boundaries retained.",
-          "reviewed_code_fingerprint": "a8675f753f846c78c0819e8d9887a1ef4f775e2f454be3e115a42de0db9a5edc",
+          "reason": "Regression repair now verifies the actual embedded security nodes already described in the reviewed docs/specs; no additional runtime or contract change.",
+          "reviewed_code_fingerprint": "8a26b4742f16587504768acf9c900fdcafe71e5e48661675738d4c3e2a9a8e67",
           "spec_material_hash": "a8f50cd106058535e9496f907f0612d8a8645d5aacb5e1b5d03aa83450106d01"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "User requires ordinary human intent then review/merge, agent-owned engineering and validation, and narrowly authorized validation branch submission without a separate operator receipt; unrelated provider and action boundaries retained.",
-          "reviewed_code_fingerprint": "a8675f753f846c78c0819e8d9887a1ef4f775e2f454be3e115a42de0db9a5edc",
+          "reason": "Regression repair now verifies the actual embedded security nodes already described in the reviewed docs/specs; no additional runtime or contract change.",
+          "reviewed_code_fingerprint": "8a26b4742f16587504768acf9c900fdcafe71e5e48661675738d4c3e2a9a8e67",
           "spec_material_hash": "7f606e094cf647d09672894a3baa4ec9ee76779b6c3532342149e09f36b7667d"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "User requires ordinary human intent then review/merge, agent-owned engineering and validation, and narrowly authorized validation branch submission without a separate operator receipt; unrelated provider and action boundaries retained.",
-          "reviewed_code_fingerprint": "a8675f753f846c78c0819e8d9887a1ef4f775e2f454be3e115a42de0db9a5edc",
+          "reason": "Regression repair now verifies the actual embedded security nodes already described in the reviewed docs/specs; no additional runtime or contract change.",
+          "reviewed_code_fingerprint": "8a26b4742f16587504768acf9c900fdcafe71e5e48661675738d4c3e2a9a8e67",
           "spec_material_hash": "3a32d010c700db35158c28ad9660375581eec104456f3a9ecf0231a9801fcc70"
         }
       ],
@@ -238,17 +243,21 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791853061Z"
+      "updated_at": "1791853866Z"
     },
     "trajectory": {
       "active_boundaries": [
         "README plus required spec and release-projection consistency only; no code, CI, auth, releases or merge."
       ],
-      "artifact_hash": "sha256:8daaaa3b6b27debc8bbe1a45deab4bbc88285b408c16c702326e289ad107d474",
+      "artifact_hash": "sha256:4c4a420af7d9eb1776672629db10e81e4ae7267868cacea1fd7d9a3f120d8432",
       "checks": [
         {
           "name": "accepted-release-source-review",
           "status": "passed"
+        },
+        {
+          "name": "buildkite-1150-core",
+          "status": "failed"
         },
         {
           "name": "editorial_review",
@@ -279,7 +288,7 @@
           "status": "passed"
         }
       ],
-      "current_phase": "validation",
+      "current_phase": "repair",
       "custody": {
         "events": [
           {
@@ -342,10 +351,17 @@
             "intent_id": "intent:readme-clarity",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:readme-clarity",
+            "event_id": "event:11",
+            "intent_id": "intent:readme-clarity",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "readme-clarity": {
@@ -495,6 +511,26 @@
                 ],
                 "sequence": 10,
                 "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "tests/entrypoint_correctness.rs",
+                  "Actual1150 core receipt failed entrypoint_correctness solely because the existing test expected nonexistent constitution.json#core/SECURITY. Updated regression to verify referenced core/DECAPOD, architecture/SECURITY and architecture/SECRETS nodes exist in assets/constitution.json, while retaining direct-file-access prohibition and rejecting legacy missing node. Preserve1150 raw log; no test bypass or local prerequisite suite."
+                ],
+                "proof_refs": [
+                  "buildkite-1150-core"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "README.md",
+                  "README.md, CONTRIBUTING.md, SECURITY.md, directly related authored interface/security specs, and required generated consistency; no runtime, provider, credential or distribution changes",
+                  "User explicitly expanded scope to typed validation-owned push policy source and regression tests plus directly related specs/docs; preserve exact branch/head/base, noforce/tags, provider access and nonvalidation policy.",
+                  "required generated release projections"
+                ],
+                "sequence": 11,
+                "validation_findings": []
               }
             ]
           }
@@ -505,6 +541,7 @@
       ],
       "evidence": [
         "Actual second validate exit1 SNAPSHOT_UPLOAD_INCOMPLETE: frozen local tags lacked newly published v0.109.0. Fetched existing remote tag history without publishing or replacing tags. User expanded same PR to CONTRIBUTING and SECURITY before preflight began.",
+        "Actual1150 core receipt failed entrypoint_correctness solely because the existing test expected nonexistent constitution.json#core/SECURITY. Updated regression to verify referenced core/DECAPOD, architecture/SECURITY and architecture/SECRETS nodes exist in assets/constitution.json, while retaining direct-file-access prohibition and rejecting legacy missing node. Preserve1150 raw log; no test bypass or local prerequisite suite.",
         "Independent editorial and source review approved draft; corrected Jev advisory input and unverified-versus-done state; parent approved final wording with validation-only remote scope.",
         "Independent editorial reviewer read final README, CONTRIBUTING, SECURITY and approved clarity, factual boundaries, preserved policies, no unsupported reporting promises. Final contribution prose simplified to proposed change and target branch. All project builds and tests remain owned by plain validate.",
         "Integrator reviewed opaque request construction after source/base/tag/ancestry checks and callback exact-argv identity verification. Tests added for no-receipt create/fastforward/reuse, sixteen malformed requests, invalid executable, unsealed/unrelated writes, explicit executable denial and provider denial. Tests not yet executed; plain validate owns execution.",
@@ -532,7 +569,8 @@
         "src/decapod/core/snapshot_provider/mod.rs",
         "src/decapod/core/snapshot_provider/snapshot.rs",
         "src/decapod/core/snapshot_provider/snapshot/tests.rs",
-        "src/decapod/lib.rs"
+        "src/decapod/lib.rs",
+        "tests/entrypoint_correctness.rs"
       ],
       "next_transitions": [
         "Checkpoint ready source and invoke plain validate"

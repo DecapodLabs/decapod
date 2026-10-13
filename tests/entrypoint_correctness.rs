@@ -1089,7 +1089,7 @@ fn test_entrypoints_use_embedded_docs_paths_only() {
 }
 
 #[test]
-fn test_top_level_docs_avoid_direct_constitution_file_links() {
+fn test_top_level_docs_reference_existing_embedded_constitution_nodes() {
     let repo_root = resolve_repo_root();
     let readme = fs::read_to_string(repo_root.join("README.md")).expect("read README.md");
     let security = fs::read_to_string(repo_root.join("SECURITY.md")).expect("read SECURITY.md");
@@ -1104,8 +1104,28 @@ fn test_top_level_docs_avoid_direct_constitution_file_links() {
         "SECURITY.md should not instruct direct constitution file access"
     );
     assert!(
-        security.contains("constitution.json#core/SECURITY"),
-        "SECURITY.md should point to the embedded security constitution section"
+        security.contains("assets/constitution.json"),
+        "SECURITY.md should point to the embedded constitution asset"
+    );
+    let constitution: serde_json::Value = serde_json::from_str(
+        &fs::read_to_string(repo_root.join("assets/constitution.json"))
+            .expect("read embedded constitution"),
+    )
+    .expect("parse embedded constitution");
+    for (document, node) in [
+        (&readme, "core/DECAPOD"),
+        (&security, "architecture/SECURITY"),
+        (&security, "architecture/SECRETS"),
+    ] {
+        assert!(document.contains(node), "document must reference {node}");
+        assert!(
+            constitution["nodes"].get(node).is_some(),
+            "documented constitution node {node} must exist"
+        );
+    }
+    assert!(
+        !security.contains("constitution.json#core/SECURITY"),
+        "SECURITY.md must not restore the nonexistent legacy security node"
     );
 }
 
