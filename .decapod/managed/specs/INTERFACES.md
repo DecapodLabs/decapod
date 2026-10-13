@@ -329,7 +329,10 @@ branch push, including a supported retry whose outcome can be safely rechecked.
 Agent guidance explicitly avoids asking for that same permission again. It still
 requires renewed authority after explicit cancellation or a material scope change,
 and it preserves access and authorization denials. Source and accepted-target
-checks precede reuse; guidance is not an authorization receipt.
+checks precede reuse; guidance is not an authorization receipt. A same-head
+retry can reuse the exact published branch after fresh binding checks; it does
+not approve arbitrary shell commands, a different ref, or changed source under
+an earlier receipt.
 
 ## Compatibility Matrix
 
