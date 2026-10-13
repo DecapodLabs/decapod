@@ -290,6 +290,7 @@ def decapod_targets():
                 "assets/tools/source_ci_profile.rs",
                 "assets/tools/source_ci_custody.rs",
                 "assets/tools/source_ci_workflow_owned.rs",
+                ".github/workflows/release.yml",
             ] if path == "tests/release_workflow_policy.rs" else [
                 ".github/actions/ci-context/action.yml",
                 ".github/workflows/constitution-sync.yml",

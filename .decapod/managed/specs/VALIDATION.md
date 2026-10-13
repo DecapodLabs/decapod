@@ -340,6 +340,10 @@ candidate has passed.
 
 ## Release mutation ownership
 
+Release ownership regression fixtures embed the workflow as a declared Bazel
+compile input, so sandboxed test compilation and execution inspect the same
+reviewed configuration.
+
 The release workflow (`.github/workflows/release.yml`) selects native GitHub
 Actions as its sole mutation owner in a credential-free job. Every release job
 requires that positive ownership result, including planning, artifact building,
