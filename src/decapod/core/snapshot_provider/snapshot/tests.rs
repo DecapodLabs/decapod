@@ -562,3 +562,152 @@ fn known_diverged_workspace_is_never_force_pushed() {
     assert!(publish(&mut fake, p, &b).outcome.is_err());
     assert!(fake.pushes.is_empty());
 }
+
+struct PolicyCheckedPublish {
+    inner: PublishFake,
+    store: PathBuf,
+}
+impl Runner for PolicyCheckedPublish {
+    fn execute(&mut self, spec: &CommandSpec, budget: &Budget<'_>) -> Result<Reply> {
+        // Exercise the same authorization used by plain validate, while the
+        // fake owns only remote responses and never performs a network write.
+        crate::authorize_readiness_snapshot_command(&self.store, spec, Path::new("/usr/bin/git"))?;
+        self.inner.execute(spec, budget)
+    }
+}
+
+#[test]
+fn validation_create_fast_forward_and_exact_reuse_need_no_operator_receipt() {
+    for previous in [None, Some(false), Some(true)] {
+        let (d, r) = setup();
+        let policy = tempfile::tempdir().unwrap();
+        let store = policy.path().join(".decapod/data");
+        let cancel = Cancellation::default();
+        let budget = Budget::new(Duration::from_secs(10), 1024 * 1024, &cancel).unwrap();
+        let snapshot = prepare(&mut local(), d.path(), r.clone(), &budget).unwrap();
+        let mut runner = PolicyCheckedPublish {
+            inner: PublishFake {
+                local: local(),
+                base: r.accepted_base.clone(),
+                remote: previous.map(|equal| {
+                    if equal {
+                        r.source_head.clone()
+                    } else {
+                        r.accepted_base.clone()
+                    }
+                }),
+                pushes: vec![],
+                race: false,
+            },
+            store: store.clone(),
+        };
+        let attempt = publish(&mut runner, snapshot, &budget);
+        assert!(attempt.outcome.is_ok(), "{:?}", attempt.outcome);
+        assert_eq!(runner.inner.remote.as_deref(), Some(r.source_head.as_str()));
+        assert_eq!(
+            runner.inner.pushes.len(),
+            usize::from(previous != Some(true))
+        );
+        assert!(
+            !store.exists(),
+            "validation must not read or create operator receipts"
+        );
+    }
+}
+
+fn sealed_push(root: &Path, request: &SnapshotRequest) -> CommandSpec {
+    let authorization = AuthorizedWorkspaceBranchPush {
+        root: root.into(),
+        request: request.clone(),
+    };
+    let mut spec = authorization.command();
+    spec.provider_request = Some(ProviderRequest::WorkspaceBranchPush(authorization));
+    spec
+}
+
+#[test]
+fn validation_push_seal_rejects_changed_argv_identity_or_executable() {
+    let (d, r) = setup();
+    let policy = tempfile::tempdir().unwrap();
+    let store = policy.path().join(".decapod/data");
+    for change in 0..16 {
+        let mut spec = sealed_push(d.path(), &r);
+        let last = spec.args.len() - 1;
+        match change {
+            0 => spec.args.push("--force".into()),
+            1 => spec.args.push("--force-with-lease".into()),
+            2 => spec.args[last] = format!(":{}", r.source_ref),
+            3 => spec.args[last] = format!("{}:refs/tags/v1", r.source_head),
+            4 => spec.args[last] = format!("{}:{PREFIX}other", r.source_head),
+            5 => spec.args[last] = format!("{}:refs/heads/other", r.source_head),
+            6 => spec.args[last] = format!("{}:{}", r.accepted_base, r.source_ref),
+            7 => spec.args[last - 1] = "https://github.com/other/repo.git".into(),
+            8 => spec.cwd = policy.path().into(),
+            9 => spec.args[6] = "core.hooksPath=/tmp/hooks".into(),
+            10 => spec.program = Program::GitLocal,
+            11 => spec.organization = Some("other".into()),
+            12 => spec
+                .args
+                .push(format!("{}:refs/heads/extra", r.source_head)),
+            13 => spec.args[last] = format!("+{}:{}", r.source_head, r.source_ref),
+            14 => spec.args.push("--mirror".into()),
+            15 => spec.args.push("--tags".into()),
+            _ => unreachable!(),
+        }
+        assert!(
+            crate::authorize_readiness_snapshot_command(&store, &spec, Path::new("/usr/bin/git"))
+                .is_err(),
+            "mutation {change} must not inherit validation authorization"
+        );
+    }
+    let spec = sealed_push(d.path(), &r);
+    for executable in ["git", "/usr/bin/sh", "/usr/bin/gh"] {
+        assert!(
+            crate::authorize_readiness_snapshot_command(&store, &spec, Path::new(executable))
+                .is_err()
+        );
+    }
+    assert!(!store.exists());
+}
+
+#[test]
+fn validation_authorization_preserves_write_and_provider_denials() {
+    use crate::core::external_action::{self, ExternalCapability};
+    let (d, r) = setup();
+    let policy = tempfile::tempdir().unwrap();
+    let store = policy.path().join(".decapod/data");
+    std::fs::create_dir_all(&store).unwrap();
+    let spec = sealed_push(d.path(), &r);
+    // A scope name alone never authorizes a write, even the validation scope.
+    for scope in ["readiness.workspace-branch", "todo.push", "unrelated.write"] {
+        let error = external_action::authorize(&store, ExternalCapability::VcsWrite, scope, "git")
+            .unwrap_err();
+        assert!(error.to_string().contains("requires approval"), "{error}");
+    }
+    let mut unsealed = sealed_push(d.path(), &r);
+    unsealed.provider_request = None;
+    assert!(
+        crate::authorize_readiness_snapshot_command(&store, &unsealed, Path::new("/usr/bin/git"))
+            .is_err()
+    );
+    // Explicit external executable restrictions still deny the sealed push.
+    std::fs::write(
+        policy.path().join(".decapod/EXTERNAL_ACTIONS.json"),
+        r#"{"rules":[{"capability":"vcs_write","allowed_bins":[]},{"capability":"preflight_read","allowed_bins":[]}]}"#,
+    ).unwrap();
+    let error =
+        crate::authorize_readiness_snapshot_command(&store, &spec, Path::new("/usr/bin/git"))
+            .unwrap_err();
+    assert!(
+        error.to_string().contains("does not allow binary"),
+        "{error}"
+    );
+    let read = super::super::provider::gh_spec(
+        d.path(),
+        &format!("repos/DecapodLabs/decapod/git/commits/{}", r.source_head),
+    );
+    assert!(
+        crate::authorize_readiness_snapshot_command(&store, &read, Path::new("/usr/bin/gh"))
+            .is_err()
+    );
+}

@@ -198,6 +198,15 @@ fn authorize_checked(
     scope: &str,
     command: &str,
 ) -> Result<(), error::DecapodError> {
+    authorize_binary(store_root, capability, command)?;
+    require_external_approval(store_root, capability, scope)
+}
+
+fn authorize_binary(
+    store_root: &Path,
+    capability: ExternalCapability,
+    command: &str,
+) -> Result<(), error::DecapodError> {
     let config = maybe_load_config(store_root);
     let allowed_bins = allowed_for_capability(&config, capability);
     let bin = command_bin(command);
@@ -221,9 +230,28 @@ fn authorize_checked(
         )));
     }
 
-    require_external_approval(store_root, capability, scope)?;
-
     Ok(())
+}
+
+/// Configured validation owns its exact workspace-branch submission. Only the
+/// publisher can mint this seal, after source, target, tags and ancestry checks.
+/// Keep the existing write executable policy; no operator approval receipt is
+/// needed for this bounded validation step. Generic writes retain their policy.
+pub fn authorize_workspace_branch_push(
+    store_root: &Path,
+    program: &Path,
+    _request: &crate::core::snapshot_provider::snapshot::AuthorizedWorkspaceBranchPush,
+) -> Result<(), error::DecapodError> {
+    if !program.is_absolute() || program.file_name().and_then(|p| p.to_str()) != Some("git") {
+        return Err(error::DecapodError::ValidationError(
+            "WORKSPACE_PUSH_REJECTED: installed absolute Git required".into(),
+        ));
+    }
+    authorize_binary(
+        store_root,
+        ExternalCapability::VcsWrite,
+        &program.to_string_lossy(),
+    )
 }
 
 /// Authorize only a fixed read-only installed-tool probe. This cannot execute

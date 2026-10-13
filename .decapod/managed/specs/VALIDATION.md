@@ -133,6 +133,13 @@ reports local project checks as `not_run_provider_owned`. It pushes or reuses th
 exact existing workspace-branch commit and collects authenticated execution
 artifacts. GitHub Actions results neither satisfy nor block that selected profile.
 
+The checked workspace-publication path binds its push request to the exact
+repository, workspace, candidate and branch. This validation-owned request does
+not require a separate human operator receipt. Generic external writes retain
+their approval requirements, and validation still enforces the configured
+executable allowlist and actual provider access. Altering the sealed command or
+using another ref cannot acquire this validation-specific authorization.
+
 Remote proof must authenticate the expected event, build, attempt, logical job,
 artifact producer, raw bytes, and reviewed execution recipe. Once a PR exists,
 independent PR/manual runs for the same head do not replace required push-event
@@ -352,7 +359,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a3ffe79fc50f186fc07d685a3846a948c9f57811f8cdf81f0f9f45c90486210e`
+- Repository signal fingerprint: `a8675f753f846c78c0819e8d9887a1ef4f775e2f454be3e115a42de0db9a5edc`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (186 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

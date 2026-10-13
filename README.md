@@ -22,8 +22,8 @@
 
 Tell your agent what you want to build. Decapod helps it turn that request into
 a plan and keeps the work tied to your requirements as the code changes.
-The agent handles the engineering, checks its work, and brings unresolved
-decisions back to you.
+The agent handles the engineering and prepares a checked pull request for you
+to review and merge.
 
 Run agents in parallel on separate tasks, or switch agents and tools during the
 same pull request. Plans and decisions stay in the repository, so the next agent

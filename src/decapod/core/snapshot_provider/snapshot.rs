@@ -1,5 +1,5 @@
-//! Submit the exact existing local workspace branch. All mutations require
-//! the caller's separately established authorization for this exact destination.
+//! Submit the exact existing local workspace branch. Source and transport gates
+//! mint bounded validation authorization for this exact destination and HEAD.
 use super::*;
 use std::collections::BTreeMap;
 
@@ -574,6 +574,50 @@ pub struct PublishAttempt {
     pub snapshot: PreparedSnapshot,
     pub outcome: Result<()>,
 }
+
+/// In-process authority minted only by `publish` after its source/target/tag and
+/// ancestry gates. No public constructor, deserialization or scope-string bypass.
+#[derive(Debug)]
+pub struct AuthorizedWorkspaceBranchPush {
+    root: PathBuf,
+    request: SnapshotRequest,
+}
+impl AuthorizedWorkspaceBranchPush {
+    fn command(&self) -> CommandSpec {
+        git_spec(
+            &self.root,
+            &[
+                "push",
+                "--porcelain",
+                "--no-verify",
+                "--no-follow-tags",
+                "--recurse-submodules=no",
+                "--",
+                &self.request.repository.https_url(),
+                &format!("{}:{}", self.request.source_head, self.request.source_ref),
+            ],
+            true,
+        )
+    }
+}
+impl CommandSpec {
+    pub fn authorize_workspace_branch_push(&self) -> Result<&AuthorizedWorkspaceBranchPush> {
+        let Some(ProviderRequest::WorkspaceBranchPush(request)) = self.provider_request() else {
+            return Err(invalid("workspace push requires publisher authorization"));
+        };
+        request.request.validate()?;
+        let expected = request.command();
+        ensure(
+            self.program == expected.program
+                && self.args == expected.args
+                && self.cwd == expected.cwd
+                && self.organization.is_none(),
+            "workspace push differs from its exact authorized command",
+        )?;
+        Ok(request)
+    }
+}
+
 pub fn publish(
     runner: &mut impl Runner,
     snapshot: PreparedSnapshot,
@@ -639,24 +683,13 @@ pub fn publish(
             }
             // Git itself rechecks fast-forward safety against the current remote
             // during this ordinary push. Never use force, leases, or a '+' refspec.
-            checked(
-                runner,
-                git_spec(
-                    &snapshot.root,
-                    &[
-                        "push",
-                        "--porcelain",
-                        "--no-verify",
-                        "--no-follow-tags",
-                        "--recurse-submodules=no",
-                        "--",
-                        &snapshot.request.repository.https_url(),
-                        &format!("{}:{reference}", snapshot.transport_head),
-                    ],
-                    true,
-                ),
-                budget,
-            )?;
+            let authorization = AuthorizedWorkspaceBranchPush {
+                root: snapshot.root.clone(),
+                request: snapshot.request.clone(),
+            };
+            let mut command = authorization.command();
+            command.provider_request = Some(ProviderRequest::WorkspaceBranchPush(authorization));
+            checked(runner, command, budget)?;
         }
         ensure(
             read_ref(runner, &snapshot, &reference, budget)?.as_deref()

@@ -123,8 +123,11 @@ readiness.
 
 Governed branch publication uses ordinary non-forced creation or fast-forward,
 or exact-tip reuse. Divergence and changed accepted targets block publication.
-Validation does not authorize releases, package uploads, deployments or new
-credentials. A service denial cannot be repaired by changing credentials,
+Configured validation owns its bounded, checked workspace-branch push without
+a separate local operator approval. That exception is limited to the sealed
+validation request; it does not relax unrelated external-write policy or the
+provider's access checks. Validation does not authorize merges, releases, package
+uploads, deployments or new credentials. A service denial cannot be repaired by changing credentials,
 weakening gates or substituting fabricated evidence.
 
 Release-only exceptions require immutable event history and exact material
@@ -236,7 +239,7 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a3ffe79fc50f186fc07d685a3846a948c9f57811f8cdf81f0f9f45c90486210e`
+- Repository signal fingerprint: `a8675f753f846c78c0819e8d9887a1ef4f775e2f454be3e115a42de0db9a5edc`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (186 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
