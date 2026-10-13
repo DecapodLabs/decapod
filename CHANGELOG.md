@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.111.0](https://github.com/DecapodLabs/decapod/compare/v0.110.0...v0.111.0) - 2026-10-13
+
+### Added
+
+- validate candidates with independently accepted executors
+
+### Fixed
+
+- bind release policy inputs and refresh governed projections
+- repair candidate inputs and isolate native release ownership
+- regenerate validation guidance and context output expectations
+- make unsupported validation controllers actionable
+- verify no-change release branch creation and CPU budgets
+
+### Other
+
+- prove accepted executor builds and verifies edited candidates
+- isolate executor fixtures and bind current release policies
+- regenerate validation authority and repair guidance
+- steer validation through already authorized branch retries
+
 ## [0.110.0](https://github.com/DecapodLabs/decapod/compare/v0.109.0...v0.110.0) - 2026-10-13
 
 ### Fixed
