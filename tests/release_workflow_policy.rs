@@ -142,16 +142,17 @@ fn source_check(workflow_name: &str, job_id: &str, check_id: &str) -> (String, &
         .split_once("\n    }")
         .unwrap()
         .0;
-    assert!(run_ci.contains("return custody::run_ci(\n            &repo,\n            selected_check.unwrap(),\n            base.as_deref(),\n            head.as_deref(),\n        );"));
+    assert!(run_ci.contains("return custody::run_ci_with_executor(\n            &repo,\n            selected_check.unwrap(),\n            base.as_deref(),\n            head.as_deref(),\n            custody::ExecutorContext::from_flags(&custody_flags)?,\n        );"));
     let custody = include_str!("../assets/tools/source_ci_custody.rs");
     let runner = custody
-        .split_once("pub fn run_ci(\n")
+        .split_once("pub fn run_ci_with_executor(\n")
         .unwrap()
         .1
         .split_once("\n#[cfg(test)]")
         .unwrap()
         .0;
     for required in [
+        "executor: Option<ExecutorContext>,",
         "let base = variable(\"SOURCE_CI_BASE\", \"CUSTODY_BASE\")?;",
         "let head = variable(\"SOURCE_CI_HEAD\", \"CUSTODY_HEAD\")?;",
         "let recipe = commands(check, &paths)?;",
@@ -161,6 +162,20 @@ fn source_check(workflow_name: &str, job_id: &str, check_id: &str) -> (String, &
             "run-ci must preserve {required}"
         );
     }
+    let execution_context = runner
+        .split_once("let mut context = Context {\n")
+        .unwrap()
+        .1
+        .split_once("\n    };")
+        .unwrap()
+        .0;
+    assert!(
+        execution_context
+            .lines()
+            .any(|line| line.trim() == "executor,")
+    );
+    assert!(runner.contains("if !run(repo, check, &paths, &base, &head, &context, true)? {"));
+    assert!(runner.contains("run(repo, check, &paths, &base, &head, &context, false)"));
     let bindings = custody
         .split_once("fn context_bindings(\n")
         .unwrap()

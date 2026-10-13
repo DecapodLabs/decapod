@@ -891,6 +891,10 @@ exit "${RECIPE_EXIT_CODE:-0}"
     command
         .arg(recipes.join("governance-artifacts.sh"))
         .current_dir(&source)
+        // This fixture supplies its own reviewed recipes. A checkout-less CI
+        // shard can inherit a provider executor root absent from its runfiles.
+        // Bind only this child; production still resolves helpers from R.
+        .env("SOURCE_CI_EXECUTOR_ROOT", &source)
         .env("RUNNER_TEMP", &scratch)
         .env(
             "SOURCE_CI_BASE",
@@ -1011,6 +1015,36 @@ fn governance_recipe_normalizes_only_exact_same_tree_pr_merge() {
     for case in ["head", "merge", "inherited-git", "verifier-failure"] {
         governance_recipe_case(case);
     }
+}
+
+#[cfg(unix)]
+#[test]
+fn governance_recipe_fixture_isolates_ambient_executor_root() {
+    const CHILD_RECORD: &str = "GOVERNANCE_RECIPE_EXECUTOR_FIXTURE_RECORD";
+    if let Some(record) = std::env::var_os(CHILD_RECORD) {
+        governance_recipe_case("merge");
+        fs::write(record, "fixture verified\n").unwrap();
+        return;
+    }
+
+    // Reproduce the provider's inherited root in a separate test process;
+    // never mutate the environment of concurrently running tests.
+    let fixture = Fixture::new();
+    let missing_executor = fixture.0.join("absent provider checkout");
+    assert!(!missing_executor.exists());
+    let record = fixture.0.join("child-record");
+    let output = Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "governance_recipe_fixture_isolates_ambient_executor_root",
+            "--nocapture",
+        ])
+        .env("SOURCE_CI_EXECUTOR_ROOT", missing_executor)
+        .env(CHILD_RECORD, &record)
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "{output:?}");
+    assert_eq!(fs::read_to_string(record).unwrap(), "fixture verified\n");
 }
 
 #[cfg(unix)]
