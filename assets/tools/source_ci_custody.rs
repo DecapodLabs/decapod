@@ -1236,11 +1236,10 @@ pub fn run(
         for (index, invocation) in recipe.iter().enumerate() {
             let stage = Instant::now();
             let outcome = (|| -> io::Result<(PathBuf, String, Execution)> {
-                if let Some(expected) = &executor {
-                    if verify_executor_root(&repo, context.executor.as_ref().unwrap())? != *expected
-                    {
-                        return Err(io::Error::other("executor changed before source command"));
-                    }
+                if let Some(expected) = &executor
+                    && verify_executor_root(&repo, context.executor.as_ref().unwrap())? != *expected
+                {
+                    return Err(io::Error::other("executor changed before source command"));
                 }
                 let executable = resolve(invocation.program, &repo.join(invocation.cwd))?;
                 let hash = file_sha(&executable)?;

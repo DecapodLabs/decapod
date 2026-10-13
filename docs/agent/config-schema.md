@@ -35,3 +35,5 @@ reconcile existing repository contracts, preserve user-authored choices, and
 report missing or conflicting obligations for repair. Successful init is not
 successful validation. Existing repositories must reconcile their contract and
 provide the required capabilities before validate can authorize publication.
+A declaration matching the current inventory does not override the controller's
+compiled workflow/helper contract. For supported remote source-CI contracts, validation uses the accepted target’s independently verified executor to build and test the candidate, even when candidate helper bytes change. The controller keeps the required graph and final verdict; candidate output cannot authorize itself. `CONTROLLER_CONTRACT_UNSUPPORTED` identifies an unsupported carrier, protocol or accepted executor. Rerunning the same controller, repinning configuration or running a manual build cannot resolve that blocker; use an independently supported controller for this exact contract, and preserve the blocker if none is available. No automatic controller replacement is performed.

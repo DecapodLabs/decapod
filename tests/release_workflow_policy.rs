@@ -230,6 +230,195 @@ fn release_workflow_lets_release_plz_update_the_manifest() {
     );
 }
 
+fn release_job(workflow: &str, id: &str) -> String {
+    let header = format!("\n  {id}:\n");
+    workflow
+        .split_once(&header)
+        .expect("release job exists")
+        .1
+        .lines()
+        .take_while(|line| {
+            !line.starts_with("  ")
+                || line.starts_with("   ")
+                || !line.ends_with(':')
+                || line.trim_start().starts_with('#')
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+#[test]
+fn release_jobs_require_native_ownership_before_resolving_secrets() {
+    let workflow = include_str!("../.github/workflows/release.yml");
+    let owner = release_job(workflow, "release-owner");
+    assert!(owner.contains("permissions: {}"));
+    assert!(!owner.contains("secrets."));
+    assert!(!owner.contains("uses:"));
+    assert!(owner.contains("native-owner: ${{ steps.owner.outputs.native_owner }}"));
+
+    let jobs: Vec<_> = workflow
+        .split_once("\njobs:\n")
+        .unwrap()
+        .1
+        .lines()
+        .filter_map(|line| {
+            line.strip_prefix("  ")
+                .filter(|line| !line.starts_with(' ') && !line.starts_with('#'))
+                .and_then(|line| line.strip_suffix(':'))
+        })
+        .collect();
+    assert_eq!(
+        jobs,
+        [
+            "release-owner",
+            "release-publish",
+            "plan",
+            "publish-decapod-image",
+            "build-local-artifacts",
+            "build-global-artifacts",
+            "host",
+            "announce",
+        ],
+        "new release jobs need an explicit ownership review"
+    );
+
+    // buildkite-gha v0.102.3 evaluates the job condition before fetching
+    // RequiredSecrets or a workflow token. Step-only guards cannot provide
+    // that boundary. This checks the source contract, not a live provider run:
+    // https://github.com/buildkite/buildkite-gha/blob/v0.102.3/internal/runtime/action_execution.go#L196-L275
+    for id in jobs.into_iter().filter(|id| *id != "release-owner") {
+        let job = release_job(workflow, id);
+        assert!(
+            job.contains("    needs: [release-owner]\n")
+                || job.contains("    needs:\n      - release-owner\n"),
+            "{id} must directly depend on the credential-free ownership job"
+        );
+        let condition = job
+            .lines()
+            .find_map(|line| line.strip_prefix("    if: "))
+            .expect("release job must have a job-level ownership condition");
+        let condition = condition
+            .strip_prefix("${{ ")
+            .and_then(|condition| condition.strip_suffix(" }}"))
+            .unwrap_or(condition);
+        let remaining = condition
+            .strip_prefix("needs.release-owner.outputs.native-owner == 'true'")
+            .unwrap_or_else(|| panic!("{id} must require positive native ownership"));
+        if !remaining.is_empty() {
+            let expression = remaining
+                .strip_prefix(" && (")
+                .and_then(|rest| rest.strip_suffix(')'))
+                .unwrap_or_else(|| panic!("{id} cannot bypass ownership with an alternative"));
+            let mut depth = 0_i32;
+            for character in expression.chars() {
+                match character {
+                    '(' => depth += 1,
+                    ')' => depth -= 1,
+                    _ => (),
+                }
+                assert!(depth >= 0, "{id} closes the ownership guard too early");
+            }
+            assert_eq!(depth, 0, "{id} must preserve balanced applicability");
+        }
+    }
+    assert!(!workflow.contains("Run release-plz (Buildkite)"));
+    assert!(!workflow.contains("Build and push Decapod image (Buildkite)"));
+    assert!(!workflow.contains("cargo install --locked release-plz"));
+}
+
+#[cfg(unix)]
+#[test]
+fn release_owner_selector_is_credential_free_and_fails_closed() {
+    use std::os::unix::fs::PermissionsExt;
+
+    let workflow = include_str!("../.github/workflows/release.yml");
+    let owner = release_job(workflow, "release-owner");
+    let script = owner
+        .split_once("        run: |\n")
+        .unwrap()
+        .1
+        .lines()
+        .map(|line| line.strip_prefix("          ").unwrap_or(line))
+        .collect::<Vec<_>>()
+        .join("\n");
+    for (github_actions, buildkite, build_id, expected) in [
+        ("true", "", "", "true"),
+        ("true", "true", "build-fixture", "false"),
+        ("true", "", "build-fixture", "false"),
+        ("true", "true", "", "false"),
+        ("", "", "", "false"),
+        ("false", "", "", "false"),
+    ] {
+        let temp = tempdir().unwrap();
+        let bin = temp.path().join("bin");
+        fs::create_dir(&bin).unwrap();
+        // Never let this fixture contact providers, install tools, or publish.
+        // Any credential access or mutating command would be a test failure.
+        for command in ["release-plz", "cargo", "gh", "docker", "buildkite-agent"] {
+            let path = bin.join(command);
+            fs::write(
+                &path,
+                "#!/bin/sh\nprintf '%s\\n' \"$0\" >> \"$COMMAND_LOG\"\nexit 97\n",
+            )
+            .unwrap();
+            fs::set_permissions(path, fs::Permissions::from_mode(0o755)).unwrap();
+        }
+        let output_file = temp.path().join("github-output");
+        let command_log = temp.path().join("commands");
+        let output = Command::new("/bin/bash")
+            .args(["--noprofile", "--norc", "-c", &script])
+            .env_clear()
+            .env("PATH", &bin)
+            .env("GITHUB_OUTPUT", &output_file)
+            .env("COMMAND_LOG", &command_log)
+            .env("GITHUB_ACTIONS", github_actions)
+            .env("BUILDKITE", buildkite)
+            .env("BUILDKITE_BUILD_ID", build_id)
+            .current_dir(temp.path())
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "{output:?}");
+        assert_eq!(
+            fs::read_to_string(output_file).unwrap(),
+            format!("native_owner={expected}\n")
+        );
+        assert!(
+            !command_log.exists(),
+            "ownership cannot touch credentials or releases"
+        );
+        if expected == "false" {
+            assert!(String::from_utf8_lossy(&output.stdout).contains("not publication proof"));
+        }
+    }
+}
+
+#[test]
+fn release_pr_only_recovery_preserves_default_release_ordering() {
+    let workflow = include_str!("../.github/workflows/release.yml");
+    let dispatch = workflow
+        .split_once("  workflow_dispatch:\n")
+        .unwrap()
+        .1
+        .split_once("\njobs:\n")
+        .unwrap()
+        .0;
+    assert!(dispatch.contains("      release_pr_only:\n"));
+    assert!(dispatch.contains("        type: boolean\n"));
+    assert!(dispatch.contains("        default: false\n"));
+    let publish = release_job(workflow, "release-publish");
+    assert_eq!(publish.matches("uses: release-plz/action@").count(), 1);
+    assert!(publish.contains("command: ${{ github.event_name == 'workflow_dispatch' && inputs.release_pr_only && 'release-pr' || '' }}"));
+    assert!(publish.contains("GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}"));
+    assert!(publish.contains("CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}"));
+    assert!(publish.contains("config: .github/release.toml"));
+    assert!(!publish.contains("continue-on-error:"));
+    // Empty command is the native action's ordered release-pr then release
+    // mode, with normal failure propagation. PR-only dispatch selects the
+    // upstream release-pr command, never --dry-run (which still opens a PR).
+    // https://github.com/release-plz/action/blob/f393a7b38aca9d9b4c58447b291dbac963901df6/action.yml
+    assert!(!publish.contains("dry_run:"));
+}
+
 #[cfg(unix)]
 fn run_release_plan_fixture(
     manifest: &str,

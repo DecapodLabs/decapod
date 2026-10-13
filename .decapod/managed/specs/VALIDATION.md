@@ -338,6 +338,23 @@ completion. Report the exact scope and unresolved limitations. A successful
 check of this specification, or a previous candidate, makes no claim that a later
 candidate has passed.
 
+## Release mutation ownership
+
+The release workflow (`.github/workflows/release.yml`) selects native GitHub
+Actions as its sole mutation owner in a credential-free job. Every release job
+requires that positive ownership result, including planning, artifact building,
+container publication, hosting and announcement. Imported Buildkite execution
+therefore skips those jobs before their ordinary secret retrieval. These skips
+are not release or publication evidence. Provider resolver capability checks can
+still run before the condition is evaluated.
+
+Native pushes retain the release-plz action's release-PR creation followed by
+release behavior. A manual dispatch may explicitly select `release_pr_only` to
+create or update the release PR without invoking package publication; the default
+remains the normal release sequence. This code does not repair a provider that
+never receives a postmerge event. Missing external trigger delivery remains a
+separate operational blocker, and validation does not authorize distribution.
+
 <!-- decapod:capability-overlay:background-processing:start -->
 
 Generated capability obligations: `background-processing` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
@@ -386,7 +403,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `06f16a3cd87a37ae874c9424f28f238a28d44fc7c4f645494336351ed6622fa4`
+- Repository signal fingerprint: `35a18f08b5f87d2c58f80f66a51ee7fba88d27aa4954978d723135dee3b54a1e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (182 files), `tests/` (188 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

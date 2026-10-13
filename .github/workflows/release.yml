@@ -49,16 +49,45 @@ on:
     tags:
       - '**[0-9]+.[0-9]+.[0-9]+*'
   workflow_dispatch:
+    inputs:
+      release_pr_only:
+        description: Create or update the release PR without publishing packages
+        type: boolean
+        default: false
 
 jobs:
+  # Native GitHub Actions is the single release writer. Buildkite imports this
+  # workflow too, so select ownership before any credential-bearing job starts.
+  # Its runtime evaluates job-level needs/if before resolving static secrets;
+  # a step-level provider guard would still request GH_APP_ID in Buildkite.
+  release-owner:
+    name: Select release owner
+    runs-on: ubuntu-latest
+    permissions: {}
+    outputs:
+      native-owner: ${{ steps.owner.outputs.native_owner }}
+    steps:
+      - id: owner
+        shell: bash
+        run: |
+          set -euo pipefail
+          native_owner=false
+          if [ -z "${BUILDKITE_BUILD_ID:-}" ] && [ "${BUILDKITE:-}" != "true" ] && [ "${GITHUB_ACTIONS:-}" = "true" ]; then
+            native_owner=true
+          fi
+          printf 'native_owner=%s\n' "$native_owner" >> "$GITHUB_OUTPUT"
+          if [ "$native_owner" != "true" ]; then
+            echo "Release mutation is owned by native GitHub Actions; imported jobs are not publication proof."
+          fi
+
   release-publish:
     name: Release (Publish)
     runs-on: ubuntu-latest
     environment: release
-    if: github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch'
+    needs: [release-owner]
+    if: needs.release-owner.outputs.native-owner == 'true' && (github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch')
     steps:
       - name: Generate GitHub App token (GitHub Actions)
-        if: env.BUILDKITE_BUILD_ID == ''
         uses: actions/create-github-app-token@v2
         id: generate-token
         with:
@@ -75,35 +104,14 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Run release-plz (GitHub Actions)
-        if: env.BUILDKITE_BUILD_ID == ''
         uses: release-plz/action@v0.5
         with:
           config: .github/release.toml
+          # An empty command preserves the action's release-pr, then release
+          # sequence on pushes. Recovery dispatches can request only the PR.
+          command: ${{ github.event_name == 'workflow_dispatch' && inputs.release_pr_only && 'release-pr' || '' }}
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-          CARGO_NET_GIT_FETCH_WITH_CLI: "true"
-
-      # Buildkite provides static job secrets, not the GitHub App token action's
-      # short-lived output. Keep the GitHub path above unchanged and use the
-      # documented release-plz CLI contract when this workflow is imported.
-      - name: Run release-plz (Buildkite)
-        if: env.BUILDKITE_BUILD_ID != ''
-        shell: bash
-        run: |
-          set -euo pipefail
-          : "${GITHUB_TOKEN:?Configure GITHUB_TOKEN as a Buildkite secret for release-plz}"
-          : "${CARGO_REGISTRY_TOKEN:?Configure CARGO_REGISTRY_TOKEN as a Buildkite secret for release-plz}"
-          if ! command -v release-plz >/dev/null 2>&1; then
-            cargo install --locked release-plz
-          fi
-          release-plz release --config .github/release.toml
-        env:
-          # These expressions make the required credentials part of the
-          # imported job's static authority. GITHUB_TOKEN is the scoped token
-          # issued by Buildkite for this workflow; CARGO_REGISTRY_TOKEN is a
-          # named Buildkite secret with the same name used by native Actions.
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
           CARGO_NET_GIT_FETCH_WITH_CLI: "true"
 
@@ -118,7 +126,8 @@ jobs:
     # Cargo-dist planning is useful for release-plz PRs and tags, not every
     # code PR. Keeping the job scoped to those release surfaces prevents a
     # normal PR from acquiring a release-plan check it cannot publish.
-    if: (github.event_name == 'pull_request' && startsWith(github.head_ref, 'release-plz-')) || (github.event_name == 'push' && github.ref != 'refs/heads/master')
+    needs: [release-owner]
+    if: needs.release-owner.outputs.native-owner == 'true' && ((github.event_name == 'pull_request' && startsWith(github.head_ref, 'release-plz-')) || (github.event_name == 'push' && github.ref != 'refs/heads/master'))
     outputs:
       # Buildkite job outputs are limited to 1 KiB each. Keep the full manifest
       # in artifacts-plan-dist-manifest and export only scheduling decisions.
@@ -127,9 +136,8 @@ jobs:
       tag: ${{ steps.plan.outputs.tag }}
       tag-flag: ${{ steps.plan.outputs.tag_flag }}
       publishing: ${{ steps.plan.outputs.publishing }}
-    # Planning is local and non-publishing. Do not bind secrets.GITHUB_TOKEN
-    # here: Buildkite treats that reference as a workflow-token request before
-    # the job starts, while release-plan.sh only invokes cargo-dist locally.
+    # PR planning is non-publishing; tag planning can create hosting state.
+    # Both are native-owned above. Keep this job free of explicit token requests.
     steps:
       - uses: actions/checkout@v4
         with:
@@ -167,7 +175,8 @@ jobs:
   publish-decapod-image:
     name: Publish Decapod GHCR Image (${{ matrix.variant }})
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref != 'refs/heads/master'
+    needs: [release-owner]
+    if: needs.release-owner.outputs.native-owner == 'true' && (github.event_name == 'push' && github.ref != 'refs/heads/master')
     permissions:
       contents: read
       packages: write
@@ -188,25 +197,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Set up QEMU (GitHub Actions)
-        if: env.BUILDKITE_BUILD_ID == ''
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx (GitHub Actions)
-        if: env.BUILDKITE_BUILD_ID == ''
         uses: docker/setup-buildx-action@v3
       - name: Log in to GHCR (GitHub Actions)
-        if: env.BUILDKITE_BUILD_ID == ''
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Compute short SHA (GitHub Actions)
-        if: env.BUILDKITE_BUILD_ID == ''
         id: commit
         shell: bash
         run: echo "sha_short=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
       - name: Extract image metadata (GitHub Actions)
-        if: env.BUILDKITE_BUILD_ID == ''
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -214,7 +218,6 @@ jobs:
           tags: |
             type=raw,value=${{ github.ref_name }}${{ matrix.tag_suffix }}
       - name: Build and push Decapod image (GitHub Actions)
-        if: env.BUILDKITE_BUILD_ID == ''
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -228,36 +231,6 @@ jobs:
             DECAPOD_REVISION=${{ steps.commit.outputs.sha_short }}
             DECAPOD_BUILD_IMAGE=${{ matrix.build_image }}
             DECAPOD_RUNTIME_IMAGE=${{ matrix.runtime_image }}
-      # The Buildkite runtime does not emulate the Docker setup actions. Keep
-      # the native GitHub Actions path above and perform the same build with
-      # the Docker CLI when this job is imported into Buildkite.
-      - name: Build and push Decapod image (Buildkite)
-        if: env.BUILDKITE_BUILD_ID != ''
-        shell: bash
-        run: |
-          set -euo pipefail
-          : "${GITHUB_TOKEN:?Configure GITHUB_TOKEN as a Buildkite secret for GHCR publishing}"
-          : "${GITHUB_REF_NAME:?Buildkite GHA must provide GITHUB_REF_NAME for tag publishing}"
-          short_sha="${GITHUB_SHA:-${BUILDKITE_COMMIT:-}}"
-          short_sha="${short_sha:0:7}"
-          docker run --privileged --rm tonistiigi/binfmt:qemu-v9.2.0 --install all
-          if ! docker buildx inspect decapod-builder >/dev/null 2>&1; then
-            docker buildx create --name decapod-builder --driver docker-container --use
-          else
-            docker buildx use decapod-builder
-          fi
-          docker buildx inspect --bootstrap
-          printf '%s' "$GITHUB_TOKEN" | docker login ghcr.io --username "${GITHUB_ACTOR:-github-actions[bot]}" --password-stdin
-          docker buildx build \
-            --context . \
-            --file assets/Dockerfile.workspace \
-            --platform linux/amd64,linux/arm64 \
-            --push \
-            --tag "ghcr.io/decapodlabs/decapod:${GITHUB_REF_NAME}${{ matrix.tag_suffix }}" \
-            --build-arg "DECAPOD_VERSION=${GITHUB_REF_NAME}" \
-            --build-arg "DECAPOD_REVISION=${short_sha}" \
-            --build-arg "DECAPOD_BUILD_IMAGE=${{ matrix.build_image }}" \
-            --build-arg "DECAPOD_RUNTIME_IMAGE=${{ matrix.runtime_image }}"
       - name: Verify anonymous GHCR pull
         env:
           IMAGE_TAG: ${{ github.ref_name }}${{ matrix.tag_suffix }}
@@ -278,8 +251,9 @@ jobs:
     name: build-local-artifacts (${{ matrix.targets }})
     # Let the initial task tell us to not run (currently very blunt)
     needs:
+      - release-owner
       - plan
-    if: ${{ needs.plan.outputs.has-local-artifacts == 'true' && (needs.plan.outputs.publishing == 'true' || needs.plan.outputs.pr-upload == 'true') }}
+    if: ${{ needs.release-owner.outputs.native-owner == 'true' && (needs.plan.outputs.has-local-artifacts == 'true' && (needs.plan.outputs.publishing == 'true' || needs.plan.outputs.pr-upload == 'true')) }}
     strategy:
       fail-fast: false
       # Buildkite validates workflow matrices before applying the job-level
@@ -367,8 +341,10 @@ jobs:
   # Build and package all the platform-agnostic(ish) things
   build-global-artifacts:
     needs:
+      - release-owner
       - plan
       - build-local-artifacts
+    if: needs.release-owner.outputs.native-owner == 'true'
     runs-on: "ubuntu-latest"
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -418,11 +394,12 @@ jobs:
   # Determines if we should publish/announce
   host:
     needs:
+      - release-owner
       - plan
       - build-local-artifacts
       - build-global-artifacts
     # Require a successful publishing plan; local/global may be skipped, but must not fail.
-    if: ${{ always() && needs.plan.result == 'success' && needs.plan.outputs.publishing == 'true' && (needs.build-global-artifacts.result == 'skipped' || needs.build-global-artifacts.result == 'success') && (needs.build-local-artifacts.result == 'skipped' || needs.build-local-artifacts.result == 'success') }}
+    if: ${{ needs.release-owner.outputs.native-owner == 'true' && (always() && needs.plan.result == 'success' && needs.plan.outputs.publishing == 'true' && (needs.build-global-artifacts.result == 'skipped' || needs.build-global-artifacts.result == 'success') && (needs.build-local-artifacts.result == 'skipped' || needs.build-local-artifacts.result == 'success')) }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     runs-on: "ubuntu-latest"
@@ -493,12 +470,13 @@ jobs:
 
   announce:
     needs:
+      - release-owner
       - plan
       - host
     # use "always() && ..." to allow us to wait for all publish jobs while
     # still allowing individual publish jobs to skip themselves (for prereleases).
     # "host" however must run to completion, no skipping allowed!
-    if: ${{ always() && needs.host.result == 'success' }}
+    if: ${{ needs.release-owner.outputs.native-owner == 'true' && (always() && needs.host.result == 'success') }}
     runs-on: "ubuntu-latest"
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
