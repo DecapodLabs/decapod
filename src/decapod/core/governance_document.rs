@@ -914,14 +914,15 @@ pub fn validation_context_hash(root: &Path) -> Result<String, DecapodError> {
 fn imported_from_git(
     root: &Path,
     document: &GovernanceDocument,
+    revision: &str,
 ) -> Result<GovernanceDocument, DecapodError> {
-    let committed_paths = git(
+    let committed_paths = immutable_archive_git(
         root,
         &[
             "ls-tree",
             "-r",
             "--name-only",
-            "HEAD",
+            revision,
             "--",
             ".decapod/governance",
         ],
@@ -940,11 +941,13 @@ fn imported_from_git(
         if !recognized_legacy_path(path) {
             return Err(invalid("Unsafe legacy proof reference"));
         }
-        let output = Command::new("git")
-            .args(["show", &format!("HEAD:{path}")])
-            .current_dir(root)
-            .output()
-            .map_err(DecapodError::IoError)?;
+        let output = crate::core::entrypoint_integrity::history_git(
+            root,
+            &["show", &format!("{revision}:{path}")],
+        )
+        .ok_or_else(|| {
+            invalid("GOVERNANCE_GIT_PROOF_UNAVAILABLE: cannot read committed legacy evidence")
+        })?;
         if !output.status.success() || bytes_digest(&output.stdout) != *expected {
             return Err(invalid(format!(
                 "GOVERNANCE_UNARCHIVED_WORK: {path} differs from committed legacy evidence"
@@ -969,21 +972,50 @@ fn imported_from_git(
     Ok(imported)
 }
 
-fn recoverable_in_git(root: &Path, document: &GovernanceDocument) -> Result<(), DecapodError> {
-    let archived = match git(root, &["show", &format!("HEAD:{GOVERNANCE_PATH}")]) {
+/// Archive decisions read local immutable objects, never a caller-selected
+/// repository, replacement object, or lazy-fetched remote substitute.
+fn immutable_archive_git(root: &Path, args: &[&str]) -> Result<String, DecapodError> {
+    let output = crate::core::entrypoint_integrity::history_git(root, args).ok_or_else(|| {
+        invalid("GOVERNANCE_GIT_PROOF_UNAVAILABLE: cannot read immutable archive evidence")
+    })?;
+    if !output.status.success() {
+        return Err(invalid(
+            "GOVERNANCE_GIT_PROOF_UNAVAILABLE: inspect immutable repository history and retry",
+        ));
+    }
+    String::from_utf8(output.stdout)
+        .map(|value| value.trim().to_string())
+        .map_err(|_| invalid("GOVERNANCE_GIT_PROOF_UNAVAILABLE: invalid archive evidence encoding"))
+}
+
+pub(crate) fn recoverable_in_git(
+    root: &Path,
+    document: &GovernanceDocument,
+) -> Result<(), DecapodError> {
+    crate::core::entrypoint_integrity::ensure_ungrafted(root)
+        .map_err(|error| invalid(format!("GOVERNANCE_GIT_PROOF_UNAVAILABLE: {error}")))?;
+    // Pin the actual repository HEAD once so every canonical/legacy read is
+    // about the same immutable predecessor rather than independently moving refs.
+    let revision = immutable_archive_git(root, &["rev-parse", "--verify", "HEAD^{commit}"])?;
+    let archived = match immutable_archive_git(
+        root,
+        &["show", &format!("{revision}:{GOVERNANCE_PATH}")],
+    ) {
         Ok(content) => parse(content.as_bytes())?,
-        Err(_) if !document.legacy_digests.is_empty() => imported_from_git(root, document)?,
+        Err(_) if !document.legacy_digests.is_empty() => {
+            imported_from_git(root, document, &revision)?
+        }
         Err(_) => {
             let is_empty = serde_json::to_value(document).map_err(|e| invalid(e.to_string()))?
                 == serde_json::to_value(GovernanceDocument::default())
                     .map_err(|e| invalid(e.to_string()))?;
-            let inherited_legacy = git(
+            let inherited_legacy = immutable_archive_git(
                 root,
                 &[
                     "ls-tree",
                     "-r",
                     "--name-only",
-                    "HEAD",
+                    &revision,
                     "--",
                     ".decapod/governance",
                 ],

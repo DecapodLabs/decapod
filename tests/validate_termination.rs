@@ -163,6 +163,34 @@ fn validation_task_dir(task_id: &str) -> PathBuf {
     std::env::temp_dir().join("decapod_validate").join(task_id)
 }
 
+fn commit_validation_journal(root: &Path) {
+    for args in [
+        vec!["add", ".decapod/governance.json"],
+        vec![
+            "-c",
+            "user.name=Validation Test",
+            "-c",
+            "user.email=validation@example.com",
+            "-c",
+            "commit.gpgsign=false",
+            "commit",
+            "-m",
+            "Preserve validation evidence before starting a new trajectory",
+        ],
+    ] {
+        let output = Command::new("git")
+            .current_dir(root)
+            .args(args)
+            .output()
+            .expect("commit validation journal");
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+}
+
 fn validation_temp_dirs() -> Vec<PathBuf> {
     let Ok(entries) = fs::read_dir(std::env::temp_dir().join("decapod_validate")) else {
         return Vec::new();
@@ -610,6 +638,7 @@ fn validate_json_reports_self_heal_and_structured_summary() {
         prior_governance,
         "stale project-check must preserve the prior receipt and trajectory byte-for-byte"
     );
+    commit_validation_journal(&dir);
     let recovery = run_decapod(
         &dir,
         &[
@@ -741,6 +770,7 @@ fn validation_profile_changes_validation_epoch() {
     // A changed validation profile creates a new proof epoch. Start a fresh
     // trajectory before validating it so the test follows the same recovery
     // path required for a real governed run.
+    commit_validation_journal(&dir);
     let recovery = run_decapod(
         &dir,
         &[

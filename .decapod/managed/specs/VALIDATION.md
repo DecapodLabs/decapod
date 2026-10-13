@@ -189,6 +189,24 @@ actual entrypoint content, declared fingerprints, compiled expectations, and the
 managed Dockerfile pin. Inheriting intact current material is permitted; every
 commit need not manufacture a change to every governed path.
 
+The full readiness controller independently checks two acceptance invariants in
+`validation_runtime::load_project` before execution selection and again during
+final discovery. `plan_governance::enforce_scope_paths` applies declared forbidden
+path prefixes and file-touch budgets to the complete accepted-base/candidate Git
+delta. Deleted paths and both sides of renames count; a clean worktree and passing
+compilation do not waive scope. Optional execution/project checks additionally
+include staged, unstaged, and untracked paths, preserve NUL-framed filenames, and
+fail closed when scope evidence cannot be read. These are explicit path/budget
+constraints, not an automated interpretation of arbitrary natural-language intent.
+
+`entrypoint_integrity::validate_committed_history` reuses immutable Git history
+and canonical template validation for every feature-branch entrypoint rewrite.
+Restoring canonical final bytes cannot conceal an earlier unauthorized rewrite.
+The full controller calls this check independently of CI-local Git-gate skip
+flags, on native and provider routes; a provider's green health check alone is
+insufficient. Existing accepted-template lineage and installed-binary authority
+remain unchanged.
+
 `PUBLICATION_BUNDLE_CURRENCY` proves required HEAD participation and loadability.
 Sibling gates separately prove fingerprint integrity, authored material change,
 epoch currency, and receipt binding. Presence alone is insufficient.
@@ -211,8 +229,10 @@ classification, never a label or branch name.
 `STALE_CONFIG_INPUT_HASH`, `OUT_OF_SYNC_SPECS`, and `STALE_SPECS_FINGERPRINT`
 identify projection/authority drift and require supported refresh and revalidation.
 `STALE_VALIDATION_EVIDENCE` identifies a different active validation epoch. Prior
-evidence is preserved; the agent initializes a new run and obtains fresh proof
-rather than relabeling an old receipt. Same-epoch validation is idempotent.
+evidence is preserved; the agent commits the complete prior governance journal
+before initializing a replacement run and obtaining fresh proof, rather than
+relabeling an old receipt. Uncommitted replacement fails with
+`TRAJECTORY_UNARCHIVED_WORK`; continuing the current run remains available. Same-epoch validation is idempotent.
 
 Epoch bindings cover plan/review, claims, authored spec digests, entrypoints, and
 managed Dockerfile while excluding the receipt itself. A proof-only receipt commit
@@ -418,7 +438,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1664bbc78e858f90e0b310627567067118d153b3f77ba1fabf82c40d822b21c1`
+- Repository signal fingerprint: `8b0c054bd14ac4d418d30ea47c2216d0004df6ab3ea9316b79102420964a7bf5`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (183 files), `tests/` (188 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

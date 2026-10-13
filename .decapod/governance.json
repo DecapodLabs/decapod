@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "619825ca52f352cb12531e843dcd47b7af53345b",
+    "accepted_commit": "dfe59bd07aedb6b351435cc96ca252a30b55a858",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -83,6 +83,11 @@
         "id": "shared-interface-scale",
         "owner": "Decapod workspace maintainers",
         "question": "How does custody scale when tasks intentionally share an interface or require coordinated changes across workspaces?",
+        "status": "open"
+      },
+      "claim:native-release-owner": {
+        "falsifier": "The extracted owner script emits true for the sanitized importer, missing/unknown runner identity or explicit Buildkite markers, or false for the configured native hosted identity.",
+        "statement": "Only the configured native GitHub-hosted owner identity selects release mutation; sanitized Buildkite imports and missing or unknown runner identity remain false before credential-bearing jobs.",
         "status": "open"
       },
       "claim:project-spec-purpose": {
@@ -169,40 +174,74 @@
     }
   },
   "change": {
-    "id": "change_01M4VDD0XNGEB15WSK35DK0PG9",
-    "base_commit": "619825ca52f352cb12531e843dcd47b7af53345b",
+    "id": "change_01M4VGS2S8JFC6CBCNWFGXTKJ2",
+    "base_commit": "dfe59bd07aedb6b351435cc96ca252a30b55a858",
     "target_base": "origin/master"
   },
   "claims": {
-    "native-release-owner": {
-      "statement": "Only the configured native GitHub-hosted owner identity selects release mutation; sanitized Buildkite imports and missing or unknown runner identity remain false before credential-bearing jobs.",
-      "falsifier": "The extracted owner script emits true for the sanitized importer, missing/unknown runner identity or explicit Buildkite markers, or false for the configured native hosted identity.",
-      "status": "open"
+    "committed-scope-enforcement": {
+      "statement": "Full readiness rejects forbidden-path and file-budget violations across complete accepted-base candidate delta on native and provider routes",
+      "falsifier": "A clean committed forbidden edit, deletion, rename source or over-budget delta reaches provider execution or readiness",
+      "status": "open",
+      "proof_refs": [
+        "src/decapod/core/validation_runtime/tests.rs"
+      ]
+    },
+    "independent-entrypoint-history": {
+      "statement": "Complete validation rejects unauthorized entrypoint rewrites in candidate history independently of provider-local Git gate skips",
+      "falsifier": "Tamper then restore to canonical HEAD can pass the full native or Buildkite readiness boundary",
+      "status": "open",
+      "proof_refs": [
+        "src/decapod/core/entrypoint_integrity/history/tests.rs"
+      ]
+    },
+    "trajectory-journal-recoverability": {
+      "statement": "Starting a different trajectory cannot replace an uncommitted governance journal through supported APIs",
+      "falsifier": "Changing run ID discards uncommitted failures, assumptions, blockers or Jev evidence without Git recovery",
+      "status": "open",
+      "proof_refs": [
+        "tests/unit/core/trajectory_tests.rs"
+      ]
     }
   },
   "checkpoints": [
     {
-      "id": "release-owner-positive-hosted-01",
-      "summary": "Require protected github-hosted runner identity for the sole native release writer; cover sanitized imported and unknown identities, retain all mutation guards and reconcile the reviewed workflow inventory",
-      "input_digest": "sha256:6e1e94f33fb5acfd4028407467f44e11be513f8dcff27990d114198ebc36e054"
+      "id": "kernel-enforcement-initial",
+      "summary": "Enforce committed scope, recoverable trajectory resets and immutable entrypoint history across validation routes",
+      "input_digest": "sha256:76441b2d8488b7cf7cfd9eec94ea93885c4f08f1a58388d71ed6230130dade48",
+      "proof_refs": [
+        "src/decapod/core/entrypoint_integrity/history/tests.rs",
+        "src/decapod/core/validation_runtime/tests.rs",
+        "tests/unit/core/trajectory_tests.rs"
+      ]
+    },
+    {
+      "id": "kernel-enforcement-reviewed",
+      "summary": "Checkpoint reviewed three-gap repair, complete adversarial regressions and current release projections before first branch publication",
+      "input_digest": "sha256:b9003a8b78d7bbfb22c6586bedcd3d7668db935a975ebf504ae75eea2d3824fd",
+      "proof_refs": [
+        "src/decapod/core/entrypoint_integrity/history/tests.rs",
+        "src/decapod/core/validation_runtime/tests.rs",
+        "tests/unit/core/trajectory_tests.rs"
+      ]
     }
   ],
   "intents": {
-    "intent:release-owner-correction": {
+    "intent:kernel-enforcement": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "No credentials, permissions, provider settings, release dispatch, distribution, merges, or Docs deployment changes."
+        "No merge, release, credentials change, force push, weakened checks, fabricated evidence or separate build gate"
       ],
       "constraints": [
-        ".github/workflows/release.yml, release policy tests, reviewed profile declaration and directly relevant authored specs"
+        "Existing governance kernel Rust, regression tests, canonical instructions and product-wide authored specs"
       ],
       "created_sequence": 1,
-      "id": "intent:release-owner-correction",
+      "id": "intent:kernel-enforcement",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Correct the confirmed release ownership repair defect within the authorized release scope.",
-      "refined_intent": "Require positive GitHub-hosted runner identity before release jobs acquire credentials; prove sanitized importer and unknown identities cannot own distribution.",
+      "raw_intent": "Strengthen the existing universal repository-native governance kernel for autonomous software engineering; confirm existing guarantees, select no more than three real enforcement gaps, implement and validate minimal corrections, and publish a review-ready PR for human merge",
+      "refined_intent": "Audit generation, authority and durable intent/custody/evidence/lifecycle; choose only code-demonstrable gaps and deterministic adversarial regressions",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -211,11 +250,13 @@
     "plan": {
       "constraints": {
         "file_touch_budget": null,
-        "forbidden_paths": []
+        "forbidden_paths": [
+          "release publication and protected branch mutations"
+        ]
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Fix sanitized release provider ownership\n\nCorrect confirmed Buildkite1261 native-owner=true misclassification using positive GitHub-hosted runner identity. Preserve native GitHub release behavior, add sanitized importer and unknown identity regressions, validate before dedicated PR. No credentials, provider settings, release dispatch, distribution or merge. Docs token denial is diagnosis-only.",
+      "intent": "Strengthen existing governance kernel enforcement\n\nAudit six areas: conventional agent entrypoints; durable intent and replacement-agent recovery; initialization/claim/work/validation/publication lifecycle; exact input-bound evidence; durable failure-repair lifecycle; adversarial regressions. Confirm existing guarantees first and implement at most three code-grounded high-impact gaps with minimal coherent Rust changes. Preserve daemonless local-first Git-native governance, SQLite/Dactyl roles, harness independence, optional cloud separation and human merge authority. Validate source using plain decapod validate; preserve genuine failures; publish only after exact candidate green.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -223,50 +264,60 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Release owner selection stays in the existing credential-free job and unchanged downstream guards; only positive native hosted identity is corrected.",
-          "reviewed_code_fingerprint": "1664bbc78e858f90e0b310627567067118d153b3f77ba1fabf82c40d822b21c1",
-          "spec_material_hash": "ec960d5117e65fef6ea0ee63367fb51a57560f2c439302fdae12f13111e65a4e"
+          "reason": "Reviewed implementation including immutable Git archive lookup, shared trusted validation runner, exact candidate scope and unchanged daemonless/Dactyl ownership boundaries",
+          "reviewed_code_fingerprint": "8b0c054bd14ac4d418d30ea47c2216d0004df6ab3ea9316b79102420964a7bf5",
+          "spec_material_hash": "ad7b0d507fb069caf348fcb2eecf7b06b7c0dd0bf3d1eeaf19da4617a78c82cf"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "No CLI, RPC, provider custody envelope or job output interface changes; native-owner remains the boolean output with stricter actual runtime identity.",
-          "reviewed_code_fingerprint": "1664bbc78e858f90e0b310627567067118d153b3f77ba1fabf82c40d822b21c1",
+          "reason": "No CLI/RPC schema or syntax additions; existing transitions now reject unarchived journal resets and enforce existing explicit scope/history constraints",
+          "reviewed_code_fingerprint": "8b0c054bd14ac4d418d30ea47c2216d0004df6ab3ea9316b79102420964a7bf5",
           "spec_material_hash": "58c045c5b7aecc82b99be8060d28862dbd7ef54edd20a16f8665d5a7b3d16f00"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No credentials, permissions or trust expansion. The existing pre-secret owner boundary now rejects sanitized importer identity instead of assuming missing host variables identify GitHub.",
-          "reviewed_code_fingerprint": "1664bbc78e858f90e0b310627567067118d153b3f77ba1fabf82c40d822b21c1",
-          "spec_material_hash": "3a32d010c700db35158c28ad9660375581eec104456f3a9ecf0231a9801fcc70"
+          "reason": "Reviewed immutable local archive evidence, trusted canonical controller Git plus shared deadline/cancellation, path scope boundaries and explicit filesystem/semantic trust limits",
+          "reviewed_code_fingerprint": "8b0c054bd14ac4d418d30ea47c2216d0004df6ab3ea9316b79102420964a7bf5",
+          "spec_material_hash": "439b8a69e8db6ebf0d579a87f982878ed8e3e350c6a70c09a99b16c92523659b"
         }
       ],
       "state": "APPROVED",
-      "stop_conditions": [],
-      "title": "Fix sanitized release provider ownership",
+      "stop_conditions": [
+        "Stop on a genuine human decision, denied authorization, unavailable required evidence, or proposed architecture expansion beyond three confirmed gaps"
+      ],
+      "title": "Strengthen existing governance kernel enforcement",
       "todo_ids": [
-        "bugs_01m4vdc77ryvkh10"
+        "code_01m4vgrjk4f9x6vr"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791921633Z"
+      "updated_at": "1791925856Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "No credentials, permissions, provider settings, release dispatch, distribution, merges, or Docs deployment changes."
+        "No merge, release, credentials change, force push, weakened checks, fabricated evidence or separate build gate"
       ],
-      "artifact_hash": "sha256:2fd57b1a783373fd9b4747da8a8d0610f1c70815ff0669694702dd31a8d102aa",
+      "artifact_hash": "sha256:983625b1da6d48c46e4194b7ec742f76e4783440f18fc3ef6fa88cbb3e96b841",
       "checks": [
         {
-          "name": "actual-owner-misclassification",
+          "name": "adversarial-regressions-authored-not-executed",
+          "status": "unavailable"
+        },
+        {
+          "name": "code-grounded-six-area-audit",
           "status": "passed"
         },
         {
-          "name": "regression-execution",
-          "status": "unavailable"
+          "name": "independent-source-review",
+          "status": "passed"
+        },
+        {
+          "name": "initial-full-validation",
+          "status": "failed"
         }
       ],
       "current_phase": "validation",
@@ -274,50 +325,99 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:release-owner-correction",
+            "intent_id": "intent:kernel-enforcement",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:release-owner-correction",
+            "intent_id": "intent:kernel-enforcement",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:release-owner-correction",
+            "detail": "trajectory:kernel-enforcement",
             "event_id": "event:4",
-            "intent_id": "intent:release-owner-correction",
+            "intent_id": "intent:kernel-enforcement",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:kernel-enforcement",
+            "event_id": "event:5",
+            "intent_id": "intent:kernel-enforcement",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
+          },
+          {
+            "detail": "trajectory:kernel-enforcement",
+            "event_id": "event:6",
+            "intent_id": "intent:kernel-enforcement",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
-          "release-owner-correction": {
+          "kernel-enforcement": {
             "evidence_only": true,
-            "id": "release-owner-correction",
-            "intent_id": "intent:release-owner-correction",
+            "id": "kernel-enforcement",
+            "intent_id": "intent:kernel-enforcement",
             "steps": [
               {
-                "action": "validation",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  ".github/workflows/release.yml",
-                  ".github/workflows/release.yml",
-                  "tests/release_workflow_policy.rs",
-                  "Buildkite1261 owner result native-owner=true was verified against its result artifact SHA256355cd7136a3a591240337c557b2e77c690cca4f34935f0f827f548a770014fba. Importer v0.102.3 sets protected RUNNER_ENVIRONMENT=self-hosted and GITHUB_ACTIONS=true."
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/workspace.rs",
+                  "src/decapod/core/trajectory.rs",
+                  "src/decapod/plan_governance.rs"
                 ],
                 "proof_refs": [
-                  "actual-owner-misclassification",
-                  "regression-execution"
+                  "code-grounded-six-area-audit"
                 ],
                 "scope": [
-                  ".github/workflows/release.yml, release policy tests, reviewed profile declaration and directly relevant authored specs"
+                  "Existing governance kernel Rust, regression tests, canonical instructions and product-wide authored specs"
                 ],
                 "sequence": 4,
+                "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "src/decapod/plan_governance.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/trajectory.rs",
+                  "src/decapod/core/entrypoint_integrity/history.rs",
+                  "Three minimal repairs source-reviewed; baseline failures derived from exact existing code paths; executable regressions await configured validation"
+                ],
+                "proof_refs": [
+                  "adversarial-regressions-authored-not-executed"
+                ],
+                "scope": [
+                  "Existing governance kernel Rust, regression tests, canonical instructions and product-wide authored specs"
+                ],
+                "sequence": 5,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Initial candidate 427ff3a5 full validation failed COMMIT_AND_RERUN after controller refreshed managed Dockerfile; complete JSON and stderr preserved outside repository. Supported v0.111.1 init refreshed entrypoints. Before publication source review repaired staged-revert scope omission, trusted Git/deadline propagation and immutable archive redirection. No builds/tests yet executed.",
+                  "Reviewed complete source inventory is unchanged from accepted master dfe59bd0; reconciled inherited post-release inventory declaration to 9f0b1bc79567aa7e181e0df583efd8dc3b15b0065fae074ac56061fd8bc97559 without changing any required source/check/helper."
+                ],
+                "proof_refs": [
+                  "initial-full-validation",
+                  "independent-source-review"
+                ],
+                "scope": [
+                  "Existing governance kernel Rust, regression tests, canonical instructions and product-wide authored specs"
+                ],
+                "sequence": 6,
                 "validation_findings": []
               }
             ]
@@ -326,27 +426,34 @@
       },
       "declared_commands": [],
       "evidence": [
-        "Buildkite1261 owner result native-owner=true was verified against its result artifact SHA256355cd7136a3a591240337c557b2e77c690cca4f34935f0f827f548a770014fba. Importer v0.102.3 sets protected RUNNER_ENVIRONMENT=self-hosted and GITHUB_ACTIONS=true."
+        "Initial candidate 427ff3a5 full validation failed COMMIT_AND_RERUN after controller refreshed managed Dockerfile; complete JSON and stderr preserved outside repository. Supported v0.111.1 init refreshed entrypoints. Before publication source review repaired staged-revert scope omission, trusted Git/deadline propagation and immutable archive redirection. No builds/tests yet executed.",
+        "Reviewed complete source inventory is unchanged from accepted master dfe59bd0; reconciled inherited post-release inventory declaration to 9f0b1bc79567aa7e181e0df583efd8dc3b15b0065fae074ac56061fd8bc97559 without changing any required source/check/helper.",
+        "Three minimal repairs source-reviewed; baseline failures derived from exact existing code paths; executable regressions await configured validation"
       ],
       "inspected_files": [
-        ".github/workflows/release.yml"
+        "src/decapod/core/trajectory.rs",
+        "src/decapod/core/validation_runtime.rs",
+        "src/decapod/core/workspace.rs",
+        "src/decapod/plan_governance.rs"
       ],
-      "intent_id": "intent:release-owner-correction",
+      "intent_id": "intent:kernel-enforcement",
       "modified_files": [
-        ".github/workflows/release.yml",
-        "tests/release_workflow_policy.rs"
+        "src/decapod/core/entrypoint_integrity/history.rs",
+        "src/decapod/core/trajectory.rs",
+        "src/decapod/core/validation_runtime.rs",
+        "src/decapod/plan_governance.rs"
       ],
       "next_transitions": [
-        "Checkpoint the reviewed predicate and regressions, then run plain validate. Follow exact compatibility/provider failure instructions without local prerequisite builds.",
-        "Edit the selector and exact-script regressions, checkpoint and run plain validate; preserve unsupported-controller or provider blockers."
+        "Commit exact source then plain decapod validate owns build/test/verification",
+        "Report confirmed mechanisms and precise gaps before implementation"
       ],
       "repo_scope": [
-        ".github/workflows/release.yml, release policy tests, reviewed profile declaration and directly relevant authored specs"
+        "Existing governance kernel Rust, regression tests, canonical instructions and product-wide authored specs"
       ],
-      "run_id": "release-owner-correction",
+      "run_id": "kernel-enforcement",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m4vdc77ryvkh10",
+      "task_id": "code_01m4vgrjk4f9x6vr",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

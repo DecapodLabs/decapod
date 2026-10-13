@@ -481,14 +481,30 @@ pub fn init_trajectory(
     input: TrajectoryInit,
 ) -> Result<TrajectoryArtifact, error::DecapodError> {
     crate::core::governance_document::with_lock(project_root, || {
-        // Repeated run initialization never erases its existing evidence.
-        if load_trajectory_cookie(project_root)?
-            .is_some_and(|existing| existing.run_id == input.run_id)
-        {
-            return Err(error::DecapodError::ValidationError(format!(
-                "trajectory '{}' already exists",
-                input.run_id
-            )));
+        if let Some(existing) = load_trajectory_cookie(project_root)? {
+            // Repeated run initialization never erases its existing evidence.
+            if existing.run_id == input.run_id {
+                return Err(error::DecapodError::ValidationError(format!(
+                    "trajectory '{}' already exists",
+                    input.run_id
+                )));
+            }
+            // A fresh run replaces trajectory, intent custody and optional Jev
+            // evidence together. Prove the complete predecessor is recoverable
+            // before preparing any replacement, just as at the PR boundary.
+            let document = crate::core::governance_document::load(project_root)?
+                .ok_or_else(|| {
+                    error::DecapodError::ValidationError(
+                        "Trajectory governance disappeared during initialization".to_string(),
+                    )
+                })?;
+            crate::core::governance_document::recoverable_in_git(project_root, &document)
+                .map_err(|err| {
+                    error::DecapodError::ValidationError(format!(
+                        "TRAJECTORY_UNARCHIVED_WORK: preserve and commit the complete current governance journal before starting a new run. Continue the existing run with `decapod govern trajectory record --run-id {}` or checkpoint and commit its evidence, then retry initialization. No trajectory or Jev evidence was replaced. {err}",
+                        existing.run_id
+                    ))
+                })?;
         }
         let written = fresh_trajectory(project_root, input)?;
         let mut updates = vec![(

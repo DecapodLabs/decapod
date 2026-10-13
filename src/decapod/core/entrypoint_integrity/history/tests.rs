@@ -287,6 +287,7 @@ fn current_head_deletion_and_mode_touches_keep_binary_guard() {
 #[test]
 fn git_replace_cannot_rewrite_history_or_its_source_blobs() {
     let fixture = Fixture::new(true, PUBLISHED_TEMPLATE);
+    let base = command(fixture.root(), &["rev-parse", "HEAD"]);
     let tampered_source =
         PUBLISHED_TEMPLATE.replace("Universal Agent Contract", "Self Signed Contract");
     fs::write(
@@ -298,6 +299,11 @@ fn git_replace_cannot_rewrite_history_or_its_source_blobs() {
     fixture.advance();
     command(fixture.root(), &["replace", &invalid, &fixture.historical]);
     assert!(fixture.rejects(&invalid).contains("not its canonical"));
+    assert!(
+        validate_committed_history(fixture.root(), &base, "HEAD")
+            .unwrap_err()
+            .contains(&invalid)
+    );
 }
 
 #[test]
@@ -314,6 +320,154 @@ fn comments_strings_and_grafts_cannot_supply_source_authority() {
     )
     .unwrap();
     assert!(fixture.rejects(&fixture.historical).contains("grafts"));
+    assert!(
+        validate_committed_history(fixture.root(), &fixture.historical, "HEAD")
+            .unwrap_err()
+            .contains("grafts")
+    );
+}
+
+#[test]
+fn committed_history_rejects_tamper_even_after_canonical_restoration() {
+    for surface in super::super::ENTRYPOINT_FILES {
+        let fixture = Fixture::new(false, PUBLISHED_TEMPLATE);
+        let base = command(fixture.root(), &["rev-parse", "HEAD"]);
+        fs::write(fixture.root().join(surface), "Hand-edited agent contract\n").unwrap();
+        let invalid = fixture.commit();
+        fixture.advance();
+        assert!(super::super::validate_entrypoint(fixture.root(), surface).is_ok());
+        let error = validate_committed_history(fixture.root(), &base, "HEAD").unwrap_err();
+        assert!(error.contains("ENTRYPOINT_COMMIT_DISCIPLINE"), "{error}");
+        assert!(
+            error.contains(&invalid) && error.contains(surface),
+            "{error}"
+        );
+    }
+}
+
+#[test]
+fn committed_history_checks_merge_resolutions_and_all_merged_parents() {
+    for invalid_in_merge in [false, true] {
+        let fixture = Fixture::new(false, PUBLISHED_TEMPLATE);
+        let base = command(fixture.root(), &["rev-parse", "HEAD"]);
+        let canonical_tree = command(fixture.root(), &["rev-parse", "HEAD^{tree}"]);
+        fs::write(
+            fixture.root().join("AGENTS.md"),
+            "Invalid merged contract\n",
+        )
+        .unwrap();
+        command(fixture.root(), &["add", "AGENTS.md"]);
+        let invalid_tree = command(fixture.root(), &["write-tree"]);
+        let side_tree = if invalid_in_merge {
+            &canonical_tree
+        } else {
+            &invalid_tree
+        };
+        let side = command(
+            fixture.root(),
+            &["commit-tree", side_tree, "-p", &base, "-m", "side branch"],
+        );
+        let merge_tree = if invalid_in_merge {
+            &invalid_tree
+        } else {
+            &canonical_tree
+        };
+        let merge = command(
+            fixture.root(),
+            &[
+                "commit-tree",
+                merge_tree,
+                "-p",
+                &base,
+                "-p",
+                &side,
+                "-m",
+                "merge resolution",
+            ],
+        );
+        // The previous single-commit diff-tree invocation omitted this merge.
+        assert!(
+            command(
+                fixture.root(),
+                &["diff-tree", "--no-commit-id", "-r", &merge]
+            )
+            .is_empty()
+        );
+        command(fixture.root(), &["update-ref", "refs/heads/work", &merge]);
+        command(fixture.root(), &["reset", "--hard", &merge]);
+        fixture.advance();
+        let error = validate_committed_history(fixture.root(), &base, "HEAD").unwrap_err();
+        let invalid = if invalid_in_merge { &merge } else { &side };
+        assert!(
+            error.contains(invalid) && error.contains("AGENTS.md"),
+            "{error}"
+        );
+    }
+}
+
+#[test]
+fn committed_history_keeps_canonical_upgrades_and_merge_ancestry_valid() {
+    let fixture = Fixture::new(false, PUBLISHED_TEMPLATE);
+    let base = command(fixture.root(), &["rev-parse", "HEAD"]);
+    let canonical_tree = command(fixture.root(), &["rev-parse", "HEAD^{tree}"]);
+    fs::write(
+        fixture.root().join("AGENTS.md"),
+        super::super::render_entrypoint_for_release("AGENTS.md", "0.98.1").unwrap(),
+    )
+    .unwrap();
+    let side = fixture.commit();
+    let merge = command(
+        fixture.root(),
+        &[
+            "commit-tree",
+            &canonical_tree,
+            "-p",
+            &base,
+            "-p",
+            &side,
+            "-m",
+            "canonical merge",
+        ],
+    );
+    command(fixture.root(), &["update-ref", "refs/heads/work", &merge]);
+    command(fixture.root(), &["reset", "--hard", &merge]);
+    assert_eq!(
+        validate_committed_history(fixture.root(), &base, &merge).unwrap(),
+        1
+    );
+    assert_eq!(
+        validate_committed_history(fixture.root(), &merge, &merge).unwrap(),
+        0
+    );
+}
+
+#[test]
+fn committed_history_uses_explicit_candidate_and_rejects_invalid_ranges() {
+    let fixture = Fixture::new(true, PUBLISHED_TEMPLATE);
+    let base = command(fixture.root(), &["rev-parse", "HEAD"]);
+    let source = PUBLISHED_TEMPLATE.replace("Universal Agent Contract", "Candidate-owned Contract");
+    fs::write(fixture.root().join(ASSETS), &source).unwrap();
+    fs::write(
+        fixture.root().join("AGENTS.md"),
+        rendered(&source, "AGENTS.md", "0.107.5"),
+    )
+    .unwrap();
+    let candidate = fixture.commit();
+    fixture.advance();
+    // It is valid source history relative to the newer checkout HEAD, but must
+    // never become source authority for the explicitly selected candidate tip.
+    assert_eq!(
+        commit_path_violation(fixture.root(), &candidate, 'M', "AGENTS.md"),
+        None
+    );
+    let error = validate_committed_history(fixture.root(), &base, &candidate).unwrap_err();
+    assert!(
+        error.contains(&candidate) && error.contains("not its canonical"),
+        "{error}"
+    );
+    assert!(validate_committed_history(fixture.root(), "refs/heads/missing", &candidate).is_err());
+    assert!(validate_committed_history(fixture.root(), &base, "refs/heads/missing").is_err());
+    assert!(validate_committed_history(fixture.root(), "HEAD", &base).is_err());
 }
 
 #[test]
@@ -367,6 +521,105 @@ fn inherited_git_environment_child() {
     };
     let expected = std::env::var("DECAPOD_HISTORY_EXPECTED").unwrap();
     assert_eq!(oid(Path::new(&repo), "HEAD").unwrap(), expected);
+    if let Ok(base) = std::env::var("DECAPOD_HISTORY_BASE") {
+        let invalid = std::env::var("DECAPOD_HISTORY_INVALID").unwrap();
+        let error = validate_committed_history(Path::new(&repo), &base, &expected).unwrap_err();
+        assert!(error.contains(&invalid), "{error}");
+    }
+}
+
+#[test]
+fn committed_history_is_not_disabled_by_project_or_ci_skip_flags() {
+    let fixture = Fixture::new(false, PUBLISHED_TEMPLATE);
+    let base = command(fixture.root(), &["rev-parse", "HEAD"]);
+    fs::write(fixture.root().join("AGENTS.md"), "Skipped contract\n").unwrap();
+    let invalid = fixture.commit();
+    fixture.advance();
+    let output = Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "core::entrypoint_integrity::history::tests::inherited_git_environment_child",
+            "--nocapture",
+        ])
+        .env("DECAPOD_HISTORY_ENV_FIXTURE", fixture.root())
+        .env(
+            "DECAPOD_HISTORY_EXPECTED",
+            command(fixture.root(), &["rev-parse", "HEAD"]),
+        )
+        .env("DECAPOD_HISTORY_BASE", base)
+        .env("DECAPOD_HISTORY_INVALID", invalid)
+        .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
+        .env("DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES", "1")
+        .env("BUILDKITE", "true")
+        .env("GITHUB_ACTIONS", "true")
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "{output:?}");
+    assert!(String::from_utf8_lossy(&output.stdout).contains("1 passed"));
+}
+
+#[test]
+fn controller_owned_reader_handles_every_historical_read_and_preserves_errors() {
+    let fixture = Fixture::new(true, PUBLISHED_TEMPLATE);
+    let base = command(fixture.root(), &["rev-parse", "HEAD"]);
+    fs::write(
+        fixture.root().join("AGENTS.md"),
+        rendered(PUBLISHED_TEMPLATE, "AGENTS.md", "0.107.5"),
+    )
+    .unwrap();
+    fixture.commit();
+    fixture.advance();
+    let head = command(fixture.root(), &["rev-parse", "HEAD"]);
+    let mut calls = Vec::new();
+    let result = validate_committed_history_with(fixture.root(), &base, &head, &mut |args| {
+        calls.push(
+            args.iter()
+                .map(|value| value.to_string())
+                .collect::<Vec<_>>(),
+        );
+        git(fixture.root(), args).ok_or_else(|| "controller Git read failed".into())
+    });
+    assert_eq!(result.unwrap(), 2);
+    for operation in [
+        "rev-parse",
+        "merge-base",
+        "rev-list",
+        "diff-tree",
+        "cat-file",
+        "ls-tree",
+    ] {
+        assert!(
+            calls
+                .iter()
+                .any(|args| args.first().map(String::as_str) == Some(operation))
+        );
+    }
+
+    // Failure of an optional identity/parent observation must not be treated
+    // as absent authority and allowed through a binary-template fallback.
+    let root_object = format!("{SOURCE_ROOT}^{{commit}}");
+    for failure_at in ["source_root", "parent_blob", "source_mode"] {
+        let mut failed = false;
+        let error = validate_committed_history_with(fixture.root(), &base, &head, &mut |args| {
+            let selected = match failure_at {
+                "source_root" => args.contains(&root_object.as_str()),
+                "parent_blob" => args.starts_with(&["cat-file", "-e"]),
+                "source_mode" => args.first() == Some(&"ls-tree"),
+                _ => unreachable!(),
+            };
+            if selected {
+                failed = true;
+                return Err("controller deadline or cancellation".into());
+            }
+            git(fixture.root(), args).ok_or_else(|| "controller Git read failed".into())
+        })
+        .unwrap_err();
+        assert!(failed, "{failure_at} was not exercised");
+        assert!(
+            error.contains("controller deadline or cancellation"),
+            "{error}"
+        );
+    }
 }
 
 #[test]
@@ -400,30 +653,31 @@ fn enumeration_and_object_reads_share_sanitized_git_environment() {
         .unwrap();
     assert!(output.status.success(), "{output:?}");
     assert!(String::from_utf8_lossy(&output.stdout).contains("1 passed"));
-    // Verify actual gate wiring too: enumeration cannot retain a second,
-    // unsanitized Git constructor or skip a failed immutable range lookup.
+    // Local reporting delegates to the same immutable publication invariant.
     let validator = include_str!("../../validate.rs");
     let gate = validator
         .split("fn validate_entrypoint_commit_discipline(")
         .nth(1)
         .unwrap()
-        .split("/// Return a failure message")
+        .split("fn git_same_commit(")
         .next()
         .unwrap();
     assert_eq!(
-        gate.matches("entrypoint_integrity::history_git(").count(),
-        2
+        gate.matches("entrypoint_integrity::validate_committed_history(")
+            .count(),
+        1
     );
     assert!(!gate.contains("Command::new(\"git\")"));
-    let failure = gate
-        .split("if !rev_list.status.success()")
+    let invariant = include_str!("../history.rs")
+        .split("fn committed_history(")
         .nth(1)
         .unwrap()
-        .split("let mut failures")
+        .split("#[cfg(test)]")
         .next()
         .unwrap();
-    assert!(failure.contains("fail("));
-    assert!(!failure.contains("skip("));
+    assert!(!invariant.contains("std::env"));
+    assert!(!invariant.contains("Command::new(\"git\")"));
+    assert!(invariant.contains("if !revisions.status.success()"));
 }
 
 // Exact literal functions from published commit 6f32b093 (source-only test data).

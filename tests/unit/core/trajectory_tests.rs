@@ -2,6 +2,55 @@
 use super::*;
 use tempfile::tempdir;
 
+fn trajectory_git(root: &Path, args: &[&str]) -> Vec<u8> {
+    let output = std::process::Command::new("git")
+        .current_dir(root)
+        .args(args)
+        .output()
+        .expect("run fixture git");
+    assert!(
+        output.status.success(),
+        "git {args:?}: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    output.stdout
+}
+
+fn commit_trajectory_journal(root: &Path) {
+    trajectory_git(root, &["init", "-b", "main"]);
+    trajectory_git(root, &["add", ".decapod/governance.json"]);
+    trajectory_git(
+        root,
+        &[
+            "-c",
+            "user.name=Trajectory Test",
+            "-c",
+            "user.email=trajectory@example.com",
+            "-c",
+            "commit.gpgsign=false",
+            "commit",
+            "-m",
+            "Preserve trajectory journal",
+        ],
+    );
+}
+
+fn replacement_init(run_id: &str) -> TrajectoryInit {
+    TrajectoryInit {
+        run_id: run_id.to_string(),
+        task_id: None,
+        intent_id: None,
+        original_intent: "original".to_string(),
+        derived_intent: "derived".to_string(),
+        active_boundaries: vec!["src/**".to_string()],
+        repo_scope: vec!["src/decapod/lib.rs".to_string()],
+        destination: None,
+        current_phase: None,
+        next_transitions: Vec::new(),
+        blockers: Vec::new(),
+    }
+}
+
 #[test]
 fn trajectory_creation_is_inspectable_and_unproven_without_checks() {
     let temp = tempdir().unwrap();
@@ -34,22 +83,10 @@ fn trajectory_creation_is_inspectable_and_unproven_without_checks() {
 #[test]
 fn new_run_replaces_the_cookie_and_git_preserves_prior_history() {
     let temp = tempdir().unwrap();
-    let init = |run_id: &str| TrajectoryInit {
-        run_id: run_id.to_string(),
-        task_id: None,
-        intent_id: None,
-        original_intent: "original".to_string(),
-        derived_intent: "derived".to_string(),
-        active_boundaries: vec!["src/**".to_string()],
-        repo_scope: vec!["src/decapod/lib.rs".to_string()],
-        destination: None,
-        current_phase: None,
-        next_transitions: Vec::new(),
-        blockers: Vec::new(),
-    };
-
-    init_trajectory(temp.path(), init("run_old")).unwrap();
-    let replacement = init_trajectory(temp.path(), init("run_new")).unwrap();
+    init_trajectory(temp.path(), replacement_init("run_old")).unwrap();
+    let prior = fs::read(trajectory_cookie_path(temp.path())).unwrap();
+    commit_trajectory_journal(temp.path());
+    let replacement = init_trajectory(temp.path(), replacement_init("run_new")).unwrap();
     assert_eq!(replacement.run_id, "run_new");
     assert!(load_trajectory(temp.path(), "run_old").is_err());
     let cookie_path = trajectory_cookie_path(temp.path());
@@ -61,8 +98,261 @@ fn new_run_replaces_the_cookie_and_git_preserves_prior_history() {
         replacement
     );
 
-    let same_run = init_trajectory(temp.path(), init("run_new"));
+    assert_eq!(
+        trajectory_git(temp.path(), &["show", "HEAD:.decapod/governance.json"]),
+        prior,
+        "the complete previous run must remain recoverable in Git"
+    );
+    let current = fs::read(&cookie_path).unwrap();
+    let same_run = init_trajectory(temp.path(), replacement_init("run_new"));
     assert!(same_run.is_err());
+    assert_eq!(fs::read(cookie_path).unwrap(), current);
+}
+
+#[test]
+fn new_run_preserves_uncommitted_failures_blockers_custody_and_jev() {
+    let temp = tempdir().unwrap();
+    init_trajectory(temp.path(), replacement_init("run_old")).unwrap();
+    commit_trajectory_journal(temp.path());
+    let failed = record_trajectory(
+        temp.path(),
+        "run_old",
+        TrajectoryUpdate {
+            checks: vec![TrajectoryCheck {
+                name: "required-check".to_string(),
+                status: TrajectoryCheckStatus::Failed,
+            }],
+            blockers: vec!["required check failed".to_string()],
+            unresolved_assumptions: vec!["repair still needs verification".to_string()],
+            evidence: vec!["artifact:failed-check".to_string()],
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    crate::core::governance_document::write_section(
+        temp.path(),
+        "jev",
+        &serde_json::json!({
+            "$schema": "https://decapod.dev/schemas/jev-observations-1.0.0.schema.json",
+            "schema_version": "1.0.0",
+            "kind": "jev_observation_ledger",
+            "trajectory_run_id": "run_old",
+            "runs": {}
+        }),
+    )
+    .unwrap();
+    let cookie = trajectory_cookie_path(temp.path());
+    let prior = fs::read(&cookie).unwrap();
+    // An interrupted checkpoint may have staged the journal without committing
+    // it. Neither staging nor a repeated initialization attempt archives it.
+    trajectory_git(temp.path(), &["add", ".decapod/governance.json"]);
+    for _ in 0..2 {
+        let error = init_trajectory(temp.path(), replacement_init("run_new")).unwrap_err();
+        assert!(error.to_string().contains("TRAJECTORY_UNARCHIVED_WORK"));
+        assert!(error.to_string().contains("run_old"));
+        assert_eq!(fs::read(&cookie).unwrap(), prior);
+        assert_eq!(load_trajectory(temp.path(), "run_old").unwrap(), failed);
+    }
+
+    // The same requested replacement succeeds once the recovery instruction is
+    // satisfied; the failure, assumptions, custody and Jev bytes remain in HEAD.
+    commit_trajectory_journal(temp.path());
+    init_trajectory(temp.path(), replacement_init("run_new")).unwrap();
+    assert_eq!(
+        trajectory_git(temp.path(), &["show", "HEAD:.decapod/governance.json"]),
+        prior
+    );
+    assert!(
+        crate::core::governance_document::read_section(temp.path(), "jev")
+            .unwrap()
+            .is_none()
+    );
+}
+
+#[test]
+fn invalid_replacement_preserves_committed_predecessor_without_partial_writes() {
+    let temp = tempdir().unwrap();
+    init_trajectory(temp.path(), replacement_init("run_old")).unwrap();
+    commit_trajectory_journal(temp.path());
+    let cookie = trajectory_cookie_path(temp.path());
+    let prior = fs::read(&cookie).unwrap();
+    let mut invalid = replacement_init("run_new");
+    invalid.original_intent.clear();
+    assert!(init_trajectory(temp.path(), invalid).is_err());
+    assert_eq!(fs::read(&cookie).unwrap(), prior);
+    assert!(load_trajectory(temp.path(), "run_old").is_ok());
+
+    init_trajectory(temp.path(), replacement_init("run_new")).unwrap();
+    assert_eq!(
+        trajectory_git(temp.path(), &["show", "HEAD:.decapod/governance.json"]),
+        prior
+    );
+}
+
+#[test]
+fn new_run_without_git_history_preserves_existing_journal() {
+    let temp = tempdir().unwrap();
+    init_trajectory(temp.path(), replacement_init("run_old")).unwrap();
+    let cookie = trajectory_cookie_path(temp.path());
+    let prior = fs::read(&cookie).unwrap();
+    let error = init_trajectory(temp.path(), replacement_init("run_new")).unwrap_err();
+    assert!(error.to_string().contains("TRAJECTORY_UNARCHIVED_WORK"));
+    assert_eq!(fs::read(cookie).unwrap(), prior);
+}
+
+#[test]
+fn inherited_governance_git_environment_child() {
+    let Some(root) = std::env::var_os("DECAPOD_GOVERNANCE_GIT_ENV_FIXTURE") else {
+        return;
+    };
+    let root = Path::new(&root);
+    let cookie = trajectory_cookie_path(root);
+    let before = fs::read(&cookie).unwrap();
+    let error = init_trajectory(root, replacement_init("run_redirected")).unwrap_err();
+    assert!(error.to_string().contains("TRAJECTORY_UNARCHIVED_WORK"));
+    assert_eq!(fs::read(cookie).unwrap(), before);
+}
+
+#[test]
+fn foreign_git_environment_cannot_archive_the_current_journal() {
+    let actual = tempdir().unwrap();
+    init_trajectory(actual.path(), replacement_init("run_old")).unwrap();
+    commit_trajectory_journal(actual.path());
+    record_trajectory(
+        actual.path(),
+        "run_old",
+        TrajectoryUpdate {
+            blockers: vec!["uncommitted failure".into()],
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let cookie = trajectory_cookie_path(actual.path());
+    let before = fs::read(&cookie).unwrap();
+    let foreign = tempdir().unwrap();
+    fs::create_dir_all(foreign.path().join(".decapod")).unwrap();
+    fs::write(trajectory_cookie_path(foreign.path()), &before).unwrap();
+    commit_trajectory_journal(foreign.path());
+    assert_eq!(
+        trajectory_git(foreign.path(), &["show", "HEAD:.decapod/governance.json"]),
+        before
+    );
+
+    // The isolated child avoids changing process-global environment in a
+    // parallel test binary. Its filesystem root and apparent Git root disagree.
+    let output = std::process::Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "core::trajectory::tests::inherited_governance_git_environment_child",
+            "--nocapture",
+        ])
+        .env("DECAPOD_GOVERNANCE_GIT_ENV_FIXTURE", actual.path())
+        .env("GIT_DIR", foreign.path().join(".git"))
+        .env("GIT_COMMON_DIR", foreign.path().join(".git"))
+        .env("GIT_WORK_TREE", foreign.path())
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "{output:?}");
+    assert!(String::from_utf8_lossy(&output.stdout).contains("1 passed"));
+    assert_eq!(fs::read(cookie).unwrap(), before);
+}
+
+#[test]
+fn git_replace_cannot_archive_the_current_journal() {
+    let temp = tempdir().unwrap();
+    init_trajectory(temp.path(), replacement_init("run_old")).unwrap();
+    commit_trajectory_journal(temp.path());
+    let original = String::from_utf8(trajectory_git(temp.path(), &["rev-parse", "HEAD"]))
+        .unwrap();
+    record_trajectory(
+        temp.path(),
+        "run_old",
+        TrajectoryUpdate {
+            blockers: vec!["failure absent from actual HEAD".into()],
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let cookie = trajectory_cookie_path(temp.path());
+    let before = fs::read(&cookie).unwrap();
+    commit_trajectory_journal(temp.path());
+    let replacement = String::from_utf8(trajectory_git(temp.path(), &["rev-parse", "HEAD"]))
+        .unwrap();
+    trajectory_git(temp.path(), &["reset", "--soft", original.trim()]);
+    trajectory_git(
+        temp.path(),
+        &["replace", original.trim(), replacement.trim()],
+    );
+    assert_eq!(
+        trajectory_git(temp.path(), &["show", "HEAD:.decapod/governance.json"]),
+        before,
+        "ordinary Git reads demonstrate the false archival source"
+    );
+    let error = init_trajectory(temp.path(), replacement_init("run_replaced")).unwrap_err();
+    assert!(error.to_string().contains("TRAJECTORY_UNARCHIVED_WORK"));
+    assert_eq!(fs::read(cookie).unwrap(), before);
+}
+
+#[test]
+fn grafted_history_cannot_authorize_journal_replacement() {
+    let temp = tempdir().unwrap();
+    init_trajectory(temp.path(), replacement_init("run_old")).unwrap();
+    commit_trajectory_journal(temp.path());
+    let head = trajectory_git(temp.path(), &["rev-parse", "HEAD"]);
+    fs::write(temp.path().join(".git/info/grafts"), head).unwrap();
+    let cookie = trajectory_cookie_path(temp.path());
+    let before = fs::read(&cookie).unwrap();
+    let error = init_trajectory(temp.path(), replacement_init("run_grafted")).unwrap_err();
+    assert!(error.to_string().contains("TRAJECTORY_UNARCHIVED_WORK"));
+    assert!(error.to_string().contains("grafts"));
+    assert_eq!(fs::read(cookie).unwrap(), before);
+}
+
+#[test]
+fn fresh_workbranch_seed_remains_recordable_when_replacement_is_blocked() {
+    let temp = tempdir().unwrap();
+    crate::core::governance_document::migrate(temp.path()).unwrap();
+    commit_trajectory_journal(temp.path());
+    trajectory_git(temp.path(), &["checkout", "-b", "agent/test/task_seed"]);
+    let context = crate::core::governance_document::BranchWorkContext {
+        title: "Current task".into(),
+        intent: "Preserve current task intent across workspace creation".into(),
+        todo_ids: vec!["task_seed".into()],
+        scope: vec!["src".into()],
+    };
+    crate::core::governance_document::initialize_workbranch(
+        temp.path(),
+        "main",
+        Some(&context),
+    )
+    .unwrap()
+    .expect("fresh workbranch governance");
+    let seed = load_trajectory_cookie(temp.path()).unwrap().unwrap();
+    assert_eq!(seed.task_id.as_deref(), Some("task_seed"));
+    assert_eq!(seed.original_intent, context.intent);
+    let cookie = trajectory_cookie_path(temp.path());
+    let before = fs::read(&cookie).unwrap();
+    let error = init_trajectory(temp.path(), replacement_init("replacement")).unwrap_err();
+    assert!(error.to_string().contains("TRAJECTORY_UNARCHIVED_WORK"));
+    assert!(error.to_string().contains(&seed.run_id));
+    assert_eq!(fs::read(&cookie).unwrap(), before);
+
+    let continued = record_trajectory(
+        temp.path(),
+        &seed.run_id,
+        TrajectoryUpdate {
+            current_phase: Some("inspection".into()),
+            inspected_files: vec!["src/lib.rs".into()],
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    assert_eq!(continued.run_id, seed.run_id);
+    assert_eq!(continued.task_id, seed.task_id);
+    assert_eq!(continued.original_intent, seed.original_intent);
+    assert_eq!(continued.inspected_files, vec!["src/lib.rs"]);
+    assert_eq!(continued.proof_status, TrajectoryProofStatus::NoChecksRun);
+    assert_eq!(continued.custody.events.len(), seed.custody.events.len() + 1);
 }
 
 #[test]
