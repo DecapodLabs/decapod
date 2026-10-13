@@ -492,8 +492,8 @@ pub fn init_trajectory(
             // A fresh run replaces trajectory, intent custody and optional Jev
             // evidence together. Prove the complete predecessor is recoverable
             // before preparing any replacement, just as at the PR boundary.
-            let document = crate::core::governance_document::load(project_root)?
-                .ok_or_else(|| {
+            let document =
+                crate::core::governance_document::load(project_root)?.ok_or_else(|| {
                     error::DecapodError::ValidationError(
                         "Trajectory governance disappeared during initialization".to_string(),
                     )

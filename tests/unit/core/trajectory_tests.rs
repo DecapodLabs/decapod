@@ -262,8 +262,7 @@ fn git_replace_cannot_archive_the_current_journal() {
     let temp = tempdir().unwrap();
     init_trajectory(temp.path(), replacement_init("run_old")).unwrap();
     commit_trajectory_journal(temp.path());
-    let original = String::from_utf8(trajectory_git(temp.path(), &["rev-parse", "HEAD"]))
-        .unwrap();
+    let original = String::from_utf8(trajectory_git(temp.path(), &["rev-parse", "HEAD"])).unwrap();
     record_trajectory(
         temp.path(),
         "run_old",
@@ -276,8 +275,8 @@ fn git_replace_cannot_archive_the_current_journal() {
     let cookie = trajectory_cookie_path(temp.path());
     let before = fs::read(&cookie).unwrap();
     commit_trajectory_journal(temp.path());
-    let replacement = String::from_utf8(trajectory_git(temp.path(), &["rev-parse", "HEAD"]))
-        .unwrap();
+    let replacement =
+        String::from_utf8(trajectory_git(temp.path(), &["rev-parse", "HEAD"])).unwrap();
     trajectory_git(temp.path(), &["reset", "--soft", original.trim()]);
     trajectory_git(
         temp.path(),
@@ -320,13 +319,9 @@ fn fresh_workbranch_seed_remains_recordable_when_replacement_is_blocked() {
         todo_ids: vec!["task_seed".into()],
         scope: vec!["src".into()],
     };
-    crate::core::governance_document::initialize_workbranch(
-        temp.path(),
-        "main",
-        Some(&context),
-    )
-    .unwrap()
-    .expect("fresh workbranch governance");
+    crate::core::governance_document::initialize_workbranch(temp.path(), "main", Some(&context))
+        .unwrap()
+        .expect("fresh workbranch governance");
     let seed = load_trajectory_cookie(temp.path()).unwrap().unwrap();
     assert_eq!(seed.task_id.as_deref(), Some("task_seed"));
     assert_eq!(seed.original_intent, context.intent);
@@ -352,7 +347,10 @@ fn fresh_workbranch_seed_remains_recordable_when_replacement_is_blocked() {
     assert_eq!(continued.original_intent, seed.original_intent);
     assert_eq!(continued.inspected_files, vec!["src/lib.rs"]);
     assert_eq!(continued.proof_status, TrajectoryProofStatus::NoChecksRun);
-    assert_eq!(continued.custody.events.len(), seed.custody.events.len() + 1);
+    assert_eq!(
+        continued.custody.events.len(),
+        seed.custody.events.len() + 1
+    );
 }
 
 #[test]

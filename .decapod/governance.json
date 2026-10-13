@@ -224,6 +224,23 @@
         "src/decapod/core/validation_runtime/tests.rs",
         "tests/unit/core/trajectory_tests.rs"
       ]
+    },
+    {
+      "id": "kernel-format-repair",
+      "summary": "Repair required Rust formatting and preserve exact-candidate failed and passed evidence",
+      "input_digest": "sha256:557fafbedc010306f6d154376e5b3b12b5ecc812af0ef4b2d22baff70eb9f65c",
+      "proof_refs": [
+        "https://buildkite.com/decapodlabs/decapod/builds/1311",
+        "https://github.com/DecapodLabs/decapod/actions/runs/38469049952"
+      ]
+    },
+    {
+      "id": "kernel-format-repair-complete-evidence",
+      "summary": "Preserve additional genuine Buildkite ETXTBSY failure alongside unchanged required tests and formatting repair",
+      "input_digest": "sha256:cbadda769a68cbb07f09a92ab5848c7ae56d02c08048e1d0946e7d6c78d52bb3",
+      "proof_refs": [
+        "https://buildkite.com/decapodlabs/decapod/builds/1311"
+      ]
     }
   ],
   "intents": {
@@ -266,22 +283,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed implementation including immutable Git archive lookup, shared trusted validation runner, exact candidate scope and unchanged daemonless/Dactyl ownership boundaries",
-          "reviewed_code_fingerprint": "8b0c054bd14ac4d418d30ea47c2216d0004df6ab3ea9316b79102420964a7bf5",
+          "reason": "Re-reviewed final source after formatting-only repair; immutable journal and trusted controller runner architecture unchanged",
+          "reviewed_code_fingerprint": "8db770925a4a896ca4938495d83d2ab15176b5010768008d0aaf88b74c3e783a",
           "spec_material_hash": "ad7b0d507fb069caf348fcb2eecf7b06b7c0dd0bf3d1eeaf19da4617a78c82cf"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "No CLI/RPC schema or syntax additions; existing transitions now reject unarchived journal resets and enforce existing explicit scope/history constraints",
-          "reviewed_code_fingerprint": "8b0c054bd14ac4d418d30ea47c2216d0004df6ab3ea9316b79102420964a7bf5",
+          "reason": "Formatting-only repair adds no interface changes; existing scoped transition and recovery semantics reviewed",
+          "reviewed_code_fingerprint": "8db770925a4a896ca4938495d83d2ab15176b5010768008d0aaf88b74c3e783a",
           "spec_material_hash": "58c045c5b7aecc82b99be8060d28862dbd7ef54edd20a16f8665d5a7b3d16f00"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed immutable local archive evidence, trusted canonical controller Git plus shared deadline/cancellation, path scope boundaries and explicit filesystem/semantic trust limits",
-          "reviewed_code_fingerprint": "8b0c054bd14ac4d418d30ea47c2216d0004df6ab3ea9316b79102420964a7bf5",
+          "reason": "Re-reviewed unchanged trust limits and immutable archive/controller reads after required formatter repair",
+          "reviewed_code_fingerprint": "8db770925a4a896ca4938495d83d2ab15176b5010768008d0aaf88b74c3e783a",
           "spec_material_hash": "439b8a69e8db6ebf0d579a87f982878ed8e3e350c6a70c09a99b16c92523659b"
         }
       ],
@@ -295,17 +312,21 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791925856Z"
+      "updated_at": "1791926846Z"
     },
     "trajectory": {
       "active_boundaries": [
         "No merge, release, credentials change, force push, weakened checks, fabricated evidence or separate build gate"
       ],
-      "artifact_hash": "sha256:983625b1da6d48c46e4194b7ec742f76e4783440f18fc3ef6fa88cbb3e96b841",
+      "artifact_hash": "sha256:cadb2a224e900c63930e99c1e7faf45bd395d9e1db61d4cfbc277cc2157f4eea",
       "checks": [
         {
           "name": "adversarial-regressions-authored-not-executed",
           "status": "unavailable"
+        },
+        {
+          "name": "candidate-library-adversarial-tests-abd3d44c",
+          "status": "passed"
         },
         {
           "name": "code-grounded-six-area-audit",
@@ -317,6 +338,14 @@
         },
         {
           "name": "initial-full-validation",
+          "status": "failed"
+        },
+        {
+          "name": "required-buildkite-fmt-abd3d44c",
+          "status": "failed"
+        },
+        {
+          "name": "required-buildkite-library-abd3d44c",
           "status": "failed"
         }
       ],
@@ -355,10 +384,24 @@
             "intent_id": "intent:kernel-enforcement",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:kernel-enforcement",
+            "event_id": "event:7",
+            "intent_id": "intent:kernel-enforcement",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
+          },
+          {
+            "detail": "trajectory:kernel-enforcement",
+            "event_id": "event:8",
+            "intent_id": "intent:kernel-enforcement",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "kernel-enforcement": {
@@ -419,6 +462,39 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Buildkite source build1311 fmt job01a1371e-8fdd-43c3-9f4b-027ba95b0808 failed required cargo fmt check; rustfmt repaired trajectory.rs and trajectory_tests.rs without semantic change",
+                  "GitHub candidate custody11851291943 verifies abd3d44c/treea891a0f4: 1139 library tests passed, zero failed, three ignored; named new scope/journal/history adversarial regressions passed. Supplementary only, not full Buildkite readiness.",
+                  "Same-candidate release tags fetched after SNAPSHOT_UPLOAD_INCOMPLETE tag mismatch; failed reports retained. Exact-head CI controller archive11851765894 digestdf6329a4d71d93211a4f4cfde465c84cc07a5e96b680fa04231d70d6bc119839 verified before use."
+                ],
+                "proof_refs": [
+                  "required-buildkite-fmt-abd3d44c",
+                  "candidate-library-adversarial-tests-abd3d44c"
+                ],
+                "scope": [
+                  "Existing governance kernel Rust, regression tests, canonical instructions and product-wide authored specs"
+                ],
+                "sequence": 7,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "Buildkite1311 supabase-consumer executed all new regressions successfully but full library result1138passed/1failed/3ignored: existing container_runtime::lifecycle_cleanup_is_owned_and_idempotent at container_runtime_tests.rs156 hit OS ExecutableFileBusy (ETXTBSY). Same test passed on GitHub candidate run. Preserve failure; ordinary exact-next-candidate validation retries without weakening test."
+                ],
+                "proof_refs": [
+                  "required-buildkite-library-abd3d44c"
+                ],
+                "scope": [
+                  "Existing governance kernel Rust, regression tests, canonical instructions and product-wide authored specs"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -426,8 +502,12 @@
       },
       "declared_commands": [],
       "evidence": [
+        "Buildkite source build1311 fmt job01a1371e-8fdd-43c3-9f4b-027ba95b0808 failed required cargo fmt check; rustfmt repaired trajectory.rs and trajectory_tests.rs without semantic change",
+        "Buildkite1311 supabase-consumer executed all new regressions successfully but full library result1138passed/1failed/3ignored: existing container_runtime::lifecycle_cleanup_is_owned_and_idempotent at container_runtime_tests.rs156 hit OS ExecutableFileBusy (ETXTBSY). Same test passed on GitHub candidate run. Preserve failure; ordinary exact-next-candidate validation retries without weakening test.",
+        "GitHub candidate custody11851291943 verifies abd3d44c/treea891a0f4: 1139 library tests passed, zero failed, three ignored; named new scope/journal/history adversarial regressions passed. Supplementary only, not full Buildkite readiness.",
         "Initial candidate 427ff3a5 full validation failed COMMIT_AND_RERUN after controller refreshed managed Dockerfile; complete JSON and stderr preserved outside repository. Supported v0.111.1 init refreshed entrypoints. Before publication source review repaired staged-revert scope omission, trusted Git/deadline propagation and immutable archive redirection. No builds/tests yet executed.",
         "Reviewed complete source inventory is unchanged from accepted master dfe59bd0; reconciled inherited post-release inventory declaration to 9f0b1bc79567aa7e181e0df583efd8dc3b15b0065fae074ac56061fd8bc97559 without changing any required source/check/helper.",
+        "Same-candidate release tags fetched after SNAPSHOT_UPLOAD_INCOMPLETE tag mismatch; failed reports retained. Exact-head CI controller archive11851765894 digestdf6329a4d71d93211a4f4cfde465c84cc07a5e96b680fa04231d70d6bc119839 verified before use.",
         "Three minimal repairs source-reviewed; baseline failures derived from exact existing code paths; executable regressions await configured validation"
       ],
       "inspected_files": [
