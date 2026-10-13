@@ -127,6 +127,19 @@ pub fn plan(paths: &[String]) -> Plan {
         result.policies.push("ci_event_context_policy");
     }
     if has(&[
+        "assets/tools/ci_event_context.rs",
+        "assets/tools/source_ci_profile.rs",
+        "assets/tools/source_ci_custody.rs",
+        "assets/tools/source_ci_toolchain.rs",
+        ".github/actions/ci-context/action.yml",
+        ".github/workflows/constitution-sync.yml",
+        ".github/workflows/ci.yml",
+        ".config/build/decapod.BUILD.bzl",
+        "tests/created_branch_workflow_policy.rs",
+    ]) {
+        result.policies.push("created_branch_workflow_policy");
+    }
+    if has(&[
         "assets/tools/docs_sync.rs",
         "tests/docs_sync_checkpoint_boundary.rs",
         "tests/support/docs_sync_cases.rs",
@@ -143,6 +156,16 @@ pub fn plan(paths: &[String]) -> Plan {
         "tests/release_workflow_policy.rs",
     ]) {
         result.policies.push("release_workflow_policy");
+    }
+    if has(&[
+        ".cargo/config.toml",
+        "dist-workspace.toml",
+        ".github/workflows/release.yml",
+        ".github/scripts/release-build.sh",
+        "assets/tools/release_cpu.rs",
+        "tests/release_cpu_policy.rs",
+    ]) {
+        result.policies.push("release_cpu_policy");
     }
     if paths
         .iter()

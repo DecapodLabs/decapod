@@ -234,6 +234,13 @@ and `resume_command`. These fields steer the agent; they do not change the
 readiness verdict, grant authorization, or replace execution evidence. Missing
 build/test configuration and unsupported adapters remain explicit blockers.
 
+`CONTROLLER_CONTRACT_UNSUPPORTED` distinguishes a reviewed inventory from a
+workflow or helper contract the running controller cannot interpret. Its
+`next_action` is `obtain_supported_controller`, and readiness remains false.
+Repeating validation with that controller, changing the declaration or building
+manually cannot repair this incompatibility. The current runtime does not
+bootstrap a replacement controller or accept a candidate's own readiness claim.
+
 `proof.validation_buildkite_preflights=false` selects native execution; `true`
 selects the optional Buildkite adapter for the same required profile. Unknown
 profiles, unavailable adapters, and unreconciled source contracts fail explicitly.
@@ -272,6 +279,15 @@ context capsule, repository identity, and validation epoch. `passed`, `failed`,
 is not evidence, and no checks produce an unsupported verdict. Portable evidence
 retains source identity and artifact digests; the receiving repository makes its
 own acceptance decision.
+
+The CI context action exposes a required boolean `no_change` disposition. It is
+true only after an explicit created push with an exact zero before value names
+an ordinary branch whose head equals the captured accepted target. Missing or
+malformed event data, unavailable base history, dirty or hidden source, and
+unrelated heads fail verification. Consumers must not infer this disposition
+from a release-looking branch name or equal caller-supplied IDs. Constitution
+schema validation runs for both dispositions; only real ranges use candidate
+custody. Full validation and measured receipt APIs still reject equal endpoints.
 
 ## Outbound Dependencies
 
@@ -320,7 +336,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7878f6ed8607d2a1102eb78788025fb7ecdd4c76b313a8bd4107f457e19bd161`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (186 files)
+- Repository signal fingerprint: `a311bb876ab115a084d4baef25da4e9d093491eff1d2241911abda03924d05c7`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (180 files), `tests/` (188 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

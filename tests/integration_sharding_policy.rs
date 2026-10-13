@@ -37,7 +37,11 @@ fn original_changed_path_conditions_retain_every_target() {
     ] {
         assert_eq!(
             plan(&paths(&[changed])).targets(),
-            ["release_distribution_policy"],
+            if changed == "dist-workspace.toml" {
+                vec!["release_distribution_policy", "release_cpu_policy"]
+            } else {
+                vec!["release_distribution_policy"]
+            },
             "{changed}"
         );
     }
@@ -72,6 +76,7 @@ fn runner_changes_cover_the_runner_and_workflow_retains_release_policies() {
         let mut expected = vec!["integration_sharding_policy"];
         if changed == ".config/build/decapod.BUILD.bzl" {
             expected.push("integration_custody_policy");
+            expected.push("created_branch_workflow_policy");
         }
         if [".config/build/decapod.BUILD.bzl", "BUILD.bazel"].contains(&changed) {
             expected.push("source_ci_profile_policy");
@@ -88,6 +93,7 @@ fn runner_changes_cover_the_runner_and_workflow_retains_release_policies() {
             "ci_checkout_policy",
             "integration_custody_policy",
             "ci_event_context_policy",
+            "created_branch_workflow_policy",
             "release_workflow_policy",
             "source_ci_profile_policy"
         ]
@@ -107,7 +113,7 @@ fn combined_selection_is_deterministic_and_each_target_is_unique() {
     reversed.reverse();
     assert_eq!(selection, plan(&reversed));
     let targets = selection.targets();
-    assert_eq!(targets.len(), 14);
+    assert_eq!(targets.len(), 15);
     assert_eq!(targets.len(), targets.iter().collect::<BTreeSet<_>>().len());
     assert_eq!(
         selection.shards(),
@@ -146,11 +152,27 @@ fn workflow_repairs_select_their_executable_regressions() {
         assert_eq!(
             plan(&paths(&[changed])).targets(),
             if changed.starts_with(".github/workflows/") {
-                vec!["release_workflow_policy", "source_ci_profile_policy"]
+                vec![
+                    "release_workflow_policy",
+                    "release_cpu_policy",
+                    "source_ci_profile_policy",
+                ]
             } else {
                 vec!["release_workflow_policy"]
             }
         );
+    }
+}
+
+#[test]
+fn release_cpu_changes_select_their_executable_regression() {
+    for changed in [
+        ".cargo/config.toml",
+        ".github/scripts/release-build.sh",
+        "assets/tools/release_cpu.rs",
+        "tests/release_cpu_policy.rs",
+    ] {
+        assert_eq!(plan(&paths(&[changed])).targets(), ["release_cpu_policy"]);
     }
 }
 
@@ -162,7 +184,11 @@ fn preflight_context_and_docs_changes_select_real_policy_tests() {
     ] {
         assert_eq!(
             plan(&paths(&[changed])).targets(),
-            ["ci_event_context_policy"]
+            if changed == "assets/tools/ci_event_context.rs" {
+                vec!["ci_event_context_policy", "created_branch_workflow_policy"]
+            } else {
+                vec!["ci_event_context_policy"]
+            }
         );
     }
     for changed in [
@@ -186,6 +212,28 @@ fn preflight_context_and_docs_changes_select_real_policy_tests() {
             .targets()
             .contains(&"docs_sync_checkpoint_boundary")
     );
+}
+
+#[test]
+fn created_branch_workflow_changes_select_whole_command_regression() {
+    for changed in [
+        ".github/actions/ci-context/action.yml",
+        "tests/created_branch_workflow_policy.rs",
+    ] {
+        assert_eq!(
+            plan(&paths(&[changed])).targets(),
+            ["created_branch_workflow_policy"]
+        );
+    }
+    for changed in [
+        ".github/workflows/constitution-sync.yml",
+        "assets/tools/source_ci_profile.rs",
+    ] {
+        assert_eq!(
+            plan(&paths(&[changed])).targets(),
+            ["created_branch_workflow_policy", "source_ci_profile_policy"]
+        );
+    }
 }
 
 fn workflow_job<'a>(workflow: &'a str, name: &str) -> &'a str {

@@ -46,6 +46,14 @@ remains a failure; the diagnostic path neither retries it nor changes file
 permissions. This keeps operating-system details available for the agent to
 diagnose before proposing a repair (`assets/tools/integration_shards.rs`).
 
+A provider-declared new ordinary branch at the accepted target has no candidate
+delta. Its context verifier still checks complete history, exact commit/tree,
+clean source and the captured target. The constitution workflow runs the same
+Ajv schema recipe, rechecks that identity around execution, and emits no PR
+readiness receipt. Fixtures cover creation metadata, SHA-1/SHA-256 identity,
+changed and unrelated heads, hidden/staged source, missing bases and workflow
+failure propagation. Those fixtures do not establish a live release event result.
+
 ## Agent steering
 
 Validation reports identify this phase, the agent as operator, the entry command,
@@ -108,6 +116,16 @@ the current repository. Missing adapters, unknown repositories/profiles, altered
 workflow contracts, unproved exclusions, or self-dependent validation fail
 explicitly. Profile declarations are reviewed policy and cannot be silently
 updated to match whatever evidence happens to exist.
+
+After source and required governance material are ready, the agent checkpoints
+and commits the candidate, then invokes plain validation. Configured build
+prerequisites and tests belong inside that route. Canonical agent templates in
+`src/decapod/core/assets.rs` forbid a separate manual build or shadow preflight.
+An unreviewed inventory requires reconciliation. A reviewed inventory that
+differs from the running controller's compiled adapters instead reports
+`CONTROLLER_CONTRACT_UNSUPPORTED` and requires an independently supported
+controller. The current runtime does not automatically build or promote a new
+controller to resolve that incompatibility. Neither outcome grants readiness.
 
 The current core profile reports `source_pr_readiness`. Release-only
 four-platform packaging is outside that profile. A passing source report makes
@@ -367,7 +385,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7878f6ed8607d2a1102eb78788025fb7ecdd4c76b313a8bd4107f457e19bd161`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (186 files)
+- Repository signal fingerprint: `a311bb876ab115a084d4baef25da4e9d093491eff1d2241911abda03924d05c7`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (180 files), `tests/` (188 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

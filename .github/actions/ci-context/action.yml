@@ -17,6 +17,9 @@ outputs:
   event:
     description: Verified logical event for the shared CI graph
     value: ${{ steps.context.outputs.event }}
+  no_change:
+    description: Verified ordinary branch creation at the captured accepted tip; never PR readiness
+    value: ${{ steps.context.outputs.no_change }}
   trigger_event:
     description: Actual provider event, preserved through snapshot normalization
     value: ${{ steps.context.outputs.trigger_event }}

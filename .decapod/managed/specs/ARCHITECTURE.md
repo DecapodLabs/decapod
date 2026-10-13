@@ -186,6 +186,13 @@ check profiles. Buildkite is a provider of execution evidence. Its presence
 does not change the ownership of intent, policy, or proof requirements.
 Provider details belong in [VALIDATION.md](VALIDATION.md).
 
+The controller's finite source adapters are separate from the configured
+project's reviewed inventory. `readiness_profile::required_source_catalog`
+checks both before execution selection. A matching declaration cannot authorize
+different compiled workflow or helper semantics; this case returns a typed
+controller-support blocker rather than asking the agent to repin and repeat.
+There is no independently pinned remote controller-bootstrap harness today.
+
 Governed publication requires current readiness and uses a normal non-forced
 push. Remote divergence requires reconciliation and fresh proof. Branch push,
 pull-request creation, merge, packaging, release, and deployment remain
@@ -193,6 +200,13 @@ distinct external outcomes. The human supplies intent and reviews and merges
 the prepared PR; the agent owns the engineering work and validation phase. The
 checked validation push uses narrowly bound authorization rather than a separate
 local operator-approval ceremony.
+
+The dependency-free `assets/tools/ci_event_context.rs` distinguishes a real
+change range from a verified ordinary branch creation at the captured accepted
+tip. Only the latter emits `no_change=true`; workspace/pre-PR and ordinary update
+contexts retain distinct immutable endpoints. The constitution workflow rechecks
+the same accepted commit and tree before and after running its schema command.
+This no-delta execution produces no measured candidate custody receipt.
 
 ## Optional advisory intelligence
 
@@ -266,7 +280,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7878f6ed8607d2a1102eb78788025fb7ecdd4c76b313a8bd4107f457e19bd161`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (186 files)
+- Repository signal fingerprint: `a311bb876ab115a084d4baef25da4e9d093491eff1d2241911abda03924d05c7`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (180 files), `tests/` (188 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

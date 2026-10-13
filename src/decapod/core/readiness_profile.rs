@@ -59,7 +59,7 @@ pub fn reviewed_workflow_digests() -> &'static [(&'static str, &'static str)] {
         ),
         (
             ".github/workflows/constitution-sync.yml",
-            "sha256:36c04f68c23574218f4ea27d03f4d6dab7c6f5b24f18d943f18fdc7cb12d8669",
+            "sha256:1742466d162dff4b654516e451401650fbf5f64ea6aecfc01158d7e371562f50",
         ),
         (
             ".github/workflows/decapod-validate.yml",
@@ -83,7 +83,7 @@ pub fn reviewed_workflow_digests() -> &'static [(&'static str, &'static str)] {
         ),
         (
             ".github/workflows/release.yml",
-            "sha256:440e58f4de5b57bc53944600067ed939b80ad4a3a0b1680d672dd51e49a65a6b",
+            "sha256:ba1382b8e6bdd7cf1ffda70e18202449179ceb6739d52e21a92be5f46606da9d",
         ),
         (
             ".github/workflows/security-audit.yml",
@@ -288,6 +288,7 @@ pub enum PlanningFailure {
     MissingProfile,
     UnknownProfile(String),
     SourceContractChanged,
+    ControllerContractUnsupported(String),
     MissingSource(String),
     UnsupportedSource(String),
     InvalidFacts,
@@ -314,7 +315,11 @@ impl std::fmt::Display for PlanningFailure {
             ),
             Self::SourceContractChanged => write!(
                 f,
-                "PROOF_PROFILE_RECONCILIATION_REQUIRED: source definitions or compiled catalog changed; review inventory and adapters before explicitly updating the declaration"
+                "PROOF_PROFILE_RECONCILIATION_REQUIRED: source inventory differs from the reviewed declaration or the source adapter requires reconciliation; review complete inventory and adapters before explicitly updating the declaration"
+            ),
+            Self::ControllerContractUnsupported(path) => write!(
+                f,
+                "CONTROLLER_CONTRACT_UNSUPPORTED: controller does not support this reviewed source contract at {path}; the declaration matches the discovered inventory, but compiled workflow/helper bytes differ. Rerunning the same controller, repinning configuration or running a manual build cannot resolve this blocker. Use an independently supported controller for this exact contract; preserve the blocker if none is available"
             ),
             Self::MissingBinding(key) => write!(
                 f,
@@ -459,12 +464,14 @@ pub fn required_source_catalog(
     }
     for (path, expected) in reviewed_workflow_digests() {
         if discovered.files.get(*path).map(String::as_str) != Some(*expected) {
-            return Err(PlanningFailure::SourceContractChanged);
+            return Err(PlanningFailure::ControllerContractUnsupported(
+                (*path).into(),
+            ));
         }
     }
     for (path, compiled) in definition_files() {
         if discovered.files.get(path) != Some(&bytes_digest(compiled)) {
-            return Err(PlanningFailure::SourceContractChanged);
+            return Err(PlanningFailure::ControllerContractUnsupported(path.into()));
         }
     }
     let source_digest = discovered.digest()?;

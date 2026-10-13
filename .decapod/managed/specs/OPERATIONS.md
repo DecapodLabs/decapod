@@ -184,6 +184,15 @@ Decapod and confirm completion and verification. The notice alone is not proof.
 Failed migration follows supported backup/restore diagnostics; unresolved
 corruption or unsupported recovery requires human judgment.
 
+Release artifact jobs use `assets/tools/release_cpu.rs` through the scoped
+`.github/scripts/release-build.sh` wrapper. Rust estimates available parallelism
+from runner affinity and accessible CPU quotas; a lower positive runner
+`CARGO_BUILD_JOBS` budget is preserved and discovery failure selects one job.
+Hidden resource limits and memory pressure are not inferred. The ordinary Cargo
+job cap and the four declared artifact targets remain separate from this
+release-job override. Only observed artifact builds can establish a throughput
+improvement; source validation alone makes no four-platform packaging claim.
+
 ## Incident Response
 
 Preserve the failing operation's diagnostics and affected state. Stop dependent
@@ -315,7 +324,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7878f6ed8607d2a1102eb78788025fb7ecdd4c76b313a8bd4107f457e19bd161`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (186 files)
+- Repository signal fingerprint: `a311bb876ab115a084d4baef25da4e9d093491eff1d2241911abda03924d05c7`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (180 files), `tests/` (188 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
