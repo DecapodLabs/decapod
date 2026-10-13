@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "96c53abc62728fc3a54138850e216be5e59a6642",
+    "accepted_commit": "83eea72cf4972409d52febaadb6a02c00cda8451",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -65,6 +65,15 @@
         "question": "How does custody scale when tasks intentionally share an interface or require coordinated changes across workspaces?",
         "status": "open"
       },
+      "claim:project-spec-purpose": {
+        "falsifier": "A non-Decapod fixture acquires a Decapod or provider identity, a narrow task replaces product purpose, or supported refresh rewrites authored material.",
+        "proof_refs": [
+          "tests/project_spec_authoring.rs",
+          "tests/unit/core/project_specs_tests.rs"
+        ],
+        "statement": "Generic specs scaffolding and context extraction preserve the configured whole-project purpose across narrow task work; all Decapod specs describe the full product.",
+        "status": "open"
+      },
       "claim:proof-backed-completion:question:predictive-proof": {
         "decision_impact": "Determines future validation policy and whether additional proof gates are warranted.",
         "id": "predictive-proof",
@@ -93,6 +102,7 @@
         "status": "open"
       },
       "trajectory:13217192dadb3ee3": "No local prerequisite suite run; remote full validation remains required",
+      "trajectory:17669a7d73b8ecb7": "RPC download403 is runner-specific; same pinned URL succeeded on another fresh runner. Policy fixture exit126 OS detail is unknown because stderr was discarded.",
       "trajectory:42a30b6dcb8fd580": "Provider scheduling and ARM execution currently exceed the five-minute full target; only completed comparable runs can establish gain",
       "trajectory:576cf7a5bf4d1081": "Accepted master a56fd2d3 is user merge of release1402; only Cargo package version and changelog changed from d891d81d",
       "trajectory:7d90d3eaf34454b7": "Five-minute end-to-end target remains subject to measured queue and unavoidable execution costs.",
@@ -101,103 +111,59 @@
     }
   },
   "change": {
-    "id": "change_01M4RYSDPVAQMA7FKJC1JHM2JM",
-    "base_commit": "96c53abc62728fc3a54138850e216be5e59a6642",
+    "id": "change_01M4SASNF38E1RXNDPKH0B38H7",
+    "base_commit": "83eea72cf4972409d52febaadb6a02c00cda8451",
     "target_base": "origin/master"
   },
   "claims": {
-    "human-onboarding": {
-      "statement": "README assigns operational validation and Constitution use to agents and gives humans only cargo binstall decapod && decapod init.",
-      "falsifier": "README contains another human command, a validation code block, a historical results section, an arrow chain, or direct human Constitution instructions.",
+    "readme-capability-boundaries": {
+      "statement": "README distinguishes separate-task concurrency from same-PR tool switching, scopes remote execution to validation, and describes Jev as advisory input without code or CI changes.",
+      "falsifier": "Prose promises automatic multi-agent merging, migrated chat memory, authoritative Jev approvals, or remote execution of all Decapod.",
       "status": "supported",
       "proof_refs": [
         "README.md",
-        "readme-human-content-review"
+        "src/decapod/core/decision_provider.rs",
+        "src/decapod/core/todo.rs"
       ]
     },
-    "project-spec-purpose": {
-      "statement": "Generic specs scaffolding and context extraction preserve the configured whole-project purpose across narrow task work; all Decapod specs describe the full product.",
-      "falsifier": "A non-Decapod fixture acquires a Decapod or provider identity, a narrow task replaces product purpose, or supported refresh rewrites authored material.",
-      "status": "open",
+    "readme-reader-path": {
+      "statement": "README preserves the existing section order, visual badges and links while limiting human setup code to cargo binstall decapod && decapod init; it contains no manual validation/Constitution commands or historical results section.",
+      "falsifier": "A changed/missing section or badge, another command block, or a human operational validation/Constitution instruction in README.md.",
+      "status": "supported",
       "proof_refs": [
-        "tests/project_spec_authoring.rs",
-        "tests/unit/core/project_specs_tests.rs"
+        "Independent editorial review and static content review",
+        "README.md"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "readme-product-candidate-1",
-      "summary": "Minimal human README, all eight whole-product specs, generic source-grounded spec generation/context and non-Decapod/narrow-task regressions; existing fixture purposes reconciled; accepted 0.108.1 projections refreshed. Bootstrap only completed; full Buildkite validation pending.",
-      "input_digest": "sha256:d6d0eec73de29cd6fe19099e855d23839caf78eba9b8e8ac40265b0348550ff7",
+      "id": "readme-clarity-1",
+      "summary": "Rewrite README for concrete human product value with reviewed concurrency, validation and Jev boundaries; preserve structure and one-command setup; refresh required0.109.0 projections",
+      "input_digest": "sha256:600cfbe9aa8d2d6e4480a8a7cdef504beda349a946bf64e9493cfc13e2a8f545",
       "proof_refs": [
-        "README.md",
-        "tests/project_spec_authoring.rs",
-        "tests/unit/core/project_specs_tests.rs"
-      ]
-    },
-    {
-      "id": "readme-product-candidate-2",
-      "summary": "Complete product specs and agent-owned validation-phase behavior with build and artifact-consumer regressions; follow source-ready validate COMMIT_AND_RERUN",
-      "input_digest": "sha256:787ec26caa572a75199f9e63c9d5d7e7bf45f8b256bd5ee2d22679ac755b66f2",
-      "proof_refs": [
-        "readme-product-source-ready-validate",
-        "runtime-steering-independent-review"
-      ]
-    },
-    {
-      "id": "readme-product-template-repair-1",
-      "summary": "Repair canonical AGENTS line budget and exercise generated-contract regression; validation owns exact candidate build for projection regeneration",
-      "input_digest": "sha256:59d047b7b4e966fa7861add1344e01734b808b7ce4548aed38f3d344cc094860",
-      "proof_refs": [
-        "readme-product-1098.log",
-        "readme-product-template-source-ready-validate"
-      ]
-    },
-    {
-      "id": "readme-product-fixture-repair-1",
-      "summary": "Repair configured-identity regression fixture using complete real config schema; retain purpose authority and unknown legacy checks",
-      "input_digest": "sha256:2a88a56075b752e32f54dd4ae7da309b4ab27791bd7a64126cc3c3c6b5c169da",
-      "proof_refs": [
-        "GitHub38313886520/job115025944153",
-        "readme-product-fixture-source-ready-validate"
-      ]
-    },
-    {
-      "id": "readme-product-coherent-final-1",
-      "summary": "Regenerate canonical entrypoint with exact validation-built binary and repair purpose/timeout regression fixtures without weakening policy",
-      "input_digest": "sha256:12594dd7a2156c96594addf2eaa8a679bf2bb78009a3b7146293a4278b81bd9a",
-      "proof_refs": [
-        "readme-product-repair-artifact/verification-report.json",
-        "timeout-retry-determinism-proposal/manifest.json"
-      ]
-    },
-    {
-      "id": "readme-pr1406-inventory-diagnostics-1",
-      "summary": "Preserve supervised inventory exit status and bounded execution diagnostics; add exit126/no-retry and output-bound regressions after observed PR failure",
-      "input_digest": "sha256:eece3e261847d5a309bb8b244aa192e573486715a1f30bc76a054ced7438bcbf",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/actions/runs/38318876628/job/115043341975"
+        "README.md"
       ]
     }
   ],
   "intents": {
-    "intent:readme-human-setup": {
+    "intent:readme-clarity": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "No performance integration; no merge/release/deployment/security changes; plain exact-head configured validation gates publication."
+        "README plus required spec and release-projection consistency only; no code, CI, auth, releases or merge."
       ],
       "constraints": [
         "README.md",
-        ".decapod/managed/specs/INTERFACES.md"
+        ".decapod/managed/specs/INTERFACES.md",
+        "required generated release projections"
       ],
       "created_sequence": 1,
-      "id": "intent:readme-human-setup",
+      "id": "intent:readme-clarity",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Remove the README results, arrows and manual agent operations; only cargo binstall decapod && decapod init is human code.",
-      "refined_intent": "Keep a minimal one-command human quickstart, describe agent-owned validation in ordinary prose, remove historical results and direct Constitution instructions, preserve other capabilities and Jev.",
+      "raw_intent": "Give the README legitimate, human-readable prose while keeping its structure and style.",
+      "refined_intent": "Concrete product value, task ownership, same-PR continuity, agent-owned lifecycle and minimal human setup; code-grounded claims and independent editorial review.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -205,12 +171,12 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 60,
+        "file_touch_budget": 20,
         "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Keep human onboarding minimal and whole-product specs source-grounded; preserve project meaning across narrow tasks; codify agent-owned lifecycle steering and validation-phase build/check execution with actionable repair and exact proof; repair all PR1406 CI failures without masking checks or bypassing denied access.",
+      "intent": "Rewrite README prose to communicate whole-product engineering value and accurate multi-agent continuity, preserving existing structure, visuals and links; keep human setup to install/init and ordinary prompting, with no operational validation or Constitution instructions.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -220,502 +186,107 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed bounded integration inventory failure diagnostics: existing invocation, failure, retry, permissions and custody contracts preserved; validation prose updated with diagnostic behavior",
-          "reviewed_code_fingerprint": "4a22c1131f4bdf292132ddd5b0a9a19a786b04652954203254c0541f9b821e1a",
+          "reason": "README prose changes only; code and architectural/security contracts unchanged. Required release-bound projections refreshed by Decapod0.109.0.",
+          "reviewed_code_fingerprint": "a3ffe79fc50f186fc07d685a3846a948c9f57811f8cdf81f0f9f45c90486210e",
           "spec_material_hash": "c14319e9fc027b8dffd23bae88fd64b082e0794fb431f1de6f31dbab091f3db5"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed bounded integration inventory failure diagnostics: existing invocation, failure, retry, permissions and custody contracts preserved; validation prose updated with diagnostic behavior",
-          "reviewed_code_fingerprint": "4a22c1131f4bdf292132ddd5b0a9a19a786b04652954203254c0541f9b821e1a",
-          "spec_material_hash": "31c8a50dcf9a60ca3eb41fdd811eddae3dbaafb14d5fcec99f16f061d3940da6"
+          "reason": "Added the directly requested human-facing README contract: glanceable product prose, one-command onboarding, agent-owned validation, and precise concurrency versus same-PR continuity.",
+          "reviewed_code_fingerprint": "a3ffe79fc50f186fc07d685a3846a948c9f57811f8cdf81f0f9f45c90486210e",
+          "spec_material_hash": "0e2b7fd5d5809891e175594ff7b93abc66d590af5da3c193c1d16415af4a507d"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed bounded integration inventory failure diagnostics: existing invocation, failure, retry, permissions and custody contracts preserved; validation prose updated with diagnostic behavior",
-          "reviewed_code_fingerprint": "4a22c1131f4bdf292132ddd5b0a9a19a786b04652954203254c0541f9b821e1a",
+          "reason": "README prose changes only; code and architectural/security contracts unchanged. Required release-bound projections refreshed by Decapod0.109.0.",
+          "reviewed_code_fingerprint": "a3ffe79fc50f186fc07d685a3846a948c9f57811f8cdf81f0f9f45c90486210e",
           "spec_material_hash": "59f2f1f8a48c50141aad995f25448873a3b13bbf6e7920af210c48c5c9480a8e"
         }
       ],
       "state": "EXECUTING",
-      "stop_conditions": [],
-      "title": "Restore product-level specs and minimal human onboarding",
+      "stop_conditions": [
+        "No PR before exact-head full validation succeeds; stop for missing access or authorization; no merge or unrelated CI/security changes."
+      ],
+      "title": "Make the README clear and useful at a glance",
       "todo_ids": [
-        "bugs_01m4ryrj8c6v7vsv"
+        "docs_01m4saqn58m57xkt"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791846130Z"
+      "updated_at": "1791851737Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "No performance integration; no merge/release/deployment/security changes; plain exact-head configured validation gates publication."
+        "README plus required spec and release-projection consistency only; no code, CI, auth, releases or merge."
       ],
-      "artifact_hash": "sha256:db6a72de383e60cc0939ab2d6a396a94461d46fae9376e54d6fe67e2e7af7f46",
+      "artifact_hash": "sha256:5373f978a7510bac3c7d6433af3038b85e3ba753e678e1aca3d48820444729e8",
       "checks": [
         {
-          "name": "PR1406_RPC",
-          "status": "failed"
-        },
-        {
-          "name": "PR1406_release_policies",
-          "status": "failed"
-        },
-        {
-          "name": "candidate_content_review",
+          "name": "editorial_review",
           "status": "passed"
         },
         {
-          "name": "configured_identity_fixture",
-          "status": "failed"
-        },
-        {
-          "name": "content_review",
-          "status": "passed"
-        },
-        {
-          "name": "diagnostic_patch_review",
-          "status": "passed"
-        },
-        {
-          "name": "full_validate_AA",
-          "status": "failed"
-        },
-        {
-          "name": "source_ready_validation",
-          "status": "failed"
-        },
-        {
-          "name": "standalone_validation",
-          "status": "failed"
-        },
-        {
-          "name": "validation_artifact_custody",
+          "name": "source_claim_review",
           "status": "passed"
         }
       ],
-      "current_phase": "repair",
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:readme-human-setup",
+            "intent_id": "intent:readme-clarity",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:readme-human-setup",
+            "intent_id": "intent:readme-clarity",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:readme-human-setup",
+            "detail": "trajectory:readme-clarity",
             "event_id": "event:4",
-            "intent_id": "intent:readme-human-setup",
+            "intent_id": "intent:readme-clarity",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:readme-human-setup",
-            "event_id": "event:5",
-            "intent_id": "intent:readme-human-setup",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:readme-human-setup",
-            "event_id": "event:6",
-            "intent_id": "intent:readme-human-setup",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:readme-human-setup",
-            "event_id": "event:7",
-            "intent_id": "intent:readme-human-setup",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:readme-human-setup",
-            "event_id": "event:8",
-            "intent_id": "intent:readme-human-setup",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
-          },
-          {
-            "detail": "trajectory:readme-human-setup",
-            "event_id": "event:9",
-            "intent_id": "intent:readme-human-setup",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
-          },
-          {
-            "detail": "trajectory:readme-human-setup",
-            "event_id": "event:10",
-            "intent_id": "intent:readme-human-setup",
-            "kind": "trajectory_step_recorded",
-            "sequence": 10
-          },
-          {
-            "detail": "trajectory:readme-human-setup",
-            "event_id": "event:11",
-            "intent_id": "intent:readme-human-setup",
-            "kind": "trajectory_step_recorded",
-            "sequence": 11
-          },
-          {
-            "detail": "trajectory:readme-human-setup",
-            "event_id": "event:12",
-            "intent_id": "intent:readme-human-setup",
-            "kind": "trajectory_step_recorded",
-            "sequence": 12
-          },
-          {
-            "detail": "trajectory:readme-human-setup",
-            "event_id": "event:13",
-            "intent_id": "intent:readme-human-setup",
-            "kind": "trajectory_step_recorded",
-            "sequence": 13
-          },
-          {
-            "detail": "trajectory:readme-human-setup",
-            "event_id": "event:14",
-            "intent_id": "intent:readme-human-setup",
-            "kind": "trajectory_step_recorded",
-            "sequence": 14
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 14,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "readme-human-setup": {
+          "readme-clarity": {
             "evidence_only": true,
-            "id": "readme-human-setup",
-            "intent_id": "intent:readme-human-setup",
+            "id": "readme-clarity",
+            "intent_id": "intent:readme-clarity",
             "steps": [
               {
-                "action": "product_specs_and_generator",
+                "action": "trajectory.record",
+                "command": "decapod rpc --op specs.refresh",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "User explicitly expanded this PR to whole-product specs and configured-project spec-generation behavior; performance proposals remain separate."
+                  "README.md",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/core/workspace.rs",
+                  "src/decapod/core/decision_provider.rs",
+                  "README.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "Independent editorial and source review approved draft; corrected Jev advisory input and unverified-versus-done state; parent approved final wording with validation-only remote scope."
                 ],
-                "proof_refs": [],
+                "proof_refs": [
+                  "editorial_review",
+                  "source_claim_review"
+                ],
                 "scope": [
                   ".decapod/managed/specs/INTERFACES.md",
-                  "README.md"
+                  "README.md",
+                  "required generated release projections"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "candidate_integration",
-                "command": "cargo build --locked --bin decapod (CLI bootstrap only)",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "src/decapod/core/migration.rs",
-                  "Independent content and generator reviews passed; preserved source maps and patch hashes; all eight authored bodies retained through CLI refresh; existing fixture purpose seeding being reconciled.",
-                  "CLI bootstrap exit 0; initialization proof_pending and full provider validation not yet run. Canonical source inventory unchanged; no performance patches integrated."
-                ],
-                "proof_refs": [
-                  "content_review"
-                ],
-                "scope": [
-                  ".decapod/managed/specs",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "README.md",
-                  "assets",
-                  "docs/agent",
-                  "src",
-                  "tests"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "exact_candidate_checkpoint",
-                "command": "cargo clean -p decapod (authorized disposable package build artifacts only)",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "Accepted release1405/master08681903 fast-forwarded on this same task branch; exact Cargo.toml/root Cargo.lock version-only delta reviewed in the canonical source inventory. CLI bootstrap passed after ENOSPC recovery; full validate remains pending.",
-                  "All existing success fixtures now seed explicit purpose; failure assertions and unknown-purpose guard retained. Independent fixture review passed."
-                ],
-                "proof_refs": [
-                  "candidate_content_review"
-                ],
-                "scope": [
-                  ".decapod/managed/specs",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "AGENTS.md",
-                  "CLAUDE.md",
-                  "CODEX.md",
-                  "GEMINI.md",
-                  "README.md",
-                  "assets",
-                  "docs/agent",
-                  "src",
-                  "tests"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "validation_phase_steering",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "User explicitly requested source-ready plain validation, agent-owned lifecycle work, and runtime codification. Validation remains one phase; no generic execution framework, bootstrap reexecution, provider bypass or autonomous delivery authorization.",
-                  "Branch create and local publication-alignment reset remain held after cancellation/denial; separate source work explicitly resumed."
-                ],
-                "proof_refs": [],
-                "scope": [
-                  ".decapod/managed/specs",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "AGENTS.md",
-                  "CLAUDE.md",
-                  "CODEX.md",
-                  "GEMINI.md",
-                  "README.md",
-                  "assets",
-                  "docs/agent",
-                  "src",
-                  "tests"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "source_ready_checkpoint",
-                "command": "decapod validate --format json",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "readme-product-source-ready-validate: exit 1; COMMIT_AND_RERUN; local_project_checks=not_run_provider_owned; no readiness claimed",
-                  "Independent semantic review of runtime steering and actual prerequisite/build/artifact-consumer regression fixtures; tests remain provider-owned"
-                ],
-                "proof_refs": [
-                  "source_ready_validation"
-                ],
-                "scope": [
-                  ".config/build/decapod.BUILD.bzl",
-                  ".decapod/managed/specs",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "AGENTS.md",
-                  "CLAUDE.md",
-                  "CODEX.md",
-                  "GEMINI.md",
-                  "README.md",
-                  "assets",
-                  "docs/agent",
-                  "docs/agent/api-index.md",
-                  "docs/agent/contribution-conventions.md",
-                  "src",
-                  "src/decapod/core/init_reconciliation",
-                  "src/decapod/core/readiness_profile.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "tests"
-                ],
-                "sequence": 8,
-                "validation_findings": []
-              },
-              {
-                "action": "publication_resumed",
-                "custody_event_id": "event:9",
-                "observations": [
-                  "User explicitly approved resuming current combined candidate push; prior API commit identity aligned only after exact tree/parent verification; all source and history preserved."
-                ],
-                "proof_refs": [],
-                "scope": [
-                  ".config/build/decapod.BUILD.bzl",
-                  ".decapod/managed/specs",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "AGENTS.md",
-                  "CLAUDE.md",
-                  "CODEX.md",
-                  "GEMINI.md",
-                  "README.md",
-                  "assets",
-                  "docs/agent",
-                  "docs/agent/api-index.md",
-                  "docs/agent/contribution-conventions.md",
-                  "src",
-                  "src/decapod/core/init_reconciliation",
-                  "src/decapod/core/readiness_profile.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "tests"
-                ],
-                "sequence": 9,
-                "validation_findings": []
-              },
-              {
-                "action": "template_validation_repair",
-                "custody_event_id": "event:10",
-                "observations": [
-                  "Buildkite1098 and GitHub standalone both report AGENTS.md 121 lines > 120; canonical source compacted without removing guidance, generated-budget regression added",
-                  "Existing controller cannot render newly compiled templates. Source-only checkpoint leaves entrypoints untouched; full-history checker inspects changed entrypoint paths. Use exact validation-built artifact for supported regeneration, then checkpoint and rerun."
-                ],
-                "proof_refs": [
-                  "standalone_validation"
-                ],
-                "scope": [
-                  ".config/build/decapod.BUILD.bzl",
-                  ".decapod/managed/specs",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "AGENTS.md",
-                  "CLAUDE.md",
-                  "CODEX.md",
-                  "GEMINI.md",
-                  "README.md",
-                  "assets",
-                  "docs/agent",
-                  "docs/agent/api-index.md",
-                  "docs/agent/contribution-conventions.md",
-                  "src",
-                  "src/decapod/core/init_reconciliation",
-                  "src/decapod/core/readiness_profile.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "tests"
-                ],
-                "sequence": 10,
-                "validation_findings": []
-              },
-              {
-                "action": "config_fixture_repair",
-                "custody_event_id": "event:11",
-                "observations": [
-                  "Actual Supabase lib run:1069passed,1failed; new hand-written fixture omitted required init settings. Use complete default config with same metadata and explicit successful-load assertion; no production changes or weakened assertions."
-                ],
-                "proof_refs": [
-                  "configured_identity_fixture"
-                ],
-                "scope": [
-                  ".config/build/decapod.BUILD.bzl",
-                  ".decapod/managed/specs",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "AGENTS.md",
-                  "CLAUDE.md",
-                  "CODEX.md",
-                  "GEMINI.md",
-                  "README.md",
-                  "assets",
-                  "docs/agent",
-                  "docs/agent/api-index.md",
-                  "docs/agent/contribution-conventions.md",
-                  "src",
-                  "src/decapod/core/init_reconciliation",
-                  "src/decapod/core/readiness_profile.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "tests"
-                ],
-                "sequence": 11,
-                "validation_findings": []
-              },
-              {
-                "action": "final_validation_repair",
-                "custody_event_id": "event:12",
-                "observations": [
-                  "Buildkite1101 setup artifact exact760e1e98/tree3bb7fb6b verified through provider/archive/custody/log/artifact hash chain; SHA256e27c01544edc5c45ad3b21690162ac70bd1326ad3482ee7f5e8e649a64e322c6. That validation-built binary regenerated AGENTS through init --proof to120lines; prior canonical backup preserved outsideworkspace.",
-                  "Exact corrected CI exposed auth fixture lacking explicit purpose and timeout test racing10s shared deadline. Purpose fixture repaired without changing auth assertions; independently reviewed private retry executor seam makes policy tests deterministic while preserving production limits."
-                ],
-                "proof_refs": [
-                  "validation_artifact_custody"
-                ],
-                "scope": [
-                  ".config/build/decapod.BUILD.bzl",
-                  ".decapod/managed/specs",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "AGENTS.md",
-                  "CLAUDE.md",
-                  "CODEX.md",
-                  "GEMINI.md",
-                  "README.md",
-                  "assets",
-                  "docs/agent",
-                  "docs/agent/api-index.md",
-                  "docs/agent/contribution-conventions.md",
-                  "src",
-                  "src/decapod/core/init_reconciliation",
-                  "src/decapod/core/readiness_profile.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "tests"
-                ],
-                "sequence": 12,
-                "validation_findings": []
-              },
-              {
-                "action": "repair",
-                "custody_event_id": "event:13",
-                "observations": [
-                  "assets/tools/integration_shards.rs",
-                  "tests/integration_sharding_policy.rs",
-                  ".github/workflows/ci.yml",
-                  "https://github.com/DecapodLabs/decapod/actions/runs/38318876628/job/115042069359",
-                  "https://github.com/DecapodLabs/decapod/actions/runs/38318876628/job/115043341975",
-                  "readme-product-coherent-pty.json: actual exit1, public commit GET timeout28 before custody"
-                ],
-                "proof_refs": [
-                  "PR1406_RPC",
-                  "PR1406_release_policies",
-                  "full_validate_AA"
-                ],
-                "scope": [
-                  ".config/build/decapod.BUILD.bzl",
-                  ".decapod/managed/specs",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "AGENTS.md",
-                  "CLAUDE.md",
-                  "CODEX.md",
-                  "GEMINI.md",
-                  "README.md",
-                  "assets",
-                  "docs/agent",
-                  "docs/agent/api-index.md",
-                  "docs/agent/contribution-conventions.md",
-                  "src",
-                  "src/decapod/core/init_reconciliation",
-                  "src/decapod/core/readiness_profile.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "tests"
-                ],
-                "sequence": 13,
-                "validation_findings": [
-                  "RPC download403 is runner-specific; same pinned URL succeeded on another fresh runner. Policy fixture exit126 OS detail is unknown because stderr was discarded."
-                ]
-              },
-              {
-                "action": "repair",
-                "custody_event_id": "event:14",
-                "observations": [
-                  "assets/tools/integration_shards.rs",
-                  "tests/integration_sharding_policy.rs",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "Independent semantic review: fail-closed status preserved, stream excerpts bounded and escaped, exit126/no-retry and oversized-output regressions authored. No local prerequisite test/build executed."
-                ],
-                "proof_refs": [
-                  "diagnostic_patch_review"
-                ],
-                "scope": [
-                  ".config/build/decapod.BUILD.bzl",
-                  ".decapod/managed/specs",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "AGENTS.md",
-                  "CLAUDE.md",
-                  "CODEX.md",
-                  "GEMINI.md",
-                  "README.md",
-                  "assets",
-                  "docs/agent",
-                  "docs/agent/api-index.md",
-                  "docs/agent/contribution-conventions.md",
-                  "src",
-                  "src/decapod/core/init_reconciliation",
-                  "src/decapod/core/readiness_profile.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "tests"
-                ],
-                "sequence": 14,
                 "validation_findings": []
               }
             ]
@@ -723,89 +294,36 @@
         }
       },
       "declared_commands": [
-        "cargo build --locked --bin decapod (0.108.1 bootstrap)",
-        "cargo build --locked --bin decapod (CLI bootstrap only)",
-        "cargo clean -p decapod (authorized disposable package build artifacts only)",
-        "decapod docs build",
-        "decapod init --proof",
-        "decapod init --proof; decapod docs build; decapod rpc --op specs.refresh",
-        "decapod rpc --op context.resolve",
-        "decapod rpc --op specs.refresh",
-        "decapod validate --format json"
+        "decapod rpc --op specs.refresh"
       ],
       "evidence": [
-        "Accepted release1405/master08681903 fast-forwarded on this same task branch; exact Cargo.toml/root Cargo.lock version-only delta reviewed in the canonical source inventory. CLI bootstrap passed after ENOSPC recovery; full validate remains pending.",
-        "Actual Supabase lib run:1069passed,1failed; new hand-written fixture omitted required init settings. Use complete default config with same metadata and explicit successful-load assertion; no production changes or weakened assertions.",
-        "All existing success fixtures now seed explicit purpose; failure assertions and unknown-purpose guard retained. Independent fixture review passed.",
-        "Branch create and local publication-alignment reset remain held after cancellation/denial; separate source work explicitly resumed.",
-        "Buildkite1098 and GitHub standalone both report AGENTS.md 121 lines > 120; canonical source compacted without removing guidance, generated-budget regression added",
-        "Buildkite1101 setup artifact exact760e1e98/tree3bb7fb6b verified through provider/archive/custody/log/artifact hash chain; SHA256e27c01544edc5c45ad3b21690162ac70bd1326ad3482ee7f5e8e649a64e322c6. That validation-built binary regenerated AGENTS through init --proof to120lines; prior canonical backup preserved outsideworkspace.",
-        "CLI bootstrap exit 0; initialization proof_pending and full provider validation not yet run. Canonical source inventory unchanged; no performance patches integrated.",
-        "Exact corrected CI exposed auth fixture lacking explicit purpose and timeout test racing10s shared deadline. Purpose fixture repaired without changing auth assertions; independently reviewed private retry executor seam makes policy tests deterministic while preserving production limits.",
-        "Existing controller cannot render newly compiled templates. Source-only checkpoint leaves entrypoints untouched; full-history checker inspects changed entrypoint paths. Use exact validation-built artifact for supported regeneration, then checkpoint and rerun.",
-        "Independent content and generator reviews passed; preserved source maps and patch hashes; all eight authored bodies retained through CLI refresh; existing fixture purpose seeding being reconciled.",
-        "Independent semantic review of runtime steering and actual prerequisite/build/artifact-consumer regression fixtures; tests remain provider-owned",
-        "Independent semantic review: fail-closed status preserved, stream excerpts bounded and escaped, exit126/no-retry and oversized-output regressions authored. No local prerequisite test/build executed.",
-        "User explicitly approved resuming current combined candidate push; prior API commit identity aligned only after exact tree/parent verification; all source and history preserved.",
-        "User explicitly expanded this PR to whole-product specs and configured-project spec-generation behavior; performance proposals remain separate.",
-        "User explicitly requested source-ready plain validation, agent-owned lifecycle work, and runtime codification. Validation remains one phase; no generic execution framework, bootstrap reexecution, provider bypass or autonomous delivery authorization.",
-        "https://github.com/DecapodLabs/decapod/actions/runs/38318876628/job/115042069359",
-        "https://github.com/DecapodLabs/decapod/actions/runs/38318876628/job/115043341975",
-        "readme-product-coherent-pty.json: actual exit1, public commit GET timeout28 before custody",
-        "readme-product-source-ready-validate: exit 1; COMMIT_AND_RERUN; local_project_checks=not_run_provider_owned; no readiness claimed"
+        "Independent editorial and source review approved draft; corrected Jev advisory input and unverified-versus-done state; parent approved final wording with validation-only remote scope."
       ],
       "inspected_files": [
-        ".github/workflows/ci.yml",
-        "assets/tools/integration_shards.rs",
-        "src/decapod/core/migration.rs",
-        "tests/integration_sharding_policy.rs"
+        "README.md",
+        "src/decapod/core/decision_provider.rs",
+        "src/decapod/core/todo.rs",
+        "src/decapod/core/workspace.rs"
       ],
-      "intent_id": "intent:readme-human-setup",
+      "intent_id": "intent:readme-clarity",
       "modified_files": [
-        ".decapod/managed/specs/VALIDATION.md",
-        "assets/tools/integration_shards.rs",
-        "tests/integration_sharding_policy.rs"
+        ".decapod/managed/specs/INTERFACES.md",
+        "README.md"
       ],
       "next_transitions": [
-        "Checkpoint exact source, publish same work branch, rerun plain validate and follow report",
-        "Repair source diagnostics, checkpoint and run plain validate on the same work branch",
-        "checkpoint coherent exact source; samebranch push; plain full validate and all-proof gate before PR",
-        "exact_candidate_checkpoint",
-        "full_buildkite_validation",
-        "integrate_reviewed_specs_and_generator",
-        "integrate_runtime_steering_and_validate",
-        "narrow_readme_edit",
-        "plain full validate after exact-head branch readback",
-        "plain validate owns corrected exact candidate build and tests",
-        "validate candidate build, verify artifact custody, regenerate and validate coherent final head"
+        "Checkpoint ready source and invoke plain validate"
       ],
       "repo_scope": [
-        ".config/build/decapod.BUILD.bzl",
-        ".decapod/managed/specs",
         ".decapod/managed/specs/INTERFACES.md",
-        "AGENTS.md",
-        "CLAUDE.md",
-        "CODEX.md",
-        "GEMINI.md",
         "README.md",
-        "assets",
-        "docs/agent",
-        "docs/agent/api-index.md",
-        "docs/agent/contribution-conventions.md",
-        "src",
-        "src/decapod/core/init_reconciliation",
-        "src/decapod/core/readiness_profile.rs",
-        "src/decapod/core/validation_runtime.rs",
-        "tests"
+        "required generated release projections"
       ],
-      "run_id": "readme-human-setup",
+      "run_id": "readme-clarity",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m4ryrj8c6v7vsv",
+      "task_id": "docs_01m4saqn58m57xkt",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "RPC download403 is runner-specific; same pinned URL succeeded on another fresh runner. Policy fixture exit126 OS detail is unknown because stderr was discarded."
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {
