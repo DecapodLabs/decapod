@@ -324,6 +324,13 @@ Policy approvals retain exact action/target scope and expiry; category approval
 and risk-zone approval are independent gates. No provider or approval record
 expands Decapod's control to commands the agent executes outside its interfaces.
 
+Configured validation uses existing authority for its exact non-forced workspace
+branch push, including a supported retry whose outcome can be safely rechecked.
+Agent guidance explicitly avoids asking for that same permission again. It still
+requires renewed authority after explicit cancellation or a material scope change,
+and it preserves access and authorization denials. Source and accepted-target
+checks precede reuse; guidance is not an authorization receipt.
+
 ## Compatibility Matrix
 
 Compatibility is established by the exposed operation and versioned data
@@ -343,7 +350,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `35a18f08b5f87d2c58f80f66a51ee7fba88d27aa4954978d723135dee3b54a1e`
+- Repository signal fingerprint: `c33bc58905862223bd336a0cb676997c4d9c7e5c779a4ebf94a3d265fe78b913`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (182 files), `tests/` (188 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
