@@ -15,6 +15,14 @@ Human setup is `cargo binstall decapod && decapod init` in the project, followed
 by a task given to the person's coding agent. The README keeps this path short.
 Operational commands belong in the agent contract and agent documentation.
 
+The human-facing README is a brief product overview: its existing visual layout
+and section order make capabilities easy to scan, while the introduction
+explains agent-owned engineering work. It distinguishes parallel owned tasks
+from continuing one pull request in another tool. Validation stays in prose as
+an agent responsibility; its optional remote execution applies to that phase,
+not to Decapod as a whole. The README does not add operating instructions or
+historical proof reports to the single-command setup path.
+
 Agents discover the installed interface with `capabilities`, ingest its command
 contracts with `docs ingest`, and retrieve engineering guidance with
 `constitution get` or constitution search. `docs` serves `docs/agent/`; the
@@ -302,7 +310,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4a22c1131f4bdf292132ddd5b0a9a19a786b04652954203254c0541f9b821e1a`
+- Repository signal fingerprint: `a3ffe79fc50f186fc07d685a3846a948c9f57811f8cdf81f0f9f45c90486210e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (21 files), `docs/` (1 files), `src/` (180 files), `tests/` (186 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -8,7 +8,7 @@
 <p align="center">
   Work in Cursor, Claude Code, Codex, Antigravity, Grok, or your preferred coding agent.
   Decapod governs the work while you keep using the same tools.
-  Decapod can use <a href="https://docs.typesafe.ai/introduction">Jev</a> for System 1 decisions.
+  Decapod can use <a href="https://docs.typesafe.ai/introduction">Jev</a> for System 1 input.
 </p>
 
 <p align="center">
@@ -20,19 +20,18 @@
 </p>
 
 
-Decapod keeps an agent's work tied to the request and the repository's required
-checks. The agent records its understanding, makes the change, runs validation,
-and repairs failures it can resolve. Missing proof and decisions that need a
-human remain visible blockers.
+Tell your agent what you want to build. Decapod helps it turn that request into
+a plan and keeps the work tied to your requirements as the code changes.
+The agent handles the engineering, checks its work, and brings unresolved
+decisions back to you.
 
-What was asked, what was understood, what changed, and what was proven stays
-with the project, connecting human intent, agent work, tool execution and the
-artifacts prepared for delivery. Another agent or reviewer can pick up those
-records after the original conversation ends.
+Run agents in parallel on separate tasks, or switch agents and tools during the
+same pull request. Plans and decisions stay in the repository, so the next agent
+can continue from recorded work without relying on the previous chat.
 
 ## Quick start
 
-Run this in your project, then open your coding agent and give it a task.
+Run this in your project, then open your coding agent and tell it what you want to build.
 
 ```bash
 cargo binstall decapod && decapod init
@@ -40,44 +39,42 @@ cargo binstall decapod && decapod init
 
 ## Capabilities
 
-1. **Review what the agent understood.** Agent-authored specifications make the request, scope, and expected behavior available for review.
-2. **Agents get relevant context.** Scoped context points to code and documentation with their sources.
-3. **Concurrent tasks stay separate.** Exclusive task claims establish ownership; isolated workspaces separate changes.
-4. **Work continues across sessions.** Recorded intent, decisions, changes, and evidence support handoff to another agent.
-5. **Project rules govern agent work.** Explicit boundaries and project overrides govern the work and expose conflicts that need a decision.
-6. **Review the proof.** Decapod requires deterministic verification for completion; Jev can add advisory input.
+1. **Catch misunderstandings early.** Project specs record the intended behavior. A plan gives each change a clear scope before the agent starts implementing it.
+2. **Give agents useful context.** Agents retrieve relevant project guidance with source references, including the repository's own requirements.
+3. **Run agents in parallel.** Task claims make ownership explicit. Overlap checks and isolated workspaces help keep concurrent changes separate.
+4. **Continue the same PR in another tool.** The next agent can use the recorded plan, decisions and work history to pick up where work stopped.
+5. **Apply your project’s rules.** Agents consult engineering guidance as they plan and build. Conflicts that need your decision stay visible.
+6. **Know what has been checked.** Built-in validation ties results to the current change and the project's required checks. Missing required proof keeps the work unverified; Jev can add advisory input.
 
 ## How it works
 
-Decapod is a repo-native governance kernel. The agent interprets the request,
-plans the work, writes code and specifications, configures builds, tests and CI
-as needed, and gathers evidence. Decapod steers that work through the project's
-rules and recorded state. It checks invariants and blocks governed publication
-when required conditions remain unsatisfied.
+Decapod is a Rust CLI that agents use throughout development. It reads the
+project's configuration and recorded work, checks the relevant requirements, and
+returns context or a next step. The agent writes the code and operates the
+project's tools, including configuring builds and CI when needed.
 
-Decapod runs on demand, without a daemon. Agents call it before inference,
-while coordinating work, at validation boundaries, and before publication.
-Durable state lives in the repository:
+Each call runs and exits. There is no background service to keep alive. The
+repository keeps the working record:
 
-- `.decapod/governance.json` records the plan, trajectory, claims, and validation
-- `.decapod/managed/specs/` holds the agent's reviewable understanding of the project
-- `.decapod/workspaces/` separates task execution from the main checkout
-- `.decapod/config.toml` describes the project and its configuration
-- `.decapod/OVERRIDE.md` holds project-specific instructions
+- `.decapod/governance.json` holds the plan, work history, claims and validation results
+- `.decapod/managed/specs/` describes the project's purpose, architecture and behavior
+- `.decapod/workspaces/` gives tasks separate checkouts
+- `.decapod/config.toml` holds project and validation settings
+- `.decapod/OVERRIDE.md` records project-specific engineering instructions
 
-Decapod runs locally by default. You keep your coding agent, review process,
-and project tracker. Its checks cover the configured requirements; they cannot
-establish correctness beyond that scope or control commands an agent runs
-outside Decapod.
+The validation pipeline runs locally by default and can use remote Buildkite
+preflight when configured. You keep your coding tools, tracker and review
+process. Validation covers the configured requirements; Decapod cannot govern commands an agent runs
+outside its workflow.
 
 [Governed execution architecture](docs/architecture/governed-execution.md) ·
 [Configuration reference](docs/book/src/reference/config-toml.md)
 
 ## The Constitution
 
-Decapod includes engineering guidance for architecture, security,
-performance, research, and testing. Agents use it to shape their approach before
-implementation. Project overrides make local requirements explicit.
+Decapod includes engineering guidance that agents consult before and during
+implementation, covering areas such as architecture, security and testing.
+Project overrides add your local requirements.
 
 ## Documentation
 
