@@ -149,6 +149,11 @@
       "id": "readme-clarity-2",
       "summary": "Review and reconcile the accepted0.109.0 root package version-only proof inventory, following actual validation report; no adapter or coverage change.",
       "input_digest": "sha256:381279c3ca69bb9e8437d5f43e8f84c5e056f4852563aa2b04d6acaf3317845f"
+    },
+    {
+      "id": "readme-clarity-3",
+      "summary": "Clarify CONTRIBUTING and SECURITY alongside README; preserve agent-owned verification, private reporting expectations and implemented security limits.",
+      "input_digest": "sha256:1d2fe022076db4df6c034c0341aab11fe0cb068493dae9983472d2418fe6fd6f"
     }
   ],
   "intents": {
@@ -181,7 +186,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Rewrite README prose to communicate whole-product engineering value and accurate multi-agent continuity, preserving existing structure, visuals and links; keep human setup to install/init and ordinary prompting, with no operational validation or Constitution instructions.",
+      "intent": "Rewrite README, CONTRIBUTING and SECURITY in clear human prose: preserve README structure and visuals, show whole-product value, keep human setup minimal and engineering agent-owned, and preserve accurate security boundaries and private reporting commitments.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -191,23 +196,23 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "README prose clarification and explicit accepted-release version-only source inventory reconciliation do not alter this contract.",
+          "reason": "Human documentation clarification and accepted release declaration reconciliation do not change product architecture or provider execution.",
           "reviewed_code_fingerprint": "a3ffe79fc50f186fc07d685a3846a948c9f57811f8cdf81f0f9f45c90486210e",
           "spec_material_hash": "c14319e9fc027b8dffd23bae88fd64b082e0794fb431f1de6f31dbab091f3db5"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Human README interface now states the approved glanceable product overview, single-command setup, owned-task concurrency and same-PR continuity, with validation as an agent phase.",
+          "reason": "Documented human README and contribution interfaces, agent-owned engineering/validation, and minimal human setup.",
           "reviewed_code_fingerprint": "a3ffe79fc50f186fc07d685a3846a948c9f57811f8cdf81f0f9f45c90486210e",
-          "spec_material_hash": "0e2b7fd5d5809891e175594ff7b93abc66d590af5da3c193c1d16415af4a507d"
+          "spec_material_hash": "aa92b7139b91893a6366b4f88d5b3c1692d291301e52437cefe48043ac24b791"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "README prose clarification and explicit accepted-release version-only source inventory reconciliation do not alter this contract.",
+          "reason": "Documented root security guidance scope, existing private reporting expectation, no invented service promises, and owner-defined credential lifecycle.",
           "reviewed_code_fingerprint": "a3ffe79fc50f186fc07d685a3846a948c9f57811f8cdf81f0f9f45c90486210e",
-          "spec_material_hash": "59f2f1f8a48c50141aad995f25448873a3b13bbf6e7920af210c48c5c9480a8e"
+          "spec_material_hash": "b366e1c5fe36af5413bcf7594357a8fc111d6f8f73c0e55f1b873af7c2898a17"
         }
       ],
       "state": "EXECUTING",
@@ -220,13 +225,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791852046Z"
+      "updated_at": "1791852266Z"
     },
     "trajectory": {
       "active_boundaries": [
         "README plus required spec and release-projection consistency only; no code, CI, auth, releases or merge."
       ],
-      "artifact_hash": "sha256:6699ea0622f58a70f71f158b4ca11b734e0de66cb4155ac0bcd0919fe54d133c",
+      "artifact_hash": "sha256:c1097a487aa60190a2aaec4b0e744d12266c1a6717dd62a961ce5334ebb50700",
       "checks": [
         {
           "name": "accepted-release-source-review",
@@ -241,11 +246,23 @@
           "status": "failed"
         },
         {
+          "name": "reconciled-validation",
+          "status": "failed"
+        },
+        {
+          "name": "security-source-review",
+          "status": "passed"
+        },
+        {
           "name": "source_claim_review",
+          "status": "passed"
+        },
+        {
+          "name": "three-docs-editorial-review",
           "status": "passed"
         }
       ],
-      "current_phase": "repair",
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
@@ -273,10 +290,31 @@
             "intent_id": "intent:readme-clarity",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:readme-clarity",
+            "event_id": "event:6",
+            "intent_id": "intent:readme-clarity",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
+          },
+          {
+            "detail": "trajectory:readme-clarity",
+            "event_id": "event:7",
+            "intent_id": "intent:readme-clarity",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
+          },
+          {
+            "detail": "trajectory:readme-clarity",
+            "event_id": "event:8",
+            "intent_id": "intent:readme-clarity",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "readme-clarity": {
@@ -329,6 +367,63 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "authoring",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Actual second validate exit1 SNAPSHOT_UPLOAD_INCOMPLETE: frozen local tags lacked newly published v0.109.0. Fetched existing remote tag history without publishing or replacing tags. User expanded same PR to CONTRIBUTING and SECURITY before preflight began."
+                ],
+                "proof_refs": [
+                  "reconciled-validation"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "README.md",
+                  "required generated release projections"
+                ],
+                "sequence": 6,
+                "validation_findings": []
+              },
+              {
+                "action": "review",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "CONTRIBUTING.md",
+                  "SECURITY.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "Verified actual architecture/SECURITY and architecture/SECRETS nodes in assets/constitution.json; old core/SECURITY reference nonexistent. Existing private reporting route preserved without inventing address or SLA. Public security page fetched200 but exposes no reporting form; not claimed enabled/disabled. All contribution reference paths exist. No manual validation or access-token setup recipes remain."
+                ],
+                "proof_refs": [
+                  "security-source-review"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "README.md",
+                  "README.md, CONTRIBUTING.md, SECURITY.md, directly related authored interface/security specs, and required generated consistency; no runtime, provider, credential or distribution changes",
+                  "required generated release projections"
+                ],
+                "sequence": 7,
+                "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "Independent editorial reviewer read final README, CONTRIBUTING, SECURITY and approved clarity, factual boundaries, preserved policies, no unsupported reporting promises. Final contribution prose simplified to proposed change and target branch. All project builds and tests remain owned by plain validate."
+                ],
+                "proof_refs": [
+                  "three-docs-editorial-review"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "README.md",
+                  "README.md, CONTRIBUTING.md, SECURITY.md, directly related authored interface/security specs, and required generated consistency; no runtime, provider, credential or distribution changes",
+                  "required generated release projections"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -338,8 +433,11 @@
         "decapod rpc --op specs.refresh"
       ],
       "evidence": [
+        "Actual second validate exit1 SNAPSHOT_UPLOAD_INCOMPLETE: frozen local tags lacked newly published v0.109.0. Fetched existing remote tag history without publishing or replacing tags. User expanded same PR to CONTRIBUTING and SECURITY before preflight began.",
         "Independent editorial and source review approved draft; corrected Jev advisory input and unverified-versus-done state; parent approved final wording with validation-only remote scope.",
-        "Plain validate reported PROOF_PROFILE_RECONCILIATION_REQUIRED; preserved initial-validate.json and exit1. Explicit review compared all76 canonical entries: accepted83eea72 only changes root package version0.108.1 to0.109.0 in Cargo.toml/Cargo.lock; dependency list and every adapter/workflow unchanged. Updated reviewed declaration only, preserving required coverage."
+        "Independent editorial reviewer read final README, CONTRIBUTING, SECURITY and approved clarity, factual boundaries, preserved policies, no unsupported reporting promises. Final contribution prose simplified to proposed change and target branch. All project builds and tests remain owned by plain validate.",
+        "Plain validate reported PROOF_PROFILE_RECONCILIATION_REQUIRED; preserved initial-validate.json and exit1. Explicit review compared all76 canonical entries: accepted83eea72 only changes root package version0.108.1 to0.109.0 in Cargo.toml/Cargo.lock; dependency list and every adapter/workflow unchanged. Updated reviewed declaration only, preserving required coverage.",
+        "Verified actual architecture/SECURITY and architecture/SECRETS nodes in assets/constitution.json; old core/SECURITY reference nonexistent. Existing private reporting route preserved without inventing address or SLA. Public security page fetched200 but exposes no reporting form; not claimed enabled/disabled. All contribution reference paths exist. No manual validation or access-token setup recipes remain."
       ],
       "inspected_files": [
         "Cargo.lock",
@@ -353,7 +451,10 @@
       "modified_files": [
         ".decapod/config.toml",
         ".decapod/managed/specs/INTERFACES.md",
-        "README.md"
+        ".decapod/managed/specs/SECURITY.md",
+        "CONTRIBUTING.md",
+        "README.md",
+        "SECURITY.md"
       ],
       "next_transitions": [
         "Checkpoint ready source and invoke plain validate"
@@ -361,6 +462,7 @@
       "repo_scope": [
         ".decapod/managed/specs/INTERFACES.md",
         "README.md",
+        "README.md, CONTRIBUTING.md, SECURITY.md, directly related authored interface/security specs, and required generated consistency; no runtime, provider, credential or distribution changes",
         "required generated release projections"
       ],
       "run_id": "readme-clarity",

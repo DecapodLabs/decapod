@@ -1,41 +1,48 @@
 # Security
 
-Decapod takes security seriously. This document provides an overview of our security practices and guidance for agents operating within the Decapod environment.
+Report vulnerabilities privately, and keep credentials out of source code and
+reports.
+
+Decapod checks work performed through its governed workflow. Agents and tools
+still run with the permissions granted by their host environment. See the
+[security specification](.decapod/managed/specs/SECURITY.md) for the implemented
+controls and their limits.
 
 ## For Agents
 
-The canonical security contract is embedded in `constitution.json#core/SECURITY`.
+Agents follow the [repository contract](AGENTS.md) and the security guidance in
+the [embedded constitution](assets/constitution.json), including
+`architecture/SECURITY` and `architecture/SECRETS`.
 
-This document is binding. All agents must follow the security principles outlined therein, including:
-- Credential handling (never log, never commit, always rotate)
-- Git security (signed commits, verified remotes)
-- CI/CD security (OIDC, short-lived tokens)
-- Supply chain integrity (dependency audit, reproducible builds)
+Before changing authentication, permissions, or secret handling, identify the
+affected trust boundary and how the change will be checked. Bring unresolved
+security decisions to the human responsible for the work.
 
 ## Reporting Security Issues
 
-For security vulnerabilities in Decapod itself:
-- **Do not** open a public GitHub issue
-- Contact the maintainers directly
-- Provide detailed reproduction steps
+Contact the maintainers directly through a private channel. Do not publish
+vulnerability details in a GitHub issue or pull request.
+
+Include:
+
+- The affected version or commit
+- Steps to reproduce the problem and its likely impact
+- Relevant logs or a minimal example, with credentials and private data removed
 
 ## Security Principles Summary
 
-| Principle | Description |
-|-----------|-------------|
-| **Zero Trust** | Never trust, always verify |
-| **Defense in Depth** | Layered controls, assume breach |
-| **Least Privilege** | Minimum access required |
-| **Fail Secure** | Default deny, error toward safety |
-| **Complete Mediation** | Every access checked |
+- Validate untrusted input at the boundary where it enters the system
+- Use the minimum permissions needed for the task
+- Check authorization for each protected operation
+- Keep independent safeguards where a single failure could expose data or access
+- Leave work blocked when a required security check cannot be completed
 
 ## Credential Handling
 
-When handling credentials as an agent:
-1. **Never** log credentials to any output
-2. **Never** commit credentials to source control
-3. **Always** use environment variables or secrets management
-4. **Always** rotate credentials between sessions
-5. **Always** revoke credentials when work is complete
+- Never commit credentials or include them in logs, screenshots, issues, or pull requests
+- Use supported environment-based configuration or secret storage; keep secrets out of tracked configuration files
+- Follow the credential owner's expiry and rotation policy
+- Revoke temporary access when it is no longer needed, and rotate or revoke exposed credentials promptly
 
-Violations of these principles are constitutional breaches requiring immediate remediation.
+If a credential is exposed, notify its owner and address the exposure before
+continuing the affected work.

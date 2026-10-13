@@ -13,6 +13,13 @@ cannot establish correctness beyond the required proof or protect state from a
 malicious process with the same operating-system authority. A repository owner,
 root account and any explicitly trusted storage group remain trusted principals.
 
+The root `SECURITY.md` presents these limits and the existing private reporting
+expectation in concise contributor-facing prose. Reports go privately to the
+maintainers with affected versions, reproduction steps and sanitized evidence.
+The document makes no response-time, bounty or supported-version promise. Its
+credential guidance follows the owner's lifecycle and rotation policy, including
+revocation of temporary access and response to exposure.
+
 ## Trust-Boundary Inventory
 
 Agents evaluate each incoming prompt with the side-effect-free `decapod eval`
