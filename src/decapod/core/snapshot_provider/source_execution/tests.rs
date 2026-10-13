@@ -27,6 +27,7 @@ fn expected() -> SourceExpectation {
         ),
         artifact_source_paths: Default::default(),
         execution_mode: "source_checkout".into(),
+        executor: None,
     }
 }
 fn log(path: &str, data: &[u8]) -> Value {
@@ -47,6 +48,18 @@ fn fixture_for(e: SourceExpectation) -> BTreeMap<String, Vec<u8>> {
         &json!([{"program":program,"executable_sha256":exe,"version_args":["--version"],"exit_code":0,"signal":null,"success":true,"stdout_sha256":hash(version.as_bytes()),"stdout_bytes":22,"stderr_sha256":hash(b""),"stderr_bytes":0}]),
     );
     let mut prep = json!({"schema":"decapod.source-ci.preparation.v1","authenticated":false,"complete_pr_profile":false,"preparation_complete":true,"workflow":e.workflow,"job":e.job,"check":e.check,"matrix":null,"platform":e.platform,"base":e.base,"head":e.head,"snapshot":e.snapshot,"execution_revision":e.execution_revision,"tree":e.tree,"provider":e.provider,"run_id":e.run_id,"run_attempt":e.run_attempt,"job_id":e.job_id,"step_key":e.step_key,"profile_digest":e.profile_digest,"invocation_digest":hash(&e.invocations),"toolchain_digest":hash(&toolchain),"context_digest":hash(&context),"executor_digest":hash(b"executor")});
+    if let Some(executor) = &e.executor {
+        prep["schema"] = "decapod.source-ci.preparation.v2".into();
+        prep["execution_context"] = json!({
+            "schema": "decapod.source-ci.dual-root.v1",
+            "executor_revision": executor.revision,
+            "executor_tree": executor.tree,
+            "executor_profile_digest": executor.profile_digest,
+            "subject_revision": e.execution_revision,
+            "subject_tree": e.tree,
+            "executor_closure_digest": executor.profile_digest,
+        });
+    }
     // Count from the actual fixture stream, never a duplicated invented length.
     let mut tc = value(&toolchain).unwrap();
     tc[0]["stdout_bytes"] = (version.len() as u64).into();
@@ -114,6 +127,13 @@ fn fixture_for(e: SourceExpectation) -> BTreeMap<String, Vec<u8>> {
     ] {
         obj.insert(k.into(), v);
     }
+    if let Some(executor) = &e.executor {
+        obj.insert("schema".into(), "decapod.source-ci.execution.v3".into());
+        obj.insert(
+            "final_executor_closure_digest".into(),
+            executor.profile_digest.clone().into(),
+        );
+    }
     files.insert(
         format!("{}/execution/execution.json", e.check),
         bytes(&execution),
@@ -156,15 +176,202 @@ fn actual_command_logs_chain_and_independent_recipe_required() {
         }
     ));
 }
+fn dual_root_expected() -> SourceExpectation {
+    let mut e = expected();
+    // Accepted-base executor R, candidate H and execution subject V differ.
+    e.execution_revision = e.snapshot.clone();
+    e.profile_digest = hash(b"independently reviewed executor profile");
+    e.executor = Some(ExecutorExpectation {
+        revision: e.base.clone(),
+        tree: "f".repeat(40),
+        profile_digest: e.profile_digest.clone(),
+    });
+    e
+}
+#[test]
+fn dual_root_execution_requires_independently_expected_executor_and_subject() {
+    let e = dual_root_expected();
+    let files = ArtifactFiles::fixture(ORIGIN, fixture_for(e.clone()));
+    let p = verify_preparation(&files, &e, policy).unwrap();
+    let x = verify_execution(&files, &p).unwrap();
+    assert_eq!(x.preparation_digest(), p.preparation_digest());
+    assert_eq!(x.invocation_digest(), hash(&e.invocations));
+    assert!(x.artifacts().is_empty());
+    let mut single_root = e.clone();
+    single_root.executor = None;
+    assert!(verify_preparation(&files, &single_root, policy).is_err());
+    let legacy = ArtifactFiles::fixture(ORIGIN, fixture_for(single_root));
+    assert!(verify_preparation(&legacy, &e, policy).is_err());
+}
+#[test]
+fn dual_root_context_is_exact_and_bound_in_each_phase() {
+    let e = dual_root_expected();
+    for phase in ["preparation", "execution"] {
+        for case in 0..16 {
+            let mut content = fixture_for(e.clone());
+            let path = format!("fmt/{phase}/{phase}.json");
+            mutate(&mut content, &path, |v| {
+                let context = &mut v["execution_context"];
+                match case {
+                    0 => context["executor_revision"] = e.head.clone().into(),
+                    1 => context["executor_tree"] = e.tree.clone().into(),
+                    2 => context["executor_profile_digest"] = hash(b"substitute profile").into(),
+                    3 => context["executor_closure_digest"] = hash(b"substitute closure").into(),
+                    4 => context["subject_revision"] = e.head.clone().into(),
+                    5 => context["subject_tree"] = "0".repeat(40).into(),
+                    6 => context["schema"] = "decapod.source-ci.dual-root.v2".into(),
+                    7 => context["executor_revision"] = 123.into(),
+                    8 => context["unknown_field"] = true.into(),
+                    9 => *context = Value::Null,
+                    10 => *context = json!([]),
+                    11 => {
+                        context.as_object_mut().unwrap().remove("executor_tree");
+                    }
+                    12 => {
+                        v.as_object_mut().unwrap().remove("execution_context");
+                    }
+                    13 => v["head"] = "0".repeat(40).into(),
+                    14 => v["execution_revision"] = e.head.clone().into(),
+                    _ => v["profile_digest"] = hash(b"substitute source profile").into(),
+                }
+            });
+            let files = ArtifactFiles::fixture(ORIGIN, content);
+            if phase == "preparation" {
+                assert!(
+                    verify_preparation(&files, &e, policy).is_err(),
+                    "accepted preparation context mutation {case}"
+                );
+            } else {
+                let p = verify_preparation(&files, &e, policy).unwrap();
+                assert!(
+                    verify_execution(&files, &p).is_err(),
+                    "accepted execution context mutation {case}"
+                );
+            }
+        }
+    }
+}
+#[test]
+fn executor_expectation_cannot_be_replaced_by_self_consistent_receipts() {
+    let expected = dual_root_expected();
+    for field in ["revision", "tree", "profile_digest"] {
+        let mut forged = expected.clone();
+        let executor = forged.executor.as_mut().unwrap();
+        match field {
+            "revision" => executor.revision = "0".repeat(40),
+            "tree" => executor.tree = "1".repeat(40),
+            _ => executor.profile_digest = hash(b"self-authorized executor"),
+        }
+        forged.profile_digest = executor.profile_digest.clone();
+        let files = ArtifactFiles::fixture(ORIGIN, fixture_for(forged));
+        assert!(verify_preparation(&files, &expected, policy).is_err());
+    }
+    for field in ["revision", "tree", "profile_digest"] {
+        let mut malformed = expected.clone();
+        let executor = malformed.executor.as_mut().unwrap();
+        match field {
+            "revision" => executor.revision = "HEAD".into(),
+            "tree" => executor.tree = String::new(),
+            _ => executor.profile_digest = "sha256:unbound".into(),
+        }
+        let files = ArtifactFiles::fixture(ORIGIN, fixture_for(malformed.clone()));
+        assert!(verify_preparation(&files, &malformed, policy).is_err());
+    }
+    let mut inconsistent = expected.clone();
+    inconsistent.profile_digest = hash(b"different source recipe profile");
+    let files = ArtifactFiles::fixture(ORIGIN, fixture_for(inconsistent.clone()));
+    assert!(verify_preparation(&files, &inconsistent, policy).is_err());
+}
+#[test]
+fn dual_root_execution_requires_final_executor_closure() {
+    let e = dual_root_expected();
+    for closure in [
+        None,
+        Some(Value::Null),
+        Some(hash(b"changed closure").into()),
+    ] {
+        let mut content = fixture_for(e.clone());
+        mutate(&mut content, "fmt/execution/execution.json", |v| {
+            let obj = v.as_object_mut().unwrap();
+            obj.remove("final_executor_closure_digest");
+            if let Some(closure) = closure {
+                obj.insert("final_executor_closure_digest".into(), closure);
+            }
+        });
+        let files = ArtifactFiles::fixture(ORIGIN, content);
+        let p = verify_preparation(&files, &e, policy).unwrap();
+        assert!(verify_execution(&files, &p).is_err());
+    }
+}
+#[test]
+fn dual_root_preparation_cannot_assert_final_executor_closure() {
+    let e = dual_root_expected();
+    for closure in [Value::Null, e.profile_digest.clone().into()] {
+        let mut content = fixture_for(e.clone());
+        mutate(&mut content, "fmt/preparation/preparation.json", |v| {
+            v["final_executor_closure_digest"] = closure;
+        });
+        let files = ArtifactFiles::fixture(ORIGIN, content);
+        assert!(verify_preparation(&files, &e, policy).is_err());
+    }
+}
+#[test]
+fn source_custody_rejects_mixed_envelope_versions_and_legacy_context_fields() {
+    for e in [expected(), dual_root_expected()] {
+        for phase in ["preparation", "execution"] {
+            let schemas = if phase == "preparation" {
+                [
+                    "decapod.source-ci.preparation.v1",
+                    "decapod.source-ci.preparation.v2",
+                ]
+            } else {
+                [
+                    "decapod.source-ci.execution.v2",
+                    "decapod.source-ci.execution.v3",
+                ]
+            };
+            let opposite = if e.executor.is_some() {
+                schemas[0]
+            } else {
+                schemas[1]
+            };
+            let mut content = fixture_for(e.clone());
+            let path = format!("fmt/{phase}/{phase}.json");
+            mutate(&mut content, &path, |v| v["schema"] = opposite.into());
+            let files = ArtifactFiles::fixture(ORIGIN, content);
+            if phase == "preparation" {
+                assert!(verify_preparation(&files, &e, policy).is_err());
+            } else {
+                let p = verify_preparation(&files, &e, policy).unwrap();
+                assert!(verify_execution(&files, &p).is_err());
+            }
+        }
+    }
+    for phase in ["preparation", "execution"] {
+        for field in ["execution_context", "final_executor_closure_digest"] {
+            let mut content = fixture();
+            let path = format!("fmt/{phase}/{phase}.json");
+            // Null is still a present field; legacy receipts must omit it.
+            mutate(&mut content, &path, |v| v[field] = Value::Null);
+            let files = ArtifactFiles::fixture(ORIGIN, content);
+            if phase == "preparation" {
+                assert!(verify_preparation(&files, &expected(), policy).is_err());
+            } else {
+                let p = verify_preparation(&files, &expected(), policy).unwrap();
+                assert!(verify_execution(&files, &p).is_err());
+            }
+        }
+    }
+}
 #[test]
 fn trusted_preparation_policy_is_mandatory_and_may_deny() {
-    let files = ArtifactFiles::fixture(ORIGIN, fixture());
-    assert!(
-        verify_preparation(&files, &expected(), |_| Err(invalid(
-            "nested toolchain unsupported"
-        )))
-        .is_err()
-    );
+    for e in [expected(), dual_root_expected()] {
+        let files = ArtifactFiles::fixture(ORIGIN, fixture_for(e.clone()));
+        assert!(
+            verify_preparation(&files, &e, |_| Err(invalid("nested toolchain unsupported")))
+                .is_err()
+        );
+    }
 }
 #[test]
 fn independent_recipe_and_provider_identity_cannot_be_observed_defaults() {

@@ -943,6 +943,8 @@ pub fn run_check(
             let mut command = Command::new(invocation.program);
             command
                 .args(&invocation.args)
+                .env("SOURCE_CI_EXECUTOR_ROOT", fs::canonicalize(repo)?)
+                .env("SOURCE_CI_PROFILE_EXECUTABLE", env::current_exe()?)
                 .current_dir(repo.join(invocation.cwd));
             for (key, value) in &invocation.env {
                 if let Some(value) = value {
@@ -1138,6 +1140,15 @@ fn main_result() -> io::Result<bool> {
             "--base" if base.is_none() => base = Some(value),
             "--head" if head.is_none() => head = Some(value),
             "--check" if id.is_none() => id = Some(value),
+            "--execution-context"
+            | "--executor-root"
+            | "--executor-revision"
+            | "--executor-tree"
+                if ["run-evidence", "prepare-evidence", "run-ci"].contains(&mode.as_str())
+                    && !custody_flags.contains_key(&flag) =>
+            {
+                custody_flags.insert(flag, value);
+            }
             "--snapshot"
             | "--validation-head"
             | "--tree"
@@ -1192,11 +1203,12 @@ fn main_result() -> io::Result<bool> {
         return Err(io::Error::other("--check is only valid for run"));
     }
     if mode == "run-ci" {
-        return custody::run_ci(
+        return custody::run_ci_with_executor(
             &repo,
             selected_check.unwrap(),
             base.as_deref(),
             head.as_deref(),
+            custody::ExecutorContext::from_flags(&custody_flags)?,
         );
     }
     // Unconditional commands need no diff. Conditional execution and all plans

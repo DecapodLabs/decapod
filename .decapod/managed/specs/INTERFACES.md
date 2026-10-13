@@ -234,8 +234,15 @@ and `resume_command`. These fields steer the agent; they do not change the
 readiness verdict, grant authorization, or replace execution evidence. Missing
 build/test configuration and unsupported adapters remain explicit blockers.
 
+For supported remote execution, validation captures an accepted executor R
+independently from candidate source H. Versioned preparation and execution
+custody bind R’s revision, tree and profile closure separately from H’s actual
+execution revision and tree. The required graph and final verdict remain in the
+installed controller. Authenticated artifact-only workers inherit the measured
+R executor through their verified preparation dependency.
+
 `CONTROLLER_CONTRACT_UNSUPPORTED` distinguishes a reviewed inventory from a
-workflow or helper contract the running controller cannot interpret. Its
+carrier, protocol or accepted executor the running controller cannot admit. Its
 `next_action` is `obtain_supported_controller`, and readiness remains false.
 Repeating validation with that controller, changing the declaration or building
 manually cannot repair this incompatibility. The current runtime does not
@@ -336,7 +343,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a311bb876ab115a084d4baef25da4e9d093491eff1d2241911abda03924d05c7`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (180 files), `tests/` (188 files)
+- Repository signal fingerprint: `06f16a3cd87a37ae874c9424f28f238a28d44fc7c4f645494336351ed6622fa4`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (182 files), `tests/` (188 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

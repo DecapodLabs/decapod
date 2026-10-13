@@ -232,11 +232,16 @@ pub(super) fn verify(
                     .into_iter()
                     .find(|(name, _)| *name == path)
                     .ok_or_else(|| invalid("undeclared source recipe input"))?;
+                // R was independently captured before dispatch and its exact
+                // profile is required by source_execution. Artifact workers
+                // inherit the same recipe through their authenticated producer
+                // chain. H's edited helper is a subject input, not authority.
                 ensure(
                     recipes.insert(path)
                         && field(row, "sha256")? == hash(expected.1)
-                        && regular_source_hash(&project.identity_inputs.root, path)?
-                            == hash(expected.1),
+                        && (project.executor.is_some()
+                            || regular_source_hash(&project.identity_inputs.root, path)?
+                                == hash(expected.1)),
                     "fixed source recipe hash mismatch",
                 )?;
             }

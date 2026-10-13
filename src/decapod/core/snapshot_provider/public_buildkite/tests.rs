@@ -149,6 +149,25 @@ fn recipe_expected() -> RecipeExpectation {
         job_total: 1,
     }
 }
+// v0.102.3 Site/Job/Step shape follows the upstream shell.plans.golden.json;
+// this fixture is structural test data, not independent proof of compilation.
+fn program_site(source: &str, field: &str) -> Value {
+    json!({"source":source,"location":{"file":"./.github/workflows/ci.yml","field":field}})
+}
+fn program_fixture() -> Value {
+    json!({"version":2,"job":{
+        "condition":program_site("", "job.if"),
+        "continue_on_error":{},
+        "defaults":{"shell":program_site("", "job.defaults.run.shell"),"working_directory":program_site("", "job.defaults.run.working-directory")},
+        "services":{},
+        "steps":[{
+            "id":"verify","kind":"run","source":{"file":"./.github/workflows/ci.yml","field":"job.steps[0]"},
+            "condition":program_site("", "job.steps[0].if"),"continue_on_error":{},"timeout_minutes":{},
+            "name":program_site("Run source check", "job.steps[0].name"),
+            "run":{"command":program_site("source-ci-profile run-ci --check test", "job.steps[0].run"),"shell":program_site("bash", "job.steps[0].shell"),"working_directory":program_site("", "job.steps[0].working-directory")}
+        }]
+    }})
+}
 fn fixture(result: &str) -> Mock {
     fixture_for_job(result, "test")
 }
@@ -167,7 +186,7 @@ fn fixture_for_job(result: &str, logical_job: &str) -> Mock {
     }
     let event = b"event bytes";
     let plan = bytes(
-        &json!({"schema":"https://buildkite.com/schemas/buildkite-gha/job-plan-v2.schema.json","workflow":{"path":"./.github/workflows/ci.yml","digest":hash(b"source"),"logical_job_id":logical_job},"compiler":{"version":"0.102.3","distribution_digest":hash(b"compiler")},"runtime":{"distribution_digest":hash(b"runtime")},"target":{"step_key":"gha-test"},"strategy":{"job-index":0,"job-total":1},"event":{"provider":"github","name":"push","sha":"a".repeat(40),"repository":"owner/repo","payload_digest":hash(event),"payload_artifact":true},"program":{"version":2,"job":{"steps":[]}}}),
+        &json!({"schema":"https://buildkite.com/schemas/buildkite-gha/job-plan-v2.schema.json","workflow":{"path":"./.github/workflows/ci.yml","digest":hash(b"source"),"logical_job_id":logical_job},"compiler":{"version":"0.102.3","distribution_digest":hash(b"compiler")},"runtime":{"distribution_digest":hash(b"runtime")},"target":{"step_key":"gha-test"},"strategy":{"job-index":0,"job-total":1},"event":{"provider":"github","name":"push","sha":"a".repeat(40),"repository":"owner/repo","payload_digest":hash(event),"payload_artifact":true},"program":program_fixture()}),
     );
     let pd = hash(&plan);
     let manifest = bytes(
@@ -225,8 +244,250 @@ fn mutate(mock: &mut Mock, path: String, change: impl FnOnce(&mut Value)) {
     change(&mut v);
     mock.responses.insert(path, bytes(&v));
 }
+// Rebind every synthetic provider hash and content-addressed manifest path.
+// Negative tests using this helper fail policy/shape rather than stale hashes.
+fn reseal_plan(mock: &mut Mock, change: impl FnOnce(&mut Value)) {
+    let b = build();
+    let plan_url = format!("{}/artifacts/{PID}", b.job_base(IMPORTER).unwrap());
+    mutate(mock, plan_url.clone(), change);
+    let plan_digest = hash(&mock.responses[&plan_url]);
+    mutate(
+        mock,
+        format!("{}/artifacts", b.job_base(IMPORTER).unwrap()),
+        |rows| {
+            let row = rows
+                .as_array_mut()
+                .unwrap()
+                .iter_mut()
+                .find(|row| row["id"] == PID)
+                .unwrap();
+            row["path"] = format!(".buildkite-gha/plans/{}.json", &plan_digest[7..]).into();
+            row["sha256sum"] = plan_digest[7..].into();
+        },
+    );
+    reseal_result(mock, |manifest| {
+        manifest["plan_digest"] = plan_digest.into()
+    });
+}
+fn reseal_result(mock: &mut Mock, change: impl FnOnce(&mut Value)) {
+    let b = build();
+    let url = format!("{}/artifacts/{AID}", b.job_base(JOB).unwrap());
+    mutate(mock, url.clone(), change);
+    let data = &mock.responses[&url];
+    let result_digest = hash(data);
+    let result = json(data).unwrap();
+    let plan_digest = result["plan_digest"].as_str().unwrap();
+    mutate(
+        mock,
+        format!("{}/artifacts", b.job_base(JOB).unwrap()),
+        |rows| {
+            rows[0]["path"] = format!(
+                "buildkite-gha/v1/results/gha-test/{}.json",
+                &plan_digest[7..]
+            )
+            .into();
+            rows[0]["sha256sum"] = result_digest[7..].into();
+        },
+    );
+}
 fn budget(c: &Cancellation) -> Budget<'_> {
     Budget::new(Duration::from_secs(2), 1024 * 1024, c).unwrap()
+}
+#[test]
+fn imported_program_rejects_empty_malformed_and_unknown_shapes_after_full_resealing() {
+    for mode in 0..12 {
+        let c = Cancellation::default();
+        let b = budget(&c);
+        let mut mock = fixture("success");
+        reseal_plan(&mut mock, |plan| {
+            let program = &mut plan["program"];
+            match mode {
+                0 => *program = Value::Null,
+                1 => *program = json!({"version":2,"job":{"steps":[]}}),
+                2 => program["job"]["steps"] = json!([]),
+                3 => program["job"]["steps"] = json!({}),
+                4 => program["version"] = 3.into(),
+                5 => program["job"]["steps"][0]["kind"] = "unreviewed".into(),
+                6 => program["job"]["steps"][0]["run"]["command"]["source"] = "".into(),
+                7 => program["job"]["env"] = json!({"PATH":"/candidate"}),
+                8 => program["job"]["steps"][0]["condition"] = true.into(),
+                9 => {
+                    program["job"]["steps"][0]["continue_on_error"] = json!({"literal":true,"expression":program_site("${{ true }}", "job.steps[0].continue-on-error")})
+                }
+                10 => program["job"]["steps"][0]["post"] = json!({"run":"unreviewed"}),
+                _ => {
+                    program["job"].as_object_mut().unwrap().remove("defaults");
+                }
+            }
+        });
+        let inventory = collect_inventory(&mut mock, build(), &expected(), &b).unwrap();
+        let error = collect_recipe(&mut mock, &inventory, JOB, &recipe_expected(), &b).unwrap_err();
+        assert!(
+            !error.to_string().contains("hash"),
+            "must reach shape admission: {error}"
+        );
+    }
+}
+#[test]
+fn imported_program_accepts_complete_composite_and_native_action_shapes() {
+    let mut plan = json!({"program":program_fixture()});
+    let native = "a-1111111111111111";
+    let local = "a-2222222222222222";
+    let empty = program_site("", "runs.pre-if");
+    plan["actions"] = json!([
+        {"id":native,"source":"github","repository":"actions/checkout","requested_ref":"v4","commit":"a".repeat(40),"source_digest":hash(b"native-source"),"executable_paths":[]},
+        {"id":local,"source":"workspace","path":".github/actions/source-ci-profile","source_digest":hash(b"local-source"),"children":{"actions/checkout@v4":{"lock":native}}}
+    ]);
+    plan["program"]["job"]["steps"][0]
+        .as_object_mut()
+        .unwrap()
+        .remove("run");
+    plan["program"]["job"]["steps"][0]["kind"] = "uses".into();
+    plan["program"]["job"]["steps"][0]["invocation"] = json!({"uses":program_site("./.github/actions/source-ci-profile", "job.steps[0].uses"),"lock":local});
+    plan["program"]["actions"] = json!({local:{"runtime":"composite","pre_if":empty,"post_if":empty,"steps":[{
+        "name":empty,"shell":empty,"working_directory":empty,"condition":empty,
+        "invocation":{"uses":program_site("actions/checkout@v4", "runs.steps[0].uses"),"lock":native}
+    }]}});
+    program::verify(&plan).unwrap();
+    for mode in 0..5 {
+        let mut altered = plan.clone();
+        match mode {
+            0 => {
+                altered["program"]["actions"]
+                    .as_object_mut()
+                    .unwrap()
+                    .remove(local);
+            }
+            1 => {
+                altered["actions"][1]["children"]["actions/checkout@v4"]["lock"] =
+                    "a-3333333333333333".into()
+            }
+            2 => altered["program"]["actions"][local]["steps"] = json!([]),
+            3 => altered["actions"][0]["commit"] = "main".into(),
+            _ => altered["program"]["actions"][local]["post_if"] = false.into(),
+        }
+        assert!(program::verify(&altered).is_err(), "mode {mode}");
+    }
+}
+#[test]
+fn imported_recipe_requires_independent_root_importer_custody() {
+    for mode in 0..3 {
+        let c = Cancellation::default();
+        let b = budget(&c);
+        let mut mock = fixture("success");
+        mutate(
+            &mut mock,
+            format!("{}/data/steps", build().base()),
+            |steps| match mode {
+                0 => steps[1]["uploaded_by_step_uuid"] = STEP.into(),
+                1 => steps[0]["uploaded_by_step_uuid"] = STEP.into(),
+                _ => steps[1]["uploaded_by_step_uuid"] = AID.into(),
+            },
+        );
+        let inventory = collect_inventory(&mut mock, build(), &expected(), &b).unwrap();
+        assert!(
+            collect_recipe(&mut mock, &inventory, JOB, &recipe_expected(), &b).is_err(),
+            "mode {mode}"
+        );
+    }
+}
+#[test]
+fn native_job_cannot_supply_the_importers_plan_artifact() {
+    let c = Cancellation::default();
+    let b = budget(&c);
+    let mut mock = fixture("success");
+    let root = format!("{}/artifacts", build().job_base(IMPORTER).unwrap());
+    let rows = json(&mock.responses[&root]).unwrap();
+    let mut plan = rows
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|row| row["id"] == PID)
+        .unwrap()
+        .clone();
+    let original_url = plan["url"].as_str().unwrap().to_owned();
+    let replacement_url = format!("{}/artifacts/{PID}", build().job_base(JOB).unwrap());
+    plan["url"] = replacement_url.clone().into();
+    mock.responses
+        .insert(replacement_url, mock.responses[&original_url].clone());
+    mutate(&mut mock, root, |rows| {
+        rows.as_array_mut().unwrap().retain(|row| row["id"] != PID)
+    });
+    mutate(
+        &mut mock,
+        format!("{}/artifacts", build().job_base(JOB).unwrap()),
+        |rows| rows.as_array_mut().unwrap().push(plan),
+    );
+    let inventory = collect_inventory(&mut mock, build(), &expected(), &b).unwrap();
+    assert!(
+        collect_recipe(&mut mock, &inventory, JOB, &recipe_expected(), &b)
+            .unwrap_err()
+            .to_string()
+            .contains("artifact missing")
+    );
+}
+#[test]
+fn resealed_importer_identity_and_required_matrix_substitutions_reject() {
+    for mode in 0..9 {
+        let c = Cancellation::default();
+        let b = budget(&c);
+        let mut mock = fixture("success");
+        reseal_plan(&mut mock, |plan| match mode {
+            0 => plan["workflow"]["digest"] = hash(b"changed carrier").into(),
+            1 => plan["compiler"]["distribution_digest"] = hash(b"other compiler").into(),
+            2 => plan["runtime"]["distribution_digest"] = hash(b"other runtime").into(),
+            3 => plan["event"]["sha"] = "b".repeat(40).into(),
+            4 => plan["workflow"]["logical_job_id"] = "other-job".into(),
+            5 => plan["strategy"]["job-total"] = 2.into(),
+            6 => plan["matrix"] = json!({"shard":"missing-required-row"}),
+            7 => plan["event"]["payload_digest"] = hash(b"other event").into(),
+            _ => plan["target"]["step_key"] = "gha-other".into(),
+        });
+        let inventory = collect_inventory(&mut mock, build(), &expected(), &b).unwrap();
+        assert!(
+            collect_recipe(&mut mock, &inventory, JOB, &recipe_expected(), &b).is_err(),
+            "mode {mode}"
+        );
+    }
+    for key in ["build_id", "job_id", "step_key"] {
+        let c = Cancellation::default();
+        let b = budget(&c);
+        let mut mock = fixture("success");
+        reseal_result(&mut mock, |manifest| {
+            manifest["producer"][key] = "substituted".into()
+        });
+        let inventory = collect_inventory(&mut mock, build(), &expected(), &b).unwrap();
+        assert!(
+            collect_recipe(&mut mock, &inventory, JOB, &recipe_expected(), &b)
+                .unwrap_err()
+                .to_string()
+                .contains("producer mismatch")
+        );
+    }
+}
+#[test]
+fn required_matrix_cannot_disappear_from_a_resealed_plan() {
+    let c = Cancellation::default();
+    let b = budget(&c);
+    let mut mock = fixture("success");
+    let mut expected_recipe = recipe_expected();
+    expected_recipe
+        .matrix
+        .insert("shard".into(), "required".into());
+    reseal_plan(&mut mock, |plan| {
+        plan["matrix"] = json!({"shard":"required"})
+    });
+    let inventory = collect_inventory(&mut mock, build(), &expected(), &b).unwrap();
+    collect_recipe(&mut mock, &inventory, JOB, &expected_recipe, &b).unwrap();
+    reseal_plan(&mut mock, |plan| {
+        plan.as_object_mut().unwrap().remove("matrix");
+    });
+    assert!(
+        collect_recipe(&mut mock, &inventory, JOB, &expected_recipe, &b)
+            .unwrap_err()
+            .to_string()
+            .contains("matrix mismatch")
+    );
 }
 #[test]
 fn complete_native_exit_zero_does_not_override_logical_skip() {

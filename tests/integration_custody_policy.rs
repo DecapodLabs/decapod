@@ -373,7 +373,7 @@ fn actual_workflow_measures_before_execution_and_records_after_the_real_shard_co
     );
     assert_eq!(
         PREPARE_RECIPE
-            .matches("rustc --edition=2024 -O assets/tools/integration_custody.rs")
+            .matches("rustc --edition=2024 -O \"${SOURCE_CI_EXECUTOR_ROOT:-.}/assets/tools/integration_custody.rs\"")
             .count(),
         1
     );

@@ -6,7 +6,7 @@ export CHANGE_EVENT="${SOURCE_CI_EVENT:?}"
 export CHANGE_BASE="${SOURCE_CI_BASE?}"
 export CHANGE_HEAD="${SOURCE_CI_HEAD:?}"
 set -euo pipefail
-rustc --edition=2024 assets/tools/release_metadata.rs -o "$RUNNER_TEMP/decapod-release-metadata"
+rustc --edition=2024 "${SOURCE_CI_EXECUTOR_ROOT:-.}/assets/tools/release_metadata.rs" -o "$RUNNER_TEMP/decapod-release-metadata"
 "$RUNNER_TEMP/decapod-release-metadata" \
   --repo . --event "$CHANGE_EVENT" --base "$CHANGE_BASE" --head "$CHANGE_HEAD" \
   | tee -a "$GITHUB_OUTPUT"

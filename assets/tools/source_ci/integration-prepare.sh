@@ -8,12 +8,12 @@ umask 077
 : "${RUNNER_TEMP:?}" "${GITHUB_OUTPUT:?}" "${CHANGE_BASE:?}" "${CHANGE_HEAD:?}"
 [[ "$CHANGE_BASE" == "$CUSTODY_BASE" && "$CHANGE_HEAD" == "$CUSTODY_HEAD" ]]
 
-"$RUNNER_TEMP/source-ci-profile" paths --base "$CHANGE_BASE" --head "$CHANGE_HEAD" > "$RUNNER_TEMP/integration-paths.txt"
-rustc --edition=2024 assets/tools/integration_shards.rs -o "$RUNNER_TEMP/integration-shards"
+"${SOURCE_CI_PROFILE_EXECUTABLE:-$RUNNER_TEMP/source-ci-profile}" paths --base "$CHANGE_BASE" --head "$CHANGE_HEAD" > "$RUNNER_TEMP/integration-paths.txt"
+rustc --edition=2024 "${SOURCE_CI_EXECUTOR_ROOT:-.}/assets/tools/integration_shards.rs" -o "$RUNNER_TEMP/integration-shards"
 "$RUNNER_TEMP/integration-shards" plan --paths "$RUNNER_TEMP/integration-paths.txt" > "$RUNNER_TEMP/integration-matrix.json"
 export CUSTODY_SHARDS="$(jq -c '[.include[].shard]' "$RUNNER_TEMP/integration-matrix.json")"
 count="$(jq '.include | length' "$RUNNER_TEMP/integration-matrix.json")"
-rustc --edition=2024 -O assets/tools/integration_custody.rs -o "$RUNNER_TEMP/integration-custody"
+rustc --edition=2024 -O "${SOURCE_CI_EXECUTOR_ROOT:-.}/assets/tools/integration_custody.rs" -o "$RUNNER_TEMP/integration-custody"
 # Validate the complete immutable context before publishing any plan output.
 "$RUNNER_TEMP/integration-custody" context > "$RUNNER_TEMP/integration-context-output.txt"
 mkdir -p target/integration-custody-artifacts
@@ -35,8 +35,9 @@ fi
 bootstrap="$RUNNER_TEMP/integration-bootstrap-package"
 mkdir "$bootstrap"
 mkdir -p "$bootstrap/integration-bootstrap" "$bootstrap/assets/tools/source_ci"
-cp "$RUNNER_TEMP/source-ci-profile" "$bootstrap/integration-bootstrap/source-ci-profile"
-cp assets/tools/source_ci/integration-worker.sh assets/tools/source_ci/integration-status.sh \
+cp "${SOURCE_CI_PROFILE_EXECUTABLE:-$RUNNER_TEMP/source-ci-profile}" "$bootstrap/integration-bootstrap/source-ci-profile"
+cp "${SOURCE_CI_EXECUTOR_ROOT:-.}/assets/tools/source_ci/integration-worker.sh" \
+  "${SOURCE_CI_EXECUTOR_ROOT:-.}/assets/tools/source_ci/integration-status.sh" \
   "$bootstrap/assets/tools/source_ci/"
 mkdir -p target/integration-bootstrap-artifacts
 tar -C "$bootstrap" -cf target/integration-bootstrap-artifacts/integration-bootstrap.tar .

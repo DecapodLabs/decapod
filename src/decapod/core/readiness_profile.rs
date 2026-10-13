@@ -129,6 +129,115 @@ pub fn definition_files() -> Vec<(&'static str, &'static [u8])> {
     files
 }
 
+/// Independently reviewed carrier bytes. These execute before/after measured
+/// checks and therefore remain controller authority, even when H changes its
+/// source helpers. Unknown sibling actions/scripts are not implicitly admitted.
+pub fn carrier_files() -> Vec<(&'static str, &'static [u8])> {
+    vec![
+        (
+            ".github/actions/ci-context/action.yml",
+            include_bytes!("../../../.github/actions/ci-context/action.yml").as_slice(),
+        ),
+        (
+            ".github/actions/docs-drift/action.yml",
+            include_bytes!("../../../.github/actions/docs-drift/action.yml").as_slice(),
+        ),
+        (
+            ".github/actions/install-lld/action.yml",
+            include_bytes!("../../../.github/actions/install-lld/action.yml").as_slice(),
+        ),
+        (
+            ".github/actions/setup-release-proof/action.yml",
+            include_bytes!("../../../.github/actions/setup-release-proof/action.yml").as_slice(),
+        ),
+        (
+            ".github/actions/source-ci-profile/action.yml",
+            include_bytes!("../../../.github/actions/source-ci-profile/action.yml").as_slice(),
+        ),
+        (
+            ".github/actions/validation-checkout/action.yml",
+            include_bytes!("../../../.github/actions/validation-checkout/action.yml").as_slice(),
+        ),
+        (
+            ".github/scripts/install-release-dist.sh",
+            include_bytes!("../../../.github/scripts/install-release-dist.sh").as_slice(),
+        ),
+        (
+            ".github/scripts/preflight-release.py",
+            include_bytes!("../../../.github/scripts/preflight-release.py").as_slice(),
+        ),
+        (
+            ".github/scripts/release-build.sh",
+            include_bytes!("../../../.github/scripts/release-build.sh").as_slice(),
+        ),
+        (
+            ".github/scripts/release-plan.sh",
+            include_bytes!("../../../.github/scripts/release-plan.sh").as_slice(),
+        ),
+        (
+            ".github/scripts/release-tool-versions.py",
+            include_bytes!("../../../.github/scripts/release-tool-versions.py").as_slice(),
+        ),
+        (
+            "assets/tools/ci_event_context.rs",
+            include_bytes!("../../../assets/tools/ci_event_context.rs").as_slice(),
+        ),
+    ]
+}
+
+/// Captured only from the accepted target's immutable Git objects. This type is
+/// deliberately not Deserialize: a candidate or receipt cannot select authority.
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+pub struct AcceptedExecutor {
+    revision: String,
+    tree: String,
+    profile_digest: String,
+    files: SourceInventory,
+}
+impl AcceptedExecutor {
+    pub fn from_captured(
+        revision: String,
+        tree: String,
+        files: SourceInventory,
+    ) -> Result<Self, PlanningFailure> {
+        let oid = |v: &str| {
+            v.len() == 40
+                && v.bytes()
+                    .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+        };
+        if !oid(&revision) || !oid(&tree) {
+            return Err(PlanningFailure::InvalidPlan(
+                "invalid accepted executor identity".into(),
+            ));
+        }
+        let expected: BTreeMap<_, _> = definition_files()
+            .into_iter()
+            .map(|(path, bytes)| (path.to_string(), bytes_digest(bytes)))
+            .collect();
+        if files.files != expected {
+            return Err(PlanningFailure::ControllerContractUnsupported(
+                "accepted executor closure".into(),
+            ));
+        }
+        Ok(Self {
+            revision,
+            tree,
+            files,
+            profile_digest: source::custody::profile_digest()
+                .map_err(|e| PlanningFailure::InvalidPlan(e.to_string()))?,
+        })
+    }
+    pub fn revision(&self) -> &str {
+        &self.revision
+    }
+    pub fn tree(&self) -> &str {
+        &self.tree
+    }
+    pub fn profile_digest(&self) -> &str {
+        &self.profile_digest
+    }
+}
+
 fn bytes_digest(bytes: &[u8]) -> String {
     use sha2::{Digest, Sha256};
     format!("sha256:{:x}", Sha256::digest(bytes))
@@ -401,6 +510,18 @@ pub fn required_source_catalog(
     discovered: &SourceInventory,
     facts: &ApplicabilityFacts,
 ) -> Result<RequiredCatalog, PlanningFailure> {
+    required_source_catalog_with_executor(declaration, discovered, facts, None)
+}
+
+/// The same finite graph, with R authority separated from candidate H inputs.
+/// The authenticated provider importer executes the independently pinned carrier;
+/// it is a trusted compiler boundary, not a cryptographic compiler attestation.
+pub fn required_source_catalog_with_executor(
+    declaration: Option<&ProfileDeclaration>,
+    discovered: &SourceInventory,
+    facts: &ApplicabilityFacts,
+    executor: Option<&AcceptedExecutor>,
+) -> Result<RequiredCatalog, PlanningFailure> {
     let declaration = declaration.ok_or(PlanningFailure::MissingProfile)?;
     if declaration.id != REQUIRED_PROFILE {
         return Err(PlanningFailure::UnknownProfile(declaration.id.clone()));
@@ -469,12 +590,34 @@ pub fn required_source_catalog(
             ));
         }
     }
+    let carrier = carrier_files();
+    for (path, compiled) in &carrier {
+        if discovered.files.get(*path) != Some(&bytes_digest(compiled)) {
+            return Err(PlanningFailure::ControllerContractUnsupported(
+                (*path).into(),
+            ));
+        }
+    }
+    for path in discovered.files.keys() {
+        if (path.starts_with(".github/actions/") || path.starts_with(".github/scripts/"))
+            && !carrier.iter().any(|(known, _)| *known == path)
+        {
+            return Err(PlanningFailure::UnsupportedSource(path.clone()));
+        }
+    }
+    let authority = executor.map(|r| &r.files).unwrap_or(discovered);
     for (path, compiled) in definition_files() {
-        if discovered.files.get(path) != Some(&bytes_digest(compiled)) {
+        if authority.files.get(path) != Some(&bytes_digest(compiled)) {
             return Err(PlanningFailure::ControllerContractUnsupported(path.into()));
         }
     }
-    let source_digest = discovered.digest()?;
+    // H remains fully captured and independently reviewed. R is additionally
+    // bound into every obligation and the final recomputed policy identity.
+    let source_digest = if let Some(executor) = executor {
+        hash(&(discovered.digest()?, executor))?
+    } else {
+        discovered.digest()?
+    };
     let paths: Vec<_> = facts.changed_paths.iter().cloned().collect();
     let mut obligations = Vec::new();
     let mut exclusions = Vec::new();

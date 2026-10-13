@@ -59,9 +59,96 @@ runs:
         toolchain: 1.96.1
     - name: Compile shared source-CI profile
       shell: bash
+      env:
+        SOURCE_INPUT_BASE: ${{ inputs.base }}
       run: |
+        set -euo pipefail
         umask 077
-        rustc --edition=2024 -O assets/tools/source_ci_profile.rs -o "$RUNNER_TEMP/source-ci-profile"
+        # The context action captured B before this carrier runs. Inputs cannot
+        # substitute a branch name or another immutable executor revision.
+        base="${SOURCE_CI_BASE:-}"
+        if [[ -n "${SOURCE_INPUT_BASE:-}" && "$SOURCE_INPUT_BASE" != "$base" ]]; then
+          echo 'Requested base differs from verified immutable CI context' >&2
+          exit 1
+        fi
+        while IFS= read -r name; do
+          unset "$name"
+        done < <(compgen -e GIT_ || true)
+        export GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null
+        export GIT_NO_LAZY_FETCH=1 GIT_TERMINAL_PROMPT=0 GIT_NO_REPLACE_OBJECTS=1
+        git_local() {
+          git --no-replace-objects -c core.hooksPath=/dev/null \
+            -c core.fsmonitor=false -c core.untrackedCache=false "$@"
+        }
+        subject_root="$(git_local rev-parse --show-toplevel)"
+        subject_root="$(cd "$subject_root" && pwd -P)"
+        runner_root="$(cd "${RUNNER_TEMP:?}" && pwd -P)"
+        cd "$subject_root"
+        case "$runner_root/" in
+          "$subject_root/"*) echo 'Executor scratch must be outside the subject checkout' >&2; exit 1 ;;
+        esac
+        supported=false
+        if [[ -n "$base" ]]; then
+          [[ "$base" =~ ^([0-9a-f]{40}|[0-9a-f]{64})$ && "$base" =~ [1-9a-f] ]]
+          test "$(git_local cat-file -t "$base")" = commit
+          # Equal endpoints are an ordinary no-change branch event, not a
+          # candidate proof. Preserve its existing unmeasured source behavior.
+          if [[ "$base" != "${SOURCE_CI_HEAD:?Missing verified authored head}" ]]; then
+            entry="$(git_local ls-tree "$base" -- assets/tools/source_ci_custody.rs)"
+            if [[ -n "$entry" ]]; then
+              [[ "$entry" =~ ^100644[[:space:]]blob[[:space:]]([0-9a-f]{40}|[0-9a-f]{64})$'\t'assets/tools/source_ci_custody.rs$ ]]
+              blob="${BASH_REMATCH[1]}"
+              test "$(git_local cat-file -s "$blob")" -le 4194304
+              probe="$(mktemp "$runner_root/source-ci-protocol.XXXXXX")"
+              git_local cat-file blob "$blob" > "$probe"
+              if grep -Fqx 'pub const DUAL_ROOT_SCHEMA: &str = "decapod.source-ci.dual-root.v1";' "$probe"; then
+                supported=true
+              else
+                probe_status=$?
+                # Only an honest absent declaration permits rollout fallback.
+                test "$probe_status" = 1
+              fi
+              rm -- "$probe"
+            fi
+          fi
+        fi
+        if [[ "$supported" != true ]]; then
+          # One-time rollout compatibility only. The independent collector
+          # still requires H's complete closure to match its embedded contract.
+          rustc --edition=2024 -O assets/tools/source_ci_profile.rs -o "$RUNNER_TEMP/source-ci-profile"
+          exit 0
+        fi
+        executor_parent="$(mktemp -d "$runner_root/source-ci-executor.XXXXXX")"
+        executor_root="$executor_parent/repo"
+        executor_tree="$(git_local rev-parse --verify "$base^{tree}")"
+        git_local worktree add --quiet --detach "$executor_root" "$base"
+        test "$(git_local -C "$executor_root" rev-parse --verify HEAD)" = "$base"
+        test "$(git_local -C "$executor_root" rev-parse --verify 'HEAD^{tree}')" = "$executor_tree"
+        executor="$executor_parent/source-ci-profile"
+        # Once R advertises support, any staging/compilation/verification error
+        # is terminal. Never retry using candidate helper bytes.
+        rustc --edition=2024 -O "$executor_root/assets/tools/source_ci_profile.rs" -o "$executor"
+        # Keep the familiar entrypoint, with frozen explicit argv rather than
+        # an ambient authority environment. Helpers package current_exe, so
+        # downstream workers receive the actual R binary, never this wrapper.
+        {
+          printf '#!/usr/bin/env bash\nset -euo pipefail\n'
+          printf 'executor=%q\nroot=%q\nrevision=%q\ntree=%q\n' \
+            "$executor" "$executor_root" "$base" "$executor_tree"
+          cat <<'WRAPPER'
+        mode="${1:?Missing source-CI mode}"
+        case "$mode" in
+          run-ci|prepare-evidence|run-evidence)
+            shift
+            exec "$executor" "$mode" \
+              --execution-context decapod.source-ci.dual-root.v1 \
+              --executor-root "$root" --executor-revision "$revision" --executor-tree "$tree" "$@"
+            ;;
+          *) exec "$executor" "$@" ;;
+        esac
+        WRAPPER
+        } > "$RUNNER_TEMP/source-ci-profile"
+        chmod 700 "$RUNNER_TEMP/source-ci-profile"
     - name: Execute reviewed source check with measured custody
       if: inputs.check != ''
       shell: bash

@@ -121,7 +121,7 @@ impl ValidationGuidance {
     fn for_controller_contract_unsupported() -> Self {
         Self {
             next_action: "obtain_supported_controller",
-            instruction: "The controller does not support this reviewed source contract. Rerunning the same controller, repinning configuration or running a manual build cannot resolve this blocker. Use an independently supported controller for this exact contract, then run plain decapod validate; preserve the blocker if none is available. No automatic controller bootstrap is implemented.",
+            instruction: "The controller cannot admit this carrier, protocol or accepted executor. Supported remote candidate helper changes are built and tested by the independently verified accepted executor within plain decapod validate. For this unsupported contract, rerunning the same controller, repinning configuration or running a manual build cannot resolve the blocker. Use an independently supported controller for this exact contract; preserve the blocker if none is available. No automatic controller replacement is performed.",
             human_input_when: "Request the specific access, authorization or controller-support decision needed if no independently supported controller is available; do not weaken the contract or substitute manual-build evidence.",
             ..Self::for_outcome(false)
         }
@@ -207,6 +207,8 @@ impl RuntimeBudget<'_> {
 pub struct CurrentProject {
     pub configuration: ProofConfiguration,
     pub sources: SourceInventory,
+    /// Accepted R authority, captured independently before remote execution.
+    pub executor: Option<profile::AcceptedExecutor>,
     pub facts: ApplicabilityFacts,
     /// Reserved for an explicitly scoped future predictive release run (#1399).
     /// Core PR readiness does not load or execute this optional profile.
@@ -493,9 +495,20 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
         )?)?,
     };
     let release = None;
-    let catalog =
-        profile::required_source_catalog(configuration.required_profile.as_ref(), &sources, &facts)
-            .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?;
+    let executor = executor_contract::capture(
+        options,
+        budget,
+        &base,
+        configuration.validation_buildkite_preflights,
+    )?;
+    let catalog = profile::required_source_catalog_with_executor(
+        configuration.required_profile.as_ref(),
+        &sources,
+        &facts,
+        executor.as_ref(),
+    )
+    .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?;
+    executor_contract::verify_carrier_modes(options, budget, &head)?;
     let configuration_paths = tracked
         .iter()
         .filter(|p| {
@@ -535,6 +548,7 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
     Ok(CurrentProject {
         configuration,
         sources,
+        executor,
         facts,
         release,
         catalog,
@@ -1964,3 +1978,5 @@ pub fn discover_rust_tools(
 mod tests;
 
 pub mod snapshot;
+
+mod executor_contract;

@@ -318,6 +318,20 @@ fn verify_check(
             .unwrap_or_else(|| check.job.into()),
         step_key: context.step_key.into(),
         profile_digest: source::custody::profile_digest()?,
+        executor: if source::workflow_owned::artifact_worker(check) {
+            // The authenticated producer supplies the exact R binary/recipes;
+            // workers do not checkout or recompile either source root.
+            None
+        } else {
+            project
+                .executor
+                .as_ref()
+                .map(|executor| custody::ExecutorExpectation {
+                    revision: executor.revision().into(),
+                    tree: executor.tree().into(),
+                    profile_digest: executor.profile_digest().into(),
+                })
+        },
         invocations: source::custody::recipe_json(&source::commands(check, &paths)?).into_bytes(),
         artifact_source_paths: source::custody::required_artifact_paths(check, &paths)
             .into_iter()

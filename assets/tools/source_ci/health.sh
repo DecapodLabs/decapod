@@ -3,7 +3,7 @@
 set -euo pipefail
 umask 077
 source_root="$(git rev-parse --show-toplevel)"
-source "$source_root/assets/tools/source_ci/private-checkout.sh"
+source "${SOURCE_CI_EXECUTOR_ROOT:-$source_root}/assets/tools/source_ci/private-checkout.sh"
 source_private_checkout
 cd "$SOURCE_PRIVATE_CHECKOUT"
 export PATH="$source_root/target/debug:$PATH"

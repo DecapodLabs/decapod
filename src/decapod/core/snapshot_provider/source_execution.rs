@@ -6,6 +6,14 @@ use super::artifact_archive::ArtifactFiles;
 use super::*;
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
+/// Trusted executor identity constructed from the accepted executor's Git
+/// objects and reviewed profile, never deserialized from source receipts.
+#[derive(Clone, Debug)]
+pub struct ExecutorExpectation {
+    pub revision: String,
+    pub tree: String,
+    pub profile_digest: String,
+}
 #[derive(Clone, Debug)]
 pub struct SourceExpectation {
     pub workflow: String,
@@ -30,6 +38,9 @@ pub struct SourceExpectation {
     pub invocations: Vec<u8>,
     pub artifact_source_paths: BTreeSet<String>,
     pub execution_mode: String,
+    /// None retains the single-root contract. Some requires independently bound
+    /// dual-root preparation and execution; it never permits a legacy fallback.
+    pub executor: Option<ExecutorExpectation>,
 }
 fn required<'a>(v: &'a Value, key: &str) -> Result<&'a Value> {
     v.get(key)
@@ -190,6 +201,55 @@ fn identity(v: &Value, e: &SourceExpectation) -> Result<()> {
     )?;
     truth(v, "authenticated", false)?;
     truth(v, "complete_pr_profile", false)?;
+    Ok(())
+}
+fn execution_context(v: &Value, e: &SourceExpectation, final_execution: bool) -> Result<()> {
+    let schema = match (e.executor.is_some(), final_execution) {
+        (false, false) => "decapod.source-ci.preparation.v1",
+        (false, true) => "decapod.source-ci.execution.v2",
+        (true, false) => "decapod.source-ci.preparation.v2",
+        (true, true) => "decapod.source-ci.execution.v3",
+    };
+    ensure(
+        string(v, "schema")? == schema,
+        "source custody schema mismatch",
+    )?;
+    match &e.executor {
+        Some(executor) => {
+            // Exact object equality rejects missing, unknown, mistyped, or
+            // receipt-selected roots. Subject identity remains the independent
+            // source expectation, including when executor and subject differ.
+            let expected = serde_json::json!({
+                "schema": "decapod.source-ci.dual-root.v1",
+                "executor_revision": executor.revision,
+                "executor_tree": executor.tree,
+                "executor_profile_digest": executor.profile_digest,
+                "subject_revision": e.execution_revision,
+                "subject_tree": e.tree,
+                "executor_closure_digest": executor.profile_digest,
+            });
+            ensure(
+                required(v, "execution_context")? == &expected,
+                "source dual-root context differs from independent executor/subject identity",
+            )?;
+            if final_execution {
+                ensure(
+                    string(v, "final_executor_closure_digest")? == executor.profile_digest,
+                    "source final executor closure differs from independent profile",
+                )?;
+            } else {
+                ensure(
+                    v.get("final_executor_closure_digest").is_none(),
+                    "source preparation cannot assert final executor closure",
+                )?;
+            }
+        }
+        None => ensure(
+            v.get("execution_context").is_none()
+                && v.get("final_executor_closure_digest").is_none(),
+            "legacy source custody cannot assert dual-root context",
+        )?,
+    }
     Ok(())
 }
 fn stream(files: &ArtifactFiles, prefix: &str, log: &Value) -> Result<String> {
@@ -404,6 +464,15 @@ fn verify_preparation_inner(
             && digest(&expected.profile_digest),
         "invalid expected source objects/digest",
     )?;
+    if let Some(executor) = &expected.executor {
+        ensure(
+            oid(&executor.revision)
+                && oid(&executor.tree)
+                && digest(&executor.profile_digest)
+                && executor.profile_digest == expected.profile_digest,
+            "invalid independent executor objects/profile digest",
+        )?;
+    }
     ensure(
         matches!(
             expected.execution_mode.as_str(),
@@ -452,10 +521,10 @@ fn verify_preparation_inner(
     let p = format!("{root}preparation/");
     let manifest = file(files, &p, "preparation.json")?;
     let v = value(manifest)?;
+    execution_context(&v, expected, false)?;
     ensure(
-        string(&v, "schema")? == "decapod.source-ci.preparation.v1"
-            && string(&v, "tree")? == expected.tree,
-        "source preparation schema/tree mismatch",
+        string(&v, "tree")? == expected.tree,
+        "source preparation tree mismatch",
     )?;
     identity(&v, expected)?;
     truth(&v, "preparation_complete", true)?;
@@ -640,10 +709,7 @@ pub fn verify_execution(
     let p = format!("{}execution/", prefix(e)?);
     let raw = file(files, &p, "execution.json")?;
     let manifest = value(raw)?;
-    ensure(
-        string(&manifest, "schema")? == "decapod.source-ci.execution.v2",
-        "source execution schema mismatch",
-    )?;
+    execution_context(&manifest, e, true)?;
     identity(&manifest, e)?;
     ensure(
         final_revision_matches(e, required(&manifest, "final_execution_revision")?),

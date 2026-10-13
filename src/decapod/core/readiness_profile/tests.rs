@@ -24,7 +24,7 @@ fn inputs() -> (
             .map(|p| ((*p).into(), d(p)))
             .collect(),
     };
-    for (path, contents) in definition_files() {
+    for (path, contents) in definition_files().into_iter().chain(carrier_files()) {
         discovered.files.insert(path.into(), bytes_digest(contents));
     }
     for (path, digest) in reviewed_workflow_digests() {
@@ -51,6 +51,275 @@ fn inputs() -> (
         .collect(),
     };
     (declaration, discovered, facts, release())
+}
+
+fn accepted_executor_files() -> SourceInventory {
+    SourceInventory {
+        files: definition_files()
+            .into_iter()
+            .map(|(path, bytes)| (path.into(), bytes_digest(bytes)))
+            .collect(),
+    }
+}
+
+fn accepted_executor() -> AcceptedExecutor {
+    AcceptedExecutor::from_captured("b".repeat(40), "c".repeat(40), accepted_executor_files())
+        .unwrap()
+}
+
+fn accepted_executor_inputs() -> (ProfileDeclaration, SourceInventory, ApplicabilityFacts) {
+    let (declaration, sources, facts, _) = inputs();
+    (declaration, sources, facts)
+}
+
+fn catalog_shape(catalog: &RequiredCatalog) -> Vec<(CheckKey, CheckKind, InvocationRole)> {
+    catalog
+        .obligations()
+        .iter()
+        .map(|row| (row.key.clone(), row.kind, row.role))
+        .collect()
+}
+
+#[test]
+fn accepted_executor_requires_complete_exact_compiled_closure_and_git_identities() {
+    let expected = accepted_executor();
+    assert_eq!(expected.revision(), "b".repeat(40));
+    assert_eq!(expected.tree(), "c".repeat(40));
+    assert_eq!(
+        expected.profile_digest(),
+        source::custody::profile_digest().unwrap()
+    );
+    for (path, _) in definition_files() {
+        for missing in [false, true] {
+            let mut files = accepted_executor_files();
+            if missing {
+                files.files.remove(path);
+            } else {
+                files
+                    .files
+                    .insert(path.into(), d("tampered accepted helper"));
+            }
+            assert!(
+                matches!(
+                    AcceptedExecutor::from_captured("b".repeat(40), "c".repeat(40), files),
+                    Err(PlanningFailure::ControllerContractUnsupported(_))
+                ),
+                "accepted helper {path}, missing={missing}"
+            );
+        }
+    }
+    let mut files = accepted_executor_files();
+    files
+        .files
+        .insert("assets/tools/unreviewed.rs".into(), d("extra"));
+    assert!(matches!(
+        AcceptedExecutor::from_captured("b".repeat(40), "c".repeat(40), files),
+        Err(PlanningFailure::ControllerContractUnsupported(_))
+    ));
+    for invalid in ["HEAD".into(), "b".repeat(39), "G".repeat(40)] {
+        for (revision, tree) in [
+            (invalid.clone(), "c".repeat(40)),
+            ("b".repeat(40), invalid.clone()),
+        ] {
+            assert!(matches!(
+                AcceptedExecutor::from_captured(revision, tree, accepted_executor_files()),
+                Err(PlanningFailure::InvalidPlan(_))
+            ));
+        }
+    }
+}
+
+#[test]
+fn accepted_executor_admits_reviewed_newer_candidate_helpers_without_dropping_obligations() {
+    let (mut declaration, mut sources, facts) = accepted_executor_inputs();
+    let executor = accepted_executor();
+    let original = required_source_catalog(Some(&declaration), &sources, &facts).unwrap();
+    for path in [
+        "assets/tools/source_ci_profile.rs",
+        "assets/tools/source_ci/health.sh",
+    ] {
+        sources
+            .files
+            .insert(path.into(), d(&format!("newer candidate {path}")));
+    }
+    // R does not excuse H from its independent complete-inventory review.
+    assert!(matches!(
+        required_source_catalog_with_executor(
+            Some(&declaration),
+            &sources,
+            &facts,
+            Some(&executor)
+        ),
+        Err(PlanningFailure::SourceContractChanged)
+    ));
+    declaration.reviewed_sources_digest = sources.digest().unwrap();
+    assert!(matches!(
+        required_source_catalog(Some(&declaration), &sources, &facts),
+        Err(PlanningFailure::ControllerContractUnsupported(_))
+    ));
+    let admitted = required_source_catalog_with_executor(
+        Some(&declaration),
+        &sources,
+        &facts,
+        Some(&executor),
+    )
+    .unwrap();
+    assert_eq!(catalog_shape(&admitted), catalog_shape(&original));
+    assert_eq!(admitted.exclusions(), original.exclusions());
+    assert_eq!(admitted.stage_dispositions(), original.stage_dispositions());
+    assert!(
+        admitted
+            .obligations()
+            .iter()
+            .zip(original.obligations())
+            .all(|(a, b)| { a.definition_digest != b.definition_digest })
+    );
+}
+
+#[test]
+fn accepted_executor_binds_accepted_identity_and_candidate_source_to_every_obligation() {
+    let (mut declaration, mut sources, facts) = accepted_executor_inputs();
+    let executor = accepted_executor();
+    let original = required_source_catalog_with_executor(
+        Some(&declaration),
+        &sources,
+        &facts,
+        Some(&executor),
+    )
+    .unwrap();
+    for (revision, tree) in [
+        ("d".repeat(40), "c".repeat(40)),
+        ("b".repeat(40), "d".repeat(40)),
+    ] {
+        let changed_executor =
+            AcceptedExecutor::from_captured(revision, tree, accepted_executor_files()).unwrap();
+        let changed = required_source_catalog_with_executor(
+            Some(&declaration),
+            &sources,
+            &facts,
+            Some(&changed_executor),
+        )
+        .unwrap();
+        assert_eq!(catalog_shape(&changed), catalog_shape(&original));
+        assert!(
+            changed
+                .obligations()
+                .iter()
+                .zip(original.obligations())
+                .all(|(a, b)| { a.definition_digest != b.definition_digest })
+        );
+    }
+    sources
+        .files
+        .insert("assets/tools/source_ci/health.sh".into(), d("changed H"));
+    declaration.reviewed_sources_digest = sources.digest().unwrap();
+    let changed = required_source_catalog_with_executor(
+        Some(&declaration),
+        &sources,
+        &facts,
+        Some(&executor),
+    )
+    .unwrap();
+    assert_eq!(catalog_shape(&changed), catalog_shape(&original));
+    assert!(
+        changed
+            .obligations()
+            .iter()
+            .zip(original.obligations())
+            .all(|(a, b)| { a.definition_digest != b.definition_digest })
+    );
+}
+
+#[test]
+fn accepted_executor_never_authorizes_changed_candidate_workflows_or_carriers() {
+    let executor = accepted_executor();
+    let protected: Vec<_> = reviewed_workflow_digests()
+        .iter()
+        .map(|(path, _)| *path)
+        .chain(carrier_files().into_iter().map(|(path, _)| path))
+        .collect();
+    for path in protected {
+        let (mut declaration, mut sources, facts) = accepted_executor_inputs();
+        sources
+            .files
+            .insert(path.into(), d("reviewed but unsupported carrier"));
+        declaration.reviewed_sources_digest = sources.digest().unwrap();
+        assert!(
+            matches!(
+                required_source_catalog_with_executor(Some(&declaration), &sources, &facts, Some(&executor)),
+                Err(PlanningFailure::ControllerContractUnsupported(rejected)) if rejected == path
+            ),
+            "candidate carrier {path}"
+        );
+    }
+}
+
+#[test]
+fn accepted_executor_never_authorizes_unknown_candidate_execution_surfaces() {
+    let executor = accepted_executor();
+    for path in [
+        ".github/workflows/new.yml",
+        ".github/actions/new/action.yml",
+        ".github/scripts/new.sh",
+        ".buildkite/pipeline.yml",
+        ".circleci/config.yml",
+        ".gitlab-ci.yml",
+        "Jenkinsfile",
+    ] {
+        let (mut declaration, mut sources, facts) = accepted_executor_inputs();
+        sources.files.insert(path.into(), d("new source"));
+        declaration.reviewed_sources_digest = sources.digest().unwrap();
+        assert!(
+            matches!(
+                required_source_catalog_with_executor(Some(&declaration), &sources, &facts, Some(&executor)),
+                Err(PlanningFailure::UnsupportedSource(rejected)) if rejected == path
+            ),
+            "candidate source {path}"
+        );
+    }
+}
+
+#[test]
+fn legacy_catalog_also_requires_exact_complete_pinned_carrier() {
+    for path in [
+        ".github/actions/source-ci-profile/action.yml",
+        ".github/scripts/release-build.sh",
+        "assets/tools/ci_event_context.rs",
+    ] {
+        for missing in [false, true] {
+            let (mut declaration, mut sources, facts) = accepted_executor_inputs();
+            if missing {
+                sources.files.remove(path);
+            } else {
+                sources
+                    .files
+                    .insert(path.into(), d("changed legacy carrier"));
+            }
+            declaration.reviewed_sources_digest = sources.digest().unwrap();
+            let failure =
+                required_source_catalog_with_executor(Some(&declaration), &sources, &facts, None)
+                    .unwrap_err();
+            assert!(
+                matches!(failure,
+                    PlanningFailure::MissingSource(ref rejected)
+                    | PlanningFailure::ControllerContractUnsupported(ref rejected) if rejected == path
+                ),
+                "{path}, missing={missing}: {failure:?}"
+            );
+        }
+    }
+    for path in [
+        ".github/actions/extra/action.yml",
+        ".github/scripts/extra.sh",
+    ] {
+        let (mut declaration, mut sources, facts) = accepted_executor_inputs();
+        sources.files.insert(path.into(), d("extra legacy carrier"));
+        declaration.reviewed_sources_digest = sources.digest().unwrap();
+        assert!(matches!(
+            required_source_catalog_with_executor(Some(&declaration), &sources, &facts, None),
+            Err(PlanningFailure::UnsupportedSource(rejected)) if rejected == path
+        ));
+    }
 }
 fn identity() -> MaterialIdentity {
     MaterialIdentity {

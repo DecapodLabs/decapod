@@ -1,8 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "4d12fc976d201591e5de943071ecbe5cba2e6408",
-    "release": "v0.110.0",
+    "accepted_commit": "33514f2132ad12bcaac2e43b228667a0861e495b",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -33,6 +32,11 @@
       "claim:complete-prepush-readiness": {
         "falsifier": "An empty, stale, skipped-required, mocked-code or missing-provider result authorizes publication, or CLI/RPC/publish bypasses the same boundary",
         "statement": "Public validate can authorize source PR publication only after all applicable actual source checks and candidate builds pass with genuine current material/provider evidence; release-only packaging is explicitly outside core source scope",
+        "status": "open"
+      },
+      "claim:created-context": {
+        "falsifier": "A changed, unrelated, dirty, missing-base or tampered event obtains no-change status or readiness evidence",
+        "statement": "Only a provider-declared ordinary first push at the verified accepted target is classified as no change; actual candidate ranges remain strict",
         "status": "open"
       },
       "claim:fresh-provider-metadata-batching": {
@@ -99,6 +103,11 @@
         "statement": "The release-build uploader consumes an owned regular file containing exactly the successfully built Bazel binary.",
         "status": "open"
       },
+      "claim:release-cpus": {
+        "falsifier": "CPU quota/affinity is exceeded, matrix targets drift, or publication gates are broadened",
+        "statement": "Release artifact compilation uses runner-effective CPU parallelism without altering global defaults, target matrix or publication gates",
+        "status": "open"
+      },
       "claim:release-version-stable-bazel": {
         "falsifier": "A version-only candidate fails stale-lock setup, or changed dependencies build without a reviewed lock refresh",
         "proof_refs": [
@@ -119,74 +128,64 @@
       "trajectory:17669a7d73b8ecb7": "RPC download403 is runner-specific; same pinned URL succeeded on another fresh runner. Policy fixture exit126 OS detail is unknown because stderr was discarded.",
       "trajectory:42a30b6dcb8fd580": "Provider scheduling and ARM execution currently exceed the five-minute full target; only completed comparable runs can establish gain",
       "trajectory:576cf7a5bf4d1081": "Accepted master a56fd2d3 is user merge of release1402; only Cargo package version and changelog changed from d891d81d",
+      "trajectory:62203fa208725296": "Four-platform release packaging is outside current source readiness; genuine artifact proof and resource limits must remain explicit",
       "trajectory:7d90d3eaf34454b7": "Five-minute end-to-end target remains subject to measured queue and unavoidable execution costs.",
       "trajectory:8a2fbdef1f3ce7d9": "All project tests and verification remain owned by plain decapod validate with Buildkite enabled",
-      "trajectory:d347ed41a83079c8": "Historical README report is scoped to873ab797 and f2073bd4 and is not current candidate proof"
+      "trajectory:d347ed41a83079c8": "Historical README report is scoped to873ab797 and f2073bd4 and is not current candidate proof",
+      "trajectory:f000bb05667cb46e": "No actual four-target release artifact build is scheduled by ordinary source preflight;1049 latency improvement remains unmeasured",
+      "trajectory:fa421ac6b37186ed": "Automatic trusted remote controller bootstrap is absent; a two-revision independent provider harness requires separate scope decision. Diagnostics do not claim to close that gap."
     }
   },
   "change": {
-    "id": "change_01M4T691D18ZER3D9V0KK0VGFQ",
-    "base_commit": "4d12fc976d201591e5de943071ecbe5cba2e6408",
+    "id": "change_01M4TXGSMSM4D26XBPFH1BRDKH",
+    "base_commit": "33514f2132ad12bcaac2e43b228667a0861e495b",
     "target_base": "origin/master"
   },
   "claims": {
-    "created-context": {
-      "statement": "Only a provider-declared ordinary first push at the verified accepted target is classified as no change; actual candidate ranges remain strict",
-      "falsifier": "A changed, unrelated, dirty, missing-base or tampered event obtains no-change status or readiness evidence",
-      "status": "open"
+    "accepted-executor-candidate-build": {
+      "statement": "For the supported remote source-CI carrier, plain validation admits candidate helper changes using an independently captured accepted executor, retains the full build/test graph and final controller verdict, and rejects substituted authority or custody.",
+      "falsifier": "A changed carrier, altered accepted executor, missing or mismatched dual-root identity, incomplete required graph, or unauthenticated artifact can establish readiness; or candidate helper changes require a separate manual build despite a supported accepted executor.",
+      "status": "open",
+      "proof_refs": [
+        "src/decapod/core/readiness_profile/tests.rs",
+        "src/decapod/core/snapshot_provider/source_execution/tests.rs",
+        "src/decapod/core/validation_runtime/executor_contract.rs"
+      ]
     },
-    "release-cpus": {
-      "statement": "Release artifact compilation uses runner-effective CPU parallelism without altering global defaults, target matrix or publication gates",
-      "falsifier": "CPU quota/affinity is exceeded, matrix targets drift, or publication gates are broadened",
-      "status": "open"
+    "strict-protocol-rollout": {
+      "statement": "Initial protocol rollout preserves strict independently pinned single-root compatibility, and unsupported workflow or execution contracts remain actionable blockers rather than self-authorizing a candidate controller.",
+      "falsifier": "The fallback accepts altered or new carrier content after only changing the review digest, supported R failure falls back to H, or an old released executable is claimed to acquire unimplemented bootstrap behavior.",
+      "status": "open",
+      "proof_refs": [
+        "src/decapod/core/readiness_profile/tests.rs",
+        "tests/source_ci_profile_policy.rs"
+      ]
     }
   },
   "checkpoints": [
     {
-      "id": "release-context-first",
-      "summary": "Verify ordinary accepted-tip branch creation without candidate receipts; use runner-aware release artifact CPU budgets with adversarial workflow and resource regressions",
-      "input_digest": "sha256:24d3ba7d9baf115250f9a705cb7c49a0f6a77d9185e194ef166e03e24f864d54",
-      "proof_refs": [
-        "tests/ci_event_context_policy.rs",
-        "tests/created_branch_workflow_policy.rs",
-        "tests/release_cpu_policy.rs"
-      ]
-    },
-    {
-      "id": "release-context-controller-diagnostics",
-      "summary": "Repair initial CI assertion and spec reviews; distinguish unsupported controllers and codify validation-owned execution in canonical templates without claiming remote bootstrap",
-      "input_digest": "sha256:6bdec75a01967d854996cbe06b084ff4636181f484b24b107548feb3c3ee700d",
-      "proof_refs": [
-        "https://buildkite.com/decapodlabs/decapod/builds/1199",
-        "https://github.com/DecapodLabs/decapod/actions/runs/38372362158/job/115214285712"
-      ]
-    },
-    {
-      "id": "release-context-template-projections",
-      "summary": "Regenerate canonical entrypoints and agent docs with provider-built candidate; preserve exact 14-field context output suffix and current spec reviews",
-      "input_digest": "sha256:976731df66f7475277db1acf91df894a67c742e780f2bf89e4ff41ee5440616f",
-      "proof_refs": [
-        "https://buildkite.com/decapodlabs/decapod/builds/1204",
-        "https://github.com/DecapodLabs/decapod/actions/runs/38376258621/job/115227195069"
-      ]
+      "id": "accepted-executor-initial",
+      "summary": "Separate accepted execution authority from candidate build inputs, pin the complete carrier in both protocol modes, and preserve controller-owned full validation with versioned custody and regressions.",
+      "input_digest": "sha256:78f9a4cf24e66584f09541b3efe229bdc1e27b9b84651f6d46811ffee7a21ddb"
     }
   ],
   "intents": {
-    "intent:release-context-1397-1049": {
+    "intent:validation-orchestration-779": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "No merges, release publication, deploys, credentials, paid capacity, force pushes or temporary refs"
+        "Fresh governed branch only; no master edits, merge, release, deploy, credentials, paid capacity, or unapproved persistent access changes.",
+        "Do not run manual prerequisite build/test suites outside plain validation."
       ],
       "constraints": [
-        "CI context source/action/constitution workflow/tests, release artifact helper/workflow/tests, directly related specs and generated consistency"
+        "validation runtime, execution/custody boundaries, provider adapter, canonical guidance, regression tests, relevant authored specs and existing issue reconciliation"
       ],
       "created_sequence": 1,
-      "id": "intent:release-context-1397-1049",
+      "id": "intent:validation-orchestration-779",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Fix release-bot branch creation and one closely related release issue",
-      "refined_intent": "Explicit verified no-change context; effective release artifact CPU selection",
+      "raw_intent": "Get to work on issue779 and wrangle related existing issues; newer validation is the automation layer and may supersede old proposed solutions.",
+      "refined_intent": "Extend existing plain validation to own candidate build/test/provider/proof from source-ready work, with independently protected execution and verdict authority.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -199,328 +198,171 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Fix verified ordinary branch creation at the accepted target without treating it as a candidate or granting readiness; retain immutable checks for changed sources. Use runner-effective CPU parallelism only in the existing release artifact matrix. Codify source-ready plain-validation guidance and distinguish unsupported compiled controllers from inventory reconciliation; preserve the separately unresolved remote harness gap.",
+      "intent": "Implement issue779 as the existing validation automation layer: source-ready governed work enters plain validate, which owns configured candidate build, required tests, provider execution, evidence and final readiness. Reuse the existing execution/collection stack; earlier issue mechanisms are hypotheses. Preserve independent verifier authority, full required coverage, same-branch transport, exact source/base/artifact custody and bounded nonrecursive execution.",
       "phases": [],
       "proof_hooks": [
-        "Plain decapod validate; adversarial CI context, release CPU/matrix, typed controller mismatch and canonical template regressions"
+        "decapod validate"
       ],
       "schema_version": "1.1.0",
-      "spec_reviews": [
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Verified accepted-tip no-delta execution remains distinct from candidate proof; canonical templates assign configured execution to validation and finite controller mismatch fails closed without auto-bootstrap",
-          "reviewed_code_fingerprint": "a311bb876ab115a084d4baef25da4e9d093491eff1d2241911abda03924d05c7",
-          "spec_material_hash": "f8dfd4a65a73efabeac3c3160afe1557fd3a6596adbcc8d9098364a3048650ce"
-        },
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed the fixed 14-line CI context output including final no_change boolean, typed unsupported-controller report, and regenerated canonical agent guidance; no candidate readiness or source-identity exception added",
-          "reviewed_code_fingerprint": "a311bb876ab115a084d4baef25da4e9d093491eff1d2241911abda03924d05c7",
-          "spec_material_hash": "ae5de3cd8fa13e0c1eac7da07df4afaecf48bb66965945e592d30d20279f7048"
-        },
-        {
-          "disposition": "unchanged_with_reason",
-          "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Re-reviewed exact-source and accepted-target binding, no-change proof boundary, scoped CPU limits and fail-closed controller diagnostics against final source; no credentials, authorization or distribution permissions changed",
-          "reviewed_code_fingerprint": "a311bb876ab115a084d4baef25da4e9d093491eff1d2241911abda03924d05c7",
-          "spec_material_hash": "3a32d010c700db35158c28ad9660375581eec104456f3a9ecf0231a9801fcc70"
-        }
-      ],
       "state": "APPROVED",
       "stop_conditions": [
-        "Unavailable provider access, required credentials, or resource constraints requiring human decision"
+        "Stop before any credential, account, persistent pipeline trust, runner privilege or paid capacity change and request the exact required authorization.",
+        "Do not weaken required checks, accept candidate self-attested readiness, or claim live support from test doubles."
       ],
-      "title": "Fix release branch context and artifact CPU use",
+      "title": "Make validation own candidate build orchestration",
       "todo_ids": [
-        "bugs_01m4t62e629se07y"
+        "feat_01m4txfvt0ncj3d7"
       ],
-      "unknowns": [],
+      "unknowns": [
+        "Determine the smallest existing-provider execution boundary that keeps candidate build/test code from modifying trusted measurement or final-verdict authority.",
+        "An already shipped controller cannot retroactively implement this code; distinguish one-time controller rollout from future older-catalog compatibility proof."
+      ],
       "unresolved_contradictions": [],
-      "updated_at": "1791884160Z"
+      "updated_at": "1791906901Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "No merges, release publication, deploys, credentials, paid capacity, force pushes or temporary refs"
+        "Do not run manual prerequisite build/test suites outside plain validation.",
+        "Fresh governed branch only; no master edits, merge, release, deploy, credentials, paid capacity, or unapproved persistent access changes.",
+        "Reviewed-transitive-code model only; dual roots are not hostile-code OS isolation."
       ],
-      "artifact_hash": "sha256:d41a5a333e789751b227e0643e10c4c55af10d855ed923f5ccc58c1c6842cf3a",
+      "artifact_hash": "sha256:9b24017c1febd35e78174bfd624fe6dbc4b9e7c44fc751756eab399beeb2e03a",
       "checks": [
         {
-          "name": "CI context independent source review",
+          "name": "imported-program-source-coverage",
           "status": "passed"
         },
         {
-          "name": "CI context output contract",
-          "status": "failed"
+          "name": "independent-source-review",
+          "status": "passed"
         },
         {
-          "name": "CI context output suffix",
-          "status": "failed"
-        },
-        {
-          "name": "Configured proof execution",
+          "name": "regression-execution",
           "status": "unavailable"
-        },
-        {
-          "name": "Controller diagnostic source review",
-          "status": "passed"
-        },
-        {
-          "name": "Current generated projections",
-          "status": "failed"
-        },
-        {
-          "name": "Governance spec review",
-          "status": "failed"
-        },
-        {
-          "name": "No-change whole-command regressions",
-          "status": "passed"
-        },
-        {
-          "name": "Release CPU and matrix regressions",
-          "status": "passed"
-        },
-        {
-          "name": "source review",
-          "status": "partial"
         }
       ],
-      "current_phase": "repair",
+      "completion_claim": "Implementation and regression sources are reviewed; tests and readiness remain unproven until validation executes.",
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:release-context-1397-1049",
+            "intent_id": "intent:validation-orchestration-779",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:release-context-1397-1049",
+            "intent_id": "intent:validation-orchestration-779",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:release-context-1397-1049",
+            "detail": "trajectory:validation-orchestration-779",
             "event_id": "event:4",
-            "intent_id": "intent:release-context-1397-1049",
+            "intent_id": "intent:validation-orchestration-779",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:release-context-1397-1049",
+            "detail": "trajectory:validation-orchestration-779",
             "event_id": "event:5",
-            "intent_id": "intent:release-context-1397-1049",
+            "intent_id": "intent:validation-orchestration-779",
             "kind": "trajectory_step_recorded",
             "sequence": 5
-          },
-          {
-            "detail": "trajectory:release-context-1397-1049",
-            "event_id": "event:6",
-            "intent_id": "intent:release-context-1397-1049",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:release-context-1397-1049",
-            "event_id": "event:7",
-            "intent_id": "intent:release-context-1397-1049",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:release-context-1397-1049",
-            "event_id": "event:8",
-            "intent_id": "intent:release-context-1397-1049",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "release-context-1397-1049": {
+          "validation-orchestration-779": {
             "evidence_only": true,
-            "id": "release-context-1397-1049",
-            "intent_id": "intent:release-context-1397-1049",
+            "id": "validation-orchestration-779",
+            "intent_id": "intent:validation-orchestration-779",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "implementation",
+                "command": "decapod rpc --op agent.init",
                 "custody_event_id": "event:4",
-                "observations": [
-                  "assets/tools/ci_event_context.rs",
-                  "assets/tools/source_ci_custody.rs",
-                  ".github/workflows/constitution-sync.yml",
-                  ".github/workflows/release.yml",
-                  "src/decapod/core/readiness_profile.rs",
-                  "assets/tools/ci_event_context.rs",
-                  ".github/actions/ci-context/action.yml",
-                  ".github/workflows/constitution-sync.yml",
-                  "Historical failure: https://github.com/DecapodLabs/decapod/actions/runs/38343792522/job/115120460402 and Buildkite1183 at exact ef7ab8bc accepted-head branch creation"
-                ],
-                "proof_refs": [
-                  "source review"
-                ],
-                "scope": [
-                  "CI context source/action/constitution workflow/tests, release artifact helper/workflow/tests, directly related specs and generated consistency"
-                ],
-                "sequence": 4,
-                "validation_findings": [
-                  "Four-platform release packaging is outside current source readiness; genuine artifact proof and resource limits must remain explicit"
-                ]
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "Independent review preserved measured distinct endpoints and required before/after no-change identity rechecks; whole-command fixture results pending validate",
-                  "Reviewed release0.110 accepted delta contains only Cargo root package/lock version and changelog; current source inventory includes8 intended helper/workflow/build edits"
-                ],
-                "proof_refs": [
-                  "CI context independent source review",
-                  "Configured proof execution"
-                ],
-                "scope": [
-                  "CI context source/action/constitution workflow/tests, release artifact helper/workflow/tests, directly related specs and generated consistency"
-                ],
-                "sequence": 5,
-                "validation_findings": [
-                  "No actual four-target release artifact build is scheduled by ordinary source preflight;1049 latency improvement remains unmeasured"
-                ]
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "GitHub job115214285712:52 context fixtures passed; existing output count expected13 rather than14, now corrected with exact no_change=false assertion",
-                  "GitHub job115214285712:2 whole-command tests passed in4.63s; actual verifier/profile binaries with explicit Ajv/Node doubles",
-                  "GitHub job115214285712:6 CPU/matrix/wrapper regression tests passed; not actual release packaging speed evidence",
-                  "GitHub job115214384022 reported SPEC_REVIEW_REQUIRED for INTERFACES; supported content-bound review recorded"
-                ],
-                "proof_refs": [
-                  "CI context output contract",
-                  "No-change whole-command regressions",
-                  "Release CPU and matrix regressions",
-                  "Governance spec review"
-                ],
-                "scope": [
-                  "CI context source/action/constitution workflow/tests, release artifact helper/workflow/tests, directly related specs and generated consistency"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "repair",
-                "custody_event_id": "event:7",
                 "observations": [
                   "src/decapod/core/validation_runtime.rs",
                   "src/decapod/core/readiness_profile.rs",
-                  "src/decapod/core/assets.rs",
-                  "src/decapod/core/docs_cli.rs",
-                  "tests/ci_event_context_policy.rs",
-                  "Independent source review: typed failure occurs only after complete inventory equality and missing/unknown-source rejection; no dispatch, readiness or trust fallback is added",
-                  "Initial exact b0fc82 graph terminal:71success,5skipped,6failure entries from output-count assertion and missing spec review only; Buildkite1199 ended2026-10-13T09:05:03.312Z",
-                  "Provider-built b0fc82 controller ZIP artifact11799827610 SHA256 2a4691cf2522760bf688c48bcfcbbb844e4424373192cfc8012f764d0e44cfb9; executable SHA256 d1f3613f8a38e3cd80e29c6f68582cd294506680d568302aa324cba2a5c72006"
+                  "src/decapod/core/validation_runtime/executor_contract.rs",
+                  "assets/tools/source_ci_custody.rs",
+                  ".github/actions/source-ci-profile/action.yml",
+                  "https://github.com/DecapodLabs/decapod/issues/779#issuecomment-6148469287"
                 ],
                 "proof_refs": [
-                  "Controller diagnostic source review"
+                  "regression-execution",
+                  "independent-source-review"
                 ],
                 "scope": [
-                  "CI context source/action/constitution workflow/tests, release artifact helper/workflow/tests, directly related specs and generated consistency"
+                  "validation runtime, execution/custody boundaries, provider adapter, canonical guidance, regression tests, relevant authored specs and existing issue reconciliation"
                 ],
-                "sequence": 7,
+                "sequence": 4,
                 "validation_findings": [
-                  "Automatic trusted remote controller bootstrap is absent; a two-revision independent provider harness requires separate scope decision. Diagnostics do not claim to close that gap."
+                  "First rollout cannot retroactively teach the existing released controller this new protocol; use independently built supported controller custody without claiming automatic replacement."
                 ]
               },
               {
-                "action": "repair",
-                "custody_event_id": "event:8",
+                "action": "validation",
+                "custody_event_id": "event:5",
                 "observations": [
-                  "AGENTS.md",
-                  "CLAUDE.md",
-                  "CODEX.md",
-                  "GEMINI.md",
-                  "docs/agent/command-contracts.md",
-                  "Second head1b714ee3 provider build succeeded; exact artifact11801821617 ZIP SHA256 5ac5cdd868f14cd909a3860f46ecd44226360eb24139cd1dd7e4e387ac3d7b95 and CLI SHA256 2782028dadedcf34bdfaf968c3024d9b1c4d72d5beb8bc2963616b59313fda9c",
-                  "CI reported four entrypoint mismatches and docs/agent/command-contracts drift; init --proof, docs build --touched src/decapod/core/docs_cli.rs and specs.refresh regenerated through the exact provider-built candidate; authored config and overrides unchanged; original entrypoints preserved",
-                  "Existing output-schema test also expected provider_freshness as final line; corrected to exact provider_freshness plus no_change=false suffix, preserving ordered keys/count",
-                  "Plain validate reached provider_terminal_wait for exact1b714ee3; host session disappeared at45s after status review cancellation; no final report or exit exists and controller was not restarted against the running graph"
+                  "src/decapod/core/readiness_profile/tests.rs",
+                  "src/decapod/core/validation_runtime/tests.rs",
+                  "src/decapod/core/snapshot_provider/public_buildkite/program.rs",
+                  "tests/source_ci_profile_policy.rs"
                 ],
                 "proof_refs": [
-                  "Current generated projections",
-                  "CI context output suffix"
+                  "independent-source-review",
+                  "imported-program-source-coverage"
                 ],
                 "scope": [
-                  "CI context source/action/constitution workflow/tests, release artifact helper/workflow/tests, directly related specs and generated consistency",
-                  "Canonical agent templates and typed validation-controller mismatch diagnostics with regression tests"
+                  "validation runtime, execution/custody boundaries, provider adapter, canonical guidance, regression tests, relevant authored specs and existing issue reconciliation"
                 ],
-                "sequence": 8,
+                "sequence": 5,
                 "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "decapod rpc --op agent.init"
+      ],
       "evidence": [
-        "CI reported four entrypoint mismatches and docs/agent/command-contracts drift; init --proof, docs build --touched src/decapod/core/docs_cli.rs and specs.refresh regenerated through the exact provider-built candidate; authored config and overrides unchanged; original entrypoints preserved",
-        "Existing output-schema test also expected provider_freshness as final line; corrected to exact provider_freshness plus no_change=false suffix, preserving ordered keys/count",
-        "GitHub job115214285712:2 whole-command tests passed in4.63s; actual verifier/profile binaries with explicit Ajv/Node doubles",
-        "GitHub job115214285712:52 context fixtures passed; existing output count expected13 rather than14, now corrected with exact no_change=false assertion",
-        "GitHub job115214285712:6 CPU/matrix/wrapper regression tests passed; not actual release packaging speed evidence",
-        "GitHub job115214384022 reported SPEC_REVIEW_REQUIRED for INTERFACES; supported content-bound review recorded",
-        "Historical failure: https://github.com/DecapodLabs/decapod/actions/runs/38343792522/job/115120460402 and Buildkite1183 at exact ef7ab8bc accepted-head branch creation",
-        "Independent review preserved measured distinct endpoints and required before/after no-change identity rechecks; whole-command fixture results pending validate",
-        "Independent source review: typed failure occurs only after complete inventory equality and missing/unknown-source rejection; no dispatch, readiness or trust fallback is added",
-        "Initial exact b0fc82 graph terminal:71success,5skipped,6failure entries from output-count assertion and missing spec review only; Buildkite1199 ended2026-10-13T09:05:03.312Z",
-        "Plain validate reached provider_terminal_wait for exact1b714ee3; host session disappeared at45s after status review cancellation; no final report or exit exists and controller was not restarted against the running graph",
-        "Provider-built b0fc82 controller ZIP artifact11799827610 SHA256 2a4691cf2522760bf688c48bcfcbbb844e4424373192cfc8012f764d0e44cfb9; executable SHA256 d1f3613f8a38e3cd80e29c6f68582cd294506680d568302aa324cba2a5c72006",
-        "Reviewed release0.110 accepted delta contains only Cargo root package/lock version and changelog; current source inventory includes8 intended helper/workflow/build edits",
-        "Second head1b714ee3 provider build succeeded; exact artifact11801821617 ZIP SHA256 5ac5cdd868f14cd909a3860f46ecd44226360eb24139cd1dd7e4e387ac3d7b95 and CLI SHA256 2782028dadedcf34bdfaf968c3024d9b1c4d72d5beb8bc2963616b59313fda9c"
+        "https://github.com/DecapodLabs/decapod/issues/779#issuecomment-6148469287",
+        "src/decapod/core/readiness_profile/tests.rs",
+        "src/decapod/core/snapshot_provider/public_buildkite/program.rs",
+        "src/decapod/core/validation_runtime/tests.rs",
+        "tests/source_ci_profile_policy.rs"
       ],
       "inspected_files": [
-        ".github/workflows/constitution-sync.yml",
-        ".github/workflows/release.yml",
-        "assets/tools/ci_event_context.rs",
-        "assets/tools/source_ci_custody.rs",
         "src/decapod/core/readiness_profile.rs",
         "src/decapod/core/validation_runtime.rs"
       ],
-      "intent_id": "intent:release-context-1397-1049",
+      "intent_id": "intent:validation-orchestration-779",
       "modified_files": [
-        ".github/actions/ci-context/action.yml",
-        ".github/workflows/constitution-sync.yml",
-        "AGENTS.md",
-        "CLAUDE.md",
-        "CODEX.md",
-        "GEMINI.md",
-        "assets/tools/ci_event_context.rs",
-        "docs/agent/command-contracts.md",
-        "src/decapod/core/assets.rs",
-        "src/decapod/core/docs_cli.rs",
-        "tests/ci_event_context_policy.rs"
+        ".github/actions/source-ci-profile/action.yml",
+        "assets/tools/source_ci_custody.rs",
+        "src/decapod/core/validation_runtime/executor_contract.rs"
       ],
       "next_transitions": [
-        "Checkpoint regenerated projections and corrected suffix assertion, then plain validate",
-        "Checkpoint repaired source and invoke plain validation through the reviewed provider-built controller"
+        "Finish bounded source review, checkpoint and run plain validate; repair reported failures using the same branch.",
+        "Review minimal safe execution design, then implement bounded shared primitives and regression coverage.",
+        "Run plain validate on the committed candidate, preserve any controller compatibility blocker, and use only authenticated configured-provider artifacts for the initial protocol rollout."
       ],
       "repo_scope": [
-        "CI context source/action/constitution workflow/tests, release artifact helper/workflow/tests, directly related specs and generated consistency",
-        "Canonical agent templates and typed validation-controller mismatch diagnostics with regression tests"
+        "validation runtime, execution/custody boundaries, provider adapter, canonical guidance, regression tests, relevant authored specs and existing issue reconciliation"
       ],
-      "run_id": "release-context-1397-1049",
+      "run_id": "validation-orchestration-779",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m4t62e629se07y",
+      "task_id": "feat_01m4txfvt0ncj3d7",
       "tool_calls": [],
       "unresolved_assumptions": [
-        "Automatic trusted remote controller bootstrap is absent; a two-revision independent provider harness requires separate scope decision. Diagnostics do not claim to close that gap.",
-        "Four-platform release packaging is outside current source readiness; genuine artifact proof and resource limits must remain explicit",
-        "No actual four-target release artifact build is scheduled by ordinary source preflight;1049 latency improvement remains unmeasured"
+        "First rollout cannot retroactively teach the existing released controller this new protocol; use independently built supported controller custody without claiming automatic replacement."
       ]
     }
   },

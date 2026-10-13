@@ -633,6 +633,7 @@ fn describe_preparation(context: &Context) -> Check<PreparedDependencies> {
             }
         }
     }
+    let bootstrap = temp.join("integration-bootstrap-package");
     let value = PreparedDependencies {
         context: context.clone(),
         archive_sha256,
@@ -643,13 +644,13 @@ fn describe_preparation(context: &Context) -> Check<PreparedDependencies> {
         bootstrap_sha256: file_sha256(Path::new(
             "target/integration-bootstrap-artifacts/integration-bootstrap.tar",
         ))?,
-        executor_sha256: file_sha256(&temp.join("source-ci-profile"))?,
-        worker_script_sha256: file_sha256(Path::new(
-            "assets/tools/source_ci/integration-worker.sh",
-        ))?,
-        status_script_sha256: file_sha256(Path::new(
-            "assets/tools/source_ci/integration-status.sh",
-        ))?,
+        executor_sha256: file_sha256(&bootstrap.join("integration-bootstrap/source-ci-profile"))?,
+        worker_script_sha256: file_sha256(
+            &bootstrap.join("assets/tools/source_ci/integration-worker.sh"),
+        )?,
+        status_script_sha256: file_sha256(
+            &bootstrap.join("assets/tools/source_ci/integration-status.sh"),
+        )?,
         inventory,
     };
     value.encode()?;

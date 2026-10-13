@@ -22,6 +22,9 @@ pub mod ci_context;
 pub mod declared_toolchain;
 
 pub const SCHEMA: &str = "decapod.source-ci.execution.v2";
+pub const DUAL_ROOT_SCHEMA: &str = "decapod.source-ci.dual-root.v1";
+pub const DUAL_ROOT_PREPARATION_SCHEMA: &str = "decapod.source-ci.preparation.v2";
+pub const DUAL_ROOT_EXECUTION_SCHEMA: &str = "decapod.source-ci.execution.v3";
 pub const UPLOAD_STEP_NAME: &str = "Upload measured source-CI custody";
 pub fn artifact_name(job: &str, matrix: Option<&str>, attempt: &str) -> io::Result<String> {
     let matrix = matrix.unwrap_or("singleton");
@@ -127,7 +130,7 @@ fn uuid(value: &str) -> bool {
 
 /// Exact source bytes used to compile this executor, with filenames and byte
 /// lengths framed to avoid concatenation ambiguity. Never an expected value.
-pub fn profile_digest() -> io::Result<String> {
+pub fn profile_sources() -> Vec<(&'static str, &'static [u8])> {
     let files: &[(&str, &[u8])] = &[
         (
             "source_ci_toolchain.rs",
@@ -151,20 +154,216 @@ pub fn profile_digest() -> io::Result<String> {
             include_bytes!("integration_custody.rs"),
         ),
     ];
+    files
+        .iter()
+        .chain(workflow_owned::SOURCES.iter())
+        .copied()
+        .chain(std::iter::once((
+            "source_ci_workflow_owned.rs",
+            include_bytes!("source_ci_workflow_owned.rs").as_slice(),
+        )))
+        .collect()
+}
+
+/// Preserve v1 profile framing while exposing the complete transitive closure.
+pub fn profile_source_path(name: &str) -> PathBuf {
+    if name.contains('/') {
+        PathBuf::from(name)
+    } else {
+        Path::new("assets/tools").join(name)
+    }
+}
+pub fn profile_digest() -> io::Result<String> {
     let mut bytes = Vec::new();
-    for (name, content) in
-        files
-            .iter()
-            .chain(workflow_owned::SOURCES.iter())
-            .chain(std::iter::once(&(
-                "source_ci_workflow_owned.rs",
-                include_bytes!("source_ci_workflow_owned.rs").as_slice(),
-            )))
-    {
+    for (name, content) in profile_sources() {
         bytes.extend_from_slice(format!("{name}\0{}\0", content.len()).as_bytes());
         bytes.extend_from_slice(content);
     }
     sha(&bytes)
+}
+
+/// Opt-in authority context. The caller independently authenticates this R;
+/// these measurements do not turn a directory or a subprocess into a sandbox.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ExecutorContext {
+    pub root: PathBuf,
+    pub revision: String,
+    pub tree: String,
+}
+impl ExecutorContext {
+    pub fn from_flags(flags: &BTreeMap<String, String>) -> io::Result<Option<Self>> {
+        let names = [
+            "--execution-context",
+            "--executor-root",
+            "--executor-revision",
+            "--executor-tree",
+        ];
+        if names.iter().all(|key| !flags.contains_key(*key)) {
+            return Ok(None);
+        }
+        if names.iter().any(|key| !flags.contains_key(*key))
+            || flags["--execution-context"] != DUAL_ROOT_SCHEMA
+            || flags["--executor-root"].is_empty()
+            || !oid(&flags["--executor-revision"])
+            || !oid(&flags["--executor-tree"])
+        {
+            return Err(io::Error::other(
+                "missing, invalid, or unsupported dual-root execution context",
+            ));
+        }
+        Ok(Some(Self {
+            root: flags["--executor-root"].clone().into(),
+            revision: flags["--executor-revision"].clone(),
+            tree: flags["--executor-tree"].clone(),
+        }))
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct VerifiedExecutor {
+    pub root: PathBuf,
+    pub revision: String,
+    pub tree: String,
+    pub closure_digest: String,
+}
+impl VerifiedExecutor {
+    /// No machine-local paths appear in the portable proof identity.
+    pub fn context_json(&self, subject_revision: &str, subject_tree: &str) -> String {
+        format!(
+            "{{\"schema\":{},\"executor_revision\":{},\"executor_tree\":{},\"executor_profile_digest\":{},\"subject_revision\":{},\"subject_tree\":{},\"executor_closure_digest\":{}}}",
+            json_string(DUAL_ROOT_SCHEMA),
+            json_string(&self.revision),
+            json_string(&self.tree),
+            json_string(&self.closure_digest),
+            json_string(subject_revision),
+            json_string(subject_tree),
+            json_string(&self.closure_digest)
+        )
+    }
+}
+
+/// Verify a separate, complete clean R and measure every embedded source/helper
+/// and recipe, including the selector and packaged integration verifier closure.
+/// Candidate build files and test programs remain subject inputs under H.
+pub fn verify_executor_root(
+    repo: &Path,
+    executor: &ExecutorContext,
+) -> io::Result<VerifiedExecutor> {
+    if !oid(&executor.revision)
+        || !oid(&executor.tree)
+        || !executor.root.symlink_metadata()?.file_type().is_dir()
+        || !repo.symlink_metadata()?.file_type().is_dir()
+    {
+        return Err(io::Error::other(
+            "invalid dual-root directory or immutable identity",
+        ));
+    }
+    let root = fs::canonicalize(&executor.root)?;
+    let subject = fs::canonicalize(repo)?;
+    if root.starts_with(&subject) || subject.starts_with(&root) {
+        return Err(io::Error::other(
+            "executor and subject roots must be separate, non-nested directories",
+        ));
+    }
+    let actual = ci_context::resolve(&ci_context::Inputs {
+        repo: root.clone(),
+        event: "workflow_dispatch".into(),
+        base: String::new(),
+        head: executor.revision.clone(),
+        pre_pr: false,
+        created: false,
+        accepted_base_ref: None,
+        snapshot: false,
+        trigger_ref: None,
+    })
+    .map_err(io::Error::other)?;
+    if actual.checkout_head != executor.revision || actual.checkout_tree != executor.tree {
+        return Err(io::Error::other(
+            "executor revision/tree differs from independently reviewed R",
+        ));
+    }
+    let index = immutable_git(&root, &["ls-files", "-v", "-z"])?;
+    if !index.status.success()
+        || index.stdout.len() > 8 * 1024 * 1024
+        || index
+            .stdout
+            .split(|b| *b == 0)
+            .filter(|v| !v.is_empty())
+            .any(|v| !v.starts_with(b"H "))
+        || !git_value(
+            &root,
+            &[
+                "diff",
+                "--cached",
+                "--name-only",
+                "--no-ext-diff",
+                "--no-textconv",
+                &executor.revision,
+                "--",
+            ],
+        )?
+        .is_empty()
+    {
+        return Err(io::Error::other(
+            "executor requires a complete unchanged ordinary index",
+        ));
+    }
+    let mut measured = Vec::new();
+    for (name, expected) in profile_sources() {
+        let relative = profile_source_path(name);
+        let mut path = root.clone();
+        for component in relative.components() {
+            if !matches!(component, Component::Normal(_)) {
+                return Err(io::Error::other("invalid executor closure path"));
+            }
+            path.push(component);
+            if path.symlink_metadata()?.file_type().is_symlink() {
+                return Err(io::Error::other(
+                    "executor closure cannot traverse symlinks",
+                ));
+            }
+        }
+        if !path.symlink_metadata()?.file_type().is_file() {
+            return Err(io::Error::other("executor closure requires ordinary files"));
+        }
+        let mut content = Vec::new();
+        File::open(&path)?
+            .take(expected.len() as u64 + 1)
+            .read_to_end(&mut content)?;
+        if content != expected {
+            return Err(io::Error::other(format!(
+                "executor closure differs from compiled reviewed profile: {}",
+                relative.display()
+            )));
+        }
+        // Also prove that the measured bytes belong to the exact captured tree.
+        let object = immutable_git(
+            &root,
+            &[
+                "show",
+                &format!("{}:{}", executor.revision, relative.display()),
+            ],
+        )?;
+        if !object.status.success() || object.stdout != content {
+            return Err(io::Error::other(
+                "executor closure differs from captured revision",
+            ));
+        }
+        measured.extend_from_slice(format!("{name}\0{}\0", content.len()).as_bytes());
+        measured.extend_from_slice(&content);
+    }
+    let closure_digest = sha(&measured)?;
+    if closure_digest != profile_digest()? {
+        return Err(io::Error::other(
+            "measured executor closure digest mismatch",
+        ));
+    }
+    Ok(VerifiedExecutor {
+        root,
+        revision: actual.checkout_head,
+        tree: actual.checkout_tree,
+        closure_digest,
+    })
 }
 
 /// Compact UTF-8 JSON array, with field order fixed by invocation_json; no newline.
@@ -197,6 +396,7 @@ pub struct Context {
     pub expected_toolchain: Option<String>,
     pub preparation_file: Option<PathBuf>,
     pub evidence_dir: PathBuf,
+    pub executor: Option<ExecutorContext>,
 }
 impl Context {
     pub fn from_flags(flags: &BTreeMap<String, String>) -> io::Result<Self> {
@@ -220,6 +420,7 @@ impl Context {
             expected_toolchain: flags.get("--expected-toolchain-sha256").cloned(),
             preparation_file: flags.get("--preparation-file").map(PathBuf::from),
             evidence_dir: required("--evidence-dir")?.into(),
+            executor: ExecutorContext::from_flags(flags)?,
         })
     }
     fn validate(
@@ -584,16 +785,42 @@ fn exit_json(status: ExitStatus) -> String {
         status.success()
     )
 }
+/// Resolve only reviewed shell recipe operands against R. Other operands,
+/// command working directories, Cargo/Bazel inputs and outputs stay under H.
+pub fn configured_arguments(
+    invocation: &Invocation,
+    executor_root: &Path,
+) -> Vec<std::ffi::OsString> {
+    invocation
+        .args
+        .iter()
+        .map(|arg| {
+            if invocation.program == "bash"
+                && workflow_owned::SOURCES
+                    .iter()
+                    .any(|(path, _)| path == arg && path.ends_with(".sh"))
+            {
+                executor_root.join(arg).into_os_string()
+            } else {
+                std::ffi::OsString::from(*arg)
+            }
+        })
+        .collect()
+}
 fn configured(
     invocation: &Invocation,
     repo: &Path,
     executable: &Path,
     bindings: &BTreeMap<String, String>,
+    executor_root: &Path,
+    profile_executable: &Path,
 ) -> Command {
     let mut command = Command::new(executable);
     command.envs(bindings);
     command
-        .args(&invocation.args)
+        .args(configured_arguments(invocation, executor_root))
+        .env("SOURCE_CI_EXECUTOR_ROOT", executor_root)
+        .env("SOURCE_CI_PROFILE_EXECUTABLE", profile_executable)
         .current_dir(repo.join(invocation.cwd));
     for (key, value) in &invocation.env {
         if let Some(value) = value {
@@ -616,6 +843,7 @@ fn measure_tools(
     repo: &Path,
     dir: &Path,
     prefix: &str,
+    executor_root: &Path,
 ) -> io::Result<(String, String, bool)> {
     // Resolve and bind the selected toolchain first. Bazelisk may initialize its
     // pinned cache on this probe; preserve that cold-start diagnostic in the
@@ -685,7 +913,7 @@ fn measure_tools(
         ));
     }
     for (path, _) in workflow_owned::script_sources(check) {
-        let file = repo.join(path);
+        let file = executor_root.join(path);
         tools.push(format!(
             "{{\"kind\":\"source_recipe\",\"path\":{},\"sha256\":{}}}",
             json_string(path),
@@ -871,13 +1099,28 @@ pub fn run(
             "run-evidence requires independently frozen --expected-toolchain-sha256 and --preparation-file",
         ));
     }
+    let executor = context
+        .executor
+        .as_ref()
+        .map(|value| verify_executor_root(repo, value))
+        .transpose()?;
     let repo = fs::canonicalize(repo)?;
     let candidate_tree = if workflow_owned::artifact_worker(check) {
         artifact_context(check, base, head, context)?.tree
     } else {
         verify_snapshot(&repo, context, base, head)?
     };
-    verify_recipe_files(&repo, check)?;
+    let executor_root = executor
+        .as_ref()
+        .map_or(repo.as_path(), |value| value.root.as_path());
+    let execution_context = executor
+        .as_ref()
+        .map(|value| value.context_json(&context.validation_head, &context.tree));
+    let context_field = execution_context.as_ref().map_or(String::new(), |value| {
+        format!(",\"execution_context\":{value}")
+    });
+    let profile_executable = env::current_exe()?;
+    verify_recipe_files(executor_root, check)?;
     let bindings = context_bindings(&repo, check, base, head, context)?;
     let context_json = bindings_json(&bindings);
     // Unique directories prevent overwriting or confusing an earlier attempt.
@@ -896,7 +1139,7 @@ pub fn run(
         if check.id.starts_with("golden-vectors-") {
             golden_preflight(&repo)?;
         }
-        let measured = measure_tools(check, &recipe, &repo, &dir, "")?;
+        let measured = measure_tools(check, &recipe, &repo, &dir, "", executor_root)?;
         toolchain_json = measured.0;
         new_file(&dir.join("tool-logs.json"), measured.1.as_bytes())?;
         logs_complete &= measured.2;
@@ -913,8 +1156,19 @@ pub fn run(
     )?;
     let toolchain_digest = sha(toolchain_json.as_bytes())?;
     new_file(&dir.join("context.json"), context_json.as_bytes())?;
+    if let Some(expected) = &executor {
+        let after = verify_executor_root(&repo, context.executor.as_ref().unwrap())?;
+        if &after != expected {
+            return Err(io::Error::other("executor changed during preparation"));
+        }
+    }
     let preparation_manifest = format!(
-        "{{\"schema\":\"decapod.source-ci.preparation.v1\",\"authenticated\":false,\"complete_pr_profile\":false,\"preparation_complete\":{},\"workflow\":{},\"job\":{},\"check\":{},\"matrix\":{},\"base\":{},\"head\":{},\"snapshot\":{},\"execution_revision\":{},\"tree\":{},\"provider\":{},\"run_id\":{},\"run_attempt\":{},\"job_id\":{},\"step_key\":{},\"profile_digest\":{},\"invocation_digest\":{},\"toolchain_digest\":{},\"context_digest\":{},\"executor_digest\":{},\"platform\":{}}}\n",
+        "{{\"schema\":{},\"authenticated\":false,\"complete_pr_profile\":false,\"preparation_complete\":{},\"workflow\":{},\"job\":{},\"check\":{},\"matrix\":{},\"base\":{},\"head\":{},\"snapshot\":{},\"execution_revision\":{},\"tree\":{},\"provider\":{},\"run_id\":{},\"run_attempt\":{},\"job_id\":{},\"step_key\":{},\"profile_digest\":{},\"invocation_digest\":{},\"toolchain_digest\":{},\"context_digest\":{},\"executor_digest\":{},\"platform\":{}{}}}\n",
+        json_string(if executor.is_some() {
+            DUAL_ROOT_PREPARATION_SCHEMA
+        } else {
+            "decapod.source-ci.preparation.v1"
+        }),
         status == "passed" && logs_complete,
         json_string(check.workflow),
         json_string(check.job),
@@ -934,8 +1188,9 @@ pub fn run(
         json_string(&invocation_digest(&recipe)?),
         json_string(&toolchain_digest),
         json_string(&sha(context_json.as_bytes())?),
-        json_string(&file_sha(&env::current_exe()?)?),
-        json_string(check.platform.name())
+        json_string(&file_sha(&profile_executable)?),
+        json_string(check.platform.name()),
+        context_field
     );
     new_file(
         &dir.join("preparation.json"),
@@ -981,10 +1236,23 @@ pub fn run(
         for (index, invocation) in recipe.iter().enumerate() {
             let stage = Instant::now();
             let outcome = (|| -> io::Result<(PathBuf, String, Execution)> {
+                if let Some(expected) = &executor {
+                    if verify_executor_root(&repo, context.executor.as_ref().unwrap())? != *expected
+                    {
+                        return Err(io::Error::other("executor changed before source command"));
+                    }
+                }
                 let executable = resolve(invocation.program, &repo.join(invocation.cwd))?;
                 let hash = file_sha(&executable)?;
                 let out = execute(
-                    configured(invocation, &repo, &executable, &bindings),
+                    configured(
+                        invocation,
+                        &repo,
+                        &executable,
+                        &bindings,
+                        executor_root,
+                        &profile_executable,
+                    ),
                     &dir,
                     &format!("command-{index}"),
                     true,
@@ -1039,7 +1307,7 @@ pub fn run(
         }
     }
     if !results.is_empty() {
-        match measure_tools(check, &recipe, &repo, &dir, "after-") {
+        match measure_tools(check, &recipe, &repo, &dir, "after-", executor_root) {
             Ok((after, logs, complete)) => {
                 new_file(&dir.join("after-toolchain.json"), after.as_bytes())?;
                 new_file(&dir.join("after-tool-logs.json"), logs.as_bytes())?;
@@ -1092,10 +1360,40 @@ pub fn run(
         status = "failed";
         failure = Some(error.to_string());
     }
+    let mut final_executor_closure = None;
+    if let Some(expected) = &executor {
+        match verify_executor_root(&repo, context.executor.as_ref().unwrap()) {
+            Ok(after) if &after == expected => final_executor_closure = Some(after.closure_digest),
+            Ok(_) => {
+                status = "failed";
+                failure = Some("executor identity changed during source execution".into());
+            }
+            Err(error) => {
+                status = "failed";
+                failure = Some(format!(
+                    "cannot verify post-execution executor closure: {error}"
+                ));
+            }
+        }
+    }
+    let final_context_field = if executor.is_some() {
+        format!(
+            "{context_field},\"final_executor_closure_digest\":{}",
+            final_executor_closure
+                .as_deref()
+                .map_or_else(|| "null".into(), json_string)
+        )
+    } else {
+        String::new()
+    };
     let complete = status == "passed" && logs_complete && results.len() == recipe.len();
     let manifest = format!(
-        "{{\"schema\":{},\"complete_pr_profile\":false,\"authenticated\":false,\"toolchain_scope\":\"declared executable, compiler, sysroot, configuration and input closure; provider policy remains mandatory\",\"execution_complete\":{},\"status\":{},\"workflow\":{},\"job\":{},\"check\":{},\"matrix\":{},\"base\":{},\"head\":{},\"execution_revision\":{},\"final_execution_revision\":{},\"candidate_tree\":{},\"snapshot\":{},\"snapshot_tree\":{},\"provider\":{},\"run_id\":{},\"run_attempt\":{},\"job_id\":{},\"step_key\":{},\"profile_digest\":{},\"invocation_digest\":{},\"toolchain_digest\":{},\"preparation_digest\":{},\"terminal_record_sha256\":{},\"platform\":{},\"logs_complete\":{},\"context_digest\":{},\"execution_mode\":{},\"results\":[{}],\"artifacts\":[{}],\"error\":{},\"elapsed_ms\":{}}}\n",
-        json_string(SCHEMA),
+        "{{\"schema\":{},\"complete_pr_profile\":false,\"authenticated\":false,\"toolchain_scope\":\"declared executable, compiler, sysroot, configuration and input closure; provider policy remains mandatory\",\"execution_complete\":{},\"status\":{},\"workflow\":{},\"job\":{},\"check\":{},\"matrix\":{},\"base\":{},\"head\":{},\"execution_revision\":{},\"final_execution_revision\":{},\"candidate_tree\":{},\"snapshot\":{},\"snapshot_tree\":{},\"provider\":{},\"run_id\":{},\"run_attempt\":{},\"job_id\":{},\"step_key\":{},\"profile_digest\":{},\"invocation_digest\":{},\"toolchain_digest\":{},\"preparation_digest\":{},\"terminal_record_sha256\":{},\"platform\":{},\"logs_complete\":{},\"context_digest\":{},\"execution_mode\":{},\"results\":[{}],\"artifacts\":[{}],\"error\":{},\"elapsed_ms\":{}{}}}\n",
+        json_string(if executor.is_some() {
+            DUAL_ROOT_EXECUTION_SCHEMA
+        } else {
+            SCHEMA
+        }),
         complete,
         json_string(status),
         json_string(check.workflow),
@@ -1134,7 +1432,8 @@ pub fn run(
         failure
             .as_deref()
             .map_or_else(|| "null".into(), json_string),
-        start.elapsed().as_millis()
+        start.elapsed().as_millis(),
+        final_context_field
     );
     new_file(&dir.join("execution.json"), manifest.as_bytes())?;
     print!("{manifest}");
@@ -1162,6 +1461,16 @@ pub fn run_ci(
     supplied_base: Option<&str>,
     supplied_head: Option<&str>,
 ) -> io::Result<bool> {
+    run_ci_with_executor(repo, check, supplied_base, supplied_head, None)
+}
+
+pub fn run_ci_with_executor(
+    repo: &Path,
+    check: &Check,
+    supplied_base: Option<&str>,
+    supplied_head: Option<&str>,
+    executor: Option<ExecutorContext>,
+) -> io::Result<bool> {
     let variable = |name: &str, fallback: &str| -> io::Result<String> {
         env::var(name)
             .or_else(|_| env::var(fallback))
@@ -1179,6 +1488,11 @@ pub fn run_ci(
     // Ordinary manual dispatch is explicitly outside PR readiness. Preserve its
     // existing partial source-check behavior; never issue an execution receipt.
     if base.is_empty() && env::var("SOURCE_CI_EVENT").as_deref() == Ok("workflow_dispatch") {
+        if executor.is_some() {
+            return Err(io::Error::other(
+                "dual-root execution requires immutable subject context",
+            ));
+        }
         return run_check(repo, check, &[], &base, &head);
     }
     let artifact = workflow_owned::artifact_worker(check);
@@ -1244,13 +1558,30 @@ pub fn run_ci(
         expected_toolchain: None,
         preparation_file: None,
         evidence_dir: check_dir.join("preparation"),
+        executor,
     };
     if !artifact && !selected(check, &paths, false) {
         let tree = verify_snapshot(repo, &context, &base, &head)?;
+        let measured = context
+            .executor
+            .as_ref()
+            .map(|value| verify_executor_root(repo, value))
+            .transpose()?;
+        let extra = measured.as_ref().map_or(String::new(), |value| {
+            format!(
+                ",\"execution_context\":{}",
+                value.context_json(&context.validation_head, &tree)
+            )
+        });
         // Context validation deliberately rejects empty required recipes. This
         // separate receipt proves the selector result and claims no execution.
         let selection = format!(
-            "{{\"schema\":\"decapod.source-ci.selection.v1\",\"status\":\"not_applicable\",\"authenticated\":false,\"complete_pr_profile\":false,\"check\":{},\"workflow\":{},\"job\":{},\"matrix\":{},\"base\":{},\"head\":{},\"snapshot\":{},\"execution_revision\":{},\"tree\":{},\"profile_digest\":{},\"provider\":{},\"run_id\":{},\"run_attempt\":{},\"job_id\":{},\"step_key\":{},\"changed_paths\":{}}}\n",
+            "{{\"schema\":{},\"status\":\"not_applicable\",\"authenticated\":false,\"complete_pr_profile\":false,\"check\":{},\"workflow\":{},\"job\":{},\"matrix\":{},\"base\":{},\"head\":{},\"snapshot\":{},\"execution_revision\":{},\"tree\":{},\"profile_digest\":{},\"provider\":{},\"run_id\":{},\"run_attempt\":{},\"job_id\":{},\"step_key\":{},\"changed_paths\":{}{}}}\n",
+            json_string(if measured.is_some() {
+                "decapod.source-ci.selection.v2"
+            } else {
+                "decapod.source-ci.selection.v1"
+            }),
             json_string(check.id),
             json_string(check.workflow),
             json_string(check.job),
@@ -1266,7 +1597,8 @@ pub fn run_ci(
             json_string(&context.run_attempt),
             json_string(&context.job_id),
             json_string(&context.step_key),
-            json_strings(&paths)
+            json_strings(&paths),
+            extra
         );
         new_file(&check_dir.join("selection.json"), selection.as_bytes())?;
         print!("{selection}");
@@ -1311,6 +1643,7 @@ mod tests {
             expected_toolchain: None,
             preparation_file: None,
             evidence_dir: PathBuf::from("unused"),
+            executor: None,
         }
     }
     #[test]

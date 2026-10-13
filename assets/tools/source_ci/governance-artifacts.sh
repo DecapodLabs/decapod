@@ -11,7 +11,7 @@ done
 export GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null
 export GIT_NO_REPLACE_OBJECTS=1 GIT_NO_LAZY_FETCH=1 GIT_TERMINAL_PROMPT=0
 source_root="$(git rev-parse --show-toplevel)"
-source "$source_root/assets/tools/source_ci/private-checkout.sh"
+source "${SOURCE_CI_EXECUTOR_ROOT:-$source_root}/assets/tools/source_ci/private-checkout.sh"
 source_private_checkout
 cd "$SOURCE_PRIVATE_CHECKOUT"
 export GOVERNANCE_BASE="${SOURCE_CI_BASE?}" GOVERNANCE_HEAD_REF="${SOURCE_CI_HEAD:?}"
