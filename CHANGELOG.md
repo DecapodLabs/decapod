@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.111.1](https://github.com/DecapodLabs/decapod/compare/v0.111.0...v0.111.1) - 2026-10-13
+
+### Fixed
+
+- require positive hosted identity for release ownership
+
 ## [0.111.0](https://github.com/DecapodLabs/decapod/compare/v0.110.0...v0.111.0) - 2026-10-13
 
 ### Added
