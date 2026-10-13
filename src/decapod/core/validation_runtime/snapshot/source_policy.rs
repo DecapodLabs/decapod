@@ -525,6 +525,9 @@ fn verify_environment(values: &Value, recipe: &[source::Invocation]) -> io::Resu
     source::custody::declared_toolchain::validate_environment(&values, recipe)
 }
 
+#[cfg(all(test, target_os = "linux", target_arch = "x86_64"))]
+mod real_compiler_tests;
+
 #[cfg(test)]
 mod tests {
     use super::*;
