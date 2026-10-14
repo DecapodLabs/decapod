@@ -1,12 +1,47 @@
 use decapod::core::store::{Store, StoreKind};
 use decapod::core::todo::{
     ClaimMode, TodoCommand, add_task, claim_task, get_task, initialize_todo_db, update_status,
+    yield_claim_lease,
 };
 use decapod::core::workspace;
 use decapod::plugins::federation::initialize_federation_db;
 use std::fs;
 use std::path::Path;
 use tempfile::tempdir;
+
+// Pruning fixtures need completed tasks, not validation evidence. Relinquish
+// exclusive custody through the owner-authorized API before plain completion.
+fn claim_fixture_task(root: &Path, id: &str) {
+    let claimed = claim_task(root, id, "test-agent", ClaimMode::Exclusive).expect("claim task");
+    assert_eq!(claimed["status"], "ok", "claim fixture task: {claimed}");
+}
+
+fn complete_fixture_task(store: &Store, id: &str) {
+    let yielded = yield_claim_lease(
+        &store.root,
+        id,
+        "test-agent",
+        "prepare completed prune fixture",
+    )
+    .expect("yield fixture custody");
+    assert_eq!(yielded["status"], "ok", "yield fixture custody: {yielded}");
+    let current = get_task(&store.root, id).unwrap().unwrap();
+    let completed = update_status(
+        store,
+        id,
+        current.revision,
+        &current.status,
+        "done",
+        "task.done",
+        serde_json::json!({"actor": "test-agent"}),
+    )
+    .expect("complete fixture task");
+    assert_eq!(
+        completed["status"], "ok",
+        "complete fixture task: {completed}"
+    );
+    assert_eq!(get_task(&store.root, id).unwrap().unwrap().status, "done");
+}
 
 fn git_init(dir: &Path) {
     run_git_cmd(dir, &["init"]);
@@ -146,19 +181,9 @@ fn test_workspace_prune() {
     let hash_c = "hashcc";
 
     // Set claims and status
-    claim_task(&store_root, id_a, "test-agent", ClaimMode::Exclusive).expect("claim task a");
-    claim_task(&store_root, id_b, "test-agent", ClaimMode::Exclusive).expect("claim task b");
-    let current = get_task(&store_root, id_b).unwrap().unwrap();
-    update_status(
-        &store,
-        id_b,
-        current.revision,
-        &current.status,
-        "done",
-        "task.done",
-        serde_json::json!({}),
-    )
-    .expect("done task b");
+    claim_fixture_task(&store_root, id_a);
+    claim_fixture_task(&store_root, id_b);
+    complete_fixture_task(&store, id_b);
 
     // 4. Create actual git worktrees for A, B, C, D
     let workspaces_dir = main_root.join(".decapod").join("workspaces");
@@ -360,18 +385,8 @@ fn test_workspace_prune_unmerged_prevention() {
         .expect("update f");
 
     let hash_f = "hashff";
-    claim_task(&store_root, id_f, "test-agent", ClaimMode::Exclusive).expect("claim task f");
-    let current = get_task(&store_root, id_f).unwrap().unwrap();
-    update_status(
-        &store,
-        id_f,
-        current.revision,
-        &current.status,
-        "done",
-        "task.done",
-        serde_json::json!({}),
-    )
-    .expect("done task f");
+    claim_fixture_task(&store_root, id_f);
+    complete_fixture_task(&store, id_f);
 
     let workspaces_dir = main_root.join(".decapod").join("workspaces");
     fs::create_dir_all(&workspaces_dir).expect("create workspaces dir");
@@ -469,18 +484,8 @@ fn test_workspace_prune_non_force_preserves_dirty_and_unregistered_data() {
         [task_id],
     )
     .expect("update task hash");
-    claim_task(&store_root, task_id, "test-agent", ClaimMode::Exclusive).expect("claim task");
-    let current = get_task(&store_root, task_id).unwrap().unwrap();
-    update_status(
-        &store,
-        task_id,
-        current.revision,
-        &current.status,
-        "done",
-        "task.done",
-        serde_json::json!({}),
-    )
-    .expect("complete task");
+    claim_fixture_task(&store_root, task_id);
+    complete_fixture_task(&store, task_id);
 
     let workspaces_dir = main_root.join(".decapod").join("workspaces");
     fs::create_dir_all(&workspaces_dir).expect("create workspaces dir");
@@ -601,18 +606,8 @@ fn test_validate_stale_workspaces_cleanup() {
     conn.execute("UPDATE tasks SET hash = 'hashprune' WHERE id = ?", [id])
         .expect("update hash");
 
-    claim_task(&store_root, id, "test-agent", ClaimMode::Exclusive).expect("claim task");
-    let current = get_task(&store_root, id).unwrap().unwrap();
-    update_status(
-        &store,
-        id,
-        current.revision,
-        &current.status,
-        "done",
-        "task.done",
-        serde_json::json!({}),
-    )
-    .expect("done task");
+    claim_fixture_task(&store_root, id);
+    complete_fixture_task(&store, id);
 
     let workspaces_dir = main_root.join(".decapod").join("workspaces");
     fs::create_dir_all(&workspaces_dir).expect("create workspaces dir");

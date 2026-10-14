@@ -1306,6 +1306,29 @@ fn exclusive_lease_blocks_unproven_done() {
         "expected claimed lease in fleet: {fleet}"
     );
 
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: root.clone(),
+    };
+    let before = get_task(&root, &task_id).unwrap().unwrap();
+    let rejected = update_status(
+        &store,
+        &task_id,
+        before.revision,
+        &before.status,
+        "done",
+        "task.done",
+        serde_json::json!({"actor":"agent-p"}),
+    )
+    .unwrap();
+    assert_eq!(
+        rejected["status"], "conflict",
+        "exclusive completion without proof must fail: {rejected}"
+    );
+    let after = get_task(&root, &task_id).unwrap().unwrap();
+    assert_eq!(after.status, before.status);
+    assert_eq!(after.revision, before.revision);
+
     // Yield removes exclusive custody so unmarked done can proceed for unleased tasks.
     let _ = yield_claim_lease(&root, &task_id, "agent-p", "done without lease").unwrap();
     let store = Store {

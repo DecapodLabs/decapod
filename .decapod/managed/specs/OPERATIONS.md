@@ -25,6 +25,27 @@ are not a manual workflow the human must run for every task. Agents obtain curre
 syntax and preconditions from `decapod docs ingest`; they must not guess arguments
 or invent unavailable capabilities.
 
+## Atomic task completion and custody
+
+Task completion in `src/decapod/core/todo.rs::update_status` checks dependency
+readiness and exclusive-lease proof under the same transaction as the revision
+compare-and-swap and event append. The public mutation, CLI and worker loop share
+this boundary. A precheck outside the transaction is not completion authority.
+
+Validated completion prepares real verification through
+`src/decapod/plugins/verify.rs::prepare_verified_completion` before committing
+`done`. The opaque prepared result binds the observed task revision, verification
+epoch and captured artifacts. The final transaction rechecks that material and
+commits the transition, passing verification record and events together. Failed
+capture attempts remain durable history. The worker loop must keep the task
+incomplete and skip automatic archiving when proof fails.
+
+`todo release` compares the caller with the current assignee before clearing
+local custody. Unclaimed retries are idempotent. Cache invalidation preserves the
+stored task status rather than reporting a completed or archived task as open.
+These are cooperative kernel boundaries over the existing SQLite/Dactyl path;
+arbitrary database writes and actor impersonation remain outside the guarantee.
+
 ## The working lifecycle
 
 1. Evaluate the incoming prompt with `decapod eval`. A nonzero exit or blocked
@@ -324,8 +345,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9eb41e6222c24a92b6eef9fe719652eb94e299235286ec58f8c29cea8e1a777a`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (183 files), `tests/` (187 files)
+- Repository signal fingerprint: `a0ff79178165611bcfcabf80c53a0e782ca391bbd5662a9fb7145954d30f08f0`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (183 files), `tests/` (189 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

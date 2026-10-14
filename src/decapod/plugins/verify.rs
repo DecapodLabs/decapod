@@ -925,6 +925,236 @@ fn verify_target(
     Ok(result)
 }
 
+/// A passing validation bound to one task revision and the material it checked.
+/// Fields and construction stay private: a caller's `--validated` assertion is
+/// never sufficient to manufacture completion evidence.
+#[derive(Debug)]
+pub(crate) struct PreparedTodoVerification {
+    todo_id: String,
+    expected_revision: i64,
+    expected_status: String,
+    repo_root: PathBuf,
+    artifact_paths: Vec<PathBuf>,
+    artifacts: VerificationArtifacts,
+}
+
+impl PreparedTodoVerification {
+    pub(crate) fn expected_revision(&self) -> i64 {
+        self.expected_revision
+    }
+
+    pub(crate) fn expected_status(&self) -> &str {
+        &self.expected_status
+    }
+
+    pub(crate) fn matches_task(&self, id: &str, revision: i64, status: &str) -> bool {
+        self.todo_id == id && self.expected_revision == revision && self.expected_status == status
+    }
+
+    fn check_material(&self) -> Result<(), error::DecapodError> {
+        let epoch = active_validation_epoch(&self.repo_root)?;
+        if self.artifacts.validation_epoch.as_ref() != Some(&epoch) {
+            return Err(error::DecapodError::ValidationError(
+                "Validation material changed after verification; rerun completion validation"
+                    .into(),
+            ));
+        }
+        for (path, artifact) in self
+            .artifact_paths
+            .iter()
+            .zip(&self.artifacts.file_artifacts)
+        {
+            let (hash, size, _) = hash_file(path)?;
+            if hash != artifact.hash || size != artifact.size {
+                return Err(error::DecapodError::ValidationError(format!(
+                    "Verification artifact changed after validation: {}",
+                    path.display()
+                )));
+            }
+        }
+        Ok(())
+    }
+
+    /// Persist only inside the caller's existing transaction, after its CAS and
+    /// completion gates and status update. Any error must abort that transaction.
+    pub(crate) fn commit_on_connection(
+        &self,
+        conn: &crate::core::db::Connection,
+    ) -> Result<(), error::DecapodError> {
+        self.persist_on_connection(conn, self.expected_revision + 1)
+    }
+
+    fn commit_recapture_on_connection(
+        &self,
+        conn: &crate::core::db::Connection,
+    ) -> Result<(), error::DecapodError> {
+        if self.expected_status != "done" {
+            return Err(error::DecapodError::ValidationError(
+                "Only completed tasks can recapture a verification baseline".into(),
+            ));
+        }
+        self.persist_on_connection(conn, self.expected_revision)
+    }
+
+    fn persist_on_connection(
+        &self,
+        conn: &crate::core::db::Connection,
+        expected_revision: i64,
+    ) -> Result<(), error::DecapodError> {
+        if conn.is_autocommit() {
+            return Err(error::DecapodError::ValidationError(
+                "Verified completion requires an existing transaction".into(),
+            ));
+        }
+        let (status, revision): (String, i64) = conn.query_row(
+            "SELECT status, revision FROM tasks WHERE id = ?1",
+            [&self.todo_id],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )?;
+        if status != "done" || revision != expected_revision {
+            return Err(error::DecapodError::ValidationError(
+                "Task changed after verification; rerun completion validation".into(),
+            ));
+        }
+        self.check_material()?;
+        let ts = &self.artifacts.completed_at;
+        let artifacts_json = serde_json::to_string(&self.artifacts)
+            .map_err(|err| error::DecapodError::ValidationError(err.to_string()))?;
+        conn.execute(
+            "INSERT INTO task_verification(todo_id, proof_plan, verification_artifacts, last_verified_at, last_verified_status, last_verified_notes, verification_policy_days, updated_at)
+             VALUES(?1, '[\"validate_passes\"]', ?2, ?3, 'pass', 'baseline captured', 90, ?3)
+             ON CONFLICT(todo_id) DO UPDATE SET
+               proof_plan=excluded.proof_plan,
+               verification_artifacts=excluded.verification_artifacts,
+               last_verified_at=excluded.last_verified_at,
+               last_verified_status=excluded.last_verified_status,
+               last_verified_notes=excluded.last_verified_notes,
+               verification_policy_days=excluded.verification_policy_days,
+               updated_at=excluded.updated_at",
+            crate::core::db::params![self.todo_id, artifacts_json, ts],
+        )?;
+        events::append_on_conn(
+            conn,
+            events::TODO,
+            &serde_json::json!({
+                "ts": ts,
+                "event_id": crate::core::ulid::new_ulid(),
+                "event_type": "task.verify.capture",
+                "status": "success",
+                "task_id": self.todo_id,
+                "actor": "decapod",
+                "payload": {
+                    "proof_plan": ["validate_passes"],
+                    "verification_artifacts": self.artifacts,
+                    "last_verified_status": "pass",
+                    "last_verified_notes": "baseline captured",
+                    "verification_policy_days": 90
+                }
+            }),
+        )?;
+        Ok(())
+    }
+}
+
+pub(crate) fn prepare_verified_completion(
+    store: &Store,
+    repo_root: &Path,
+    todo_id: &str,
+    artifact_paths: Vec<String>,
+) -> Result<PreparedTodoVerification, error::DecapodError> {
+    prepare_verified_completion_with(store, repo_root, todo_id, artifact_paths, || {
+        run_validate_and_hash(&store.root, repo_root, Some(todo_id))
+    })
+}
+
+// Keep the outcome collector private. Tests can exercise failures without
+// executing a subprocess; production has only the real validator entrypoint.
+fn prepare_verified_completion_with(
+    store: &Store,
+    repo_root: &Path,
+    todo_id: &str,
+    artifact_paths: Vec<String>,
+    collect: impl FnOnce() -> Result<(bool, String), error::DecapodError>,
+) -> Result<PreparedTodoVerification, error::DecapodError> {
+    todo::initialize_todo_db(&store.root)?;
+    let task = todo::get_task(&store.root, todo_id)?
+        .ok_or_else(|| error::DecapodError::NotFound(format!("TODO not found: {todo_id}")))?;
+    let result = (|| {
+        let paths = if artifact_paths.is_empty() {
+            vec!["AGENTS.md".to_string()]
+        } else {
+            artifact_paths
+        };
+        let validation_epoch = active_validation_epoch(repo_root)?;
+        let mut file_artifacts = Vec::new();
+        let mut resolved_paths = Vec::new();
+        for path in paths {
+            let disk_path = resolve_artifact_path_for_todo(repo_root, Some(todo_id), &path);
+            if !disk_path.exists() {
+                return Err(error::DecapodError::NotFound(format!(
+                    "Verification artifact file not found: {}. `--artifact` expects a file path relative to the workspace worktree that owns the claim, for example `--artifact README.md`. To attach notes, use `decapod todo comment --id {}`.",
+                    disk_path.display(),
+                    todo_id
+                )));
+            }
+            let (hash, size, mtime) = hash_file(&disk_path)?;
+            resolved_paths.push(disk_path);
+            file_artifacts.push(FileArtifact {
+                path,
+                hash,
+                size,
+                mtime,
+            });
+        }
+        let (passed, output_hash) = collect()?;
+        if !passed {
+            return Err(error::DecapodError::ValidationError(format!(
+                "decapod validate did not pass; completion verification failed (output_hash={output_hash})"
+            )));
+        }
+        let prepared = PreparedTodoVerification {
+            todo_id: todo_id.to_string(),
+            expected_revision: task.revision,
+            expected_status: task.status,
+            repo_root: repo_root.to_path_buf(),
+            artifact_paths: resolved_paths,
+            artifacts: VerificationArtifacts {
+                completed_at: now_iso(),
+                evaluator_epoch: Some(validation_epoch.epoch_id.clone()),
+                validation_epoch: Some(validation_epoch.clone()),
+                proof_plan_results: vec![ProofPlanResult {
+                    proof_gate: "validate_passes".to_string(),
+                    status: "pass".to_string(),
+                    command: "decapod validate".to_string(),
+                    output_hash,
+                    evaluator_epoch: Some(validation_epoch.epoch_id.clone()),
+                    validation_epoch: Some(validation_epoch),
+                }],
+                file_artifacts,
+            },
+        };
+        prepared.check_material()?;
+        Ok(prepared)
+    })();
+    if let Err(err) = &result {
+        // Failed attempts are durable history, never replacement baselines.
+        events::append(
+            &store.root,
+            events::TODO,
+            &serde_json::json!({
+                "ts": now_iso(),
+                "event_id": crate::core::ulid::new_ulid(),
+                "event_type": "task.verify.capture_failed",
+                "status": "failed",
+                "task_id": todo_id,
+                "actor": "decapod",
+                "payload": { "last_verified_status": "fail", "reason": err.to_string() }
+            }),
+        )?;
+    }
+    result
+}
+
 pub fn capture_baseline_for_todo(
     store: &Store,
     repo_root: &Path,
@@ -932,118 +1162,21 @@ pub fn capture_baseline_for_todo(
     artifact_paths: Vec<String>,
 ) -> Result<(), error::DecapodError> {
     todo::initialize_todo_db(&store.root)?;
-
-    let broker = DbBroker::new(&store.root);
-    let db_path = todo::todo_db_path(&store.root);
-    let status: Option<String> =
-        broker.with_conn(&db_path, "decapod", None, "verify.capture.read", |conn| {
-            let status = conn
-                .query_row(
-                    "SELECT status FROM tasks WHERE id = ?1",
-                    crate::core::db::params![todo_id],
-                    |row| row.get(0),
-                )
-                .optional()?;
-            Ok(status)
-        })?;
-
-    let Some(task_status) = status else {
-        return Err(error::DecapodError::NotFound(format!(
-            "TODO not found: {todo_id}"
-        )));
-    };
-
-    if task_status != "done" {
+    let task = todo::get_task(&store.root, todo_id)?
+        .ok_or_else(|| error::DecapodError::NotFound(format!("TODO not found: {todo_id}")))?;
+    if task.status != "done" {
         return Err(error::DecapodError::ValidationError(
             "Task must be in done state before capturing verification artifacts".to_string(),
         ));
     }
-
-    let paths = if artifact_paths.is_empty() {
-        vec!["AGENTS.md".to_string()]
-    } else {
-        artifact_paths
-    };
-
-    let mut file_artifacts = Vec::new();
-    for path in paths {
-        let disk_path = resolve_artifact_path_for_todo(repo_root, Some(todo_id), &path);
-        if !disk_path.exists() {
-            return Err(error::DecapodError::NotFound(format!(
-                "Verification artifact file not found: {}. `--artifact` expects a file path relative to the workspace worktree that owns the claim, for example `--artifact README.md`. To attach notes, use `decapod todo comment --id {}`.",
-                disk_path.display(),
-                todo_id
-            )));
-        }
-        let (hash, size, mtime) = hash_file(&disk_path)?;
-        file_artifacts.push(FileArtifact {
-            path,
-            hash,
-            size,
-            mtime,
-        });
-    }
-
-    let (validate_ok, output_hash) = run_validate_and_hash(&store.root, repo_root, Some(todo_id))?;
-    let validation_epoch = active_validation_epoch(repo_root)?;
-
-    let ts = now_iso();
-    let artifacts = VerificationArtifacts {
-        completed_at: ts.clone(),
-        evaluator_epoch: Some(validation_epoch.epoch_id.clone()),
-        validation_epoch: Some(validation_epoch.clone()),
-        proof_plan_results: vec![ProofPlanResult {
-            proof_gate: "validate_passes".to_string(),
-            status: if validate_ok {
-                "pass".to_string()
-            } else {
-                "fail".to_string()
-            },
-            command: "decapod validate".to_string(),
-            output_hash,
-            evaluator_epoch: Some(validation_epoch.epoch_id.clone()),
-            validation_epoch: Some(validation_epoch.clone()),
-        }],
-        file_artifacts,
-    };
-
-    let artifacts_json = serde_json::to_string(&artifacts).unwrap();
-    let proof_plan_json = serde_json::to_string(&vec!["validate_passes"]).unwrap();
-    let baseline_status = if validate_ok { "pass" } else { "fail" };
-    let baseline_notes = if validate_ok {
-        "baseline captured"
-    } else {
-        "baseline captured while validate was failing"
-    };
-
-    broker.with_conn(&db_path, "decapod", None, "verify.capture.write", |conn| {
-        conn.execute(
-            "INSERT INTO task_verification(todo_id, proof_plan, verification_artifacts, last_verified_at, last_verified_status, last_verified_notes, verification_policy_days, updated_at)\n             VALUES(?1, ?2, ?3, ?4, ?5, ?6, 90, ?4)\n             ON CONFLICT(todo_id) DO UPDATE SET\n               proof_plan=excluded.proof_plan,\n               verification_artifacts=excluded.verification_artifacts,\n               last_verified_at=excluded.last_verified_at,\n               last_verified_status=excluded.last_verified_status,\n               last_verified_notes=excluded.last_verified_notes,\n               verification_policy_days=excluded.verification_policy_days,\n               updated_at=excluded.updated_at",
-            crate::core::db::params![
-                todo_id,
-                proof_plan_json,
-                artifacts_json,
-                ts,
-                baseline_status,
-                baseline_notes
-            ],
-        )?;
-        Ok(())
-    })?;
-
-    todo::record_task_event(
-        &store.root,
-        "task.verify.capture",
-        Some(todo_id),
-        serde_json::json!({
-            "proof_plan": ["validate_passes"],
-            "verification_artifacts": artifacts,
-            "last_verified_status": baseline_status,
-            "last_verified_notes": baseline_notes,
-            "verification_policy_days": 90
-        }),
-    )?;
-    Ok(())
+    let prepared = prepare_verified_completion(store, repo_root, todo_id, artifact_paths)?;
+    DbBroker::new(&store.root).with_transaction(
+        &todo::todo_db_path(&store.root),
+        "decapod",
+        None,
+        "verify.capture.write",
+        |conn| prepared.commit_recapture_on_connection(conn),
+    )
 }
 
 fn refresh_batch_baselines(
@@ -1827,3 +1960,7 @@ fn diagnose_task(
 #[cfg(test)]
 #[path = "../../../tests/unit/plugins/verify_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "../../../tests/unit/plugins/verify_completion_tests.rs"]
+mod completion_tests;

@@ -2043,28 +2043,34 @@ fn run_worker_loop(
             ),
         );
 
-        let done_out = update_status(
-            store,
-            &task_id,
-            task.revision,
-            &task.status,
-            "done",
-            "task.done",
-            serde_json::json!({
-                "reason": "worker_loop_execution",
-                "actor": agent_id
-            }),
-        )?;
+        let prepared = verify::prepare_verified_completion(store, &repo_root, &task_id, vec![]);
+        let (done_out, baseline_status, baseline_error) = match prepared {
+            Ok(proof) => {
+                let done = update_status_with_verification(
+                    store,
+                    &task_id,
+                    proof.expected_revision(),
+                    proof.expected_status(),
+                    "done",
+                    "task.done",
+                    serde_json::json!({"reason":"worker_loop_execution", "actor":agent_id}),
+                    Some(&proof),
+                )?;
+                let passed = done.get("status").and_then(|v| v.as_str()) == Some("ok");
+                (done, if passed { "ok" } else { "error" }, None)
+            }
+            Err(error) => (
+                serde_json::json!({"status":"error", "reason":"verification_failed"}),
+                "error",
+                Some(error.to_string()),
+            ),
+        };
 
-        let baseline = verify::capture_baseline_for_todo(store, &repo_root, &task_id, vec![]);
-        let baseline_status = if baseline.is_ok() { "ok" } else { "error" };
-        let baseline_error = baseline.err().map(|e| e.to_string());
-
-        if lesson {
+        if lesson && baseline_status == "ok" {
             record_task_lesson(store, &task, agent_id, &context_summary);
         }
 
-        let archive_out = if autoclose {
+        let archive_out = if autoclose && baseline_status == "ok" {
             match get_task(root, &task_id)? {
                 Some(current) => match update_status(
                     store,
@@ -3262,6 +3268,29 @@ pub fn update_status(
     event_type: &str,
     payload: JsonValue,
 ) -> Result<serde_json::Value, error::DecapodError> {
+    update_status_with_verification(
+        store,
+        id,
+        expected_revision,
+        expected_status,
+        new_status,
+        event_type,
+        payload,
+        None,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn update_status_with_verification(
+    store: &Store,
+    id: &str,
+    expected_revision: i64,
+    expected_status: &str,
+    new_status: &str,
+    event_type: &str,
+    payload: JsonValue,
+    verification: Option<&verify::PreparedTodoVerification>,
+) -> Result<serde_json::Value, error::DecapodError> {
     let ts = now_iso();
     let intent_ref = format!("intent:{}:{}", event_type, crate::core::ulid::new_ulid());
     let root = &store.root;
@@ -3335,6 +3364,26 @@ pub fn update_status(
                 }));
             }
 
+            // Completion eligibility is checked under the same database transaction
+            // as the status CAS and success event. CLI prechecks are advisory only.
+            if new_status == "done" {
+                if let Some(gate) = dependency_completion_gate_on_conn(conn, root, id)? {
+                    return Ok(gate);
+                }
+                if let Some(proof) = verification {
+                    if !proof.matches_task(id, actual_revision, &actual_status) {
+                        return Ok(serde_json::json!({
+                            "status": "conflict", "reason": "stale_completion_proof", "id": id
+                        }));
+                    }
+                } else if let Some(gate) = exclusive_lease_proof_gate_on_conn(conn, root, id)? {
+                    return Ok(gate);
+                }
+            } else if verification.is_some() {
+                return Err(error::DecapodError::ValidationError(
+                    "Completion proof may only accompany the done transition".into()));
+            }
+
             let changed = conn.execute(
                 "UPDATE tasks
              SET status = ?1,
@@ -3353,6 +3402,10 @@ pub fn update_status(
                     "expected_status": expected_status,
                     "expected_revision": expected_revision,
                 }));
+            }
+
+            if let Some(proof) = verification {
+                proof.commit_on_connection(conn)?;
             }
 
             let new_revision = expected_revision + 1;
@@ -3442,7 +3495,9 @@ pub fn update_status(
             "decision",
             "notable",
             "agent_inferred",
-            &format!("Task {id} marked as done. Validation gates passed."),
+            &format!(
+                "Task {id} completion transition accepted; inspect attached verification evidence for proof scope."
+            ),
             &intent_source,
             "proof,completion",
             "repo",
@@ -4508,74 +4563,68 @@ pub fn yield_claim_lease(
     }))
 }
 
-fn exclusive_lease_proof_gate(
+fn exclusive_lease_proof_gate_on_conn(
+    conn: &Connection,
     root: &Path,
     task_id: &str,
 ) -> Result<Option<serde_json::Value>, error::DecapodError> {
-    let broker = DbBroker::new(root);
-    if broker.is_cloud() {
+    let row: Option<(String, String)> = conn
+        .query_row(
+            "SELECT COALESCE(assigned_to, ''), COALESCE(lease_lifecycle, '')
+                 FROM tasks WHERE id = ?",
+            [task_id],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )
+        .optional()
+        .map_err(error::DecapodError::StorageError)?;
+    let Some((assigned_to, lifecycle_raw)) = row else {
+        return Ok(None);
+    };
+    let lifecycle = LeaseLifecycle::parse(Some(&lifecycle_raw));
+    if !fleet_coord::exclusive_lease_requires_proof(lifecycle, !assigned_to.is_empty()) {
         return Ok(None);
     }
-    let db_path = todo_db_path(root);
-    broker.with_conn(&db_path, "decapod", None, "todo.done.proof_gate", |conn| {
-        ensure_schema(conn)?;
-        let row: Option<(String, String)> = conn
-            .query_row(
-                "SELECT COALESCE(assigned_to, ''), COALESCE(lease_lifecycle, '')
-                 FROM tasks WHERE id = ?",
-                [task_id],
-                |row| Ok((row.get(0)?, row.get(1)?)),
+    let verified: Option<String> = conn
+        .query_row(
+            "SELECT last_verified_status FROM task_verification WHERE todo_id = ?",
+            [task_id],
+            |row| row.get(0),
+        )
+        .optional()
+        .map_err(error::DecapodError::StorageError)?;
+    let passed = verified
+        .as_deref()
+        .map(|s| {
+            matches!(
+                s.to_ascii_lowercase().as_str(),
+                "pass" | "passed" | "verified"
             )
-            .optional()
-            .map_err(error::DecapodError::StorageError)?;
-        let Some((assigned_to, lifecycle_raw)) = row else {
-            return Ok(None);
-        };
-        let lifecycle = LeaseLifecycle::parse(Some(&lifecycle_raw));
-        if !fleet_coord::exclusive_lease_requires_proof(lifecycle, !assigned_to.is_empty()) {
-            return Ok(None);
-        }
-        let verified: Option<String> = conn
-            .query_row(
-                "SELECT last_verified_status FROM task_verification WHERE todo_id = ?",
-                [task_id],
-                |row| row.get(0),
-            )
-            .optional()
-            .map_err(error::DecapodError::StorageError)?;
-        let passed = verified
-            .as_deref()
-            .map(|s| {
-                matches!(
-                    s.to_ascii_lowercase().as_str(),
-                    "pass" | "passed" | "verified"
-                )
-            })
-            .unwrap_or(false);
-        if passed {
-            return Ok(None);
-        }
-        Ok(Some(serde_json::json!({
-            "ts": now_iso(),
-            "cmd": "todo.done",
+        })
+        .unwrap_or(false);
+    if passed {
+        return Ok(None);
+    }
+    Ok(Some(serde_json::json!({
+        "ts": now_iso(),
+        "cmd": "todo.done",
+        "status": "conflict",
+        "root": root.to_string_lossy(),
+        "id": task_id,
+        "result": {
             "status": "conflict",
-            "root": root.to_string_lossy(),
-            "id": task_id,
-            "result": {
-                "status": "conflict",
-                "resolution": "proof_required",
-                "message": format!(
-                    "Task {task_id} holds an exclusive lease ({}); complete with --validated after proof, or yield the lease first",
-                    lifecycle.as_str()
-                ),
-                "lease_lifecycle": lifecycle.as_str(),
-                "assigned_to": assigned_to,
-                "last_verified_status": verified
-            }
-        })))
-    })
+            "resolution": "proof_required",
+            "message": format!(
+                "Task {task_id} holds an exclusive lease ({}); complete with --validated after proof, or yield the lease first",
+                lifecycle.as_str()
+            ),
+            "lease_lifecycle": lifecycle.as_str(),
+            "assigned_to": assigned_to,
+            "last_verified_status": verified
+        }
+    })))
 }
 
+#[cfg(test)]
 fn dependency_completion_gate(
     root: &Path,
     task_id: &str,
@@ -4584,42 +4633,47 @@ fn dependency_completion_gate(
     if broker.is_cloud() {
         return Ok(None);
     }
-    let db_path = todo_db_path(root);
     broker.with_conn(
-        &db_path,
+        &todo_db_path(root),
         "decapod",
         None,
         "todo.done.dependency_gate",
         |conn| {
             ensure_schema(conn)?;
-            let readiness = load_dependency_readiness(conn, task_id)?;
-            if readiness.is_ready() {
-                return Ok(None);
-            }
-            let resolution = if readiness.state
-                == fleet_coord::DependencyReadinessState::Cycle
-            {
-                "repair_dependency_graph"
-            } else {
-                "satisfy_dependencies"
-            };
-            Ok(Some(serde_json::json!({
-                "ts": now_iso(),
-                "cmd": "todo.done",
-                "status": "conflict",
-                "root": root.to_string_lossy(),
-                "id": task_id,
-                "result": {
-                    "status": "conflict",
-                    "resolution": resolution,
-                    "message": format!(
-                        "Task {task_id} cannot complete until every dependency is complete with passing proof"
-                    ),
-                    "dependency_readiness": readiness
-                }
-            })))
+            dependency_completion_gate_on_conn(conn, root, task_id)
         },
     )
+}
+
+fn dependency_completion_gate_on_conn(
+    conn: &Connection,
+    root: &Path,
+    task_id: &str,
+) -> Result<Option<serde_json::Value>, error::DecapodError> {
+    let readiness = load_dependency_readiness(conn, task_id)?;
+    if readiness.is_ready() {
+        return Ok(None);
+    }
+    let resolution = if readiness.state == fleet_coord::DependencyReadinessState::Cycle {
+        "repair_dependency_graph"
+    } else {
+        "satisfy_dependencies"
+    };
+    Ok(Some(serde_json::json!({
+        "ts": now_iso(),
+        "cmd": "todo.done",
+        "status": "conflict",
+        "root": root.to_string_lossy(),
+        "id": task_id,
+        "result": {
+            "status": "conflict",
+            "resolution": resolution,
+            "message": format!(
+                "Task {task_id} cannot complete until every dependency is complete with passing proof"
+            ),
+            "dependency_readiness": readiness
+        }
+    })))
 }
 
 pub fn fleet_health(
@@ -5264,12 +5318,19 @@ fn list_agent_expertise(
 }
 
 fn release_task(root: &Path, id: &str) -> Result<serde_json::Value, error::DecapodError> {
+    release_task_as_actor(root, id, &mutation_actor(None))
+}
+
+fn release_task_as_actor(
+    root: &Path,
+    id: &str,
+    actor: &str,
+) -> Result<serde_json::Value, error::DecapodError> {
     let ts = now_iso();
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
-    let actor = mutation_actor(None);
 
-    let result = broker.with_transaction(&db_path, &actor, None, "todo.release", |conn| {
+    let result = broker.with_transaction(&db_path, actor, None, "todo.release", |conn| {
         ensure_schema(conn)?;
 
         // Check if task exists
@@ -5290,6 +5351,23 @@ fn release_task(root: &Path, id: &str) -> Result<serde_json::Value, error::Decap
         let Some(previous_assignee) = exists else {
             unreachable!("checked task existence above");
         };
+
+        // An unclaimed task is already released. Do not fabricate a new lease
+        // transition or remove unrelated ownership records on an idempotent retry.
+        if previous_assignee.is_empty() {
+            return Ok(serde_json::json!({
+                "status": "ok",
+                "message": format!("Task {} is already released", id)
+            }));
+        }
+        if previous_assignee != actor {
+            return Ok(serde_json::json!({
+                "status": "conflict",
+                "reason": "not_assignee",
+                "assigned_to": previous_assignee,
+                "message": format!("Task {} may only be released by its current assignee", id)
+            }));
+        }
 
         // Release the task and clear its exclusive lease only if the observed
         // assignee is still current. This prevents a stale release from
@@ -5333,7 +5411,7 @@ fn release_task(root: &Path, id: &str) -> Result<serde_json::Value, error::Decap
             payload: serde_json::json!({
                 "previous_assignee": previous_assignee,
             }),
-            actor: actor.clone(),
+            actor: actor.to_string(),
         };
         append_event(conn, &ev)?;
         insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
@@ -5345,7 +5423,7 @@ fn release_task(root: &Path, id: &str) -> Result<serde_json::Value, error::Decap
     })?;
 
     if result.get("status").and_then(|v| v.as_str()) == Some("ok") {
-        cache_put_claim_status(&db_path, id, "open", "", &ts);
+        let _ = DbBroker::cache_invalidate_key(&db_path, CLAIM_STATUS_CACHE_SCOPE, id);
     }
 
     Ok(serde_json::json!({
@@ -6983,38 +7061,40 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
                     },
                 )?;
             }
-            // Houseboat wave 3: dependency/proof readiness cannot be bypassed by
-            // claiming completion, including with --validated.
-            if let Some(gate) = dependency_completion_gate(root, &task_id)? {
-                gate
-            // Houseboat wave 2: exclusive leases require proof before unmarked done.
-            } else if !*validated && let Some(gate) = exclusive_lease_proof_gate(root, &task_id)? {
-                gate
-            } else {
-                let current = get_task(root, &task_id)?.ok_or_else(|| {
-                    error::DecapodError::ValidationError(format!("Task {task_id} not found"))
-                })?;
-                let out = update_status(
+            // Preparation executes actual verification while the task remains open.
+            // The final transition rechecks dependencies and task revision under lock.
+            let prepared = if *validated {
+                Some(verify::prepare_verified_completion(
                     store,
+                    &project_root,
                     &task_id,
-                    current.revision,
-                    &current.status,
-                    "done",
-                    "task.done",
-                    serde_json::json!({}),
-                )?;
-                if *validated && out.get("status").and_then(|v| v.as_str()) == Some("ok") {
-                    verify::capture_baseline_for_todo(
-                        store,
-                        &project_root,
-                        &task_id,
-                        artifact.clone(),
-                    )?;
-                } else if out.get("status").and_then(|v| v.as_str()) == Some("ok") {
-                    mark_todo_claimed_pending_proof(store, &task_id)?;
-                }
-                out
+                    artifact.clone(),
+                )?)
+            } else {
+                None
+            };
+            let current = get_task(root, &task_id)?.ok_or_else(|| {
+                error::DecapodError::ValidationError(format!("Task {task_id} not found"))
+            })?;
+            let (revision, status) = prepared
+                .as_ref()
+                .map_or((current.revision, current.status.as_str()), |proof| {
+                    (proof.expected_revision(), proof.expected_status())
+                });
+            let out = update_status_with_verification(
+                store,
+                &task_id,
+                revision,
+                status,
+                "done",
+                "task.done",
+                serde_json::json!({}),
+                prepared.as_ref(),
+            )?;
+            if !*validated && out.get("status").and_then(|v| v.as_str()) == Some("ok") {
+                mark_todo_claimed_pending_proof(store, &task_id)?;
             }
+            out
         }
         TodoCommand::Archive { id, id_positional } => {
             let task_id = resolve_task_id_arg(id, id_positional, "todo archive")?;
@@ -7477,3 +7557,7 @@ mod tests;
 #[cfg(test)]
 #[path = "../../../tests/unit/core/cloud_todo_retry_tests.rs"]
 mod cloud_retry_tests;
+
+#[cfg(test)]
+#[path = "../../../tests/unit/core/todo_release_tests.rs"]
+mod release_tests;
