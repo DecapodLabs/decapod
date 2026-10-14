@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.111.4](https://github.com/DecapodLabs/decapod/compare/v0.111.3...v0.111.4) - 2026-10-14
+
+### Fixed
+
+- update Quinn security lock and reviewed importer compatibility ([#1420](https://github.com/DecapodLabs/decapod/pull/1420))
+
 ## [0.111.3](https://github.com/DecapodLabs/decapod/compare/v0.111.2...v0.111.3) - 2026-10-14
 
 ### Fixed
