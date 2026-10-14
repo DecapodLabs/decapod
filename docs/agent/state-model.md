@@ -35,6 +35,22 @@ state, or persistence failure cannot manufacture successful completion. Failed
 capture attempts remain in event history; they do not replace a passing baseline.
 The worker can archive only after verified completion succeeds.
 
+Persisted verification artifacts carry `task_id` and the exact `task_revision`
+accepted by the completion transaction. A later task or custody edit cannot reuse
+that pass. Missing, malformed, or mismatched bindings remain historical evidence
+and project as stale; they cannot complete a work claim, satisfy dependencies,
+or clear aggregate verification. Comments do not advance task revision. Release
+and ownership changes conservatively invalidate proof when they advance it.
+Use `decapod qa verify regen <id>` to collect fresh proof for the current completed
+task, or the supported prune/recomplete flow when the work must be reopened.
+
+Verification and batch recovery compare their original task and proof baseline
+inside the write transaction. `STALE_TASK_VERIFICATION` means concurrent changes
+won: inspect the current task and retry instead of applying the old result to new
+evidence. Prune deletes proof, reopens the task, increments revision, and records
+its event atomically. Legacy replay preserves the original proof event but cannot
+assign revision authority when the full mutation history is unavailable.
+
 Local release requires the current assignee. Releasing an already unclaimed task
 is a no-op; releasing a task does not change its completion status. Actor identity
 uses the existing local caller boundary. These checks do not protect against an

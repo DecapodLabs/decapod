@@ -57,6 +57,43 @@ pub struct WorkClaimVerification {
     pub verification_artifacts: Option<JsonValue>,
 }
 
+/// A persisted pass proves only the exact task identity and revision captured.
+/// Legacy or malformed artifacts remain audit evidence, never current authority.
+pub(crate) fn verification_binding_matches(
+    artifacts: Option<&JsonValue>,
+    task_id: &str,
+    revision: i64,
+) -> bool {
+    revision >= 0
+        && artifacts
+            .and_then(|value| value.get("task_id"))
+            .and_then(JsonValue::as_str)
+            == Some(task_id)
+        && artifacts
+            .and_then(|value| value.get("task_revision"))
+            .and_then(JsonValue::as_i64)
+            == Some(revision)
+}
+
+pub(crate) fn effective_verification_status<'a>(
+    status: Option<&'a str>,
+    artifacts: Option<&JsonValue>,
+    task_id: &str,
+    revision: i64,
+) -> Option<&'a str> {
+    if status.is_some_and(|value| {
+        matches!(
+            value.to_ascii_lowercase().as_str(),
+            "pass" | "passed" | "verified"
+        )
+    }) && !verification_binding_matches(artifacts, task_id, revision)
+    {
+        Some("stale")
+    } else {
+        status
+    }
+}
+
 #[derive(Parser, Debug)]
 #[clap(name = "todo", about = "Manage TODO tasks within the Decapod system.")]
 pub struct TodoCli {
@@ -2603,23 +2640,30 @@ fn load_dependency_readiness(
     let dependency_ids = parse_dependency_ids(&depends_on);
     let mut dependencies = Vec::with_capacity(dependency_ids.len());
     for dependency_id in dependency_ids {
-        let row: Option<(String, Option<String>, Option<String>)> = conn
+        let row: Option<(String, Option<String>, Option<String>, i64)> = conn
             .query_row(
-                "SELECT t.status, v.last_verified_status, v.verification_artifacts
+                "SELECT t.status, v.last_verified_status, v.verification_artifacts, t.revision
                  FROM tasks t
                  LEFT JOIN task_verification v ON v.todo_id = t.id
                  WHERE t.id = ?1",
                 [&dependency_id],
-                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
             )
             .optional()
             .map_err(error::DecapodError::StorageError)?;
         let node = match row {
-            Some((status, validation_status, artifacts_raw)) => {
+            Some((status, validation_status, artifacts_raw, revision)) => {
                 let artifacts = artifacts_raw
                     .as_deref()
                     .filter(|raw| !raw.trim().is_empty())
                     .and_then(|raw| serde_json::from_str::<JsonValue>(raw).ok());
+                let validation_status = effective_verification_status(
+                    validation_status.as_deref(),
+                    artifacts.as_ref(),
+                    &dependency_id,
+                    revision,
+                )
+                .map(str::to_string);
                 DependencyNodeView {
                     task_id: dependency_id.clone(),
                     status,
@@ -3920,6 +3964,7 @@ pub fn claim_task_with_lease(
                             },
                         )?;
                         sync_legacy_owner_column(conn, id)?;
+                        conn.execute("UPDATE tasks SET revision = revision + 1, updated_at = ?1 WHERE id = ?2", crate::core::db::params![ts, id])?;
                         return Ok(serde_json::json!({
                             "status": "ok",
                             "mode": "shared",
@@ -4568,39 +4613,42 @@ fn exclusive_lease_proof_gate_on_conn(
     root: &Path,
     task_id: &str,
 ) -> Result<Option<serde_json::Value>, error::DecapodError> {
-    let row: Option<(String, String)> = conn
+    let row: Option<(String, String, i64)> = conn
         .query_row(
-            "SELECT COALESCE(assigned_to, ''), COALESCE(lease_lifecycle, '')
+            "SELECT COALESCE(assigned_to, ''), COALESCE(lease_lifecycle, ''), revision
                  FROM tasks WHERE id = ?",
             [task_id],
-            |row| Ok((row.get(0)?, row.get(1)?)),
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
         )
         .optional()
         .map_err(error::DecapodError::StorageError)?;
-    let Some((assigned_to, lifecycle_raw)) = row else {
+    let Some((assigned_to, lifecycle_raw, revision)) = row else {
         return Ok(None);
     };
     let lifecycle = LeaseLifecycle::parse(Some(&lifecycle_raw));
     if !fleet_coord::exclusive_lease_requires_proof(lifecycle, !assigned_to.is_empty()) {
         return Ok(None);
     }
-    let verified: Option<String> = conn
+    let verification: Option<(Option<String>, Option<String>)> = conn
         .query_row(
-            "SELECT last_verified_status FROM task_verification WHERE todo_id = ?",
+            "SELECT last_verified_status, verification_artifacts FROM task_verification WHERE todo_id = ?",
             [task_id],
-            |row| row.get(0),
+            |row| Ok((row.get(0)?, row.get(1)?)),
         )
         .optional()
         .map_err(error::DecapodError::StorageError)?;
-    let passed = verified
+    let (verified, artifacts_raw) = verification.unwrap_or_default();
+    let artifacts = artifacts_raw
         .as_deref()
-        .map(|s| {
-            matches!(
-                s.to_ascii_lowercase().as_str(),
-                "pass" | "passed" | "verified"
-            )
-        })
-        .unwrap_or(false);
+        .and_then(|raw| serde_json::from_str::<JsonValue>(raw).ok());
+    let effective =
+        effective_verification_status(verified.as_deref(), artifacts.as_ref(), task_id, revision);
+    let passed = effective.is_some_and(|status| {
+        matches!(
+            status.to_ascii_lowercase().as_str(),
+            "pass" | "passed" | "verified"
+        )
+    });
     if passed {
         return Ok(None);
     }
@@ -4619,7 +4667,7 @@ fn exclusive_lease_proof_gate_on_conn(
             ),
             "lease_lifecycle": lifecycle.as_str(),
             "assigned_to": assigned_to,
-            "last_verified_status": verified
+            "last_verified_status": effective
         }
     })))
 }
@@ -5100,6 +5148,7 @@ fn add_task_owner(
         }
 
         let claim_id = upsert_task_owner(conn, task_id, agent_id, claim_type, &ts)?;
+        conn.execute("UPDATE tasks SET revision = revision + 1, updated_at = ?1 WHERE id = ?2", crate::core::db::params![ts, task_id])?;
         write_ownership_claim_event(
             root,
             conn,
@@ -5149,6 +5198,11 @@ fn remove_task_owner(
                 "message": format!("Owner {} not found for task {}", agent_id, task_id)
             }));
         }
+
+        conn.execute(
+            "UPDATE tasks SET revision = revision + 1, updated_at = ?1 WHERE id = ?2",
+            crate::core::db::params![ts, task_id],
+        )?;
 
         // Log ownership release event
         let ev = TodoEvent {
@@ -6081,11 +6135,16 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                         .get("proof_plan")
                         .cloned()
                         .unwrap_or_else(|| serde_json::json!([]));
-                    let artifacts = ev
+                    let mut artifacts = ev
                         .payload
                         .get("verification_artifacts")
                         .cloned()
                         .unwrap_or(serde_json::Value::Null);
+                    // Legacy replay does not reconstruct complete revision/custody history.
+                    // Keep the evidence, but require real recapture before accepting it.
+                    if let Some(object) = artifacts.as_object_mut() {
+                        object.remove("task_revision");
+                    }
                     let last_verified_status = ev
                         .payload
                         .get("last_verified_status")

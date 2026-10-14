@@ -1070,24 +1070,44 @@ pub fn collect_unverified_done_todos(
     let conn = crate::core::db::db_connect(&db_path.to_string_lossy())?;
     let mut stmt = conn
         .prepare(
-            "SELECT t.id
+            "SELECT t.id, t.revision, v.last_verified_status, v.verification_artifacts
              FROM tasks t
              LEFT JOIN task_verification v ON v.todo_id = t.id
              WHERE t.status = 'done'
-               AND (
-                 v.last_verified_status IS NULL
-                 OR LOWER(v.last_verified_status) NOT IN ('verified', 'pass')
-               )
              ORDER BY t.updated_at DESC",
         )
         .map_err(error::DecapodError::StorageError)?;
     let rows = stmt
-        .query_map([], |row| row.get::<_, String>(0))
+        .query_map([], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, i64>(1)?,
+                row.get::<_, Option<String>>(2)?,
+                row.get::<_, Option<String>>(3)?,
+            ))
+        })
         .map_err(error::DecapodError::StorageError)?;
     let verifying_ids = verifying_todo_ids();
     let mut out = Vec::new();
     for row in rows {
-        let id = row.map_err(error::DecapodError::StorageError)?;
+        let (id, revision, status, artifacts) = row.map_err(error::DecapodError::StorageError)?;
+        let artifacts = artifacts
+            .as_deref()
+            .and_then(|raw| serde_json::from_str::<serde_json::Value>(raw).ok());
+        let current_status = crate::core::todo::effective_verification_status(
+            status.as_deref(),
+            artifacts.as_ref(),
+            &id,
+            revision,
+        );
+        if current_status.is_some_and(|value| {
+            matches!(
+                value.to_ascii_lowercase().as_str(),
+                "pass" | "passed" | "verified"
+            )
+        }) {
+            continue;
+        }
         if !verifying_ids.iter().any(|verifying_id| verifying_id == &id) {
             out.push(id);
         }

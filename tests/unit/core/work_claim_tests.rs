@@ -33,6 +33,24 @@ fn task(status: &str, assigned_to: &str) -> Task {
     }
 }
 
+fn bound_verification(task: &Task) -> WorkClaimVerification {
+    WorkClaimVerification {
+        last_verified_status: Some("pass".to_string()),
+        verification_artifacts: Some(serde_json::json!({
+            "task_id": task.id,
+            "task_revision": task.revision,
+            "proof_plan_results": [{
+                "proof_gate": "validate_passes",
+                "output_hash": "sha256:deadbeef"
+            }],
+            "file_artifacts": [{
+                "path": "AGENTS.md",
+                "hash": "sha256:cafebabe"
+            }]
+        })),
+    }
+}
+
 #[test]
 fn legacy_todo_mapping_preserves_scope_and_ownership() {
     let claim = from_todo(
@@ -80,10 +98,7 @@ fn failed_validation_blocks_done_claim_and_keeps_proof_refs() {
 
 #[test]
 fn passed_validation_completes_done_claim_and_archive_abandons() {
-    let verification = WorkClaimVerification {
-        last_verified_status: Some("pass".to_string()),
-        verification_artifacts: None,
-    };
+    let verification = bound_verification(&task("done", "agent-a"));
     assert_eq!(
         from_todo(&task("done", "agent-a"), &verification, None).status,
         WorkClaimStatus::Complete
@@ -91,6 +106,160 @@ fn passed_validation_completes_done_claim_and_archive_abandons() {
     assert_eq!(
         from_todo(&task("archived", "agent-a"), &verification, None).status,
         WorkClaimStatus::Abandoned
+    );
+}
+
+#[test]
+fn current_task_binding_accepts_passing_status_aliases() {
+    let mut task = task("done", "agent-a");
+    task.revision = 7;
+    for status in ["pass", "passed", "verified", "PASS", "VERIFIED"] {
+        let mut verification = bound_verification(&task);
+        verification.last_verified_status = Some(status.to_string());
+        let claim = from_todo(&task, &verification, None);
+
+        assert_eq!(claim.status, WorkClaimStatus::Complete, "{status}");
+        assert_eq!(
+            claim.validation_status,
+            WorkClaimValidationStatus::Passed,
+            "{status}"
+        );
+        assert_eq!(claim.proof_refs.len(), 2, "{status}");
+    }
+}
+
+#[test]
+fn passing_status_without_an_artifact_object_is_stale() {
+    let task = task("done", "agent-a");
+    for (label, artifacts) in [
+        ("missing", None),
+        ("null", Some(serde_json::Value::Null)),
+        ("string", Some(serde_json::json!("legacy evidence"))),
+        ("array", Some(serde_json::json!([]))),
+        ("empty object", Some(serde_json::json!({}))),
+    ] {
+        let verification = WorkClaimVerification {
+            last_verified_status: Some("pass".to_string()),
+            verification_artifacts: artifacts,
+        };
+        let claim = from_todo(&task, &verification, None);
+
+        assert_eq!(claim.status, WorkClaimStatus::Blocked, "{label}");
+        assert_eq!(
+            claim.validation_status,
+            WorkClaimValidationStatus::Stale,
+            "{label}"
+        );
+        assert!(claim.proof_refs.is_empty(), "{label}");
+    }
+}
+
+#[test]
+fn invalid_task_binding_is_stale_and_keeps_historical_proof_refs() {
+    let mut task = task("done", "agent-a");
+    task.revision = 7;
+    let baseline = bound_verification(&task);
+    let expected_refs = from_todo(&task, &baseline, None).proof_refs;
+    for (label, binding) in [
+        ("legacy unbound", serde_json::json!({})),
+        ("missing task id", serde_json::json!({"task_revision": 7})),
+        ("missing revision", serde_json::json!({"task_id": task.id})),
+        (
+            "null task id",
+            serde_json::json!({"task_id": null, "task_revision": 7}),
+        ),
+        (
+            "numeric task id",
+            serde_json::json!({"task_id": 7, "task_revision": 7}),
+        ),
+        (
+            "wrong task id",
+            serde_json::json!({"task_id": "feat_other_task", "task_revision": 7}),
+        ),
+        (
+            "null revision",
+            serde_json::json!({"task_id": task.id, "task_revision": null}),
+        ),
+        (
+            "string revision",
+            serde_json::json!({"task_id": task.id, "task_revision": "7"}),
+        ),
+        (
+            "fractional revision",
+            serde_json::json!({"task_id": task.id, "task_revision": 7.5}),
+        ),
+        (
+            "out of range revision",
+            serde_json::json!({"task_id": task.id, "task_revision": u64::MAX}),
+        ),
+        (
+            "negative revision",
+            serde_json::json!({"task_id": task.id, "task_revision": -1}),
+        ),
+        (
+            "older revision",
+            serde_json::json!({"task_id": task.id, "task_revision": 6}),
+        ),
+        (
+            "future revision",
+            serde_json::json!({"task_id": task.id, "task_revision": 8}),
+        ),
+    ] {
+        let mut artifacts = baseline.verification_artifacts.clone().unwrap();
+        let object = artifacts.as_object_mut().unwrap();
+        object.remove("task_id");
+        object.remove("task_revision");
+        object.extend(binding.as_object().unwrap().clone());
+        let verification = WorkClaimVerification {
+            last_verified_status: Some("pass".to_string()),
+            verification_artifacts: Some(artifacts),
+        };
+        let claim = from_todo(&task, &verification, None);
+
+        assert_eq!(claim.status, WorkClaimStatus::Blocked, "{label}");
+        assert_eq!(
+            claim.validation_status,
+            WorkClaimValidationStatus::Stale,
+            "{label}"
+        );
+        assert_eq!(claim.proof_refs, expected_refs, "{label}");
+    }
+}
+
+#[test]
+fn matching_negative_task_revision_cannot_authorize_completion() {
+    let mut task = task("done", "agent-a");
+    task.revision = -1;
+    let claim = from_todo(&task, &bound_verification(&task), None);
+
+    assert_eq!(claim.status, WorkClaimStatus::Blocked);
+    assert_eq!(claim.validation_status, WorkClaimValidationStatus::Stale);
+    assert_eq!(claim.proof_refs.len(), 2);
+}
+
+#[test]
+fn edited_task_revision_cannot_reuse_prior_passing_proof() {
+    let mut task = task("done", "agent-a");
+    task.revision = 7;
+    let prior_verification = bound_verification(&task);
+    let prior_claim = from_todo(&task, &prior_verification, None);
+    assert_eq!(prior_claim.status, WorkClaimStatus::Complete);
+
+    task.description = "Changed completion requirements".to_string();
+    task.revision += 1;
+    let stale_claim = from_todo(&task, &prior_verification, None);
+    assert_eq!(stale_claim.status, WorkClaimStatus::Blocked);
+    assert_eq!(
+        stale_claim.validation_status,
+        WorkClaimValidationStatus::Stale
+    );
+    assert_eq!(stale_claim.proof_refs, prior_claim.proof_refs);
+
+    let current_claim = from_todo(&task, &bound_verification(&task), None);
+    assert_eq!(current_claim.status, WorkClaimStatus::Complete);
+    assert_eq!(
+        current_claim.validation_status,
+        WorkClaimValidationStatus::Passed
     );
 }
 

@@ -85,9 +85,10 @@ pub enum VerifyCommand {
     },
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct VerifyTarget {
     todo_id: String,
+    revision: i64,
     status: String,
     proof_plan: Option<String>,
     artifacts: Option<String>,
@@ -105,6 +106,10 @@ struct ValidationSnapshot {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct VerificationArtifacts {
     completed_at: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    task_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    task_revision: Option<i64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     evaluator_epoch: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -431,7 +436,7 @@ fn load_targets(
         let mut out = Vec::new();
         if let Some(id) = single_id {
             let mut stmt = conn.prepare(
-                "SELECT t.id, t.status, v.proof_plan, v.verification_artifacts, v.last_verified_at, v.last_verified_status, COALESCE(v.verification_policy_days, 90)\n                 FROM tasks t\n                 LEFT JOIN task_verification v ON v.todo_id = t.id\n                 WHERE t.id = ?1",
+                "SELECT t.id, t.status, v.proof_plan, v.verification_artifacts, v.last_verified_at, v.last_verified_status, COALESCE(v.verification_policy_days, 90), t.revision\n                 FROM tasks t\n                 LEFT JOIN task_verification v ON v.todo_id = t.id\n                 WHERE t.id = ?1",
             )?;
             let rows = stmt.query_map(crate::core::db::params![id], |row| {
                 Ok(VerifyTarget {
@@ -442,6 +447,7 @@ fn load_targets(
                     last_verified_at: row.get(4)?,
                     last_verified_status: row.get(5)?,
                     verification_policy_days: row.get(6)?,
+                    revision: row.get(7)?,
                 })
             })?;
 
@@ -450,7 +456,7 @@ fn load_targets(
             }
         } else {
             let mut stmt = conn.prepare(
-                "SELECT t.id, t.status, v.proof_plan, v.verification_artifacts, v.last_verified_at, v.last_verified_status, COALESCE(v.verification_policy_days, 90)\n                 FROM tasks t\n                 LEFT JOIN task_verification v ON v.todo_id = t.id\n                 WHERE t.status = 'done'\n                   AND (v.last_verified_status IS NULL\n                        OR LOWER(v.last_verified_status) NOT IN ('verified', 'pass'))\n                 ORDER BY t.updated_at DESC",
+                "SELECT t.id, t.status, v.proof_plan, v.verification_artifacts, v.last_verified_at, v.last_verified_status, COALESCE(v.verification_policy_days, 90), t.revision\n                 FROM tasks t\n                 LEFT JOIN task_verification v ON v.todo_id = t.id\n                 WHERE t.status = 'done'\n                 ORDER BY t.updated_at DESC",
             )?;
             let rows = stmt.query_map([], |row| {
                 Ok(VerifyTarget {
@@ -461,90 +467,142 @@ fn load_targets(
                     last_verified_at: row.get(4)?,
                     last_verified_status: row.get(5)?,
                     verification_policy_days: row.get(6)?,
+                    revision: row.get(7)?,
                 })
             })?;
 
             for row in rows {
-                out.push(row?);
+                let target = row?;
+                let artifacts = target.artifacts.as_deref().and_then(|raw| serde_json::from_str::<serde_json::Value>(raw).ok());
+                let effective = todo::effective_verification_status(target.last_verified_status.as_deref(), artifacts.as_ref(), &target.todo_id, target.revision);
+                if !effective.is_some_and(|value| matches!(value.to_ascii_lowercase().as_str(), "pass" | "passed" | "verified")) {
+                    out.push(target);
+                }
             }
         }
         Ok(out)
     })
 }
 
-fn persist_result(
-    store: &Store,
-    todo_id: &str,
-    status: &str,
-    notes: &str,
+/// Check the exact task and verification baseline that the caller inspected.
+/// The caller holds the write transaction through the result/event mutation.
+fn ensure_target_unchanged(
+    conn: &crate::core::db::Connection,
+    target: &VerifyTarget,
 ) -> Result<(), error::DecapodError> {
-    let ts = now_iso();
-    let broker = DbBroker::new(&store.root);
-    let db_path = todo::todo_db_path(&store.root);
-    let (proof_plan, verification_artifacts, verification_policy_days) =
-        broker.with_conn(&db_path, "decapod", None, "verify.persist", |conn| {
-            let existing: Option<(String, Option<String>, i64)> = conn
-                .query_row(
-                    "SELECT proof_plan, verification_artifacts, verification_policy_days
-                     FROM task_verification
-                     WHERE todo_id = ?1",
-                    crate::core::db::params![todo_id],
-                    |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
-                )
-                .optional()?;
-            let (proof_plan, verification_artifacts, verification_policy_days) =
-                existing.unwrap_or_else(|| ("[]".to_string(), None, 90));
-
-            conn.execute(
-                "INSERT INTO task_verification(todo_id, proof_plan, verification_artifacts, last_verified_at, last_verified_status, last_verified_notes, verification_policy_days, updated_at)
-                 VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?4)
-                 ON CONFLICT(todo_id) DO UPDATE SET
-                   proof_plan=excluded.proof_plan,
-                   verification_artifacts=excluded.verification_artifacts,
-                   last_verified_at=excluded.last_verified_at,
-                   last_verified_status=excluded.last_verified_status,
-                   last_verified_notes=excluded.last_verified_notes,
-                   verification_policy_days=excluded.verification_policy_days,
-                   updated_at=excluded.updated_at",
-                crate::core::db::params![
-                    todo_id,
-                    proof_plan,
-                    verification_artifacts,
-                    ts,
-                    status,
-                    notes,
-                    verification_policy_days,
-                ],
-            )?;
-            Ok((proof_plan, verification_artifacts, verification_policy_days))
-        })?;
-
-    todo::record_task_event(
-        &store.root,
-        "task.verify.result",
-        Some(todo_id),
-        serde_json::json!({
-            "proof_plan": serde_json::from_str::<serde_json::Value>(&proof_plan).unwrap_or_else(|_| serde_json::json!([])),
-            "verification_artifacts": verification_artifacts
-                .as_ref()
-                .and_then(|s| serde_json::from_str::<serde_json::Value>(s).ok())
-                .unwrap_or(serde_json::Value::Null),
-            "last_verified_status": status,
-            "last_verified_notes": notes,
-            "verification_policy_days": verification_policy_days
-        }),
-    )?;
-    mirror_verification_to_federation(
-        store,
-        todo_id,
-        &format!("Verification Result: {todo_id}"),
-        &format!("Verification status={status} notes={notes}"),
-        "proof,verification,result",
+    let current = conn.query_row(
+        "SELECT t.status, t.revision, v.proof_plan, v.verification_artifacts, v.last_verified_at, v.last_verified_status, COALESCE(v.verification_policy_days, 90)
+         FROM tasks t LEFT JOIN task_verification v ON v.todo_id = t.id WHERE t.id = ?1",
+        [&target.todo_id],
+        |row| Ok((row.get::<_, String>(0)?, row.get::<_, i64>(1)?, row.get::<_, Option<String>>(2)?, row.get::<_, Option<String>>(3)?, row.get::<_, Option<String>>(4)?, row.get::<_, Option<String>>(5)?, row.get::<_, i64>(6)?)),
+    ).optional()?;
+    let expected = (
+        target.status.clone(),
+        target.revision,
+        target.proof_plan.clone(),
+        target.artifacts.clone(),
+        target.last_verified_at.clone(),
+        target.last_verified_status.clone(),
+        target.verification_policy_days,
     );
+    if current.as_ref() != Some(&expected) {
+        return Err(error::DecapodError::ValidationError(format!(
+            "STALE_TASK_VERIFICATION: task {} or its proof baseline changed during verification; inspect the current task and rerun verification or recapture with `decapod qa verify regen {}`",
+            target.todo_id, target.todo_id,
+        )));
+    }
     Ok(())
 }
 
+fn append_verification_event_on_connection(
+    conn: &crate::core::db::Connection,
+    todo_id: &str,
+    event_type: &str,
+    ts: &str,
+    payload: serde_json::Value,
+) -> Result<(), error::DecapodError> {
+    events::append_on_conn(
+        conn,
+        events::TODO,
+        &serde_json::json!({
+            "ts": ts,
+            "event_id": crate::core::ulid::new_ulid(),
+            "event_type": event_type,
+            "status": "success",
+            "task_id": todo_id,
+            "actor": "decapod",
+            "payload": payload,
+        }),
+    )?;
+    Ok(())
+}
+
+fn persist_result(
+    store: &Store,
+    target: &VerifyTarget,
+    status: &str,
+    notes: &str,
+) -> Result<VerifyTarget, error::DecapodError> {
+    let ts = now_iso();
+    let broker = DbBroker::new(&store.root);
+    let db_path = todo::todo_db_path(&store.root);
+    broker.with_transaction(&db_path, "decapod", None, "verify.persist", |conn| {
+        ensure_target_unchanged(conn, target)?;
+        let artifacts = target.artifacts.as_deref().and_then(|raw| serde_json::from_str::<serde_json::Value>(raw).ok());
+        if status.eq_ignore_ascii_case("pass") && (target.status != "done" || !todo::verification_binding_matches(artifacts.as_ref(), &target.todo_id, target.revision)) {
+            return Err(error::DecapodError::ValidationError(
+                "STALE_TASK_VERIFICATION: passing proof must bind the current completed task; recapture verification".into(),
+            ));
+        }
+        let proof_plan = target.proof_plan.as_deref().unwrap_or("[]");
+        conn.execute(
+            "INSERT INTO task_verification(todo_id, proof_plan, verification_artifacts, last_verified_at, last_verified_status, last_verified_notes, verification_policy_days, updated_at)
+             VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?4)
+             ON CONFLICT(todo_id) DO UPDATE SET
+               proof_plan=excluded.proof_plan,
+               verification_artifacts=excluded.verification_artifacts,
+               last_verified_at=excluded.last_verified_at,
+               last_verified_status=excluded.last_verified_status,
+               last_verified_notes=excluded.last_verified_notes,
+               verification_policy_days=excluded.verification_policy_days,
+               updated_at=excluded.updated_at",
+            crate::core::db::params![target.todo_id, proof_plan, target.artifacts, ts, status, notes, target.verification_policy_days],
+        )?;
+        append_verification_event_on_connection(conn, &target.todo_id, "task.verify.result", &ts, serde_json::json!({
+            "proof_plan": serde_json::from_str::<serde_json::Value>(proof_plan).unwrap_or_else(|_| serde_json::json!([])),
+            "verification_artifacts": artifacts,
+            "last_verified_status": status,
+            "last_verified_notes": notes,
+            "verification_policy_days": target.verification_policy_days,
+        }))
+    })?;
+    mirror_verification_to_federation(
+        store,
+        &target.todo_id,
+        &format!("Verification Result: {}", target.todo_id),
+        &format!("Verification status={status} notes={notes}"),
+        "proof,verification,result",
+    );
+    let mut written = target.clone();
+    written.proof_plan = Some(
+        target
+            .proof_plan
+            .clone()
+            .unwrap_or_else(|| "[]".to_string()),
+    );
+    written.last_verified_at = Some(ts);
+    written.last_verified_status = Some(status.to_string());
+    Ok(written)
+}
+
 fn is_stale(target: &VerifyTarget, now_secs: i64) -> bool {
+    let artifacts = target
+        .artifacts
+        .as_deref()
+        .and_then(|raw| serde_json::from_str::<serde_json::Value>(raw).ok());
+    if !todo::verification_binding_matches(artifacts.as_ref(), &target.todo_id, target.revision) {
+        return true;
+    }
     match target.last_verified_at.as_deref().and_then(epoch_secs) {
         None => true,
         Some(last) => now_secs.saturating_sub(last) > target.verification_policy_days * 86_400,
@@ -666,6 +724,18 @@ fn verify_target(
             return Ok(result);
         }
     };
+
+    if artifacts.task_id.as_deref() != Some(target.todo_id.as_str())
+        || artifacts.task_revision != Some(target.revision)
+        || target.revision < 0
+    {
+        result.status = "fail".to_string();
+        result.notes.push(format!(
+            "STALE_TASK_VERIFICATION: proof does not bind current task {} revision {}. Recapture with `decapod qa verify regen {}`; historical proof is not reassigned to changed intent.",
+            target.todo_id, target.revision, target.todo_id,
+        ));
+        return Ok(result);
+    }
 
     let expected_proof = artifacts
         .proof_plan_results
@@ -1018,7 +1088,10 @@ impl PreparedTodoVerification {
         }
         self.check_material()?;
         let ts = &self.artifacts.completed_at;
-        let artifacts_json = serde_json::to_string(&self.artifacts)
+        let mut artifacts = self.artifacts.clone();
+        artifacts.task_id = Some(self.todo_id.clone());
+        artifacts.task_revision = Some(expected_revision);
+        let artifacts_json = serde_json::to_string(&artifacts)
             .map_err(|err| error::DecapodError::ValidationError(err.to_string()))?;
         conn.execute(
             "INSERT INTO task_verification(todo_id, proof_plan, verification_artifacts, last_verified_at, last_verified_status, last_verified_notes, verification_policy_days, updated_at)
@@ -1045,7 +1118,7 @@ impl PreparedTodoVerification {
                 "actor": "decapod",
                 "payload": {
                     "proof_plan": ["validate_passes"],
-                    "verification_artifacts": self.artifacts,
+                    "verification_artifacts": artifacts,
                     "last_verified_status": "pass",
                     "last_verified_notes": "baseline captured",
                     "verification_policy_days": 90
@@ -1120,6 +1193,8 @@ fn prepare_verified_completion_with(
             artifact_paths: resolved_paths,
             artifacts: VerificationArtifacts {
                 completed_at: now_iso(),
+                task_id: Some(todo_id.to_string()),
+                task_revision: Some(task.revision),
                 evaluator_epoch: Some(validation_epoch.epoch_id.clone()),
                 validation_epoch: Some(validation_epoch.clone()),
                 proof_plan_results: vec![ProofPlanResult {
@@ -1184,7 +1259,7 @@ fn refresh_batch_baselines(
     targets: &[VerifyTarget],
     snapshot: &ValidationSnapshot,
     validation_epoch: &ValidationEpochMetadata,
-) -> Result<(), error::DecapodError> {
+) -> Result<Vec<VerifyTarget>, error::DecapodError> {
     if !snapshot.passed {
         return Err(error::DecapodError::ValidationError(
             "cannot recover verification baselines from a failing validation snapshot".to_string(),
@@ -1249,11 +1324,13 @@ fn refresh_batch_baselines(
         proof.evaluator_epoch = Some(validation_epoch.epoch_id.clone());
         proof.validation_epoch = Some(validation_epoch.clone());
         artifacts.completed_at = completed_at.clone();
+        artifacts.task_id = Some(target.todo_id.clone());
+        artifacts.task_revision = Some(target.revision);
         artifacts.evaluator_epoch = Some(validation_epoch.epoch_id.clone());
         artifacts.validation_epoch = Some(validation_epoch.clone());
 
         updates.push((
-            target.todo_id.clone(),
+            target,
             serde_json::to_string(&artifacts).unwrap(),
             serde_json::to_string(&proof_plan).unwrap(),
             artifacts,
@@ -1262,8 +1339,14 @@ fn refresh_batch_baselines(
 
     let db_path = todo::todo_db_path(&store.root);
     let broker = DbBroker::new(&store.root);
-    broker.with_conn(&db_path, "decapod", None, "verify.recover.baselines", |conn| {
-        for (todo_id, artifacts_json, proof_plan_json, _) in &updates {
+    broker.with_transaction(&db_path, "decapod", None, "verify.recover.baselines", |conn| {
+        for (target, _, _, _) in &updates {
+            ensure_target_unchanged(conn, target)?;
+            if target.status != "done" || target.revision < 0 {
+                return Err(error::DecapodError::ValidationError("Recovery requires a current completed task revision".into()));
+            }
+        }
+        for (target, artifacts_json, proof_plan_json, artifacts) in &updates {
             conn.execute(
                 "UPDATE task_verification
                  SET proof_plan = ?1,
@@ -1272,27 +1355,30 @@ fn refresh_batch_baselines(
                      last_verified_notes = 'baseline recovered from stable batch validation snapshot; awaiting final aggregate verification',
                      updated_at = ?3
                  WHERE todo_id = ?4",
-                crate::core::db::params![proof_plan_json, artifacts_json, completed_at, todo_id],
+                crate::core::db::params![proof_plan_json, artifacts_json, completed_at, target.todo_id],
             )?;
-        }
-        Ok(())
-    })?;
-
-    for (todo_id, _, _, artifacts) in updates {
-        todo::record_task_event(
-            &store.root,
-            "task.verify.recover",
-            Some(&todo_id),
-            serde_json::json!({
-                "proof_plan": ["validate_passes"],
+            append_verification_event_on_connection(conn, &target.todo_id, "task.verify.recover", &completed_at, serde_json::json!({
+                "proof_plan": serde_json::from_str::<serde_json::Value>(proof_plan_json).map_err(|err| error::DecapodError::ValidationError(err.to_string()))?,
                 "verification_artifacts": artifacts,
                 "validation_epoch": validation_epoch,
                 "snapshot_output_hash": snapshot.output_hash,
-                "status": "CLAIMED"
-            }),
-        )?;
-    }
-    Ok(())
+                "last_verified_status": "CLAIMED",
+                "last_verified_notes": "baseline recovered; awaiting final aggregate verification",
+                "verification_policy_days": target.verification_policy_days,
+            }))?;
+        }
+        Ok(())
+    })?;
+    Ok(updates
+        .into_iter()
+        .map(|(target, artifacts_json, proof_plan_json, _)| {
+            let mut refreshed = target.clone();
+            refreshed.artifacts = Some(artifacts_json);
+            refreshed.proof_plan = Some(proof_plan_json);
+            refreshed.last_verified_status = Some("CLAIMED".to_string());
+            refreshed
+        })
+        .collect())
 }
 
 pub fn prune_verification_for_todo(
@@ -1303,25 +1389,17 @@ pub fn prune_verification_for_todo(
     let db_path = todo::todo_db_path(&store.root);
     let broker = DbBroker::new(&store.root);
 
-    broker.with_conn(&db_path, "decapod", None, "verify.prune", |conn| {
+    broker.with_transaction(&db_path, "decapod", None, "verify.prune", |conn| {
         conn.execute(
             "DELETE FROM task_verification WHERE todo_id = ?1",
             [todo_id],
         )?;
         conn.execute(
-            "UPDATE tasks SET status = 'open', completed_at = NULL, updated_at = ?1 WHERE id = ?2",
+            "UPDATE tasks SET status = 'open', completed_at = NULL, updated_at = ?1, revision = revision + 1 WHERE id = ?2",
             crate::core::db::params![ts, todo_id],
         )?;
-        Ok(())
-    })?;
-
-    todo::record_task_event(
-        &store.root,
-        "task.verify.prune",
-        Some(todo_id),
-        serde_json::json!({}),
-    )?;
-    Ok(())
+        append_verification_event_on_connection(conn, todo_id, "task.verify.prune", &ts, serde_json::json!({}))
+    })
 }
 
 fn run_recover_cli(store: &Store, repo_root: &Path, json: bool) -> Result<(), error::DecapodError> {
@@ -1349,18 +1427,20 @@ fn run_recover_cli(store: &Store, repo_root: &Path, json: bool) -> Result<(), er
             output_hash,
         };
         let validation_epoch = active_validation_epoch(repo_root)?;
-        refresh_batch_baselines(store, &targets, &snapshot, &validation_epoch)?;
-        let recovered_targets = load_targets(store, None)?;
+        let recovered_targets =
+            refresh_batch_baselines(store, &targets, &snapshot, &validation_epoch)?;
 
         let mut results = Vec::new();
+        let mut result_targets = Vec::new();
         for target in &recovered_targets {
             let verification = verify_target(target, &store.root, repo_root, Some(&snapshot))?;
-            persist_result(
+            let written = persist_result(
                 store,
-                &verification.todo_id,
+                target,
                 &verification.status,
                 &verification.notes.join("; "),
             )?;
+            result_targets.push(written);
             results.push(verification);
         }
 
@@ -1369,10 +1449,10 @@ fn run_recover_cli(store: &Store, repo_root: &Path, json: bool) -> Result<(), er
         }
         let (final_passed, final_hash) = run_validate_and_hash(&store.root, repo_root, None)?;
         if !final_passed || results.iter().any(|result| result.status != "pass") {
-            for verification in &results {
+            for target in &result_targets {
                 persist_result(
                     store,
-                    &verification.todo_id,
+                    target,
                     "fail",
                     "batch recovery rejected because final aggregate validation or task proof failed",
                 )?;
@@ -1647,12 +1727,7 @@ pub fn run_verify_cli(
 
     for target in &targets {
         let result = verify_target(target, &store.root, repo_root, validation_snapshot.as_ref())?;
-        persist_result(
-            store,
-            &result.todo_id,
-            &result.status,
-            &result.notes.join("; "),
-        )?;
+        persist_result(store, target, &result.status, &result.notes.join("; "))?;
 
         append_event(
             store,
@@ -1893,11 +1968,19 @@ fn diagnose_task(
     expected_container: bool,
     base_branch: &str,
 ) -> serde_json::Value {
-    let proof_status = target
-        .and_then(|target| target.last_verified_status.as_deref())
-        .unwrap_or("missing");
+    let artifacts = target
+        .and_then(|target| target.artifacts.as_deref())
+        .and_then(|raw| serde_json::from_str::<serde_json::Value>(raw).ok());
+    let proof_status = todo::effective_verification_status(
+        target.and_then(|target| target.last_verified_status.as_deref()),
+        artifacts.as_ref(),
+        &task.id,
+        task.revision,
+    )
+    .unwrap_or("missing");
     let proof_status = match proof_status {
-        "pass" => "pass",
+        "pass" | "passed" | "verified" => "pass",
+        "stale" => "stale",
         "fail" => "blocked",
         "missing" => "missing",
         _ => "unknown",
@@ -1935,6 +2018,8 @@ fn diagnose_task(
         format!("switch to the todo-scoped workspace for {}", task.id)
     } else if proof_status == "missing" {
         format!("decapod todo done --id {} --validated", task.id)
+    } else if proof_status == "stale" {
+        format!("decapod qa verify regen {}", task.id)
     } else if proof_status == "blocked" || proof_status == "unknown" {
         format!("decapod validate && decapod qa verify todo {}", task.id)
     } else {

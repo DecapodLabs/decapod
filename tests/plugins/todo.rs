@@ -1398,7 +1398,11 @@ fn dependency_readiness_gates_claim_and_feeds_work_claim_and_fleet() {
          ) VALUES(?1, '[\"validate_passes\"]', ?2, '100Z', 'passed', '', 90, '100Z')",
         decapod::core::db::params![
             dependency_id,
-            r#"{"proof_plan_results":[{"proof_gate":"validate_passes","output_hash":"sha256:dep-proof"}]}"#
+            serde_json::json!({
+                "task_id": dependency_id,
+                "task_revision": get_task(&root, &dependency_id).unwrap().unwrap().revision,
+                "proof_plan_results": [{"proof_gate":"validate_passes","output_hash":"sha256:dep-proof"}]
+            }).to_string()
         ],
     )
     .unwrap();
