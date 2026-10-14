@@ -151,6 +151,17 @@ write atomically. Related sections share intent and epoch references instead
 of creating competing copies. Generated views remain projections of their
 inputs and never become a second authority.
 
+Plan acceptance is bound to its execution contract through the existing locked
+mutation boundary in `src/decapod/plan_governance.rs`. Material plan, phase, or
+gate definition edits return the plan to `DRAFT` and clear every phase/gate
+progress flag and timestamp. Exact no-op updates preserve progress. The
+conservative all-phase reset prevents later phases from retaining evidence that
+depended on an earlier contract. Reapproval is a separate declared transition;
+phase entry/completion cannot manufacture approval from draft state.
+`validate_plan_progress` is shared by explicit transitions, execution checks,
+and the publication validation gate to reject inconsistent completed state.
+This adds no separate storage, authority service, or harness-specific runtime.
+
 ## Persistence boundary
 
 Decapod owns domain schemas, transition rules, migration order, identity,
@@ -288,7 +299,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8db770925a4a896ca4938495d83d2ab15176b5010768008d0aaf88b74c3e783a`
+- Repository signal fingerprint: `d648d3300c45bfae720bbf7e71a259761969cd3ce32a0cf2b4e22c097897e3fb`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (183 files), `tests/` (188 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

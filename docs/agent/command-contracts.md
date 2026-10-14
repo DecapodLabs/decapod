@@ -72,6 +72,30 @@ This document defines the normative operational contracts for the Decapod CLI.
 ## `decapod govern`
 - **Intent:** Governance: policy, health, proofs, audits
 
+### `decapod govern plan` contract revisions
+
+- Plan acceptance applies to the recorded execution contract. A real change to
+  title, intent, task bindings, proof hooks, questions, stop conditions,
+  contradictions, deferrals, scope constraints, or phase/gate definitions returns
+  the plan to `DRAFT` and clears all phase and gate progress, including timestamps.
+  Phase ordering can make later evidence depend on earlier definitions, so a
+  revision conservatively requires replay of every declared phase.
+- Exact no-op updates preserve acceptance and progress. Spec-review records are
+  retained, including unresolved human decisions; their independent content-bound
+  review rules still apply.
+- After a material edit, review the revised contract and use the separate
+  `decapod govern plan approve` transition. Editing and accepting a changed
+  contract in the same low-level patch is rejected without writing the document.
+  An explicit state transition remains a declared approval, not authenticated
+  proof of a human identity or semantic correctness.
+- `enter-phase` and `exit-phase` require an approved or executing plan. Completing
+  phases cannot promote a draft or annotating plan to `DONE`. Reapproval does not
+  restore progress erased by a contract revision; satisfy the current gates and
+  replay the phases in declaration order.
+- Execution and publication reject `DONE` plans with incomplete phases and
+  completed phases with unsatisfied gates. These structural checks supplement
+  exact-candidate validation and do not substitute for actual proof execution.
+
 ### `decapod govern trajectory record`
 
 - **Preconditions:** Use an active session and initialize the run with `decapod govern trajectory init --run-id <run-id> --original-intent "..." --derived-intent "..."`.

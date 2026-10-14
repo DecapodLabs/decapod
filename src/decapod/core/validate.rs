@@ -6159,6 +6159,10 @@ fn validate_plan_governed_execution_gate(
 
     let plan = plan_governance::load_plan(main_root)?;
     if let Some(plan) = plan {
+        match plan_governance::validate_plan_progress(&plan) {
+            Ok(()) => pass("Plan phase progress matches its current contract", ctx),
+            Err(error) => fail(&error.to_string(), ctx),
+        }
         match plan_governance::enforce_scope_constraints(main_root, &plan.constraints) {
             Ok(()) => pass("Complete candidate scope satisfies the governed plan", ctx),
             Err(error) => fail(&error.to_string(), ctx),

@@ -149,13 +149,25 @@ fn plan_gate_returns_needs_human_input_until_questions_cleared() {
         String::from_utf8_lossy(&update.stderr)
     );
 
+    let stale = run_decapod(
+        &dir,
+        &["govern", "plan", "check-execute", "--todo-id", &todo_id],
+    );
+    assert!(!stale.status.success());
+    assert!(String::from_utf8_lossy(&stale.stderr).contains("NEEDS_PLAN_APPROVAL"));
+    assert!(
+        run_decapod(&dir, &["govern", "plan", "approve"])
+            .status
+            .success()
+    );
+
     let ok = run_decapod(
         &dir,
         &["govern", "plan", "check-execute", "--todo-id", &todo_id],
     );
     assert!(
         ok.status.success(),
-        "check-execute should pass after questions are cleared: {}",
+        "check-execute should pass after the revised plan is approved: {}",
         String::from_utf8_lossy(&ok.stderr)
     );
 }
@@ -226,4 +238,82 @@ fn missing_todo_reports_coordination_recovery_without_reasking_intent() {
         String::from_utf8_lossy(&recovered.stderr)
     );
     assert!(String::from_utf8_lossy(&recovered.stdout).contains("EXECUTION_READY"));
+}
+
+#[test]
+fn public_plan_edits_require_reapproval_and_phase_completion_cannot_supply_it() {
+    let (_tmp, dir, todo_id) = setup_repo();
+    let run = |args: &[&str]| {
+        let out = run_decapod(&dir, args);
+        assert!(
+            out.status.success(),
+            "{args:?}: {}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+        serde_json::from_slice::<serde_json::Value>(&out.stdout).unwrap()
+    };
+    run(&[
+        "govern",
+        "plan",
+        "init",
+        "--title",
+        "Accepted work",
+        "--intent",
+        "Original contract",
+        "--todo-id",
+        &todo_id,
+    ]);
+    run(&[
+        "govern",
+        "plan",
+        "phase-add",
+        "--id",
+        "build",
+        "--name",
+        "Build",
+        "--description",
+        "Perform accepted work",
+    ]);
+    for command in ["enter-phase", "exit-phase"] {
+        let blocked = run_decapod(&dir, &["govern", "plan", command, "--phase-id", "build"]);
+        assert!(!blocked.status.success());
+        assert!(String::from_utf8_lossy(&blocked.stderr).contains("NEEDS_PLAN_APPROVAL"));
+    }
+    run(&["govern", "plan", "approve"]);
+    run(&["govern", "plan", "enter-phase", "--phase-id", "build"]);
+    assert_eq!(
+        run(&["govern", "plan", "exit-phase", "--phase-id", "build"])["state"],
+        "DONE"
+    );
+    // A byte-identical update preserves completion, but a changed contract cannot.
+    assert_eq!(
+        run(&["govern", "plan", "update", "--intent", "Original contract"])["state"],
+        "DONE"
+    );
+    let changed = run(&["govern", "plan", "update", "--intent", "Different contract"]);
+    assert_eq!(changed["state"], "DRAFT");
+    assert_eq!(changed["phases"][0]["completed"], false);
+    let blocked = run_decapod(
+        &dir,
+        &["govern", "plan", "check-execute", "--todo-id", &todo_id],
+    );
+    assert!(!blocked.status.success());
+    assert!(String::from_utf8_lossy(&blocked.stderr).contains("NEEDS_PLAN_APPROVAL"));
+    run(&["govern", "plan", "approve"]);
+    let blocked = run_decapod(
+        &dir,
+        &["govern", "plan", "check-execute", "--todo-id", &todo_id],
+    );
+    assert!(!blocked.status.success());
+    assert!(String::from_utf8_lossy(&blocked.stderr).contains("PHASE_REQUIRED"));
+    run(&["govern", "plan", "enter-phase", "--phase-id", "build"]);
+    run(&["govern", "plan", "exit-phase", "--phase-id", "build"]);
+    assert!(
+        run_decapod(
+            &dir,
+            &["govern", "plan", "check-execute", "--todo-id", &todo_id]
+        )
+        .status
+        .success()
+    );
 }
