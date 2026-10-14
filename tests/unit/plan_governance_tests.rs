@@ -209,6 +209,7 @@ fn actual_intent_ambiguity_still_requires_human_input_before_projection_lookup()
         },
     ] {
         patch_plan(dir.path(), patch).unwrap();
+        approve_plan(dir.path());
         let message = execute_check(dir.path(), &store, None)
             .unwrap_err()
             .to_string();
@@ -243,6 +244,7 @@ fn missing_projection_does_not_waive_plan_approval_or_phase_gates() {
     )
     .unwrap();
     add_phase(dir.path(), phase("build")).unwrap();
+    approve_plan(dir.path());
     assert!(
         execute_check(dir.path(), &store, None)
             .unwrap_err()
@@ -389,4 +391,362 @@ fn staged_revert_cannot_hide_a_forbidden_committed_head_from_execution_scope() {
             .to_string()
             .contains("SCOPE_VIOLATION")
     );
+}
+
+fn approve_plan(root: &Path) {
+    patch_plan(
+        root,
+        PlanPatch {
+            state: Some(PlanState::Approved),
+            ..Default::default()
+        },
+    )
+    .unwrap();
+}
+
+fn approval_gate() -> Gate {
+    Gate {
+        description: "Current contract reviewed".into(),
+        required_artifacts: vec![],
+        validation_checks: vec![],
+        satisfied: false,
+        satisfied_at: None,
+    }
+}
+
+fn progressed_plan(state: PlanState) -> (tempfile::TempDir, PathBuf) {
+    let (dir, store) = execution_fixture();
+    insert_projection_task(&store, "root-task");
+    let mut first = phase("first");
+    first.entry_gates.push(approval_gate());
+    first.exit_gates.push(approval_gate());
+    add_phase(dir.path(), first).unwrap();
+    add_phase(dir.path(), phase("second")).unwrap();
+    approve_plan(dir.path());
+    satisfy_gate(dir.path(), "first", "entry", 0).unwrap();
+    satisfy_gate(dir.path(), "first", "exit", 0).unwrap();
+    enter_phase(dir.path(), "first").unwrap();
+    complete_phase(dir.path(), "first").unwrap();
+    if state == PlanState::Done {
+        enter_phase(dir.path(), "second").unwrap();
+        complete_phase(dir.path(), "second").unwrap();
+    } else if state == PlanState::Approved {
+        approve_plan(dir.path());
+    }
+    assert_eq!(load_plan(dir.path()).unwrap().unwrap().state, state);
+    (dir, store)
+}
+
+fn assert_acceptance_invalidated(plan: &GovernedPlan) {
+    assert_eq!(plan.state, PlanState::Draft);
+    for phase in &plan.phases {
+        assert!(!phase.entered && !phase.completed);
+        assert!(phase.entered_at.is_none() && phase.completed_at.is_none());
+        for gate in phase.entry_gates.iter().chain(&phase.exit_gates) {
+            assert!(!gate.satisfied);
+            assert!(gate.satisfied_at.is_none());
+        }
+    }
+}
+
+#[test]
+fn contract_edits_revoke_every_accepted_state_and_all_phase_evidence() {
+    let patches = vec![
+        PlanPatch {
+            title: Some("Revised title".into()),
+            ..Default::default()
+        },
+        PlanPatch {
+            intent: Some("Different accepted work".into()),
+            ..Default::default()
+        },
+        PlanPatch {
+            todo_ids: Some(vec!["replacement".into()]),
+            ..Default::default()
+        },
+        PlanPatch {
+            proof_hooks: Some(vec!["different proof".into()]),
+            ..Default::default()
+        },
+        PlanPatch {
+            unknowns: Some(vec!["new unknown".into()]),
+            ..Default::default()
+        },
+        PlanPatch {
+            human_questions: Some(vec!["new question".into()]),
+            ..Default::default()
+        },
+        PlanPatch {
+            stop_conditions: Some(vec!["new stop".into()]),
+            ..Default::default()
+        },
+        PlanPatch {
+            unresolved_contradictions: Some(vec!["new conflict".into()]),
+            ..Default::default()
+        },
+        PlanPatch {
+            deferred_questions: Some(vec!["new deferral".into()]),
+            ..Default::default()
+        },
+        PlanPatch {
+            constraints: Some(ScopeConstraints {
+                forbidden_paths: vec!["private/**".into()],
+                file_touch_budget: Some(1),
+            }),
+            ..Default::default()
+        },
+        PlanPatch {
+            phases: Some(vec![phase("replacement")]),
+            ..Default::default()
+        },
+    ];
+    for state in [PlanState::Approved, PlanState::Executing, PlanState::Done] {
+        for patch in &patches {
+            let (dir, store) = progressed_plan(state.clone());
+            let changed = patch_plan(dir.path(), patch.clone()).unwrap();
+            assert_acceptance_invalidated(&changed);
+            assert!(
+                execute_check(dir.path(), &store, None)
+                    .unwrap_err()
+                    .to_string()
+                    .contains("NEEDS_PLAN_APPROVAL")
+            );
+            assert!(
+                enter_phase(dir.path(), &changed.phases[0].id)
+                    .unwrap_err()
+                    .to_string()
+                    .contains("NEEDS_PLAN_APPROVAL")
+            );
+            assert!(
+                complete_phase(dir.path(), &changed.phases[0].id)
+                    .unwrap_err()
+                    .to_string()
+                    .contains("NEEDS_PLAN_APPROVAL")
+            );
+        }
+    }
+}
+
+#[test]
+fn identical_contract_updates_preserve_acceptance_progress_and_reviews() {
+    for state in [PlanState::Approved, PlanState::Executing, PlanState::Done] {
+        let (dir, _) = progressed_plan(state);
+        let before = load_plan(dir.path()).unwrap().unwrap();
+        let changed = patch_plan(
+            dir.path(),
+            PlanPatch {
+                title: Some(before.title.clone()),
+                intent: Some(before.intent.clone()),
+                todo_ids: Some(before.todo_ids.clone()),
+                proof_hooks: Some(before.proof_hooks.clone()),
+                unknowns: Some(before.unknowns.clone()),
+                human_questions: Some(before.human_questions.clone()),
+                stop_conditions: Some(before.stop_conditions.clone()),
+                unresolved_contradictions: Some(before.unresolved_contradictions.clone()),
+                deferred_questions: Some(before.deferred_questions.clone()),
+                constraints: Some(before.constraints.clone()),
+                phases: Some(before.phases.clone()),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        assert_eq!(changed.state, before.state);
+        assert_eq!(changed.phases, before.phases);
+        assert_eq!(changed.spec_reviews, before.spec_reviews);
+        let updated = update_phase(
+            dir.path(),
+            "first",
+            Some("first".into()),
+            Some("first work".into()),
+        )
+        .unwrap();
+        assert_eq!(updated.state, before.state);
+        assert_eq!(updated.phases, before.phases);
+        let updated = update_gate(
+            dir.path(),
+            "first",
+            true,
+            0,
+            "Current contract reviewed".into(),
+        )
+        .unwrap();
+        assert_eq!(updated.state, before.state);
+        assert_eq!(updated.phases, before.phases);
+    }
+}
+
+#[test]
+fn phase_and_gate_contract_editors_revoke_done_and_require_fresh_progress() {
+    for editor in 0..6 {
+        let (dir, store) = progressed_plan(PlanState::Done);
+        let updated = match editor {
+            0 => add_phase(dir.path(), phase("third")),
+            1 => update_phase(dir.path(), "first", Some("Revised name".into()), None),
+            2 => update_phase(dir.path(), "first", None, Some("Revised contract".into())),
+            3 => add_gate(dir.path(), "first", true, approval_gate()),
+            4 => add_gate(dir.path(), "first", false, approval_gate()),
+            _ => update_gate(dir.path(), "first", false, 0, "Revised gate".into()),
+        }
+        .unwrap();
+        assert_acceptance_invalidated(&updated);
+        approve_plan(dir.path());
+        assert!(
+            execute_check(dir.path(), &store, None)
+                .unwrap_err()
+                .to_string()
+                .contains("PHASE_REQUIRED")
+        );
+        assert!(
+            enter_phase(dir.path(), "first")
+                .unwrap_err()
+                .to_string()
+                .contains("PHASE_ENTRY_GATE_NOT_SATISFIED")
+        );
+        assert!(
+            patch_plan(
+                dir.path(),
+                PlanPatch {
+                    state: Some(PlanState::Done),
+                    ..Default::default()
+                }
+            )
+            .unwrap_err()
+            .to_string()
+            .contains("PHASES_INCOMPLETE")
+        );
+    }
+}
+
+#[test]
+fn contract_change_cannot_be_accepted_in_the_same_patch() {
+    for state in [PlanState::Approved, PlanState::Executing, PlanState::Done] {
+        let (dir, _) = progressed_plan(PlanState::Done);
+        let before = fs::read(plan_path(dir.path())).unwrap();
+        let error = patch_plan(
+            dir.path(),
+            PlanPatch {
+                state: Some(state),
+                phases: Some(vec![phase("unperformed")]),
+                ..Default::default()
+            },
+        )
+        .unwrap_err()
+        .to_string();
+        assert!(error.contains("PLAN_CHANGED_REQUIRES_APPROVAL"));
+        assert_eq!(before, fs::read(plan_path(dir.path())).unwrap());
+    }
+}
+
+#[test]
+fn unapproved_phase_progress_cannot_manufacture_done() {
+    for state in [PlanState::Draft, PlanState::Annotating] {
+        let (dir, _) = execution_fixture();
+        add_phase(dir.path(), phase("build")).unwrap();
+        patch_plan(
+            dir.path(),
+            PlanPatch {
+                state: Some(state.clone()),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        let before = fs::read(plan_path(dir.path())).unwrap();
+        for error in [
+            enter_phase(dir.path(), "build").unwrap_err(),
+            complete_phase(dir.path(), "build").unwrap_err(),
+        ] {
+            assert!(error.to_string().contains("NEEDS_PLAN_APPROVAL"));
+        }
+        assert_eq!(before, fs::read(plan_path(dir.path())).unwrap());
+        approve_plan(dir.path());
+        enter_phase(dir.path(), "build").unwrap();
+        patch_plan(
+            dir.path(),
+            PlanPatch {
+                state: Some(state),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        assert!(
+            complete_phase(dir.path(), "build")
+                .unwrap_err()
+                .to_string()
+                .contains("NEEDS_PLAN_APPROVAL")
+        );
+        approve_plan(dir.path());
+        assert_eq!(
+            complete_phase(dir.path(), "build").unwrap().state,
+            PlanState::Done
+        );
+    }
+}
+
+#[test]
+fn legacy_inconsistent_progress_is_rejected_at_shared_acceptance_boundary() {
+    let (dir, store) = progressed_plan(PlanState::Done);
+    let mut plan = load_plan(dir.path()).unwrap().unwrap();
+    plan.phases[0].exit_gates[0].satisfied = false;
+    save_plan(dir.path(), &plan).unwrap();
+    assert!(
+        validate_plan_progress(&plan)
+            .unwrap_err()
+            .to_string()
+            .contains("PHASE_GATE_NOT_SATISFIED")
+    );
+    assert!(
+        execute_check(dir.path(), &store, None)
+            .unwrap_err()
+            .to_string()
+            .contains("PHASE_GATE_NOT_SATISFIED")
+    );
+    plan.phases[0].exit_gates[0].satisfied = true;
+    plan.phases[1].completed = false;
+    assert!(
+        validate_plan_progress(&plan)
+            .unwrap_err()
+            .to_string()
+            .contains("PHASES_INCOMPLETE")
+    );
+}
+
+#[test]
+fn completing_final_phase_cannot_persist_inconsistent_legacy_done() {
+    let (dir, _) = progressed_plan(PlanState::Executing);
+    enter_phase(dir.path(), "second").unwrap();
+    let mut plan = load_plan(dir.path()).unwrap().unwrap();
+    // The old gate editor could leave a completed predecessor unsatisfied.
+    plan.phases[0].exit_gates[0].satisfied = false;
+    save_plan(dir.path(), &plan).unwrap();
+    let before = fs::read(plan_path(dir.path())).unwrap();
+    let error = complete_phase(dir.path(), "second")
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("PHASE_GATE_NOT_SATISFIED"));
+    assert_eq!(before, fs::read(plan_path(dir.path())).unwrap());
+}
+
+#[test]
+fn contract_revision_preserves_pending_spec_decisions() {
+    let (dir, _) = progressed_plan(PlanState::Done);
+    let mut plan = load_plan(dir.path()).unwrap().unwrap();
+    plan.spec_reviews.push(SpecReview {
+        path: PUBLICATION_REVIEW_SPECS[0].into(),
+        spec_material_hash: "prior material".into(),
+        reviewed_code_fingerprint: "prior code".into(),
+        disposition: SpecReviewDisposition::RequiresDecision,
+        reason: "Unresolved external authority question".into(),
+        decision_ref: None,
+    });
+    save_plan(dir.path(), &plan).unwrap();
+    let updated = patch_plan(
+        dir.path(),
+        PlanPatch {
+            intent: Some("Revised work".into()),
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    assert_acceptance_invalidated(&updated);
+    assert_eq!(updated.spec_reviews, plan.spec_reviews);
 }

@@ -353,7 +353,31 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8db770925a4a896ca4938495d83d2ab15176b5010768008d0aaf88b74c3e783a`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (183 files), `tests/` (188 files)
+- Repository signal fingerprint: `9b1af545233f14b42c94eed39aa319437b3f0dc6a35dc22cc724726eb4af1de7`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (183 files), `tests/` (187 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Plan contract revision boundary
+
+`govern plan update`, `phase-add`, `phase-update`, `add-entry-gate`,
+`add-exit-gate`, and `update-gate` revoke acceptance and all phase/gate progress
+when their proposed contract actually differs. Repeating identical values leaves
+acceptance and progress intact. Review the revised contract and explicitly
+`govern plan approve`, then satisfy and replay its phases; `enter-phase` and
+`exit-phase` return `NEEDS_PLAN_APPROVAL` for draft or annotating plans.
+
+`plan_governance::patch_plan` rejects a combined contract change and accepted
+state with `PLAN_CHANGED_REQUIRES_APPROVAL`, preserving the previous document.
+Final proposed state, rather than the pre-patch phase list, determines whether
+`DONE` is structurally valid. `validate_plan_progress` enforces incomplete-phase
+and unsatisfied-completed-gate rejection for execution and publication as well.
+Spec-review decisions are preserved by these editors and retain their separate
+review and resolution rules. Explicit approval still records declared authority;
+it does not authenticate the approver or independently judge natural language.
+
+The public plan CLI regressions live in the existing branch-enforced
+`tests/cli_contract_enforcement.rs::plan_governed_execution` module. Their
+standalone predecessor was not selected by the source-PR graph; keeping all
+three cases in this executed target makes CLI routing, reapproval, and phase
+replay behavior part of the normal required proof without changing its adapter.

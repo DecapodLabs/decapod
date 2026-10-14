@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "dfe59bd07aedb6b351435cc96ca252a30b55a858",
+    "accepted_commit": "a4c03b203688d28e7e1520a90e0d8265f5c3b3b2",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -39,6 +39,14 @@
         "question": "Should a future Bazel release permit the generated module lockfile to move under .config/build, or must it remain root-discovered?",
         "status": "deferred"
       },
+      "claim:committed-scope-enforcement": {
+        "falsifier": "A clean committed forbidden edit, deletion, rename source or over-budget delta reaches provider execution or readiness",
+        "proof_refs": [
+          "src/decapod/core/validation_runtime/tests.rs"
+        ],
+        "statement": "Full readiness rejects forbidden-path and file-budget violations across complete accepted-base candidate delta on native and provider routes",
+        "status": "open"
+      },
       "claim:complete-prepush-readiness": {
         "falsifier": "An empty, stale, skipped-required, mocked-code or missing-provider result authorizes publication, or CLI/RPC/publish bypasses the same boundary",
         "statement": "Public validate can authorize source PR publication only after all applicable actual source checks and candidate builds pass with genuine current material/provider evidence; release-only packaging is explicitly outside core source scope",
@@ -64,6 +72,14 @@
         "id": "task-class-benefit",
         "owner": "Decapod context maintainers",
         "question": "Which task classes benefit most from narrowing, and when is additional context worth its cost?",
+        "status": "open"
+      },
+      "claim:independent-entrypoint-history": {
+        "falsifier": "Tamper then restore to canonical HEAD can pass the full native or Buildkite readiness boundary",
+        "proof_refs": [
+          "src/decapod/core/entrypoint_integrity/history/tests.rs"
+        ],
+        "statement": "Complete validation rejects unauthorized entrypoint rewrites in candidate history independently of provider-local Git gate skips",
         "status": "open"
       },
       "claim:intent-durability:question:sample-size": {
@@ -148,6 +164,14 @@
         "statement": "Initial protocol rollout preserves strict independently pinned single-root compatibility, and unsupported workflow or execution contracts remain actionable blockers rather than self-authorizing a candidate controller.",
         "status": "open"
       },
+      "claim:trajectory-journal-recoverability": {
+        "falsifier": "Changing run ID discards uncommitted failures, assumptions, blockers or Jev evidence without Git recovery",
+        "proof_refs": [
+          "tests/unit/core/trajectory_tests.rs"
+        ],
+        "statement": "Starting a different trajectory cannot replace an uncommitted governance journal through supported APIs",
+        "status": "open"
+      },
       "claim:validation-without-operator-receipt": {
         "falsifier": "The first checked validation push needs an operator receipt; a changed command/root/head/ref/repository inherits the seal; or unrelated write/provider restrictions are bypassed.",
         "proof_refs": [
@@ -174,91 +198,50 @@
     }
   },
   "change": {
-    "id": "change_01M4VGS2S8JFC6CBCNWFGXTKJ2",
-    "base_commit": "dfe59bd07aedb6b351435cc96ca252a30b55a858",
+    "id": "change_01M4VVJF5X9AS4618BD5VJESBZ",
+    "base_commit": "a4c03b203688d28e7e1520a90e0d8265f5c3b3b2",
     "target_base": "origin/master"
   },
   "claims": {
-    "committed-scope-enforcement": {
-      "statement": "Full readiness rejects forbidden-path and file-budget violations across complete accepted-base candidate delta on native and provider routes",
-      "falsifier": "A clean committed forbidden edit, deletion, rename source or over-budget delta reaches provider execution or readiness",
-      "status": "open",
-      "proof_refs": [
-        "src/decapod/core/validation_runtime/tests.rs"
-      ]
-    },
-    "independent-entrypoint-history": {
-      "statement": "Complete validation rejects unauthorized entrypoint rewrites in candidate history independently of provider-local Git gate skips",
-      "falsifier": "Tamper then restore to canonical HEAD can pass the full native or Buildkite readiness boundary",
-      "status": "open",
-      "proof_refs": [
-        "src/decapod/core/entrypoint_integrity/history/tests.rs"
-      ]
-    },
-    "trajectory-journal-recoverability": {
-      "statement": "Starting a different trajectory cannot replace an uncommitted governance journal through supported APIs",
-      "falsifier": "Changing run ID discards uncommitted failures, assumptions, blockers or Jev evidence without Git recovery",
-      "status": "open",
-      "proof_refs": [
-        "tests/unit/core/trajectory_tests.rs"
-      ]
+    "renewed-plan-acceptance": {
+      "statement": "Material plan or phase contract changes revoke previous accepted state and progress before execution can continue; no-op changes preserve state",
+      "falsifier": "A changed intent, scope, proof or phase contract retains accepted state or phase completion, or phase progression promotes an unapproved plan",
+      "status": "open"
     }
   },
   "checkpoints": [
     {
-      "id": "kernel-enforcement-initial",
-      "summary": "Enforce committed scope, recoverable trajectory resets and immutable entrypoint history across validation routes",
-      "input_digest": "sha256:76441b2d8488b7cf7cfd9eec94ea93885c4f08f1a58388d71ed6230130dade48",
-      "proof_refs": [
-        "src/decapod/core/entrypoint_integrity/history/tests.rs",
-        "src/decapod/core/validation_runtime/tests.rs",
-        "tests/unit/core/trajectory_tests.rs"
-      ]
+      "id": "plan-revision-source",
+      "summary": "Invalidate accepted plan and all phase progress on material edits; preserve no-ops and require accepted phase transitions; adversarial cases authored, validation pending",
+      "input_digest": "sha256:090b4790baf4958ecc11659b19f8f4e2c4d275c2851bbcdf081935cb3eb2b4bf"
     },
     {
-      "id": "kernel-enforcement-reviewed",
-      "summary": "Checkpoint reviewed three-gap repair, complete adversarial regressions and current release projections before first branch publication",
-      "input_digest": "sha256:b9003a8b78d7bbfb22c6586bedcd3d7668db935a975ebf504ae75eea2d3824fd",
-      "proof_refs": [
-        "src/decapod/core/entrypoint_integrity/history/tests.rs",
-        "src/decapod/core/validation_runtime/tests.rs",
-        "tests/unit/core/trajectory_tests.rs"
-      ]
+      "id": "plan-revision-repair",
+      "summary": "Repair final-phase atomicity found in independent review; reconcile reviewed source inventory after version-only release0.111.2; preserve initial validation failures and correct branch task identity",
+      "input_digest": "sha256:28542e72809643ecc58843ddfff2b33b34b1d66cf2ca1a08be27e1c33096a812"
     },
     {
-      "id": "kernel-format-repair",
-      "summary": "Repair required Rust formatting and preserve exact-candidate failed and passed evidence",
-      "input_digest": "sha256:557fafbedc010306f6d154376e5b3b12b5ecc812af0ef4b2d22baff70eb9f65c",
-      "proof_refs": [
-        "https://buildkite.com/decapodlabs/decapod/builds/1311",
-        "https://github.com/DecapodLabs/decapod/actions/runs/38469049952"
-      ]
-    },
-    {
-      "id": "kernel-format-repair-complete-evidence",
-      "summary": "Preserve additional genuine Buildkite ETXTBSY failure alongside unchanged required tests and formatting repair",
-      "input_digest": "sha256:cbadda769a68cbb07f09a92ab5848c7ae56d02c08048e1d0946e7d6c78d52bb3",
-      "proof_refs": [
-        "https://buildkite.com/decapodlabs/decapod/builds/1311"
-      ]
+      "id": "enforce-public-cli-regressions",
+      "summary": "Audit confirmed1147librarypasses but standalone plan CLI target was unexecuted; move all three cases into required CLI contract target without adapter changes; full revalidation pending",
+      "input_digest": "sha256:a44d583436f4d46a71cc7a457daf7b35ee3073b4ff685c0303b7f8ccfb94c0ef"
     }
   ],
   "intents": {
-    "intent:kernel-enforcement": {
+    "intent:change_01M4VVJF5X9AS4618BD5VJESBZ": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "No merge, release, credentials change, force push, weakened checks, fabricated evidence or separate build gate"
+        "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "Existing governance kernel Rust, regression tests, canonical instructions and product-wide authored specs"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:kernel-enforcement",
+      "id": "intent:change_01M4VVJF5X9AS4618BD5VJESBZ",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Strengthen the existing universal repository-native governance kernel for autonomous software engineering; confirm existing guarantees, select no more than three real enforcement gaps, implement and validate minimal corrections, and publish a review-ready PR for human merge",
-      "refined_intent": "Audit generation, authority and durable intent/custody/evidence/lifecycle; choose only code-demonstrable gaps and deterministic adversarial regressions",
+      "raw_intent": "Strengthen next concrete governance authority boundary",
+      "refined_intent": "Strengthen next concrete governance authority boundary",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -266,15 +249,25 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": null,
-        "forbidden_paths": [
-          "release publication and protected branch mutations"
-        ]
+        "file_touch_budget": 22,
+        "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Strengthen existing governance kernel enforcement\n\nAudit six areas: conventional agent entrypoints; durable intent and replacement-agent recovery; initialization/claim/work/validation/publication lifecycle; exact input-bound evidence; durable failure-repair lifecycle; adversarial regressions. Confirm existing guarantees first and implement at most three code-grounded high-impact gaps with minimal coherent Rust changes. Preserve daemonless local-first Git-native governance, SQLite/Dactyl roles, harness independence, optional cloud separation and human merge authority. Validate source using plain decapod validate; preserve genuine failures; publish only after exact candidate green.",
-      "phases": [],
+      "intent": "Require explicit renewed plan acceptance and fresh phase progress after changes to the governed execution contract, preserving no-op and separate state transitions",
+      "phases": [
+        {
+          "completed": true,
+          "completed_at": "1791938990Z",
+          "description": "Trace plan mutation and phase state",
+          "entered": true,
+          "entered_at": "1791938988Z",
+          "entry_gates": [],
+          "exit_gates": [],
+          "id": "inspect",
+          "name": "Inspect acceptance boundary"
+        }
+      ],
       "proof_hooks": [
         "decapod validate"
       ],
@@ -283,165 +276,153 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Re-reviewed final source after formatting-only repair; immutable journal and trusted controller runner architecture unchanged",
-          "reviewed_code_fingerprint": "8db770925a4a896ca4938495d83d2ab15176b5010768008d0aaf88b74c3e783a",
-          "spec_material_hash": "ad7b0d507fb069caf348fcb2eecf7b06b7c0dd0bf3d1eeaf19da4617a78c82cf"
-        },
-        {
-          "disposition": "unchanged_with_reason",
-          "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Formatting-only repair adds no interface changes; existing scoped transition and recovery semantics reviewed",
-          "reviewed_code_fingerprint": "8db770925a4a896ca4938495d83d2ab15176b5010768008d0aaf88b74c3e783a",
-          "spec_material_hash": "58c045c5b7aecc82b99be8060d28862dbd7ef54edd20a16f8665d5a7b3d16f00"
+          "reason": "Contract revision reset and shared structural gates remain accurate; execution graph unchanged",
+          "reviewed_code_fingerprint": "9b1af545233f14b42c94eed39aa319437b3f0dc6a35dc22cc724726eb4af1de7",
+          "spec_material_hash": "77b4a522d06938885ac3502be7cc417b0456a06299beeaacf75e846eb4562d84"
         },
         {
           "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Public CLI regressions now live in enforced contract target; preserves all three cases without changing source adapter",
+          "reviewed_code_fingerprint": "9b1af545233f14b42c94eed39aa319437b3f0dc6a35dc22cc724726eb4af1de7",
+          "spec_material_hash": "f9711772a9cbac81073b05f30711f2c83c45b9a848ed8ef5c22d4fb2dadff95d"
+        },
+        {
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Re-reviewed unchanged trust limits and immutable archive/controller reads after required formatter repair",
-          "reviewed_code_fingerprint": "8db770925a4a896ca4938495d83d2ab15176b5010768008d0aaf88b74c3e783a",
+          "reason": "Declared approval authority and external provider trust limits unchanged; test relocation closes branch coverage omission",
+          "reviewed_code_fingerprint": "9b1af545233f14b42c94eed39aa319437b3f0dc6a35dc22cc724726eb4af1de7",
           "spec_material_hash": "439b8a69e8db6ebf0d579a87f982878ed8e3e350c6a70c09a99b16c92523659b"
         }
       ],
-      "state": "APPROVED",
+      "state": "DONE",
       "stop_conditions": [
-        "Stop on a genuine human decision, denied authorization, unavailable required evidence, or proposed architecture expansion beyond three confirmed gaps"
+        "No weakening of provider proof or external human authority assumptions"
       ],
-      "title": "Strengthen existing governance kernel enforcement",
+      "title": "Invalidate stale plan acceptance after contract edits",
       "todo_ids": [
-        "code_01m4vgrjk4f9x6vr"
+        "secu_01m4vvhnkp105c3d"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791926846Z"
+      "updated_at": "1791939000Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "No merge, release, credentials change, force push, weakened checks, fabricated evidence or separate build gate"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:cadb2a224e900c63930e99c1e7faf45bd395d9e1db61d4cfbc277cc2157f4eea",
+      "artifact_hash": "sha256:62f6500378dd4584f8e19e1f5c2ead76c939acbb725feff8db76f6345afa4adc",
       "checks": [
         {
-          "name": "adversarial-regressions-authored-not-executed",
+          "name": "candidate_regressions",
           "status": "unavailable"
         },
         {
-          "name": "candidate-library-adversarial-tests-abd3d44c",
+          "name": "d9fb4970_library_1147_passed",
           "status": "passed"
         },
         {
-          "name": "code-grounded-six-area-audit",
+          "name": "d9fb4970_public_cli_execution",
+          "status": "unavailable"
+        },
+        {
+          "name": "first_readiness",
+          "status": "failed"
+        },
+        {
+          "name": "independent_static_review",
           "status": "passed"
         },
         {
-          "name": "independent-source-review",
+          "name": "official_0.111.2_stale_acceptance_reproduction",
           "status": "passed"
-        },
-        {
-          "name": "initial-full-validation",
-          "status": "failed"
-        },
-        {
-          "name": "required-buildkite-fmt-abd3d44c",
-          "status": "failed"
-        },
-        {
-          "name": "required-buildkite-library-abd3d44c",
-          "status": "failed"
         }
       ],
-      "current_phase": "validation",
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:kernel-enforcement",
+            "intent_id": "intent:change_01M4VVJF5X9AS4618BD5VJESBZ",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:kernel-enforcement",
+            "intent_id": "intent:change_01M4VVJF5X9AS4618BD5VJESBZ",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:kernel-enforcement",
+            "detail": "trajectory:branch_01M4VVJF6TFY9PC58A2WCXGWQV",
             "event_id": "event:4",
-            "intent_id": "intent:kernel-enforcement",
+            "intent_id": "intent:change_01M4VVJF5X9AS4618BD5VJESBZ",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:kernel-enforcement",
+            "detail": "trajectory:branch_01M4VVJF6TFY9PC58A2WCXGWQV",
             "event_id": "event:5",
-            "intent_id": "intent:kernel-enforcement",
+            "intent_id": "intent:change_01M4VVJF5X9AS4618BD5VJESBZ",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:kernel-enforcement",
+            "detail": "trajectory:branch_01M4VVJF6TFY9PC58A2WCXGWQV",
             "event_id": "event:6",
-            "intent_id": "intent:kernel-enforcement",
+            "intent_id": "intent:change_01M4VVJF5X9AS4618BD5VJESBZ",
             "kind": "trajectory_step_recorded",
             "sequence": 6
           },
           {
-            "detail": "trajectory:kernel-enforcement",
+            "detail": "trajectory:branch_01M4VVJF6TFY9PC58A2WCXGWQV",
             "event_id": "event:7",
-            "intent_id": "intent:kernel-enforcement",
+            "intent_id": "intent:change_01M4VVJF5X9AS4618BD5VJESBZ",
             "kind": "trajectory_step_recorded",
             "sequence": 7
-          },
-          {
-            "detail": "trajectory:kernel-enforcement",
-            "event_id": "event:8",
-            "intent_id": "intent:kernel-enforcement",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
-          "kernel-enforcement": {
+          "branch_01M4VVJF6TFY9PC58A2WCXGWQV": {
             "evidence_only": true,
-            "id": "kernel-enforcement",
-            "intent_id": "intent:kernel-enforcement",
+            "id": "branch_01M4VVJF6TFY9PC58A2WCXGWQV",
+            "intent_id": "intent:change_01M4VVJF5X9AS4618BD5VJESBZ",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/validation_runtime.rs",
-                  "src/decapod/core/workspace.rs",
-                  "src/decapod/core/trajectory.rs",
-                  "src/decapod/plan_governance.rs"
+                  "src/decapod/plan_governance.rs",
+                  "src/decapod/lib.rs",
+                  "src/decapod/core/validate.rs"
                 ],
                 "proof_refs": [
-                  "code-grounded-six-area-audit"
+                  "official_0.111.2_stale_acceptance_reproduction"
                 ],
                 "scope": [
-                  "Existing governance kernel Rust, regression tests, canonical instructions and product-wide authored specs"
+                  "root"
                 ],
                 "sequence": 4,
                 "validation_findings": []
               },
               {
-                "action": "validation",
+                "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
                   "src/decapod/plan_governance.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "src/decapod/core/trajectory.rs",
-                  "src/decapod/core/entrypoint_integrity/history.rs",
-                  "Three minimal repairs source-reviewed; baseline failures derived from exact existing code paths; executable regressions await configured validation"
+                  "src/decapod/core/validate.rs",
+                  "tests/unit/plan_governance_tests.rs",
+                  "tests/plan_governed_execution.rs",
+                  "docs/agent/command-contracts.md"
                 ],
                 "proof_refs": [
-                  "adversarial-regressions-authored-not-executed"
+                  "candidate_regressions"
                 ],
                 "scope": [
-                  "Existing governance kernel Rust, regression tests, canonical instructions and product-wide authored specs"
+                  "root"
                 ],
                 "sequence": 5,
                 "validation_findings": []
@@ -450,15 +431,14 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:6",
                 "observations": [
-                  "Initial candidate 427ff3a5 full validation failed COMMIT_AND_RERUN after controller refreshed managed Dockerfile; complete JSON and stderr preserved outside repository. Supported v0.111.1 init refreshed entrypoints. Before publication source review repaired staged-revert scope omission, trusted Git/deadline propagation and immutable archive redirection. No builds/tests yet executed.",
-                  "Reviewed complete source inventory is unchanged from accepted master dfe59bd0; reconciled inherited post-release inventory declaration to 9f0b1bc79567aa7e181e0df583efd8dc3b15b0065fae074ac56061fd8bc97559 without changing any required source/check/helper."
+                  ".decapod/config.toml"
                 ],
                 "proof_refs": [
-                  "initial-full-validation",
-                  "independent-source-review"
+                  "first_readiness",
+                  "independent_static_review"
                 ],
                 "scope": [
-                  "Existing governance kernel Rust, regression tests, canonical instructions and product-wide authored specs"
+                  "root"
                 ],
                 "sequence": 6,
                 "validation_findings": []
@@ -467,33 +447,16 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:7",
                 "observations": [
-                  "Buildkite source build1311 fmt job01a1371e-8fdd-43c3-9f4b-027ba95b0808 failed required cargo fmt check; rustfmt repaired trajectory.rs and trajectory_tests.rs without semantic change",
-                  "GitHub candidate custody11851291943 verifies abd3d44c/treea891a0f4: 1139 library tests passed, zero failed, three ignored; named new scope/journal/history adversarial regressions passed. Supplementary only, not full Buildkite readiness.",
-                  "Same-candidate release tags fetched after SNAPSHOT_UPLOAD_INCOMPLETE tag mismatch; failed reports retained. Exact-head CI controller archive11851765894 digestdf6329a4d71d93211a4f4cfde465c84cc07a5e96b680fa04231d70d6bc119839 verified before use."
+                  "tests/cli_contract_enforcement.rs"
                 ],
                 "proof_refs": [
-                  "required-buildkite-fmt-abd3d44c",
-                  "candidate-library-adversarial-tests-abd3d44c"
+                  "d9fb4970_library_1147_passed",
+                  "d9fb4970_public_cli_execution"
                 ],
                 "scope": [
-                  "Existing governance kernel Rust, regression tests, canonical instructions and product-wide authored specs"
+                  "root"
                 ],
                 "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "Buildkite1311 supabase-consumer executed all new regressions successfully but full library result1138passed/1failed/3ignored: existing container_runtime::lifecycle_cleanup_is_owned_and_idempotent at container_runtime_tests.rs156 hit OS ExecutableFileBusy (ETXTBSY). Same test passed on GitHub candidate run. Preserve failure; ordinary exact-next-candidate validation retries without weakening test."
-                ],
-                "proof_refs": [
-                  "required-buildkite-library-abd3d44c"
-                ],
-                "scope": [
-                  "Existing governance kernel Rust, regression tests, canonical instructions and product-wide authored specs"
-                ],
-                "sequence": 8,
                 "validation_findings": []
               }
             ]
@@ -501,39 +464,33 @@
         }
       },
       "declared_commands": [],
-      "evidence": [
-        "Buildkite source build1311 fmt job01a1371e-8fdd-43c3-9f4b-027ba95b0808 failed required cargo fmt check; rustfmt repaired trajectory.rs and trajectory_tests.rs without semantic change",
-        "Buildkite1311 supabase-consumer executed all new regressions successfully but full library result1138passed/1failed/3ignored: existing container_runtime::lifecycle_cleanup_is_owned_and_idempotent at container_runtime_tests.rs156 hit OS ExecutableFileBusy (ETXTBSY). Same test passed on GitHub candidate run. Preserve failure; ordinary exact-next-candidate validation retries without weakening test.",
-        "GitHub candidate custody11851291943 verifies abd3d44c/treea891a0f4: 1139 library tests passed, zero failed, three ignored; named new scope/journal/history adversarial regressions passed. Supplementary only, not full Buildkite readiness.",
-        "Initial candidate 427ff3a5 full validation failed COMMIT_AND_RERUN after controller refreshed managed Dockerfile; complete JSON and stderr preserved outside repository. Supported v0.111.1 init refreshed entrypoints. Before publication source review repaired staged-revert scope omission, trusted Git/deadline propagation and immutable archive redirection. No builds/tests yet executed.",
-        "Reviewed complete source inventory is unchanged from accepted master dfe59bd0; reconciled inherited post-release inventory declaration to 9f0b1bc79567aa7e181e0df583efd8dc3b15b0065fae074ac56061fd8bc97559 without changing any required source/check/helper.",
-        "Same-candidate release tags fetched after SNAPSHOT_UPLOAD_INCOMPLETE tag mismatch; failed reports retained. Exact-head CI controller archive11851765894 digestdf6329a4d71d93211a4f4cfde465c84cc07a5e96b680fa04231d70d6bc119839 verified before use.",
-        "Three minimal repairs source-reviewed; baseline failures derived from exact existing code paths; executable regressions await configured validation"
-      ],
+      "destination": "pull request",
+      "evidence": [],
       "inspected_files": [
-        "src/decapod/core/trajectory.rs",
-        "src/decapod/core/validation_runtime.rs",
-        "src/decapod/core/workspace.rs",
+        "src/decapod/core/validate.rs",
+        "src/decapod/lib.rs",
         "src/decapod/plan_governance.rs"
       ],
-      "intent_id": "intent:kernel-enforcement",
+      "intent_id": "intent:change_01M4VVJF5X9AS4618BD5VJESBZ",
       "modified_files": [
-        "src/decapod/core/entrypoint_integrity/history.rs",
-        "src/decapod/core/trajectory.rs",
-        "src/decapod/core/validation_runtime.rs",
-        "src/decapod/plan_governance.rs"
+        ".decapod/config.toml",
+        "docs/agent/command-contracts.md",
+        "src/decapod/core/validate.rs",
+        "src/decapod/plan_governance.rs",
+        "tests/cli_contract_enforcement.rs",
+        "tests/plan_governed_execution.rs",
+        "tests/unit/plan_governance_tests.rs"
       ],
       "next_transitions": [
-        "Commit exact source then plain decapod validate owns build/test/verification",
-        "Report confirmed mechanisms and precise gaps before implementation"
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "Existing governance kernel Rust, regression tests, canonical instructions and product-wide authored specs"
+        "root"
       ],
-      "run_id": "kernel-enforcement",
+      "run_id": "branch_01M4VVJF6TFY9PC58A2WCXGWQV",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m4vgrjk4f9x6vr",
+      "task_id": "secu_01m4vvhnkp105c3d",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

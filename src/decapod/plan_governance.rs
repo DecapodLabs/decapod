@@ -19,7 +19,7 @@ pub enum PlanState {
     Done,
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ScopeConstraints {
     #[serde(default)]
     pub forbidden_paths: Vec<String>,
@@ -27,7 +27,7 @@ pub struct ScopeConstraints {
 }
 
 /// Represents a gate that must be satisfied to enter or exit a phase
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Gate {
     /// Human-readable description of what this gate validates
     pub description: String,
@@ -46,7 +46,7 @@ pub struct Gate {
 }
 
 /// A phase in a gated execution process
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Phase {
     /// Unique identifier for the phase
     pub id: String,
@@ -74,7 +74,7 @@ pub struct Phase {
     pub completed_at: Option<String>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct GovernedPlan {
     pub schema_version: String,
     pub title: String,
@@ -113,7 +113,7 @@ pub enum SpecReviewDisposition {
     RequiresDecision,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct SpecReview {
     pub path: String,
     pub spec_material_hash: String,
@@ -324,23 +324,12 @@ pub fn patch_plan(
             )
         })?;
 
+        let previous = plan.clone();
         if let Some(title) = patch.title {
             plan.title = title;
         }
         if let Some(intent) = patch.intent {
             plan.intent = intent;
-        }
-        if let Some(state) = patch.state {
-            if state == PlanState::Done && plan.phases.iter().any(|phase| !phase.completed) {
-                return Err(marker_error(
-                    "PHASES_INCOMPLETE",
-                    "Plan cannot reach DONE until every declared phase is completed.",
-                    Some(json!({
-                        "incomplete_phases": plan.phases.iter().filter(|phase| !phase.completed).map(|phase| phase.id.clone()).collect::<Vec<_>>()
-                    })),
-                ));
-            }
-            plan.state = state;
         }
         if let Some(todo_ids) = patch.todo_ids {
             plan.todo_ids = todo_ids;
@@ -369,10 +358,54 @@ pub fn patch_plan(
         if let Some(phases) = patch.phases {
             plan.phases = phases;
         }
+        if plan != previous {
+            if matches!(
+                patch.state,
+                Some(PlanState::Approved | PlanState::Executing | PlanState::Done)
+            ) {
+                return Err(marker_error(
+                    "PLAN_CHANGED_REQUIRES_APPROVAL",
+                    "Update the plan contract first, then explicitly approve the revised plan in a separate transition.",
+                    None,
+                ));
+            }
+            invalidate_plan_acceptance(&mut plan);
+        }
+        if let Some(state) = patch.state {
+            plan.state = state;
+        }
+        validate_plan_progress(&plan)?;
         plan.updated_at = crate::core::time::now_epoch_z();
         save_plan(project_root, &plan)?;
         Ok(plan)
     })
+}
+
+/// Contract edits cannot carry acceptance or measured phase progress from the
+/// previous contract. This does not authenticate the later approval's author.
+fn invalidate_plan_acceptance(plan: &mut GovernedPlan) {
+    plan.state = PlanState::Draft;
+    for phase in &mut plan.phases {
+        phase.entered = false;
+        phase.completed = false;
+        phase.entered_at = None;
+        phase.completed_at = None;
+        for gate in phase.entry_gates.iter_mut().chain(&mut phase.exit_gates) {
+            gate.satisfied = false;
+            gate.satisfied_at = None;
+        }
+    }
+}
+
+fn require_phase_acceptance(plan: &GovernedPlan) -> Result<(), error::DecapodError> {
+    if !matches!(plan.state, PlanState::Approved | PlanState::Executing) {
+        return Err(marker_error(
+            "NEEDS_PLAN_APPROVAL",
+            "Phase progress requires APPROVED or EXECUTING state. Review the current contract and run `decapod govern plan approve` before entering or completing a phase.",
+            None,
+        ));
+    }
+    Ok(())
 }
 
 pub fn add_phase(project_root: &Path, phase: Phase) -> Result<GovernedPlan, error::DecapodError> {
@@ -399,6 +432,7 @@ pub fn add_phase(project_root: &Path, phase: Phase) -> Result<GovernedPlan, erro
             ));
         }
         plan.phases.push(phase);
+        invalidate_plan_acceptance(&mut plan);
         plan.updated_at = crate::core::time::now_epoch_z();
         save_plan(project_root, &plan)?;
         Ok(plan)
@@ -419,6 +453,7 @@ pub fn update_phase(
                 None,
             )
         })?;
+        let previous = plan.clone();
         let phase = plan
             .phases
             .iter_mut()
@@ -437,6 +472,9 @@ pub fn update_phase(
         }
         if let Some(description) = description {
             phase.description = description;
+        }
+        if plan != previous {
+            invalidate_plan_acceptance(&mut plan);
         }
         plan.updated_at = crate::core::time::now_epoch_z();
         save_plan(project_root, &plan)?;
@@ -474,6 +512,7 @@ pub fn add_gate(
         } else {
             phase.exit_gates.push(gate);
         }
+        invalidate_plan_acceptance(&mut plan);
         plan.updated_at = crate::core::time::now_epoch_z();
         save_plan(project_root, &plan)?;
         Ok(plan)
@@ -495,6 +534,7 @@ pub fn update_gate(
                 None,
             )
         })?;
+        let previous = plan.clone();
         let phase = plan
             .phases
             .iter_mut()
@@ -519,8 +559,9 @@ pub fn update_gate(
             )
         })?;
         gate.description = description;
-        gate.satisfied = false;
-        gate.satisfied_at = None;
+        if plan != previous {
+            invalidate_plan_acceptance(&mut plan);
+        }
         plan.updated_at = crate::core::time::now_epoch_z();
         save_plan(project_root, &plan)?;
         Ok(plan)
@@ -626,7 +667,7 @@ pub fn ensure_execute_ready(
         ));
     }
 
-    validate_phase_contract(&plan.phases)?;
+    validate_plan_progress(&plan)?;
     if let Some(active) = plan
         .phases
         .iter()
@@ -657,6 +698,34 @@ pub fn ensure_execute_ready(
     enforce_scope_constraints(input.project_root, &plan.constraints)?;
 
     Ok(plan)
+}
+
+/// Structural progress must agree with the current contract even when a caller
+/// loads old state. Shared by explicit transitions, execution and publication.
+pub fn validate_plan_progress(plan: &GovernedPlan) -> Result<(), error::DecapodError> {
+    validate_phase_contract(&plan.phases)?;
+    if plan.state == PlanState::Done && plan.phases.iter().any(|phase| !phase.completed) {
+        return Err(marker_error(
+            "PHASES_INCOMPLETE",
+            "Plan cannot reach DONE until every declared phase is completed.",
+            None,
+        ));
+    }
+    if plan.phases.iter().any(|phase| {
+        phase.completed
+            && phase
+                .entry_gates
+                .iter()
+                .chain(&phase.exit_gates)
+                .any(|gate| !gate.satisfied)
+    }) {
+        return Err(marker_error(
+            "PHASE_GATE_NOT_SATISFIED",
+            "Completed phases must satisfy every gate in the current contract; revise the contract and replay its phase progress.",
+            None,
+        ));
+    }
+    Ok(())
 }
 
 fn validate_phase_contract(phases: &[Phase]) -> Result<(), error::DecapodError> {
@@ -699,6 +768,8 @@ pub fn enter_phase(
                 None,
             )
         })?;
+
+        require_phase_acceptance(&plan)?;
 
         // Find the phase
         let phase_index = plan
@@ -789,6 +860,8 @@ pub fn complete_phase(
             )
         })?;
 
+        require_phase_acceptance(&plan)?;
+
         // Find the phase
         let phase_index = plan
             .phases
@@ -853,6 +926,7 @@ pub fn complete_phase(
         if plan.phases.iter().all(|candidate| candidate.completed) {
             plan.state = PlanState::Done;
         }
+        validate_plan_progress(&plan)?;
         save_plan(project_root, &plan)?;
         Ok(plan)
     })
