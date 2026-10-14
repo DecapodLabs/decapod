@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "3893f8e2b53d7273cd6d831981976ef256a82f07",
+    "accepted_commit": "947ef6c7f0261522b011d5055de5dbd3fa34fb85",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -211,40 +211,42 @@
     }
   },
   "change": {
-    "id": "change_01M4X73PVDVRPE1HDSQA80YJGB",
-    "base_commit": "3893f8e2b53d7273cd6d831981976ef256a82f07",
+    "id": "change_01M4XA68B83672X8674J2C13GK",
+    "base_commit": "947ef6c7f0261522b011d5055de5dbd3fa34fb85",
     "target_base": "origin/master"
   },
   "claims": {
-    "constitution-branch-only": {
-      "statement": "Constitution validation covers source branches and pull requests without invoking branch verification on release tags.",
-      "falsifier": "A tag push schedules the branch-only constitution job or a branch or PR loses schema validation.",
-      "status": "supported",
-      "proof_refs": [
-        "tests/source_ci_profile_policy.rs::constitution_schema_checks_cover_branches_and_prs_without_release_tag_ranges"
-      ]
+    "atomic-completion": {
+      "statement": "Every task done mutation enforces dependency and lease proof within its transaction",
+      "falsifier": "An unresolved dependency or unproven exclusive task can commit done through a direct mutation",
+      "status": "open"
     },
-    "docs-native-owner": {
-      "statement": "Docs deployment requires positive native GitHub hosted identity; imported Buildkite retains docs build verification without deployment.",
-      "falsifier": "An importer with GitHub-compatible variables but no native runner identity can schedule deployment.",
-      "status": "supported",
-      "proof_refs": [
-        "tests/source_ci_profile_policy.rs::docs_owner_selector_rejects_sanitized_importers_and_incomplete_identity"
-      ]
+    "proof-before-done": {
+      "statement": "Validated completion and captured successful proof commit atomically",
+      "falsifier": "Missing or failing proof leaves task done or success event committed",
+      "status": "open"
+    },
+    "release-ownership": {
+      "statement": "A different local actor cannot release current exclusive custody",
+      "falsifier": "Non-owner release changes task assignment, owners or events",
+      "status": "open"
     }
   },
   "checkpoints": [
     {
-      "id": "constitution-docs-owner",
-      "summary": "Constitution source-branch routing and positive native GitHub docs deployment ownership; 60 source-CI policy tests passed. Full validation explicitly waived by user before PR publication.",
-      "input_digest": "sha256:4559259a2fe7616239cde52fc296f288d9c38acfecd6853eb389c5d5f147af73",
+      "id": "lifecycle-enforcement",
+      "summary": "Enforce atomic completion prerequisites, prepare successful verification before done, and protect local release custody; add adversarial regressions for1424,1425,1426",
+      "input_digest": "sha256:29c344f152e1c5a8ab3935173ad03073c8464afd4db62d2c753690faa47a23fd",
       "proof_refs": [
-        "tests/source_ci_profile_policy.rs"
+        "tests/plugins/todo.rs",
+        "tests/unit/core/todo_release_tests.rs",
+        "tests/unit/core/todo_tests.rs",
+        "tests/unit/plugins/verify_completion_tests.rs"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M4X73PVDVRPE1HDSQA80YJGB": {
+    "intent:change_01M4XA68B83672X8674J2C13GK": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -254,11 +256,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M4X73PVDVRPE1HDSQA80YJGB",
+      "id": "intent:change_01M4XA68B83672X8674J2C13GK",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Repair constitution validation event context and restrict docs deployment to native GitHub",
-      "refined_intent": "Repair constitution validation event context and restrict docs deployment to native GitHub",
+      "raw_intent": "Reconcile open kernel issues and enforce governed completion",
+      "refined_intent": "Reconcile open kernel issues and enforce governed completion",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -266,91 +268,93 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": null,
+        "file_touch_budget": 30,
         "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Keep Constitution schema validation on all ordinary branches and pull requests while excluding redundant tag pushes from its branch-only verifier. Keep docs build validation on both providers, require positive native GitHub ownership for Pages upload and deployment, and cover event routing and provider selection with regression tests. Preserve governance enforcement and publish one PR only after exact-candidate decapod validate passes.",
+      "intent": "Solve1424 transaction-bound completion prerequisites,1425 verified completion atomicity,1426 release ownership in one PR; retain broader1247,852,1367 requirements",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "decapod validate",
+        "adversarial completion, verification and release regressions"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed final workflow-only changes: source branch event routing and native hosted GitHub docs ownership preserve existing product architecture, interfaces and trust boundaries. Concrete operational changes are documented in OPERATIONS.",
-          "reviewed_code_fingerprint": "9eb41e6222c24a92b6eef9fe719652eb94e299235286ec58f8c29cea8e1a777a",
+          "reason": "Repairs strengthen existing todo and verification transaction boundaries without adding a storage or orchestration subsystem; Operations details current lifecycle",
+          "reviewed_code_fingerprint": "4d413f07921aaa7114bf076fb0d2e7b6a27a30dee537be1d9168dd60559fcd4b",
           "spec_material_hash": "77b4a522d06938885ac3502be7cc417b0456a06299beeaacf75e846eb4562d84"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed final workflow-only changes: source branch event routing and native hosted GitHub docs ownership preserve existing product architecture, interfaces and trust boundaries. Concrete operational changes are documented in OPERATIONS.",
-          "reviewed_code_fingerprint": "9eb41e6222c24a92b6eef9fe719652eb94e299235286ec58f8c29cea8e1a777a",
+          "reason": "Existing public CLI signatures are preserved; verified completion behavior is fail-closed and documented in state-model and Operations",
+          "reviewed_code_fingerprint": "4d413f07921aaa7114bf076fb0d2e7b6a27a30dee537be1d9168dd60559fcd4b",
           "spec_material_hash": "f9711772a9cbac81073b05f30711f2c83c45b9a848ed8ef5c22d4fb2dadff95d"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed final workflow-only changes: source branch event routing and native hosted GitHub docs ownership preserve existing product architecture, interfaces and trust boundaries. Concrete operational changes are documented in OPERATIONS.",
-          "reviewed_code_fingerprint": "9eb41e6222c24a92b6eef9fe719652eb94e299235286ec58f8c29cea8e1a777a",
+          "reason": "Current local caller trust boundary remains unchanged; release now enforces assignee equality, with unrestricted actor impersonation explicitly outside guarantee",
+          "reviewed_code_fingerprint": "4d413f07921aaa7114bf076fb0d2e7b6a27a30dee537be1d9168dd60559fcd4b",
           "spec_material_hash": "9ca65fee6422b656de7b2c25e45866c308f1d7e30401a5d296978e35be62df47"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Repair constitution validation event context and restrict docs deployment to native GitHub",
+      "title": "Atomic governed todo completion and custody",
       "todo_ids": [
-        "docs_01m4x72wzdh0fnsn"
+        "bugs_01m4xa5t6c3p6pqz"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791982319Z"
+      "updated_at": "1791985875Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Current claimed task and isolated work branch",
+        "Preserve failed attempts and independent validation; no merge authority"
       ],
-      "artifact_hash": "sha256:d86a02cad8ba64ec177022340abc8159a2569879494c50bb3865bd28fa7db6f9",
+      "artifact_hash": "sha256:8a605f7e07593f7ddba2ce8435fac22df7a352ee2b1bc30d7668f31153fc5d33",
       "checks": [
         {
-          "name": "source-ci-policy",
+          "name": "code-diff-review",
           "status": "passed"
         },
         {
-          "name": "workflow-yaml",
-          "status": "passed"
+          "name": "exclusive-completion-baseline",
+          "status": "failed"
         }
       ],
-      "current_phase": "intent",
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M4X73PVDVRPE1HDSQA80YJGB",
+            "intent_id": "intent:change_01M4XA68B83672X8674J2C13GK",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M4X73PVDVRPE1HDSQA80YJGB",
+            "intent_id": "intent:change_01M4XA68B83672X8674J2C13GK",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M4X73PW0CY0HFZAZ3NVD0F1H",
+            "detail": "trajectory:branch_01M4XA68BQXWY6WVVVM6ABDJKE",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M4X73PVDVRPE1HDSQA80YJGB",
+            "intent_id": "intent:change_01M4XA68B83672X8674J2C13GK",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M4X73PW0CY0HFZAZ3NVD0F1H",
+            "detail": "trajectory:branch_01M4XA68BQXWY6WVVVM6ABDJKE",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M4X73PVDVRPE1HDSQA80YJGB",
+            "intent_id": "intent:change_01M4XA68B83672X8674J2C13GK",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           }
@@ -359,44 +363,52 @@
         "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M4X73PW0CY0HFZAZ3NVD0F1H": {
+          "branch_01M4XA68BQXWY6WVVVM6ABDJKE": {
             "evidence_only": true,
-            "id": "branch_01M4X73PW0CY0HFZAZ3NVD0F1H",
-            "intent_id": "intent:change_01M4X73PVDVRPE1HDSQA80YJGB",
+            "id": "branch_01M4XA68BQXWY6WVVVM6ABDJKE",
+            "intent_id": "intent:change_01M4XA68B83672X8674J2C13GK",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "implementation",
                 "custody_event_id": "event:4",
                 "observations": [
-                  ".github/workflows/constitution-sync.yml",
-                  ".github/workflows/docs.yml",
-                  "assets/tools/ci_event_context.rs",
-                  ".github/workflows/constitution-sync.yml",
-                  ".github/workflows/docs.yml",
-                  "tests/source_ci_profile_policy.rs",
-                  "User Sentinel_9a32c86967348191adf0532787b12aed explicitly authorizes skipping full validation and publishing after targeted workflow checks."
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/plugins/verify.rs",
+                  "Red baseline: unproven exclusive direct done returned ok with revision2; regression tests/plugins/todo.rs exclusive_lease_blocks_unproven_done"
                 ],
-                "proof_refs": [],
+                "proof_refs": [
+                  "exclusive-completion-baseline"
+                ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 4,
-                "validation_findings": [
-                  "Full decapod validate intentionally not run under explicit user publication waiver; targeted checks do not establish full publication readiness."
-                ]
+                "validation_findings": []
               },
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "All 60 source CI policy tests passed, including three new workflow/provider regressions. YAML parsing passed. Full validation intentionally not run under explicit user waiver."
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/plugins/verify.rs",
+                  "tests/plugins/todo.rs",
+                  "tests/unit/core/todo_tests.rs",
+                  "tests/unit/core/todo_release_tests.rs",
+                  "tests/unit/plugins/verify_completion_tests.rs",
+                  "docs/agent/state-model.md",
+                  ".decapod/managed/specs/OPERATIONS.md",
+                  "Three focused issue repairs1424,1425,1426; red exclusive-completion reproduced and retained; new adversarial tests cover rollback, drift, missing/failing proof and non-owner release"
                 ],
                 "proof_refs": [
-                  "source-ci-policy",
-                  "workflow-yaml"
+                  "code-diff-review"
                 ],
                 "scope": [
-                  "root"
+                  ".decapod/managed/specs",
+                  "docs",
+                  "root",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/plugins/verify.rs",
+                  "tests"
                 ],
                 "sequence": 5,
                 "validation_findings": []
@@ -408,32 +420,39 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "All 60 source CI policy tests passed, including three new workflow/provider regressions. YAML parsing passed. Full validation intentionally not run under explicit user waiver.",
-        "User Sentinel_9a32c86967348191adf0532787b12aed explicitly authorizes skipping full validation and publishing after targeted workflow checks."
+        "Red baseline: unproven exclusive direct done returned ok with revision2; regression tests/plugins/todo.rs exclusive_lease_blocks_unproven_done",
+        "Three focused issue repairs1424,1425,1426; red exclusive-completion reproduced and retained; new adversarial tests cover rollback, drift, missing/failing proof and non-owner release"
       ],
       "inspected_files": [
-        ".github/workflows/constitution-sync.yml",
-        ".github/workflows/docs.yml",
-        "assets/tools/ci_event_context.rs"
+        "src/decapod/core/todo.rs",
+        "src/decapod/plugins/verify.rs"
       ],
-      "intent_id": "intent:change_01M4X73PVDVRPE1HDSQA80YJGB",
+      "intent_id": "intent:change_01M4XA68B83672X8674J2C13GK",
       "modified_files": [
-        ".github/workflows/constitution-sync.yml",
-        ".github/workflows/docs.yml",
-        "tests/source_ci_profile_policy.rs"
+        ".decapod/managed/specs/OPERATIONS.md",
+        "docs/agent/state-model.md",
+        "src/decapod/core/todo.rs",
+        "src/decapod/plugins/verify.rs",
+        "tests/plugins/todo.rs",
+        "tests/unit/core/todo_release_tests.rs",
+        "tests/unit/core/todo_tests.rs",
+        "tests/unit/plugins/verify_completion_tests.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "root"
+        ".decapod/managed/specs",
+        "docs",
+        "root",
+        "src/decapod/core/todo.rs",
+        "src/decapod/plugins/verify.rs",
+        "tests"
       ],
-      "run_id": "branch_01M4X73PW0CY0HFZAZ3NVD0F1H",
+      "run_id": "branch_01M4XA68BQXWY6WVVVM6ABDJKE",
       "schema_version": "1.1.0",
-      "shortcut_risk_signals": [
-        "Full decapod validate intentionally not run under explicit user publication waiver; targeted checks do not establish full publication readiness."
-      ],
-      "task_id": "docs_01m4x72wzdh0fnsn",
+      "shortcut_risk_signals": [],
+      "task_id": "bugs_01m4xa5t6c3p6pqz",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

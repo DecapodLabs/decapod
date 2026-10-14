@@ -19,6 +19,27 @@ The primary coordination unit of work, not the sole authority for request meanin
 - **Ownership:** A task in the `claimed` state is locked to a specific `agent_id`.
 - **Identity:** ULID-based (e.g., `code_01H2...`).
 
+### Completion and release boundaries
+
+Local task completion rechecks dependency readiness and exclusive-lease proof
+inside the status compare-and-swap transaction. CLI checks alone cannot authorize
+a transition. A direct caller and the worker loop use the same mutation boundary.
+An unresolved dependency or missing exclusive proof leaves task state, revision,
+and success events unchanged.
+
+For validated completion, Decapod first collects artifact hashes and executes
+validation while the task remains incomplete. It then checks the captured task
+revision and verification material again. The done transition, passing baseline,
+and success events commit together. Missing artifacts, failed validation, stale
+state, or persistence failure cannot manufacture successful completion. Failed
+capture attempts remain in event history; they do not replace a passing baseline.
+The worker can archive only after verified completion succeeds.
+
+Local release requires the current assignee. Releasing an already unclaimed task
+is a no-op; releasing a task does not change its completion status. Actor identity
+uses the existing local caller boundary. These checks do not protect against an
+unrestricted process directly rewriting the database or impersonating that actor.
+
 ## 2. Workspaces
 Isolated execution environments.
 - **Context boundary:** Isolation does not discard the agent's prompt. With clear
