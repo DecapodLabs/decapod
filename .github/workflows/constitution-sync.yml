@@ -1,7 +1,10 @@
 name: Constitution Sync and Validation
 
 on:
+  # Schema checks govern source changes. Release tags point to an already
+  # validated commit and are not branch ranges for the context verifier.
   push:
+    branches: ["**"]
   pull_request:
 
 jobs:

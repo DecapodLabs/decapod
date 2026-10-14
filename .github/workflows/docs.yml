@@ -11,13 +11,26 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      native-owner: ${{ steps.owner.outputs.native_owner }}
     steps:
+      - name: Select documentation deployment owner
+        id: owner
+        shell: bash
+        run: |
+          set -euo pipefail
+          native_owner=false
+          # Imported jobs expose GITHUB_ACTIONS but omit Buildkite markers.
+          # Pages delivery requires the protected native hosted identity.
+          if [ "${RUNNER_ENVIRONMENT:-}" = "github-hosted" ] && [ -z "${BUILDKITE_BUILD_ID:-}" ] && [ "${BUILDKITE:-}" != "true" ] && [ "${GITHUB_ACTIONS:-}" = "true" ]; then
+            native_owner=true
+          fi
+          printf 'native_owner=%s\n' "$native_owner" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -38,7 +51,7 @@ jobs:
       - name: Build with mdBook
         run: '"$RUNNER_TEMP/source-ci-profile" run-ci --check docs-build'
       - name: Upload artifact (GitHub Pages)
-        if: github.ref == 'refs/heads/master' && env.BUILDKITE_BUILD_ID == ''
+        if: github.ref == 'refs/heads/master' && steps.owner.outputs.native_owner == 'true'
         uses: actions/upload-pages-artifact@v3
         with:
           path: docs/book/book
@@ -46,7 +59,7 @@ jobs:
       # Preserve the built site with the supported generic artifact action so
       # the build remains useful while Pages deployment is unavailable there.
       - name: Upload artifact (Buildkite)
-        if: github.ref == 'refs/heads/master' && env.BUILDKITE_BUILD_ID != ''
+        if: github.ref == 'refs/heads/master' && steps.owner.outputs.native_owner != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: docs-site
@@ -62,24 +75,17 @@ jobs:
           retention-days: 1
           compression-level: 0
   deploy:
-    # Keep the event gate in a GitHub context: Buildkite does not expose env in
-    # job-level conditions. The step-level split below handles the runtime.
-    if: github.ref == 'refs/heads/master'
+    # Gate the whole job before the importer can attempt Pages deployment.
+    if: github.ref == 'refs/heads/master' && needs.build.outputs.native-owner == 'true'
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        if: env.BUILDKITE_BUILD_ID == ''
         uses: actions/deploy-pages@v4
-
-      - name: Retain Buildkite docs artifact
-        if: env.BUILDKITE_BUILD_ID != ''
-        run: |
-          set -euo pipefail
-          command -v buildkite-agent >/dev/null 2>&1
-          echo "GitHub Pages deployment is unavailable in the Buildkite GHA runtime."
-          echo "The built site is retained by the build job as a Buildkite artifact."
