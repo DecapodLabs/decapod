@@ -262,6 +262,11 @@
       "id": "quinn-importer-fmt-repair",
       "summary": "Correct importer update formatting to repository Rust2024; preserve failed formatting validation evidence",
       "input_digest": "sha256:33e16d385b6905f00692ddca32771c6ffe7fc73ef5212a21738998739046b54b"
+    },
+    {
+      "id": "quinn-publication-reviews",
+      "summary": "Record explicit current-content architecture interfaces and security review after importer change; retain failed review gate evidence",
+      "input_digest": "sha256:ccc0d5868e7f80d3e0cace4c068ba1e50a48f2aa42030286c69f40d0e4928a46"
     }
   ],
   "intents": {
@@ -298,6 +303,29 @@
         "Official 0.102.5 archive and executable digests independently verified; targeted old/mixed/unknown identity rejection coverage and full decapod validate must pass."
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Reviewed kernel and bounded provider architecture against importer tuple and tests: local-first durable governance, accepted executor boundary, complete structural verification and harness-independent operation remain unchanged; no new orchestrator, storage layer, provider setting or remote mutation authority introduced.",
+          "reviewed_code_fingerprint": "e42e554be1c33a35fbc1341dd4829602132e7309676ff4ac0ffcda83a6c3c731",
+          "spec_material_hash": "77b4a522d06938885ac3502be7cc417b0456a06299beeaacf75e846eb4562d84"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Reviewed CLI/RPC and validation contracts against snapshot.rs and source_import.rs: no public command schema, lifecycle or evidence authority changes; only the fixed independently reviewed importer executable identity advances to0.102.5, with existing mismatch errors and full proof requirements preserved.",
+          "reviewed_code_fingerprint": "e42e554be1c33a35fbc1341dd4829602132e7309676ff4ac0ffcda83a6c3c731",
+          "spec_material_hash": "f9711772a9cbac81073b05f30711f2c83c45b9a848ed8ef5c22d4fb2dadff95d"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Security prose documents Quinn0.11.19 reachability limits and independently verified official importer0.102.5 executable identities; source review covers upstream containment and diagnostics changes with unchanged plan schema; regression tests reject old mixed unknown and swapped runtime identities without weakening custody.",
+          "reviewed_code_fingerprint": "e42e554be1c33a35fbc1341dd4829602132e7309676ff4ac0ffcda83a6c3c731",
+          "spec_material_hash": "9ca65fee6422b656de7b2c25e45866c308f1d7e30401a5d296978e35be62df47"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "Update Quinn security dependency to 0.11.19",
@@ -306,14 +334,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791972574Z"
+      "updated_at": "1791977344Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Only Quinn dependency and required governance/spec reconciliation; all source CI helpers and workflows unchanged"
       ],
-      "artifact_hash": "sha256:99a6365ed2214aab4e8b4e1ef4a84d1135d3511a5eecf3ba6a20bf04e69ca949",
+      "artifact_hash": "sha256:e8fba2fa7f4bffc894822add6ec8c54b8dfa09198b9c9397a2aa1c1b744a5774",
       "checks": [
         {
           "name": "bazel-mod-deps",
@@ -325,6 +353,10 @@
         },
         {
           "name": "importer_candidate_fmt",
+          "status": "failed"
+        },
+        {
+          "name": "importer_spec_review",
           "status": "failed"
         },
         {
@@ -386,10 +418,17 @@
             "intent_id": "intent:change_01M4WDFYXQJZS8N294KV08VX4Z",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M4WDFYYN55XF04924XJEJMTH",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M4WDFYXQJZS8N294KV08VX4Z",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M4WDFYYN55XF04924XJEJMTH": {
@@ -471,6 +510,23 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "GitHub38555783849 governance gate requested current-content publication spec reviews after source changes; review existing interfaces architecture and updated security prose explicitly"
+                ],
+                "proof_refs": [
+                  "importer_spec_review"
+                ],
+                "scope": [
+                  "root",
+                  "src/decapod/core/validation_runtime/snapshot.rs",
+                  "src/decapod/core/validation_runtime/snapshot/source_import.rs"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -484,6 +540,7 @@
         "/workspace/shared/quinn-security-evidence/quinn-feature-tree.txt",
         "Buildkite1392 all source jobs passed; full controller rejects observed importer0.102.5 against reviewed0.102.3",
         "Buildkite1402 and GitHub38555124426 rejected formatting; correct targeted rustfmt edition to repository2024, preserve failure",
+        "GitHub38555783849 governance gate requested current-content publication spec reviews after source changes; review existing interfaces architecture and updated security prose explicitly",
         "Official release asset639031444 archive sha256:4d76d1e54cc3d90790cb7e6046abf6e5c60c8ab50de59ff4c25c7cbddb42bd59 executable sha256:0e33c9189e80ec1e776a53f837f61b26e8f7f2b26671a6df2c0b4d23c09a4b02; asset639031441 archive sha256:1ebe5b625f21a4b9b4b4eaa60cafb574dcc918ffbb8436b62bcc908ad25a795f executable sha256:7af087fef3a258ed093c1812c18eb0832e44b48047cf3ab1b2adf0836fc2ad86",
         "User explicitly approved independently reviewed0.102.5 compatibility and regression coverage in same Quinn PR"
       ],
