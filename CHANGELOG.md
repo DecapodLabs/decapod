@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.111.5](https://github.com/DecapodLabs/decapod/compare/v0.111.4...v0.111.5) - 2026-10-14
+
+### Fixed
+
+- scope constitution events and native docs deployment ([#1422](https://github.com/DecapodLabs/decapod/pull/1422))
+
 ## [0.111.4](https://github.com/DecapodLabs/decapod/compare/v0.111.3...v0.111.4) - 2026-10-14
 
 ### Fixed
