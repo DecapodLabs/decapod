@@ -321,21 +321,17 @@ fn run_validate_and_hash(
     repo_root: &Path,
     todo_id: Option<&str>,
 ) -> Result<(bool, String), error::DecapodError> {
-    let mut old_verifying_todo = None;
-    if let Some(id) = todo_id {
+    let _verifying = todo_id.map(|id| {
         let existing = std::env::var("DECAPOD_VERIFYING_TODO").unwrap_or_default();
-        old_verifying_todo = Some(existing.clone());
-        let new_val = if existing.is_empty() {
+        let ids = if existing.is_empty() {
             id.to_string()
-        } else if existing.split(',').any(|x| x.trim() == id) {
+        } else if existing.split(',').any(|value| value.trim() == id) {
             existing
         } else {
-            format!("{},{}", existing, id)
+            format!("{existing},{id}")
         };
-        unsafe {
-            std::env::set_var("DECAPOD_VERIFYING_TODO", new_val);
-        }
-    }
+        VerifyingTodosGuard::enter(&ids)
+    });
     let exe = std::env::current_exe()?;
     let exe_str = exe.to_string_lossy().to_string();
     let output = external_action::execute(
@@ -363,15 +359,6 @@ fn run_validate_and_hash(
     } else {
         output
     };
-    if let Some(old_val) = old_verifying_todo {
-        unsafe {
-            if old_val.is_empty() {
-                std::env::remove_var("DECAPOD_VERIFYING_TODO");
-            } else {
-                std::env::set_var("DECAPOD_VERIFYING_TODO", old_val);
-            }
-        }
-    }
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();
     if let Ok(value) = serde_json::from_str::<serde_json::Value>(&stdout) {
         let normalized = normalize_json_value(&value);

@@ -205,7 +205,10 @@ Recovery keeps every refreshed row pending while aggregate validation runs with
 exactly those task-proof admissions scoped to the recovery. The final transaction
 checks each admission against current task, epoch, output, and file evidence,
 then promotes the complete batch atomically; an error cannot leave partial passes.
-A scope guard restores the temporary verification exemption on every return.
+The exemption affects only selected proof admission; completed-task counting
+still enforces the required governed plan. A scope guard restores temporary
+verification exemptions on every return, including recapture and completion's
+nested validator calls.
 Prune deletes proof, reopens the task, increments revision, and records its event
 atomically. The legacy replay helper lacks complete revision history and removes
 revision authority from its projection while retaining the original events.
@@ -324,7 +327,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8697fee7f4018fb3c36601e2a2321ca00b6bdd0cdbfd63bd8a7ed8a521f9e0ee`
+- Repository signal fingerprint: `957aa4c1bca935f4a0709a575c9004cfe0599cb78b0256ab3089b263579355f7`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (183 files), `tests/` (189 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -1121,24 +1121,8 @@ pub fn count_done_todos(store_root: &Path) -> Result<usize, error::DecapodError>
         return Ok(0);
     }
     let conn = crate::core::db::db_connect(&db_path.to_string_lossy())?;
-    let verifying_ids = verifying_todo_ids();
-    if !verifying_ids.is_empty() {
-        let mut stmt = conn
-            .prepare("SELECT id FROM tasks WHERE status = 'done'")
-            .map_err(error::DecapodError::StorageError)?;
-        let rows = stmt
-            .query_map([], |row| row.get::<_, String>(0))
-            .map_err(error::DecapodError::StorageError)?;
-        let mut count = 0usize;
-        for row in rows {
-            let id = row.map_err(error::DecapodError::StorageError)?;
-            if !verifying_ids.iter().any(|verifying_id| verifying_id == &id) {
-                count += 1;
-            }
-        }
-        return Ok(count);
-    }
-
+    // Verification may defer only its own proof-admission check. A completed
+    // task still requires a governed plan while its proof is being refreshed.
     let count: i64 = conn
         .query_row(
             "SELECT COUNT(*) FROM tasks WHERE status = 'done'",
