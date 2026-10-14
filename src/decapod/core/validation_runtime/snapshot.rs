@@ -35,19 +35,19 @@ pub struct ReviewedBuildkiteImporter {
     pub macos_runtime_digest: String,
 }
 impl ReviewedBuildkiteImporter {
-    /// Independently verified official buildkite/buildkite-gha v0.102.3 assets:
-    /// Linux x86_64 asset632925784 (archive831fe31a0ecb...) and Darwin arm64
-    /// asset632925785 (archive64535a3d4f65...). Digests bind executable members,
+    /// Independently verified official buildkite/buildkite-gha v0.102.5 assets:
+    /// Linux x86_64 asset639031444 (archive4d76d1e54cc3...) and Darwin arm64
+    /// asset639031441 (archive1ebe5b625f21...). Digests bind executable members,
     /// not observed job outcomes. The Linux compiler emits both runtime plans.
     pub fn reviewed() -> Self {
         Self {
-            compiler_version: "0.102.3".into(),
+            compiler_version: "0.102.5".into(),
             compiler_digest:
-                "sha256:0803b5258df3929ab975bcb00b5e49eea028c910f6c59f84c03067ce19dc32fe".into(),
+                "sha256:0e33c9189e80ec1e776a53f837f61b26e8f7f2b26671a6df2c0b4d23c09a4b02".into(),
             linux_runtime_digest:
-                "sha256:0803b5258df3929ab975bcb00b5e49eea028c910f6c59f84c03067ce19dc32fe".into(),
+                "sha256:0e33c9189e80ec1e776a53f837f61b26e8f7f2b26671a6df2c0b4d23c09a4b02".into(),
             macos_runtime_digest:
-                "sha256:274edf3e0086df695cf23ad1713adaa25a5ecdd1decafb16480e222e0e9aa9fa".into(),
+                "sha256:7af087fef3a258ed093c1812c18eb0832e44b48047cf3ab1b2adf0836fc2ad86".into(),
         }
     }
     fn validate(&self) -> io::Result<()> {

@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "a4c03b203688d28e7e1520a90e0d8265f5c3b3b2",
+    "accepted_commit": "067b8f55071e13dd103779998168b4c9ffd31a79",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -155,6 +155,11 @@
         "statement": "A version-only release with unchanged dependency resolution can build through strict Bazel setup while dependency drift remains fail-closed",
         "status": "open"
       },
+      "claim:renewed-plan-acceptance": {
+        "falsifier": "A changed intent, scope, proof or phase contract retains accepted state or phase completion, or phase progression promotes an unapproved plan",
+        "statement": "Material plan or phase contract changes revoke previous accepted state and progress before execution can continue; no-op changes preserve state",
+        "status": "open"
+      },
       "claim:strict-protocol-rollout": {
         "falsifier": "The fallback accepts altered or new carrier content after only changing the review digest, supported R failure falls back to H, or an old released executable is claimed to acquire unimplemented bootstrap behavior.",
         "proof_refs": [
@@ -198,36 +203,74 @@
     }
   },
   "change": {
-    "id": "change_01M4VVJF5X9AS4618BD5VJESBZ",
-    "base_commit": "a4c03b203688d28e7e1520a90e0d8265f5c3b3b2",
+    "id": "change_01M4WDFYXQJZS8N294KV08VX4Z",
+    "base_commit": "067b8f55071e13dd103779998168b4c9ffd31a79",
     "target_base": "origin/master"
   },
   "claims": {
-    "renewed-plan-acceptance": {
-      "statement": "Material plan or phase contract changes revoke previous accepted state and progress before execution can continue; no-op changes preserve state",
-      "falsifier": "A changed intent, scope, proof or phase contract retains accepted state or phase completion, or phase progression promotes an unapproved plan",
-      "status": "open"
+    "quinn-importer-compatibility": {
+      "statement": "Current Buildkite importer0.102.5 is accepted only through independently reviewed version and executable digests; old mixed and unknown tuples remain rejected",
+      "falsifier": "Any old mixed unknown or changed importer identity validates, or full proof accepts malformed source/structural evidence",
+      "status": "open",
+      "proof_refs": [
+        "Targeted Rust importer identity tests and full decapod validate required"
+      ]
+    },
+    "quinn-patched": {
+      "statement": "Cargo and generated Bazel lockfiles resolve quinn-proto 0.11.19; audit reports no known vulnerabilities without advisory suppression",
+      "falsifier": "Either lockfile resolves a vulnerable Quinn version, another package changes unexpectedly, or a known vulnerability is ignored",
+      "status": "supported",
+      "proof_refs": [
+        "/workspace/shared/quinn-security-evidence/bazel-mod-deps-system-java.log",
+        "/workspace/shared/quinn-security-evidence/cargo-audit.json"
+      ]
     }
   },
   "checkpoints": [
     {
-      "id": "plan-revision-source",
-      "summary": "Invalidate accepted plan and all phase progress on material edits; preserve no-ops and require accepted phase transitions; adversarial cases authored, validation pending",
-      "input_digest": "sha256:090b4790baf4958ecc11659b19f8f4e2c4d275c2851bbcdf081935cb3eb2b4bf"
+      "id": "note:084aa17b0dc72f1c",
+      "summary": "Narrow Quinn security remediation; full exact-candidate provider validation pending",
+      "input_digest": "sha256:52f9e72b240425dd9c9dd04ef26052f98a09e4b16598f979ceda7bd1960037dc"
     },
     {
-      "id": "plan-revision-repair",
-      "summary": "Repair final-phase atomicity found in independent review; reconcile reviewed source inventory after version-only release0.111.2; preserve initial validation failures and correct branch task identity",
-      "input_digest": "sha256:28542e72809643ecc58843ddfff2b33b34b1d66cf2ca1a08be27e1c33096a812"
+      "id": "quinn-security-source",
+      "summary": "Update only quinn-proto version/checksum; reconcile reviewed source inventory and security specification",
+      "input_digest": "sha256:52f9e72b240425dd9c9dd04ef26052f98a09e4b16598f979ceda7bd1960037dc",
+      "proof_refs": [
+        "/workspace/shared/quinn-security-evidence/cargo-audit.json"
+      ]
     },
     {
-      "id": "enforce-public-cli-regressions",
-      "summary": "Audit confirmed1147librarypasses but standalone plan CLI target was unexecuted; move all three cases into required CLI contract target without adapter changes; full revalidation pending",
-      "input_digest": "sha256:a44d583436f4d46a71cc7a457daf7b35ee3073b4ff685c0303b7f8ccfb94c0ef"
+      "id": "note:792cf8d61568048c",
+      "summary": "Quinn-only remediation with exact generated Bazel lock and release-bound projection repairs; provider failures preserved, full readiness pending",
+      "input_digest": "sha256:b915c7ab22a4f32a17bc81be1b4d811f0ae4b71bf37077152b5e60231549cae2"
+    },
+    {
+      "id": "quinn-generated-repair",
+      "summary": "Repair CI-reported Bazel lock and release-bound projection drift for Quinn 0.11.19",
+      "input_digest": "sha256:b915c7ab22a4f32a17bc81be1b4d811f0ae4b71bf37077152b5e60231549cae2"
+    },
+    {
+      "id": "quinn-importer-1025",
+      "summary": "Independently review official importer0.102.5 executable identities and add old mixed unknown tuple rejection coverage; preserve failed0.102.3 collection evidence and require exact candidate validation",
+      "input_digest": "sha256:9f5df5bb9e5e545dc16d5e9142a5be583742071548f957e0864b51969897e87c",
+      "proof_refs": [
+        "Official buildkite/buildkite-gha release v0.102.5 assets independently hashed; https://github.com/buildkite/buildkite-gha/compare/v0.102.3...v0.102.5 reviewed"
+      ]
+    },
+    {
+      "id": "quinn-importer-fmt-repair",
+      "summary": "Correct importer update formatting to repository Rust2024; preserve failed formatting validation evidence",
+      "input_digest": "sha256:33e16d385b6905f00692ddca32771c6ffe7fc73ef5212a21738998739046b54b"
+    },
+    {
+      "id": "quinn-publication-reviews",
+      "summary": "Record explicit current-content architecture interfaces and security review after importer change; retain failed review gate evidence",
+      "input_digest": "sha256:ccc0d5868e7f80d3e0cace4c068ba1e50a48f2aa42030286c69f40d0e4928a46"
     }
   ],
   "intents": {
-    "intent:change_01M4VVJF5X9AS4618BD5VJESBZ": {
+    "intent:change_01M4WDFYXQJZS8N294KV08VX4Z": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -237,11 +280,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M4VVJF5X9AS4618BD5VJESBZ",
+      "id": "intent:change_01M4WDFYXQJZS8N294KV08VX4Z",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Strengthen next concrete governance authority boundary",
-      "refined_intent": "Strengthen next concrete governance authority boundary",
+      "raw_intent": "Update Quinn security dependency to 0.11.19\n\nSingle narrow PR: update quinn-proto lock entry to 0.11.19, prove audit and feature reachability, preserve unchanged source CI and accepted executor, complete exact-candidate governed validation before PR.",
+      "refined_intent": "Update Quinn security dependency to 0.11.19\n\nSingle narrow PR: update quinn-proto lock entry to 0.11.19, prove audit and feature reachability, preserve unchanged source CI and accepted executor, complete exact-candidate governed validation before PR.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -249,158 +292,163 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 22,
+        "file_touch_budget": 20,
         "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Require explicit renewed plan acceptance and fresh phase progress after changes to the governed execution contract, preserving no-op and separate state transitions",
-      "phases": [
-        {
-          "completed": true,
-          "completed_at": "1791938990Z",
-          "description": "Trace plan mutation and phase state",
-          "entered": true,
-          "entered_at": "1791938988Z",
-          "entry_gates": [],
-          "exit_gates": [],
-          "id": "inspect",
-          "name": "Inspect acceptance boundary"
-        }
-      ],
+      "intent": "Update quinn-proto to 0.11.19 in one PR, synchronize Cargo/Bazel locks and release-bound projections, and include the user-approved independently reviewed Buildkite importer 0.102.5 compatibility update required by current provider execution. Preserve exact source, runtime identity, structural and custody verification; reject unreviewed or mixed identities. No provider settings, trigger changes or unrelated rollout work.",
+      "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "Official 0.102.5 archive and executable digests independently verified; targeted old/mixed/unknown identity rejection coverage and full decapod validate must pass."
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Contract revision reset and shared structural gates remain accurate; execution graph unchanged",
-          "reviewed_code_fingerprint": "9b1af545233f14b42c94eed39aa319437b3f0dc6a35dc22cc724726eb4af1de7",
+          "reason": "Reviewed kernel and bounded provider architecture against importer tuple and tests: local-first durable governance, accepted executor boundary, complete structural verification and harness-independent operation remain unchanged; no new orchestrator, storage layer, provider setting or remote mutation authority introduced.",
+          "reviewed_code_fingerprint": "e42e554be1c33a35fbc1341dd4829602132e7309676ff4ac0ffcda83a6c3c731",
           "spec_material_hash": "77b4a522d06938885ac3502be7cc417b0456a06299beeaacf75e846eb4562d84"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Public CLI regressions now live in enforced contract target; preserves all three cases without changing source adapter",
-          "reviewed_code_fingerprint": "9b1af545233f14b42c94eed39aa319437b3f0dc6a35dc22cc724726eb4af1de7",
+          "reason": "Reviewed CLI/RPC and validation contracts against snapshot.rs and source_import.rs: no public command schema, lifecycle or evidence authority changes; only the fixed independently reviewed importer executable identity advances to0.102.5, with existing mismatch errors and full proof requirements preserved.",
+          "reviewed_code_fingerprint": "e42e554be1c33a35fbc1341dd4829602132e7309676ff4ac0ffcda83a6c3c731",
           "spec_material_hash": "f9711772a9cbac81073b05f30711f2c83c45b9a848ed8ef5c22d4fb2dadff95d"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Declared approval authority and external provider trust limits unchanged; test relocation closes branch coverage omission",
-          "reviewed_code_fingerprint": "9b1af545233f14b42c94eed39aa319437b3f0dc6a35dc22cc724726eb4af1de7",
-          "spec_material_hash": "439b8a69e8db6ebf0d579a87f982878ed8e3e350c6a70c09a99b16c92523659b"
+          "reason": "Security prose documents Quinn0.11.19 reachability limits and independently verified official importer0.102.5 executable identities; source review covers upstream containment and diagnostics changes with unchanged plan schema; regression tests reject old mixed unknown and swapped runtime identities without weakening custody.",
+          "reviewed_code_fingerprint": "e42e554be1c33a35fbc1341dd4829602132e7309676ff4ac0ffcda83a6c3c731",
+          "spec_material_hash": "9ca65fee6422b656de7b2c25e45866c308f1d7e30401a5d296978e35be62df47"
         }
       ],
-      "state": "DONE",
-      "stop_conditions": [
-        "No weakening of provider proof or external human authority assumptions"
-      ],
-      "title": "Invalidate stale plan acceptance after contract edits",
+      "state": "APPROVED",
+      "stop_conditions": [],
+      "title": "Update Quinn security dependency to 0.11.19",
       "todo_ids": [
-        "secu_01m4vvhnkp105c3d"
+        "secu_01m4wdfdb4w1t25m"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791939000Z"
+      "updated_at": "1791977344Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Current claimed task and isolated work branch",
+        "Only Quinn dependency and required governance/spec reconciliation; all source CI helpers and workflows unchanged"
       ],
-      "artifact_hash": "sha256:62f6500378dd4584f8e19e1f5c2ead76c939acbb725feff8db76f6345afa4adc",
+      "artifact_hash": "sha256:e8fba2fa7f4bffc894822add6ec8c54b8dfa09198b9c9397a2aa1c1b744a5774",
       "checks": [
         {
-          "name": "candidate_regressions",
-          "status": "unavailable"
-        },
-        {
-          "name": "d9fb4970_library_1147_passed",
+          "name": "bazel-mod-deps",
           "status": "passed"
         },
         {
-          "name": "d9fb4970_public_cli_execution",
-          "status": "unavailable"
+          "name": "dependency-feature-reachability",
+          "status": "passed"
         },
         {
-          "name": "first_readiness",
+          "name": "importer_candidate_fmt",
           "status": "failed"
         },
         {
-          "name": "independent_static_review",
+          "name": "importer_spec_review",
+          "status": "failed"
+        },
+        {
+          "name": "initial-source-ci",
+          "status": "failed"
+        },
+        {
+          "name": "official_importer_archive_integrity",
           "status": "passed"
         },
         {
-          "name": "official_0.111.2_stale_acceptance_reproduction",
+          "name": "prior_importer_validation",
+          "status": "failed"
+        },
+        {
+          "name": "security-audit",
           "status": "passed"
         }
       ],
-      "current_phase": "intent",
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M4VVJF5X9AS4618BD5VJESBZ",
+            "intent_id": "intent:change_01M4WDFYXQJZS8N294KV08VX4Z",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M4VVJF5X9AS4618BD5VJESBZ",
+            "intent_id": "intent:change_01M4WDFYXQJZS8N294KV08VX4Z",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M4VVJF6TFY9PC58A2WCXGWQV",
+            "detail": "trajectory:branch_01M4WDFYYN55XF04924XJEJMTH",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M4VVJF5X9AS4618BD5VJESBZ",
+            "intent_id": "intent:change_01M4WDFYXQJZS8N294KV08VX4Z",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M4VVJF6TFY9PC58A2WCXGWQV",
+            "detail": "trajectory:branch_01M4WDFYYN55XF04924XJEJMTH",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M4VVJF5X9AS4618BD5VJESBZ",
+            "intent_id": "intent:change_01M4WDFYXQJZS8N294KV08VX4Z",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M4VVJF6TFY9PC58A2WCXGWQV",
+            "detail": "trajectory:branch_01M4WDFYYN55XF04924XJEJMTH",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M4VVJF5X9AS4618BD5VJESBZ",
+            "intent_id": "intent:change_01M4WDFYXQJZS8N294KV08VX4Z",
             "kind": "trajectory_step_recorded",
             "sequence": 6
           },
           {
-            "detail": "trajectory:branch_01M4VVJF6TFY9PC58A2WCXGWQV",
+            "detail": "trajectory:branch_01M4WDFYYN55XF04924XJEJMTH",
             "event_id": "event:7",
-            "intent_id": "intent:change_01M4VVJF5X9AS4618BD5VJESBZ",
+            "intent_id": "intent:change_01M4WDFYXQJZS8N294KV08VX4Z",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M4WDFYYN55XF04924XJEJMTH",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M4WDFYXQJZS8N294KV08VX4Z",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M4VVJF6TFY9PC58A2WCXGWQV": {
+          "branch_01M4WDFYYN55XF04924XJEJMTH": {
             "evidence_only": true,
-            "id": "branch_01M4VVJF6TFY9PC58A2WCXGWQV",
-            "intent_id": "intent:change_01M4VVJF5X9AS4618BD5VJESBZ",
+            "id": "branch_01M4WDFYYN55XF04924XJEJMTH",
+            "intent_id": "intent:change_01M4WDFYXQJZS8N294KV08VX4Z",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "implementation",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/plan_governance.rs",
-                  "src/decapod/lib.rs",
-                  "src/decapod/core/validate.rs"
+                  "Cargo.lock",
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "/workspace/shared/quinn-security-evidence/cargo-audit.json",
+                  "/workspace/shared/quinn-security-evidence/quinn-feature-tree.txt"
                 ],
                 "proof_refs": [
-                  "official_0.111.2_stale_acceptance_reproduction"
+                  "security-audit",
+                  "dependency-feature-reachability"
                 ],
                 "scope": [
                   "root"
@@ -412,14 +460,13 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/decapod/plan_governance.rs",
-                  "src/decapod/core/validate.rs",
-                  "tests/unit/plan_governance_tests.rs",
-                  "tests/plan_governed_execution.rs",
-                  "docs/agent/command-contracts.md"
+                  "MODULE.bazel.lock",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "/workspace/shared/quinn-security-evidence/bazel-mod-deps-system-java.log"
                 ],
                 "proof_refs": [
-                  "candidate_regressions"
+                  "initial-source-ci",
+                  "bazel-mod-deps"
                 ],
                 "scope": [
                   "root"
@@ -431,11 +478,15 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:6",
                 "observations": [
-                  ".decapod/config.toml"
+                  "src/decapod/core/validation_runtime/snapshot.rs",
+                  "src/decapod/core/validation_runtime/snapshot/source_import.rs",
+                  "Buildkite1392 all source jobs passed; full controller rejects observed importer0.102.5 against reviewed0.102.3",
+                  "User explicitly approved independently reviewed0.102.5 compatibility and regression coverage in same Quinn PR",
+                  "Official release asset639031444 archive sha256:4d76d1e54cc3d90790cb7e6046abf6e5c60c8ab50de59ff4c25c7cbddb42bd59 executable sha256:0e33c9189e80ec1e776a53f837f61b26e8f7f2b26671a6df2c0b4d23c09a4b02; asset639031441 archive sha256:1ebe5b625f21a4b9b4b4eaa60cafb574dcc918ffbb8436b62bcc908ad25a795f executable sha256:7af087fef3a258ed093c1812c18eb0832e44b48047cf3ab1b2adf0836fc2ad86"
                 ],
                 "proof_refs": [
-                  "first_readiness",
-                  "independent_static_review"
+                  "prior_importer_validation",
+                  "official_importer_archive_integrity"
                 ],
                 "scope": [
                   "root"
@@ -447,16 +498,34 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:7",
                 "observations": [
-                  "tests/cli_contract_enforcement.rs"
+                  "Buildkite1402 and GitHub38555124426 rejected formatting; correct targeted rustfmt edition to repository2024, preserve failure"
                 ],
                 "proof_refs": [
-                  "d9fb4970_library_1147_passed",
-                  "d9fb4970_public_cli_execution"
+                  "importer_candidate_fmt"
                 ],
                 "scope": [
-                  "root"
+                  "root",
+                  "src/decapod/core/validation_runtime/snapshot.rs",
+                  "src/decapod/core/validation_runtime/snapshot/source_import.rs"
                 ],
                 "sequence": 7,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "GitHub38555783849 governance gate requested current-content publication spec reviews after source changes; review existing interfaces architecture and updated security prose explicitly"
+                ],
+                "proof_refs": [
+                  "importer_spec_review"
+                ],
+                "scope": [
+                  "root",
+                  "src/decapod/core/validation_runtime/snapshot.rs",
+                  "src/decapod/core/validation_runtime/snapshot/source_import.rs"
+                ],
+                "sequence": 8,
                 "validation_findings": []
               }
             ]
@@ -465,32 +534,38 @@
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [],
-      "inspected_files": [
-        "src/decapod/core/validate.rs",
-        "src/decapod/lib.rs",
-        "src/decapod/plan_governance.rs"
+      "evidence": [
+        "/workspace/shared/quinn-security-evidence/bazel-mod-deps-system-java.log",
+        "/workspace/shared/quinn-security-evidence/cargo-audit.json",
+        "/workspace/shared/quinn-security-evidence/quinn-feature-tree.txt",
+        "Buildkite1392 all source jobs passed; full controller rejects observed importer0.102.5 against reviewed0.102.3",
+        "Buildkite1402 and GitHub38555124426 rejected formatting; correct targeted rustfmt edition to repository2024, preserve failure",
+        "GitHub38555783849 governance gate requested current-content publication spec reviews after source changes; review existing interfaces architecture and updated security prose explicitly",
+        "Official release asset639031444 archive sha256:4d76d1e54cc3d90790cb7e6046abf6e5c60c8ab50de59ff4c25c7cbddb42bd59 executable sha256:0e33c9189e80ec1e776a53f837f61b26e8f7f2b26671a6df2c0b4d23c09a4b02; asset639031441 archive sha256:1ebe5b625f21a4b9b4b4eaa60cafb574dcc918ffbb8436b62bcc908ad25a795f executable sha256:7af087fef3a258ed093c1812c18eb0832e44b48047cf3ab1b2adf0836fc2ad86",
+        "User explicitly approved independently reviewed0.102.5 compatibility and regression coverage in same Quinn PR"
       ],
-      "intent_id": "intent:change_01M4VVJF5X9AS4618BD5VJESBZ",
+      "inspected_files": [],
+      "intent_id": "intent:change_01M4WDFYXQJZS8N294KV08VX4Z",
       "modified_files": [
         ".decapod/config.toml",
-        "docs/agent/command-contracts.md",
-        "src/decapod/core/validate.rs",
-        "src/decapod/plan_governance.rs",
-        "tests/cli_contract_enforcement.rs",
-        "tests/plan_governed_execution.rs",
-        "tests/unit/plan_governance_tests.rs"
+        ".decapod/managed/specs/SECURITY.md",
+        "Cargo.lock",
+        "MODULE.bazel.lock",
+        "src/decapod/core/validation_runtime/snapshot.rs",
+        "src/decapod/core/validation_runtime/snapshot/source_import.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "root"
+        "root",
+        "src/decapod/core/validation_runtime/snapshot.rs",
+        "src/decapod/core/validation_runtime/snapshot/source_import.rs"
       ],
-      "run_id": "branch_01M4VVJF6TFY9PC58A2WCXGWQV",
+      "run_id": "branch_01M4WDFYYN55XF04924XJEJMTH",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "secu_01m4vvhnkp105c3d",
+      "task_id": "secu_01m4wdfdb4w1t25m",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

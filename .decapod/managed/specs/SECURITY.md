@@ -251,7 +251,31 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9b1af545233f14b42c94eed39aa319437b3f0dc6a35dc22cc724726eb4af1de7`
+- Repository signal fingerprint: `e42e554be1c33a35fbc1341dd4829602132e7309676ff4ac0ffcda83a6c3c731`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (183 files), `tests/` (187 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Quinn transitive dependency remediation
+
+The locked dependency graph uses quinn-proto 0.11.19 through Dactyl's reqwest
+resolution. The Cargo lock change updates only that package version and registry
+checksum. The generated Bazel lock must be regenerated with the repository-pinned
+Bazel version so both build systems resolve the same patched dependency;
+release-bound projections must match the evaluating Decapod release.
+No HTTP/3 feature is enabled: Cargo feature-tree inspection across default,
+no-default and all Decapod features finds no active Quinn path. That limits the
+identified runtime exposure but does not excuse vulnerable lockfile entries.
+The dependency audit must pass without ignored advisories; the existing yanked
+chacha20 warning remains separately visible. No transport policy, CI trigger,
+provider permissions or accepted-executor helper is changed by this remediation.
+
+Current provider execution uses buildkite-gha 0.102.5. The validator accepts only
+the independently reviewed official compiler and platform-specific executable
+digests in `ReviewedBuildkiteImporter`, verified from release assets rather than
+from successful job output. The 0.102.3-to-0.102.5 review covers composite-action
+working-directory containment, repository-relative workflow resolution, and
+masked service-readiness diagnostics; the v2 plan and result schema remains
+unchanged. Old versions, mixed-release tuples, unknown versions, modified
+executables and swapped platform identities are rejected. Source, plan, runtime,
+artifact and accepted-executor verification remain required.
