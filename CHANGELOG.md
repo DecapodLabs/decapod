@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.111.3](https://github.com/DecapodLabs/decapod/compare/v0.111.2...v0.111.3) - 2026-10-14
+
+### Fixed
+
+- *(governance)* revoke stale plan acceptance after contract edits ([#1418](https://github.com/DecapodLabs/decapod/pull/1418))
+
 ## [0.111.2](https://github.com/DecapodLabs/decapod/compare/v0.111.1...v0.111.2) - 2026-10-13
 
 ### Fixed
