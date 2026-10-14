@@ -101,15 +101,133 @@ fn completion_dependency_gate_rechecks_proof_readiness() {
     conn.execute(
         "INSERT INTO task_verification(
             todo_id, proof_plan, last_verified_at, last_verified_status,
-            last_verified_notes, verification_policy_days, updated_at
-         ) VALUES(?1, '[]', '100Z', 'passed', '', 90, '100Z')",
-        [&dependency_id],
+            last_verified_notes, verification_policy_days, updated_at, verification_artifacts
+         ) VALUES(?1, '[]', '100Z', 'passed', '', 90, '100Z', ?2)",
+        crate::core::db::params![dependency_id, serde_json::json!({
+            "task_id": dependency_id,
+            "task_revision": super::get_task(&root, &dependency_id).unwrap().unwrap().revision,
+            "proof_plan_results": [{"proof_gate": "validate_passes", "output_hash": "sha256:test-proof"}]
+        }).to_string()],
     )
     .unwrap();
     assert!(
         super::dependency_completion_gate(&root, &target_id)
             .unwrap()
             .is_none()
+    );
+
+    let proven_revision = super::get_task(&root, &dependency_id)
+        .unwrap()
+        .unwrap()
+        .revision;
+    super::comment_task(&root, &dependency_id, "Evidence observation only").unwrap();
+    assert_eq!(
+        super::get_task(&root, &dependency_id)
+            .unwrap()
+            .unwrap()
+            .revision,
+        proven_revision
+    );
+    assert!(
+        super::dependency_completion_gate(&root, &target_id)
+            .unwrap()
+            .is_none()
+    );
+    assert_eq!(
+        super::get_work_claim(&root, &dependency_id)
+            .unwrap()
+            .unwrap()
+            .status,
+        crate::core::work_claim::WorkClaimStatus::Complete
+    );
+    assert!(
+        !crate::plan_governance::collect_unverified_done_todos(&root)
+            .unwrap()
+            .contains(&dependency_id)
+    );
+
+    // Editing completed intent leaves historical evidence intact but cannot reuse it.
+    super::edit_task(
+        &root,
+        &dependency_id,
+        None,
+        Some("Changed acceptance intent"),
+        None,
+        None,
+    )
+    .unwrap();
+    let stale = super::get_work_claim(&root, &dependency_id)
+        .unwrap()
+        .unwrap();
+    assert_eq!(
+        stale.status,
+        crate::core::work_claim::WorkClaimStatus::Blocked
+    );
+    assert_eq!(
+        stale.validation_status,
+        crate::core::work_claim::WorkClaimValidationStatus::Stale
+    );
+    assert!(!stale.proof_refs.is_empty());
+    assert!(
+        crate::plan_governance::collect_unverified_done_todos(&root)
+            .unwrap()
+            .contains(&dependency_id)
+    );
+    let blocked = super::dependency_completion_gate(&root, &target_id)
+        .unwrap()
+        .unwrap();
+    assert_eq!(
+        blocked["result"]["dependency_readiness"]["state"],
+        "proof_blocked"
+    );
+    let blocked_claim = super::claim_task(
+        &root,
+        &target_id,
+        "revision-agent",
+        super::ClaimMode::Exclusive,
+    )
+    .unwrap();
+    assert_eq!(blocked_claim["status"], "conflict");
+    let current = super::get_task(&root, &target_id).unwrap().unwrap();
+    let blocked_done = super::update_status(
+        &store,
+        &target_id,
+        current.revision,
+        &current.status,
+        "done",
+        "task.done",
+        serde_json::json!({}),
+    )
+    .unwrap();
+    assert_eq!(blocked_done["status"], "conflict");
+    assert_eq!(
+        super::get_task(&root, &target_id)
+            .unwrap()
+            .unwrap()
+            .revision,
+        current.revision
+    );
+
+    // Public owner mutations also advance custody; comments above deliberately do not.
+    let before_owner = super::get_task(&root, &dependency_id)
+        .unwrap()
+        .unwrap()
+        .revision;
+    super::add_task_owner(&root, &dependency_id, "observer", "watcher").unwrap();
+    assert_eq!(
+        super::get_task(&root, &dependency_id)
+            .unwrap()
+            .unwrap()
+            .revision,
+        before_owner + 1
+    );
+    super::remove_task_owner(&root, &dependency_id, "observer").unwrap();
+    assert_eq!(
+        super::get_task(&root, &dependency_id)
+            .unwrap()
+            .unwrap()
+            .revision,
+        before_owner + 2
     );
 
     // A successful earlier check is not authority when the dependency changes.

@@ -70,6 +70,11 @@ and where it may run. Concurrent agents must not silently acquire one another's
 assignments or overwrite the main checkout. Existing issue trackers may remain
 the organizational record; Decapod coordinates accepted repository execution.
 
+Completed work must remain tied to the task that was actually verified.
+Changes to task intent or custody cannot inherit a prior passing result; the
+kernel exposes stale evidence and requires supported revalidation before that
+work can again authorize completion or dependent execution.
+
 ### Durable understanding and continuity
 
 Living specifications describe the product. Plans and trajectories describe
@@ -159,7 +164,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a0ff79178165611bcfcabf80c53a0e782ca391bbd5662a9fb7145954d30f08f0`
+- Repository signal fingerprint: `5abb5363406c18b6ef4a242d5e823131577c1ec2e407840a19bda02a400d3905`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (183 files), `tests/` (189 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

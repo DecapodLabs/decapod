@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "947ef6c7f0261522b011d5055de5dbd3fa34fb85",
+    "accepted_commit": "7cceb4acdee224732bcd3d7973e178af43ef74fc",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -20,6 +20,11 @@
           "src/decapod/core/validation_runtime/executor_contract.rs"
         ],
         "statement": "For the supported remote source-CI carrier, plain validation admits candidate helper changes using an independently captured accepted executor, retains the full build/test graph and final controller verdict, and rejects substituted authority or custody.",
+        "status": "open"
+      },
+      "claim:atomic-completion": {
+        "falsifier": "An unresolved dependency or unproven exclusive task can commit done through a direct mutation",
+        "statement": "Every task done mutation enforces dependency and lease proof within its transaction",
         "status": "open"
       },
       "claim:bounded-integration-matrix": {
@@ -122,6 +127,11 @@
         "question": "Which proof gates best predict production-relevant correctness, and how should warning-heavy but passing runs be classified?",
         "status": "open"
       },
+      "claim:proof-before-done": {
+        "falsifier": "Missing or failing proof leaves task done or success event committed",
+        "statement": "Validated completion and captured successful proof commit atomically",
+        "status": "open"
+      },
       "claim:proof-recovery-no-deadlock:question:historical-proof-ownership": {
         "decision_impact": "Determines whether recovery can be automatic for legacy backlogs or must return tasks to an actionable open state.",
         "id": "historical-proof-ownership",
@@ -145,6 +155,11 @@
       "claim:release-cpus": {
         "falsifier": "CPU quota/affinity is exceeded, matrix targets drift, or publication gates are broadened",
         "statement": "Release artifact compilation uses runner-effective CPU parallelism without altering global defaults, target matrix or publication gates",
+        "status": "open"
+      },
+      "claim:release-ownership": {
+        "falsifier": "Non-owner release changes task assignment, owners or events",
+        "statement": "A different local actor cannot release current exclusive custody",
         "status": "open"
       },
       "claim:release-pr-provider-parity": {
@@ -211,75 +226,29 @@
     }
   },
   "change": {
-    "id": "change_01M4XA68B83672X8674J2C13GK",
-    "base_commit": "947ef6c7f0261522b011d5055de5dbd3fa34fb85",
+    "id": "change_01M4XJJWVMWFERNBH5WFTQ1Q7B",
+    "base_commit": "7cceb4acdee224732bcd3d7973e178af43ef74fc",
     "target_base": "origin/master"
   },
   "claims": {
-    "atomic-completion": {
-      "statement": "Every task done mutation enforces dependency and lease proof within its transaction",
-      "falsifier": "An unresolved dependency or unproven exclusive task can commit done through a direct mutation",
-      "status": "open"
-    },
-    "proof-before-done": {
-      "statement": "Validated completion and captured successful proof commit atomically",
-      "falsifier": "Missing or failing proof leaves task done or success event committed",
-      "status": "open"
-    },
-    "release-ownership": {
-      "statement": "A different local actor cannot release current exclusive custody",
-      "falsifier": "Non-owner release changes task assignment, owners or events",
+    "current-task-proof": {
+      "statement": "Persisted task pass cannot authorize a different task revision, and stale verification cannot overwrite a changed baseline",
+      "falsifier": "A stale or unbound pass completes a work claim, unlocks dependency admission, bypasses aggregate verification, or stale verifier overwrites newer evidence",
       "status": "open"
     }
   },
   "checkpoints": [
     {
-      "id": "lifecycle-enforcement",
-      "summary": "Enforce atomic completion prerequisites, prepare successful verification before done, and protect local release custody; add adversarial regressions for1424,1425,1426",
-      "input_digest": "sha256:29c344f152e1c5a8ab3935173ad03073c8464afd4db62d2c753690faa47a23fd",
+      "id": "revision-proof-implementation",
+      "summary": "Bind durable task proof to exact task revision and fence stale verification writes with negative regressions",
+      "input_digest": "sha256:29187290c12c41e7e064c7c131e58f9045d497b52188050f3586c9b70ad3e549",
       "proof_refs": [
-        "tests/plugins/todo.rs",
-        "tests/unit/core/todo_release_tests.rs",
-        "tests/unit/core/todo_tests.rs",
-        "tests/unit/plugins/verify_completion_tests.rs"
-      ]
-    },
-    {
-      "id": "release-profile-reconciliation",
-      "summary": "Review source inventory release-only version delta and reconcile declared digest after validation rejection",
-      "input_digest": "sha256:40cce1d42085ee77bc772a9174cbede3f90b2b9c8f0512a62b43cff223ec3d72",
-      "proof_refs": [
-        "Cargo.lock",
-        "Cargo.toml"
-      ]
-    },
-    {
-      "id": "rustls-advisory-repair",
-      "summary": "Repair fresh dependency audit failures with rustls 0.23.46 and regenerate Bazel lock evidence",
-      "input_digest": "sha256:5d5ff567bfdec78e4df7046786706db08ec942f1329a1b7a220c3c696414aac6",
-      "proof_refs": [
-        "/workspace/shared/governed-completion-evidence/rustls-bazel-lock-verify.log"
-      ]
-    },
-    {
-      "id": "refresh-security-repair-review",
-      "summary": "Renew content-bound spec reviews after audited dependency repair",
-      "input_digest": "sha256:1189cb3c7ed677e594595540a10455bdbe5ae7ac5376b88aebc5f79206b024a8",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/actions/runs/38577443142/job/115900932474"
-      ]
-    },
-    {
-      "id": "lawful-pruning-fixtures",
-      "summary": "Establish pruning fixture completion through owner yield and assert all mutation outcomes",
-      "input_digest": "sha256:2f698dd1c880999175ffa20ea25f9a51dbb9287f4bc318188e9058dd2d0bf934",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/actions/runs/38578675681/job/115903178552"
+        "https://github.com/DecapodLabs/decapod/issues/1429"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M4XA68B83672X8674J2C13GK": {
+    "intent:change_01M4XJJWVMWFERNBH5WFTQ1Q7B": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -289,11 +258,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M4XA68B83672X8674J2C13GK",
+      "id": "intent:change_01M4XJJWVMWFERNBH5WFTQ1Q7B",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Reconcile open kernel issues and enforce governed completion",
-      "refined_intent": "Reconcile open kernel issues and enforce governed completion",
+      "raw_intent": "Repair next verified kernel enforcement gap after PR 1427",
+      "refined_intent": "Repair next verified kernel enforcement gap after PR 1427",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -301,150 +270,107 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 30,
+        "file_touch_budget": null,
         "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Solve1424 transaction-bound completion prerequisites,1425 verified completion atomicity,1426 release ownership in one PR; retain broader1247,852,1367 requirements",
+      "intent": "Repair issue1429: retain exact task identity and post-transition revision in durable verification artifacts; reject stale or unbound proof at completion, dependency, work-claim, and aggregate gates; fence verification/recovery writes to the task and baseline actually checked; keep legacy replay evidence unbound and preserve canonical storage and human merge control.",
       "phases": [],
       "proof_hooks": [
         "decapod validate",
-        "adversarial completion, verification and release regressions"
+        "negative tests for stale task revisions, stale verifier writes, missing proof binding, atomic recovery, and prune ABA"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed final lifecycle changes, rustls repair and pruning fixtures; fixtures now establish legitimate terminal states without changing product architecture, public interfaces or security boundaries; OPERATIONS.md describes implemented task contract",
-          "reviewed_code_fingerprint": "a0ff79178165611bcfcabf80c53a0e782ca391bbd5662a9fb7145954d30f08f0",
-          "spec_material_hash": "77b4a522d06938885ac3502be7cc417b0456a06299beeaacf75e846eb4562d84"
+          "reason": "Reviewed issue1429 current-content contract for exact task revision proof, stale-verifier fencing, atomic proof recovery and conservative historical evidence; preserves storage and publication boundaries",
+          "reviewed_code_fingerprint": "5abb5363406c18b6ef4a242d5e823131577c1ec2e407840a19bda02a400d3905",
+          "spec_material_hash": "c0890e9c75c3bd573d3bcf46d3b14a809d8bb12fa4844b8c1b69eaebe120f627"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed final lifecycle changes, rustls repair and pruning fixtures; fixtures now establish legitimate terminal states without changing product architecture, public interfaces or security boundaries; OPERATIONS.md describes implemented task contract",
-          "reviewed_code_fingerprint": "a0ff79178165611bcfcabf80c53a0e782ca391bbd5662a9fb7145954d30f08f0",
-          "spec_material_hash": "f9711772a9cbac81073b05f30711f2c83c45b9a848ed8ef5c22d4fb2dadff95d"
+          "reason": "Reviewed issue1429 current-content contract for exact task revision proof, stale-verifier fencing, atomic proof recovery and conservative historical evidence; preserves storage and publication boundaries",
+          "reviewed_code_fingerprint": "5abb5363406c18b6ef4a242d5e823131577c1ec2e407840a19bda02a400d3905",
+          "spec_material_hash": "5964b9006ebe768f1b3a1c7e244bb9b4eec4856d43bcb5ebbbb3d6c611ce5cdd"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed final lifecycle changes, rustls repair and pruning fixtures; fixtures now establish legitimate terminal states without changing product architecture, public interfaces or security boundaries; OPERATIONS.md describes implemented task contract",
-          "reviewed_code_fingerprint": "a0ff79178165611bcfcabf80c53a0e782ca391bbd5662a9fb7145954d30f08f0",
-          "spec_material_hash": "9ca65fee6422b656de7b2c25e45866c308f1d7e30401a5d296978e35be62df47"
+          "reason": "Reviewed issue1429 current-content contract for exact task revision proof, stale-verifier fencing, atomic proof recovery and conservative historical evidence; preserves storage and publication boundaries",
+          "reviewed_code_fingerprint": "5abb5363406c18b6ef4a242d5e823131577c1ec2e407840a19bda02a400d3905",
+          "spec_material_hash": "8bc61dc4f2ac7adf1fcea9b79c691f66ed7f5696ff9e4e8c5b33243003276b87"
         }
       ],
       "state": "APPROVED",
-      "stop_conditions": [],
-      "title": "Atomic governed todo completion and custody",
+      "stop_conditions": [
+        "Stop for access denial, unsupported validation controller, or a genuine human decision; preserve exact blocker"
+      ],
+      "title": "Bind durable task proof to current task revision",
       "todo_ids": [
-        "bugs_01m4xa5t6c3p6pqz"
+        "code_01m4xjj77c5y1jty"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791988188Z"
+      "updated_at": "1791994896Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
-        "Preserve failed attempts and independent validation; no merge authority"
+        "Do not implement broader per-todo ledger, runtime, cloud proof parity, or alter SQLite/Dactyl ownership"
       ],
-      "artifact_hash": "sha256:e34c026f968c948dc157bcfe846c2b85b232c84c37defe022cdda0f37d0fa338",
+      "artifact_hash": "sha256:13856d189c709ed5f8c2557e740c4390ff73080a066d9b8f42dbf1e2d4989bc4",
       "checks": [
         {
-          "name": "buildkite1477-dependency-audit",
-          "status": "failed"
-        },
-        {
-          "name": "code-diff-review",
+          "name": "git_diff_check",
           "status": "passed"
         },
         {
-          "name": "completion-regressions",
-          "status": "passed"
-        },
-        {
-          "name": "core-pruning-fixtures",
-          "status": "failed"
-        },
-        {
-          "name": "exclusive-completion-baseline",
-          "status": "failed"
-        },
-        {
-          "name": "release-custody-regressions",
-          "status": "passed"
-        },
-        {
-          "name": "todo-unit-regressions",
-          "status": "passed"
-        },
-        {
-          "name": "validation-4a64f673",
-          "status": "failed"
+          "name": "runtime_regressions",
+          "status": "unavailable"
         }
       ],
-      "current_phase": "implementation",
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M4XA68B83672X8674J2C13GK",
+            "intent_id": "intent:change_01M4XJJWVMWFERNBH5WFTQ1Q7B",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M4XA68B83672X8674J2C13GK",
+            "intent_id": "intent:change_01M4XJJWVMWFERNBH5WFTQ1Q7B",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M4XA68BQXWY6WVVVM6ABDJKE",
+            "detail": "trajectory:branch_01M4XJJWW5JC0R34KAHQHVKBZ4",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M4XA68B83672X8674J2C13GK",
+            "intent_id": "intent:change_01M4XJJWVMWFERNBH5WFTQ1Q7B",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M4XA68BQXWY6WVVVM6ABDJKE",
+            "detail": "trajectory:branch_01M4XJJWW5JC0R34KAHQHVKBZ4",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M4XA68B83672X8674J2C13GK",
+            "intent_id": "intent:change_01M4XJJWVMWFERNBH5WFTQ1Q7B",
             "kind": "trajectory_step_recorded",
             "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M4XA68BQXWY6WVVVM6ABDJKE",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M4XA68B83672X8674J2C13GK",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M4XA68BQXWY6WVVVM6ABDJKE",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M4XA68B83672X8674J2C13GK",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M4XA68BQXWY6WVVVM6ABDJKE",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M4XA68B83672X8674J2C13GK",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M4XA68BQXWY6WVVVM6ABDJKE": {
+          "branch_01M4XJJWW5JC0R34KAHQHVKBZ4": {
             "evidence_only": true,
-            "id": "branch_01M4XA68BQXWY6WVVVM6ABDJKE",
-            "intent_id": "intent:change_01M4XA68B83672X8674J2C13GK",
+            "id": "branch_01M4XJJWW5JC0R34KAHQHVKBZ4",
+            "intent_id": "intent:change_01M4XJJWVMWFERNBH5WFTQ1Q7B",
             "steps": [
               {
                 "action": "implementation",
@@ -452,11 +378,11 @@
                 "observations": [
                   "src/decapod/core/todo.rs",
                   "src/decapod/plugins/verify.rs",
-                  "Red baseline: unproven exclusive direct done returned ok with revision2; regression tests/plugins/todo.rs exclusive_lease_blocks_unproven_done"
+                  "src/decapod/core/work_claim.rs",
+                  "src/decapod/plan_governance.rs",
+                  "Current master 7cceb4ac includes PR1427; issue1429 isolates durable proof revision drift after its atomic initial-completion fix. Read-only independent audits confirm outdated pass acceptance and stale verifier baseline race. No runtime proof executed yet."
                 ],
-                "proof_refs": [
-                  "exclusive-completion-baseline"
-                ],
+                "proof_refs": [],
                 "scope": [
                   "root"
                 ],
@@ -464,102 +390,29 @@
                 "validation_findings": []
               },
               {
-                "action": "trajectory.record",
+                "action": "validation",
                 "custody_event_id": "event:5",
                 "observations": [
                   "src/decapod/core/todo.rs",
+                  "src/decapod/core/work_claim.rs",
+                  "src/decapod/plan_governance.rs",
                   "src/decapod/plugins/verify.rs",
-                  "tests/plugins/todo.rs",
-                  "tests/unit/core/todo_tests.rs",
-                  "tests/unit/core/todo_release_tests.rs",
                   "tests/unit/plugins/verify_completion_tests.rs",
+                  "tests/unit/core/work_claim_tests.rs",
+                  "tests/unit/core/todo_tests.rs",
+                  "tests/plugins/todo.rs",
+                  "tests/todo_rebuild_compat.rs",
                   "docs/agent/state-model.md",
-                  ".decapod/managed/specs/OPERATIONS.md",
-                  "Three focused issue repairs1424,1425,1426; red exclusive-completion reproduced and retained; new adversarial tests cover rollback, drift, missing/failing proof and non-owner release"
+                  "Implemented exact task_id/task_revision binding, current-proof consumers, transaction-fenced result/recovery/prune, and historical unbinding on legacy replay. Added negative tests in existing targets. No manual build or test run: full decapod validate owns compilation and verification. Official v0.111.6 asset checksum verified and release-bound projections refreshed by workspace ensure."
                 ],
                 "proof_refs": [
-                  "code-diff-review"
+                  "git_diff_check",
+                  "runtime_regressions"
                 ],
                 "scope": [
-                  ".decapod/managed/specs",
-                  "docs",
-                  "root",
-                  "src/decapod/core/todo.rs",
-                  "src/decapod/plugins/verify.rs",
-                  "tests"
+                  "root"
                 ],
                 "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  ".decapod/config.toml",
-                  "Full validation rejected stale reviewed source inventory. Compared every discovered source against last reviewed072a1820: only Cargo.toml and root Cargo.lock package version0.111.4 to0.111.5 changed; no workflow/check coverage change. Explicitly reconcile release-only source inventory112cfe84."
-                ],
-                "proof_refs": [
-                  "validation-4a64f673"
-                ],
-                "scope": [
-                  ".decapod/managed/specs",
-                  "docs",
-                  "root",
-                  "src/decapod/core/todo.rs",
-                  "src/decapod/plugins/verify.rs",
-                  "tests"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "Cargo.lock",
-                  "MODULE.bazel.lock",
-                  "22completion-related tests and16todo unit tests passed, including4release tests and worker failure; Buildkite1477 blocked on inherited rustls0.23.45 advisories0346-0349; minimal official0.23.46 lock update preserves all checks and packageversions otherwise"
-                ],
-                "proof_refs": [
-                  "completion-regressions",
-                  "release-custody-regressions",
-                  "todo-unit-regressions",
-                  "buildkite1477-dependency-audit"
-                ],
-                "scope": [
-                  ".decapod/config.toml",
-                  ".decapod/managed/specs",
-                  "docs",
-                  "root",
-                  "src/decapod/core/todo.rs",
-                  "src/decapod/plugins/verify.rs",
-                  "tests"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "tests/workspace_prune_regression.rs",
-                  "Core CI identified four pruning fixtures that ignored rejected unproven exclusive completion. Repair fixtures through owner-authorized yield and assert every transition, preserving all pruning safety assertions. Previous full validation run 1482 failed and its report remains retained."
-                ],
-                "proof_refs": [
-                  "core-pruning-fixtures"
-                ],
-                "scope": [
-                  ".decapod/config.toml",
-                  ".decapod/managed/specs",
-                  "Cargo.lock",
-                  "MODULE.bazel.lock",
-                  "docs",
-                  "root",
-                  "src/decapod/core/todo.rs",
-                  "src/decapod/plugins/verify.rs",
-                  "tests"
-                ],
-                "sequence": 8,
                 "validation_findings": []
               }
             ]
@@ -569,49 +422,38 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "22completion-related tests and16todo unit tests passed, including4release tests and worker failure; Buildkite1477 blocked on inherited rustls0.23.45 advisories0346-0349; minimal official0.23.46 lock update preserves all checks and packageversions otherwise",
-        "Core CI identified four pruning fixtures that ignored rejected unproven exclusive completion. Repair fixtures through owner-authorized yield and assert every transition, preserving all pruning safety assertions. Previous full validation run 1482 failed and its report remains retained.",
-        "Full validation rejected stale reviewed source inventory. Compared every discovered source against last reviewed072a1820: only Cargo.toml and root Cargo.lock package version0.111.4 to0.111.5 changed; no workflow/check coverage change. Explicitly reconcile release-only source inventory112cfe84.",
-        "Red baseline: unproven exclusive direct done returned ok with revision2; regression tests/plugins/todo.rs exclusive_lease_blocks_unproven_done",
-        "Three focused issue repairs1424,1425,1426; red exclusive-completion reproduced and retained; new adversarial tests cover rollback, drift, missing/failing proof and non-owner release"
+        "Current master 7cceb4ac includes PR1427; issue1429 isolates durable proof revision drift after its atomic initial-completion fix. Read-only independent audits confirm outdated pass acceptance and stale verifier baseline race. No runtime proof executed yet.",
+        "Implemented exact task_id/task_revision binding, current-proof consumers, transaction-fenced result/recovery/prune, and historical unbinding on legacy replay. Added negative tests in existing targets. No manual build or test run: full decapod validate owns compilation and verification. Official v0.111.6 asset checksum verified and release-bound projections refreshed by workspace ensure."
       ],
       "inspected_files": [
         "src/decapod/core/todo.rs",
+        "src/decapod/core/work_claim.rs",
+        "src/decapod/plan_governance.rs",
         "src/decapod/plugins/verify.rs"
       ],
-      "intent_id": "intent:change_01M4XA68B83672X8674J2C13GK",
+      "intent_id": "intent:change_01M4XJJWVMWFERNBH5WFTQ1Q7B",
       "modified_files": [
-        ".decapod/config.toml",
-        ".decapod/managed/specs/OPERATIONS.md",
-        "Cargo.lock",
-        "MODULE.bazel.lock",
         "docs/agent/state-model.md",
         "src/decapod/core/todo.rs",
+        "src/decapod/core/work_claim.rs",
+        "src/decapod/plan_governance.rs",
         "src/decapod/plugins/verify.rs",
         "tests/plugins/todo.rs",
-        "tests/unit/core/todo_release_tests.rs",
+        "tests/todo_rebuild_compat.rs",
         "tests/unit/core/todo_tests.rs",
-        "tests/unit/plugins/verify_completion_tests.rs",
-        "tests/workspace_prune_regression.rs"
+        "tests/unit/core/work_claim_tests.rs",
+        "tests/unit/plugins/verify_completion_tests.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        ".decapod/config.toml",
-        ".decapod/managed/specs",
-        "Cargo.lock",
-        "MODULE.bazel.lock",
-        "docs",
-        "root",
-        "src/decapod/core/todo.rs",
-        "src/decapod/plugins/verify.rs",
-        "tests"
+        "root"
       ],
-      "run_id": "branch_01M4XA68BQXWY6WVVVM6ABDJKE",
+      "run_id": "branch_01M4XJJWW5JC0R34KAHQHVKBZ4",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m4xa5t6c3p6pqz",
+      "task_id": "code_01m4xjj77c5y1jty",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

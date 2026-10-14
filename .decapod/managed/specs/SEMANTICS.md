@@ -83,6 +83,15 @@ Completion evidence additionally binds the task, workunit, context capsule,
 repository material, validation epoch, and referenced artifacts. Structural
 integrity and hashes do not authenticate an unconfigured external producer.
 
+A passing task-verification row is current only when its artifact binds the
+same task ID and current nonnegative revision. Changing a completed task does
+not erase historical proof or change its `done` row, but removes its eligibility
+to appear complete or satisfy dependent work. Returning a task to a prior
+lifecycle state does not restore earlier proof: prune advances revision, and
+new completion/recapture must establish fresh custody. Legacy replay never
+assigns a current revision to historical evidence whose revision provenance
+cannot be reconstructed.
+
 Obligation status is derived from its dependencies, required proofs, and state
 commit. A declaration that an obligation is satisfied does not substitute for
 those inputs.
@@ -218,7 +227,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a0ff79178165611bcfcabf80c53a0e782ca391bbd5662a9fb7145954d30f08f0`
+- Repository signal fingerprint: `5abb5363406c18b6ef4a242d5e823131577c1ec2e407840a19bda02a400d3905`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (183 files), `tests/` (189 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

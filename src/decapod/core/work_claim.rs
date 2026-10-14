@@ -25,6 +25,7 @@ pub enum WorkClaimStatus {
 #[serde(rename_all = "snake_case")]
 pub enum WorkClaimValidationStatus {
     Passed,
+    Stale,
     Failed,
     Pending,
     Missing,
@@ -94,7 +95,12 @@ pub fn from_todo_with_lease(
     lease_expires_at: Option<String>,
     now_ts: Option<&str>,
 ) -> WorkClaim {
-    let validation_status = validation_status(verification.last_verified_status.as_deref());
+    let validation_status = validation_status(crate::core::todo::effective_verification_status(
+        verification.last_verified_status.as_deref(),
+        verification.verification_artifacts.as_ref(),
+        &task.id,
+        task.revision,
+    ));
     let status = match task.status.as_str() {
         "archived" => WorkClaimStatus::Abandoned,
         "done" if validation_status == WorkClaimValidationStatus::Passed => {
@@ -162,6 +168,7 @@ fn validation_status(status: Option<&str>) -> WorkClaimValidationStatus {
     match status.map(|value| value.to_ascii_lowercase()).as_deref() {
         Some("pass" | "passed" | "verified") => WorkClaimValidationStatus::Passed,
         Some("fail" | "failed") => WorkClaimValidationStatus::Failed,
+        Some("stale") => WorkClaimValidationStatus::Stale,
         Some("claimed" | "pending") => WorkClaimValidationStatus::Pending,
         Some(_) => WorkClaimValidationStatus::Unknown,
         None => WorkClaimValidationStatus::Missing,

@@ -113,6 +113,22 @@ status changes distinguish success, not-found, and conflict, and emit their even
 only when the state transition wins. External trackers may remain the
 organizational system of record; they do not replace Decapod execution claims.
 
+Captured task verification artifacts include `task_id` and `task_revision`.
+A passing legacy record without this binding, a malformed binding, or a different
+task/revision projects `validation_status: stale`; a done task then projects
+`status: blocked`. Dependency admission and completion reject that evidence.
+Proof references remain historical references rather than renewed permission.
+`qa diagnose` recommends `decapod qa verify regen <id>` for stale binding;
+`qa verify --stale` includes revision drift as well as age. Explicit recapture
+runs real validation before binding new evidence. Batch recovery first leaves
+its refreshed evidence `CLAIMED` and requires per-task and aggregate proof.
+
+`STALE_TASK_VERIFICATION` reports a task or verification baseline changed while
+verification was running. The stale result is discarded without replacing the
+newer evidence. Inspect the current task and rerun verification or recapture.
+Strict revision binding also invalidates proof after custody changes such as
+release or owner edits; comments alone do not change task revision.
+
 `workspace ensure` requires a claimed task and creates or reuses a matching
 isolated workspace. It starts from committed source, preserves dirty root files
 and the root index, and never imports uncommitted root changes implicitly.
@@ -353,7 +369,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a0ff79178165611bcfcabf80c53a0e782ca391bbd5662a9fb7145954d30f08f0`
+- Repository signal fingerprint: `5abb5363406c18b6ef4a242d5e823131577c1ec2e407840a19bda02a400d3905`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (183 files), `tests/` (189 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

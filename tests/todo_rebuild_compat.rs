@@ -49,3 +49,80 @@ fn todo_rebuild_accepts_task_proof_claimed_events() {
         .expect("query tasks");
     assert_eq!(task_count, 1, "task must exist after rebuild");
 }
+
+#[test]
+fn legacy_replay_retains_proof_history_without_inventing_revision_custody() {
+    let tmp = TempDir::new().unwrap();
+    let events_path = tmp.path().join("todo.events.jsonl");
+    let event = |event_id: &str, event_type: &str, payload: serde_json::Value| {
+        json!({
+            "ts": "1770000001Z", "event_id": event_id, "event_type": event_type,
+            "status": "success", "task_id": "T_REPLAY", "payload": payload, "actor": "test"
+        })
+    };
+    let records = [
+        event(
+            "R_ADD",
+            "task.add",
+            json!({"title": "Replay proof subject"}),
+        ),
+        event("R_DONE", "task.done", json!({"revision": 9})),
+        event(
+            "R_PROOF",
+            "task.verify.capture",
+            json!({
+                "proof_plan": ["validate_passes"], "last_verified_status": "pass",
+                "verification_artifacts": {
+                    "task_id": "T_REPLAY", "task_revision": 9,
+                    "proof_plan_results": [{"proof_gate": "validate_passes", "output_hash": "sha256:historical"}]
+                }
+            }),
+        ),
+    ];
+    std::fs::write(
+        &events_path,
+        records
+            .iter()
+            .map(|event| format!("{event}\n"))
+            .collect::<String>(),
+    )
+    .unwrap();
+    let db = tmp.path().join("decapod.db");
+    todo::rebuild_db_from_events(&events_path, &db).unwrap();
+    let claim = todo::get_work_claim(tmp.path(), "T_REPLAY")
+        .unwrap()
+        .unwrap();
+    assert_eq!(
+        claim.status,
+        decapod::core::work_claim::WorkClaimStatus::Blocked
+    );
+    assert_eq!(
+        claim.validation_status,
+        decapod::core::work_claim::WorkClaimValidationStatus::Stale
+    );
+    assert_eq!(
+        claim.proof_refs,
+        ["proof:T_REPLAY:validate_passes:sha256:historical"]
+    );
+    let conn = Connection::open(db).unwrap();
+    let raw: String = conn
+        .query_row(
+            "SELECT verification_artifacts FROM task_verification WHERE todo_id='T_REPLAY'",
+            [],
+            |row| row.get(0),
+        )
+        .unwrap();
+    let artifacts: serde_json::Value = serde_json::from_str(&raw).unwrap();
+    assert!(artifacts.get("task_revision").is_none());
+    let original: String = conn
+        .query_row(
+            "SELECT payload FROM events WHERE event_id='R_PROOF'",
+            [],
+            |row| row.get(0),
+        )
+        .unwrap();
+    assert!(
+        original.contains("task_revision"),
+        "canonical historical event remains intact"
+    );
+}

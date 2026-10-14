@@ -187,6 +187,26 @@ route. The hosted service owns its authentication and tenancy boundary; Dactyl
 owns transport and physical execution. A local transaction test does not prove
 that a deployed service implements the same contract.
 
+Task proof keeps its subject in the existing verification-artifact JSON: the
+stable `task_id` and the exact `task_revision` accepted by the completion
+transaction. `PreparedTodoVerification::persist_on_connection` binds the final
+revision after `done`; explicit recapture binds the current completed revision.
+`todo::effective_verification_status` is the shared eligibility boundary for
+work claims, dependency admission, exclusive completion, aggregate verification,
+and read-only diagnostics. Historical proof remains visible when its binding is
+missing or stale, but cannot authorize current work.
+
+Verification and batch recovery carry the task and baseline they actually
+inspected. Under one broker transaction they compare status, revision, proof-plan
+bytes, artifact bytes, and the previous verification outcome before recording
+new results and canonical events. Batch refresh returns its exact written
+snapshots rather than selecting newly appeared tasks into an earlier validation.
+Prune deletes proof, reopens the task, increments revision, and records its event
+atomically. The legacy replay helper lacks complete revision history and removes
+revision authority from its projection while retaining the original events.
+This uses existing task revisions and SQLite/Dactyl transactions, not another
+state store or execution runtime.
+
 ## Proof and publication
 
 Plans, claims, trajectories, workunits, obligations, context bindings, validation
@@ -299,7 +319,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a0ff79178165611bcfcabf80c53a0e782ca391bbd5662a9fb7145954d30f08f0`
+- Repository signal fingerprint: `5abb5363406c18b6ef4a242d5e823131577c1ec2e407840a19bda02a400d3905`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (183 files), `tests/` (189 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
