@@ -1,9 +1,33 @@
 use std::fs;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use tempfile::tempdir;
 
+fn resolve_decapod_bin() -> PathBuf {
+    let cargo_bin = env!("CARGO_BIN_EXE_decapod");
+    if let Ok(path) = Path::new(cargo_bin).canonicalize() {
+        return path;
+    }
+    if let Ok(runfiles_dir) = std::env::var("RUNFILES_DIR") {
+        let path = Path::new(&runfiles_dir).join("_main").join("decapod");
+        if path.exists() {
+            return path;
+        }
+    }
+    if let Some(parent) = std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(Path::to_path_buf))
+    {
+        let path = parent.join("decapod");
+        if path.exists() {
+            return path;
+        }
+    }
+    PathBuf::from(cargo_bin)
+}
+
 fn run_decapod(dir: &std::path::Path, args: &[&str]) -> std::process::Output {
-    Command::new(env!("CARGO_BIN_EXE_decapod"))
+    Command::new(resolve_decapod_bin())
         .args(args)
         .current_dir(dir)
         .output()
@@ -29,6 +53,33 @@ fn init_scaffolds_github_action_workflow() {
     let content = fs::read_to_string(workflow_path).expect("read workflow file");
     assert!(content.contains("name: Decapod Validate"));
     assert!(content.contains("decapod validate"));
+    assert!(content.contains("fetch-depth: 0"));
+    assert!(content.contains("persist-credentials: false"));
+    for binding in [
+        "CHANGE_EVENT: ${{ github.event_name }}",
+        "CHANGE_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}",
+        "CHANGE_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}",
+        "DECAPOD_VALIDATE_REQUIRE_CHANGE_CONTEXT: 1",
+    ] {
+        assert!(
+            content.contains(binding),
+            "missing immutable CI binding: {binding}"
+        );
+    }
+    // A merge checkout is allowed, but its SHA/last parent cannot replace the
+    // provider's PR source head or the complete pre-push comparison range.
+    for unsafe_binding in [
+        "CHANGE_BASE: ${{ github.base_ref }}",
+        "CHANGE_HEAD: ${{ github.head_ref }}",
+        "CHANGE_HEAD: ${{ github.sha }}",
+        "CHANGE_BASE: HEAD^",
+    ] {
+        assert!(
+            !content.contains(unsafe_binding),
+            "unsafe binding: {unsafe_binding}"
+        );
+    }
+
     // Bootstrap only when .decapod is missing; --force rewrites living specs and
     // invents drift against the PR drift gate.
     assert!(content.contains("decapod init --proof"));

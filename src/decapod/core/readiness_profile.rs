@@ -352,6 +352,7 @@ fn source_stage_dispositions(
 
 #[derive(Debug, Clone, Serialize)]
 pub struct RequiredCatalog {
+    profile_id: String,
     obligations: Vec<Obligation>,
     exclusions: Vec<ProvenExclusion>,
     stage_dispositions: Vec<StageDisposition>,
@@ -360,6 +361,21 @@ pub struct RequiredCatalog {
 }
 
 impl RequiredCatalog {
+    pub(crate) fn repository_local(
+        obligations: Vec<Obligation>,
+        stage_dispositions: Vec<StageDisposition>,
+        facts: ApplicabilityFacts,
+        source_inventory_digest: String,
+    ) -> Self {
+        Self {
+            profile_id: super::repository_profile::REQUIRED_PROFILE.into(),
+            obligations,
+            exclusions: Vec::new(),
+            stage_dispositions,
+            facts,
+            source_inventory_digest,
+        }
+    }
     pub fn obligations(&self) -> &[Obligation] {
         &self.obligations
     }
@@ -451,7 +467,7 @@ impl std::error::Error for PlanningFailure {}
 fn hash(value: &impl Serialize) -> Result<String, PlanningFailure> {
     evidence::digest(value).map_err(|_| PlanningFailure::Serialization)
 }
-fn valid_digest(digest: &str) -> bool {
+pub(crate) fn valid_digest(digest: &str) -> bool {
     digest.strip_prefix("sha256:").is_some_and(|d| {
         d.len() == 64
             && d.bytes()
@@ -709,6 +725,7 @@ pub fn required_source_catalog_with_executor(
         "decapod.source-pr-scope.v1",
     ))?;
     Ok(RequiredCatalog {
+        profile_id: REQUIRED_PROFILE.into(),
         obligations,
         exclusions,
         stage_dispositions,
@@ -809,7 +826,7 @@ pub fn compile_plan(
     let plan = ExpectedPlan {
         schema_version: evidence::SCHEMA_VERSION.into(),
         policy_digest: hash(&(
-            REQUIRED_PROFILE,
+            &catalog.profile_id,
             configuration_digest,
             governance_policy_digest,
             policy.buildkite_preflights,

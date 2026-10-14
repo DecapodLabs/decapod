@@ -62,6 +62,7 @@ pub mod propodus;
 pub mod readiness_evidence;
 pub mod readiness_profile;
 pub mod release_archive;
+pub mod repository_profile;
 // The standalone helper and runtime share one classifier module per crate.
 pub use readiness_profile::source::workflow_owned::release_classifier::implementation as release_metadata;
 pub mod release_projection_drift;

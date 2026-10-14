@@ -30,7 +30,7 @@ use plugins::{
     workflow,
 };
 
-use clap::{CommandFactory, Parser};
+use clap::{CommandFactory, FromArgMatches};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
@@ -94,20 +94,83 @@ fn load_project_config_if_present(
     Ok(Some(cfg))
 }
 
+// Retain unrecognized authored settings when a supported init option changes.
+// Known optional fields that were deliberately removed must not be resurrected.
+fn merge_init_config_values(
+    authored: &mut toml::Value,
+    previous: Option<&toml::Value>,
+    desired: toml::Value,
+) {
+    if let (Some(authored), toml::Value::Table(desired)) = (authored.as_table_mut(), &desired) {
+        let previous = previous.and_then(toml::Value::as_table);
+        if let Some(previous) = previous {
+            for key in previous.keys() {
+                if !desired.contains_key(key) {
+                    authored.remove(key);
+                }
+            }
+        }
+        for (key, value) in desired {
+            if let Some(authored) = authored.get_mut(key) {
+                merge_init_config_values(
+                    authored,
+                    previous.and_then(|old| old.get(key)),
+                    value.clone(),
+                );
+            } else {
+                authored.insert(key.clone(), value.clone());
+            }
+        }
+    } else {
+        *authored = desired;
+    }
+}
+
 fn write_project_config(
     target_dir: &Path,
     config: &DecapodProjectConfig,
     dry_run: bool,
 ) -> Result<(), error::DecapodError> {
+    let config_path = decapod_config_path(target_dir);
+    let desired = toml::Value::try_from(config).map_err(|error| {
+        error::DecapodError::ValidationError(format!("CONFIG_SERIALIZE_FAILED: {error}"))
+    })?;
+    let mut merged = desired.clone();
+    let exists = config_path.exists();
+    if exists {
+        let raw = fs::read_to_string(&config_path).map_err(error::DecapodError::IoError)?;
+        let authored: toml::Value = toml::from_str(&raw).map_err(|error| {
+            error::DecapodError::ValidationError(format!("INVALID_CONFIG_SCHEMA: {error}"))
+        })?;
+        let previous = load_project_config_if_present(target_dir)?.expect("existing config");
+        let previous = toml::Value::try_from(previous).map_err(|error| {
+            error::DecapodError::ValidationError(format!("CONFIG_SERIALIZE_FAILED: {error}"))
+        })?;
+        merged = authored.clone();
+        // Normalize supported legacy aliases without leaving duplicate fields.
+        if let Some(repo) = merged.get_mut("repo").and_then(toml::Value::as_table_mut) {
+            repo.remove("architecture_intent");
+            repo.remove("capabilities");
+        }
+        merge_init_config_values(&mut merged, Some(&previous), desired);
+        if merged == authored {
+            println!("  config.toml: unchanged");
+            return Ok(());
+        }
+    }
+    println!(
+        "  config.toml: {}{}",
+        if dry_run { "would " } else { "" },
+        if exists { "update" } else { "create" },
+    );
     if dry_run {
         return Ok(());
     }
-    let config_path = decapod_config_path(target_dir);
     if let Some(parent) = config_path.parent() {
         core::fs_permissions::ensure_private_dir(parent).map_err(error::DecapodError::IoError)?;
     }
-    let serialized = toml::to_string_pretty(config).map_err(|e| {
-        error::DecapodError::ValidationError(format!("AUTOREMEDIABLE_VALIDATION_ERROR code=CONFIG_SERIALIZE_FAILED severity=transient auto_remediable=true audience=agent agent_action=\"ensure the .decapod/config.toml data can be serialized (e.g., fix data types)\" user_note=\"Failed to serialize configuration; the agent should adjust the config content or report the issue.\"\nFailed to serialize config.toml: {e}"))
+    let serialized = toml::to_string_pretty(&merged).map_err(|error| {
+        error::DecapodError::ValidationError(format!("CONFIG_SERIALIZE_FAILED: {error}"))
     })?;
     core::atomic::write_atomic(&config_path, serialized.as_bytes())
         .map_err(error::DecapodError::IoError)?;
@@ -1587,6 +1650,7 @@ fn init_with_from_config(
             .collect(),
         existing_proof_commands: config.proof.commands.clone(),
         existing_required_profile: config.proof.required_profile.clone(),
+        existing_repository_contract: config.proof.repository_contract.clone(),
         validation_buildkite_preflights: Some(config.proof.validation_buildkite_preflights),
         backend: if config.repo.effective_backend().is_cloud() {
             crate::cli::BackendType::Cloud
@@ -1599,14 +1663,109 @@ fn init_with_from_config(
     }
 }
 
+/// Both init surfaces share the same authored defaults. Clap value provenance
+/// distinguishes an omitted default (for example, local/ascii) from an explicit
+/// request to change an existing cloud/mermaid configuration back to it.
+fn preserve_unspecified_init_options(
+    init: &mut InitWithCli,
+    config: &DecapodProjectConfig,
+    matches: &clap::ArgMatches,
+) {
+    let existing = init_with_from_config(
+        config,
+        init.dir.clone().unwrap_or_default(),
+        init.force,
+        init.dry_run,
+    );
+    let explicit = |id| matches.value_source(id) == Some(clap::parser::ValueSource::CommandLine);
+    if !explicit("specs") {
+        init.specs = existing.specs;
+    }
+    if !explicit("ci") {
+        init.ci = existing.ci;
+    }
+    if !explicit("diagram_style") {
+        init.diagram_style = existing.diagram_style;
+    }
+    if !explicit("product_name") {
+        init.product_name = existing.product_name;
+    }
+    if !explicit("product_summary") {
+        init.product_summary = existing.product_summary;
+    }
+    if !explicit("architecture_direction") {
+        init.architecture_direction = existing.architecture_direction;
+    }
+    if !explicit("product_type") {
+        init.product_type = existing.product_type;
+    }
+    if !explicit("done_criteria") {
+        init.done_criteria = existing.done_criteria;
+    }
+    if !explicit("primary_languages") {
+        init.primary_languages = existing.primary_languages;
+    }
+    if !explicit("detected_surfaces") {
+        init.detected_surfaces = existing.detected_surfaces;
+    }
+    if !explicit("declared_capabilities") {
+        init.declared_capabilities = existing.declared_capabilities;
+    }
+    if !explicit("container_workspaces") {
+        init.container_workspaces = existing.container_workspaces;
+    }
+    if !explicit("protected_paths") {
+        init.protected_paths = existing.protected_paths;
+    }
+    if !explicit("approval_categories") {
+        init.approval_categories = existing.approval_categories;
+    }
+    if !explicit("isolation_mode") {
+        init.isolation_mode = existing.isolation_mode;
+    }
+    if !explicit("tracker_provider") {
+        init.tracker_provider = existing.tracker_provider;
+    }
+    if !explicit("tracker_project") {
+        init.tracker_project = existing.tracker_project;
+    }
+    if !explicit("tracker_url") {
+        init.tracker_url = existing.tracker_url;
+    }
+    if !explicit("declared_context_sources") {
+        init.declared_context_sources = existing.declared_context_sources;
+    }
+    if !explicit("proof_commands") {
+        init.proof_commands = existing.proof_commands;
+    }
+    if !explicit("validation_buildkite_preflights") {
+        init.validation_buildkite_preflights = existing.validation_buildkite_preflights;
+    }
+    if !explicit("backend") {
+        init.backend = existing.backend;
+    }
+    if !explicit("decision_provider") {
+        init.decision_provider = existing.decision_provider;
+    }
+    // Entrypoint flags add requested projections without silently removing the
+    // project's existing selection; --all explicitly adds every projection.
+    init.all |= existing.all;
+    init.agents |= existing.agents;
+    init.claude |= existing.claude;
+    init.gemini |= existing.gemini;
+    init.cdx_ep |= existing.cdx_ep;
+    init.existing_proof_commands = existing.existing_proof_commands;
+    init.existing_required_profile = existing.existing_required_profile;
+    init.existing_repository_contract = existing.existing_repository_contract;
+}
+
 fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjectConfig {
     let mut repo = repo;
     let external_tracker = repo.external_tracker;
-    let tracker_is_external = external_tracker
-        || init
-            .tracker_provider
-            .as_deref()
-            .is_some_and(|provider| provider != "decapod");
+    let tracker_is_external = init
+        .tracker_provider
+        .as_deref()
+        .map_or(external_tracker, |provider| provider != "decapod");
     repo.external_tracker = tracker_is_external;
     // Explicit cloud backend selection is active. Local remains the
     // default when the caller does not opt in.
@@ -1660,8 +1819,8 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
                 }
             })
             .collect();
+        proof_commands.sort_by(|left, right| left.name.cmp(&right.name));
     }
-    proof_commands.sort_by(|left, right| left.name.cmp(&right.name));
     let mut approval_categories = if init.approval_categories.is_empty() {
         vec!["destructive_operations".to_string()]
     } else {
@@ -1684,6 +1843,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
         proof: proof::ProjectProofConfig {
             validation_buildkite_preflights: init.validation_buildkite_preflights.unwrap_or(false),
             required_profile: init.existing_required_profile.clone(),
+            repository_contract: init.existing_repository_contract.clone(),
             commands: proof_commands,
         },
         custody: CustodyConfig {
@@ -1934,6 +2094,9 @@ fn print_init_reconciliation(report: &core::init_reconciliation::ReconciliationR
     if let Some(digest) = &report.inventory_digest {
         println!("  Discovered source inventory: {digest}");
     }
+    if let Some(digest) = &report.command_contract_digest {
+        println!("  Command contract digest (review aid; not approved): {digest}");
+    }
     for task in &report.repair_tasks {
         println!("TASK [{}]: {}", task.code, task.title);
         println!("  {}", task.action);
@@ -1971,10 +2134,6 @@ fn run_init_apply(
         );
         // Blend OVERRIDE.md additions
         let _ = scaffold::blend_overrides(&target_dir, init_with.dry_run)?;
-        // Sync config (adds missing default fields)
-        if let Some(cfg) = load_project_config_if_present(&target_dir)? {
-            write_project_config(&target_dir, &cfg, init_with.dry_run)?;
-        }
         // Sync override checksums
         let _ = docs_cli::sync_override_checksum(&target_dir, false, init_with.dry_run)?;
         if !init_with.dry_run {
@@ -2124,7 +2283,7 @@ fn run_init_apply(
             .bright_white()
     );
     println!(
-        "  Config: created={}, unchanged={}, preserved={}",
+        "  Config scaffold (README/OVERRIDE): created={}, unchanged={}, preserved={}",
         scaffold_summary.config_created.to_string().bright_green(),
         scaffold_summary
             .config_unchanged
@@ -2188,7 +2347,8 @@ fn run_init_apply(
 }
 
 pub fn run() -> Result<(), error::DecapodError> {
-    let parsed_cli = Cli::parse();
+    let command_line = Cli::command().get_matches();
+    let parsed_cli = Cli::from_arg_matches(&command_line).unwrap_or_else(|error| error.exit());
     let command = match parsed_cli.command {
         Command::Eval(eval_cli) => return core::agent_eval::run_agent_eval_cli(eval_cli),
         Command::ProjectCheckWorker(validate_cli) => {
@@ -2306,107 +2466,11 @@ pub fn run() -> Result<(), error::DecapodError> {
                                 .to_string(),
                         ));
                     }
-                    if let Some(cfg) = maybe_cfg {
-                        // REFRESH FLOW: Sidestep manual entries if .decapod already exists
-                        let mut with = init_with_from_config(
-                            &cfg,
-                            target.clone(),
-                            init_group.force,
-                            init_group.dry_run,
-                        );
-                        // Keep base command flags as explicit runtime overrides.
-                        if init_group.all {
-                            with.all = true;
-                            with.agents = true;
-                            with.claude = true;
-                            with.gemini = true;
-                            with.cdx_ep = true;
-                        }
-                        if init_group.agents {
-                            with.agents = true;
-                        }
-                        if init_group.claude {
-                            with.claude = true;
-                        }
-                        if init_group.gemini {
-                            with.gemini = true;
-                        }
-                        if init_group.cdx_ep {
-                            with.cdx_ep = true;
-                        }
-                        // CLI overrides for specs/ci
-                        if !init_group.specs {
-                            with.specs = false;
-                        }
-                        if !init_group.ci {
-                            with.ci = false;
-                        }
-                        if init_group.git {
-                            with.git = true;
-                        }
-                        if init_group.no_git {
-                            with.no_git = true;
-                        }
-                        if init_group.product_name.is_some() {
-                            with.product_name = init_group.product_name.clone();
-                        }
-                        if init_group.product_summary.is_some() {
-                            with.product_summary = init_group.product_summary.clone();
-                        }
-                        if init_group.architecture_direction.is_some() {
-                            with.architecture_direction = init_group.architecture_direction.clone();
-                        }
-                        if init_group.product_type.is_some() {
-                            with.product_type = init_group.product_type.clone();
-                        }
-                        if init_group.done_criteria.is_some() {
-                            with.done_criteria = init_group.done_criteria.clone();
-                        }
-                        if !init_group.primary_languages.is_empty() {
-                            with.primary_languages = init_group.primary_languages.clone();
-                        }
-                        if !init_group.detected_surfaces.is_empty() {
-                            with.detected_surfaces = init_group.detected_surfaces.clone();
-                        }
-                        if !init_group.declared_capabilities.is_empty() {
-                            with.declared_capabilities = init_group.declared_capabilities.clone();
-                        }
-                        if !init_group.protected_paths.is_empty() {
-                            with.protected_paths = init_group.protected_paths.clone();
-                        }
-                        if !init_group.approval_categories.is_empty() {
-                            with.approval_categories = init_group.approval_categories.clone();
-                        }
-                        if init_group.isolation_mode.is_some() {
-                            with.isolation_mode = init_group.isolation_mode;
-                        }
-                        if init_group.tracker_provider.is_some() {
-                            with.tracker_provider = init_group.tracker_provider.clone();
-                        }
-                        if init_group.tracker_project.is_some() {
-                            with.tracker_project = init_group.tracker_project.clone();
-                        }
-                        if init_group.tracker_url.is_some() {
-                            with.tracker_url = init_group.tracker_url.clone();
-                        }
-                        if !init_group.declared_context_sources.is_empty() {
-                            with.declared_context_sources =
-                                init_group.declared_context_sources.clone();
-                        }
-                        if !init_group.proof_commands.is_empty() {
-                            with.proof_commands = init_group.proof_commands.clone();
-                        }
-                        if init_group.validation_buildkite_preflights.is_some() {
-                            with.validation_buildkite_preflights =
-                                init_group.validation_buildkite_preflights;
-                        }
-                        if init_group.decision_provider.is_some() {
-                            with.decision_provider = init_group.decision_provider;
-                        }
-                        with.refresh = init_group.refresh;
-                        with
-                    } else {
-                        let diagram_style = if io::stdin().is_terminal() && !init_group.proof {
+                    {
+                        let diagram_style = if maybe_cfg.is_none()
+                            && io::stdin().is_terminal()
+                            && !init_group.proof
+                        {
                             prompt_diagram_style(init_group.diagram_style)?
                         } else {
                             init_group.diagram_style
@@ -2415,7 +2479,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             dir: Some(target),
                             project_dir: None,
                             force: init_group.force,
-                            refresh: false,
+                            refresh: init_group.refresh,
                             proof: init_group.proof,
                             dry_run: init_group.dry_run,
                             all: init_group.all,
@@ -2445,6 +2509,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             proof_commands: init_group.proof_commands.clone(),
                             existing_proof_commands: Vec::new(),
                             existing_required_profile: None,
+                            existing_repository_contract: None,
                             validation_buildkite_preflights: init_group
                                 .validation_buildkite_preflights,
                             backend: init_group.backend,
@@ -2469,42 +2534,32 @@ pub fn run() -> Result<(), error::DecapodError> {
                 resolve_existing_init_dir(&current_dir)?
             };
             let existing_config = load_project_config_if_present(&init_target)?;
-            let configured_base_branch = existing_config
-                .as_ref()
-                .and_then(|config| config.repo.base_branch.clone());
             let mut init_with = init_with;
             init_with.dir = Some(init_target.clone());
             init_with.project_dir = None;
-            if let Some(config) = existing_config {
-                if init_with.decision_provider.is_none() {
-                    init_with.decision_provider = Some(config.decision.provider);
-                }
-                if init_with.validation_buildkite_preflights.is_none() {
-                    init_with.validation_buildkite_preflights =
-                        Some(config.proof.validation_buildkite_preflights);
-                }
-                if init_with.proof_commands.is_empty() {
-                    init_with.proof_commands = config
-                        .proof
-                        .commands
-                        .iter()
-                        .map(|proof| format!("{}={}", proof.name, proof.command))
-                        .collect();
-                }
-                init_with.existing_required_profile = config.proof.required_profile;
-                init_with.existing_proof_commands = config.proof.commands;
+            if let Some(config) = existing_config.as_ref() {
+                let matches = command_line
+                    .subcommand_matches("init")
+                    .expect("init arguments");
+                let matches = matches.subcommand_matches("with").unwrap_or(matches);
+                preserve_unspecified_init_options(&mut init_with, config, matches);
             }
-            let mut repo_ctx = infer_repo_context(&init_target)?;
-            if configured_base_branch.is_some() {
-                repo_ctx.base_branch = configured_base_branch;
-            }
+            // A refresh starts from the entire authored repo context, including
+            // tracker, backend and migration policy, rather than reconstructing
+            // a selected subset from repository shape.
+            let mut repo_ctx = match existing_config.as_ref() {
+                Some(config) => config.repo.clone(),
+                None => infer_repo_context(&init_target)?,
+            };
             apply_repo_context_env_overrides(&mut repo_ctx);
             apply_repo_context_cli_overrides(&mut repo_ctx, &init_with);
             if repo_ctx.effective_backend().is_cloud() && !init_with.backend.is_cloud() {
                 init_with.backend = crate::cli::BackendType::Cloud;
             }
-            apply_substrate_adoption(&mut repo_ctx, &init_target);
-            apply_architecture_language_recommendation(&mut repo_ctx);
+            if existing_config.is_none() {
+                apply_substrate_adoption(&mut repo_ctx, &init_target);
+                apply_architecture_language_recommendation(&mut repo_ctx);
+            }
 
             let is_git = is_git_repository(&init_target);
             let is_refresh = init_target.join(".decapod").exists();
@@ -6455,9 +6510,18 @@ fn run_current_workbranch_readiness_with(
     invocation: &ReadinessInvocation,
 ) -> core::validation_runtime::ValidationReport {
     use core::validation_runtime as runtime;
+    let mut report_scope = runtime::READINESS_SCOPE;
     let result = (|| -> Result<runtime::ValidationReport, error::DecapodError> {
         invocation.validate()?;
         let config = crate::cli::DecapodProjectConfig::load(workspace_root)?;
+        if config
+            .proof
+            .required_profile
+            .as_ref()
+            .is_some_and(|profile| profile.id == core::repository_profile::REQUIRED_PROFILE)
+        {
+            report_scope = core::repository_profile::READINESS_SCOPE;
+        }
         if invocation.has_snapshot_arguments() && !config.proof.validation_buildkite_preflights {
             return Err(error::DecapodError::ValidationError(
                 "READINESS_PROVIDER_MISMATCH: snapshot arguments require proof.validation_buildkite_preflights = true; native validation cannot silently switch providers".into(),
@@ -6466,6 +6530,29 @@ fn run_current_workbranch_readiness_with(
         if config.proof.required_profile.is_none() {
             return Err(error::DecapodError::ValidationError(
                 "READINESS_PROFILE_REQUIRED: agent must reconcile this repository's complete build, test and source-CI contract through init/agent.init, preserving separately scoped release requirements; configure the supported required profile, checkpoint, then rerun decapod validate so validation executes the build and proof; project prerequisites alone cannot establish PR readiness".into(),
+            ));
+        }
+        if let Some(profile) = &config.proof.required_profile
+            && ![
+                core::readiness_profile::REQUIRED_PROFILE,
+                core::repository_profile::REQUIRED_PROFILE,
+            ]
+            .contains(&profile.id.as_str())
+        {
+            return Err(error::DecapodError::ValidationError(format!(
+                "UNKNOWN_PROOF_PROFILE: {}; review and implement this repository's supported proof contract before validation",
+                profile.id
+            )));
+        }
+        if config.proof.validation_buildkite_preflights
+            && config
+                .proof
+                .required_profile
+                .as_ref()
+                .is_some_and(|profile| profile.id == core::repository_profile::REQUIRED_PROFILE)
+        {
+            return Err(error::DecapodError::ValidationError(
+                "REPOSITORY_PROFILE_PROVIDER_UNSUPPORTED: repo.pr-readiness.v1 proves the reviewed local repository commands; Buildkite execution needs its own supported provider contract".into(),
             ));
         }
         if config.proof.validation_buildkite_preflights {
@@ -6496,6 +6583,9 @@ fn run_current_workbranch_readiness_with(
                     "readiness.source-check",
                     &invocation.program.to_string_lossy(),
                 ),
+                runtime::NativeAction::RepositoryCheck { invocation, seal } => {
+                    external_action::authorize_repository_proof(&store_root, invocation, seal)
+                }
             };
             result.map_err(std::io::Error::other)
         };
@@ -6594,6 +6684,22 @@ fn run_current_workbranch_readiness_with(
             signal_guard.restore()?;
             return Ok(report);
         }
+        if config
+            .proof
+            .required_profile
+            .as_ref()
+            .is_some_and(|profile| profile.id == core::repository_profile::REQUIRED_PROFILE)
+        {
+            let mut host = runtime::repository_host::RepositoryHost::new(
+                options.clone(),
+                repository.remote_url,
+                prerequisite,
+                authorize,
+            )?;
+            let report = runtime::validate(&options, &mut host, &cancellation);
+            signal_guard.restore()?;
+            return Ok(report);
+        }
         let manifest: toml::Value = toml::from_str(&fs::read_to_string(
             workspace_root.join("Cargo.toml"),
         )?)
@@ -6623,7 +6729,7 @@ fn run_current_workbranch_readiness_with(
     })();
     result.unwrap_or_else(|error| runtime::ValidationReport {
         ready: false,
-        scope: runtime::READINESS_SCOPE,
+        scope: report_scope,
         agent_guidance: runtime::ValidationGuidance::for_outcome(false),
         stage_dispositions: Vec::new(),
         blockers: vec![runtime::Blocker::new(

@@ -57,6 +57,11 @@ pub enum ExecutionPurpose {
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
 pub enum ReviewedCapabilities {
     LocalCheckWithOwnedScratch,
+    /// Explicit repository policy, validated against the complete source,
+    /// command and execution declaration digests before invocation selection.
+    /// Its declared toolchain files are measured, not inferred complete. This
+    /// is local command evidence and is not a sandbox or provider attestation.
+    RepositoryDeclaredLocalCheck,
 }
 
 /// Values are passed as individual arguments, never interpreted as shell text.
@@ -70,9 +75,11 @@ pub enum Value {
 pub struct Invocation {
     pub platform: NativePlatform,
     pub program: PathBuf,
-    /// Independently complete local toolchain closure (compiler, linker,
-    /// runtime libraries, pinned SDK metadata). 'program' is reserved and the
-    /// direct executable is always included automatically. No ambient discovery.
+    /// Reviewed local toolchain closure (compiler, linker, runtime libraries,
+    /// pinned SDK metadata). RepositoryDeclaredLocalCheck uses the explicit
+    /// repository declaration rather than claiming independently inferred
+    /// completeness. 'program' is reserved; the direct executable is always
+    /// included automatically. No ambient discovery.
     pub toolchain_files: BTreeMap<String, PathBuf>,
     pub arguments: Vec<Value>,
     /// Repository-relative directory; '.' means the root.
@@ -587,17 +594,18 @@ fn validate_invocation(
         "ssh",
         "xargs",
         "timeout",
-        "make",
         "docker",
         "podman",
         "decapod",
         "decapod-native-proof",
     ]
     .contains(&name)
-        || name.starts_with("python")
-        || name.starts_with("node")
-        || name.starts_with("perl")
-        || name.starts_with("ruby")
+        || (invocation.capabilities != ReviewedCapabilities::RepositoryDeclaredLocalCheck
+            && (name == "make"
+                || name.starts_with("python")
+                || name.starts_with("node")
+                || name.starts_with("perl")
+                || name.starts_with("ruby")))
     {
         return Err(invalid(
             "shell, interpreter, wrapper or recursive validator invocation is unsupported",
@@ -676,7 +684,7 @@ fn expand(value: &Value, scratch: &Path) -> std::ffi::OsString {
 }
 fn purpose(kind: CheckKind) -> Option<ExecutionPurpose> {
     match kind {
-        CheckKind::SourceCi => Some(ExecutionPurpose::SourceCheck),
+        CheckKind::SourceCi | CheckKind::RepositoryLocal => Some(ExecutionPurpose::SourceCheck),
         CheckKind::DerivedRelease => Some(ExecutionPurpose::ReleaseProof),
         CheckKind::CandidateBuild => Some(ExecutionPurpose::CandidateBuild),
         CheckKind::Validator => None,
@@ -798,6 +806,8 @@ pub fn run_native(
         if check.executor != Provider::Native
             || purpose(check.kind) != Some(invocation.purpose)
             || check.invocation_digest != invocation.digest()?
+            || (invocation.capabilities == ReviewedCapabilities::RepositoryDeclaredLocalCheck
+                && check.kind != CheckKind::RepositoryLocal)
         {
             return Err(invalid("unreviewed native invocation/purpose/backend"));
         }
@@ -836,6 +846,11 @@ pub fn run_native(
         let scratch = tempfile::Builder::new()
             .prefix("native-proof-")
             .tempdir_in(snapshot.storage.path())?;
+        if invocation.capabilities == ReviewedCapabilities::RepositoryDeclaredLocalCheck {
+            // The repository host reserves HOME for this owned directory;
+            // ambient HOME is not inherited. This is not an OS sandbox.
+            fs::create_dir(scratch.path().join("home"))?;
+        }
         let execution_id = format!(
             "native:{}:{}",
             std::process::id(),

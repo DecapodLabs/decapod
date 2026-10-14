@@ -16,7 +16,8 @@ pub const PROOF_CONFIG_AUTHORITY: &str = ".decapod/config.toml";
 pub const LEGACY_PROOF_REGISTRY: &str = ".decapod/proofs.toml";
 
 /// A proof definition from project proof configuration.
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub struct ProofDef {
     pub name: String,
     pub command: String,
@@ -43,6 +44,8 @@ pub struct ProjectProofConfig {
     /// Explicitly reviewed complete-suite declaration; init never approves its digest.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub required_profile: Option<crate::core::readiness_profile::ProfileDeclaration>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub repository_contract: Option<crate::core::repository_profile::RepositoryContract>,
     #[serde(default)]
     pub commands: Vec<ProofDef>,
 }

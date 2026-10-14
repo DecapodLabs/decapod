@@ -260,8 +260,8 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2b5f83a2b718323d923082f8fd9008d8b47729c478f0a3212d0f22b668ffc037`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (183 files), `tests/` (189 files)
+- Repository signal fingerprint: `23f6db43b9a8b25bd848a22259be36133baa680f8b046e76b30edf203e50f84c`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (185 files), `tests/` (190 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -288,3 +288,24 @@ masked service-readiness diagnostics; the v2 plan and result schema remains
 unchanged. Old versions, mixed-release tuples, unknown versions, modified
 executables and swapped platform identities are rejected. Source, plan, runtime,
 artifact and accepted-executor verification remain required.
+
+## Reviewed repository command boundary
+
+Repository-local proof is admitted only for the exact supported profile after both
+source and command/execution contracts match their reviewed digests. Its capability
+permits reviewed native language/build executables without relaxing the existing
+compiled Decapod profile. Program arguments are passed separately; workflow YAML
+and shell text are never imported as commands. Direct shell, privilege/container
+and recursive validator entrypoints remain denied. Cleared environment and owned
+scratch avoid ambient credentials; declared installed bytes are measured around
+execution. This is bounded execution and custody, not an OS sandbox or a proof that
+arbitrary repository code has no external side effects. Review must exclude daemon,
+network, external writes and publication operations. Unsupported behavior blocks
+rather than producing a local substitute for required provider evidence.
+
+Repository command authorization is a sealed exact-invocation operation minted
+by the validated host, distinct from the generic executable allowlist. Existing
+authored proof policy continues to deny disallowed programs; missing relevant
+permissions in a present policy and malformed policy fail closed. No policy
+file is rewritten as a repair, and generic callers cannot request the sealed
+capability without the reviewed contract and measured invocation.

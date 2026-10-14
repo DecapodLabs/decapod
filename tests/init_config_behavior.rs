@@ -1,9 +1,33 @@
 use std::fs;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use tempfile::{NamedTempFile, tempdir};
 
+fn resolve_decapod_bin() -> PathBuf {
+    let cargo_bin = env!("CARGO_BIN_EXE_decapod");
+    if let Ok(path) = Path::new(cargo_bin).canonicalize() {
+        return path;
+    }
+    if let Ok(runfiles_dir) = std::env::var("RUNFILES_DIR") {
+        let path = Path::new(&runfiles_dir).join("_main").join("decapod");
+        if path.exists() {
+            return path;
+        }
+    }
+    if let Some(parent) = std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(Path::to_path_buf))
+    {
+        let path = parent.join("decapod");
+        if path.exists() {
+            return path;
+        }
+    }
+    PathBuf::from(cargo_bin)
+}
+
 fn run_decapod(dir: &std::path::Path, args: &[&str]) -> std::process::Output {
-    Command::new(env!("CARGO_BIN_EXE_decapod"))
+    Command::new(resolve_decapod_bin())
         .args(args)
         .current_dir(dir)
         .output()
@@ -73,7 +97,7 @@ fn init_persists_remote_default_base_branch() {
 #[test]
 fn init_with_backend_cloud_saves_to_config() {
     let tmp = tempdir().expect("tempdir");
-    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let out = Command::new(resolve_decapod_bin())
         .args(["init", "with", "--backend", "cloud", "--force"])
         .current_dir(tmp.path())
         .output()
@@ -148,7 +172,7 @@ fn init_with_backend_local_is_default() {
 fn init_jev_persists_machine_key_without_repository_leakage() {
     let project = tempdir().expect("project tempdir");
     let data_home = tempdir().expect("data tempdir");
-    let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let output = Command::new(resolve_decapod_bin())
         .args(["init", "with", "--force", "--decision-provider", "jev"])
         .current_dir(project.path())
         .env("XDG_DATA_HOME", data_home.path())
@@ -219,7 +243,7 @@ fn init_refresh_requires_an_existing_project() {
 #[test]
 fn init_cloud_opt_in_does_not_store_secret_environment_values() {
     let tmp = tempdir().expect("tempdir");
-    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let out = Command::new(resolve_decapod_bin())
         .args(["init", "with", "--backend", "cloud", "--force"])
         .current_dir(tmp.path())
         .env("SUPABASE_URL", "https://private.supabase.local")
@@ -268,7 +292,7 @@ fn session_acquire_uses_machine_local_config_not_repo_session_file() {
         String::from_utf8_lossy(&out.stderr)
     );
 
-    let acquire = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let acquire = Command::new(resolve_decapod_bin())
         .args(["session", "acquire"])
         .current_dir(tmp.path())
         .env("XDG_CONFIG_HOME", config_home.path())
@@ -319,7 +343,7 @@ fn session_acquire_falls_back_to_workspace_when_machine_config_is_unusable() {
         String::from_utf8_lossy(&out.stderr)
     );
 
-    let acquire = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let acquire = Command::new(resolve_decapod_bin())
         .args(["session", "acquire"])
         .current_dir(tmp.path())
         .env("XDG_CONFIG_HOME", config_blocker.path())
@@ -349,7 +373,7 @@ fn session_acquire_falls_back_to_workspace_when_machine_config_is_unusable() {
         "unusable machine config path should not be replaced"
     );
 
-    let status = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let status = Command::new(resolve_decapod_bin())
         .args(["session", "status"])
         .current_dir(tmp.path())
         .env("XDG_CONFIG_HOME", config_blocker.path())
@@ -642,7 +666,7 @@ fn init_with_mixed_scripts_repo_uses_file_inference_noninteractively() {
 #[test]
 fn init_with_accepts_noninteractive_spec_seed_env() {
     let tmp = tempdir().expect("tempdir");
-    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let out = Command::new(resolve_decapod_bin())
         .args(["init", "with", "--force"])
         .current_dir(tmp.path())
         .env("DECAPOD_INIT_PRODUCT_NAME", "pincher-env")
@@ -1046,18 +1070,22 @@ fn init_validation_rejects_traversal_in_guided_paths() {
         "init should preserve noninteractive behavior"
     );
 
-    let validate = run_decapod(tmp.path(), &["validate"]);
+    let validate = run_decapod(tmp.path(), &["validate", "--format", "json"]);
     assert!(
         !validate.status.success(),
         "validate must reject traversal paths: {}",
         String::from_utf8_lossy(&validate.stdout)
     );
+    let report: serde_json::Value =
+        serde_json::from_slice(&validate.stdout).expect("structured validation report");
+    let failures = report["report"]["failures"]
+        .as_array()
+        .expect("complete validation failure list");
     assert!(
-        String::from_utf8_lossy(&validate.stdout).contains("protected path")
-            || String::from_utf8_lossy(&validate.stderr).contains("protected path"),
-        "stdout: {}\nstderr: {}",
-        String::from_utf8_lossy(&validate.stdout),
-        String::from_utf8_lossy(&validate.stderr)
+        failures.iter().any(|failure| failure
+            .as_str()
+            .is_some_and(|message| message.contains("Invalid guided init protected path:"))),
+        "traversal rejection missing from structured failures: {failures:?}"
     );
 }
 
@@ -1168,4 +1196,169 @@ fn init_refresh_upgrades_legacy_proof_config_to_native_default() {
         read_init_proof_config(project.path())["validation_buildkite_preflights"].as_bool(),
         Some(false)
     );
+}
+
+#[test]
+fn both_init_surfaces_preserve_authored_config_and_accurate_dry_run() {
+    for prefix in [vec!["init"], vec!["init", "with"], vec!["init", "wtih"]] {
+        let project = tempdir().expect("project tempdir");
+        fs::write(project.path().join("README.md"), "# Authored consumer\n").unwrap();
+        let first = run_decapod(
+            project.path(),
+            &[
+                "init",
+                "with",
+                "--all",
+                "--no-specs",
+                "--no-ci",
+                "--tracker-provider",
+                "beads",
+                "--tracker-project",
+                "consumer",
+                "--tracker-url",
+                "https://tracker.invalid/consumer",
+                "--diagram-style",
+                "mermaid",
+                "--no-container-workspaces",
+                "--isolation-mode",
+                "worktree",
+                "--protected-path",
+                "README.md",
+                "--approval-category",
+                "policy_changes",
+                "--declared-context-source",
+                "README.md",
+                "--proof-command",
+                "lint=echo checked",
+            ],
+        );
+        assert!(
+            first.status.success(),
+            "{}",
+            String::from_utf8_lossy(&first.stderr)
+        );
+        let path = project.path().join(".decapod/config.toml");
+        let mut authored = fs::read_to_string(&path).unwrap();
+        authored.push_str("\n# Preserve this authored extension and comment.\n[consumer_extension]\nowner = 'consumer-team'\n");
+        authored.push_str(&format!(
+            "\n[proof.repository_contract]\nreviewed_commands_digest = 'sha256:{}'\nsource_coverage = []\nexecutions = {{}}\n",
+            "0".repeat(64)
+        ));
+        fs::write(&path, &authored).unwrap();
+        let mut args = prefix.clone();
+        args.extend(["--all", "--force", "--no-specs", "--no-ci", "--dry-run"]);
+        let dry = run_decapod(project.path(), &args);
+        assert!(
+            dry.status.success(),
+            "{}",
+            String::from_utf8_lossy(&dry.stderr)
+        );
+        assert_eq!(
+            fs::read_to_string(&path).unwrap(),
+            authored,
+            "dry-run mutated config"
+        );
+        assert!(String::from_utf8_lossy(&dry.stdout).contains("config.toml: unchanged"));
+        assert!(
+            String::from_utf8_lossy(&dry.stdout)
+                .contains("Command contract digest (review aid; not approved): sha256:")
+        );
+        args.pop();
+        let apply = run_decapod(project.path(), &args);
+        assert!(
+            apply.status.success(),
+            "{}",
+            String::from_utf8_lossy(&apply.stderr)
+        );
+        assert_eq!(
+            fs::read_to_string(&path).unwrap(),
+            authored,
+            "refresh must preserve every authored setting and no-op bytes: {prefix:?}"
+        );
+    }
+}
+
+#[test]
+fn both_init_surfaces_apply_only_explicit_config_overrides() {
+    for prefix in [vec!["init"], vec!["init", "with"]] {
+        let project = tempdir().expect("project tempdir");
+        let first = run_decapod(
+            project.path(),
+            &[
+                "init",
+                "with",
+                "--all",
+                "--no-specs",
+                "--no-ci",
+                "--tracker-provider",
+                "beads",
+                "--tracker-project",
+                "consumer",
+                "--tracker-url",
+                "https://tracker.invalid/consumer",
+                "--diagram-style",
+                "mermaid",
+            ],
+        );
+        assert!(
+            first.status.success(),
+            "{}",
+            String::from_utf8_lossy(&first.stderr)
+        );
+        let path = project.path().join(".decapod/config.toml");
+        let mut authored: toml::Value =
+            toml::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+        // Neither a default-valued backend option nor a default-valued diagram
+        // style may be confused with omission. Avoid any cloud execution here.
+        authored["repo"]["backend"] = "cloud".into();
+        authored["init"]["ci"] = true.into();
+        authored["init"]["specs"] = true.into();
+        authored.as_table_mut().unwrap().insert(
+            "consumer_extension".into(),
+            toml::Value::try_from(serde_json::json!({"owner":"consumer-team"})).unwrap(),
+        );
+        fs::write(&path, toml::to_string_pretty(&authored).unwrap()).unwrap();
+        let before = fs::read_to_string(&path).unwrap();
+        let mut args = prefix.clone();
+        args.extend([
+            "--force",
+            "--no-specs",
+            "--no-ci",
+            "--tracker-provider",
+            "decapod",
+            "--diagram-style",
+            "ascii",
+            "--backend",
+            "local",
+            "--no-container-workspaces",
+            "--dry-run",
+        ]);
+        let dry = run_decapod(project.path(), &args);
+        assert!(
+            dry.status.success(),
+            "{}",
+            String::from_utf8_lossy(&dry.stderr)
+        );
+        assert_eq!(fs::read_to_string(&path).unwrap(), before);
+        assert!(String::from_utf8_lossy(&dry.stdout).contains("config.toml: would update"));
+        args.pop();
+        let apply = run_decapod(project.path(), &args);
+        assert!(
+            apply.status.success(),
+            "{}",
+            String::from_utf8_lossy(&apply.stderr)
+        );
+        let actual: toml::Value = toml::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+        authored["repo"]["backend"] = "local".into();
+        authored["repo"]["external_tracker"] = false.into();
+        authored["repo"]["container_workspaces"] = false.into();
+        authored["tracker"]["provider"] = "decapod".into();
+        authored["init"]["diagram_style"] = "ascii".into();
+        authored["init"]["ci"] = false.into();
+        authored["init"]["specs"] = false.into();
+        assert_eq!(
+            actual, authored,
+            "unrequested config changes for {prefix:?}"
+        );
+    }
 }

@@ -336,7 +336,7 @@ pub fn readiness_contract() -> &'static str {
 - **Publication loop:** Work branch pushes and iteration are allowed before preflight. Hold PR creation (including a draft) until intent is converged, the branch is mergeable into the accepted target, and full validation succeeds against the exact current candidate and accepted target. Follow the validation report's actionable instructions, repair reported root causes on the work branch, and rerun exact-candidate validation until it succeeds; never bypass a reported gate or fabricate evidence. `workspace publish` combines branch push and PR creation, so it remains held at this readiness boundary; earlier standalone branch pushes are allowed. RPC `validate.run` enforces the same validation contract.
 - **CI context:** Inside GitHub Actions (`GITHUB_ACTIONS=true`) or Buildkite (`BUILDKITE=true`), public CLI/alias/RPC validation executes the real bounded local gates and ignores remote preflight configuration. It reports `scope=ci_local` and `publication_ready=false`, never writes a full-readiness receipt or waits for its own suite, and rejects snapshot transport arguments. Provider environment flags alone cannot authorize publication: the publisher independently invokes the complete workbranch readiness boundary.
 - **Prerequisites:** Once source and required governance material are ready, checkpoint and commit the candidate, then run plain `decapod validate`. Validation owns configured build prerequisites and tests; do not run a separate manual build or shadow preflight. `decapod govern project-check` runs bounded project/governance prerequisites for bootstrap and finite native/CI recipe execution. Its partial success never grants publication readiness. Complete workbranch validation runs outside CI and aggregates actual source checks without recursion.
-- **Providers:** `proof.validation_buildkite_preflights = false` selects native execution; true selects remote execution on the current Decapod workspace branch. Both enforce the same complete required profile. Unknown repositories, missing capabilities and unreconciled contracts fail explicitly.
+- **Providers:** `proof.validation_buildkite_preflights = false` selects native execution; true selects remote execution on the current Decapod workspace branch. The `decapod.pr-readiness.v1` profile retains the complete finite source-CI contract on either route. Consumer `repo.pr-readiness.v1` instead proves explicitly reviewed required local commands with `scope=repository_local_readiness`; it cannot select Buildkite or attest hosted CI, release or deployment execution. Missing capabilities and unknown or unreconciled contracts fail explicitly.
 - **Automatic provider execution:** With Buildkite validation enabled outside CI, `validate` pushes or reuses the exact current workspace branch commit, waits for every required imported Buildkite workflow, collects authenticated execution artifacts once, and rechecks the candidate, accepted target and provider attempt identities before returning success. The required project checks execute on Buildkite; this route neither runs a duplicate local prerequisite suite nor requires a fresh local validation receipt before submission. It uses already configured official Git access, repository check URLs only to locate Buildkite runs, and the reviewed Buildkite reader; missing tools, access denial, timeout, cancellation, failed jobs or incomplete custody return nonzero. It never installs credentials or falls back after an authorization failure.
 - **Host handoff:** `validate --snapshot-prepare` prepares private metadata for the existing workspace branch and returns nonzero while proof is pending. An authorized host may push only the same exact candidate commit to that branch. `validate --snapshot-resume <HANDOFF> --snapshot-adopt <H>` independently verifies the unchanged source/tree/target and the exact remote branch tip; it cannot accept a different commit or a temporary branch. If a host object API changes commit identity, first checkpoint and review that real source identity before preparing a new handoff. Never edit a handoff to assert success. `validate --snapshot-resume <HANDOFF>` independently verifies Buildkite identities, raw artifact digests and execution evidence. No per-run branch or synthetic commit is created, and validation cleanup never deletes the workspace branch. Existing GitHub workflows may run independently; their results and artifacts neither satisfy nor block this Buildkite profile. This is not a compatibility claim for a separate `bk preflight` command.
 - **Boundaries:** Validation may perform the authorized non-forced push of its existing workspace branch. It does not open a PR, create a release/tag, upload a package/image or deploy. Remote CI submission needs existing authorized access and remains subject to external-action policy. The core source-PR profile requires actual compile, test and build execution. Release-only packaging is outside this profile and has no packaging-assurance claim; publish/deploy dispositions describe simulation only, never actual delivery.
@@ -352,8 +352,10 @@ True pushes or reuses the exact current Decapod workspace branch commit, waits
 for its real required Buildkite checks, and downloads verified execution evidence.
 The eventual PR uses that same branch; validation creates no temporary branches. It does not run or collect GitHub Actions; normal
 PR workflows on that service remain independent.
-`[proof.required_profile]` binds the reviewed complete repository CI/release
-contract. A missing, unknown or changed contract fails readiness; an empty
+`[proof.required_profile]` selects the reviewed repository contract. The Decapod
+profile binds its finite source-CI contract; `repo.pr-readiness.v1` binds the
+explicit local-proof contract below without hosted-CI or release assurance.
+A missing, unknown or changed contract fails readiness; an empty
 `commands` list cannot prove completion. Init and initial agent execution
 reconcile existing repository contracts, preserve user-authored choices, and
 report missing or conflicting obligations for repair. Successful init is not
@@ -489,6 +491,7 @@ fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
             // Extract more info if it's a known core command
             match name {
                 "govern" => {
+                    writeln!(file, "\n{}", plan_revision_contract())?;
                     writeln!(file, "\n{}", trajectory_record_contract()?)?;
                 }
                 "docs" => {
@@ -562,9 +565,42 @@ fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
             writeln!(file, "```rust\n{fields}\n```")?;
         }
         writeln!(file, "\n{}", readiness_config_contract())?;
+        writeln!(file, "\n{}", repository_readiness_contract().trim_end())?;
     }
 
     Ok(())
+}
+
+fn plan_revision_contract() -> &'static str {
+    r#"### `decapod govern plan` contract revisions
+
+- Plan acceptance applies to the recorded execution contract. A real change to
+  title, intent, task bindings, proof hooks, questions, stop conditions,
+  contradictions, deferrals, scope constraints, or phase/gate definitions returns
+  the plan to `DRAFT` and clears all phase and gate progress, including timestamps.
+  Phase ordering can make later evidence depend on earlier definitions, so a
+  revision conservatively requires replay of every declared phase.
+- Exact no-op updates preserve acceptance and progress. Spec-review records are
+  retained, including unresolved human decisions; their independent content-bound
+  review rules still apply.
+- After a material edit, review the revised contract and use the separate
+  `decapod govern plan approve` transition. Editing and accepting a changed
+  contract in the same low-level patch is rejected without writing the document.
+  An explicit state transition remains a declared approval, not authenticated
+  proof of a human identity or semantic correctness.
+- `enter-phase` and `exit-phase` require an approved or executing plan. Completing
+  phases cannot promote a draft or annotating plan to `DONE`. Reapproval does not
+  restore progress erased by a contract revision; satisfy the current gates and
+  replay the phases in declaration order.
+- Execution and publication reject `DONE` plans with incomplete phases and
+  completed phases with unsatisfied gates. These structural checks supplement
+  exact-candidate validation and do not substitute for actual proof execution."#
+}
+
+/// Authored local-profile guidance is part of generated schema output too;
+/// regeneration must not erase the supported consumer contract.
+fn repository_readiness_contract() -> &'static str {
+    include_str!("../../../docs/agent/repository-readiness.md")
 }
 
 fn calculate_sha256(path: &Path) -> Result<String, error::DecapodError> {
@@ -771,6 +807,19 @@ mod touched_path_tests {
 
 #[cfg(test)]
 mod validation_contract_tests {
+    #[test]
+    fn generated_docs_preserve_plan_revision_and_consumer_readiness_contracts() {
+        let plan = super::plan_revision_contract();
+        assert!(plan.contains("returns\n  the plan to `DRAFT`"));
+        assert!(plan.contains("Exact no-op updates preserve acceptance and progress"));
+        let consumer = super::repository_readiness_contract();
+        assert!(consumer.contains("repo.pr-readiness.v1"));
+        assert!(consumer.contains("repository_local_readiness"));
+        assert!(consumer.contains("reviewed_commands_digest"));
+        assert!(consumer.contains("repository_proof_exec"));
+        assert!(consumer.contains("not execution of GitHub Actions"));
+    }
+
     #[test]
     fn canonical_readiness_guidance_assigns_execution_and_preserves_controller_blockers() {
         let contract = super::readiness_contract();

@@ -121,6 +121,7 @@ def decapod_targets():
         name = "decapod_lib",
         srcs = native.glob(["src/**/*.rs"], exclude = ["src/main.rs", "src/bin/*.rs"]),
         compile_data = native.glob(["src/**/*.sql"])
+        + ["docs/agent/repository-readiness.md"]
         + [
             # Synthetic release inputs are materialized only inside test fixtures.
             "tests/fixtures/derived-release/Cargo.toml.fixture",
@@ -236,6 +237,10 @@ def decapod_targets():
             # test-threads flag alone does not isolate concurrent Bazel targets.
             tags = ["exclusive"] if path == "tests/validate_termination.rs" else [],
             srcs = [path] + [
+                "tests/consumer_readiness.rs",
+                "tests/init_ci_scaffolding.rs",
+                "tests/init_config_behavior.rs",
+            ] if path == "tests/cli_contracts.rs" else [path] + [
                 "assets/tools/release_metadata.rs",
                 "src/decapod/core/release_metadata.rs",
                 "assets/tools/source_ci_profile.rs",
@@ -272,7 +277,7 @@ def decapod_targets():
                 "src/decapod/core/release_metadata.rs",
             ] if path in ["tests/source_ci_profile_policy.rs", "tests/ci_checkout_policy.rs"] else [path],
             crate_root = path,
-            compile_data = native.glob(["assets/tools/source_ci/*.sh"]) + ([".github/actions/ci-context/action.yml"] if path == "tests/ci_event_context_policy.rs" else [".github/workflows/ci.yml", ".github/workflows/decapod-validate.yml", ".github/workflows/docs.yml", ".github/workflows/docs_sync.yml"] if path == "tests/integration_custody_policy.rs" else ["tests/fixtures/native_proof_fixture.rs"] if path == "tests/native_proof_execution.rs" else ["Cargo.toml", "Cargo.lock"] if path == "tests/release_dependency_policy.rs" else [
+            compile_data = native.glob(["assets/tools/source_ci/*.sh"]) + (["src/decapod/lib.rs"] if path in ["tests/consumer_readiness.rs", "tests/cli_contracts.rs"] else [".github/actions/ci-context/action.yml"] if path == "tests/ci_event_context_policy.rs" else [".github/workflows/ci.yml", ".github/workflows/decapod-validate.yml", ".github/workflows/docs.yml", ".github/workflows/docs_sync.yml"] if path == "tests/integration_custody_policy.rs" else ["tests/fixtures/native_proof_fixture.rs"] if path == "tests/native_proof_execution.rs" else ["Cargo.toml", "Cargo.lock"] if path == "tests/release_dependency_policy.rs" else [
                 ".github/workflows/ci.yml",
             ] if path == "tests/release_metadata_policy.rs" else [
                 ".github/workflows/ci.yml",
