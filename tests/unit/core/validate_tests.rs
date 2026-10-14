@@ -1505,3 +1505,188 @@ fn material_specs_gate_accepts_only_bound_normalized_provider_snapshot() {
         assert!(output.status.success(), "mode={mode}: {output:?}");
     }
 }
+
+fn obligation_gate_fixture() -> (tempfile::TempDir, Store) {
+    let dir = tempdir().unwrap();
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: dir.path().to_path_buf(),
+    };
+    crate::core::obligation::initialize_obligation_db(&store.root).unwrap();
+    (dir, store)
+}
+
+#[test]
+fn obligation_gate_rechecks_open_cached_completion_attempts() {
+    use crate::core::obligation::{
+        ObligationStatus, add_obligation, complete_obligation, get_obligation,
+    };
+    let (_dir, store) = obligation_gate_fixture();
+    crate::plugins::health::initialize_health_db(&store.root).unwrap();
+    let attempted = add_obligation(&store, "attempted", "medium", "", "unproved-claim").unwrap();
+    complete_obligation(&store, &attempted, "attempt-state-commit").unwrap();
+    assert_eq!(
+        get_obligation(&store, &attempted).unwrap().status,
+        ObligationStatus::Open
+    );
+
+    let ctx = ValidationContext::new();
+    super::validate_obligations(&store, &ctx).unwrap();
+    assert_eq!(ctx.fail_count.load(Ordering::Relaxed), 1);
+    assert_eq!(ctx.pass_count.load(Ordering::Relaxed), 0);
+}
+
+#[test]
+fn obligation_gate_accepts_fresh_evidence_and_ignores_unrelated_open_backlog() {
+    use crate::core::obligation::{add_obligation, complete_obligation};
+    use crate::plugins::health::{add_claim, initialize_health_db, record_proof};
+    let (_dir, store) = obligation_gate_fixture();
+    initialize_health_db(&store.root).unwrap();
+    add_claim(&store, "gate-proof", "gate-proof", "FACT", "fixture").unwrap();
+    record_proof(&store, "gate-proof", "fixture", "pass", 3600).unwrap();
+    let leaf = add_obligation(&store, "proved-leaf", "medium", "", "gate-proof").unwrap();
+    complete_obligation(&store, &leaf, "leaf-state-commit").unwrap();
+    let root = add_obligation(&store, "proved-root", "medium", &leaf, "").unwrap();
+    complete_obligation(&store, &root, "root-state-commit").unwrap();
+    add_obligation(
+        &store,
+        "unrelated-open-backlog",
+        "medium",
+        "",
+        "future-proof",
+    )
+    .unwrap();
+
+    let ctx = ValidationContext::new();
+    super::validate_obligations(&store, &ctx).unwrap();
+    assert_eq!(ctx.fail_count.load(Ordering::Relaxed), 0);
+    assert_eq!(ctx.pass_count.load(Ordering::Relaxed), 1);
+    assert!(
+        crate::core::obligation::list_obligations(&store)
+            .unwrap()
+            .iter()
+            .all(|node| node.status == crate::core::obligation::ObligationStatus::Open)
+    );
+}
+
+#[test]
+fn obligation_gate_rejects_transitively_incomplete_completion_attempt() {
+    use crate::core::obligation::{add_obligation, complete_obligation};
+    let (_dir, store) = obligation_gate_fixture();
+    let leaf = add_obligation(&store, "unfinished-dependency", "medium", "", "").unwrap();
+    let root = add_obligation(&store, "attempted-parent", "medium", &leaf, "").unwrap();
+    complete_obligation(&store, &root, "parent-state-commit").unwrap();
+
+    let ctx = ValidationContext::new();
+    super::validate_obligations(&store, &ctx).unwrap();
+    assert_eq!(ctx.fail_count.load(Ordering::Relaxed), 1);
+    assert_eq!(ctx.pass_count.load(Ordering::Relaxed), 0);
+
+    complete_obligation(&store, &leaf, "leaf-state-commit").unwrap();
+    let recovered = ValidationContext::new();
+    super::validate_obligations(&store, &recovered).unwrap();
+    assert_eq!(recovered.fail_count.load(Ordering::Relaxed), 0);
+    assert_eq!(recovered.pass_count.load(Ordering::Relaxed), 1);
+}
+
+#[test]
+fn obligation_gate_rechecks_legacy_met_without_a_completion_commit() {
+    let (_dir, store) = obligation_gate_fixture();
+    let id =
+        crate::core::obligation::add_obligation(&store, "legacy-met", "medium", "", "").unwrap();
+    {
+        let conn = crate::core::db::Connection::open(crate::core::obligation::obligation_db_path(
+            &store.root,
+        ))
+        .unwrap();
+        conn.execute("UPDATE obligations SET status = 'met' WHERE id = ?1", [&id])
+            .unwrap();
+    }
+    let ctx = ValidationContext::new();
+    super::validate_obligations(&store, &ctx).unwrap();
+    assert_eq!(ctx.fail_count.load(Ordering::Relaxed), 1);
+    assert_eq!(ctx.pass_count.load(Ordering::Relaxed), 0);
+}
+
+#[test]
+fn obligation_gate_rejects_legacy_blank_commit_as_a_failed_attempt() {
+    let (_dir, store) = obligation_gate_fixture();
+    let id =
+        crate::core::obligation::add_obligation(&store, "legacy-blank", "medium", "", "").unwrap();
+    {
+        let conn = crate::core::db::Connection::open(crate::core::obligation::obligation_db_path(
+            &store.root,
+        ))
+        .unwrap();
+        conn.execute(
+            "UPDATE obligations SET state_commit_root = ' ' WHERE id = ?1",
+            [&id],
+        )
+        .unwrap();
+    }
+    let ctx = ValidationContext::new();
+    super::validate_obligations(&store, &ctx).unwrap();
+    assert_eq!(ctx.fail_count.load(Ordering::Relaxed), 1);
+    assert_eq!(ctx.pass_count.load(Ordering::Relaxed), 0);
+}
+
+#[test]
+fn obligation_gate_does_not_turn_malformed_requirements_into_a_pass() {
+    use crate::core::obligation::{add_obligation, complete_obligation, obligation_db_path};
+    let (_dir, store) = obligation_gate_fixture();
+    let id = add_obligation(&store, "malformed-attempt", "medium", "", "").unwrap();
+    complete_obligation(&store, &id, "state-commit").unwrap();
+    {
+        let conn = crate::core::db::Connection::open(obligation_db_path(&store.root)).unwrap();
+        conn.execute(
+            "UPDATE obligations SET required_proofs = '{' WHERE id = ?1",
+            [&id],
+        )
+        .unwrap();
+    }
+    let ctx = ValidationContext::new();
+    assert!(super::validate_obligations(&store, &ctx).is_err());
+    assert_eq!(ctx.pass_count.load(Ordering::Relaxed), 0);
+}
+
+#[test]
+fn obligation_gate_ignores_malformed_backlog_until_completion_or_dependency_requires_it() {
+    use crate::core::obligation::{
+        add_obligation, complete_obligation, get_obligation, list_obligations, obligation_db_path,
+        validate_obligation_graph,
+    };
+    for attempted_dependency in [false, true] {
+        let (_dir, store) = obligation_gate_fixture();
+        let backlog = add_obligation(&store, "malformed-backlog", "medium", "", "").unwrap();
+        let parent = add_obligation(&store, "future-parent", "medium", &backlog, "").unwrap();
+        let ready = add_obligation(&store, "unrelated-ready", "medium", "", "").unwrap();
+        complete_obligation(&store, &ready, "ready-state-commit").unwrap();
+        {
+            let conn = crate::core::db::Connection::open(obligation_db_path(&store.root)).unwrap();
+            conn.execute(
+                "UPDATE obligations SET required_proofs = '{' WHERE id = ?1",
+                [&backlog],
+            )
+            .unwrap();
+        }
+        // Listing and full-graph inspection remain strict; readiness only owns
+        // attempted nodes and their reachable dependencies.
+        assert!(get_obligation(&store, &backlog).is_err());
+        assert!(list_obligations(&store).is_err());
+        assert!(validate_obligation_graph(&store).is_err());
+        let unrelated = ValidationContext::new();
+        super::validate_obligations(&store, &unrelated).unwrap();
+        assert_eq!(unrelated.fail_count.load(Ordering::Relaxed), 0);
+        assert_eq!(unrelated.pass_count.load(Ordering::Relaxed), 1);
+
+        let attempted = if attempted_dependency {
+            &parent
+        } else {
+            &backlog
+        };
+        complete_obligation(&store, attempted, "new-state-commit").unwrap();
+        let required = ValidationContext::new();
+        assert!(super::validate_obligations(&store, &required).is_err());
+        assert_eq!(required.pass_count.load(Ordering::Relaxed), 0);
+    }
+}

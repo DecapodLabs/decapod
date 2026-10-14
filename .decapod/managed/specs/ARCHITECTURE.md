@@ -215,6 +215,24 @@ revision authority from its projection while retaining the original events.
 This uses existing task revisions and SQLite/Dactyl transactions, not another
 state store or execution runtime.
 
+## Current obligation evidence
+
+`core::obligation::Derivation` walks dependencies iteratively on one canonical
+broker-held read connection, with one captured time and memoized node results.
+The existing Dactyl/SQLite storage lock keeps cooperating local writers outside
+that read. Dependency readiness uses current derived results rather than stored
+`obligations.status`; deep chains and diamonds need no recursive call stack or
+cache mutation. Direct edge reads retain missing endpoints and cycles as
+verification failures. Whole-graph inspection counts every stored edge, including
+orphan sources. New obligations validate dependencies before transactional insert.
+
+`plugins::health::derive_health_from_connection` reads claims and proof events
+on that same connection. It never reads or updates `health_cache`. Health
+inspection uses the same derivation before refreshing that advisory cache.
+Exact claim IDs take precedence; subject aliases must be unique. Missing proof
+state is unsatisfied, while malformed storage and ambiguous aliases remain
+errors. No additional state store, daemon, or completion ledger is introduced.
+
 ## Proof and publication
 
 Plans, claims, trajectories, workunits, obligations, context bindings, validation
@@ -327,7 +345,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `23f6db43b9a8b25bd848a22259be36133baa680f8b046e76b30edf203e50f84c`
+- Repository signal fingerprint: `9677326548f3c7c8534c185c8babc69f5af3f6af15de30bc2875e8d3d65e4c0b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (185 files), `tests/` (190 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -1,5 +1,5 @@
 use crate::core::broker::DbBroker;
-use crate::core::db::params;
+use crate::core::db::{self, OptionalExtension, params};
 use crate::core::schemas;
 use crate::core::store::Store;
 use crate::core::{error, events};
@@ -179,7 +179,7 @@ pub struct ProofEvent {
 }
 
 pub fn compute_health(
-    _claim: &Claim,
+    claim: &Claim,
     events: &[ProofEvent],
     now_secs: i64,
 ) -> (HealthState, String) {
@@ -190,39 +190,161 @@ pub fn compute_health(
         );
     }
 
-    // Sort by timestamp descending
-    let mut sorted_events = events.to_vec();
-    sorted_events.sort_by(|a, b| b.ts.cmp(&a.ts));
+    // An invalid timestamp cannot be placed before or after another event.
+    // Fail closed rather than discarding it and reviving an older pass.
+    if events.iter().any(|event| event.claim_id != claim.id) {
+        return (
+            HealthState::ASSERTED,
+            "Proof event belongs to a different claim".to_string(),
+        );
+    }
+    let mut timed_events = Vec::with_capacity(events.len());
+    for event in events {
+        let timestamp = event.ts.strip_suffix('Z').unwrap_or(&event.ts);
+        let parsed = if !timestamp.is_empty() && timestamp.bytes().all(|c| c.is_ascii_digit()) {
+            timestamp.parse::<i64>().ok()
+        } else {
+            None
+        };
+        let Some(timestamp) = parsed else {
+            return (HealthState::ASSERTED, "Invalid proof timestamp".to_string());
+        };
+        timed_events.push((timestamp, event));
+    }
+    let latest_ts = timed_events.iter().map(|(ts, _)| *ts).max().unwrap();
+    if latest_ts > now_secs {
+        return (
+            HealthState::ASSERTED,
+            "Latest proof timestamp is in the future".to_string(),
+        );
+    }
+    let latest: Vec<&ProofEvent> = timed_events
+        .iter()
+        .filter(|(ts, _)| *ts == latest_ts)
+        .map(|(_, event)| *event)
+        .collect();
 
-    let latest = &sorted_events[0];
-
-    if latest.result == "fail" {
+    // Epoch timestamps have second resolution; event IDs do not establish
+    // insertion order. Any tied failure dominates, independent of row order.
+    if latest.iter().any(|event| event.result == "fail") {
         return (
             HealthState::CONTRADICTED,
-            format!("Latest proof failed at {}", latest.ts),
+            format!("Latest proof failed at {latest_ts}Z"),
         );
     }
-
-    let last_pass = sorted_events.iter().find(|e| e.result == "pass");
-
-    if let Some(pass) = last_pass {
-        let pass_ts: i64 = pass.ts.trim_end_matches('Z').parse().unwrap_or(0);
-        if now_secs > pass_ts + pass.sla_seconds {
-            return (
-                HealthState::STALE,
-                format!("Last passing proof ({}) expired SLA", pass.ts),
-            );
-        }
+    if latest.iter().any(|event| event.result != "pass") {
         return (
-            HealthState::VERIFIED,
-            format!("Valid proof recorded at {}", pass.ts),
+            HealthState::ASSERTED,
+            "Latest proof has an unknown result".to_string(),
         );
     }
 
+    let mut earliest_expiry = i64::MAX;
+    for pass in latest {
+        let Some(expiry) = latest_ts
+            .checked_add(pass.sla_seconds)
+            .filter(|_| pass.sla_seconds >= 0)
+        else {
+            return (
+                HealthState::ASSERTED,
+                "Latest proof has an invalid SLA".to_string(),
+            );
+        };
+        earliest_expiry = earliest_expiry.min(expiry);
+    }
+    // All equally recent passes must still be valid. Preserve the inclusive
+    // SLA boundary: a proof expires only after its expiry second.
+    if now_secs > earliest_expiry {
+        return (
+            HealthState::STALE,
+            format!("Last passing proof ({latest_ts}Z) expired SLA"),
+        );
+    }
     (
-        HealthState::ASSERTED,
-        "No passing proof events recorded".to_string(),
+        HealthState::VERIFIED,
+        format!("Valid proof recorded at {latest_ts}Z"),
     )
+}
+
+fn claim_from_row(row: &db::Row<'_>) -> db::Result<Claim> {
+    Ok(Claim {
+        id: row.get(0)?,
+        subject: row.get(1)?,
+        kind: row.get(2)?,
+        provenance: row.get::<_, Option<String>>(3)?.unwrap_or_default(),
+        created_at: row.get(4)?,
+    })
+}
+
+fn derive_claim_health_from_connection(
+    conn: &db::Connection,
+    claim: &Claim,
+    now_secs: i64,
+) -> Result<(HealthState, String), error::DecapodError> {
+    if !conn.has_table("proof_events")? {
+        return Ok((
+            HealthState::ASSERTED,
+            "Proof events table is missing".to_string(),
+        ));
+    }
+    let mut stmt = conn.prepare(
+        "SELECT event_id, claim_id, ts, surface, result, sla_seconds FROM proof_events WHERE claim_id = ?1",
+    )?;
+    let events = stmt
+        .query_map(params![claim.id], |row| {
+            Ok(ProofEvent {
+                event_id: row.get(0)?,
+                claim_id: row.get(1)?,
+                ts: row.get(2)?,
+                surface: row.get(3)?,
+                result: row.get(4)?,
+                sla_seconds: row.get(5)?,
+            })
+        })?
+        .collect::<db::Result<Vec<_>>>()?;
+    Ok(compute_health(claim, &events, now_secs))
+}
+
+/// Derive current proof authority on the caller's connection and clock.
+/// Never reads or writes the advisory cache, opens another connection, or
+/// initializes missing tables. Storage errors remain errors, not missing proof.
+/// Exact IDs take precedence over subjects; aliases must identify one claim.
+pub(crate) fn derive_health_from_connection(
+    conn: &db::Connection,
+    claim_ref: &str,
+    now_secs: i64,
+) -> Result<Option<(String, HealthState, String)>, error::DecapodError> {
+    if !conn.has_table("claims")? {
+        return Ok(None);
+    }
+    let exact = conn
+        .query_row(
+            "SELECT id, subject, kind, provenance, created_at FROM claims WHERE id = ?1",
+            params![claim_ref],
+            claim_from_row,
+        )
+        .optional()?;
+    let claim = if let Some(claim) = exact {
+        claim
+    } else {
+        let mut stmt = conn.prepare(
+            "SELECT id, subject, kind, provenance, created_at FROM claims WHERE subject = ?1 ORDER BY id LIMIT 2",
+        )?;
+        let aliases = stmt
+            .query_map(params![claim_ref], claim_from_row)?
+            .collect::<db::Result<Vec<_>>>()?;
+        if aliases.len() > 1 {
+            return Err(error::DecapodError::ValidationError(format!(
+                "HEALTH_CLAIM_AMBIGUOUS: subject '{claim_ref}' identifies multiple claims; use an exact claim ID"
+            )));
+        }
+        let Some(claim) = aliases.into_iter().next() else {
+            return Ok(None);
+        };
+        claim
+    };
+    let (state, reason) = derive_claim_health_from_connection(conn, &claim, now_secs)?;
+    Ok(Some((claim.id, state, reason)))
 }
 
 pub fn add_claim(
@@ -272,46 +394,25 @@ pub fn get_health(
     let broker = DbBroker::new(&store.root);
     let db_path = health_db_path(&store.root);
 
-    use std::time::{SystemTime, UNIX_EPOCH};
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs() as i64;
-
     // This read also refreshes the non-authoritative health cache, so it must
     // use a write connection. Do not classify it as a pure `.get` operation.
     broker.with_conn(&db_path, "decapod", None, "health.inspect", |conn| {
-        let claim: Claim = conn.query_row(
-            "SELECT id, subject, kind, provenance, created_at FROM claims WHERE id = ?1 OR subject = ?1",
-            params![claim_id],
-            |row| Ok(Claim {
-                id: row.get(0)?,
-                subject: row.get(1)?,
-                kind: row.get(2)?,
-                provenance: row.get(3)?,
-                created_at: row.get(4)?,
-            }),
-        ).map_err(|_| error::DecapodError::ValidationError(format!("AUTOREMEDIABLE_VALIDATION_ERROR code=HEALTH_CLAIM_NOT_FOUND severity=transient auto_remediable=true audience=agent agent_action=\"verify the claim ID exists, or create a new claim\" user_note=\"Health claim not found; the agent should locate or create the claim.\"\nClaim not found: {claim_id}")))?;
-
-        let mut stmt = conn.prepare("SELECT event_id, claim_id, ts, surface, result, sla_seconds FROM proof_events WHERE claim_id = ?1")?;
-        let event_iter = stmt.query_map(params![claim.id], |row| {
-            Ok(ProofEvent {
-                event_id: row.get(0)?,
-                claim_id: row.get(1)?,
-                ts: row.get(2)?,
-                surface: row.get(3)?,
-                result: row.get(4)?,
-                sla_seconds: row.get(5)?,
-            })
-        })?;
-
-        let events: Vec<ProofEvent> = event_iter.collect::<Result<Vec<_>, _>>().map_err(error::DecapodError::StorageError)?;
-        let (state, reason) = compute_health(&claim, &events, now);
+        use std::time::{SystemTime, UNIX_EPOCH};
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as i64;
+        let (resolved_id, state, reason) =
+            derive_health_from_connection(conn, claim_id, now)?.ok_or_else(|| {
+                error::DecapodError::ValidationError(format!(
+                    "AUTOREMEDIABLE_VALIDATION_ERROR code=HEALTH_CLAIM_NOT_FOUND severity=transient auto_remediable=true audience=agent agent_action=\"verify the claim ID exists, or create a new claim\" user_note=\"Health claim not found; the agent should locate or create the claim.\"\nClaim not found: {claim_id}"
+                ))
+            })?;
 
         // Update cache (non-authoritative)
         conn.execute(
             "INSERT OR REPLACE INTO health_cache(claim_id, computed_state, reason, updated_at) VALUES(?1, ?2, ?3, ?4)",
-            params![claim.id, format!("{:?}", state), reason, now_iso()],
+            params![resolved_id, format!("{:?}", state), reason, format!("{now}Z")],
         )?;
 
         Ok((state, reason))
@@ -324,40 +425,23 @@ pub fn get_all_health(
     let broker = DbBroker::new(&store.root);
     let db_path = health_db_path(&store.root);
 
-    use std::time::{SystemTime, UNIX_EPOCH};
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs() as i64;
-
     broker.with_conn(&db_path, "decapod", None, "health.list_all", |conn| {
-        let mut stmt = conn.prepare("SELECT id, subject, kind, provenance, created_at FROM claims")?;
-        let claim_iter = stmt.query_map([], |row| {
-            Ok(Claim {
-                id: row.get(0)?,
-                subject: row.get(1)?,
-                kind: row.get(2)?,
-                provenance: row.get(3)?,
-                created_at: row.get(4)?,
-            })
-        })?;
-
-        let mut results = Vec::new();
-        for claim_res in claim_iter {
-            let claim = claim_res?;
-            let mut ev_stmt = conn.prepare("SELECT event_id, claim_id, ts, surface, result, sla_seconds FROM proof_events WHERE claim_id = ?1")?;
-            let event_iter = ev_stmt.query_map(params![claim.id], |row| {
-                Ok(ProofEvent {
-                    event_id: row.get(0)?,
-                    claim_id: row.get(1)?,
-                    ts: row.get(2)?,
-                    surface: row.get(3)?,
-                    result: row.get(4)?,
-                    sla_seconds: row.get(5)?,
-                })
-            })?;
-            let events: Vec<ProofEvent> = event_iter.collect::<Result<Vec<_>, _>>().map_err(error::DecapodError::StorageError)?;
-            let (state, reason) = compute_health(&claim, &events, now);
+        use std::time::{SystemTime, UNIX_EPOCH};
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as i64;
+        if !conn.has_table("claims")? {
+            return Ok(Vec::new());
+        }
+        let mut stmt = conn
+            .prepare("SELECT id, subject, kind, provenance, created_at FROM claims ORDER BY id")?;
+        let claims = stmt
+            .query_map([], claim_from_row)?
+            .collect::<db::Result<Vec<_>>>()?;
+        let mut results = Vec::with_capacity(claims.len());
+        for claim in claims {
+            let (state, reason) = derive_claim_health_from_connection(conn, &claim, now)?;
             results.push((claim.id, state, reason));
         }
         Ok(results)

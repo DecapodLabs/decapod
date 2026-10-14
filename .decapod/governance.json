@@ -1,7 +1,8 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "8f5ff4cefa4aea5f3981396fd11f8b46f7057192",
+    "accepted_commit": "0884f77820520a691c0375b4638cc986233b3719",
+    "release": "v0.113.0",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -55,6 +56,14 @@
       "claim:complete-prepush-readiness": {
         "falsifier": "An empty, stale, skipped-required, mocked-code or missing-provider result authorizes publication, or CLI/RPC/publish bypasses the same boundary",
         "statement": "Public validate can authorize source PR publication only after all applicable actual source checks and candidate builds pass with genuine current material/provider evidence; release-only packaging is explicitly outside core source scope",
+        "status": "open"
+      },
+      "claim:consumer-local-proof": {
+        "falsifier": "Real non-Cargo failure passes, stale contract or target passes, or strict profile can downgrade",
+        "proof_refs": [
+          "tests/consumer_readiness.rs"
+        ],
+        "statement": "Reviewed consumer local proof executes required commands against exact candidate and target without weakening strict Decapod CI proof",
         "status": "open"
       },
       "claim:created-context": {
@@ -188,6 +197,15 @@
         "statement": "Material plan or phase contract changes revoke previous accepted state and progress before execution can continue; no-op changes preserve state",
         "status": "open"
       },
+      "claim:repeatable-bootstrap": {
+        "falsifier": "Forced init resets tracker or reviewed contract, or generated workflow lacks immutable context",
+        "proof_refs": [
+          "tests/init_ci_scaffolding.rs",
+          "tests/init_config_behavior.rs"
+        ],
+        "statement": "Both init entrypoints preserve omitted authored config choices; generated CI includes immutable range and full history",
+        "status": "open"
+      },
       "claim:strict-protocol-rollout": {
         "falsifier": "The fallback accepts altered or new carrier content after only changing the review digest, supported R failure falls back to H, or an old released executable is claimed to acquire unimplemented bootstrap behavior.",
         "proof_refs": [
@@ -220,64 +238,50 @@
       "trajectory:30ef4cc2d51da604": "The new already-authorized retry wording still needs generation by its exact updated binary; the existing controller can now admit the source catalog and own remote verification.",
       "trajectory:3ce44b0c351b9137": "Existing exact-source branch create, fast-forward and reuse already need no operator receipt; this change adds explicit authorized retry guidance, not a policy bypass.",
       "trajectory:42a30b6dcb8fd580": "Provider scheduling and ARM execution currently exceed the five-minute full target; only completed comparable runs can establish gain",
+      "trajectory:44ab164f90c301d9": "The existing traversal regression expected compact human output to contain every failure; use the complete structured failure list and preserve the exact traversal rejection assertion.",
       "trajectory:50af5d188a338fdf": "First rollout cannot retroactively teach the existing released controller this new protocol; use independently built supported controller custody without claiming automatic replacement.",
       "trajectory:576cf7a5bf4d1081": "Accepted master a56fd2d3 is user merge of release1402; only Cargo package version and changelog changed from d891d81d",
       "trajectory:62203fa208725296": "Four-platform release packaging is outside current source readiness; genuine artifact proof and resource limits must remain explicit",
       "trajectory:7d90d3eaf34454b7": "Five-minute end-to-end target remains subject to measured queue and unavoidable execution costs.",
       "trajectory:8a2fbdef1f3ce7d9": "All project tests and verification remain owned by plain decapod validate with Buildkite enabled",
       "trajectory:d347ed41a83079c8": "Historical README report is scoped to873ab797 and f2073bd4 and is not current candidate proof",
+      "trajectory:e765d893d1533fc1": "Standalone integration targets are not automatically scheduled by the finite accepted CI recipe; include the three consumer regression modules in required cli_contracts.",
       "trajectory:f000bb05667cb46e": "No actual four-target release artifact build is scheduled by ordinary source preflight;1049 latency improvement remains unmeasured",
       "trajectory:fa421ac6b37186ed": "Automatic trusted remote controller bootstrap is absent; a two-revision independent provider harness requires separate scope decision. Diagnostics do not claim to close that gap."
     }
   },
   "change": {
-    "id": "change_01M4Y2NS9BJEDS3X9T2A3A5KA5",
-    "base_commit": "8f5ff4cefa4aea5f3981396fd11f8b46f7057192",
+    "id": "change_01M4YADKHVP222S50ZMQHJEGMK",
+    "base_commit": "0884f77820520a691c0375b4638cc986233b3719",
     "target_base": "origin/master"
   },
   "claims": {
-    "consumer-local-proof": {
-      "statement": "Reviewed consumer local proof executes required commands against exact candidate and target without weakening strict Decapod CI proof",
-      "falsifier": "Real non-Cargo failure passes, stale contract or target passes, or strict profile can downgrade",
+    "current-obligation-evidence": {
+      "statement": "Obligation readiness derives from current transitive dependencies and authoritative HealthEngine evidence, not advisory caches; corrupt graphs and unmet CLI verification fail closed.",
+      "falsifier": "A required regression accepts stale cached proof, cached dependency completion, malformed requirements, dangling edges or cycles, or an unmet verify/graph command exits zero.",
       "status": "open",
       "proof_refs": [
-        "tests/consumer_readiness.rs"
-      ]
-    },
-    "repeatable-bootstrap": {
-      "statement": "Both init entrypoints preserve omitted authored config choices; generated CI includes immutable range and full history",
-      "falsifier": "Forced init resets tracker or reviewed contract, or generated workflow lacks immutable context",
-      "status": "open",
-      "proof_refs": [
-        "tests/init_ci_scaffolding.rs",
-        "tests/init_config_behavior.rs"
+        "tests/plugins/health.rs",
+        "tests/plugins/obligation.rs",
+        "tests/unit/plugins/health_tests.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "consumer-readiness-implementation",
-      "summary": "Add reviewed repository-local readiness and repair init workflow/config regressions; preserve strict profile and honest proof scope",
-      "input_digest": "sha256:c804753b9255557373b750cd6853761dde146bda6c06b5f45405a65eddc85aaa"
-    },
-    {
-      "id": "consumer-readiness-authorization-final",
-      "summary": "Bind local proofs to sealed authorization; preserve denies and credential provenance; regenerate release and documentation contracts",
-      "input_digest": "sha256:b7ab6cf9d93e00c0a03066f129b7f2b7c88e311f6f2914956f85e621a1aece6b"
-    },
-    {
-      "id": "consumer-readiness-required-tests",
-      "summary": "Wire consumer and init adversarial regressions into the existing required CLI test suite; preserve provider and genuine CLI evidence.",
-      "input_digest": "sha256:0b0af377d8ed206f73ecd89869aafce7c97150bd474d69c62231eb0d53bcd5f6"
-    },
-    {
-      "id": "consumer-readiness-structured-rejection",
-      "summary": "Assert protected-path traversal rejection through complete structured validation output; preserve actual passing consumer tests and provider failure logs.",
-      "input_digest": "sha256:eccb609b9c5df3477b8ca0f64b4c0a1f70f499b06d52967b1220728998c9e8c7"
+      "id": "current-obligation-evidence",
+      "summary": "Derive current obligation and HealthEngine readiness; strict graph verification, completion-attempt validation, adversarial regressions and material living specs. Source/format review passed; runtime proof awaits full validation.",
+      "input_digest": "sha256:c162387e81c465a1f11409a89d60cea440b7c7547bfea3aed5cfcc4660009993",
+      "proof_refs": [
+        "tests/plugins/health.rs",
+        "tests/plugins/obligation.rs",
+        "tests/unit/core/validate_tests.rs",
+        "tests/unit/plugins/health_tests.rs"
+      ]
     }
   ],
   "intents": {
-    "intent:change_01M4Y2NS9BJEDS3X9T2A3A5KA5": {
+    "intent:change_01M4YADKHVP222S50ZMQHJEGMK": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -287,11 +291,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M4Y2NS9BJEDS3X9T2A3A5KA5",
+      "id": "intent:change_01M4YADKHVP222S50ZMQHJEGMK",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Fix consumer repository readiness and bootstrap regressions (issue 1431)",
-      "refined_intent": "Fix consumer repository readiness and bootstrap regressions (issue 1431)",
+      "raw_intent": "Derive current obligation readiness from canonical proof and dependency evidence\n\nIssue #1430: remove health cache and stored obligation status as readiness authorities; fail closed on corrupt requirements, dangling edges, cycles and CLI verification failures; preserve unrelated backlog. Full required validation and draft PR publication; no merge.",
+      "refined_intent": "Derive current obligation readiness from canonical proof and dependency evidence\n\nIssue #1430: remove health cache and stored obligation status as readiness authorities; fail closed on corrupt requirements, dangling edges, cycles and CLI verification failures; preserve unrelated backlog. Full required validation and draft PR publication; no merge.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -299,203 +303,131 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": null,
+        "file_touch_budget": 25,
         "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Independently reproduce and repair issue 1431: supported bounded repository-local readiness with reviewed full source and proof contract, preserving strict Decapod proof; correct generated CI change context and init with configuration preservation",
+      "intent": "Issue 1430: derive obligation completion from canonical current proof and transitive dependency evidence; fail closed on malformed requirements, dangling edges and cycles; make verification command failures observable; validate completion attempts without requiring unrelated open backlog.",
       "phases": [],
       "proof_hooks": [
-        "decapod validate",
-        "Consumer local proof real success/failure and stale-contract regression tests"
+        "decapod validate --format json",
+        "Required plugins, library and CLI suites include adversarial obligation and HealthEngine tests"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Test-only repair reads full structured validation failures and requires the protected-path traversal rejection. Production interfaces, architecture and security enforcement are unchanged.",
-          "reviewed_code_fingerprint": "23f6db43b9a8b25bd848a22259be36133baa680f8b046e76b30edf203e50f84c",
-          "spec_material_hash": "32f087f7adb4450ee7484aaedf1a8109abbbbcca2cb696b8ed97820c8f636c19"
+          "reason": "Current content reviewed against final source: canonical connection-level proof derivation, iterative dependency readiness, strict requirements, explicit dangling/cycle handling, failing verification exits and scoped completion-attempt admission. Source reviewed; measured tests await plain full validate.",
+          "reviewed_code_fingerprint": "9677326548f3c7c8534c185c8babc69f5af3f6af15de30bc2875e8d3d65e4c0b",
+          "spec_material_hash": "0b0b6283905eb9345ef0b66a0dd5d6d4ad1575f2010282287096c127884b3ae5"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Test-only repair reads full structured validation failures and requires the protected-path traversal rejection. Production interfaces, architecture and security enforcement are unchanged.",
-          "reviewed_code_fingerprint": "23f6db43b9a8b25bd848a22259be36133baa680f8b046e76b30edf203e50f84c",
-          "spec_material_hash": "842761b840f64db7cfa86819060611a0c8d811a32ec951d5ee1675466fc12323"
+          "reason": "Current content reviewed against final source: canonical connection-level proof derivation, iterative dependency readiness, strict requirements, explicit dangling/cycle handling, failing verification exits and scoped completion-attempt admission. Source reviewed; measured tests await plain full validate.",
+          "reviewed_code_fingerprint": "9677326548f3c7c8534c185c8babc69f5af3f6af15de30bc2875e8d3d65e4c0b",
+          "spec_material_hash": "68130d4ee6c7dce2f2f8acd626cc6eccc4c5906234bf9fa226e253c9777e7ebc"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Test-only repair reads full structured validation failures and requires the protected-path traversal rejection. Production interfaces, architecture and security enforcement are unchanged.",
-          "reviewed_code_fingerprint": "23f6db43b9a8b25bd848a22259be36133baa680f8b046e76b30edf203e50f84c",
+          "reason": "Current authored security contract still applies: canonical Dactyl datastore, session and ownership enforcement, read coordination locks and exact-candidate publication. No credentials, permissions, provider settings, trust policy or external authority change. Readiness semantics are updated in the owning architecture/interface/semantics specs.",
+          "reviewed_code_fingerprint": "9677326548f3c7c8534c185c8babc69f5af3f6af15de30bc2875e8d3d65e4c0b",
           "spec_material_hash": "2ea32916117ded5ef055b3a5c1e5de60fe12d90aabc6b60818b80f77c5779c6a"
         }
       ],
-      "state": "DRAFT",
+      "state": "APPROVED",
       "stop_conditions": [
-        "No weakening of existing strict Decapod profile, no unsupported CI execution claims, no merge or credential changes"
+        "Stop for a real human decision, denied access or unsupported required validation contract; no merge."
       ],
-      "title": "Fix consumer repository readiness and bootstrap regressions (issue 1431)",
+      "title": "Derive current obligation readiness",
       "todo_ids": [
-        "bugs_01m4y2md9xhxs91r"
+        "bugs_01m4y9w8prbd8g51"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792014489Z"
+      "updated_at": "1792019404Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch",
-        "Existing strict profile and exact-target proof remain enforced; generic local profile cannot attest provider CI",
-        "Published v0.112.0 checksum-verified controller refreshes release projections; source-built artifact reserved for consumer smoke, not self-authorizing strict profile",
-        "Removed newly introduced local item macro rather than weakening credential provenance namespace analysis",
-        "Review confirms scoped local proof, not hosted CI or Nix daemon/deployment assurance; full validate owns build/test execution"
+        "Canonical SQLite/Dactyl and Git authority; no merge or provider settings changes; no new framework.",
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:46928b9a5e2fba8d7850cb4c5d9f6d02a5a81abd4195b33fcec2369bb4f9e7f9",
+      "artifact_hash": "sha256:6c027df26f37bd53645cd62e36bbfde06089125343a4790a74f150d348feb8c9",
       "checks": [
         {
-          "name": "authorization-independent-review",
-          "status": "passed"
-        },
-        {
-          "name": "clippy-first-candidate",
-          "status": "failed"
-        },
-        {
-          "name": "consumer-adversarial-tests",
-          "status": "passed"
-        },
-        {
-          "name": "consumer-profile-reproduction",
-          "status": "passed"
-        },
-        {
-          "name": "credential-provenance-regression",
-          "status": "failed"
-        },
-        {
-          "name": "finite-suite-coverage",
-          "status": "failed"
-        },
-        {
-          "name": "first-full-validation",
-          "status": "failed"
-        },
-        {
-          "name": "formatting",
-          "status": "passed"
-        },
-        {
-          "name": "full-readiness",
-          "status": "partial"
-        },
-        {
-          "name": "independent-contract-review",
-          "status": "passed"
-        },
-        {
-          "name": "init-workflow-tests",
-          "status": "passed"
-        },
-        {
-          "name": "real-consumer-cli-good-bad-repair",
-          "status": "passed"
-        },
-        {
-          "name": "required-build-test-proof",
+          "name": "candidate_runtime_tests",
           "status": "unavailable"
         },
         {
-          "name": "required-cli-tests",
+          "name": "git_diff_check",
+          "status": "passed"
+        },
+        {
+          "name": "released_0.113.0_baseline_reproduction",
           "status": "failed"
         },
         {
-          "name": "source-candidate-compilation",
+          "name": "rustfmt",
+          "status": "passed"
+        },
+        {
+          "name": "source_adversarial_review",
           "status": "passed"
         }
       ],
-      "current_phase": "validation-repair",
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M4Y2NS9BJEDS3X9T2A3A5KA5",
+            "intent_id": "intent:change_01M4YADKHVP222S50ZMQHJEGMK",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M4Y2NS9BJEDS3X9T2A3A5KA5",
+            "intent_id": "intent:change_01M4YADKHVP222S50ZMQHJEGMK",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M4Y2NS9VJ59NTGYFC6YCKD68",
+            "detail": "trajectory:branch_01M4YADKJJSX0CMNDGSPF9BJG2",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M4Y2NS9BJEDS3X9T2A3A5KA5",
+            "intent_id": "intent:change_01M4YADKHVP222S50ZMQHJEGMK",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M4Y2NS9VJ59NTGYFC6YCKD68",
+            "detail": "trajectory:branch_01M4YADKJJSX0CMNDGSPF9BJG2",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M4Y2NS9BJEDS3X9T2A3A5KA5",
+            "intent_id": "intent:change_01M4YADKHVP222S50ZMQHJEGMK",
             "kind": "trajectory_step_recorded",
             "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M4Y2NS9VJ59NTGYFC6YCKD68",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M4Y2NS9BJEDS3X9T2A3A5KA5",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M4Y2NS9VJ59NTGYFC6YCKD68",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M4Y2NS9BJEDS3X9T2A3A5KA5",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M4Y2NS9VJ59NTGYFC6YCKD68",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M4Y2NS9BJEDS3X9T2A3A5KA5",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
-          },
-          {
-            "detail": "trajectory:branch_01M4Y2NS9VJ59NTGYFC6YCKD68",
-            "event_id": "event:9",
-            "intent_id": "intent:change_01M4Y2NS9BJEDS3X9T2A3A5KA5",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M4Y2NS9VJ59NTGYFC6YCKD68": {
+          "branch_01M4YADKJJSX0CMNDGSPF9BJG2": {
             "evidence_only": true,
-            "id": "branch_01M4Y2NS9VJ59NTGYFC6YCKD68",
-            "intent_id": "intent:change_01M4Y2NS9BJEDS3X9T2A3A5KA5",
+            "id": "branch_01M4YADKJJSX0CMNDGSPF9BJG2",
+            "intent_id": "intent:change_01M4YADKHVP222S50ZMQHJEGMK",
             "steps": [
               {
-                "action": "investigation",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/readiness_profile.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "src/decapod/core/proof.rs",
-                  "src/decapod/core/native_proof.rs",
-                  "/workspace/shared/consumer-readiness-evidence/reproduction.json"
+                  "src/decapod/core/obligation.rs",
+                  "src/decapod/plugins/health.rs",
+                  "src/decapod/core/validate.rs",
+                  "Released CLI fixture: completed parent remains open after leaf completion; verify and validate-graph exit zero on failure; uncached pass rejected and later failed proof accepted through stale VERIFIED cache."
                 ],
                 "proof_refs": [
-                  "consumer-profile-reproduction"
+                  "released_0.113.0_baseline_reproduction"
                 ],
                 "scope": [
                   "root"
@@ -504,170 +436,72 @@
                 "validation_findings": []
               },
               {
-                "action": "implementation",
+                "action": "validation",
+                "command": "decapod validate --format json",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/decapod/core/repository_profile.rs",
-                  "src/decapod/core/validation_runtime/repository_host.rs",
-                  "src/decapod/core/readiness_evidence/mod.rs",
-                  "src/decapod/core/native_proof.rs",
-                  "src/decapod/lib.rs",
-                  "tests/consumer_readiness.rs",
-                  "tests/consumer_readiness.rs",
-                  "/workspace/shared/consumer-readiness-evidence/reviewed-source-delta.json"
+                  "src/decapod/core/obligation.rs",
+                  "src/decapod/core/validate.rs",
+                  "src/decapod/plugins/health.rs",
+                  "tests/plugins/obligation.rs",
+                  "tests/plugins/health.rs",
+                  "tests/unit/core/validate_tests.rs",
+                  "tests/unit/plugins/health_tests.rs",
+                  "Source review found and repaired unrelated malformed backlog scope leakage before checkpoint. Added 16 obligation integration, 7 validation gate and 15 health regressions in required existing suites. No candidate build or tests run outside validate."
                 ],
                 "proof_refs": [
-                  "independent-contract-review",
-                  "formatting",
-                  "required-build-test-proof"
+                  "source_adversarial_review",
+                  "rustfmt",
+                  "git_diff_check",
+                  "candidate_runtime_tests"
                 ],
                 "scope": [
+                  "Obligation current-proof/dependency derivation, HealthEngine read helper, completion validation, adversarial tests and specs",
                   "root"
                 ],
                 "sequence": 5,
                 "validation_findings": []
-              },
-              {
-                "action": "repair",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "src/decapod/core/external_action.rs",
-                  "src/decapod/core/docs_cli.rs",
-                  "src/decapod/core/validation_runtime/repository_host.rs",
-                  "tests/consumer_readiness.rs",
-                  "https://github.com/DecapodLabs/decapod/actions/runs/38636434864/artifacts/11928536993",
-                  "/workspace/shared/consumer-readiness-evidence/bk1563-validate.log",
-                  "/workspace/shared/consumer-readiness-evidence/ci-8abcea17-docs-sync.log"
-                ],
-                "proof_refs": [
-                  "first-full-validation",
-                  "clippy-first-candidate",
-                  "source-candidate-compilation",
-                  "authorization-independent-review"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "repair",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "/workspace/shared/consumer-readiness-evidence/ci-8abcea17-supabase.log"
-                ],
-                "proof_refs": [
-                  "credential-provenance-regression"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "validation-repair",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "assets/tools/source_ci_profile.rs",
-                  "tests/cli_contracts.rs",
-                  ".config/build/decapod.BUILD.bzl",
-                  "tests/init_config_behavior.rs",
-                  "tests/init_ci_scaffolding.rs",
-                  "/workspace/shared/consumer-readiness-evidence/ci-8a19787d-supabase.log",
-                  "/workspace/shared/consumer-readiness-evidence/fresh-local-proof/native-evidence"
-                ],
-                "proof_refs": [
-                  "finite-suite-coverage",
-                  "real-consumer-cli-good-bad-repair",
-                  "full-readiness"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 8,
-                "validation_findings": [
-                  "Standalone integration targets are not automatically scheduled by the finite accepted CI recipe; include the three consumer regression modules in required cli_contracts."
-                ]
-              },
-              {
-                "action": "validation-repair",
-                "custody_event_id": "event:9",
-                "observations": [
-                  "tests/init_config_behavior.rs",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "/workspace/shared/consumer-readiness-evidence/final-provider-check/gh-cli.log"
-                ],
-                "proof_refs": [
-                  "consumer-adversarial-tests",
-                  "init-workflow-tests",
-                  "required-cli-tests"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 9,
-                "validation_findings": [
-                  "The existing traversal regression expected compact human output to contain every failure; use the complete structured failure list and preserve the exact traversal rejection assertion."
-                ]
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "decapod validate --format json"
+      ],
       "destination": "pull request",
       "evidence": [
-        "/workspace/shared/consumer-readiness-evidence/bk1563-validate.log",
-        "/workspace/shared/consumer-readiness-evidence/ci-8a19787d-supabase.log",
-        "/workspace/shared/consumer-readiness-evidence/ci-8abcea17-docs-sync.log",
-        "/workspace/shared/consumer-readiness-evidence/ci-8abcea17-supabase.log",
-        "/workspace/shared/consumer-readiness-evidence/final-provider-check/gh-cli.log",
-        "/workspace/shared/consumer-readiness-evidence/fresh-local-proof/native-evidence",
-        "/workspace/shared/consumer-readiness-evidence/reproduction.json",
-        "/workspace/shared/consumer-readiness-evidence/reviewed-source-delta.json",
-        "https://github.com/DecapodLabs/decapod/actions/runs/38636434864/artifacts/11928536993",
-        "tests/consumer_readiness.rs"
+        "Released CLI fixture: completed parent remains open after leaf completion; verify and validate-graph exit zero on failure; uncached pass rejected and later failed proof accepted through stale VERIFIED cache.",
+        "Source review found and repaired unrelated malformed backlog scope leakage before checkpoint. Added 16 obligation integration, 7 validation gate and 15 health regressions in required existing suites. No candidate build or tests run outside validate."
       ],
       "inspected_files": [
-        "assets/tools/source_ci_profile.rs",
-        "src/decapod/core/native_proof.rs",
-        "src/decapod/core/proof.rs",
-        "src/decapod/core/readiness_profile.rs",
-        "src/decapod/core/validation_runtime.rs"
+        "src/decapod/core/obligation.rs",
+        "src/decapod/core/validate.rs",
+        "src/decapod/plugins/health.rs"
       ],
-      "intent_id": "intent:change_01M4Y2NS9BJEDS3X9T2A3A5KA5",
+      "intent_id": "intent:change_01M4YADKHVP222S50ZMQHJEGMK",
       "modified_files": [
-        ".config/build/decapod.BUILD.bzl",
-        ".decapod/managed/specs/VALIDATION.md",
-        "src/decapod/core/docs_cli.rs",
-        "src/decapod/core/external_action.rs",
-        "src/decapod/core/native_proof.rs",
-        "src/decapod/core/readiness_evidence/mod.rs",
-        "src/decapod/core/repository_profile.rs",
-        "src/decapod/core/validation_runtime/repository_host.rs",
-        "src/decapod/lib.rs",
-        "tests/cli_contracts.rs",
-        "tests/consumer_readiness.rs",
-        "tests/init_ci_scaffolding.rs",
-        "tests/init_config_behavior.rs"
+        "src/decapod/core/obligation.rs",
+        "src/decapod/core/validate.rs",
+        "src/decapod/plugins/health.rs",
+        "tests/plugins/health.rs",
+        "tests/plugins/obligation.rs",
+        "tests/unit/core/validate_tests.rs",
+        "tests/unit/plugins/health_tests.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
+        "Obligation current-proof/dependency derivation, HealthEngine read helper, completion validation, adversarial tests and specs",
         "root"
       ],
-      "run_id": "branch_01M4Y2NS9VJ59NTGYFC6YCKD68",
+      "run_id": "branch_01M4YADKJJSX0CMNDGSPF9BJG2",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m4y2md9xhxs91r",
+      "task_id": "bugs_01m4y9w8prbd8g51",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "Standalone integration targets are not automatically scheduled by the finite accepted CI recipe; include the three consumer regression modules in required cli_contracts.",
-        "The existing traversal regression expected compact human output to contain every failure; use the complete structured failure list and preserve the exact traversal rejection assertion."
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {

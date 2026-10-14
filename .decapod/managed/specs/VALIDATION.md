@@ -97,6 +97,25 @@ Validation checks repository evidence for these product contracts:
 intended task, agent ownership, lease, and control plane before execution resumes.
 A storage error must not be relabeled as an absent projection.
 
+## Obligation current-evidence regression proof
+
+`tests/plugins/obligation.rs` covers transitive and diamond completion without
+status-cache writes; uncached passing proofs; poisoned or stale `VERIFIED`
+cache entries; newer failure and expiry; malformed requirement arrays; dangling
+and orphan edges; cycles; deep chains; atomic add failures; and public CLI JSON
+plus failure exit codes. These tests run in the existing required plugins suite.
+`tests/unit/core/validate_tests.rs` checks completion attempts and legacy `met`
+projections while preserving unrelated open backlog.
+
+HealthEngine integration and unit tests exercise numeric chronology, tied
+outcome permutations, conservative tied expiry, invalid timestamps/results/SLAs,
+missing claims/tables, alias ambiguity, exact-ID precedence, storage-error
+propagation, and the cache-free connection helper. They remain in the required
+plugins and library suites. Source inspection and a reproduction against a
+released binary describe the defect; only execution against the current
+candidate establishes that the repair passes. Plain full `decapod validate`
+owns the configured build and test evidence before publication.
+
 ## Promotion Gates
 
 Full `decapod validate` outside CI proves the exact current workbranch against
@@ -451,7 +470,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `23f6db43b9a8b25bd848a22259be36133baa680f8b046e76b30edf203e50f84c`
+- Repository signal fingerprint: `9677326548f3c7c8534c185c8babc69f5af3f6af15de30bc2875e8d3d65e4c0b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (185 files), `tests/` (190 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
