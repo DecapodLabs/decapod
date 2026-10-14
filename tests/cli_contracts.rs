@@ -185,3 +185,9 @@ fn contract_fixture_is_private_at_creation() {
         0o700
     );
 }
+// The finite source-CI profile executes this target. Keep consumer readiness
+// and initialization regressions in that required suite rather than relying
+// on Cargo's discovery of otherwise unscheduled standalone test targets.
+mod consumer_readiness;
+mod init_ci_scaffolding;
+mod init_config_behavior;

@@ -451,7 +451,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `bfb800148abc78764c50cba4b8ced66a42a64ca84c6136105fe4d080be1b16dd`
+- Repository signal fingerprint: `70a6bf975ed8574676562f542285e7c3c46250c7d0a866ab1e26ab61fe0ae3dc`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (185 files), `tests/` (190 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -512,3 +512,9 @@ behavior. Init regressions distinguish top-level and `init with`, preserve exter
 tracker/proof choices across forced refreshes, and verify generated workflow event
 context and nonshallow history. Full Decapod validation still owns this project's
 build/test/source-CI proof and publication gate.
+
+The required `cli_contracts` target includes the consumer-readiness and both init
+regression modules explicitly, with their source/compile-data inputs declared in
+the Bazel target. Standalone Cargo test discovery is not evidence that the finite
+source-CI graph executed a new suite. Provider logs must show those module tests
+passing, alongside a separate genuine public CLI acceptance run.

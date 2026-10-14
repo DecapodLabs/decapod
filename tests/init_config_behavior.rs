@@ -1,9 +1,33 @@
 use std::fs;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use tempfile::{NamedTempFile, tempdir};
 
+fn resolve_decapod_bin() -> PathBuf {
+    let cargo_bin = env!("CARGO_BIN_EXE_decapod");
+    if let Ok(path) = Path::new(cargo_bin).canonicalize() {
+        return path;
+    }
+    if let Ok(runfiles_dir) = std::env::var("RUNFILES_DIR") {
+        let path = Path::new(&runfiles_dir).join("_main").join("decapod");
+        if path.exists() {
+            return path;
+        }
+    }
+    if let Some(parent) = std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(Path::to_path_buf))
+    {
+        let path = parent.join("decapod");
+        if path.exists() {
+            return path;
+        }
+    }
+    PathBuf::from(cargo_bin)
+}
+
 fn run_decapod(dir: &std::path::Path, args: &[&str]) -> std::process::Output {
-    Command::new(env!("CARGO_BIN_EXE_decapod"))
+    Command::new(resolve_decapod_bin())
         .args(args)
         .current_dir(dir)
         .output()
@@ -73,7 +97,7 @@ fn init_persists_remote_default_base_branch() {
 #[test]
 fn init_with_backend_cloud_saves_to_config() {
     let tmp = tempdir().expect("tempdir");
-    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let out = Command::new(resolve_decapod_bin())
         .args(["init", "with", "--backend", "cloud", "--force"])
         .current_dir(tmp.path())
         .output()
@@ -148,7 +172,7 @@ fn init_with_backend_local_is_default() {
 fn init_jev_persists_machine_key_without_repository_leakage() {
     let project = tempdir().expect("project tempdir");
     let data_home = tempdir().expect("data tempdir");
-    let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let output = Command::new(resolve_decapod_bin())
         .args(["init", "with", "--force", "--decision-provider", "jev"])
         .current_dir(project.path())
         .env("XDG_DATA_HOME", data_home.path())
@@ -219,7 +243,7 @@ fn init_refresh_requires_an_existing_project() {
 #[test]
 fn init_cloud_opt_in_does_not_store_secret_environment_values() {
     let tmp = tempdir().expect("tempdir");
-    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let out = Command::new(resolve_decapod_bin())
         .args(["init", "with", "--backend", "cloud", "--force"])
         .current_dir(tmp.path())
         .env("SUPABASE_URL", "https://private.supabase.local")
@@ -268,7 +292,7 @@ fn session_acquire_uses_machine_local_config_not_repo_session_file() {
         String::from_utf8_lossy(&out.stderr)
     );
 
-    let acquire = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let acquire = Command::new(resolve_decapod_bin())
         .args(["session", "acquire"])
         .current_dir(tmp.path())
         .env("XDG_CONFIG_HOME", config_home.path())
@@ -319,7 +343,7 @@ fn session_acquire_falls_back_to_workspace_when_machine_config_is_unusable() {
         String::from_utf8_lossy(&out.stderr)
     );
 
-    let acquire = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let acquire = Command::new(resolve_decapod_bin())
         .args(["session", "acquire"])
         .current_dir(tmp.path())
         .env("XDG_CONFIG_HOME", config_blocker.path())
@@ -349,7 +373,7 @@ fn session_acquire_falls_back_to_workspace_when_machine_config_is_unusable() {
         "unusable machine config path should not be replaced"
     );
 
-    let status = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let status = Command::new(resolve_decapod_bin())
         .args(["session", "status"])
         .current_dir(tmp.path())
         .env("XDG_CONFIG_HOME", config_blocker.path())
@@ -642,7 +666,7 @@ fn init_with_mixed_scripts_repo_uses_file_inference_noninteractively() {
 #[test]
 fn init_with_accepts_noninteractive_spec_seed_env() {
     let tmp = tempdir().expect("tempdir");
-    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let out = Command::new(resolve_decapod_bin())
         .args(["init", "with", "--force"])
         .current_dir(tmp.path())
         .env("DECAPOD_INIT_PRODUCT_NAME", "pincher-env")
