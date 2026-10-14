@@ -709,3 +709,44 @@ fn legacy_inconsistent_progress_is_rejected_at_shared_acceptance_boundary() {
             .contains("PHASES_INCOMPLETE")
     );
 }
+
+#[test]
+fn completing_final_phase_cannot_persist_inconsistent_legacy_done() {
+    let (dir, _) = progressed_plan(PlanState::Executing);
+    enter_phase(dir.path(), "second").unwrap();
+    let mut plan = load_plan(dir.path()).unwrap().unwrap();
+    // The old gate editor could leave a completed predecessor unsatisfied.
+    plan.phases[0].exit_gates[0].satisfied = false;
+    save_plan(dir.path(), &plan).unwrap();
+    let before = fs::read(plan_path(dir.path())).unwrap();
+    let error = complete_phase(dir.path(), "second")
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("PHASE_GATE_NOT_SATISFIED"));
+    assert_eq!(before, fs::read(plan_path(dir.path())).unwrap());
+}
+
+#[test]
+fn contract_revision_preserves_pending_spec_decisions() {
+    let (dir, _) = progressed_plan(PlanState::Done);
+    let mut plan = load_plan(dir.path()).unwrap().unwrap();
+    plan.spec_reviews.push(SpecReview {
+        path: PUBLICATION_REVIEW_SPECS[0].into(),
+        spec_material_hash: "prior material".into(),
+        reviewed_code_fingerprint: "prior code".into(),
+        disposition: SpecReviewDisposition::RequiresDecision,
+        reason: "Unresolved external authority question".into(),
+        decision_ref: None,
+    });
+    save_plan(dir.path(), &plan).unwrap();
+    let updated = patch_plan(
+        dir.path(),
+        PlanPatch {
+            intent: Some("Revised work".into()),
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    assert_acceptance_invalidated(&updated);
+    assert_eq!(updated.spec_reviews, plan.spec_reviews);
+}

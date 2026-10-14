@@ -926,6 +926,7 @@ pub fn complete_phase(
         if plan.phases.iter().all(|candidate| candidate.completed) {
             plan.state = PlanState::Done;
         }
+        validate_plan_progress(&plan)?;
         save_plan(project_root, &plan)?;
         Ok(plan)
     })

@@ -214,6 +214,11 @@
       "id": "plan-revision-source",
       "summary": "Invalidate accepted plan and all phase progress on material edits; preserve no-ops and require accepted phase transitions; adversarial cases authored, validation pending",
       "input_digest": "sha256:090b4790baf4958ecc11659b19f8f4e2c4d275c2851bbcdf081935cb3eb2b4bf"
+    },
+    {
+      "id": "plan-revision-repair",
+      "summary": "Repair final-phase atomicity found in independent review; reconcile reviewed source inventory after version-only release0.111.2; preserve initial validation failures and correct branch task identity",
+      "input_digest": "sha256:28542e72809643ecc58843ddfff2b33b34b1d66cf2ca1a08be27e1c33096a812"
     }
   ],
   "intents": {
@@ -239,7 +244,7 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 20,
+        "file_touch_budget": 21,
         "forbidden_paths": []
       },
       "deferred_questions": [],
@@ -266,22 +271,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Describes existing locked plan mutation invalidation and shared structural acceptance checks; no storage or harness expansion",
-          "reviewed_code_fingerprint": "d648d3300c45bfae720bbf7e71a259761969cd3ce32a0cf2b4e22c097897e3fb",
+          "reason": "Locked revision invalidation and shared structural checks remain accurate after final-phase atomicity repair",
+          "reviewed_code_fingerprint": "098c399a5a791f939345a96521031ad84d1f7db7f184173d68d8864c70aded75",
           "spec_material_hash": "77b4a522d06938885ac3502be7cc417b0456a06299beeaacf75e846eb4562d84"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documents material versus no-op contract edits, separate reapproval, phase replay and exact typed failures",
-          "reviewed_code_fingerprint": "d648d3300c45bfae720bbf7e71a259761969cd3ce32a0cf2b4e22c097897e3fb",
+          "reason": "Revision and separate reapproval semantics include final transition consistency; no new human confirmation required",
+          "reviewed_code_fingerprint": "098c399a5a791f939345a96521031ad84d1f7db7f184173d68d8864c70aded75",
           "spec_material_hash": "463c9efea584f8eb53e0e4da4b412ad720d1d0fec8bb02b550de6a10c360959c"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Existing local declared approval and external authority limits remain; revision invalidation prevents stale flags but neither authenticates humans nor changes policy settings",
-          "reviewed_code_fingerprint": "d648d3300c45bfae720bbf7e71a259761969cd3ce32a0cf2b4e22c097897e3fb",
+          "reason": "Local declared approval and external trust limits are unchanged; pending review decisions remain preserved by contract editors",
+          "reviewed_code_fingerprint": "098c399a5a791f939345a96521031ad84d1f7db7f184173d68d8864c70aded75",
           "spec_material_hash": "439b8a69e8db6ebf0d579a87f982878ed8e3e350c6a70c09a99b16c92523659b"
         }
       ],
@@ -295,17 +300,25 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791936676Z"
+      "updated_at": "1791936856Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:6a6d2ad9c58be675d974d413f65da65b5c37aa1e839223c74c3ad245859beeea",
+      "artifact_hash": "sha256:34b49ee86d21e5831465a8c38604692034daa3c0e87e15007d6617e04609586c",
       "checks": [
         {
           "name": "candidate_regressions",
           "status": "unavailable"
+        },
+        {
+          "name": "first_readiness",
+          "status": "failed"
+        },
+        {
+          "name": "independent_static_review",
+          "status": "passed"
         },
         {
           "name": "official_0.111.2_stale_acceptance_reproduction",
@@ -340,10 +353,17 @@
             "intent_id": "intent:change_01M4VVJF5X9AS4618BD5VJESBZ",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M4VVJF6TFY9PC58A2WCXGWQV",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M4VVJF5X9AS4618BD5VJESBZ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M4VVJF6TFY9PC58A2WCXGWQV": {
@@ -386,6 +406,22 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  ".decapod/config.toml"
+                ],
+                "proof_refs": [
+                  "first_readiness",
+                  "independent_static_review"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -401,6 +437,7 @@
       ],
       "intent_id": "intent:change_01M4VVJF5X9AS4618BD5VJESBZ",
       "modified_files": [
+        ".decapod/config.toml",
         "docs/agent/command-contracts.md",
         "src/decapod/core/validate.rs",
         "src/decapod/plan_governance.rs",
