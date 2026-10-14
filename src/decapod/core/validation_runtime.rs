@@ -34,6 +34,10 @@ pub struct ProofConfiguration {
     #[serde(default)]
     pub validation_buildkite_preflights: bool,
     pub required_profile: Option<ProfileDeclaration>,
+    #[serde(default)]
+    pub commands: Vec<super::proof::ProofDef>,
+    #[serde(default)]
+    pub repository_contract: Option<super::repository_profile::RepositoryContract>,
 }
 /// Parse only the canonical tracked project field. No environment fallback,
 /// receipt-selected profile or auto-reconciliation is permitted.
@@ -462,7 +466,10 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
                 profile::PlanningFailure::MissingProfile.to_string(),
             ));
         }
-        Some(profile) if profile.id != profile::REQUIRED_PROFILE => {
+        Some(profile)
+            if profile.id != profile::REQUIRED_PROFILE
+                && profile.id != super::repository_profile::REQUIRED_PROFILE =>
+        {
             return Err(invalid(
                 profile::PlanningFailure::UnknownProfile(profile.id.clone()).to_string(),
             ));
@@ -528,20 +535,64 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
     )
     .map_err(invalid)?;
     let release = None;
-    let executor = executor_contract::capture(
-        options,
-        budget,
-        &base,
-        configuration.validation_buildkite_preflights,
-    )?;
-    let catalog = profile::required_source_catalog_with_executor(
-        configuration.required_profile.as_ref(),
-        &sources,
-        &facts,
-        executor.as_ref(),
-    )
-    .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?;
-    executor_contract::verify_carrier_modes(options, budget, &head)?;
+    let repository_local = configuration
+        .required_profile
+        .as_ref()
+        .is_some_and(|p| p.id == super::repository_profile::REQUIRED_PROFILE);
+    let (executor, catalog) = if repository_local {
+        if configuration.validation_buildkite_preflights {
+            return Err(invalid(
+                "REPOSITORY_PROFILE_PROVIDER_UNSUPPORTED: repository-local proof cannot select Buildkite or claim hosted CI execution",
+            ));
+        }
+        // A candidate cannot downgrade Decapod's accepted strict contract by
+        // selecting the weaker local-only profile or repinning its own policy.
+        let accepted_entries = git(options, budget, &["ls-tree", "-z", &base, "--", CONFIG])?;
+        if !accepted_entries.is_empty() {
+            let accepted_config = git(options, budget, &["show", &format!("{base}:{CONFIG}")])?;
+            let accepted = proof_configuration(&accepted_config)?;
+            if accepted
+                .required_profile
+                .as_ref()
+                .is_some_and(|p| p.id == profile::REQUIRED_PROFILE)
+            {
+                return Err(invalid(
+                    "REQUIRED_PROFILE_DOWNGRADE: the accepted target requires Decapod's strict source-CI proof",
+                ));
+            }
+        }
+        let declaration = configuration
+            .required_profile
+            .as_ref()
+            .expect("profile checked above");
+        let contract = configuration.repository_contract.as_ref().ok_or_else(||
+            invalid("REPOSITORY_CONTRACT_REQUIRED: review and declare proof.repository_contract before local proof"))?;
+        let catalog = super::repository_profile::required_catalog(
+            declaration,
+            &sources,
+            &facts,
+            &configuration.commands,
+            contract,
+        )
+        .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?;
+        (None, catalog)
+    } else {
+        let executor = executor_contract::capture(
+            options,
+            budget,
+            &base,
+            configuration.validation_buildkite_preflights,
+        )?;
+        let catalog = profile::required_source_catalog_with_executor(
+            configuration.required_profile.as_ref(),
+            &sources,
+            &facts,
+            executor.as_ref(),
+        )
+        .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?;
+        executor_contract::verify_carrier_modes(options, budget, &head)?;
+        (executor, catalog)
+    };
     let configuration_paths = tracked
         .iter()
         .filter(|p| {
@@ -791,6 +842,14 @@ fn run(
         && !project.configuration.validation_buildkite_preflights
     {
         return Err(invalid("PROJECT_PREREQUISITES_PROVIDER_MISMATCH"));
+    }
+    if project
+        .configuration
+        .required_profile
+        .as_ref()
+        .is_some_and(|p| p.id == super::repository_profile::REQUIRED_PROFILE)
+    {
+        report.scope = super::repository_profile::READINESS_SCOPE;
     }
     report.stage_dispositions = project.catalog.stage_dispositions().to_vec();
     // Freeze source/governance/accepted target before any remote preparation or
@@ -2013,3 +2072,5 @@ mod tests;
 pub mod snapshot;
 
 mod executor_contract;
+
+pub mod repository_host;

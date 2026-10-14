@@ -29,6 +29,33 @@ fn init_scaffolds_github_action_workflow() {
     let content = fs::read_to_string(workflow_path).expect("read workflow file");
     assert!(content.contains("name: Decapod Validate"));
     assert!(content.contains("decapod validate"));
+    assert!(content.contains("fetch-depth: 0"));
+    assert!(content.contains("persist-credentials: false"));
+    for binding in [
+        "CHANGE_EVENT: ${{ github.event_name }}",
+        "CHANGE_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}",
+        "CHANGE_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}",
+        "DECAPOD_VALIDATE_REQUIRE_CHANGE_CONTEXT: 1",
+    ] {
+        assert!(
+            content.contains(binding),
+            "missing immutable CI binding: {binding}"
+        );
+    }
+    // A merge checkout is allowed, but its SHA/last parent cannot replace the
+    // provider's PR source head or the complete pre-push comparison range.
+    for unsafe_binding in [
+        "CHANGE_BASE: ${{ github.base_ref }}",
+        "CHANGE_HEAD: ${{ github.head_ref }}",
+        "CHANGE_HEAD: ${{ github.sha }}",
+        "CHANGE_BASE: HEAD^",
+    ] {
+        assert!(
+            !content.contains(unsafe_binding),
+            "unsafe binding: {unsafe_binding}"
+        );
+    }
+
     // Bootstrap only when .decapod is missing; --force rewrites living specs and
     // invents drift against the PR drift gate.
     assert!(content.contains("decapod init --proof"));

@@ -1169,3 +1169,168 @@ fn init_refresh_upgrades_legacy_proof_config_to_native_default() {
         Some(false)
     );
 }
+
+#[test]
+fn both_init_surfaces_preserve_authored_config_and_accurate_dry_run() {
+    for prefix in [vec!["init"], vec!["init", "with"], vec!["init", "wtih"]] {
+        let project = tempdir().expect("project tempdir");
+        fs::write(project.path().join("README.md"), "# Authored consumer\n").unwrap();
+        let first = run_decapod(
+            project.path(),
+            &[
+                "init",
+                "with",
+                "--all",
+                "--no-specs",
+                "--no-ci",
+                "--tracker-provider",
+                "beads",
+                "--tracker-project",
+                "consumer",
+                "--tracker-url",
+                "https://tracker.invalid/consumer",
+                "--diagram-style",
+                "mermaid",
+                "--no-container-workspaces",
+                "--isolation-mode",
+                "worktree",
+                "--protected-path",
+                "README.md",
+                "--approval-category",
+                "policy_changes",
+                "--declared-context-source",
+                "README.md",
+                "--proof-command",
+                "lint=echo checked",
+            ],
+        );
+        assert!(
+            first.status.success(),
+            "{}",
+            String::from_utf8_lossy(&first.stderr)
+        );
+        let path = project.path().join(".decapod/config.toml");
+        let mut authored = fs::read_to_string(&path).unwrap();
+        authored.push_str("\n# Preserve this authored extension and comment.\n[consumer_extension]\nowner = 'consumer-team'\n");
+        authored.push_str(&format!(
+            "\n[proof.repository_contract]\nreviewed_commands_digest = 'sha256:{}'\nsource_coverage = []\nexecutions = {{}}\n",
+            "0".repeat(64)
+        ));
+        fs::write(&path, &authored).unwrap();
+        let mut args = prefix.clone();
+        args.extend(["--all", "--force", "--no-specs", "--no-ci", "--dry-run"]);
+        let dry = run_decapod(project.path(), &args);
+        assert!(
+            dry.status.success(),
+            "{}",
+            String::from_utf8_lossy(&dry.stderr)
+        );
+        assert_eq!(
+            fs::read_to_string(&path).unwrap(),
+            authored,
+            "dry-run mutated config"
+        );
+        assert!(String::from_utf8_lossy(&dry.stdout).contains("config.toml: unchanged"));
+        assert!(
+            String::from_utf8_lossy(&dry.stdout)
+                .contains("Command contract digest (review aid; not approved): sha256:")
+        );
+        args.pop();
+        let apply = run_decapod(project.path(), &args);
+        assert!(
+            apply.status.success(),
+            "{}",
+            String::from_utf8_lossy(&apply.stderr)
+        );
+        assert_eq!(
+            fs::read_to_string(&path).unwrap(),
+            authored,
+            "refresh must preserve every authored setting and no-op bytes: {prefix:?}"
+        );
+    }
+}
+
+#[test]
+fn both_init_surfaces_apply_only_explicit_config_overrides() {
+    for prefix in [vec!["init"], vec!["init", "with"]] {
+        let project = tempdir().expect("project tempdir");
+        let first = run_decapod(
+            project.path(),
+            &[
+                "init",
+                "with",
+                "--all",
+                "--no-specs",
+                "--no-ci",
+                "--tracker-provider",
+                "beads",
+                "--tracker-project",
+                "consumer",
+                "--tracker-url",
+                "https://tracker.invalid/consumer",
+                "--diagram-style",
+                "mermaid",
+            ],
+        );
+        assert!(
+            first.status.success(),
+            "{}",
+            String::from_utf8_lossy(&first.stderr)
+        );
+        let path = project.path().join(".decapod/config.toml");
+        let mut authored: toml::Value =
+            toml::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+        // Neither a default-valued backend option nor a default-valued diagram
+        // style may be confused with omission. Avoid any cloud execution here.
+        authored["repo"]["backend"] = "cloud".into();
+        authored["init"]["ci"] = true.into();
+        authored["init"]["specs"] = true.into();
+        authored.as_table_mut().unwrap().insert(
+            "consumer_extension".into(),
+            toml::Value::try_from(serde_json::json!({"owner":"consumer-team"})).unwrap(),
+        );
+        fs::write(&path, toml::to_string_pretty(&authored).unwrap()).unwrap();
+        let before = fs::read_to_string(&path).unwrap();
+        let mut args = prefix.clone();
+        args.extend([
+            "--force",
+            "--no-specs",
+            "--no-ci",
+            "--tracker-provider",
+            "decapod",
+            "--diagram-style",
+            "ascii",
+            "--backend",
+            "local",
+            "--no-container-workspaces",
+            "--dry-run",
+        ]);
+        let dry = run_decapod(project.path(), &args);
+        assert!(
+            dry.status.success(),
+            "{}",
+            String::from_utf8_lossy(&dry.stderr)
+        );
+        assert_eq!(fs::read_to_string(&path).unwrap(), before);
+        assert!(String::from_utf8_lossy(&dry.stdout).contains("config.toml: would update"));
+        args.pop();
+        let apply = run_decapod(project.path(), &args);
+        assert!(
+            apply.status.success(),
+            "{}",
+            String::from_utf8_lossy(&apply.stderr)
+        );
+        let actual: toml::Value = toml::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+        authored["repo"]["backend"] = "local".into();
+        authored["repo"]["external_tracker"] = false.into();
+        authored["repo"]["container_workspaces"] = false.into();
+        authored["tracker"]["provider"] = "decapod".into();
+        authored["init"]["diagram_style"] = "ascii".into();
+        authored["init"]["ci"] = false.into();
+        authored["init"]["specs"] = false.into();
+        assert_eq!(
+            actual, authored,
+            "unrequested config changes for {prefix:?}"
+        );
+    }
+}

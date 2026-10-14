@@ -62,6 +62,8 @@ pub struct CheckKey {
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum CheckKind {
+    /// Repository-authored local command; never a hosted CI or candidate-build claim.
+    RepositoryLocal,
     SourceCi,
     DerivedRelease,
     CandidateBuild,
@@ -514,15 +516,34 @@ pub fn verify(
     if plan.checks.is_empty() {
         failures.push(Failure::EmptyPlan);
     }
-    // Core source-PR readiness requires the actual CI suite and candidate build.
-    // Explicitly planned predictive release rows still require complete evidence;
-    // they are not implicitly mandatory for an unrelated source PR scope.
-    for kind in [CheckKind::SourceCi, CheckKind::CandidateBuild] {
-        if !plan.checks.iter().any(|c| {
-            c.kind == kind
-                && (kind != CheckKind::CandidateBuild || c.requirement == Requirement::Execute)
-        }) {
-            failures.push(Failure::IncompletePlan);
+    // A distinct local-contract plan cannot masquerade as provider CI or an
+    // artifact-producing candidate build. No mixed scopes, skipped local checks
+    // or remote execution are admissible. Strict source-PR plans retain their
+    // complete suite and mandatory real candidate build exactly as before.
+    let repository_local = plan
+        .checks
+        .iter()
+        .any(|c| c.kind == CheckKind::RepositoryLocal);
+    if repository_local {
+        if plan.buildkite_enabled
+            || plan.checks.iter().any(|c| {
+                c.kind != CheckKind::RepositoryLocal
+                    || c.executor != Provider::Native
+                    || c.key.provider != Provider::Native
+                    || c.key.profile != crate::core::repository_profile::REQUIRED_PROFILE
+                    || c.requirement != Requirement::Execute
+            })
+        {
+            failures.push(Failure::InvalidPlan);
+        }
+    } else {
+        for kind in [CheckKind::SourceCi, CheckKind::CandidateBuild] {
+            if !plan.checks.iter().any(|c| {
+                c.kind == kind
+                    && (kind != CheckKind::CandidateBuild || c.requirement == Requirement::Execute)
+            }) {
+                failures.push(Failure::IncompletePlan);
+            }
         }
     }
     if !is_digest(&plan.policy_digest) || !is_digest(&plan.source_inventory_digest) {

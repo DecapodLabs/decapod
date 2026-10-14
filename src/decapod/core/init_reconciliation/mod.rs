@@ -86,6 +86,7 @@ const SOURCE_FILES: &[&str] = &[
     "go.sum",
     "Makefile",
     "justfile",
+    "Justfile",
     "CMakeLists.txt",
     "BUILD.bazel",
     "MODULE.bazel",
@@ -143,6 +144,8 @@ pub struct ReconciliationReport {
     pub merge_ready: bool,
     pub proof_status: String,
     pub inventory_digest: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub command_contract_digest: Option<String>,
     pub discovered_sources: BTreeMap<String, String>,
     pub repair_tasks: Vec<RepairTask>,
 }
@@ -303,7 +306,7 @@ pub fn discover_source_inventory(root: &Path) -> Result<SourceInventory, Decapod
     })
 }
 
-fn is_workflow(path: &str) -> bool {
+pub(crate) fn is_workflow(path: &str) -> bool {
     path.starts_with(".github/workflows/")
         || path.starts_with(".buildkite/")
         || path.starts_with(".circleci/")
@@ -361,6 +364,9 @@ pub fn inspect(
         merge_ready: false,
         proof_status: "not_run".into(),
         inventory_digest: None,
+        command_contract_digest: proof.repository_contract.as_ref().and_then(|contract| {
+            crate::core::repository_profile::command_contract_digest(&proof.commands, contract).ok()
+        }),
         discovered_sources: BTreeMap::new(),
         repair_tasks: Vec::new(),
     };
@@ -399,6 +405,21 @@ pub fn inspect(
     match proof.required_profile.as_ref() {
         None => report.task("MISSING_REQUIRED_PROFILE", "Select and review a complete required profile", vec![".decapod/config.toml".into()],
             "Agent: reconcile existing build, test, CI and intended proof coverage, preserving separately scoped release requirements, then declare proof.required_profile.id and reviewed_sources_digest. Review complete coverage before updating a digest; checkpoint and run decapod validate to execute configured proof."),
+        Some(profile) if profile.id == crate::core::repository_profile::REQUIRED_PROFILE => {
+            if proof.validation_buildkite_preflights {
+                report.task("REPOSITORY_PROFILE_PROVIDER_UNSUPPORTED", "Select the repository-local proof route", vec![".decapod/config.toml".into()],
+                    "The repository profile proves required local commands only; it cannot select Buildkite or attest hosted workflow execution.");
+            }
+            match proof.repository_contract.as_ref() {
+                None => report.task("REPOSITORY_CONTRACT_REQUIRED", "Review the local command execution and source coverage contract", vec![".decapod/config.toml".into()],
+                    "Declare proof.repository_contract with explicit execution tools, required command coverage for every discovered workflow, and a reviewed_commands_digest. This is local proof, not evidence that hosted CI or release packaging ran."),
+                Some(contract) => {
+                    if let Err(error) = crate::core::repository_profile::validate_contract(profile, &inventory, &proof.commands, contract) {
+                        report.task("REPOSITORY_CONTRACT_INVALID", "Reconcile the reviewed local proof contract", vec![".decapod/config.toml".into()], error.to_string());
+                    }
+                }
+            }
+        }
         Some(profile) if profile.id != readiness_profile::REQUIRED_PROFILE => report.task("UNKNOWN_REQUIRED_PROFILE", "Implement or select a supported required profile", vec![".decapod/config.toml".into()],
             format!("The profile {:?} has no supported complete-suite adapter. Preserve the declared intent and add the missing adapter rather than replacing it with an empty profile.", profile.id)),
         Some(profile) => {
@@ -429,7 +450,12 @@ pub fn inspect(
         })
         .cloned()
         .collect();
-    if !unknown.is_empty() {
+    if !unknown.is_empty()
+        && !proof
+            .required_profile
+            .as_ref()
+            .is_some_and(|profile| profile.id == crate::core::repository_profile::REQUIRED_PROFILE)
+    {
         report.task("UNKNOWN_CI_CONTRACT", "Adopt unsupported CI contracts into required proof", unknown,
             "Preserve these authored workflows. Review their jobs, conditions, matrices and helpers, then add a faithful supported profile adapter or an explicit proven exclusion. Discovery does not execute YAML or assume these checks passed.");
     }

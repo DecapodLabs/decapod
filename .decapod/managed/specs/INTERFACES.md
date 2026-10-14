@@ -369,8 +369,8 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2b5f83a2b718323d923082f8fd9008d8b47729c478f0a3212d0f22b668ffc037`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (183 files), `tests/` (189 files)
+- Repository signal fingerprint: `ad4df983c31c1eeca2e45b16c2a72680989482eb30c86fb3976025fc82af36e9`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (185 files), `tests/` (190 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -397,3 +397,19 @@ The public plan CLI regressions live in the existing branch-enforced
 standalone predecessor was not selected by the source-PR graph; keeping all
 three cases in this executed target makes CLI routing, reapproval, and phase
 replay behavior part of the normal required proof without changing its adapter.
+
+## Consumer readiness and repeatable initialization
+
+`proof.required_profile.id = "repo.pr-readiness.v1"` is the supported local consumer
+profile. `proof.repository_contract` declares a reviewed command digest,
+`source_coverage` rows and per-command `executions`. Every discovered workflow has
+exactly one explicit mapping to real required commands; all configured commands
+execute. Absolute installed programs, declared runtime/tool files, exact environment,
+working directory and timeout are configuration-bound. Unknown IDs, stale pins,
+empty/optional commands and missing or duplicate coverage fail closed. Init exposes
+both discovered digests for review without updating them or implying proof success.
+
+`init` and `init with` share option-provenance-aware preservation: omitted defaults
+retain authored configuration even under `--force`; explicit arguments still change
+it. The generated GitHub validation workflow fetches complete history and supplies
+immutable `CHANGE_EVENT`, `CHANGE_BASE` and `CHANGE_HEAD` to CI-local validation.

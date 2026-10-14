@@ -1008,6 +1008,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
       - name: Cache cargo-binstall and Decapod
@@ -1026,6 +1029,12 @@ jobs:
         run: cargo binstall --no-confirm decapod
       - name: Decapod Validate
         env:
+          # Bind validation to the immutable provider range. Never substitute
+          # branch names, HEAD^, or a PR merge checkout for the event's head.
+          CHANGE_EVENT: ${{ github.event_name }}
+          CHANGE_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          CHANGE_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+          DECAPOD_VALIDATE_REQUIRE_CHANGE_CONTEXT: 1
           DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
           # Post-merge: tree-local binary fingerprints lag the last published pin.
           # PRs still enforce release-bound pins + drift.

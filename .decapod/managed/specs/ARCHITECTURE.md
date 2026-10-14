@@ -327,8 +327,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2b5f83a2b718323d923082f8fd9008d8b47729c478f0a3212d0f22b668ffc037`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (183 files), `tests/` (189 files)
+- Repository signal fingerprint: `ad4df983c31c1eeca2e45b16c2a72680989482eb30c86fb3976025fc82af36e9`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (185 files), `tests/` (190 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -363,3 +363,22 @@ when the accepted base predates dual-root support. That path still requires H’
 helper closure to match the controller. Unknown carrier semantics, unsupported
 R, and native-controller mismatches remain explicit blockers. A released binary
 cannot acquire new protocol code merely because its repository source changed.
+
+## Repository-declared local proof
+
+Consumer repositories select `repo.pr-readiness.v1` through the canonical proof
+configuration. `core/repository_profile.rs` checks complete discovered workflow
+mapping, required commands and explicit execution declarations against reviewed
+source and command digests. `validation_runtime/repository_host.rs` translates
+that reviewed local contract into the existing bounded native runner; it does not
+interpret workflow YAML or introduce an orchestration engine. Every command runs
+in the frozen source snapshot, with byte-measured declared tool inputs and fresh
+accepted-target queries. Source/configuration/tool/target drift invalidates proof.
+
+The resulting `repository_local_readiness` scope attests those local commands,
+not hosted workflow jobs, platform matrices or release/deployment execution. The
+repository authors the semantic coverage and transitive toolchain declaration;
+the kernel enforces freshness, execution and custody mechanically. Existing
+Decapod source-CI adapters retain their stricter authority and cannot be downgraded
+by a candidate switching to local proof. Unsupported remote/daemon operations
+remain explicit limitations, rather than fabricated native evidence.

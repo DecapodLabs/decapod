@@ -451,8 +451,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2b5f83a2b718323d923082f8fd9008d8b47729c478f0a3212d0f22b668ffc037`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (183 files), `tests/` (189 files)
+- Repository signal fingerprint: `ad4df983c31c1eeca2e45b16c2a72680989482eb30c86fb3976025fc82af36e9`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (185 files), `tests/` (190 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -500,3 +500,15 @@ complete hosted dual-root rollout. Provider authentication remains covered by
 its own checks. A hosted opt-in proof requires a subsequent ordinary work branch
 whose accepted target already contains the protocol, followed by full plain
 validation against that branch; release dispatch is unnecessary.
+
+## Consumer local-proof regressions
+
+The repository-local profile is tested in fresh non-Cargo Git repositories using
+actual source-inspecting native commands, including success and nonzero failure.
+Contract tests cover unknown IDs, stale workflow and command pins, full mapping,
+requiredness, strict-profile downgrade rejection and immutable execution/target
+boundaries. The native profile does not attest hosted CI or Nix daemon/deployment
+behavior. Init regressions distinguish top-level and `init with`, preserve external
+tracker/proof choices across forced refreshes, and verify generated workflow event
+context and nonshallow history. Full Decapod validation still owns this project's
+build/test/source-CI proof and publication gate.

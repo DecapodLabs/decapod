@@ -390,6 +390,14 @@ fn structured_init_proof_config() -> DecapodProjectConfig {
         id: "authored.profile.v1".to_string(),
         reviewed_sources_digest: format!("sha256:{}", "0".repeat(64)),
     });
+    config.proof.repository_contract = Some(core::repository_profile::RepositoryContract {
+        reviewed_commands_digest: format!("sha256:{}", "1".repeat(64)),
+        source_coverage: vec![core::repository_profile::SourceCoverage {
+            source: ".github/workflows/consumer.yml".into(),
+            commands: vec!["lint".into(), "smoke".into()],
+        }],
+        executions: BTreeMap::new(),
+    });
     config.proof.commands = vec![
         proof::ProofDef {
             name: "lint".to_string(),
@@ -518,4 +526,60 @@ fn repository_shape_does_not_invent_product_or_runtime_guarantees() {
     assert!(direction.contains("confirm interfaces"));
     assert!(!direction.contains("durable state ownership"));
     assert!(!direction.contains("proof-gated releases"));
+}
+
+#[test]
+fn unspecified_init_defaults_do_not_reset_authored_settings() {
+    for subcommand in [None, Some("with"), Some("wtih")] {
+        let mut args = vec!["decapod", "init"];
+        if let Some(subcommand) = subcommand {
+            args.push(subcommand);
+        }
+        args.extend(["--all", "--force", "--no-specs", "--no-ci"]);
+        let matches = Cli::command().try_get_matches_from(&args).unwrap();
+        let group = matches.subcommand_matches("init").unwrap();
+        let options = group.subcommand_matches("with").unwrap_or(group);
+        let parsed = Cli::from_arg_matches(&matches).unwrap();
+        let mut config = structured_init_proof_config();
+        config.repo.set_backend(cli::BackendType::Cloud);
+        config.init.diagram_style = InitDiagramStyle::Mermaid;
+        config.repo.external_tracker = true;
+        config.tracker.provider = "beads".into();
+        config.tracker.project = Some("consumer".into());
+        let mut init = match parsed.command {
+            Command::Init(group) => match group.command {
+                Some(InitCommand::With(with)) => *with,
+                _ => init_with_from_config(
+                    &DecapodProjectConfig::default(),
+                    PathBuf::from("."),
+                    true,
+                    false,
+                ),
+            },
+            _ => unreachable!(),
+        };
+        preserve_unspecified_init_options(&mut init, &config, options);
+        let roundtrip = config_from_init_with(&init, config.repo.clone());
+        assert_eq!(roundtrip.repo.effective_backend(), cli::BackendType::Cloud);
+        assert_eq!(roundtrip.init.diagram_style, InitDiagramStyle::Mermaid);
+        assert_eq!(roundtrip.tracker.provider, "beads");
+        assert!(roundtrip.repo.external_tracker);
+        assert_eq!(
+            roundtrip.proof.repository_contract,
+            config.proof.repository_contract
+        );
+    }
+}
+
+#[test]
+fn init_config_preserves_reviewed_proof_order_and_contract_digest() {
+    let mut config = structured_init_proof_config();
+    config.proof.commands.reverse();
+    let init = init_with_from_config(&config, PathBuf::from("."), false, false);
+    let roundtrip = config_from_init_with(&init, config.repo.clone());
+    assert_eq!(
+        serde_json::to_value(&roundtrip.proof).unwrap(),
+        serde_json::to_value(&config.proof).unwrap(),
+        "re-init must not reorder reviewed commands or silently invalidate their contract"
+    );
 }

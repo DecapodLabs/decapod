@@ -161,3 +161,19 @@ and project-specific evidence sections are authorable and must survive refresh.
 3.  **Remediate When Supported:** Identify the violated invariant, perform the sanctioned remediation, update the affected artifact, and re-run the failed validation.
 4.  **Continue the Task:** A recoverable failure means the work remains incomplete. Continue toward publication after revalidation succeeds.
 5.  **Escalate Real Blockers:** Do not attempt "brute-force" argument variations. Stop for human judgment when the result is a decision gate, contradiction, unsupported remediation, or unavailable proof.
+
+## Consumer repository readiness
+
+`UNKNOWN_REQUIRED_PROFILE` is not repaired by copying Decapod's own profile into
+a consumer. Review its actual proof contract and select `repo.pr-readiness.v1`
+with explicit required local commands and `proof.repository_contract`, as described
+in `config-schema.md`. `REPOSITORY_CONTRACT_REQUIRED`, `STALE_COMMAND_CONTRACT` and
+source-inventory mismatches require source-grounded review and explicit declarations;
+init does not auto-approve a digest. Missing tools or unsupported daemon/provider
+behavior remain actionable blockers. Local proof does not claim hosted-CI coverage.
+
+Both `init` and `init with` retain authored tracker/proof/context settings when
+options are omitted, including with `--force`. Explicit flags can change those
+settings. Dry-run distinguishes config.toml from scaffold documentation. Generated
+GitHub validation uses full checkout history and immutable event/base/head context;
+never replace those revisions with mutable branch names or omit them in CI.

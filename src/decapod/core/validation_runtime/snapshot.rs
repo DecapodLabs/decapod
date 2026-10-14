@@ -1131,6 +1131,7 @@ mod tests {
             configuration: ProofConfiguration {
                 validation_buildkite_preflights: true,
                 required_profile: Some(declaration),
+                ..ProofConfiguration::default()
             },
             sources,
             executor: None,

@@ -1145,3 +1145,63 @@ fn core_source_plan_needs_no_release_but_never_drops_planned_release_or_candidat
             .contains(&Failure::Missing(release))
     );
 }
+
+#[test]
+fn repository_local_plan_is_distinct_and_cannot_mix_or_claim_remote_proof() {
+    let (mut plan, identity, facts, mut proof) = fixture();
+    plan.checks.truncate(1);
+    proof.results.truncate(1);
+    plan.checks[0].kind = CheckKind::RepositoryLocal;
+    plan.checks[0].key.provider = Provider::Native;
+    plan.checks[0].key.profile = crate::core::repository_profile::REQUIRED_PROFILE.into();
+    proof.results[0].key = plan.checks[0].key.clone();
+    proof.expected_plan_digest = plan.digest().unwrap();
+    assert_eq!(
+        verify(&plan, &identity, &facts, &proof).verdict,
+        Verdict::Ready
+    );
+    for kind in [CheckKind::SourceCi, CheckKind::CandidateBuild] {
+        let mut mixed = plan.clone();
+        let mut other = mixed.checks[0].clone();
+        other.key.job = "other-scope".into();
+        other.kind = kind;
+        mixed.checks.push(other);
+        assert!(
+            assert_not_ready(&mixed, &identity, &facts, &proof)
+                .failures
+                .contains(&Failure::InvalidPlan)
+        );
+    }
+    for provider in [Provider::GithubActions, Provider::Buildkite] {
+        let mut remote = plan.clone();
+        remote.checks[0].executor = provider;
+        assert!(
+            assert_not_ready(&remote, &identity, &facts, &proof)
+                .failures
+                .contains(&Failure::InvalidPlan)
+        );
+    }
+    let mut remote = plan.clone();
+    remote.buildkite_enabled = true;
+    assert!(
+        assert_not_ready(&remote, &identity, &facts, &proof)
+            .failures
+            .contains(&Failure::InvalidPlan)
+    );
+    let mut impersonated = plan.clone();
+    impersonated.checks[0].key.profile = crate::core::readiness_profile::REQUIRED_PROFILE.into();
+    assert!(
+        assert_not_ready(&impersonated, &identity, &facts, &proof)
+            .failures
+            .contains(&Failure::InvalidPlan)
+    );
+    for kind in [CheckKind::SourceCi, CheckKind::CandidateBuild] {
+        let mut incomplete = plan.clone();
+        incomplete.checks[0].kind = kind;
+        assert!(
+            assert_not_ready(&incomplete, &identity, &facts, &proof)
+                .failures
+                .contains(&Failure::IncompletePlan)
+        );
+    }
+}

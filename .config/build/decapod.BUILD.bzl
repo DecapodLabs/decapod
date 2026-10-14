@@ -272,7 +272,7 @@ def decapod_targets():
                 "src/decapod/core/release_metadata.rs",
             ] if path in ["tests/source_ci_profile_policy.rs", "tests/ci_checkout_policy.rs"] else [path],
             crate_root = path,
-            compile_data = native.glob(["assets/tools/source_ci/*.sh"]) + ([".github/actions/ci-context/action.yml"] if path == "tests/ci_event_context_policy.rs" else [".github/workflows/ci.yml", ".github/workflows/decapod-validate.yml", ".github/workflows/docs.yml", ".github/workflows/docs_sync.yml"] if path == "tests/integration_custody_policy.rs" else ["tests/fixtures/native_proof_fixture.rs"] if path == "tests/native_proof_execution.rs" else ["Cargo.toml", "Cargo.lock"] if path == "tests/release_dependency_policy.rs" else [
+            compile_data = native.glob(["assets/tools/source_ci/*.sh"]) + (["src/decapod/lib.rs"] if path == "tests/consumer_readiness.rs" else [".github/actions/ci-context/action.yml"] if path == "tests/ci_event_context_policy.rs" else [".github/workflows/ci.yml", ".github/workflows/decapod-validate.yml", ".github/workflows/docs.yml", ".github/workflows/docs_sync.yml"] if path == "tests/integration_custody_policy.rs" else ["tests/fixtures/native_proof_fixture.rs"] if path == "tests/native_proof_execution.rs" else ["Cargo.toml", "Cargo.lock"] if path == "tests/release_dependency_policy.rs" else [
                 ".github/workflows/ci.yml",
             ] if path == "tests/release_metadata_policy.rs" else [
                 ".github/workflows/ci.yml",
