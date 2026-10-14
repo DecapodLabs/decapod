@@ -219,6 +219,11 @@
       "id": "plan-revision-repair",
       "summary": "Repair final-phase atomicity found in independent review; reconcile reviewed source inventory after version-only release0.111.2; preserve initial validation failures and correct branch task identity",
       "input_digest": "sha256:28542e72809643ecc58843ddfff2b33b34b1d66cf2ca1a08be27e1c33096a812"
+    },
+    {
+      "id": "enforce-public-cli-regressions",
+      "summary": "Audit confirmed1147librarypasses but standalone plan CLI target was unexecuted; move all three cases into required CLI contract target without adapter changes; full revalidation pending",
+      "input_digest": "sha256:a44d583436f4d46a71cc7a457daf7b35ee3073b4ff685c0303b7f8ccfb94c0ef"
     }
   ],
   "intents": {
@@ -244,7 +249,7 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 21,
+        "file_touch_budget": 22,
         "forbidden_paths": []
       },
       "deferred_questions": [],
@@ -253,10 +258,10 @@
       "phases": [
         {
           "completed": true,
-          "completed_at": "1791936419Z",
+          "completed_at": "1791938990Z",
           "description": "Trace plan mutation and phase state",
           "entered": true,
-          "entered_at": "1791936417Z",
+          "entered_at": "1791938988Z",
           "entry_gates": [],
           "exit_gates": [],
           "id": "inspect",
@@ -271,26 +276,26 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Locked revision invalidation and shared structural checks remain accurate after final-phase atomicity repair",
-          "reviewed_code_fingerprint": "098c399a5a791f939345a96521031ad84d1f7db7f184173d68d8864c70aded75",
+          "reason": "Contract revision reset and shared structural gates remain accurate; execution graph unchanged",
+          "reviewed_code_fingerprint": "9b1af545233f14b42c94eed39aa319437b3f0dc6a35dc22cc724726eb4af1de7",
           "spec_material_hash": "77b4a522d06938885ac3502be7cc417b0456a06299beeaacf75e846eb4562d84"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Revision and separate reapproval semantics include final transition consistency; no new human confirmation required",
-          "reviewed_code_fingerprint": "098c399a5a791f939345a96521031ad84d1f7db7f184173d68d8864c70aded75",
-          "spec_material_hash": "463c9efea584f8eb53e0e4da4b412ad720d1d0fec8bb02b550de6a10c360959c"
+          "reason": "Public CLI regressions now live in enforced contract target; preserves all three cases without changing source adapter",
+          "reviewed_code_fingerprint": "9b1af545233f14b42c94eed39aa319437b3f0dc6a35dc22cc724726eb4af1de7",
+          "spec_material_hash": "f9711772a9cbac81073b05f30711f2c83c45b9a848ed8ef5c22d4fb2dadff95d"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Local declared approval and external trust limits are unchanged; pending review decisions remain preserved by contract editors",
-          "reviewed_code_fingerprint": "098c399a5a791f939345a96521031ad84d1f7db7f184173d68d8864c70aded75",
+          "reason": "Declared approval authority and external provider trust limits unchanged; test relocation closes branch coverage omission",
+          "reviewed_code_fingerprint": "9b1af545233f14b42c94eed39aa319437b3f0dc6a35dc22cc724726eb4af1de7",
           "spec_material_hash": "439b8a69e8db6ebf0d579a87f982878ed8e3e350c6a70c09a99b16c92523659b"
         }
       ],
-      "state": "APPROVED",
+      "state": "DONE",
       "stop_conditions": [
         "No weakening of provider proof or external human authority assumptions"
       ],
@@ -300,16 +305,24 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791936856Z"
+      "updated_at": "1791939000Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:34b49ee86d21e5831465a8c38604692034daa3c0e87e15007d6617e04609586c",
+      "artifact_hash": "sha256:62f6500378dd4584f8e19e1f5c2ead76c939acbb725feff8db76f6345afa4adc",
       "checks": [
         {
           "name": "candidate_regressions",
+          "status": "unavailable"
+        },
+        {
+          "name": "d9fb4970_library_1147_passed",
+          "status": "passed"
+        },
+        {
+          "name": "d9fb4970_public_cli_execution",
           "status": "unavailable"
         },
         {
@@ -360,10 +373,17 @@
             "intent_id": "intent:change_01M4VVJF5X9AS4618BD5VJESBZ",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M4VVJF6TFY9PC58A2WCXGWQV",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M4VVJF5X9AS4618BD5VJESBZ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M4VVJF6TFY9PC58A2WCXGWQV": {
@@ -422,6 +442,22 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "tests/cli_contract_enforcement.rs"
+                ],
+                "proof_refs": [
+                  "d9fb4970_library_1147_passed",
+                  "d9fb4970_public_cli_execution"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -441,6 +477,7 @@
         "docs/agent/command-contracts.md",
         "src/decapod/core/validate.rs",
         "src/decapod/plan_governance.rs",
+        "tests/cli_contract_enforcement.rs",
         "tests/plan_governed_execution.rs",
         "tests/unit/plan_governance_tests.rs"
       ],

@@ -353,8 +353,8 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `098c399a5a791f939345a96521031ad84d1f7db7f184173d68d8864c70aded75`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (183 files), `tests/` (188 files)
+- Repository signal fingerprint: `9b1af545233f14b42c94eed39aa319437b3f0dc6a35dc22cc724726eb4af1de7`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (183 files), `tests/` (187 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -375,3 +375,9 @@ and unsatisfied-completed-gate rejection for execution and publication as well.
 Spec-review decisions are preserved by these editors and retain their separate
 review and resolution rules. Explicit approval still records declared authority;
 it does not authenticate the approver or independently judge natural language.
+
+The public plan CLI regressions live in the existing branch-enforced
+`tests/cli_contract_enforcement.rs::plan_governed_execution` module. Their
+standalone predecessor was not selected by the source-PR graph; keeping all
+three cases in this executed target makes CLI routing, reapproval, and phase
+replay behavior part of the normal required proof without changing its adapter.
