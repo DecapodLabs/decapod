@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "067b8f55071e13dd103779998168b4c9ffd31a79",
+    "accepted_commit": "3893f8e2b53d7273cd6d831981976ef256a82f07",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -129,6 +129,14 @@
         "question": "When a task was completed by an agent whose proof record is missing, what minimum repository-native evidence is sufficient for a later agent to recover verification without recreating the original execution context?",
         "status": "open"
       },
+      "claim:quinn-importer-compatibility": {
+        "falsifier": "Any old mixed unknown or changed importer identity validates, or full proof accepts malformed source/structural evidence",
+        "proof_refs": [
+          "Targeted Rust importer identity tests and full decapod validate required"
+        ],
+        "statement": "Current Buildkite importer0.102.5 is accepted only through independently reviewed version and executable digests; old mixed and unknown tuples remain rejected",
+        "status": "open"
+      },
       "claim:regular-release-artifact": {
         "falsifier": "The staged upload path is a symlink or differs in bytes from the compiled Bazel output.",
         "statement": "The release-build uploader consumes an owned regular file containing exactly the successfully built Bazel binary.",
@@ -203,74 +211,40 @@
     }
   },
   "change": {
-    "id": "change_01M4WDFYXQJZS8N294KV08VX4Z",
-    "base_commit": "067b8f55071e13dd103779998168b4c9ffd31a79",
+    "id": "change_01M4X73PVDVRPE1HDSQA80YJGB",
+    "base_commit": "3893f8e2b53d7273cd6d831981976ef256a82f07",
     "target_base": "origin/master"
   },
   "claims": {
-    "quinn-importer-compatibility": {
-      "statement": "Current Buildkite importer0.102.5 is accepted only through independently reviewed version and executable digests; old mixed and unknown tuples remain rejected",
-      "falsifier": "Any old mixed unknown or changed importer identity validates, or full proof accepts malformed source/structural evidence",
-      "status": "open",
-      "proof_refs": [
-        "Targeted Rust importer identity tests and full decapod validate required"
-      ]
-    },
-    "quinn-patched": {
-      "statement": "Cargo and generated Bazel lockfiles resolve quinn-proto 0.11.19; audit reports no known vulnerabilities without advisory suppression",
-      "falsifier": "Either lockfile resolves a vulnerable Quinn version, another package changes unexpectedly, or a known vulnerability is ignored",
+    "constitution-branch-only": {
+      "statement": "Constitution validation covers source branches and pull requests without invoking branch verification on release tags.",
+      "falsifier": "A tag push schedules the branch-only constitution job or a branch or PR loses schema validation.",
       "status": "supported",
       "proof_refs": [
-        "/workspace/shared/quinn-security-evidence/bazel-mod-deps-system-java.log",
-        "/workspace/shared/quinn-security-evidence/cargo-audit.json"
+        "tests/source_ci_profile_policy.rs::constitution_schema_checks_cover_branches_and_prs_without_release_tag_ranges"
+      ]
+    },
+    "docs-native-owner": {
+      "statement": "Docs deployment requires positive native GitHub hosted identity; imported Buildkite retains docs build verification without deployment.",
+      "falsifier": "An importer with GitHub-compatible variables but no native runner identity can schedule deployment.",
+      "status": "supported",
+      "proof_refs": [
+        "tests/source_ci_profile_policy.rs::docs_owner_selector_rejects_sanitized_importers_and_incomplete_identity"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "note:084aa17b0dc72f1c",
-      "summary": "Narrow Quinn security remediation; full exact-candidate provider validation pending",
-      "input_digest": "sha256:52f9e72b240425dd9c9dd04ef26052f98a09e4b16598f979ceda7bd1960037dc"
-    },
-    {
-      "id": "quinn-security-source",
-      "summary": "Update only quinn-proto version/checksum; reconcile reviewed source inventory and security specification",
-      "input_digest": "sha256:52f9e72b240425dd9c9dd04ef26052f98a09e4b16598f979ceda7bd1960037dc",
+      "id": "constitution-docs-owner",
+      "summary": "Constitution source-branch routing and positive native GitHub docs deployment ownership; 60 source-CI policy tests passed. Full validation explicitly waived by user before PR publication.",
+      "input_digest": "sha256:4559259a2fe7616239cde52fc296f288d9c38acfecd6853eb389c5d5f147af73",
       "proof_refs": [
-        "/workspace/shared/quinn-security-evidence/cargo-audit.json"
+        "tests/source_ci_profile_policy.rs"
       ]
-    },
-    {
-      "id": "note:792cf8d61568048c",
-      "summary": "Quinn-only remediation with exact generated Bazel lock and release-bound projection repairs; provider failures preserved, full readiness pending",
-      "input_digest": "sha256:b915c7ab22a4f32a17bc81be1b4d811f0ae4b71bf37077152b5e60231549cae2"
-    },
-    {
-      "id": "quinn-generated-repair",
-      "summary": "Repair CI-reported Bazel lock and release-bound projection drift for Quinn 0.11.19",
-      "input_digest": "sha256:b915c7ab22a4f32a17bc81be1b4d811f0ae4b71bf37077152b5e60231549cae2"
-    },
-    {
-      "id": "quinn-importer-1025",
-      "summary": "Independently review official importer0.102.5 executable identities and add old mixed unknown tuple rejection coverage; preserve failed0.102.3 collection evidence and require exact candidate validation",
-      "input_digest": "sha256:9f5df5bb9e5e545dc16d5e9142a5be583742071548f957e0864b51969897e87c",
-      "proof_refs": [
-        "Official buildkite/buildkite-gha release v0.102.5 assets independently hashed; https://github.com/buildkite/buildkite-gha/compare/v0.102.3...v0.102.5 reviewed"
-      ]
-    },
-    {
-      "id": "quinn-importer-fmt-repair",
-      "summary": "Correct importer update formatting to repository Rust2024; preserve failed formatting validation evidence",
-      "input_digest": "sha256:33e16d385b6905f00692ddca32771c6ffe7fc73ef5212a21738998739046b54b"
-    },
-    {
-      "id": "quinn-publication-reviews",
-      "summary": "Record explicit current-content architecture interfaces and security review after importer change; retain failed review gate evidence",
-      "input_digest": "sha256:ccc0d5868e7f80d3e0cace4c068ba1e50a48f2aa42030286c69f40d0e4928a46"
     }
   ],
   "intents": {
-    "intent:change_01M4WDFYXQJZS8N294KV08VX4Z": {
+    "intent:change_01M4X73PVDVRPE1HDSQA80YJGB": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -280,11 +254,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M4WDFYXQJZS8N294KV08VX4Z",
+      "id": "intent:change_01M4X73PVDVRPE1HDSQA80YJGB",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Update Quinn security dependency to 0.11.19\n\nSingle narrow PR: update quinn-proto lock entry to 0.11.19, prove audit and feature reachability, preserve unchanged source CI and accepted executor, complete exact-candidate governed validation before PR.",
-      "refined_intent": "Update Quinn security dependency to 0.11.19\n\nSingle narrow PR: update quinn-proto lock entry to 0.11.19, prove audit and feature reachability, preserve unchanged source CI and accepted executor, complete exact-candidate governed validation before PR.",
+      "raw_intent": "Repair constitution validation event context and restrict docs deployment to native GitHub",
+      "refined_intent": "Repair constitution validation event context and restrict docs deployment to native GitHub",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -292,240 +266,139 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 20,
+        "file_touch_budget": null,
         "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Update quinn-proto to 0.11.19 in one PR, synchronize Cargo/Bazel locks and release-bound projections, and include the user-approved independently reviewed Buildkite importer 0.102.5 compatibility update required by current provider execution. Preserve exact source, runtime identity, structural and custody verification; reject unreviewed or mixed identities. No provider settings, trigger changes or unrelated rollout work.",
+      "intent": "Keep Constitution schema validation on all ordinary branches and pull requests while excluding redundant tag pushes from its branch-only verifier. Keep docs build validation on both providers, require positive native GitHub ownership for Pages upload and deployment, and cover event routing and provider selection with regression tests. Preserve governance enforcement and publish one PR only after exact-candidate decapod validate passes.",
       "phases": [],
       "proof_hooks": [
-        "Official 0.102.5 archive and executable digests independently verified; targeted old/mixed/unknown identity rejection coverage and full decapod validate must pass."
+        "decapod validate"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed kernel and bounded provider architecture against importer tuple and tests: local-first durable governance, accepted executor boundary, complete structural verification and harness-independent operation remain unchanged; no new orchestrator, storage layer, provider setting or remote mutation authority introduced.",
-          "reviewed_code_fingerprint": "e42e554be1c33a35fbc1341dd4829602132e7309676ff4ac0ffcda83a6c3c731",
+          "reason": "Reviewed final workflow-only changes: source branch event routing and native hosted GitHub docs ownership preserve existing product architecture, interfaces and trust boundaries. Concrete operational changes are documented in OPERATIONS.",
+          "reviewed_code_fingerprint": "9eb41e6222c24a92b6eef9fe719652eb94e299235286ec58f8c29cea8e1a777a",
           "spec_material_hash": "77b4a522d06938885ac3502be7cc417b0456a06299beeaacf75e846eb4562d84"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed CLI/RPC and validation contracts against snapshot.rs and source_import.rs: no public command schema, lifecycle or evidence authority changes; only the fixed independently reviewed importer executable identity advances to0.102.5, with existing mismatch errors and full proof requirements preserved.",
-          "reviewed_code_fingerprint": "e42e554be1c33a35fbc1341dd4829602132e7309676ff4ac0ffcda83a6c3c731",
+          "reason": "Reviewed final workflow-only changes: source branch event routing and native hosted GitHub docs ownership preserve existing product architecture, interfaces and trust boundaries. Concrete operational changes are documented in OPERATIONS.",
+          "reviewed_code_fingerprint": "9eb41e6222c24a92b6eef9fe719652eb94e299235286ec58f8c29cea8e1a777a",
           "spec_material_hash": "f9711772a9cbac81073b05f30711f2c83c45b9a848ed8ef5c22d4fb2dadff95d"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Security prose documents Quinn0.11.19 reachability limits and independently verified official importer0.102.5 executable identities; source review covers upstream containment and diagnostics changes with unchanged plan schema; regression tests reject old mixed unknown and swapped runtime identities without weakening custody.",
-          "reviewed_code_fingerprint": "e42e554be1c33a35fbc1341dd4829602132e7309676ff4ac0ffcda83a6c3c731",
+          "reason": "Reviewed final workflow-only changes: source branch event routing and native hosted GitHub docs ownership preserve existing product architecture, interfaces and trust boundaries. Concrete operational changes are documented in OPERATIONS.",
+          "reviewed_code_fingerprint": "9eb41e6222c24a92b6eef9fe719652eb94e299235286ec58f8c29cea8e1a777a",
           "spec_material_hash": "9ca65fee6422b656de7b2c25e45866c308f1d7e30401a5d296978e35be62df47"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Update Quinn security dependency to 0.11.19",
+      "title": "Repair constitution validation event context and restrict docs deployment to native GitHub",
       "todo_ids": [
-        "secu_01m4wdfdb4w1t25m"
+        "docs_01m4x72wzdh0fnsn"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791977344Z"
+      "updated_at": "1791982319Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch",
-        "Only Quinn dependency and required governance/spec reconciliation; all source CI helpers and workflows unchanged"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:e8fba2fa7f4bffc894822add6ec8c54b8dfa09198b9c9397a2aa1c1b744a5774",
+      "artifact_hash": "sha256:d86a02cad8ba64ec177022340abc8159a2569879494c50bb3865bd28fa7db6f9",
       "checks": [
         {
-          "name": "bazel-mod-deps",
+          "name": "source-ci-policy",
           "status": "passed"
         },
         {
-          "name": "dependency-feature-reachability",
-          "status": "passed"
-        },
-        {
-          "name": "importer_candidate_fmt",
-          "status": "failed"
-        },
-        {
-          "name": "importer_spec_review",
-          "status": "failed"
-        },
-        {
-          "name": "initial-source-ci",
-          "status": "failed"
-        },
-        {
-          "name": "official_importer_archive_integrity",
-          "status": "passed"
-        },
-        {
-          "name": "prior_importer_validation",
-          "status": "failed"
-        },
-        {
-          "name": "security-audit",
+          "name": "workflow-yaml",
           "status": "passed"
         }
       ],
-      "current_phase": "implementation",
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M4WDFYXQJZS8N294KV08VX4Z",
+            "intent_id": "intent:change_01M4X73PVDVRPE1HDSQA80YJGB",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M4WDFYXQJZS8N294KV08VX4Z",
+            "intent_id": "intent:change_01M4X73PVDVRPE1HDSQA80YJGB",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M4WDFYYN55XF04924XJEJMTH",
+            "detail": "trajectory:branch_01M4X73PW0CY0HFZAZ3NVD0F1H",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M4WDFYXQJZS8N294KV08VX4Z",
+            "intent_id": "intent:change_01M4X73PVDVRPE1HDSQA80YJGB",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M4WDFYYN55XF04924XJEJMTH",
+            "detail": "trajectory:branch_01M4X73PW0CY0HFZAZ3NVD0F1H",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M4WDFYXQJZS8N294KV08VX4Z",
+            "intent_id": "intent:change_01M4X73PVDVRPE1HDSQA80YJGB",
             "kind": "trajectory_step_recorded",
             "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M4WDFYYN55XF04924XJEJMTH",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M4WDFYXQJZS8N294KV08VX4Z",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M4WDFYYN55XF04924XJEJMTH",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M4WDFYXQJZS8N294KV08VX4Z",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M4WDFYYN55XF04924XJEJMTH",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M4WDFYXQJZS8N294KV08VX4Z",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M4WDFYYN55XF04924XJEJMTH": {
+          "branch_01M4X73PW0CY0HFZAZ3NVD0F1H": {
             "evidence_only": true,
-            "id": "branch_01M4WDFYYN55XF04924XJEJMTH",
-            "intent_id": "intent:change_01M4WDFYXQJZS8N294KV08VX4Z",
+            "id": "branch_01M4X73PW0CY0HFZAZ3NVD0F1H",
+            "intent_id": "intent:change_01M4X73PVDVRPE1HDSQA80YJGB",
             "steps": [
               {
-                "action": "implementation",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "Cargo.lock",
-                  ".decapod/config.toml",
-                  ".decapod/managed/specs/SECURITY.md",
-                  "/workspace/shared/quinn-security-evidence/cargo-audit.json",
-                  "/workspace/shared/quinn-security-evidence/quinn-feature-tree.txt"
+                  ".github/workflows/constitution-sync.yml",
+                  ".github/workflows/docs.yml",
+                  "assets/tools/ci_event_context.rs",
+                  ".github/workflows/constitution-sync.yml",
+                  ".github/workflows/docs.yml",
+                  "tests/source_ci_profile_policy.rs",
+                  "User Sentinel_9a32c86967348191adf0532787b12aed explicitly authorizes skipping full validation and publishing after targeted workflow checks."
                 ],
-                "proof_refs": [
-                  "security-audit",
-                  "dependency-feature-reachability"
-                ],
+                "proof_refs": [],
                 "scope": [
                   "root"
                 ],
                 "sequence": 4,
-                "validation_findings": []
+                "validation_findings": [
+                  "Full decapod validate intentionally not run under explicit user publication waiver; targeted checks do not establish full publication readiness."
+                ]
               },
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "MODULE.bazel.lock",
-                  ".decapod/managed/specs/SECURITY.md",
-                  "/workspace/shared/quinn-security-evidence/bazel-mod-deps-system-java.log"
+                  "All 60 source CI policy tests passed, including three new workflow/provider regressions. YAML parsing passed. Full validation intentionally not run under explicit user waiver."
                 ],
                 "proof_refs": [
-                  "initial-source-ci",
-                  "bazel-mod-deps"
+                  "source-ci-policy",
+                  "workflow-yaml"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "src/decapod/core/validation_runtime/snapshot.rs",
-                  "src/decapod/core/validation_runtime/snapshot/source_import.rs",
-                  "Buildkite1392 all source jobs passed; full controller rejects observed importer0.102.5 against reviewed0.102.3",
-                  "User explicitly approved independently reviewed0.102.5 compatibility and regression coverage in same Quinn PR",
-                  "Official release asset639031444 archive sha256:4d76d1e54cc3d90790cb7e6046abf6e5c60c8ab50de59ff4c25c7cbddb42bd59 executable sha256:0e33c9189e80ec1e776a53f837f61b26e8f7f2b26671a6df2c0b4d23c09a4b02; asset639031441 archive sha256:1ebe5b625f21a4b9b4b4eaa60cafb574dcc918ffbb8436b62bcc908ad25a795f executable sha256:7af087fef3a258ed093c1812c18eb0832e44b48047cf3ab1b2adf0836fc2ad86"
-                ],
-                "proof_refs": [
-                  "prior_importer_validation",
-                  "official_importer_archive_integrity"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "Buildkite1402 and GitHub38555124426 rejected formatting; correct targeted rustfmt edition to repository2024, preserve failure"
-                ],
-                "proof_refs": [
-                  "importer_candidate_fmt"
-                ],
-                "scope": [
-                  "root",
-                  "src/decapod/core/validation_runtime/snapshot.rs",
-                  "src/decapod/core/validation_runtime/snapshot/source_import.rs"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "GitHub38555783849 governance gate requested current-content publication spec reviews after source changes; review existing interfaces architecture and updated security prose explicitly"
-                ],
-                "proof_refs": [
-                  "importer_spec_review"
-                ],
-                "scope": [
-                  "root",
-                  "src/decapod/core/validation_runtime/snapshot.rs",
-                  "src/decapod/core/validation_runtime/snapshot/source_import.rs"
-                ],
-                "sequence": 8,
                 "validation_findings": []
               }
             ]
@@ -535,37 +408,32 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "/workspace/shared/quinn-security-evidence/bazel-mod-deps-system-java.log",
-        "/workspace/shared/quinn-security-evidence/cargo-audit.json",
-        "/workspace/shared/quinn-security-evidence/quinn-feature-tree.txt",
-        "Buildkite1392 all source jobs passed; full controller rejects observed importer0.102.5 against reviewed0.102.3",
-        "Buildkite1402 and GitHub38555124426 rejected formatting; correct targeted rustfmt edition to repository2024, preserve failure",
-        "GitHub38555783849 governance gate requested current-content publication spec reviews after source changes; review existing interfaces architecture and updated security prose explicitly",
-        "Official release asset639031444 archive sha256:4d76d1e54cc3d90790cb7e6046abf6e5c60c8ab50de59ff4c25c7cbddb42bd59 executable sha256:0e33c9189e80ec1e776a53f837f61b26e8f7f2b26671a6df2c0b4d23c09a4b02; asset639031441 archive sha256:1ebe5b625f21a4b9b4b4eaa60cafb574dcc918ffbb8436b62bcc908ad25a795f executable sha256:7af087fef3a258ed093c1812c18eb0832e44b48047cf3ab1b2adf0836fc2ad86",
-        "User explicitly approved independently reviewed0.102.5 compatibility and regression coverage in same Quinn PR"
+        "All 60 source CI policy tests passed, including three new workflow/provider regressions. YAML parsing passed. Full validation intentionally not run under explicit user waiver.",
+        "User Sentinel_9a32c86967348191adf0532787b12aed explicitly authorizes skipping full validation and publishing after targeted workflow checks."
       ],
-      "inspected_files": [],
-      "intent_id": "intent:change_01M4WDFYXQJZS8N294KV08VX4Z",
+      "inspected_files": [
+        ".github/workflows/constitution-sync.yml",
+        ".github/workflows/docs.yml",
+        "assets/tools/ci_event_context.rs"
+      ],
+      "intent_id": "intent:change_01M4X73PVDVRPE1HDSQA80YJGB",
       "modified_files": [
-        ".decapod/config.toml",
-        ".decapod/managed/specs/SECURITY.md",
-        "Cargo.lock",
-        "MODULE.bazel.lock",
-        "src/decapod/core/validation_runtime/snapshot.rs",
-        "src/decapod/core/validation_runtime/snapshot/source_import.rs"
+        ".github/workflows/constitution-sync.yml",
+        ".github/workflows/docs.yml",
+        "tests/source_ci_profile_policy.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "root",
-        "src/decapod/core/validation_runtime/snapshot.rs",
-        "src/decapod/core/validation_runtime/snapshot/source_import.rs"
+        "root"
       ],
-      "run_id": "branch_01M4WDFYYN55XF04924XJEJMTH",
+      "run_id": "branch_01M4X73PW0CY0HFZAZ3NVD0F1H",
       "schema_version": "1.1.0",
-      "shortcut_risk_signals": [],
-      "task_id": "secu_01m4wdfdb4w1t25m",
+      "shortcut_risk_signals": [
+        "Full decapod validate intentionally not run under explicit user publication waiver; targeted checks do not establish full publication readiness."
+      ],
+      "task_id": "docs_01m4x72wzdh0fnsn",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

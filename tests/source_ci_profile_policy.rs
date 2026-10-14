@@ -19,6 +19,108 @@ const PREPARE: &str = include_str!("../.github/actions/source-ci-profile/action.
 const SOURCE: &str = include_str!("../assets/tools/source_ci_profile.rs");
 
 #[test]
+fn constitution_schema_checks_cover_branches_and_prs_without_release_tag_ranges() {
+    let triggers = CONSTITUTION.split_once("\njobs:\n").unwrap().0;
+    assert!(triggers.contains("  push:\n    branches: [\"**\"]\n"));
+    assert!(triggers.contains("  pull_request:\n"));
+    assert!(!triggers.contains("tags:"));
+    assert!(!triggers.contains("tags-ignore:"));
+    let validation = job(CONSTITUTION, "validate-constitution");
+    assert!(validation.contains("uses: ./.github/actions/ci-context"));
+    assert!(validation.contains("run-ci --check constitution-schema"));
+    assert!(validation.contains("run --check constitution-schema"));
+    // An accepted-tip branch creation still checks the schema, while the
+    // existing immutable-context verifier continues rejecting tag contexts.
+    assert!(validation.contains("Recheck accepted branch after schema validation"));
+}
+
+#[test]
+fn docs_deployment_requires_positive_native_owner_before_job_scheduling() {
+    let build = job(DOCS, "build");
+    let deploy = job(DOCS, "deploy");
+    assert!(build.contains("native-owner: ${{ steps.owner.outputs.native_owner }}"));
+    assert!(build.contains("run-ci --check docs-build"));
+    assert!(build.contains(
+        "if: github.ref == 'refs/heads/master' && steps.owner.outputs.native_owner == 'true'"
+    ));
+    assert!(deploy.contains(
+        "if: github.ref == 'refs/heads/master' && needs.build.outputs.native-owner == 'true'"
+    ));
+    assert!(deploy.contains("needs: build"));
+    assert!(deploy.contains("uses: actions/deploy-pages@v4"));
+    assert!(!deploy.contains("BUILDKITE_BUILD_ID"));
+    assert!(!build.contains("pages: write"));
+    assert!(
+        !DOCS
+            .split_once("\njobs:\n")
+            .unwrap()
+            .0
+            .contains("pages: write")
+    );
+}
+
+#[test]
+fn docs_owner_selector_rejects_sanitized_importers_and_incomplete_identity() {
+    let script = job(DOCS, "build")
+        .split_once("        run: |\n")
+        .unwrap()
+        .1
+        .split_once("      - uses: actions/checkout@v4")
+        .unwrap()
+        .0
+        .lines()
+        .map(|line| line.strip_prefix("          ").unwrap_or(line))
+        .collect::<Vec<_>>()
+        .join("\n");
+    for (case, github, runner, buildkite, build_id, expected) in [
+        ("native", "true", "github-hosted", "", "", "true"),
+        ("sanitized importer", "true", "self-hosted", "", "", "false"),
+        ("missing runner", "true", "", "", "", "false"),
+        ("unknown runner", "true", "other", "", "", "false"),
+        ("missing github", "", "github-hosted", "", "", "false"),
+        ("false github", "false", "github-hosted", "", "", "false"),
+        (
+            "buildkite marker",
+            "true",
+            "github-hosted",
+            "true",
+            "",
+            "false",
+        ),
+        (
+            "buildkite id",
+            "true",
+            "github-hosted",
+            "",
+            "fixture",
+            "false",
+        ),
+    ] {
+        let temp = tempfile::tempdir().unwrap();
+        let output_file = temp.path().join("output");
+        // Empty PATH makes the selector fail if it attempts provider calls or
+        // credential-bearing tools. Identity selection is shell-only.
+        let result = Command::new("/bin/bash")
+            .args(["--noprofile", "--norc", "-c", &script])
+            .env_clear()
+            .env("PATH", "")
+            .env("GITHUB_ACTIONS", github)
+            .env("RUNNER_ENVIRONMENT", runner)
+            .env("BUILDKITE", buildkite)
+            .env("BUILDKITE_BUILD_ID", build_id)
+            .env("GITHUB_OUTPUT", &output_file)
+            .output()
+            .unwrap();
+        assert!(result.status.success(), "{case}: {result:?}");
+        assert_eq!(
+            fs::read_to_string(output_file).unwrap(),
+            format!("native_owner={expected}\n"),
+            "{case}"
+        );
+    }
+}
+
+#[test]
 fn dependency_tool_preparation_keeps_both_fresh_measured_checks() {
     let lint = job(CI, "deps-lint");
     assert!(lint.contains("needs: release-metadata"));

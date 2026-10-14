@@ -324,7 +324,23 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e42e554be1c33a35fbc1341dd4829602132e7309676ff4ac0ffcda83a6c3c731`
+- Repository signal fingerprint: `9eb41e6222c24a92b6eef9fe719652eb94e299235286ec58f8c29cea8e1a777a`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (183 files), `tests/` (187 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Source validation and documentation delivery
+
+Constitution schema validation in `.github/workflows/constitution-sync.yml` runs
+on ordinary branch pushes and pull requests. A release tag names an already
+validated source commit; it does not provide a branch comparison range. The
+workflow excludes tag pushes while retaining the immutable source-context
+verifier and both ordinary and accepted-tip schema checks.
+
+Documentation builds remain measured source checks on GitHub Actions and
+Buildkite. In `.github/workflows/docs.yml`, the build job records a positive
+native hosted-runner identity before uploading a Pages artifact. The deployment
+job requires that output and the master branch before it can be scheduled.
+GitHub-compatible environment variables or missing Buildkite markers alone do
+not establish native ownership. Imported builds retain a generic site artifact
+and validation custody, without starting the GitHub Pages deployment job.
