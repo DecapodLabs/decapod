@@ -208,6 +208,14 @@
     "target_base": "origin/master"
   },
   "claims": {
+    "quinn-importer-compatibility": {
+      "statement": "Current Buildkite importer0.102.5 is accepted only through independently reviewed version and executable digests; old mixed and unknown tuples remain rejected",
+      "falsifier": "Any old mixed unknown or changed importer identity validates, or full proof accepts malformed source/structural evidence",
+      "status": "open",
+      "proof_refs": [
+        "Targeted Rust importer identity tests and full decapod validate required"
+      ]
+    },
     "quinn-patched": {
       "statement": "Cargo and generated Bazel lockfiles resolve quinn-proto 0.11.19; audit reports no known vulnerabilities without advisory suppression",
       "falsifier": "Either lockfile resolves a vulnerable Quinn version, another package changes unexpectedly, or a known vulnerability is ignored",
@@ -241,6 +249,14 @@
       "id": "quinn-generated-repair",
       "summary": "Repair CI-reported Bazel lock and release-bound projection drift for Quinn 0.11.19",
       "input_digest": "sha256:b915c7ab22a4f32a17bc81be1b4d811f0ae4b71bf37077152b5e60231549cae2"
+    },
+    {
+      "id": "quinn-importer-1025",
+      "summary": "Independently review official importer0.102.5 executable identities and add old mixed unknown tuple rejection coverage; preserve failed0.102.3 collection evidence and require exact candidate validation",
+      "input_digest": "sha256:9f5df5bb9e5e545dc16d5e9142a5be583742071548f957e0864b51969897e87c",
+      "proof_refs": [
+        "Official buildkite/buildkite-gha release v0.102.5 assets independently hashed; https://github.com/buildkite/buildkite-gha/compare/v0.102.3...v0.102.5 reviewed"
+      ]
     }
   ],
   "intents": {
@@ -271,10 +287,10 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Update Quinn security dependency to 0.11.19\n\nSingle narrow PR: update quinn-proto lock entry to 0.11.19, prove audit and feature reachability, preserve unchanged source CI and accepted executor, complete exact-candidate governed validation before PR.",
+      "intent": "Update quinn-proto to 0.11.19 in one PR, synchronize Cargo/Bazel locks and release-bound projections, and include the user-approved independently reviewed Buildkite importer 0.102.5 compatibility update required by current provider execution. Preserve exact source, runtime identity, structural and custody verification; reject unreviewed or mixed identities. No provider settings, trigger changes or unrelated rollout work.",
       "phases": [],
       "proof_hooks": [
-        "Regenerate Bazel lock with pinned Bazel 9.3.0 and release-bound projections with official Decapod 0.111.3; no unrelated dependency or CI policy changes"
+        "Official 0.102.5 archive and executable digests independently verified; targeted old/mixed/unknown identity rejection coverage and full decapod validate must pass."
       ],
       "schema_version": "1.1.0",
       "state": "APPROVED",
@@ -285,14 +301,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791958660Z"
+      "updated_at": "1791972574Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Only Quinn dependency and required governance/spec reconciliation; all source CI helpers and workflows unchanged"
       ],
-      "artifact_hash": "sha256:46ad79d933eb25fb87568e0b19f490aa593f25c8728ee308bfcd1cc274873776",
+      "artifact_hash": "sha256:102dab44d7c867d3a03a2337ac9eeeb857554f50211ed883dec36c338dd6630d",
       "checks": [
         {
           "name": "bazel-mod-deps",
@@ -304,6 +320,14 @@
         },
         {
           "name": "initial-source-ci",
+          "status": "failed"
+        },
+        {
+          "name": "official_importer_archive_integrity",
+          "status": "passed"
+        },
+        {
+          "name": "prior_importer_validation",
           "status": "failed"
         },
         {
@@ -339,10 +363,17 @@
             "intent_id": "intent:change_01M4WDFYXQJZS8N294KV08VX4Z",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M4WDFYYN55XF04924XJEJMTH",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M4WDFYXQJZS8N294KV08VX4Z",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M4WDFYYN55XF04924XJEJMTH": {
@@ -387,6 +418,26 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "src/decapod/core/validation_runtime/snapshot.rs",
+                  "src/decapod/core/validation_runtime/snapshot/source_import.rs",
+                  "Buildkite1392 all source jobs passed; full controller rejects observed importer0.102.5 against reviewed0.102.3",
+                  "User explicitly approved independently reviewed0.102.5 compatibility and regression coverage in same Quinn PR",
+                  "Official release asset639031444 archive sha256:4d76d1e54cc3d90790cb7e6046abf6e5c60c8ab50de59ff4c25c7cbddb42bd59 executable sha256:0e33c9189e80ec1e776a53f837f61b26e8f7f2b26671a6df2c0b4d23c09a4b02; asset639031441 archive sha256:1ebe5b625f21a4b9b4b4eaa60cafb574dcc918ffbb8436b62bcc908ad25a795f executable sha256:7af087fef3a258ed093c1812c18eb0832e44b48047cf3ab1b2adf0836fc2ad86"
+                ],
+                "proof_refs": [
+                  "prior_importer_validation",
+                  "official_importer_archive_integrity"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -397,7 +448,10 @@
       "evidence": [
         "/workspace/shared/quinn-security-evidence/bazel-mod-deps-system-java.log",
         "/workspace/shared/quinn-security-evidence/cargo-audit.json",
-        "/workspace/shared/quinn-security-evidence/quinn-feature-tree.txt"
+        "/workspace/shared/quinn-security-evidence/quinn-feature-tree.txt",
+        "Buildkite1392 all source jobs passed; full controller rejects observed importer0.102.5 against reviewed0.102.3",
+        "Official release asset639031444 archive sha256:4d76d1e54cc3d90790cb7e6046abf6e5c60c8ab50de59ff4c25c7cbddb42bd59 executable sha256:0e33c9189e80ec1e776a53f837f61b26e8f7f2b26671a6df2c0b4d23c09a4b02; asset639031441 archive sha256:1ebe5b625f21a4b9b4b4eaa60cafb574dcc918ffbb8436b62bcc908ad25a795f executable sha256:7af087fef3a258ed093c1812c18eb0832e44b48047cf3ab1b2adf0836fc2ad86",
+        "User explicitly approved independently reviewed0.102.5 compatibility and regression coverage in same Quinn PR"
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M4WDFYXQJZS8N294KV08VX4Z",
@@ -405,13 +459,17 @@
         ".decapod/config.toml",
         ".decapod/managed/specs/SECURITY.md",
         "Cargo.lock",
-        "MODULE.bazel.lock"
+        "MODULE.bazel.lock",
+        "src/decapod/core/validation_runtime/snapshot.rs",
+        "src/decapod/core/validation_runtime/snapshot/source_import.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "root"
+        "root",
+        "src/decapod/core/validation_runtime/snapshot.rs",
+        "src/decapod/core/validation_runtime/snapshot/source_import.rs"
       ],
       "run_id": "branch_01M4WDFYYN55XF04924XJEJMTH",
       "schema_version": "1.1.0",

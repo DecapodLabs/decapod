@@ -35,19 +35,19 @@ pub struct ReviewedBuildkiteImporter {
     pub macos_runtime_digest: String,
 }
 impl ReviewedBuildkiteImporter {
-    /// Independently verified official buildkite/buildkite-gha v0.102.3 assets:
-    /// Linux x86_64 asset632925784 (archive831fe31a0ecb...) and Darwin arm64
-    /// asset632925785 (archive64535a3d4f65...). Digests bind executable members,
+    /// Independently verified official buildkite/buildkite-gha v0.102.5 assets:
+    /// Linux x86_64 asset639031444 (archive4d76d1e54cc3...) and Darwin arm64
+    /// asset639031441 (archive1ebe5b625f21...). Digests bind executable members,
     /// not observed job outcomes. The Linux compiler emits both runtime plans.
     pub fn reviewed() -> Self {
         Self {
-            compiler_version: "0.102.3".into(),
+            compiler_version: "0.102.5".into(),
             compiler_digest:
-                "sha256:0803b5258df3929ab975bcb00b5e49eea028c910f6c59f84c03067ce19dc32fe".into(),
+                "sha256:0e33c9189e80ec1e776a53f837f61b26e8f7f2b26671a6df2c0b4d23c09a4b02".into(),
             linux_runtime_digest:
-                "sha256:0803b5258df3929ab975bcb00b5e49eea028c910f6c59f84c03067ce19dc32fe".into(),
+                "sha256:0e33c9189e80ec1e776a53f837f61b26e8f7f2b26671a6df2c0b4d23c09a4b02".into(),
             macos_runtime_digest:
-                "sha256:274edf3e0086df695cf23ad1713adaa25a5ecdd1decafb16480e222e0e9aa9fa".into(),
+                "sha256:7af087fef3a258ed093c1812c18eb0832e44b48047cf3ab1b2adf0836fc2ad86".into(),
         }
     }
     fn validate(&self) -> io::Result<()> {
@@ -926,11 +926,10 @@ mod tests {
                 if spec.arguments().iter().any(|arg| arg == "fetch") {
                     self.fetches += 1;
                     assert_eq!(spec.arguments().last().unwrap(), &self.server_s);
-                    assert!(
-                        spec.arguments()
-                            .iter()
-                            .any(|arg| arg == "--no-write-fetch-head")
-                    );
+                    assert!(spec
+                        .arguments()
+                        .iter()
+                        .any(|arg| arg == "--no-write-fetch-head"));
                     return Ok(Reply {
                         exit_code: 0,
                         stdout: Vec::new(),
@@ -1044,19 +1043,17 @@ mod tests {
         legacy["transport_head"] = serde_json::Value::String("e".repeat(40));
         let legacy_path = handoff.with_file_name("legacy-transport-handoff.json");
         write_new(&legacy_path, &serde_json::to_vec(&legacy).unwrap()).unwrap();
-        assert!(
-            adopt_host_handoff(
-                options,
-                repository,
-                &mut reader,
-                &legacy_path,
-                &server_s,
-                &cancel
-            )
-            .unwrap_err()
-            .to_string()
-            .contains("LEGACY_TEMPORARY_SNAPSHOT_UNSUPPORTED")
-        );
+        assert!(adopt_host_handoff(
+            options,
+            repository,
+            &mut reader,
+            &legacy_path,
+            &server_s,
+            &cancel
+        )
+        .unwrap_err()
+        .to_string()
+        .contains("LEGACY_TEMPORARY_SNAPSHOT_UNSUPPORTED"));
         let mut wrong = record.clone();
         wrong["request"]["source_head"] = serde_json::Value::String("f".repeat(40));
         let bad = handoff.with_file_name("adoption-wrong-handoff.json");
@@ -1066,33 +1063,29 @@ mod tests {
         );
         let saved = fs::read(options.root.join("source")).unwrap();
         fs::write(options.root.join("source"), "dirty").unwrap();
-        assert!(
-            adopt_host_handoff(
-                options,
-                repository,
-                &mut reader,
-                handoff,
-                &server_s,
-                &cancel
-            )
-            .is_err()
-        );
+        assert!(adopt_host_handoff(
+            options,
+            repository,
+            &mut reader,
+            handoff,
+            &server_s,
+            &cancel
+        )
+        .is_err());
         fs::write(options.root.join("source"), saved).unwrap();
         command(
             &options.root,
             &["commit", "--allow-empty", "-m", "new committed source"],
         );
-        assert!(
-            adopt_host_handoff(
-                options,
-                repository,
-                &mut reader,
-                handoff,
-                &server_s,
-                &cancel
-            )
-            .is_err()
-        );
+        assert!(adopt_host_handoff(
+            options,
+            repository,
+            &mut reader,
+            handoff,
+            &server_s,
+            &cancel
+        )
+        .is_err());
         assert_eq!(
             reader.fetches, 0,
             "same-branch adoption never fetches a synthetic transport object"

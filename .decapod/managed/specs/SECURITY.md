@@ -251,7 +251,7 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5d6559ee2814264907c43b53fd034107fdc7e73e306382d9b6f5bb55e298cb8b`
+- Repository signal fingerprint: `6b1a65d908a224fb1df6266aacde35ff36fffa4f07a5213008d3656302c1e726`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (183 files), `tests/` (187 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -269,3 +269,13 @@ identified runtime exposure but does not excuse vulnerable lockfile entries.
 The dependency audit must pass without ignored advisories; the existing yanked
 chacha20 warning remains separately visible. No transport policy, CI trigger,
 provider permissions or accepted-executor helper is changed by this remediation.
+
+Current provider execution uses buildkite-gha 0.102.5. The validator accepts only
+the independently reviewed official compiler and platform-specific executable
+digests in `ReviewedBuildkiteImporter`, verified from release assets rather than
+from successful job output. The 0.102.3-to-0.102.5 review covers composite-action
+working-directory containment, repository-relative workflow resolution, and
+masked service-readiness diagnostics; the v2 plan and result schema remains
+unchanged. Old versions, mixed-release tuples, unknown versions, modified
+executables and swapped platform identities are rejected. Source, plan, runtime,
+artifact and accepted-executor verification remain required.

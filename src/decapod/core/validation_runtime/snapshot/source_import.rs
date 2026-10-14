@@ -196,10 +196,13 @@ pub(super) fn github_sources(
                 };
                 let files = files.map_err(|error| {
                     transport_failed = true;
-                    io::Error::new(error.kind(), format!(
+                    io::Error::new(
+                        error.kind(),
+                        format!(
                         "GitHub artifact {} for run {} attempt {} could not be verified: {error}",
                         selection.artifact_id, selection.run_id, selection.run_attempt
-                    ))
+                    ),
+                    )
                 })?;
                 if selected_artifacts
                     .insert(artifact_name, selection.artifact_id)
@@ -1084,12 +1087,45 @@ mod tests {
         assert!(altered.validate().is_err());
     }
     #[test]
-    fn reviewed_01023_runtime_selection_uses_authored_platform() {
+    fn reviewed_importer_rejects_old_mixed_and_unknown_release_identities() {
+        let reviewed = ReviewedBuildkiteImporter::reviewed();
+        let old_linux = "sha256:0803b5258df3929ab975bcb00b5e49eea028c910f6c59f84c03067ce19dc32fe";
+        let old_macos = "sha256:274edf3e0086df695cf23ad1713adaa25a5ecdd1decafb16480e222e0e9aa9fa";
+        let old = ReviewedBuildkiteImporter {
+            compiler_version: "0.102.3".into(),
+            compiler_digest: old_linux.into(),
+            linux_runtime_digest: old_linux.into(),
+            macos_runtime_digest: old_macos.into(),
+        };
+        assert!(old.validate().is_err());
+        for version in ["0.102.3", "0.102.4", "0.102.6", "observed-green"] {
+            let mut mixed = reviewed.clone();
+            mixed.compiler_version = version.into();
+            assert!(mixed.validate().is_err(), "{version}");
+        }
+        for field in 0..3 {
+            let mut mixed = reviewed.clone();
+            match field {
+                0 => mixed.compiler_digest = old_linux.into(),
+                1 => mixed.linux_runtime_digest = old_linux.into(),
+                _ => mixed.macos_runtime_digest = old_macos.into(),
+            }
+            assert!(mixed.validate().is_err(), "old digest field {field}");
+        }
+        let mut swapped = reviewed.clone();
+        std::mem::swap(
+            &mut swapped.linux_runtime_digest,
+            &mut swapped.macos_runtime_digest,
+        );
+        assert!(swapped.validate().is_err());
+    }
+    #[test]
+    fn reviewed_01025_runtime_selection_uses_authored_platform() {
         let contract = ReviewedBuildkiteImporter::reviewed();
-        assert_eq!(contract.compiler_version, "0.102.3");
+        assert_eq!(contract.compiler_version, "0.102.5");
         assert_eq!(
             contract.compiler_digest,
-            "sha256:0803b5258df3929ab975bcb00b5e49eea028c910f6c59f84c03067ce19dc32fe"
+            "sha256:0e33c9189e80ec1e776a53f837f61b26e8f7f2b26671a6df2c0b4d23c09a4b02"
         );
         assert_eq!(
             contract.runtime_digest_for(&BTreeMap::new()).unwrap(),
@@ -1098,7 +1134,7 @@ mod tests {
         let mut matrix = BTreeMap::from([("os".into(), "macos-latest".into())]);
         assert_eq!(
             contract.runtime_digest_for(&matrix).unwrap(),
-            "sha256:274edf3e0086df695cf23ad1713adaa25a5ecdd1decafb16480e222e0e9aa9fa"
+            "sha256:7af087fef3a258ed093c1812c18eb0832e44b48047cf3ab1b2adf0836fc2ad86"
         );
         matrix.insert("os".into(), "ubuntu-latest".into());
         assert_eq!(
@@ -1167,11 +1203,9 @@ mod tests {
             },
         )
         .unwrap_err();
-        assert!(
-            error
-                .to_string()
-                .contains("custody group result count mismatch")
-        );
+        assert!(error
+            .to_string()
+            .contains("custody group result count mismatch"));
         assert_eq!(dispatched, 1);
         assert_eq!(verified, 0);
     }
