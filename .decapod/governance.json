@@ -260,6 +260,14 @@
       "proof_refs": [
         "/workspace/shared/governed-completion-evidence/rustls-bazel-lock-verify.log"
       ]
+    },
+    {
+      "id": "refresh-security-repair-review",
+      "summary": "Renew content-bound spec reviews after audited dependency repair",
+      "input_digest": "sha256:1189cb3c7ed677e594595540a10455bdbe5ae7ac5376b88aebc5f79206b024a8",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/38577443142/job/115900932474"
+      ]
     }
   ],
   "intents": {
@@ -301,22 +309,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Repairs strengthen existing todo and verification transaction boundaries without adding a storage or orchestration subsystem; Operations details current lifecycle",
-          "reviewed_code_fingerprint": "4d413f07921aaa7114bf076fb0d2e7b6a27a30dee537be1d9168dd60559fcd4b",
+          "reason": "Reviewed current task completion and release boundaries plus rustls 0.23.46 lock repair; existing project architecture, public interfaces and security boundaries remain accurate; task lifecycle details are recorded in OPERATIONS.md",
+          "reviewed_code_fingerprint": "f551dca4951bed4bc6b2ca5d08941767ddbbfbd339e96cf3d21aecd1d2f89816",
           "spec_material_hash": "77b4a522d06938885ac3502be7cc417b0456a06299beeaacf75e846eb4562d84"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Existing public CLI signatures are preserved; verified completion behavior is fail-closed and documented in state-model and Operations",
-          "reviewed_code_fingerprint": "4d413f07921aaa7114bf076fb0d2e7b6a27a30dee537be1d9168dd60559fcd4b",
+          "reason": "Reviewed current task completion and release boundaries plus rustls 0.23.46 lock repair; existing project architecture, public interfaces and security boundaries remain accurate; task lifecycle details are recorded in OPERATIONS.md",
+          "reviewed_code_fingerprint": "f551dca4951bed4bc6b2ca5d08941767ddbbfbd339e96cf3d21aecd1d2f89816",
           "spec_material_hash": "f9711772a9cbac81073b05f30711f2c83c45b9a848ed8ef5c22d4fb2dadff95d"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Current local caller trust boundary remains unchanged; release now enforces assignee equality, with unrestricted actor impersonation explicitly outside guarantee",
-          "reviewed_code_fingerprint": "4d413f07921aaa7114bf076fb0d2e7b6a27a30dee537be1d9168dd60559fcd4b",
+          "reason": "Reviewed current task completion and release boundaries plus rustls 0.23.46 lock repair; existing project architecture, public interfaces and security boundaries remain accurate; task lifecycle details are recorded in OPERATIONS.md",
+          "reviewed_code_fingerprint": "f551dca4951bed4bc6b2ca5d08941767ddbbfbd339e96cf3d21aecd1d2f89816",
           "spec_material_hash": "9ca65fee6422b656de7b2c25e45866c308f1d7e30401a5d296978e35be62df47"
         }
       ],
@@ -328,7 +336,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791985875Z"
+      "updated_at": "1791987230Z"
     },
     "trajectory": {
       "active_boundaries": [
