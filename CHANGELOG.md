@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.112.0](https://github.com/DecapodLabs/decapod/compare/v0.111.6...v0.112.0) - 2026-10-14
+
+### Fixed
+
+- align task proof fixtures and spec reviews
+- retain plan gates during proof recovery
+- finalize recovered proof as an atomic batch
+- bind durable task proof to current revision
+
 ## [0.111.6](https://github.com/DecapodLabs/decapod/compare/v0.111.5...v0.111.6) - 2026-10-14
 
 ### Fixed
