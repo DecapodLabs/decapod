@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.113.0](https://github.com/DecapodLabs/decapod/compare/v0.112.0...v0.113.0) - 2026-10-14
+
+### Fixed
+
+- restore consumer-local readiness and preserve init configuration ([#1434](https://github.com/DecapodLabs/decapod/pull/1434))
+
 ## [0.112.0](https://github.com/DecapodLabs/decapod/compare/v0.111.6...v0.112.0) - 2026-10-14
 
 ### Fixed
