@@ -245,6 +245,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1429"
       ]
+    },
+    {
+      "id": "revision-proof-atomic-recovery",
+      "summary": "Finalize recovered task proof atomically and restore scoped exemptions on errors; reconcile accepted release inventory",
+      "input_digest": "sha256:0767bff7ca031f49c47b450e42863f7d4f93f1be9b063b184b8cf8efdba3e299",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1429"
+      ]
     }
   ],
   "intents": {
@@ -286,22 +294,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed issue1429 current-content contract for exact task revision proof, stale-verifier fencing, atomic proof recovery and conservative historical evidence; preserves storage and publication boundaries",
-          "reviewed_code_fingerprint": "5abb5363406c18b6ef4a242d5e823131577c1ec2e407840a19bda02a400d3905",
-          "spec_material_hash": "c0890e9c75c3bd573d3bcf46d3b14a809d8bb12fa4844b8c1b69eaebe120f627"
+          "reason": "Reviewed exact task/revision proof, all-or-nothing recovery promotion and scoped-exemption restoration; accepted release inventory has only Cargo package-version changes, no altered checks or adapters",
+          "reviewed_code_fingerprint": "8697fee7f4018fb3c36601e2a2321ca00b6bdd0cdbfd63bd8a7ed8a521f9e0ee",
+          "spec_material_hash": "948d973920ac78b98db228517968e58373d11fa0637bfe85188913b1c59f296a"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed issue1429 current-content contract for exact task revision proof, stale-verifier fencing, atomic proof recovery and conservative historical evidence; preserves storage and publication boundaries",
-          "reviewed_code_fingerprint": "5abb5363406c18b6ef4a242d5e823131577c1ec2e407840a19bda02a400d3905",
+          "reason": "Reviewed exact task/revision proof, all-or-nothing recovery promotion and scoped-exemption restoration; accepted release inventory has only Cargo package-version changes, no altered checks or adapters",
+          "reviewed_code_fingerprint": "8697fee7f4018fb3c36601e2a2321ca00b6bdd0cdbfd63bd8a7ed8a521f9e0ee",
           "spec_material_hash": "5964b9006ebe768f1b3a1c7e244bb9b4eec4856d43bcb5ebbbb3d6c611ce5cdd"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed issue1429 current-content contract for exact task revision proof, stale-verifier fencing, atomic proof recovery and conservative historical evidence; preserves storage and publication boundaries",
-          "reviewed_code_fingerprint": "5abb5363406c18b6ef4a242d5e823131577c1ec2e407840a19bda02a400d3905",
+          "reason": "Reviewed exact task/revision proof, all-or-nothing recovery promotion and scoped-exemption restoration; accepted release inventory has only Cargo package-version changes, no altered checks or adapters",
+          "reviewed_code_fingerprint": "8697fee7f4018fb3c36601e2a2321ca00b6bdd0cdbfd63bd8a7ed8a521f9e0ee",
           "spec_material_hash": "8bc61dc4f2ac7adf1fcea9b79c691f66ed7f5696ff9e4e8c5b33243003276b87"
         }
       ],
@@ -315,15 +323,19 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791994896Z"
+      "updated_at": "1791995224Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Do not implement broader per-todo ledger, runtime, cloud proof parity, or alter SQLite/Dactyl ownership"
       ],
-      "artifact_hash": "sha256:13856d189c709ed5f8c2557e740c4390ff73080a066d9b8f42dbf1e2d4989bc4",
+      "artifact_hash": "sha256:e1e488a8cf26d7bdf73158f74f9a92410ed3e3624346d115088d31ad7424c5a9",
       "checks": [
+        {
+          "name": "full_validation",
+          "status": "failed"
+        },
         {
           "name": "git_diff_check",
           "status": "passed"
@@ -361,10 +373,17 @@
             "intent_id": "intent:change_01M4XJJWVMWFERNBH5WFTQ1Q7B",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M4XJJWW5JC0R34KAHQHVKBZ4",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M4XJJWVMWFERNBH5WFTQ1Q7B",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M4XJJWW5JC0R34KAHQHVKBZ4": {
@@ -414,6 +433,23 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:6",
+                "observations": [
+                  ".decapod/config.toml",
+                  "Full validate 96e16630 stopped before runtime checks: PROOF_PROFILE_RECONCILIATION_REQUIRED. Complete inventory compared against prior accepted rustls reconciliation: only Cargo.toml/Cargo.lock package version 0.111.5 -> 0.111.6 differ; no workflow/helper/adapter changes. Explicit user-editable required-profile digest reviewed and updated; agent.init now reports only REQUIRED_PROOF_NOT_RUN. Durable report: /workspace/shared/next-kernel-gap-evidence/validate-96e16630.json.",
+                  "Independent review found provisional recovery pass and leaked verification exemption error paths. Repaired with pending-until-final atomic batch promotion and scope guard; added finalization failure, stale second target, event rollback, drift and isolated-child restoration regressions. No manual builds/tests run."
+                ],
+                "proof_refs": [
+                  "full_validation"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -423,7 +459,9 @@
       "destination": "pull request",
       "evidence": [
         "Current master 7cceb4ac includes PR1427; issue1429 isolates durable proof revision drift after its atomic initial-completion fix. Read-only independent audits confirm outdated pass acceptance and stale verifier baseline race. No runtime proof executed yet.",
-        "Implemented exact task_id/task_revision binding, current-proof consumers, transaction-fenced result/recovery/prune, and historical unbinding on legacy replay. Added negative tests in existing targets. No manual build or test run: full decapod validate owns compilation and verification. Official v0.111.6 asset checksum verified and release-bound projections refreshed by workspace ensure."
+        "Full validate 96e16630 stopped before runtime checks: PROOF_PROFILE_RECONCILIATION_REQUIRED. Complete inventory compared against prior accepted rustls reconciliation: only Cargo.toml/Cargo.lock package version 0.111.5 -> 0.111.6 differ; no workflow/helper/adapter changes. Explicit user-editable required-profile digest reviewed and updated; agent.init now reports only REQUIRED_PROOF_NOT_RUN. Durable report: /workspace/shared/next-kernel-gap-evidence/validate-96e16630.json.",
+        "Implemented exact task_id/task_revision binding, current-proof consumers, transaction-fenced result/recovery/prune, and historical unbinding on legacy replay. Added negative tests in existing targets. No manual build or test run: full decapod validate owns compilation and verification. Official v0.111.6 asset checksum verified and release-bound projections refreshed by workspace ensure.",
+        "Independent review found provisional recovery pass and leaked verification exemption error paths. Repaired with pending-until-final atomic batch promotion and scope guard; added finalization failure, stale second target, event rollback, drift and isolated-child restoration regressions. No manual builds/tests run."
       ],
       "inspected_files": [
         "src/decapod/core/todo.rs",
@@ -433,6 +471,7 @@
       ],
       "intent_id": "intent:change_01M4XJJWVMWFERNBH5WFTQ1Q7B",
       "modified_files": [
+        ".decapod/config.toml",
         "docs/agent/state-model.md",
         "src/decapod/core/todo.rs",
         "src/decapod/core/work_claim.rs",

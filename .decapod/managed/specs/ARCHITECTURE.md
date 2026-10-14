@@ -201,6 +201,11 @@ inspected. Under one broker transaction they compare status, revision, proof-pla
 bytes, artifact bytes, and the previous verification outcome before recording
 new results and canonical events. Batch refresh returns its exact written
 snapshots rather than selecting newly appeared tasks into an earlier validation.
+Recovery keeps every refreshed row pending while aggregate validation runs with
+exactly those task-proof admissions scoped to the recovery. The final transaction
+checks each admission against current task, epoch, output, and file evidence,
+then promotes the complete batch atomically; an error cannot leave partial passes.
+A scope guard restores the temporary verification exemption on every return.
 Prune deletes proof, reopens the task, increments revision, and records its event
 atomically. The legacy replay helper lacks complete revision history and removes
 revision authority from its projection while retaining the original events.
@@ -319,7 +324,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5abb5363406c18b6ef4a242d5e823131577c1ec2e407840a19bda02a400d3905`
+- Repository signal fingerprint: `8697fee7f4018fb3c36601e2a2321ca00b6bdd0cdbfd63bd8a7ed8a521f9e0ee`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (183 files), `tests/` (189 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
