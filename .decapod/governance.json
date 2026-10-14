@@ -268,6 +268,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/actions/runs/38577443142/job/115900932474"
       ]
+    },
+    {
+      "id": "lawful-pruning-fixtures",
+      "summary": "Establish pruning fixture completion through owner yield and assert all mutation outcomes",
+      "input_digest": "sha256:2f698dd1c880999175ffa20ea25f9a51dbb9287f4bc318188e9058dd2d0bf934",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/38578675681/job/115903178552"
+      ]
     }
   ],
   "intents": {
@@ -309,22 +317,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed current task completion and release boundaries plus rustls 0.23.46 lock repair; existing project architecture, public interfaces and security boundaries remain accurate; task lifecycle details are recorded in OPERATIONS.md",
-          "reviewed_code_fingerprint": "f551dca4951bed4bc6b2ca5d08941767ddbbfbd339e96cf3d21aecd1d2f89816",
+          "reason": "Reviewed final lifecycle changes, rustls repair and pruning fixtures; fixtures now establish legitimate terminal states without changing product architecture, public interfaces or security boundaries; OPERATIONS.md describes implemented task contract",
+          "reviewed_code_fingerprint": "a0ff79178165611bcfcabf80c53a0e782ca391bbd5662a9fb7145954d30f08f0",
           "spec_material_hash": "77b4a522d06938885ac3502be7cc417b0456a06299beeaacf75e846eb4562d84"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed current task completion and release boundaries plus rustls 0.23.46 lock repair; existing project architecture, public interfaces and security boundaries remain accurate; task lifecycle details are recorded in OPERATIONS.md",
-          "reviewed_code_fingerprint": "f551dca4951bed4bc6b2ca5d08941767ddbbfbd339e96cf3d21aecd1d2f89816",
+          "reason": "Reviewed final lifecycle changes, rustls repair and pruning fixtures; fixtures now establish legitimate terminal states without changing product architecture, public interfaces or security boundaries; OPERATIONS.md describes implemented task contract",
+          "reviewed_code_fingerprint": "a0ff79178165611bcfcabf80c53a0e782ca391bbd5662a9fb7145954d30f08f0",
           "spec_material_hash": "f9711772a9cbac81073b05f30711f2c83c45b9a848ed8ef5c22d4fb2dadff95d"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed current task completion and release boundaries plus rustls 0.23.46 lock repair; existing project architecture, public interfaces and security boundaries remain accurate; task lifecycle details are recorded in OPERATIONS.md",
-          "reviewed_code_fingerprint": "f551dca4951bed4bc6b2ca5d08941767ddbbfbd339e96cf3d21aecd1d2f89816",
+          "reason": "Reviewed final lifecycle changes, rustls repair and pruning fixtures; fixtures now establish legitimate terminal states without changing product architecture, public interfaces or security boundaries; OPERATIONS.md describes implemented task contract",
+          "reviewed_code_fingerprint": "a0ff79178165611bcfcabf80c53a0e782ca391bbd5662a9fb7145954d30f08f0",
           "spec_material_hash": "9ca65fee6422b656de7b2c25e45866c308f1d7e30401a5d296978e35be62df47"
         }
       ],
@@ -336,14 +344,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791987230Z"
+      "updated_at": "1791988188Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Preserve failed attempts and independent validation; no merge authority"
       ],
-      "artifact_hash": "sha256:abc067e7b939197653821ca436f2effd9fbb9118e53f44cd0ec56279e434c874",
+      "artifact_hash": "sha256:e34c026f968c948dc157bcfe846c2b85b232c84c37defe022cdda0f37d0fa338",
       "checks": [
         {
           "name": "buildkite1477-dependency-audit",
@@ -356,6 +364,10 @@
         {
           "name": "completion-regressions",
           "status": "passed"
+        },
+        {
+          "name": "core-pruning-fixtures",
+          "status": "failed"
         },
         {
           "name": "exclusive-completion-baseline",
@@ -416,10 +428,17 @@
             "intent_id": "intent:change_01M4XA68B83672X8674J2C13GK",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M4XA68BQXWY6WVVVM6ABDJKE",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M4XA68B83672X8674J2C13GK",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M4XA68BQXWY6WVVVM6ABDJKE": {
@@ -518,6 +537,30 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "tests/workspace_prune_regression.rs",
+                  "Core CI identified four pruning fixtures that ignored rejected unproven exclusive completion. Repair fixtures through owner-authorized yield and assert every transition, preserving all pruning safety assertions. Previous full validation run 1482 failed and its report remains retained."
+                ],
+                "proof_refs": [
+                  "core-pruning-fixtures"
+                ],
+                "scope": [
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs",
+                  "Cargo.lock",
+                  "MODULE.bazel.lock",
+                  "docs",
+                  "root",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/plugins/verify.rs",
+                  "tests"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -527,6 +570,7 @@
       "destination": "pull request",
       "evidence": [
         "22completion-related tests and16todo unit tests passed, including4release tests and worker failure; Buildkite1477 blocked on inherited rustls0.23.45 advisories0346-0349; minimal official0.23.46 lock update preserves all checks and packageversions otherwise",
+        "Core CI identified four pruning fixtures that ignored rejected unproven exclusive completion. Repair fixtures through owner-authorized yield and assert every transition, preserving all pruning safety assertions. Previous full validation run 1482 failed and its report remains retained.",
         "Full validation rejected stale reviewed source inventory. Compared every discovered source against last reviewed072a1820: only Cargo.toml and root Cargo.lock package version0.111.4 to0.111.5 changed; no workflow/check coverage change. Explicitly reconcile release-only source inventory112cfe84.",
         "Red baseline: unproven exclusive direct done returned ok with revision2; regression tests/plugins/todo.rs exclusive_lease_blocks_unproven_done",
         "Three focused issue repairs1424,1425,1426; red exclusive-completion reproduced and retained; new adversarial tests cover rollback, drift, missing/failing proof and non-owner release"
@@ -547,7 +591,8 @@
         "tests/plugins/todo.rs",
         "tests/unit/core/todo_release_tests.rs",
         "tests/unit/core/todo_tests.rs",
-        "tests/unit/plugins/verify_completion_tests.rs"
+        "tests/unit/plugins/verify_completion_tests.rs",
+        "tests/workspace_prune_regression.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
