@@ -579,7 +579,7 @@ fn current_pass_persists_exact_snapshot_and_canonical_result_event() {
         written.last_verified_at.as_deref()
     );
 
-    // Recovery's final aggregate result must use the just-written snapshot.
+    // A subsequent result must use the just-written snapshot.
     let rejected = persist_result(&store, &written, "fail", "final aggregate failed").unwrap();
     assert_eq!(
         target_snapshot(&rejected),
@@ -818,17 +818,17 @@ fn recovery_binds_current_revision_and_remains_claimed_until_verification() {
     );
     let result = verify_target(&recovered, &store.root, dir.path(), Some(&snapshot)).unwrap();
     assert_eq!(result.status, "pass");
-    let written = persist_result(
+    let finalized = finalize_recovered_batch(
         &store,
-        &recovered,
-        &result.status,
-        "recovered proof verified",
+        dir.path(),
+        std::slice::from_ref(&recovered),
+        &snapshot,
     )
     .unwrap();
-    assert_eq!(
-        target_snapshot(&written),
-        target_snapshot(&target(&store, ID))
-    );
+    assert_eq!(finalized[0].status, "pass");
+    let written = target(&store, ID);
+    assert_eq!(written.last_verified_status.as_deref(), Some("pass"));
+    assert_eq!(written.artifacts, recovered.artifacts);
     assert!(load_targets(&store, None).unwrap().is_empty());
 }
 
@@ -913,4 +913,218 @@ fn second_recovery_event_failure_rolls_back_both_baselines_and_events() {
             target_snapshot(original)
         );
     }
+}
+
+fn pending_batch_fixture() -> (TempDir, Store, Vec<VerifyTarget>) {
+    let (dir, store, targets) = batch_fixture();
+    let pending = refresh_batch_baselines(
+        &store,
+        &targets,
+        &passing_snapshot(),
+        &active_validation_epoch(dir.path()).unwrap(),
+    )
+    .unwrap();
+    assert!(
+        pending
+            .iter()
+            .all(|target| target.last_verified_status.as_deref() == Some("CLAIMED"))
+    );
+    (dir, store, pending)
+}
+
+fn assert_batch_pending_without_result_events(store: &Store, targets: &[VerifyTarget]) {
+    for pending in targets {
+        assert_eq!(
+            target(store, &pending.todo_id)
+                .last_verified_status
+                .as_deref(),
+            Some("CLAIMED")
+        );
+    }
+    assert!(verification_events(store, "task.verify.result").is_empty());
+}
+
+#[test]
+fn stale_second_finalization_target_leaves_the_entire_batch_pending() {
+    for mutation in [
+        "UPDATE tasks SET revision = revision + 1 WHERE id = ?1",
+        "UPDATE task_verification SET last_verified_at = 'newer-final-result' WHERE todo_id = ?1",
+    ] {
+        let (dir, store, pending) = pending_batch_fixture();
+        with_conn(&store, |conn| {
+            conn.execute(mutation, [&pending[1].todo_id]).unwrap();
+        });
+        let before = baseline_rows(&store);
+        let error = finalize_recovered_batch(&store, dir.path(), &pending, &passing_snapshot())
+            .unwrap_err();
+        assert!(
+            error.to_string().contains("STALE_TASK_VERIFICATION"),
+            "{mutation}: {error}"
+        );
+        assert_eq!(baseline_rows(&store), before);
+        assert_batch_pending_without_result_events(&store, &pending);
+    }
+}
+
+#[test]
+fn failed_or_drifted_final_validation_leaves_every_target_claimed() {
+    for change in [
+        "failed validation",
+        "output hash",
+        "artifact",
+        "validation epoch",
+    ] {
+        let (dir, store, pending) = pending_batch_fixture();
+        let mut snapshot = passing_snapshot();
+        match change {
+            "failed validation" => snapshot.passed = false,
+            "output hash" => snapshot.output_hash = "sha256:changed-final-output".into(),
+            "artifact" => {
+                fs::write(dir.path().join("proof.txt"), "changed after batch capture").unwrap()
+            }
+            "validation epoch" => {
+                fs::write(dir.path().join("AGENTS.md"), "changed after batch capture").unwrap()
+            }
+            _ => unreachable!(),
+        }
+        let before = baseline_rows(&store);
+        assert!(
+            finalize_recovered_batch(&store, dir.path(), &pending, &snapshot).is_err(),
+            "{change}"
+        );
+        assert_eq!(baseline_rows(&store), before, "{change}");
+        assert_batch_pending_without_result_events(&store, &pending);
+    }
+}
+
+#[test]
+fn second_finalization_event_failure_rolls_back_every_pass_and_event() {
+    let (dir, store, pending) = pending_batch_fixture();
+    let before = baseline_rows(&store);
+    reject_verification_event(&store, "task.verify.result", &pending[1].todo_id);
+    let error =
+        finalize_recovered_batch(&store, dir.path(), &pending, &passing_snapshot()).unwrap_err();
+    assert!(
+        error
+            .to_string()
+            .contains("injected canonical verification event failure")
+    );
+    assert_eq!(baseline_rows(&store), before);
+    assert_batch_pending_without_result_events(&store, &pending);
+}
+
+#[test]
+fn unchanged_passing_final_snapshot_commits_the_whole_recovery_batch() {
+    let (dir, store, pending) = pending_batch_fixture();
+    let results =
+        finalize_recovered_batch(&store, dir.path(), &pending, &passing_snapshot()).unwrap();
+    assert_eq!(results.len(), pending.len());
+    assert!(results.iter().all(|result| result.status == "pass"));
+    let events = verification_events(&store, "task.verify.result");
+    assert_eq!(events.len(), pending.len());
+    for original in &pending {
+        let current = target(&store, &original.todo_id);
+        assert_eq!(current.last_verified_status.as_deref(), Some("pass"));
+        assert_eq!(current.revision, original.revision);
+        assert_eq!(current.artifacts, original.artifacts);
+        assert!(
+            results
+                .iter()
+                .any(|result| result.todo_id == original.todo_id)
+        );
+        let event = events
+            .iter()
+            .find(|event| event.payload["task_id"] == original.todo_id)
+            .unwrap();
+        assert_eq!(event.payload["payload"]["last_verified_status"], "pass");
+        assert_eq!(
+            event.payload["payload"]["verification_artifacts"],
+            artifacts(&current)
+        );
+        assert_eq!(current.last_verified_at.as_deref(), Some(event.ts.as_str()));
+    }
+    assert!(load_targets(&store, None).unwrap().is_empty());
+}
+
+#[test]
+fn verifying_todos_guard_restores_exact_exemption_after_all_exits() {
+    const CHILD: &str = "DECAPOD_VERIFY_GUARD_TEST_CHILD";
+    const VERIFYING: &str = "DECAPOD_VERIFYING_TODO";
+    if std::env::var_os(CHILD).is_none() {
+        use crate::core::bounded_process::{BoundedCommand, CONTROL_TIMEOUT};
+        // Keep process-global environment changes out of the parallel suite.
+        for initial in [None, Some(""), Some("outer-task-a,outer-task-b")] {
+            let mut child = std::process::Command::new(std::env::current_exe().unwrap());
+            child.args([
+                "--exact",
+                "plugins::verify::completion_tests::verifying_todos_guard_restores_exact_exemption_after_all_exits",
+                "--nocapture",
+                "--test-threads=1",
+            ]).env(CHILD, "1");
+            if let Some(value) = initial {
+                child.env(VERIFYING, value);
+            } else {
+                child.env_remove(VERIFYING);
+            }
+            let output = child.bounded_output(CONTROL_TIMEOUT).unwrap();
+            assert!(
+                output.status.success(),
+                "initial={initial:?}: {}\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            );
+            assert!(String::from_utf8_lossy(&output.stdout).contains("1 passed"));
+        }
+        return;
+    }
+
+    let previous = std::env::var_os(VERIFYING);
+    {
+        let _guard = VerifyingTodosGuard::enter("exact-task-a,exact-task-b");
+        assert_eq!(
+            std::env::var(VERIFYING).unwrap(),
+            "exact-task-a,exact-task-b"
+        );
+        {
+            let _inner = VerifyingTodosGuard::enter("nested-task");
+            assert_eq!(std::env::var(VERIFYING).unwrap(), "nested-task");
+        }
+        assert_eq!(
+            std::env::var(VERIFYING).unwrap(),
+            "exact-task-a,exact-task-b"
+        );
+    }
+    assert_eq!(std::env::var_os(VERIFYING), previous);
+
+    let (dir, store) = fixture();
+    let stale = capture_done(&store, dir.path(), ID);
+    with_conn(&store, |conn| {
+        conn.execute(
+            "UPDATE tasks SET revision = revision + 1 WHERE id = ?1",
+            [ID],
+        )
+        .unwrap();
+    });
+    let result: Result<(), error::DecapodError> = (|| {
+        let _guard = VerifyingTodosGuard::enter(ID);
+        assert_eq!(std::env::var(VERIFYING).unwrap(), ID);
+        persist_result(&store, &stale, "pass", "injected stale write")?;
+        Ok(())
+    })();
+    assert!(
+        result
+            .unwrap_err()
+            .to_string()
+            .contains("STALE_TASK_VERIFICATION")
+    );
+    assert_eq!(std::env::var_os(VERIFYING), previous);
+
+    assert!(
+        std::panic::catch_unwind(|| {
+            let _guard = VerifyingTodosGuard::enter("unwinding-task");
+            panic!("injected verification unwind");
+        })
+        .is_err()
+    );
+    assert_eq!(std::env::var_os(VERIFYING), previous);
 }

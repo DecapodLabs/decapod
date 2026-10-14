@@ -47,7 +47,10 @@ task, or the supported prune/recomplete flow when the work must be reopened.
 Verification and batch recovery compare their original task and proof baseline
 inside the write transaction. `STALE_TASK_VERIFICATION` means concurrent changes
 won: inspect the current task and retry instead of applying the old result to new
-evidence. Prune deletes proof, reopens the task, increments revision, and records
+evidence. Recovery keeps the complete batch pending through aggregate validation
+and current artifact checks, then promotes all results and events atomically.
+Temporary verification exemptions are restored on every exit. Prune deletes
+proof, reopens the task, increments revision, and records
 its event atomically. Legacy replay preserves the original proof event but cannot
 assign revision authority when the full mutation history is unavailable.
 

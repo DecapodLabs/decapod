@@ -537,25 +537,37 @@ fn append_verification_event_on_connection(
     Ok(())
 }
 
-fn persist_result(
-    store: &Store,
+fn persist_result_on_connection(
+    conn: &crate::core::db::Connection,
     target: &VerifyTarget,
     status: &str,
     notes: &str,
-) -> Result<VerifyTarget, error::DecapodError> {
-    let ts = now_iso();
-    let broker = DbBroker::new(&store.root);
-    let db_path = todo::todo_db_path(&store.root);
-    broker.with_transaction(&db_path, "decapod", None, "verify.persist", |conn| {
-        ensure_target_unchanged(conn, target)?;
-        let artifacts = target.artifacts.as_deref().and_then(|raw| serde_json::from_str::<serde_json::Value>(raw).ok());
-        if status.eq_ignore_ascii_case("pass") && (target.status != "done" || !todo::verification_binding_matches(artifacts.as_ref(), &target.todo_id, target.revision)) {
-            return Err(error::DecapodError::ValidationError(
+    ts: &str,
+) -> Result<(), error::DecapodError> {
+    if conn.is_autocommit() {
+        return Err(error::DecapodError::ValidationError(
+            "Verification result requires a transaction".into(),
+        ));
+    }
+    ensure_target_unchanged(conn, target)?;
+    let artifacts = target
+        .artifacts
+        .as_deref()
+        .and_then(|raw| serde_json::from_str::<serde_json::Value>(raw).ok());
+    if status.eq_ignore_ascii_case("pass")
+        && (target.status != "done"
+            || !todo::verification_binding_matches(
+                artifacts.as_ref(),
+                &target.todo_id,
+                target.revision,
+            ))
+    {
+        return Err(error::DecapodError::ValidationError(
                 "STALE_TASK_VERIFICATION: passing proof must bind the current completed task; recapture verification".into(),
             ));
-        }
-        let proof_plan = target.proof_plan.as_deref().unwrap_or("[]");
-        conn.execute(
+    }
+    let proof_plan = target.proof_plan.as_deref().unwrap_or("[]");
+    conn.execute(
             "INSERT INTO task_verification(todo_id, proof_plan, verification_artifacts, last_verified_at, last_verified_status, last_verified_notes, verification_policy_days, updated_at)
              VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?4)
              ON CONFLICT(todo_id) DO UPDATE SET
@@ -568,13 +580,32 @@ fn persist_result(
                updated_at=excluded.updated_at",
             crate::core::db::params![target.todo_id, proof_plan, target.artifacts, ts, status, notes, target.verification_policy_days],
         )?;
-        append_verification_event_on_connection(conn, &target.todo_id, "task.verify.result", &ts, serde_json::json!({
+    append_verification_event_on_connection(
+        conn,
+        &target.todo_id,
+        "task.verify.result",
+        ts,
+        serde_json::json!({
             "proof_plan": serde_json::from_str::<serde_json::Value>(proof_plan).unwrap_or_else(|_| serde_json::json!([])),
             "verification_artifacts": artifacts,
             "last_verified_status": status,
             "last_verified_notes": notes,
             "verification_policy_days": target.verification_policy_days,
-        }))
+        }),
+    )
+}
+
+fn persist_result(
+    store: &Store,
+    target: &VerifyTarget,
+    status: &str,
+    notes: &str,
+) -> Result<VerifyTarget, error::DecapodError> {
+    let ts = now_iso();
+    let broker = DbBroker::new(&store.root);
+    let db_path = todo::todo_db_path(&store.root);
+    broker.with_transaction(&db_path, "decapod", None, "verify.persist", |conn| {
+        persist_result_on_connection(conn, target, status, notes, &ts)
     })?;
     mirror_verification_to_federation(
         store,
@@ -1402,6 +1433,68 @@ pub fn prune_verification_for_todo(
     })
 }
 
+struct VerifyingTodosGuard {
+    previous: Option<std::ffi::OsString>,
+}
+
+impl VerifyingTodosGuard {
+    fn enter(ids: &str) -> Self {
+        let previous = std::env::var_os("DECAPOD_VERIFYING_TODO");
+        unsafe {
+            std::env::set_var("DECAPOD_VERIFYING_TODO", ids);
+        }
+        Self { previous }
+    }
+}
+
+impl Drop for VerifyingTodosGuard {
+    fn drop(&mut self) {
+        unsafe {
+            if let Some(previous) = &self.previous {
+                std::env::set_var("DECAPOD_VERIFYING_TODO", previous);
+            } else {
+                std::env::remove_var("DECAPOD_VERIFYING_TODO");
+            }
+        }
+    }
+}
+
+/// Recovery has no provisional passing state. Recheck the exact batch and its
+/// material, then promote all proof rows and events in a single transaction.
+fn finalize_recovered_batch(
+    store: &Store,
+    repo_root: &Path,
+    targets: &[VerifyTarget],
+    snapshot: &ValidationSnapshot,
+) -> Result<Vec<VerifyTodoResult>, error::DecapodError> {
+    if !snapshot.passed {
+        return Err(error::DecapodError::ValidationError(
+            "Final aggregate validation did not pass; recovered proof remains pending".into(),
+        ));
+    }
+    let ts = now_iso();
+    DbBroker::new(&store.root).with_transaction(&todo::todo_db_path(&store.root), "decapod", None, "verify.recover.finalize", |conn| {
+        for target in targets {
+            ensure_target_unchanged(conn, target)?;
+        }
+        let mut results = Vec::with_capacity(targets.len());
+        for target in targets {
+            let result = verify_target(target, &store.root, repo_root, Some(snapshot))?;
+            if result.status != "pass" {
+                return Err(error::DecapodError::ValidationError(format!(
+                    "Recovered task {} did not pass current proof; the complete batch remains pending: {}",
+                    target.todo_id, serde_json::to_string(&result).map_err(|err| error::DecapodError::ValidationError(err.to_string()))?,
+                )));
+            }
+            results.push(result);
+        }
+        for (target, result) in targets.iter().zip(&results) {
+            persist_result_on_connection(conn, target, &result.status, &result.notes.join("; "), &ts)?;
+        }
+        Ok(results)
+    })
+}
+
 fn run_recover_cli(store: &Store, repo_root: &Path, json: bool) -> Result<(), error::DecapodError> {
     let targets = load_targets(store, None)?;
     if targets.is_empty() {
@@ -1410,87 +1503,53 @@ fn run_recover_cli(store: &Store, repo_root: &Path, json: bool) -> Result<(), er
         ));
     }
 
-    let old_verifying = std::env::var("DECAPOD_VERIFYING_TODO").ok();
     let target_ids = targets
         .iter()
         .map(|target| target.todo_id.as_str())
         .collect::<Vec<_>>()
         .join(",");
-    unsafe {
-        std::env::set_var("DECAPOD_VERIFYING_TODO", &target_ids);
+    let _verifying = VerifyingTodosGuard::enter(&target_ids);
+
+    let (passed, output_hash) = run_validate_and_hash(&store.root, repo_root, None)?;
+    let snapshot = ValidationSnapshot {
+        passed,
+        output_hash,
+    };
+    let validation_epoch = active_validation_epoch(repo_root)?;
+    let recovered_targets = refresh_batch_baselines(store, &targets, &snapshot, &validation_epoch)?;
+
+    // These exact tasks remain CLAIMED while their own aggregate admission
+    // check is scoped out. All other final validation gates still execute.
+    // Finalization rechecks every task/artifact and commits all passes at once.
+    let (final_passed, final_hash) = run_validate_and_hash(&store.root, repo_root, None)?;
+    let results = finalize_recovered_batch(
+        store,
+        repo_root,
+        &recovered_targets,
+        &ValidationSnapshot {
+            passed: final_passed,
+            output_hash: final_hash.clone(),
+        },
+    )?;
+
+    if json {
+        println!(
+            "{}",
+            serde_json::json!({
+                "status": "ok",
+                "recovered": results.len(),
+                "validation_epoch": validation_epoch.epoch_id,
+                "snapshot_output_hash": snapshot.output_hash,
+                "final_output_hash": final_hash
+            })
+        );
+    } else {
+        println!(
+            "Recovered and verified {} TODO(s) with final aggregate validation passing.",
+            results.len()
+        );
     }
-
-    let result = (|| {
-        let (passed, output_hash) = run_validate_and_hash(&store.root, repo_root, None)?;
-        let snapshot = ValidationSnapshot {
-            passed,
-            output_hash,
-        };
-        let validation_epoch = active_validation_epoch(repo_root)?;
-        let recovered_targets =
-            refresh_batch_baselines(store, &targets, &snapshot, &validation_epoch)?;
-
-        let mut results = Vec::new();
-        let mut result_targets = Vec::new();
-        for target in &recovered_targets {
-            let verification = verify_target(target, &store.root, repo_root, Some(&snapshot))?;
-            let written = persist_result(
-                store,
-                target,
-                &verification.status,
-                &verification.notes.join("; "),
-            )?;
-            result_targets.push(written);
-            results.push(verification);
-        }
-
-        unsafe {
-            std::env::remove_var("DECAPOD_VERIFYING_TODO");
-        }
-        let (final_passed, final_hash) = run_validate_and_hash(&store.root, repo_root, None)?;
-        if !final_passed || results.iter().any(|result| result.status != "pass") {
-            for target in &result_targets {
-                persist_result(
-                    store,
-                    target,
-                    "fail",
-                    "batch recovery rejected because final aggregate validation or task proof failed",
-                )?;
-            }
-            return Err(error::DecapodError::ValidationError(format!(
-                "proof recovery rejected: final aggregate validation passed={} hash={}",
-                final_passed, final_hash
-            )));
-        }
-
-        if json {
-            println!(
-                "{}",
-                serde_json::json!({
-                    "status": "ok",
-                    "recovered": results.len(),
-                    "validation_epoch": validation_epoch.epoch_id,
-                    "snapshot_output_hash": snapshot.output_hash,
-                    "final_output_hash": final_hash
-                })
-            );
-        } else {
-            println!(
-                "Recovered and verified {} TODO(s) with final aggregate validation passing.",
-                results.len()
-            );
-        }
-        Ok(())
-    })();
-
-    unsafe {
-        if let Some(value) = old_verifying {
-            std::env::set_var("DECAPOD_VERIFYING_TODO", value);
-        } else {
-            std::env::remove_var("DECAPOD_VERIFYING_TODO");
-        }
-    }
-    result
+    Ok(())
 }
 
 pub fn run_verify_cli(
@@ -1708,12 +1767,9 @@ pub fn run_verify_cli(
     let run_id = crate::core::ulid::new_ulid();
     let mut results = Vec::new();
 
-    let old_verifying = std::env::var("DECAPOD_VERIFYING_TODO").ok();
     let target_ids: Vec<String> = targets.iter().map(|t| t.todo_id.clone()).collect();
     let target_ids_str = target_ids.join(",");
-    unsafe {
-        std::env::set_var("DECAPOD_VERIFYING_TODO", &target_ids_str);
-    }
+    let _verifying = VerifyingTodosGuard::enter(&target_ids_str);
 
     let validation_snapshot = if single_id.is_none() {
         let (passed, output_hash) = run_validate_and_hash(&store.root, repo_root, None)?;
@@ -1817,14 +1873,6 @@ pub fn run_verify_cli(
             report.summary.unknown,
             report.summary.stale
         );
-    }
-
-    unsafe {
-        if let Some(val) = old_verifying {
-            std::env::set_var("DECAPOD_VERIFYING_TODO", val);
-        } else {
-            std::env::remove_var("DECAPOD_VERIFYING_TODO");
-        }
     }
 
     if report.summary.failed > 0 {

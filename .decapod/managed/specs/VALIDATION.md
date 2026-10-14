@@ -308,7 +308,10 @@ selection, observational comments, custody edits, and conservative legacy replay
 Verification fixtures prove post-transition capture, current-revision recapture,
 stale pass/failure rejection, prune ABA protection, and transaction rollback
 for result/recovery/prune events. Batch recovery must not partly rewrite proof
-when any captured task or baseline changes. These live in the existing selected
+when any captured task or baseline changes. Final aggregate failure, a stale
+second target, an event-insertion failure, or drift in output/material/epoch
+must leave the whole recovery batch pending. Temporary admission exemptions must
+restore their previous value after success, errors, and unwinding. These live in the existing selected
 unit/plugin test targets; fixture validation callbacks are test-only and cannot
 manufacture production completion evidence.
 
@@ -448,7 +451,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5abb5363406c18b6ef4a242d5e823131577c1ec2e407840a19bda02a400d3905`
+- Repository signal fingerprint: `8697fee7f4018fb3c36601e2a2321ca00b6bdd0cdbfd63bd8a7ed8a521f9e0ee`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (183 files), `tests/` (189 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
