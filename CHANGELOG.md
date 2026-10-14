@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.111.6](https://github.com/DecapodLabs/decapod/compare/v0.111.5...v0.111.6) - 2026-10-14
+
+### Fixed
+
+- enforce atomic task completion and claim custody ([#1427](https://github.com/DecapodLabs/decapod/pull/1427))
+
 ## [0.111.5](https://github.com/DecapodLabs/decapod/compare/v0.111.4...v0.111.5) - 2026-10-14
 
 ### Fixed
