@@ -243,6 +243,15 @@
         "tests/unit/core/todo_tests.rs",
         "tests/unit/plugins/verify_completion_tests.rs"
       ]
+    },
+    {
+      "id": "release-profile-reconciliation",
+      "summary": "Review source inventory release-only version delta and reconcile declared digest after validation rejection",
+      "input_digest": "sha256:40cce1d42085ee77bc772a9174cbede3f90b2b9c8f0512a62b43cff223ec3d72",
+      "proof_refs": [
+        "Cargo.lock",
+        "Cargo.toml"
+      ]
     }
   ],
   "intents": {
@@ -318,7 +327,7 @@
         "Current claimed task and isolated work branch",
         "Preserve failed attempts and independent validation; no merge authority"
       ],
-      "artifact_hash": "sha256:8a605f7e07593f7ddba2ce8435fac22df7a352ee2b1bc30d7668f31153fc5d33",
+      "artifact_hash": "sha256:156fb3ef7970458eda2b67a6e5d65248d88490d818aae354417134832dac5857",
       "checks": [
         {
           "name": "code-diff-review",
@@ -326,6 +335,10 @@
         },
         {
           "name": "exclusive-completion-baseline",
+          "status": "failed"
+        },
+        {
+          "name": "validation-4a64f673",
           "status": "failed"
         }
       ],
@@ -357,10 +370,17 @@
             "intent_id": "intent:change_01M4XA68B83672X8674J2C13GK",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M4XA68BQXWY6WVVVM6ABDJKE",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M4XA68B83672X8674J2C13GK",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M4XA68BQXWY6WVVVM6ABDJKE": {
@@ -412,6 +432,27 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  ".decapod/config.toml",
+                  "Full validation rejected stale reviewed source inventory. Compared every discovered source against last reviewed072a1820: only Cargo.toml and root Cargo.lock package version0.111.4 to0.111.5 changed; no workflow/check coverage change. Explicitly reconcile release-only source inventory112cfe84."
+                ],
+                "proof_refs": [
+                  "validation-4a64f673"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "docs",
+                  "root",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/plugins/verify.rs",
+                  "tests"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -420,6 +461,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Full validation rejected stale reviewed source inventory. Compared every discovered source against last reviewed072a1820: only Cargo.toml and root Cargo.lock package version0.111.4 to0.111.5 changed; no workflow/check coverage change. Explicitly reconcile release-only source inventory112cfe84.",
         "Red baseline: unproven exclusive direct done returned ok with revision2; regression tests/plugins/todo.rs exclusive_lease_blocks_unproven_done",
         "Three focused issue repairs1424,1425,1426; red exclusive-completion reproduced and retained; new adversarial tests cover rollback, drift, missing/failing proof and non-owner release"
       ],
@@ -429,6 +471,7 @@
       ],
       "intent_id": "intent:change_01M4XA68B83672X8674J2C13GK",
       "modified_files": [
+        ".decapod/config.toml",
         ".decapod/managed/specs/OPERATIONS.md",
         "docs/agent/state-model.md",
         "src/decapod/core/todo.rs",
@@ -442,6 +485,7 @@
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
+        ".decapod/config.toml",
         ".decapod/managed/specs",
         "docs",
         "root",
