@@ -1203,9 +1203,11 @@ mod tests {
             },
         )
         .unwrap_err();
-        assert!(error
-            .to_string()
-            .contains("custody group result count mismatch"));
+        assert!(
+            error
+                .to_string()
+                .contains("custody group result count mismatch")
+        );
         assert_eq!(dispatched, 1);
         assert_eq!(verified, 0);
     }

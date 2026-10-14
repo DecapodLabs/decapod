@@ -257,6 +257,11 @@
       "proof_refs": [
         "Official buildkite/buildkite-gha release v0.102.5 assets independently hashed; https://github.com/buildkite/buildkite-gha/compare/v0.102.3...v0.102.5 reviewed"
       ]
+    },
+    {
+      "id": "quinn-importer-fmt-repair",
+      "summary": "Correct importer update formatting to repository Rust2024; preserve failed formatting validation evidence",
+      "input_digest": "sha256:33e16d385b6905f00692ddca32771c6ffe7fc73ef5212a21738998739046b54b"
     }
   ],
   "intents": {
@@ -308,7 +313,7 @@
         "Current claimed task and isolated work branch",
         "Only Quinn dependency and required governance/spec reconciliation; all source CI helpers and workflows unchanged"
       ],
-      "artifact_hash": "sha256:102dab44d7c867d3a03a2337ac9eeeb857554f50211ed883dec36c338dd6630d",
+      "artifact_hash": "sha256:99a6365ed2214aab4e8b4e1ef4a84d1135d3511a5eecf3ba6a20bf04e69ca949",
       "checks": [
         {
           "name": "bazel-mod-deps",
@@ -317,6 +322,10 @@
         {
           "name": "dependency-feature-reachability",
           "status": "passed"
+        },
+        {
+          "name": "importer_candidate_fmt",
+          "status": "failed"
         },
         {
           "name": "initial-source-ci",
@@ -370,10 +379,17 @@
             "intent_id": "intent:change_01M4WDFYXQJZS8N294KV08VX4Z",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M4WDFYYN55XF04924XJEJMTH",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M4WDFYXQJZS8N294KV08VX4Z",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M4WDFYYN55XF04924XJEJMTH": {
@@ -438,6 +454,23 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Buildkite1402 and GitHub38555124426 rejected formatting; correct targeted rustfmt edition to repository2024, preserve failure"
+                ],
+                "proof_refs": [
+                  "importer_candidate_fmt"
+                ],
+                "scope": [
+                  "root",
+                  "src/decapod/core/validation_runtime/snapshot.rs",
+                  "src/decapod/core/validation_runtime/snapshot/source_import.rs"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -450,6 +483,7 @@
         "/workspace/shared/quinn-security-evidence/cargo-audit.json",
         "/workspace/shared/quinn-security-evidence/quinn-feature-tree.txt",
         "Buildkite1392 all source jobs passed; full controller rejects observed importer0.102.5 against reviewed0.102.3",
+        "Buildkite1402 and GitHub38555124426 rejected formatting; correct targeted rustfmt edition to repository2024, preserve failure",
         "Official release asset639031444 archive sha256:4d76d1e54cc3d90790cb7e6046abf6e5c60c8ab50de59ff4c25c7cbddb42bd59 executable sha256:0e33c9189e80ec1e776a53f837f61b26e8f7f2b26671a6df2c0b4d23c09a4b02; asset639031441 archive sha256:1ebe5b625f21a4b9b4b4eaa60cafb574dcc918ffbb8436b62bcc908ad25a795f executable sha256:7af087fef3a258ed093c1812c18eb0832e44b48047cf3ab1b2adf0836fc2ad86",
         "User explicitly approved independently reviewed0.102.5 compatibility and regression coverage in same Quinn PR"
       ],

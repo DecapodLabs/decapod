@@ -926,10 +926,11 @@ mod tests {
                 if spec.arguments().iter().any(|arg| arg == "fetch") {
                     self.fetches += 1;
                     assert_eq!(spec.arguments().last().unwrap(), &self.server_s);
-                    assert!(spec
-                        .arguments()
-                        .iter()
-                        .any(|arg| arg == "--no-write-fetch-head"));
+                    assert!(
+                        spec.arguments()
+                            .iter()
+                            .any(|arg| arg == "--no-write-fetch-head")
+                    );
                     return Ok(Reply {
                         exit_code: 0,
                         stdout: Vec::new(),
@@ -1043,17 +1044,19 @@ mod tests {
         legacy["transport_head"] = serde_json::Value::String("e".repeat(40));
         let legacy_path = handoff.with_file_name("legacy-transport-handoff.json");
         write_new(&legacy_path, &serde_json::to_vec(&legacy).unwrap()).unwrap();
-        assert!(adopt_host_handoff(
-            options,
-            repository,
-            &mut reader,
-            &legacy_path,
-            &server_s,
-            &cancel
-        )
-        .unwrap_err()
-        .to_string()
-        .contains("LEGACY_TEMPORARY_SNAPSHOT_UNSUPPORTED"));
+        assert!(
+            adopt_host_handoff(
+                options,
+                repository,
+                &mut reader,
+                &legacy_path,
+                &server_s,
+                &cancel
+            )
+            .unwrap_err()
+            .to_string()
+            .contains("LEGACY_TEMPORARY_SNAPSHOT_UNSUPPORTED")
+        );
         let mut wrong = record.clone();
         wrong["request"]["source_head"] = serde_json::Value::String("f".repeat(40));
         let bad = handoff.with_file_name("adoption-wrong-handoff.json");
@@ -1063,29 +1066,33 @@ mod tests {
         );
         let saved = fs::read(options.root.join("source")).unwrap();
         fs::write(options.root.join("source"), "dirty").unwrap();
-        assert!(adopt_host_handoff(
-            options,
-            repository,
-            &mut reader,
-            handoff,
-            &server_s,
-            &cancel
-        )
-        .is_err());
+        assert!(
+            adopt_host_handoff(
+                options,
+                repository,
+                &mut reader,
+                handoff,
+                &server_s,
+                &cancel
+            )
+            .is_err()
+        );
         fs::write(options.root.join("source"), saved).unwrap();
         command(
             &options.root,
             &["commit", "--allow-empty", "-m", "new committed source"],
         );
-        assert!(adopt_host_handoff(
-            options,
-            repository,
-            &mut reader,
-            handoff,
-            &server_s,
-            &cancel
-        )
-        .is_err());
+        assert!(
+            adopt_host_handoff(
+                options,
+                repository,
+                &mut reader,
+                handoff,
+                &server_s,
+                &cancel
+            )
+            .is_err()
+        );
         assert_eq!(
             reader.fetches, 0,
             "same-branch adoption never fetches a synthetic transport object"
