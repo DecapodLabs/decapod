@@ -1108,6 +1108,22 @@ fn verifying_todos_guard_restores_exact_exemption_after_all_exits() {
     let result: Result<(), error::DecapodError> = (|| {
         let _guard = VerifyingTodosGuard::enter(ID);
         assert_eq!(std::env::var(VERIFYING).unwrap(), ID);
+        assert!(
+            crate::plan_governance::load_plan(dir.path())
+                .unwrap()
+                .is_none()
+        );
+        assert_eq!(
+            crate::plan_governance::count_done_todos(&store.root).unwrap(),
+            1,
+            "the all-selected recovery batch must still require its missing governed plan"
+        );
+        assert!(
+            crate::plan_governance::collect_unverified_done_todos(&store.root)
+                .unwrap()
+                .is_empty(),
+            "only the exact batch proof admission is deferred to atomic finalization"
+        );
         persist_result(&store, &stale, "pass", "injected stale write")?;
         Ok(())
     })();
