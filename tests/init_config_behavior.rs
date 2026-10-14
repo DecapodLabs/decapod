@@ -1070,18 +1070,22 @@ fn init_validation_rejects_traversal_in_guided_paths() {
         "init should preserve noninteractive behavior"
     );
 
-    let validate = run_decapod(tmp.path(), &["validate"]);
+    let validate = run_decapod(tmp.path(), &["validate", "--format", "json"]);
     assert!(
         !validate.status.success(),
         "validate must reject traversal paths: {}",
         String::from_utf8_lossy(&validate.stdout)
     );
+    let report: serde_json::Value =
+        serde_json::from_slice(&validate.stdout).expect("structured validation report");
+    let failures = report["report"]["failures"]
+        .as_array()
+        .expect("complete validation failure list");
     assert!(
-        String::from_utf8_lossy(&validate.stdout).contains("protected path")
-            || String::from_utf8_lossy(&validate.stderr).contains("protected path"),
-        "stdout: {}\nstderr: {}",
-        String::from_utf8_lossy(&validate.stdout),
-        String::from_utf8_lossy(&validate.stderr)
+        failures.iter().any(|failure| failure
+            .as_str()
+            .is_some_and(|message| message.contains("Invalid guided init protected path:"))),
+        "traversal rejection missing from structured failures: {failures:?}"
     );
 }
 

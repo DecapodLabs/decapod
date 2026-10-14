@@ -451,7 +451,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `70a6bf975ed8574676562f542285e7c3c46250c7d0a866ab1e26ab61fe0ae3dc`
+- Repository signal fingerprint: `23f6db43b9a8b25bd848a22259be36133baa680f8b046e76b30edf203e50f84c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (185 files), `tests/` (190 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -518,3 +518,7 @@ regression modules explicitly, with their source/compile-data inputs declared in
 the Bazel target. Standalone Cargo test discovery is not evidence that the finite
 source-CI graph executed a new suite. Provider logs must show those module tests
 passing, alongside a separate genuine public CLI acceptance run.
+
+Security rejection assertions inspect the complete structured validation failure
+list, not the compact human summary's first issue. A placeholder-spec failure
+must not hide or substitute for the specific protected-path traversal rejection.

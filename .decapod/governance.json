@@ -269,6 +269,11 @@
       "id": "consumer-readiness-required-tests",
       "summary": "Wire consumer and init adversarial regressions into the existing required CLI test suite; preserve provider and genuine CLI evidence.",
       "input_digest": "sha256:0b0af377d8ed206f73ecd89869aafce7c97150bd474d69c62231eb0d53bcd5f6"
+    },
+    {
+      "id": "consumer-readiness-structured-rejection",
+      "summary": "Assert protected-path traversal rejection through complete structured validation output; preserve actual passing consumer tests and provider failure logs.",
+      "input_digest": "sha256:eccb609b9c5df3477b8ca0f64b4c0a1f70f499b06d52967b1220728998c9e8c7"
     }
   ],
   "intents": {
@@ -310,22 +315,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed the additional required CLI regression-suite wiring and binary path resolution. Product interfaces, native proof architecture and sealed security boundaries remain unchanged; VALIDATION documents mandatory actual module execution.",
-          "reviewed_code_fingerprint": "70a6bf975ed8574676562f542285e7c3c46250c7d0a866ab1e26ab61fe0ae3dc",
+          "reason": "Test-only repair reads full structured validation failures and requires the protected-path traversal rejection. Production interfaces, architecture and security enforcement are unchanged.",
+          "reviewed_code_fingerprint": "23f6db43b9a8b25bd848a22259be36133baa680f8b046e76b30edf203e50f84c",
           "spec_material_hash": "32f087f7adb4450ee7484aaedf1a8109abbbbcca2cb696b8ed97820c8f636c19"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed the additional required CLI regression-suite wiring and binary path resolution. Product interfaces, native proof architecture and sealed security boundaries remain unchanged; VALIDATION documents mandatory actual module execution.",
-          "reviewed_code_fingerprint": "70a6bf975ed8574676562f542285e7c3c46250c7d0a866ab1e26ab61fe0ae3dc",
+          "reason": "Test-only repair reads full structured validation failures and requires the protected-path traversal rejection. Production interfaces, architecture and security enforcement are unchanged.",
+          "reviewed_code_fingerprint": "23f6db43b9a8b25bd848a22259be36133baa680f8b046e76b30edf203e50f84c",
           "spec_material_hash": "842761b840f64db7cfa86819060611a0c8d811a32ec951d5ee1675466fc12323"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed the additional required CLI regression-suite wiring and binary path resolution. Product interfaces, native proof architecture and sealed security boundaries remain unchanged; VALIDATION documents mandatory actual module execution.",
-          "reviewed_code_fingerprint": "70a6bf975ed8574676562f542285e7c3c46250c7d0a866ab1e26ab61fe0ae3dc",
+          "reason": "Test-only repair reads full structured validation failures and requires the protected-path traversal rejection. Production interfaces, architecture and security enforcement are unchanged.",
+          "reviewed_code_fingerprint": "23f6db43b9a8b25bd848a22259be36133baa680f8b046e76b30edf203e50f84c",
           "spec_material_hash": "2ea32916117ded5ef055b3a5c1e5de60fe12d90aabc6b60818b80f77c5779c6a"
         }
       ],
@@ -339,7 +344,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792012859Z"
+      "updated_at": "1792014489Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -349,7 +354,7 @@
         "Removed newly introduced local item macro rather than weakening credential provenance namespace analysis",
         "Review confirms scoped local proof, not hosted CI or Nix daemon/deployment assurance; full validate owns build/test execution"
       ],
-      "artifact_hash": "sha256:436d87cf856116a50ddbc5a70d8e54159bdcd43961c09fd78889a525b27dad44",
+      "artifact_hash": "sha256:46928b9a5e2fba8d7850cb4c5d9f6d02a5a81abd4195b33fcec2369bb4f9e7f9",
       "checks": [
         {
           "name": "authorization-independent-review",
@@ -358,6 +363,10 @@
         {
           "name": "clippy-first-candidate",
           "status": "failed"
+        },
+        {
+          "name": "consumer-adversarial-tests",
+          "status": "passed"
         },
         {
           "name": "consumer-profile-reproduction",
@@ -388,12 +397,20 @@
           "status": "passed"
         },
         {
+          "name": "init-workflow-tests",
+          "status": "passed"
+        },
+        {
           "name": "real-consumer-cli-good-bad-repair",
           "status": "passed"
         },
         {
           "name": "required-build-test-proof",
           "status": "unavailable"
+        },
+        {
+          "name": "required-cli-tests",
+          "status": "failed"
         },
         {
           "name": "source-candidate-compilation",
@@ -449,10 +466,17 @@
             "intent_id": "intent:change_01M4Y2NS9BJEDS3X9T2A3A5KA5",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M4Y2NS9VJ59NTGYFC6YCKD68",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M4Y2NS9BJEDS3X9T2A3A5KA5",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M4Y2NS9VJ59NTGYFC6YCKD68": {
@@ -566,6 +590,27 @@
                 "validation_findings": [
                   "Standalone integration targets are not automatically scheduled by the finite accepted CI recipe; include the three consumer regression modules in required cli_contracts."
                 ]
+              },
+              {
+                "action": "validation-repair",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "tests/init_config_behavior.rs",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "/workspace/shared/consumer-readiness-evidence/final-provider-check/gh-cli.log"
+                ],
+                "proof_refs": [
+                  "consumer-adversarial-tests",
+                  "init-workflow-tests",
+                  "required-cli-tests"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 9,
+                "validation_findings": [
+                  "The existing traversal regression expected compact human output to contain every failure; use the complete structured failure list and preserve the exact traversal rejection assertion."
+                ]
               }
             ]
           }
@@ -578,6 +623,7 @@
         "/workspace/shared/consumer-readiness-evidence/ci-8a19787d-supabase.log",
         "/workspace/shared/consumer-readiness-evidence/ci-8abcea17-docs-sync.log",
         "/workspace/shared/consumer-readiness-evidence/ci-8abcea17-supabase.log",
+        "/workspace/shared/consumer-readiness-evidence/final-provider-check/gh-cli.log",
         "/workspace/shared/consumer-readiness-evidence/fresh-local-proof/native-evidence",
         "/workspace/shared/consumer-readiness-evidence/reproduction.json",
         "/workspace/shared/consumer-readiness-evidence/reviewed-source-delta.json",
@@ -594,6 +640,7 @@
       "intent_id": "intent:change_01M4Y2NS9BJEDS3X9T2A3A5KA5",
       "modified_files": [
         ".config/build/decapod.BUILD.bzl",
+        ".decapod/managed/specs/VALIDATION.md",
         "src/decapod/core/docs_cli.rs",
         "src/decapod/core/external_action.rs",
         "src/decapod/core/native_proof.rs",
@@ -618,7 +665,8 @@
       "task_id": "bugs_01m4y2md9xhxs91r",
       "tool_calls": [],
       "unresolved_assumptions": [
-        "Standalone integration targets are not automatically scheduled by the finite accepted CI recipe; include the three consumer regression modules in required cli_contracts."
+        "Standalone integration targets are not automatically scheduled by the finite accepted CI recipe; include the three consumer regression modules in required cli_contracts.",
+        "The existing traversal regression expected compact human output to contain every failure; use the complete structured failure list and preserve the exact traversal rejection assertion."
       ]
     }
   },
