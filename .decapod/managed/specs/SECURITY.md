@@ -259,7 +259,10 @@ Release and deployment authority remains separate.
 ## Quinn transitive dependency remediation
 
 The locked dependency graph uses quinn-proto 0.11.19 through Dactyl's reqwest
-resolution. This patch updates only that package version and registry checksum.
+resolution. The Cargo lock change updates only that package version and registry
+checksum. The generated Bazel lock must be regenerated with the repository-pinned
+Bazel version so both build systems resolve the same patched dependency;
+release-bound projections must match the evaluating Decapod release.
 No HTTP/3 feature is enabled: Cargo feature-tree inspection across default,
 no-default and all Decapod features finds no active Quinn path. That limits the
 identified runtime exposure but does not excuse vulnerable lockfile entries.

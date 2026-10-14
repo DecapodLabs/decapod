@@ -209,10 +209,11 @@
   },
   "claims": {
     "quinn-patched": {
-      "statement": "The only dependency change is quinn-proto 0.11.19 and its checksum; the audit has no known vulnerabilities without suppression",
-      "falsifier": "Any unrelated lock entry changes, a vulnerable locked version or audit suppression",
+      "statement": "Cargo and generated Bazel lockfiles resolve quinn-proto 0.11.19; audit reports no known vulnerabilities without advisory suppression",
+      "falsifier": "Either lockfile resolves a vulnerable Quinn version, another package changes unexpectedly, or a known vulnerability is ignored",
       "status": "supported",
       "proof_refs": [
+        "/workspace/shared/quinn-security-evidence/bazel-mod-deps-system-java.log",
         "/workspace/shared/quinn-security-evidence/cargo-audit.json"
       ]
     }
@@ -230,6 +231,16 @@
       "proof_refs": [
         "/workspace/shared/quinn-security-evidence/cargo-audit.json"
       ]
+    },
+    {
+      "id": "note:792cf8d61568048c",
+      "summary": "Quinn-only remediation with exact generated Bazel lock and release-bound projection repairs; provider failures preserved, full readiness pending",
+      "input_digest": "sha256:b915c7ab22a4f32a17bc81be1b4d811f0ae4b71bf37077152b5e60231549cae2"
+    },
+    {
+      "id": "quinn-generated-repair",
+      "summary": "Repair CI-reported Bazel lock and release-bound projection drift for Quinn 0.11.19",
+      "input_digest": "sha256:b915c7ab22a4f32a17bc81be1b4d811f0ae4b71bf37077152b5e60231549cae2"
     }
   ],
   "intents": {
@@ -255,7 +266,7 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 16,
+        "file_touch_budget": 20,
         "forbidden_paths": []
       },
       "deferred_questions": [],
@@ -263,10 +274,10 @@
       "intent": "Update Quinn security dependency to 0.11.19\n\nSingle narrow PR: update quinn-proto lock entry to 0.11.19, prove audit and feature reachability, preserve unchanged source CI and accepted executor, complete exact-candidate governed validation before PR.",
       "phases": [],
       "proof_hooks": [
-        "cargo audit --json without ignored advisories"
+        "Regenerate Bazel lock with pinned Bazel 9.3.0 and release-bound projections with official Decapod 0.111.3; no unrelated dependency or CI policy changes"
       ],
       "schema_version": "1.1.0",
-      "state": "DRAFT",
+      "state": "APPROVED",
       "stop_conditions": [],
       "title": "Update Quinn security dependency to 0.11.19",
       "todo_ids": [
@@ -274,18 +285,26 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1791955138Z"
+      "updated_at": "1791958660Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Only Quinn dependency and required governance/spec reconciliation; all source CI helpers and workflows unchanged"
       ],
-      "artifact_hash": "sha256:7f2cf55f218a95b7c9d39e5ed6227d429e8f7763416b31cc86a66b3c3bd30e3c",
+      "artifact_hash": "sha256:46ad79d933eb25fb87568e0b19f490aa593f25c8728ee308bfcd1cc274873776",
       "checks": [
+        {
+          "name": "bazel-mod-deps",
+          "status": "passed"
+        },
         {
           "name": "dependency-feature-reachability",
           "status": "passed"
+        },
+        {
+          "name": "initial-source-ci",
+          "status": "failed"
         },
         {
           "name": "security-audit",
@@ -313,10 +332,17 @@
             "intent_id": "intent:change_01M4WDFYXQJZS8N294KV08VX4Z",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M4WDFYYN55XF04924XJEJMTH",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M4WDFYXQJZS8N294KV08VX4Z",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M4WDFYYN55XF04924XJEJMTH": {
@@ -343,6 +369,24 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "MODULE.bazel.lock",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "/workspace/shared/quinn-security-evidence/bazel-mod-deps-system-java.log"
+                ],
+                "proof_refs": [
+                  "initial-source-ci",
+                  "bazel-mod-deps"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -351,6 +395,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "/workspace/shared/quinn-security-evidence/bazel-mod-deps-system-java.log",
         "/workspace/shared/quinn-security-evidence/cargo-audit.json",
         "/workspace/shared/quinn-security-evidence/quinn-feature-tree.txt"
       ],
@@ -359,7 +404,8 @@
       "modified_files": [
         ".decapod/config.toml",
         ".decapod/managed/specs/SECURITY.md",
-        "Cargo.lock"
+        "Cargo.lock",
+        "MODULE.bazel.lock"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
