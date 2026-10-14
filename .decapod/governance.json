@@ -252,6 +252,14 @@
         "Cargo.lock",
         "Cargo.toml"
       ]
+    },
+    {
+      "id": "rustls-advisory-repair",
+      "summary": "Repair fresh dependency audit failures with rustls 0.23.46 and regenerate Bazel lock evidence",
+      "input_digest": "sha256:5d5ff567bfdec78e4df7046786706db08ec942f1329a1b7a220c3c696414aac6",
+      "proof_refs": [
+        "/workspace/shared/governed-completion-evidence/rustls-bazel-lock-verify.log"
+      ]
     }
   ],
   "intents": {
@@ -327,15 +335,31 @@
         "Current claimed task and isolated work branch",
         "Preserve failed attempts and independent validation; no merge authority"
       ],
-      "artifact_hash": "sha256:156fb3ef7970458eda2b67a6e5d65248d88490d818aae354417134832dac5857",
+      "artifact_hash": "sha256:abc067e7b939197653821ca436f2effd9fbb9118e53f44cd0ec56279e434c874",
       "checks": [
+        {
+          "name": "buildkite1477-dependency-audit",
+          "status": "failed"
+        },
         {
           "name": "code-diff-review",
           "status": "passed"
         },
         {
+          "name": "completion-regressions",
+          "status": "passed"
+        },
+        {
           "name": "exclusive-completion-baseline",
           "status": "failed"
+        },
+        {
+          "name": "release-custody-regressions",
+          "status": "passed"
+        },
+        {
+          "name": "todo-unit-regressions",
+          "status": "passed"
         },
         {
           "name": "validation-4a64f673",
@@ -377,10 +401,17 @@
             "intent_id": "intent:change_01M4XA68B83672X8674J2C13GK",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M4XA68BQXWY6WVVVM6ABDJKE",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M4XA68B83672X8674J2C13GK",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M4XA68BQXWY6WVVVM6ABDJKE": {
@@ -453,6 +484,32 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Cargo.lock",
+                  "MODULE.bazel.lock",
+                  "22completion-related tests and16todo unit tests passed, including4release tests and worker failure; Buildkite1477 blocked on inherited rustls0.23.45 advisories0346-0349; minimal official0.23.46 lock update preserves all checks and packageversions otherwise"
+                ],
+                "proof_refs": [
+                  "completion-regressions",
+                  "release-custody-regressions",
+                  "todo-unit-regressions",
+                  "buildkite1477-dependency-audit"
+                ],
+                "scope": [
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs",
+                  "docs",
+                  "root",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/plugins/verify.rs",
+                  "tests"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -461,6 +518,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "22completion-related tests and16todo unit tests passed, including4release tests and worker failure; Buildkite1477 blocked on inherited rustls0.23.45 advisories0346-0349; minimal official0.23.46 lock update preserves all checks and packageversions otherwise",
         "Full validation rejected stale reviewed source inventory. Compared every discovered source against last reviewed072a1820: only Cargo.toml and root Cargo.lock package version0.111.4 to0.111.5 changed; no workflow/check coverage change. Explicitly reconcile release-only source inventory112cfe84.",
         "Red baseline: unproven exclusive direct done returned ok with revision2; regression tests/plugins/todo.rs exclusive_lease_blocks_unproven_done",
         "Three focused issue repairs1424,1425,1426; red exclusive-completion reproduced and retained; new adversarial tests cover rollback, drift, missing/failing proof and non-owner release"
@@ -473,6 +531,8 @@
       "modified_files": [
         ".decapod/config.toml",
         ".decapod/managed/specs/OPERATIONS.md",
+        "Cargo.lock",
+        "MODULE.bazel.lock",
         "docs/agent/state-model.md",
         "src/decapod/core/todo.rs",
         "src/decapod/plugins/verify.rs",
@@ -487,6 +547,8 @@
       "repo_scope": [
         ".decapod/config.toml",
         ".decapod/managed/specs",
+        "Cargo.lock",
+        "MODULE.bazel.lock",
         "docs",
         "root",
         "src/decapod/core/todo.rs",
