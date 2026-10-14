@@ -28,8 +28,10 @@ True pushes or reuses the exact current Decapod workspace branch commit, waits
 for its real required Buildkite checks, and downloads verified execution evidence.
 The eventual PR uses that same branch; validation creates no temporary branches. It does not run or collect GitHub Actions; normal
 PR workflows on that service remain independent.
-`[proof.required_profile]` binds the reviewed complete repository CI/release
-contract. A missing, unknown or changed contract fails readiness; an empty
+`[proof.required_profile]` selects the reviewed repository contract. The Decapod
+profile binds its finite source-CI contract; `repo.pr-readiness.v1` binds the
+explicit local-proof contract below without hosted-CI or release assurance.
+A missing, unknown or changed contract fails readiness; an empty
 `commands` list cannot prove completion. Init and initial agent execution
 reconcile existing repository contracts, preserve user-authored choices, and
 report missing or conflicting obligations for repair. Successful init is not
@@ -93,3 +95,11 @@ For Nix projects, installing this profile is not evidence that daemon-backed
 builds, remote builders or deployment ran. A supported local contract can use
 preinstalled pinned formatters/test tools directly; unavailable build/deployment
 proof remains a limitation to reconcile, not a successful or skipped check.
+
+Repository proof uses a sealed, argument-aware authorization path minted only
+for the validated local contract and exact measured invocation. It does not add
+Python, Make or other programs to the ordinary `proof_exec` default allowlist.
+An authored `.decapod/EXTERNAL_ACTIONS.json` remains authoritative: an explicit
+`proof_exec` or `repository_proof_exec` deny blocks the command, malformed policy
+fails closed, and a present policy must explicitly allow proof execution. The
+kernel never rewrites that policy to make a check pass.

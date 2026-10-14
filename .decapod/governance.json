@@ -259,6 +259,11 @@
       "id": "consumer-readiness-implementation",
       "summary": "Add reviewed repository-local readiness and repair init workflow/config regressions; preserve strict profile and honest proof scope",
       "input_digest": "sha256:c804753b9255557373b750cd6853761dde146bda6c06b5f45405a65eddc85aaa"
+    },
+    {
+      "id": "consumer-readiness-authorization-final",
+      "summary": "Bind local proofs to sealed authorization; preserve denies and credential provenance; regenerate release and documentation contracts",
+      "input_digest": "sha256:b7ab6cf9d93e00c0a03066f129b7f2b7c88e311f6f2914956f85e621a1aece6b"
     }
   ],
   "intents": {
@@ -300,23 +305,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed final consumer local proof contract, preserved strict Decapod profile, explicit assurance limits and initialization compatibility against source",
-          "reviewed_code_fingerprint": "ad4df983c31c1eeca2e45b16c2a72680989482eb30c86fb3976025fc82af36e9",
+          "reason": "Reviewed final sealed consumer proof authorization, exact execution custody, strict profile preservation, generated documentation and macro-free init config preservation",
+          "reviewed_code_fingerprint": "bfb800148abc78764c50cba4b8ced66a42a64ca84c6136105fe4d080be1b16dd",
           "spec_material_hash": "32f087f7adb4450ee7484aaedf1a8109abbbbcca2cb696b8ed97820c8f636c19"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed final consumer local proof contract, preserved strict Decapod profile, explicit assurance limits and initialization compatibility against source",
-          "reviewed_code_fingerprint": "ad4df983c31c1eeca2e45b16c2a72680989482eb30c86fb3976025fc82af36e9",
+          "reason": "Reviewed final sealed consumer proof authorization, exact execution custody, strict profile preservation, generated documentation and macro-free init config preservation",
+          "reviewed_code_fingerprint": "bfb800148abc78764c50cba4b8ced66a42a64ca84c6136105fe4d080be1b16dd",
           "spec_material_hash": "842761b840f64db7cfa86819060611a0c8d811a32ec951d5ee1675466fc12323"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed final consumer local proof contract, preserved strict Decapod profile, explicit assurance limits and initialization compatibility against source",
-          "reviewed_code_fingerprint": "ad4df983c31c1eeca2e45b16c2a72680989482eb30c86fb3976025fc82af36e9",
-          "spec_material_hash": "060d7a03107268e4290075324f08f69158fbe6ac11c6d49a718c99e7729c2231"
+          "reason": "Reviewed final sealed consumer proof authorization, exact execution custody, strict profile preservation, generated documentation and macro-free init config preservation",
+          "reviewed_code_fingerprint": "bfb800148abc78764c50cba4b8ced66a42a64ca84c6136105fe4d080be1b16dd",
+          "spec_material_hash": "2ea32916117ded5ef055b3a5c1e5de60fe12d90aabc6b60818b80f77c5779c6a"
         }
       ],
       "state": "DRAFT",
@@ -329,19 +334,37 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792011279Z"
+      "updated_at": "1792011911Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Existing strict profile and exact-target proof remain enforced; generic local profile cannot attest provider CI",
+        "Published v0.112.0 checksum-verified controller refreshes release projections; source-built artifact reserved for consumer smoke, not self-authorizing strict profile",
+        "Removed newly introduced local item macro rather than weakening credential provenance namespace analysis",
         "Review confirms scoped local proof, not hosted CI or Nix daemon/deployment assurance; full validate owns build/test execution"
       ],
-      "artifact_hash": "sha256:cdf31d29327fb54e9b17ebc09525066335db1f0e351caf45ba9c80b4d4750478",
+      "artifact_hash": "sha256:5a729f9ac6ce14cead792d8d3ce0b6f565fff89861521b975e2314fd5648037f",
       "checks": [
+        {
+          "name": "authorization-independent-review",
+          "status": "passed"
+        },
+        {
+          "name": "clippy-first-candidate",
+          "status": "failed"
+        },
         {
           "name": "consumer-profile-reproduction",
           "status": "passed"
+        },
+        {
+          "name": "credential-provenance-regression",
+          "status": "failed"
+        },
+        {
+          "name": "first-full-validation",
+          "status": "failed"
         },
         {
           "name": "formatting",
@@ -354,9 +377,13 @@
         {
           "name": "required-build-test-proof",
           "status": "unavailable"
+        },
+        {
+          "name": "source-candidate-compilation",
+          "status": "passed"
         }
       ],
-      "current_phase": "implementation",
+      "current_phase": "repair",
       "custody": {
         "events": [
           {
@@ -384,10 +411,24 @@
             "intent_id": "intent:change_01M4Y2NS9BJEDS3X9T2A3A5KA5",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M4Y2NS9VJ59NTGYFC6YCKD68",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M4Y2NS9BJEDS3X9T2A3A5KA5",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M4Y2NS9VJ59NTGYFC6YCKD68",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M4Y2NS9BJEDS3X9T2A3A5KA5",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M4Y2NS9VJ59NTGYFC6YCKD68": {
@@ -437,6 +478,45 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "src/decapod/core/external_action.rs",
+                  "src/decapod/core/docs_cli.rs",
+                  "src/decapod/core/validation_runtime/repository_host.rs",
+                  "tests/consumer_readiness.rs",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/38636434864/artifacts/11928536993",
+                  "/workspace/shared/consumer-readiness-evidence/bk1563-validate.log",
+                  "/workspace/shared/consumer-readiness-evidence/ci-8abcea17-docs-sync.log"
+                ],
+                "proof_refs": [
+                  "first-full-validation",
+                  "clippy-first-candidate",
+                  "source-candidate-compilation",
+                  "authorization-independent-review"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "/workspace/shared/consumer-readiness-evidence/ci-8abcea17-supabase.log"
+                ],
+                "proof_refs": [
+                  "credential-provenance-regression"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -445,8 +525,12 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "/workspace/shared/consumer-readiness-evidence/bk1563-validate.log",
+        "/workspace/shared/consumer-readiness-evidence/ci-8abcea17-docs-sync.log",
+        "/workspace/shared/consumer-readiness-evidence/ci-8abcea17-supabase.log",
         "/workspace/shared/consumer-readiness-evidence/reproduction.json",
         "/workspace/shared/consumer-readiness-evidence/reviewed-source-delta.json",
+        "https://github.com/DecapodLabs/decapod/actions/runs/38636434864/artifacts/11928536993",
         "tests/consumer_readiness.rs"
       ],
       "inspected_files": [
@@ -457,6 +541,8 @@
       ],
       "intent_id": "intent:change_01M4Y2NS9BJEDS3X9T2A3A5KA5",
       "modified_files": [
+        "src/decapod/core/docs_cli.rs",
+        "src/decapod/core/external_action.rs",
         "src/decapod/core/native_proof.rs",
         "src/decapod/core/readiness_evidence/mod.rs",
         "src/decapod/core/repository_profile.rs",

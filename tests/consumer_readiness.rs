@@ -265,19 +265,25 @@ struct LocalHost {
 
 impl LocalHost {
     fn new(fixture: &Fixture, deny_execution: bool) -> Self {
+        let store = fixture.options.root.join(".decapod/data");
         let runner = runtime::repository_host::RepositoryHost::new(
             fixture.options.clone(),
             "https://github.com/consumer/project.git".into(),
             |_| Ok(ProjectPrerequisites::Passed),
             move |action| {
-                assert!(matches!(action, NativeAction::SourceCheck { .. }));
+                let NativeAction::RepositoryCheck { invocation, seal } = action else {
+                    panic!("repository execution must use the sealed authorization path");
+                };
                 if deny_execution {
                     Err(io::Error::new(
                         io::ErrorKind::PermissionDenied,
                         "fixture denied proof execution",
                     ))
                 } else {
-                    Ok(())
+                    decapod::core::external_action::authorize_repository_proof(
+                        &store, invocation, seal,
+                    )
+                    .map_err(io::Error::other)
                 }
             },
         )
@@ -319,7 +325,7 @@ impl Host for LocalHost {
         budget: &RuntimeBudget<'_>,
     ) -> Result<ExecutionSelection, Vec<Blocker>> {
         self.selections += 1;
-        let mut selection = runtime::repository_host::select_commands(project, budget)?;
+        let mut selection = self.runner.select(project, budget)?;
         if self.force_strict_capability {
             for (key, invocation) in &mut selection.native_invocations {
                 invocation.capabilities = ReviewedCapabilities::LocalCheckWithOwnedScratch;
@@ -343,9 +349,14 @@ impl Host for LocalHost {
         budget: &RuntimeBudget<'_>,
     ) -> io::Result<ExecutedSuite> {
         self.execution_attempts += 1;
-        let result = self
-            .runner
-            .execute(project, selection, plan, identity, directory, budget)?;
+        // This one negative case targets the legacy runner capability directly;
+        // production host seals correctly reject invocation mutation even earlier.
+        let result = if self.force_strict_capability {
+            runtime::execute_native(project, selection, plan, identity, directory, budget)?
+        } else {
+            self.runner
+                .execute(project, selection, plan, identity, directory, budget)?
+        };
         if self.move_target_after_execution {
             git(&self.root, &["push", "origin", "HEAD:refs/heads/main"]);
         }

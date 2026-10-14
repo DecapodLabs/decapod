@@ -14,6 +14,65 @@ pub struct RepositoryHost<'a> {
     remote_url: String,
     project_check: PrerequisiteCallback<'a>,
     authorize: NativeAuthorizer<'a>,
+    authorized_commands: BTreeMap<CheckKey, AuthorizedRepositoryProof>,
+}
+
+/// In-process authority for one exact, validated repository proof invocation.
+/// Only this host can mint the seal, after the complete source/command contract
+/// and selection have been checked. Serialized declarations are not seals.
+pub struct AuthorizedRepositoryProof {
+    invocation_digest: String,
+    toolchain_digest: String,
+    command_contract_digest: String,
+    source_inventory_digest: String,
+    source_root: PathBuf,
+    repository: String,
+}
+
+impl AuthorizedRepositoryProof {
+    pub(crate) fn verify(&self, invocation: &Invocation) -> io::Result<()> {
+        if invocation.capabilities
+            != native_proof::ReviewedCapabilities::RepositoryDeclaredLocalCheck
+            || invocation.digest()? != self.invocation_digest
+            || native_proof::toolchain_digest(invocation)? != self.toolchain_digest
+        {
+            return Err(invalid(
+                "REPOSITORY_PROOF_SEAL_MISMATCH: invocation or measured tools changed",
+            ));
+        }
+        Ok(())
+    }
+
+    fn verify_context(&self, project: &CurrentProject) -> io::Result<()> {
+        let declaration = project
+            .configuration
+            .required_profile
+            .as_ref()
+            .ok_or_else(|| invalid("repository proof declaration missing"))?;
+        let contract = project
+            .configuration
+            .repository_contract
+            .as_ref()
+            .ok_or_else(|| invalid("repository proof contract missing"))?;
+        repository_profile::validate_contract(
+            declaration,
+            &project.sources,
+            &project.configuration.commands,
+            contract,
+        )
+        .map_err(io::Error::other)?;
+        if project.configuration.validation_buildkite_preflights
+            || project.identity_inputs.root != self.source_root
+            || project.identity_inputs.repository != self.repository
+            || project.sources.digest().map_err(io::Error::other)? != self.source_inventory_digest
+            || contract.reviewed_commands_digest != self.command_contract_digest
+        {
+            return Err(invalid(
+                "REPOSITORY_PROOF_SEAL_STALE: reviewed source or command contract changed",
+            ));
+        }
+        Ok(())
+    }
 }
 
 impl<'a> RepositoryHost<'a> {
@@ -48,6 +107,7 @@ impl<'a> RepositoryHost<'a> {
             remote_url,
             project_check: Box::new(project_check),
             authorize: Box::new(authorize),
+            authorized_commands: BTreeMap::new(),
         })
     }
 
@@ -109,7 +169,36 @@ impl Host for RepositoryHost<'_> {
         project: &CurrentProject,
         budget: &RuntimeBudget<'_>,
     ) -> Result<ExecutionSelection, Vec<Blocker>> {
-        select_commands(project, budget)
+        self.authorized_commands.clear();
+        let selection = select_commands(project, budget)?;
+        let sources = project
+            .sources
+            .digest()
+            .map_err(|error| vec![Blocker::new("REPOSITORY_PROOF_SEAL", error.to_string())])?;
+        let contract = project
+            .configuration
+            .repository_contract
+            .as_ref()
+            .ok_or_else(|| {
+                vec![Blocker::new(
+                    "REPOSITORY_PROOF_SEAL",
+                    "validated contract disappeared",
+                )]
+            })?;
+        for (key, binding) in &selection.bindings {
+            self.authorized_commands.insert(
+                key.clone(),
+                AuthorizedRepositoryProof {
+                    invocation_digest: binding.invocation_digest.clone(),
+                    toolchain_digest: binding.toolchain_digest.clone(),
+                    command_contract_digest: contract.reviewed_commands_digest.clone(),
+                    source_inventory_digest: sources.clone(),
+                    source_root: project.identity_inputs.root.clone(),
+                    repository: project.identity_inputs.repository.clone(),
+                },
+            );
+        }
+        Ok(selection)
     }
 
     fn execute(
@@ -124,10 +213,20 @@ impl Host for RepositoryHost<'_> {
         // Authorize the complete frozen selection before executing any check.
         // The common runner retains bounded execution, snapshot custody and
         // independent before/after executable, source and target measurement.
-        for invocation in selection.native_invocations.values() {
+        if selection.native_invocations.keys().collect::<BTreeSet<_>>()
+            != self.authorized_commands.keys().collect::<BTreeSet<_>>()
+        {
+            return Err(invalid(
+                "REPOSITORY_PROOF_SEAL_MISSING: select the complete reviewed contract before execution",
+            ));
+        }
+        for (key, invocation) in &selection.native_invocations {
             budget.remaining()?;
+            let seal = &self.authorized_commands[key];
+            seal.verify_context(project)?;
+            seal.verify(invocation)?;
             verify_invocation_path(invocation, &project.identity_inputs.root, budget)?;
-            (self.authorize)(NativeAction::SourceCheck { invocation })?;
+            (self.authorize)(NativeAction::RepositoryCheck { invocation, seal })?;
         }
         let result = execute_native(
             project,
@@ -592,5 +691,144 @@ mod tests {
         assert!(declared_path(Some(&path), &installed, &source, &budget).is_ok());
         symlink(first, bin.join("alias")).unwrap();
         assert!(declared_path(Some(&path), &installed, &source, &budget).is_err());
+    }
+
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    #[test]
+    fn host_seals_reject_tampered_invocations_tools_and_stale_contracts() {
+        use crate::core::external_action::authorize_repository_proof;
+        let storage = tempfile::tempdir().unwrap();
+        let root = storage.path().canonicalize().unwrap();
+        let source = root.join("source");
+        fs::create_dir(&source).unwrap();
+        let program = root.join("proof-tool");
+        let runtime = root.join("runtime");
+        fs::write(&program, b"measured executable fixture").unwrap();
+        fs::write(&runtime, b"measured runtime fixture").unwrap();
+        let commands = vec![ProofDef {
+            name: "inspect".into(),
+            command: "proof-tool".into(),
+            args: vec!["input".into()],
+            description: String::new(),
+            required: true,
+        }];
+        let mut contract = repository_profile::RepositoryContract {
+            reviewed_commands_digest: String::new(),
+            source_coverage: Vec::new(),
+            executions: BTreeMap::from([(
+                "inspect".into(),
+                repository_profile::RepositoryExecution {
+                    program: program.to_string_lossy().into(),
+                    toolchain_files: BTreeMap::from([(
+                        "runtime".into(),
+                        runtime.to_string_lossy().into(),
+                    )]),
+                    environment: BTreeMap::new(),
+                    directory: ".".into(),
+                    timeout_seconds: 5,
+                },
+            )]),
+        };
+        contract.reviewed_commands_digest =
+            repository_profile::command_contract_digest(&commands, &contract).unwrap();
+        let sources = SourceInventory {
+            files: BTreeMap::from([("tool.conf".into(), hash(b"reviewed source"))]),
+        };
+        let declaration = ProfileDeclaration {
+            id: repository_profile::REQUIRED_PROFILE.into(),
+            reviewed_sources_digest: sources.digest().unwrap(),
+        };
+        let facts = ApplicabilityFacts {
+            event: "pull_request".into(),
+            target_branch: "main".into(),
+            changed_paths: BTreeSet::new(),
+        };
+        let catalog = repository_profile::required_catalog(
+            &declaration,
+            &sources,
+            &facts,
+            &commands,
+            &contract,
+        )
+        .unwrap();
+        let mut project = CurrentProject {
+            configuration: ProofConfiguration {
+                validation_buildkite_preflights: false,
+                required_profile: Some(declaration),
+                commands,
+                repository_contract: Some(contract),
+            },
+            sources,
+            executor: None,
+            facts,
+            release: None,
+            catalog,
+            identity_inputs: IdentityInputs {
+                root: source.clone(),
+                git_program: root.join("unused-git"),
+                repository: "consumer/project".into(),
+                base_branch: "main".into(),
+                accepted_base_ref: "refs/remotes/origin/main".into(),
+                declared_untracked: BTreeSet::new(),
+                configuration: BTreeSet::new(),
+                workflows: BTreeSet::new(),
+                candidate_inputs: BTreeSet::new(),
+            },
+        };
+        let mut host = RepositoryHost::new(
+            options(&source),
+            "https://github.com/consumer/project.git".into(),
+            |_| Ok(ProjectPrerequisites::Passed),
+            |_| Ok(()),
+        )
+        .unwrap();
+        let cancel = Cancellation::default();
+        let budget = RuntimeBudget {
+            deadline: Instant::now() + Duration::from_secs(5),
+            cancel: &cancel,
+            max_output_bytes: 1024,
+            bytes_left: 1024,
+        };
+        let selection = host.select(&project, &budget).unwrap();
+        let (key, invocation) = selection.native_invocations.first_key_value().unwrap();
+        let seal = &host.authorized_commands[key];
+        let store = source.join(".decapod/data");
+        authorize_repository_proof(&store, invocation, seal).unwrap();
+        seal.verify_context(&project).unwrap();
+        let mut tampered = invocation.clone();
+        tampered
+            .arguments
+            .push(native_proof::Value::Literal("extra".into()));
+        assert!(authorize_repository_proof(&store, &tampered, seal).is_err());
+        fs::write(&runtime, b"replacement runtime fixture").unwrap();
+        assert!(authorize_repository_proof(&store, invocation, seal).is_err());
+        fs::write(&runtime, b"measured runtime fixture").unwrap();
+        project.configuration.commands[0]
+            .args
+            .push("new argument".into());
+        assert!(seal.verify_context(&project).is_err());
+        let contract = project.configuration.repository_contract.as_mut().unwrap();
+        contract.reviewed_commands_digest =
+            repository_profile::command_contract_digest(&project.configuration.commands, contract)
+                .unwrap();
+        // Even an independently re-reviewed changed declaration needs a fresh
+        // selection; an old in-process seal cannot authorize the new contract.
+        assert!(seal.verify_context(&project).is_err());
+        project.configuration.commands[0].args.pop();
+        let contract = project.configuration.repository_contract.as_mut().unwrap();
+        contract.reviewed_commands_digest =
+            repository_profile::command_contract_digest(&project.configuration.commands, contract)
+                .unwrap();
+        project
+            .sources
+            .files
+            .insert("tool.conf".into(), hash(b"changed source"));
+        project
+            .configuration
+            .required_profile
+            .as_mut()
+            .unwrap()
+            .reviewed_sources_digest = project.sources.digest().unwrap();
+        assert!(seal.verify_context(&project).is_err());
     }
 }

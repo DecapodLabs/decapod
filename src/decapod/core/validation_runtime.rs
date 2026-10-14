@@ -1424,6 +1424,10 @@ pub enum NativeAction<'a> {
     SourceCheck {
         invocation: &'a Invocation,
     },
+    RepositoryCheck {
+        invocation: &'a Invocation,
+        seal: &'a repository_host::AuthorizedRepositoryProof,
+    },
 }
 type PrerequisiteCallback<'a> =
     Box<dyn FnMut(&RuntimeBudget<'_>) -> io::Result<ProjectPrerequisites> + 'a>;

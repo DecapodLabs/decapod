@@ -58,7 +58,7 @@ pub enum ExecutionPurpose {
 pub enum ReviewedCapabilities {
     LocalCheckWithOwnedScratch,
     /// Explicit repository policy, validated against the complete source,
-    /// command and execution declaration digests before host construction.
+    /// command and execution declaration digests before invocation selection.
     /// Its declared toolchain files are measured, not inferred complete. This
     /// is local command evidence and is not a sandbox or provider attestation.
     RepositoryDeclaredLocalCheck,

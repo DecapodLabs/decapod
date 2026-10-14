@@ -451,10 +451,10 @@ pub fn inspect(
         .cloned()
         .collect();
     if !unknown.is_empty()
-        && !proof
+        && proof
             .required_profile
             .as_ref()
-            .is_some_and(|profile| profile.id == crate::core::repository_profile::REQUIRED_PROFILE)
+            .is_none_or(|profile| profile.id != crate::core::repository_profile::REQUIRED_PROFILE)
     {
         report.task("UNKNOWN_CI_CONTRACT", "Adopt unsupported CI contracts into required proof", unknown,
             "Preserve these authored workflows. Review their jobs, conditions, matrices and helpers, then add a faithful supported profile adapter or an explicit proven exclusion. Discovery does not execute YAML or assume these checks passed.");

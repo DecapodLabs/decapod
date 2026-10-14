@@ -11,6 +11,7 @@ pub enum ExternalCapability {
     VcsRead,
     VcsWrite,
     ProofExec,
+    RepositoryProofExec,
     VerificationExec,
     SystemInspect,
     PreflightProbe,
@@ -23,6 +24,7 @@ impl ExternalCapability {
             ExternalCapability::VcsRead => "vcs_read",
             ExternalCapability::VcsWrite => "vcs_write",
             ExternalCapability::ProofExec => "proof_exec",
+            ExternalCapability::RepositoryProofExec => "repository_proof_exec",
             ExternalCapability::VerificationExec => "verification_exec",
             ExternalCapability::SystemInspect => "system_inspect",
             ExternalCapability::PreflightProbe => "preflight_probe",
@@ -181,6 +183,11 @@ pub fn authorize(
     scope: &str,
     command: &str,
 ) -> Result<(), error::DecapodError> {
+    if capability == ExternalCapability::RepositoryProofExec {
+        return Err(error::DecapodError::ValidationError(
+            "Repository proof requires a sealed, exact validated invocation".into(),
+        ));
+    }
     if matches!(
         capability,
         ExternalCapability::PreflightProbe | ExternalCapability::PreflightRead
@@ -190,6 +197,97 @@ pub fn authorize(
         ));
     }
     authorize_checked(store_root, capability, scope, command)
+}
+
+/// A repository proof can use its reviewed installed program without broadening
+/// the generic ProofExec default. Only the validating repository host can mint
+/// this seal. Authored allowlists remain authoritative: every explicit legacy
+/// proof_exec or repository_proof_exec rule must allow the actual binary.
+pub fn authorize_repository_proof(
+    store_root: &Path,
+    invocation: &crate::core::native_proof::Invocation,
+    seal: &crate::core::validation_runtime::repository_host::AuthorizedRepositoryProof,
+) -> Result<(), error::DecapodError> {
+    seal.verify(invocation).map_err(|error| {
+        error::DecapodError::ValidationError(format!("REPOSITORY_PROOF_REJECTED: {error}"))
+    })?;
+    repository_proof_policy(store_root, &invocation.program.to_string_lossy())
+}
+
+fn repository_proof_policy(store_root: &Path, command: &str) -> Result<(), error::DecapodError> {
+    use std::io::Read;
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct AuthoredRule {
+        capability: String,
+        allowed_bins: Vec<String>,
+    }
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct AuthoredConfig {
+        rules: Vec<AuthoredRule>,
+    }
+    let denied = |detail: &str| {
+        error::DecapodError::ValidationError(format!(
+            "REPOSITORY_PROOF_POLICY_DENIED: {detail}; preserve the authored external-action policy"
+        ))
+    };
+    let root = store_root
+        .parent()
+        .and_then(Path::parent)
+        .ok_or_else(|| denied("invalid policy store location"))?;
+    let path = root.join(".decapod/EXTERNAL_ACTIONS.json");
+    let metadata = match std::fs::symlink_metadata(&path) {
+        Ok(metadata) => metadata,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+        Err(_) => return Err(denied("authored policy is unreadable")),
+    };
+    const MAX_POLICY_BYTES: u64 = 1024 * 1024;
+    if !metadata.is_file() || metadata.file_type().is_symlink() || metadata.len() > MAX_POLICY_BYTES
+    {
+        return Err(denied("authored policy is not a bounded regular file"));
+    }
+    let mut options = std::fs::OpenOptions::new();
+    options.read(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK);
+    }
+    let mut bytes = Vec::new();
+    options
+        .open(&path)
+        .map_err(|_| denied("authored policy cannot be opened"))?
+        .take(MAX_POLICY_BYTES + 1)
+        .read_to_end(&mut bytes)
+        .map_err(|_| denied("authored policy cannot be read"))?;
+    if bytes.len() as u64 > MAX_POLICY_BYTES {
+        return Err(denied("authored policy exceeded its byte limit"));
+    }
+    let config: AuthoredConfig =
+        serde_json::from_slice(&bytes).map_err(|_| denied("authored policy is malformed"))?;
+    let bin = command_bin(command);
+    let mut proof_rule_present = false;
+    for rule in &config.rules {
+        if matches!(
+            rule.capability.as_str(),
+            "proof_exec" | "repository_proof_exec"
+        ) {
+            proof_rule_present = true;
+            if !rule.allowed_bins.iter().any(|allowed| allowed == &bin) {
+                return Err(denied(&format!(
+                    "{} does not allow binary {bin}",
+                    rule.capability
+                )));
+            }
+        }
+    }
+    if !proof_rule_present {
+        return Err(denied(
+            "authored policy does not grant repository proof execution",
+        ));
+    }
+    Ok(())
 }
 
 fn authorize_checked(
@@ -444,6 +542,7 @@ pub fn schema() -> serde_json::Value {
             "vcs_read",
             "vcs_write",
             "proof_exec",
+            "repository_proof_exec",
             "verification_exec",
             "system_inspect"
         ],
@@ -536,5 +635,122 @@ mod preflight_authorization_tests {
             assert!(authorize(root, capability, "readiness", "cargo").is_err());
             assert!(execute(root, capability, "readiness", "cargo", &["--version"], root).is_err());
         }
+    }
+}
+
+#[cfg(test)]
+mod repository_proof_authorization_tests {
+    use super::*;
+
+    #[test]
+    fn only_absent_policy_gets_the_sealed_default() {
+        let root = tempfile::tempdir().unwrap();
+        let store = root.path().join(".decapod/data");
+        std::fs::create_dir_all(&store).unwrap();
+        let policy = root.path().join(".decapod/EXTERNAL_ACTIONS.json");
+        assert!(repository_proof_policy(&store, "/installed/python3").is_ok());
+        // The old generic default remains unchanged, and a scope string cannot
+        // grant the new sealed capability through either generic entry point.
+        assert!(
+            authorize(
+                &store,
+                ExternalCapability::ProofExec,
+                "readiness",
+                "/installed/python3"
+            )
+            .is_err()
+        );
+        assert!(
+            authorize(
+                &store,
+                ExternalCapability::RepositoryProofExec,
+                "readiness",
+                "/installed/python3"
+            )
+            .is_err()
+        );
+        assert!(
+            execute(
+                &store,
+                ExternalCapability::RepositoryProofExec,
+                "readiness",
+                "/installed/python3",
+                &[],
+                root.path()
+            )
+            .is_err()
+        );
+        for rules in [
+            serde_json::json!([]),
+            serde_json::json!([{"capability":"vcs_read","allowed_bins":["git"]}]),
+            serde_json::json!([{"capability":"proof_exec","allowed_bins":[]}]),
+            serde_json::json!([{"capability":"repository_proof_exec","allowed_bins":[]}]),
+            serde_json::json!([
+                {"capability":"proof_exec","allowed_bins":[]},
+                {"capability":"repository_proof_exec","allowed_bins":["python3"]}
+            ]),
+            serde_json::json!([
+                {"capability":"proof_exec","allowed_bins":["python3"]},
+                {"capability":"repository_proof_exec","allowed_bins":[]}
+            ]),
+            serde_json::json!([
+                {"capability":"proof_exec","allowed_bins":["python3"]},
+                {"capability":"proof_exec","allowed_bins":[]}
+            ]),
+        ] {
+            std::fs::write(
+                &policy,
+                serde_json::to_vec(&serde_json::json!({"rules":rules})).unwrap(),
+            )
+            .unwrap();
+            assert!(repository_proof_policy(&store, "/installed/python3").is_err());
+        }
+        for rules in [
+            serde_json::json!([{"capability":"proof_exec","allowed_bins":["python3"]}]),
+            serde_json::json!([{"capability":"repository_proof_exec","allowed_bins":["python3"]}]),
+            serde_json::json!([
+                {"capability":"proof_exec","allowed_bins":["python3"]},
+                {"capability":"repository_proof_exec","allowed_bins":["python3"]}
+            ]),
+        ] {
+            std::fs::write(
+                &policy,
+                serde_json::to_vec(&serde_json::json!({"rules":rules})).unwrap(),
+            )
+            .unwrap();
+            assert!(repository_proof_policy(&store, "/installed/python3").is_ok());
+        }
+    }
+
+    #[test]
+    fn malformed_or_unbounded_authored_policy_never_falls_back_to_defaults() {
+        let root = tempfile::tempdir().unwrap();
+        let store = root.path().join(".decapod/data");
+        std::fs::create_dir_all(&store).unwrap();
+        let policy = root.path().join(".decapod/EXTERNAL_ACTIONS.json");
+        for bytes in [b"not JSON".to_vec(), vec![b' '; 1024 * 1024 + 1]] {
+            std::fs::write(&policy, bytes).unwrap();
+            assert!(repository_proof_policy(&store, "/installed/python3").is_err());
+        }
+        std::fs::remove_file(&policy).unwrap();
+        std::fs::create_dir(&policy).unwrap();
+        assert!(repository_proof_policy(&store, "/installed/python3").is_err());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn symlinked_authored_policy_is_rejected() {
+        let root = tempfile::tempdir().unwrap();
+        let store = root.path().join(".decapod/data");
+        std::fs::create_dir_all(&store).unwrap();
+        let target = root.path().join("allow.json");
+        std::fs::write(
+            &target,
+            br#"{"rules":[{"capability":"repository_proof_exec","allowed_bins":["python3"]}]}"#,
+        )
+        .unwrap();
+        std::os::unix::fs::symlink(target, root.path().join(".decapod/EXTERNAL_ACTIONS.json"))
+            .unwrap();
+        assert!(repository_proof_policy(&store, "/installed/python3").is_err());
     }
 }

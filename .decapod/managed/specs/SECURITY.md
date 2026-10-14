@@ -260,7 +260,7 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ad4df983c31c1eeca2e45b16c2a72680989482eb30c86fb3976025fc82af36e9`
+- Repository signal fingerprint: `bfb800148abc78764c50cba4b8ced66a42a64ca84c6136105fe4d080be1b16dd`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (185 files), `tests/` (190 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -302,3 +302,10 @@ execution. This is bounded execution and custody, not an OS sandbox or a proof t
 arbitrary repository code has no external side effects. Review must exclude daemon,
 network, external writes and publication operations. Unsupported behavior blocks
 rather than producing a local substitute for required provider evidence.
+
+Repository command authorization is a sealed exact-invocation operation minted
+by the validated host, distinct from the generic executable allowlist. Existing
+authored proof policy continues to deny disallowed programs; missing relevant
+permissions in a present policy and malformed policy fail closed. No policy
+file is rewritten as a repair, and generic callers cannot request the sealed
+capability without the reviewed contract and measured invocation.

@@ -1678,38 +1678,75 @@ fn preserve_unspecified_init_options(
         init.dry_run,
     );
     let explicit = |id| matches.value_source(id) == Some(clap::parser::ValueSource::CommandLine);
-    macro_rules! preserve {
-        ($($field:ident),+ $(,)?) => {
-            $(if !explicit(stringify!($field)) {
-                init.$field = existing.$field;
-            })+
-        };
+    if !explicit("specs") {
+        init.specs = existing.specs;
     }
-    preserve!(
-        specs,
-        ci,
-        diagram_style,
-        product_name,
-        product_summary,
-        architecture_direction,
-        product_type,
-        done_criteria,
-        primary_languages,
-        detected_surfaces,
-        declared_capabilities,
-        container_workspaces,
-        protected_paths,
-        approval_categories,
-        isolation_mode,
-        tracker_provider,
-        tracker_project,
-        tracker_url,
-        declared_context_sources,
-        proof_commands,
-        validation_buildkite_preflights,
-        backend,
-        decision_provider,
-    );
+    if !explicit("ci") {
+        init.ci = existing.ci;
+    }
+    if !explicit("diagram_style") {
+        init.diagram_style = existing.diagram_style;
+    }
+    if !explicit("product_name") {
+        init.product_name = existing.product_name;
+    }
+    if !explicit("product_summary") {
+        init.product_summary = existing.product_summary;
+    }
+    if !explicit("architecture_direction") {
+        init.architecture_direction = existing.architecture_direction;
+    }
+    if !explicit("product_type") {
+        init.product_type = existing.product_type;
+    }
+    if !explicit("done_criteria") {
+        init.done_criteria = existing.done_criteria;
+    }
+    if !explicit("primary_languages") {
+        init.primary_languages = existing.primary_languages;
+    }
+    if !explicit("detected_surfaces") {
+        init.detected_surfaces = existing.detected_surfaces;
+    }
+    if !explicit("declared_capabilities") {
+        init.declared_capabilities = existing.declared_capabilities;
+    }
+    if !explicit("container_workspaces") {
+        init.container_workspaces = existing.container_workspaces;
+    }
+    if !explicit("protected_paths") {
+        init.protected_paths = existing.protected_paths;
+    }
+    if !explicit("approval_categories") {
+        init.approval_categories = existing.approval_categories;
+    }
+    if !explicit("isolation_mode") {
+        init.isolation_mode = existing.isolation_mode;
+    }
+    if !explicit("tracker_provider") {
+        init.tracker_provider = existing.tracker_provider;
+    }
+    if !explicit("tracker_project") {
+        init.tracker_project = existing.tracker_project;
+    }
+    if !explicit("tracker_url") {
+        init.tracker_url = existing.tracker_url;
+    }
+    if !explicit("declared_context_sources") {
+        init.declared_context_sources = existing.declared_context_sources;
+    }
+    if !explicit("proof_commands") {
+        init.proof_commands = existing.proof_commands;
+    }
+    if !explicit("validation_buildkite_preflights") {
+        init.validation_buildkite_preflights = existing.validation_buildkite_preflights;
+    }
+    if !explicit("backend") {
+        init.backend = existing.backend;
+    }
+    if !explicit("decision_provider") {
+        init.decision_provider = existing.decision_provider;
+    }
     // Entrypoint flags add requested projections without silently removing the
     // project's existing selection; --all explicitly adds every projection.
     init.all |= existing.all;
@@ -6546,6 +6583,9 @@ fn run_current_workbranch_readiness_with(
                     "readiness.source-check",
                     &invocation.program.to_string_lossy(),
                 ),
+                runtime::NativeAction::RepositoryCheck { invocation, seal } => {
+                    external_action::authorize_repository_proof(&store_root, invocation, seal)
+                }
             };
             result.map_err(std::io::Error::other)
         };

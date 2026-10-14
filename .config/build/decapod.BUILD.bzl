@@ -121,6 +121,7 @@ def decapod_targets():
         name = "decapod_lib",
         srcs = native.glob(["src/**/*.rs"], exclude = ["src/main.rs", "src/bin/*.rs"]),
         compile_data = native.glob(["src/**/*.sql"])
+        + ["docs/agent/repository-readiness.md"]
         + [
             # Synthetic release inputs are materialized only inside test fixtures.
             "tests/fixtures/derived-release/Cargo.toml.fixture",
