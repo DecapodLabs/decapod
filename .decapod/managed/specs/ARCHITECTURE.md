@@ -146,6 +146,14 @@ cannot be discarded by choosing another run ID; the agent continues that run
 or checkpoints and commits it before starting another. Git remains the history
 store rather than a second snapshot database.
 
+`governance_document::checkpoint` checks ID reuse inside the existing document
+lock, after loading current authority and measuring material. It preserves the
+first record, rejects conflicting content before saving, and treats an identical
+request as a no-op. Proof references are sorted and deduplicated before comparison.
+The material digest includes staged source and governed semantic inputs, but
+excludes the checkpoint list itself. Cooperating document writers serialize;
+this does not claim isolation from an unrelated process mutating the Git index.
+
 Governance document writers lock the complete read-modify-write operation and
 write atomically. Related sections share intent and epoch references instead
 of creating competing copies. Generated views remain projections of their
@@ -345,7 +353,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9677326548f3c7c8534c185c8babc69f5af3f6af15de30bc2875e8d3d65e4c0b`
+- Repository signal fingerprint: `1ed6125ed6d884dfced02c598cb6d2d5263aeafb6d2f2ff248d74bfe38e33937`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (185 files), `tests/` (190 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

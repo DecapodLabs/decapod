@@ -83,6 +83,10 @@ Knowledge and context records preserve useful project information across
 sessions. These records must retain unresolved assumptions and obligations so
 the next agent can continue without inventing a clean history.
 
+Checkpoint creation must preserve that history at the mutation boundary. A reused
+identifier cannot replace earlier evidence with revised work. Identical retries
+remain safe; changed work gets a new checkpoint and independent validation.
+
 ### Evidence and accepted work
 
 Agents define proof expectations, run the required checks, preserve results,
@@ -171,7 +175,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9677326548f3c7c8534c185c8babc69f5af3f6af15de30bc2875e8d3d65e4c0b`
+- Repository signal fingerprint: `1ed6125ed6d884dfced02c598cb6d2d5263aeafb6d2f2ff248d74bfe38e33937`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (185 files), `tests/` (190 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

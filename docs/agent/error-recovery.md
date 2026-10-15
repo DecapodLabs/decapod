@@ -117,6 +117,13 @@ staged before recording a checkpoint. After checkpointing, stage governance.json
 and commit. Publication refuses a missing checkpoint before auto-commit, and a
 later checkpoint cannot retroactively prove an earlier uncheckpointed commit.
 
+`GOVERNANCE_CHECKPOINT_ID_CONFLICT` means an existing ID already records different
+material, summary, or proof references. The rejected call leaves that checkpoint
+and governance document unchanged. Preserve the old record, stage current work,
+and record a new checkpoint ID before committing. An identical retry with the
+same material and summary and the same proof-reference set is a no-op. Do not
+rewrite a published commit or remove prior records to reuse its ID.
+
 ### Orphan broker audit entries (`data broker verify`)
 
 `data broker verify` checks audit lifecycle evidence, not SQLite structural

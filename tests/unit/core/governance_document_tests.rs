@@ -206,6 +206,202 @@ fn per_commit_checkpoints_bind_material_and_keep_prior_records() {
 }
 
 #[test]
+fn checkpoint_identical_retry_preserves_bytes_before_and_after_commit() {
+    let root = repo();
+    let base = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
+    begin_pr(root.path(), "series", "master").unwrap();
+    checkpoint(
+        root.path(),
+        "first",
+        "Initial work",
+        vec!["proof:b".into(), "proof:a".into(), "proof:a".into()],
+    )
+    .unwrap();
+    let before = fs::read(root.path().join(GOVERNANCE_PATH)).unwrap();
+    for committed in [false, true] {
+        if committed {
+            git(root.path(), &["add", GOVERNANCE_PATH]).unwrap();
+            commit(root.path(), "first");
+        }
+        let retried = checkpoint(
+            root.path(),
+            "first",
+            "Initial work",
+            vec!["proof:a".into(), "proof:b".into()],
+        )
+        .unwrap();
+        assert_eq!(retried.checkpoints.len(), 1);
+        assert_eq!(before, fs::read(root.path().join(GOVERNANCE_PATH)).unwrap());
+    }
+    verify_pr_checkpoints(root.path(), &base, "HEAD").unwrap();
+}
+
+#[test]
+fn checkpoint_retry_preserves_noncanonical_stored_proof_reference_bytes() {
+    let root = repo();
+    begin_pr(root.path(), "series", "master").unwrap();
+    let mut document = checkpoint(
+        root.path(),
+        "first",
+        "Initial work",
+        vec!["proof:a".into(), "proof:b".into()],
+    )
+    .unwrap();
+    document.checkpoints[0].proof_refs = vec!["proof:b".into(), "proof:a".into(), "proof:a".into()];
+    save(root.path(), &document).unwrap();
+    let before = fs::read(root.path().join(GOVERNANCE_PATH)).unwrap();
+    checkpoint(
+        root.path(),
+        "first",
+        "Initial work",
+        vec!["proof:a".into(), "proof:b".into()],
+    )
+    .unwrap();
+    assert_eq!(before, fs::read(root.path().join(GOVERNANCE_PATH)).unwrap());
+}
+
+#[test]
+fn checkpoint_conflicting_summary_or_proof_refs_preserves_history() {
+    for (summary, refs) in [
+        ("Rewritten work", vec!["proof:original".into()]),
+        ("Initial work", vec!["proof:replacement".into()]),
+        ("Initial work", vec![]),
+    ] {
+        let root = repo();
+        begin_pr(root.path(), "series", "master").unwrap();
+        checkpoint(
+            root.path(),
+            "first",
+            "Initial work",
+            vec!["proof:original".into()],
+        )
+        .unwrap();
+        let before = fs::read(root.path().join(GOVERNANCE_PATH)).unwrap();
+        let error = checkpoint(root.path(), "first", summary, refs).unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .contains("GOVERNANCE_CHECKPOINT_ID_CONFLICT")
+        );
+        assert_eq!(before, fs::read(root.path().join(GOVERNANCE_PATH)).unwrap());
+    }
+}
+
+#[test]
+fn checkpoint_changed_staged_material_requires_new_id_and_keeps_publishable_history() {
+    let root = repo();
+    let base = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
+    begin_pr(root.path(), "series", "master").unwrap();
+    checkpoint(root.path(), "first", "Initial work", vec![]).unwrap();
+    git(root.path(), &["add", GOVERNANCE_PATH]).unwrap();
+    commit(root.path(), "first");
+    fs::write(root.path().join("source.rs"), "fn changed() {}\n").unwrap();
+    git(root.path(), &["add", "source.rs"]).unwrap();
+    let before = fs::read(root.path().join(GOVERNANCE_PATH)).unwrap();
+    assert!(
+        checkpoint(root.path(), "first", "Initial work", vec![])
+            .unwrap_err()
+            .to_string()
+            .contains("GOVERNANCE_CHECKPOINT_ID_CONFLICT")
+    );
+    assert_eq!(before, fs::read(root.path().join(GOVERNANCE_PATH)).unwrap());
+    let next = checkpoint(root.path(), "second", "Updated work", vec![]).unwrap();
+    assert_eq!(next.checkpoints.len(), 2);
+    assert_ne!(
+        next.checkpoints[0].input_digest,
+        next.checkpoints[1].input_digest
+    );
+    git(root.path(), &["add", GOVERNANCE_PATH]).unwrap();
+    verify_staged_checkpoint(root.path()).unwrap();
+    commit(root.path(), "second");
+    verify_pr_checkpoints(root.path(), &base, "HEAD").unwrap();
+}
+
+#[test]
+fn checkpoint_changed_governance_inputs_require_new_id() {
+    let root = repo();
+    begin_pr(root.path(), "series", "master").unwrap();
+    write_section(root.path(), "plan", &plan("original intent")).unwrap();
+    checkpoint(root.path(), "first", "Initial work", vec![]).unwrap();
+    write_section(root.path(), "plan", &plan("revised intent")).unwrap();
+    let before = fs::read(root.path().join(GOVERNANCE_PATH)).unwrap();
+    assert!(
+        checkpoint(root.path(), "first", "Initial work", vec![])
+            .unwrap_err()
+            .to_string()
+            .contains("GOVERNANCE_CHECKPOINT_ID_CONFLICT")
+    );
+    assert_eq!(before, fs::read(root.path().join(GOVERNANCE_PATH)).unwrap());
+}
+
+#[test]
+fn concurrent_checkpoint_id_conflicts_do_not_overwrite_winner() {
+    let root = repo();
+    begin_pr(root.path(), "series", "master").unwrap();
+    let barrier = std::sync::Arc::new(std::sync::Barrier::new(2));
+    let handles: Vec<_> = ["First writer", "Second writer"]
+        .into_iter()
+        .map(|summary| {
+            let root = root.path().to_path_buf();
+            let barrier = barrier.clone();
+            std::thread::spawn(move || {
+                barrier.wait();
+                checkpoint(&root, "shared", summary, vec![])
+            })
+        })
+        .collect();
+    let results: Vec<_> = handles
+        .into_iter()
+        .map(|handle| handle.join().unwrap())
+        .collect();
+    assert_eq!(results.iter().filter(|result| result.is_ok()).count(), 1);
+    let winner = results
+        .iter()
+        .find_map(|result| result.as_ref().ok())
+        .unwrap();
+    let error = results
+        .iter()
+        .find_map(|result| result.as_ref().err())
+        .unwrap();
+    assert!(
+        error
+            .to_string()
+            .contains("GOVERNANCE_CHECKPOINT_ID_CONFLICT")
+    );
+    let final_document = load(root.path()).unwrap().unwrap();
+    assert_eq!(final_document.checkpoints.len(), 1);
+    assert_eq!(
+        final_document.checkpoints[0].summary,
+        winner.checkpoints[0].summary
+    );
+    assert_eq!(
+        serde_json::to_value(&final_document).unwrap(),
+        serde_json::to_value(winner).unwrap()
+    );
+}
+
+#[test]
+fn concurrent_identical_checkpoint_requests_are_idempotent() {
+    let root = repo();
+    begin_pr(root.path(), "series", "master").unwrap();
+    let barrier = std::sync::Arc::new(std::sync::Barrier::new(2));
+    let handles: Vec<_> = (0..2)
+        .map(|_| {
+            let root = root.path().to_path_buf();
+            let barrier = barrier.clone();
+            std::thread::spawn(move || {
+                barrier.wait();
+                checkpoint(&root, "shared", "Identical work", vec![])
+            })
+        })
+        .collect();
+    for handle in handles {
+        assert_eq!(handle.join().unwrap().unwrap().checkpoints.len(), 1);
+    }
+    assert_eq!(load(root.path()).unwrap().unwrap().checkpoints.len(), 1);
+}
+
+#[test]
 fn a_new_name_does_not_bless_an_old_material_digest() {
     let root = repo();
     let base = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
