@@ -278,6 +278,15 @@
         "tests/unit/core/validate_tests.rs",
         "tests/unit/plugins/health_tests.rs"
       ]
+    },
+    {
+      "id": "release-inventory-evidence-repair",
+      "summary": "Reconcile reviewed release proof-source inventory and preserve measured CI plus failed readiness evidence without rewriting the prior checkpoint",
+      "input_digest": "sha256:8d596a64caddd2b654c46cf16c03a1f78e1c19d05aa75c01d36b813fd34d9386",
+      "proof_refs": [
+        ".decapod/config.toml",
+        "https://github.com/DecapodLabs/decapod/actions/runs/38652640719"
+      ]
     }
   ],
   "intents": {
@@ -319,21 +328,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Current content reviewed against final source: canonical connection-level proof derivation, iterative dependency readiness, strict requirements, explicit dangling/cycle handling, failing verification exits and scoped completion-attempt admission. Source reviewed; measured tests await plain full validate.",
+          "reason": "Reviewed current source-grounded obligation derivation and shared cache-free health evaluation; no architecture change in this recovery.",
           "reviewed_code_fingerprint": "9677326548f3c7c8534c185c8babc69f5af3f6af15de30bc2875e8d3d65e4c0b",
           "spec_material_hash": "0b0b6283905eb9345ef0b66a0dd5d6d4ad1575f2010282287096c127884b3ae5"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Current content reviewed against final source: canonical connection-level proof derivation, iterative dependency readiness, strict requirements, explicit dangling/cycle handling, failing verification exits and scoped completion-attempt admission. Source reviewed; measured tests await plain full validate.",
+          "reason": "Reviewed current strict readiness error and nonzero exit contracts; no interface change in this recovery.",
           "reviewed_code_fingerprint": "9677326548f3c7c8534c185c8babc69f5af3f6af15de30bc2875e8d3d65e4c0b",
           "spec_material_hash": "68130d4ee6c7dce2f2f8acd626cc6eccc4c5906234bf9fa226e253c9777e7ebc"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Current authored security contract still applies: canonical Dactyl datastore, session and ownership enforcement, read coordination locks and exact-candidate publication. No credentials, permissions, provider settings, trust policy or external authority change. Readiness semantics are updated in the owning architecture/interface/semantics specs.",
+          "reason": "Recovery updates the reviewed proof-source inventory and append-only evidence only; no authentication, permission, or security boundary changes.",
           "reviewed_code_fingerprint": "9677326548f3c7c8534c185c8babc69f5af3f6af15de30bc2875e8d3d65e4c0b",
           "spec_material_hash": "2ea32916117ded5ef055b3a5c1e5de60fe12d90aabc6b60818b80f77c5779c6a"
         }
@@ -348,21 +357,29 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792019404Z"
+      "updated_at": "1792022848Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Canonical SQLite/Dactyl and Git authority; no merge or provider settings changes; no new framework.",
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:6c027df26f37bd53645cd62e36bbfde06089125343a4790a74f150d348feb8c9",
+      "artifact_hash": "sha256:12c4056b8c4bc4d55c8df3ee0ef907a3056c6f2a62633239f631ccf77affdaed",
       "checks": [
         {
           "name": "candidate_runtime_tests",
           "status": "unavailable"
         },
         {
+          "name": "full_readiness",
+          "status": "failed"
+        },
+        {
           "name": "git_diff_check",
+          "status": "passed"
+        },
+        {
+          "name": "hosted_code_and_test_suites",
           "status": "passed"
         },
         {
@@ -376,8 +393,13 @@
         {
           "name": "source_adversarial_review",
           "status": "passed"
+        },
+        {
+          "name": "source_inventory_review",
+          "status": "passed"
         }
       ],
+      "completion_claim": "Implementation and regression suites passed; current-candidate full readiness remains pending.",
       "current_phase": "validation",
       "custody": {
         "events": [
@@ -406,10 +428,17 @@
             "intent_id": "intent:change_01M4YADKHVP222S50ZMQHJEGMK",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M4YADKJJSX0CMNDGSPF9BJG2",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M4YADKHVP222S50ZMQHJEGMK",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M4YADKJJSX0CMNDGSPF9BJG2": {
@@ -461,26 +490,57 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "command": "Reconstruct final commit from unchanged first commit, append a unique CLI-owned checkpoint, verify history, then rerun plain decapod validate",
+                "custody_event_id": "event:6",
+                "observations": [
+                  ".decapod/config.toml",
+                  ".decapod/config.toml",
+                  "Source inventory review found only release package version changes in Cargo.toml and Cargo.lock; required checks and execution adapters are unchanged.",
+                  "GitHub Actions run 38652640719: library 1212 passed, 0 failed, 3 ignored; required health and obligation plugin targets passed. Buildkite builds 1608-1612 recorded 40 successes and one governance history failure.",
+                  "e2490fd21ca690e157622e6017ea2ea53895980c failed GOVERNANCE_CHECKPOINT_HISTORY_CHANGED because its checkpoint reused the first commit ID. Failed Git history and reports are preserved outside the worktree. User authorized replacing only that final commit with an exact lease guard.",
+                  "Full validation also retained a failed transient Buildkite build-envelope GET. Neither partial provider reads nor passed tests establish publication readiness."
+                ],
+                "proof_refs": [
+                  "source_inventory_review",
+                  "hosted_code_and_test_suites",
+                  "full_readiness"
+                ],
+                "scope": [
+                  "Obligation current-proof/dependency derivation, HealthEngine read helper, completion validation, adversarial tests and specs",
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
+        "Reconstruct final commit from unchanged first commit, append a unique CLI-owned checkpoint, verify history, then rerun plain decapod validate",
         "decapod validate --format json"
       ],
       "destination": "pull request",
       "evidence": [
+        "Full validation also retained a failed transient Buildkite build-envelope GET. Neither partial provider reads nor passed tests establish publication readiness.",
+        "GitHub Actions run 38652640719: library 1212 passed, 0 failed, 3 ignored; required health and obligation plugin targets passed. Buildkite builds 1608-1612 recorded 40 successes and one governance history failure.",
         "Released CLI fixture: completed parent remains open after leaf completion; verify and validate-graph exit zero on failure; uncached pass rejected and later failed proof accepted through stale VERIFIED cache.",
-        "Source review found and repaired unrelated malformed backlog scope leakage before checkpoint. Added 16 obligation integration, 7 validation gate and 15 health regressions in required existing suites. No candidate build or tests run outside validate."
+        "Source inventory review found only release package version changes in Cargo.toml and Cargo.lock; required checks and execution adapters are unchanged.",
+        "Source review found and repaired unrelated malformed backlog scope leakage before checkpoint. Added 16 obligation integration, 7 validation gate and 15 health regressions in required existing suites. No candidate build or tests run outside validate.",
+        "e2490fd21ca690e157622e6017ea2ea53895980c failed GOVERNANCE_CHECKPOINT_HISTORY_CHANGED because its checkpoint reused the first commit ID. Failed Git history and reports are preserved outside the worktree. User authorized replacing only that final commit with an exact lease guard."
       ],
       "inspected_files": [
+        ".decapod/config.toml",
         "src/decapod/core/obligation.rs",
         "src/decapod/core/validate.rs",
         "src/decapod/plugins/health.rs"
       ],
       "intent_id": "intent:change_01M4YADKHVP222S50ZMQHJEGMK",
       "modified_files": [
+        ".decapod/config.toml",
         "src/decapod/core/obligation.rs",
         "src/decapod/core/validate.rs",
         "src/decapod/plugins/health.rs",
@@ -490,7 +550,8 @@
         "tests/unit/plugins/health_tests.rs"
       ],
       "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "Refine plan and declare falsifiable checks",
+        "Run exact-candidate full validation, then publish only when green"
       ],
       "repo_scope": [
         "Obligation current-proof/dependency derivation, HealthEngine read helper, completion validation, adversarial tests and specs",
