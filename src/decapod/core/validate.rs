@@ -7123,26 +7123,30 @@ fn validate_obligations(store: &Store, ctx: &ValidationContext) -> Result<(), er
     // Initialize the DB to ensure tables exist
     crate::core::obligation::initialize_obligation_db(&store.root)?;
 
-    let obligations = crate::core::obligation::list_obligations(store)?;
+    let attempts = crate::core::obligation::derive_completion_attempts(store)?;
     let mut met_count = 0;
-    for ob in obligations {
-        // If an obligation is marked Met, we MUST verify it still holds
-        if ob.status == crate::core::obligation::ObligationStatus::Met {
-            let (status, reason) = crate::core::obligation::verify_obligation(store, &ob.id)?;
-            if status != crate::core::obligation::ObligationStatus::Met {
-                fail(
-                    &format!("Obligation {} failed verification: {}", ob.id, reason),
-                    ctx,
-                );
-            } else {
-                met_count += 1;
-            }
+    let mut failed = false;
+    for result in attempts {
+        if result.derived_status != crate::core::obligation::ObligationStatus::Met {
+            failed = true;
+            fail(
+                &format!(
+                    "Obligation {} failed verification: {}",
+                    result.obligation_id,
+                    result.validation_errors.join("; ")
+                ),
+                ctx,
+            );
+        } else {
+            met_count += 1;
         }
     }
-    pass(
-        &format!("Obligation Graph Validation Gate ({met_count} met nodes verified)"),
-        ctx,
-    );
+    if !failed {
+        pass(
+            &format!("Obligation Graph Validation Gate ({met_count} completion attempts verified)"),
+            ctx,
+        );
+    }
     Ok(())
 }
 

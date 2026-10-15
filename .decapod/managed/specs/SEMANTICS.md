@@ -92,9 +92,21 @@ new completion/recapture must establish fresh custody. Legacy replay never
 assigns a current revision to historical evidence whose revision provenance
 cannot be reconstructed.
 
-Obligation status is derived from its dependencies, required proofs, and state
-commit. A declaration that an obligation is satisfied does not substitute for
-those inputs.
+Obligation status is derived from current transitive dependencies, required
+proofs, and a nonempty state-commit root. Stored `open` or `met` values cannot
+substitute for those inputs. Cycles, missing dependencies, malformed proof
+requirements, absent claims, expired proofs, and current contradictions cannot
+produce `Met`. Completion attempts are identified by a recorded root; legacy
+`met` rows are also rechecked. Unattempted open backlog is not a publication gate.
+
+HealthEngine proof order uses numeric epoch seconds. Because timestamp ties do
+not establish event order, any failure at the latest second dominates tied
+passes; all tied passes must still satisfy their SLAs. Expiry remains inclusive
+at the expiry second. A strictly newer passing event can recover from an older
+failure. Unknown latest results, future or malformed timestamps, invalid SLAs,
+and overflow cannot establish `VERIFIED`. An unorderable timestamp invalidates
+the derivation instead of being discarded. Current claim/event evidence remains
+authoritative regardless of `health_cache` contents or inspection history.
 
 Full publication readiness concerns the exact workbranch candidate and accepted
 target under the applicable current contract. CI-local success, project
@@ -227,7 +239,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `23f6db43b9a8b25bd848a22259be36133baa680f8b046e76b30edf203e50f84c`
+- Repository signal fingerprint: `9677326548f3c7c8534c185c8babc69f5af3f6af15de30bc2875e8d3d65e4c0b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (185 files), `tests/` (190 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

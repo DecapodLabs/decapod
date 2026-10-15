@@ -312,6 +312,28 @@ from a release-looking branch name or equal caller-supplied IDs. Constitution
 schema validation runs for both dispositions; only real ranges use candidate
 custody. Full validation and measured receipt APIs still reject equal endpoints.
 
+## Obligation and HealthEngine verification
+
+`obligation verify --id` prints its structured current derivation and returns a
+nonzero exit when the obligation is unmet. `obligation validate-graph` prints the
+whole graph result and exits nonzero for any unmet node, cycle, or missing
+endpoint. `dependency_errors` exposes dangling edges; `total_edges` counts raw
+stored edges. Malformed requirement arrays are errors, never empty proof lists.
+`get` and `list` retain the stored status field for compatibility; that projection
+cannot authorize readiness.
+
+`obligation complete --id --commit` records a completion attempt using a nonempty
+root and prints current readiness. It does not assert `Met`; missing IDs or empty
+roots fail. Full validation rechecks recorded roots and legacy `met` projections,
+including their transitive evidence, while unattempted open obligations remain
+backlog. A public whole-graph check intentionally asks about every node.
+
+Health claim references resolve an exact ID first, then a unique subject alias.
+Duplicate subjects return `HEALTH_CLAIM_AMBIGUOUS`; a storage failure is not
+reported as a missing claim. `govern health get` may refresh the advisory cache,
+but obligation verification does not depend on that refresh. These behaviors are
+implemented in `core/obligation.rs` and `plugins/health.rs`.
+
 ## Outbound Dependencies
 
 Cloud storage uses an explicit versioned storage context, Git-derived repository
@@ -369,7 +391,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `23f6db43b9a8b25bd848a22259be36133baa680f8b046e76b30edf203e50f84c`
+- Repository signal fingerprint: `9677326548f3c7c8534c185c8babc69f5af3f6af15de30bc2875e8d3d65e4c0b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (185 files), `tests/` (190 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
