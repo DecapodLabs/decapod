@@ -219,6 +219,13 @@ Before each authored commit, stage code/spec changes, run
 `decapod govern artifacts checkpoint --id <unique-id> --summary "..." --proof-ref <evidence>`,
 then stage governance.json and commit. Publication checks exact material and
 cumulative checkpoint preservation across the entire commit graph, including merges.
+Checkpoint IDs are immutable within the active PR. Repeating an ID succeeds
+without a write only when the summary, normalized proof-reference set, and
+current material digest match its original record. Different code, governed
+inputs, summary, or proof references return `GOVERNANCE_CHECKPOINT_ID_CONFLICT`
+without replacing history. Record changed work with a new ID. This check runs
+under the existing governance-document lock; independent history verification
+still rejects erased or rewritten records in authored commits.
 `inventory --claims-note "..."` records a current-PR checkpoint, not a fake claim
 or a policy-history append. `inventory --compact` performs lossless legacy
 normalization. Neither surface repairs malformed evidence by overwriting it.

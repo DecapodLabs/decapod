@@ -1,8 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "0884f77820520a691c0375b4638cc986233b3719",
-    "release": "v0.113.0",
+    "accepted_commit": "943e45757351297a5e4d83af7962b51ad3727b5e",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -69,6 +68,16 @@
       "claim:created-context": {
         "falsifier": "A changed, unrelated, dirty, missing-base or tampered event obtains no-change status or readiness evidence",
         "statement": "Only a provider-declared ordinary first push at the verified accepted target is classified as no change; actual candidate ranges remain strict",
+        "status": "open"
+      },
+      "claim:current-obligation-evidence": {
+        "falsifier": "A required regression accepts stale cached proof, cached dependency completion, malformed requirements, dangling edges or cycles, or an unmet verify/graph command exits zero.",
+        "proof_refs": [
+          "tests/plugins/health.rs",
+          "tests/plugins/obligation.rs",
+          "tests/unit/plugins/health_tests.rs"
+        ],
+        "statement": "Obligation readiness derives from current transitive dependencies and authoritative HealthEngine evidence, not advisory caches; corrupt graphs and unmet CLI verification fail closed.",
         "status": "open"
       },
       "claim:current-task-proof": {
@@ -251,46 +260,49 @@
     }
   },
   "change": {
-    "id": "change_01M4YADKHVP222S50ZMQHJEGMK",
-    "base_commit": "0884f77820520a691c0375b4638cc986233b3719",
+    "id": "change_01M4YS7YJVQN9E3W82GQXAP37H",
+    "base_commit": "943e45757351297a5e4d83af7962b51ad3727b5e",
     "target_base": "origin/master"
   },
   "claims": {
-    "current-obligation-evidence": {
-      "statement": "Obligation readiness derives from current transitive dependencies and authoritative HealthEngine evidence, not advisory caches; corrupt graphs and unmet CLI verification fail closed.",
-      "falsifier": "A required regression accepts stale cached proof, cached dependency completion, malformed requirements, dangling edges or cycles, or an unmet verify/graph command exits zero.",
-      "status": "open",
+    "checkpoint-immutable": {
+      "statement": "Checkpoint mutation preserves existing IDs and accepts only exact semantic retries under the document lock",
+      "falsifier": "A conflicting same-ID call succeeds or changes the governance bytes, or an identical retry adds or changes a checkpoint",
+      "status": "supported",
       "proof_refs": [
-        "tests/plugins/health.rs",
-        "tests/plugins/obligation.rs",
-        "tests/unit/plugins/health_tests.rs"
+        "https://github.com/DecapodLabs/decapod/actions/runs/38676400782/job/116231008636",
+        "tests/unit/core/governance_document_tests.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "current-obligation-evidence",
-      "summary": "Derive current obligation and HealthEngine readiness; strict graph verification, completion-attempt validation, adversarial regressions and material living specs. Source/format review passed; runtime proof awaits full validation.",
-      "input_digest": "sha256:c162387e81c465a1f11409a89d60cea440b7c7547bfea3aed5cfcc4660009993",
+      "id": "checkpoint-immutability-01",
+      "summary": "Reject conflicting checkpoint ID reuse and preserve semantic retries with adversarial regressions",
+      "input_digest": "sha256:5f517f99233eceab834b9f0a2ece0aacab1418cd4110f32f094d5e7eed22397f",
       "proof_refs": [
-        "tests/plugins/health.rs",
-        "tests/plugins/obligation.rs",
-        "tests/unit/core/validate_tests.rs",
-        "tests/unit/plugins/health_tests.rs"
+        "tests/unit/core/governance_document_tests.rs"
       ]
     },
     {
-      "id": "release-inventory-evidence-repair",
-      "summary": "Reconcile reviewed release proof-source inventory and preserve measured CI plus failed readiness evidence without rewriting the prior checkpoint",
-      "input_digest": "sha256:8d596a64caddd2b654c46cf16c03a1f78e1c19d05aa75c01d36b813fd34d9386",
+      "id": "checkpoint-immutability-02",
+      "summary": "Reconcile version-only v0.114.0 inventory and strengthen retry preservation assertions",
+      "input_digest": "sha256:959327752d7293ef5b28d96b0961d7a2b2d265671aa7eb13c62fedc7c96e5a36",
       "proof_refs": [
-        ".decapod/config.toml",
-        "https://github.com/DecapodLabs/decapod/actions/runs/38652640719"
+        "tests/unit/core/governance_document_tests.rs"
+      ]
+    },
+    {
+      "id": "checkpoint-immutability-03",
+      "summary": "Renew final-content spec reviews after passing checkpoint regression targets",
+      "input_digest": "sha256:8c8ee43423026d5a739ecba880c123f9f66eff19702ce384007294373efbc071",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/38676400782/job/116231008636"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M4YADKHVP222S50ZMQHJEGMK": {
+    "intent:change_01M4YS7YJVQN9E3W82GQXAP37H": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -300,11 +312,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M4YADKHVP222S50ZMQHJEGMK",
+      "id": "intent:change_01M4YS7YJVQN9E3W82GQXAP37H",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Derive current obligation readiness from canonical proof and dependency evidence\n\nIssue #1430: remove health cache and stored obligation status as readiness authorities; fail closed on corrupt requirements, dangling edges, cycles and CLI verification failures; preserve unrelated backlog. Full required validation and draft PR publication; no merge.",
-      "refined_intent": "Derive current obligation readiness from canonical proof and dependency evidence\n\nIssue #1430: remove health cache and stored obligation status as readiness authorities; fail closed on corrupt requirements, dangling edges, cycles and CLI verification failures; preserve unrelated backlog. Full required validation and draft PR publication; no merge.",
+      "raw_intent": "Reject destructive governance checkpoint ID reuse\n\nPreserve immutable checkpoint history at mutation time; reject conflicting ID reuse without writes and retain exact-request idempotence, with adversarial regressions and full prescribed validation.",
+      "refined_intent": "Reject destructive governance checkpoint ID reuse\n\nPreserve immutable checkpoint history at mutation time; reject conflicting ID reuse without writes and retain exact-request idempotence, with adversarial regressions and full prescribed validation.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -312,127 +324,110 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 25,
+        "file_touch_budget": null,
         "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Issue 1430: derive obligation completion from canonical current proof and transitive dependency evidence; fail closed on malformed requirements, dangling edges and cycles; make verification command failures observable; validate completion attempts without requiring unrelated open backlog.",
+      "intent": "Reject destructive governance checkpoint ID reuse\n\nPreserve immutable checkpoint history at mutation time; reject conflicting ID reuse without writes and retain exact-request idempotence, with adversarial regressions and full prescribed validation.",
       "phases": [],
       "proof_hooks": [
-        "decapod validate --format json",
-        "Required plugins, library and CLI suites include adversarial obligation and HealthEngine tests"
+        "decapod validate"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed current source-grounded obligation derivation and shared cache-free health evaluation; no architecture change in this recovery.",
-          "reviewed_code_fingerprint": "9677326548f3c7c8534c185c8babc69f5af3f6af15de30bc2875e8d3d65e4c0b",
-          "spec_material_hash": "0b0b6283905eb9345ef0b66a0dd5d6d4ad1575f2010282287096c127884b3ae5"
+          "reason": "Reviewed final existing-lock implementation and adversarial tests; no Git-index isolation guarantee",
+          "reviewed_code_fingerprint": "2121c701724f32727246b58c5e5c2567f081986d300d6ada2722406420a0e850",
+          "spec_material_hash": "6f9677b8412511526871a3e51e7e081a78a21b547f0473f9b9a02a0b3b04ff76"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed current strict readiness error and nonzero exit contracts; no interface change in this recovery.",
-          "reviewed_code_fingerprint": "9677326548f3c7c8534c185c8babc69f5af3f6af15de30bc2875e8d3d65e4c0b",
-          "spec_material_hash": "68130d4ee6c7dce2f2f8acd626cc6eccc4c5906234bf9fa226e253c9777e7ebc"
+          "reason": "Reviewed final checkpoint rejection, canonical proof-reference comparison, byte-preserving retries and recovery against final implementation and regressions",
+          "reviewed_code_fingerprint": "2121c701724f32727246b58c5e5c2567f081986d300d6ada2722406420a0e850",
+          "spec_material_hash": "301a2aeaa7b06104cd8b633c51f7c9201e32eb299c5ddd579295c689233f7c0a"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Recovery updates the reviewed proof-source inventory and append-only evidence only; no authentication, permission, or security boundary changes.",
-          "reviewed_code_fingerprint": "9677326548f3c7c8534c185c8babc69f5af3f6af15de30bc2875e8d3d65e4c0b",
+          "reason": "Final code preserves existing authentication, authorization, advisory locking and historical publication checks; no security boundary change",
+          "reviewed_code_fingerprint": "2121c701724f32727246b58c5e5c2567f081986d300d6ada2722406420a0e850",
           "spec_material_hash": "2ea32916117ded5ef055b3a5c1e5de60fe12d90aabc6b60818b80f77c5779c6a"
         }
       ],
       "state": "APPROVED",
-      "stop_conditions": [
-        "Stop for a real human decision, denied access or unsupported required validation contract; no merge."
-      ],
-      "title": "Derive current obligation readiness",
+      "stop_conditions": [],
+      "title": "Reject destructive governance checkpoint ID reuse",
       "todo_ids": [
-        "bugs_01m4y9w8prbd8g51"
+        "bugs_01m4ys7ehn6v8f64"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792022848Z"
+      "updated_at": "1792035570Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Canonical SQLite/Dactyl and Git authority; no merge or provider settings changes; no new framework.",
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:12c4056b8c4bc4d55c8df3ee0ef907a3056c6f2a62633239f631ccf77affdaed",
+      "artifact_hash": "sha256:e5e5b201ec39542bb0b8e4b87f50f93f51bac57de87705ae0689bbc3f52ed0f9",
       "checks": [
         {
-          "name": "candidate_runtime_tests",
-          "status": "unavailable"
+          "name": "adversarial_regressions",
+          "status": "passed"
         },
         {
-          "name": "full_readiness",
+          "name": "checkpoint_reuse_source_audit",
+          "status": "passed"
+        },
+        {
+          "name": "diff_whitespace",
+          "status": "passed"
+        },
+        {
+          "name": "full_prescribed_validation",
           "status": "failed"
         },
         {
-          "name": "git_diff_check",
-          "status": "passed"
-        },
-        {
-          "name": "hosted_code_and_test_suites",
-          "status": "passed"
-        },
-        {
-          "name": "released_0.113.0_baseline_reproduction",
-          "status": "failed"
-        },
-        {
-          "name": "rustfmt",
-          "status": "passed"
-        },
-        {
-          "name": "source_adversarial_review",
-          "status": "passed"
-        },
-        {
-          "name": "source_inventory_review",
+          "name": "release_inventory_review",
           "status": "passed"
         }
       ],
-      "completion_claim": "Implementation and regression suites passed; current-candidate full readiness remains pending.",
-      "current_phase": "validation",
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M4YADKHVP222S50ZMQHJEGMK",
+            "intent_id": "intent:change_01M4YS7YJVQN9E3W82GQXAP37H",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M4YADKHVP222S50ZMQHJEGMK",
+            "intent_id": "intent:change_01M4YS7YJVQN9E3W82GQXAP37H",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M4YADKJJSX0CMNDGSPF9BJG2",
+            "detail": "trajectory:branch_01M4YS7YKB6XJHAX7D6NGGH1YG",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M4YADKHVP222S50ZMQHJEGMK",
+            "intent_id": "intent:change_01M4YS7YJVQN9E3W82GQXAP37H",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M4YADKJJSX0CMNDGSPF9BJG2",
+            "detail": "trajectory:branch_01M4YS7YKB6XJHAX7D6NGGH1YG",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M4YADKHVP222S50ZMQHJEGMK",
+            "intent_id": "intent:change_01M4YS7YJVQN9E3W82GQXAP37H",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M4YADKJJSX0CMNDGSPF9BJG2",
+            "detail": "trajectory:branch_01M4YS7YKB6XJHAX7D6NGGH1YG",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M4YADKHVP222S50ZMQHJEGMK",
+            "intent_id": "intent:change_01M4YS7YJVQN9E3W82GQXAP37H",
             "kind": "trajectory_step_recorded",
             "sequence": 6
           }
@@ -441,22 +436,20 @@
         "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M4YADKJJSX0CMNDGSPF9BJG2": {
+          "branch_01M4YS7YKB6XJHAX7D6NGGH1YG": {
             "evidence_only": true,
-            "id": "branch_01M4YADKJJSX0CMNDGSPF9BJG2",
-            "intent_id": "intent:change_01M4YADKHVP222S50ZMQHJEGMK",
+            "id": "branch_01M4YS7YKB6XJHAX7D6NGGH1YG",
+            "intent_id": "intent:change_01M4YS7YJVQN9E3W82GQXAP37H",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/obligation.rs",
-                  "src/decapod/plugins/health.rs",
-                  "src/decapod/core/validate.rs",
-                  "Released CLI fixture: completed parent remains open after leaf completion; verify and validate-graph exit zero on failure; uncached pass rejected and later failed proof accepted through stale VERIFIED cache."
+                  "src/decapod/core/governance_document.rs",
+                  "tests/unit/core/governance_document_tests.rs"
                 ],
                 "proof_refs": [
-                  "released_0.113.0_baseline_reproduction"
+                  "checkpoint_reuse_source_audit"
                 ],
                 "scope": [
                   "root"
@@ -465,51 +458,37 @@
                 "validation_findings": []
               },
               {
-                "action": "validation",
-                "command": "decapod validate --format json",
+                "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/decapod/core/obligation.rs",
-                  "src/decapod/core/validate.rs",
-                  "src/decapod/plugins/health.rs",
-                  "tests/plugins/obligation.rs",
-                  "tests/plugins/health.rs",
-                  "tests/unit/core/validate_tests.rs",
-                  "tests/unit/plugins/health_tests.rs",
-                  "Source review found and repaired unrelated malformed backlog scope leakage before checkpoint. Added 16 obligation integration, 7 validation gate and 15 health regressions in required existing suites. No candidate build or tests run outside validate."
+                  "src/decapod/core/governance_document.rs",
+                  "tests/unit/core/governance_document_tests.rs",
+                  ".decapod/config.toml",
+                  "Initial validate 35580b21 blocked before provider execution: stale reviewed inventory. Recomputed complete inventory at 830146a1 exactly matches prior pin; 943e4575 differs only in Decapod package version in Cargo.toml and Cargo.lock. Explicitly reviewed new digest preserves all source checks and provider selection. Tests await prescribed validation."
                 ],
                 "proof_refs": [
-                  "source_adversarial_review",
-                  "rustfmt",
-                  "git_diff_check",
-                  "candidate_runtime_tests"
+                  "adversarial_regressions",
+                  "full_prescribed_validation",
+                  "release_inventory_review",
+                  "diff_whitespace"
                 ],
                 "scope": [
-                  "Obligation current-proof/dependency derivation, HealthEngine read helper, completion validation, adversarial tests and specs",
                   "root"
                 ],
                 "sequence": 5,
                 "validation_findings": []
               },
               {
-                "action": "validation",
-                "command": "Reconstruct final commit from unchanged first commit, append a unique CLI-owned checkpoint, verify history, then rerun plain decapod validate",
+                "action": "trajectory.record",
                 "custody_event_id": "event:6",
                 "observations": [
-                  ".decapod/config.toml",
-                  ".decapod/config.toml",
-                  "Source inventory review found only release package version changes in Cargo.toml and Cargo.lock; required checks and execution adapters are unchanged.",
-                  "GitHub Actions run 38652640719: library 1212 passed, 0 failed, 3 ignored; required health and obligation plugin targets passed. Buildkite builds 1608-1612 recorded 40 successes and one governance history failure.",
-                  "e2490fd21ca690e157622e6017ea2ea53895980c failed GOVERNANCE_CHECKPOINT_HISTORY_CHANGED because its checkpoint reused the first commit ID. Failed Git history and reports are preserved outside the worktree. User authorized replacing only that final commit with an exact lease guard.",
-                  "Full validation also retained a failed transient Buildkite build-envelope GET. Neither partial provider reads nor passed tests establish publication readiness."
+                  "Candidate 5975482c: GitHub core test target and Buildkite core target passed; both governance-artifacts lanes failed STALE_SPEC_REVIEW after final source refinement. Preserve failed provider runs 1645 and 38676400782. Renew exact-content spec reviews and rerun full prescribed validation on a normal repair commit."
                 ],
                 "proof_refs": [
-                  "source_inventory_review",
-                  "hosted_code_and_test_suites",
-                  "full_readiness"
+                  "adversarial_regressions",
+                  "full_prescribed_validation"
                 ],
                 "scope": [
-                  "Obligation current-proof/dependency derivation, HealthEngine read helper, completion validation, adversarial tests and specs",
                   "root"
                 ],
                 "sequence": 6,
@@ -519,48 +498,32 @@
           }
         }
       },
-      "declared_commands": [
-        "Reconstruct final commit from unchanged first commit, append a unique CLI-owned checkpoint, verify history, then rerun plain decapod validate",
-        "decapod validate --format json"
-      ],
+      "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "Full validation also retained a failed transient Buildkite build-envelope GET. Neither partial provider reads nor passed tests establish publication readiness.",
-        "GitHub Actions run 38652640719: library 1212 passed, 0 failed, 3 ignored; required health and obligation plugin targets passed. Buildkite builds 1608-1612 recorded 40 successes and one governance history failure.",
-        "Released CLI fixture: completed parent remains open after leaf completion; verify and validate-graph exit zero on failure; uncached pass rejected and later failed proof accepted through stale VERIFIED cache.",
-        "Source inventory review found only release package version changes in Cargo.toml and Cargo.lock; required checks and execution adapters are unchanged.",
-        "Source review found and repaired unrelated malformed backlog scope leakage before checkpoint. Added 16 obligation integration, 7 validation gate and 15 health regressions in required existing suites. No candidate build or tests run outside validate.",
-        "e2490fd21ca690e157622e6017ea2ea53895980c failed GOVERNANCE_CHECKPOINT_HISTORY_CHANGED because its checkpoint reused the first commit ID. Failed Git history and reports are preserved outside the worktree. User authorized replacing only that final commit with an exact lease guard."
+        "Candidate 5975482c: GitHub core test target and Buildkite core target passed; both governance-artifacts lanes failed STALE_SPEC_REVIEW after final source refinement. Preserve failed provider runs 1645 and 38676400782. Renew exact-content spec reviews and rerun full prescribed validation on a normal repair commit.",
+        "Initial validate 35580b21 blocked before provider execution: stale reviewed inventory. Recomputed complete inventory at 830146a1 exactly matches prior pin; 943e4575 differs only in Decapod package version in Cargo.toml and Cargo.lock. Explicitly reviewed new digest preserves all source checks and provider selection. Tests await prescribed validation."
       ],
       "inspected_files": [
-        ".decapod/config.toml",
-        "src/decapod/core/obligation.rs",
-        "src/decapod/core/validate.rs",
-        "src/decapod/plugins/health.rs"
+        "src/decapod/core/governance_document.rs",
+        "tests/unit/core/governance_document_tests.rs"
       ],
-      "intent_id": "intent:change_01M4YADKHVP222S50ZMQHJEGMK",
+      "intent_id": "intent:change_01M4YS7YJVQN9E3W82GQXAP37H",
       "modified_files": [
         ".decapod/config.toml",
-        "src/decapod/core/obligation.rs",
-        "src/decapod/core/validate.rs",
-        "src/decapod/plugins/health.rs",
-        "tests/plugins/health.rs",
-        "tests/plugins/obligation.rs",
-        "tests/unit/core/validate_tests.rs",
-        "tests/unit/plugins/health_tests.rs"
+        "src/decapod/core/governance_document.rs",
+        "tests/unit/core/governance_document_tests.rs"
       ],
       "next_transitions": [
-        "Refine plan and declare falsifiable checks",
-        "Run exact-candidate full validation, then publish only when green"
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "Obligation current-proof/dependency derivation, HealthEngine read helper, completion validation, adversarial tests and specs",
         "root"
       ],
-      "run_id": "branch_01M4YADKJJSX0CMNDGSPF9BJG2",
+      "run_id": "branch_01M4YS7YKB6XJHAX7D6NGGH1YG",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m4y9w8prbd8g51",
+      "task_id": "bugs_01m4ys7ehn6v8f64",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

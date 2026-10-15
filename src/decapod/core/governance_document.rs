@@ -1558,11 +1558,21 @@ pub fn checkpoint(
             input_digest: material_digest(root, &document, None)?,
             proof_refs,
         };
-        if let Some(existing) = document.checkpoints.iter_mut().find(|entry| entry.id == id) {
-            *existing = checkpoint;
-        } else {
-            document.checkpoints.push(checkpoint);
+        if let Some(existing) = document.checkpoints.iter().find(|entry| entry.id == id) {
+            let mut existing_refs = existing.proof_refs.clone();
+            existing_refs.sort();
+            existing_refs.dedup();
+            if existing.summary == checkpoint.summary
+                && existing.input_digest == checkpoint.input_digest
+                && existing_refs == checkpoint.proof_refs
+            {
+                return Ok(document);
+            }
+            return Err(invalid(format!(
+                "GOVERNANCE_CHECKPOINT_ID_CONFLICT: checkpoint '{id}' already binds different material, summary, or proof references; preserve it and record the current work with a new ID"
+            )));
         }
+        document.checkpoints.push(checkpoint);
         save(root, &document)?;
         Ok(document)
     })
