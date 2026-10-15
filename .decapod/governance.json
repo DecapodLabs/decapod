@@ -283,6 +283,15 @@
       "proof_refs": [
         "tests/unit/plugins/container_tests.rs"
       ]
+    },
+    {
+      "id": "container-preservation-2",
+      "summary": "Reconcile complete source inventory after accepted v0.114.1 package-only release",
+      "input_digest": "sha256:daeb01d0a5a145b2b228971d8b1565433e8e58ad251bfcd91238eefe0301c42f",
+      "proof_refs": [
+        "Cargo.lock",
+        "Cargo.toml"
+      ]
     }
   ],
   "intents": {
@@ -323,21 +332,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed final cleanup code, shared bounded Git status, twelve adversarial regression cases and full spec. Describes failure retention and bounded successful-worktree protection; excludes ignored successful outputs, extra refs/stashes and hidden index flags; no live Docker or race-proof claim.",
+          "reason": "Reviewed final cleanup implementation and full spec. Release inventory repair changes only reviewed Cargo package-version pin and does not alter execution coverage or documented boundaries.",
           "reviewed_code_fingerprint": "b49895de9daa3511b30c3bb686f901fa54530b312936b96a363c4c66496d4161",
           "spec_material_hash": "9ad701d94d179b91ad17a116ec8b93c3f813ccf577a488af3992f55030f6d3e5"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed final cleanup code, shared bounded Git status, twelve adversarial regression cases and full spec. Describes failure retention and bounded successful-worktree protection; excludes ignored successful outputs, extra refs/stashes and hidden index flags; no live Docker or race-proof claim.",
+          "reason": "Reviewed final cleanup implementation and full spec. Release inventory repair changes only reviewed Cargo package-version pin and does not alter execution coverage or documented boundaries.",
           "reviewed_code_fingerprint": "b49895de9daa3511b30c3bb686f901fa54530b312936b96a363c4c66496d4161",
           "spec_material_hash": "b8d3e3136062425d69b28353a22216356b3b02cf4960c0055da3bfe6b57cb76a"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed final cleanup code, shared bounded Git status, twelve adversarial regression cases and full spec. Describes failure retention and bounded successful-worktree protection; excludes ignored successful outputs, extra refs/stashes and hidden index flags; no live Docker or race-proof claim.",
+          "reason": "Reviewed final cleanup implementation and full spec. Release inventory repair changes only reviewed Cargo package-version pin and does not alter execution coverage or documented boundaries.",
           "reviewed_code_fingerprint": "b49895de9daa3511b30c3bb686f901fa54530b312936b96a363c4c66496d4161",
           "spec_material_hash": "e8591e02761bb2eab1a632dafbf01523adeff29c3ea8574e9d556aaa435dfbf8"
         }
@@ -352,18 +361,22 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792040314Z"
+      "updated_at": "1792040369Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Preserve existing lifecycle ownership and Git-native recovery; no new backend or proof bypass"
       ],
-      "artifact_hash": "sha256:75f7b0d92e3f6c27afe65aa113b7b16355f03bdd7d4426ed57b2f694b64da7a5",
+      "artifact_hash": "sha256:1b91f049cfc14889d69e0de0ee9769ffd4cb55facd1237da35b53e0166d74a9d",
       "checks": [
         {
           "name": "container_cleanup_regression",
           "status": "unavailable"
+        },
+        {
+          "name": "initial_validation",
+          "status": "failed"
         }
       ],
       "current_phase": "verification",
@@ -394,10 +407,17 @@
             "intent_id": "intent:change_01M4YYHREYFCN4KXVSAC3SXMVR",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M4YYHRFFDWVKX1HN27QG182C",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M4YYHREYFCN4KXVSAC3SXMVR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M4YYHRFFDWVKX1HN27QG182C": {
@@ -448,6 +468,23 @@
                 "validation_findings": [
                   "Successful clean-run ignored outputs and extra refs/stashes remain outside worktree preservation scope"
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  ".decapod/config.toml",
+                  "First validate stopped before provider execution: stale reviewed source inventory after accepted v0.114.1. Complete inventory hash at cda95e79 exactly matches old pin; only own package versions in Cargo.toml and Cargo.lock differ. Reviewed release-only change and preserved all workflow/helper coverage."
+                ],
+                "proof_refs": [
+                  "initial_validation"
+                ],
+                "scope": [
+                  "container execution cleanup",
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -458,6 +495,7 @@
       ],
       "destination": "pull request",
       "evidence": [
+        "First validate stopped before provider execution: stale reviewed source inventory after accepted v0.114.1. Complete inventory hash at cda95e79 exactly matches old pin; only own package versions in Cargo.toml and Cargo.lock differ. Reviewed release-only change and preserved all workflow/helper coverage.",
         "Static trace: failed checkpoint stops commit, host sync fetches only refs, then unconditional remove_dir_all deletes remaining files",
         "Twelve new regression tests cover preservation and eligible cleanup; not yet executed. Tests use temporary real Git repositories and a bounded shell process, not a live Docker claim."
       ],
@@ -469,6 +507,7 @@
       ],
       "intent_id": "intent:change_01M4YYHREYFCN4KXVSAC3SXMVR",
       "modified_files": [
+        ".decapod/config.toml",
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
