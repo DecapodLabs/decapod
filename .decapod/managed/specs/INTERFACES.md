@@ -163,13 +163,30 @@ A timeout does not prove that a task, branch, or container is absent.
 
 `container run` reports `workspace_cleanup` in successful summaries: `removed`,
 `preserved_by_request`, `preserved_unsynced_branch`, `preserved_unexpected_head`,
-or `preserved_dirty_workspace`. Execution failure diagnostics retain their failure status and
-include the retained workspace path; runtime termination retains files after the
-existing invocation-owned container cleanup. `--keep-worktree` is an additional
-retention request, not the only protection against loss. Local-only runs retain
-the clone because their commits have not returned to the host. Git inspection
-errors report `container_workspace_status_unavailable`; foldback errors report
-`container_workspace_foldback_failed` with their underlying diagnostic.
+`preserved_hidden_index`, `preserved_unreturned_refs`, or
+`preserved_dirty_workspace`. Failed executions retain their failure status and
+workspace path; runtime termination retains files after invocation-owned runtime
+cleanup. `--keep-worktree` adds an unconditional retention request. Git inspection
+errors report `container_workspace_status_unavailable`; finalization failures
+report `container_workspace_finalization_failed` with the underlying diagnostic
+and retained path. Foldback rejects divergent host history without forcing it.
+
+`--push` publishes the returned branch only after successful execution. `--pr`
+uses the common governed workspace publisher on the clone, including full
+readiness and verified draft-PR creation/reuse; its result appears as
+`publication` in the summary. Combining `--push --pr` does not cause a separate
+unvalidated push. Publication precedes final foldback because the publisher may
+commit checkpointed material. Publication failure retains the clone; repair the
+reported gate, then run `decapod validate` and `decapod workspace publish` there.
+A failed command never invokes either publication action.
+
+`--local-only` cannot combine with `--push` or `--pr`; the shared boundary rejects
+that conflict before starting a runtime or creating a clone. Omit the publication
+flags to retain local work, or omit `--local-only` to return the actual candidate.
+An explicit `--pr-base` differing from the configured governed publication target
+returns `container_publication_base_mismatch`. Align the intended configuration,
+review the accepted target and revalidate from the retained workspace rather
+than silently publishing against another base.
 
 ## Governance and living specifications
 
@@ -407,7 +424,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b49895de9daa3511b30c3bb686f901fa54530b312936b96a363c4c66496d4161`
+- Repository signal fingerprint: `398548f52fb5bd053728d01a0dfb610c7abfa949d7f9b0efc14b3d59fa024bc7`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (185 files), `tests/` (190 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

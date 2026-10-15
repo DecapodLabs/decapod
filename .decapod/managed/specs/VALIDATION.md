@@ -354,6 +354,17 @@ daemon. Actual interrupted-container recovery requires a provisioned runtime and
 checks receipt-bound cleanup while preserving unrelated files and containers.
 Absent runtime evidence remains unavailable.
 
+Container boundary regressions in `tests/unit/plugins/container_tests.rs` exercise
+real temporary Git repositories for non-fast-forward rejection, checked-out-host
+fast-forward behavior, hidden index flags, stash/side-branch/tag preservation and
+unchanged inherited-ref cleanup. Side-effect spies exercise the production
+finalization helper's failure, publication, final-foldback and push ordering.
+A real common-publisher call rejects a clone missing governance before network
+publication; target mismatches also fail closed. These tests do not claim a live
+Docker run or a real external PR. Existing full publisher/readiness contracts
+remain independently required. Full `decapod validate` executes the prescribed
+suite; authored tests and static inspection alone are not passing receipts.
+
 SQLite, Neon, Supabase HTTP fixtures, actual PostgreSQL transactions, and hosted
 Propodus authorization are separate proof scopes. Cloud fixtures cannot establish
 server-side tenant isolation, deployment membership policy, or event atomicity.
@@ -470,7 +481,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b49895de9daa3511b30c3bb686f901fa54530b312936b96a363c4c66496d4161`
+- Repository signal fingerprint: `398548f52fb5bd053728d01a0dfb610c7abfa949d7f9b0efc14b3d59fa024bc7`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (185 files), `tests/` (190 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -134,10 +134,12 @@ The implementation and its tests must establish that:
 
 For container execution, recovery includes retaining failed or interrupted
 workspaces and successful local-only work whose commits were not returned.
-Automatic cleanup of a successful synced workspace protects Git-visible tracked and
-non-ignored untracked changes; ignored successful build outputs remain
-intentionally disposable. A reported retention reason is recovery information,
-not evidence that the command passed.
+Failed commands cannot trigger publication. Successful PR requests use the
+same governed publication proof as other workspaces, and host foldback cannot
+replace divergent commits. Automatic cleanup protects dirty work, tracked work
+hidden by index flags, and added or changed refs omitted by branch foldback.
+Ignored successful build outputs remain intentionally disposable. A reported
+retention reason is recovery information, not evidence that the command passed.
 
 The concrete proof surfaces are defined in [VALIDATION.md](VALIDATION.md).
 These expectations specify behavior; this document is not a test receipt.
@@ -182,7 +184,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b49895de9daa3511b30c3bb686f901fa54530b312936b96a363c4c66496d4161`
+- Repository signal fingerprint: `398548f52fb5bd053728d01a0dfb610c7abfa949d7f9b0efc14b3d59fa024bc7`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (185 files), `tests/` (190 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

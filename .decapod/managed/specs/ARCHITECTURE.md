@@ -107,13 +107,33 @@ capture output and terminate and reap owned children on failure. Cleanup acts
 only on established ownership and preserves uncertain resources with a recovery
 diagnostic.
 
-`plugins/container.rs::cleanup_workspace_clone` separates runtime removal from
-workspace disposal. A failed or interrupted command keeps the clone even if
-branch foldback succeeded. Successful execution can remove it only after
-foldback, an expected attached branch, and the bounded shared
-`workspace::worktree_is_dirty` check. Explicit retention, local-only runs and
-dirty work return a named retention state. Unverifiable Git state fails closed
-with the retained path. Ownership is rechecked before removal.
+`plugins/container.rs::finalize_container_branch` separates child success,
+publication, foldback and disposal. Failed commands may return their branch for
+recovery but never invoke push or PR publication. Successful PR requests call
+`workspace::publish_workspace` on the owned clone, using the same governance,
+exact-candidate validation, normal push and verified draft-PR path as the public
+workspace command. Publication may create a checkpointed commit; foldback occurs
+afterward so the host receives the final candidate. Push-only execution returns
+the branch first. A local-only/publication option conflict fails before runtime
+startup, and an inconsistent explicit/configured publication base fails with
+retained-workspace recovery instructions.
+
+Foldback uses Git's ordinary non-forcing ref update, including its atomic rejection
+of non-fast-forward host divergence. A checked-out host branch uses the existing
+fast-forward-only path. Neither recovery nor success authorizes overwriting
+independently advanced host history.
+
+`cleanup_workspace_clone` separates runtime removal from workspace disposal.
+Failed or interrupted commands keep the clone even if foldback succeeded.
+Successful disposal requires foldback, the expected attached branch, an ordinary
+visible index, no added or changed refs outside the returned branch, and the
+bounded shared `workspace::worktree_is_dirty` check. `prepare_workspace_clone`
+captures inherited refs after initialization; comparing raw ref OIDs preserves
+new stash, side-branch and annotated-tag custody without treating unchanged
+inherited refs as new work. Index inspection is NUL-delimited and never clears
+assume-unchanged or skip-worktree flags. Unknown Git state fails closed with the
+retained path; ownership is rechecked before removal. These are cooperative,
+post-execution checks, not an atomic filesystem snapshot or reflog preservation.
 
 ## Deployment Topology
 
@@ -361,7 +381,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b49895de9daa3511b30c3bb686f901fa54530b312936b96a363c4c66496d4161`
+- Repository signal fingerprint: `398548f52fb5bd053728d01a0dfb610c7abfa949d7f9b0efc14b3d59fa024bc7`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (185 files), `tests/` (190 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

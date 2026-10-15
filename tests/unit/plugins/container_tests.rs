@@ -1189,14 +1189,7 @@ fn failed_container_cleanup_preserves_tracked_untracked_and_ignored_work() {
             "failure evidence\n",
         )
         .unwrap();
-        let state = cleanup_workspace_clone(
-            &workspace.ownership,
-            &workspace.branch,
-            false,
-            false,
-            synced,
-        )
-        .unwrap();
+        let state = cleanup_workspace_clone(&workspace, false, false, synced).unwrap();
         assert_eq!(state, "preserved_failed_execution");
         assert_eq!(
             fs::read_to_string(workspace.path.join("README")).unwrap(),
@@ -1227,8 +1220,7 @@ fn successful_container_cleanup_preserves_dirty_tracked_staged_and_untracked_wor
             git(&workspace.path, &["add", file]);
         }
         assert_eq!(
-            cleanup_workspace_clone(&workspace.ownership, &workspace.branch, false, true, true)
-                .unwrap(),
+            cleanup_workspace_clone(&workspace, false, true, true).unwrap(),
             "preserved_dirty_workspace"
         );
         assert_eq!(
@@ -1255,8 +1247,7 @@ fn successful_local_only_container_keeps_committed_history() {
         ],
     );
     assert_eq!(
-        cleanup_workspace_clone(&workspace.ownership, &workspace.branch, false, true, false)
-            .unwrap(),
+        cleanup_workspace_clone(&workspace, false, true, false).unwrap(),
         "preserved_unsynced_branch"
     );
     let head = Command::new("git")
@@ -1272,7 +1263,7 @@ fn successful_local_only_container_keeps_committed_history() {
 fn explicit_container_retention_keeps_clean_workspace() {
     let (_temp, workspace) = cleanup_fixture();
     assert_eq!(
-        cleanup_workspace_clone(&workspace.ownership, &workspace.branch, true, true, true).unwrap(),
+        cleanup_workspace_clone(&workspace, true, true, true).unwrap(),
         "preserved_by_request"
     );
     assert!(workspace.path.join("README").exists());
@@ -1283,8 +1274,7 @@ fn successful_synced_clean_container_workspace_is_removed() {
     let (temp, workspace) = cleanup_fixture();
     sync_workspace_branch_to_host_repo(temp.path(), &workspace.path, &workspace.branch).unwrap();
     assert_eq!(
-        cleanup_workspace_clone(&workspace.ownership, &workspace.branch, false, true, true)
-            .unwrap(),
+        cleanup_workspace_clone(&workspace, false, true, true).unwrap(),
         "removed"
     );
     assert!(!workspace.path.exists());
@@ -1296,8 +1286,7 @@ fn container_cleanup_preserves_unverifiable_git_state() {
     let (_temp, workspace) = cleanup_fixture();
     // A corrupt index must fail closed, never be interpreted as a clean status.
     fs::write(workspace.path.join(".git/index"), "corrupt").unwrap();
-    let error = cleanup_workspace_clone(&workspace.ownership, &workspace.branch, false, true, true)
-        .unwrap_err();
+    let error = cleanup_workspace_clone(&workspace, false, true, true).unwrap_err();
     assert!(
         error
             .to_string()
@@ -1321,8 +1310,7 @@ fn container_cleanup_preserves_detached_or_different_head() {
             git(&workspace.path, &["checkout", "-b", "other-work"]);
         }
         assert_eq!(
-            cleanup_workspace_clone(&workspace.ownership, &workspace.branch, false, true, true)
-                .unwrap(),
+            cleanup_workspace_clone(&workspace, false, true, true).unwrap(),
             "preserved_unexpected_head"
         );
         assert!(workspace.path.join("README").exists());
@@ -1338,8 +1326,7 @@ fn container_cleanup_ignores_untracked_visibility_configuration() {
     );
     fs::write(workspace.path.join("new-file"), "recover me\n").unwrap();
     assert_eq!(
-        cleanup_workspace_clone(&workspace.ownership, &workspace.branch, false, true, true)
-            .unwrap(),
+        cleanup_workspace_clone(&workspace, false, true, true).unwrap(),
         "preserved_dirty_workspace"
     );
     assert!(workspace.path.join("new-file").exists());
@@ -1381,8 +1368,7 @@ fn container_cleanup_preserves_dirty_submodule_despite_ignore_configuration() {
     )
     .unwrap();
     assert_eq!(
-        cleanup_workspace_clone(&workspace.ownership, &workspace.branch, false, true, true)
-            .unwrap(),
+        cleanup_workspace_clone(&workspace, false, true, true).unwrap(),
         "preserved_dirty_workspace"
     );
     assert_eq!(
@@ -1398,10 +1384,7 @@ fn container_cleanup_does_not_delete_replaced_owned_directory() {
     fs::rename(&workspace.path, &original).unwrap();
     fs::create_dir(&workspace.path).unwrap();
     fs::write(workspace.path.join("unrelated"), "not ours").unwrap();
-    assert!(
-        cleanup_workspace_clone(&workspace.ownership, &workspace.branch, false, true, true)
-            .is_err()
-    );
+    assert!(cleanup_workspace_clone(&workspace, false, true, true).is_err());
     assert_eq!(
         fs::read_to_string(workspace.path.join("unrelated")).unwrap(),
         "not ours"
@@ -1420,8 +1403,7 @@ fn successful_clean_container_cleanup_keeps_ignored_outputs_disposable() {
     .unwrap();
     sync_workspace_branch_to_host_repo(temp.path(), &workspace.path, &workspace.branch).unwrap();
     assert_eq!(
-        cleanup_workspace_clone(&workspace.ownership, &workspace.branch, false, true, true)
-            .unwrap(),
+        cleanup_workspace_clone(&workspace, false, true, true).unwrap(),
         "removed"
     );
     assert!(!workspace.path.exists());
@@ -1436,12 +1418,420 @@ fn container_timeout_keeps_recoverable_workspace_files() {
     assert!(error.to_string().contains("container_command_timeout"));
     // Exercise the same failure cleanup arguments used after runtime removal.
     assert_eq!(
-        cleanup_workspace_clone(&workspace.ownership, &workspace.branch, false, false, false)
-            .unwrap(),
+        cleanup_workspace_clone(&workspace, false, false, false).unwrap(),
         "preserved_failed_execution"
     );
     assert_eq!(
         fs::read_to_string(workspace.path.join("README")).unwrap(),
         "interrupted work\n"
     );
+}
+
+#[test]
+fn failed_container_finalization_never_pushes_or_publishes() {
+    for (push, pr) in [(true, false), (false, true), (true, true)] {
+        let calls = std::cell::RefCell::new(Vec::new());
+        let result = finalize_container_branch(
+            false,
+            false,
+            push,
+            pr,
+            || {
+                calls.borrow_mut().push("foldback");
+                Ok(())
+            },
+            || -> Result<(), error::DecapodError> { panic!("failed execution pushed") },
+            || -> Result<(), error::DecapodError> { panic!("failed execution published") },
+        )
+        .unwrap();
+        assert_eq!(result, (true, None));
+        assert_eq!(*calls.borrow(), ["foldback"]);
+    }
+}
+
+#[test]
+fn successful_container_pr_uses_governed_publication_before_final_foldback() {
+    let calls = std::cell::RefCell::new(Vec::new());
+    let result = finalize_container_branch(
+        true,
+        false,
+        true,
+        true,
+        || {
+            calls.borrow_mut().push("foldback-final-candidate");
+            Ok(())
+        },
+        || -> Result<(), error::DecapodError> { panic!("duplicate unvalidated push") },
+        || {
+            calls.borrow_mut().push("governed-publisher");
+            Ok("verified-pr")
+        },
+    )
+    .unwrap();
+    assert_eq!(result, (true, Some("verified-pr")));
+    assert_eq!(
+        *calls.borrow(),
+        ["governed-publisher", "foldback-final-candidate"]
+    );
+}
+
+#[test]
+fn publication_gate_failure_preserves_clone_and_stops_finalization() {
+    let (_temp, workspace) = cleanup_fixture();
+    fs::write(workspace.path.join("retained"), "recover me").unwrap();
+    let result = finalize_container_branch(
+        true,
+        false,
+        true,
+        true,
+        || -> Result<(), error::DecapodError> { panic!("foldback after failed publication") },
+        || -> Result<(), error::DecapodError> { panic!("push after failed publication") },
+        || -> Result<(), error::DecapodError> {
+            Err(error::DecapodError::ValidationError(
+                "readiness rejected".into(),
+            ))
+        },
+    );
+    assert!(
+        result
+            .unwrap_err()
+            .to_string()
+            .contains("readiness rejected")
+    );
+    assert_eq!(
+        fs::read_to_string(workspace.path.join("retained")).unwrap(),
+        "recover me"
+    );
+}
+
+#[test]
+fn successful_container_push_only_folds_back_before_push() {
+    let calls = std::cell::RefCell::new(Vec::new());
+    let result = finalize_container_branch(
+        true,
+        false,
+        true,
+        false,
+        || {
+            calls.borrow_mut().push("foldback");
+            Ok(())
+        },
+        || {
+            calls.borrow_mut().push("push");
+            Ok(())
+        },
+        || -> Result<(), error::DecapodError> { panic!("unrequested publication") },
+    )
+    .unwrap();
+    assert_eq!(result, (true, None));
+    assert_eq!(*calls.borrow(), ["foldback", "push"]);
+}
+
+#[test]
+fn failed_foldback_never_pushes_stale_host_branch() {
+    let result = finalize_container_branch(
+        true,
+        false,
+        true,
+        false,
+        || Err(error::DecapodError::ValidationError("diverged".into())),
+        || -> Result<(), error::DecapodError> { panic!("pushed stale host branch") },
+        || -> Result<(), error::DecapodError> { panic!("unrequested publication") },
+    );
+    assert!(result.unwrap_err().to_string().contains("diverged"));
+}
+
+#[test]
+fn local_only_publication_conflicts_are_rejected_without_side_effects() {
+    for (push, pr) in [(true, false), (false, true), (true, true)] {
+        let result = finalize_container_branch(
+            true,
+            true,
+            push,
+            pr,
+            || -> Result<(), error::DecapodError> { panic!("local-only foldback") },
+            || -> Result<(), error::DecapodError> { panic!("local-only push") },
+            || -> Result<(), error::DecapodError> { panic!("local-only publication") },
+        );
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("container_local_only_publication_conflict")
+        );
+    }
+    let result = finalize_container_branch(
+        true,
+        true,
+        false,
+        false,
+        || -> Result<(), error::DecapodError> { panic!("local-only foldback") },
+        || -> Result<(), error::DecapodError> { panic!("local-only push") },
+        || -> Result<(), error::DecapodError> { panic!("local-only publication") },
+    )
+    .unwrap();
+    assert_eq!(result, (false, None));
+}
+
+#[test]
+fn container_pr_rejects_substituted_publication_base() {
+    let (_temp, mut workspace) = cleanup_fixture();
+    workspace.base_branch = "different-target".into();
+    let error = publish_container_workspace(&workspace, None, None).unwrap_err();
+    assert!(
+        error
+            .to_string()
+            .contains("container_publication_base_mismatch")
+    );
+    assert!(workspace.path.exists());
+}
+
+#[test]
+fn container_pr_cannot_bypass_common_governance_gate() {
+    let (_temp, workspace) = cleanup_fixture();
+    assert!(workspace::is_worktree(&workspace.path).unwrap());
+    let error =
+        publish_container_workspace(&workspace, Some("must not publish"), None).unwrap_err();
+    // The owned clone is accepted, then the common publisher rejects absent
+    // branch-local governance before remote resolution, push, or gh invocation.
+    assert!(
+        error
+            .to_string()
+            .contains("Cannot publish: missing trajectory cookie"),
+        "{error}"
+    );
+    assert!(!error.to_string().contains("not in a git worktree"));
+    assert!(workspace.path.exists());
+}
+
+fn git_value(repo: &Path, args: &[&str]) -> String {
+    let output = Command::new("git")
+        .arg("-C")
+        .arg(repo)
+        .args(args)
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    String::from_utf8(output.stdout).unwrap().trim().to_owned()
+}
+
+fn commit_workspace_file(repo: &Path, file: &str, contents: &str) {
+    fs::write(repo.join(file), contents).unwrap();
+    git(repo, &["add", file]);
+    git(
+        repo,
+        &[
+            "-c",
+            "user.name=Container Tests",
+            "-c",
+            "user.email=test@example.invalid",
+            "commit",
+            "-m",
+            "fixture work",
+        ],
+    );
+}
+
+#[test]
+fn container_foldback_rejects_divergent_host_history_atomically() {
+    let (temp, workspace) = cleanup_fixture();
+    git(temp.path(), &["checkout", "-b", &workspace.branch]);
+    commit_workspace_file(temp.path(), "host-only", "host work");
+    let host = git_value(temp.path(), &["rev-parse", "HEAD"]);
+    git(temp.path(), &["checkout", "master"]);
+    commit_workspace_file(&workspace.path, "container-only", "container work");
+    let candidate = git_value(&workspace.path, &["rev-parse", "HEAD"]);
+    let error = sync_workspace_branch_to_host_repo(temp.path(), &workspace.path, &workspace.branch)
+        .unwrap_err();
+    assert!(error.to_string().contains("container_branch_sync_failed"));
+    assert_eq!(
+        git_value(temp.path(), &["rev-parse", &workspace.branch]),
+        host
+    );
+    assert_eq!(
+        git_value(&workspace.path, &["rev-parse", "HEAD"]),
+        candidate
+    );
+    assert!(workspace.path.exists());
+}
+
+#[test]
+fn container_foldback_allows_new_branch_and_fast_forward() {
+    let (temp, workspace) = cleanup_fixture();
+    sync_workspace_branch_to_host_repo(temp.path(), &workspace.path, &workspace.branch).unwrap();
+    commit_workspace_file(&workspace.path, "next", "next revision");
+    sync_workspace_branch_to_host_repo(temp.path(), &workspace.path, &workspace.branch).unwrap();
+    assert_eq!(
+        git_value(temp.path(), &["rev-parse", &workspace.branch]),
+        git_value(&workspace.path, &["rev-parse", "HEAD"])
+    );
+}
+
+#[test]
+fn container_foldback_checked_out_host_branch_is_fast_forward_only() {
+    let (temp, workspace) = cleanup_fixture();
+    git(temp.path(), &["checkout", "-b", &workspace.branch]);
+    commit_workspace_file(&workspace.path, "next", "next revision");
+    sync_workspace_branch_to_host_repo(temp.path(), &workspace.path, &workspace.branch).unwrap();
+    assert_eq!(
+        fs::read_to_string(temp.path().join("next")).unwrap(),
+        "next revision"
+    );
+    commit_workspace_file(temp.path(), "host-only", "host work");
+    let host = git_value(temp.path(), &["rev-parse", "HEAD"]);
+    commit_workspace_file(&workspace.path, "diverged", "container work");
+    assert!(
+        sync_workspace_branch_to_host_repo(temp.path(), &workspace.path, &workspace.branch)
+            .is_err()
+    );
+    assert_eq!(git_value(temp.path(), &["rev-parse", "HEAD"]), host);
+}
+
+#[test]
+fn cleanup_retains_hidden_index_work_without_mutating_flags() {
+    for flag in ["--assume-unchanged", "--skip-worktree"] {
+        let (temp, workspace) = cleanup_fixture();
+        git(&workspace.path, &["update-index", flag, "README"]);
+        fs::write(workspace.path.join("README"), "hidden work\n").unwrap();
+        assert!(!workspace::worktree_is_dirty(&workspace.path).unwrap());
+        let before = git_value(&workspace.path, &["ls-files", "-v", "README"]);
+        sync_workspace_branch_to_host_repo(temp.path(), &workspace.path, &workspace.branch)
+            .unwrap();
+        assert_eq!(
+            cleanup_workspace_clone(&workspace, false, true, true).unwrap(),
+            "preserved_hidden_index"
+        );
+        assert_eq!(
+            fs::read_to_string(workspace.path.join("README")).unwrap(),
+            "hidden work\n"
+        );
+        assert_eq!(
+            git_value(&workspace.path, &["ls-files", "-v", "README"]),
+            before
+        );
+    }
+}
+
+#[test]
+fn cleanup_retains_stash_and_side_branch_not_returned_to_host() {
+    for kind in ["stash", "branch", "tag"] {
+        let (temp, workspace) = cleanup_fixture();
+        let retained_ref = match kind {
+            "stash" => {
+                fs::write(workspace.path.join("README"), "stashed work").unwrap();
+                git(
+                    &workspace.path,
+                    &[
+                        "-c",
+                        "user.name=Container Tests",
+                        "-c",
+                        "user.email=test@example.invalid",
+                        "stash",
+                        "push",
+                    ],
+                );
+                "refs/stash"
+            }
+            "branch" => {
+                git(&workspace.path, &["checkout", "-b", "side-work"]);
+                commit_workspace_file(&workspace.path, "side-only", "side work");
+                git(&workspace.path, &["checkout", &workspace.branch]);
+                "refs/heads/side-work"
+            }
+            _ => {
+                git(
+                    &workspace.path,
+                    &[
+                        "-c",
+                        "user.name=Container Tests",
+                        "-c",
+                        "user.email=test@example.invalid",
+                        "tag",
+                        "-a",
+                        "local-tag",
+                        "-m",
+                        "annotation",
+                    ],
+                );
+                "refs/tags/local-tag"
+            }
+        };
+        let oid = git_value(&workspace.path, &["rev-parse", retained_ref]);
+        assert!(!workspace::worktree_is_dirty(&workspace.path).unwrap());
+        sync_workspace_branch_to_host_repo(temp.path(), &workspace.path, &workspace.branch)
+            .unwrap();
+        assert!(
+            !Command::new("git")
+                .arg("-C")
+                .arg(temp.path())
+                .args(["cat-file", "-e", &oid])
+                .output()
+                .unwrap()
+                .status
+                .success()
+        );
+        assert_eq!(
+            cleanup_workspace_clone(&workspace, false, true, true).unwrap(),
+            "preserved_unreturned_refs"
+        );
+        assert_eq!(
+            git_value(&workspace.path, &["rev-parse", retained_ref]),
+            oid
+        );
+    }
+}
+
+#[test]
+fn cleanup_retains_changed_inherited_ref() {
+    let (_temp, workspace) = cleanup_fixture();
+    commit_workspace_file(&workspace.path, "work", "new commit");
+    git(
+        &workspace.path,
+        &["update-ref", "refs/heads/master", "HEAD"],
+    );
+    assert_eq!(
+        cleanup_workspace_clone(&workspace, false, true, true).unwrap(),
+        "preserved_unreturned_refs"
+    );
+}
+
+#[test]
+fn cleanup_allows_unchanged_inherited_tag_metadata() {
+    let (temp, workspace) = cleanup_fixture();
+    git(
+        temp.path(),
+        &["tag", "-a", "inherited-tag", "-m", "accepted tag"],
+    );
+    let tagged = prepare_workspace_clone(temp.path(), "agent/tagged", "master", "docker").unwrap();
+    assert!(tagged.initial_refs.contains_key("refs/tags/inherited-tag"));
+    sync_workspace_branch_to_host_repo(temp.path(), &tagged.path, &tagged.branch).unwrap();
+    assert_eq!(
+        cleanup_workspace_clone(&tagged, false, true, true).unwrap(),
+        "removed"
+    );
+    assert!(workspace.path.exists());
+}
+
+#[test]
+fn container_pr_rejects_changed_or_detached_head_before_publisher() {
+    for detached in [false, true] {
+        let (_temp, workspace) = cleanup_fixture();
+        if detached {
+            git(&workspace.path, &["checkout", "--detach"]);
+        } else {
+            git(&workspace.path, &["checkout", "-b", "agent/unrequested"]);
+        }
+        let error = publish_container_workspace(&workspace, None, None).unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .contains("container_publication_head_mismatch"),
+            "{error}"
+        );
+        assert!(workspace.path.exists());
+    }
 }

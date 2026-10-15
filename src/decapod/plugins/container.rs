@@ -90,6 +90,7 @@ struct WorkspaceSpec {
     base_commit: String,
     backend: String,
     ownership: crate::core::workspace_lifecycle::OwnedWorkspace,
+    initial_refs: BTreeMap<String, String>,
 }
 
 fn auto_remediable_validation_error(
@@ -269,6 +270,7 @@ fn run_container(
     inherit_env: bool,
     local_only: bool,
 ) -> Result<RunSummary, error::DecapodError> {
+    validate_container_publication_options(local_only, push, pr)?;
     let repo = resolve_repo_path(repo_override)?;
     let docker = match container_runtime::find_container_runtime() {
         Ok(runtime) => runtime,
@@ -364,7 +366,7 @@ Agent must clear the disable marker through Decapod self-heal before retrying.",
             // A failed execution may have uncommitted work or a branch that
             // could not be returned. Keep the original files, including ignored
             // diagnostics, even when the caller did not request retention.
-            let retention = cleanup_workspace_clone(&workspace.ownership, &workspace.branch, keep_worktree, false, false)
+            let retention = cleanup_workspace_clone(&workspace, keep_worktree, false, false)
                 .map(|state| format!("workspace {state} at {}", workspace.path.display()))
                 .unwrap_or_else(|error| format!("workspace cleanup refused: {error}"));
             auto_remediable_validation_error(
@@ -383,44 +385,21 @@ Agent must clear the disable marker through Decapod self-heal before retrying.",
     } else {
         "error"
     };
-    let branch_returned_to_host = if local_only {
-        false
-    } else {
-        sync_workspace_branch_to_host_repo(&repo, &workspace.path, &workspace.branch).map_err(|error| {
-            auto_remediable_validation_error(
-                "container_workspace_foldback_failed",
-                format!("{error}; workspace preserved at {}", workspace.path.display()),
-                "Agent: repair branch foldback from the retained workspace; do not discard its files.",
-            )
-        })?;
-        true
-    };
-
-    if pr {
-        workspace::check_merge_conflicts_for_branch(
-            &repo,
-            &workspace.base_branch,
-            &workspace.branch,
-        )?;
-    }
-
-    if push {
-        push_branch_to_origin(&repo, &workspace.branch)?;
-    }
-
-    if pr {
-        create_gh_pr(
-            &repo,
-            &workspace.branch,
-            &workspace.base_branch,
-            pr_title,
-            pr_body,
-        )?;
-    }
+    let (branch_returned_to_host, publication) = finalize_container_branch(
+        output.status.success(), local_only, push, pr,
+        || sync_workspace_branch_to_host_repo(&repo, &workspace.path, &workspace.branch),
+        || push_branch_to_origin(&repo, &workspace.branch),
+        || publish_container_workspace(&workspace, pr_title, pr_body),
+    ).map_err(|error| {
+        auto_remediable_validation_error(
+            "container_workspace_finalization_failed",
+            format!("{error}; workspace preserved at {}", workspace.path.display()),
+            "Agent: inspect the retained workspace, repair the reported foldback or publication gate, and resume through `decapod validate` and `decapod workspace publish`; do not discard its files.",
+        )
+    })?;
 
     let cleanup_state = cleanup_workspace_clone(
-        &workspace.ownership,
-        &workspace.branch,
+        &workspace,
         keep_worktree,
         output.status.success(),
         branch_returned_to_host,
@@ -444,6 +423,7 @@ Agent must clear the disable marker through Decapod self-heal before retrying.",
         "task_id": task_id,
         "push": push,
         "pr": pr,
+        "publication": publication,
         "keep_worktree": keep_worktree,
         "workspace_cleanup": cleanup_state,
         "branch_returned_to_host": branch_returned_to_host,
@@ -1354,6 +1334,7 @@ fn prepare_workspace_clone(
             base_commit.trim(),
         ],
     )?;
+    let initial_refs = workspace_refs(&workspace_path)?;
     ownership.mark_ready()?;
 
     Ok(WorkspaceSpec {
@@ -1363,6 +1344,7 @@ fn prepare_workspace_clone(
         base_commit: base_commit.trim().to_string(),
         backend: "local-clone".to_string(),
         ownership,
+        initial_refs,
     })
 }
 
@@ -1396,7 +1378,8 @@ fn sync_workspace_branch_to_host_repo(
     let workspace_str = workspace.to_str().ok_or_else(|| {
         error::DecapodError::PathError("invalid workspace path for host sync".to_string())
     })?;
-    let refspec = format!("+{branch_ref}:{branch_ref}");
+    // Git atomically rejects concurrent non-fast-forward host updates.
+    let refspec = format!("{branch_ref}:{branch_ref}");
     let output = Command::new("git")
         .arg("-C")
         .arg(repo)
@@ -1459,53 +1442,147 @@ fn current_branch(repo: &Path) -> Result<String, error::DecapodError> {
     Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
 }
 
-fn create_gh_pr(
-    repo: &Path,
-    branch: &str,
-    base_branch: &str,
+fn validate_container_publication_options(
+    local_only: bool,
+    push: bool,
+    pr: bool,
+) -> Result<(), error::DecapodError> {
+    if local_only && (push || pr) {
+        return Err(auto_remediable_validation_error(
+            "container_local_only_publication_conflict",
+            "--local-only cannot be combined with --push or --pr; no container was started",
+            "Agent: omit --push/--pr to keep the run local, or omit --local-only to return and publish the actual container branch.",
+        ));
+    }
+    Ok(())
+}
+
+// Keep the side-effect ordering explicit and independently testable. Publication
+// can commit staged work, so only fold back its final candidate after it succeeds.
+#[allow(clippy::too_many_arguments)]
+fn finalize_container_branch<T>(
+    execution_succeeded: bool,
+    local_only: bool,
+    push: bool,
+    pr: bool,
+    foldback: impl FnOnce() -> Result<(), error::DecapodError>,
+    push_branch: impl FnOnce() -> Result<(), error::DecapodError>,
+    publish: impl FnOnce() -> Result<T, error::DecapodError>,
+) -> Result<(bool, Option<T>), error::DecapodError> {
+    validate_container_publication_options(local_only, push, pr)?;
+    let publication = if execution_succeeded && pr {
+        Some(publish()?)
+    } else {
+        None
+    };
+    let returned = if local_only {
+        false
+    } else {
+        foldback()?;
+        true
+    };
+    if execution_succeeded && push && !pr {
+        push_branch()?;
+    }
+    Ok((returned, publication))
+}
+
+fn publish_container_workspace(
+    workspace: &WorkspaceSpec,
     title: Option<&str>,
     body: Option<&str>,
-) -> Result<(), error::DecapodError> {
-    let repo_str = repo.to_str().ok_or_else(|| {
-        error::DecapodError::PathError("invalid repo path for PR creation".to_string())
-    })?;
+) -> Result<workspace::PublishResult, error::DecapodError> {
+    workspace.ownership.verify()?;
+    if current_branch(&workspace.path)? != workspace.branch {
+        return Err(auto_remediable_validation_error(
+            "container_publication_head_mismatch",
+            "container HEAD is detached or no longer on the requested branch; no publication was attempted",
+            "Agent: preserve all work, return to the requested branch, review its final candidate, then run `decapod validate` and `decapod workspace publish` from the retained workspace.",
+        ));
+    }
+    let publication_base = workspace::resolve_base_branch(&workspace.path, None);
+    if publication_base != workspace.base_branch {
+        return Err(auto_remediable_validation_error(
+            "container_publication_base_mismatch",
+            format!(
+                "container target '{}' differs from governed publication target '{}'",
+                workspace.base_branch, publication_base
+            ),
+            "Agent: align the repository's configured base with the intended --pr-base, review the accepted target, then run `decapod validate` and `decapod workspace publish` from the retained workspace. Do not publish against a substituted base.",
+        ));
+    }
+    // The common publisher owns exact-candidate readiness, push, remote readback,
+    // draft PR creation/reuse and verification. A successful child is not proof.
+    let published = workspace::publish_workspace(
+        &workspace.path,
+        title.map(str::to_owned),
+        body.map(str::to_owned),
+    )?;
+    if !published.pr_verified || published.pr_url.is_none() {
+        return Err(error::DecapodError::ValidationError(
+            "PUBLICATION_INCOMPLETE: governed branch publication returned without a verified PR. The branch may already be pushed. Inspect the configured remote and publication warnings; retain the workspace and do not report PR creation.".into(),
+        ));
+    }
+    Ok(published)
+}
 
-    let title_arg = title
-        .map(String::from)
-        .unwrap_or_else(|| format!("Agent PR: {branch}"));
-    let body_arg = body
-        .map(String::from)
-        .unwrap_or_else(|| "Created by Decapod agent container workflow".to_string());
-
-    let output = Command::new("gh")
-        .arg("pr")
-        .arg("create")
-        .arg("--base")
-        .arg(base_branch)
-        .arg("--head")
-        .arg(branch)
-        .arg("--title")
-        .arg(&title_arg)
-        .arg("--body")
-        .arg(&body_arg)
-        .arg("--repo")
-        .arg(repo_str)
+fn workspace_refs(repo: &Path) -> Result<BTreeMap<String, String>, error::DecapodError> {
+    let output = Command::new("git")
+        .arg("-C")
+        .arg(repo)
+        .args(["for-each-ref", "--format=%(refname) %(objectname)"])
         .bounded_output(CONTROL_TIMEOUT)
         .map_err(error::DecapodError::IoError)?;
-
-    if output.status.success() {
-        return Ok(());
+    if !output.status.success() {
+        return Err(error::DecapodError::ValidationError(
+            "Cannot inspect workspace refs; preserve the workspace".into(),
+        ));
     }
-    Err(error::DecapodError::ValidationError(format!(
-        "failed creating PR for branch '{}': {}",
-        branch,
-        String::from_utf8_lossy(&output.stderr).trim()
-    )))
+    let text = std::str::from_utf8(&output.stdout).map_err(|_| {
+        error::DecapodError::ValidationError(
+            "Cannot decode workspace refs; preserve the workspace".into(),
+        )
+    })?;
+    text.lines()
+        .map(|line| {
+            let (name, oid) = line.split_once(' ').ok_or_else(|| {
+                error::DecapodError::ValidationError("Malformed workspace ref inventory".into())
+            })?;
+            if !name.starts_with("refs/")
+                || oid.is_empty()
+                || !oid.bytes().all(|byte| byte.is_ascii_hexdigit())
+            {
+                return Err(error::DecapodError::ValidationError(
+                    "Malformed workspace ref inventory".into(),
+                ));
+            }
+            Ok((name.to_owned(), oid.to_owned()))
+        })
+        .collect()
+}
+
+fn workspace_has_hidden_index_entries(repo: &Path) -> Result<bool, error::DecapodError> {
+    let output = Command::new("git")
+        .arg("-C")
+        .arg(repo)
+        .args(["ls-files", "-v", "-z"])
+        .bounded_output(CONTROL_TIMEOUT)
+        .map_err(error::DecapodError::IoError)?;
+    if !output.status.success() {
+        return Err(error::DecapodError::ValidationError(
+            "Cannot inspect workspace index; preserve the workspace".into(),
+        ));
+    }
+    // Do not clear assume-unchanged/skip-worktree flags or mutate the index.
+    Ok(output
+        .stdout
+        .split(|byte| *byte == 0)
+        .filter(|entry| !entry.is_empty())
+        .any(|entry| !entry.starts_with(b"H ")))
 }
 
 fn cleanup_workspace_clone(
-    ownership: &crate::core::workspace_lifecycle::OwnedWorkspace,
-    expected_branch: &str,
+    workspace: &WorkspaceSpec,
     keep_worktree: bool,
     execution_succeeded: bool,
     branch_returned_to_host: bool,
@@ -1519,8 +1596,9 @@ fn cleanup_workspace_clone(
     if !branch_returned_to_host {
         return Ok("preserved_unsynced_branch");
     }
+    let ownership = &workspace.ownership;
     ownership.verify()?;
-    let branch = current_branch(ownership.path()).map_err(|error| {
+    let inspection_error = |error| {
         auto_remediable_validation_error(
             "container_workspace_status_unavailable",
             format!(
@@ -1529,9 +1607,21 @@ fn cleanup_workspace_clone(
             ),
             "Agent: restore Git access and inspect the retained workspace before explicit pruning.",
         )
-    })?;
-    if branch != expected_branch {
+    };
+    let branch = current_branch(ownership.path()).map_err(inspection_error)?;
+    if branch != workspace.branch {
         return Ok("preserved_unexpected_head");
+    }
+    if workspace_has_hidden_index_entries(ownership.path()).map_err(inspection_error)? {
+        return Ok("preserved_hidden_index");
+    }
+    let expected_ref = format!("refs/heads/{}", workspace.branch);
+    if workspace_refs(ownership.path())
+        .map_err(inspection_error)?
+        .iter()
+        .any(|(name, oid)| name != &expected_ref && workspace.initial_refs.get(name) != Some(oid))
+    {
+        return Ok("preserved_unreturned_refs");
     }
     // Ownership authorizes cleanup of this directory, not destruction of work
     // that Git foldback cannot carry. Reuse the bounded prune safety check.

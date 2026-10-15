@@ -120,14 +120,23 @@ immutable IDs using the recorded runtime backend.
 
 Automatic container cleanup does not equate directory ownership with permission
 to destroy unfinished work. Failed executions retain all clone files, including
-ignored diagnostics. Successful cleanup requires branch foldback, the expected
-attached HEAD and no Git-visible tracked or non-ignored untracked changes. The shared Git
-status check forces untracked visibility and submodule inspection despite local
-ignore settings. Ignored build outputs remain disposable after a successful,
-otherwise clean run; extra refs, stashes and arbitrary external writers are not
-covered by this narrow worktree check. Index assume-unchanged and skip-worktree
-flags can hide tracked changes from Git status and remain outside its guarantee. No retained file is copied into Git or
-proof merely to establish retention. Review retained work before explicit prune.
+ignored diagnostics, and cannot invoke push or PR creation. Successful PR requests
+use the common exact-candidate governed publisher; child success and CI-local
+validation cannot substitute for publication readiness. Local-only execution
+cannot select a stale host branch for publication. Foldback never force-updates
+a divergent host branch.
+
+Successful disposal requires branch foldback, the expected attached HEAD, an
+index without hidden entries, unchanged inherited refs outside the returned
+branch, and no dirty tracked or non-ignored untracked files. New or changed
+stash, side-branch and tag refs preserve the clone. Raw OID comparison includes
+annotated-tag objects; index inspection preserves flags rather than clearing them.
+The shared status check forces untracked visibility and submodule inspection.
+Ignored build outputs remain disposable after successful otherwise clean runs.
+Reflog-only/dangling objects, deleted ref names, arbitrary external writers and
+races after inspection are outside this bounded guarantee. Retention does not
+copy files into Git or proof. Review retained work before explicit prune; these
+automatic-clone checks do not broaden the separate explicit-prune contract.
 
 Build/test cleanup is restricted to invocation-owned scratch with its original
 filesystem identity. Replaced roots, unconfirmed live process groups, shared
@@ -271,7 +280,7 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b49895de9daa3511b30c3bb686f901fa54530b312936b96a363c4c66496d4161`
+- Repository signal fingerprint: `398548f52fb5bd053728d01a0dfb610c7abfa949d7f9b0efc14b3d59fa024bc7`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (185 files), `tests/` (190 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

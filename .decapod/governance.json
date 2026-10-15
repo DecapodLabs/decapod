@@ -1,8 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "036a2360b03b6d7868598506de1a90abe2b219c4",
-    "release": "v0.114.1",
+    "accepted_commit": "e5badd38d4c913f8888af215a15a3a9cda02105d",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -44,6 +43,14 @@
         "owner": "Decapod build maintainers",
         "question": "Should a future Bazel release permit the generated module lockfile to move under .config/build, or must it remain root-discovered?",
         "status": "deferred"
+      },
+      "claim:claim:container-work-preservation": {
+        "falsifier": "A failed or interrupted command, local-only history, dirty tracked or untracked work, or unreadable Git status is deleted automatically; or eligible clean successful work cannot be removed.",
+        "proof_refs": [
+          "tests/unit/plugins/container_tests.rs"
+        ],
+        "statement": "Automatic container workspace deletion requires successful command completion, branch foldback, verified ownership and a clean Git worktree; failed, unsynced, dirty or unverifiable work remains available with recovery diagnostics.",
+        "status": "open"
       },
       "claim:committed-scope-enforcement": {
         "falsifier": "A clean committed forbidden edit, deletion, rename source or over-budget delta reaches provider execution or readiness",
@@ -252,6 +259,7 @@
       "trajectory:50af5d188a338fdf": "First rollout cannot retroactively teach the existing released controller this new protocol; use independently built supported controller custody without claiming automatic replacement.",
       "trajectory:576cf7a5bf4d1081": "Accepted master a56fd2d3 is user merge of release1402; only Cargo package version and changelog changed from d891d81d",
       "trajectory:62203fa208725296": "Four-platform release packaging is outside current source readiness; genuine artifact proof and resource limits must remain explicit",
+      "trajectory:754f2eaee0aa202d": "Successful clean-run ignored outputs and extra refs/stashes remain outside worktree preservation scope",
       "trajectory:7d90d3eaf34454b7": "Five-minute end-to-end target remains subject to measured queue and unavoidable execution costs.",
       "trajectory:8a2fbdef1f3ce7d9": "All project tests and verification remain owned by plain decapod validate with Buildkite enabled",
       "trajectory:d347ed41a83079c8": "Historical README report is scoped to873ab797 and f2073bd4 and is not current candidate proof",
@@ -261,14 +269,14 @@
     }
   },
   "change": {
-    "id": "change_01M4YYHREYFCN4KXVSAC3SXMVR",
-    "base_commit": "036a2360b03b6d7868598506de1a90abe2b219c4",
+    "id": "change_01M4Z26WC8Z1YHHDJJ1HFN0PQD",
+    "base_commit": "e5badd38d4c913f8888af215a15a3a9cda02105d",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:container-work-preservation": {
-      "statement": "Automatic container workspace deletion requires successful command completion, branch foldback, verified ownership and a clean Git worktree; failed, unsynced, dirty or unverifiable work remains available with recovery diagnostics.",
-      "falsifier": "A failed or interrupted command, local-only history, dirty tracked or untracked work, or unreadable Git status is deleted automatically; or eligible clean successful work cannot be removed.",
+    "container-boundary-integrity": {
+      "statement": "Container completion never publishes failed or local-only runs, PR requests use the common governed publisher, branch foldback rejects non-fast-forward updates, and cleanup retains index-hidden work plus refs added or changed beyond the returned branch.",
+      "falsifier": "A failed execution invokes push or PR; raw gh bypasses readiness; divergent host history is overwritten; or successful cleanup deletes hidden tracked edits or new/changed stash, side branch or tag refs.",
       "status": "open",
       "proof_refs": [
         "tests/unit/plugins/container_tests.rs"
@@ -277,25 +285,16 @@
   },
   "checkpoints": [
     {
-      "id": "container-preservation-1",
-      "summary": "Preserve failed or unsynced container work and gate clean success cleanup; add adversarial Git and timeout regressions",
-      "input_digest": "sha256:ad0cff6723038365a3454a25ddcd574c3fd40fa5604246563523f1033b56642c",
+      "id": "five-kernel-1",
+      "summary": "Repair five reproduced container publication and custody failures with adversarial regressions and updated contracts",
+      "input_digest": "sha256:e6aad3a2fccf6fcc3a977c181224faeb4131a73c39ee267f57f61974f3ff799f",
       "proof_refs": [
         "tests/unit/plugins/container_tests.rs"
-      ]
-    },
-    {
-      "id": "container-preservation-2",
-      "summary": "Reconcile complete source inventory after accepted v0.114.1 package-only release",
-      "input_digest": "sha256:daeb01d0a5a145b2b228971d8b1565433e8e58ad251bfcd91238eefe0301c42f",
-      "proof_refs": [
-        "Cargo.lock",
-        "Cargo.toml"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M4YYHREYFCN4KXVSAC3SXMVR": {
+    "intent:change_01M4Z26WC8Z1YHHDJJ1HFN0PQD": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -305,11 +304,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M4YYHREYFCN4KXVSAC3SXMVR",
+      "id": "intent:change_01M4Z26WC8Z1YHHDJJ1HFN0PQD",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Preserve container work after failed execution\n\nConfirm and repair destructive cleanup of dirty container workspaces after command failure or timeout, with adversarial regression coverage and living specs.",
-      "refined_intent": "Preserve container work after failed execution\n\nConfirm and repair destructive cleanup of dirty container workspaces after command failure or timeout, with adversarial regression coverage and living specs.",
+      "raw_intent": "Fix five verified kernel integrity gaps\n\nIdentify five reproducible urgent kernel/data-integrity/validation failures on latest master, repair together with adversarial tests and living specs, full validate then publish one green draft PR and monitor CI. Human merges.",
+      "refined_intent": "Fix five verified kernel integrity gaps\n\nIdentify five reproducible urgent kernel/data-integrity/validation failures on latest master, repair together with adversarial tests and living specs, full validate then publish one green draft PR and monitor CI. Human merges.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -322,121 +321,118 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Prevent automatic container workspace cleanup from destroying recoverable work: retain failed or interrupted executions, unsynced local-only histories, and dirty or unverifiable Git workspaces. Preserve existing ownership and runtime cleanup gates; do not add storage or copy ignored data into evidence. Prove the cleanup boundary with real temporary Git repositories and existing core CI.",
+      "intent": "Repair five reproduced container boundary failures: prevent failed-execution publication, close raw PR readiness bypass through governed publication guidance, refuse non-fast-forward host foldback, retain index-hidden tracked work, and retain local refs/stashes omitted by foldback. Preserve daemonless local-first kernel and separate storage boundaries. One PR with adversarial real-Git/helper tests and full prescribed validation.",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "Full decapod validate with container unit regressions"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed final cleanup implementation and full spec. Release inventory repair changes only reviewed Cargo package-version pin and does not alter execution coverage or documented boundaries.",
-          "reviewed_code_fingerprint": "b49895de9daa3511b30c3bb686f901fa54530b312936b96a363c4c66496d4161",
-          "spec_material_hash": "9ad701d94d179b91ad17a116ec8b93c3f813ccf577a488af3992f55030f6d3e5"
+          "reason": "Reviewed full architecture, publisher call chain, atomic non-force Git foldback, captured initial-ref comparison and conservative hidden-index checks; no new state subsystem or arbitrary-writer guarantee.",
+          "reviewed_code_fingerprint": "398548f52fb5bd053728d01a0dfb610c7abfa949d7f9b0efc14b3d59fa024bc7",
+          "spec_material_hash": "599a4d451ff70a4f2c6ddc138c062652fea9f78332b329012f46db44bd229918"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed final cleanup implementation and full spec. Release inventory repair changes only reviewed Cargo package-version pin and does not alter execution coverage or documented boundaries.",
-          "reviewed_code_fingerprint": "b49895de9daa3511b30c3bb686f901fa54530b312936b96a363c4c66496d4161",
-          "spec_material_hash": "b8d3e3136062425d69b28353a22216356b3b02cf4960c0055da3bfe6b57cb76a"
+          "reason": "Reviewed full interface contract and concrete code; container PR now uses common governed publisher, failure/local-only boundaries are explicit, and retention states describe hidden-index/ref custody.",
+          "reviewed_code_fingerprint": "398548f52fb5bd053728d01a0dfb610c7abfa949d7f9b0efc14b3d59fa024bc7",
+          "spec_material_hash": "a92ff1b6e1b1d388c26c87bafb51ee9528403f3bdeb9e70410a84302fb5f3e9c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed final cleanup implementation and full spec. Release inventory repair changes only reviewed Cargo package-version pin and does not alter execution coverage or documented boundaries.",
-          "reviewed_code_fingerprint": "b49895de9daa3511b30c3bb686f901fa54530b312936b96a363c4c66496d4161",
-          "spec_material_hash": "e8591e02761bb2eab1a632dafbf01523adeff29c3ea8574e9d556aaa435dfbf8"
+          "reason": "Reviewed full security contract; shared readiness cannot be replaced by child success, expected HEAD checked before PR, failed/local-only publication blocked, bounded retention and explicit prune limitations stated.",
+          "reviewed_code_fingerprint": "398548f52fb5bd053728d01a0dfb610c7abfa949d7f9b0efc14b3d59fa024bc7",
+          "spec_material_hash": "0b40c21bb1c0b73691c2c92fbb940c2f84c0dd3690436cf0a7f6096c5fa45925"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [
-        "Stop for unavailable required provider access or an explicit governance decision gate"
+        "Human decision or unavailable authorization required by a real validation gate"
       ],
-      "title": "Preserve container work after failed execution",
+      "title": "Fix five verified kernel integrity gaps",
       "todo_ids": [
-        "bugs_01m4yyha8q8kxehq"
+        "bugs_01m4z26b5cgh0y10"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792040369Z"
+      "updated_at": "1792044541Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
-        "Preserve existing lifecycle ownership and Git-native recovery; no new backend or proof bypass"
+        "No live Docker or arbitrary filesystem race-proof guarantee"
       ],
-      "artifact_hash": "sha256:1b91f049cfc14889d69e0de0ee9769ffd4cb55facd1237da35b53e0166d74a9d",
+      "artifact_hash": "sha256:f47232faf32fba8cbf3570cb4ccf1be97519c61f3e645381881692fccb57424f",
       "checks": [
         {
-          "name": "container_cleanup_regression",
-          "status": "unavailable"
+          "name": "adversarial-source-review",
+          "status": "passed"
         },
         {
-          "name": "initial_validation",
-          "status": "failed"
+          "name": "independent-git-custody-reproduction",
+          "status": "passed"
+        },
+        {
+          "name": "static-container-publication-audit",
+          "status": "passed"
         }
       ],
-      "current_phase": "verification",
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M4YYHREYFCN4KXVSAC3SXMVR",
+            "intent_id": "intent:change_01M4Z26WC8Z1YHHDJJ1HFN0PQD",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M4YYHREYFCN4KXVSAC3SXMVR",
+            "intent_id": "intent:change_01M4Z26WC8Z1YHHDJJ1HFN0PQD",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M4YYHRFFDWVKX1HN27QG182C",
+            "detail": "trajectory:branch_01M4Z26WCS2D70CPPSK517D6QE",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M4YYHREYFCN4KXVSAC3SXMVR",
+            "intent_id": "intent:change_01M4Z26WC8Z1YHHDJJ1HFN0PQD",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M4YYHRFFDWVKX1HN27QG182C",
+            "detail": "trajectory:branch_01M4Z26WCS2D70CPPSK517D6QE",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M4YYHREYFCN4KXVSAC3SXMVR",
+            "intent_id": "intent:change_01M4Z26WC8Z1YHHDJJ1HFN0PQD",
             "kind": "trajectory_step_recorded",
             "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M4YYHRFFDWVKX1HN27QG182C",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M4YYHREYFCN4KXVSAC3SXMVR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M4YYHRFFDWVKX1HN27QG182C": {
+          "branch_01M4Z26WCS2D70CPPSK517D6QE": {
             "evidence_only": true,
-            "id": "branch_01M4YYHRFFDWVKX1HN27QG182C",
-            "intent_id": "intent:change_01M4YYHREYFCN4KXVSAC3SXMVR",
+            "id": "branch_01M4Z26WCS2D70CPPSK517D6QE",
+            "intent_id": "intent:change_01M4Z26WC8Z1YHHDJJ1HFN0PQD",
             "steps": [
               {
-                "action": "implementation",
+                "action": "inspection",
                 "custody_event_id": "event:4",
                 "observations": [
                   "src/decapod/plugins/container.rs",
-                  "src/decapod/core/workspace.rs",
-                  "src/decapod/core/workspace_lifecycle.rs",
                   "tests/unit/plugins/container_tests.rs",
-                  "Static trace: failed checkpoint stops commit, host sync fetches only refs, then unconditional remove_dir_all deletes remaining files"
+                  "src/decapod/core/workspace.rs",
+                  "Independent real Git fixture demonstrated forced divergent branch overwrite, hidden tracked edits, and stash object absent from host after single-branch foldback"
                 ],
                 "proof_refs": [
-                  "container_cleanup_regression"
+                  "static-container-publication-audit",
+                  "independent-git-custody-reproduction"
                 ],
                 "scope": [
                   "root"
@@ -445,75 +441,51 @@
                 "validation_findings": []
               },
               {
-                "action": "verification",
-                "command": "decapod validate",
+                "action": "implementation",
                 "custody_event_id": "event:5",
                 "observations": [
                   "src/decapod/plugins/container.rs",
-                  "src/decapod/core/workspace.rs",
                   "tests/unit/plugins/container_tests.rs",
                   "docs/agent/state-model.md",
                   ".decapod/managed/specs/INTENT.md",
                   ".decapod/managed/specs/ARCHITECTURE.md",
                   ".decapod/managed/specs/INTERFACES.md",
                   ".decapod/managed/specs/SECURITY.md",
-                  "Twelve new regression tests cover preservation and eligible cleanup; not yet executed. Tests use temporary real Git repositories and a bounded shell process, not a live Docker claim."
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Independent review identified and corrected expected-HEAD publication binding and contextual corrupt-index diagnostics. Strengthened governance rejection assertion; no live Docker or network publication test claim."
                 ],
-                "proof_refs": [],
+                "proof_refs": [
+                  "adversarial-source-review"
+                ],
                 "scope": [
-                  "container execution cleanup",
                   "root"
                 ],
                 "sequence": 5,
-                "validation_findings": [
-                  "Successful clean-run ignored outputs and extra refs/stashes remain outside worktree preservation scope"
-                ]
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  ".decapod/config.toml",
-                  "First validate stopped before provider execution: stale reviewed source inventory after accepted v0.114.1. Complete inventory hash at cda95e79 exactly matches old pin; only own package versions in Cargo.toml and Cargo.lock differ. Reviewed release-only change and preserved all workflow/helper coverage."
-                ],
-                "proof_refs": [
-                  "initial_validation"
-                ],
-                "scope": [
-                  "container execution cleanup",
-                  "root"
-                ],
-                "sequence": 6,
                 "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "decapod validate"
-      ],
+      "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "First validate stopped before provider execution: stale reviewed source inventory after accepted v0.114.1. Complete inventory hash at cda95e79 exactly matches old pin; only own package versions in Cargo.toml and Cargo.lock differ. Reviewed release-only change and preserved all workflow/helper coverage.",
-        "Static trace: failed checkpoint stops commit, host sync fetches only refs, then unconditional remove_dir_all deletes remaining files",
-        "Twelve new regression tests cover preservation and eligible cleanup; not yet executed. Tests use temporary real Git repositories and a bounded shell process, not a live Docker claim."
+        "Independent real Git fixture demonstrated forced divergent branch overwrite, hidden tracked edits, and stash object absent from host after single-branch foldback",
+        "Independent review identified and corrected expected-HEAD publication binding and contextual corrupt-index diagnostics. Strengthened governance rejection assertion; no live Docker or network publication test claim."
       ],
       "inspected_files": [
         "src/decapod/core/workspace.rs",
-        "src/decapod/core/workspace_lifecycle.rs",
         "src/decapod/plugins/container.rs",
         "tests/unit/plugins/container_tests.rs"
       ],
-      "intent_id": "intent:change_01M4YYHREYFCN4KXVSAC3SXMVR",
+      "intent_id": "intent:change_01M4Z26WC8Z1YHHDJJ1HFN0PQD",
       "modified_files": [
-        ".decapod/config.toml",
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/SECURITY.md",
+        ".decapod/managed/specs/VALIDATION.md",
         "docs/agent/state-model.md",
-        "src/decapod/core/workspace.rs",
         "src/decapod/plugins/container.rs",
         "tests/unit/plugins/container_tests.rs"
       ],
@@ -521,17 +493,14 @@
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "container execution cleanup",
         "root"
       ],
-      "run_id": "branch_01M4YYHRFFDWVKX1HN27QG182C",
+      "run_id": "branch_01M4Z26WCS2D70CPPSK517D6QE",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m4yyha8q8kxehq",
+      "task_id": "bugs_01m4z26b5cgh0y10",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "Successful clean-run ignored outputs and extra refs/stashes remain outside worktree preservation scope"
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {
