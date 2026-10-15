@@ -531,6 +531,7 @@ fn proven_consolidation_retires_legacy_files_as_runtime_inputs() {
 fn subject_journal_is_complete_ascending_and_isolated() {
     let dir = tempdir().unwrap();
     let conn = Connection::open(dir.path().join("decapod.db")).unwrap();
+    ensure_tables(&conn).unwrap();
     for (id, task) in [
         ("first", "task_a"),
         ("other", "task_b"),
@@ -576,6 +577,7 @@ fn subject_journal_is_complete_ascending_and_isolated() {
 fn subject_journal_rejects_oversize_or_corrupt_payload_without_truncation() {
     let dir = tempdir().unwrap();
     let conn = Connection::open(dir.path().join("decapod.db")).unwrap();
+    ensure_tables(&conn).unwrap();
     append_on_conn(
         &conn,
         WORKUNIT,
@@ -610,6 +612,7 @@ fn subject_journal_rejects_oversize_or_corrupt_payload_without_truncation() {
 fn subject_capacity_is_reserved_before_append_and_retries_do_not_consume_it() {
     let dir = tempdir().unwrap();
     let conn = Connection::open(dir.path().join("decapod.db")).unwrap();
+    ensure_tables(&conn).unwrap();
     let first = serde_json::json!({
         "event_id": "capacity-first", "event_type": "workunit.checkpoint",
         "task_id": "task_capacity", "ts": "1792050000Z", "actor": "test-agent"
@@ -655,6 +658,7 @@ fn subject_capacity_is_reserved_before_append_and_retries_do_not_consume_it() {
 fn journal_authority_prevents_legacy_import_and_sequence_renumbering() {
     let dir = tempdir().unwrap();
     let conn = Connection::open(dir.path().join("decapod.db")).unwrap();
+    ensure_tables(&conn).unwrap();
     append_on_conn(
         &conn,
         TODO,

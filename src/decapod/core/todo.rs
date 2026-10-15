@@ -184,7 +184,18 @@ pub fn capture_execution_custody(
     })?)?;
     bound_execution_custody_reads(&conn)?;
     task_journal::check_execution_authority(&conn, task_id)?;
-    let row: Option<(String,i64,String,i64,Option<String>,String,String,String,String)> = conn.query_row(
+    type ExecutionCustodyRow = (
+        String,
+        i64,
+        String,
+        i64,
+        Option<String>,
+        String,
+        String,
+        String,
+        String,
+    );
+    let row: Option<ExecutionCustodyRow> = conn.query_row(
         "SELECT status,revision,COALESCE(assigned_to,''),COALESCE(lease_generation,0),lease_expires_at,COALESCE(lease_lifecycle,''),COALESCE(intent_anchor,''),scope,dir_path FROM tasks WHERE id=?1",
         [task_id], |r| Ok((r.get(0)?,r.get(1)?,r.get(2)?,r.get(3)?,r.get(4)?,r.get(5)?,r.get(6)?,r.get(7)?,r.get(8)?)),
     ).optional()?;

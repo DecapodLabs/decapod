@@ -876,6 +876,7 @@ fn resolved_obligations_retire_with_evidence_in_the_current_pr() {
 fn direct_workunit_write_cannot_follow_a_legacy_ancestor_symlink() {
     use std::os::unix::fs::symlink;
     let root = TempDir::new().unwrap();
+    crate::core::todo::initialize_todo_db(&root.path().join(".decapod/data")).unwrap();
     let outside = TempDir::new().unwrap();
     fs::create_dir_all(root.path().join(".decapod")).unwrap();
     fs::create_dir_all(outside.path().join("workunits")).unwrap();
@@ -948,6 +949,7 @@ fn epoch_pruning_preserves_all_live_consumers_and_rejects_dangling_references() 
 fn workunit_initialization_cannot_overwrite_existing_legacy_proof() {
     use crate::core::workunit::{self, WorkUnitStatus};
     let root = TempDir::new().unwrap();
+    crate::core::todo::initialize_todo_db(&root.path().join(".decapod/data")).unwrap();
     // This fixture intentionally models historical, pre-journal state. Current
     // writers must not manufacture VERIFIED proof by overwriting a snapshot.
     let manifest = workunit::WorkUnitManifest {

@@ -191,6 +191,8 @@ This document defines the normative operational contracts for the Decapod CLI.
 
 Runtime journals use the existing canonical datastore. They do not replace Git
 as the authority for authored governance or grant publication readiness.
+Workunit mutations require an initialized local runtime (`decapod init`). A
+missing or partial policy store fails before any workunit journal append.
 
 - `decapod todo journal checkpoint` records the selected store's current task
   state as an explicit baseline or current checkpoint

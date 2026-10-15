@@ -373,18 +373,17 @@ pub fn checkpoint_execution(
         // A new checkpoint is not a way to discard a previously declared
         // continuation gate. Additional requirements can be added; removing a
         // requirement needs a newly accepted run/intent with preserved history.
-        if let Some(previous) = trajectory.execution_checkpoints.last() {
-            if previous
+        if let Some(previous) = trajectory.execution_checkpoints.last()
+            && previous
                 .binding
                 .required_approvals
                 .iter()
                 .any(|approval| !required_approval_ids.contains(&approval.approval_id))
-            {
-                return Err(blocked(
-                    "EXECUTION_APPROVAL_REQUIRED",
-                    "new checkpoint cannot remove the current run's required approval references",
-                ));
-            }
+        {
+            return Err(blocked(
+                "EXECUTION_APPROVAL_REQUIRED",
+                "new checkpoint cannot remove the current run's required approval references",
+            ));
         }
         let binding = stable_capture(root, &task_id, required_approval_ids)?;
         if let Some(previous) = trajectory

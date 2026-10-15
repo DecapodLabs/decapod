@@ -731,13 +731,12 @@ fn append_checkpoint(
     require_transaction(conn)?;
     validate_projection(projection)?;
     let previous = journal.heads.get(&projection.task.id);
-    if let Some(previous) = previous {
-        if projection.task.revision < previous.projection.task.revision
+    if let Some(previous) = previous
+        && (projection.task.revision < previous.projection.task.revision
             || projection.task.lease_generation.unwrap_or(0)
-                < previous.projection.task.lease_generation.unwrap_or(0)
-        {
-            return Err(invalid("task revision or lease generation regressed"));
-        }
+                < previous.projection.task.lease_generation.unwrap_or(0))
+    {
+        return Err(invalid("task revision or lease generation regressed"));
     }
     let mut checkpoint = Checkpoint {
         schema_version: SCHEMA_VERSION,

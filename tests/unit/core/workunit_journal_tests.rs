@@ -4,6 +4,9 @@ use std::sync::{Arc, Barrier};
 
 fn fixture() -> tempfile::TempDir {
     let root = tempfile::tempdir().unwrap();
+    // Broker mutations evaluate policy against the initialized runtime store.
+    // An events-only file is not a substitute for the TODO-owned policy schema.
+    crate::core::todo::initialize_todo_db(&root.path().join(".decapod/data")).unwrap();
     init_workunit(root.path(), "task_test", "intent:test").unwrap();
     root
 }
@@ -186,6 +189,7 @@ fn concurrent_read_modify_write_preserves_every_attachment() {
 #[test]
 fn legacy_baseline_is_explicit_and_does_not_reanimate_verified_proof() {
     let root = tempfile::tempdir().unwrap();
+    crate::core::todo::initialize_todo_db(&root.path().join(".decapod/data")).unwrap();
     let manifest = WorkUnitManifest {
         task_id: "legacy_task".into(),
         intent_ref: "intent:legacy".into(),
@@ -281,6 +285,7 @@ fn checkpoint_cannot_rebind_any_unbound_historical_pass_to_current_source() {
         WorkUnitStatus::Verified,
     ] {
         let root = tempfile::tempdir().unwrap();
+        crate::core::todo::initialize_todo_db(&root.path().join(".decapod/data")).unwrap();
         let manifest = WorkUnitManifest {
             task_id: "historical_task".into(),
             intent_ref: "intent:old-source".into(),
@@ -759,5 +764,35 @@ fn proof_opener_refuses_symlinked_ancestors_outside_pinned_root() {
             .unwrap_err()
             .to_string()
             .contains("WORKUNIT_PROOF_UNVERIFIABLE")
+    );
+}
+
+#[test]
+fn bare_or_partial_runtime_is_rejected_before_creating_workunit_state() {
+    let bare = tempfile::tempdir().unwrap();
+    let error = init_workunit(bare.path(), "task_test", "intent:test").unwrap_err();
+    assert!(error.to_string().contains("WORKUNIT_RUNTIME_UNINITIALIZED"));
+    assert!(error.to_string().contains("decapod init"));
+    assert!(!bare.path().join(".decapod").exists());
+
+    let partial = tempfile::tempdir().unwrap();
+    let data = partial.path().join(".decapod/data");
+    fs::create_dir_all(&data).unwrap();
+    let path = events::canonical_db_path(&data);
+    let conn = db::db_connect(&path.to_string_lossy()).unwrap();
+    events::ensure_tables(&conn).unwrap();
+    drop(conn);
+    let original = fs::read(&path).unwrap();
+    let error = init_workunit(partial.path(), "task_test", "intent:test").unwrap_err();
+    assert!(error.to_string().contains("WORKUNIT_RUNTIME_UNINITIALIZED"));
+    assert_eq!(fs::read(&path).unwrap(), original);
+    assert!(!workunits_dir(partial.path()).exists());
+    let conn = db::db_connect_for_validate(&path.to_string_lossy()).unwrap();
+    assert!(!conn.has_table("risk_zones").unwrap());
+    assert!(!conn.has_table("agents").unwrap());
+    assert!(
+        journal_records_on_conn(&conn, "task_test")
+            .unwrap()
+            .is_empty()
     );
 }

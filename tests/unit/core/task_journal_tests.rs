@@ -630,11 +630,14 @@ fn a_failed_transition_rolls_back_domain_mutation_baseline_and_success_event() {
     let (_temp, conn) = fixture();
     seed_task(&conn, TASK);
     let before = capture(&conn).unwrap();
-    conn.execute_batch(
+    // A trigger is one SQLite statement; execute_batch splits on its body
+    // semicolon at the Dactyl facade. Keep the injected failure intact.
+    conn.execute(
         "CREATE TRIGGER reject_transition BEFORE INSERT ON events
          WHEN NEW.event_type='task.journal.checkpoint'
            AND json_extract(NEW.payload,'$.payload.kind')='transition'
          BEGIN SELECT RAISE(ABORT,'injected transition failure'); END",
+        [],
     )
     .unwrap();
     let result = mutate(&conn, TASK, "task.edit", || {
@@ -1019,6 +1022,13 @@ fn live_revision_or_generation_regression_rolls_back_without_extending_journal()
 #[test]
 fn todo_mutation_entrypoints_keep_replay_head_current_through_completion_and_archive() {
     let (temp, conn) = fixture();
+    // Lifecycle integration uses a legitimately authorized archive actor; keep
+    // production policy gates enabled rather than bypassing them in the test.
+    conn.execute(
+        "INSERT INTO agents(agent_id,trust_level,updated_at) VALUES('journal-owner','verified',?1)",
+        [CREATED],
+    )
+    .unwrap();
     let added = super::super::add_task(
         temp.path(),
         &super::super::TodoCommand::Add {
@@ -1080,6 +1090,8 @@ fn todo_mutation_entrypoints_keep_replay_head_current_through_completion_and_arc
         kind: crate::core::store::StoreKind::Repo,
         root: temp.path().to_path_buf(),
     };
+    crate::plugins::policy::approve_action(&store, "task.archive", Some(id), "operator", "global")
+        .unwrap();
     for (status, event_type) in [("done", "task.done"), ("archived", "task.archive")] {
         let before = capture(&conn).unwrap()[id].task.clone();
         let result = super::super::update_status(

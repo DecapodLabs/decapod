@@ -677,7 +677,49 @@ pub fn schema() -> serde_json::Value {
 /// Generated governance guidance must survive `docs build` without restoring
 /// retired split-file authorities or encouraging end-of-run reconstruction.
 fn governance_artifacts_contract() -> &'static str {
-    r#"# Governance Artifact Ownership
+    r#"# Runtime Checkpoints and Recovery
+
+Runtime journals use the existing canonical datastore. They do not replace Git
+as the authority for authored governance or grant publication readiness.
+Workunit mutations require an initialized local runtime (`decapod init`). A
+missing or partial policy store fails before any workunit journal append.
+
+- `decapod todo journal checkpoint` records the selected store's current task
+  state as an explicit baseline or current checkpoint
+- `decapod todo journal verify` inspects integrity without repairing state
+- `decapod todo journal restore --expected-current-digest <digest>` verifies
+  the complete chain and the observed live-state precondition before restoring
+  an absent or known predecessor projection; divergent authority is preserved
+- `decapod govern workunit checkpoint --task-id <id> --operation-id <id>`
+  records a checkpoint, with optional `--expected-generation <n>`
+- `decapod govern workunit journal-status --task-id <id>` inspects the journal
+  and JSON projection; `recover --task-id <id>` restores the exact recorded
+  manifest without refreshing verification
+- `decapod govern workunit resume --task-id <id> --operation-id <id>` checks
+  current execution authority before continuing, with the same optional
+  generation precondition
+
+- `decapod govern trajectory checkpoint --run-id <id> --checkpoint-id <id>`
+  records bounded source, intent, plan, trajectory, task custody, and policy
+  bindings; repeat `--approval-id <id>` for explicit required approval references
+- `decapod govern trajectory verify-resume --run-id <id> --checkpoint-id <id>`
+  rechecks those bindings and current approval validity without mutating them
+
+An approval reference never issues a grant. Resume requires live task custody
+and current dependency readiness. Checkpoint-only commits may descend from the
+captured commit; branch changes, rewinds, changed source, or changed authority
+require review and a fresh checkpoint. Existing execution checkpoints cannot
+silently drop required approval references.
+
+Reuse an operation ID only for an identical request. A failed file publication
+may follow a successful durable journal append; inspect status and reconcile
+that operation rather than submitting a changed request with the old ID. Legacy
+baseline records describe observed current state, not reconstructed prior
+history. Neither successful replay nor a readable manifest proves current
+source, task, approval, or validation freshness. Full `decapod validate` and the
+governed publisher retain their existing independent proof requirements.
+
+# Governance Artifact Ownership
 
 `.decapod/governance.json` is the sole tracked governance document. Its logical
 plan, trajectory, validation, claims, and optional Jev sections share normalized
@@ -709,6 +751,13 @@ Before each authored commit, stage code/spec changes, run
 `decapod govern artifacts checkpoint --id <unique-id> --summary "..." --proof-ref <evidence>`,
 then stage governance.json and commit. Publication checks exact material and
 cumulative checkpoint preservation across the entire commit graph, including merges.
+Checkpoint IDs are immutable within the active PR. Repeating an ID succeeds
+without a write only when the summary, normalized proof-reference set, and
+current material digest match its original record. Different code, governed
+inputs, summary, or proof references return `GOVERNANCE_CHECKPOINT_ID_CONFLICT`
+without replacing history. Record changed work with a new ID. This check runs
+under the existing governance-document lock; independent history verification
+still rejects erased or rewritten records in authored commits.
 `inventory --claims-note "..."` records a current-PR checkpoint, not a fake claim
 or a policy-history append. `inventory --compact` performs lossless legacy
 normalization. Neither surface repairs malformed evidence by overwriting it.
@@ -727,6 +776,9 @@ mod governance_contract_tests {
         );
         assert!(!contract.contains(".decapod/governance/claims.json"));
         assert!(!contract.contains("oversized research ledger"));
+        assert!(contract.contains("todo journal restore --expected-current-digest"));
+        assert!(contract.contains("trajectory verify-resume"));
+        assert!(contract.contains("GOVERNANCE_CHECKPOINT_ID_CONFLICT"));
         let ordered = [
             "stable PR identity",
             "intent/scope plan",

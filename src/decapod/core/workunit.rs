@@ -249,12 +249,34 @@ fn validate_operation_id(operation_id: &str) -> Result<(), error::DecapodError> 
     Ok(())
 }
 
+/// Workunit mutations require the existing initialized runtime policy owner.
+/// Never create an events-only datastore that cannot authorize its next write,
+/// or silently fill missing policy tables with a new default policy.
+fn require_initialized_workunit_runtime(root: &Path) -> Result<(), error::DecapodError> {
+    let path = crate::core::events::canonical_db_path(&root.join(".decapod/data"));
+    let uninitialized = || {
+        journal_error(
+            "WORKUNIT_RUNTIME_UNINITIALIZED",
+            "initialize the repository with `decapod init` before workunit mutation; an existing partial datastore requires explicit initialization/reconciliation of its agents and risk_zones policy tables",
+        )
+    };
+    if !path.exists() {
+        return Err(uninitialized());
+    }
+    let conn = crate::core::db::db_connect_for_validate(&path.to_string_lossy())?;
+    if !conn.has_table("agents")? || !conn.has_table("risk_zones")? {
+        return Err(uninitialized());
+    }
+    Ok(())
+}
+
 // Unlike the branch-local governance lock, this lock is on the shared runtime
 // volume. Containers/worktrees exposing that volume cannot race file publication.
 fn with_workunit_lock<T>(
     root: &Path,
     f: impl FnOnce() -> Result<T, error::DecapodError>,
 ) -> Result<T, error::DecapodError> {
+    require_initialized_workunit_runtime(root)?;
     use fs2::FileExt;
     struct Lease(std::fs::File);
     impl Drop for Lease {
@@ -846,26 +868,26 @@ fn mutate_workunit_with_proof_gate(
         let mut manifest = previous.manifest.clone();
         mutate(&mut manifest)?;
         let mut proof_hashes = previous.proof_hashes.clone();
-        if manifest.proof_results != previous.manifest.proof_results || updated_gate.is_some() {
-            if let Some(binding) = previous.binding.as_ref() {
-                // New proof may be recorded only under the current execution
-                // binding. Clearing obsolete proofs is always a safe downgrade.
-                if manifest
-                    .proof_results
-                    .iter()
-                    .any(|proof| proof.status == "pass")
-                {
-                    crate::core::trajectory::verify_execution_binding(root, task_id, binding)?;
-                }
-                proof_hashes = proof_artifact_hashes(root, &manifest)?;
-                verify_retained_proof_hashes(
-                    &previous.manifest,
-                    &manifest,
-                    &previous.proof_hashes,
-                    &proof_hashes,
-                    updated_gate,
-                )?;
+        if (manifest.proof_results != previous.manifest.proof_results || updated_gate.is_some())
+            && let Some(binding) = previous.binding.as_ref()
+        {
+            // New proof may be recorded only under the current execution
+            // binding. Clearing obsolete proofs is always a safe downgrade.
+            if manifest
+                .proof_results
+                .iter()
+                .any(|proof| proof.status == "pass")
+            {
+                crate::core::trajectory::verify_execution_binding(root, task_id, binding)?;
             }
+            proof_hashes = proof_artifact_hashes(root, &manifest)?;
+            verify_retained_proof_hashes(
+                &previous.manifest,
+                &manifest,
+                &previous.proof_hashes,
+                &proof_hashes,
+                updated_gate,
+            )?;
         }
         if manifest.status == WorkUnitStatus::Verified {
             ensure_verified_ready(&manifest)?;
@@ -1182,6 +1204,8 @@ pub fn write_workunit_checked(
     })
 }
 
+/// Initialize in an existing repository runtime (`decapod init` first).
+/// Missing policy schema is an explicit error and is never silently defaulted.
 pub fn init_workunit(
     project_root: &Path,
     task_id: &str,
@@ -1236,8 +1260,9 @@ pub fn load_workunit(
     load_workunit_projection(project_root, task_id)
 }
 
-/// Compatibility writer: initialize or repeat identical content only. Prepared
-/// replacements require write_workunit_checked and the observed generation.
+/// Compatibility writer: import first content or repeat identical content only.
+/// An initialized repository runtime is required, including policy schema.
+/// Prepared replacements require write_workunit_checked and the observed generation.
 pub fn write_workunit(
     project_root: &Path,
     manifest: &WorkUnitManifest,

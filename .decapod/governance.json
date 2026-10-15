@@ -347,6 +347,17 @@
         "Cargo.lock",
         "Cargo.toml"
       ]
+    },
+    {
+      "id": "houseboat-recovery-03",
+      "summary": "Repair measured lint, generated contract ownership, initialized-runtime boundary and adversarial fixture setup without weakening journal or policy gates",
+      "input_digest": "sha256:8c55aa39962140c9dff2f7bbc894b1e1a3c617d9625b405827c49a0019b7679d",
+      "proof_refs": [
+        "src/decapod/core/docs_cli.rs",
+        "tests/plugins/todo.rs",
+        "tests/unit/core/task_journal_tests.rs",
+        "tests/unit/core/workunit_journal_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -387,22 +398,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Final source review: local transaction-backed snapshots, generation-fenced workunit recovery, live custody and approval checks, bounded shared source/proof/governance readers and captured-byte policy parsing. Authored contracts explicitly retain historical, optional-cloud, distributed and platform limitations. Full validation supplies execution proof.",
-          "reviewed_code_fingerprint": "39c48aa282aa7eeca02e6e6ce39b61abb879534e4a64b409762381380ed5cbb4",
+          "reason": "Reviewed measured CI repairs: runtime workunit initialization now fails before journal mutation for missing policy; existing legitimate owner initialization used in tests; task expiry fixture precedes journal genesis, no corrupted-head rebaseline; generated runtime commands and immutable checkpoint guidance are owned by docs generator. Prior source/authority and recovery contracts retained.",
+          "reviewed_code_fingerprint": "b8ca15e57181192355ec5d120dfb01b92870254c2866f951a7ff99a590d652fb",
           "spec_material_hash": "e5b43ec32a4f63877e22f652d8d903ffcc6dac9dfee081f3ac9331a9d3f179d7"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Final source review: local transaction-backed snapshots, generation-fenced workunit recovery, live custody and approval checks, bounded shared source/proof/governance readers and captured-byte policy parsing. Authored contracts explicitly retain historical, optional-cloud, distributed and platform limitations. Full validation supplies execution proof.",
-          "reviewed_code_fingerprint": "39c48aa282aa7eeca02e6e6ce39b61abb879534e4a64b409762381380ed5cbb4",
-          "spec_material_hash": "7d9a3086d7e6c902996599e186eba9c687c3ed5fc9b16820c926bcda4fb6d03c"
+          "reason": "Reviewed measured CI repairs: runtime workunit initialization now fails before journal mutation for missing policy; existing legitimate owner initialization used in tests; task expiry fixture precedes journal genesis, no corrupted-head rebaseline; generated runtime commands and immutable checkpoint guidance are owned by docs generator. Prior source/authority and recovery contracts retained.",
+          "reviewed_code_fingerprint": "b8ca15e57181192355ec5d120dfb01b92870254c2866f951a7ff99a590d652fb",
+          "spec_material_hash": "bf5735d95e83446d4311a941b7d511871056d9a9c3f94c8e80635255ef9b4b02"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Final source review: local transaction-backed snapshots, generation-fenced workunit recovery, live custody and approval checks, bounded shared source/proof/governance readers and captured-byte policy parsing. Authored contracts explicitly retain historical, optional-cloud, distributed and platform limitations. Full validation supplies execution proof.",
-          "reviewed_code_fingerprint": "39c48aa282aa7eeca02e6e6ce39b61abb879534e4a64b409762381380ed5cbb4",
+          "reason": "Reviewed measured CI repairs: runtime workunit initialization now fails before journal mutation for missing policy; existing legitimate owner initialization used in tests; task expiry fixture precedes journal genesis, no corrupted-head rebaseline; generated runtime commands and immutable checkpoint guidance are owned by docs generator. Prior source/authority and recovery contracts retained.",
+          "reviewed_code_fingerprint": "b8ca15e57181192355ec5d120dfb01b92870254c2866f951a7ff99a590d652fb",
           "spec_material_hash": "546e1354723c4d9853921f233ddbed7eb46c5da576aca356d9da8ed48dff1bb8"
         }
       ],
@@ -416,17 +427,25 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792054961Z"
+      "updated_at": "1792056219Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:efc78ab8ebfed1a9791b2ec1848f22f3c7d8ebd594d90e5c02df882b83eb477e",
+      "artifact_hash": "sha256:c107131cbdadca4500c8690f0843e8922fb910ce6a97f8b442cebe8b2241fe06",
       "checks": [
         {
+          "name": "candidate-build",
+          "status": "passed"
+        },
+        {
+          "name": "cli-recovery-suite",
+          "status": "passed"
+        },
+        {
           "name": "full-validation",
-          "status": "unavailable"
+          "status": "failed"
         },
         {
           "name": "houseboat_inventory",
@@ -437,11 +456,15 @@
           "status": "passed"
         },
         {
+          "name": "library-suite",
+          "status": "failed"
+        },
+        {
           "name": "source-review",
           "status": "passed"
         }
       ],
-      "current_phase": "validation",
+      "current_phase": "validation-repair",
       "custody": {
         "events": [
           {
@@ -483,10 +506,17 @@
             "intent_id": "intent:change_01M4ZA6GX2N767VDY40HNH9C8H",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M4ZA6GXNKRAA5A869N1VR4Z2",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M4ZA6GX2N767VDY40HNH9C8H",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M4ZA6GXNKRAA5A869N1VR4Z2": {
@@ -569,6 +599,25 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "validation-repair",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "Candidate1351aff4 source CI setup built successfully under accepted executorfc71d3a8. Library job116341435178 measured1327passed13failed3ignored; event/policy/schema/scope/trigger fixture repairs preserve assertions. Plugin job116341435435 measured22passed2failed, repaired legacy-expiry setup and exact event counts. CLI recovery target passed. Lint and generated-documentation failures repaired at actual source owners; no local build/tests substituted.",
+                  "Full validation attempt02 preserved transient public Buildkite1756 GET failure; no alternate authentication or reduced proof route used. Independent CI candidate binary provenance verified for supported docs regeneration only."
+                ],
+                "proof_refs": [
+                  "candidate-build",
+                  "library-suite",
+                  "cli-recovery-suite",
+                  "full-validation"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -580,7 +629,9 @@
       "destination": "pull request",
       "evidence": [
         "Adversarial regressions authored for transaction/replay conflicts, stale proof, custody and approval drift, bounded reads, directory-sync uncertainty and real CLI recovery. No build or test executed yet; full decapod validate owns measured proof.",
+        "Candidate1351aff4 source CI setup built successfully under accepted executorfc71d3a8. Library job116341435178 measured1327passed13failed3ignored; event/policy/schema/scope/trigger fixture repairs preserve assertions. Plugin job116341435435 measured22passed2failed, repaired legacy-expiry setup and exact event counts. CLI recovery target passed. Lint and generated-documentation failures repaired at actual source owners; no local build/tests substituted.",
         "Full validation at 5cbdbee6 stopped before provider execution on stale reviewed source inventory. Independent complete 78-path review reproduced old and new digests: only own Cargo package version 0.114.2 to 0.114.3 changed; all workflow pins, carriers, helper definitions and adapter owners unchanged. Updated only the explicit declaration; no checks removed.",
+        "Full validation attempt02 preserved transient public Buildkite1756 GET failure; no alternate authentication or reduced proof route used. Independent CI candidate binary provenance verified for supported docs regeneration only.",
         "GitHub label houseboat:852,853,854,855,856,857,858,859,860,878; accepted master fc71d3a8",
         "Independent source review completed 2026-10-15 09:03 UTC with no known open blocker after task, workunit, custody, approval, bounded read and migration fixes. This is source review, not executed test proof.",
         "Legacy history limitation is explicit in checkpoint schema and docs; no reconstructed historical custody or cloud replay is claimed."

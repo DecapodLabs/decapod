@@ -476,7 +476,7 @@ pub fn is_hitl_disabled_by_override(store: &Store, scope: &str, level: RiskLevel
 }
 
 fn hitl_disabled_in_policy(policy_override: &str, scope: &str, level: RiskLevel) -> bool {
-    let rules = parse_hitl_override_rules(&policy_override);
+    let rules = parse_hitl_override_rules(policy_override);
     if rules.is_empty() {
         return false;
     }

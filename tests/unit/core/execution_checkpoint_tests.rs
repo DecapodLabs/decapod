@@ -275,7 +275,13 @@ fn execution_resume_rejects_revoked_and_wrong_scope_approvals() {
             .contains("EXECUTION_APPROVAL_SCOPE")
     );
     let id = approval_fixture(root, RESUME_OPERATION, "global", &future);
-    checkpoint_execution(root, "run_execution", "checkpoint_1", &[id.clone()]).unwrap();
+    checkpoint_execution(
+        root,
+        "run_execution",
+        "checkpoint_1",
+        std::slice::from_ref(&id),
+    )
+    .unwrap();
     verify_execution_resume(root, "run_execution", "checkpoint_1").unwrap();
     let store = crate::core::store::Store {
         kind: crate::core::store::StoreKind::Repo,
@@ -299,7 +305,13 @@ fn execution_approval_expiry_and_record_changes_are_not_hash_only() {
     let root = temp.path();
     let future = format!("{}Z", chrono::Utc::now().timestamp() + 3600);
     let id = approval_fixture(root, RESUME_OPERATION, "global", &future);
-    checkpoint_execution(root, "run_execution", "checkpoint_1", &[id.clone()]).unwrap();
+    checkpoint_execution(
+        root,
+        "run_execution",
+        "checkpoint_1",
+        std::slice::from_ref(&id),
+    )
+    .unwrap();
     let db = crate::plugins::policy::policy_db_path(&root.join(".decapod/data"));
     {
         let conn = crate::core::db::db_connect(&db.to_string_lossy()).unwrap();
@@ -372,7 +384,8 @@ fn execution_checkpoint_rechecks_existing_scope_constraint_gate() {
         root,
         PlanPatch {
             constraints: Some(ScopeConstraints {
-                forbidden_paths: vec!["src/**".into()],
+                // Existing scope constraints are directory prefixes, not globs.
+                forbidden_paths: vec!["src".into()],
                 file_touch_budget: None,
             }),
             ..Default::default()
@@ -388,7 +401,11 @@ fn execution_checkpoint_rechecks_existing_scope_constraint_gate() {
     )
     .unwrap();
     fs::write(root.join("src/app.rs"), "changed implementation").unwrap();
-    assert!(capture_execution_binding(root, "task_execution").is_err());
+    let error = capture_execution_binding(root, "task_execution")
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("SCOPE_VIOLATION"), "{error}");
+    assert!(error.contains("src/app.rs"), "{error}");
 }
 
 #[test]
