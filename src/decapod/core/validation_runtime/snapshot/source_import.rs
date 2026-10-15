@@ -1098,7 +1098,14 @@ mod tests {
             macos_runtime_digest: old_macos.into(),
         };
         assert!(old.validate().is_err());
-        for version in ["0.102.3", "0.102.4", "0.102.6", "observed-green"] {
+        for version in [
+            "0.102.3",
+            "0.102.4",
+            "0.102.5",
+            "0.102.6",
+            "0.102.8",
+            "observed-green",
+        ] {
             let mut mixed = reviewed.clone();
             mixed.compiler_version = version.into();
             assert!(mixed.validate().is_err(), "{version}");
@@ -1120,12 +1127,34 @@ mod tests {
         assert!(swapped.validate().is_err());
     }
     #[test]
-    fn reviewed_01025_runtime_selection_uses_authored_platform() {
+    fn reviewed_importer_rejects_previous_and_observed_compiler_bytes() {
+        let reviewed = ReviewedBuildkiteImporter::reviewed();
+        for digest in [
+            "sha256:0e33c9189e80ec1e776a53f837f61b26e8f7f2b26671a6df2c0b4d23c09a4b02",
+            "sha256:3ce19c7c558e340dc070122893f55ab884e33b16b19c9bc1a8cec975fbeb9e9b",
+        ] {
+            for compiler in [false, true] {
+                let mut mixed = reviewed.clone();
+                if compiler {
+                    mixed.compiler_digest = digest.into();
+                } else {
+                    mixed.linux_runtime_digest = digest.into();
+                }
+                assert!(mixed.validate().is_err());
+            }
+        }
+        let mut mixed = reviewed;
+        mixed.macos_runtime_digest =
+            "sha256:7af087fef3a258ed093c1812c18eb0832e44b48047cf3ab1b2adf0836fc2ad86".into();
+        assert!(mixed.validate().is_err());
+    }
+    #[test]
+    fn reviewed_01027_runtime_selection_uses_authored_platform() {
         let contract = ReviewedBuildkiteImporter::reviewed();
-        assert_eq!(contract.compiler_version, "0.102.5");
+        assert_eq!(contract.compiler_version, "0.102.7");
         assert_eq!(
             contract.compiler_digest,
-            "sha256:0e33c9189e80ec1e776a53f837f61b26e8f7f2b26671a6df2c0b4d23c09a4b02"
+            "sha256:0e67be8be661f75d4abd69b115a746905664f54560c9b27aab74b4c1cdcc8692"
         );
         assert_eq!(
             contract.runtime_digest_for(&BTreeMap::new()).unwrap(),
@@ -1134,7 +1163,7 @@ mod tests {
         let mut matrix = BTreeMap::from([("os".into(), "macos-latest".into())]);
         assert_eq!(
             contract.runtime_digest_for(&matrix).unwrap(),
-            "sha256:7af087fef3a258ed093c1812c18eb0832e44b48047cf3ab1b2adf0836fc2ad86"
+            "sha256:a887b7bd1453715cfb3bccaeab5c063c12e54f446f281d0d1837b12be0bdf328"
         );
         matrix.insert("os".into(), "ubuntu-latest".into());
         assert_eq!(

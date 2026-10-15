@@ -281,6 +281,14 @@
       "proof_refs": [
         "tests/unit/plugins/container_tests.rs"
       ]
+    },
+    "reviewed-importer-01027": {
+      "statement": "The importer accepts only independently reviewed official0.102.7 compiler/Linux/Darwin executable identities, with unchanged source, producer, recipe and artifact custody checks; older, unknown, mixed and swapped tuples remain invalid.",
+      "falsifier": "An observed green result or arbitrary version/digest tuple authorizes import; any required proof/profile/custody check is removed; or the selected controller artifact lacks verified accepted-executor and source provenance.",
+      "status": "open",
+      "proof_refs": [
+        "src/decapod/core/validation_runtime/snapshot/source_import.rs"
+      ]
     }
   },
   "checkpoints": [
@@ -306,6 +314,14 @@
       "input_digest": "sha256:04b2c22f4abd33c8b533e7032f441e4c0441ec342617d5f32f46b29dd1891df4",
       "proof_refs": [
         "tests/unit/plugins/container_tests.rs"
+      ]
+    },
+    {
+      "id": "five-kernel-4",
+      "summary": "Repair reviewed importer compatibility while preserving failed proof and fixed-tuple custody",
+      "input_digest": "sha256:76aa39b4159c0afedf0914ea4cf4f86c88b8f74fc983ca7bc31679e5e63483fb",
+      "proof_refs": [
+        "src/decapod/core/validation_runtime/snapshot/source_import.rs"
       ]
     }
   ],
@@ -337,7 +353,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Repair five reproduced container boundary failures: prevent failed-execution publication, close raw PR readiness bypass through governed publication guidance, refuse non-fast-forward host foldback, retain index-hidden tracked work, and retain local refs/stashes omitted by foldback. Preserve daemonless local-first kernel and separate storage boundaries. One PR with adversarial real-Git/helper tests and full prescribed validation.",
+      "intent": "Repair five reproduced container boundary failures: failed-execution publication, raw PR readiness bypass, non-fast-forward foldback, hidden-index work loss, and unreturned ref/stash loss. Supporting prescribed-validation repair: independently review one fixed Buildkite importer0.102.7 tuple after authenticated0.102.6 evidence exceeded released0.102.5 controller support, build the reviewed controller through accepted source-CI, verify its provenance and artifact digest explicitly, then rerun full exact-candidate proof. No provider/access changes, automatic compiler acceptance or manual local build.",
       "phases": [],
       "proof_hooks": [
         "Full decapod validate with container unit regressions"
@@ -345,25 +361,25 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Full contract review remains valid; inspected final source/HEAD/publication corrections and official0.114.2 entrypoint/Dockerfile refresh, with identical authored source guarantees and complete78source inventory.",
-          "reviewed_code_fingerprint": "398548f52fb5bd053728d01a0dfb610c7abfa949d7f9b0efc14b3d59fa024bc7",
+          "reason": "Re-read full contract against supporting fixed importer tuple upgrade; shared CLI, data, publication and accepted-executor architecture remain unchanged. Manual engineering controller selection is independently verified, not an automatic protocol feature.",
+          "reviewed_code_fingerprint": "92b5bb3991acc9bc81c28f8578d9abaf4ba3b122fd6468d1f2ab57f70d02389d",
           "spec_material_hash": "599a4d451ff70a4f2c6ddc138c062652fea9f78332b329012f46db44bd229918"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Full contract review remains valid; inspected final source/HEAD/publication corrections and official0.114.2 entrypoint/Dockerfile refresh, with identical authored source guarantees and complete78source inventory.",
-          "reviewed_code_fingerprint": "398548f52fb5bd053728d01a0dfb610c7abfa949d7f9b0efc14b3d59fa024bc7",
+          "reason": "Re-read full contract against supporting fixed importer tuple upgrade; shared CLI, data, publication and accepted-executor architecture remain unchanged. Manual engineering controller selection is independently verified, not an automatic protocol feature.",
+          "reviewed_code_fingerprint": "92b5bb3991acc9bc81c28f8578d9abaf4ba3b122fd6468d1f2ab57f70d02389d",
           "spec_material_hash": "a92ff1b6e1b1d388c26c87bafb51ee9528403f3bdeb9e70410a84302fb5f3e9c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Full contract review remains valid; inspected final source/HEAD/publication corrections and official0.114.2 entrypoint/Dockerfile refresh, with identical authored source guarantees and complete78source inventory.",
-          "reviewed_code_fingerprint": "398548f52fb5bd053728d01a0dfb610c7abfa949d7f9b0efc14b3d59fa024bc7",
-          "spec_material_hash": "0b40c21bb1c0b73691c2c92fbb940c2f84c0dd3690436cf0a7f6096c5fa45925"
+          "reason": "Reviewed complete security contract and independent official0.102.7 source/archive/member evidence. Exact fixed platform tuple replaces0.102.5; unknown/mixed versions and all original custody checks remain fail-closed.",
+          "reviewed_code_fingerprint": "92b5bb3991acc9bc81c28f8578d9abaf4ba3b122fd6468d1f2ab57f70d02389d",
+          "spec_material_hash": "465365a761f2c758bbc385fdb7e3152d029e46a26c4223b22d2f3c49951f57d3"
         }
       ],
       "state": "APPROVED",
@@ -376,17 +392,22 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792044773Z"
+      "updated_at": "1792046238Z"
     },
     "trajectory": {
       "active_boundaries": [
+        "Accepted source-CI executor provenance and source/artifact hashes must verify before selecting replacement controller; otherwise stop.",
         "Current claimed task and isolated work branch",
         "No live Docker or arbitrary filesystem race-proof guarantee"
       ],
-      "artifact_hash": "sha256:beb003a1353a206a506699bdb28af45212bce9f550f84ec750691fe5b852317b",
+      "artifact_hash": "sha256:8d979c1411079374c5ec30c552412be5c0db99531854e5da42ef7579d5a1495c",
       "checks": [
         {
           "name": "adversarial-source-review",
+          "status": "passed"
+        },
+        {
+          "name": "container-new-regressions",
           "status": "passed"
         },
         {
@@ -398,7 +419,15 @@
           "status": "failed"
         },
         {
+          "name": "full-validation-attempt-4",
+          "status": "failed"
+        },
+        {
           "name": "independent-git-custody-reproduction",
+          "status": "passed"
+        },
+        {
+          "name": "independent-importer-01027-review",
           "status": "passed"
         },
         {
@@ -459,10 +488,24 @@
             "intent_id": "intent:change_01M4Z26WC8Z1YHHDJJ1HFN0PQD",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M4Z26WCS2D70CPPSK517D6QE",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M4Z26WC8Z1YHHDJJ1HFN0PQD",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M4Z26WCS2D70CPPSK517D6QE",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M4Z26WC8Z1YHHDJJ1HFN0PQD",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M4Z26WCS2D70CPPSK517D6QE": {
@@ -557,6 +600,41 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "recovery",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "All16 new regression tests passed in native job116278039871; full validator rejected authenticated Buildkite1714 plan compiler0.102.6 against installed reviewed0.102.5. Preserve mismatch. Official0.102.7 source delta and both executable-member hashes independently reviewed; manual verified CI-built-controller selection follows explicit PR1420 precedent, not automatic adoption or candidate JSON proof."
+                ],
+                "proof_refs": [
+                  "full-validation-attempt-4",
+                  "container-new-regressions"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 9,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "src/decapod/core/validation_runtime/snapshot.rs",
+                  "src/decapod/core/validation_runtime/snapshot/source_import.rs",
+                  ".decapod/managed/specs/SECURITY.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Independent reviewer rehashed official Linux asset642891563 and Darwin asset642891564 archives and named executable members; reviewed official six-commit source delta and exact fixed-tuple-only implementation. No profile, provider, platform or custody expansion. Full controller provenance and fresh exact-tuple execution remain pending."
+                ],
+                "proof_refs": [
+                  "independent-importer-01027-review"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
@@ -565,9 +643,11 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "All16 new regression tests passed in native job116278039871; full validator rejected authenticated Buildkite1714 plan compiler0.102.6 against installed reviewed0.102.5. Preserve mismatch. Official0.102.7 source delta and both executable-member hashes independently reviewed; manual verified CI-built-controller selection follows explicit PR1420 precedent, not automatic adoption or candidate JSON proof.",
         "Compared every discovered source against bf5c0e1b and reproduced prior reviewed pin exactly. Only own Cargo version 0.114.1 to0.114.2 differs; updated configuration pin without changing adapter coverage.",
         "Independent real Git fixture demonstrated forced divergent branch overwrite, hidden tracked edits, and stash object absent from host after single-branch foldback",
         "Independent review identified and corrected expected-HEAD publication binding and contextual corrupt-index diagnostics. Strengthened governance rejection assertion; no live Docker or network publication test claim.",
+        "Independent reviewer rehashed official Linux asset642891563 and Darwin asset642891564 archives and named executable members; reviewed official six-commit source delta and exact fixed-tuple-only implementation. No profile, provider, platform or custody expansion. Full controller provenance and fresh exact-tuple execution remain pending.",
         "Second validator rejected stale local release tag inventory before upload. Fetched published v0.114.2 tag normally; no tag publication. Official init --proof refreshed release-bound entrypoints/Dockerfile; preserved generated backups outside candidate. Independent final publication/cwd review found no remaining must-fix.",
         "validate-first rejected default generated branch because its todo-01m4z2 prefix was parsed as a different task. Renamed this same work branch to agent/five-kernel/bugs_01m4z26b5cgh0y10; no history rewrite, extra branch or proof substitution."
       ],
@@ -585,6 +665,8 @@
         ".decapod/managed/specs/SECURITY.md",
         ".decapod/managed/specs/VALIDATION.md",
         "docs/agent/state-model.md",
+        "src/decapod/core/validation_runtime/snapshot.rs",
+        "src/decapod/core/validation_runtime/snapshot/source_import.rs",
         "src/decapod/plugins/container.rs",
         "tests/unit/plugins/container_tests.rs"
       ],

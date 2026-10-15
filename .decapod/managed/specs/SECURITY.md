@@ -280,7 +280,7 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `398548f52fb5bd053728d01a0dfb610c7abfa949d7f9b0efc14b3d59fa024bc7`
+- Repository signal fingerprint: `92b5bb3991acc9bc81c28f8578d9abaf4ba3b122fd6468d1f2ab57f70d02389d`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (185 files), `tests/` (190 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -299,15 +299,19 @@ The dependency audit must pass without ignored advisories; the existing yanked
 chacha20 warning remains separately visible. No transport policy, CI trigger,
 provider permissions or accepted-executor helper is changed by this remediation.
 
-Current provider execution uses buildkite-gha 0.102.5. The validator accepts only
-the independently reviewed official compiler and platform-specific executable
-digests in `ReviewedBuildkiteImporter`, verified from release assets rather than
-from successful job output. The 0.102.3-to-0.102.5 review covers composite-action
-working-directory containment, repository-relative workflow resolution, and
-masked service-readiness diagnostics; the v2 plan and result schema remains
-unchanged. Old versions, mixed-release tuples, unknown versions, modified
-executables and swapped platform identities are rejected. Source, plan, runtime,
-artifact and accepted-executor verification remain required.
+The reviewed provider importer identity is buildkite-gha 0.102.7. The validator
+accepts exactly its independently reviewed official compiler and platform-specific
+executable digests in `ReviewedBuildkiteImporter`; observed green jobs do not
+select or authorize versions. The 0.102.5-to-0.102.7 source review covers diagnostic
+redaction and error reporting, including the workflow-concurrency/output-derived
+runs-on classification change from `E_EXPRESSION_INVALID` to `E_GRAPH_INVALID`.
+Production runtime execution, serialized plan models and v2 schemas are unchanged.
+Linux x86_64 release asset 642891563 and Darwin arm64 asset 642891564 were checked
+against official archive digests before hashing their named executable members.
+Old 0.102.5, observed 0.102.6, unknown versions, mixed tuples and swapped platform
+identities remain rejected. Source, plan, runtime, artifact and accepted-executor
+verification remain required. There is no provider-setting change, dynamic latest
+acceptance or automatic controller bootstrap in this repair.
 
 ## Reviewed repository command boundary
 
