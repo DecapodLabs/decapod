@@ -764,6 +764,8 @@ pub fn with_lock<T>(
                 if e.kind() == std::io::ErrorKind::WouldBlock
                     && start.elapsed() < Duration::from_secs(5) =>
             {
+                #[cfg(test)]
+                tests::observe_document_lock_contention();
                 std::thread::sleep(Duration::from_millis(10))
             }
             Err(e) => {
@@ -1589,8 +1591,11 @@ pub fn checkpoint(
     }
     proof_refs.sort();
     proof_refs.dedup();
-    require_staged_material(root)?;
     with_lock(root, || {
+        // A cooperating writer's atomic publication temporarily creates an
+        // untracked sibling file. Inspect authored material only after that
+        // writer releases the same lock that protects the checkpoint update.
+        require_staged_material(root)?;
         let mut document =
             load(root)?.ok_or_else(|| invalid("Begin a PR before recording checkpoints"))?;
         if document.change.is_none() {

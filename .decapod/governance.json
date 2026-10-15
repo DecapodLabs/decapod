@@ -366,6 +366,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/actions/runs/38712723063"
       ]
+    },
+    {
+      "id": "houseboat-recovery-05",
+      "summary": "Serialize checkpoint staged-material inspection with atomic governance publication; preserve dirty-source rejection",
+      "input_digest": "sha256:e160646698a1292294064fba81ae23dfd2ac21935303ea5ffa1fb100971fee6a",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/38715939488"
+      ]
     }
   ],
   "intents": {
@@ -404,24 +412,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed final test-only prune fixture repair: historical deterministic identities are seeded before journal genesis; all prune safety assertions and production contracts remain unchanged.",
-          "reviewed_code_fingerprint": "20cb0a82971ddc723a3d45c985bf1ce38591b45ac1481c29bbd1541386d08c64",
-          "spec_material_hash": "e5b43ec32a4f63877e22f652d8d903ffcc6dac9dfee081f3ac9331a9d3f179d7"
+          "reason": "Documented staged-material inspection inside the governance lock, preventing cooperating checkpoint temporary files from causing false authored-material conflicts.",
+          "reviewed_code_fingerprint": "7efe54997513078b81090151e7204411beadfd92783550b1d170955d5159157a",
+          "spec_material_hash": "efd4a84b93e8ac77bfe37de37db6218be391e7199f6fe1168379864a963bb9e0"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed final test-only prune fixture repair: historical deterministic identities are seeded before journal genesis; all prune safety assertions and production contracts remain unchanged.",
-          "reviewed_code_fingerprint": "20cb0a82971ddc723a3d45c985bf1ce38591b45ac1481c29bbd1541386d08c64",
+          "reason": "Reviewed checkpoint lock-order repair; API, bounded timeout, path classification, conflict handling and dirty-source rejection contracts remain unchanged.",
+          "reviewed_code_fingerprint": "7efe54997513078b81090151e7204411beadfd92783550b1d170955d5159157a",
           "spec_material_hash": "bf5735d95e83446d4311a941b7d511871056d9a9c3f94c8e80635255ef9b4b02"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed final test-only prune fixture repair: historical deterministic identities are seeded before journal genesis; all prune safety assertions and production contracts remain unchanged.",
-          "reviewed_code_fingerprint": "20cb0a82971ddc723a3d45c985bf1ce38591b45ac1481c29bbd1541386d08c64",
+          "reason": "Reviewed checkpoint lock-order repair; API, bounded timeout, path classification, conflict handling and dirty-source rejection contracts remain unchanged.",
+          "reviewed_code_fingerprint": "7efe54997513078b81090151e7204411beadfd92783550b1d170955d5159157a",
           "spec_material_hash": "546e1354723c4d9853921f233ddbed7eb46c5da576aca356d9da8ed48dff1bb8"
         }
       ],
@@ -435,13 +443,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792057834Z"
+      "updated_at": "1792058641Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:df2e765b8c86b01e28a3e1d3bde3fcd861f40ebcbbd55caa2d4dccb75e7bb904",
+      "artifact_hash": "sha256:3a38ad24d7d5078d31e60c751c67f1772a473acad0a23211dcbb29d4a3327419",
       "checks": [
         {
           "name": "candidate-build",
@@ -449,6 +457,14 @@
         },
         {
           "name": "cli-recovery-suite",
+          "status": "passed"
+        },
+        {
+          "name": "cloud-library-suite",
+          "status": "failed"
+        },
+        {
+          "name": "core-suite",
           "status": "passed"
         },
         {
@@ -528,10 +544,17 @@
             "intent_id": "intent:change_01M4ZA6GX2N767VDY40HNH9C8H",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M4ZA6GXNKRAA5A869N1VR4Z2",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M4ZA6GX2N767VDY40HNH9C8H",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M4ZA6GXNKRAA5A869N1VR4Z2": {
@@ -651,6 +674,25 @@
                 ],
                 "sequence": 9,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "src/decapod/core/governance_document.rs",
+                  "tests/unit/core/governance_document_tests.rs",
+                  "Candidate90cb6816 GitHub run38715939488 core job116358722732 passed, including all repaired prune fixtures. Cloud-feature library job116358722503 measured1340passed1failed3ignored: concurrent checkpoint pre-lock staged inspection can observe another writer atomic temporary file. Moved inspection inside existing lock and added deterministic contention/dirty-source regressions; not yet executed. Full validate04 preserved BuildEnvelope1766 public GET failure in validate-04.json, no readiness."
+                ],
+                "proof_refs": [
+                  "core-suite",
+                  "cloud-library-suite",
+                  "full-validation"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
@@ -664,6 +706,7 @@
         "Adversarial regressions authored for transaction/replay conflicts, stale proof, custody and approval drift, bounded reads, directory-sync uncertainty and real CLI recovery. No build or test executed yet; full decapod validate owns measured proof.",
         "Candidate f004eda3 GitHub run38712723063 library job116348069968:1341 passed,0 failed,3 ignored. Core job116348069777 failed four prune fixtures from post-genesis hash mutations; repaired historical seed fixtures and independently reviewed, not yet rerun. Buildkite1761 terminal failed; controller poll interruption produced no readiness verdict.",
         "Candidate1351aff4 source CI setup built successfully under accepted executorfc71d3a8. Library job116341435178 measured1327passed13failed3ignored; event/policy/schema/scope/trigger fixture repairs preserve assertions. Plugin job116341435435 measured22passed2failed, repaired legacy-expiry setup and exact event counts. CLI recovery target passed. Lint and generated-documentation failures repaired at actual source owners; no local build/tests substituted.",
+        "Candidate90cb6816 GitHub run38715939488 core job116358722732 passed, including all repaired prune fixtures. Cloud-feature library job116358722503 measured1340passed1failed3ignored: concurrent checkpoint pre-lock staged inspection can observe another writer atomic temporary file. Moved inspection inside existing lock and added deterministic contention/dirty-source regressions; not yet executed. Full validate04 preserved BuildEnvelope1766 public GET failure in validate-04.json, no readiness.",
         "Full validation at 5cbdbee6 stopped before provider execution on stale reviewed source inventory. Independent complete 78-path review reproduced old and new digests: only own Cargo package version 0.114.2 to 0.114.3 changed; all workflow pins, carriers, helper definitions and adapter owners unchanged. Updated only the explicit declaration; no checks removed.",
         "Full validation attempt02 preserved transient public Buildkite1756 GET failure; no alternate authentication or reduced proof route used. Independent CI candidate binary provenance verified for supported docs regeneration only.",
         "GitHub label houseboat:852,853,854,855,856,857,858,859,860,878; accepted master fc71d3a8",
@@ -684,6 +727,7 @@
         "src/decapod/core/events.rs",
         "src/decapod/core/governance_document.rs",
         "tests/cli_contract_enforcement.rs",
+        "tests/unit/core/governance_document_tests.rs",
         "tests/workspace_prune_regression.rs"
       ],
       "next_transitions": [

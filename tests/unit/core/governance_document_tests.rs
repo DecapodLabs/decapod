@@ -1,6 +1,23 @@
 use super::*;
 use tempfile::TempDir;
 
+enum CheckpointLockObservation {
+    Contended,
+    Returned,
+}
+
+thread_local! {
+    static DOCUMENT_LOCK_OBSERVER: RefCell<Option<std::sync::mpsc::Sender<CheckpointLockObservation>>> = const { RefCell::new(None) };
+}
+
+pub(super) fn observe_document_lock_contention() {
+    DOCUMENT_LOCK_OBSERVER.with(|observer| {
+        if let Some(sender) = observer.borrow_mut().take() {
+            let _ = sender.send(CheckpointLockObservation::Contended);
+        }
+    });
+}
+
 fn repo() -> TempDir {
     let root = TempDir::new().unwrap();
     git(root.path(), &["init", "-b", "master"]).unwrap();
@@ -413,6 +430,70 @@ fn concurrent_identical_checkpoint_requests_are_idempotent() {
         assert_eq!(handle.join().unwrap().unwrap().checkpoints.len(), 1);
     }
     assert_eq!(load(root.path()).unwrap().unwrap().checkpoints.len(), 1);
+}
+
+#[test]
+fn checkpoint_waits_for_publication_before_inspecting_untracked_material() {
+    let root = repo();
+    begin_pr(root.path(), "series", "master").unwrap();
+    checkpoint(root.path(), "shared", "Identical work", vec![]).unwrap();
+    let before = fs::read(root.path().join(GOVERNANCE_PATH)).unwrap();
+    let (sender, receiver) = std::sync::mpsc::channel();
+    let (worker, observation) = with_lock(root.path(), || {
+        // Exactly the naming pattern used by atomic::write_atomic. Keep the
+        // transient file visible until the contender actually waits on this
+        // lock; a pre-lock staged-material check instead returns an error.
+        let relative = format!(".decapod/.governance.json.tmp-{}-1", std::process::id());
+        let temporary = root.path().join(&relative);
+        fs::write(&temporary, &before).unwrap();
+        assert!(material_path(&relative));
+        assert!(
+            git(root.path(), &["ls-files", "--others", "--exclude-standard"])
+                .unwrap()
+                .lines()
+                .any(|path| path == relative)
+        );
+        let contender_root = root.path().to_path_buf();
+        let worker = std::thread::spawn(move || {
+            DOCUMENT_LOCK_OBSERVER.with(|observer| {
+                *observer.borrow_mut() = Some(sender.clone());
+            });
+            let result = checkpoint(&contender_root, "shared", "Identical work", vec![]);
+            let _ = sender.send(CheckpointLockObservation::Returned);
+            result
+        });
+        let observation = receiver.recv_timeout(Duration::from_secs(10));
+        fs::remove_file(temporary).unwrap();
+        Ok((worker, observation))
+    })
+    .unwrap();
+    let result = worker.join().unwrap();
+    assert!(
+        matches!(observation, Ok(CheckpointLockObservation::Contended)),
+        "checkpoint must acquire the document lock before examining transient files: {result:?}"
+    );
+    assert_eq!(result.unwrap().checkpoints.len(), 1);
+    assert_eq!(fs::read(root.path().join(GOVERNANCE_PATH)).unwrap(), before);
+}
+
+#[test]
+fn locked_checkpoint_still_rejects_real_unstaged_material_without_mutation() {
+    for relative in [
+        "source.rs",
+        "new-authored.rs",
+        ".decapod/.governance.json.tmp-1234-1",
+    ] {
+        let root = repo();
+        begin_pr(root.path(), "series", "master").unwrap();
+        checkpoint(root.path(), "shared", "Identical work", vec![]).unwrap();
+        let before = fs::read(root.path().join(GOVERNANCE_PATH)).unwrap();
+        let authored = root.path().join(relative);
+        fs::write(&authored, "preserve unstaged bytes\n").unwrap();
+        let error = checkpoint(root.path(), "shared", "Identical work", vec![]).unwrap_err();
+        assert!(error.to_string().contains("GOVERNANCE_UNSTAGED_MATERIAL"));
+        assert_eq!(fs::read(root.path().join(GOVERNANCE_PATH)).unwrap(), before);
+        assert_eq!(fs::read(&authored).unwrap(), b"preserve unstaged bytes\n");
+    }
 }
 
 #[test]
