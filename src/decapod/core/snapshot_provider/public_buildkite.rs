@@ -1,15 +1,20 @@
 //! Dedicated, anonymous public-site reader. This is not the REST API schema.
 //! Complete native job inventory and content-addressed importer provenance do
-//! not prove substantive source checks. Only measured execution custody may do
-//! that; this module deliberately cannot mint a readiness Observation.
+//! not prove physical execution custody. An explicit trusted CI-provider
+//! contract can accept complete successful metadata through `ci_attested`; this
+//! module itself cannot select that policy or mint a readiness Observation.
 use super::super::bounded_process::ProcessCapture;
 use super::*;
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
 
+mod ci_attested;
 mod collection;
 mod custody;
 mod program;
+pub use ci_attested::{
+    CiAttestedValidation, collect_ci_attested_validation, verify_ci_attested_validation,
+};
 pub use collection::CollectionReader;
 pub use custody::{
     CollectedCustody, CustodyRead, CustodyRequest, CustodyResponse, collect_custody,
@@ -729,6 +734,7 @@ pub struct PublicInventory {
     steps: BTreeMap<String, Value>,
     jobs: BTreeMap<String, PublicJob>,
     response_digests: [String; 3],
+    metadata_digest: String,
 }
 impl PublicInventory {
     pub fn build_id(&self) -> &str {
@@ -1089,6 +1095,7 @@ pub fn collect_inventory(
         steps,
         jobs,
         response_digests: [hash(&envelope_bytes), hash(&steps_bytes), hash(&jobs_bytes)],
+        metadata_digest: ci_attested::metadata_digest([&envelope_bytes, &steps_bytes, &jobs_bytes]),
     })
 }
 

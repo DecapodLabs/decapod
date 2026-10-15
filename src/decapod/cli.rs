@@ -408,6 +408,8 @@ pub(crate) struct InitWithCli {
     /// Preserve the reviewed repository-local contract without approving its digest.
     #[clap(skip)]
     pub existing_repository_contract: Option<crate::core::repository_profile::RepositoryContract>,
+    #[clap(skip)]
+    pub existing_ci_attested: Option<crate::core::validation_runtime::CiAttestedPolicy>,
     /// Select Buildkite workspace-branch validation (false: native Decapod).
     /// Both providers execute the full required proof suite; omission preserves existing settings.
     #[clap(long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]

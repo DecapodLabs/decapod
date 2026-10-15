@@ -7,6 +7,7 @@ use provider::{automatic, provider as collect, snapshot as transport};
 // Preserved predictive release adapter for #1399; core readiness never calls it.
 #[cfg(test)]
 mod automatic_tests;
+pub mod ci_attested;
 #[allow(dead_code)]
 mod derived_import;
 mod integration;
@@ -322,15 +323,27 @@ impl<'a, R: Runner> SnapshotHost<'a, R> {
             );
             let terminal = terminal?;
             let collection_started = Instant::now();
-            let buildkite = source_import::buildkite_sources(
-                reader,
-                contract,
-                &snapshot,
-                project,
-                &terminal,
-                &directory,
-                &provider_budget,
-            );
+            let buildkite = if let Some(policy) = &project.configuration.ci_attested {
+                ci_attested::collect(
+                    reader,
+                    &snapshot,
+                    project,
+                    &terminal,
+                    &state,
+                    policy,
+                    &provider_budget,
+                )
+            } else {
+                source_import::buildkite_sources(
+                    reader,
+                    contract,
+                    &snapshot,
+                    project,
+                    &terminal,
+                    &directory,
+                    &provider_budget,
+                )
+            };
             let custody_collection_ms = collection_started.elapsed().as_millis();
             eprintln!(
                 "Buildkite validation: stage=custody_collection elapsed_ms={custody_collection_ms}"

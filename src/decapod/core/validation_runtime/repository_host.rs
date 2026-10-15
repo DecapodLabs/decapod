@@ -757,6 +757,7 @@ mod tests {
                 required_profile: Some(declaration),
                 commands,
                 repository_contract: Some(contract),
+                ci_attested: None,
             },
             sources,
             executor: None,

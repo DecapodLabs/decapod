@@ -1651,6 +1651,7 @@ fn init_with_from_config(
         existing_proof_commands: config.proof.commands.clone(),
         existing_required_profile: config.proof.required_profile.clone(),
         existing_repository_contract: config.proof.repository_contract.clone(),
+        existing_ci_attested: config.proof.ci_attested.clone(),
         validation_buildkite_preflights: Some(config.proof.validation_buildkite_preflights),
         backend: if config.repo.effective_backend().is_cloud() {
             crate::cli::BackendType::Cloud
@@ -1757,6 +1758,7 @@ fn preserve_unspecified_init_options(
     init.existing_proof_commands = existing.existing_proof_commands;
     init.existing_required_profile = existing.existing_required_profile;
     init.existing_repository_contract = existing.existing_repository_contract;
+    init.existing_ci_attested = existing.existing_ci_attested;
 }
 
 fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjectConfig {
@@ -1844,6 +1846,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
             validation_buildkite_preflights: init.validation_buildkite_preflights.unwrap_or(false),
             required_profile: init.existing_required_profile.clone(),
             repository_contract: init.existing_repository_contract.clone(),
+            ci_attested: init.existing_ci_attested.clone(),
             commands: proof_commands,
         },
         custody: CustodyConfig {
@@ -2510,6 +2513,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             existing_proof_commands: Vec::new(),
                             existing_required_profile: None,
                             existing_repository_contract: None,
+                            existing_ci_attested: None,
                             validation_buildkite_preflights: init_group
                                 .validation_buildkite_preflights,
                             backend: init_group.backend,

@@ -418,8 +418,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7efe54997513078b81090151e7204411beadfd92783550b1d170955d5159157a`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (188 files), `tests/` (193 files)
+- Repository signal fingerprint: `1d9cb65474dccf2738529f9e4b7ab82a2a25f574f52f4b8721d80927132679df`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (193 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -473,3 +473,25 @@ the kernel enforces freshness, execution and custody mechanically. Existing
 Decapod source-CI adapters retain their stricter authority and cannot be downgraded
 by a candidate switching to local proof. Unsupported remote/daemon operations
 remain explicit limitations, rather than fabricated native evidence.
+
+### Optional CI-attested validation boundary
+
+Validation establishes whether the agent's work has converged on the user's
+declared intent and satisfies the conditions for integration. Assurance remains
+bounded by the requirements and checks actually established. A later readiness
+decision evaluates that result; the agent publishes through the applicable gate,
+and a human merges.
+
+`validation_runtime::snapshot::ci_attested` implements an opt-in alternative to
+archive custody. The policy must equal the accepted target's policy, with
+Buildkite validation enabled on both target and candidate. The existing compiled
+check catalog remains authoritative. `snapshot_provider::public_buildkite` binds
+complete successful native-job metadata to the exact repository, pipeline,
+workflow, branch and commit. `readiness_evidence::buildkite_ci` verifies distinct
+CI-attested observations bound to material, intent and check definitions.
+
+The trust boundary is the configured CI executor and provider-owned HTTPS
+metadata, rather than independently downloaded measurements of remote outputs.
+No artifact, log, toolchain or binary measurement is invented. The default
+archive-based policy remains unchanged. This bootstrap delivers capability and
+negative regressions, not policy activation or model readiness integration.

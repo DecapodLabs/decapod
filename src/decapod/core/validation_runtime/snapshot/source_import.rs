@@ -452,7 +452,7 @@ fn verify_check(
     Ok(())
 }
 
-fn source_dependencies(
+pub(super) fn source_dependencies(
     project: &CurrentProject,
     check: &source::Check,
     provider: evidence::Provider,
