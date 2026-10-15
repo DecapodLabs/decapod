@@ -299,6 +299,14 @@
       "proof_refs": [
         "tests/unit/plugins/container_tests.rs"
       ]
+    },
+    {
+      "id": "five-kernel-3",
+      "summary": "Bind release projections and retain failed validation history before exact-candidate proof",
+      "input_digest": "sha256:04b2c22f4abd33c8b533e7032f441e4c0441ec342617d5f32f46b29dd1891df4",
+      "proof_refs": [
+        "tests/unit/plugins/container_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -339,21 +347,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Re-reviewed current source and full authored contract after release inventory reconciliation; five container fixes and bounded guarantees unchanged; exact inventory comparison proves only own package versions changed.",
+          "reason": "Full contract review remains valid; inspected final source/HEAD/publication corrections and official0.114.2 entrypoint/Dockerfile refresh, with identical authored source guarantees and complete78source inventory.",
           "reviewed_code_fingerprint": "398548f52fb5bd053728d01a0dfb610c7abfa949d7f9b0efc14b3d59fa024bc7",
           "spec_material_hash": "599a4d451ff70a4f2c6ddc138c062652fea9f78332b329012f46db44bd229918"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Re-reviewed current source and full authored contract after release inventory reconciliation; five container fixes and bounded guarantees unchanged; exact inventory comparison proves only own package versions changed.",
+          "reason": "Full contract review remains valid; inspected final source/HEAD/publication corrections and official0.114.2 entrypoint/Dockerfile refresh, with identical authored source guarantees and complete78source inventory.",
           "reviewed_code_fingerprint": "398548f52fb5bd053728d01a0dfb610c7abfa949d7f9b0efc14b3d59fa024bc7",
           "spec_material_hash": "a92ff1b6e1b1d388c26c87bafb51ee9528403f3bdeb9e70410a84302fb5f3e9c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Re-reviewed current source and full authored contract after release inventory reconciliation; five container fixes and bounded guarantees unchanged; exact inventory comparison proves only own package versions changed.",
+          "reason": "Full contract review remains valid; inspected final source/HEAD/publication corrections and official0.114.2 entrypoint/Dockerfile refresh, with identical authored source guarantees and complete78source inventory.",
           "reviewed_code_fingerprint": "398548f52fb5bd053728d01a0dfb610c7abfa949d7f9b0efc14b3d59fa024bc7",
           "spec_material_hash": "0b40c21bb1c0b73691c2c92fbb940c2f84c0dd3690436cf0a7f6096c5fa45925"
         }
@@ -368,14 +376,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792044646Z"
+      "updated_at": "1792044773Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "No live Docker or arbitrary filesystem race-proof guarantee"
       ],
-      "artifact_hash": "sha256:5d633dcc1418b87716e6e52e4da7a7755820b54d55c5d44644efc143f5f2a69b",
+      "artifact_hash": "sha256:beb003a1353a206a506699bdb28af45212bce9f550f84ec750691fe5b852317b",
       "checks": [
         {
           "name": "adversarial-source-review",
@@ -383,6 +391,10 @@
         },
         {
           "name": "full-validation-attempt-1",
+          "status": "failed"
+        },
+        {
+          "name": "full-validation-attempt-2",
           "status": "failed"
         },
         {
@@ -440,10 +452,17 @@
             "intent_id": "intent:change_01M4Z26WC8Z1YHHDJJ1HFN0PQD",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M4Z26WCS2D70CPPSK517D6QE",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M4Z26WC8Z1YHHDJJ1HFN0PQD",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M4Z26WCS2D70CPPSK517D6QE": {
@@ -523,6 +542,21 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "Second validator rejected stale local release tag inventory before upload. Fetched published v0.114.2 tag normally; no tag publication. Official init --proof refreshed release-bound entrypoints/Dockerfile; preserved generated backups outside candidate. Independent final publication/cwd review found no remaining must-fix."
+                ],
+                "proof_refs": [
+                  "full-validation-attempt-2"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -534,6 +568,7 @@
         "Compared every discovered source against bf5c0e1b and reproduced prior reviewed pin exactly. Only own Cargo version 0.114.1 to0.114.2 differs; updated configuration pin without changing adapter coverage.",
         "Independent real Git fixture demonstrated forced divergent branch overwrite, hidden tracked edits, and stash object absent from host after single-branch foldback",
         "Independent review identified and corrected expected-HEAD publication binding and contextual corrupt-index diagnostics. Strengthened governance rejection assertion; no live Docker or network publication test claim.",
+        "Second validator rejected stale local release tag inventory before upload. Fetched published v0.114.2 tag normally; no tag publication. Official init --proof refreshed release-bound entrypoints/Dockerfile; preserved generated backups outside candidate. Independent final publication/cwd review found no remaining must-fix.",
         "validate-first rejected default generated branch because its todo-01m4z2 prefix was parsed as a different task. Renamed this same work branch to agent/five-kernel/bugs_01m4z26b5cgh0y10; no history rewrite, extra branch or proof substitution."
       ],
       "inspected_files": [
