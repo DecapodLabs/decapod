@@ -591,9 +591,15 @@ fn persist_result(
     let ts = now_iso();
     let broker = DbBroker::new(&store.root);
     let db_path = todo::todo_db_path(&store.root);
-    broker.with_transaction(&db_path, "decapod", None, "verify.persist", |conn| {
-        persist_result_on_connection(conn, target, status, notes, &ts)
-    })?;
+    todo::with_task_journal(
+        &broker,
+        &db_path,
+        "decapod",
+        None,
+        "verify.persist",
+        todo::TaskJournalSelection::Ids(vec![target.todo_id.clone()]),
+        |conn| persist_result_on_connection(conn, target, status, notes, &ts),
+    )?;
     mirror_verification_to_federation(
         store,
         &target.todo_id,
@@ -1263,11 +1269,13 @@ pub fn capture_baseline_for_todo(
         ));
     }
     let prepared = prepare_verified_completion(store, repo_root, todo_id, artifact_paths)?;
-    DbBroker::new(&store.root).with_transaction(
+    todo::with_task_journal(
+        &DbBroker::new(&store.root),
         &todo::todo_db_path(&store.root),
         "decapod",
         None,
         "verify.capture.write",
+        todo::TaskJournalSelection::Ids(vec![todo_id.to_owned()]),
         |conn| prepared.commit_recapture_on_connection(conn),
     )
 }
@@ -1357,15 +1365,29 @@ fn refresh_batch_baselines(
 
     let db_path = todo::todo_db_path(&store.root);
     let broker = DbBroker::new(&store.root);
-    broker.with_transaction(&db_path, "decapod", None, "verify.recover.baselines", |conn| {
-        for (target, _, _, _) in &updates {
-            ensure_target_unchanged(conn, target)?;
-            if target.status != "done" || target.revision < 0 {
-                return Err(error::DecapodError::ValidationError("Recovery requires a current completed task revision".into()));
+    todo::with_task_journal(
+        &broker,
+        &db_path,
+        "decapod",
+        None,
+        "verify.recover.baselines",
+        todo::TaskJournalSelection::Ids(
+            targets
+                .iter()
+                .map(|target| target.todo_id.clone())
+                .collect(),
+        ),
+        |conn| {
+            for (target, _, _, _) in &updates {
+                ensure_target_unchanged(conn, target)?;
+                if target.status != "done" || target.revision < 0 {
+                    return Err(error::DecapodError::ValidationError(
+                        "Recovery requires a current completed task revision".into(),
+                    ));
+                }
             }
-        }
-        for (target, artifacts_json, proof_plan_json, artifacts) in &updates {
-            conn.execute(
+            for (target, artifacts_json, proof_plan_json, artifacts) in &updates {
+                conn.execute(
                 "UPDATE task_verification
                  SET proof_plan = ?1,
                      verification_artifacts = ?2,
@@ -1375,18 +1397,25 @@ fn refresh_batch_baselines(
                  WHERE todo_id = ?4",
                 crate::core::db::params![proof_plan_json, artifacts_json, completed_at, target.todo_id],
             )?;
-            append_verification_event_on_connection(conn, &target.todo_id, "task.verify.recover", &completed_at, serde_json::json!({
-                "proof_plan": serde_json::from_str::<serde_json::Value>(proof_plan_json).map_err(|err| error::DecapodError::ValidationError(err.to_string()))?,
-                "verification_artifacts": artifacts,
-                "validation_epoch": validation_epoch,
-                "snapshot_output_hash": snapshot.output_hash,
-                "last_verified_status": "CLAIMED",
-                "last_verified_notes": "baseline recovered; awaiting final aggregate verification",
-                "verification_policy_days": target.verification_policy_days,
-            }))?;
-        }
-        Ok(())
-    })?;
+                append_verification_event_on_connection(
+                    conn,
+                    &target.todo_id,
+                    "task.verify.recover",
+                    &completed_at,
+                    serde_json::json!({
+                        "proof_plan": serde_json::from_str::<serde_json::Value>(proof_plan_json).map_err(|err| error::DecapodError::ValidationError(err.to_string()))?,
+                        "verification_artifacts": artifacts,
+                        "validation_epoch": validation_epoch,
+                        "snapshot_output_hash": snapshot.output_hash,
+                        "last_verified_status": "CLAIMED",
+                        "last_verified_notes": "baseline recovered; awaiting final aggregate verification",
+                        "verification_policy_days": target.verification_policy_days,
+                    }),
+                )?;
+            }
+            Ok(())
+        },
+    )?;
     Ok(updates
         .into_iter()
         .map(|(target, artifacts_json, proof_plan_json, _)| {
@@ -1407,17 +1436,31 @@ pub fn prune_verification_for_todo(
     let db_path = todo::todo_db_path(&store.root);
     let broker = DbBroker::new(&store.root);
 
-    broker.with_transaction(&db_path, "decapod", None, "verify.prune", |conn| {
-        conn.execute(
-            "DELETE FROM task_verification WHERE todo_id = ?1",
-            [todo_id],
-        )?;
-        conn.execute(
+    todo::with_task_journal(
+        &broker,
+        &db_path,
+        "decapod",
+        None,
+        "verify.prune",
+        todo::TaskJournalSelection::Ids(vec![todo_id.to_owned()]),
+        |conn| {
+            conn.execute(
+                "DELETE FROM task_verification WHERE todo_id = ?1",
+                [todo_id],
+            )?;
+            conn.execute(
             "UPDATE tasks SET status = 'open', completed_at = NULL, updated_at = ?1, revision = revision + 1 WHERE id = ?2",
             crate::core::db::params![ts, todo_id],
         )?;
-        append_verification_event_on_connection(conn, todo_id, "task.verify.prune", &ts, serde_json::json!({}))
-    })
+            append_verification_event_on_connection(
+                conn,
+                todo_id,
+                "task.verify.prune",
+                &ts,
+                serde_json::json!({}),
+            )
+        },
+    )
 }
 
 struct VerifyingTodosGuard {
@@ -1460,26 +1503,47 @@ fn finalize_recovered_batch(
         ));
     }
     let ts = now_iso();
-    DbBroker::new(&store.root).with_transaction(&todo::todo_db_path(&store.root), "decapod", None, "verify.recover.finalize", |conn| {
-        for target in targets {
-            ensure_target_unchanged(conn, target)?;
-        }
-        let mut results = Vec::with_capacity(targets.len());
-        for target in targets {
-            let result = verify_target(target, &store.root, repo_root, Some(snapshot))?;
-            if result.status != "pass" {
-                return Err(error::DecapodError::ValidationError(format!(
-                    "Recovered task {} did not pass current proof; the complete batch remains pending: {}",
-                    target.todo_id, serde_json::to_string(&result).map_err(|err| error::DecapodError::ValidationError(err.to_string()))?,
-                )));
+    todo::with_task_journal(
+        &DbBroker::new(&store.root),
+        &todo::todo_db_path(&store.root),
+        "decapod",
+        None,
+        "verify.recover.finalize",
+        todo::TaskJournalSelection::Ids(
+            targets
+                .iter()
+                .map(|target| target.todo_id.clone())
+                .collect(),
+        ),
+        |conn| {
+            for target in targets {
+                ensure_target_unchanged(conn, target)?;
             }
-            results.push(result);
-        }
-        for (target, result) in targets.iter().zip(&results) {
-            persist_result_on_connection(conn, target, &result.status, &result.notes.join("; "), &ts)?;
-        }
-        Ok(results)
-    })
+            let mut results = Vec::with_capacity(targets.len());
+            for target in targets {
+                let result = verify_target(target, &store.root, repo_root, Some(snapshot))?;
+                if result.status != "pass" {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "Recovered task {} did not pass current proof; the complete batch remains pending: {}",
+                        target.todo_id,
+                        serde_json::to_string(&result)
+                            .map_err(|err| error::DecapodError::ValidationError(err.to_string()))?,
+                    )));
+                }
+                results.push(result);
+            }
+            for (target, result) in targets.iter().zip(&results) {
+                persist_result_on_connection(
+                    conn,
+                    target,
+                    &result.status,
+                    &result.notes.join("; "),
+                    &ts,
+                )?;
+            }
+            Ok(results)
+        },
+    )
 }
 
 fn run_recover_cli(store: &Store, repo_root: &Path, json: bool) -> Result<(), error::DecapodError> {

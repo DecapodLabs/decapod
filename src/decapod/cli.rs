@@ -1199,6 +1199,23 @@ pub(crate) struct TrajectoryCli {
 
 #[derive(Subcommand, Debug)]
 pub(crate) enum TrajectoryCommand {
+    /// Bind an execution checkpoint to current source, intent and authority
+    Checkpoint {
+        #[clap(long)]
+        run_id: String,
+        #[clap(long)]
+        checkpoint_id: String,
+        /// Existing applicable approval references; references do not grant approval
+        #[clap(long = "approval-id")]
+        approval_ids: Vec<String>,
+    },
+    /// Verify current continuation authority without changing proof or state
+    VerifyResume {
+        #[clap(long)]
+        run_id: String,
+        #[clap(long)]
+        checkpoint_id: String,
+    },
     /// Create a trajectory artifact for an agent run
     Init {
         #[clap(long)]
@@ -1301,6 +1318,34 @@ impl From<WorkunitStatusArg> for workunit::WorkUnitStatus {
 
 #[derive(Subcommand, Debug)]
 pub(crate) enum WorkunitCommand {
+    /// Record a current-state checkpoint without inventing missing history
+    Checkpoint {
+        #[clap(long)]
+        task_id: String,
+        #[clap(long)]
+        operation_id: String,
+        #[clap(long)]
+        expected_generation: Option<u64>,
+    },
+    /// Inspect journal integrity and manifest projection consistency
+    JournalStatus {
+        #[clap(long)]
+        task_id: String,
+    },
+    /// Restore the exact journaled manifest; recovery does not refresh proof
+    Recover {
+        #[clap(long)]
+        task_id: String,
+    },
+    /// Resume only against the checkpoint's current source and authority
+    Resume {
+        #[clap(long)]
+        task_id: String,
+        #[clap(long)]
+        operation_id: String,
+        #[clap(long)]
+        expected_generation: Option<u64>,
+    },
     /// Initialize a work unit manifest for a task
     Init {
         #[clap(long)]

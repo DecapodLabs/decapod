@@ -472,6 +472,10 @@ pub fn is_hitl_disabled_by_override(store: &Store, scope: &str, level: RiskLevel
         return false;
     };
 
+    hitl_disabled_in_policy(&policy_override, scope, level)
+}
+
+fn hitl_disabled_in_policy(policy_override: &str, scope: &str, level: RiskLevel) -> bool {
     let rules = parse_hitl_override_rules(&policy_override);
     if rules.is_empty() {
         return false;
@@ -612,11 +616,17 @@ fn configured_approval_categories(root: &Path) -> Result<Vec<String>, error::Dec
         .unwrap_or(root);
     let main_root = crate::core::workspace::get_main_repo_root(project_root)
         .unwrap_or_else(|_| project_root.to_path_buf());
+    configured_approval_categories_at_project(&main_root)
+}
+
+fn configured_approval_categories_at_project(
+    main_root: &Path,
+) -> Result<Vec<String>, error::DecapodError> {
     let config_path = main_root.join(".decapod").join("config.toml");
     if !config_path.exists() {
         return Ok(Vec::new());
     }
-    let config = crate::cli::DecapodProjectConfig::load(&main_root)
+    let config = crate::cli::DecapodProjectConfig::load(main_root)
         .map_err(|e| error::DecapodError::Config(format!("Unable to load approval policy: {e}")))?;
     Ok(config.governance.approval_categories)
 }
@@ -836,6 +846,12 @@ fn parse_expiry(value: &str) -> Option<i64> {
         .map(|timestamp| timestamp.timestamp())
 }
 
+pub(crate) fn approval_expiry_is_live(expiry: Option<&str>) -> bool {
+    expiry.is_none_or(|expiry| {
+        parse_expiry(expiry).is_some_and(|seconds| seconds > chrono::Utc::now().timestamp())
+    })
+}
+
 pub fn revoke_approval(store: &Store, approval_id: &str) -> Result<bool, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = policy_db_path(&store.root);
@@ -877,6 +893,155 @@ pub fn check_approval_on_conn(
 ) -> Result<bool, error::DecapodError> {
     let fingerprint = approval_fingerprint(command, target_path, scope);
     approval_matches(conn, &fingerprint, command, target_path, scope)
+}
+
+/// Read-only continuation check using the same trust/category/zone rules as
+/// broker mutation. The caller owns the canonical shared-store connection;
+/// absent schema is never initialized and this function never issues a grant.
+/// Returned IDs are the concrete live records on which this observation relied.
+pub(crate) fn continuation_policy_on_conn(
+    conn: &Connection,
+    actor: &str,
+    operation: &str,
+    target: &str,
+    config_text: Option<&str>,
+    override_text: Option<&str>,
+) -> Result<Vec<String>, error::DecapodError> {
+    let exists = |table: &str| -> Result<bool, error::DecapodError> {
+        Ok(conn
+            .query_row(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?1",
+                [table],
+                |row| row.get::<_, i64>(0),
+            )
+            .optional()?
+            .is_some())
+    };
+    let actor_trust = if matches!(actor, "decapod" | "cli" | "operator") {
+        "core".to_string()
+    } else if exists("agents")? {
+        conn.query_row(
+            "SELECT substr(trust_level,1,513) FROM agents WHERE agent_id=?1",
+            [actor],
+            |row| row.get::<_, String>(0),
+        )
+        .optional()?
+        .unwrap_or_else(|| "basic".into())
+    } else {
+        "basic".into()
+    };
+    let deny = || {
+        error::DecapodError::ValidationError(
+            "EXECUTION_POLICY_DENIED: current actor does not meet continuation policy".into(),
+        )
+    };
+    if actor.trim().is_empty()
+        || actor_trust.len() > 512
+        || trust_level_to_int(&actor_trust)
+            < trust_level_to_int(required_trust_for_operation(operation))
+    {
+        return Err(deny());
+    }
+    let categories = config_text
+        .map(|text| {
+            toml::from_str::<crate::cli::DecapodProjectConfig>(text)
+                .map(|config| config.governance.approval_categories)
+                .map_err(|_| {
+                    error::DecapodError::Config(
+                        "EXECUTION_POLICY_INVALID: captured policy configuration is invalid".into(),
+                    )
+                })
+        })
+        .transpose()?
+        .unwrap_or_default();
+    let policy_override = override_text
+        .map(|text| assets::override_doc_from_text(text, "plugins/POLICY"))
+        .transpose()
+        .map_err(|_| {
+            error::DecapodError::Config(
+                "EXECUTION_POLICY_INVALID: captured override structure is invalid".into(),
+            )
+        })?
+        .flatten();
+    let mut requirements = Vec::new();
+    if configured_approval_required(&categories, operation) {
+        requirements.push(operation.to_string());
+    }
+    let zone = risk_zone_for_operation(operation);
+    if exists("risk_zones")? {
+        let policy = conn.query_row("SELECT substr(required_trust_level,1,513), requires_approval FROM risk_zones WHERE zone_name=?1", [zone], |row| Ok((row.get::<_, String>(0)?, row.get::<_, i64>(1)?))).optional()?;
+        if let Some((trust, requires_approval)) = policy {
+            if trust.len() > 512 || trust_level_to_int(&actor_trust) < trust_level_to_int(&trust) {
+                return Err(deny());
+            }
+            let risk = risk_level_for_operation(operation);
+            let high = matches!(risk, RiskLevel::HIGH | RiskLevel::CRITICAL);
+            let hitl = high
+                && !policy_override
+                    .as_deref()
+                    .is_some_and(|text| hitl_disabled_in_policy(text, zone, risk));
+            if requires_approval != 0 && hitl {
+                requirements.push(zone.to_string());
+            }
+        }
+    }
+    if requirements.is_empty() {
+        return Ok(Vec::new());
+    }
+    if !exists("approvals")? {
+        return Err(error::DecapodError::ValidationError(
+            "EXECUTION_APPROVAL_MISSING: policy requires unavailable approval authority".into(),
+        ));
+    }
+    let mut required_ids = Vec::new();
+    for action in requirements {
+        let exact = approval_fingerprint(&action, Some(target), "global");
+        let general = derive_fingerprint(&action, None, "global");
+        // Limit before materialization; unsupported oversized authority fails.
+        let mut statement = conn.prepare("SELECT substr(approval_id,1,129), substr(expires_at,1,129) FROM approvals WHERE scope='global' AND (action_fingerprint=?1 OR action_fingerprint=?2) ORDER BY approval_id LIMIT 65")?;
+        let records = statement
+            .query_map(params![exact, general], |row| {
+                Ok((row.get::<_, String>(0)?, row.get::<_, Option<String>>(1)?))
+            })?
+            .collect::<Result<Vec<_>, _>>()?;
+        if records.len() > 64 {
+            return Err(error::DecapodError::ValidationError(
+                "EXECUTION_APPROVAL_LIMIT: applicable approval inventory exceeds bound".into(),
+            ));
+        }
+        if records.iter().any(|(id, expiry)| {
+            id.len() > 128 || expiry.as_ref().is_some_and(|value| value.len() > 128)
+        }) {
+            return Err(error::DecapodError::ValidationError(
+                "EXECUTION_APPROVAL_LIMIT: approval field exceeds bound".into(),
+            ));
+        }
+        let id = records.into_iter().find(|(_, expiry)| approval_expiry_is_live(expiry.as_deref()))
+            .map(|(id, _)| id).ok_or_else(|| error::DecapodError::ValidationError("EXECUTION_APPROVAL_MISSING: current policy requires a live applicable approval".into()))?;
+        required_ids.push(id);
+    }
+    required_ids.sort();
+    required_ids.dedup();
+    Ok(required_ids)
+}
+
+/// Return the existing policy action whose grant can cover this continuation.
+/// A zone grant is applicable only to operations mapped to that same zone.
+pub(crate) fn continuation_approval_action<'a>(
+    operation: &'a str,
+    target: &str,
+    scope: &str,
+    fingerprint: &str,
+) -> Option<&'a str> {
+    if scope != "global" {
+        return None;
+    }
+    [operation, risk_zone_for_operation(operation)]
+        .into_iter()
+        .find(|action| {
+            fingerprint == approval_fingerprint(action, Some(target), scope)
+                || fingerprint == derive_fingerprint(action, None, scope)
+        })
 }
 
 fn approval_matches(

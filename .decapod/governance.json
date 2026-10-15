@@ -1,7 +1,8 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "e5badd38d4c913f8888af215a15a3a9cda02105d",
+    "accepted_commit": "fc71d3a8a1e1f45adeee3ee24b02507b7198592f",
+    "release": "v0.114.3",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -71,6 +72,14 @@
           "tests/consumer_readiness.rs"
         ],
         "statement": "Reviewed consumer local proof executes required commands against exact candidate and target without weakening strict Decapod CI proof",
+        "status": "open"
+      },
+      "claim:container-boundary-integrity": {
+        "falsifier": "A failed execution invokes push or PR; raw gh bypasses readiness; divergent host history is overwritten; or successful cleanup deletes hidden tracked edits or new/changed stash, side branch or tag refs.",
+        "proof_refs": [
+          "tests/unit/plugins/container_tests.rs"
+        ],
+        "statement": "Container completion never publishes failed or local-only runs, PR requests use the common governed publisher, branch foldback rejects non-fast-forward updates, and cleanup retains index-hidden work plus refs added or changed beyond the returned branch.",
         "status": "open"
       },
       "claim:created-context": {
@@ -223,6 +232,14 @@
         "statement": "Both init entrypoints preserve omitted authored config choices; generated CI includes immutable range and full history",
         "status": "open"
       },
+      "claim:reviewed-importer-01027": {
+        "falsifier": "An observed green result or arbitrary version/digest tuple authorizes import; any required proof/profile/custody check is removed; or the selected controller artifact lacks verified accepted-executor and source provenance.",
+        "proof_refs": [
+          "src/decapod/core/validation_runtime/snapshot/source_import.rs"
+        ],
+        "statement": "The importer accepts only independently reviewed official0.102.7 compiler/Linux/Darwin executable identities, with unchanged source, producer, recipe and artifact custody checks; older, unknown, mixed and swapped tuples remain invalid.",
+        "status": "open"
+      },
       "claim:strict-protocol-rollout": {
         "falsifier": "The fallback accepts altered or new carrier content after only changing the review digest, supported R failure falls back to H, or an old released executable is claimed to acquire unimplemented bootstrap behavior.",
         "proof_refs": [
@@ -269,64 +286,62 @@
     }
   },
   "change": {
-    "id": "change_01M4Z26WC8Z1YHHDJJ1HFN0PQD",
-    "base_commit": "e5badd38d4c913f8888af215a15a3a9cda02105d",
+    "id": "change_01M4ZA6GX2N767VDY40HNH9C8H",
+    "base_commit": "fc71d3a8a1e1f45adeee3ee24b02507b7198592f",
     "target_base": "origin/master"
   },
   "claims": {
-    "container-boundary-integrity": {
-      "statement": "Container completion never publishes failed or local-only runs, PR requests use the common governed publisher, branch foldback rejects non-fast-forward updates, and cleanup retains index-hidden work plus refs added or changed beyond the returned branch.",
-      "falsifier": "A failed execution invokes push or PR; raw gh bypasses readiness; divergent host history is overwritten; or successful cleanup deletes hidden tracked edits or new/changed stash, side branch or tag refs.",
+    "current-authority-resume": {
+      "statement": "Execution continuation checks the checkpoint against current material, accepted intent, plan, scope, policy approvals and task custody; a valid checkpoint hash alone does not grant continuation or publication readiness.",
+      "falsifier": "Changed source, branch lineage, intent, plan, required approval, task revision or lease owner can pass resume; or committing only checkpoint bookkeeping invalidates unchanged continuation.",
       "status": "open",
       "proof_refs": [
-        "tests/unit/plugins/container_tests.rs"
+        "src/decapod/core/trajectory/execution.rs"
       ]
     },
-    "reviewed-importer-01027": {
-      "statement": "The importer accepts only independently reviewed official0.102.7 compiler/Linux/Darwin executable identities, with unchanged source, producer, recipe and artifact custody checks; older, unknown, mixed and swapped tuples remain invalid.",
-      "falsifier": "An observed green result or arbitrary version/digest tuple authorizes import; any required proof/profile/custody check is removed; or the selected controller artifact lacks verified accepted-executor and source provenance.",
+    "durable-artifact-publication": {
+      "statement": "Unix atomic artifact publication requires file and containing-directory synchronization; an error after rename reports unconfirmed durability without claiming rollback, and bounded journal admission cannot append an unreadable head.",
+      "falsifier": "Parent sync failure reports success, recovery follows a substituted parent symlink, a partial history is returned as complete, or admitted append crosses its recovery size bound.",
       "status": "open",
       "proof_refs": [
-        "src/decapod/core/validation_runtime/snapshot/source_import.rs"
+        "src/decapod/core/atomic.rs",
+        "tests/unit/core/events_tests.rs"
+      ]
+    },
+    "task-journal-reconstruction": {
+      "statement": "Modern local task mutation and exact revision, lease, owner, dependency and proof projection checkpoints commit together in the canonical event store; recovery preserves incomplete legacy history and rejects divergent live authority.",
+      "falsifier": "A supported mutation loses journal custody, replay changes verification bytes or revision, a contradictory chain is accepted, or recovery overwrites an unrelated current projection.",
+      "status": "open",
+      "proof_refs": [
+        "src/decapod/core/task_journal.rs",
+        "tests/unit/core/task_journal_tests.rs"
+      ]
+    },
+    "workunit-journal-recovery": {
+      "statement": "Workunit generation-fenced mutations have durable event snapshots before JSON publication; interrupted projection publication is explicitly recoverable without inventing current proof.",
+      "falsifier": "Concurrent mutations lose updates, stale prepared state overwrites the journal, a retry overwrites a divergent projection, or replay refreshes a retained passing proof artifact.",
+      "status": "open",
+      "proof_refs": [
+        "tests/cli_contract_enforcement.rs",
+        "tests/unit/core/workunit_journal_tests.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "five-kernel-1",
-      "summary": "Repair five reproduced container publication and custody failures with adversarial regressions and updated contracts",
-      "input_digest": "sha256:e6aad3a2fccf6fcc3a977c181224faeb4131a73c39ee267f57f61974f3ff799f",
+      "id": "houseboat-recovery-01",
+      "summary": "Local task/workunit reconstruction and current-authority execution resume, with bounded durability and adversarial regressions; independent source review complete, full validation pending",
+      "input_digest": "sha256:5635da345747a87a36b19f47821bfdd9fcf8a84571e9a9673cfddbdb4c89c4c0",
       "proof_refs": [
-        "tests/unit/plugins/container_tests.rs"
-      ]
-    },
-    {
-      "id": "five-kernel-2",
-      "summary": "Preserve first validation failure and reconcile exact release inventory after branch identity correction",
-      "input_digest": "sha256:6090eef5fa1455b278427f8d879f82b22d7084858972945bd7cf215214a877db",
-      "proof_refs": [
-        "tests/unit/plugins/container_tests.rs"
-      ]
-    },
-    {
-      "id": "five-kernel-3",
-      "summary": "Bind release projections and retain failed validation history before exact-candidate proof",
-      "input_digest": "sha256:04b2c22f4abd33c8b533e7032f441e4c0441ec342617d5f32f46b29dd1891df4",
-      "proof_refs": [
-        "tests/unit/plugins/container_tests.rs"
-      ]
-    },
-    {
-      "id": "five-kernel-4",
-      "summary": "Repair reviewed importer compatibility while preserving failed proof and fixed-tuple custody",
-      "input_digest": "sha256:76aa39b4159c0afedf0914ea4cf4f86c88b8f74fc983ca7bc31679e5e63483fb",
-      "proof_refs": [
-        "src/decapod/core/validation_runtime/snapshot/source_import.rs"
+        "tests/cli_contract_enforcement.rs",
+        "tests/unit/core/execution_checkpoint_tests.rs",
+        "tests/unit/core/task_journal_tests.rs",
+        "tests/unit/core/workunit_journal_tests.rs"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M4Z26WC8Z1YHHDJJ1HFN0PQD": {
+    "intent:change_01M4ZA6GX2N767VDY40HNH9C8H": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -336,11 +351,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M4Z26WC8Z1YHHDJJ1HFN0PQD",
+      "id": "intent:change_01M4ZA6GX2N767VDY40HNH9C8H",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Fix five verified kernel integrity gaps\n\nIdentify five reproducible urgent kernel/data-integrity/validation failures on latest master, repair together with adversarial tests and living specs, full validate then publish one green draft PR and monitor CI. Human merges.",
-      "refined_intent": "Fix five verified kernel integrity gaps\n\nIdentify five reproducible urgent kernel/data-integrity/validation failures on latest master, repair together with adversarial tests and living specs, full validate then publish one green draft PR and monitor CI. Human merges.",
+      "raw_intent": "Complete remaining Houseboat governed fleet work\n\nImplement open houseboat issues 852-860 and 878 with their direct dependencies, preserving existing authority and using phased governed PRs with adversarial proof.",
+      "refined_intent": "Complete remaining Houseboat governed fleet work\n\nImplement open houseboat issues 852-860 and 878 with their direct dependencies, preserving existing authority and using phased governed PRs with adversarial proof.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -353,201 +368,151 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Repair five reproduced container boundary failures: failed-execution publication, raw PR readiness bypass, non-fast-forward foldback, hidden-index work loss, and unreturned ref/stash loss. Supporting prescribed-validation repair: independently review one fixed Buildkite importer0.102.7 tuple after authenticated0.102.6 evidence exceeded released0.102.5 controller support, build the reviewed controller through accepted source-CI, verify its provenance and artifact digest explicitly, then rerun full exact-candidate proof. No provider/access changes, automatic compiler acceptance or manual local build.",
+      "intent": "First dependency-ordered Houseboat PR: complete durable local transition/checkpoint/replay and current-state resume enforcement over existing events, workunit, workspace lifecycle and Git governance owners. Preserve existing atomic task proof and ownership guarantees. Legacy histories are not assumed complete: establish explicit migration baselines and mark missing custody unverified. No background scheduler, cloud authority, automatic merge, or raw secret persistence. Subsequent PRs complete atomic budgets and semantic lease coordination; bounded collaboration and container capabilities; canonical drift, trajectory, readiness and publication projections.",
       "phases": [],
       "proof_hooks": [
-        "Full decapod validate with container unit regressions"
+        "decapod validate"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Re-read full contract against supporting fixed importer tuple upgrade; shared CLI, data, publication and accepted-executor architecture remain unchanged. Manual engineering controller selection is independently verified, not an automatic protocol feature.",
-          "reviewed_code_fingerprint": "92b5bb3991acc9bc81c28f8578d9abaf4ba3b122fd6468d1f2ab57f70d02389d",
-          "spec_material_hash": "599a4d451ff70a4f2c6ddc138c062652fea9f78332b329012f46db44bd229918"
+          "reason": "Final source review: local transaction-backed snapshots, generation-fenced workunit recovery, live custody and approval checks, bounded shared source/proof/governance readers and captured-byte policy parsing. Authored contracts explicitly retain historical, optional-cloud, distributed and platform limitations. Full validation supplies execution proof.",
+          "reviewed_code_fingerprint": "39c48aa282aa7eeca02e6e6ce39b61abb879534e4a64b409762381380ed5cbb4",
+          "spec_material_hash": "e5b43ec32a4f63877e22f652d8d903ffcc6dac9dfee081f3ac9331a9d3f179d7"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Re-read full contract against supporting fixed importer tuple upgrade; shared CLI, data, publication and accepted-executor architecture remain unchanged. Manual engineering controller selection is independently verified, not an automatic protocol feature.",
-          "reviewed_code_fingerprint": "92b5bb3991acc9bc81c28f8578d9abaf4ba3b122fd6468d1f2ab57f70d02389d",
-          "spec_material_hash": "a92ff1b6e1b1d388c26c87bafb51ee9528403f3bdeb9e70410a84302fb5f3e9c"
+          "reason": "Final source review: local transaction-backed snapshots, generation-fenced workunit recovery, live custody and approval checks, bounded shared source/proof/governance readers and captured-byte policy parsing. Authored contracts explicitly retain historical, optional-cloud, distributed and platform limitations. Full validation supplies execution proof.",
+          "reviewed_code_fingerprint": "39c48aa282aa7eeca02e6e6ce39b61abb879534e4a64b409762381380ed5cbb4",
+          "spec_material_hash": "7d9a3086d7e6c902996599e186eba9c687c3ed5fc9b16820c926bcda4fb6d03c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed complete security contract and independent official0.102.7 source/archive/member evidence. Exact fixed platform tuple replaces0.102.5; unknown/mixed versions and all original custody checks remain fail-closed.",
-          "reviewed_code_fingerprint": "92b5bb3991acc9bc81c28f8578d9abaf4ba3b122fd6468d1f2ab57f70d02389d",
-          "spec_material_hash": "465365a761f2c758bbc385fdb7e3152d029e46a26c4223b22d2f3c49951f57d3"
+          "reason": "Final source review: local transaction-backed snapshots, generation-fenced workunit recovery, live custody and approval checks, bounded shared source/proof/governance readers and captured-byte policy parsing. Authored contracts explicitly retain historical, optional-cloud, distributed and platform limitations. Full validation supplies execution proof.",
+          "reviewed_code_fingerprint": "39c48aa282aa7eeca02e6e6ce39b61abb879534e4a64b409762381380ed5cbb4",
+          "spec_material_hash": "546e1354723c4d9853921f233ddbed7eb46c5da576aca356d9da8ed48dff1bb8"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [
-        "Human decision or unavailable authorization required by a real validation gate"
+        "Reject contradictory generations, changed accepted intent or material state, missing approval, incomplete checkpoint provenance, or unbounded replay rather than invent recovery success."
       ],
-      "title": "Fix five verified kernel integrity gaps",
+      "title": "Make governed execution reconstructable after interruption",
       "todo_ids": [
-        "bugs_01m4z26b5cgh0y10"
+        "code_01m4za5wkgtvc7m2"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792046238Z"
+      "updated_at": "1792054961Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Accepted source-CI executor provenance and source/artifact hashes must verify before selecting replacement controller; otherwise stop.",
-        "Current claimed task and isolated work branch",
-        "No live Docker or arbitrary filesystem race-proof guarantee"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:8d979c1411079374c5ec30c552412be5c0db99531854e5da42ef7579d5a1495c",
+      "artifact_hash": "sha256:745be0a3bfc1788cbdeba4197380cb9a334a0ccfe5c4ea82e33f7fb31cd1db8b",
       "checks": [
         {
-          "name": "adversarial-source-review",
+          "name": "full-validation",
+          "status": "unavailable"
+        },
+        {
+          "name": "houseboat_inventory",
           "status": "passed"
         },
         {
-          "name": "container-new-regressions",
-          "status": "passed"
-        },
-        {
-          "name": "full-validation-attempt-1",
-          "status": "failed"
-        },
-        {
-          "name": "full-validation-attempt-2",
-          "status": "failed"
-        },
-        {
-          "name": "full-validation-attempt-4",
-          "status": "failed"
-        },
-        {
-          "name": "independent-git-custody-reproduction",
-          "status": "passed"
-        },
-        {
-          "name": "independent-importer-01027-review",
-          "status": "passed"
-        },
-        {
-          "name": "release-source-inventory-review",
-          "status": "passed"
-        },
-        {
-          "name": "static-container-publication-audit",
+          "name": "source-review",
           "status": "passed"
         }
       ],
-      "current_phase": "recovery",
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M4Z26WC8Z1YHHDJJ1HFN0PQD",
+            "intent_id": "intent:change_01M4ZA6GX2N767VDY40HNH9C8H",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M4Z26WC8Z1YHHDJJ1HFN0PQD",
+            "intent_id": "intent:change_01M4ZA6GX2N767VDY40HNH9C8H",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M4Z26WCS2D70CPPSK517D6QE",
+            "detail": "trajectory:branch_01M4ZA6GXNKRAA5A869N1VR4Z2",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M4Z26WC8Z1YHHDJJ1HFN0PQD",
+            "intent_id": "intent:change_01M4ZA6GX2N767VDY40HNH9C8H",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M4Z26WCS2D70CPPSK517D6QE",
+            "detail": "trajectory:branch_01M4ZA6GXNKRAA5A869N1VR4Z2",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M4Z26WC8Z1YHHDJJ1HFN0PQD",
+            "intent_id": "intent:change_01M4ZA6GX2N767VDY40HNH9C8H",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M4Z26WCS2D70CPPSK517D6QE",
+            "detail": "trajectory:branch_01M4ZA6GXNKRAA5A869N1VR4Z2",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M4Z26WC8Z1YHHDJJ1HFN0PQD",
+            "intent_id": "intent:change_01M4ZA6GX2N767VDY40HNH9C8H",
             "kind": "trajectory_step_recorded",
             "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M4Z26WCS2D70CPPSK517D6QE",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M4Z26WC8Z1YHHDJJ1HFN0PQD",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M4Z26WCS2D70CPPSK517D6QE",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M4Z26WC8Z1YHHDJJ1HFN0PQD",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
-          },
-          {
-            "detail": "trajectory:branch_01M4Z26WCS2D70CPPSK517D6QE",
-            "event_id": "event:9",
-            "intent_id": "intent:change_01M4Z26WC8Z1YHHDJJ1HFN0PQD",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
-          },
-          {
-            "detail": "trajectory:branch_01M4Z26WCS2D70CPPSK517D6QE",
-            "event_id": "event:10",
-            "intent_id": "intent:change_01M4Z26WC8Z1YHHDJJ1HFN0PQD",
-            "kind": "trajectory_step_recorded",
-            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M4Z26WCS2D70CPPSK517D6QE": {
+          "branch_01M4ZA6GXNKRAA5A869N1VR4Z2": {
             "evidence_only": true,
-            "id": "branch_01M4Z26WCS2D70CPPSK517D6QE",
-            "intent_id": "intent:change_01M4Z26WC8Z1YHHDJJ1HFN0PQD",
+            "id": "branch_01M4ZA6GXNKRAA5A869N1VR4Z2",
+            "intent_id": "intent:change_01M4ZA6GX2N767VDY40HNH9C8H",
             "steps": [
               {
-                "action": "inspection",
+                "action": "design",
+                "command": "GitHub label/body/comment inventory and code-grounded parallel audits",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/plugins/container.rs",
-                  "tests/unit/plugins/container_tests.rs",
-                  "src/decapod/core/workspace.rs",
-                  "Independent real Git fixture demonstrated forced divergent branch overwrite, hidden tracked edits, and stash object absent from host after single-branch foldback"
+                  "src/decapod/core/events.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/core/workunit.rs",
+                  "src/decapod/core/workspace_lifecycle.rs",
+                  "GitHub label houseboat:852,853,854,855,856,857,858,859,860,878; accepted master fc71d3a8"
                 ],
                 "proof_refs": [
-                  "static-container-publication-audit",
-                  "independent-git-custody-reproduction"
+                  "houseboat_inventory"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 4,
-                "validation_findings": []
+                "validation_findings": [
+                  "Legacy event history is incomplete and cannot prove full reconstruction; establish explicit current-state migration baseline without synthesizing historical custody."
+                ]
               },
               {
-                "action": "implementation",
+                "action": "source-review",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/decapod/plugins/container.rs",
-                  "tests/unit/plugins/container_tests.rs",
-                  "docs/agent/state-model.md",
-                  ".decapod/managed/specs/INTENT.md",
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  ".decapod/managed/specs/SECURITY.md",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "Independent review identified and corrected expected-HEAD publication binding and contextual corrupt-index diagnostics. Strengthened governance rejection assertion; no live Docker or network publication test claim."
+                  "src/decapod/core/task_journal.rs",
+                  "src/decapod/core/workunit.rs",
+                  "src/decapod/core/trajectory/execution.rs",
+                  "src/decapod/core/events.rs",
+                  "src/decapod/core/atomic.rs",
+                  "src/decapod/core/governance_document.rs",
+                  "tests/cli_contract_enforcement.rs",
+                  "Adversarial regressions authored for transaction/replay conflicts, stale proof, custody and approval drift, bounded reads, directory-sync uncertainty and real CLI recovery. No build or test executed yet; full decapod validate owns measured proof.",
+                  "Legacy history limitation is explicit in checkpoint schema and docs; no reconstructed historical custody or cloud replay is claimed."
                 ],
                 "proof_refs": [
-                  "adversarial-source-review"
+                  "source-review",
+                  "full-validation"
                 ],
                 "scope": [
                   "root"
@@ -556,132 +521,65 @@
                 "validation_findings": []
               },
               {
-                "action": "recovery",
+                "action": "validation",
                 "custody_event_id": "event:6",
                 "observations": [
-                  "validate-first rejected default generated branch because its todo-01m4z2 prefix was parsed as a different task. Renamed this same work branch to agent/five-kernel/bugs_01m4z26b5cgh0y10; no history rewrite, extra branch or proof substitution."
+                  "Independent source review completed 2026-10-15 09:03 UTC with no known open blocker after task, workunit, custody, approval, bounded read and migration fixes. This is source review, not executed test proof."
                 ],
                 "proof_refs": [
-                  "full-validation-attempt-1"
+                  "source-review"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 6,
                 "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  ".decapod/config.toml",
-                  "Compared every discovered source against bf5c0e1b and reproduced prior reviewed pin exactly. Only own Cargo version 0.114.1 to0.114.2 differs; updated configuration pin without changing adapter coverage."
-                ],
-                "proof_refs": [
-                  "release-source-inventory-review"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "Second validator rejected stale local release tag inventory before upload. Fetched published v0.114.2 tag normally; no tag publication. Official init --proof refreshed release-bound entrypoints/Dockerfile; preserved generated backups outside candidate. Independent final publication/cwd review found no remaining must-fix."
-                ],
-                "proof_refs": [
-                  "full-validation-attempt-2"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 8,
-                "validation_findings": []
-              },
-              {
-                "action": "recovery",
-                "custody_event_id": "event:9",
-                "observations": [
-                  "All16 new regression tests passed in native job116278039871; full validator rejected authenticated Buildkite1714 plan compiler0.102.6 against installed reviewed0.102.5. Preserve mismatch. Official0.102.7 source delta and both executable-member hashes independently reviewed; manual verified CI-built-controller selection follows explicit PR1420 precedent, not automatic adoption or candidate JSON proof."
-                ],
-                "proof_refs": [
-                  "full-validation-attempt-4",
-                  "container-new-regressions"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 9,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:10",
-                "observations": [
-                  "src/decapod/core/validation_runtime/snapshot.rs",
-                  "src/decapod/core/validation_runtime/snapshot/source_import.rs",
-                  ".decapod/managed/specs/SECURITY.md",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "Independent reviewer rehashed official Linux asset642891563 and Darwin asset642891564 archives and named executable members; reviewed official six-commit source delta and exact fixed-tuple-only implementation. No profile, provider, platform or custody expansion. Full controller provenance and fresh exact-tuple execution remain pending."
-                ],
-                "proof_refs": [
-                  "independent-importer-01027-review"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 10,
-                "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "GitHub label/body/comment inventory and code-grounded parallel audits"
+      ],
       "destination": "pull request",
       "evidence": [
-        "All16 new regression tests passed in native job116278039871; full validator rejected authenticated Buildkite1714 plan compiler0.102.6 against installed reviewed0.102.5. Preserve mismatch. Official0.102.7 source delta and both executable-member hashes independently reviewed; manual verified CI-built-controller selection follows explicit PR1420 precedent, not automatic adoption or candidate JSON proof.",
-        "Compared every discovered source against bf5c0e1b and reproduced prior reviewed pin exactly. Only own Cargo version 0.114.1 to0.114.2 differs; updated configuration pin without changing adapter coverage.",
-        "Independent real Git fixture demonstrated forced divergent branch overwrite, hidden tracked edits, and stash object absent from host after single-branch foldback",
-        "Independent review identified and corrected expected-HEAD publication binding and contextual corrupt-index diagnostics. Strengthened governance rejection assertion; no live Docker or network publication test claim.",
-        "Independent reviewer rehashed official Linux asset642891563 and Darwin asset642891564 archives and named executable members; reviewed official six-commit source delta and exact fixed-tuple-only implementation. No profile, provider, platform or custody expansion. Full controller provenance and fresh exact-tuple execution remain pending.",
-        "Second validator rejected stale local release tag inventory before upload. Fetched published v0.114.2 tag normally; no tag publication. Official init --proof refreshed release-bound entrypoints/Dockerfile; preserved generated backups outside candidate. Independent final publication/cwd review found no remaining must-fix.",
-        "validate-first rejected default generated branch because its todo-01m4z2 prefix was parsed as a different task. Renamed this same work branch to agent/five-kernel/bugs_01m4z26b5cgh0y10; no history rewrite, extra branch or proof substitution."
+        "Adversarial regressions authored for transaction/replay conflicts, stale proof, custody and approval drift, bounded reads, directory-sync uncertainty and real CLI recovery. No build or test executed yet; full decapod validate owns measured proof.",
+        "GitHub label houseboat:852,853,854,855,856,857,858,859,860,878; accepted master fc71d3a8",
+        "Independent source review completed 2026-10-15 09:03 UTC with no known open blocker after task, workunit, custody, approval, bounded read and migration fixes. This is source review, not executed test proof.",
+        "Legacy history limitation is explicit in checkpoint schema and docs; no reconstructed historical custody or cloud replay is claimed."
       ],
       "inspected_files": [
-        "src/decapod/core/workspace.rs",
-        "src/decapod/plugins/container.rs",
-        "tests/unit/plugins/container_tests.rs"
+        "src/decapod/core/events.rs",
+        "src/decapod/core/task_journal.rs",
+        "src/decapod/core/todo.rs",
+        "src/decapod/core/trajectory/execution.rs",
+        "src/decapod/core/workspace_lifecycle.rs",
+        "src/decapod/core/workunit.rs"
       ],
-      "intent_id": "intent:change_01M4Z26WC8Z1YHHDJJ1HFN0PQD",
+      "intent_id": "intent:change_01M4ZA6GX2N767VDY40HNH9C8H",
       "modified_files": [
-        ".decapod/config.toml",
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTENT.md",
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/SECURITY.md",
-        ".decapod/managed/specs/VALIDATION.md",
-        "docs/agent/state-model.md",
-        "src/decapod/core/validation_runtime/snapshot.rs",
-        "src/decapod/core/validation_runtime/snapshot/source_import.rs",
-        "src/decapod/plugins/container.rs",
-        "tests/unit/plugins/container_tests.rs"
+        "src/decapod/core/atomic.rs",
+        "src/decapod/core/events.rs",
+        "src/decapod/core/governance_document.rs",
+        "tests/cli_contract_enforcement.rs"
       ],
       "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "Refine plan and declare falsifiable checks",
+        "full-validation",
+        "repair-or-publish"
       ],
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M4Z26WCS2D70CPPSK517D6QE",
+      "run_id": "branch_01M4ZA6GXNKRAA5A869N1VR4Z2",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m4z26b5cgh0y10",
+      "task_id": "code_01m4za5wkgtvc7m2",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Legacy event history is incomplete and cannot prove full reconstruction; establish explicit current-state migration baseline without synthesizing historical custody."
+      ]
     }
   },
   "legacy_digests": {

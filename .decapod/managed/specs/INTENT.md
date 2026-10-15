@@ -87,6 +87,14 @@ Checkpoint creation must preserve that history at the mutation boundary. A reuse
 identifier cannot replace earlier evidence with revised work. Identical retries
 remain safe; changed work gets a new checkpoint and independent validation.
 
+Interrupted execution must distinguish recoverable state from current permission
+to continue. A journal can restore the exact bytes and custody that it recorded;
+it cannot turn missing history into observed history, or refresh old proof merely
+by replaying it. Checkpoints of pre-journal state are explicitly migration
+baselines. Resume compares current source, intent, plan, and applicable authority
+with the recorded binding and fails closed on drift. This continuity is an
+on-demand kernel operation, not a scheduler or background retry service.
+
 ### Evidence and accepted work
 
 Agents define proof expectations, run the required checks, preserve results,
@@ -184,7 +192,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `92b5bb3991acc9bc81c28f8578d9abaf4ba3b122fd6468d1f2ab57f70d02389d`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (185 files), `tests/` (190 files)
+- Repository signal fingerprint: `39c48aa282aa7eeca02e6e6ce39b61abb879534e4a64b409762381380ed5cbb4`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (188 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

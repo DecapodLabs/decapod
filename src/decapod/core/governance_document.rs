@@ -14,6 +14,7 @@ use std::time::{Duration, Instant};
 
 pub const GOVERNANCE_PATH: &str = ".decapod/governance.json";
 pub const SCHEMA_VERSION: &str = "1.0.0";
+const MAX_GOVERNANCE_BYTES: usize = 16 * 1024 * 1024;
 const SECTIONS: &[&str] = &["plan", "trajectory", "validation", "jev"];
 const LEGACY: &[(&str, &str)] = &[
     ("plan", ".decapod/governance/plan.json"),
@@ -150,12 +151,47 @@ fn parse(bytes: &[u8]) -> Result<GovernanceDocument, DecapodError> {
     Ok(document)
 }
 
+/// Keep governance parsing bounded before any execution checkpoint is captured.
+/// Unix reads use the shared pinned-root opener, including ancestor protection.
+fn read_governance_bytes(root: &Path, path: &Path) -> Result<Vec<u8>, DecapodError> {
+    use std::io::Read;
+    #[cfg(unix)]
+    let mut file =
+        crate::core::validation_epoch::input::BoundedEpochInput::new(root)?.open_regular(path)?;
+    #[cfg(not(unix))]
+    let mut file = {
+        let _ = root;
+        if !fs::symlink_metadata(path)?.file_type().is_file() {
+            return Err(invalid(
+                "GOVERNANCE_INPUT_UNSUPPORTED: expected a regular file",
+            ));
+        }
+        fs::File::open(path)?
+    };
+    let deadline = Instant::now() + Duration::from_secs(30);
+    let mut bytes = Vec::new();
+    let mut chunk = [0u8; 65536];
+    loop {
+        if Instant::now() >= deadline {
+            return Err(invalid("GOVERNANCE_INPUT_LIMIT: read deadline exceeded"));
+        }
+        let count = file.read(&mut chunk)?;
+        if count == 0 {
+            return Ok(bytes);
+        }
+        if bytes.len() + count > MAX_GOVERNANCE_BYTES {
+            return Err(invalid("GOVERNANCE_INPUT_LIMIT: document exceeds 16 MiB"));
+        }
+        bytes.extend_from_slice(&chunk[..count]);
+    }
+}
+
 pub fn load(root: &Path) -> Result<Option<GovernanceDocument>, DecapodError> {
     let path = root.join(GOVERNANCE_PATH);
     if !path.exists() {
         return import_legacy(root);
     }
-    let document = parse(&fs::read(path).map_err(DecapodError::IoError)?)?;
+    let document = parse(&read_governance_bytes(root, &path)?)?;
     check_legacy_conflicts(root, &document)?;
     Ok(Some(document))
 }
@@ -216,9 +252,7 @@ pub(crate) fn diagnostic_section_path(root: &Path, section: &str) -> &'static st
 fn check_legacy_conflicts(root: &Path, document: &GovernanceDocument) -> Result<(), DecapodError> {
     for (path, expected) in &document.legacy_digests {
         let file = safe_legacy_file(root, path)?;
-        if file.exists()
-            && bytes_digest(&fs::read(&file).map_err(DecapodError::IoError)?) != *expected
-        {
+        if file.exists() && bytes_digest(&read_governance_bytes(root, &file)?) != *expected {
             return Err(invalid(format!(
                 "GOVERNANCE_AUTHORITY_CONFLICT: {path} changed; no canonical mutation permitted"
             )));
@@ -259,7 +293,7 @@ fn import_legacy(root: &Path) -> Result<Option<GovernanceDocument>, DecapodError
         if !file.exists() {
             continue;
         }
-        let bytes = fs::read(file).map_err(DecapodError::IoError)?;
+        let bytes = read_governance_bytes(root, &file)?;
         let value: Value = serde_json::from_slice(&bytes)
             .map_err(|e| invalid(format!("Invalid legacy {path}: {e}")))?;
         validate_domain(section, &value)?;
@@ -283,7 +317,7 @@ fn import_legacy(root: &Path) -> Result<Option<GovernanceDocument>, DecapodError
                 .map_err(|e| invalid(e.to_string()))?
                 .to_string_lossy();
             safe_legacy_file(root, &relative)?;
-            let bytes = fs::read(&path).map_err(DecapodError::IoError)?;
+            let bytes = read_governance_bytes(root, &path)?;
             let value: Value =
                 serde_json::from_slice(&bytes).map_err(|e| invalid(e.to_string()))?;
             if value["schema_version"] != "recursive-improvement-pass.v1" {
@@ -807,15 +841,25 @@ fn save(root: &Path, document: &GovernanceDocument) -> Result<(), DecapodError> 
     crate::core::workunit::validate_legacy_workunits(root)?;
     let mut bytes = serde_json::to_vec_pretty(document).map_err(|e| invalid(e.to_string()))?;
     bytes.push(b'\n');
+    if bytes.len() > MAX_GOVERNANCE_BYTES {
+        return Err(invalid(
+            "GOVERNANCE_INPUT_LIMIT: publication would exceed 16 MiB",
+        ));
+    }
     let canonical = root.join(GOVERNANCE_PATH);
-    if fs::read(&canonical).ok().as_deref() != Some(bytes.as_slice()) {
+    let existing = match read_governance_bytes(root, &canonical) {
+        Ok(bytes) => Some(bytes),
+        Err(DecapodError::IoError(error)) if error.kind() == std::io::ErrorKind::NotFound => None,
+        Err(error) => return Err(error),
+    };
+    if existing.as_deref() != Some(bytes.as_slice()) {
         crate::core::atomic::write_atomic(&canonical, &bytes).map_err(DecapodError::IoError)?;
     }
     // Write first. Interrupted cleanup is recoverable using the recorded input digests.
     for (path, expected) in &document.legacy_digests {
         let file = safe_legacy_file(root, path)?;
         if file.exists() {
-            if bytes_digest(&fs::read(&file).map_err(DecapodError::IoError)?) != *expected {
+            if bytes_digest(&read_governance_bytes(root, &file)?) != *expected {
                 return Err(invalid(
                     "Legacy file changed during migration; canonical document preserved, cleanup stopped",
                 ));

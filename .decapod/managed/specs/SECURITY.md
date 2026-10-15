@@ -20,6 +20,29 @@ The document makes no response-time, bounty or supported-version promise. Its
 credential guidance follows the owner's lifecycle and rotation policy, including
 revocation of temporary access and response to exposure.
 
+## Recovery cannot grant authority
+
+Runtime checkpoint payloads preserve domain state and references, never session
+passwords, environment dumps, credential values or provider tokens. Immutable
+operation IDs, predecessor digests and generations prevent replay from silently
+choosing a different successor. A valid content hash proves identity, not an
+approval or the completeness of missing history.
+
+A workunit's projection can be repaired without claiming its evidence is current.
+Execution resume must recheck the accepted intent, material, plan and applicable
+policy/approval boundary; revocation and expiry cannot be undone by restoring an
+older checkpoint. Task proof bytes retain their original task-revision binding.
+A contradictory live projection is preserved for explicit recovery rather than
+overwritten by the journal's last timestamp. Git remains the authority for
+accepted authored governance, and full validation still gates publication.
+
+Execution capture and proof hashing bound file counts, bytes and elapsed work.
+On Unix the shared reader pins the repository root and opens path components
+without following directory symlinks, rejecting special files before reading.
+Bounded regular-file symlinks must resolve within that root. Governance documents
+are capped at 16 MiB before parsing. Unsupported execution-capture platforms
+fail closed; atomic visibility alone does not imply durable continuation.
+
 ## Trust-Boundary Inventory
 
 Agents evaluate each incoming prompt with the side-effect-free `decapod eval`
@@ -280,8 +303,8 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `92b5bb3991acc9bc81c28f8578d9abaf4ba3b122fd6468d1f2ab57f70d02389d`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (185 files), `tests/` (190 files)
+- Repository signal fingerprint: `39c48aa282aa7eeca02e6e6ce39b61abb879534e4a64b409762381380ed5cbb4`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (188 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

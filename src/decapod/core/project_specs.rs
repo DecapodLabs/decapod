@@ -467,6 +467,40 @@ fn repo_signal_requires_content_hash(rel_path: &str) -> bool {
         || rel_path.ends_with(".sql")
 }
 
+fn significant_repo_path(rel_str: &str, file_name: &str) -> bool {
+    let top_level_signal = matches!(
+        file_name,
+        "Cargo.toml"
+            | "Cargo.lock"
+            | "package.json"
+            | "package-lock.json"
+            | "pyproject.toml"
+            | "requirements.txt"
+            | "go.mod"
+            | "go.sum"
+            | "Dockerfile"
+            | "docker-compose.yml"
+            | "docker-compose.yaml"
+            | "compose.yml"
+            | "compose.yaml"
+            | "README.md"
+            | "Makefile"
+    );
+    let path_signal = rel_str.starts_with(".github/workflows/")
+        || rel_str.starts_with("src/")
+        || rel_str.starts_with("app/")
+        || rel_str.starts_with("api/")
+        || rel_str.starts_with("backend/")
+        || rel_str.starts_with("frontend/")
+        || rel_str.starts_with("web/")
+        || rel_str.starts_with("services/")
+        || rel_str.starts_with("infra/")
+        || rel_str.starts_with("deploy/")
+        || rel_str.starts_with("k8s/")
+        || rel_str.ends_with(".sql");
+    top_level_signal || path_signal || is_implementation_path(rel_str)
+}
+
 fn collect_significant_repo_paths(
     root: &Path,
     dir: &Path,
@@ -499,37 +533,7 @@ fn collect_significant_repo_paths(
         };
         let rel_str = rel.to_string_lossy();
         let file_name = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
-        let top_level_signal = matches!(
-            file_name,
-            "Cargo.toml"
-                | "Cargo.lock"
-                | "package.json"
-                | "package-lock.json"
-                | "pyproject.toml"
-                | "requirements.txt"
-                | "go.mod"
-                | "go.sum"
-                | "Dockerfile"
-                | "docker-compose.yml"
-                | "docker-compose.yaml"
-                | "compose.yml"
-                | "compose.yaml"
-                | "README.md"
-                | "Makefile"
-        );
-        let path_signal = rel_str.starts_with(".github/workflows/")
-            || rel_str.starts_with("src/")
-            || rel_str.starts_with("app/")
-            || rel_str.starts_with("api/")
-            || rel_str.starts_with("backend/")
-            || rel_str.starts_with("frontend/")
-            || rel_str.starts_with("web/")
-            || rel_str.starts_with("services/")
-            || rel_str.starts_with("infra/")
-            || rel_str.starts_with("deploy/")
-            || rel_str.starts_with("k8s/")
-            || rel_str.ends_with(".sql");
-        if top_level_signal || path_signal || is_implementation_path(&rel_str) {
+        if significant_repo_path(&rel_str, file_name) {
             out.push(path);
         }
     }
@@ -539,6 +543,14 @@ fn collect_significant_repo_paths(
 pub fn repo_signal_fingerprint(project_root: &Path) -> Result<String, error::DecapodError> {
     let mut files = Vec::new();
     collect_significant_repo_paths(project_root, project_root, &mut files)?;
+    hash_repo_signal(project_root, files, &mut |path| Ok(fs::read(path)?))
+}
+
+fn hash_repo_signal(
+    project_root: &Path,
+    files: Vec<PathBuf>,
+    read: &mut dyn FnMut(&Path) -> Result<Vec<u8>, error::DecapodError>,
+) -> Result<String, error::DecapodError> {
     let mut files = files
         .into_iter()
         .filter_map(|path| {
@@ -557,7 +569,7 @@ pub fn repo_signal_fingerprint(project_root: &Path) -> Result<String, error::Dec
         hasher.update(rel.as_bytes());
         hasher.update(b"\0");
         if repo_signal_requires_content_hash(&rel) {
-            let content = fs::read(&path).map_err(error::DecapodError::IoError)?;
+            let content = read(&path)?;
             let content_hash = hash_text(&String::from_utf8_lossy(&content));
             hasher.update(content_hash.as_bytes());
         } else {
@@ -566,6 +578,86 @@ pub fn repo_signal_fingerprint(project_root: &Path) -> Result<String, error::Dec
         hasher.update(b"\n");
     }
     Ok(format!("{:x}", hasher.finalize()))
+}
+
+/// I/O owner for bounded epoch capture. The fingerprint algorithm and material
+/// selection stay here; callers only supply bounded reads and cancellation.
+pub(crate) trait RepoSignalIo {
+    fn checkpoint(&mut self) -> Result<(), error::DecapodError>;
+    fn read(&mut self, path: &Path) -> Result<Vec<u8>, error::DecapodError>;
+    fn directory(&mut self, path: &Path) -> Result<(fs::File, fs::ReadDir), error::DecapodError>;
+    fn regular_file(&mut self, path: &Path) -> Result<bool, error::DecapodError>;
+}
+
+pub(crate) fn repo_signal_fingerprint_with_io(
+    root: &Path,
+    io: &mut dyn RepoSignalIo,
+) -> Result<String, error::DecapodError> {
+    fn walk(
+        root: &Path,
+        dir: &Path,
+        files: &mut Vec<PathBuf>,
+        io: &mut dyn RepoSignalIo,
+        depth: usize,
+        entries: &mut usize,
+    ) -> Result<(), error::DecapodError> {
+        io.checkpoint()?;
+        if depth > 64 {
+            return Err(error::DecapodError::ValidationError(
+                "EPOCH_INPUT_LIMIT: repository scan depth exceeded".into(),
+            ));
+        }
+        let (_directory_owner, entries_iter) = io.directory(dir)?;
+        for entry in entries_iter {
+            io.checkpoint()?;
+            *entries += 1;
+            if *entries > 100000 {
+                return Err(error::DecapodError::ValidationError(
+                    "EPOCH_INPUT_LIMIT: repository scan entry limit exceeded".into(),
+                ));
+            }
+            let entry = entry?;
+            let name = entry.file_name();
+            let path = dir.join(&name);
+            // Preserve the existing generated/runtime exclusions without
+            // traversing large ignored build outputs merely to reject them.
+            let kind = entry.file_type()?;
+            if (kind.is_dir() || kind.is_symlink())
+                && matches!(
+                    name.to_str(),
+                    Some(".git" | ".decapod" | "target" | "node_modules" | ".venv")
+                )
+            {
+                continue;
+            }
+            if (kind.is_symlink() && !io.regular_file(&path)?)
+                || (!kind.is_symlink() && !kind.is_dir() && !kind.is_file())
+            {
+                return Err(error::DecapodError::ValidationError("EPOCH_INPUT_UNSUPPORTED: source scan requires regular files and non-symlink directories".into()));
+            }
+            if kind.is_dir() {
+                walk(root, &path, files, io, depth + 1, entries)?;
+                continue;
+            }
+            let relative = path.strip_prefix(root).map_err(|_| {
+                error::DecapodError::ValidationError(
+                    "EPOCH_INPUT_UNSUPPORTED: path escaped repository".into(),
+                )
+            })?;
+            let relative = relative.to_str().ok_or_else(|| {
+                error::DecapodError::ValidationError(
+                    "EPOCH_INPUT_UNSUPPORTED: non-UTF-8 source path".into(),
+                )
+            })?;
+            if significant_repo_path(relative, name.to_str().unwrap_or_default()) {
+                files.push(path);
+            }
+        }
+        Ok(())
+    }
+    let mut files = Vec::new();
+    walk(root, root, &mut files, io, 0, &mut 0)?;
+    hash_repo_signal(root, files, &mut |path| io.read(path))
 }
 
 pub fn read_specs_manifest(

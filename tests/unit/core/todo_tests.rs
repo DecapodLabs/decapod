@@ -29,29 +29,20 @@ fn completion_dependency_gate_rechecks_proof_readiness() {
     let tmp = tempfile::tempdir().unwrap();
     let root = tmp.path().to_path_buf();
     super::initialize_todo_db(&root).unwrap();
+    // Seed legacy authority before journal genesis; this test's proof setup is
+    // intentionally historical. The later production edit must create a
+    // baseline/transition without blessing drift in an existing journal.
     let add = |title: &str, depends_on: &str| {
-        super::add_task(
-            &root,
-            &super::TodoCommand::Add {
-                title: title.to_string(),
-                description: String::new(),
-                priority: "medium".to_string(),
-                tags: "houseboat,dependency".to_string(),
-                owner: String::new(),
-                due: None,
-                r#ref: String::new(),
-                scope: String::new(),
-                dir: Some(root.to_string_lossy().to_string()),
-                depends_on: depends_on.to_string(),
-                blocks: String::new(),
-                parent: None,
-                one_shot: 0,
-            },
-        )
-        .unwrap()["id"]
-            .as_str()
-            .unwrap()
-            .to_string()
+        let id = format!("test_{}", title.replace(' ', "_").to_lowercase());
+        let conn = crate::core::db::Connection::open(super::todo_db_path(&root)).unwrap();
+        conn.execute(
+            "INSERT INTO tasks(id,hash,title,status,created_at,updated_at,dir_path,scope,depends_on,revision) VALUES(?1,?1,?2,'open','1Z','1Z',?3,'',?4,0)",
+            crate::core::db::params![id,title,root.to_string_lossy(),depends_on],
+        ).unwrap();
+        if !depends_on.is_empty() {
+            conn.execute("INSERT INTO task_dependencies(id,task_id,depends_on_task_id,created_at) VALUES(?1,?2,?3,'1Z')", crate::core::db::params![format!("edge:{id}"),id,depends_on]).unwrap();
+        }
+        id
     };
     let dependency_id = add("Completion dependency unique", "");
     let target_id = add("Completion target unique", &dependency_id);

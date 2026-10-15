@@ -7851,6 +7851,40 @@ fn run_workunit_command(
     let project_root = workspace_root;
 
     match workunit_cli.command {
+        WorkunitCommand::Checkpoint {
+            task_id,
+            operation_id,
+            expected_generation,
+        } => {
+            let report = core::workunit::checkpoint_workunit(
+                project_root,
+                &task_id,
+                &operation_id,
+                expected_generation,
+            )?;
+            println!("{}", serde_json::to_string_pretty(&report).unwrap());
+        }
+        WorkunitCommand::JournalStatus { task_id } => {
+            let report = core::workunit::workunit_journal_status(project_root, &task_id)?;
+            println!("{}", serde_json::to_string_pretty(&report).unwrap());
+        }
+        WorkunitCommand::Recover { task_id } => {
+            let report = core::workunit::recover_workunit(project_root, &task_id)?;
+            println!("{}", serde_json::to_string_pretty(&report).unwrap());
+        }
+        WorkunitCommand::Resume {
+            task_id,
+            operation_id,
+            expected_generation,
+        } => {
+            let report = core::workunit::resume_workunit(
+                project_root,
+                &task_id,
+                &operation_id,
+                expected_generation,
+            )?;
+            println!("{}", serde_json::to_string_pretty(&report).unwrap());
+        }
         WorkunitCommand::Init {
             task_id,
             intent_ref,
@@ -7933,6 +7967,27 @@ fn run_trajectory_command(
     workspace_root: &Path,
 ) -> Result<(), error::DecapodError> {
     match trajectory_cli.command {
+        TrajectoryCommand::Checkpoint {
+            run_id,
+            checkpoint_id,
+            approval_ids,
+        } => {
+            let checkpoint = core::trajectory::checkpoint_execution(
+                workspace_root,
+                &run_id,
+                &checkpoint_id,
+                &approval_ids,
+            )?;
+            println!("{}", serde_json::to_string_pretty(&checkpoint).unwrap());
+        }
+        TrajectoryCommand::VerifyResume {
+            run_id,
+            checkpoint_id,
+        } => {
+            let checkpoint =
+                core::trajectory::verify_execution_resume(workspace_root, &run_id, &checkpoint_id)?;
+            println!("{}", serde_json::to_string_pretty(&checkpoint).unwrap());
+        }
         TrajectoryCommand::Init {
             run_id,
             task_id,

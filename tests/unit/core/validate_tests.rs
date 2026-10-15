@@ -916,6 +916,7 @@ fn receipt_is_reusable_after_governance_only_commit() {
         },
         artifact_hash: "sha256:traj".to_string(),
         custody: crate::core::custody::CustodyState::default(),
+        execution_checkpoints: Vec::new(),
     };
     let receipt = super::ValidationReceipt {
         schema_version: "1.0.0".to_string(),

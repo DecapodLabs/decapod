@@ -948,15 +948,23 @@ fn epoch_pruning_preserves_all_live_consumers_and_rejects_dangling_references() 
 fn workunit_initialization_cannot_overwrite_existing_legacy_proof() {
     use crate::core::workunit::{self, WorkUnitStatus};
     let root = TempDir::new().unwrap();
-    let mut manifest = workunit::init_workunit(root.path(), "task_old", "intent:original").unwrap();
-    manifest.status = WorkUnitStatus::Verified;
-    workunit::write_workunit(root.path(), &manifest).unwrap();
-    let source = workunit::workunit_path(root.path(), "task_old").unwrap();
+    // This fixture intentionally models historical, pre-journal state. Current
+    // writers must not manufacture VERIFIED proof by overwriting a snapshot.
+    let manifest = workunit::WorkUnitManifest {
+        task_id: "task_old".into(),
+        intent_ref: "intent:original".into(),
+        spec_refs: vec![],
+        state_refs: vec![],
+        proof_plan: vec![],
+        proof_results: vec![],
+        validation_epoch: None,
+        status: WorkUnitStatus::Verified,
+    };
     let legacy = root
         .path()
         .join(".decapod/governance/workunits/task_old.json");
     fs::create_dir_all(legacy.parent().unwrap()).unwrap();
-    fs::rename(source, &legacy).unwrap();
+    fs::write(&legacy, serde_json::to_vec(&manifest).unwrap()).unwrap();
     assert!(
         workunit::init_workunit(root.path(), "task_old", "intent:replacement")
             .unwrap_err()
@@ -1989,4 +1997,42 @@ fn workbranch_host_governance_aliases_fail_closed_before_initialization_or_save(
             "master"
         );
     }
+}
+
+#[test]
+fn governance_input_rejects_oversized_document_before_parsing() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path().join("large.json");
+    std::fs::write(&path, vec![b' '; 16 * 1024 * 1024 + 1]).unwrap();
+    let error = read_governance_bytes(temp.path(), &path).unwrap_err();
+    assert!(error.to_string().contains("GOVERNANCE_INPUT_LIMIT"));
+}
+
+#[cfg(unix)]
+#[test]
+fn governance_input_refuses_fifo_without_waiting_for_a_writer() {
+    use std::os::unix::ffi::OsStrExt;
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path().join("fifo.json");
+    let name = std::ffi::CString::new(path.as_os_str().as_bytes()).unwrap();
+    assert_eq!(unsafe { libc::mkfifo(name.as_ptr(), 0o600) }, 0);
+    assert!(read_governance_bytes(temp.path(), &path).is_err());
+}
+
+#[test]
+fn governance_save_rejects_unreadable_size_without_replacing_prior_document() {
+    let root = repo();
+    let mut document = GovernanceDocument::default();
+    save(root.path(), &document).unwrap();
+    let original = fs::read(root.path().join(GOVERNANCE_PATH)).unwrap();
+    document
+        .baseline
+        .policy
+        .insert("oversized".into(), json!("x".repeat(MAX_GOVERNANCE_BYTES)));
+    let error = save(root.path(), &document).unwrap_err();
+    assert!(error.to_string().contains("publication would exceed"));
+    assert_eq!(
+        fs::read(root.path().join(GOVERNANCE_PATH)).unwrap(),
+        original
+    );
 }

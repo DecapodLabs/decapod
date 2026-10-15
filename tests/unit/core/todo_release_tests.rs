@@ -119,7 +119,8 @@ fn owner_release_clears_custody_once_and_preserves_generation() {
     assert_eq!(after["owners"], 0);
     assert_eq!(
         after["events"].as_i64(),
-        Some(before["events"].as_i64().unwrap() + 1)
+        Some(before["events"].as_i64().unwrap() + 2),
+        "release appends its domain event and one task-journal checkpoint"
     );
     assert_eq!(
         release_task_as_actor(temp.path(), &id, "release-owner").unwrap()["status"],
@@ -142,14 +143,33 @@ fn releasing_unclaimed_task_is_an_idempotent_noop() {
 #[test]
 fn release_preserves_terminal_status_and_invalidates_claim_cache() {
     for status in ["done", "archived"] {
-        let (temp, id) = fixture();
-        claim(temp.path(), &id);
+        let temp = tempfile::tempdir().unwrap();
+        initialize_todo_db(temp.path()).unwrap();
+        let id = "terminal-release-fixture".to_owned();
         let conn = Connection::open(todo_db_path(temp.path())).unwrap();
+        // Model an observed legacy terminal task before journal genesis rather
+        // than silently rewriting a projection whose history already exists.
         conn.execute(
-            "UPDATE tasks SET status = ?1 WHERE id = ?2",
+            "INSERT INTO tasks(id,hash,title,status,created_at,updated_at,dir_path,
+                scope,assigned_to,assigned_at,lease_expires_at,lease_generation,
+                lease_lifecycle,intent_anchor,revision)
+             VALUES(?2,'terminal-release','Terminal release fixture',?1,'1Z','2Z',
+                '.','root','release-owner','2Z','4102444800Z',1,'claimed',
+                'intent:release-regression',2)",
             crate::core::db::params![status, id],
         )
         .unwrap();
+        conn.execute(
+            "INSERT INTO task_owners(id,task_id,agent_id,claimed_at,claim_type)
+             VALUES('terminal-release-owner',?1,'release-owner','2Z','primary')",
+            [&id],
+        )
+        .unwrap();
+        drop(conn);
+        assert_eq!(
+            task_journal_checkpoint(temp.path()).unwrap()["status"],
+            "ok"
+        );
         cache_put_claim_status(
             &todo_db_path(temp.path()),
             &id,

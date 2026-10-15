@@ -22,6 +22,8 @@ use std::path::{Path, PathBuf};
 pub const BROKER: &str = "broker";
 /// Workspace invocation ownership receipts, separate from BrokerEvent audit payloads.
 pub const WORKSPACE_LIFECYCLE: &str = "workspace_lifecycle";
+/// Versioned workunit checkpoints; JSON manifests are recoverable projections.
+pub const WORKUNIT: &str = "workunit";
 pub const TODO: &str = "todo";
 pub const FEDERATION: &str = "federation";
 pub const EXTERNAL_ACTIONS: &str = "external_actions";
@@ -38,6 +40,7 @@ pub const ASSURANCE: &str = "assurance";
 pub const STREAMS: &[&str] = &[
     BROKER,
     WORKSPACE_LIFECYCLE,
+    WORKUNIT,
     TODO,
     FEDERATION,
     EXTERNAL_ACTIONS,
@@ -60,6 +63,9 @@ pub const EVENTS_TABLE: &str = "events";
 /// Large audit streams therefore need keyset pagination at this boundary;
 /// otherwise a validation query for `usize::MAX` becomes one unbounded read.
 const QUERY_PAGE_SIZE: usize = 1024;
+const MAX_SUBJECT_RECORDS: usize = 100_000;
+const MAX_SUBJECT_BYTES: u64 = 32 * 1024 * 1024;
+const MAX_SUBJECT_RECORD_BYTES: u64 = 8 * 1024 * 1024;
 
 /// Historical physical table names used only by migration into `events`.
 const LEGACY_STREAM_TABLES: &[(&str, &str)] = &[
@@ -110,7 +116,7 @@ pub fn is_known_stream(stream: &str) -> bool {
 
 fn subject_for_stream(stream: &str, event: &Value) -> (Option<String>, Option<String>) {
     match stream {
-        TODO => {
+        TODO | WORKUNIT => {
             let id = event
                 .get("task_id")
                 .or_else(|| event.pointer("/payload/task_id"))
@@ -296,6 +302,156 @@ pub fn query_all_on_conn(
     Ok(events)
 }
 
+/// Read one subject's complete bounded journal in ascending causal storage order.
+/// Unlike `query_all_on_conn`, this does not return newest-first results. Bounds
+/// are checked before materializing payloads; overflow is an error, not a partial
+/// history that a replay caller could mistake for a complete chain.
+pub fn query_subject_on_conn(
+    conn: &Connection,
+    stream: &str,
+    subject_kind: &str,
+    subject_id: &str,
+    limit: usize,
+) -> Result<Vec<StoredEvent>, error::DecapodError> {
+    let invalid = |message: &str| {
+        error::DecapodError::ValidationError(format!("EVENT_SUBJECT_JOURNAL: {message}"))
+    };
+    if !is_known_stream(stream)
+        || subject_kind.is_empty()
+        || subject_id.is_empty()
+        || limit == 0
+        || limit > MAX_SUBJECT_RECORDS
+    {
+        return Err(invalid("invalid subject or record bound"));
+    }
+    if !conn.has_table(EVENTS_TABLE)? {
+        return Ok(Vec::new());
+    }
+    let (count, bytes, largest): (u64, u64, u64) = conn.query_row(
+        "SELECT COUNT(*), COALESCE(SUM(length(CAST(payload AS BLOB))), 0),
+                COALESCE(MAX(length(CAST(payload AS BLOB))), 0)
+         FROM events WHERE stream = ?1 AND subject_kind = ?2 AND subject_id = ?3",
+        params![stream, subject_kind, subject_id],
+        |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+    )?;
+    if count > limit as u64 || bytes > MAX_SUBJECT_BYTES || largest > MAX_SUBJECT_RECORD_BYTES {
+        return Err(invalid(
+            "journal exceeds record or byte bound; preserve it for explicit bounded recovery",
+        ));
+    }
+    let mut statement = conn.prepare(
+        "SELECT event_id, ts, seq, event_type, payload, actor FROM events
+         WHERE stream = ?1 AND subject_kind = ?2 AND subject_id = ?3
+         ORDER BY seq ASC, event_id ASC LIMIT ?4",
+    )?;
+    let rows = statement.query_map(
+        params![stream, subject_kind, subject_id, limit + 1],
+        |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, u64>(2)?,
+                row.get::<_, String>(3)?,
+                row.get::<_, String>(4)?,
+                row.get::<_, String>(5)?,
+            ))
+        },
+    )?;
+    let mut output = Vec::new();
+    let mut actual_bytes = 0u64;
+    for row in rows {
+        let (event_id, ts, seq, event_type, raw, actor) = row?;
+        actual_bytes = actual_bytes.saturating_add(raw.len() as u64);
+        if output.len() >= limit
+            || actual_bytes > MAX_SUBJECT_BYTES
+            || raw.len() as u64 > MAX_SUBJECT_RECORD_BYTES
+        {
+            return Err(invalid("journal changed or exceeded its verified bound"));
+        }
+        let payload = serde_json::from_str(&raw)
+            .map_err(|_| invalid("malformed canonical subject payload"))?;
+        output.push(StoredEvent {
+            stream: stream.to_string(),
+            event_id,
+            ts,
+            seq,
+            event_type,
+            payload,
+            actor,
+        });
+    }
+    if output.len() as u64 != count || actual_bytes != bytes {
+        return Err(invalid(
+            "journal changed during bounded capture; retry under its owner transaction",
+        ));
+    }
+    Ok(output)
+}
+
+/// Check prospective subject-journal size inside the same transaction as append.
+/// A successful append must not render the subject unreadable by its bounded
+/// recovery reader. Identical existing records consume no additional capacity.
+pub fn check_subject_append_capacity(
+    conn: &Connection,
+    stream: &str,
+    subject_kind: &str,
+    subject_id: &str,
+    event: &Value,
+    limit: usize,
+) -> Result<(), error::DecapodError> {
+    let invalid = |message: &str| {
+        error::DecapodError::ValidationError(format!("EVENT_SUBJECT_JOURNAL: {message}"))
+    };
+    if conn.is_autocommit() {
+        return Err(invalid(
+            "capacity admission requires the append transaction",
+        ));
+    }
+    if !is_known_stream(stream)
+        || limit == 0
+        || limit > MAX_SUBJECT_RECORDS
+        || subject_for_stream(stream, event)
+            != (Some(subject_kind.to_string()), Some(subject_id.to_string()))
+        || subject_kind.is_empty()
+        || subject_id.is_empty()
+    {
+        return Err(invalid("invalid append subject or record bound"));
+    }
+    let id = event_id(event);
+    if let Some(existing) = load_canonical_event_shape(conn, stream, &id)? {
+        if canonical_event_matches(stream, &existing, event)? {
+            return Ok(());
+        }
+        return Err(invalid("conflicting existing event identity"));
+    }
+    let event_type = event
+        .get("event_type")
+        .or_else(|| event.get("op"))
+        .and_then(Value::as_str)
+        .unwrap_or("");
+    let payload = domain_payload_for_storage(stream, event, &id, event_type)?;
+    let added_bytes = serde_json::to_vec(&payload)
+        .map_err(|_| invalid("unserializable event payload"))?
+        .len() as u64;
+    let (count, bytes, largest): (u64, u64, u64) = conn.query_row(
+        "SELECT COUNT(*), COALESCE(SUM(length(CAST(payload AS BLOB))), 0),
+                COALESCE(MAX(length(CAST(payload AS BLOB))), 0)
+         FROM events WHERE stream = ?1 AND subject_kind = ?2 AND subject_id = ?3",
+        params![stream, subject_kind, subject_id],
+        |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+    )?;
+    if count >= limit as u64
+        || bytes.saturating_add(added_bytes) > MAX_SUBJECT_BYTES
+        || largest > MAX_SUBJECT_RECORD_BYTES
+        || added_bytes > MAX_SUBJECT_RECORD_BYTES
+    {
+        return Err(invalid(
+            "append would exceed journal recovery bounds; no record was added",
+        ));
+    }
+    Ok(())
+}
+
 pub fn latest(root: &Path, stream: &str) -> Result<Option<StoredEvent>, error::DecapodError> {
     Ok(query(root, stream, 1)?.into_iter().next())
 }
@@ -373,6 +529,18 @@ fn migrate_legacy_stream_tables_into_events(conn: &Connection) -> Result<(), err
 
     let result = (|| {
         let sequence_indexes = stream_sequence_unique_indexes(conn)?;
+        // Modern checkpoints bind canonical sequence watermarks. Legacy imports
+        // and renumbering are migration operations, not safe journal repair.
+        let journal_authority_exists: bool = conn.query_row(
+            "SELECT EXISTS(SELECT 1 FROM events WHERE (stream='todo' AND event_type='task.journal.checkpoint') OR stream='workunit')",
+            [],
+            |row| row.get(0),
+        )?;
+        if journal_authority_exists && legacy_tables_present {
+            return Err(error::DecapodError::ValidationError(
+                "JOURNAL_MIGRATION_REQUIRED: legacy event import would rewrite checkpoint sequence authority".into(),
+            ));
+        }
         if legacy_tables_present {
             // Older code used a different index name. Drop every structural
             // stream/sequence unique index before importing and renumbering;
@@ -458,7 +626,11 @@ fn migrate_legacy_stream_tables_into_events(conn: &Connection) -> Result<(), err
             .iter()
             .any(|name| name == "idx_events_stream_seq_unique");
         if sequence_indexes.is_empty() {
-            normalize_stream_sequences(conn)?;
+            if !journal_authority_exists {
+                normalize_stream_sequences(conn)?;
+            }
+            // Reinstalling a missing index is safe only if existing sequence
+            // identities remain untouched and already satisfy uniqueness.
             ensure_stream_sequences_are_unique(conn)?;
         }
         if !canonical_index_exists || legacy_tables_present {

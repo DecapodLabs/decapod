@@ -103,6 +103,25 @@ Append-only operational evidence.
 - **Migration:** `events.retire_legacy_jsonl.v001` and related migrations import residual logs, unwrap double-wrapped federation payloads, and migrate assurance attestations into `events` (stream=`assurance`). Recreated legacy SQLite stores are copied forward and removed.
 - **Federation payload shape:** Native federation writers and imports store only the inner domain `payload` object in `events.payload`. Older double-wrapped rows are unwrapped automatically. Operators must not hand-edit the SQLite store; verify recovery with `decapod validate --projections` and a green `federation.rebuild_determinism` gate.
 
+### Runtime reconstruction
+
+The task journal records complete current-schema task projections, including
+lease/revision and proof bindings, at the existing task transaction boundary.
+Incomplete legacy histories are not replayed as if they were complete. An
+explicit migration baseline identifies where reconstructable modern history
+begins; it never upgrades old evidence.
+
+Workunit snapshots live in the canonical `workunit` event stream. The ignored
+JSON manifest is a projection of its journal head. Generation and predecessor
+checks reject stale or contradictory updates, and operation IDs distinguish
+identical retries from conflicting reuse. A committed journal record can survive
+an interrupted manifest rename; explicit recovery publishes the same bytes.
+
+Recovery restores recorded state. Resume additionally checks current material,
+intent, plan and applicable authority against the checkpoint. Restoring old
+bytes does not renew a lease, restore revoked approval, or make stale proof pass.
+An integrity or custody conflict remains visible until explicitly resolved.
+
 ## 6. Knowledge (Memory)
 The persistent, shared understanding of the project.
 - **Class:** Advisory (Aptitude) | Procedural (Federated Knowledge).
