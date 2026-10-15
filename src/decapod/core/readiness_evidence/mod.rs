@@ -12,6 +12,8 @@
 //! exact accepted-base full-suite evidence under the same policy, a real immutable
 //! version-only classification, and a fresh candidate build. A skipped wrapper or
 //! successful validator job is never evidence that its underlying checks ran.
+//! A separate CI-attested mode trusts an independently accepted complete provider
+//! job contract; it makes no local output or downloaded-artifact measurement claim.
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -19,6 +21,12 @@ use std::collections::{BTreeMap, BTreeSet};
 
 pub const SCHEMA_VERSION: &str = "1.1.0";
 pub const GITHUB_EXECUTION_SCHEMA_VERSION: &str = "1.0.0";
+
+mod buildkite_ci;
+pub use buildkite_ci::{
+    BUILDKITE_CI_SCHEMA_VERSION, BuildkiteCiAttestation, BuildkiteCiContract,
+    BuildkiteJobObservation, BuildkiteRequiredJob, buildkite_ci_material_digest,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
@@ -34,7 +42,9 @@ pub struct MaterialIdentity {
     pub tree_digest: String,
     pub configuration_digest: String,
     pub workflow_digest: String,
-    /// Resolved tools/images/actions for every execution profile, not version labels alone.
+    /// Aggregate execution bindings: measured tools/images/actions for measured
+    /// execution, or explicitly declared accepted executor policy for CiAttested.
+    /// CI policy identities are not claims to have measured remote tool bytes.
     pub toolchain_digest: String,
     /// Candidate package/build inputs; the actual built artifact is recorded below.
     pub candidate_digest: String,
@@ -161,6 +171,7 @@ pub struct ExpectedCheck {
     pub kind: CheckKind,
     pub definition_digest: String,
     pub invocation_digest: String,
+    /// Measured tool closure, or the accepted executor policy for CiAttested.
     pub toolchain_digest: String,
     pub executor: Provider,
     pub dependencies: Vec<Dependency>,
@@ -288,6 +299,10 @@ pub struct GithubExecutionAttestation {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum Observation {
+    /// Accepted provider execution, without fabricated process/artifact measurements.
+    CiAttested {
+        attestation: Box<BuildkiteCiAttestation>,
+    },
     /// Provider execution attestation; intentionally has no invented exit code.
     GithubActions {
         attestation: Box<GithubExecutionAttestation>,
@@ -649,6 +664,11 @@ pub fn verify(
         }
         match (&check.requirement, &result.observation) {
             (_, Observation::Reused { .. }) => failures.push(Failure::ReuseUnsupported(key)),
+            (Requirement::Execute, Observation::CiAttested { attestation }) => {
+                if !buildkite_ci::valid_attestation(check, current, attestation) {
+                    failures.push(Failure::InvalidProviderAttestation(key));
+                }
+            }
             (Requirement::Execute, Observation::GithubActions { attestation }) => {
                 if !valid_github_attestation(check, current, attestation) {
                     failures.push(Failure::InvalidProviderAttestation(key));

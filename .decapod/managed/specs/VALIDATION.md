@@ -499,8 +499,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7efe54997513078b81090151e7204411beadfd92783550b1d170955d5159157a`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (188 files), `tests/` (193 files)
+- Repository signal fingerprint: `0bcdfff7afd43a06dc9fe4414ef53d596cd32e3d404f7cf0cea1e04df179a9b6`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `bazel-bin/` (7 files), `bazel-laya-readiness-todo-01m50n-agent-laya-readiness-cicd_01m50ns7bafppa7k/` (8100 files), `bazel-out/` (11 files), `docs/` (1 files), `src/` (193 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

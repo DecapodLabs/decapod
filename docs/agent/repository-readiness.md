@@ -61,3 +61,33 @@ An authored `.decapod/EXTERNAL_ACTIONS.json` remains authoritative: an explicit
 `proof_exec` or `repository_proof_exec` deny blocks the command, malformed policy
 fails closed, and a present policy must explicitly allow proof execution. The
 kernel never rewrites that policy to make a check pass.
+
+## Optional CI-attested validation policy
+
+`proof.ci_attested` selects provider-attested validation instead of execution
+archive collection. It is absent by default. Its schema is
+`decapod.ci-attested-validation.v1`. The exact policy and Buildkite enablement
+must already be accepted on the target: a candidate cannot enable or change its
+own acceptance policy. Each workflow lists all required native step keys,
+explicit auxiliary step keys, and mappings from the independently compiled
+required check catalog to native steps. Missing, unknown, duplicate, retried,
+skipped, soft-failed or unsuccessful jobs fail closed.
+
+The adapter verifies provider-owned HTTPS metadata for the configured repository,
+pipeline, workflow, branch and exact commit. All declared jobs must terminate
+successfully. The resulting observation binds source, accepted base, intent,
+configuration, required checks and original metadata digests. This explicitly
+trusts the configured CI executor to implement the declared checks. It does not
+claim measured remote binary, toolchain, log or output hashes. A successful
+CI-local validation job alone does not satisfy the complete required profile.
+
+This optional controller capability requires a separately reviewed, accepted job
+mapping before activation. This bootstrap change does not enable it. The PR's
+direct test results are disclosed as a one-time maintainer-approved bootstrap,
+not a successful full validation verdict from the previously released controller.
+
+Validation establishes whether the agent's work has converged on the user's
+declared intent and satisfies the conditions for integration. Its assurance is
+bounded by the declared requirements and checks. A subsequent readiness decision
+can evaluate that result; the agent publishes through the applicable gate and
+the human retains merge authority. This principle adds no unimplemented guarantee.

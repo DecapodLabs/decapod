@@ -31,6 +31,8 @@ use super::readiness_profile::source;
 
 #[derive(Debug, Clone, Deserialize, Default, PartialEq, Eq)]
 pub struct ProofConfiguration {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ci_attested: Option<CiAttestedPolicy>,
     #[serde(default)]
     pub validation_buildkite_preflights: bool,
     pub required_profile: Option<ProfileDeclaration>,
@@ -39,6 +41,7 @@ pub struct ProofConfiguration {
     #[serde(default)]
     pub repository_contract: Option<super::repository_profile::RepositoryContract>,
 }
+pub use snapshot::ci_attested::Policy as CiAttestedPolicy;
 /// Parse only the canonical tracked project field. No environment fallback,
 /// receipt-selected profile or auto-reconciliation is permitted.
 pub fn proof_configuration(bytes: &[u8]) -> io::Result<ProofConfiguration> {
@@ -535,6 +538,19 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
     )
     .map_err(invalid)?;
     let release = None;
+    if let Some(policy) = &configuration.ci_attested {
+        let accepted = proof_configuration(&git(
+            options,
+            budget,
+            &["show", &format!("{base}:{CONFIG}")],
+        )?)?;
+        snapshot::ci_attested::verify_policy_acceptance(
+            policy,
+            accepted.ci_attested.as_ref(),
+            configuration.validation_buildkite_preflights
+                && accepted.validation_buildkite_preflights,
+        )?;
+    }
     let repository_local = configuration
         .required_profile
         .as_ref()

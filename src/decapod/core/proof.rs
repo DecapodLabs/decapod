@@ -36,6 +36,8 @@ pub struct ProofDef {
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct ProjectProofConfig {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ci_attested: Option<crate::core::validation_runtime::CiAttestedPolicy>,
     /// Select Buildkite temporary-snapshot validation instead of native Decapod
     /// execution. Native and Buildkite backends preserve required real coverage;
     /// ordinary GitHub Actions PR runs are independent of this validation flow.
