@@ -358,6 +358,14 @@
         "tests/unit/core/task_journal_tests.rs",
         "tests/unit/core/workunit_journal_tests.rs"
       ]
+    },
+    {
+      "id": "houseboat-recovery-04",
+      "summary": "Repair measured workspace-prune fixtures without mutating journaled task authority; preserve all cleanup safety assertions",
+      "input_digest": "sha256:d88dd93eb8d999cbf1c3a7e13becdc07dd1e29115b565c3431c8050f2393de26",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/38712723063"
+      ]
     }
   ],
   "intents": {
@@ -396,24 +404,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed measured CI repairs: runtime workunit initialization now fails before journal mutation for missing policy; existing legitimate owner initialization used in tests; task expiry fixture precedes journal genesis, no corrupted-head rebaseline; generated runtime commands and immutable checkpoint guidance are owned by docs generator. Prior source/authority and recovery contracts retained.",
-          "reviewed_code_fingerprint": "b8ca15e57181192355ec5d120dfb01b92870254c2866f951a7ff99a590d652fb",
+          "reason": "Reviewed final test-only prune fixture repair: historical deterministic identities are seeded before journal genesis; all prune safety assertions and production contracts remain unchanged.",
+          "reviewed_code_fingerprint": "20cb0a82971ddc723a3d45c985bf1ce38591b45ac1481c29bbd1541386d08c64",
           "spec_material_hash": "e5b43ec32a4f63877e22f652d8d903ffcc6dac9dfee081f3ac9331a9d3f179d7"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed measured CI repairs: runtime workunit initialization now fails before journal mutation for missing policy; existing legitimate owner initialization used in tests; task expiry fixture precedes journal genesis, no corrupted-head rebaseline; generated runtime commands and immutable checkpoint guidance are owned by docs generator. Prior source/authority and recovery contracts retained.",
-          "reviewed_code_fingerprint": "b8ca15e57181192355ec5d120dfb01b92870254c2866f951a7ff99a590d652fb",
+          "reason": "Reviewed final test-only prune fixture repair: historical deterministic identities are seeded before journal genesis; all prune safety assertions and production contracts remain unchanged.",
+          "reviewed_code_fingerprint": "20cb0a82971ddc723a3d45c985bf1ce38591b45ac1481c29bbd1541386d08c64",
           "spec_material_hash": "bf5735d95e83446d4311a941b7d511871056d9a9c3f94c8e80635255ef9b4b02"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed measured CI repairs: runtime workunit initialization now fails before journal mutation for missing policy; existing legitimate owner initialization used in tests; task expiry fixture precedes journal genesis, no corrupted-head rebaseline; generated runtime commands and immutable checkpoint guidance are owned by docs generator. Prior source/authority and recovery contracts retained.",
-          "reviewed_code_fingerprint": "b8ca15e57181192355ec5d120dfb01b92870254c2866f951a7ff99a590d652fb",
+          "reason": "Reviewed final test-only prune fixture repair: historical deterministic identities are seeded before journal genesis; all prune safety assertions and production contracts remain unchanged.",
+          "reviewed_code_fingerprint": "20cb0a82971ddc723a3d45c985bf1ce38591b45ac1481c29bbd1541386d08c64",
           "spec_material_hash": "546e1354723c4d9853921f233ddbed7eb46c5da576aca356d9da8ed48dff1bb8"
         }
       ],
@@ -427,13 +435,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792056219Z"
+      "updated_at": "1792057834Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:c107131cbdadca4500c8690f0843e8922fb910ce6a97f8b442cebe8b2241fe06",
+      "artifact_hash": "sha256:df2e765b8c86b01e28a3e1d3bde3fcd861f40ebcbbd55caa2d4dccb75e7bb904",
       "checks": [
         {
           "name": "candidate-build",
@@ -457,7 +465,7 @@
         },
         {
           "name": "library-suite",
-          "status": "failed"
+          "status": "passed"
         },
         {
           "name": "source-review",
@@ -513,10 +521,17 @@
             "intent_id": "intent:change_01M4ZA6GX2N767VDY40HNH9C8H",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M4ZA6GXNKRAA5A869N1VR4Z2",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M4ZA6GX2N767VDY40HNH9C8H",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M4ZA6GXNKRAA5A869N1VR4Z2": {
@@ -618,6 +633,24 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "tests/workspace_prune_regression.rs",
+                  "Candidate f004eda3 GitHub run38712723063 library job116348069968:1341 passed,0 failed,3 ignored. Core job116348069777 failed four prune fixtures from post-genesis hash mutations; repaired historical seed fixtures and independently reviewed, not yet rerun. Buildkite1761 terminal failed; controller poll interruption produced no readiness verdict."
+                ],
+                "proof_refs": [
+                  "library-suite",
+                  "full-validation",
+                  "source-review"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -629,6 +662,7 @@
       "destination": "pull request",
       "evidence": [
         "Adversarial regressions authored for transaction/replay conflicts, stale proof, custody and approval drift, bounded reads, directory-sync uncertainty and real CLI recovery. No build or test executed yet; full decapod validate owns measured proof.",
+        "Candidate f004eda3 GitHub run38712723063 library job116348069968:1341 passed,0 failed,3 ignored. Core job116348069777 failed four prune fixtures from post-genesis hash mutations; repaired historical seed fixtures and independently reviewed, not yet rerun. Buildkite1761 terminal failed; controller poll interruption produced no readiness verdict.",
         "Candidate1351aff4 source CI setup built successfully under accepted executorfc71d3a8. Library job116341435178 measured1327passed13failed3ignored; event/policy/schema/scope/trigger fixture repairs preserve assertions. Plugin job116341435435 measured22passed2failed, repaired legacy-expiry setup and exact event counts. CLI recovery target passed. Lint and generated-documentation failures repaired at actual source owners; no local build/tests substituted.",
         "Full validation at 5cbdbee6 stopped before provider execution on stale reviewed source inventory. Independent complete 78-path review reproduced old and new digests: only own Cargo package version 0.114.2 to 0.114.3 changed; all workflow pins, carriers, helper definitions and adapter owners unchanged. Updated only the explicit declaration; no checks removed.",
         "Full validation attempt02 preserved transient public Buildkite1756 GET failure; no alternate authentication or reduced proof route used. Independent CI candidate binary provenance verified for supported docs regeneration only.",
@@ -649,7 +683,8 @@
         "src/decapod/core/atomic.rs",
         "src/decapod/core/events.rs",
         "src/decapod/core/governance_document.rs",
-        "tests/cli_contract_enforcement.rs"
+        "tests/cli_contract_enforcement.rs",
+        "tests/workspace_prune_regression.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks",
