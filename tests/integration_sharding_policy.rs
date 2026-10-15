@@ -65,6 +65,28 @@ fn original_changed_path_conditions_retain_every_target() {
 }
 
 #[test]
+fn completion_and_validation_changes_select_all_gatling_shards() {
+    for changed in [
+        "src/decapod/lib.rs",
+        "src/decapod/core/todo.rs",
+        "src/decapod/plugins/verify.rs",
+        "src/decapod/core/validation_runtime.rs",
+        "src/decapod/core/validation_runtime/snapshot/ci_attested.rs",
+        "tests/unit/plugins/verify_completion_tests.rs",
+    ] {
+        let selected = plan(&paths(&[changed]));
+        assert!(selected.gatling, "{changed}");
+        for index in 0..4 {
+            assert!(
+                selected.shards().contains(&format!("gatling-{index}")),
+                "{changed} omitted gatling-{index}"
+            );
+        }
+    }
+    assert!(!plan(&paths(&["docs/agent/repository-readiness.md"])).gatling);
+}
+
+#[test]
 fn runner_changes_cover_the_runner_and_workflow_retains_release_policies() {
     for changed in [
         "assets/tools/integration_shards.rs",

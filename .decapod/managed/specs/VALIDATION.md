@@ -16,6 +16,19 @@ agent performs validation and coordination.
 
 ## Runtime recovery proof obligations
 
+Validated task completion invokes full readiness validation before mutating the
+task. A bootstrap-only repository with no accepted readiness profile must reject
+`todo done --validated` and preserve the task's status and revision. Gatling
+exercises this negative CLI boundary; the verification unit suite separately
+checks successful prepared-proof capture, revision binding and atomic completion.
+Those unit tests inject the validator result and do not establish end-to-end
+successful CLI validation. The existing positive CLI MVP fixture remains ignored
+for its documented setup issue.
+
+Changes to task completion, verification and validation-runtime sources select
+all Gatling shards before merge through `assets/tools/integration_shards.rs`.
+Selector regressions keep this coverage independent of the master-only full run.
+
 The durability slice requires adversarial proof at real domain boundaries:
 transaction failure must roll back task state and journal together; duplicate
 identical operations are idempotent; conflicting IDs, predecessor gaps, corrupt
@@ -499,7 +512,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1d9cb65474dccf2738529f9e4b7ab82a2a25f574f52f4b8721d80927132679df`
+- Repository signal fingerprint: `c0da5ca063e76c295a7c47187429b883d1b44fdc544b0ff3a3b55719f89a9835`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (193 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

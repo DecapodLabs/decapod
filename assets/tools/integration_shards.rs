@@ -68,7 +68,18 @@ pub fn plan(paths: &[String]) -> Plan {
     };
     let has = |names: &[&str]| paths.iter().any(|path| names.contains(&path.as_str()));
     let mut result = Plan {
-        gatling: has(&["tests/gatling.rs"]),
+        // Completion and validation changes must exercise the public CLI before
+        // merge, rather than relying on the master-only full gatling run.
+        gatling: has(&[
+            "tests/gatling.rs",
+            "src/decapod/lib.rs",
+            "src/decapod/core/todo.rs",
+            "src/decapod/plugins/verify.rs",
+            "src/decapod/core/validation_runtime.rs",
+        ]) || paths.iter().any(|path| {
+            path.starts_with("src/decapod/core/validation_runtime/")
+                || path.starts_with("tests/unit/plugins/verify_completion")
+        }),
         // Keep the previous `grep 'src/'` selection, including nested source
         // paths. Selection must never narrow existing coverage accidentally.
         conformance: paths.iter().any(|path| path.contains("src/")),

@@ -548,11 +548,33 @@ fn t059_todo_add_relationships() {
 }
 
 #[test]
-fn t051_todo_done_validated() {
+fn t051_todo_done_validated_requires_full_proof() {
     let (_tmp, dir) = setup_workspace();
     ok(&dir, &["todo", "add", "Validated task"]);
     let id = extract_task_id(&dir);
-    ok(&dir, &["todo", "done", "--id", &id, "--validated"]);
+    let before = host_output(&dir, &["todo", "--format", "json", "get", "--id", &id]);
+    assert!(before.status.success());
+    let before: serde_json::Value = serde_json::from_slice(&before.stdout).unwrap();
+    assert!(before["item"]["status"].is_string());
+    assert!(before["item"]["revision"].is_number());
+
+    // This bootstrap fixture has no accepted full-readiness profile. A caller's
+    // --validated assertion cannot manufacture passing completion evidence.
+    let (ready, report) = run(&dir, &["validate", "--format", "json"]);
+    assert!(!ready, "bare fixture unexpectedly has full proof: {report}");
+    assert!(report.contains("READINESS_PROFILE_REQUIRED"), "{report}");
+    let (success, output) = run(&dir, &["todo", "done", "--id", &id, "--validated"]);
+    assert!(!success, "completion without full proof succeeded: {output}");
+    assert!(
+        output.contains("decapod validate did not pass"),
+        "expected actual validation rejection, not an unrelated failure: {output}"
+    );
+    let after = host_output(&dir, &["todo", "--format", "json", "get", "--id", &id]);
+    assert!(after.status.success());
+    let after: serde_json::Value = serde_json::from_slice(&after.stdout).unwrap();
+    assert_eq!(after["item"]["status"], before["item"]["status"]);
+    assert_eq!(after["item"]["revision"], before["item"]["revision"]);
+    assert_ne!(after["item"]["status"], "done");
 }
 
 #[test]

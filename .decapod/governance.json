@@ -1,8 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "9f9ad1a091eb3f69341a9f6ff619cecc43d6d53d",
-    "release": "v0.115.0",
+    "accepted_commit": "0140fb4f1ab30c7351ce73f14829a8114ae6ec98",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -322,59 +321,26 @@
     }
   },
   "change": {
-    "id": "change_01M50NTQNTWPQHGMGH2SA0RPAS",
-    "base_commit": "9f9ad1a091eb3f69341a9f6ff619cecc43d6d53d",
+    "id": "change_01M50ZF1AHBF3KSSS7J32EAH6Q",
+    "base_commit": "0140fb4f1ab30c7351ce73f14829a8114ae6ec98",
     "target_base": "origin/master"
   },
   "claims": {
-    "ci-metadata-binding": {
-      "statement": "CI-attested success requires the complete independently required job set bound to exact source and intent",
-      "falsifier": "Wrong source, missing/skipped/failed/retried or unknown native jobs can establish readiness",
-      "status": "supported",
-      "proof_refs": [
-        "src/decapod/core/readiness_evidence/buildkite_ci/tests.rs",
-        "src/decapod/core/snapshot_provider/public_buildkite/ci_attested/tests.rs"
-      ]
-    },
-    "ci-policy-default": {
-      "statement": "CI-attested collection remains optional and cannot be enabled or changed by a candidate lacking the exact accepted policy",
-      "falsifier": "A candidate-only policy or changed policy passes acceptance, or default collection selects CI-attested mode",
-      "status": "supported",
-      "proof_refs": [
-        "src/decapod/core/validation_runtime/snapshot/ci_attested.rs"
-      ]
+    "completion-rejects-unproved-fixture": {
+      "statement": "Bare repository completion with --validated rejects missing full proof and preserves task status and revision; completion and validation sources select all Gatling shards.",
+      "falsifier": "Gatling or selection regressions fail, invalid completion mutates status/revision, or successful completion unit coverage regresses.",
+      "status": "open"
     }
   },
   "checkpoints": [
     {
-      "id": "ci-attested-bootstrap-checked",
-      "summary": "Owner-approved isolated CI-attested bootstrap; direct library/integration/lint/Bazel checks passed, policy disabled, no full controller readiness claim",
-      "input_digest": "sha256:d4dbf60223dc9323840c3c3593aebd0bf171c2fa76433e8ec7a96d1526fde8bc",
-      "proof_refs": [
-        "src/decapod/core/readiness_evidence/buildkite_ci/tests.rs",
-        "src/decapod/core/snapshot_provider/public_buildkite/ci_attested/tests.rs"
-      ]
-    },
-    {
-      "id": "ci-attested-docs-mirror",
-      "summary": "Repair generated configuration documentation drift identified by hosted CI; canonical policy and Rust source unchanged",
-      "input_digest": "sha256:4c9f0fb1f0533cc64c9416b1568b2a38b8b912c86430757921c55cc88354a620",
-      "proof_refs": [
-        "docs/agent/config-schema.md",
-        "docs/agent/repository-readiness.md"
-      ]
-    },
-    {
-      "id": "ci-attested-clean-source-review",
-      "summary": "Rebind reviewed specs to clean source without generated Bazel symlinks; preserve original CI failure; no implementation changes",
-      "input_digest": "sha256:f4afca764aafa469ae06ab2b84b7540b615d41847fa574f7e955911514140abe",
-      "proof_refs": [
-        ".decapod/managed/specs/ARCHITECTURE.md"
-      ]
+      "id": "gatling-proof-boundary-01",
+      "summary": "Correct bare-fixture validated completion expectation and select Gatling for completion and validation changes; tests awaiting governed execution",
+      "input_digest": "sha256:be50f7bd9aab146b8612c81fcb4074909df2917993538fb15be72e7901e79b63"
     }
   ],
   "intents": {
-    "intent:change_01M50NTQNTWPQHGMGH2SA0RPAS": {
+    "intent:change_01M50ZF1AHBF3KSSS7J32EAH6Q": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -384,11 +350,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M50NTQNTWPQHGMGH2SA0RPAS",
+      "id": "intent:change_01M50ZF1AHBF3KSSS7J32EAH6Q",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Bootstrap CI-attested validation policy\n\nOwner-approved one-time direct-check and draft-publication bootstrap; isolate API policy and regression tests, disabled by default, preserve existing work, no S3 requests, human merge and release.",
-      "refined_intent": "Bootstrap CI-attested validation policy\n\nOwner-approved one-time direct-check and draft-publication bootstrap; isolate API policy and regression tests, disabled by default, preserve existing work, no S3 requests, human merge and release.",
+      "raw_intent": "Diagnose postmerge validated todo regression and resume vega readiness",
+      "refined_intent": "Diagnose postmerge validated todo regression and resume vega readiness",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -401,190 +367,114 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Owner-approved isolated API validation policy bootstrap: direct checks and explicitly disclosed draft PR, human merge/release, disabled default, no S3 reads",
+      "intent": "Repair the existing gatling validated-completion fixture mismatch exposed on master, preserving real successful completion coverage and preventing invalid completion without full proof.",
       "phases": [],
       "proof_hooks": [
-        "Direct Rust library and integration regressions, fmt, clippy and Bazel inputs/build"
+        "Full decapod validate including changed gatling suite and selector regressions"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed clean source without generated Bazel symlinks; optional accepted CI policy trust boundary documented",
-          "reviewed_code_fingerprint": "1d9cb65474dccf2738529f9e4b7ab82a2a25f574f52f4b8721d80927132679df",
+          "reason": "Only negative CLI fixture and premerge selection change; includes lib.rs readiness entrypoint. Runtime transaction/revision architecture unchanged; VALIDATION documents proof boundaries.",
+          "reviewed_code_fingerprint": "c0da5ca063e76c295a7c47187429b883d1b44fdc544b0ff3a3b55719f89a9835",
           "spec_material_hash": "c9f47c7eab8acc53b34c7355b5eba05dce7efc60be4f6b685b494f09973f007f"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed clean source; no new command or service; optional schema is documented in canonical and generated readiness docs",
-          "reviewed_code_fingerprint": "1d9cb65474dccf2738529f9e4b7ab82a2a25f574f52f4b8721d80927132679df",
+          "reason": "No CLI or runtime API changes; tests enforce existing failure semantics and source selectors include actual lib.rs readiness gate.",
+          "reviewed_code_fingerprint": "c0da5ca063e76c295a7c47187429b883d1b44fdc544b0ff3a3b55719f89a9835",
           "spec_material_hash": "bf5735d95e83446d4311a941b7d511871056d9a9c3f94c8e80635255ef9b4b02"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed clean source; credentials/access unchanged, explicit accepted-policy CI executor trust documented",
-          "reviewed_code_fingerprint": "1d9cb65474dccf2738529f9e4b7ab82a2a25f574f52f4b8721d80927132679df",
+          "reason": "No authorization or proof gate relaxed; premerge coverage expanded, successful unit completion coverage preserved with explicit limitation.",
+          "reviewed_code_fingerprint": "c0da5ca063e76c295a7c47187429b883d1b44fdc544b0ff3a3b55719f89a9835",
           "spec_material_hash": "546e1354723c4d9853921f233ddbed7eb46c5da576aca356d9da8ed48dff1bb8"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Bootstrap optional CI-attested validation",
+      "title": "Diagnose postmerge validated todo regression and resume vega readiness",
       "todo_ids": [
-        "cicd_01m50ns7bafppa7k"
+        "code_01m50zemd9zw1swe"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792100442Z"
+      "updated_at": "1792108360Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
-        "Owner approved 20:58 UTC one-time direct-check and draft-publication exception to AGENTS rule 7; no full released-controller readiness claim; no S3 requests"
+        "No standalone builds; prior bootstrap exception consumed; no denied artifact access"
       ],
-      "artifact_hash": "sha256:33e01fb824379ffb6471b3bca75d09d14be7395c077c1fe91e639e398c11e606",
+      "artifact_hash": "sha256:1a933750d540ca481f3c884d00b49cba2545e1f77a645114146cab0be103e746",
       "checks": [
         {
-          "name": "bazel-binary-builds",
-          "status": "passed"
-        },
-        {
-          "name": "bazel-cargo-input-policy",
-          "status": "passed"
-        },
-        {
-          "name": "clippy-all-targets-all-features",
-          "status": "passed"
-        },
-        {
-          "name": "docs-generation",
-          "status": "passed"
-        },
-        {
-          "name": "format",
-          "status": "passed"
-        },
-        {
-          "name": "format-final",
-          "status": "passed"
-        },
-        {
-          "name": "full-lib-first-run",
+          "name": "initial-validation",
           "status": "failed"
         },
         {
-          "name": "full-lib-rustup-rerun",
-          "status": "passed"
-        },
-        {
-          "name": "hosted-docs-sync-first-run",
-          "status": "failed"
-        },
-        {
-          "name": "hosted-governance-first-run",
-          "status": "failed"
-        },
-        {
-          "name": "integration-76-tests",
-          "status": "passed"
-        },
-        {
-          "name": "metadata-and-evidence-static-review",
-          "status": "passed"
-        },
-        {
-          "name": "new-policy-regressions-first-run",
-          "status": "passed"
-        },
-        {
-          "name": "owner-bootstrap-exception",
-          "status": "passed"
-        },
-        {
-          "name": "private-checkout-reproduction",
-          "status": "failed"
+          "name": "tests",
+          "status": "unavailable"
         }
       ],
-      "completion_claim": "Direct bootstrap checks passed; no full released-controller readiness verdict, no hosted CI or model proof claimed",
-      "current_phase": "intent",
+      "current_phase": "source-review",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M50NTQNTWPQHGMGH2SA0RPAS",
+            "intent_id": "intent:change_01M50ZF1AHBF3KSSS7J32EAH6Q",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M50NTQNTWPQHGMGH2SA0RPAS",
+            "intent_id": "intent:change_01M50ZF1AHBF3KSSS7J32EAH6Q",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M50NTQPDT9Z8WSWWAK4PBVPX",
+            "detail": "trajectory:branch_01M50ZF1B4DGZK5XJQNYSYMH47",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M50NTQNTWPQHGMGH2SA0RPAS",
+            "intent_id": "intent:change_01M50ZF1AHBF3KSSS7J32EAH6Q",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M50NTQPDT9Z8WSWWAK4PBVPX",
+            "detail": "trajectory:branch_01M50ZF1B4DGZK5XJQNYSYMH47",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M50NTQNTWPQHGMGH2SA0RPAS",
+            "intent_id": "intent:change_01M50ZF1AHBF3KSSS7J32EAH6Q",
             "kind": "trajectory_step_recorded",
             "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M50NTQPDT9Z8WSWWAK4PBVPX",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M50NTQNTWPQHGMGH2SA0RPAS",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M50NTQPDT9Z8WSWWAK4PBVPX",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M50NTQNTWPQHGMGH2SA0RPAS",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M50NTQPDT9Z8WSWWAK4PBVPX",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M50NTQNTWPQHGMGH2SA0RPAS",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
-          },
-          {
-            "detail": "trajectory:branch_01M50NTQPDT9Z8WSWWAK4PBVPX",
-            "event_id": "event:9",
-            "intent_id": "intent:change_01M50NTQNTWPQHGMGH2SA0RPAS",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M50NTQPDT9Z8WSWWAK4PBVPX": {
+          "branch_01M50ZF1B4DGZK5XJQNYSYMH47": {
             "evidence_only": true,
-            "id": "branch_01M50NTQPDT9Z8WSWWAK4PBVPX",
-            "intent_id": "intent:change_01M50NTQNTWPQHGMGH2SA0RPAS",
+            "id": "branch_01M50ZF1B4DGZK5XJQNYSYMH47",
+            "intent_id": "intent:change_01M50ZF1AHBF3KSSS7J32EAH6Q",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "source-review",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "AGENTS.md",
-                  "assets/tools/source_ci_profile.rs"
+                  "src/decapod/plugins/verify.rs",
+                  "src/decapod/core/group_broker.rs",
+                  "tests/gatling.rs",
+                  "assets/tools/integration_shards.rs",
+                  "tests/integration_sharding_policy.rs",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Master job116710914849 exposed t051 fixture mismatch; source inspection shows fixture lacks readiness profile and successful unit completion remains covered."
                 ],
                 "proof_refs": [
-                  "owner-bootstrap-exception"
+                  "tests"
                 ],
                 "scope": [
                   "root"
@@ -596,85 +486,15 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "/workspace/shared/ci-attested-bootstrap: original library failure retained; rustup installed from official checksum-verified vendor to repair missing test prerequisite; full suite rerun pending"
+                  "/tmp/vega-repair-validation.json: COMMIT_AND_RERUN, no provider execution or artifact collection"
                 ],
                 "proof_refs": [
-                  "format",
-                  "new-policy-regressions-first-run",
-                  "full-lib-first-run",
-                  "integration-76-tests",
-                  "bazel-cargo-input-policy",
-                  "bazel-binary-builds"
+                  "initial-validation"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "23 new tests passed; 76 integration tests passed; Bazel input policy and two binary targets passed; full library rerun uses installed official rustup toolchain"
-                ],
-                "proof_refs": [
-                  "clippy-all-targets-all-features",
-                  "metadata-and-evidence-static-review"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "cargo test --locked --lib: 1366 passed, 3 ignored; 76 integration tests passed; 23 new regressions included; clippy all targets/features passed; pinned Bazel cargo-inputs and both binary builds passed"
-                ],
-                "proof_refs": [
-                  "full-lib-rustup-rerun",
-                  "format-final"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "docs/agent/config-schema.md",
-                  "Buildkite1822 docs-sync failed; source-built docs build reproduced missing generated config-schema mirror and generated exact canonical30-line update"
-                ],
-                "proof_refs": [
-                  "hosted-docs-sync-first-run",
-                  "docs-generation"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 8,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:9",
-                "observations": [
-                  "Exact private CI checkout exposed stale reviews: local repo-signal fingerprint followed generated Bazel symlinks. Removed only four generated symlinks, retained output cache and logs, re-reviewed clean source and refreshed projections."
-                ],
-                "proof_refs": [
-                  "hosted-governance-first-run",
-                  "private-checkout-reproduction"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 9,
                 "validation_findings": []
               }
             ]
@@ -684,19 +504,19 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "/workspace/shared/ci-attested-bootstrap: original library failure retained; rustup installed from official checksum-verified vendor to repair missing test prerequisite; full suite rerun pending",
-        "23 new tests passed; 76 integration tests passed; Bazel input policy and two binary targets passed; full library rerun uses installed official rustup toolchain",
-        "Buildkite1822 docs-sync failed; source-built docs build reproduced missing generated config-schema mirror and generated exact canonical30-line update",
-        "Exact private CI checkout exposed stale reviews: local repo-signal fingerprint followed generated Bazel symlinks. Removed only four generated symlinks, retained output cache and logs, re-reviewed clean source and refreshed projections.",
-        "cargo test --locked --lib: 1366 passed, 3 ignored; 76 integration tests passed; 23 new regressions included; clippy all targets/features passed; pinned Bazel cargo-inputs and both binary builds passed"
+        "/tmp/vega-repair-validation.json: COMMIT_AND_RERUN, no provider execution or artifact collection",
+        "Master job116710914849 exposed t051 fixture mismatch; source inspection shows fixture lacks readiness profile and successful unit completion remains covered."
       ],
       "inspected_files": [
-        "AGENTS.md",
-        "assets/tools/source_ci_profile.rs"
+        "src/decapod/core/group_broker.rs",
+        "src/decapod/plugins/verify.rs"
       ],
-      "intent_id": "intent:change_01M50NTQNTWPQHGMGH2SA0RPAS",
+      "intent_id": "intent:change_01M50ZF1AHBF3KSSS7J32EAH6Q",
       "modified_files": [
-        "docs/agent/config-schema.md"
+        ".decapod/managed/specs/VALIDATION.md",
+        "assets/tools/integration_shards.rs",
+        "tests/gatling.rs",
+        "tests/integration_sharding_policy.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
@@ -704,10 +524,10 @@
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M50NTQPDT9Z8WSWWAK4PBVPX",
+      "run_id": "branch_01M50ZF1B4DGZK5XJQNYSYMH47",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "cicd_01m50ns7bafppa7k",
+      "task_id": "code_01m50zemd9zw1swe",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
