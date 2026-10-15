@@ -338,6 +338,15 @@
         "tests/unit/core/task_journal_tests.rs",
         "tests/unit/core/workunit_journal_tests.rs"
       ]
+    },
+    {
+      "id": "houseboat-recovery-02",
+      "summary": "Reconcile reviewed complete source inventory after official release version bump; retain all source checks and provider obligations",
+      "input_digest": "sha256:10829ede9a254bd0125b842aa523f87dc8b8cf971754ac65033cbf54886f004b",
+      "proof_refs": [
+        "Cargo.lock",
+        "Cargo.toml"
+      ]
     }
   ],
   "intents": {
@@ -413,7 +422,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:745be0a3bfc1788cbdeba4197380cb9a334a0ccfe5c4ea82e33f7fb31cd1db8b",
+      "artifact_hash": "sha256:efc78ab8ebfed1a9791b2ec1848f22f3c7d8ebd594d90e5c02df882b83eb477e",
       "checks": [
         {
           "name": "full-validation",
@@ -421,6 +430,10 @@
         },
         {
           "name": "houseboat_inventory",
+          "status": "passed"
+        },
+        {
+          "name": "inventory-reconciliation",
           "status": "passed"
         },
         {
@@ -463,10 +476,17 @@
             "intent_id": "intent:change_01M4ZA6GX2N767VDY40HNH9C8H",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M4ZA6GXNKRAA5A869N1VR4Z2",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M4ZA6GX2N767VDY40HNH9C8H",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M4ZA6GXNKRAA5A869N1VR4Z2": {
@@ -534,6 +554,21 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Full validation at 5cbdbee6 stopped before provider execution on stale reviewed source inventory. Independent complete 78-path review reproduced old and new digests: only own Cargo package version 0.114.2 to 0.114.3 changed; all workflow pins, carriers, helper definitions and adapter owners unchanged. Updated only the explicit declaration; no checks removed."
+                ],
+                "proof_refs": [
+                  "inventory-reconciliation"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -545,6 +580,7 @@
       "destination": "pull request",
       "evidence": [
         "Adversarial regressions authored for transaction/replay conflicts, stale proof, custody and approval drift, bounded reads, directory-sync uncertainty and real CLI recovery. No build or test executed yet; full decapod validate owns measured proof.",
+        "Full validation at 5cbdbee6 stopped before provider execution on stale reviewed source inventory. Independent complete 78-path review reproduced old and new digests: only own Cargo package version 0.114.2 to 0.114.3 changed; all workflow pins, carriers, helper definitions and adapter owners unchanged. Updated only the explicit declaration; no checks removed.",
         "GitHub label houseboat:852,853,854,855,856,857,858,859,860,878; accepted master fc71d3a8",
         "Independent source review completed 2026-10-15 09:03 UTC with no known open blocker after task, workunit, custody, approval, bounded read and migration fixes. This is source review, not executed test proof.",
         "Legacy history limitation is explicit in checkpoint schema and docs; no reconstructed historical custody or cloud replay is claimed."
