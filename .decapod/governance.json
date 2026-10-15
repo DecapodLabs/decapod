@@ -282,6 +282,14 @@
       "proof_refs": [
         "tests/unit/core/governance_document_tests.rs"
       ]
+    },
+    {
+      "id": "checkpoint-immutability-02",
+      "summary": "Reconcile version-only v0.114.0 inventory and strengthen retry preservation assertions",
+      "input_digest": "sha256:959327752d7293ef5b28d96b0961d7a2b2d265671aa7eb13c62fedc7c96e5a36",
+      "proof_refs": [
+        "tests/unit/core/governance_document_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -355,10 +363,26 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:aa75767c802421e2295aac01de2f4b2c51f669c8a78c3f6a3303780c9e7510f8",
+      "artifact_hash": "sha256:c1c2467e085d28bf02e12ac085063e2d9757178c525f5c3ca0d564b00416f758",
       "checks": [
         {
+          "name": "adversarial_regressions",
+          "status": "unavailable"
+        },
+        {
           "name": "checkpoint_reuse_source_audit",
+          "status": "passed"
+        },
+        {
+          "name": "diff_whitespace",
+          "status": "passed"
+        },
+        {
+          "name": "full_prescribed_validation",
+          "status": "failed"
+        },
+        {
+          "name": "release_inventory_review",
           "status": "passed"
         }
       ],
@@ -383,10 +407,17 @@
             "intent_id": "intent:change_01M4YS7YJVQN9E3W82GQXAP37H",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M4YS7YKB6XJHAX7D6NGGH1YG",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M4YS7YJVQN9E3W82GQXAP37H",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M4YS7YKB6XJHAX7D6NGGH1YG": {
@@ -409,6 +440,27 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "src/decapod/core/governance_document.rs",
+                  "tests/unit/core/governance_document_tests.rs",
+                  ".decapod/config.toml",
+                  "Initial validate 35580b21 blocked before provider execution: stale reviewed inventory. Recomputed complete inventory at 830146a1 exactly matches prior pin; 943e4575 differs only in Decapod package version in Cargo.toml and Cargo.lock. Explicitly reviewed new digest preserves all source checks and provider selection. Tests await prescribed validation."
+                ],
+                "proof_refs": [
+                  "adversarial_regressions",
+                  "full_prescribed_validation",
+                  "release_inventory_review",
+                  "diff_whitespace"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -416,13 +468,19 @@
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [],
+      "evidence": [
+        "Initial validate 35580b21 blocked before provider execution: stale reviewed inventory. Recomputed complete inventory at 830146a1 exactly matches prior pin; 943e4575 differs only in Decapod package version in Cargo.toml and Cargo.lock. Explicitly reviewed new digest preserves all source checks and provider selection. Tests await prescribed validation."
+      ],
       "inspected_files": [
         "src/decapod/core/governance_document.rs",
         "tests/unit/core/governance_document_tests.rs"
       ],
       "intent_id": "intent:change_01M4YS7YJVQN9E3W82GQXAP37H",
-      "modified_files": [],
+      "modified_files": [
+        ".decapod/config.toml",
+        "src/decapod/core/governance_document.rs",
+        "tests/unit/core/governance_document_tests.rs"
+      ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],

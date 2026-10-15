@@ -232,6 +232,14 @@ fn checkpoint_identical_retry_preserves_bytes_before_and_after_commit() {
         .unwrap();
         assert_eq!(retried.checkpoints.len(), 1);
         assert_eq!(before, fs::read(root.path().join(GOVERNANCE_PATH)).unwrap());
+        if committed {
+            assert!(
+                verify_staged_checkpoint(root.path())
+                    .unwrap_err()
+                    .to_string()
+                    .contains("GOVERNANCE_CHECKPOINT_MISSING")
+            );
+        }
     }
     verify_pr_checkpoints(root.path(), &base, "HEAD").unwrap();
 }
@@ -249,6 +257,12 @@ fn checkpoint_retry_preserves_noncanonical_stored_proof_reference_bytes() {
     .unwrap();
     document.checkpoints[0].proof_refs = vec!["proof:b".into(), "proof:a".into(), "proof:a".into()];
     save(root.path(), &document).unwrap();
+    // A valid noncanonical encoding must survive the retry without save/normalization.
+    fs::write(
+        root.path().join(GOVERNANCE_PATH),
+        serde_json::to_vec(&document).unwrap(),
+    )
+    .unwrap();
     let before = fs::read(root.path().join(GOVERNANCE_PATH)).unwrap();
     checkpoint(
         root.path(),
