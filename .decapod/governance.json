@@ -268,8 +268,9 @@
     "checkpoint-immutable": {
       "statement": "Checkpoint mutation preserves existing IDs and accepts only exact semantic retries under the document lock",
       "falsifier": "A conflicting same-ID call succeeds or changes the governance bytes, or an identical retry adds or changes a checkpoint",
-      "status": "open",
+      "status": "supported",
       "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/38676400782/job/116231008636",
         "tests/unit/core/governance_document_tests.rs"
       ]
     }
@@ -289,6 +290,14 @@
       "input_digest": "sha256:959327752d7293ef5b28d96b0961d7a2b2d265671aa7eb13c62fedc7c96e5a36",
       "proof_refs": [
         "tests/unit/core/governance_document_tests.rs"
+      ]
+    },
+    {
+      "id": "checkpoint-immutability-03",
+      "summary": "Renew final-content spec reviews after passing checkpoint regression targets",
+      "input_digest": "sha256:8c8ee43423026d5a739ecba880c123f9f66eff19702ce384007294373efbc071",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/38676400782/job/116231008636"
       ]
     }
   ],
@@ -330,22 +339,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Describe existing lock and atomic-write boundary without claiming Git-index isolation",
-          "reviewed_code_fingerprint": "1ed6125ed6d884dfced02c598cb6d2d5263aeafb6d2f2ff248d74bfe38e33937",
+          "reason": "Reviewed final existing-lock implementation and adversarial tests; no Git-index isolation guarantee",
+          "reviewed_code_fingerprint": "2121c701724f32727246b58c5e5c2567f081986d300d6ada2722406420a0e850",
           "spec_material_hash": "6f9677b8412511526871a3e51e7e081a78a21b547f0473f9b9a02a0b3b04ff76"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document immutable checkpoint IDs and exact retry recovery semantics",
-          "reviewed_code_fingerprint": "1ed6125ed6d884dfced02c598cb6d2d5263aeafb6d2f2ff248d74bfe38e33937",
+          "reason": "Reviewed final checkpoint rejection, canonical proof-reference comparison, byte-preserving retries and recovery against final implementation and regressions",
+          "reviewed_code_fingerprint": "2121c701724f32727246b58c5e5c2567f081986d300d6ada2722406420a0e850",
           "spec_material_hash": "301a2aeaa7b06104cd8b633c51f7c9201e32eb299c5ddd579295c689233f7c0a"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No authentication, authorization or external trust boundary changes; existing document lock and publication history gates remain",
-          "reviewed_code_fingerprint": "1ed6125ed6d884dfced02c598cb6d2d5263aeafb6d2f2ff248d74bfe38e33937",
+          "reason": "Final code preserves existing authentication, authorization, advisory locking and historical publication checks; no security boundary change",
+          "reviewed_code_fingerprint": "2121c701724f32727246b58c5e5c2567f081986d300d6ada2722406420a0e850",
           "spec_material_hash": "2ea32916117ded5ef055b3a5c1e5de60fe12d90aabc6b60818b80f77c5779c6a"
         }
       ],
@@ -357,17 +366,17 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792034608Z"
+      "updated_at": "1792035570Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:c1c2467e085d28bf02e12ac085063e2d9757178c525f5c3ca0d564b00416f758",
+      "artifact_hash": "sha256:e5e5b201ec39542bb0b8e4b87f50f93f51bac57de87705ae0689bbc3f52ed0f9",
       "checks": [
         {
           "name": "adversarial_regressions",
-          "status": "unavailable"
+          "status": "passed"
         },
         {
           "name": "checkpoint_reuse_source_audit",
@@ -414,10 +423,17 @@
             "intent_id": "intent:change_01M4YS7YJVQN9E3W82GQXAP37H",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M4YS7YKB6XJHAX7D6NGGH1YG",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M4YS7YJVQN9E3W82GQXAP37H",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M4YS7YKB6XJHAX7D6NGGH1YG": {
@@ -461,6 +477,22 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Candidate 5975482c: GitHub core test target and Buildkite core target passed; both governance-artifacts lanes failed STALE_SPEC_REVIEW after final source refinement. Preserve failed provider runs 1645 and 38676400782. Renew exact-content spec reviews and rerun full prescribed validation on a normal repair commit."
+                ],
+                "proof_refs": [
+                  "adversarial_regressions",
+                  "full_prescribed_validation"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -469,6 +501,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Candidate 5975482c: GitHub core test target and Buildkite core target passed; both governance-artifacts lanes failed STALE_SPEC_REVIEW after final source refinement. Preserve failed provider runs 1645 and 38676400782. Renew exact-content spec reviews and rerun full prescribed validation on a normal repair commit.",
         "Initial validate 35580b21 blocked before provider execution: stale reviewed inventory. Recomputed complete inventory at 830146a1 exactly matches prior pin; 943e4575 differs only in Decapod package version in Cargo.toml and Cargo.lock. Explicitly reviewed new digest preserves all source checks and provider selection. Tests await prescribed validation."
       ],
       "inspected_files": [
