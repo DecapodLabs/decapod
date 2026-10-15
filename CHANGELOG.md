@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.114.1](https://github.com/DecapodLabs/decapod/compare/v0.114.0...v0.114.1) - 2026-10-15
+
+### Fixed
+
+- *(governance)* reject destructive checkpoint ID reuse ([#1438](https://github.com/DecapodLabs/decapod/pull/1438))
+
 ## [0.114.0](https://github.com/DecapodLabs/decapod/compare/v0.113.0...v0.114.0) - 2026-10-15
 
 ### Fixed
