@@ -7,6 +7,9 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
 
+pub(crate) mod input;
+use input::BoundedEpochInput;
+
 pub const VALIDATION_EPOCH_SCHEMA_VERSION: &str = "1.0.0";
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
@@ -29,6 +32,39 @@ pub struct ValidationEpochMetadata {
 pub fn active_validation_epoch(
     project_root: &Path,
 ) -> Result<ValidationEpochMetadata, error::DecapodError> {
+    build_validation_epoch(project_root, &mut HostEpochInput)
+}
+
+/// Bounded, no-symlink input adapter for execution continuity. Uses exactly the
+/// same epoch formula as ordinary validation; an unreadable source is an error,
+/// never an "unavailable" fingerprint that can compare equal across failures.
+pub(crate) fn active_validation_epoch_bounded(
+    project_root: &Path,
+) -> Result<ValidationEpochMetadata, error::DecapodError> {
+    build_validation_epoch(project_root, &mut BoundedEpochInput::new(project_root)?)
+}
+
+trait EpochInput {
+    fn read_optional(&mut self, path: &Path) -> Result<Option<Vec<u8>>, error::DecapodError>;
+    fn fingerprint(&mut self, root: &Path) -> Result<String, error::DecapodError>;
+}
+struct HostEpochInput;
+impl EpochInput for HostEpochInput {
+    fn read_optional(&mut self, path: &Path) -> Result<Option<Vec<u8>>, error::DecapodError> {
+        if !path.exists() {
+            return Ok(None);
+        }
+        Ok(Some(fs::read(path)?))
+    }
+    fn fingerprint(&mut self, root: &Path) -> Result<String, error::DecapodError> {
+        Ok(project_specs::repo_signal_fingerprint(root).unwrap_or_else(|_| "unavailable".into()))
+    }
+}
+
+fn build_validation_epoch(
+    project_root: &Path,
+    input: &mut dyn EpochInput,
+) -> Result<ValidationEpochMetadata, error::DecapodError> {
     let validation_profile =
         std::env::var("DECAPOD_VALIDATION_PROFILE").unwrap_or_else(|_| "default".to_string());
     let evaluator_identity = format!("decapod-validate@{}", env!("CARGO_PKG_VERSION"));
@@ -39,10 +75,11 @@ pub fn active_validation_epoch(
     let constitution_version = extract_version(&constitution_body)
         .unwrap_or_else(|| format!("embedded-docs@{}", env!("CARGO_PKG_VERSION")));
 
-    let generated_specs_manifest_hash =
-        hash_specs_manifest_material(project_root.join(LOCAL_PROJECT_SPECS_MANIFEST).as_path())?;
-    let generated_specs_fingerprint = project_specs::repo_signal_fingerprint(project_root)
-        .unwrap_or_else(|_| "unavailable".to_string());
+    let generated_specs_manifest_hash = hash_specs_manifest_using(
+        project_root.join(LOCAL_PROJECT_SPECS_MANIFEST).as_path(),
+        input,
+    )?;
+    let generated_specs_fingerprint = input.fingerprint(project_root)?;
 
     let mut material_hashes = BTreeMap::new();
     material_hashes.insert(
@@ -69,14 +106,14 @@ pub fn active_validation_epoch(
         let path = project_root.join(spec.path);
         material_hashes.insert(
             format!("generated_spec:{}", spec.path),
-            hash_file_if_exists(path.as_path())?,
+            hash_file_using(path.as_path(), input)?,
         );
         // Authored living-spec prose is evidence material for proof completion
         // (#1183). Fingerprint/attestation blocks are excluded so completion
         // packages bind the contract text agents must rewrite per change.
         material_hashes.insert(
             format!("living_spec_material:{}", spec.path),
-            hash_living_spec_material_if_exists(path.as_path())?,
+            hash_living_spec_using(path.as_path(), input)?,
         );
     }
 
@@ -92,7 +129,7 @@ pub fn active_validation_epoch(
     ] {
         material_hashes.insert(
             format!("governance_material:{path}"),
-            hash_file_if_exists(&project_root.join(path))?,
+            hash_file_using(&project_root.join(path), input)?,
         );
     }
 
@@ -173,41 +210,49 @@ fn extract_version(markdown: &str) -> Option<String> {
     })
 }
 
-fn hash_file_if_exists(path: &Path) -> Result<String, error::DecapodError> {
-    if !path.exists() {
-        return Ok("absent".to_string());
-    }
-    let bytes = fs::read(path).map_err(error::DecapodError::IoError)?;
-    Ok(sha256_hex(&bytes))
+fn hash_file_using(path: &Path, input: &mut dyn EpochInput) -> Result<String, error::DecapodError> {
+    Ok(input
+        .read_optional(path)?
+        .map(|bytes| sha256_hex(&bytes))
+        .unwrap_or_else(|| "absent".into()))
 }
 
-fn hash_living_spec_material_if_exists(path: &Path) -> Result<String, error::DecapodError> {
-    if !path.exists() {
-        return Ok("absent".to_string());
-    }
-    let body = fs::read_to_string(path).map_err(error::DecapodError::IoError)?;
+fn hash_living_spec_using(
+    path: &Path,
+    input: &mut dyn EpochInput,
+) -> Result<String, error::DecapodError> {
+    let Some(bytes) = input.read_optional(path)? else {
+        return Ok("absent".into());
+    };
+    let body = String::from_utf8(bytes)
+        .map_err(|_| error::DecapodError::ValidationError("Invalid UTF-8 living spec".into()))?;
     Ok(sha256_hex(
         project_specs::material_spec_body(&body).as_bytes(),
     ))
 }
 
+#[cfg(test)]
 fn hash_specs_manifest_material(path: &Path) -> Result<String, error::DecapodError> {
-    if !path.exists() {
-        return Ok("absent".to_string());
-    }
-    let raw = fs::read_to_string(path).map_err(error::DecapodError::IoError)?;
-    let mut value = serde_json::from_str::<serde_json::Value>(&raw).map_err(|e| {
-        error::DecapodError::ValidationError(format!(
-            "Invalid generated specs manifest for validation epoch: {e}"
-        ))
+    hash_specs_manifest_using(path, &mut HostEpochInput)
+}
+
+fn hash_specs_manifest_using(
+    path: &Path,
+    input: &mut dyn EpochInput,
+) -> Result<String, error::DecapodError> {
+    let Some(bytes) = input.read_optional(path)? else {
+        return Ok("absent".into());
+    };
+    let mut value = serde_json::from_slice::<serde_json::Value>(&bytes).map_err(|_| {
+        error::DecapodError::ValidationError(
+            "Invalid generated specs manifest for validation epoch".into(),
+        )
     })?;
     if let Some(obj) = value.as_object_mut() {
         obj.remove("generated_at");
     }
-    let canonical = serde_json::to_string(&value).map_err(|e| {
-        error::DecapodError::ValidationError(format!(
-            "Failed to canonicalize generated specs manifest for validation epoch: {e}"
-        ))
+    let canonical = serde_json::to_string(&value).map_err(|_| {
+        error::DecapodError::ValidationError("Cannot canonicalize generated specs manifest".into())
     })?;
     Ok(sha256_hex(canonical.as_bytes()))
 }

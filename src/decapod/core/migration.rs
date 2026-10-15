@@ -932,6 +932,7 @@ fn migrate_reconstruct_todo_events(decapod_root: &Path) -> Result<(), error::Dec
     let source = db::db_connect(&db_path.to_string_lossy())?;
     let target_path = decapod_root.join("data").join(schemas::LOCAL_DB_NAME);
     let target = db::db_connect(&target_path.to_string_lossy())?;
+    crate::core::todo::refuse_task_journal_migration(&target, "legacy task event reconstruction")?;
     events::ensure_tables(&target)?;
 
     // Read all tasks from database
@@ -1102,6 +1103,14 @@ fn migrate_consolidate_single_datastore(decapod_root: &Path) -> Result<(), error
 
     let target_path = data_root.join(schemas::LOCAL_DB_NAME);
     let target = db::db_connect(&target_path.to_string_lossy())?;
+    // Legacy task imports cannot be mixed into an already journaled authority.
+    // Check before schema initialization, event import, or source-file removal.
+    if data_root.join(schemas::TODO_DB_NAME).exists() {
+        crate::core::todo::refuse_task_journal_migration(
+            &target,
+            "legacy task database consolidation",
+        )?;
+    }
     initialize_single_datastore_schema(&target)?;
     // Import legacy append-only logs before removing legacy SQLite stores.
     // The source JSONL files remain untouched as an operator-visible archive.
@@ -1211,6 +1220,11 @@ fn migrate_task_events_to_canonical_stream(target: &Connection) -> Result<(), er
     if !table_exists(target, "task_events")? || !table_exists(target, "todo_events")? {
         return Ok(());
     }
+    let populated: bool =
+        target.query_row("SELECT EXISTS(SELECT 1 FROM task_events)", [], |r| r.get(0))?;
+    if populated {
+        crate::core::todo::refuse_task_journal_migration(target, "legacy task event import")?;
+    }
     let mut stmt = target.prepare(
         "SELECT event_id, ts, event_type, task_id, payload, actor
          FROM task_events ORDER BY seq ASC, ts ASC, event_id ASC",
@@ -1245,6 +1259,7 @@ fn migrate_task_events_to_canonical_stream(target: &Connection) -> Result<(), er
 }
 
 fn initialize_single_datastore_schema(conn: &Connection) -> Result<(), error::DecapodError> {
+    crate::core::todo::guard_task_schema_initialization(conn)?;
     // Consolidated surface (#1126–#1131): one events table, agents row, node_edges,
     // task_tags; empty tables no longer bootstrapped by default.
     for schema in [
@@ -1327,6 +1342,9 @@ fn migrate_schema_fold_v001(decapod_root: &Path) -> Result<(), error::DecapodErr
         return Ok(());
     }
     let conn = db::db_connect(&db_path.to_string_lossy())?;
+    // Fail before any fold side effect if task schema repair would invalidate
+    // an existing checkpoint. Unchanged current schemas remain valid no-ops.
+    crate::core::todo::guard_task_schema_initialization(&conn)?;
     // Events unification + historical stream table drop.
     events::ensure_tables(&conn)?;
 
@@ -1470,7 +1488,10 @@ fn migrate_schema_fold_v001(decapod_root: &Path) -> Result<(), error::DecapodErr
 
     // Task tags (#1130) — dual-write path; denormalized columns remain for one release
     conn.execute_batch(schemas::TODO_DB_SCHEMA_TASK_TAGS)?;
-    if table_exists(&conn, "tasks")? && table_has_column(&conn, "tasks", "tags")? {
+    if !crate::core::todo::has_task_journal(&conn)?
+        && table_exists(&conn, "tasks")?
+        && table_has_column(&conn, "tasks", "tags")?
+    {
         let mut stmt =
             conn.prepare("SELECT id, tags FROM tasks WHERE tags IS NOT NULL AND tags != ''")?;
         let rows = stmt.query_map([], |row| {
@@ -1780,6 +1801,7 @@ fn migrate_todo_ids_to_typed_format(decapod_root: &Path) -> Result<(), error::De
     if legacy_rows.is_empty() {
         return Ok(());
     }
+    crate::core::todo::refuse_task_journal_migration(&conn, "legacy task ID repair")?;
 
     let mut id_map: HashMap<String, String> = HashMap::new();
     for (old_id, category, title) in legacy_rows {
@@ -2063,6 +2085,7 @@ fn migrate_todo_one_shot_column(decapod_root: &Path) -> Result<(), error::Decapo
 
     let has_one_shot = table_has_column(&conn, "tasks", "one_shot")?;
     if !has_one_shot {
+        crate::core::todo::refuse_task_journal_migration(&conn, "task one-shot schema repair")?;
         conn.execute(
             "ALTER TABLE tasks ADD COLUMN one_shot INTEGER DEFAULT 0",
             [],
@@ -2086,6 +2109,28 @@ fn migrate_table(
     let source_conn = db::db_connect(&source_path.to_string_lossy())?;
     if !source_conn.has_table(table)? || !target_conn.has_table(table)? {
         return Ok(());
+    }
+    if matches!(
+        table,
+        "tasks"
+            | "task_events"
+            | "task_verification"
+            | "task_owners"
+            | "task_dependencies"
+            | "task_tags"
+    ) {
+        // Table names here are the migration owner's fixed identifiers.
+        let populated: bool = source_conn.query_row(
+            &format!("SELECT EXISTS(SELECT 1 FROM \"{table}\")"),
+            [],
+            |r| r.get(0),
+        )?;
+        if populated {
+            crate::core::todo::refuse_task_journal_migration(
+                target_conn,
+                "legacy task table import",
+            )?;
+        }
     }
     let source_columns = source_conn.columns(table)?;
     let target_columns = target_conn.columns(table)?;

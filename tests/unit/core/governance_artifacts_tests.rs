@@ -41,6 +41,7 @@ fn trajectory() -> TrajectoryArtifact {
         },
         artifact_hash: "sha256:trajectory-proof".to_string(),
         custody: CustodyState::default(),
+        execution_checkpoints: Vec::new(),
     }
 }
 

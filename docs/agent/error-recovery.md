@@ -17,6 +17,25 @@ output when a caller must distinguish failure kinds.
 
 ## Common Error Patterns
 
+### Interrupted runtime checkpoint or projection write
+
+Inspect `todo journal verify` or `govern workunit journal-status --task-id <id>`
+in the owning store/workspace. Preserve the operation ID, observed generation,
+predecessor and digest evidence. Journal commit precedes manifest publication,
+so an I/O error does not prove that the operation rolled back.
+
+Use the domain recovery command only after reviewing its current-state
+precondition. It restores exact recorded bytes and refuses divergent live
+state. Do not hand-edit SQLite, the manifest, or a receipt to erase the conflict.
+A legacy baseline cannot reconstruct missing earlier custody. After recovery,
+resume still has to prove current source and authority; repair drift and obtain
+fresh proof through normal governed operations instead of relabeling old proof.
+
+`ARTIFACT_DURABILITY_UNCONFIRMED` means the new complete file may already be
+visible, but syncing its parent directory failed. Retain the file and journal,
+inspect their hashes, and retry supported recovery after fixing the filesystem
+problem. The failure is neither a success receipt nor a rollback receipt.
+
 ### `TODO_PROJECTION_MISSING`
 
 `govern plan check-execute` found no selected todo in the store named by the

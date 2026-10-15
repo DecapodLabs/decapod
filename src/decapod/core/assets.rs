@@ -82,10 +82,20 @@ pub fn get_override_doc(repo_root: &Path, id: &str) -> Option<String> {
     }
 
     let override_content = std::fs::read_to_string(&override_path).ok()?;
-    parse_override_sections(&override_content)
-        .ok()?
-        .remove(&canonical_override_id(id)?)
-        .and_then(|resolved| (!resolved.content.is_empty()).then_some(resolved.content))
+    override_doc_from_text(&override_content, id).ok().flatten()
+}
+
+/// Parse already captured override bytes without reopening an authority path.
+pub(crate) fn override_doc_from_text(
+    content: &str,
+    id: &str,
+) -> Result<Option<String>, error::DecapodError> {
+    let Some(id) = canonical_override_id(id) else {
+        return Ok(None);
+    };
+    Ok(parse_override_sections(content)?
+        .remove(&id)
+        .and_then(|resolved| (!resolved.content.is_empty()).then_some(resolved.content)))
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

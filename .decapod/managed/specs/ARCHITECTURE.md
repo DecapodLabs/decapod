@@ -174,8 +174,10 @@ cannot be discarded by choosing another run ID; the agent continues that run
 or checkpoints and commits it before starting another. Git remains the history
 store rather than a second snapshot database.
 
-`governance_document::checkpoint` checks ID reuse inside the existing document
-lock, after loading current authority and measuring material. It preserves the
+`governance_document::checkpoint` checks unstaged material and ID reuse inside
+the existing document lock, before and after loading current authority and
+measuring material respectively. This prevents a cooperating writer from
+classifying another checkpoint’s temporary publication file as authored input. It preserves the
 first record, rejects conflicting content before saving, and treats an identical
 request as a no-op. Proof references are sorted and deduplicated before comparison.
 The material digest includes staged source and governed semantic inputs, but
@@ -250,6 +252,41 @@ atomically. The legacy replay helper lacks complete revision history and removes
 revision authority from its projection while retaining the original events.
 This uses existing task revisions and SQLite/Dactyl transactions, not another
 state store or execution runtime.
+
+## Runtime reconstruction and execution continuity
+
+`core::todo::task_journal` extends the existing canonical TODO event stream with
+versioned projection checkpoints. Task scalars, revision, lease generation,
+ownership, dependencies, and proof bytes are captured by the task transaction;
+legacy event logs are not assumed to contain those complete preimages. An
+explicit baseline records existing authority without inventing earlier custody.
+Chain validation checks identity, predecessor and projection digests before
+restoring a projection. Divergent live authority is not overwritten.
+A surviving mutation beyond the last checkpoint blocks reconstruction. Complete
+journal-tail removal cannot be detected without independent evidence; this is
+not an externally sealed tamper-proof log. Post-baseline legacy imports and
+sequence renumbering require an explicit migration instead of silent repair.
+The optional cloud task schema has no reconstruction adapter in this contract.
+
+`core::workunit` journals complete manifest snapshots in the canonical `workunit`
+event stream. The JSON file remains the ignored, recoverable projection. Journal
+commit precedes file publication; interruption can leave the projection behind
+its durable head, which explicit recovery reconciles without changing proof.
+Read-modify-write helpers serialize the whole operation; external prepared writes
+require the expected journal generation. An identical operation retry is a no-op;
+conflicting identity or predecessor reuse is an error.
+
+`core::trajectory::execution` binds checkpoints to current repository material,
+accepted intent and plan authority using existing material and validation-epoch
+owners. Recovery and resume are separate operations. Restoring a manifest does
+not authorize resumed execution or establish publication readiness. The full
+validation and publisher remain the only source of their own readiness verdicts.
+
+Atomic artifact publication syncs file contents before rename. On Unix it also
+syncs the parent directory. A directory-sync error is an unconfirmed durability
+outcome even if the complete new file is visible; recovery inspects the journal
+and file instead of treating that error as proof of rollback. Other platforms
+retain atomic visibility without a claimed directory-fsync guarantee.
 
 ## Current obligation evidence
 
@@ -381,8 +418,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `92b5bb3991acc9bc81c28f8578d9abaf4ba3b122fd6468d1f2ab57f70d02389d`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (185 files), `tests/` (190 files)
+- Repository signal fingerprint: `7efe54997513078b81090151e7204411beadfd92783550b1d170955d5159157a`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (188 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -483,13 +483,27 @@ fn test_todo_rebuild() {
         add_task(&root, &add_args).unwrap();
     }
 
-    // Rebuild is now a canonical-datastore projection check. The event
-    // stream lives in decapod.db; deleting that single source would delete
-    // the source of truth rather than exercise a supported recovery path.
+    // Legacy rebuild imports/counts canonical evidence; it does not replay
+    // task projections. Each add now appends its domain event and checkpoint.
     let rebuild = rebuild_from_events(&root).unwrap();
-    // After #1127 the unified `events` stream is the sole rebuild source.
     assert_eq!(rebuild["source"], "events");
-    assert_eq!(rebuild["events"], 3);
+    assert_eq!(rebuild["events"], 6);
+    assert_eq!(rebuild["task_projection_replayed"], false);
+    let conn = Connection::open(root.join(schemas::LOCAL_DB_NAME)).unwrap();
+    for event_type in ["task.add", "task.journal.checkpoint"] {
+        let count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM events WHERE stream='todo' AND event_type=?1",
+                [event_type],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(count, 3, "{event_type}");
+    }
+    assert_eq!(
+        decapod::core::todo::task_journal_verify(&root).unwrap()["status"],
+        "ok"
+    );
 
     // Verify
     let tasks = list_tasks(&root, None, None, None, None, None).unwrap();
@@ -1087,28 +1101,30 @@ fn expired_lease_is_reclaimable_by_another_agent() {
     let dir = tmp.path().join("src").join("workspace");
     std::fs::create_dir_all(&dir).unwrap();
 
-    let task_id = add_scoped_task(
-        &root,
-        "Reclaimable expired lease task",
-        "documentation",
-        dir.to_str().unwrap(),
-    );
-    let first = claim_task(&root, &task_id, "agent-old", ClaimMode::Exclusive).unwrap();
-    assert_eq!(first["status"], "ok");
-
+    // Seed a legitimately historical expired claim before journal genesis.
+    // Rewriting expiry after a modern claim would be authority corruption,
+    // not a simulation of time passing.
+    let task_id = "docs_expiredlease0001".to_string();
     let db = root.join(schemas::LOCAL_DB_NAME);
     let conn = Connection::open(&db).unwrap();
     conn.execute(
-        "UPDATE tasks SET lease_expires_at = '1Z' WHERE id = ?1",
-        [&task_id],
-    )
-    .unwrap();
-    // Presence must also be stale, or only lease expiry is enough for reclaim.
+        "INSERT INTO tasks(id,hash,title,status,created_at,updated_at,dir_path,scope,category,tags,owner,assigned_to,assigned_at,lease_expires_at,lease_generation,lease_lifecycle,intent_anchor,revision)
+         VALUES(?1,'expired-fixture','Reclaimable expired lease task','open','1Z','1Z',?2,'documentation','documentation','documentation','agent-old','agent-old','1Z','1Z',1,'claimed','intent:expired-fixture',1)",
+        decapod::core::db::params![task_id,dir.to_string_lossy()],
+    ).unwrap();
     conn.execute(
-        "UPDATE agents SET last_seen = '1Z', updated_at = '1Z' WHERE agent_id = 'agent-old'",
-        [],
-    )
-    .ok();
+        "INSERT INTO task_owners(id,task_id,agent_id,claimed_at,claim_type) VALUES('expired-owner',?1,'agent-old','1Z','primary')",
+        [&task_id],
+    ).unwrap();
+    set_agent_trust(&conn, "agent-old", "basic", "1Z");
+    assert_eq!(
+        get_task(&root, &task_id).unwrap().unwrap().assigned_to,
+        "agent-old"
+    );
+    assert_eq!(
+        decapod::core::todo::task_journal_checkpoint(&root).unwrap()["status"],
+        "ok"
+    );
 
     let reclaim = claim_task(&root, &task_id, "agent-new", ClaimMode::Exclusive).unwrap();
     assert_eq!(reclaim["status"], "ok", "reclaim should succeed: {reclaim}");
@@ -1119,6 +1135,10 @@ fn expired_lease_is_reclaimable_by_another_agent() {
 
     let task = get_task(&root, &task_id).unwrap().unwrap();
     assert_eq!(task.assigned_to, "agent-new");
+    assert_eq!(
+        decapod::core::todo::task_journal_verify(&root).unwrap()["status"],
+        "ok"
+    );
 }
 
 #[test]

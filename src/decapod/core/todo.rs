@@ -35,6 +35,273 @@ use std::fs::{self, OpenOptions};
 use std::io::{BufRead, BufReader, IsTerminal};
 use std::path::{Path, PathBuf};
 
+#[path = "task_journal.rs"]
+mod task_journal;
+
+/// Task IDs are selected under the same write transaction as their mutation.
+/// New-task discovery uses only this transaction's task.add event range.
+pub(crate) enum TaskJournalSelection {
+    Ids(Vec<String>),
+    NewTasks,
+    OwnedBy(Vec<String>),
+}
+
+pub(crate) fn with_task_journal<F, R>(
+    broker: &DbBroker,
+    db_path: &Path,
+    actor: &str,
+    intent_ref: Option<&str>,
+    operation: &str,
+    selection: TaskJournalSelection,
+    f: F,
+) -> Result<R, error::DecapodError>
+where
+    F: FnOnce(&Connection) -> Result<R, error::DecapodError>,
+{
+    let actor = if actor == "decapod" {
+        mutation_actor(None)
+    } else {
+        actor.to_owned()
+    };
+    broker.with_transaction(db_path, &actor, intent_ref, operation, |conn| {
+        ensure_schema(conn)?;
+        let mut ids = match &selection {
+            TaskJournalSelection::Ids(ids) => ids.clone(),
+            TaskJournalSelection::NewTasks => Vec::new(),
+            TaskJournalSelection::OwnedBy(agents) => {
+                let mut ids = Vec::new();
+                for agent in agents {
+                    let mut stmt = conn.prepare("SELECT id FROM tasks WHERE assigned_to=?1 OR id IN (SELECT task_id FROM task_owners WHERE agent_id=?1) ORDER BY id LIMIT 10001")?;
+                    let rows = stmt.query_map([agent], |r| r.get::<_, String>(0))?;
+                    for row in rows { ids.push(row?); }
+                    if ids.len() > 10_000 { return Err(error::DecapodError::ValidationError("TASK_JOURNAL_LIMIT: cleanup task selection exceeds bounded limit".into())); }
+                }
+                ids
+            }
+        };
+        ids.sort(); ids.dedup();
+        let before = task_journal::capture_selected(conn, &ids)?;
+        let watermark = task_journal::watermark(conn)?;
+        let result = f(conn)?;
+        if matches!(selection, TaskJournalSelection::NewTasks) {
+            let mut stmt = conn.prepare("SELECT DISTINCT subject_id FROM events WHERE stream='todo' AND event_type='task.add' AND seq>?1 ORDER BY subject_id LIMIT 10001")?;
+            let rows = stmt.query_map([watermark], |r| r.get::<_, String>(0))?;
+            ids = rows.collect::<Result<Vec<_>, _>>()?;
+        }
+        task_journal::record_changes(conn, &before, &ids, watermark, operation, &actor)?;
+        Ok(result)
+    })
+}
+
+/// Shared by the historical migration owner. A post-genesis repair must be an
+/// explicit versioned journal transition, never an implicit schema side effect.
+pub(crate) fn has_task_journal(conn: &Connection) -> Result<bool, error::DecapodError> {
+    if !conn.has_table("events")? {
+        return Ok(false);
+    }
+    Ok(conn.query_row("SELECT EXISTS(SELECT 1 FROM events WHERE stream='todo' AND event_type='task.journal.checkpoint')", [], |r| r.get(0))?)
+}
+
+pub(crate) fn refuse_task_journal_migration(
+    conn: &Connection,
+    operation: &str,
+) -> Result<(), error::DecapodError> {
+    if has_task_journal(conn)? {
+        return Err(error::DecapodError::ValidationError(format!(
+            "TASK_JOURNAL_MIGRATION_REQUIRED: {operation} would change journaled task authority; preserve the store and use an explicit versioned recovery migration"
+        )));
+    }
+    Ok(())
+}
+
+pub(crate) fn guard_task_schema_initialization(
+    conn: &Connection,
+) -> Result<(), error::DecapodError> {
+    if !has_task_journal(conn)? {
+        return Ok(());
+    }
+    task_journal::check_schema(conn)?;
+    let version: Option<String> = if conn.has_table("meta")? {
+        conn.query_row(
+            "SELECT value FROM meta WHERE namespace=?1 AND key='schema_version'",
+            [schemas::TODO_META_NAMESPACE],
+            |r| r.get(0),
+        )
+        .optional()?
+    } else {
+        None
+    };
+    let duplicate_owners: bool = conn.query_row(
+        "SELECT EXISTS(SELECT 1 FROM task_owners GROUP BY task_id,agent_id HAVING count(*)>1)",
+        [],
+        |r| r.get(0),
+    )?;
+    if version.as_deref().and_then(|v| v.parse::<u32>().ok()) != Some(schemas::TODO_SCHEMA_VERSION)
+        || duplicate_owners
+    {
+        return Err(error::DecapodError::ValidationError("TASK_JOURNAL_MIGRATION_REQUIRED: initialization would repair journaled task state; preserve the store for explicit versioned recovery".into()));
+    }
+    Ok(())
+}
+
+fn bound_execution_custody_reads(conn: &Connection) -> Result<(), error::DecapodError> {
+    // Readiness owns graph semantics. Bound all of the strings it materializes,
+    // including dependency proof artifacts, before entering that shared owner.
+    let (tasks, bytes): (i64,i64) = conn.query_row(
+        "SELECT count(*),COALESCE(sum(COALESCE(length(CAST(id AS BLOB)),0)+COALESCE(length(CAST(depends_on AS BLOB)),0)+COALESCE(length(CAST(status AS BLOB)),0)+COALESCE(length(CAST(assigned_to AS BLOB)),0)+COALESCE(length(CAST(lease_expires_at AS BLOB)),0)+COALESCE(length(CAST(lease_lifecycle AS BLOB)),0)+COALESCE(length(CAST(intent_anchor AS BLOB)),0)+COALESCE(length(CAST(scope AS BLOB)),0)+COALESCE(length(CAST(dir_path AS BLOB)),0)),0) FROM tasks", [], |r| Ok((r.get(0)?,r.get(1)?)),
+    )?;
+    let (proofs, proof_bytes): (i64,i64) = conn.query_row(
+        "SELECT count(*),COALESCE(sum(COALESCE(length(CAST(todo_id AS BLOB)),0)+COALESCE(length(CAST(last_verified_status AS BLOB)),0)+COALESCE(length(CAST(verification_artifacts AS BLOB)),0)),0) FROM task_verification", [], |r| Ok((r.get(0)?,r.get(1)?)),
+    )?;
+    if tasks > 10_000
+        || proofs > 10_000
+        || bytes
+            .checked_add(proof_bytes)
+            .is_none_or(|n| n > 32 * 1024 * 1024)
+    {
+        return Err(error::DecapodError::ValidationError(
+            "EXECUTION_CUSTODY_LIMIT: dependency authority exceeds bounded task/proof read limit"
+                .into(),
+        ));
+    }
+    Ok(())
+}
+
+/// Capture live local task custody using the existing task/dependency authorities.
+/// `root` is the store data root (the same root accepted by `get_task`).
+/// The shared read lock spans every query; no schema repair or broker event runs.
+pub fn capture_execution_custody(
+    root: &Path,
+    task_id: &str,
+    actor: &str,
+) -> Result<JsonValue, error::DecapodError> {
+    if DbBroker::new(root).is_cloud() {
+        return Err(error::DecapodError::NotImplemented("execution custody requires the supported local lease contract; cloud mode never falls back locally".into()));
+    }
+    let path = todo_db_path(root);
+    let conn = crate::core::db::db_connect_for_validate(path.to_str().ok_or_else(|| {
+        error::DecapodError::ValidationError("task database path is not UTF-8".into())
+    })?)?;
+    bound_execution_custody_reads(&conn)?;
+    task_journal::check_execution_authority(&conn, task_id)?;
+    type ExecutionCustodyRow = (
+        String,
+        i64,
+        String,
+        i64,
+        Option<String>,
+        String,
+        String,
+        String,
+        String,
+    );
+    let row: Option<ExecutionCustodyRow> = conn.query_row(
+        "SELECT status,revision,COALESCE(assigned_to,''),COALESCE(lease_generation,0),lease_expires_at,COALESCE(lease_lifecycle,''),COALESCE(intent_anchor,''),scope,dir_path FROM tasks WHERE id=?1",
+        [task_id], |r| Ok((r.get(0)?,r.get(1)?,r.get(2)?,r.get(3)?,r.get(4)?,r.get(5)?,r.get(6)?,r.get(7)?,r.get(8)?)),
+    ).optional()?;
+    let (status, revision, assignee, generation, expiry, lifecycle, anchor, scope, dir_path) = row
+        .ok_or_else(|| {
+            error::DecapodError::ValidationError("EXECUTION_CUSTODY_MISSING: task is absent".into())
+        })?;
+    if actor.trim().is_empty()
+        || assignee != actor
+        || generation <= 0
+        || revision < 0
+        || !matches!(status.as_str(), "open" | "in_progress")
+        || !LeaseLifecycle::parse(Some(&lifecycle)).holds_exclusive_custody()
+        || fleet_coord::lease_state(expiry.as_deref(), &now_iso())
+            != fleet_coord::LeaseState::Active
+    {
+        return Err(error::DecapodError::ValidationError("EXECUTION_CUSTODY_STALE: task requires the requesting actor's current active exclusive lease".into()));
+    }
+    let dependencies = load_dependency_readiness(&conn, task_id)?;
+    if !dependencies.is_ready() {
+        return Err(error::DecapodError::ValidationError(format!(
+            "EXECUTION_DEPENDENCIES_BLOCKED: {}",
+            serde_json::to_string(&dependencies)
+                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?
+        )));
+    }
+    Ok(
+        serde_json::json!({"task_id":task_id,"status":status,"revision":revision,"assignee":assignee,
+        "lease_generation":generation,"lease_expires_at":expiry,"lease_lifecycle":lifecycle,
+        "intent_anchor":anchor,"scope":scope,"dir_path":dir_path,"dependency_readiness":dependencies}),
+    )
+}
+
+/// Explicitly establish current-state baselines; legacy events are not replayed.
+pub fn task_journal_checkpoint(root: &Path) -> Result<JsonValue, error::DecapodError> {
+    let broker = DbBroker::new(root);
+    if broker.is_cloud() {
+        return Err(error::DecapodError::NotImplemented("task journal requires the local canonical task schema; cloud mode never falls back locally".into()));
+    }
+    broker.with_transaction(
+        &todo_db_path(root),
+        &mutation_actor(None),
+        None,
+        "todo.journal.checkpoint",
+        |conn| {
+            ensure_schema(conn)?;
+            task_journal::checkpoint(conn, &mutation_actor(None))
+        },
+    )
+}
+
+/// Read-only verification, including digest and source completeness diagnostics.
+pub fn task_journal_verify(root: &Path) -> Result<JsonValue, error::DecapodError> {
+    if DbBroker::new(root).is_cloud() {
+        return Err(error::DecapodError::NotImplemented("task journal requires the local canonical task schema; cloud mode never falls back locally".into()));
+    }
+    let path = todo_db_path(root);
+    let conn = crate::core::db::db_connect_for_validate(path.to_str().ok_or_else(|| {
+        error::DecapodError::ValidationError("task database path is not UTF-8".into())
+    })?)?;
+    task_journal::verify(&conn)
+}
+
+pub fn task_journal_restore(
+    root: &Path,
+    expected_current_digest: &str,
+) -> Result<JsonValue, error::DecapodError> {
+    let broker = DbBroker::new(root);
+    if broker.is_cloud() {
+        return Err(error::DecapodError::NotImplemented("task journal requires the local canonical task schema; cloud mode never falls back locally".into()));
+    }
+    let path = todo_db_path(root);
+    let actor = mutation_actor(None);
+    let result = broker.with_transaction(&path, &actor, None, "todo.journal.restore", |conn| {
+        // Recovery must not repair schema or rewrite evidence before comparison.
+        let result = task_journal::restore(conn, expected_current_digest)?;
+        if result["restored_tasks"].as_array().is_some_and(|ids| !ids.is_empty()) {
+            crate::core::events::append_on_conn(conn, crate::core::events::TODO, &serde_json::json!({
+                "ts": now_iso(), "event_id": crate::core::ulid::new_ulid(),
+                "event_type": "task.journal.restored", "status": "success", "actor": actor,
+                "payload": {"expected_current_digest": expected_current_digest, "current_digest": result["current_digest"], "restored_tasks": result["restored_tasks"], "proof_policy": "preserve_bytes_no_refresh"}
+            }))?;
+        }
+        Ok(result)
+    })?;
+    if let Some(ids) = result["restored_tasks"].as_array() {
+        for id in ids.iter().filter_map(JsonValue::as_str) {
+            let _ = DbBroker::cache_invalidate_key(&path, CLAIM_STATUS_CACHE_SCOPE, id);
+        }
+    }
+    Ok(result)
+}
+
+#[derive(Subcommand, Debug)]
+pub enum TodoJournalCommand {
+    /// Observe current state as an explicit versioned baseline.
+    Checkpoint,
+    /// Verify journal and current projection without mutation.
+    Verify,
+    /// Restore absent or known-predecessor state after reviewing its digest.
+    Restore {
+        #[clap(long)]
+        expected_current_digest: String,
+    },
+}
+
 const AGENT_EVICT_TIMEOUT_SECS: u64 = DEFAULT_CLAIM_LEASE_SECS;
 const CLAIM_STATUS_CACHE_SCOPE: &str = "todo.claim.status";
 const CLAIM_STATUS_CACHE_TTL_SECS: u64 = 15;
@@ -275,6 +542,11 @@ pub enum TodoCommand {
     },
     /// Rebuild / reconcile the todo projection from the canonical events table.
     Rebuild,
+    /// Checkpoint, verify, or explicitly recover the task projection journal.
+    Journal {
+        #[clap(subcommand)]
+        command: TodoJournalCommand,
+    },
     /// List available task categories.
     Categories,
     /// Register an agent and claim ownership of one or more categories.
@@ -639,6 +911,7 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
         return Ok(());
     }
 
+    guard_task_schema_initialization(conn)?;
     conn.execute(schemas::TODO_DB_SCHEMA_META, [])?;
     crate::core::events::ensure_tables(conn)?;
 
@@ -1767,101 +2040,109 @@ pub fn cleanup_stale_agent_assignments(
     let db_path = todo_db_path(root);
     let ts = now_iso();
 
-    broker.with_transaction(&db_path, "decapod", None, "todo.session.cleanup", |conn| {
-        ensure_schema(conn)?;
-        let mut released_count = 0usize;
+    with_task_journal(
+        &broker,
+        &db_path,
+        "decapod",
+        None,
+        "todo.session.cleanup",
+        TaskJournalSelection::OwnedBy(stale_agents.to_vec()),
+        |conn| {
+            ensure_schema(conn)?;
+            let mut released_count = 0usize;
 
-        for agent_id in stale_agents {
-            let mut task_ids = Vec::new();
-            {
-                let mut stmt = conn
-                    .prepare(
-                        "SELECT id FROM tasks
+            for agent_id in stale_agents {
+                let mut task_ids = Vec::new();
+                {
+                    let mut stmt = conn
+                        .prepare(
+                            "SELECT id FROM tasks
                              WHERE assigned_to = ?1
                                AND status NOT IN ('done', 'archived')",
-                    )
-                    .map_err(error::DecapodError::StorageError)?;
-                let rows = stmt
-                    .query_map(crate::core::db::params![agent_id], |row| {
-                        row.get::<_, String>(0)
-                    })
-                    .map_err(error::DecapodError::StorageError)?;
-                for row in rows {
-                    task_ids.push(row.map_err(error::DecapodError::StorageError)?);
+                        )
+                        .map_err(error::DecapodError::StorageError)?;
+                    let rows = stmt
+                        .query_map(crate::core::db::params![agent_id], |row| {
+                            row.get::<_, String>(0)
+                        })
+                        .map_err(error::DecapodError::StorageError)?;
+                    for row in rows {
+                        task_ids.push(row.map_err(error::DecapodError::StorageError)?);
+                    }
                 }
-            }
 
-            for task_id in task_ids {
-                let changed = conn
-                    .execute(
-                        "UPDATE tasks
+                for task_id in task_ids {
+                    let changed = conn
+                        .execute(
+                            "UPDATE tasks
                              SET assigned_to = '', assigned_at = NULL, updated_at = ?1,
                                  revision = revision + 1
                              WHERE id = ?2
                                AND assigned_to = ?3
                                AND status NOT IN ('done', 'archived')",
-                        crate::core::db::params![ts, task_id, agent_id],
-                    )
-                    .map_err(error::DecapodError::StorageError)?;
-                if changed > 0 {
-                    conn.execute(
-                        "DELETE FROM task_owners WHERE task_id = ?1 AND agent_id = ?2",
-                        crate::core::db::params![task_id, agent_id],
-                    )
-                    .map_err(error::DecapodError::StorageError)?;
-                    sync_legacy_owner_column(conn, &task_id)?;
-                    released_count += changed;
+                            crate::core::db::params![ts, task_id, agent_id],
+                        )
+                        .map_err(error::DecapodError::StorageError)?;
+                    if changed > 0 {
+                        conn.execute(
+                            "DELETE FROM task_owners WHERE task_id = ?1 AND agent_id = ?2",
+                            crate::core::db::params![task_id, agent_id],
+                        )
+                        .map_err(error::DecapodError::StorageError)?;
+                        sync_legacy_owner_column(conn, &task_id)?;
+                        released_count += changed;
 
-                    let ev = TodoEvent {
-                        ts: ts.clone(),
-                        event_id: crate::core::ulid::new_ulid(),
-                        event_type: "task.release".to_string(),
-                        status: "success".to_string(),
-                        task_id: Some(task_id.clone()),
-                        payload: serde_json::json!({
-                            "assigned_to": "",
-                            "previous_assignee": agent_id,
-                            "reason": reason,
-                        }),
-                        actor: "decapod".to_string(),
-                    };
-                    append_event(conn, &ev)?;
-                    insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
+                        let ev = TodoEvent {
+                            ts: ts.clone(),
+                            event_id: crate::core::ulid::new_ulid(),
+                            event_type: "task.release".to_string(),
+                            status: "success".to_string(),
+                            task_id: Some(task_id.clone()),
+                            payload: serde_json::json!({
+                                "assigned_to": "",
+                                "previous_assignee": agent_id,
+                                "reason": reason,
+                            }),
+                            actor: "decapod".to_string(),
+                        };
+                        append_event(conn, &ev)?;
+                        insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
+                    }
                 }
-            }
 
-            conn.execute(
-                "DELETE FROM task_owners WHERE agent_id = ?1",
-                crate::core::db::params![agent_id],
-            )
-            .map_err(error::DecapodError::StorageError)?;
-            clear_agent_category_claims(conn, agent_id, &ts)?;
-            conn.execute(
-                "UPDATE agents
+                conn.execute(
+                    "DELETE FROM task_owners WHERE agent_id = ?1",
+                    crate::core::db::params![agent_id],
+                )
+                .map_err(error::DecapodError::StorageError)?;
+                clear_agent_category_claims(conn, agent_id, &ts)?;
+                conn.execute(
+                    "UPDATE agents
                      SET status = 'expired', updated_at = ?1
                      WHERE agent_id = ?2",
-                crate::core::db::params![ts, agent_id],
-            )
-            .map_err(error::DecapodError::StorageError)?;
+                    crate::core::db::params![ts, agent_id],
+                )
+                .map_err(error::DecapodError::StorageError)?;
 
-            let ev = TodoEvent {
-                ts: ts.clone(),
-                event_id: crate::core::ulid::new_ulid(),
-                event_type: "agent.session.cleanup".to_string(),
-                status: "success".to_string(),
-                task_id: None,
-                payload: serde_json::json!({
-                    "agent_id": agent_id,
-                    "reason": reason,
-                }),
-                actor: "decapod".to_string(),
-            };
-            append_event(conn, &ev)?;
-            insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
-        }
+                let ev = TodoEvent {
+                    ts: ts.clone(),
+                    event_id: crate::core::ulid::new_ulid(),
+                    event_type: "agent.session.cleanup".to_string(),
+                    status: "success".to_string(),
+                    task_id: None,
+                    payload: serde_json::json!({
+                        "agent_id": agent_id,
+                        "reason": reason,
+                    }),
+                    actor: "decapod".to_string(),
+                };
+                append_event(conn, &ev)?;
+                insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
+            }
 
-        Ok(released_count)
-    })
+            Ok(released_count)
+        },
+    )
 }
 
 fn list_claimable_tasks_for_agent(
@@ -3068,102 +3349,104 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
     }
 
     let actor = mutation_actor(None);
-    let (task_id, task_hash, effective_tags, consolidation) = broker.with_transaction(
+    let (task_id, task_hash, effective_tags, consolidation) = with_task_journal(
+        &broker,
         &db_path,
         &actor,
         Some(&intent_ref),
         "todo.add",
+        TaskJournalSelection::NewTasks,
         |conn| {
             ensure_schema(conn)?;
 
-        let similar_active_task = if scope == "workspace" {
-            None
-        } else {
-            find_similar_active_task(conn, title, description, &effective_tags, &primary_owner)?
-        };
-        if let Some(similar) = similar_active_task.as_ref() {
-            append_fuzzy_assignment_labels(&mut effective_tags, similar);
-            let comment = format!(
-                "Similar todo request consolidated here: title=\"{}\" priority={} tags=\"{}\" description=\"{}\"",
-                title, priority, effective_tags, description
-            );
-            write_task_comment_event(
-                root,
-                conn,
-                &similar.task_id,
-                "decapod",
-                &comment,
-                serde_json::json!({
-                    "kind": "fuzzy-consolidation",
-                    "source_title": title,
-                    "source_description": description,
-                    "source_priority": priority,
-                    "source_tags": effective_tags,
-                    "similarity_score": similar.score,
-                    "matched_task_id": similar.task_id,
-                    "matched_task_hash": similar.task_hash,
-                    "matched_task_title": similar.title,
-                    "assigned_to": similar.assigned_to,
-                    "intent_ref": intent_ref,
-                    "fuzzy_labels": [
-                        "fuzzy-similar",
-                        format!("similar-task:{}", similar.task_id),
-                        format!("similar-hash:{}", similar.task_hash),
-                        format!("handoff-to:{}", similar.assigned_to),
-                    ],
-                }),
-                &ts,
-            )?;
+            let similar_active_task = if scope == "workspace" {
+                None
+            } else {
+                find_similar_active_task(conn, title, description, &effective_tags, &primary_owner)?
+            };
+            if let Some(similar) = similar_active_task.as_ref() {
+                append_fuzzy_assignment_labels(&mut effective_tags, similar);
+                let comment = format!(
+                    "Similar todo request consolidated here: title=\"{}\" priority={} tags=\"{}\" description=\"{}\"",
+                    title, priority, effective_tags, description
+                );
+                write_task_comment_event(
+                    root,
+                    conn,
+                    &similar.task_id,
+                    "decapod",
+                    &comment,
+                    serde_json::json!({
+                        "kind": "fuzzy-consolidation",
+                        "source_title": title,
+                        "source_description": description,
+                        "source_priority": priority,
+                        "source_tags": effective_tags,
+                        "similarity_score": similar.score,
+                        "matched_task_id": similar.task_id,
+                        "matched_task_hash": similar.task_hash,
+                        "matched_task_title": similar.title,
+                        "assigned_to": similar.assigned_to,
+                        "intent_ref": intent_ref,
+                        "fuzzy_labels": [
+                            "fuzzy-similar",
+                            format!("similar-task:{}", similar.task_id),
+                            format!("similar-hash:{}", similar.task_hash),
+                            format!("handoff-to:{}", similar.assigned_to),
+                        ],
+                    }),
+                    &ts,
+                )?;
 
-            return Ok((
-                similar.task_id.clone(),
-                similar.task_hash.clone(),
-                effective_tags.clone(),
-                Some(serde_json::json!({
-                    "matched_task_id": similar.task_id,
-                    "matched_task_hash": similar.task_hash,
-                    "matched_task_title": similar.title,
-                    "assigned_to": similar.assigned_to,
-                    "similarity_score": similar.score,
-                    "comment_added": true,
-                    "labels": [
-                        "fuzzy-similar",
-                        format!("similar-task:{}", similar.task_id),
-                        format!("similar-hash:{}", similar.task_hash),
-                        format!("handoff-to:{}", similar.assigned_to),
-                    ],
-                })),
-            ));
-        }
+                return Ok((
+                    similar.task_id.clone(),
+                    similar.task_hash.clone(),
+                    effective_tags.clone(),
+                    Some(serde_json::json!({
+                        "matched_task_id": similar.task_id,
+                        "matched_task_hash": similar.task_hash,
+                        "matched_task_title": similar.title,
+                        "assigned_to": similar.assigned_to,
+                        "similarity_score": similar.score,
+                        "comment_added": true,
+                        "labels": [
+                            "fuzzy-similar",
+                            format!("similar-task:{}", similar.task_id),
+                            format!("similar-hash:{}", similar.task_hash),
+                            format!("handoff-to:{}", similar.assigned_to),
+                        ],
+                    })),
+                ));
+            }
 
-        // Infer category from tags or title for auto-assignment.
-        let inferred_category = infer_category_from_task(conn, title, &effective_tags)?;
-        let category = inferred_category.clone().unwrap_or_default();
-        let task_type = infer_task_type(&scope, &category, title, &effective_tags);
-        let task_id = make_task_id(&task_type);
-        let task_hash = task_hash_from_id(&task_id);
+            // Infer category from tags or title for auto-assignment.
+            let inferred_category = infer_category_from_task(conn, title, &effective_tags)?;
+            let category = inferred_category.clone().unwrap_or_default();
+            let task_type = infer_task_type(&scope, &category, title, &effective_tags);
+            let task_id = make_task_id(&task_type);
+            let task_hash = task_hash_from_id(&task_id);
 
-        let category_agent = if let Some(cat) = &inferred_category {
-            find_agent_for_category(conn, cat, &ts)?
-        } else {
-            None
-        };
-
-        // Determine assigned_to and assigned_at
-        let (assigned_to, assigned_at, auto_assignment_reason) = if let Some(agent) = category_agent
-        {
-                (agent, Some(ts.clone()), Some("category-owner"))
-        } else {
-                (String::new(), None, None)
+            let category_agent = if let Some(cat) = &inferred_category {
+                find_agent_for_category(conn, cat, &ts)?
+            } else {
+                None
             };
 
+            // Determine assigned_to and assigned_at
+            let (assigned_to, assigned_at, auto_assignment_reason) =
+                if let Some(agent) = category_agent {
+                    (agent, Some(ts.clone()), Some("category-owner"))
+                } else {
+                    (String::new(), None, None)
+                };
 
-        if let Some(cat) = inferred_category.as_deref()
-            && !assigned_to.is_empty() {
+            if let Some(cat) = inferred_category.as_deref()
+                && !assigned_to.is_empty()
+            {
                 claim_category_if_unowned(conn, cat, &assigned_to, &ts)?;
             }
 
-        conn.execute(
+            conn.execute(
             "INSERT INTO tasks(id, hash, title, description, tags, owner, due, ref, status, created_at, updated_at, completed_at, closed_at, dir_path, scope, parent_task_id, priority, depends_on, blocks, category, assigned_to, assigned_at, one_shot)
              VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, 'open', ?9, ?10, NULL, NULL, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20)",
             crate::core::db::params![
@@ -3189,68 +3472,72 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
                 one_shot
             ],
         )?;
-        sync_task_tags(conn, &task_id, &effective_tags)?;
-        sync_task_dependencies(conn, &task_id, depends_on, &ts)?;
+            sync_task_tags(conn, &task_id, &effective_tags)?;
+            sync_task_dependencies(conn, &task_id, depends_on, &ts)?;
 
-        let mut payload = serde_json::json!({
-            "intent_ref": intent_ref,
-            "title": title,
-            "description": description,
-            "tags": effective_tags,
-            "owner": primary_owner,
-            "owners": owner_list.clone(),
-            "due": due,
-            "ref": r#ref,
-            "dir_path": dir_abs,
-            "scope": scope,
-            "parent_task_id": parent,
-            "priority": priority,
-            "depends_on": depends_on,
-            "blocks": blocks,
-            "category": category,
-            "hash": task_hash,
-            "task_type": task_type,
-        });
+            let mut payload = serde_json::json!({
+                "intent_ref": intent_ref,
+                "title": title,
+                "description": description,
+                "tags": effective_tags,
+                "owner": primary_owner,
+                "owners": owner_list.clone(),
+                "due": due,
+                "ref": r#ref,
+                "dir_path": dir_abs,
+                "scope": scope,
+                "parent_task_id": parent,
+                "priority": priority,
+                "depends_on": depends_on,
+                "blocks": blocks,
+                "category": category,
+                "hash": task_hash,
+                "task_type": task_type,
+            });
 
-        // Add auto-assignment info if applicable
-        if !assigned_to.is_empty()
-            && let Some(obj) = payload.as_object_mut() {
+            // Add auto-assignment info if applicable
+            if !assigned_to.is_empty()
+                && let Some(obj) = payload.as_object_mut()
+            {
                 obj.insert("assigned_to".to_string(), serde_json::json!(assigned_to));
                 obj.insert("auto_assigned".to_string(), serde_json::json!(true));
                 if let Some(reason) = auto_assignment_reason {
-                    obj.insert("auto_assignment_reason".to_string(), serde_json::json!(reason));
+                    obj.insert(
+                        "auto_assignment_reason".to_string(),
+                        serde_json::json!(reason),
+                    );
                 }
             }
 
-        let ev = TodoEvent {
-            ts: ts.clone(),
-            event_id: crate::core::ulid::new_ulid(),
-            event_type: "task.add".to_string(),
-            status: "success".to_string(),
-            task_id: Some(task_id.clone()),
-            payload,
-            actor: actor.clone(),
-        };
-        append_event(conn, &ev)?;
-        insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
+            let ev = TodoEvent {
+                ts: ts.clone(),
+                event_id: crate::core::ulid::new_ulid(),
+                event_type: "task.add".to_string(),
+                status: "success".to_string(),
+                task_id: Some(task_id.clone()),
+                payload,
+                actor: actor.clone(),
+            };
+            append_event(conn, &ev)?;
+            insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
 
-        for (idx, owner_agent) in owner_list.iter().enumerate() {
-            let claim_type = if idx == 0 { "primary" } else { "secondary" };
-            let claim_id = upsert_task_owner(conn, &task_id, owner_agent, claim_type, &ts)?;
-            write_ownership_claim_event(
-                root,
-                conn,
-                &OwnershipClaimRecord {
-                    task_id: &task_id,
-                    agent_id: owner_agent,
-                    claim_type,
-                    claim_id: &claim_id,
-                    actor: &actor,
-                    ts: &ts,
-                },
-            )?;
-        }
-        sync_legacy_owner_column(conn, &task_id)?;
+            for (idx, owner_agent) in owner_list.iter().enumerate() {
+                let claim_type = if idx == 0 { "primary" } else { "secondary" };
+                let claim_id = upsert_task_owner(conn, &task_id, owner_agent, claim_type, &ts)?;
+                write_ownership_claim_event(
+                    root,
+                    conn,
+                    &OwnershipClaimRecord {
+                        task_id: &task_id,
+                        agent_id: owner_agent,
+                        claim_type,
+                        claim_id: &claim_id,
+                        actor: &actor,
+                        ts: &ts,
+                    },
+                )?;
+            }
+            sync_legacy_owner_column(conn, &task_id)?;
             Ok((task_id, task_hash, effective_tags.clone(), None))
         },
     )?;
@@ -3370,13 +3657,21 @@ fn update_status_with_verification(
         );
     }
 
-    let result =
-        match broker.with_transaction(&db_path, &actor, Some(&intent_ref), event_type, |conn| {
+    let result = match with_task_journal(
+        &broker,
+        &db_path,
+        &actor,
+        Some(&intent_ref),
+        event_type,
+        TaskJournalSelection::Ids(vec![id.to_owned()]),
+        |conn| {
             ensure_schema(conn)?;
             // Check after acquiring the transaction so a grant revoked or
             // expired while waiting cannot authorize this mutation. Reuse the
             // held connection rather than opening another broker connection.
-            if requires_human && !policy::check_approval_on_conn(conn, event_type, Some(id), "global")? {
+            if requires_human
+                && !policy::check_approval_on_conn(conn, event_type, Some(id), "global")?
+            {
                 return Err(error::DecapodError::ValidationError(format!(
                     "Action '{event_type}' on '{id}' is high risk and lacks approval. Run `decapod govern policy eval --command '{event_type}' --path '{id}'` to get the approval command."
                 )));
@@ -3425,7 +3720,8 @@ fn update_status_with_verification(
                 }
             } else if verification.is_some() {
                 return Err(error::DecapodError::ValidationError(
-                    "Completion proof may only accompany the done transition".into()));
+                    "Completion proof may only accompany the done transition".into(),
+                ));
             }
 
             let changed = conn.execute(
@@ -3477,21 +3773,22 @@ fn update_status_with_verification(
                 "id": id,
                 "revision": new_revision,
             }))
-        }) {
-            Ok(result) => result,
-            Err(error::DecapodError::ValidationError(message))
-                if message.starts_with("STORAGE_POOL_LOCK_TIMEOUT:") =>
-            {
-                serde_json::json!({
-                    "status": "conflict",
-                    "reason": "storage_contention",
-                    "id": id,
-                    "expected_status": expected_status,
-                    "expected_revision": expected_revision,
-                })
-            }
-            Err(error) => return Err(error),
-        };
+        },
+    ) {
+        Ok(result) => result,
+        Err(error::DecapodError::ValidationError(message))
+            if message.starts_with("STORAGE_POOL_LOCK_TIMEOUT:") =>
+        {
+            serde_json::json!({
+                "status": "conflict",
+                "reason": "storage_contention",
+                "id": id,
+                "expected_status": expected_status,
+                "expected_revision": expected_revision,
+            })
+        }
+        Err(error) => return Err(error),
+    };
 
     let changed = result.get("status").and_then(|v| v.as_str()) == Some("ok");
     if changed {
@@ -3620,103 +3917,111 @@ fn edit_task(
     let db_path = todo_db_path(root);
     let actor = mutation_actor(None);
 
-    let changed = broker.with_transaction(&db_path, &actor, None, "todo.edit", |conn| {
-        ensure_schema(conn)?;
+    let changed = with_task_journal(
+        &broker,
+        &db_path,
+        &actor,
+        None,
+        "todo.edit",
+        TaskJournalSelection::Ids(vec![id.to_owned()]),
+        |conn| {
+            ensure_schema(conn)?;
 
-        // Validate category if provided
-        if let Some(cat) = category
-            && !cat.is_empty()
-        {
-            let valid: bool = conn
-                .query_row("SELECT 1 FROM categories WHERE name = ?", [cat], |_| {
-                    Ok(true)
-                })
-                .optional()
-                .map_err(error::DecapodError::StorageError)?
-                .unwrap_or(false);
-            if !valid {
-                return Err(error::DecapodError::ValidationError(format!(
-                    "Unknown category '{cat}'. Run `decapod todo categories` to see valid categories."
-                )));
+            // Validate category if provided
+            if let Some(cat) = category
+                && !cat.is_empty()
+            {
+                let valid: bool = conn
+                    .query_row("SELECT 1 FROM categories WHERE name = ?", [cat], |_| {
+                        Ok(true)
+                    })
+                    .optional()
+                    .map_err(error::DecapodError::StorageError)?
+                    .unwrap_or(false);
+                if !valid {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "Unknown category '{cat}'. Run `decapod todo categories` to see valid categories."
+                    )));
+                }
             }
-        }
 
-        // Build update fields and track what changed
-        let mut updates = vec![];
-        let mut params: Vec<Box<dyn ToSql>> = vec![];
+            // Build update fields and track what changed
+            let mut updates = vec![];
+            let mut params: Vec<Box<dyn ToSql>> = vec![];
 
-        if let Some(t) = title {
-            updates.push("title = ?");
-            params.push(Box::new(t.to_string()));
-        }
+            if let Some(t) = title {
+                updates.push("title = ?");
+                params.push(Box::new(t.to_string()));
+            }
 
-        if let Some(d) = description {
-            updates.push("description = ?");
-            params.push(Box::new(d.to_string()));
-        }
+            if let Some(d) = description {
+                updates.push("description = ?");
+                params.push(Box::new(d.to_string()));
+            }
 
-        if let Some(c) = category {
-            updates.push("category = ?");
-            params.push(Box::new(c.to_string()));
-        }
+            if let Some(c) = category {
+                updates.push("category = ?");
+                params.push(Box::new(c.to_string()));
+            }
 
-        if updates.is_empty() && owner.is_none() {
-            return Ok(0usize);
-        }
+            if updates.is_empty() && owner.is_none() {
+                return Ok(0usize);
+            }
 
-        let changed = if updates.is_empty() {
-            conn.execute(
-                "UPDATE tasks SET updated_at = ?, revision = revision + 1 WHERE id = ?",
-                crate::core::db::params![ts, id],
-            )?
-        } else {
-            // Always update updated_at
-            let sql = format!(
-                "UPDATE tasks SET {}, updated_at = ?, revision = revision + 1 WHERE id = ?",
-                updates.join(", ")
-            );
-            params.push(Box::new(ts.clone()));
-            params.push(Box::new(id.to_string()));
-            conn.execute(
-                &sql,
-                crate::core::db::params_from_iter(params.iter().map(|p| p.as_ref())),
-            )?
-        };
+            let changed = if updates.is_empty() {
+                conn.execute(
+                    "UPDATE tasks SET updated_at = ?, revision = revision + 1 WHERE id = ?",
+                    crate::core::db::params![ts, id],
+                )?
+            } else {
+                // Always update updated_at
+                let sql = format!(
+                    "UPDATE tasks SET {}, updated_at = ?, revision = revision + 1 WHERE id = ?",
+                    updates.join(", ")
+                );
+                params.push(Box::new(ts.clone()));
+                params.push(Box::new(id.to_string()));
+                conn.execute(
+                    &sql,
+                    crate::core::db::params_from_iter(params.iter().map(|p| p.as_ref())),
+                )?
+            };
 
-        // Create edit event
-        let mut payload = serde_json::Map::new();
-        if let Some(t) = title {
-            payload.insert("title".to_string(), serde_json::json!(t));
-        }
-        if let Some(d) = description {
-            payload.insert("description".to_string(), serde_json::json!(d));
-        }
-        if let Some(o) = owner {
-            payload.insert("owner".to_string(), serde_json::json!(o));
-        }
-        if let Some(c) = category {
-            payload.insert("category".to_string(), serde_json::json!(c));
-        }
+            // Create edit event
+            let mut payload = serde_json::Map::new();
+            if let Some(t) = title {
+                payload.insert("title".to_string(), serde_json::json!(t));
+            }
+            if let Some(d) = description {
+                payload.insert("description".to_string(), serde_json::json!(d));
+            }
+            if let Some(o) = owner {
+                payload.insert("owner".to_string(), serde_json::json!(o));
+            }
+            if let Some(c) = category {
+                payload.insert("category".to_string(), serde_json::json!(c));
+            }
 
-        let ev = TodoEvent {
-            ts: ts.clone(),
-            event_id: crate::core::ulid::new_ulid(),
-            event_type: "task.edit".to_string(),
-            status: "success".to_string(),
-            task_id: Some(id.to_string()),
-            payload: serde_json::Value::Object(payload),
-            actor: actor.clone(),
-        };
-        append_event(conn, &ev)?;
-        insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
+            let ev = TodoEvent {
+                ts: ts.clone(),
+                event_id: crate::core::ulid::new_ulid(),
+                event_type: "task.edit".to_string(),
+                status: "success".to_string(),
+                task_id: Some(id.to_string()),
+                payload: serde_json::Value::Object(payload),
+                actor: actor.clone(),
+            };
+            append_event(conn, &ev)?;
+            insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
 
-        if let Some(o) = owner {
-            let owner_list = parse_owners_input(o);
-            set_task_owners(root, conn, id, &owner_list, &actor, &ts)?;
-        }
+            if let Some(o) = owner {
+                let owner_list = parse_owners_input(o);
+                set_task_owners(root, conn, id, &owner_list, &actor, &ts)?;
+            }
 
-        Ok(changed)
-    })?;
+            Ok(changed)
+        },
+    )?;
 
     Ok(serde_json::json!({
         "ts": ts,
@@ -3858,334 +4163,336 @@ pub fn claim_task_with_lease(
     // Do not short-circuit exclusive conflicts from cache: lease expiry must hit the DB
     // so another agent can reclaim an expired ownership lease.
 
-    let result = broker.with_transaction(&db_path, "decapod", None, "todo.claim", |conn| {
-        ensure_schema(conn)?;
-        touch_agent_presence(conn, agent_id, &ts)?;
-        let claim_zone = if mode == ClaimMode::Shared {
-            "todo.claim.shared"
-        } else {
-            "todo.claim.exclusive"
-        };
-        enforce_operation_policy(root, conn, claim_zone, agent_id, id)?;
+    let result = with_task_journal(
+        &broker,
+        &db_path,
+        "decapod",
+        None,
+        "todo.claim",
+        TaskJournalSelection::Ids(vec![id.to_owned()]),
+        |conn| {
+            ensure_schema(conn)?;
+            touch_agent_presence(conn, agent_id, &ts)?;
+            let claim_zone = if mode == ClaimMode::Shared {
+                "todo.claim.shared"
+            } else {
+                "todo.claim.exclusive"
+            };
+            enforce_operation_policy(root, conn, claim_zone, agent_id, id)?;
 
-        // status, assigned_to, category, scope, dir_path, lease_expires_at, lease_generation
-        struct ClaimLeaseRow {
-            status: String,
-            assigned_to: String,
-            category: String,
-            scope: String,
-            dir_path: String,
-            existing_lease: Option<String>,
-            lease_generation: u32,
-        }
-        let current: Option<ClaimLeaseRow> = conn
-            .query_row(
-                "SELECT status, assigned_to, category, scope, dir_path, lease_expires_at,
+            // status, assigned_to, category, scope, dir_path, lease_expires_at, lease_generation
+            struct ClaimLeaseRow {
+                status: String,
+                assigned_to: String,
+                category: String,
+                scope: String,
+                dir_path: String,
+                existing_lease: Option<String>,
+                lease_generation: u32,
+            }
+            let current: Option<ClaimLeaseRow> = conn
+                .query_row(
+                    "SELECT status, assigned_to, category, scope, dir_path, lease_expires_at,
                         COALESCE(lease_generation, 0)
                  FROM tasks WHERE id = ?",
-                [id],
-                |row| {
-                    Ok(ClaimLeaseRow {
-                        status: row.get(0)?,
-                        assigned_to: row.get(1)?,
-                        category: row.get(2)?,
-                        scope: row.get(3)?,
-                        dir_path: row.get(4)?,
-                        existing_lease: row.get(5)?,
-                        lease_generation: row.get::<_, i64>(6).unwrap_or(0) as u32,
-                    })
-                },
-            )
-            .optional()
-            .map_err(error::DecapodError::StorageError)?;
+                    [id],
+                    |row| {
+                        Ok(ClaimLeaseRow {
+                            status: row.get(0)?,
+                            assigned_to: row.get(1)?,
+                            category: row.get(2)?,
+                            scope: row.get(3)?,
+                            dir_path: row.get(4)?,
+                            existing_lease: row.get(5)?,
+                            lease_generation: row.get::<_, i64>(6).unwrap_or(0) as u32,
+                        })
+                    },
+                )
+                .optional()
+                .map_err(error::DecapodError::StorageError)?;
 
-        let mut reclaimed_from: Option<String> = None;
-        let dependency_readiness;
-        let prior_generation = current
-            .as_ref()
-            .map(|row| row.lease_generation)
-            .unwrap_or(0);
+            let mut reclaimed_from: Option<String> = None;
+            let dependency_readiness;
+            let prior_generation = current
+                .as_ref()
+                .map(|row| row.lease_generation)
+                .unwrap_or(0);
 
-        match current {
-            None => {
-                return Ok(serde_json::json!({
-                    "status": "not_found",
-                    "message": format!("Task {} not found", id)
-                }));
-            }
-            Some(row) => {
-                let ClaimLeaseRow {
-                    status,
-                    assigned_to,
-                    category,
-                    scope,
-                    dir_path,
-                    existing_lease,
-                    lease_generation: _,
-                } = row;
-                if status == "done" || status == "archived" {
+            match current {
+                None => {
                     return Ok(serde_json::json!({
-                        "status": "error",
-                        "message": format!("Task {} is already {}", id, status)
+                        "status": "not_found",
+                        "message": format!("Task {} not found", id)
                     }));
                 }
-                dependency_readiness = load_dependency_readiness(conn, id)?;
-                if !dependency_readiness.is_ready() {
-                    let resolution = if dependency_readiness.state
-                        == fleet_coord::DependencyReadinessState::Cycle
-                    {
-                        "repair_dependency_graph"
-                    } else {
-                        "satisfy_dependencies"
-                    };
-                    return Ok(serde_json::json!({
-                        "status": "conflict",
-                        "mode": format!("{mode:?}").to_lowercase(),
-                        "resolution": resolution,
-                        "message": format!(
-                            "Task {id} dependencies are not proof-ready; resolve the typed blockers before claiming"
-                        ),
-                        "dependency_readiness": dependency_readiness
-                    }));
-                }
-                if !assigned_to.is_empty() && assigned_to != agent_id {
-                    if mode == ClaimMode::Shared {
-                        let claim_id = upsert_task_owner(conn, id, agent_id, "secondary", &ts)?;
-                        write_ownership_claim_event(
-                            root,
-                            conn,
-                            &OwnershipClaimRecord {
-                                task_id: id,
-                                agent_id,
-                                claim_type: "secondary",
-                                claim_id: &claim_id,
-                                actor: agent_id,
-                                ts: &ts,
-                            },
-                        )?;
-                        sync_legacy_owner_column(conn, id)?;
-                        conn.execute("UPDATE tasks SET revision = revision + 1, updated_at = ?1 WHERE id = ?2", crate::core::db::params![ts, id])?;
+                Some(row) => {
+                    let ClaimLeaseRow {
+                        status,
+                        assigned_to,
+                        category,
+                        scope,
+                        dir_path,
+                        existing_lease,
+                        lease_generation: _,
+                    } = row;
+                    if status == "done" || status == "archived" {
                         return Ok(serde_json::json!({
-                            "status": "ok",
-                            "mode": "shared",
-                            "message": format!("Task {} is assigned to {}; added {} as secondary owner", id, assigned_to, agent_id),
-                            "assigned_to": assigned_to,
-                            "claim_id": claim_id,
+                            "status": "error",
+                            "message": format!("Task {} is already {}", id, status)
+                        }));
+                    }
+                    dependency_readiness = load_dependency_readiness(conn, id)?;
+                    if !dependency_readiness.is_ready() {
+                        let resolution = if dependency_readiness.state
+                            == fleet_coord::DependencyReadinessState::Cycle
+                        {
+                            "repair_dependency_graph"
+                        } else {
+                            "satisfy_dependencies"
+                        };
+                        return Ok(serde_json::json!({
+                            "status": "conflict",
+                            "mode": format!("{mode:?}").to_lowercase(),
+                            "resolution": resolution,
+                            "message": format!(
+                                "Task {id} dependencies are not proof-ready; resolve the typed blockers before claiming"
+                            ),
                             "dependency_readiness": dependency_readiness
                         }));
                     }
-
-                    let lease_expired =
-                        fleet_coord::lease_allows_reclaim(existing_lease.as_deref(), &ts);
-                    let agent_stale =
-                        is_agent_stale(conn, &assigned_to, &ts, AGENT_EVICT_TIMEOUT_SECS)?;
-                    if lease_expired || agent_stale {
-                        force_release_assignment(
-                            conn,
-                            id,
-                            &assigned_to,
-                            agent_id,
-                            &ts,
-                            if lease_expired {
-                                "lease_expired"
-                            } else {
-                                "agent_stale"
-                            },
-                        )?;
-                        reclaimed_from = Some(assigned_to);
-                    } else {
-                        return Ok(serde_json::json!({
-                            "status": "conflict",
-                            "mode": "exclusive",
-                            "message": format!("Task {} is already claimed by {}", id, assigned_to),
-                            "resolution": "none",
-                            "assigned_to": assigned_to,
-                            "lease_expires_at": existing_lease,
-                            "lease_state": "active"
-                        }));
-                    }
-                }
-
-                if mode == ClaimMode::Exclusive {
-                    let active = list_active_exclusive_claims(conn, &ts)?;
-                    let overlaps = fleet_coord::detect_overlaps(
-                        id,
-                        agent_id,
-                        &scope,
-                        &category,
-                        &dir_path,
-                        &active,
-                        &ts,
-                    );
-                    if !overlaps.is_empty() {
-                        return Ok(serde_json::json!({
-                            "status": "conflict",
-                            "mode": "exclusive",
-                            "resolution": "serialize_or_handoff",
-                            "message": format!(
-                                "Task {} overlaps {} active exclusive claim(s); serialize or hand off before claiming",
-                                id,
-                                overlaps.len()
-                            ),
-                            "overlap": true,
-                            "overlaps": overlaps
-                        }));
-                    }
-                }
-
-                if !category.is_empty() && mode == ClaimMode::Exclusive {
-                    if let Some(owner) = get_category_owner(conn, &category)? {
-                        if owner != agent_id {
-                            if is_agent_stale(conn, &owner, &ts, AGENT_EVICT_TIMEOUT_SECS)? {
-                                claim_category_for_agent(conn, agent_id, &category, &ts)?;
-                            } else {
-                                return Ok(serde_json::json!({
-                                    "status": "error",
-                                    "message": format!(
-                                        "Category '{}' is owned by {}; cannot claim task {}",
-                                        category, owner, id
-                                    )
-                                }));
-                            }
+                    if !assigned_to.is_empty() && assigned_to != agent_id {
+                        if mode == ClaimMode::Shared {
+                            let claim_id = upsert_task_owner(conn, id, agent_id, "secondary", &ts)?;
+                            write_ownership_claim_event(
+                                root,
+                                conn,
+                                &OwnershipClaimRecord {
+                                    task_id: id,
+                                    agent_id,
+                                    claim_type: "secondary",
+                                    claim_id: &claim_id,
+                                    actor: agent_id,
+                                    ts: &ts,
+                                },
+                            )?;
+                            sync_legacy_owner_column(conn, id)?;
+                            conn.execute("UPDATE tasks SET revision = revision + 1, updated_at = ?1 WHERE id = ?2", crate::core::db::params![ts, id])?;
+                            return Ok(serde_json::json!({
+                                "status": "ok",
+                                "mode": "shared",
+                                "message": format!("Task {} is assigned to {}; added {} as secondary owner", id, assigned_to, agent_id),
+                                "assigned_to": assigned_to,
+                                "claim_id": claim_id,
+                                "dependency_readiness": dependency_readiness
+                            }));
                         }
-                    } else {
-                        claim_category_if_unowned(conn, &category, agent_id, &ts)?;
+
+                        let lease_expired =
+                            fleet_coord::lease_allows_reclaim(existing_lease.as_deref(), &ts);
+                        let agent_stale =
+                            is_agent_stale(conn, &assigned_to, &ts, AGENT_EVICT_TIMEOUT_SECS)?;
+                        if lease_expired || agent_stale {
+                            force_release_assignment(
+                                conn,
+                                id,
+                                &assigned_to,
+                                agent_id,
+                                &ts,
+                                if lease_expired {
+                                    "lease_expired"
+                                } else {
+                                    "agent_stale"
+                                },
+                            )?;
+                            reclaimed_from = Some(assigned_to);
+                        } else {
+                            return Ok(serde_json::json!({
+                                "status": "conflict",
+                                "mode": "exclusive",
+                                "message": format!("Task {} is already claimed by {}", id, assigned_to),
+                                "resolution": "none",
+                                "assigned_to": assigned_to,
+                                "lease_expires_at": existing_lease,
+                                "lease_state": "active"
+                            }));
+                        }
+                    }
+
+                    if mode == ClaimMode::Exclusive {
+                        let active = list_active_exclusive_claims(conn, &ts)?;
+                        let overlaps = fleet_coord::detect_overlaps(
+                            id, agent_id, &scope, &category, &dir_path, &active, &ts,
+                        );
+                        if !overlaps.is_empty() {
+                            return Ok(serde_json::json!({
+                                "status": "conflict",
+                                "mode": "exclusive",
+                                "resolution": "serialize_or_handoff",
+                                "message": format!(
+                                    "Task {} overlaps {} active exclusive claim(s); serialize or hand off before claiming",
+                                    id,
+                                    overlaps.len()
+                                ),
+                                "overlap": true,
+                                "overlaps": overlaps
+                            }));
+                        }
+                    }
+
+                    if !category.is_empty() && mode == ClaimMode::Exclusive {
+                        if let Some(owner) = get_category_owner(conn, &category)? {
+                            if owner != agent_id {
+                                if is_agent_stale(conn, &owner, &ts, AGENT_EVICT_TIMEOUT_SECS)? {
+                                    claim_category_for_agent(conn, agent_id, &category, &ts)?;
+                                } else {
+                                    return Ok(serde_json::json!({
+                                        "status": "error",
+                                        "message": format!(
+                                            "Category '{}' is owned by {}; cannot claim task {}",
+                                            category, owner, id
+                                        )
+                                    }));
+                                }
+                            }
+                        } else {
+                            claim_category_if_unowned(conn, &category, agent_id, &ts)?;
+                        }
                     }
                 }
             }
-        }
 
-        // Claim the task atomically to avoid read-then-write races across agents.
-        let reclaimed = reclaimed_from.is_some();
-        let generation = fleet_coord::next_lease_generation(prior_generation, reclaimed);
-        let lifecycle = if reclaimed {
-            LeaseLifecycle::Reclaimed
-        } else {
-            LeaseLifecycle::Claimed
-        };
-        if mode == ClaimMode::Exclusive {
-            let changed = conn
-                .execute(
-                    "UPDATE tasks
+            // Claim the task atomically to avoid read-then-write races across agents.
+            let reclaimed = reclaimed_from.is_some();
+            let generation = fleet_coord::next_lease_generation(prior_generation, reclaimed);
+            let lifecycle = if reclaimed {
+                LeaseLifecycle::Reclaimed
+            } else {
+                LeaseLifecycle::Claimed
+            };
+            if mode == ClaimMode::Exclusive {
+                let changed = conn
+                    .execute(
+                        "UPDATE tasks
                      SET assigned_to = ?1, assigned_at = ?2, updated_at = ?2, lease_expires_at = ?3,
                          lease_generation = ?4, lease_lifecycle = ?5, intent_anchor = ?6,
                          revision = revision + 1
                      WHERE id = ?7
                        AND status NOT IN ('done', 'archived')
                        AND (assigned_to = '' OR assigned_to = ?1)",
-                    crate::core::db::params![
-                        agent_id,
-                        ts,
-                        lease_exp,
-                        generation as i64,
-                        lifecycle.as_str(),
-                        resolved_intent,
-                        id
-                    ],
-                )
-                .map_err(error::DecapodError::StorageError)?;
-            if changed == 0 {
-                let current: Option<(String, String)> = conn
-                    .query_row(
-                        "SELECT status, assigned_to FROM tasks WHERE id = ?1",
-                        crate::core::db::params![id],
-                        |row| Ok((row.get(0)?, row.get(1)?)),
+                        crate::core::db::params![
+                            agent_id,
+                            ts,
+                            lease_exp,
+                            generation as i64,
+                            lifecycle.as_str(),
+                            resolved_intent,
+                            id
+                        ],
                     )
-                    .optional()
                     .map_err(error::DecapodError::StorageError)?;
-                return Ok(match current {
-                    None => serde_json::json!({
-                        "status": "not_found",
-                        "message": format!("Task {} not found", id)
-                    }),
-                    Some((status, _assignee)) if status == "done" || status == "archived" => {
-                        serde_json::json!({
-                            "status": "error",
-                            "message": format!("Task {} is already {}", id, status)
-                        })
-                    }
-                    Some((_status, assignee)) => serde_json::json!({
-                        "status": "conflict",
-                        "mode": "exclusive",
-                        "message": format!("Task {} is already claimed by {}", id, assignee),
-                        "resolution": "none",
-                        "assigned_to": assignee
-                    }),
-                });
-            }
-        } else {
-            conn.execute(
+                if changed == 0 {
+                    let current: Option<(String, String)> = conn
+                        .query_row(
+                            "SELECT status, assigned_to FROM tasks WHERE id = ?1",
+                            crate::core::db::params![id],
+                            |row| Ok((row.get(0)?, row.get(1)?)),
+                        )
+                        .optional()
+                        .map_err(error::DecapodError::StorageError)?;
+                    return Ok(match current {
+                        None => serde_json::json!({
+                            "status": "not_found",
+                            "message": format!("Task {} not found", id)
+                        }),
+                        Some((status, _assignee)) if status == "done" || status == "archived" => {
+                            serde_json::json!({
+                                "status": "error",
+                                "message": format!("Task {} is already {}", id, status)
+                            })
+                        }
+                        Some((_status, assignee)) => serde_json::json!({
+                            "status": "conflict",
+                            "mode": "exclusive",
+                            "message": format!("Task {} is already claimed by {}", id, assignee),
+                            "resolution": "none",
+                            "assigned_to": assignee
+                        }),
+                    });
+                }
+            } else {
+                conn.execute(
                 "UPDATE tasks SET assigned_to = ?, assigned_at = ?, updated_at = ?, revision = revision + 1 WHERE id = ?",
                 [agent_id, &ts, &ts, id],
             )
             .map_err(error::DecapodError::StorageError)?;
-        }
+            }
 
-        let claim_id = upsert_task_owner(conn, id, agent_id, "primary", &ts)?;
-        write_ownership_claim_event(
-            root,
-            conn,
-            &OwnershipClaimRecord {
-                task_id: id,
-                agent_id,
-                claim_type: "primary",
-                claim_id: &claim_id,
-                actor: agent_id,
-                ts: &ts,
-            },
-        )?;
-        sync_legacy_owner_column(conn, id)?;
+            let claim_id = upsert_task_owner(conn, id, agent_id, "primary", &ts)?;
+            write_ownership_claim_event(
+                root,
+                conn,
+                &OwnershipClaimRecord {
+                    task_id: id,
+                    agent_id,
+                    claim_type: "primary",
+                    claim_id: &claim_id,
+                    actor: agent_id,
+                    ts: &ts,
+                },
+            )?;
+            sync_legacy_owner_column(conn, id)?;
 
-        // Create claim event
-        let mut payload = serde_json::json!({
-            "assigned_to": agent_id,
-            "mode": format!("{mode:?}").to_lowercase(),
-        });
-        if mode == ClaimMode::Exclusive {
-            payload["lease_expires_at"] = serde_json::json!(lease_exp);
-            payload["lease_seconds"] = serde_json::json!(lease_secs);
-            payload["lease_generation"] = serde_json::json!(generation);
-            payload["lease_lifecycle"] = serde_json::json!(lifecycle.as_str());
-            payload["intent_anchor"] = serde_json::json!(resolved_intent);
-        }
-        payload["dependency_readiness"] = serde_json::json!(dependency_readiness.clone());
-        if let Some(prev) = reclaimed_from.as_ref() {
-            payload["reclaimed_from"] = serde_json::json!(prev);
-        }
-        let ev = TodoEvent {
-            ts: ts.clone(),
-            event_id: crate::core::ulid::new_ulid(),
-            event_type: "task.claim".to_string(),
-            status: "success".to_string(),
-            task_id: Some(id.to_string()),
-            payload,
-            actor: agent_id.to_string(),
-        };
-        append_event(conn, &ev)?;
-        insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
+            // Create claim event
+            let mut payload = serde_json::json!({
+                "assigned_to": agent_id,
+                "mode": format!("{mode:?}").to_lowercase(),
+            });
+            if mode == ClaimMode::Exclusive {
+                payload["lease_expires_at"] = serde_json::json!(lease_exp);
+                payload["lease_seconds"] = serde_json::json!(lease_secs);
+                payload["lease_generation"] = serde_json::json!(generation);
+                payload["lease_lifecycle"] = serde_json::json!(lifecycle.as_str());
+                payload["intent_anchor"] = serde_json::json!(resolved_intent);
+            }
+            payload["dependency_readiness"] = serde_json::json!(dependency_readiness.clone());
+            if let Some(prev) = reclaimed_from.as_ref() {
+                payload["reclaimed_from"] = serde_json::json!(prev);
+            }
+            let ev = TodoEvent {
+                ts: ts.clone(),
+                event_id: crate::core::ulid::new_ulid(),
+                event_type: "task.claim".to_string(),
+                status: "success".to_string(),
+                task_id: Some(id.to_string()),
+                payload,
+                actor: agent_id.to_string(),
+            };
+            append_event(conn, &ev)?;
+            insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
 
-        let mut ok = serde_json::json!({
-            "status": "ok",
-            "mode": format!("{mode:?}").to_lowercase(),
-            "message": format!("Task {} claimed by {}", id, agent_id),
-            "claim_id": claim_id,
-            "assigned_to": agent_id,
-            "dependency_readiness": dependency_readiness
-        });
-        if mode == ClaimMode::Exclusive {
-            ok["lease_expires_at"] = serde_json::json!(lease_exp);
-            ok["lease_seconds"] = serde_json::json!(lease_secs);
-            ok["lease_state"] = serde_json::json!("active");
-            ok["lease_generation"] = serde_json::json!(generation);
-            ok["lease_lifecycle"] = serde_json::json!(lifecycle.as_str());
-            ok["intent_anchor"] = serde_json::json!(resolved_intent);
-        }
-        if let Some(prev) = reclaimed_from {
-            ok["reclaimed_from"] = serde_json::json!(prev);
-            ok["resolution"] = serde_json::json!("reclaimed");
-        }
-        Ok(ok)
-    })?;
+            let mut ok = serde_json::json!({
+                "status": "ok",
+                "mode": format!("{mode:?}").to_lowercase(),
+                "message": format!("Task {} claimed by {}", id, agent_id),
+                "claim_id": claim_id,
+                "assigned_to": agent_id,
+                "dependency_readiness": dependency_readiness
+            });
+            if mode == ClaimMode::Exclusive {
+                ok["lease_expires_at"] = serde_json::json!(lease_exp);
+                ok["lease_seconds"] = serde_json::json!(lease_secs);
+                ok["lease_state"] = serde_json::json!("active");
+                ok["lease_generation"] = serde_json::json!(generation);
+                ok["lease_lifecycle"] = serde_json::json!(lifecycle.as_str());
+                ok["intent_anchor"] = serde_json::json!(resolved_intent);
+            }
+            if let Some(prev) = reclaimed_from {
+                ok["reclaimed_from"] = serde_json::json!(prev);
+                ok["resolution"] = serde_json::json!("reclaimed");
+            }
+            Ok(ok)
+        },
+    )?;
 
     if result.get("status").and_then(|v| v.as_str()) == Some("ok") {
         let assigned_to = result
@@ -4363,123 +4670,133 @@ pub fn renew_claim_lease(
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
 
-    let result = broker.with_transaction(&db_path, "decapod", None, "todo.renew", |conn| {
-        ensure_schema(conn)?;
-        touch_agent_presence(conn, agent_id, &ts)?;
-        enforce_operation_policy(root, conn, "todo.claim.exclusive", agent_id, id)?;
+    let result = with_task_journal(
+        &broker,
+        &db_path,
+        "decapod",
+        None,
+        "todo.renew",
+        TaskJournalSelection::Ids(vec![id.to_owned()]),
+        |conn| {
+            ensure_schema(conn)?;
+            touch_agent_presence(conn, agent_id, &ts)?;
+            enforce_operation_policy(root, conn, "todo.claim.exclusive", agent_id, id)?;
 
-        let current: Option<(String, String, Option<String>, u32, String)> = conn
-            .query_row(
-                "SELECT status, assigned_to, lease_expires_at, COALESCE(lease_generation, 0),
+            let current: Option<(String, String, Option<String>, u32, String)> = conn
+                .query_row(
+                    "SELECT status, assigned_to, lease_expires_at, COALESCE(lease_generation, 0),
                         COALESCE(lease_lifecycle, '')
                  FROM tasks WHERE id = ?",
-                [id],
-                |row| {
-                    Ok((
-                        row.get(0)?,
-                        row.get(1)?,
-                        row.get(2)?,
-                        row.get::<_, i64>(3).unwrap_or(0) as u32,
-                        row.get::<_, String>(4).unwrap_or_default(),
-                    ))
-                },
-            )
-            .optional()
-            .map_err(error::DecapodError::StorageError)?;
+                    [id],
+                    |row| {
+                        Ok((
+                            row.get(0)?,
+                            row.get(1)?,
+                            row.get(2)?,
+                            row.get::<_, i64>(3).unwrap_or(0) as u32,
+                            row.get::<_, String>(4).unwrap_or_default(),
+                        ))
+                    },
+                )
+                .optional()
+                .map_err(error::DecapodError::StorageError)?;
 
-        match current {
-            None => Ok(serde_json::json!({
-                "status": "not_found",
-                "message": format!("Task {} not found", id)
-            })),
-            Some((status, assigned_to, prev_lease, prev_gen, prev_lifecycle)) => {
-                if status == "done" || status == "archived" {
-                    return Ok(serde_json::json!({
-                        "status": "error",
-                        "message": format!("Task {} is already {}", id, status)
-                    }));
-                }
-                if assigned_to != agent_id {
-                    return Ok(serde_json::json!({
-                        "status": "conflict",
-                        "message": format!(
-                            "Task {} is claimed by '{}'; only the primary assignee may renew",
-                            id, assigned_to
-                        ),
-                        "assigned_to": assigned_to,
-                        "lease_expires_at": prev_lease
-                    }));
-                }
-                let lifecycle = LeaseLifecycle::parse(Some(&prev_lifecycle));
-                if matches!(
-                    lifecycle,
-                    LeaseLifecycle::Yielded | LeaseLifecycle::Expired | LeaseLifecycle::Released
-                ) {
-                    return Ok(serde_json::json!({
-                        "status": "conflict",
-                        "message": format!(
-                            "Task {} lease lifecycle '{}' cannot be extended; reclaim or claim again",
-                            id, lifecycle.as_str()
-                        ),
-                        "lease_lifecycle": lifecycle.as_str()
-                    }));
-                }
-                if fleet_coord::lease_allows_reclaim(prev_lease.as_deref(), &ts) {
-                    return Ok(serde_json::json!({
-                        "status": "conflict",
-                        "message": format!(
-                            "Task {} lease has expired; reclaim with todo claim instead of renew",
-                            id
-                        ),
-                        "lease_state": "expired",
-                        "lease_expires_at": prev_lease
-                    }));
-                }
-                let generation = fleet_coord::extended_generation(prev_gen);
-                conn.execute(
-                    "UPDATE tasks
+            match current {
+                None => Ok(serde_json::json!({
+                    "status": "not_found",
+                    "message": format!("Task {} not found", id)
+                })),
+                Some((status, assigned_to, prev_lease, prev_gen, prev_lifecycle)) => {
+                    if status == "done" || status == "archived" {
+                        return Ok(serde_json::json!({
+                            "status": "error",
+                            "message": format!("Task {} is already {}", id, status)
+                        }));
+                    }
+                    if assigned_to != agent_id {
+                        return Ok(serde_json::json!({
+                            "status": "conflict",
+                            "message": format!(
+                                "Task {} is claimed by '{}'; only the primary assignee may renew",
+                                id, assigned_to
+                            ),
+                            "assigned_to": assigned_to,
+                            "lease_expires_at": prev_lease
+                        }));
+                    }
+                    let lifecycle = LeaseLifecycle::parse(Some(&prev_lifecycle));
+                    if matches!(
+                        lifecycle,
+                        LeaseLifecycle::Yielded
+                            | LeaseLifecycle::Expired
+                            | LeaseLifecycle::Released
+                    ) {
+                        return Ok(serde_json::json!({
+                            "status": "conflict",
+                            "message": format!(
+                                "Task {} lease lifecycle '{}' cannot be extended; reclaim or claim again",
+                                id, lifecycle.as_str()
+                            ),
+                            "lease_lifecycle": lifecycle.as_str()
+                        }));
+                    }
+                    if fleet_coord::lease_allows_reclaim(prev_lease.as_deref(), &ts) {
+                        return Ok(serde_json::json!({
+                            "status": "conflict",
+                            "message": format!(
+                                "Task {} lease has expired; reclaim with todo claim instead of renew",
+                                id
+                            ),
+                            "lease_state": "expired",
+                            "lease_expires_at": prev_lease
+                        }));
+                    }
+                    let generation = fleet_coord::extended_generation(prev_gen);
+                    conn.execute(
+                        "UPDATE tasks
                      SET lease_expires_at = ?1, lease_generation = ?2, lease_lifecycle = ?3,
                          updated_at = ?4, revision = revision + 1
                      WHERE id = ?5",
-                    crate::core::db::params![
-                        lease_exp,
-                        generation as i64,
-                        LeaseLifecycle::Extended.as_str(),
-                        ts,
-                        id
-                    ],
-                )
-                .map_err(error::DecapodError::StorageError)?;
-                let ev = TodoEvent {
-                    ts: ts.clone(),
-                    event_id: crate::core::ulid::new_ulid(),
-                    event_type: "task.lease_renew".to_string(),
-                    status: "success".to_string(),
-                    task_id: Some(id.to_string()),
-                    payload: serde_json::json!({
+                        crate::core::db::params![
+                            lease_exp,
+                            generation as i64,
+                            LeaseLifecycle::Extended.as_str(),
+                            ts,
+                            id
+                        ],
+                    )
+                    .map_err(error::DecapodError::StorageError)?;
+                    let ev = TodoEvent {
+                        ts: ts.clone(),
+                        event_id: crate::core::ulid::new_ulid(),
+                        event_type: "task.lease_renew".to_string(),
+                        status: "success".to_string(),
+                        task_id: Some(id.to_string()),
+                        payload: serde_json::json!({
+                            "lease_expires_at": lease_exp,
+                            "lease_seconds": lease_secs,
+                            "previous_lease_expires_at": prev_lease,
+                            "lease_generation": generation,
+                            "lease_lifecycle": "extended"
+                        }),
+                        actor: agent_id.to_string(),
+                    };
+                    append_event(conn, &ev)?;
+                    insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
+                    Ok(serde_json::json!({
+                        "status": "ok",
+                        "message": format!("Lease for task {} renewed by {}", id, agent_id),
                         "lease_expires_at": lease_exp,
                         "lease_seconds": lease_secs,
-                        "previous_lease_expires_at": prev_lease,
+                        "lease_state": "active",
                         "lease_generation": generation,
-                        "lease_lifecycle": "extended"
-                    }),
-                    actor: agent_id.to_string(),
-                };
-                append_event(conn, &ev)?;
-                insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
-                Ok(serde_json::json!({
-                    "status": "ok",
-                    "message": format!("Lease for task {} renewed by {}", id, agent_id),
-                    "lease_expires_at": lease_exp,
-                    "lease_seconds": lease_secs,
-                    "lease_state": "active",
-                    "lease_generation": generation,
-                    "lease_lifecycle": "extended",
-                    "assigned_to": agent_id
-                }))
+                        "lease_lifecycle": "extended",
+                        "assigned_to": agent_id
+                    }))
+                }
             }
-        }
-    })?;
+        },
+    )?;
 
     Ok(serde_json::json!({
         "ts": ts,
@@ -4501,98 +4818,106 @@ pub fn yield_claim_lease(
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
 
-    let result = broker.with_transaction(&db_path, "decapod", None, "todo.yield", |conn| {
-        ensure_schema(conn)?;
-        touch_agent_presence(conn, agent_id, &ts)?;
-        enforce_operation_policy(root, conn, "todo.claim.exclusive", agent_id, id)?;
+    let result = with_task_journal(
+        &broker,
+        &db_path,
+        "decapod",
+        None,
+        "todo.yield",
+        TaskJournalSelection::Ids(vec![id.to_owned()]),
+        |conn| {
+            ensure_schema(conn)?;
+            touch_agent_presence(conn, agent_id, &ts)?;
+            enforce_operation_policy(root, conn, "todo.claim.exclusive", agent_id, id)?;
 
-        let current: Option<(String, String, u32, String, String)> = conn
-            .query_row(
-                "SELECT status, assigned_to, COALESCE(lease_generation, 0),
+            let current: Option<(String, String, u32, String, String)> = conn
+                .query_row(
+                    "SELECT status, assigned_to, COALESCE(lease_generation, 0),
                         COALESCE(lease_lifecycle, ''), COALESCE(intent_anchor, '')
                  FROM tasks WHERE id = ?",
-                [id],
-                |row| {
-                    Ok((
-                        row.get(0)?,
-                        row.get(1)?,
-                        row.get::<_, i64>(2).unwrap_or(0) as u32,
-                        row.get::<_, String>(3).unwrap_or_default(),
-                        row.get::<_, String>(4).unwrap_or_default(),
-                    ))
-                },
-            )
-            .optional()
-            .map_err(error::DecapodError::StorageError)?;
+                    [id],
+                    |row| {
+                        Ok((
+                            row.get(0)?,
+                            row.get(1)?,
+                            row.get::<_, i64>(2).unwrap_or(0) as u32,
+                            row.get::<_, String>(3).unwrap_or_default(),
+                            row.get::<_, String>(4).unwrap_or_default(),
+                        ))
+                    },
+                )
+                .optional()
+                .map_err(error::DecapodError::StorageError)?;
 
-        match current {
-            None => Ok(serde_json::json!({
-                "status": "not_found",
-                "message": format!("Task {} not found", id)
-            })),
-            Some((status, assigned_to, generation, _lifecycle, intent_anchor)) => {
-                if status == "done" || status == "archived" {
-                    return Ok(serde_json::json!({
-                        "status": "error",
-                        "message": format!("Task {} is already {}", id, status)
-                    }));
-                }
-                if assigned_to != agent_id {
-                    return Ok(serde_json::json!({
-                        "status": "conflict",
-                        "message": format!(
-                            "Task {} is claimed by '{}'; only the primary assignee may yield",
-                            id, assigned_to
-                        ),
-                        "assigned_to": assigned_to
-                    }));
-                }
-                conn.execute(
-                    "UPDATE tasks
+            match current {
+                None => Ok(serde_json::json!({
+                    "status": "not_found",
+                    "message": format!("Task {} not found", id)
+                })),
+                Some((status, assigned_to, generation, _lifecycle, intent_anchor)) => {
+                    if status == "done" || status == "archived" {
+                        return Ok(serde_json::json!({
+                            "status": "error",
+                            "message": format!("Task {} is already {}", id, status)
+                        }));
+                    }
+                    if assigned_to != agent_id {
+                        return Ok(serde_json::json!({
+                            "status": "conflict",
+                            "message": format!(
+                                "Task {} is claimed by '{}'; only the primary assignee may yield",
+                                id, assigned_to
+                            ),
+                            "assigned_to": assigned_to
+                        }));
+                    }
+                    conn.execute(
+                        "UPDATE tasks
                      SET assigned_to = '', assigned_at = NULL, lease_expires_at = NULL,
                          lease_lifecycle = ?1, updated_at = ?2, revision = revision + 1
                      WHERE id = ?3",
-                    crate::core::db::params![LeaseLifecycle::Yielded.as_str(), ts, id],
-                )
-                .map_err(error::DecapodError::StorageError)?;
-                conn.execute(
-                    "DELETE FROM task_owners WHERE task_id = ?1 AND agent_id = ?2",
-                    crate::core::db::params![id, agent_id],
-                )
-                .map_err(error::DecapodError::StorageError)?;
-                let reason = if reason.trim().is_empty() {
-                    "yielded"
-                } else {
-                    reason
-                };
-                let ev = TodoEvent {
-                    ts: ts.clone(),
-                    event_id: crate::core::ulid::new_ulid(),
-                    event_type: "task.yield".to_string(),
-                    status: "success".to_string(),
-                    task_id: Some(id.to_string()),
-                    payload: serde_json::json!({
-                        "previous_assignee": agent_id,
-                        "reason": reason,
-                        "lease_generation": generation,
+                        crate::core::db::params![LeaseLifecycle::Yielded.as_str(), ts, id],
+                    )
+                    .map_err(error::DecapodError::StorageError)?;
+                    conn.execute(
+                        "DELETE FROM task_owners WHERE task_id = ?1 AND agent_id = ?2",
+                        crate::core::db::params![id, agent_id],
+                    )
+                    .map_err(error::DecapodError::StorageError)?;
+                    let reason = if reason.trim().is_empty() {
+                        "yielded"
+                    } else {
+                        reason
+                    };
+                    let ev = TodoEvent {
+                        ts: ts.clone(),
+                        event_id: crate::core::ulid::new_ulid(),
+                        event_type: "task.yield".to_string(),
+                        status: "success".to_string(),
+                        task_id: Some(id.to_string()),
+                        payload: serde_json::json!({
+                            "previous_assignee": agent_id,
+                            "reason": reason,
+                            "lease_generation": generation,
+                            "lease_lifecycle": "yielded",
+                            "intent_anchor": intent_anchor
+                        }),
+                        actor: agent_id.to_string(),
+                    };
+                    append_event(conn, &ev)?;
+                    insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
+                    Ok(serde_json::json!({
+                        "status": "ok",
+                        "message": format!("Lease for task {} yielded by {}", id, agent_id),
                         "lease_lifecycle": "yielded",
-                        "intent_anchor": intent_anchor
-                    }),
-                    actor: agent_id.to_string(),
-                };
-                append_event(conn, &ev)?;
-                insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
-                Ok(serde_json::json!({
-                    "status": "ok",
-                    "message": format!("Lease for task {} yielded by {}", id, agent_id),
-                    "lease_lifecycle": "yielded",
-                    "lease_generation": generation,
-                    "intent_anchor": intent_anchor,
-                    "previous_assignee": agent_id
-                }))
+                        "lease_generation": generation,
+                        "intent_anchor": intent_anchor,
+                        "previous_assignee": agent_id
+                    }))
+                }
             }
-        }
-    })?;
+        },
+    )?;
 
     if result.get("status").and_then(|v| v.as_str()) == Some("ok") {
         let _ = DbBroker::cache_invalidate_key(&db_path, CLAIM_STATUS_CACHE_SCOPE, id);
@@ -4801,245 +5126,252 @@ pub fn handoff_task(
         }));
     }
 
-    let result = broker.with_transaction(&db_path, "decapod", None, "todo.handoff", |conn| {
-        ensure_schema(conn)?;
-        let acting_agent = from.unwrap_or("unknown");
-        enforce_operation_policy(root, conn, "todo.handoff", acting_agent, id)?;
-        touch_agent_presence(conn, to, &ts)?;
+    let result = with_task_journal(
+        &broker,
+        &db_path,
+        "decapod",
+        None,
+        "todo.handoff",
+        TaskJournalSelection::Ids(vec![id.to_owned()]),
+        |conn| {
+            ensure_schema(conn)?;
+            let acting_agent = from.unwrap_or("unknown");
+            enforce_operation_policy(root, conn, "todo.handoff", acting_agent, id)?;
+            touch_agent_presence(conn, to, &ts)?;
 
-        struct HandoffRow {
-            status: String,
-            assigned_to: String,
-            category: String,
-            scope: String,
-            dir_path: String,
-            lease_generation: u32,
-            lease_lifecycle: String,
-            intent_anchor: String,
-        }
+            struct HandoffRow {
+                status: String,
+                assigned_to: String,
+                category: String,
+                scope: String,
+                dir_path: String,
+                lease_generation: u32,
+                lease_lifecycle: String,
+                intent_anchor: String,
+            }
 
-        let current: Option<HandoffRow> = conn
-            .query_row(
-                "SELECT status, assigned_to, category, scope, dir_path,
+            let current: Option<HandoffRow> = conn
+                .query_row(
+                    "SELECT status, assigned_to, category, scope, dir_path,
                         COALESCE(lease_generation, 0),
                         COALESCE(lease_lifecycle, ''),
                         COALESCE(intent_anchor, '')
                  FROM tasks WHERE id = ?",
-                [id],
-                |row| {
-                    Ok(HandoffRow {
-                        status: row.get(0)?,
-                        assigned_to: row.get(1)?,
-                        category: row.get(2)?,
-                        scope: row.get(3)?,
-                        dir_path: row.get(4)?,
-                        lease_generation: row.get::<_, i64>(5).unwrap_or(0) as u32,
-                        lease_lifecycle: row.get::<_, String>(6).unwrap_or_default(),
-                        intent_anchor: row.get::<_, String>(7).unwrap_or_default(),
-                    })
-                },
-            )
-            .optional()
-            .map_err(error::DecapodError::StorageError)?;
+                    [id],
+                    |row| {
+                        Ok(HandoffRow {
+                            status: row.get(0)?,
+                            assigned_to: row.get(1)?,
+                            category: row.get(2)?,
+                            scope: row.get(3)?,
+                            dir_path: row.get(4)?,
+                            lease_generation: row.get::<_, i64>(5).unwrap_or(0) as u32,
+                            lease_lifecycle: row.get::<_, String>(6).unwrap_or_default(),
+                            intent_anchor: row.get::<_, String>(7).unwrap_or_default(),
+                        })
+                    },
+                )
+                .optional()
+                .map_err(error::DecapodError::StorageError)?;
 
-        let Some(row) = current else {
-            return Ok((
-                serde_json::json!({
-                    "status": "not_found",
-                    "message": format!("Task {} not found", id)
-                }),
-                String::new(),
-            ));
-        };
-        if row.status == "done" || row.status == "archived" {
-            return Ok((
-                serde_json::json!({
-                    "status": "error",
-                    "message": format!("Task {} is already {}", id, row.status)
-                }),
-                String::new(),
-            ));
-        }
-        if let Some(expected_from) = from
-            && !row.assigned_to.is_empty()
-            && row.assigned_to != expected_from
-        {
-            return Ok((
-                serde_json::json!({
-                    "status": "error",
-                    "message": format!(
-                        "Task {} assigned_to is {}, expected {}",
-                        id, row.assigned_to, expected_from
-                    ),
-                    "assigned_to": row.assigned_to
-                }),
-                String::new(),
-            ));
-        }
-        if !row.assigned_to.is_empty() && row.assigned_to == to {
-            return Ok((
-                serde_json::json!({
-                    "status": "error",
-                    "message": format!("Task {id} is already assigned to {to}"),
-                    "assigned_to": to
-                }),
-                String::new(),
-            ));
-        }
-
-        // Fail closed on dependency/proof readiness, same contract as exclusive claim.
-        let dependency_readiness = load_dependency_readiness(conn, id)?;
-        if !dependency_readiness.is_ready() {
-            let resolution = if dependency_readiness.state
-                == fleet_coord::DependencyReadinessState::Cycle
-            {
-                "repair_dependency_graph"
-            } else {
-                "satisfy_dependencies"
+            let Some(row) = current else {
+                return Ok((
+                    serde_json::json!({
+                        "status": "not_found",
+                        "message": format!("Task {} not found", id)
+                    }),
+                    String::new(),
+                ));
             };
-            return Ok((
-                serde_json::json!({
-                    "status": "conflict",
-                    "resolution": resolution,
-                    "message": format!(
-                        "Task {id} dependencies are not proof-ready; resolve blockers before handoff"
-                    ),
-                    "dependency_readiness": dependency_readiness
-                }),
-                String::new(),
-            ));
-        }
+            if row.status == "done" || row.status == "archived" {
+                return Ok((
+                    serde_json::json!({
+                        "status": "error",
+                        "message": format!("Task {} is already {}", id, row.status)
+                    }),
+                    String::new(),
+                ));
+            }
+            if let Some(expected_from) = from
+                && !row.assigned_to.is_empty()
+                && row.assigned_to != expected_from
+            {
+                return Ok((
+                    serde_json::json!({
+                        "status": "error",
+                        "message": format!(
+                            "Task {} assigned_to is {}, expected {}",
+                            id, row.assigned_to, expected_from
+                        ),
+                        "assigned_to": row.assigned_to
+                    }),
+                    String::new(),
+                ));
+            }
+            if !row.assigned_to.is_empty() && row.assigned_to == to {
+                return Ok((
+                    serde_json::json!({
+                        "status": "error",
+                        "message": format!("Task {id} is already assigned to {to}"),
+                        "assigned_to": to
+                    }),
+                    String::new(),
+                ));
+            }
 
-        // Receiver must not collide with other exclusive claims (self is excluded).
-        let active = list_active_exclusive_claims(conn, &ts)?;
-        let overlaps = fleet_coord::detect_overlaps(
-            id,
-            to,
-            &row.scope,
-            &row.category,
-            &row.dir_path,
-            &active,
-            &ts,
-        );
-        if !overlaps.is_empty() {
-            return Ok((
-                serde_json::json!({
-                    "status": "conflict",
-                    "resolution": "serialize_or_handoff",
-                    "message": format!(
-                        "Task {id} handoff to {to} overlaps {} active exclusive claim(s)",
-                        overlaps.len()
-                    ),
-                    "overlap": true,
-                    "overlaps": overlaps
-                }),
-                String::new(),
-            ));
-        }
+            // Fail closed on dependency/proof readiness, same contract as exclusive claim.
+            let dependency_readiness = load_dependency_readiness(conn, id)?;
+            if !dependency_readiness.is_ready() {
+                let resolution =
+                    if dependency_readiness.state == fleet_coord::DependencyReadinessState::Cycle {
+                        "repair_dependency_graph"
+                    } else {
+                        "satisfy_dependencies"
+                    };
+                return Ok((
+                    serde_json::json!({
+                        "status": "conflict",
+                        "resolution": resolution,
+                        "message": format!(
+                            "Task {id} dependencies are not proof-ready; resolve blockers before handoff"
+                        ),
+                        "dependency_readiness": dependency_readiness
+                    }),
+                    String::new(),
+                ));
+            }
 
-        if !row.category.is_empty() {
-            claim_category_for_agent(conn, to, &row.category, &ts)?;
-        }
+            // Receiver must not collide with other exclusive claims (self is excluded).
+            let active = list_active_exclusive_claims(conn, &ts)?;
+            let overlaps = fleet_coord::detect_overlaps(
+                id,
+                to,
+                &row.scope,
+                &row.category,
+                &row.dir_path,
+                &active,
+                &ts,
+            );
+            if !overlaps.is_empty() {
+                return Ok((
+                    serde_json::json!({
+                        "status": "conflict",
+                        "resolution": "serialize_or_handoff",
+                        "message": format!(
+                            "Task {id} handoff to {to} overlaps {} active exclusive claim(s)",
+                            overlaps.len()
+                        ),
+                        "overlap": true,
+                        "overlaps": overlaps
+                    }),
+                    String::new(),
+                ));
+            }
 
-        let previous = if row.assigned_to.is_empty() {
-            from.unwrap_or("unassigned").to_string()
-        } else {
-            row.assigned_to.clone()
-        };
-        let prior_lifecycle = LeaseLifecycle::parse(Some(&row.lease_lifecycle));
-        let intent_anchor = if row.intent_anchor.trim().is_empty() {
-            resolve_default_intent_anchor(root, id)
-                .unwrap_or_else(|| fleet_coord::default_intent_anchor(id))
-        } else {
-            row.intent_anchor.clone()
-        };
-        let transfer = fleet_coord::plan_handoff_lease_transfer(
-            &previous,
-            to,
-            row.lease_generation,
-            prior_lifecycle,
-            &intent_anchor,
-            now_secs,
-            lease_secs,
-        );
+            if !row.category.is_empty() {
+                claim_category_for_agent(conn, to, &row.category, &ts)?;
+            }
 
-        // Drop prior primary owner before installing the receiver as primary.
-        if !previous.is_empty() && previous != "unassigned" {
+            let previous = if row.assigned_to.is_empty() {
+                from.unwrap_or("unassigned").to_string()
+            } else {
+                row.assigned_to.clone()
+            };
+            let prior_lifecycle = LeaseLifecycle::parse(Some(&row.lease_lifecycle));
+            let intent_anchor = if row.intent_anchor.trim().is_empty() {
+                resolve_default_intent_anchor(root, id)
+                    .unwrap_or_else(|| fleet_coord::default_intent_anchor(id))
+            } else {
+                row.intent_anchor.clone()
+            };
+            let transfer = fleet_coord::plan_handoff_lease_transfer(
+                &previous,
+                to,
+                row.lease_generation,
+                prior_lifecycle,
+                &intent_anchor,
+                now_secs,
+                lease_secs,
+            );
+
+            // Drop prior primary owner before installing the receiver as primary.
+            if !previous.is_empty() && previous != "unassigned" {
+                conn.execute(
+                    "DELETE FROM task_owners WHERE task_id = ?1 AND agent_id = ?2",
+                    crate::core::db::params![id, previous],
+                )
+                .map_err(error::DecapodError::StorageError)?;
+            }
+
             conn.execute(
-                "DELETE FROM task_owners WHERE task_id = ?1 AND agent_id = ?2",
-                crate::core::db::params![id, previous],
-            )
-            .map_err(error::DecapodError::StorageError)?;
-        }
-
-        conn.execute(
-            "UPDATE tasks
+                "UPDATE tasks
              SET assigned_to = ?1, assigned_at = ?2, updated_at = ?2,
                  lease_expires_at = ?3, lease_generation = ?4,
                  lease_lifecycle = ?5, intent_anchor = ?6,
                  revision = revision + 1
              WHERE id = ?7",
-            crate::core::db::params![
-                to,
-                ts,
-                transfer.lease_expires_at,
-                transfer.next_generation as i64,
-                transfer.next_lifecycle.as_str(),
-                transfer.intent_anchor,
-                id
-            ],
-        )
-        .map_err(error::DecapodError::StorageError)?;
+                crate::core::db::params![
+                    to,
+                    ts,
+                    transfer.lease_expires_at,
+                    transfer.next_generation as i64,
+                    transfer.next_lifecycle.as_str(),
+                    transfer.intent_anchor,
+                    id
+                ],
+            )
+            .map_err(error::DecapodError::StorageError)?;
 
-        let claim_id = upsert_task_owner(conn, id, to, "primary", &ts)?;
-        sync_legacy_owner_column(conn, id)?;
+            let claim_id = upsert_task_owner(conn, id, to, "primary", &ts)?;
+            sync_legacy_owner_column(conn, id)?;
 
-        let event_id = crate::core::ulid::new_ulid();
-        let ev = TodoEvent {
-            ts: ts.clone(),
-            event_id: event_id.clone(),
-            event_type: "task.handoff".to_string(),
-            status: "success".to_string(),
-            task_id: Some(id.to_string()),
-            payload: serde_json::json!({
-                "from": previous,
-                "to": to,
-                "summary": summary,
-                "prior_lease_generation": transfer.prior_generation,
-                "lease_generation": transfer.next_generation,
-                "prior_lease_lifecycle": transfer.prior_lifecycle.as_str(),
-                "lease_lifecycle": transfer.next_lifecycle.as_str(),
-                "intent_anchor": transfer.intent_anchor,
-                "lease_expires_at": transfer.lease_expires_at,
-                "lease_seconds": transfer.lease_seconds,
-                "claim_id": claim_id,
-                "dependency_readiness": dependency_readiness,
-            }),
-            actor: acting_agent.to_string(),
-        };
-        append_event(conn, &ev)?;
-        insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
+            let event_id = crate::core::ulid::new_ulid();
+            let ev = TodoEvent {
+                ts: ts.clone(),
+                event_id: event_id.clone(),
+                event_type: "task.handoff".to_string(),
+                status: "success".to_string(),
+                task_id: Some(id.to_string()),
+                payload: serde_json::json!({
+                    "from": previous,
+                    "to": to,
+                    "summary": summary,
+                    "prior_lease_generation": transfer.prior_generation,
+                    "lease_generation": transfer.next_generation,
+                    "prior_lease_lifecycle": transfer.prior_lifecycle.as_str(),
+                    "lease_lifecycle": transfer.next_lifecycle.as_str(),
+                    "intent_anchor": transfer.intent_anchor,
+                    "lease_expires_at": transfer.lease_expires_at,
+                    "lease_seconds": transfer.lease_seconds,
+                    "claim_id": claim_id,
+                    "dependency_readiness": dependency_readiness,
+                }),
+                actor: acting_agent.to_string(),
+            };
+            append_event(conn, &ev)?;
+            insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
 
-        Ok((
-            serde_json::json!({
-                "status": "ok",
-                "message": format!("Task {} handed off to {}", id, to),
-                "from": previous,
-                "to": to,
-                "claim_id": claim_id,
-                "prior_lease_generation": transfer.prior_generation,
-                "lease_generation": transfer.next_generation,
-                "prior_lease_lifecycle": transfer.prior_lifecycle.as_str(),
-                "lease_lifecycle": transfer.next_lifecycle.as_str(),
-                "intent_anchor": transfer.intent_anchor,
-                "lease_expires_at": transfer.lease_expires_at,
-                "lease_seconds": transfer.lease_seconds,
-                "lease_state": "active",
-                "dependency_readiness": dependency_readiness
-            }),
-            event_id,
-        ))
-    })?;
+            Ok((
+                serde_json::json!({
+                    "status": "ok",
+                    "message": format!("Task {} handed off to {}", id, to),
+                    "from": previous,
+                    "to": to,
+                    "claim_id": claim_id,
+                    "prior_lease_generation": transfer.prior_generation,
+                    "lease_generation": transfer.next_generation,
+                    "prior_lease_lifecycle": transfer.prior_lifecycle.as_str(),
+                    "lease_lifecycle": transfer.next_lifecycle.as_str(),
+                    "intent_anchor": transfer.intent_anchor,
+                    "lease_expires_at": transfer.lease_expires_at,
+                    "lease_seconds": transfer.lease_seconds,
+                    "lease_state": "active",
+                    "dependency_readiness": dependency_readiness
+                }),
+                event_id,
+            ))
+        },
+    )?;
 
     let (status_result, event_id): (serde_json::Value, String) = result;
     if status_result
@@ -5112,24 +5444,31 @@ fn add_task_owner(
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
 
-    broker.with_transaction(&db_path, "decapod", None, "todo.add_owner", |conn| {
-        ensure_schema(conn)?;
+    with_task_journal(
+        &broker,
+        &db_path,
+        "decapod",
+        None,
+        "todo.add_owner",
+        TaskJournalSelection::Ids(vec![task_id.to_owned()]),
+        |conn| {
+            ensure_schema(conn)?;
 
-        // Verify task exists
-        let exists: bool = conn
-            .query_row("SELECT 1 FROM tasks WHERE id = ?", [task_id], |_| Ok(true))
-            .unwrap_or(false);
+            // Verify task exists
+            let exists: bool = conn
+                .query_row("SELECT 1 FROM tasks WHERE id = ?", [task_id], |_| Ok(true))
+                .unwrap_or(false);
 
-        if !exists {
-            return Ok(serde_json::json!({
-                "status": "not_found",
-                "message": format!("Task {} not found", task_id)
-            }));
-        }
+            if !exists {
+                return Ok(serde_json::json!({
+                    "status": "not_found",
+                    "message": format!("Task {} not found", task_id)
+                }));
+            }
 
-        // Check for conflict - primary owner already exists
-        if claim_type == "primary" {
-            let existing_primary: Option<String> = conn
+            // Check for conflict - primary owner already exists
+            if claim_type == "primary" {
+                let existing_primary: Option<String> = conn
                 .query_row(
                     "SELECT agent_id FROM task_owners WHERE task_id = ? AND claim_type = 'primary'",
                     [task_id],
@@ -5138,41 +5477,46 @@ fn add_task_owner(
                 .optional()
                 .map_err(error::DecapodError::StorageError)?;
 
-            if let Some(primary_agent) = existing_primary
-                && primary_agent != agent_id {
-                return Ok(serde_json::json!({
-                    "status": "conflict",
-                    "message": "Task already has a primary owner. Use 'secondary' or resolve conflict."
-                }));
+                if let Some(primary_agent) = existing_primary
+                    && primary_agent != agent_id
+                {
+                    return Ok(serde_json::json!({
+                        "status": "conflict",
+                        "message": "Task already has a primary owner. Use 'secondary' or resolve conflict."
+                    }));
                 }
-        }
+            }
 
-        let claim_id = upsert_task_owner(conn, task_id, agent_id, claim_type, &ts)?;
-        conn.execute("UPDATE tasks SET revision = revision + 1, updated_at = ?1 WHERE id = ?2", crate::core::db::params![ts, task_id])?;
-        write_ownership_claim_event(
-            root,
-            conn,
-            &OwnershipClaimRecord {
-                task_id,
-                agent_id,
-                claim_type,
-                claim_id: &claim_id,
-                actor: "decapod",
-                ts: &ts,
-            },
-        )?;
+            let claim_id = upsert_task_owner(conn, task_id, agent_id, claim_type, &ts)?;
+            conn.execute(
+                "UPDATE tasks SET revision = revision + 1, updated_at = ?1 WHERE id = ?2",
+                crate::core::db::params![ts, task_id],
+            )?;
+            write_ownership_claim_event(
+                root,
+                conn,
+                &OwnershipClaimRecord {
+                    task_id,
+                    agent_id,
+                    claim_type,
+                    claim_id: &claim_id,
+                    actor: "decapod",
+                    ts: &ts,
+                },
+            )?;
 
-        Ok(serde_json::json!({
-            "ts": ts,
-            "cmd": "todo.add_owner",
-            "status": "ok",
-            "root": root.to_string_lossy(),
-            "task_id": task_id,
-            "agent_id": agent_id,
-            "claim_type": claim_type,
-            "claim_id": claim_id,
-        }))
-    })
+            Ok(serde_json::json!({
+                "ts": ts,
+                "cmd": "todo.add_owner",
+                "status": "ok",
+                "root": root.to_string_lossy(),
+                "task_id": task_id,
+                "agent_id": agent_id,
+                "claim_type": claim_type,
+                "claim_id": claim_id,
+            }))
+        },
+    )
 }
 
 fn remove_task_owner(
@@ -5184,51 +5528,59 @@ fn remove_task_owner(
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
 
-    broker.with_transaction(&db_path, "decapod", None, "todo.remove_owner", |conn| {
-        ensure_schema(conn)?;
+    with_task_journal(
+        &broker,
+        &db_path,
+        "decapod",
+        None,
+        "todo.remove_owner",
+        TaskJournalSelection::Ids(vec![task_id.to_owned()]),
+        |conn| {
+            ensure_schema(conn)?;
 
-        let deleted = conn.execute(
-            "DELETE FROM task_owners WHERE task_id = ?1 AND agent_id = ?2",
-            crate::core::db::params![task_id, agent_id],
-        )?;
+            let deleted = conn.execute(
+                "DELETE FROM task_owners WHERE task_id = ?1 AND agent_id = ?2",
+                crate::core::db::params![task_id, agent_id],
+            )?;
 
-        if deleted == 0 {
-            return Ok(serde_json::json!({
-                "status": "not_found",
-                "message": format!("Owner {} not found for task {}", agent_id, task_id)
-            }));
-        }
+            if deleted == 0 {
+                return Ok(serde_json::json!({
+                    "status": "not_found",
+                    "message": format!("Owner {} not found for task {}", agent_id, task_id)
+                }));
+            }
 
-        conn.execute(
-            "UPDATE tasks SET revision = revision + 1, updated_at = ?1 WHERE id = ?2",
-            crate::core::db::params![ts, task_id],
-        )?;
+            conn.execute(
+                "UPDATE tasks SET revision = revision + 1, updated_at = ?1 WHERE id = ?2",
+                crate::core::db::params![ts, task_id],
+            )?;
 
-        // Log ownership release event
-        let ev = TodoEvent {
-            ts: ts.clone(),
-            event_id: crate::core::ulid::new_ulid(),
-            event_type: "ownership.release".to_string(),
-            status: "success".to_string(),
-            task_id: Some(task_id.to_string()),
-            payload: serde_json::json!({
+            // Log ownership release event
+            let ev = TodoEvent {
+                ts: ts.clone(),
+                event_id: crate::core::ulid::new_ulid(),
+                event_type: "ownership.release".to_string(),
+                status: "success".to_string(),
+                task_id: Some(task_id.to_string()),
+                payload: serde_json::json!({
+                    "agent_id": agent_id,
+                }),
+                actor: "decapod".to_string(),
+            };
+            append_event(conn, &ev)?;
+            insert_event(conn, &ev)?;
+            sync_legacy_owner_column(conn, task_id)?;
+
+            Ok(serde_json::json!({
+                "ts": ts,
+                "cmd": "todo.remove_owner",
+                "status": "ok",
+                "root": root.to_string_lossy(),
+                "task_id": task_id,
                 "agent_id": agent_id,
-            }),
-            actor: "decapod".to_string(),
-        };
-        append_event(conn, &ev)?;
-        insert_event(conn, &ev)?;
-        sync_legacy_owner_column(conn, task_id)?;
-
-        Ok(serde_json::json!({
-            "ts": ts,
-            "cmd": "todo.remove_owner",
-            "status": "ok",
-            "root": root.to_string_lossy(),
-            "task_id": task_id,
-            "agent_id": agent_id,
-        }))
-    })
+            }))
+        },
+    )
 }
 
 fn list_task_owners(
@@ -5384,97 +5736,105 @@ fn release_task_as_actor(
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
 
-    let result = broker.with_transaction(&db_path, actor, None, "todo.release", |conn| {
-        ensure_schema(conn)?;
+    let result = with_task_journal(
+        &broker,
+        &db_path,
+        actor,
+        None,
+        "todo.release",
+        TaskJournalSelection::Ids(vec![id.to_owned()]),
+        |conn| {
+            ensure_schema(conn)?;
 
-        // Check if task exists
-        let exists: Option<String> = conn
-            .query_row("SELECT assigned_to FROM tasks WHERE id = ?", [id], |row| {
-                row.get(0)
-            })
-            .optional()
-            .map_err(error::DecapodError::StorageError)?;
+            // Check if task exists
+            let exists: Option<String> = conn
+                .query_row("SELECT assigned_to FROM tasks WHERE id = ?", [id], |row| {
+                    row.get(0)
+                })
+                .optional()
+                .map_err(error::DecapodError::StorageError)?;
 
-        if exists.is_none() {
-            return Ok(serde_json::json!({
-                "status": "not_found",
-                "message": format!("Task {} not found", id)
-            }));
-        }
+            if exists.is_none() {
+                return Ok(serde_json::json!({
+                    "status": "not_found",
+                    "message": format!("Task {} not found", id)
+                }));
+            }
 
-        let Some(previous_assignee) = exists else {
-            unreachable!("checked task existence above");
-        };
+            let Some(previous_assignee) = exists else {
+                unreachable!("checked task existence above");
+            };
 
-        // An unclaimed task is already released. Do not fabricate a new lease
-        // transition or remove unrelated ownership records on an idempotent retry.
-        if previous_assignee.is_empty() {
-            return Ok(serde_json::json!({
-                "status": "ok",
-                "message": format!("Task {} is already released", id)
-            }));
-        }
-        if previous_assignee != actor {
-            return Ok(serde_json::json!({
-                "status": "conflict",
-                "reason": "not_assignee",
-                "assigned_to": previous_assignee,
-                "message": format!("Task {} may only be released by its current assignee", id)
-            }));
-        }
+            // An unclaimed task is already released. Do not fabricate a new lease
+            // transition or remove unrelated ownership records on an idempotent retry.
+            if previous_assignee.is_empty() {
+                return Ok(serde_json::json!({
+                    "status": "ok",
+                    "message": format!("Task {} is already released", id)
+                }));
+            }
+            if previous_assignee != actor {
+                return Ok(serde_json::json!({
+                    "status": "conflict",
+                    "reason": "not_assignee",
+                    "assigned_to": previous_assignee,
+                    "message": format!("Task {} may only be released by its current assignee", id)
+                }));
+            }
 
-        // Release the task and clear its exclusive lease only if the observed
-        // assignee is still current. This prevents a stale release from
-        // clearing a newer claim acquired by another agent.
-        let changed = conn
-            .execute(
-                "UPDATE tasks
+            // Release the task and clear its exclusive lease only if the observed
+            // assignee is still current. This prevents a stale release from
+            // clearing a newer claim acquired by another agent.
+            let changed = conn
+                .execute(
+                    "UPDATE tasks
              SET assigned_to = '', assigned_at = NULL, lease_expires_at = NULL,
                  lease_lifecycle = ?1, updated_at = ?2, revision = revision + 1
              WHERE id = ?3 AND assigned_to = ?4",
-                crate::core::db::params![
-                    LeaseLifecycle::Released.as_str(),
-                    ts,
-                    id,
-                    previous_assignee
-                ],
-            )
-            .map_err(error::DecapodError::StorageError)?;
-        if changed != 1 {
-            return Ok(serde_json::json!({
-                "status": "conflict",
-                "reason": "stale_release",
-                "message": format!("Task {} changed while release was in progress", id),
-            }));
-        }
-        if !previous_assignee.is_empty() {
-            conn.execute(
-                "DELETE FROM task_owners WHERE task_id = ?1 AND agent_id = ?2",
-                crate::core::db::params![id, previous_assignee],
-            )?;
-            sync_legacy_owner_column(conn, id)?;
-        }
+                    crate::core::db::params![
+                        LeaseLifecycle::Released.as_str(),
+                        ts,
+                        id,
+                        previous_assignee
+                    ],
+                )
+                .map_err(error::DecapodError::StorageError)?;
+            if changed != 1 {
+                return Ok(serde_json::json!({
+                    "status": "conflict",
+                    "reason": "stale_release",
+                    "message": format!("Task {} changed while release was in progress", id),
+                }));
+            }
+            if !previous_assignee.is_empty() {
+                conn.execute(
+                    "DELETE FROM task_owners WHERE task_id = ?1 AND agent_id = ?2",
+                    crate::core::db::params![id, previous_assignee],
+                )?;
+                sync_legacy_owner_column(conn, id)?;
+            }
 
-        // Create release event
-        let ev = TodoEvent {
-            ts: ts.clone(),
-            event_id: crate::core::ulid::new_ulid(),
-            event_type: "task.release".to_string(),
-            status: "success".to_string(),
-            task_id: Some(id.to_string()),
-            payload: serde_json::json!({
-                "previous_assignee": previous_assignee,
-            }),
-            actor: actor.to_string(),
-        };
-        append_event(conn, &ev)?;
-        insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
+            // Create release event
+            let ev = TodoEvent {
+                ts: ts.clone(),
+                event_id: crate::core::ulid::new_ulid(),
+                event_type: "task.release".to_string(),
+                status: "success".to_string(),
+                task_id: Some(id.to_string()),
+                payload: serde_json::json!({
+                    "previous_assignee": previous_assignee,
+                }),
+                actor: actor.to_string(),
+            };
+            append_event(conn, &ev)?;
+            insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
 
-        Ok(serde_json::json!({
-            "status": "ok",
-            "message": format!("Task {} released", id)
-        }))
-    })?;
+            Ok(serde_json::json!({
+                "status": "ok",
+                "message": format!("Task {} released", id)
+            }))
+        },
+    )?;
 
     if result.get("status").and_then(|v| v.as_str()) == Some("ok") {
         let _ = DbBroker::cache_invalidate_key(&db_path, CLAIM_STATUS_CACHE_SCOPE, id);
@@ -5758,7 +6118,9 @@ pub fn rebuild_from_events(root: &Path) -> Result<serde_json::Value, error::Deca
             "events": count,
             "imported_legacy_jsonl": imported,
             "source": if imported > 0 { "legacy_jsonl_import_then_events" } else { "events" },
-            "note": "canonical authority is events (stream=todo); JSONL is one-shot migration only"
+            "task_projection_replayed": false,
+            "recovery": "todo journal verify; explicit guarded todo journal restore",
+            "note": "legacy event import/count only; task recovery requires complete versioned checkpoints"
         }));
     }
 
@@ -5769,7 +6131,8 @@ pub fn rebuild_from_events(root: &Path) -> Result<serde_json::Value, error::Deca
         "root": root.to_string_lossy(),
         "events": 0,
         "source": "empty",
-        "note": "no canonical events; created empty DB"
+        "task_projection_replayed": false,
+        "note": "no canonical events; no historical task reconstruction performed"
     }))
 }
 
@@ -5777,6 +6140,7 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
     let broker = DbBroker::new(out_db.parent().unwrap());
 
     broker.with_conn(out_db, "decapod", None, "todo.rebuild_internal", |conn| {
+        refuse_task_journal_migration(conn, "legacy JSONL task reducer")?;
         ensure_schema(conn)?;
 
         let f = OpenOptions::new()
@@ -6280,6 +6644,7 @@ pub fn schema() -> serde_json::Value {
             { "name": "register-expertise", "parameters": ["agent", "category", "level"] },
             { "name": "expertise", "parameters": ["agent", "category"] },
 
+            { "name": "journal", "subcommands": [{"name":"checkpoint","parameters":[]},{"name":"verify","parameters":[]},{"name":"restore","parameters":["expected_current_digest"]}] },
             { "name": "rebuild", "parameters": [] }
         ],
         "task_columns": [
@@ -6950,6 +7315,23 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
     factory: &F,
 ) -> Result<(), error::DecapodError> {
     let root = &store.root;
+    if matches!(
+        cli.command,
+        TodoCommand::Journal {
+            command: TodoJournalCommand::Verify
+        }
+    ) {
+        let out = task_journal_verify(root)?;
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&out)
+                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?
+        );
+        if out["status"] != "ok" {
+            return Err(error::DecapodError::ValidationError("TASK_JOURNAL_CONFLICT: inspect the emitted projection differences; verification did not pass".into()));
+        }
+        return Ok(());
+    }
     if matches!(cli.command, TodoCommand::Operations) {
         let records = CloudTodoJournal::machine()?.list()?;
         println!(
@@ -7261,6 +7643,13 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
         TodoCommand::Fleet { agent } => fleet_health(root, agent.as_deref())?,
         TodoCommand::Release { id } => release_task(root, id)?,
         TodoCommand::Rebuild => rebuild_from_events(root)?,
+        TodoCommand::Journal { command } => match command {
+            TodoJournalCommand::Checkpoint => task_journal_checkpoint(root)?,
+            TodoJournalCommand::Verify => task_journal_verify(root)?,
+            TodoJournalCommand::Restore {
+                expected_current_digest,
+            } => task_journal_restore(root, expected_current_digest)?,
+        },
         TodoCommand::Categories => {
             let categories = list_categories(root)?;
             serde_json::json!({ "categories": categories })
@@ -7561,11 +7950,13 @@ fn mark_todo_claimed_pending_proof(
     let ts = now_iso();
     let broker = DbBroker::new(&store.root);
     let db_path = todo_db_path(&store.root);
-    broker.with_conn(
+    with_task_journal(
+        &broker,
         &db_path,
         "decapod",
         None,
         "todo.proof.claimed",
+        TaskJournalSelection::Ids(vec![todo_id.to_owned()]),
         |conn| {
             ensure_schema(conn)?;
             conn.execute(
@@ -7586,19 +7977,20 @@ fn mark_todo_claimed_pending_proof(
                 ],
             )
             .map_err(error::DecapodError::StorageError)?;
-            Ok(())
+            append_event(
+                conn,
+                &TodoEvent {
+                    ts: ts.clone(),
+                    event_id: crate::core::ulid::new_ulid(),
+                    event_type: "task.proof.claimed".to_owned(),
+                    status: "success".to_owned(),
+                    task_id: Some(todo_id.to_owned()),
+                    actor: mutation_actor(None),
+                    payload: serde_json::json!({"last_verified_status":"CLAIMED","last_verified_notes":"Proof hooks pending verification"}),
+                },
+            )
         },
-    )?;
-    record_task_event(
-        &store.root,
-        "task.proof.claimed",
-        Some(todo_id),
-        serde_json::json!({
-            "last_verified_status": "CLAIMED",
-            "last_verified_notes": "Proof hooks pending verification"
-        }),
-    )?;
-    Ok(())
+    )
 }
 
 pub fn is_heartbeat_command(cli: &TodoCli) -> bool {
@@ -7606,7 +7998,13 @@ pub fn is_heartbeat_command(cli: &TodoCli) -> bool {
 }
 /// Machine-local operation inspection must not initialize or repair task state.
 pub fn is_operation_inspection(cli: &TodoCli) -> bool {
-    matches!(cli.command, TodoCommand::Operations)
+    matches!(
+        cli.command,
+        TodoCommand::Operations
+            | TodoCommand::Journal {
+                command: TodoJournalCommand::Verify
+            }
+    )
 }
 
 #[cfg(test)]

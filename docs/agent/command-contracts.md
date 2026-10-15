@@ -187,6 +187,48 @@ This document defines the normative operational contracts for the Decapod CLI.
 ### Operation: `MentorObligations`
 ### Operation: `AssuranceEvaluate`
 
+# Runtime Checkpoints and Recovery
+
+Runtime journals use the existing canonical datastore. They do not replace Git
+as the authority for authored governance or grant publication readiness.
+Workunit mutations require an initialized local runtime (`decapod init`). A
+missing or partial policy store fails before any workunit journal append.
+
+- `decapod todo journal checkpoint` records the selected store's current task
+  state as an explicit baseline or current checkpoint
+- `decapod todo journal verify` inspects integrity without repairing state
+- `decapod todo journal restore --expected-current-digest <digest>` verifies
+  the complete chain and the observed live-state precondition before restoring
+  an absent or known predecessor projection; divergent authority is preserved
+- `decapod govern workunit checkpoint --task-id <id> --operation-id <id>`
+  records a checkpoint, with optional `--expected-generation <n>`
+- `decapod govern workunit journal-status --task-id <id>` inspects the journal
+  and JSON projection; `recover --task-id <id>` restores the exact recorded
+  manifest without refreshing verification
+- `decapod govern workunit resume --task-id <id> --operation-id <id>` checks
+  current execution authority before continuing, with the same optional
+  generation precondition
+
+- `decapod govern trajectory checkpoint --run-id <id> --checkpoint-id <id>`
+  records bounded source, intent, plan, trajectory, task custody, and policy
+  bindings; repeat `--approval-id <id>` for explicit required approval references
+- `decapod govern trajectory verify-resume --run-id <id> --checkpoint-id <id>`
+  rechecks those bindings and current approval validity without mutating them
+
+An approval reference never issues a grant. Resume requires live task custody
+and current dependency readiness. Checkpoint-only commits may descend from the
+captured commit; branch changes, rewinds, changed source, or changed authority
+require review and a fresh checkpoint. Existing execution checkpoints cannot
+silently drop required approval references.
+
+Reuse an operation ID only for an identical request. A failed file publication
+may follow a successful durable journal append; inspect status and reconcile
+that operation rather than submitting a changed request with the old ID. Legacy
+baseline records describe observed current state, not reconstructed prior
+history. Neither successful replay nor a readable manifest proves current
+source, task, approval, or validation freshness. Full `decapod validate` and the
+governed publisher retain their existing independent proof requirements.
+
 # Governance Artifact Ownership
 
 `.decapod/governance.json` is the sole tracked governance document. Its logical

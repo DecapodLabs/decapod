@@ -228,6 +228,8 @@ fn local_record_replays_and_detects_artifact_change() {
         validation_epoch: Some(epoch),
         status: WorkUnitStatus::Verified,
     };
+    crate::core::todo::initialize_todo_db(&root.join(".decapod/data"))
+        .expect("initialize runtime for workunit import");
     workunit::write_workunit(root, &manifest).expect("write workunit");
 
     let record = build_record(root, "task-1").expect("build record");

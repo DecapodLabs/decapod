@@ -526,3 +526,178 @@ fn proven_consolidation_retires_legacy_files_as_runtime_inputs() {
         1
     );
 }
+
+#[test]
+fn subject_journal_is_complete_ascending_and_isolated() {
+    let dir = tempdir().unwrap();
+    let conn = Connection::open(dir.path().join("decapod.db")).unwrap();
+    ensure_tables(&conn).unwrap();
+    for (id, task) in [
+        ("first", "task_a"),
+        ("other", "task_b"),
+        ("second", "task_a"),
+    ] {
+        append_on_conn(
+            &conn,
+            WORKUNIT,
+            &serde_json::json!({
+                "event_id": id,
+                "event_type": "workunit.checkpoint",
+                "task_id": task,
+                "ts": "1792050000Z",
+                "actor": "test-agent",
+                "payload": {"generation": id}
+            }),
+        )
+        .unwrap();
+    }
+    let records = query_subject_on_conn(&conn, WORKUNIT, "task", "task_a", 2).unwrap();
+    assert_eq!(
+        records
+            .iter()
+            .map(|r| r.event_id.as_str())
+            .collect::<Vec<_>>(),
+        ["first", "second"]
+    );
+    assert!(records[0].seq < records[1].seq);
+    assert!(query_subject_on_conn(&conn, WORKUNIT, "task", "task_a", 1).is_err());
+    assert!(query_subject_on_conn(&conn, WORKUNIT, "task", "task_a", 0).is_err());
+    assert!(
+        query_subject_on_conn(&conn, WORKUNIT, "task", "absent", 1)
+            .unwrap()
+            .is_empty()
+    );
+    assert_eq!(
+        query_subject_on_conn(&conn, WORKUNIT, "task", "task_b", 1).unwrap()[0].event_id,
+        "other"
+    );
+}
+
+#[test]
+fn subject_journal_rejects_oversize_or_corrupt_payload_without_truncation() {
+    let dir = tempdir().unwrap();
+    let conn = Connection::open(dir.path().join("decapod.db")).unwrap();
+    ensure_tables(&conn).unwrap();
+    append_on_conn(
+        &conn,
+        WORKUNIT,
+        &serde_json::json!({
+            "event_id": "bounded", "event_type": "workunit.checkpoint",
+            "task_id": "task_bound", "ts": "1792050000Z", "actor": "test-agent"
+        }),
+    )
+    .unwrap();
+    conn.execute(
+        "UPDATE events SET payload = ?1 WHERE event_id = 'bounded'",
+        params!["x".repeat(8 * 1024 * 1024 + 1)],
+    )
+    .unwrap();
+    let error = query_subject_on_conn(&conn, WORKUNIT, "task", "task_bound", 2).unwrap_err();
+    assert!(error.to_string().contains("exceeds record or byte bound"));
+    conn.execute(
+        "UPDATE events SET payload = '{broken' WHERE event_id = 'bounded'",
+        [],
+    )
+    .unwrap();
+    let error = query_subject_on_conn(&conn, WORKUNIT, "task", "task_bound", 2).unwrap_err();
+    assert!(
+        error
+            .to_string()
+            .contains("malformed canonical subject payload")
+    );
+    assert!(query_subject_on_conn(&conn, "unknown", "task", "task_bound", 2).is_err());
+}
+
+#[test]
+fn subject_capacity_is_reserved_before_append_and_retries_do_not_consume_it() {
+    let dir = tempdir().unwrap();
+    let conn = Connection::open(dir.path().join("decapod.db")).unwrap();
+    ensure_tables(&conn).unwrap();
+    let first = serde_json::json!({
+        "event_id": "capacity-first", "event_type": "workunit.checkpoint",
+        "task_id": "task_capacity", "ts": "1792050000Z", "actor": "test-agent"
+    });
+    append_on_conn(&conn, WORKUNIT, &first).unwrap();
+    assert!(
+        check_subject_append_capacity(&conn, WORKUNIT, "task", "task_capacity", &first, 1).is_err()
+    );
+    conn.execute_batch("BEGIN IMMEDIATE").unwrap();
+    check_subject_append_capacity(&conn, WORKUNIT, "task", "task_capacity", &first, 1).unwrap();
+    let mut next = first.clone();
+    next["event_id"] = serde_json::json!("capacity-next");
+    let error = check_subject_append_capacity(&conn, WORKUNIT, "task", "task_capacity", &next, 1)
+        .unwrap_err();
+    assert!(error.to_string().contains("append would exceed"));
+    assert_eq!(
+        query_subject_on_conn(&conn, WORKUNIT, "task", "task_capacity", 1)
+            .unwrap()
+            .len(),
+        1
+    );
+    let mut conflict = first.clone();
+    conflict["changed"] = serde_json::json!(true);
+    assert!(
+        check_subject_append_capacity(&conn, WORKUNIT, "task", "task_capacity", &conflict, 2)
+            .is_err()
+    );
+    assert!(
+        check_subject_append_capacity(&conn, WORKUNIT, "task", "wrong_task", &next, 2).is_err()
+    );
+    check_subject_append_capacity(&conn, WORKUNIT, "task", "task_capacity", &next, 2).unwrap();
+    append_on_conn(&conn, WORKUNIT, &next).unwrap();
+    conn.execute_batch("COMMIT").unwrap();
+    assert_eq!(
+        query_subject_on_conn(&conn, WORKUNIT, "task", "task_capacity", 2)
+            .unwrap()
+            .len(),
+        2
+    );
+}
+
+#[test]
+fn journal_authority_prevents_legacy_import_and_sequence_renumbering() {
+    let dir = tempdir().unwrap();
+    let conn = Connection::open(dir.path().join("decapod.db")).unwrap();
+    ensure_tables(&conn).unwrap();
+    append_on_conn(
+        &conn,
+        TODO,
+        &serde_json::json!({
+            "event_id": "authority-checkpoint", "event_type": "task.journal.checkpoint",
+            "task_id": "task_authority", "ts": "1792050000Z", "actor": "test-agent"
+        }),
+    )
+    .unwrap();
+    conn.execute(
+        "UPDATE events SET seq=42 WHERE event_id='authority-checkpoint'",
+        [],
+    )
+    .unwrap();
+    conn.execute("DROP INDEX idx_events_stream_seq_unique", [])
+        .unwrap();
+    ensure_tables(&conn).unwrap();
+    let seq: u64 = conn
+        .query_row(
+            "SELECT seq FROM events WHERE event_id='authority-checkpoint'",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert_eq!(seq, 42);
+    conn.execute_batch("CREATE TABLE task_events(event_id TEXT, task_id TEXT, ts TEXT, event_type TEXT, payload TEXT, actor TEXT);").unwrap();
+    assert!(
+        ensure_tables(&conn)
+            .unwrap_err()
+            .to_string()
+            .contains("JOURNAL_MIGRATION_REQUIRED")
+    );
+    assert!(conn.has_table("task_events").unwrap());
+    let seq: u64 = conn
+        .query_row(
+            "SELECT seq FROM events WHERE event_id='authority-checkpoint'",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert_eq!(seq, 42);
+}

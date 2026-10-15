@@ -256,6 +256,34 @@ datastore. Legacy JSONL and split databases are migration inputs, not parallel
 runtime authority. Migration is lossless, bounded, and idempotent; conflicting or
 malformed evidence blocks rather than being silently discarded.
 
+Runtime continuity is exposed through the existing domain commands. Task journal
+commands require the local backend; cloud selection fails closed without a local
+fallback. Workunit mutations require an initialized local runtime; missing or
+partial policy tables fail before journal mutation. Verification returns a nonzero
+exit status for projection conflict:
+
+- `todo journal checkpoint` captures an explicit current-state baseline;
+  `todo journal verify` checks the journal without restoring state;
+  `todo journal restore --expected-current-digest <digest>` requires the observed
+  live projection precondition and refuses divergent authority
+- `govern workunit checkpoint --task-id <id> --operation-id <id>` records a
+  versioned checkpoint; optional `--expected-generation` fences a known head
+- `govern workunit journal-status --task-id <id>` reports integrity and projection
+  consistency; `recover` restores exact journaled manifest bytes
+- `govern workunit resume --task-id <id> --operation-id <id>` verifies current
+  execution authority before recording continuation; it does not run work or
+  reissue proof, and accepts the same generation precondition as checkpoint
+- `govern trajectory checkpoint --run-id <id> --checkpoint-id <id>` captures
+  current source, task custody and policy, with repeated `--approval-id` references
+- `govern trajectory verify-resume --run-id <id> --checkpoint-id <id>` checks
+  continuation without changing the recorded checkpoint or granting approvals
+
+Operation identifiers bind immutable requests. Identical replay is idempotent;
+a changed request must use a new identifier and a valid predecessor. Missing,
+unsupported, corrupt or contradictory history is a typed blocker. A migration
+baseline states that earlier history is incomplete. Neither projection recovery
+nor a baseline grants a lease, approval, successful check, or current proof.
+
 `data db verify` reports healthy, unavailable, locked, corrupt, or unsupported
 integrity results without repairing them. Backup produces a verified standalone
 snapshot. Recovery is an explicit operator-selected archive-and-reload action
@@ -424,8 +452,8 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `92b5bb3991acc9bc81c28f8578d9abaf4ba3b122fd6468d1f2ab57f70d02389d`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (185 files), `tests/` (190 files)
+- Repository signal fingerprint: `7efe54997513078b81090151e7204411beadfd92783550b1d170955d5159157a`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (188 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

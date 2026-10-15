@@ -12,6 +12,13 @@ use sha2::{Digest, Sha256};
 use std::fs;
 use std::path::{Path, PathBuf};
 
+mod execution;
+pub use execution::{
+    ExecutionApprovalBinding, ExecutionCheckpoint, ExecutionStateBinding,
+    capture_execution_binding, checkpoint_execution, verify_execution_binding,
+    verify_execution_resume,
+};
+
 pub const TRAJECTORY_SCHEMA_VERSION: &str = "1.1.0";
 pub const LEGACY_TRAJECTORY_SCHEMA_VERSION: &str = "1.0.0";
 pub const TRAJECTORY_PATH: &str = crate::core::governance_document::GOVERNANCE_PATH;
@@ -196,6 +203,10 @@ pub struct TrajectoryArtifact {
         skip_serializing_if = "crate::core::custody::CustodyState::is_empty"
     )]
     pub custody: crate::core::custody::CustodyState,
+    /// Continuation evidence in the existing Git-backed trajectory journal.
+    /// These records never grant task ownership or establish proof readiness.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub execution_checkpoints: Vec<ExecutionCheckpoint>,
 }
 
 #[derive(Debug, Default)]
@@ -468,6 +479,7 @@ pub(crate) fn fresh_trajectory(
         },
         artifact_hash: String::new(),
         custody,
+        execution_checkpoints: Vec::new(),
     };
     let written = artifact
         .with_recomputed_hash()
@@ -772,6 +784,7 @@ pub fn parse_loop_json(spec: &str) -> Result<TrajectoryLoop, error::DecapodError
 }
 
 pub fn validate_loops(artifact: &TrajectoryArtifact) -> Result<(), error::DecapodError> {
+    execution::validate_checkpoints(artifact)?;
     let mut attempts = std::collections::BTreeMap::<String, Vec<u32>>::new();
     let mut loop_ids = std::collections::BTreeSet::new();
     for loop_record in &artifact.loops {

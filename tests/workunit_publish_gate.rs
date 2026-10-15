@@ -33,6 +33,9 @@ fn write_manifest(
         status,
     };
 
+    // Direct owner calls use the same initialized runtime policy schema as CLI.
+    decapod::core::todo::initialize_todo_db(&root.join(".decapod/data"))
+        .expect("initialize runtime");
     workunit::write_workunit(root, &manifest).expect("write workunit manifest");
 }
 

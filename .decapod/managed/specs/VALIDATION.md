@@ -14,6 +14,24 @@ failures, and revalidate. Human decisions and unavailable proof remain explicit
 blockers. Human onboarding requires only installation and initialization; the
 agent performs validation and coordination.
 
+## Runtime recovery proof obligations
+
+The durability slice requires adversarial proof at real domain boundaries:
+transaction failure must roll back task state and journal together; duplicate
+identical operations are idempotent; conflicting IDs, predecessor gaps, corrupt
+snapshots, generation regressions and divergent live state fail closed. Modern
+claim, renew, yield, handoff, release, dependency and proof state must round-trip
+without changing verification bytes or their task-revision binding. A legacy
+baseline must visibly preserve its incomplete-history limitation.
+
+Workunit tests exercise concurrent read-modify-write, stale prepared generations,
+interruption between durable append and JSON publication, repeated recovery, and
+current-source/intent/approval drift at resume. Atomic-file tests inject directory
+sync failure after rename and verify that a complete file remains visible while
+the operation reports unconfirmed durability. Unix tests reject symlinked parent
+sync targets. These are required checks, not claims that arbitrary hardware
+power-loss behavior or every external runtime has been measured.
+
 ## Evidence Artifacts
 
 Evidence must identify the input state, evaluator, executed check, result, and
@@ -481,8 +499,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `92b5bb3991acc9bc81c28f8578d9abaf4ba3b122fd6468d1f2ab57f70d02389d`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (185 files), `tests/` (190 files)
+- Repository signal fingerprint: `7efe54997513078b81090151e7204411beadfd92783550b1d170955d5159157a`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (188 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

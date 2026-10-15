@@ -1,13 +1,47 @@
 use decapod::core::store::{Store, StoreKind};
 use decapod::core::todo::{
-    ClaimMode, TodoCommand, add_task, claim_task, get_task, initialize_todo_db, update_status,
-    yield_claim_lease,
+    ClaimMode, claim_task, get_task, initialize_todo_db, update_status, yield_claim_lease,
 };
 use decapod::core::workspace;
 use decapod::plugins::federation::initialize_federation_db;
 use std::fs;
 use std::path::Path;
 use tempfile::tempdir;
+
+// Seed deterministic historical identities before any task journal exists.
+// Prune routing needs distinct short hashes; altering an add_task checkpoint's
+// hash later would correctly be rejected as divergent authority.
+fn seed_prune_task(root: &Path, repo: &Path, title: &str, hash: &str) -> String {
+    let conn = decapod::core::db::Connection::open(decapod::core::todo::todo_db_path(root))
+        .expect("open fixture database");
+    let journal_records: i64 = conn.query_row(
+        "SELECT COUNT(*) FROM events WHERE stream='todo' AND event_type='task.journal.checkpoint'",
+        [], |row| row.get(0),
+    ).expect("read fixture genesis");
+    assert_eq!(
+        journal_records, 0,
+        "seed fixture only before journal genesis"
+    );
+    // Match todo::make_task_id's ULID-derived identity; only the separately
+    // seeded display hash is deterministic for prune-path routing.
+    let body: String = decapod::core::ulid::new_ulid()
+        .to_ascii_lowercase()
+        .chars()
+        .take(16)
+        .collect();
+    let id = format!("code_{body}");
+    let directory = fs::canonicalize(repo).expect("canonical fixture directory");
+    conn.execute(
+        "INSERT INTO tasks(id,hash,title,status,created_at,updated_at,dir_path,scope,owner,revision)
+         VALUES(?1,?2,?3,'open','1Z','1Z',?4,'root','test-agent',0)",
+        decapod::core::db::params![id, hash, title, directory.to_string_lossy()],
+    ).expect("seed historical prune task");
+    conn.execute(
+        "INSERT INTO task_owners(id,task_id,agent_id,claimed_at,claim_type) VALUES(?1,?2,'test-agent','1Z','primary')",
+        decapod::core::db::params![format!("owner:{id}"),id],
+    ).expect("seed historical task owner");
+    id
+}
 
 // Pruning fixtures need completed tasks, not validation evidence. Relinquish
 // exclusive custody through the owner-authorized API before plain completion.
@@ -101,80 +135,23 @@ fn test_workspace_prune() {
     };
 
     // 1. Task A (Active / Open & Claimed)
-    let task_a_res = add_task(
-        &store_root,
-        &TodoCommand::Add {
-            title: "Task A".to_string(),
-            description: "".to_string(),
-            tags: "".to_string(),
-            owner: "test-agent".to_string(),
-            due: None,
-            r#ref: "".to_string(),
-            scope: "".to_string(),
-            dir: Some(main_root.to_string_lossy().to_string()),
-            priority: "medium".to_string(),
-            depends_on: "".to_string(),
-            blocks: "".to_string(),
-            parent: None,
-            one_shot: 0,
-        },
-    )
-    .expect("add task a");
-    let id_a = task_a_res.get("id").unwrap().as_str().unwrap();
+    let task_a_res = seed_prune_task(&store_root, &main_root, "Task A", "hashaa");
+    let id_a = task_a_res.as_str();
 
     // 2. Task B (Done / Completed)
-    let task_b_res = add_task(
-        &store_root,
-        &TodoCommand::Add {
-            title: "Task B".to_string(),
-            description: "".to_string(),
-            tags: "".to_string(),
-            owner: "test-agent".to_string(),
-            due: None,
-            r#ref: "".to_string(),
-            scope: "".to_string(),
-            dir: Some(main_root.to_string_lossy().to_string()),
-            priority: "medium".to_string(),
-            depends_on: "".to_string(),
-            blocks: "".to_string(),
-            parent: None,
-            one_shot: 0,
-        },
-    )
-    .expect("add task b");
-    let id_b = task_b_res.get("id").unwrap().as_str().unwrap();
+    let task_b_res = seed_prune_task(&store_root, &main_root, "Task B", "hashbb");
+    let id_b = task_b_res.as_str();
 
     // 3. Task C (Open but Released/No Claim)
-    let task_c_res = add_task(
-        &store_root,
-        &TodoCommand::Add {
-            title: "Task C".to_string(),
-            description: "".to_string(),
-            tags: "".to_string(),
-            owner: "test-agent".to_string(),
-            due: None,
-            r#ref: "".to_string(),
-            scope: "".to_string(),
-            dir: Some(main_root.to_string_lossy().to_string()),
-            priority: "medium".to_string(),
-            depends_on: "".to_string(),
-            blocks: "".to_string(),
-            parent: None,
-            one_shot: 0,
-        },
-    )
-    .expect("add task c");
-    let id_c = task_c_res.get("id").unwrap().as_str().unwrap();
-
-    // Manually set distinct hashes in the SQLite db so they don't overlap within the 4.3 minute ULID millisecond threshold
-    let db_path = decapod::core::todo::todo_db_path(&store_root);
-    let conn = decapod::core::db::Connection::open(&db_path).expect("open db");
-    conn.execute("UPDATE tasks SET hash = 'hashaa' WHERE id = ?", [id_a])
-        .expect("update a");
-    conn.execute("UPDATE tasks SET hash = 'hashbb' WHERE id = ?", [id_b])
-        .expect("update b");
-    conn.execute("UPDATE tasks SET hash = 'hashcc' WHERE id = ?", [id_c])
-        .expect("update c");
+    let task_c_res = seed_prune_task(&store_root, &main_root, "Task C", "hashcc");
+    let id_c = task_c_res.as_str();
+    assert!(
+        get_task(&store_root, id_c)
+            .unwrap()
+            .unwrap()
+            .assigned_to
+            .is_empty()
+    );
 
     let hash_a = "hashaa";
     let hash_b = "hashbb";
@@ -358,31 +335,8 @@ fn test_workspace_prune_unmerged_prevention() {
     };
 
     // Task F (Done / Completed, but has unmerged commit)
-    let task_f_res = add_task(
-        &store_root,
-        &TodoCommand::Add {
-            title: "Task F".to_string(),
-            description: "".to_string(),
-            tags: "".to_string(),
-            owner: "test-agent".to_string(),
-            due: None,
-            r#ref: "".to_string(),
-            scope: "".to_string(),
-            dir: Some(main_root.to_string_lossy().to_string()),
-            priority: "medium".to_string(),
-            depends_on: "".to_string(),
-            blocks: "".to_string(),
-            parent: None,
-            one_shot: 0,
-        },
-    )
-    .expect("add task f");
-    let id_f = task_f_res.get("id").unwrap().as_str().unwrap();
-
-    let db_path = decapod::core::todo::todo_db_path(&store_root);
-    let conn = decapod::core::db::Connection::open(&db_path).expect("open db");
-    conn.execute("UPDATE tasks SET hash = 'hashff' WHERE id = ?", [id_f])
-        .expect("update f");
+    let task_f_res = seed_prune_task(&store_root, &main_root, "Task F", "hashff");
+    let id_f = task_f_res.as_str();
 
     let hash_f = "hashff";
     claim_fixture_task(&store_root, id_f);
@@ -457,33 +411,13 @@ fn test_workspace_prune_non_force_preserves_dirty_and_unregistered_data() {
         root: store_root.clone(),
     };
 
-    let task = add_task(
+    let task = seed_prune_task(
         &store_root,
-        &TodoCommand::Add {
-            title: "Dirty stale workspace".to_string(),
-            description: "".to_string(),
-            tags: "".to_string(),
-            owner: "test-agent".to_string(),
-            due: None,
-            r#ref: "".to_string(),
-            scope: "".to_string(),
-            dir: Some(main_root.to_string_lossy().to_string()),
-            priority: "medium".to_string(),
-            depends_on: "".to_string(),
-            blocks: "".to_string(),
-            parent: None,
-            one_shot: 0,
-        },
-    )
-    .expect("add task");
-    let task_id = task.get("id").unwrap().as_str().unwrap();
-    let db_path = decapod::core::todo::todo_db_path(&store_root);
-    let conn = decapod::core::db::Connection::open(&db_path).expect("open todo db");
-    conn.execute(
-        "UPDATE tasks SET hash = 'hashdirty' WHERE id = ?",
-        [task_id],
-    )
-    .expect("update task hash");
+        &main_root,
+        "Dirty stale workspace",
+        "hashdirty",
+    );
+    let task_id = task.as_str();
     claim_fixture_task(&store_root, task_id);
     complete_fixture_task(&store, task_id);
 
@@ -580,31 +514,8 @@ fn test_validate_stale_workspaces_cleanup() {
         root: store_root.clone(),
     };
 
-    let task_res = add_task(
-        &store_root,
-        &TodoCommand::Add {
-            title: "Task Prunable".to_string(),
-            description: "".to_string(),
-            tags: "".to_string(),
-            owner: "test-agent".to_string(),
-            due: None,
-            r#ref: "".to_string(),
-            scope: "".to_string(),
-            dir: Some(main_root.to_string_lossy().to_string()),
-            priority: "medium".to_string(),
-            depends_on: "".to_string(),
-            blocks: "".to_string(),
-            parent: None,
-            one_shot: 0,
-        },
-    )
-    .expect("add task");
-    let id = task_res.get("id").unwrap().as_str().unwrap();
-
-    let db_path = decapod::core::todo::todo_db_path(&store_root);
-    let conn = decapod::core::db::Connection::open(&db_path).expect("open db");
-    conn.execute("UPDATE tasks SET hash = 'hashprune' WHERE id = ?", [id])
-        .expect("update hash");
+    let task_res = seed_prune_task(&store_root, &main_root, "Task Prunable", "hashprune");
+    let id = task_res.as_str();
 
     claim_fixture_task(&store_root, id);
     complete_fixture_task(&store, id);
