@@ -1276,3 +1276,133 @@ fn controller_mismatch_is_distinct_only_after_complete_inventory_review() {
         ));
     }
 }
+
+#[test]
+fn future_native_contract_adds_exact_obligations_without_changing_current_graph() {
+    let (mut declaration, mut sources, facts) = accepted_executor_inputs();
+    let executor = accepted_executor();
+    let current = required_source_catalog_with_executor(
+        Some(&declaration),
+        &sources,
+        &facts,
+        Some(&executor),
+    )
+    .unwrap();
+    assert!(
+        !current
+            .obligations()
+            .iter()
+            .any(|o| o.key.job == "native-vega")
+    );
+    sources.files.insert(
+        ".github/workflows/ci.yml".into(),
+        bytes_digest(NATIVE_CI_WORKFLOW),
+    );
+    declaration.reviewed_sources_digest = sources.digest().unwrap();
+    let native = required_source_catalog_with_executor(
+        Some(&declaration),
+        &sources,
+        &facts,
+        Some(&executor),
+    )
+    .unwrap();
+    let old_keys: BTreeSet<_> = current.obligations().iter().map(|o| &o.key).collect();
+    let new_keys: BTreeSet<_> = native.obligations().iter().map(|o| &o.key).collect();
+    assert!(old_keys.is_subset(&new_keys));
+    assert_eq!(native.obligations().len(), current.obligations().len() + 4);
+    assert_eq!(native.exclusions(), current.exclusions());
+    let checks: BTreeSet<_> = native
+        .obligations()
+        .iter()
+        .filter(|o| o.key.job == "native-vega")
+        .map(|o| o.key.profile.as_str())
+        .collect();
+    assert_eq!(
+        checks,
+        BTreeSet::from([
+            "decapod.pr-readiness.v1/native-vega-gpu",
+            "decapod.pr-readiness.v1/native-vega-worker",
+            "decapod.pr-readiness.v1/native-vega-model-setup",
+            "decapod.pr-readiness.v1/native-vega-inference",
+        ])
+    );
+    assert_ne!(
+        current.source_inventory_digest,
+        native.source_inventory_digest
+    );
+}
+
+#[test]
+fn future_native_contract_rejects_modified_and_mixed_workflow_bytes_even_after_repin() {
+    let (mut declaration, mut sources, facts) = accepted_executor_inputs();
+    let executor = accepted_executor();
+    let mut tampered = NATIVE_CI_WORKFLOW.to_vec();
+    tampered.push(b'\n');
+    sources
+        .files
+        .insert(".github/workflows/ci.yml".into(), bytes_digest(&tampered));
+    declaration.reviewed_sources_digest = sources.digest().unwrap();
+    assert!(matches!(
+        required_source_catalog_with_executor(
+            Some(&declaration),
+            &sources,
+            &facts,
+            Some(&executor)
+        ),
+        Err(PlanningFailure::ControllerContractUnsupported(_))
+    ));
+    sources.files.insert(
+        ".github/workflows/ci.yml".into(),
+        bytes_digest(NATIVE_CI_WORKFLOW),
+    );
+    sources.files.insert(
+        ".github/workflows/docs.yml".into(),
+        d("unregistered workflow mixed with future contract"),
+    );
+    declaration.reviewed_sources_digest = sources.digest().unwrap();
+    assert!(matches!(
+        required_source_catalog_with_executor(
+            Some(&declaration),
+            &sources,
+            &facts,
+            Some(&executor)
+        ),
+        Err(PlanningFailure::ControllerContractUnsupported(_))
+    ));
+}
+
+#[test]
+fn future_native_fixture_is_accepted_executor_authority_not_candidate_approval() {
+    let mut files = accepted_executor_files();
+    files.files.remove(NATIVE_CI_WORKFLOW_PATH);
+    assert!(AcceptedExecutor::from_captured("b".repeat(40), "c".repeat(40), files).is_err());
+    let mut files = accepted_executor_files();
+    files.files.insert(
+        NATIVE_CI_WORKFLOW_PATH.into(),
+        d("candidate-selected native contract"),
+    );
+    assert!(AcceptedExecutor::from_captured("b".repeat(40), "c".repeat(40), files).is_err());
+}
+
+#[test]
+fn future_native_contract_requires_accepted_executor_and_preserves_registered_current_hash() {
+    let (mut declaration, mut sources, facts, _) = inputs();
+    assert_eq!(
+        ci_workflow_contract(reviewed_workflow_digests()[0].1),
+        Some(CiWorkflowContract::Current)
+    );
+    assert_eq!(
+        ci_workflow_contract(&bytes_digest(NATIVE_CI_WORKFLOW)),
+        Some(CiWorkflowContract::NativeVegaV1)
+    );
+    assert_eq!(ci_workflow_contract(&d("unregistered workflow")), None);
+    sources.files.insert(
+        ".github/workflows/ci.yml".into(),
+        bytes_digest(NATIVE_CI_WORKFLOW),
+    );
+    declaration.reviewed_sources_digest = sources.digest().unwrap();
+    assert!(matches!(
+        required_source_catalog(Some(&declaration), &sources, &facts),
+        Err(PlanningFailure::ControllerContractUnsupported(_))
+    ));
+}

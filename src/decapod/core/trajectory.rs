@@ -160,6 +160,72 @@ pub struct TrajectoryLoop {
     pub custody_event_id: Option<String>,
 }
 
+/// Finite unmet proof categories. These are never authorization or human-stop
+/// blockers; legacy free-text blockers remain unconditional execution stops.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+pub enum ProofBlockerId {
+    #[serde(rename = "native-apple-metal")]
+    NativeAppleMetal,
+}
+impl ProofBlockerId {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::NativeAppleMetal => "native-apple-metal",
+        }
+    }
+    pub fn required_checks(self) -> &'static [&'static str] {
+        match self {
+            Self::NativeAppleMetal => &[
+                "native-vega-gpu",
+                "native-vega-worker",
+                "native-vega-model-setup",
+                "native-vega-inference",
+            ],
+        }
+    }
+    pub fn parse(value: &str) -> Result<Self, error::DecapodError> {
+        match value {
+            "native-apple-metal" => Ok(Self::NativeAppleMetal),
+            _ => Err(error::DecapodError::ValidationError(
+                "UNKNOWN_PROOF_BLOCKER: only independently implemented proof categories are supported".into(),
+            )),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(deny_unknown_fields)]
+pub struct ProofBlocker {
+    pub id: ProofBlockerId,
+    pub detail: String,
+    pub proof_refs: Vec<String>,
+}
+impl ProofBlocker {
+    fn validate(&self) -> Result<(), error::DecapodError> {
+        if self.detail.trim().is_empty()
+            || self.detail.len() > 4096
+            || self.proof_refs.is_empty()
+            || self
+                .proof_refs
+                .iter()
+                .any(|value| value.trim().is_empty() || value.len() > 4096)
+        {
+            return Err(error::DecapodError::ValidationError(
+                "INVALID_PROOF_BLOCKER: nonempty bounded detail and evidence references are required".into(),
+            ));
+        }
+        Ok(())
+    }
+}
+
+pub fn parse_proof_blocker_json(value: &str) -> Result<ProofBlocker, error::DecapodError> {
+    let blocker: ProofBlocker = serde_json::from_str(value).map_err(|error| {
+        error::DecapodError::ValidationError(format!("INVALID_PROOF_BLOCKER: {error}"))
+    })?;
+    blocker.validate()?;
+    Ok(blocker)
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct TrajectoryArtifact {
     pub schema_version: String,
@@ -179,6 +245,8 @@ pub struct TrajectoryArtifact {
     pub next_transitions: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub blockers: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub proof_blockers: Vec<ProofBlocker>,
     pub active_boundaries: Vec<String>,
     pub repo_scope: Vec<String>,
     pub inspected_files: Vec<String>,
@@ -217,6 +285,9 @@ pub struct TrajectoryUpdate {
     pub next_transitions: Vec<String>,
     pub blockers: Vec<String>,
     pub clear_blockers: bool,
+    pub proof_blockers: Vec<ProofBlocker>,
+    pub classify_proof_blockers: Vec<ProofBlocker>,
+    pub resolve_proof_blockers: Vec<ProofBlockerId>,
     pub active_boundaries: Vec<String>,
     pub repo_scope: Vec<String>,
     pub inspected_files: Vec<String>,
@@ -232,6 +303,24 @@ pub struct TrajectoryUpdate {
 }
 
 impl TrajectoryArtifact {
+    pub fn has_blockers(&self) -> bool {
+        !self.blockers.is_empty() || !self.proof_blockers.is_empty()
+    }
+
+    pub fn validate_proof_blockers(&self) -> Result<(), error::DecapodError> {
+        let mut ids = std::collections::BTreeSet::new();
+        for blocker in &self.proof_blockers {
+            blocker.validate()?;
+            if !ids.insert(blocker.id) {
+                return Err(error::DecapodError::ValidationError(
+                    "DUPLICATE_PROOF_BLOCKER: preserve one explicit obligation per proof category"
+                        .into(),
+                ));
+            }
+        }
+        Ok(())
+    }
+
     pub fn canonicalized(&self) -> Self {
         let mut out = self.clone();
         for values in [
@@ -249,6 +338,11 @@ impl TrajectoryArtifact {
         ] {
             values.sort();
             values.dedup();
+        }
+        out.proof_blockers.sort();
+        for blocker in &mut out.proof_blockers {
+            blocker.proof_refs.sort();
+            blocker.proof_refs.dedup();
         }
         out.checks.sort();
         out.checks.dedup_by(|left, right| left.name == right.name);
@@ -298,7 +392,7 @@ pub fn motion_state(artifact: &TrajectoryArtifact) -> TrajectoryMotionState {
     {
         return TrajectoryMotionState::Abandoned;
     }
-    if !artifact.blockers.is_empty() {
+    if artifact.has_blockers() {
         return TrajectoryMotionState::Blocked;
     }
     if artifact.completion_claim.is_some() {
@@ -458,6 +552,7 @@ pub(crate) fn fresh_trajectory(
         current_phase,
         next_transitions,
         blockers,
+        proof_blockers: Vec::new(),
         active_boundaries: durable_active_boundaries,
         repo_scope: durable_repo_scope,
         inspected_files: Vec::new(),
@@ -557,9 +652,11 @@ pub fn load_trajectory_cookie(
 ) -> Result<Option<TrajectoryArtifact>, error::DecapodError> {
     crate::core::governance_document::read_section(project_root, "trajectory")?
         .map(|value| {
-            serde_json::from_value(value).map_err(|e| {
+            let artifact: TrajectoryArtifact = serde_json::from_value(value).map_err(|e| {
                 error::DecapodError::ValidationError(format!("Invalid trajectory: {e}"))
-            })
+            })?;
+            artifact.validate_proof_blockers()?;
+            Ok(artifact)
         })
         .transpose()
 }
@@ -588,6 +685,7 @@ pub fn write_trajectory(
             "failed to serialize trajectory artifact: {e}"
         ))
     })?;
+    canonical.validate_proof_blockers()?;
     validate_loops(&canonical)?;
     let parent = path.parent().ok_or_else(|| {
         error::DecapodError::ValidationError("invalid trajectory parent path".to_string())
@@ -609,6 +707,129 @@ pub fn write_trajectory(
     Ok(canonical)
 }
 
+// Deliberate authorized journal mutation, never semantic classification by the
+// execution path. Generic check declarations are not authenticated readiness.
+fn update_proof_blockers(
+    artifact: &mut TrajectoryArtifact,
+    update: &TrajectoryUpdate,
+) -> Result<(), error::DecapodError> {
+    if update.clear_blockers && !update.classify_proof_blockers.is_empty() {
+        return Err(error::DecapodError::ValidationError(
+            "PROOF_BLOCKER_CLASSIFICATION: classification cannot be combined with clearing execution blockers".into(),
+        ));
+    }
+    for blocker in &update.classify_proof_blockers {
+        blocker.validate()?;
+        if !artifact.blockers.contains(&blocker.detail) {
+            return Err(error::DecapodError::ValidationError(
+                "PROOF_BLOCKER_CLASSIFICATION: exact existing blocker detail is required; unknown blockers remain stops".into(),
+            ));
+        }
+        artifact.blockers.retain(|value| value != &blocker.detail);
+        artifact.proof_blockers.push(blocker.clone());
+        artifact.evidence.extend(blocker.proof_refs.clone());
+        let (custody, _) = crate::core::custody::append_trajectory_step(
+            artifact.custody.clone(),
+            &artifact.run_id,
+            artifact
+                .intent_id
+                .as_deref()
+                .unwrap_or(&format!("intent:{}", artifact.run_id)),
+            crate::core::custody::TrajectoryStepInput {
+                action: "trajectory.classify_proof_blocker".into(),
+                observations: vec![blocker.detail.clone(), blocker.id.as_str().into()],
+                proof_refs: blocker.proof_refs.clone(),
+                ..Default::default()
+            },
+        )
+        .map_err(|error| error::DecapodError::ValidationError(error.to_string()))?;
+        artifact.custody = custody;
+    }
+    for blocker in &update.proof_blockers {
+        blocker.validate()?;
+        artifact.evidence.extend(blocker.proof_refs.clone());
+        let (custody, _) = crate::core::custody::append_trajectory_step(
+            artifact.custody.clone(),
+            &artifact.run_id,
+            artifact
+                .intent_id
+                .as_deref()
+                .unwrap_or(&format!("intent:{}", artifact.run_id)),
+            crate::core::custody::TrajectoryStepInput {
+                action: "trajectory.add_proof_blocker".into(),
+                observations: vec![blocker.id.as_str().into(), blocker.detail.clone()],
+                proof_refs: blocker.proof_refs.clone(),
+                ..Default::default()
+            },
+        )
+        .map_err(|error| error::DecapodError::ValidationError(error.to_string()))?;
+        artifact.custody = custody;
+    }
+    artifact
+        .proof_blockers
+        .extend(update.proof_blockers.clone());
+    artifact.validate_proof_blockers()?;
+    for id in &update.resolve_proof_blockers {
+        if !artifact
+            .proof_blockers
+            .iter()
+            .any(|blocker| blocker.id == *id)
+            || update.evidence.is_empty()
+            || update
+                .evidence
+                .iter()
+                .any(|value| value.trim().is_empty() || value.len() > 4096)
+            || !id.required_checks().iter().all(|name| {
+                let matches: Vec<_> = update
+                    .checks
+                    .iter()
+                    .filter(|check| check.name == *name)
+                    .collect();
+                !matches.is_empty()
+                    && matches
+                        .iter()
+                        .all(|check| check.status == TrajectoryCheckStatus::Passed)
+            })
+        {
+            return Err(error::DecapodError::ValidationError(
+                "PROOF_BLOCKER_RESOLUTION: existing obligation, all four fresh passed native checks and evidence references are required".into(),
+            ));
+        }
+        let blocker = artifact
+            .proof_blockers
+            .iter()
+            .find(|blocker| blocker.id == *id)
+            .unwrap();
+        let (custody, _) = crate::core::custody::append_trajectory_step(
+            artifact.custody.clone(),
+            &artifact.run_id,
+            artifact
+                .intent_id
+                .as_deref()
+                .unwrap_or(&format!("intent:{}", artifact.run_id)),
+            crate::core::custody::TrajectoryStepInput {
+                action: "trajectory.declare_proof_blocker_resolved".into(),
+                observations: vec![
+                    id.as_str().into(),
+                    blocker.detail.clone(),
+                    "Journal declaration only; independent full readiness still required".into(),
+                ],
+                proof_refs: blocker
+                    .proof_refs
+                    .iter()
+                    .chain(update.evidence.iter())
+                    .cloned()
+                    .collect(),
+                ..Default::default()
+            },
+        )
+        .map_err(|error| error::DecapodError::ValidationError(error.to_string()))?;
+        artifact.custody = custody;
+        artifact.proof_blockers.retain(|blocker| blocker.id != *id);
+    }
+    Ok(())
+}
+
 pub fn record_trajectory(
     project_root: &Path,
     run_id: &str,
@@ -616,6 +837,7 @@ pub fn record_trajectory(
 ) -> Result<TrajectoryArtifact, error::DecapodError> {
     crate::core::governance_document::with_lock(project_root, || {
         let mut artifact = load_trajectory(project_root, run_id)?;
+        update_proof_blockers(&mut artifact, &update)?;
         let normalized_repo_scope = artifact
             .repo_scope
             .iter()
@@ -962,13 +1184,17 @@ fn compute_verdicts(artifact: &TrajectoryArtifact) -> TrajectoryVerdicts {
     } else {
         TrajectoryVerdict::Caution
     };
-    let completion_proof = match artifact.proof_status {
-        TrajectoryProofStatus::Passed => TrajectoryVerdict::Supported,
-        TrajectoryProofStatus::Partial | TrajectoryProofStatus::Unavailable => {
-            TrajectoryVerdict::Caution
-        }
-        TrajectoryProofStatus::Failed | TrajectoryProofStatus::NoChecksRun => {
-            TrajectoryVerdict::Unsupported
+    let completion_proof = if !artifact.proof_blockers.is_empty() {
+        TrajectoryVerdict::Unsupported
+    } else {
+        match artifact.proof_status {
+            TrajectoryProofStatus::Passed => TrajectoryVerdict::Supported,
+            TrajectoryProofStatus::Partial | TrajectoryProofStatus::Unavailable => {
+                TrajectoryVerdict::Caution
+            }
+            TrajectoryProofStatus::Failed | TrajectoryProofStatus::NoChecksRun => {
+                TrajectoryVerdict::Unsupported
+            }
         }
     };
     TrajectoryVerdicts {

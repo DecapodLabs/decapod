@@ -895,6 +895,7 @@ fn receipt_is_reusable_after_governance_only_commit() {
         current_phase: None,
         next_transitions: Vec::new(),
         blockers: Vec::new(),
+        proof_blockers: Vec::new(),
         active_boundaries: Vec::new(),
         repo_scope: Vec::new(),
         inspected_files: Vec::new(),

@@ -37,6 +37,7 @@ pub fn catalog_source_paths() -> &'static [&'static str] {
         ".github/workflows/nix-flake.yml",
         ".github/workflows/security-audit.yml",
         "assets/tools/source_ci_profile.rs",
+        "assets/tools/source_ci/contracts/ci-native.yml.fixture",
         "assets/tools/source_ci_custody.rs",
         "assets/tools/integration_custody.rs",
         "assets/tools/integration_shards.rs",
@@ -92,6 +93,36 @@ pub fn reviewed_workflow_digests() -> &'static [(&'static str, &'static str)] {
     ]
 }
 
+/// Independently accepted workflow contracts. No repository pin may extend this set.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+pub enum CiWorkflowContract {
+    Current,
+    NativeVegaV1,
+}
+pub const NATIVE_CI_WORKFLOW_PATH: &str = "assets/tools/source_ci/contracts/ci-native.yml.fixture";
+pub const NATIVE_CI_WORKFLOW: &[u8] =
+    include_bytes!("../../../assets/tools/source_ci/contracts/ci-native.yml.fixture");
+
+pub fn ci_workflow_contract(digest: &str) -> Option<CiWorkflowContract> {
+    if digest == reviewed_workflow_digests()[0].1 {
+        Some(CiWorkflowContract::Current)
+    } else if digest == bytes_digest(NATIVE_CI_WORKFLOW) {
+        Some(CiWorkflowContract::NativeVegaV1)
+    } else {
+        None
+    }
+}
+
+pub fn reviewed_workflow_matches(path: &str, digest: &str) -> bool {
+    if path == ".github/workflows/ci.yml" {
+        ci_workflow_contract(digest).is_some()
+    } else {
+        reviewed_workflow_digests()
+            .iter()
+            .any(|(known, expected)| *known == path && *expected == digest)
+    }
+}
+
 /// Exact helper bytes compiled into the reviewed finite execution adapter.
 /// Tests reuse the same manifest; provider output never defines this authority.
 pub fn definition_files() -> Vec<(&'static str, &'static [u8])> {
@@ -125,6 +156,13 @@ pub fn definition_files() -> Vec<(&'static str, &'static [u8])> {
             include_bytes!("../../../assets/tools/source_ci_workflow_owned.rs").as_slice(),
         ),
     ];
+    files.extend(source::native_vega::SOURCES.iter().copied());
+    if !files
+        .iter()
+        .any(|(path, _)| *path == NATIVE_CI_WORKFLOW_PATH)
+    {
+        files.push((NATIVE_CI_WORKFLOW_PATH, NATIVE_CI_WORKFLOW));
+    }
     files.extend(source::workflow_owned::SOURCES.iter().copied());
     files
 }
@@ -599,8 +637,12 @@ pub fn required_source_catalog_with_executor(
             return Err(PlanningFailure::UnsupportedSource(path.clone()));
         }
     }
-    for (path, expected) in reviewed_workflow_digests() {
-        if discovered.files.get(*path).map(String::as_str) != Some(*expected) {
+    for (path, _) in reviewed_workflow_digests() {
+        if !discovered
+            .files
+            .get(*path)
+            .is_some_and(|digest| reviewed_workflow_matches(path, digest))
+        {
             return Err(PlanningFailure::ControllerContractUnsupported(
                 (*path).into(),
             ));
@@ -634,10 +676,22 @@ pub fn required_source_catalog_with_executor(
     } else {
         discovered.digest()?
     };
+    let contract =
+        ci_workflow_contract(&discovered.files[".github/workflows/ci.yml"]).ok_or_else(|| {
+            PlanningFailure::ControllerContractUnsupported(".github/workflows/ci.yml".into())
+        })?;
+    if contract == CiWorkflowContract::NativeVegaV1 && executor.is_none() {
+        return Err(PlanningFailure::ControllerContractUnsupported(
+            "native contract requires independently accepted executor".into(),
+        ));
+    }
+    let source_digest = hash(&(&source_digest, contract))?;
     let paths: Vec<_> = facts.changed_paths.iter().cloned().collect();
     let mut obligations = Vec::new();
     let mut exclusions = Vec::new();
-    for job in source::inventory(&paths, false) {
+    for job in
+        source::inventory_for_contract(&paths, false, contract == CiWorkflowContract::NativeVegaV1)
+    {
         let mut members = job.checks.clone();
         if members.is_empty() {
             members.push("workflow-owned");

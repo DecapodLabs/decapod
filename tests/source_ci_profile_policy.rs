@@ -2165,3 +2165,268 @@ fn provider_carrier_rejects_mismatched_mutable_or_nested_executor_inputs_before_
         assert!(!fixture.scratch.join("compiles").exists(), "{mode}");
     }
 }
+
+#[path = "../assets/tools/native_vega_driver.rs"]
+mod native_vega_driver;
+
+#[test]
+fn native_vega_future_inventory_adds_four_checks_without_changing_current_obligations() {
+    let paths = full_paths();
+    for release_only in [false, true] {
+        let current = inventory(&paths, release_only);
+        let unchanged = profile::inventory_for_contract(&paths, release_only, false);
+        let future = profile::inventory_for_contract(&paths, release_only, true);
+        assert_eq!(format!("{current:?}"), format!("{unchanged:?}"));
+        assert_eq!(future.len(), current.len() + 1);
+        assert_eq!(
+            format!("{:?}", &future[..current.len()]),
+            format!("{current:?}")
+        );
+        let native = future.last().unwrap();
+        assert_eq!(native.workflow, "ci.yml");
+        assert_eq!(native.job, "native-vega");
+        assert_eq!(native.matrix, None);
+        assert_eq!(native.applicable, !release_only);
+        assert!(!native.workflow_owned);
+        assert_eq!(
+            native.checks,
+            [
+                "native-vega-gpu",
+                "native-vega-worker",
+                "native-vega-model-setup",
+                "native-vega-inference"
+            ]
+        );
+    }
+    assert!(
+        CHECKS
+            .iter()
+            .all(|check| !profile::native_vega::is_check(check.id))
+    );
+    let all: BTreeSet<_> = profile::all_checks().map(|c| c.id).collect();
+    assert_eq!(all.len(), CHECKS.len() + 4);
+    assert!(!profile::native_vega::contract_enabled(Path::new(env!(
+        "CARGO_MANIFEST_DIR"
+    ))));
+}
+
+#[test]
+fn native_vega_selects_only_exact_future_workflow_bytes() {
+    let temp = Temp::new();
+    fs::create_dir_all(temp.0.join(".github/workflows")).unwrap();
+    let path = temp.0.join(".github/workflows/ci.yml");
+    let fixture = include_bytes!("../assets/tools/source_ci/contracts/ci-native.yml.fixture");
+    assert!(fixture.starts_with(CI.as_bytes()));
+    assert!(!profile::native_vega::contract_enabled(&temp.0));
+    fs::write(&path, CI).unwrap();
+    assert!(!profile::native_vega::contract_enabled(&temp.0));
+    fs::write(&path, fixture).unwrap();
+    assert!(profile::native_vega::contract_enabled(&temp.0));
+    let future = std::str::from_utf8(fixture).unwrap();
+    for unmatched in [
+        String::new(),
+        format!("{future}\n"),
+        future.replace(
+            "name: Native Vega (Apple Metal)",
+            "name: Native Vega (Apple Other)",
+        ),
+        future.replace(
+            "--check native-vega-inference",
+            "--check native-vega-model-setup",
+        ),
+        "jobs:\n  native-vega:\n    runs-on: macos-latest\n".into(),
+    ] {
+        assert_ne!(unmatched.as_bytes(), fixture);
+        fs::write(&path, unmatched).unwrap();
+        assert!(!profile::native_vega::contract_enabled(&temp.0));
+        for check in profile::native_vega::CHECKS {
+            assert!(profile::native_vega::preparation(&temp.0, &temp.0, check).is_err());
+        }
+    }
+    #[cfg(unix)]
+    {
+        fs::remove_file(&path).unwrap();
+        let target = temp.0.join("reviewed-workflow.yml");
+        fs::write(&target, fixture).unwrap();
+        std::os::unix::fs::symlink(target, &path).unwrap();
+        assert!(!profile::native_vega::contract_enabled(&temp.0));
+    }
+}
+
+#[test]
+fn native_vega_gpu_recipe_requires_generic_shader_operations_without_claiming_execution() {
+    // Inspect the reviewed capability recipe, not evidence that Metal ran here.
+    let probe = include_str!("../assets/tools/native_metal_probe.m");
+    for required in [
+        "newLibraryWithSource",
+        "newComputePipelineStateWithFunction",
+        "dispatchThreads",
+        "waitUntilCompleted",
+        "MTLCommandBufferStatusCompleted",
+        "actual[i] != expected[i]",
+        "poison[i] = NAN",
+        "alarm(60)",
+        "decapod.native-metal-capability.v1",
+    ] {
+        assert!(
+            probe.contains(required),
+            "missing reviewed GPU proof operation: {required}"
+        );
+    }
+    for check in profile::native_vega::CHECKS {
+        assert_eq!(check.platform, Platform::MacosAarch64);
+        assert!(check.skipped_for_release_only);
+        assert!(!commands(check, &[]).unwrap().is_empty());
+        assert!(!check.capabilities.contains(&"python3"));
+    }
+}
+
+#[test]
+fn native_vega_helper_uses_accepted_sources_and_subject_outputs() {
+    let executor = Path::new("/reviewed-executor");
+    let subject = Path::new("/candidate-subject");
+    let recipe = commands(find_check("native-vega-gpu").unwrap(), &[]).unwrap();
+    let helper = &recipe[0];
+    assert!(profile::native_vega::is_driver_build(helper));
+    let args = profile::custody::configured_arguments_for_subject(helper, executor, subject);
+    assert!(
+        args.contains(
+            &executor
+                .join("assets/tools/native_vega_driver/Cargo.toml")
+                .into_os_string()
+        )
+    );
+    assert!(
+        args.contains(
+            &subject
+                .join("target/source-ci-native-vega/driver-build")
+                .into_os_string()
+        )
+    );
+    let probe = recipe.iter().find(|v| v.program == "xcrun").unwrap();
+    let args = profile::custody::configured_arguments(probe, executor);
+    assert!(
+        args.contains(
+            &executor
+                .join("assets/tools/native_metal_probe.m")
+                .into_os_string()
+        )
+    );
+    let source_paths: BTreeSet<_> = profile::custody::profile_sources()
+        .into_iter()
+        .map(|(name, _)| profile::custody::profile_source_path(name))
+        .collect();
+    for (path, _) in profile::native_vega::SOURCES {
+        assert!(
+            source_paths.contains(Path::new(path)),
+            "unbound native executor dependency: {path}"
+        );
+    }
+    for check in profile::native_vega::CHECKS.iter().skip(1) {
+        let driver = "target/source-ci-native-vega/driver-build/release/native-vega-driver";
+        assert!(
+            profile::native_vega::input_files(check)
+                .iter()
+                .any(|p| p == driver)
+        );
+        assert!(
+            profile::native_vega::artifact_paths(check)
+                .iter()
+                .any(|p| p == driver)
+        );
+    }
+    let worker = commands(find_check("native-vega-worker").unwrap(), &[]).unwrap();
+    let cargo: Vec<_> = worker
+        .iter()
+        .filter(|step| step.program == "cargo")
+        .collect();
+    assert_eq!(cargo.len(), 4);
+    for verb in ["build", "test"] {
+        let root = cargo
+            .iter()
+            .find(|step| step.args.contains(&verb) && !step.args.contains(&"--manifest-path"))
+            .unwrap();
+        assert!(
+            root.args
+                .windows(2)
+                .any(|pair| pair == ["--features", "vega-native"])
+        );
+        assert!(!root.args.contains(&"decapod-vega-infer"));
+        let isolated = cargo
+            .iter()
+            .find(|step| step.args.contains(&verb) && step.args.contains(&"--manifest-path"))
+            .unwrap();
+        assert!(
+            isolated
+                .args
+                .windows(2)
+                .any(|pair| pair == ["--manifest-path", "assets/tools/vega-native/Cargo.toml"])
+        );
+        assert!(
+            isolated
+                .args
+                .windows(2)
+                .any(|pair| pair == ["--target-dir", "target/source-ci-native-vega/worker-build"])
+        );
+        assert!(
+            isolated
+                .args
+                .windows(2)
+                .any(|pair| pair == ["--bin", "decapod-vega-infer"])
+        );
+        assert!(isolated.args.contains(&"--locked"));
+    }
+}
+
+#[test]
+fn native_vega_models_are_pinned_and_never_uploaded_as_bulk_custody() {
+    let files = profile::native_vega::MODEL_FILES;
+    assert_eq!(files.len(), 9);
+    assert_eq!(
+        files.iter().map(|(name, _, _)| *name).collect::<Vec<_>>(),
+        [
+            "vega_config.json",
+            "engine.safetensors",
+            "backbone/config.json",
+            "backbone/model.safetensors.index.json",
+            "backbone/model.safetensors-00001-of-00001.safetensors",
+            "backbone/tokenizer.json",
+            "backbone/tokenizer_config.json",
+            "backbone/LICENSE",
+            "licenses/vega.LICENSE",
+        ]
+    );
+    for (_, bytes, pin) in files {
+        assert!(*bytes > 0);
+        let digest = pin.strip_prefix("sha256:").unwrap();
+        assert_eq!(digest.len(), 64);
+        assert!(
+            digest
+                .bytes()
+                .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+        );
+    }
+    for check in profile::native_vega::CHECKS {
+        assert!(profile::native_vega::artifact_paths(check).iter().all(|p| {
+            !p.contains(".safetensors") && !p.contains("model-cache") && !p.contains('*')
+        }));
+        for artifact in profile::native_vega::artifact_paths(check) {
+            assert!(files.iter().all(|(path, _, _)| !artifact.ends_with(*path)));
+        }
+    }
+    let helper = include_str!("../assets/tools/native_vega_driver.rs");
+    assert!(helper.contains("#[serde(deny_unknown_fields)]"));
+    assert!(helper.contains("--cache-directory"));
+    assert!(!helper.contains("\"--refresh\""));
+    assert!(
+        helper.contains("\"publication_ready\":false")
+            || helper.contains("\"publication_ready\": false")
+    );
+    let inference =
+        profile::native_vega::artifact_paths(find_check("native-vega-inference").unwrap());
+    assert!(
+        inference
+            .iter()
+            .any(|path| path.ends_with("/native-proof.json"))
+    );
+}

@@ -142,7 +142,8 @@ pub(super) fn github_sources(
             "integration-status" => 3,
             _ => 2,
         });
-        for ((logical, matrix), obligations) in jobs {
+        for ((logical, matrix), mut obligations) in jobs {
+            obligations.sort_by_key(|o| source_check_order(o));
             let mut transport_failed = false;
             let imported = (|| -> io::Result<()> {
                 let name = job_name(workflow, &logical, matrix.as_deref())?;
@@ -382,6 +383,7 @@ fn verify_check(
             ("setup-bazel", "bazel-bin/release_projection_drift") => {
                 Some("target/debug/decapod-release-projection-drift")
             }
+            _ if source::native_vega::is_check(check.id) => Some(artifact.source_path.as_str()),
             _ => None,
         };
         if let Some(path) = consumer {
@@ -457,6 +459,41 @@ fn source_dependencies(
     check: &source::Check,
     provider: evidence::Provider,
 ) -> io::Result<Vec<evidence::Dependency>> {
+    if source::native_vega::is_check(check.id) {
+        let required: &[&str] = match check.id {
+            "native-vega-gpu" => &[],
+            "native-vega-worker" => &["native-vega-gpu"],
+            "native-vega-model-setup" => &["native-vega-gpu", "native-vega-worker"],
+            "native-vega-inference" => &[
+                "native-vega-gpu",
+                "native-vega-worker",
+                "native-vega-model-setup",
+            ],
+            _ => return Err(invalid("unregistered native proof dependency")),
+        };
+        let mut dependencies = Vec::new();
+        for id in required {
+            let matching: Vec<_> = project
+                .catalog
+                .obligations()
+                .iter()
+                .filter(|o| {
+                    o.kind == evidence::CheckKind::SourceCi
+                        && o.key.provider == provider
+                        && o.key.workflow == ".github/workflows/ci.yml"
+                        && o.key.job == "native-vega"
+                        && o.key.profile == format!("{}/{}", profile::REQUIRED_PROFILE, id)
+                })
+                .collect();
+            if matching.len() != 1 {
+                return Err(invalid(
+                    "required native proof producer absent or ambiguous",
+                ));
+            }
+            dependencies.push(evidence::Dependency::Check(matching[0].key.clone()));
+        }
+        return Ok(dependencies);
+    }
     let jobs: &[&str] = match check.id {
         "health" | "governance-artifacts" => &["setup"],
         "integration-status" => &["integration-prepare", "test-integration"],
@@ -483,6 +520,16 @@ fn source_dependencies(
     Ok(dependencies)
 }
 
+fn source_check_order(obligation: &profile::Obligation) -> u8 {
+    match obligation.key.profile.rsplit('/').next().unwrap_or("") {
+        "native-vega-gpu" => 0,
+        "native-vega-worker" => 1,
+        "native-vega-model-setup" => 2,
+        "native-vega-inference" => 3,
+        _ => 0,
+    }
+}
+
 /// Names are finite reviewed workflow contracts; no expression/YAML interpreter
 /// and no observed label is accepted as its own expected mapping.
 fn job_name(workflow: &str, job: &str, matrix: Option<&str>) -> io::Result<String> {
@@ -502,6 +549,7 @@ fn job_name(workflow: &str, job: &str, matrix: Option<&str>) -> io::Result<Strin
         (".github/workflows/ci.yml", "workspace-lifecycle-docker") => {
             "Workspace lifecycle (actual Docker)"
         }
+        (".github/workflows/ci.yml", "native-vega") => "Native Vega (Apple Metal)",
         (".github/workflows/ci.yml", "fmt") => "Lint (fmt)",
         (".github/workflows/ci.yml", "clippy") => "Lint (clippy)",
         (".github/workflows/ci.yml", "deps-lint") => "Lint (dependencies)",
@@ -590,7 +638,17 @@ pub(super) fn buildkite_sources(
         .map(|o| o.key.workflow.as_str())
         .collect();
     let paths: Vec<_> = project.facts.changed_paths.iter().cloned().collect();
-    let source_jobs = source::inventory(&paths, false);
+    let workflow_contract = project
+        .sources
+        .files
+        .get(".github/workflows/ci.yml")
+        .and_then(|digest| profile::ci_workflow_contract(digest))
+        .ok_or_else(|| invalid("unsupported exact CI workflow contract"))?;
+    let source_jobs = source::inventory_for_contract(
+        &paths,
+        false,
+        workflow_contract == profile::CiWorkflowContract::NativeVegaV1,
+    );
     for workflow in workflows {
         let workflow_started = Instant::now();
         eprintln!("Buildkite collection: stage=metadata_discovery workflow={workflow}");
@@ -640,7 +698,16 @@ pub(super) fn buildkite_sources(
                 check.job.to_string(),
                 serde_json::to_string(&matrix).map_err(io::Error::other)?,
             );
-            let runtime_digest = contract.runtime_digest_for(&matrix)?.to_string();
+            let runtime_digest = if check.job == "native-vega" {
+                if check.platform != source::Platform::MacosAarch64 || !matrix.is_empty() {
+                    return Err(invalid(
+                        "native Vega importer requires exact non-matrix Apple platform",
+                    ));
+                }
+                contract.macos_runtime_digest.clone()
+            } else {
+                contract.runtime_digest_for(&matrix)?.to_string()
+            };
             let row = expected.entry(key).or_insert_with(|| {
                 (
                     bk::RecipeExpectation {
@@ -662,6 +729,9 @@ pub(super) fn buildkite_sources(
                 )
             });
             row.1.push(obligation);
+        }
+        for (_, obligations, _) in expected.values_mut() {
+            obligations.sort_by_key(|o| source_check_order(o));
         }
         let discovery_started = Instant::now();
         eprintln!("Buildkite collection: stage=recipe_discovery workflow={workflow}");
@@ -1025,6 +1095,45 @@ mod tests {
         }
         assert!(job_name(".github/workflows/ci.yml", "fmt", Some("foreign")).is_err());
         assert!(job_name(".github/workflows/ci.yml", "new-green-job", None).is_err());
+    }
+    #[test]
+    fn future_native_checks_share_one_exact_apple_job_without_a_matrix() {
+        let current = source::inventory(&[], false);
+        assert!(!current.iter().any(|job| job.job == "native-vega"));
+        let future = source::inventory_for_contract(&[], false, true);
+        let native: Vec<_> = future
+            .iter()
+            .filter(|job| job.job == "native-vega")
+            .collect();
+        assert_eq!(native.len(), 1);
+        assert_eq!(
+            native[0].checks,
+            [
+                "native-vega-gpu",
+                "native-vega-worker",
+                "native-vega-model-setup",
+                "native-vega-inference",
+            ]
+        );
+        for id in &native[0].checks {
+            let check = source::find_check(id).unwrap();
+            assert_eq!(check.platform, source::Platform::MacosAarch64);
+            assert_eq!(check.matrix, None);
+            assert_eq!(authored_matrix_position(&future, check).unwrap(), (0, 1));
+            assert_eq!(
+                job_name(".github/workflows/ci.yml", check.job, check.matrix).unwrap(),
+                "Native Vega (Apple Metal)"
+            );
+        }
+        assert!(
+            job_name(
+                ".github/workflows/ci.yml",
+                "native-vega",
+                Some("macos-latest")
+            )
+            .is_err()
+        );
+        assert!(job_name(".github/workflows/docs.yml", "native-vega", None).is_err());
     }
     #[test]
     fn static_integration_matrix_keeps_inactive_row_indices() {

@@ -1,0 +1,16 @@
+[package]
+name = "decapod-native-vega-proof"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.96.1"
+publish = false
+
+[workspace]
+
+[[bin]]
+name = "native-vega-driver"
+path = "../native_vega_driver.rs"
+
+[dependencies]
+serde = { version = "=1.0.228", features = ["derive"] }
+serde_json = { version = "=1.0.150", features = ["float_roundtrip"] }

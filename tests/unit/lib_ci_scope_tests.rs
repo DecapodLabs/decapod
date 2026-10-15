@@ -82,3 +82,53 @@ fn reviewed_public_buildkite_profile_selects_public_metadata_before_requests() {
         Some(&wrong_profile)
     ));
 }
+
+#[test]
+fn proof_collection_cannot_use_partial_scope_or_host_adoption() {
+    let collection = ReadinessInvocation {
+        collect_proof: true,
+        ..Default::default()
+    };
+    for scope in [
+        ValidationScope::ProjectPrerequisites,
+        ValidationScope::CiLocal,
+    ] {
+        assert!(reject_remote_arguments_in_partial_scope(scope, &collection).is_err());
+    }
+    assert!(
+        reject_remote_arguments_in_partial_scope(
+            ValidationScope::PublicationReadiness,
+            &collection
+        )
+        .is_ok()
+    );
+    for invocation in [
+        ReadinessInvocation {
+            collect_proof: true,
+            snapshot_prepare: true,
+            ..Default::default()
+        },
+        ReadinessInvocation {
+            collect_proof: true,
+            snapshot_resume: Some("handoff.json".into()),
+            ..Default::default()
+        },
+    ] {
+        assert!(invocation.validate().is_err());
+    }
+    let root = tempfile::tempdir().unwrap();
+    fs::create_dir(root.path().join(".decapod")).unwrap();
+    let config = crate::cli::DecapodProjectConfig::default();
+    fs::write(
+        root.path().join(".decapod/config.toml"),
+        toml::to_string_pretty(&config).unwrap(),
+    )
+    .unwrap();
+    let report = run_current_workbranch_readiness_with(root.path(), &collection);
+    assert!(!report.ready);
+    assert_eq!(
+        report.scope,
+        core::validation_runtime::PROOF_COLLECTION_SCOPE
+    );
+    assert!(!root.path().join(".decapod/governance.json").exists());
+}

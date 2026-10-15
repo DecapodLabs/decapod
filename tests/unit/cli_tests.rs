@@ -337,3 +337,33 @@ fn workspace_publish_rpc_rejects_snapshot_adoption_instead_of_ignoring_it() {
     });
     assert!(serde_json::from_value::<crate::core::rpc::WorkspacePublishParams>(params).is_err());
 }
+
+#[test]
+fn proof_collection_is_explicit_and_cannot_import_or_adopt_snapshot_receipts() {
+    use super::{Cli, Command};
+    use clap::Parser;
+    assert!(
+        matches!(Cli::try_parse_from(["decapod", "validate", "--collect-proof"]).unwrap().command,
+        Command::Validate(value) if value.collect_proof && !value.snapshot_prepare)
+    );
+    for extra in [
+        vec!["--snapshot-prepare"],
+        vec!["--snapshot-resume", "/private/handoff.json"],
+        vec![
+            "--snapshot-resume",
+            "/private/handoff.json",
+            "--provider-artifacts",
+            "/private/artifacts",
+        ],
+        vec![
+            "--snapshot-resume",
+            "/private/handoff.json",
+            "--snapshot-adopt",
+            "1234567890123456789012345678901234567890",
+        ],
+    ] {
+        let mut args = vec!["decapod", "validate", "--collect-proof"];
+        args.extend(extra);
+        assert!(Cli::try_parse_from(args).is_err());
+    }
+}

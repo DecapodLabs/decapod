@@ -172,6 +172,8 @@ pub(super) fn verify(
     let mut bazel = false;
     let mut external_config = false;
     let mut native_compiler = false;
+    let mut native_apple = false;
+    let mut model_checkpoint = false;
     let mut submodules = false;
     let mut cross_revision = None;
     let mut node_package = false;
@@ -230,6 +232,7 @@ pub(super) fn verify(
                 let path = field(row, "path")?;
                 let expected = source::workflow_owned::script_sources(check)
                     .into_iter()
+                    .chain(source::native_vega::source_files(check))
                     .find(|(name, _)| *name == path)
                     .ok_or_else(|| invalid("undeclared source recipe input"))?;
                 // R was independently captured before dispatch and its exact
@@ -254,6 +257,188 @@ pub(super) fn verify(
                     "ambient Cargo configuration not excluded",
                 )?;
                 external_config = true;
+            }
+            Some("native_apple") => {
+                ensure(
+                    source::native_vega::is_check(check.id) && !native_apple,
+                    "unexpected or duplicate native Apple toolchain",
+                )?;
+                let keys: BTreeSet<_> = row
+                    .as_object()
+                    .ok_or_else(|| invalid("native Apple record is not an object"))?
+                    .keys()
+                    .map(String::as_str)
+                    .collect();
+                ensure(
+                    keys == BTreeSet::from([
+                        "kind",
+                        "architecture",
+                        "os_version",
+                        "os_build",
+                        "xcrun_sha256",
+                        "sdks",
+                    ]),
+                    "native Apple toolchain record fields differ",
+                )?;
+                ensure(
+                    row["architecture"] == "arm64",
+                    "native Apple proof requires actual arm64",
+                )?;
+                for key in ["os_version", "os_build"] {
+                    let value = field(row, key)?;
+                    ensure(
+                        !value.is_empty()
+                            && value.len() <= 256
+                            && !value.chars().any(char::is_control),
+                        "invalid measured Apple version",
+                    )?;
+                }
+                ensure(
+                    digest(field(row, "xcrun_sha256")?),
+                    "unmeasured Apple SDK selector",
+                )?;
+                let sdks = row["sdks"]
+                    .as_array()
+                    .ok_or_else(|| invalid("native SDK inventory absent"))?;
+                ensure(sdks.len() == 2, "both reviewed Apple SDKs are required")?;
+                let mut names = BTreeSet::new();
+                for sdk in sdks {
+                    let keys: BTreeSet<_> = sdk
+                        .as_object()
+                        .ok_or_else(|| invalid("native SDK record is not an object"))?
+                        .keys()
+                        .map(String::as_str)
+                        .collect();
+                    ensure(
+                        keys == BTreeSet::from([
+                            "name",
+                            "version",
+                            "build",
+                            "settings_sha256",
+                            "clang_sha256",
+                            "metal_sha256",
+                            "metallib_sha256",
+                        ]),
+                        "native SDK/tool fields differ",
+                    )?;
+                    let name = field(sdk, "name")?;
+                    ensure(
+                        ["macosx", "iphoneos"].contains(&name) && names.insert(name),
+                        "unexpected or duplicate native SDK",
+                    )?;
+                    for key in ["version", "build"] {
+                        let value = field(sdk, key)?;
+                        ensure(
+                            !value.is_empty()
+                                && value.len() <= 256
+                                && !value.chars().any(char::is_control),
+                            "invalid measured SDK version",
+                        )?;
+                    }
+                    for key in [
+                        "settings_sha256",
+                        "clang_sha256",
+                        "metal_sha256",
+                        "metallib_sha256",
+                    ] {
+                        ensure(
+                            digest(field(sdk, key)?),
+                            "unmeasured Apple compiler/SDK dependency",
+                        )?;
+                    }
+                }
+                native_apple = true;
+            }
+            Some("model_checkpoint") => {
+                ensure(
+                    check.id == "native-vega-inference" && !model_checkpoint,
+                    "unexpected or duplicate model checkpoint preparation",
+                )?;
+                let keys: BTreeSet<_> = row
+                    .as_object()
+                    .ok_or_else(|| invalid("model checkpoint is not an object"))?
+                    .keys()
+                    .map(String::as_str)
+                    .collect();
+                ensure(
+                    keys == BTreeSet::from([
+                        "kind",
+                        "model",
+                        "revision",
+                        "backbone",
+                        "backbone_revision",
+                        "source",
+                        "source_revision",
+                        "profile",
+                        "adapters",
+                        "manifest_digest",
+                        "manifest_file_sha256",
+                        "model_receipt_sha256",
+                        "files",
+                    ]),
+                    "model checkpoint record fields differ",
+                )?;
+                ensure(
+                    row["model"] == source::native_vega::MODEL_ID
+                        && row["revision"] == source::native_vega::MODEL_REVISION
+                        && row["backbone"] == source::native_vega::BACKBONE_ID
+                        && row["backbone_revision"] == source::native_vega::BACKBONE_REVISION
+                        && row["source"] == source::native_vega::SOURCE_ID
+                        && row["source_revision"] == source::native_vega::SOURCE_REVISION
+                        && row["profile"] == source::native_vega::model::PROFILE
+                        && row["adapters"] == "off",
+                    "unreviewed native model revision",
+                )?;
+                for key in [
+                    "manifest_digest",
+                    "manifest_file_sha256",
+                    "model_receipt_sha256",
+                ] {
+                    ensure(
+                        digest(field(row, key)?),
+                        "unmeasured native manifest identity",
+                    )?;
+                }
+                ensure(
+                    known_inputs
+                        .inputs
+                        .get("target/source-ci-native-vega/model.json")
+                        .map(String::as_str)
+                        == Some(field(row, "model_receipt_sha256")?),
+                    "native model receipt is not authenticated setup output",
+                )?;
+                let files = row["files"]
+                    .as_array()
+                    .ok_or_else(|| invalid("native model file inventory absent"))?;
+                ensure(
+                    files.len() == source::native_vega::MODEL_FILES.len(),
+                    "native model file inventory incomplete",
+                )?;
+                let mut names = BTreeSet::new();
+                for item in files {
+                    let path = field(item, "path")?;
+                    let keys: BTreeSet<_> = item
+                        .as_object()
+                        .ok_or_else(|| invalid("native model file is not an object"))?
+                        .keys()
+                        .map(String::as_str)
+                        .collect();
+                    ensure(
+                        keys == BTreeSet::from(["path", "bytes", "sha256"]),
+                        "native model file record fields differ",
+                    )?;
+                    let expected = source::native_vega::MODEL_FILES
+                        .iter()
+                        .find(|(known, _, _)| *known == path)
+                        .ok_or_else(|| invalid("unknown native model input"))?;
+                    ensure(
+                        names.insert(path)
+                            && item["bytes"].as_u64() == Some(expected.1)
+                            && field(item, "sha256")? == expected.2,
+                        "native model bytes or digest differ from approved checkpoint",
+                    )?;
+                }
+                model_checkpoint = true;
             }
             Some("native_compiler") => {
                 ensure(
@@ -390,6 +575,14 @@ pub(super) fn verify(
             _ => return Err(invalid("unknown declared toolchain record")),
         }
     }
+    ensure(
+        native_apple == source::native_vega::is_check(check.id),
+        "required native Apple compiler/SDK/OS custody missing",
+    )?;
+    ensure(
+        model_checkpoint == (check.id == "native-vega-inference"),
+        "required exact native model custody missing",
+    )?;
     ensure(environment, "effective compiler environment not measured")?;
     ensure(external_config, "ambient Cargo configuration not excluded")?;
     let expected_configs: BTreeSet<_> = if source::workflow_owned::artifact_worker(check) {
@@ -406,8 +599,9 @@ pub(super) fn verify(
         "source toolchain configuration inventory incomplete",
     )?;
     let expected_recipes: BTreeSet<_> = source::workflow_owned::script_sources(check)
-        .iter()
-        .map(|(p, _)| *p)
+        .into_iter()
+        .chain(source::native_vega::source_files(check))
+        .map(|(p, _)| p)
         .collect();
     ensure(
         recipes == expected_recipes,

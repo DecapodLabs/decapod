@@ -673,7 +673,215 @@ pub fn measure_declared(
         logs.push(log);
         records.push(docker_image_record(reference, &inspection)?);
     }
+    if native_vega::is_check(check.id) {
+        measure_native_apple(repo, dir, prefix, &mut records, &mut logs)?;
+        if check.id == "native-vega-inference" {
+            records.push(native_model_checkpoint(repo)?);
+        }
+    }
     Ok((records, logs, true))
+}
+
+fn measure_native_apple(
+    repo: &Path,
+    dir: &Path,
+    prefix: &str,
+    records: &mut Vec<String>,
+    logs: &mut Vec<String>,
+) -> io::Result<()> {
+    if env::consts::OS != "macos" || env::consts::ARCH != "aarch64" {
+        return Err(io::Error::other(
+            "native Apple toolchain requires macOS arm64",
+        ));
+    }
+    let xcrun = fs::canonicalize(resolve("xcrun", repo)?)?;
+    let mut read = |name: &str, program: &Path, args: &[&str]| -> io::Result<String> {
+        let (output, log) = probe(repo, dir, &format!("{prefix}native-{name}"), program, args)?;
+        logs.push(log);
+        let value = output.trim();
+        if value.is_empty() || value.len() > 4096 || value.contains(['\n', '\r', '\0']) {
+            return Err(io::Error::other(
+                "invalid native runtime/toolchain response",
+            ));
+        }
+        Ok(value.to_string())
+    };
+    let architecture = read("architecture", Path::new("/usr/bin/uname"), &["-m"])?;
+    let native = read(
+        "arm64",
+        Path::new("/usr/sbin/sysctl"),
+        &["-n", "hw.optional.arm64"],
+    )?;
+    if architecture != "arm64" || native != "1" {
+        return Err(io::Error::other(
+            "Apple Silicon native architecture unavailable",
+        ));
+    }
+    let os_version = read(
+        "os-version",
+        Path::new("/usr/bin/sw_vers"),
+        &["-productVersion"],
+    )?;
+    let os_build = read(
+        "os-build",
+        Path::new("/usr/bin/sw_vers"),
+        &["-buildVersion"],
+    )?;
+    let mut sdks = Vec::new();
+    // attention.rs compiles Metal kernels for both SDKs. A macOS-only inventory
+    // would omit a required build input even though the worker runs on macOS.
+    for name in ["macosx", "iphoneos"] {
+        let version = read(
+            &format!("{name}-sdk-version"),
+            &xcrun,
+            &["--sdk", name, "--show-sdk-version"],
+        )?;
+        let build = read(
+            &format!("{name}-sdk-build"),
+            &xcrun,
+            &["--sdk", name, "--show-sdk-build-version"],
+        )?;
+        let path = PathBuf::from(read(
+            &format!("{name}-sdk-path"),
+            &xcrun,
+            &["--sdk", name, "--show-sdk-path"],
+        )?);
+        if !path.is_absolute() {
+            return Err(io::Error::other("native SDK path is not absolute"));
+        }
+        let sdk = fs::canonicalize(path)?;
+        let settings = fs::canonicalize(sdk.join("SDKSettings.json"))?;
+        if !sdk.is_dir() || !settings.is_file() || !settings.starts_with(&sdk) {
+            return Err(io::Error::other("native SDK settings unavailable"));
+        }
+        let mut compilers = Vec::new();
+        for program in ["clang", "metal", "metallib"] {
+            let path = PathBuf::from(read(
+                &format!("{name}-{program}-path"),
+                &xcrun,
+                &["--sdk", name, "--find", program],
+            )?);
+            if !path.is_absolute() {
+                return Err(io::Error::other("native compiler path is not absolute"));
+            }
+            compilers.push(native_executable_sha(&fs::canonicalize(path)?)?);
+        }
+        sdks.push(format!(
+            "{{\"name\":{},\"version\":{},\"build\":{},\"settings_sha256\":{},\"clang_sha256\":{},\"metal_sha256\":{},\"metallib_sha256\":{}}}",
+            json_string(name), json_string(&version), json_string(&build),
+            json_string(&file_sha(&settings)?), json_string(&compilers[0]),
+            json_string(&compilers[1]), json_string(&compilers[2])
+        ));
+    }
+    records.push(format!(
+        "{{\"kind\":\"native_apple\",\"architecture\":\"arm64\",\"os_version\":{},\"os_build\":{},\"xcrun_sha256\":{},\"sdks\":[{}]}}",
+        json_string(&os_version), json_string(&os_build),
+        json_string(&native_executable_sha(&xcrun)?), sdks.join(",")
+    ));
+    Ok(())
+}
+
+fn native_executable_sha(path: &Path) -> io::Result<String> {
+    let metadata = fs::symlink_metadata(path)?;
+    if !path.is_absolute() || !metadata.is_file() || metadata.len() == 0 {
+        return Err(io::Error::other("native compiler closure unavailable"));
+    }
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        if metadata.permissions().mode() & 0o111 == 0 {
+            return Err(io::Error::other("native compiler is not executable"));
+        }
+    }
+    file_sha(path)
+}
+
+fn native_model_checkpoint(repo: &Path) -> io::Result<String> {
+    let installations = repo.join("target/source-ci-native-vega/model-cache/installations");
+    if fs::canonicalize(&installations)? != installations {
+        return Err(io::Error::other(
+            "native installations directory is not canonical",
+        ));
+    }
+    // Setup starts with a fresh private cache. Exactly one content-addressed
+    // installation is allowed; active pointers and revision guesses are ignored.
+    let entries = fs::read_dir(&installations)?
+        .take(2)
+        .collect::<Result<Vec<_>, _>>()?;
+    if entries.len() != 1 {
+        return Err(io::Error::other(
+            "native setup requires exactly one immutable installation",
+        ));
+    }
+    let entry = &entries[0];
+    let name = entry
+        .file_name()
+        .into_string()
+        .map_err(|_| io::Error::other("invalid manifest identity"))?;
+    if !entry.file_type()?.is_dir()
+        || name.len() != 64
+        || !name
+            .bytes()
+            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+    {
+        return Err(io::Error::other(
+            "native installation identity is not a content digest",
+        ));
+    }
+    let directory = entry.path();
+    if fs::canonicalize(&directory)? != directory {
+        return Err(io::Error::other("native installation is not canonical"));
+    }
+    let mut files = Vec::new();
+    for &(path, bytes, expected) in native_vega::MODEL_FILES {
+        let file = directory.join(path);
+        let metadata = fs::symlink_metadata(&file)?;
+        if !metadata.is_file()
+            || metadata.file_type().is_symlink()
+            || metadata.len() != bytes
+            || fs::canonicalize(&file)? != file
+            || file_sha(&file)? != expected
+        {
+            return Err(io::Error::other(format!(
+                "native model pin differs: {path}"
+            )));
+        }
+        files.push(format!(
+            "{{\"path\":{},\"bytes\":{},\"sha256\":{}}}",
+            json_string(path),
+            bytes,
+            json_string(expected)
+        ));
+    }
+    let manifest = directory.join("manifest.json");
+    let receipt = repo.join("target/source-ci-native-vega/model.json");
+    for path in [&manifest, &receipt] {
+        let metadata = fs::symlink_metadata(path)?;
+        if !metadata.is_file()
+            || metadata.file_type().is_symlink()
+            || metadata.len() == 0
+            || metadata.len() > 65536
+            || fs::canonicalize(path)? != *path
+        {
+            return Err(io::Error::other(
+                "native manifest/receipt is not a bounded regular file",
+            ));
+        }
+    }
+    Ok(format!(
+        "{{\"kind\":\"model_checkpoint\",\"model\":{},\"revision\":{},\"backbone\":{},\"backbone_revision\":{},\"source\":{},\"source_revision\":{},\"profile\":{},\"adapters\":\"off\",\"manifest_digest\":{},\"manifest_file_sha256\":{},\"model_receipt_sha256\":{},\"files\":[{}]}}",
+        json_string(native_vega::MODEL_ID),
+        json_string(native_vega::MODEL_REVISION),
+        json_string(native_vega::BACKBONE_ID),
+        json_string(native_vega::BACKBONE_REVISION),
+        json_string(native_vega::SOURCE_ID),
+        json_string(native_vega::SOURCE_REVISION),
+        json_string(native_vega::model::PROFILE),
+        json_string(&format!("sha256:{name}")),
+        json_string(&file_sha(&manifest)?),
+        json_string(&file_sha(&receipt)?),
+        files.join(",")
+    ))
 }
 
 const DOCKER_IMAGE_FORMAT: &str = "{{.Id}}\n{{range .RepoDigests}}{{println .}}{{end}}";

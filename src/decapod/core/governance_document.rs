@@ -367,6 +367,7 @@ fn validate_domain(section: &str, value: &Value) -> Result<(), DecapodError> {
             }
             let artifact: crate::core::trajectory::TrajectoryArtifact =
                 serde_json::from_value(value.clone()).map_err(|e| invalid(e.to_string()))?;
+            artifact.validate_proof_blockers()?;
             crate::core::trajectory::validate_loops(&artifact)?;
             if artifact
                 .computed_hash_hex()
@@ -1311,7 +1312,7 @@ fn begin_pr_from_context(
             }
         }
         if let Some(trajectory) = get_section(&previous, "trajectory")? {
-            for field in ["unresolved_assumptions", "blockers"] {
+            for field in ["unresolved_assumptions", "blockers", "proof_blockers"] {
                 if let Some(items) = trajectory.get(field).and_then(Value::as_array) {
                     for item in items {
                         baseline.unresolved.insert(

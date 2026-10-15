@@ -151,7 +151,7 @@ fn current_trajectory(root: &Path, task_id: &str) -> Result<TrajectoryArtifact, 
             "current accepted intent is required",
         ));
     }
-    if !trajectory.blockers.is_empty() || !trajectory.unresolved_assumptions.is_empty() {
+    if trajectory.has_blockers() || !trajectory.unresolved_assumptions.is_empty() {
         return Err(blocked(
             "EXECUTION_DECISION_REQUIRED",
             "resolve current trajectory blockers and assumptions before resuming",

@@ -88,6 +88,7 @@ impl Fixture {
     }
 }
 struct StopHost {
+    purpose: ValidationPurpose,
     prerequisites: ProjectPrerequisites,
     called: usize,
     modify: Option<PathBuf>,
@@ -102,6 +103,9 @@ struct SelectedProject {
     catalog: RequiredCatalog,
 }
 impl Host for StopHost {
+    fn purpose(&self) -> ValidationPurpose {
+        self.purpose
+    }
     fn project_check(&mut self, _: &RuntimeBudget<'_>) -> io::Result<ProjectPrerequisites> {
         self.called += 1;
         if let Some(path) = &self.modify {
@@ -145,6 +149,7 @@ impl Host for StopHost {
 }
 fn host() -> StopHost {
     StopHost {
+        purpose: ValidationPurpose::Readiness,
         prerequisites: ProjectPrerequisites::Passed,
         called: 0,
         modify: None,
@@ -1456,5 +1461,120 @@ fn history_checks_use_controller_git_instead_of_path() {
         )
         .unwrap(),
         0
+    );
+}
+
+#[test]
+fn proof_collection_cannot_ever_mint_a_ready_verdict_or_readiness_receipt() {
+    for verdict in [Verdict::Ready, Verdict::NotReady] {
+        assert!(!ValidationPurpose::ProofCollection.publication_ready(verdict));
+    }
+    assert_eq!(
+        ValidationPurpose::ProofCollection.verdict_file(),
+        "proof-collection-verification.json"
+    );
+    assert!(ValidationPurpose::Readiness.publication_ready(Verdict::Ready));
+    assert_eq!(ValidationPurpose::Readiness.verdict_file(), "verdict.json");
+    let fixture = Fixture::new("[proof]\n");
+    let mut host = host();
+    let report = collect_proof(&fixture.options, &mut host, &Cancellation::default());
+    assert!(!report.ready);
+    assert_eq!(report.exit_code(), 1);
+    assert_eq!(report.scope, PROOF_COLLECTION_SCOPE);
+    assert!(
+        report
+            .blockers
+            .iter()
+            .any(|b| b.detail.contains("PROOF_COLLECTION_MODE_MISMATCH"))
+    );
+    assert_eq!(
+        host.called, 0,
+        "purpose mismatch must precede every execution"
+    );
+    host.purpose = ValidationPurpose::ProofCollection;
+    let report = validate(&fixture.options, &mut host, &Cancellation::default());
+    assert!(!report.ready);
+    assert_eq!(host.called, 0);
+    assert_eq!(
+        fs::read_dir(&fixture.options.evidence_parent)
+            .unwrap()
+            .count(),
+        0
+    );
+}
+
+#[test]
+fn proof_collection_rejects_legacy_graph_even_with_an_accepted_executor() {
+    let fixture = accepted_executor_fixture();
+    let mut host = host();
+    host.purpose = ValidationPurpose::ProofCollection;
+    host.prerequisites = ProjectPrerequisites::ProviderRequired;
+    let report = collect_proof(&fixture.options, &mut host, &Cancellation::default());
+    assert!(!report.ready);
+    assert_eq!(report.scope, PROOF_COLLECTION_SCOPE);
+    assert!(
+        report
+            .blockers
+            .iter()
+            .any(|b| b.detail.contains("PROOF_COLLECTION_CONTRACT")),
+        "{report:?}"
+    );
+    assert_eq!(host.target_calls, 0);
+    assert!(host.selected.is_none());
+}
+
+#[test]
+fn proof_collection_requires_all_four_future_native_obligations_and_keeps_full_graph() {
+    let fixture = accepted_executor_fixture();
+    write_source(
+        &fixture,
+        ".github/workflows/ci.yml",
+        profile::NATIVE_CI_WORKFLOW,
+    );
+    review_and_commit(&fixture, true, "activate reviewed native proof graph");
+    let c = Cancellation::default();
+    let mut budget = RuntimeBudget {
+        deadline: Instant::now() + Duration::from_secs(60),
+        cancel: &c,
+        max_output_bytes: 1024 * 1024,
+        bytes_left: 128 * 1024 * 1024,
+    };
+    let project = load_project(&fixture.options, &mut budget).unwrap();
+    require_proof_collection_contract(&project).unwrap();
+    for id in super::super::trajectory::ProofBlockerId::NativeAppleMetal.required_checks() {
+        assert!(
+            project
+                .catalog
+                .obligations()
+                .iter()
+                .any(|o| o.key.profile.ends_with(id))
+        );
+    }
+    assert!(
+        project.catalog.obligations().len() > 4,
+        "collection must not select a native-only subset"
+    );
+    let mut host = host();
+    host.purpose = ValidationPurpose::ProofCollection;
+    host.prerequisites = ProjectPrerequisites::ProviderRequired;
+    host.target = Some(run(
+        &fixture.options.root,
+        &["rev-parse", &fixture.options.accepted_base_ref],
+    ));
+    let report = collect_proof(&fixture.options, &mut host, &c);
+    assert!(!report.ready);
+    assert_eq!(report.scope, PROOF_COLLECTION_SCOPE);
+    assert!(host.selected.is_some(), "{report:?}");
+    assert!(
+        report
+            .blockers
+            .iter()
+            .any(|b| b.code == "ADAPTER_SELECTION_REACHED")
+    );
+    assert!(
+        report
+            .blockers
+            .iter()
+            .any(|b| b.code == "PROOF_COLLECTION_ONLY")
     );
 }

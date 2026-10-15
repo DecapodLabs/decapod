@@ -2261,6 +2261,23 @@ pub(crate) fn verify_readiness_transport_prerequisites(
     eval::verify_eval_gate_for_publish(&repo_root.join(".decapod/data"))
 }
 
+/// Explicit proof collection retains all ownership/eval checks. Only typed unmet
+/// proof obligations can remain; free-text blockers are never classified here.
+pub(crate) fn verify_proof_collection_transport_prerequisites(
+    repo_root: &Path,
+) -> Result<(), DecapodError> {
+    let status = get_workspace_status(repo_root)?;
+    if !status.git.in_worktree || status.git.is_protected {
+        return Err(DecapodError::ValidationError(
+            "PUBLICATION_WORKBRANCH_REQUIRED: collect proof in the governed feature worktree"
+                .into(),
+        ));
+    }
+    load_trajectory_binding(repo_root, &status.git.current_branch, true)?;
+    verify_current_governance_ownership(repo_root)?;
+    eval::verify_eval_gate_for_publish(&repo_root.join(".decapod/data"))
+}
+
 /// Native readiness retains its existing full local publication verification.
 /// No receipt is written and no Git ref is changed here.
 pub(crate) fn verify_current_publication_prerequisites(
@@ -2397,8 +2414,22 @@ fn load_readiness_trajectory_binding(
     repo_root: &Path,
     branch: &str,
 ) -> Result<Option<trajectory::TrajectoryArtifact>, DecapodError> {
+    load_trajectory_binding(repo_root, branch, false)
+}
+
+fn load_trajectory_binding(
+    repo_root: &Path,
+    branch: &str,
+    collect_proof: bool,
+) -> Result<Option<trajectory::TrajectoryArtifact>, DecapodError> {
     let task_ids = extract_task_ids_from_branch(branch);
     if task_ids.is_empty() {
+        if collect_proof {
+            return Err(DecapodError::ValidationError(
+                "PROOF_COLLECTION_TASK_REQUIRED: proof collection requires a task-bound workbranch"
+                    .into(),
+            ));
+        }
         return Ok(None);
     }
 
@@ -2409,6 +2440,19 @@ fn load_readiness_trajectory_binding(
         ))
     })?;
 
+    trajectory.validate_proof_blockers()?;
+    if !collect_proof && !trajectory.proof_blockers.is_empty() {
+        return Err(DecapodError::ValidationError(format!(
+            "Cannot publish: trajectory '{}' has unmet proof blockers: {}.",
+            trajectory.run_id,
+            trajectory
+                .proof_blockers
+                .iter()
+                .map(|blocker| format!("{}: {}", blocker.id.as_str(), blocker.detail))
+                .collect::<Vec<_>>()
+                .join("; "),
+        )));
+    }
     if !trajectory.blockers.is_empty() {
         return Err(DecapodError::ValidationError(format!(
             "Cannot publish: trajectory '{}' has blockers: {}.",

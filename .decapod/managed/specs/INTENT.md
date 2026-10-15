@@ -192,7 +192,27 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7efe54997513078b81090151e7204411beadfd92783550b1d170955d5159157a`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (188 files), `tests/` (193 files)
+- Repository signal fingerprint: `fa8099e4a51c0390e100e399afae42db81b0471dfbe95f75698ab21e785ef488`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (27 files), `docs/` (1 files), `src/` (188 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Governed native proof prerequisite
+
+The source-profile controller recognizes a dormant, exact-byte Vega native CI
+contract in assets/tools/source_ci/contracts/ci-native.yml.fixture while retaining
+the active workflow and its full required graph unchanged. This is a controller
+prerequisite, not activation of the Vega readiness feature. Human acceptance and
+an official independently accepted controller release must precede future CI
+activation by the feature.
+
+Explicit validate --collect-proof may collect the accepted native graph while
+publication-specific proof is still pending. It never creates readiness, a ready
+receipt, or publication authority, including when all native checks pass. Legacy
+human/access/cancellation blockers remain hard stops. Typed native proof
+obligations are journal declarations and do not replace authenticated execution.
+
+The future recipe requires real Apple GPU execution, separate Rust worker
+compilation, explicit exact Vega/Qwen setup, and actual Metal backbone/pooling
+plus CPU base-engine and f64 calibration execution. It preserves unavailable
+upstream numerical goldens and readiness-domain calibration as unverified.

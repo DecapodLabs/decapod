@@ -452,8 +452,8 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7efe54997513078b81090151e7204411beadfd92783550b1d170955d5159157a`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (188 files), `tests/` (193 files)
+- Repository signal fingerprint: `fa8099e4a51c0390e100e399afae42db81b0471dfbe95f75698ab21e785ef488`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (27 files), `docs/` (1 files), `src/` (188 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -496,3 +496,29 @@ both discovered digests for review without updating them or implying proof succe
 retain authored configuration even under `--force`; explicit arguments still change
 it. The generated GitHub validation workflow fetches complete history and supplies
 immutable `CHANGE_EVENT`, `CHANGE_BASE` and `CHANGE_HEAD` to CI-local validation.
+
+## Native proof collection interfaces
+
+The CLI validate --collect-proof mode uses the independently recognized future
+native source contract. Existing RPC validation does not select collection mode. The result always has
+publication_ready=false and cannot write the ordinary readiness receipt. A
+terminal failed pipeline may yield a fully successful native job's evidence;
+partial checks from a failed native job are not individually accepted. Denial,
+cancellation, identity drift, unsupported executor contracts, and arbitrary
+legacy blockers remain failures. Normal validate/publish enforce all gates.
+
+Trajectory proof_blockers use the finite native-apple-metal ID with detail and
+evidence references. Explicit add/classify/resolve operations preserve custody;
+classifying a legacy blocker requires an exact matching existing declaration.
+Resolution requires declarations for all four native checks plus evidence, but
+does not attest execution or authorize publication. Human stops cannot be inferred
+as proof-only by searching their text.
+
+The native checks are native-vega-gpu, native-vega-worker,
+native-vega-model-setup and native-vega-inference in that dependency order.
+The candidate worker uses --request <private-json> --proof-output <new-private-json>
+and decapod.vega-worker.v1 / decapod.vega-native-proof.v1. Proof binds the exact
+request, immutable manifest, backend/precision, layer taps and pooled shapes and
+digests, engine readout and calibrated outcome. It records parity=unverified
+and calibration_scope=upstream-general-decisions; no positive decision from the
+fixture grants repository readiness.

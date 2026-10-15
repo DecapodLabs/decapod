@@ -625,6 +625,8 @@ impl Runner for CountMetadata {
 }
 fn terminal(state: PollState, plan: &SourceRunPlan) -> TerminalSourceRuns {
     TerminalSourceRuns {
+        collection_only: false,
+        terminal_outcomes: state.terminal_outcomes,
         source_binding: source_binding(&snapshot()).unwrap(),
         plan_binding: plan_binding(plan),
         github: state.github,
@@ -1019,4 +1021,118 @@ fn other_event_is_authenticated_before_filtering_and_duplicate_push_still_reject
             .is_err()
         );
     }
+}
+
+#[test]
+fn proof_collection_retains_failed_build_identity_without_relaxing_readiness() {
+    let c = Cancellation::default();
+    let b = budget(&c);
+    let plan = buildkite_only_plan();
+    let mut gh = NoActions(Gh::default());
+    let mut bk = Bk::default();
+    bk.envelopes.get_mut(&7).unwrap()["state"] = "failed".into();
+    assert!(
+        wait_for_source_runs(
+            &mut gh,
+            &mut bk,
+            &snapshot(),
+            &plan,
+            Duration::from_secs(1),
+            &b
+        )
+        .is_err()
+    );
+    let result = wait_for_source_collection(
+        &mut gh,
+        &mut bk,
+        &snapshot(),
+        &plan,
+        Duration::from_secs(1),
+        &b,
+    )
+    .unwrap();
+    assert!(result.collection_only);
+    assert!(
+        result
+            .terminal_outcomes
+            .values()
+            .any(|state| state == "failed")
+    );
+    result
+        .recheck(&mut gh, &mut bk, &snapshot(), &plan, &b)
+        .unwrap();
+    bk.envelopes.get_mut(&7).unwrap()["state"] = "passed".into();
+    assert!(
+        result
+            .recheck(&mut gh, &mut bk, &snapshot(), &plan, &b)
+            .is_err()
+    );
+}
+
+#[test]
+fn proof_collection_still_rejects_cancellation_denial_blocking_and_stale_identity() {
+    for state in ["canceled", "canceling", "blocked", "skipped"] {
+        let c = Cancellation::default();
+        let b = budget(&c);
+        let mut gh = NoActions(Gh::default());
+        let mut bk = Bk::default();
+        bk.envelopes.get_mut(&7).unwrap()["state"] = state.into();
+        assert!(
+            wait_for_source_collection(
+                &mut gh,
+                &mut bk,
+                &snapshot(),
+                &buildkite_only_plan(),
+                Duration::from_secs(1),
+                &b
+            )
+            .is_err(),
+            "{state}"
+        );
+    }
+    let c = Cancellation::default();
+    let b = budget(&c);
+    let mut bk = Bk::default();
+    let mut denied = NoActions(Gh {
+        denied: true,
+        ..Default::default()
+    });
+    assert!(
+        wait_for_source_collection(
+            &mut denied,
+            &mut bk,
+            &snapshot(),
+            &buildkite_only_plan(),
+            Duration::from_secs(1),
+            &b
+        )
+        .is_err()
+    );
+    let mut gh = NoActions(Gh::default());
+    let result = wait_for_source_collection(
+        &mut gh,
+        &mut bk,
+        &snapshot(),
+        &buildkite_only_plan(),
+        Duration::from_secs(1),
+        &b,
+    )
+    .unwrap();
+    bk.envelopes.get_mut(&7).unwrap()["commit_id"] = "f".repeat(40).into();
+    assert!(
+        result
+            .recheck(&mut gh, &mut bk, &snapshot(), &buildkite_only_plan(), &b)
+            .is_err()
+    );
+    assert!(
+        wait_for_source_collection(
+            &mut gh,
+            &mut bk,
+            &snapshot(),
+            &plan(),
+            Duration::from_secs(1),
+            &b
+        )
+        .is_err()
+    );
 }

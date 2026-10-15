@@ -303,8 +303,8 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7efe54997513078b81090151e7204411beadfd92783550b1d170955d5159157a`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (188 files), `tests/` (193 files)
+- Repository signal fingerprint: `fa8099e4a51c0390e100e399afae42db81b0471dfbe95f75698ab21e785ef488`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (27 files), `docs/` (1 files), `src/` (188 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -356,3 +356,23 @@ authored proof policy continues to deny disallowed programs; missing relevant
 permissions in a present policy and malformed policy fail closed. No policy
 file is rewritten as a repair, and generic callers cannot request the sealed
 capability without the reviewed contract and measured invocation.
+
+## Dormant native proof trust boundary
+
+The future Vega workflow is a compiled exact-byte fixture, not active CI.
+Unknown or tampered workflows and substituted accepted executors fail closed.
+The accepted helper is compiled under R with reviewed Cargo configuration; all
+candidate compilation and produced artifacts remain under H. Native preparation
+rejects undeclared runtime/compiler overrides, requires an ordinary private
+output directory, and measures the selected Apple OS/SDK/compiler identities.
+
+Explicit setup uses a fresh private cache, exactly pinned repositories/revisions
+and file bytes. The driver accepts only the base-text profile with adapters off,
+verifies the immutable manifest and rehashes actual inputs. Bulk model data is
+excluded from uploaded custody. Runtime/compiler hashes are bounded provenance,
+not complete system-library measurement or an OS sandbox.
+
+Collection mode can obtain proof but cannot publish, mint readiness, clear a
+blocker, or reinterpret a human/access-denial stop as a missing GPU proof.
+Upstream numeric parity and readiness-domain calibration are independent
+unverified obligations even if the native capability job succeeds.

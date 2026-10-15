@@ -87,6 +87,8 @@ impl ImportedBuildIdentity {
 /// into an execution receipt. The source importer still verifies every job.
 #[derive(Debug)]
 pub struct TerminalSourceRuns {
+    collection_only: bool,
+    terminal_outcomes: BTreeMap<String, String>,
     source_binding: String,
     plan_binding: String,
     github: BTreeMap<String, GithubRunIdentity>,
@@ -123,11 +125,21 @@ impl TerminalSourceRuns {
         )?;
         let mut state = PollState::default();
         ensure(
-            poll(runner, reader, snapshot, plan, &mut state, budget)?,
+            poll_with_collection(
+                runner,
+                reader,
+                snapshot,
+                plan,
+                &mut state,
+                budget,
+                self.collection_only,
+            )?,
             "source suite no longer terminal",
         )?;
         ensure(
-            state.github == self.github && state.buildkite == self.buildkite,
+            state.github == self.github
+                && state.buildkite == self.buildkite
+                && state.terminal_outcomes == self.terminal_outcomes,
             "source run/attempt/build changed after collection",
         )?;
         provider::verify_remote_binding(runner, snapshot, budget)
@@ -150,6 +162,7 @@ fn plan_binding(plan: &SourceRunPlan) -> String {
 }
 #[derive(Default)]
 struct PollState {
+    terminal_outcomes: BTreeMap<String, String>,
     github: BTreeMap<String, GithubRunIdentity>,
     buildkite: BTreeMap<(String, String, String), ImportedBuildIdentity>,
 }
@@ -271,6 +284,7 @@ fn locators(
     }
     Ok(urls)
 }
+#[cfg(test)]
 fn poll(
     runner: &mut impl Runner,
     reader: &mut impl buildkite::PublicReader,
@@ -278,6 +292,19 @@ fn poll(
     plan: &SourceRunPlan,
     state: &mut PollState,
     budget: &Budget<'_>,
+) -> Result<bool> {
+    poll_with_collection(runner, reader, snapshot, plan, state, budget, false)
+}
+
+#[allow(clippy::too_many_arguments)]
+fn poll_with_collection(
+    runner: &mut impl Runner,
+    reader: &mut impl buildkite::PublicReader,
+    snapshot: &snapshot::PreparedSnapshot,
+    plan: &SourceRunPlan,
+    state: &mut PollState,
+    budget: &Budget<'_>,
+    collection_only: bool,
 ) -> Result<bool> {
     budget.remaining()?;
     let mut complete = true;
@@ -300,6 +327,10 @@ fn poll(
         )?;
         state.github.insert(path.clone(), identity);
         if run.status() == "completed" {
+            state.terminal_outcomes.insert(
+                format!("github:{path}"),
+                run.conclusion().unwrap_or("absent").into(),
+            );
             if run.conclusion() != Some("success") {
                 return Err(io::Error::new(
                     io::ErrorKind::InvalidData,
@@ -435,7 +466,21 @@ fn poll(
                 ));
             }
             match build.state() {
-                "passed" => {}
+                "passed" => {
+                    state
+                        .terminal_outcomes
+                        .insert(target.clone(), "passed".into());
+                }
+                "failed" if collection_only => {
+                    // Failure stays failure. The consumer still verifies each
+                    // successful job and retains every failed required check.
+                    state
+                        .terminal_outcomes
+                        .insert(target.clone(), "failed".into());
+                }
+                "canceling" if collection_only => {
+                    return Err(invalid("proof collection canceled by provider"));
+                }
                 "creating" | "scheduled" | "running" | "started" | "failing" | "canceling" => {
                     complete = false
                 }
@@ -461,6 +506,38 @@ pub fn wait_for_source_runs(
     interval: Duration,
     budget: &Budget<'_>,
 ) -> Result<TerminalSourceRuns> {
+    wait_for_source_purpose(runner, reader, snapshot, plan, interval, budget, false)
+}
+
+/// Collect useful independently authenticated check evidence from a terminal
+/// suite that may contain failures. This is never a successful suite barrier.
+/// Cancellations, blocked execution, authorization failures and identity drift
+/// retain their ordinary hard-stop behavior.
+pub fn wait_for_source_collection(
+    runner: &mut impl Runner,
+    reader: &mut impl buildkite::PublicReader,
+    snapshot: &snapshot::PreparedSnapshot,
+    plan: &SourceRunPlan,
+    interval: Duration,
+    budget: &Budget<'_>,
+) -> Result<TerminalSourceRuns> {
+    ensure(
+        plan.github_workflows.is_empty(),
+        "proof collection supports the configured Buildkite contract only",
+    )?;
+    wait_for_source_purpose(runner, reader, snapshot, plan, interval, budget, true)
+}
+
+#[allow(clippy::too_many_arguments)]
+fn wait_for_source_purpose(
+    runner: &mut impl Runner,
+    reader: &mut impl buildkite::PublicReader,
+    snapshot: &snapshot::PreparedSnapshot,
+    plan: &SourceRunPlan,
+    interval: Duration,
+    budget: &Budget<'_>,
+    collection_only: bool,
+) -> Result<TerminalSourceRuns> {
     plan.validate()?;
     ensure(
         (Duration::from_secs(1)..=Duration::from_secs(60)).contains(&interval),
@@ -468,11 +545,21 @@ pub fn wait_for_source_runs(
     )?;
     provider::verify_remote_binding(runner, snapshot, budget)?;
     let mut state = PollState::default();
-    while !poll(runner, reader, snapshot, plan, &mut state, budget)? {
+    while !poll_with_collection(
+        runner,
+        reader,
+        snapshot,
+        plan,
+        &mut state,
+        budget,
+        collection_only,
+    )? {
         budget.wait(interval)?;
     }
     provider::verify_remote_binding(runner, snapshot, budget)?;
     let result = TerminalSourceRuns {
+        collection_only,
+        terminal_outcomes: state.terminal_outcomes,
         source_binding: source_binding(snapshot)?,
         plan_binding: plan_binding(plan),
         github: state.github,

@@ -11,6 +11,22 @@ load("//.config/build:cargo_inputs_tests.bzl", "cargo_inputs_test")
 def decapod_targets():
     cargo_inputs_test(name = "cargo_inputs_policy")
 
+    # The standalone native proof driver is embedded review material only. Its
+    # own Cargo dependencies must not become dependencies of the shipped library.
+    native_proof_sources = [
+        "assets/tools/source_ci_native_vega.rs",
+        "assets/tools/native_vega_model.rs",
+        "assets/tools/native_vega_driver.rs",
+    ]
+    native_proof_compile_data = native_proof_sources + [
+        "assets/tools/native_metal_probe.m",
+        "assets/tools/native_vega_driver/Cargo.toml",
+        "assets/tools/native_vega_driver/Cargo.lock",
+        "assets/tools/source_ci/contracts/ci-native.yml.fixture",
+        "assets/tools/source_ci/contracts/vega-config.json.fixture",
+        ".cargo/config.toml",
+    ]
+
     # Native-proof integration fixture only; never a shipped Cargo binary.
     rust_binary(
         name = "native_proof_fixture",
@@ -37,7 +53,7 @@ def decapod_targets():
 
     rust_binary(
         name = "created_profile_fixture",
-        srcs = [
+        srcs = native_proof_sources + [
             "assets/tools/source_ci_profile.rs",
             "assets/tools/source_ci_custody.rs",
             "assets/tools/source_ci_toolchain.rs",
@@ -50,7 +66,7 @@ def decapod_targets():
             "src/decapod/core/release_metadata.rs",
         ],
         crate_root = "assets/tools/source_ci_profile.rs",
-        compile_data = native.glob(["assets/tools/source_ci/*.sh"]),
+        compile_data = native.glob(["assets/tools/source_ci/*.sh"]) + native_proof_compile_data,
         edition = "2024",
         testonly = True,
     )
@@ -141,6 +157,7 @@ def decapod_targets():
             ".github/workflows/*.yml",
         ])
         + native.glob(["assets/tools/source_ci/*.sh"])
+        + native_proof_compile_data
         + native.glob(["assets/schemas/*.schema.json"])
         + [
             "assets/tools/source_ci_profile.rs",
@@ -240,7 +257,7 @@ def decapod_targets():
                 "tests/consumer_readiness.rs",
                 "tests/init_ci_scaffolding.rs",
                 "tests/init_config_behavior.rs",
-            ] if path == "tests/cli_contracts.rs" else [path] + [
+            ] if path == "tests/cli_contracts.rs" else [path] + native_proof_sources + [
                 "assets/tools/release_metadata.rs",
                 "src/decapod/core/release_metadata.rs",
                 "assets/tools/source_ci_profile.rs",
@@ -264,7 +281,7 @@ def decapod_targets():
             ] if path == "tests/integration_custody_policy.rs" else [path] + [
                 "assets/tools/docs_sync.rs",
                 "tests/support/docs_sync_cases.rs",
-            ] if path == "tests/docs_sync_checkpoint_boundary.rs" else [path] + [
+            ] if path == "tests/docs_sync_checkpoint_boundary.rs" else [path] + native_proof_sources + [
                 "assets/tools/source_ci_profile.rs",
                 "assets/tools/source_ci_custody.rs",
                 "assets/tools/source_ci_toolchain.rs",
@@ -277,7 +294,7 @@ def decapod_targets():
                 "src/decapod/core/release_metadata.rs",
             ] if path in ["tests/source_ci_profile_policy.rs", "tests/ci_checkout_policy.rs"] else [path],
             crate_root = path,
-            compile_data = native.glob(["assets/tools/source_ci/*.sh"]) + (["src/decapod/lib.rs"] if path in ["tests/consumer_readiness.rs", "tests/cli_contracts.rs"] else [".github/actions/ci-context/action.yml"] if path == "tests/ci_event_context_policy.rs" else [".github/workflows/ci.yml", ".github/workflows/decapod-validate.yml", ".github/workflows/docs.yml", ".github/workflows/docs_sync.yml"] if path == "tests/integration_custody_policy.rs" else ["tests/fixtures/native_proof_fixture.rs"] if path == "tests/native_proof_execution.rs" else ["Cargo.toml", "Cargo.lock"] if path == "tests/release_dependency_policy.rs" else [
+            compile_data = native.glob(["assets/tools/source_ci/*.sh"]) + native_proof_compile_data + (["src/decapod/lib.rs"] if path in ["tests/consumer_readiness.rs", "tests/cli_contracts.rs"] else [".github/actions/ci-context/action.yml"] if path == "tests/ci_event_context_policy.rs" else [".github/workflows/ci.yml", ".github/workflows/decapod-validate.yml", ".github/workflows/docs.yml", ".github/workflows/docs_sync.yml"] if path == "tests/integration_custody_policy.rs" else ["tests/fixtures/native_proof_fixture.rs"] if path == "tests/native_proof_execution.rs" else ["Cargo.toml", "Cargo.lock"] if path == "tests/release_dependency_policy.rs" else [
                 ".github/workflows/ci.yml",
             ] if path == "tests/release_metadata_policy.rs" else [
                 ".github/workflows/ci.yml",

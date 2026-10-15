@@ -157,6 +157,7 @@ pub fn profile_sources() -> Vec<(&'static str, &'static [u8])> {
     files
         .iter()
         .chain(workflow_owned::SOURCES.iter())
+        .chain(native_vega::SOURCES.iter())
         .copied()
         .chain(std::iter::once((
             "source_ci_workflow_owned.rs",
@@ -785,8 +786,9 @@ fn exit_json(status: ExitStatus) -> String {
         status.success()
     )
 }
-/// Resolve only reviewed shell recipe operands against R. Other operands,
-/// command working directories, Cargo/Bazel inputs and outputs stay under H.
+/// Resolve reviewed shell and native helper source operands against R. The
+/// fixed standalone proof-driver compilation also runs under R; candidate
+/// Cargo/Bazel builds and every produced artifact remain under H.
 pub fn configured_arguments(
     invocation: &Invocation,
     executor_root: &Path,
@@ -795,10 +797,11 @@ pub fn configured_arguments(
         .args
         .iter()
         .map(|arg| {
-            if invocation.program == "bash"
+            if (invocation.program == "bash"
                 && workflow_owned::SOURCES
                     .iter()
-                    .any(|(path, _)| path == arg && path.ends_with(".sh"))
+                    .any(|(path, _)| path == arg && path.ends_with(".sh")))
+                || native_vega::SOURCES.iter().any(|(path, _)| path == arg)
             {
                 executor_root.join(arg).into_os_string()
             } else {
@@ -806,6 +809,21 @@ pub fn configured_arguments(
             }
         })
         .collect()
+}
+pub fn configured_arguments_for_subject(
+    invocation: &Invocation,
+    executor_root: &Path,
+    subject: &Path,
+) -> Vec<std::ffi::OsString> {
+    let mut args = configured_arguments(invocation, executor_root);
+    if native_vega::is_driver_build(invocation) {
+        for index in 1..invocation.args.len() {
+            if invocation.args[index - 1] == "--target-dir" {
+                args[index] = subject.join(invocation.args[index]).into_os_string();
+            }
+        }
+    }
+    args
 }
 fn configured(
     invocation: &Invocation,
@@ -818,10 +836,18 @@ fn configured(
     let mut command = Command::new(executable);
     command.envs(bindings);
     command
-        .args(configured_arguments(invocation, executor_root))
+        .args(configured_arguments_for_subject(
+            invocation,
+            executor_root,
+            repo,
+        ))
         .env("SOURCE_CI_EXECUTOR_ROOT", executor_root)
         .env("SOURCE_CI_PROFILE_EXECUTABLE", profile_executable)
-        .current_dir(repo.join(invocation.cwd));
+        .current_dir(if native_vega::is_driver_build(invocation) {
+            executor_root.to_path_buf()
+        } else {
+            repo.join(invocation.cwd)
+        });
     for (key, value) in &invocation.env {
         if let Some(value) = value {
             command.env(key, value);
@@ -898,7 +924,10 @@ fn measure_tools(
     tools.extend(declared.0);
     logs.extend(declared.1);
     logs_complete &= declared.2;
-    for path in workflow_owned::input_files(check, repo) {
+    for path in workflow_owned::input_files(check, repo)
+        .into_iter()
+        .chain(native_vega::input_files(check))
+    {
         let file = repo.join(&path);
         if !file.is_file() {
             return Err(io::Error::other(format!(
@@ -912,7 +941,10 @@ fn measure_tools(
             json_string(&file_sha(&file)?)
         ));
     }
-    for (path, _) in workflow_owned::script_sources(check) {
+    for (path, _) in workflow_owned::script_sources(check)
+        .into_iter()
+        .chain(native_vega::source_files(check))
+    {
         let file = executor_root.join(path);
         tools.push(format!(
             "{{\"kind\":\"source_recipe\",\"path\":{},\"sha256\":{}}}",
@@ -928,7 +960,10 @@ fn measure_tools(
 }
 
 fn verify_recipe_files(repo: &Path, check: &Check) -> io::Result<()> {
-    for (path, expected) in workflow_owned::script_sources(check) {
+    for (path, expected) in workflow_owned::script_sources(check)
+        .into_iter()
+        .chain(native_vega::source_files(check))
+    {
         let actual = repo.join(path);
         if !actual.symlink_metadata()?.file_type().is_file() || file_sha(&actual)? != sha(expected)?
         {
@@ -1076,7 +1111,11 @@ pub fn required_artifact_paths(check: &Check, _paths: &[String]) -> Vec<String> 
     if let Some(receipt) = &receipt {
         artifact_paths.push(receipt);
     }
-    artifact_paths.into_iter().map(str::to_string).collect()
+    artifact_paths
+        .into_iter()
+        .map(str::to_string)
+        .chain(native_vega::artifact_paths(check))
+        .collect()
 }
 
 pub fn run(
@@ -1136,6 +1175,7 @@ pub fn run(
     let mut logs_complete = true;
     let preparation = (|| -> io::Result<()> {
         preflight(check)?;
+        native_vega::preparation(&repo, executor_root, check)?;
         if check.id.starts_with("golden-vectors-") {
             golden_preflight(&repo)?;
         }

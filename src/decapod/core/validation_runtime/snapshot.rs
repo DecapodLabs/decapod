@@ -105,6 +105,7 @@ pub struct SnapshotHost<'a, R: Runner> {
     runner: R,
     project_check: PrerequisiteCallback<'a>,
     mode: SnapshotMode,
+    purpose: ValidationPurpose,
     resume_file: Option<PathBuf>,
     remote_plan: Option<collect::RemotePlan>,
     verified_checks: BTreeMap<CheckKey, source_import::VerifiedCheck>,
@@ -146,6 +147,7 @@ impl<'a, R: Runner> SnapshotHost<'a, R> {
             repository,
             runner,
             mode,
+            purpose: ValidationPurpose::Readiness,
             resume_file,
             remote_plan,
             verified_checks: BTreeMap::new(),
@@ -156,6 +158,12 @@ impl<'a, R: Runner> SnapshotHost<'a, R> {
             project_check: Box::new(project_check),
             evidence_directory: None,
         })
+    }
+    /// Explicit invocation scope. This never authorizes publication or changes
+    /// the full required graph; failed jobs remain failed in collected evidence.
+    pub fn with_proof_collection(mut self) -> Self {
+        self.purpose = ValidationPurpose::ProofCollection;
+        self
     }
     /// GitHub raw ZIP handoff is outside Buildkite-only preflight. Buildkite
     /// artifacts are collected automatically from their authenticated producer.
@@ -184,6 +192,23 @@ impl<'a, R: Runner> SnapshotHost<'a, R> {
         project: &CurrentProject,
         budget: &RuntimeBudget<'_>,
     ) -> io::Result<Vec<Blocker>> {
+        if self.purpose == ValidationPurpose::ProofCollection {
+            require_proof_collection_contract(project)?;
+            if !matches!(self.mode, SnapshotMode::PublishAndCollect) || self.resume_file.is_some() {
+                return Err(invalid(
+                    "PROOF_COLLECTION_SCOPE: collection requires fresh configured source execution, not host handoff or adoption",
+                ));
+            }
+        }
+        let collection_governance = if self.purpose == ValidationPurpose::ProofCollection {
+            Some(hash(&git(
+                &self.options,
+                budget,
+                &["show", "HEAD:.decapod/governance.json"],
+            )?))
+        } else {
+            None
+        };
         if !project.configuration.validation_buildkite_preflights {
             return Err(invalid(
                 "snapshot host requires the canonical true remote-preflight policy",
@@ -272,6 +297,20 @@ impl<'a, R: Runner> SnapshotHost<'a, R> {
             &directory.join("required-catalog.json"),
             &serde_json::to_vec_pretty(&project.catalog).map_err(io::Error::other)?,
         )?;
+        if self.purpose == ValidationPurpose::ProofCollection {
+            write_new(
+                &directory.join("collection-purpose.json"),
+                &serde_json::to_vec_pretty(&serde_json::json!({
+                    "schema": "decapod.proof-collection.v1",
+                    "scope": PROOF_COLLECTION_SCOPE,
+                    "publication_ready": false,
+                    "source_head": state.head_revision,
+                    "accepted_base": state.accepted_base_revision,
+                    "governance_digest": collection_governance,
+                    "required_catalog_digest": hash(&serde_json::to_vec(&project.catalog).map_err(io::Error::other)?),
+                })).map_err(io::Error::other)?,
+            )?;
+        }
         let mut blockers:Vec<_>=project.catalog.obligations().iter().map(|obligation|Blocker{
             code:"REQUIRED_PROOF_NOT_AUTHENTICATED".into(),detail:"required current execution has not yet supplied complete authenticated measurements".into(),check:Some(obligation.key.clone()),
         }).collect();
@@ -308,14 +347,25 @@ impl<'a, R: Runner> SnapshotHost<'a, R> {
             // barrier fetches metadata only; custody is collected exactly once.
             eprintln!("Buildkite validation: stage=provider_terminal_wait");
             let provider_started = Instant::now();
-            let terminal = automatic::wait_for_source_runs(
-                &mut self.runner,
-                reader,
-                &snapshot,
-                &plan,
-                Duration::from_secs(5),
-                &provider_budget,
-            );
+            let terminal = if self.purpose == ValidationPurpose::ProofCollection {
+                automatic::wait_for_source_collection(
+                    &mut self.runner,
+                    reader,
+                    &snapshot,
+                    &plan,
+                    Duration::from_secs(5),
+                    &provider_budget,
+                )
+            } else {
+                automatic::wait_for_source_runs(
+                    &mut self.runner,
+                    reader,
+                    &snapshot,
+                    &plan,
+                    Duration::from_secs(5),
+                    &provider_budget,
+                )
+            };
             let provider_terminal_wait_ms = provider_started.elapsed().as_millis();
             eprintln!(
                 "Buildkite validation: stage=provider_terminal_wait elapsed_ms={provider_terminal_wait_ms}"
@@ -387,11 +437,27 @@ impl<'a, R: Runner> SnapshotHost<'a, R> {
                 "STALE_ACCEPTED_BASE: target changed during snapshot proof",
             ));
         }
+        if let Some(governance) = collection_governance {
+            clean(&self.options, budget)?;
+            if hash(&git(
+                &self.options,
+                budget,
+                &["show", "HEAD:.decapod/governance.json"],
+            )?) != governance
+            {
+                return Err(invalid(
+                    "STALE_GOVERNANCE: proof collection journal changed during execution",
+                ));
+            }
+        }
         self.prepared_snapshot = Some(snapshot);
         Ok(blockers)
     }
 }
 impl<R: Runner> Host for SnapshotHost<'_, R> {
+    fn purpose(&self) -> ValidationPurpose {
+        self.purpose
+    }
     fn project_check(&mut self, budget: &RuntimeBudget<'_>) -> io::Result<ProjectPrerequisites> {
         (self.project_check)(budget)
     }

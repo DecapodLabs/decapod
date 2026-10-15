@@ -418,8 +418,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7efe54997513078b81090151e7204411beadfd92783550b1d170955d5159157a`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (188 files), `tests/` (193 files)
+- Repository signal fingerprint: `fa8099e4a51c0390e100e399afae42db81b0471dfbe95f75698ab21e785ef488`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (27 files), `docs/` (1 files), `src/` (188 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -473,3 +473,29 @@ the kernel enforces freshness, execution and custody mechanically. Existing
 Decapod source-CI adapters retain their stricter authority and cannot be downgraded
 by a candidate switching to local proof. Unsupported remote/daemon operations
 remain explicit limitations, rather than fabricated native evidence.
+
+## Exact native proof contract and collection-only execution
+
+readiness_profile::CiWorkflowContract distinguishes the unchanged current source
+workflow from NativeVegaV1 using independently compiled workflow bytes. Both keep
+the accepted executor R separate from candidate H; candidate helper changes or
+source-inventory digests cannot authorize an unknown workflow or replace R.
+The new graph appends exactly four native-vega checks without dropping existing
+checks or changing current release-only exclusions.
+
+assets/tools/source_ci_native_vega.rs owns finite recipes. An accepted Rust proof
+driver and small independent Objective-C Metal capability probe are built from R;
+candidate decapod and the separately locked assets/tools/vega-native worker are
+built from H. The probe dispatches a real GPU kernel and verifies numeric output.
+Worker compilation requires both macosx and iphoneos Metal SDK tools because the
+pinned attention dependency builds both kernels. Receipts identify actual OS,
+SDK settings/compiler bytes, worker/runtime lock, compiled kernel libraries, and
+nine exact model/backbone/tokenizer/config/license files. Those are bounded
+identity measurements, not hashes of the entire operating-system/SDK closure.
+
+The accepted driver checks immutable setup manifests, rehashes model and worker
+inputs around execution, verifies typed request/response and real pooling/engine
+provenance, and emits small receipts. Model weights are never uploaded as custody
+artifacts. Candle backbone and pooling use Metal f32; the base engine is CPU f32
+and thermal calibration f64. Source-contract tests and runtime capability proof
+do not assert missing upstream numerical parity, adapters, or domain calibration.

@@ -958,3 +958,215 @@ fn trajectory_execution_carries_intent_custody_across_records() {
         artifact
     );
 }
+
+fn native_proof_blocker() -> ProofBlocker {
+    ProofBlocker {
+        id: ProofBlockerId::NativeAppleMetal,
+        detail: "Real Apple-arm64 Candle compilation and Metal execution remain unproven".into(),
+        proof_refs: vec!["evidence:missing-native-execution".into()],
+    }
+}
+
+#[test]
+fn typed_proof_blockers_are_finite_bounded_and_legacy_compatible() {
+    let blocker = native_proof_blocker();
+    let value = serde_json::to_string(&blocker).unwrap();
+    assert_eq!(parse_proof_blocker_json(&value).unwrap(), blocker);
+    assert!(
+        parse_proof_blocker_json(&value.replace("native-apple-metal", "arbitrary-proof")).is_err()
+    );
+    assert!(
+        parse_proof_blocker_json(
+            r#"{"id":"native-apple-metal","detail":"missing","proof_refs":[]}"#
+        )
+        .is_err()
+    );
+    assert!(parse_proof_blocker_json(r#"{"id":"native-apple-metal","detail":"missing","proof_refs":["evidence"],"ignore_human_stop":true}"#).is_err());
+    assert!(ProofBlockerId::parse("native-vega-gpu").is_err());
+    assert_eq!(blocker.id.required_checks().len(), 4);
+    let temp = tempdir().unwrap();
+    let artifact = init_trajectory(temp.path(), replacement_init("legacy")).unwrap();
+    let legacy = serde_json::to_value(&artifact).unwrap();
+    assert!(legacy.get("proof_blockers").is_none());
+    let decoded: TrajectoryArtifact = serde_json::from_value(legacy).unwrap();
+    assert!(decoded.proof_blockers.is_empty());
+    assert_eq!(decoded.artifact_hash, artifact.artifact_hash);
+}
+
+#[test]
+fn deliberate_classification_preserves_exact_detail_evidence_and_other_stops() {
+    let temp = tempdir().unwrap();
+    let blocker = native_proof_blocker();
+    let mut init = replacement_init("classify");
+    init.blockers = vec![
+        blocker.detail.clone(),
+        "Human authorization withheld".into(),
+    ];
+    init_trajectory(temp.path(), init).unwrap();
+    let before = fs::read(trajectory_cookie_path(temp.path())).unwrap();
+    let mut wrong = blocker.clone();
+    wrong.detail.push('!');
+    assert!(
+        record_trajectory(
+            temp.path(),
+            "classify",
+            TrajectoryUpdate {
+                classify_proof_blockers: vec![wrong],
+                ..Default::default()
+            }
+        )
+        .is_err()
+    );
+    assert_eq!(
+        fs::read(trajectory_cookie_path(temp.path())).unwrap(),
+        before
+    );
+    let artifact = record_trajectory(
+        temp.path(),
+        "classify",
+        TrajectoryUpdate {
+            classify_proof_blockers: vec![blocker.clone()],
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    assert_eq!(artifact.blockers, ["Human authorization withheld"]);
+    assert_eq!(artifact.proof_blockers, [blocker.clone()]);
+    assert!(artifact.evidence.contains(&blocker.proof_refs[0]));
+    assert!(
+        serde_json::to_string(&artifact.custody)
+            .unwrap()
+            .contains("trajectory.classify_proof_blocker")
+    );
+    assert_eq!(motion_state(&artifact), TrajectoryMotionState::Blocked);
+    let cleared = record_trajectory(
+        temp.path(),
+        "classify",
+        TrajectoryUpdate {
+            clear_blockers: true,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    assert!(cleared.blockers.is_empty());
+    assert_eq!(cleared.proof_blockers, [blocker]);
+    assert_eq!(motion_state(&cleared), TrajectoryMotionState::Blocked);
+}
+
+#[test]
+fn typed_obligation_resolution_requires_all_fresh_checks_and_never_erases_history() {
+    let temp = tempdir().unwrap();
+    init_trajectory(temp.path(), replacement_init("resolve")).unwrap();
+    let blocker = native_proof_blocker();
+    let blocked = record_trajectory(
+        temp.path(),
+        "resolve",
+        TrajectoryUpdate {
+            proof_blockers: vec![blocker.clone()],
+            checks: vec![TrajectoryCheck {
+                name: "unrelated".into(),
+                status: TrajectoryCheckStatus::Passed,
+            }],
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    assert_eq!(
+        blocked.verdicts.completion_proof,
+        TrajectoryVerdict::Unsupported
+    );
+    let checks: Vec<_> = blocker
+        .id
+        .required_checks()
+        .iter()
+        .map(|name| TrajectoryCheck {
+            name: (*name).into(),
+            status: TrajectoryCheckStatus::Passed,
+        })
+        .collect();
+    let before = fs::read(trajectory_cookie_path(temp.path())).unwrap();
+    for count in 0..checks.len() {
+        assert!(
+            record_trajectory(
+                temp.path(),
+                "resolve",
+                TrajectoryUpdate {
+                    resolve_proof_blockers: vec![blocker.id],
+                    checks: checks[..count].to_vec(),
+                    evidence: vec!["provider:collected-native-checks".into()],
+                    ..Default::default()
+                }
+            )
+            .is_err()
+        );
+        assert_eq!(
+            fs::read(trajectory_cookie_path(temp.path())).unwrap(),
+            before
+        );
+    }
+    for status in [
+        TrajectoryCheckStatus::Failed,
+        TrajectoryCheckStatus::Partial,
+        TrajectoryCheckStatus::Unavailable,
+    ] {
+        let mut conflicting = checks.clone();
+        conflicting.push(TrajectoryCheck {
+            name: checks[0].name.clone(),
+            status,
+        });
+        assert!(
+            record_trajectory(
+                temp.path(),
+                "resolve",
+                TrajectoryUpdate {
+                    resolve_proof_blockers: vec![blocker.id],
+                    checks: conflicting,
+                    evidence: vec!["provider:collected-native-checks".into()],
+                    ..Default::default()
+                }
+            )
+            .is_err()
+        );
+        assert_eq!(
+            fs::read(trajectory_cookie_path(temp.path())).unwrap(),
+            before
+        );
+    }
+    assert!(
+        record_trajectory(
+            temp.path(),
+            "resolve",
+            TrajectoryUpdate {
+                resolve_proof_blockers: vec![blocker.id],
+                checks: checks.clone(),
+                ..Default::default()
+            }
+        )
+        .is_err()
+    );
+    let resolved = record_trajectory(
+        temp.path(),
+        "resolve",
+        TrajectoryUpdate {
+            resolve_proof_blockers: vec![blocker.id],
+            checks,
+            evidence: vec!["provider:collected-native-checks".into()],
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    assert!(resolved.proof_blockers.is_empty());
+    assert!(
+        resolved
+            .checks
+            .iter()
+            .any(|check| check.name == "unrelated")
+    );
+    assert!(
+        resolved
+            .evidence
+            .contains(&"provider:collected-native-checks".into())
+    );
+    // These are journal declarations only; publication requires independent
+    // full source-bound runtime evidence, never a trajectory status string.
+}

@@ -428,7 +428,7 @@ pub fn inspect(
                     "Review added, removed and changed workflows, local actions, helpers, build and release contracts. Update the required-profile adapter and its explicitly reviewed source digest only after coverage is reconciled.");
             }
             let mismatched: Vec<_> = readiness_profile::reviewed_workflow_digests().iter()
-                .filter(|(path, expected)| inventory.files.get(*path).is_some_and(|actual| actual != expected))
+                .filter(|(path, _)| inventory.files.get(*path).is_some_and(|actual| !readiness_profile::reviewed_workflow_matches(path, actual)))
                 .map(|(path, _)| (*path).to_string()).collect();
             if !mismatched.is_empty() {
                 report.task("MISMATCHED_CI_CONTRACT", "Reconcile workflows with the compiled required profile", mismatched,

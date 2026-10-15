@@ -25,6 +25,10 @@ pub mod custody;
 #[path = "source_ci_workflow_owned.rs"]
 pub mod workflow_owned;
 
+#[allow(dead_code)]
+#[path = "source_ci_native_vega.rs"]
+pub mod native_vega;
+
 pub const SCHEMA: &str = "decapod.source-ci.v1";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -433,9 +437,12 @@ pub const CHECKS: &[Check] = &[
     },
 ];
 
+pub fn all_checks() -> impl Iterator<Item = &'static Check> {
+    CHECKS.iter().chain(native_vega::CHECKS.iter())
+}
+
 pub fn find_check(id: &str) -> io::Result<&'static Check> {
-    CHECKS
-        .iter()
+    all_checks()
         .find(|check| check.id == id)
         .ok_or_else(|| io::Error::other(format!("unknown source-CI check: {id}")))
 }
@@ -642,7 +649,9 @@ pub fn commands(check: &Check, paths: &[String]) -> io::Result<Vec<Invocation>> 
     if !selected(check, paths, false) && !workflow_owned::artifact_worker(check) {
         return Ok(Vec::new());
     }
-    let mut result = if let Some(script) = workflow_owned::script(check) {
+    let mut result = if let Some(recipe) = native_vega::commands(check) {
+        recipe
+    } else if let Some(script) = workflow_owned::script(check) {
         vec![Invocation::new("bash", &[script])]
     } else {
         match check.id {
@@ -804,6 +813,7 @@ fn preflight(check: &Check) -> io::Result<()> {
 
 pub fn requires_private_umask(check: &Check) -> bool {
     matches!(check.id, "supabase-consumer" | "workspace-lifecycle-docker")
+        || native_vega::is_check(check.id)
 }
 
 // Restrict fixture permissions exactly like the existing shell steps. Applied
@@ -913,6 +923,8 @@ pub fn run_check(
     base: &str,
     head: &str,
 ) -> io::Result<bool> {
+    let canonical_repo = fs::canonicalize(repo)?;
+    let repo = canonical_repo.as_path();
     let start = Instant::now();
     let mut results = Vec::new();
     let mut status = "passed";
@@ -923,6 +935,7 @@ pub fn run_check(
     }
     let execute = || -> io::Result<()> {
         preflight(check)?;
+        native_vega::preparation(repo, repo, check)?;
         if requires_private_umask(check) {
             private_umask();
         }
@@ -942,7 +955,9 @@ pub fn run_check(
             let stage_start = Instant::now();
             let mut command = Command::new(invocation.program);
             command
-                .args(&invocation.args)
+                .args(custody::configured_arguments_for_subject(
+                    invocation, repo, repo,
+                ))
                 .env("SOURCE_CI_EXECUTOR_ROOT", fs::canonicalize(repo)?)
                 .env("SOURCE_CI_PROFILE_EXECUTABLE", env::current_exe()?)
                 .current_dir(repo.join(invocation.cwd));
@@ -1032,6 +1047,25 @@ pub struct JobInstance {
     pub applicable: bool,
     pub checks: Vec<&'static str>,
     pub workflow_owned: bool,
+}
+
+pub fn inventory_for_contract(
+    paths: &[String],
+    release_only: bool,
+    native_vega: bool,
+) -> Vec<JobInstance> {
+    let mut jobs = inventory(paths, release_only);
+    if native_vega {
+        jobs.push(JobInstance {
+            workflow: "ci.yml",
+            job: "native-vega",
+            matrix: None,
+            applicable: !release_only,
+            checks: native_vega::CHECKS.iter().map(|c| c.id).collect(),
+            workflow_owned: false,
+        });
+    }
+    jobs
 }
 
 pub fn inventory(paths: &[String], release_only: bool) -> Vec<JobInstance> {
@@ -1245,7 +1279,9 @@ fn main_result() -> io::Result<bool> {
         }
         "plan" => {
             let mut entries = Vec::new();
-            for check in CHECKS {
+            for check in all_checks()
+                .filter(|c| !native_vega::is_check(c.id) || native_vega::contract_enabled(&repo))
+            {
                 entries.push(format!("{{\"id\":{},\"workflow\":{},\"job\":{},\"matrix\":{},\"platform\":{},\"capabilities\":{},\"applicable\":{},\"skipped_for_release_only\":{},\"commands\":[{}],\"invocation_digest\":{}}}", json_string(check.id), json_string(check.workflow), json_string(check.job), check.matrix.map_or_else(|| "null".into(), json_string), json_string(check.platform.name()), json_strings(check.capabilities.iter().copied()), selected(check, &paths, false), check.skipped_for_release_only, commands(check, &paths)?.iter().map(invocation_json).collect::<Vec<_>>().join(","), json_string(&custody::invocation_digest(&commands(check, &paths)?)?)));
             }
             println!(
@@ -1255,7 +1291,7 @@ fn main_result() -> io::Result<bool> {
                 json_string(head.as_deref().unwrap()),
                 json_string(&custody::profile_digest()?),
                 entries.join(","),
-                inventory(&paths, false).iter().map(|job| format!("{{\"workflow\":{},\"job\":{},\"matrix\":{},\"applicable\":{},\"checks\":{},\"workflow_owned\":{}}}", json_string(job.workflow), json_string(job.job), job.matrix.map_or_else(|| "null".into(), json_string), job.applicable, json_strings(job.checks.iter().copied()), job.workflow_owned)).collect::<Vec<_>>().join(","),
+                inventory_for_contract(&paths, false, native_vega::contract_enabled(&repo)).iter().map(|job| format!("{{\"workflow\":{},\"job\":{},\"matrix\":{},\"applicable\":{},\"checks\":{},\"workflow_owned\":{}}}", json_string(job.workflow), json_string(job.job), job.matrix.map_or_else(|| "null".into(), json_string), job.applicable, json_strings(job.checks.iter().copied()), job.workflow_owned)).collect::<Vec<_>>().join(","),
                 WORKFLOW_OWNED_OBLIGATIONS
                     .iter()
                     .map(|(workflow, job, purpose)| format!(

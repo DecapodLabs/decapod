@@ -282,6 +282,11 @@ pub(super) fn required_inputs(
     check: &source::Check,
     expected: &SourceExpectation,
 ) -> BTreeSet<String> {
+    if source::native_vega::is_check(check.id) {
+        return source::native_vega::input_files(check)
+            .into_iter()
+            .collect();
+    }
     if check.id == "integration-status" {
         let mut paths =
             BTreeSet::from(["target/integration-custody/integration-custody".to_string()]);

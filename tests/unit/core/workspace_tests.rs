@@ -1152,3 +1152,72 @@ fn readiness_can_retry_failed_history_without_rewriting_it_or_ignoring_boundarie
         verify_trajectory_binding_for_readiness(root, "agent/test/bugs_123456").unwrap_err();
     assert!(error.to_string().contains("Human decision required"));
 }
+
+#[test]
+fn collection_retains_untyped_stops_task_binding_and_normal_publication_blockers() {
+    let tmp = tempdir().unwrap();
+    let root = tmp.path();
+    trajectory::init_trajectory(
+        root,
+        trajectory::TrajectoryInit {
+            run_id: "collect-native".into(),
+            task_id: Some("bugs_123456".into()),
+            intent_id: None,
+            original_intent: "Collect native Apple proof".into(),
+            derived_intent: "Execute accepted full graph without publication readiness".into(),
+            active_boundaries: vec![],
+            repo_scope: vec![".".into()],
+            destination: None,
+            current_phase: None,
+            next_transitions: vec![],
+            blockers: vec![],
+        },
+    )
+    .unwrap();
+    trajectory::record_trajectory(
+        root,
+        "collect-native",
+        trajectory::TrajectoryUpdate {
+            proof_blockers: vec![trajectory::ProofBlocker {
+                id: trajectory::ProofBlockerId::NativeAppleMetal,
+                detail: "Apple native execution is missing".into(),
+                proof_refs: vec!["evidence:missing-native".into()],
+            }],
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let before = std::fs::read(trajectory::trajectory_cookie_path(root)).unwrap();
+    assert!(load_trajectory_binding(root, "agent/test/bugs_123456", true).is_ok());
+    assert!(load_readiness_trajectory_binding(root, "agent/test/bugs_123456").is_err());
+    assert!(load_trajectory_binding(root, "agent/test/bugs_654321", true).is_err());
+    assert!(load_trajectory_binding(root, "agent/test/no-task", true).is_err());
+    assert_eq!(
+        before,
+        std::fs::read(trajectory::trajectory_cookie_path(root)).unwrap()
+    );
+    for stop in [
+        "Human authorization withheld",
+        "Provider access denied",
+        "native-apple-metal",
+        "Native Vega Metal execution is missing; human review required",
+    ] {
+        trajectory::record_trajectory(
+            root,
+            "collect-native",
+            trajectory::TrajectoryUpdate {
+                clear_blockers: true,
+                blockers: vec![stop.into()],
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        let before = std::fs::read(trajectory::trajectory_cookie_path(root)).unwrap();
+        let error = load_trajectory_binding(root, "agent/test/bugs_123456", true).unwrap_err();
+        assert!(error.to_string().contains(stop));
+        assert_eq!(
+            before,
+            std::fs::read(trajectory::trajectory_cookie_path(root)).unwrap()
+        );
+    }
+}

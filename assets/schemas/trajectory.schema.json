@@ -17,6 +17,7 @@
     "current_phase": { "type": ["string", "null"] },
     "next_transitions": { "$ref": "#/$defs/string_array" },
     "blockers": { "$ref": "#/$defs/string_array" },
+    "proof_blockers": { "type": "array", "items": { "$ref": "#/$defs/proof_blocker" } },
     "active_boundaries": { "$ref": "#/$defs/string_array" },
     "repo_scope": { "$ref": "#/$defs/string_array" },
     "inspected_files": { "$ref": "#/$defs/string_array" },
@@ -35,6 +36,16 @@
     "custody": { "type": "object" }
   },
   "$defs": {
+    "proof_blocker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "detail", "proof_refs"],
+      "properties": {
+        "id": { "enum": ["native-apple-metal"] },
+        "detail": { "type": "string", "minLength": 1, "maxLength": 4096 },
+        "proof_refs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1, "maxLength": 4096 } }
+      }
+    },
     "string_array": { "type": "array", "items": { "type": "string" } },
     "check": {
       "type": "object",

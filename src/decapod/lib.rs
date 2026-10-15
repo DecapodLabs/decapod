@@ -5985,6 +5985,7 @@ fn render_validation_text(
 
 #[derive(Default)]
 pub(crate) struct ReadinessInvocation {
+    collect_proof: bool,
     snapshot_prepare: bool,
     snapshot_resume: Option<std::path::PathBuf>,
     snapshot_adopt: Option<String>,
@@ -5993,13 +5994,14 @@ pub(crate) struct ReadinessInvocation {
 
 impl ReadinessInvocation {
     fn validate(&self) -> Result<(), error::DecapodError> {
-        if (self.snapshot_prepare && self.snapshot_resume.is_some())
+        if (self.collect_proof && self.has_snapshot_arguments())
+            || (self.snapshot_prepare && self.snapshot_resume.is_some())
             || (self.provider_artifacts.is_some() && self.snapshot_resume.is_none())
             || (self.snapshot_adopt.is_some()
                 && (self.snapshot_resume.is_none() || self.provider_artifacts.is_some()))
         {
             return Err(error::DecapodError::ValidationError(
-                "READINESS_INVOCATION_INVALID: prepare and resume are exclusive; raw artifact handoff and host adoption each require an exact resume locator and are mutually exclusive".into(),
+                "READINESS_INVOCATION_INVALID: proof collection cannot combine with handoff or adoption; prepare and resume are exclusive; raw artifact handoff and host adoption each require an exact resume locator and are mutually exclusive".into(),
             ));
         }
         Ok(())
@@ -6022,6 +6024,11 @@ fn run_validate_command(
     let enabled = crate::cli::DecapodProjectConfig::load(workspace_root)?
         .proof
         .validation_buildkite_preflights;
+    if validate_cli.collect_proof && (!enabled || !scope.requires_publication_proof()) {
+        return Err(error::DecapodError::ValidationError(
+            "PROOF_COLLECTION_SCOPE: collection requires configured Buildkite source proof outside CI; project-check and native/local routes cannot collect publication proof".into(),
+        ));
+    }
     scope.dispatch(
         enabled,
         validate_cli,
@@ -6040,6 +6047,7 @@ fn run_validate_command_remote(
     scope: ValidationScope,
 ) -> Result<(), error::DecapodError> {
     let invocation = ReadinessInvocation {
+        collect_proof: cli.collect_proof,
         snapshot_prepare: cli.snapshot_prepare,
         snapshot_resume: cli.snapshot_resume,
         snapshot_adopt: cli.snapshot_adopt,
@@ -6053,7 +6061,7 @@ fn run_validate_command_remote(
             "{}",
             serde_json::to_string_pretty(&serde_json::json!({
                 "status": if readiness.ready { "pass" } else { "fail" },
-                "scope": scope.label(),
+                "scope": if invocation.collect_proof { core::validation_runtime::PROOF_COLLECTION_SCOPE } else { scope.label() },
                 "publication_ready": readiness.ready,
                 "local_project_checks": "not_run_provider_owned",
                 "report": serde_json::Value::Null,
@@ -6095,6 +6103,7 @@ fn run_validate_command_local(
     use crate::core::workspace;
 
     let readiness_invocation = ReadinessInvocation {
+        collect_proof: validate_cli.collect_proof,
         snapshot_prepare: validate_cli.snapshot_prepare,
         snapshot_resume: validate_cli.snapshot_resume.clone(),
         snapshot_adopt: validate_cli.snapshot_adopt.clone(),
@@ -6102,6 +6111,11 @@ fn run_validate_command_local(
     };
     readiness_invocation.validate()?;
     reject_remote_arguments_in_partial_scope(scope, &readiness_invocation)?;
+    if readiness_invocation.collect_proof {
+        return Err(error::DecapodError::ValidationError(
+            "PROOF_COLLECTION_SCOPE: proof collection cannot run local project checks or write a local readiness receipt".into(),
+        ));
+    }
 
     if std::env::var("DECAPOD_VALIDATE_SKIP_GIT_GATES").is_ok() {
         // Skip workspace check if gates are explicitly skipped
@@ -6318,7 +6332,9 @@ fn reject_remote_arguments_in_partial_scope(
     scope: ValidationScope,
     invocation: &ReadinessInvocation,
 ) -> Result<(), error::DecapodError> {
-    if !scope.requires_publication_proof() && invocation.has_snapshot_arguments() {
+    if !scope.requires_publication_proof()
+        && (invocation.has_snapshot_arguments() || invocation.collect_proof)
+    {
         let code = if scope == ValidationScope::CiLocal {
             "CI_LOCAL_SCOPE"
         } else {
@@ -6510,7 +6526,11 @@ fn run_current_workbranch_readiness_with(
     invocation: &ReadinessInvocation,
 ) -> core::validation_runtime::ValidationReport {
     use core::validation_runtime as runtime;
-    let mut report_scope = runtime::READINESS_SCOPE;
+    let mut report_scope = if invocation.collect_proof {
+        runtime::PROOF_COLLECTION_SCOPE
+    } else {
+        runtime::READINESS_SCOPE
+    };
     let result = (|| -> Result<runtime::ValidationReport, error::DecapodError> {
         invocation.validate()?;
         let config = crate::cli::DecapodProjectConfig::load(workspace_root)?;
@@ -6520,7 +6540,9 @@ fn run_current_workbranch_readiness_with(
             .as_ref()
             .is_some_and(|profile| profile.id == core::repository_profile::REQUIRED_PROFILE)
         {
-            report_scope = core::repository_profile::READINESS_SCOPE;
+            if !invocation.collect_proof {
+                report_scope = core::repository_profile::READINESS_SCOPE;
+            }
         }
         if invocation.has_snapshot_arguments() && !config.proof.validation_buildkite_preflights {
             return Err(error::DecapodError::ValidationError(
@@ -6555,7 +6577,16 @@ fn run_current_workbranch_readiness_with(
                 "REPOSITORY_PROFILE_PROVIDER_UNSUPPORTED: repo.pr-readiness.v1 proves the reviewed local repository commands; Buildkite execution needs its own supported provider contract".into(),
             ));
         }
-        if config.proof.validation_buildkite_preflights {
+        if invocation.collect_proof && !config.proof.validation_buildkite_preflights {
+            return Err(error::DecapodError::ValidationError(
+                "PROOF_COLLECTION_SCOPE: independently accepted remote source executor required"
+                    .into(),
+            ));
+        }
+        if invocation.collect_proof {
+            report_scope = runtime::PROOF_COLLECTION_SCOPE;
+            core::workspace::verify_proof_collection_transport_prerequisites(workspace_root)?;
+        } else if config.proof.validation_buildkite_preflights {
             core::workspace::verify_readiness_transport_prerequisites(workspace_root)?;
         } else {
             core::workspace::verify_current_publication_prerequisites(workspace_root)?;
@@ -6680,7 +6711,12 @@ fn run_current_workbranch_readiness_with(
             if let Some(path) = &invocation.provider_artifacts {
                 host = host.with_artifact_directory(path.clone())?;
             }
-            let report = runtime::validate(&options, &mut host, &cancellation);
+            let report = if invocation.collect_proof {
+                host = host.with_proof_collection();
+                runtime::collect_proof(&options, &mut host, &cancellation)
+            } else {
+                runtime::validate(&options, &mut host, &cancellation)
+            };
             signal_guard.restore()?;
             return Ok(report);
         }
@@ -6745,7 +6781,10 @@ pub(crate) fn enforce_workbranch_readiness_before_push(
     invocation: &ReadinessInvocation,
 ) -> Result<Option<std::path::PathBuf>, error::DecapodError> {
     invocation.validate()?;
-    if invocation.snapshot_prepare || invocation.snapshot_adopt.is_some() {
+    if invocation.collect_proof
+        || invocation.snapshot_prepare
+        || invocation.snapshot_adopt.is_some()
+    {
         return Err(error::DecapodError::ValidationError(
             "PUBLICATION_NOT_READY: workbranch preparation/adoption alone cannot create a PR"
                 .into(),
@@ -8037,6 +8076,9 @@ fn run_trajectory_command(
             next_transitions,
             blockers,
             clear_blockers,
+            proof_blockers,
+            classify_proof_blockers,
+            resolve_proof_blockers,
             active_boundaries,
             repo_scope,
             inspected_files,
@@ -8058,6 +8100,18 @@ fn run_trajectory_command(
                 .iter()
                 .map(|spec| core::trajectory::parse_check_spec(spec))
                 .collect::<Result<Vec<_>, _>>()?;
+            let proof_blockers = proof_blockers
+                .iter()
+                .map(|value| core::trajectory::parse_proof_blocker_json(value))
+                .collect::<Result<Vec<_>, _>>()?;
+            let classify_proof_blockers = classify_proof_blockers
+                .iter()
+                .map(|value| core::trajectory::parse_proof_blocker_json(value))
+                .collect::<Result<Vec<_>, _>>()?;
+            let resolve_proof_blockers = resolve_proof_blockers
+                .iter()
+                .map(|value| core::trajectory::ProofBlockerId::parse(value))
+                .collect::<Result<Vec<_>, _>>()?;
             let artifact = core::trajectory::record_trajectory(
                 workspace_root,
                 &run_id,
@@ -8068,6 +8122,9 @@ fn run_trajectory_command(
                     next_transitions,
                     blockers,
                     clear_blockers,
+                    proof_blockers,
+                    classify_proof_blockers,
+                    resolve_proof_blockers,
                     active_boundaries,
                     repo_scope,
                     inspected_files,
@@ -8101,6 +8158,7 @@ fn run_trajectory_command(
                     "current_phase": artifact.current_phase,
                     "next_transitions": artifact.next_transitions,
                     "blockers": artifact.blockers,
+                    "proof_blockers": artifact.proof_blockers,
                     "proof_status": artifact.proof_status,
                     "verdicts": artifact.verdicts,
                     "completion_claim": artifact.completion_claim,
@@ -9453,6 +9511,7 @@ fn run_workspace_command(
                 }
             }
             let invocation = ReadinessInvocation {
+                collect_proof: false,
                 snapshot_prepare: false,
                 snapshot_resume,
                 snapshot_adopt: None,
@@ -9824,6 +9883,7 @@ mod rpc_handlers {
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
         let invocation = super::ReadinessInvocation {
+            collect_proof: false,
             snapshot_prepare: false,
             snapshot_resume: params.snapshot_resume,
             snapshot_adopt: None,
@@ -10615,6 +10675,7 @@ mod rpc_handlers {
         let params: ValidateRunParams = serde_json::from_value(ctx.request.params.clone())
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
         let invocation = super::ReadinessInvocation {
+            collect_proof: false,
             snapshot_prepare: params.snapshot_prepare,
             snapshot_resume: params.snapshot_resume,
             snapshot_adopt: params.snapshot_adopt,
@@ -10664,6 +10725,7 @@ mod rpc_handlers {
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
         let invocation = super::ReadinessInvocation {
+            collect_proof: false,
             snapshot_prepare: params.snapshot_prepare,
             snapshot_resume: params.snapshot_resume,
             snapshot_adopt: params.snapshot_adopt,

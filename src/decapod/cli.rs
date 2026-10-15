@@ -42,6 +42,9 @@ pub(crate) struct ValidateCli {
     /// Enable projection-consistency validation for Decapod-managed governance surfaces
     #[clap(long)]
     pub projections: bool,
+    /// Collect configured native proof without publication readiness or clearing blockers.
+    #[clap(long, conflicts_with_all = ["snapshot_prepare", "snapshot_resume", "snapshot_adopt", "provider_artifacts"])]
+    pub collect_proof: bool,
     /// Prepare a private same-workbranch handoff; remains non-ready until CI completes.
     #[clap(long, conflicts_with = "snapshot_resume")]
     pub snapshot_prepare: bool,
@@ -1258,6 +1261,15 @@ pub(crate) enum TrajectoryCommand {
         blockers: Vec<String>,
         #[clap(long, default_value_t = false)]
         clear_blockers: bool,
+        /// Typed unmet proof obligation JSON; never an authorization or human-stop blocker.
+        #[clap(long = "proof-blocker")]
+        proof_blockers: Vec<String>,
+        /// Deliberately classify an exact existing blocker, preserving its detail and evidence.
+        #[clap(long = "classify-proof-blocker", conflicts_with = "clear_blockers")]
+        classify_proof_blockers: Vec<String>,
+        /// Resolve an existing proof obligation with current passed checks and evidence declarations.
+        #[clap(long = "resolve-proof-blocker")]
+        resolve_proof_blockers: Vec<String>,
         #[clap(long = "boundary")]
         active_boundaries: Vec<String>,
         #[clap(long = "scope")]

@@ -236,7 +236,30 @@ pub struct ExecutedSuite {
     pub failure: Option<String>,
 }
 
+pub const PROOF_COLLECTION_SCOPE: &str = "proof_collection";
+
+/// Execution purpose is invocation-owned, never inferred from provider output.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ValidationPurpose {
+    Readiness,
+    ProofCollection,
+}
+impl ValidationPurpose {
+    fn publication_ready(self, verdict: Verdict) -> bool {
+        self == Self::Readiness && verdict == Verdict::Ready
+    }
+    fn verdict_file(self) -> &'static str {
+        match self {
+            Self::Readiness => "verdict.json",
+            Self::ProofCollection => "proof-collection-verification.json",
+        }
+    }
+}
+
 pub trait Host {
+    fn purpose(&self) -> ValidationPurpose {
+        ValidationPurpose::Readiness
+    }
     fn evidence_directory(&self) -> Option<&Path> {
         None
     }
@@ -785,15 +808,38 @@ fn write_new(path: &Path, bytes: &[u8]) -> io::Result<()> {
 /// Public caller must use this report's exit_code, never the partial prerequisite
 /// result. This function cannot open a PR, push a work branch, or mint a receipt.
 pub fn validate(options: &Options, host: &mut dyn Host, cancel: &Cancellation) -> ValidationReport {
+    validate_for_purpose(options, host, cancel, ValidationPurpose::Readiness)
+}
+
+/// Execute the same accepted full graph to collect evidence. Even complete proof
+/// cannot yield a publication verdict, completion mark or reusable ready receipt.
+pub fn collect_proof(
+    options: &Options,
+    host: &mut dyn Host,
+    cancel: &Cancellation,
+) -> ValidationReport {
+    validate_for_purpose(options, host, cancel, ValidationPurpose::ProofCollection)
+}
+
+fn validate_for_purpose(
+    options: &Options,
+    host: &mut dyn Host,
+    cancel: &Cancellation,
+    purpose: ValidationPurpose,
+) -> ValidationReport {
     let mut report = ValidationReport {
         ready: false,
-        scope: READINESS_SCOPE,
+        scope: if purpose == ValidationPurpose::ProofCollection {
+            PROOF_COLLECTION_SCOPE
+        } else {
+            READINESS_SCOPE
+        },
         agent_guidance: ValidationGuidance::for_outcome(false),
         stage_dispositions: Vec::new(),
         blockers: Vec::new(),
         evidence_path: None,
     };
-    let result = run(options, host, cancel, &mut report);
+    let result = run(options, host, cancel, &mut report, purpose);
     if let Err(error) = result {
         let unsupported_controller = matches!(
             error
@@ -809,14 +855,82 @@ pub fn validate(options: &Options, host: &mut dyn Host, cancel: &Cancellation) -
         };
         report.blockers.push(Blocker::new(code, error.to_string()));
     }
+    if purpose == ValidationPurpose::ProofCollection {
+        debug_assert!(!report.ready);
+        report.agent_guidance = ValidationGuidance {
+            phase: "proof_collection",
+            entry_command: "decapod validate --collect-proof",
+            next_action: "review_collected_proof",
+            instruction: "Review authenticated check evidence and retained failed or missing checks. Collection never resolves blockers or permits publication; record genuine proof, checkpoint, and run ordinary full validation again.",
+            ..ValidationGuidance::for_outcome(false)
+        };
+        report.blockers.push(Blocker::new(
+            "PROOF_COLLECTION_ONLY",
+            "Publication readiness was not requested and cannot be established by this invocation; all recorded blockers are preserved",
+        ));
+        if report.evidence_path.is_none() {
+            report.evidence_path = host.evidence_directory().map(Path::to_path_buf);
+        }
+        if let Some(directory) = &report.evidence_path {
+            let saved = serde_json::to_vec_pretty(&report)
+                .map_err(io::Error::other)
+                .and_then(|bytes| write_new(&directory.join("proof-collection.json"), &bytes));
+            if let Err(error) = saved {
+                report.blockers.push(Blocker::new(
+                    "PROOF_COLLECTION_REPORT_FAILED",
+                    error.to_string(),
+                ));
+            }
+        }
+    }
     report
 }
+
+fn require_proof_collection_contract(project: &CurrentProject) -> io::Result<()> {
+    if !project.configuration.validation_buildkite_preflights || project.executor.is_none() {
+        return Err(invalid(
+            "PROOF_COLLECTION_CONTRACT: independently accepted remote executor required",
+        ));
+    }
+    let contract = project
+        .sources
+        .files
+        .get(".github/workflows/ci.yml")
+        .and_then(|digest| profile::ci_workflow_contract(digest));
+    if contract != Some(profile::CiWorkflowContract::NativeVegaV1) {
+        return Err(invalid(
+            "PROOF_COLLECTION_CONTRACT: exact independently accepted native workflow contract required",
+        ));
+    }
+    for id in super::trajectory::ProofBlockerId::NativeAppleMetal.required_checks() {
+        let expected = format!("{}/{id}", profile::REQUIRED_PROFILE);
+        if !project.catalog.obligations().iter().any(|obligation| {
+            obligation.kind == evidence::CheckKind::SourceCi
+                && obligation.key.provider == evidence::Provider::Buildkite
+                && obligation.key.workflow == ".github/workflows/ci.yml"
+                && obligation.key.job == "native-vega"
+                && obligation.key.profile == expected
+        }) {
+            return Err(invalid(format!(
+                "PROOF_COLLECTION_CONTRACT: accepted full native proof graph is missing required {id}"
+            )));
+        }
+    }
+    Ok(())
+}
+
 fn run(
     options: &Options,
     host: &mut dyn Host,
     cancel: &Cancellation,
     report: &mut ValidationReport,
+    purpose: ValidationPurpose,
 ) -> io::Result<()> {
+    if host.purpose() != purpose {
+        return Err(invalid(
+            "PROOF_COLLECTION_MODE_MISMATCH: host and controller execution purpose differ",
+        ));
+    }
     if options.timeout.is_zero()
         || options.timeout > Duration::from_secs(7200)
         || options.max_input_bytes == 0
@@ -838,6 +952,9 @@ fn run(
         return Err(invalid("PROJECT_PREREQUISITES_FAILED"));
     }
     let project = load_project(options, &mut budget)?;
+    if purpose == ValidationPurpose::ProofCollection {
+        require_proof_collection_contract(&project)?;
+    }
     if prerequisites == ProjectPrerequisites::ProviderRequired
         && !project.configuration.validation_buildkite_preflights
     {
@@ -905,12 +1022,14 @@ fn run(
     // Keep incomplete evidence on errors as well. Nothing is written to Git.
     let directory = directory.keep();
     if let Some(previous) = host.evidence_directory() {
-        let handoff = previous.join("snapshot-handoff.json");
-        if handoff.try_exists()? {
-            write_new(
-                &directory.join("snapshot-handoff.json"),
-                &budget.read(&handoff)?,
-            )?;
+        for name in ["snapshot-handoff.json", "collection-purpose.json"] {
+            if name == "collection-purpose.json" && purpose != ValidationPurpose::ProofCollection {
+                continue;
+            }
+            let handoff = previous.join(name);
+            if handoff.try_exists()? {
+                write_new(&directory.join(name), &budget.read(&handoff)?)?;
+            }
         }
     }
     report.evidence_path = Some(directory.clone());
@@ -983,10 +1102,10 @@ fn run(
         outcome,
     )
     .map_err(|e| invalid(format!("NOT_READY: {e:?}")))?;
-    report.ready = verdict == Verdict::Ready;
+    report.ready = purpose.publication_ready(verdict);
     report.agent_guidance = ValidationGuidance::for_outcome(report.ready);
     write_new(
-        &directory.join("verdict.json"),
+        &directory.join(purpose.verdict_file()),
         &serde_json::to_vec_pretty(report).map_err(io::Error::other)?,
     )?;
     Ok(())

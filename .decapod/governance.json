@@ -1,8 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "fc71d3a8a1e1f45adeee3ee24b02507b7198592f",
-    "release": "v0.114.3",
+    "accepted_commit": "9f9ad1a091eb3f69341a9f6ff619cecc43d6d53d",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -87,6 +86,14 @@
         "statement": "Only a provider-declared ordinary first push at the verified accepted target is classified as no change; actual candidate ranges remain strict",
         "status": "open"
       },
+      "claim:current-authority-resume": {
+        "falsifier": "Changed source, branch lineage, intent, plan, required approval, task revision or lease owner can pass resume; or committing only checkpoint bookkeeping invalidates unchanged continuation.",
+        "proof_refs": [
+          "src/decapod/core/trajectory/execution.rs"
+        ],
+        "statement": "Execution continuation checks the checkpoint against current material, accepted intent, plan, scope, policy approvals and task custody; a valid checkpoint hash alone does not grant continuation or publication readiness.",
+        "status": "open"
+      },
       "claim:current-obligation-evidence": {
         "falsifier": "A required regression accepts stale cached proof, cached dependency completion, malformed requirements, dangling edges or cycles, or an unmet verify/graph command exits zero.",
         "proof_refs": [
@@ -100,6 +107,15 @@
       "claim:current-task-proof": {
         "falsifier": "A stale or unbound pass completes a work claim, unlocks dependency admission, bypasses aggregate verification, or stale verifier overwrites newer evidence",
         "statement": "Persisted task pass cannot authorize a different task revision, and stale verification cannot overwrite a changed baseline",
+        "status": "open"
+      },
+      "claim:durable-artifact-publication": {
+        "falsifier": "Parent sync failure reports success, recovery follows a substituted parent symlink, a partial history is returned as complete, or admitted append crosses its recovery size bound.",
+        "proof_refs": [
+          "src/decapod/core/atomic.rs",
+          "tests/unit/core/events_tests.rs"
+        ],
+        "statement": "Unix atomic artifact publication requires file and containing-directory synchronization; an error after rename reports unconfirmed durability without claiming rollback, and bounded journal admission cannot append an unreadable head.",
         "status": "open"
       },
       "claim:fresh-provider-metadata-batching": {
@@ -249,6 +265,15 @@
         "statement": "Initial protocol rollout preserves strict independently pinned single-root compatibility, and unsupported workflow or execution contracts remain actionable blockers rather than self-authorizing a candidate controller.",
         "status": "open"
       },
+      "claim:task-journal-reconstruction": {
+        "falsifier": "A supported mutation loses journal custody, replay changes verification bytes or revision, a contradictory chain is accepted, or recovery overwrites an unrelated current projection.",
+        "proof_refs": [
+          "src/decapod/core/task_journal.rs",
+          "tests/unit/core/task_journal_tests.rs"
+        ],
+        "statement": "Modern local task mutation and exact revision, lease, owner, dependency and proof projection checkpoints commit together in the canonical event store; recovery preserves incomplete legacy history and rejects divergent live authority.",
+        "status": "open"
+      },
       "claim:trajectory-journal-recoverability": {
         "falsifier": "Changing run ID discards uncommitted failures, assumptions, blockers or Jev evidence without Git recovery",
         "proof_refs": [
@@ -263,6 +288,15 @@
           "src/decapod/core/snapshot_provider/snapshot/tests.rs"
         ],
         "statement": "Configured validation can create, fast-forward or reuse its exact governed workspace branch without asking the human for a separate local policy receipt; unrelated writes, altered requests and provider/executable denials remain blocked.",
+        "status": "open"
+      },
+      "claim:workunit-journal-recovery": {
+        "falsifier": "Concurrent mutations lose updates, stale prepared state overwrites the journal, a retry overwrites a divergent projection, or replay refreshes a retained passing proof artifact.",
+        "proof_refs": [
+          "tests/cli_contract_enforcement.rs",
+          "tests/unit/core/workunit_journal_tests.rs"
+        ],
+        "statement": "Workunit generation-fenced mutations have durable event snapshots before JSON publication; interrupted projection publication is explicitly recoverable without inventing current proof.",
         "status": "open"
       },
       "plan:3109ff52b1ce422e": "Determine the smallest existing-provider execution boundary that keeps candidate build/test code from modifying trusted measurement or final-verdict authority.",
@@ -280,104 +314,48 @@
       "trajectory:7d90d3eaf34454b7": "Five-minute end-to-end target remains subject to measured queue and unavoidable execution costs.",
       "trajectory:8a2fbdef1f3ce7d9": "All project tests and verification remain owned by plain decapod validate with Buildkite enabled",
       "trajectory:d347ed41a83079c8": "Historical README report is scoped to873ab797 and f2073bd4 and is not current candidate proof",
+      "trajectory:da69bbaf7f07e535": "Legacy event history is incomplete and cannot prove full reconstruction; establish explicit current-state migration baseline without synthesizing historical custody.",
       "trajectory:e765d893d1533fc1": "Standalone integration targets are not automatically scheduled by the finite accepted CI recipe; include the three consumer regression modules in required cli_contracts.",
       "trajectory:f000bb05667cb46e": "No actual four-target release artifact build is scheduled by ordinary source preflight;1049 latency improvement remains unmeasured",
       "trajectory:fa421ac6b37186ed": "Automatic trusted remote controller bootstrap is absent; a two-revision independent provider harness requires separate scope decision. Diagnostics do not claim to close that gap."
     }
   },
   "change": {
-    "id": "change_01M4ZA6GX2N767VDY40HNH9C8H",
-    "base_commit": "fc71d3a8a1e1f45adeee3ee24b02507b7198592f",
+    "id": "change_01M503B3KW86YDTN3WC8CGGQH9",
+    "base_commit": "9f9ad1a091eb3f69341a9f6ff619cecc43d6d53d",
     "target_base": "origin/master"
   },
   "claims": {
-    "current-authority-resume": {
-      "statement": "Execution continuation checks the checkpoint against current material, accepted intent, plan, scope, policy approvals and task custody; a valid checkpoint hash alone does not grant continuation or publication readiness.",
-      "falsifier": "Changed source, branch lineage, intent, plan, required approval, task revision or lease owner can pass resume; or committing only checkpoint bookkeeping invalidates unchanged continuation.",
-      "status": "open",
-      "proof_refs": [
-        "src/decapod/core/trajectory/execution.rs"
-      ]
+    "native-vega-contract": {
+      "statement": "Only the exact compiled future vega workflow extends the accepted native proof graph; active workflows remain unchanged.",
+      "falsifier": "Unregistered or tampered workflow accepted, current graph changed, or future contract accepted without independent executor closure.",
+      "status": "open"
     },
-    "durable-artifact-publication": {
-      "statement": "Unix atomic artifact publication requires file and containing-directory synchronization; an error after rename reports unconfirmed durability without claiming rollback, and bounded journal admission cannot append an unreadable head.",
-      "falsifier": "Parent sync failure reports success, recovery follows a substituted parent symlink, a partial history is returned as complete, or admitted append crosses its recovery size bound.",
-      "status": "open",
-      "proof_refs": [
-        "src/decapod/core/atomic.rs",
-        "tests/unit/core/events_tests.rs"
-      ]
+    "native-vega-recipe": {
+      "statement": "Dormant native recipes bind actual Metal capability, Rust worker, nine pinned model files and exact typed inference provenance without claiming numerical parity.",
+      "falsifier": "CPU fallback, stale model/worker evidence, missing SDK/toolchain identity, or unsupported parity claim is accepted.",
+      "status": "open"
     },
-    "task-journal-reconstruction": {
-      "statement": "Modern local task mutation and exact revision, lease, owner, dependency and proof projection checkpoints commit together in the canonical event store; recovery preserves incomplete legacy history and rejects divergent live authority.",
-      "falsifier": "A supported mutation loses journal custody, replay changes verification bytes or revision, a contradictory chain is accepted, or recovery overwrites an unrelated current projection.",
-      "status": "open",
-      "proof_refs": [
-        "src/decapod/core/task_journal.rs",
-        "tests/unit/core/task_journal_tests.rs"
-      ]
-    },
-    "workunit-journal-recovery": {
-      "statement": "Workunit generation-fenced mutations have durable event snapshots before JSON publication; interrupted projection publication is explicitly recoverable without inventing current proof.",
-      "falsifier": "Concurrent mutations lose updates, stale prepared state overwrites the journal, a retry overwrites a divergent projection, or replay refreshes a retained passing proof artifact.",
-      "status": "open",
-      "proof_refs": [
-        "tests/cli_contract_enforcement.rs",
-        "tests/unit/core/workunit_journal_tests.rs"
-      ]
+    "proof-collection-nonready": {
+      "statement": "Explicit collection preserves failures and cannot mint publication readiness or bypass human decision blockers.",
+      "falsifier": "Collection returns ready, emits reusable readiness receipt, resolves blockers implicitly, or publishes.",
+      "status": "open"
     }
   },
   "checkpoints": [
     {
-      "id": "houseboat-recovery-01",
-      "summary": "Local task/workunit reconstruction and current-authority execution resume, with bounded durability and adversarial regressions; independent source review complete, full validation pending",
-      "input_digest": "sha256:5635da345747a87a36b19f47821bfdd9fcf8a84571e9a9673cfddbdb4c89c4c0",
+      "id": "vega-native-prerequisite-20261015-1558",
+      "summary": "Register exact dormant Vega native proof contract and non-ready collection, with unchanged active CI and explicit unverified native parity obligations.",
+      "input_digest": "sha256:56a6055efd50795db8cee0e497e095d7f2de86def5bd8bbe4d460a31704efeb5",
       "proof_refs": [
-        "tests/cli_contract_enforcement.rs",
-        "tests/unit/core/execution_checkpoint_tests.rs",
-        "tests/unit/core/task_journal_tests.rs",
-        "tests/unit/core/workunit_journal_tests.rs"
-      ]
-    },
-    {
-      "id": "houseboat-recovery-02",
-      "summary": "Reconcile reviewed complete source inventory after official release version bump; retain all source checks and provider obligations",
-      "input_digest": "sha256:10829ede9a254bd0125b842aa523f87dc8b8cf971754ac65033cbf54886f004b",
-      "proof_refs": [
-        "Cargo.lock",
-        "Cargo.toml"
-      ]
-    },
-    {
-      "id": "houseboat-recovery-03",
-      "summary": "Repair measured lint, generated contract ownership, initialized-runtime boundary and adversarial fixture setup without weakening journal or policy gates",
-      "input_digest": "sha256:8c55aa39962140c9dff2f7bbc894b1e1a3c617d9625b405827c49a0019b7679d",
-      "proof_refs": [
-        "src/decapod/core/docs_cli.rs",
-        "tests/plugins/todo.rs",
-        "tests/unit/core/task_journal_tests.rs",
-        "tests/unit/core/workunit_journal_tests.rs"
-      ]
-    },
-    {
-      "id": "houseboat-recovery-04",
-      "summary": "Repair measured workspace-prune fixtures without mutating journaled task authority; preserve all cleanup safety assertions",
-      "input_digest": "sha256:d88dd93eb8d999cbf1c3a7e13becdc07dd1e29115b565c3431c8050f2393de26",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/actions/runs/38712723063"
-      ]
-    },
-    {
-      "id": "houseboat-recovery-05",
-      "summary": "Serialize checkpoint staged-material inspection with atomic governance publication; preserve dirty-source rejection",
-      "input_digest": "sha256:e160646698a1292294064fba81ae23dfd2ac21935303ea5ffa1fb100971fee6a",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/actions/runs/38715939488"
+        "src/decapod/core/readiness_profile/tests.rs",
+        "src/decapod/core/validation_runtime/tests.rs",
+        "tests/source_ci_profile_policy.rs"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M4ZA6GX2N767VDY40HNH9C8H": {
+    "intent:change_01M503B3KW86YDTN3WC8CGGQH9": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -387,11 +365,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M4ZA6GX2N767VDY40HNH9C8H",
+      "id": "intent:change_01M503B3KW86YDTN3WC8CGGQH9",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Complete remaining Houseboat governed fleet work\n\nImplement open houseboat issues 852-860 and 878 with their direct dependencies, preserving existing authority and using phased governed PRs with adversarial proof.",
-      "refined_intent": "Complete remaining Houseboat governed fleet work\n\nImplement open houseboat issues 852-860 and 878 with their direct dependencies, preserving existing authority and using phased governed PRs with adversarial proof.",
+      "raw_intent": "Enable governed vega native proof collection\n\nPrerequisite for issue1445 native Rust vega: preserve active CI, exact reviewed future Candle/Metal proof contract and finite checks; proof collection never readiness; full existing validate before human merge/release.",
+      "refined_intent": "Enable governed vega native proof collection\n\nPrerequisite for issue1445 native Rust vega: preserve active CI, exact reviewed future Candle/Metal proof contract and finite checks; proof collection never readiness; full existing validate before human merge/release.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -404,348 +382,176 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "First dependency-ordered Houseboat PR: complete durable local transition/checkpoint/replay and current-state resume enforcement over existing events, workunit, workspace lifecycle and Git governance owners. Preserve existing atomic task proof and ownership guarantees. Legacy histories are not assumed complete: establish explicit migration baselines and mark missing custody unverified. No background scheduler, cloud authority, automatic merge, or raw secret persistence. Subsequent PRs complete atomic budgets and semantic lease coordination; bounded collaboration and container capabilities; canonical drift, trajectory, readiness and publication projections.",
+      "intent": "Enable exact reviewed future vega native Candle/Metal proof collection while leaving current active CI unchanged. Reuse independently reviewed provider-neutral collection design, replace all Laya-specific inputs/recipes with actual vega worker/model/Candle inputs. Collection never establishes readiness. Human merge and independent release acceptance before featureactivation.",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "Existing accepted full decapod validate and terminal PR CI; exact future-contract and tamper rejection tests"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented staged-material inspection inside the governance lock, preventing cooperating checkpoint temporary files from causing false authored-material conflicts.",
-          "reviewed_code_fingerprint": "7efe54997513078b81090151e7204411beadfd92783550b1d170955d5159157a",
-          "spec_material_hash": "efd4a84b93e8ac77bfe37de37db6218be391e7199f6fe1168379864a963bb9e0"
+          "reason": "Reviewed exact dormant future Vega contract, accepted executor separation, CLI-only non-ready collection, measured native provenance and explicitly unverified parity/domain calibration against implementation and independent static review.",
+          "reviewed_code_fingerprint": "c570d4d242f5437d77f9f6f6b5b3f3163cdf82b0199ba41c37d3ff3b4753992d",
+          "spec_material_hash": "bd3328b1928b2204b98242ab96554ed4ca6c2bf86055a3fc34be185e53587d23"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed checkpoint lock-order repair; API, bounded timeout, path classification, conflict handling and dirty-source rejection contracts remain unchanged.",
-          "reviewed_code_fingerprint": "7efe54997513078b81090151e7204411beadfd92783550b1d170955d5159157a",
-          "spec_material_hash": "bf5735d95e83446d4311a941b7d511871056d9a9c3f94c8e80635255ef9b4b02"
+          "reason": "Reviewed exact dormant future Vega contract, accepted executor separation, CLI-only non-ready collection, measured native provenance and explicitly unverified parity/domain calibration against implementation and independent static review.",
+          "reviewed_code_fingerprint": "c570d4d242f5437d77f9f6f6b5b3f3163cdf82b0199ba41c37d3ff3b4753992d",
+          "spec_material_hash": "b8c1508aaf0c3e374835ba6f13a348391f4f41df726f82e443bb73f8804274a1"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed checkpoint lock-order repair; API, bounded timeout, path classification, conflict handling and dirty-source rejection contracts remain unchanged.",
-          "reviewed_code_fingerprint": "7efe54997513078b81090151e7204411beadfd92783550b1d170955d5159157a",
-          "spec_material_hash": "546e1354723c4d9853921f233ddbed7eb46c5da576aca356d9da8ed48dff1bb8"
+          "reason": "Reviewed exact dormant future Vega contract, accepted executor separation, CLI-only non-ready collection, measured native provenance and explicitly unverified parity/domain calibration against implementation and independent static review.",
+          "reviewed_code_fingerprint": "c570d4d242f5437d77f9f6f6b5b3f3163cdf82b0199ba41c37d3ff3b4753992d",
+          "spec_material_hash": "d31ef86134bb32685ac80c955d88e5a6cf4248018d87e990a0c2ef514c372783"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [
-        "Reject contradictory generations, changed accepted intent or material state, missing approval, incomplete checkpoint provenance, or unbounded replay rather than invent recovery success."
+        "Do not activate future CI or claim native proof in this prerequisite; no publication before existing full validation."
       ],
-      "title": "Make governed execution reconstructable after interruption",
+      "title": "Accepted vega native proof contract bootstrap",
       "todo_ids": [
-        "code_01m4za5wkgtvc7m2"
+        "code_01m503af4bxwpsza"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792058641Z"
+      "updated_at": "1792079805Z"
     },
     "trajectory": {
       "active_boundaries": [
+        "Active CI remains unchanged. This prerequisite registers a finite future contract; native inference parity and readiness-domain calibration remain feature acceptance obligations, not claims of this prerequisite.",
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:3a38ad24d7d5078d31e60c751c67f1772a473acad0a23211dcbb29d4a3327419",
+      "artifact_hash": "sha256:cef857a146edc1e9e62d68535c907ba20aefb48211a8543b6009e5d3bc14d0b4",
       "checks": [
         {
-          "name": "candidate-build",
+          "name": "independent-source-review",
           "status": "passed"
         },
         {
-          "name": "cli-recovery-suite",
-          "status": "passed"
+          "name": "native-execution",
+          "status": "unavailable"
         },
         {
-          "name": "cloud-library-suite",
-          "status": "failed"
-        },
-        {
-          "name": "core-suite",
-          "status": "passed"
-        },
-        {
-          "name": "full-validation",
-          "status": "failed"
-        },
-        {
-          "name": "houseboat_inventory",
-          "status": "passed"
-        },
-        {
-          "name": "inventory-reconciliation",
-          "status": "passed"
-        },
-        {
-          "name": "library-suite",
-          "status": "passed"
-        },
-        {
-          "name": "source-review",
+          "name": "source-inventory-byte-comparison",
           "status": "passed"
         }
       ],
-      "current_phase": "validation-repair",
+      "current_phase": "pre_validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M4ZA6GX2N767VDY40HNH9C8H",
+            "intent_id": "intent:change_01M503B3KW86YDTN3WC8CGGQH9",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M4ZA6GX2N767VDY40HNH9C8H",
+            "intent_id": "intent:change_01M503B3KW86YDTN3WC8CGGQH9",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M4ZA6GXNKRAA5A869N1VR4Z2",
+            "detail": "trajectory:branch_01M503B3MPBCK61GX6519E29ZT",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M4ZA6GX2N767VDY40HNH9C8H",
+            "intent_id": "intent:change_01M503B3KW86YDTN3WC8CGGQH9",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M4ZA6GXNKRAA5A869N1VR4Z2",
+            "detail": "trajectory:branch_01M503B3MPBCK61GX6519E29ZT",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M4ZA6GX2N767VDY40HNH9C8H",
+            "intent_id": "intent:change_01M503B3KW86YDTN3WC8CGGQH9",
             "kind": "trajectory_step_recorded",
             "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M4ZA6GXNKRAA5A869N1VR4Z2",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M4ZA6GX2N767VDY40HNH9C8H",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M4ZA6GXNKRAA5A869N1VR4Z2",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M4ZA6GX2N767VDY40HNH9C8H",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M4ZA6GXNKRAA5A869N1VR4Z2",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M4ZA6GX2N767VDY40HNH9C8H",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
-          },
-          {
-            "detail": "trajectory:branch_01M4ZA6GXNKRAA5A869N1VR4Z2",
-            "event_id": "event:9",
-            "intent_id": "intent:change_01M4ZA6GX2N767VDY40HNH9C8H",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
-          },
-          {
-            "detail": "trajectory:branch_01M4ZA6GXNKRAA5A869N1VR4Z2",
-            "event_id": "event:10",
-            "intent_id": "intent:change_01M4ZA6GX2N767VDY40HNH9C8H",
-            "kind": "trajectory_step_recorded",
-            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M4ZA6GXNKRAA5A869N1VR4Z2": {
+          "branch_01M503B3MPBCK61GX6519E29ZT": {
             "evidence_only": true,
-            "id": "branch_01M4ZA6GXNKRAA5A869N1VR4Z2",
-            "intent_id": "intent:change_01M4ZA6GX2N767VDY40HNH9C8H",
+            "id": "branch_01M503B3MPBCK61GX6519E29ZT",
+            "intent_id": "intent:change_01M503B3KW86YDTN3WC8CGGQH9",
             "steps": [
               {
-                "action": "design",
-                "command": "GitHub label/body/comment inventory and code-grounded parallel audits",
+                "action": "source_review",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/events.rs",
-                  "src/decapod/core/todo.rs",
-                  "src/decapod/core/workunit.rs",
-                  "src/decapod/core/workspace_lifecycle.rs",
-                  "GitHub label houseboat:852,853,854,855,856,857,858,859,860,878; accepted master fc71d3a8"
+                  "src/decapod/core/readiness_profile.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "assets/tools/source_ci_native_vega.rs",
+                  "assets/tools/native_vega_driver.rs",
+                  "assets/tools/source_ci_custody.rs"
                 ],
                 "proof_refs": [
-                  "houseboat_inventory"
+                  "independent-source-review",
+                  "native-execution"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 4,
-                "validation_findings": [
-                  "Legacy event history is incomplete and cannot prove full reconstruction; establish explicit current-state migration baseline without synthesizing historical custody."
-                ]
+                "validation_findings": []
               },
               {
-                "action": "source-review",
+                "action": "pre_validation",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/decapod/core/task_journal.rs",
-                  "src/decapod/core/workunit.rs",
-                  "src/decapod/core/trajectory/execution.rs",
-                  "src/decapod/core/events.rs",
-                  "src/decapod/core/atomic.rs",
-                  "src/decapod/core/governance_document.rs",
-                  "tests/cli_contract_enforcement.rs",
-                  "Adversarial regressions authored for transaction/replay conflicts, stale proof, custody and approval drift, bounded reads, directory-sync uncertainty and real CLI recovery. No build or test executed yet; full decapod validate owns measured proof.",
-                  "Legacy history limitation is explicit in checkpoint schema and docs; no reconstructed historical custody or cloud replay is claimed."
+                  "Static source review: exact future workflow and accepted executor closure; CLI-only collection never readiness; active CI unchanged; native parity and domain calibration unverified.",
+                  "Official source discovery has86 paths; all exact bytes and modes independently compared with accepted base9f9ad1a0; inventory digest sha256:b381df65b8a5754aceb451f640fdadf3a469c021a51642109b8347482bd195f3."
                 ],
                 "proof_refs": [
-                  "source-review",
-                  "full-validation"
+                  "independent-source-review",
+                  "source-inventory-byte-comparison"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 5,
                 "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "Independent source review completed 2026-10-15 09:03 UTC with no known open blocker after task, workunit, custody, approval, bounded read and migration fixes. This is source review, not executed test proof."
-                ],
-                "proof_refs": [
-                  "source-review"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "Full validation at 5cbdbee6 stopped before provider execution on stale reviewed source inventory. Independent complete 78-path review reproduced old and new digests: only own Cargo package version 0.114.2 to 0.114.3 changed; all workflow pins, carriers, helper definitions and adapter owners unchanged. Updated only the explicit declaration; no checks removed."
-                ],
-                "proof_refs": [
-                  "inventory-reconciliation"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "validation-repair",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "Candidate1351aff4 source CI setup built successfully under accepted executorfc71d3a8. Library job116341435178 measured1327passed13failed3ignored; event/policy/schema/scope/trigger fixture repairs preserve assertions. Plugin job116341435435 measured22passed2failed, repaired legacy-expiry setup and exact event counts. CLI recovery target passed. Lint and generated-documentation failures repaired at actual source owners; no local build/tests substituted.",
-                  "Full validation attempt02 preserved transient public Buildkite1756 GET failure; no alternate authentication or reduced proof route used. Independent CI candidate binary provenance verified for supported docs regeneration only."
-                ],
-                "proof_refs": [
-                  "candidate-build",
-                  "library-suite",
-                  "cli-recovery-suite",
-                  "full-validation"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 8,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:9",
-                "observations": [
-                  "tests/workspace_prune_regression.rs",
-                  "Candidate f004eda3 GitHub run38712723063 library job116348069968:1341 passed,0 failed,3 ignored. Core job116348069777 failed four prune fixtures from post-genesis hash mutations; repaired historical seed fixtures and independently reviewed, not yet rerun. Buildkite1761 terminal failed; controller poll interruption produced no readiness verdict."
-                ],
-                "proof_refs": [
-                  "library-suite",
-                  "full-validation",
-                  "source-review"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 9,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:10",
-                "observations": [
-                  "src/decapod/core/governance_document.rs",
-                  "tests/unit/core/governance_document_tests.rs",
-                  "Candidate90cb6816 GitHub run38715939488 core job116358722732 passed, including all repaired prune fixtures. Cloud-feature library job116358722503 measured1340passed1failed3ignored: concurrent checkpoint pre-lock staged inspection can observe another writer atomic temporary file. Moved inspection inside existing lock and added deterministic contention/dirty-source regressions; not yet executed. Full validate04 preserved BuildEnvelope1766 public GET failure in validate-04.json, no readiness."
-                ],
-                "proof_refs": [
-                  "core-suite",
-                  "cloud-library-suite",
-                  "full-validation"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 10,
-                "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "GitHub label/body/comment inventory and code-grounded parallel audits"
-      ],
+      "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "Adversarial regressions authored for transaction/replay conflicts, stale proof, custody and approval drift, bounded reads, directory-sync uncertainty and real CLI recovery. No build or test executed yet; full decapod validate owns measured proof.",
-        "Candidate f004eda3 GitHub run38712723063 library job116348069968:1341 passed,0 failed,3 ignored. Core job116348069777 failed four prune fixtures from post-genesis hash mutations; repaired historical seed fixtures and independently reviewed, not yet rerun. Buildkite1761 terminal failed; controller poll interruption produced no readiness verdict.",
-        "Candidate1351aff4 source CI setup built successfully under accepted executorfc71d3a8. Library job116341435178 measured1327passed13failed3ignored; event/policy/schema/scope/trigger fixture repairs preserve assertions. Plugin job116341435435 measured22passed2failed, repaired legacy-expiry setup and exact event counts. CLI recovery target passed. Lint and generated-documentation failures repaired at actual source owners; no local build/tests substituted.",
-        "Candidate90cb6816 GitHub run38715939488 core job116358722732 passed, including all repaired prune fixtures. Cloud-feature library job116358722503 measured1340passed1failed3ignored: concurrent checkpoint pre-lock staged inspection can observe another writer atomic temporary file. Moved inspection inside existing lock and added deterministic contention/dirty-source regressions; not yet executed. Full validate04 preserved BuildEnvelope1766 public GET failure in validate-04.json, no readiness.",
-        "Full validation at 5cbdbee6 stopped before provider execution on stale reviewed source inventory. Independent complete 78-path review reproduced old and new digests: only own Cargo package version 0.114.2 to 0.114.3 changed; all workflow pins, carriers, helper definitions and adapter owners unchanged. Updated only the explicit declaration; no checks removed.",
-        "Full validation attempt02 preserved transient public Buildkite1756 GET failure; no alternate authentication or reduced proof route used. Independent CI candidate binary provenance verified for supported docs regeneration only.",
-        "GitHub label houseboat:852,853,854,855,856,857,858,859,860,878; accepted master fc71d3a8",
-        "Independent source review completed 2026-10-15 09:03 UTC with no known open blocker after task, workunit, custody, approval, bounded read and migration fixes. This is source review, not executed test proof.",
-        "Legacy history limitation is explicit in checkpoint schema and docs; no reconstructed historical custody or cloud replay is claimed."
+        "Official source discovery has86 paths; all exact bytes and modes independently compared with accepted base9f9ad1a0; inventory digest sha256:b381df65b8a5754aceb451f640fdadf3a469c021a51642109b8347482bd195f3.",
+        "Static source review: exact future workflow and accepted executor closure; CLI-only collection never readiness; active CI unchanged; native parity and domain calibration unverified."
       ],
       "inspected_files": [
-        "src/decapod/core/events.rs",
-        "src/decapod/core/task_journal.rs",
-        "src/decapod/core/todo.rs",
-        "src/decapod/core/trajectory/execution.rs",
-        "src/decapod/core/workspace_lifecycle.rs",
-        "src/decapod/core/workunit.rs"
+        "assets/tools/native_vega_driver.rs",
+        "assets/tools/source_ci_custody.rs",
+        "assets/tools/source_ci_native_vega.rs",
+        "src/decapod/core/readiness_profile.rs",
+        "src/decapod/core/validation_runtime.rs"
       ],
-      "intent_id": "intent:change_01M4ZA6GX2N767VDY40HNH9C8H",
-      "modified_files": [
-        "src/decapod/core/atomic.rs",
-        "src/decapod/core/events.rs",
-        "src/decapod/core/governance_document.rs",
-        "tests/cli_contract_enforcement.rs",
-        "tests/unit/core/governance_document_tests.rs",
-        "tests/workspace_prune_regression.rs"
-      ],
+      "intent_id": "intent:change_01M503B3KW86YDTN3WC8CGGQH9",
+      "modified_files": [],
       "next_transitions": [
-        "Refine plan and declare falsifiable checks",
-        "full-validation",
-        "repair-or-publish"
+        "Commit governed source checkpoint and execute full decapod validate.",
+        "Finish independent source and inventory review; checkpoint candidate; run full accepted decapod validate.",
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M4ZA6GXNKRAA5A869N1VR4Z2",
+      "run_id": "branch_01M503B3MPBCK61GX6519E29ZT",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m4za5wkgtvc7m2",
+      "task_id": "code_01m503af4bxwpsza",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "Legacy event history is incomplete and cannot prove full reconstruction; establish explicit current-state migration baseline without synthesizing historical custody."
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {
