@@ -354,6 +354,17 @@ daemon. Actual interrupted-container recovery requires a provisioned runtime and
 checks receipt-bound cleanup while preserving unrelated files and containers.
 Absent runtime evidence remains unavailable.
 
+Container boundary regressions in `tests/unit/plugins/container_tests.rs` exercise
+real temporary Git repositories for non-fast-forward rejection, checked-out-host
+fast-forward behavior, hidden index flags, stash/side-branch/tag preservation and
+unchanged inherited-ref cleanup. Side-effect spies exercise the production
+finalization helper's failure, publication, final-foldback and push ordering.
+A real common-publisher call rejects a clone missing governance before network
+publication; target mismatches also fail closed. These tests do not claim a live
+Docker run or a real external PR. Existing full publisher/readiness contracts
+remain independently required. Full `decapod validate` executes the prescribed
+suite; authored tests and static inspection alone are not passing receipts.
+
 SQLite, Neon, Supabase HTTP fixtures, actual PostgreSQL transactions, and hosted
 Propodus authorization are separate proof scopes. Cloud fixtures cannot establish
 server-side tenant isolation, deployment membership policy, or event atomicity.
@@ -470,7 +481,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b49895de9daa3511b30c3bb686f901fa54530b312936b96a363c4c66496d4161`
+- Repository signal fingerprint: `92b5bb3991acc9bc81c28f8578d9abaf4ba3b122fd6468d1f2ab57f70d02389d`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (185 files), `tests/` (190 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -541,3 +552,17 @@ passing, alongside a separate genuine public CLI acceptance run.
 Security rejection assertions inspect the complete structured validation failure
 list, not the compact human summary's first issue. A placeholder-spec failure
 must not hide or substitute for the specific protected-path traversal rejection.
+
+## Reviewed importer compatibility maintenance
+
+Importer upgrades require independent official source and executable-member
+review, followed by negative tests for old, observed-but-unreviewed, unknown,
+mixed and platform-swapped identities. The fixed reviewed tuple is 0.102.7.
+A provider's own successful output cannot authorize its compiler bytes. When a
+released controller cannot import newer provider evidence, that failed result
+remains failed; a changed source pin alone does not repair the running binary.
+Any explicit engineering selection of a replacement controller must independently
+verify its accepted source-CI executor, exact candidate identity and downloaded
+artifact digest, then rerun complete readiness. This is not automatic controller
+adoption or acceptance of candidate-produced JSON as a proof verdict. No separate
+local prerequisite build or reduced check graph is introduced.
