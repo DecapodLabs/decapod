@@ -354,6 +354,15 @@
         "src/decapod/core/readiness_evidence/buildkite_ci/tests.rs",
         "src/decapod/core/snapshot_provider/public_buildkite/ci_attested/tests.rs"
       ]
+    },
+    {
+      "id": "ci-attested-docs-mirror",
+      "summary": "Repair generated configuration documentation drift identified by hosted CI; canonical policy and Rust source unchanged",
+      "input_digest": "sha256:4c9f0fb1f0533cc64c9416b1568b2a38b8b912c86430757921c55cc88354a620",
+      "proof_refs": [
+        "docs/agent/config-schema.md",
+        "docs/agent/repository-readiness.md"
+      ]
     }
   ],
   "intents": {
@@ -428,7 +437,7 @@
         "Current claimed task and isolated work branch",
         "Owner approved 20:58 UTC one-time direct-check and draft-publication exception to AGENTS rule 7; no full released-controller readiness claim; no S3 requests"
       ],
-      "artifact_hash": "sha256:9df07130319338a2dcadfe6be9ad765328f03959744a3a4ce8e636b1c81517c1",
+      "artifact_hash": "sha256:aff744acc39e179fc2bd508b81e7d7d83f8825dd5edd7ba288e2f5511f784c4e",
       "checks": [
         {
           "name": "bazel-binary-builds",
@@ -440,6 +449,10 @@
         },
         {
           "name": "clippy-all-targets-all-features",
+          "status": "passed"
+        },
+        {
+          "name": "docs-generation",
           "status": "passed"
         },
         {
@@ -457,6 +470,10 @@
         {
           "name": "full-lib-rustup-rerun",
           "status": "passed"
+        },
+        {
+          "name": "hosted-docs-sync-first-run",
+          "status": "failed"
         },
         {
           "name": "integration-76-tests",
@@ -518,10 +535,17 @@
             "intent_id": "intent:change_01M50NTQNTWPQHGMGH2SA0RPAS",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M50NTQPDT9Z8WSWWAK4PBVPX",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M50NTQNTWPQHGMGH2SA0RPAS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M50NTQPDT9Z8WSWWAK4PBVPX": {
@@ -596,6 +620,23 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "docs/agent/config-schema.md",
+                  "Buildkite1822 docs-sync failed; source-built docs build reproduced missing generated config-schema mirror and generated exact canonical30-line update"
+                ],
+                "proof_refs": [
+                  "hosted-docs-sync-first-run",
+                  "docs-generation"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -606,6 +647,7 @@
       "evidence": [
         "/workspace/shared/ci-attested-bootstrap: original library failure retained; rustup installed from official checksum-verified vendor to repair missing test prerequisite; full suite rerun pending",
         "23 new tests passed; 76 integration tests passed; Bazel input policy and two binary targets passed; full library rerun uses installed official rustup toolchain",
+        "Buildkite1822 docs-sync failed; source-built docs build reproduced missing generated config-schema mirror and generated exact canonical30-line update",
         "cargo test --locked --lib: 1366 passed, 3 ignored; 76 integration tests passed; 23 new regressions included; clippy all targets/features passed; pinned Bazel cargo-inputs and both binary builds passed"
       ],
       "inspected_files": [
@@ -613,7 +655,9 @@
         "assets/tools/source_ci_profile.rs"
       ],
       "intent_id": "intent:change_01M50NTQNTWPQHGMGH2SA0RPAS",
-      "modified_files": [],
+      "modified_files": [
+        "docs/agent/config-schema.md"
+      ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
