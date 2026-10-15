@@ -291,6 +291,14 @@
       "proof_refs": [
         "tests/unit/plugins/container_tests.rs"
       ]
+    },
+    {
+      "id": "five-kernel-2",
+      "summary": "Preserve first validation failure and reconcile exact release inventory after branch identity correction",
+      "input_digest": "sha256:6090eef5fa1455b278427f8d879f82b22d7084858972945bd7cf215214a877db",
+      "proof_refs": [
+        "tests/unit/plugins/container_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -331,21 +339,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed full architecture, publisher call chain, atomic non-force Git foldback, captured initial-ref comparison and conservative hidden-index checks; no new state subsystem or arbitrary-writer guarantee.",
+          "reason": "Re-reviewed current source and full authored contract after release inventory reconciliation; five container fixes and bounded guarantees unchanged; exact inventory comparison proves only own package versions changed.",
           "reviewed_code_fingerprint": "398548f52fb5bd053728d01a0dfb610c7abfa949d7f9b0efc14b3d59fa024bc7",
           "spec_material_hash": "599a4d451ff70a4f2c6ddc138c062652fea9f78332b329012f46db44bd229918"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed full interface contract and concrete code; container PR now uses common governed publisher, failure/local-only boundaries are explicit, and retention states describe hidden-index/ref custody.",
+          "reason": "Re-reviewed current source and full authored contract after release inventory reconciliation; five container fixes and bounded guarantees unchanged; exact inventory comparison proves only own package versions changed.",
           "reviewed_code_fingerprint": "398548f52fb5bd053728d01a0dfb610c7abfa949d7f9b0efc14b3d59fa024bc7",
           "spec_material_hash": "a92ff1b6e1b1d388c26c87bafb51ee9528403f3bdeb9e70410a84302fb5f3e9c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed full security contract; shared readiness cannot be replaced by child success, expected HEAD checked before PR, failed/local-only publication blocked, bounded retention and explicit prune limitations stated.",
+          "reason": "Re-reviewed current source and full authored contract after release inventory reconciliation; five container fixes and bounded guarantees unchanged; exact inventory comparison proves only own package versions changed.",
           "reviewed_code_fingerprint": "398548f52fb5bd053728d01a0dfb610c7abfa949d7f9b0efc14b3d59fa024bc7",
           "spec_material_hash": "0b40c21bb1c0b73691c2c92fbb940c2f84c0dd3690436cf0a7f6096c5fa45925"
         }
@@ -360,21 +368,29 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792044541Z"
+      "updated_at": "1792044646Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "No live Docker or arbitrary filesystem race-proof guarantee"
       ],
-      "artifact_hash": "sha256:f47232faf32fba8cbf3570cb4ccf1be97519c61f3e645381881692fccb57424f",
+      "artifact_hash": "sha256:5d633dcc1418b87716e6e52e4da7a7755820b54d55c5d44644efc143f5f2a69b",
       "checks": [
         {
           "name": "adversarial-source-review",
           "status": "passed"
         },
         {
+          "name": "full-validation-attempt-1",
+          "status": "failed"
+        },
+        {
           "name": "independent-git-custody-reproduction",
+          "status": "passed"
+        },
+        {
+          "name": "release-source-inventory-review",
           "status": "passed"
         },
         {
@@ -382,7 +398,7 @@
           "status": "passed"
         }
       ],
-      "current_phase": "implementation",
+      "current_phase": "recovery",
       "custody": {
         "events": [
           {
@@ -410,10 +426,24 @@
             "intent_id": "intent:change_01M4Z26WC8Z1YHHDJJ1HFN0PQD",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M4Z26WCS2D70CPPSK517D6QE",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M4Z26WC8Z1YHHDJJ1HFN0PQD",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M4Z26WCS2D70CPPSK517D6QE",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M4Z26WC8Z1YHHDJJ1HFN0PQD",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M4Z26WCS2D70CPPSK517D6QE": {
@@ -462,6 +492,37 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "recovery",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "validate-first rejected default generated branch because its todo-01m4z2 prefix was parsed as a different task. Renamed this same work branch to agent/five-kernel/bugs_01m4z26b5cgh0y10; no history rewrite, extra branch or proof substitution."
+                ],
+                "proof_refs": [
+                  "full-validation-attempt-1"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  ".decapod/config.toml",
+                  "Compared every discovered source against bf5c0e1b and reproduced prior reviewed pin exactly. Only own Cargo version 0.114.1 to0.114.2 differs; updated configuration pin without changing adapter coverage."
+                ],
+                "proof_refs": [
+                  "release-source-inventory-review"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -470,8 +531,10 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Compared every discovered source against bf5c0e1b and reproduced prior reviewed pin exactly. Only own Cargo version 0.114.1 to0.114.2 differs; updated configuration pin without changing adapter coverage.",
         "Independent real Git fixture demonstrated forced divergent branch overwrite, hidden tracked edits, and stash object absent from host after single-branch foldback",
-        "Independent review identified and corrected expected-HEAD publication binding and contextual corrupt-index diagnostics. Strengthened governance rejection assertion; no live Docker or network publication test claim."
+        "Independent review identified and corrected expected-HEAD publication binding and contextual corrupt-index diagnostics. Strengthened governance rejection assertion; no live Docker or network publication test claim.",
+        "validate-first rejected default generated branch because its todo-01m4z2 prefix was parsed as a different task. Renamed this same work branch to agent/five-kernel/bugs_01m4z26b5cgh0y10; no history rewrite, extra branch or proof substitution."
       ],
       "inspected_files": [
         "src/decapod/core/workspace.rs",
@@ -480,6 +543,7 @@
       ],
       "intent_id": "intent:change_01M4Z26WC8Z1YHHDJJ1HFN0PQD",
       "modified_files": [
+        ".decapod/config.toml",
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
