@@ -363,6 +363,14 @@
         "docs/agent/config-schema.md",
         "docs/agent/repository-readiness.md"
       ]
+    },
+    {
+      "id": "ci-attested-clean-source-review",
+      "summary": "Rebind reviewed specs to clean source without generated Bazel symlinks; preserve original CI failure; no implementation changes",
+      "input_digest": "sha256:f4afca764aafa469ae06ab2b84b7540b615d41847fa574f7e955911514140abe",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md"
+      ]
     }
   ],
   "intents": {
@@ -403,22 +411,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Final isolated CI policy source reviewed; documented opt-in CI executor trust boundary and integration principle",
-          "reviewed_code_fingerprint": "0bcdfff7afd43a06dc9fe4414ef53d596cd32e3d404f7cf0cea1e04df179a9b6",
+          "reason": "Reviewed clean source without generated Bazel symlinks; optional accepted CI policy trust boundary documented",
+          "reviewed_code_fingerprint": "1d9cb65474dccf2738529f9e4b7ab82a2a25f574f52f4b8721d80927132679df",
           "spec_material_hash": "c9f47c7eab8acc53b34c7355b5eba05dce7efc60be4f6b685b494f09973f007f"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "No new command or service; optional proof configuration schema documented in repository readiness guide",
-          "reviewed_code_fingerprint": "0bcdfff7afd43a06dc9fe4414ef53d596cd32e3d404f7cf0cea1e04df179a9b6",
+          "reason": "Reviewed clean source; no new command or service; optional schema is documented in canonical and generated readiness docs",
+          "reviewed_code_fingerprint": "1d9cb65474dccf2738529f9e4b7ab82a2a25f574f52f4b8721d80927132679df",
           "spec_material_hash": "bf5735d95e83446d4311a941b7d511871056d9a9c3f94c8e80635255ef9b4b02"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No credential/access change; explicit accepted-policy trust boundary documented in architecture",
-          "reviewed_code_fingerprint": "0bcdfff7afd43a06dc9fe4414ef53d596cd32e3d404f7cf0cea1e04df179a9b6",
+          "reason": "Reviewed clean source; credentials/access unchanged, explicit accepted-policy CI executor trust documented",
+          "reviewed_code_fingerprint": "1d9cb65474dccf2738529f9e4b7ab82a2a25f574f52f4b8721d80927132679df",
           "spec_material_hash": "546e1354723c4d9853921f233ddbed7eb46c5da576aca356d9da8ed48dff1bb8"
         }
       ],
@@ -430,14 +438,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792098749Z"
+      "updated_at": "1792100442Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Owner approved 20:58 UTC one-time direct-check and draft-publication exception to AGENTS rule 7; no full released-controller readiness claim; no S3 requests"
       ],
-      "artifact_hash": "sha256:aff744acc39e179fc2bd508b81e7d7d83f8825dd5edd7ba288e2f5511f784c4e",
+      "artifact_hash": "sha256:33e01fb824379ffb6471b3bca75d09d14be7395c077c1fe91e639e398c11e606",
       "checks": [
         {
           "name": "bazel-binary-builds",
@@ -476,6 +484,10 @@
           "status": "failed"
         },
         {
+          "name": "hosted-governance-first-run",
+          "status": "failed"
+        },
+        {
           "name": "integration-76-tests",
           "status": "passed"
         },
@@ -490,6 +502,10 @@
         {
           "name": "owner-bootstrap-exception",
           "status": "passed"
+        },
+        {
+          "name": "private-checkout-reproduction",
+          "status": "failed"
         }
       ],
       "completion_claim": "Direct bootstrap checks passed; no full released-controller readiness verdict, no hosted CI or model proof claimed",
@@ -542,10 +558,17 @@
             "intent_id": "intent:change_01M50NTQNTWPQHGMGH2SA0RPAS",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M50NTQPDT9Z8WSWWAK4PBVPX",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M50NTQNTWPQHGMGH2SA0RPAS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M50NTQPDT9Z8WSWWAK4PBVPX": {
@@ -637,6 +660,22 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "Exact private CI checkout exposed stale reviews: local repo-signal fingerprint followed generated Bazel symlinks. Removed only four generated symlinks, retained output cache and logs, re-reviewed clean source and refreshed projections."
+                ],
+                "proof_refs": [
+                  "hosted-governance-first-run",
+                  "private-checkout-reproduction"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -648,6 +687,7 @@
         "/workspace/shared/ci-attested-bootstrap: original library failure retained; rustup installed from official checksum-verified vendor to repair missing test prerequisite; full suite rerun pending",
         "23 new tests passed; 76 integration tests passed; Bazel input policy and two binary targets passed; full library rerun uses installed official rustup toolchain",
         "Buildkite1822 docs-sync failed; source-built docs build reproduced missing generated config-schema mirror and generated exact canonical30-line update",
+        "Exact private CI checkout exposed stale reviews: local repo-signal fingerprint followed generated Bazel symlinks. Removed only four generated symlinks, retained output cache and logs, re-reviewed clean source and refreshed projections.",
         "cargo test --locked --lib: 1366 passed, 3 ignored; 76 integration tests passed; 23 new regressions included; clippy all targets/features passed; pinned Bazel cargo-inputs and both binary builds passed"
       ],
       "inspected_files": [
