@@ -367,3 +367,39 @@ fn proof_collection_is_explicit_and_cannot_import_or_adopt_snapshot_receipts() {
         assert!(Cli::try_parse_from(args).is_err());
     }
 }
+
+#[test]
+fn boxed_trajectory_proof_options_preserve_flat_cli_and_conflicts() {
+    use super::{Cli, Command, GovernCli, GovernCommand, TrajectoryCli, TrajectoryCommand};
+    use clap::Parser;
+    let args = [
+        "decapod",
+        "govern",
+        "trajectory",
+        "record",
+        "--run-id",
+        "run",
+        "--proof-blocker",
+        "proof-json",
+        "--classify-proof-blocker",
+        "classification-json",
+        "--resolve-proof-blocker",
+        "native-apple-metal",
+    ];
+    let parsed = Cli::try_parse_from(args).unwrap();
+    let Command::Govern(GovernCli {
+        command:
+            GovernCommand::Trajectory(TrajectoryCli {
+                command: TrajectoryCommand::Record { proof, .. },
+            }),
+    }) = parsed.command
+    else {
+        panic!("trajectory record expected");
+    };
+    assert_eq!(proof.proof_blockers, ["proof-json"]);
+    assert_eq!(proof.classify_proof_blockers, ["classification-json"]);
+    assert_eq!(proof.resolve_proof_blockers, ["native-apple-metal"]);
+    let mut conflicting = args.to_vec();
+    conflicting.push("--clear-blockers");
+    assert!(Cli::try_parse_from(conflicting).is_err());
+}

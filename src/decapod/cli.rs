@@ -1200,6 +1200,19 @@ pub(crate) struct TrajectoryCli {
     pub command: TrajectoryCommand,
 }
 
+#[derive(clap::Args, Debug)]
+pub(crate) struct TrajectoryProofBlockerArgs {
+    /// Typed unmet proof obligation JSON; never an authorization or human-stop blocker.
+    #[clap(long = "proof-blocker")]
+    pub proof_blockers: Vec<String>,
+    /// Deliberately classify an exact existing blocker, preserving its detail and evidence.
+    #[clap(long = "classify-proof-blocker", conflicts_with = "clear_blockers")]
+    pub classify_proof_blockers: Vec<String>,
+    /// Resolve an existing proof obligation with current passed checks and evidence declarations.
+    #[clap(long = "resolve-proof-blocker")]
+    pub resolve_proof_blockers: Vec<String>,
+}
+
 #[derive(Subcommand, Debug)]
 pub(crate) enum TrajectoryCommand {
     /// Bind an execution checkpoint to current source, intent and authority
@@ -1261,15 +1274,8 @@ pub(crate) enum TrajectoryCommand {
         blockers: Vec<String>,
         #[clap(long, default_value_t = false)]
         clear_blockers: bool,
-        /// Typed unmet proof obligation JSON; never an authorization or human-stop blocker.
-        #[clap(long = "proof-blocker")]
-        proof_blockers: Vec<String>,
-        /// Deliberately classify an exact existing blocker, preserving its detail and evidence.
-        #[clap(long = "classify-proof-blocker", conflicts_with = "clear_blockers")]
-        classify_proof_blockers: Vec<String>,
-        /// Resolve an existing proof obligation with current passed checks and evidence declarations.
-        #[clap(long = "resolve-proof-blocker")]
-        resolve_proof_blockers: Vec<String>,
+        #[clap(flatten)]
+        proof: Box<TrajectoryProofBlockerArgs>,
         #[clap(long = "boundary")]
         active_boundaries: Vec<String>,
         #[clap(long = "scope")]

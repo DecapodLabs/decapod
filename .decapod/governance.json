@@ -352,6 +352,16 @@
         "src/decapod/core/validation_runtime/tests.rs",
         "tests/source_ci_profile_policy.rs"
       ]
+    },
+    {
+      "id": "vega-native-repair1-20261015-1610",
+      "summary": "Repair remote validation findings: deduplicate Bazel input, retain flat CLI via boxed proof args, fix lint condition, and synchronize generated config documentation.",
+      "input_digest": "sha256:a08db74df77ddb19a4f3bed760f56200170f032aea9b203afc11ee5485499625",
+      "proof_refs": [
+        "https://buildkite.com/decapodlabs/decapod/builds/1803",
+        "https://buildkite.com/decapodlabs/decapod/builds/1807",
+        "tests/unit/cli_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -428,8 +438,16 @@
         "Active CI remains unchanged. This prerequisite registers a finite future contract; native inference parity and readiness-domain calibration remain feature acceptance obligations, not claims of this prerequisite.",
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:cef857a146edc1e9e62d68535c907ba20aefb48211a8543b6009e5d3bc14d0b4",
+      "artifact_hash": "sha256:19ff0273f036af328a6d7f5ec0233372df1e52fe40db19520a1bd32415263f0a",
       "checks": [
+        {
+          "name": "full-readiness",
+          "status": "failed"
+        },
+        {
+          "name": "generated-docs-drift",
+          "status": "failed"
+        },
         {
           "name": "independent-source-review",
           "status": "passed"
@@ -439,11 +457,19 @@
           "status": "unavailable"
         },
         {
+          "name": "remote-bazel-build",
+          "status": "failed"
+        },
+        {
+          "name": "remote-clippy",
+          "status": "failed"
+        },
+        {
           "name": "source-inventory-byte-comparison",
           "status": "passed"
         }
       ],
-      "current_phase": "pre_validation",
+      "current_phase": "validation_repair",
       "custody": {
         "events": [
           {
@@ -471,10 +497,17 @@
             "intent_id": "intent:change_01M503B3KW86YDTN3WC8CGGQH9",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M503B3MPBCK61GX6519E29ZT",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M503B3KW86YDTN3WC8CGGQH9",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M503B3MPBCK61GX6519E29ZT": {
@@ -518,6 +551,26 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "validation_repair",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "https://buildkite.com/decapodlabs/decapod/builds/1803",
+                  "https://buildkite.com/decapodlabs/decapod/builds/1807",
+                  "55fd3517 remote validation exposed duplicate Bazel compile_data label, large CLI enum/collapsible-if lint, and generated documentation drift. Repair retains every required check and unchanged active CI."
+                ],
+                "proof_refs": [
+                  "full-readiness",
+                  "remote-bazel-build",
+                  "remote-clippy",
+                  "generated-docs-drift"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -526,8 +579,11 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "55fd3517 remote validation exposed duplicate Bazel compile_data label, large CLI enum/collapsible-if lint, and generated documentation drift. Repair retains every required check and unchanged active CI.",
         "Official source discovery has86 paths; all exact bytes and modes independently compared with accepted base9f9ad1a0; inventory digest sha256:b381df65b8a5754aceb451f640fdadf3a469c021a51642109b8347482bd195f3.",
-        "Static source review: exact future workflow and accepted executor closure; CLI-only collection never readiness; active CI unchanged; native parity and domain calibration unverified."
+        "Static source review: exact future workflow and accepted executor closure; CLI-only collection never readiness; active CI unchanged; native parity and domain calibration unverified.",
+        "https://buildkite.com/decapodlabs/decapod/builds/1803",
+        "https://buildkite.com/decapodlabs/decapod/builds/1807"
       ],
       "inspected_files": [
         "assets/tools/native_vega_driver.rs",
@@ -541,7 +597,8 @@
       "next_transitions": [
         "Commit governed source checkpoint and execute full decapod validate.",
         "Finish independent source and inventory review; checkpoint candidate; run full accepted decapod validate.",
-        "Refine plan and declare falsifiable checks"
+        "Refine plan and declare falsifiable checks",
+        "Review exact source repairs, refresh generated documentation and inventory, checkpoint and rerun full validation."
       ],
       "repo_scope": [
         "root"

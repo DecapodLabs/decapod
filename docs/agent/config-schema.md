@@ -103,3 +103,50 @@ An authored `.decapod/EXTERNAL_ACTIONS.json` remains authoritative: an explicit
 `proof_exec` or `repository_proof_exec` deny blocks the command, malformed policy
 fails closed, and a present policy must explicitly allow proof execution. The
 kernel never rewrites that policy to make a check pass.
+
+## Native proof bootstrap and collection
+
+The Decapod source profile recognizes finite, independently compiled workflow
+contracts. `assets/tools/source_ci/contracts/ci-native.yml.fixture` is a reviewed
+future CI definition, not an active workflow. The current `.github/workflows/ci.yml`
+keeps its complete existing graph. Only the exact future bytes add the four
+`native-vega-*` obligations; changing a source-inventory pin cannot admit other
+workflow bytes or a different accepted executor. Prerequisite controller changes
+must first pass the existing full suite, be human-accepted, and ship through an
+official controller release before a feature activates that future definition.
+
+`decapod validate --collect-proof` is an explicit collection-only mode for the
+independently accepted native source graph. It preserves ownership, prompt,
+authorization, exact source/base, provider-custody and timeout checks, runs the
+configured graph, and always reports `publication_ready = false`. It does not
+write an ordinary ready verdict. Failed publication-governance checks remain
+failed; successful native-job evidence may still be collected from a terminal
+failed pipeline. Canceled, denied, stale or unauthenticated execution remains a
+blocker. Normal validate and publish continue to enforce every publication gate.
+
+Untyped trajectory `blockers` always halt collection too. Explicit `proof_blockers`
+identify the finite `native-apple-metal` obligation and retain detail/evidence
+references. The supported trajectory record operations can add a typed proof
+blocker, deliberately classify an exact existing blocker, or resolve it after
+recording all four checks and evidence. These are journal declarations, not proof.
+A later ordinary full validation independently reruns and authenticates the whole
+required graph before any PR can be created. Collection never changes or clears
+a blocker on the caller's behalf.
+
+The native recipe separately proves real GPU shader execution, compiles/tests the
+Rust optional worker through its separate locked manifest, explicitly stages the
+pinned Vega and Qwen components, and executes the actual Candle/Metal backbone
+and pooling followed by the CPU base engine. Backbone/engine precision is f32;
+thermal calibration uses f64. Both macosx and iphoneos SDK tools are required by
+the pinned Metal dependency build. OS/build, selected SDK settings and compiler
+hashes, worker/lock/kernel identities, nine component file hashes and the exact
+model/backbone/source/calibration manifest are bound to small custody receipts.
+This is bounded SDK/runtime provenance, not a complete hash of every system
+framework or library. Bulk model weights are never uploaded as proof artifacts.
+
+A successful native job may be retained from a failed pipeline, but partial checks
+inside a failed native job are not accepted separately. A runner label, Linux
+fixture, finite probability, or passing hardware smoke test cannot establish
+upstream numerical parity or readiness-domain calibration. Those remain
+unverified; the base-only profile rejects adapters. The prerequisite itself does
+not activate this job or claim any native execution occurred.

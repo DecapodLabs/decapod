@@ -320,7 +320,6 @@ def decapod_targets():
                 ".github/workflows/release.yml",
                 ".github/scripts/release-build.sh",
                 "dist-workspace.toml",
-                "//:.cargo/config.toml",
             ] if path == "tests/release_cpu_policy.rs" else [
                 "Cargo.toml",
                 "dist.toml",

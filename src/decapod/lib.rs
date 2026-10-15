@@ -6539,10 +6539,9 @@ fn run_current_workbranch_readiness_with(
             .required_profile
             .as_ref()
             .is_some_and(|profile| profile.id == core::repository_profile::REQUIRED_PROFILE)
+            && !invocation.collect_proof
         {
-            if !invocation.collect_proof {
-                report_scope = core::repository_profile::READINESS_SCOPE;
-            }
+            report_scope = core::repository_profile::READINESS_SCOPE;
         }
         if invocation.has_snapshot_arguments() && !config.proof.validation_buildkite_preflights {
             return Err(error::DecapodError::ValidationError(
@@ -8076,9 +8075,7 @@ fn run_trajectory_command(
             next_transitions,
             blockers,
             clear_blockers,
-            proof_blockers,
-            classify_proof_blockers,
-            resolve_proof_blockers,
+            proof,
             active_boundaries,
             repo_scope,
             inspected_files,
@@ -8100,15 +8097,18 @@ fn run_trajectory_command(
                 .iter()
                 .map(|spec| core::trajectory::parse_check_spec(spec))
                 .collect::<Result<Vec<_>, _>>()?;
-            let proof_blockers = proof_blockers
+            let proof_blockers = proof
+                .proof_blockers
                 .iter()
                 .map(|value| core::trajectory::parse_proof_blocker_json(value))
                 .collect::<Result<Vec<_>, _>>()?;
-            let classify_proof_blockers = classify_proof_blockers
+            let classify_proof_blockers = proof
+                .classify_proof_blockers
                 .iter()
                 .map(|value| core::trajectory::parse_proof_blocker_json(value))
                 .collect::<Result<Vec<_>, _>>()?;
-            let resolve_proof_blockers = resolve_proof_blockers
+            let resolve_proof_blockers = proof
+                .resolve_proof_blockers
                 .iter()
                 .map(|value| core::trajectory::ProofBlockerId::parse(value))
                 .collect::<Result<Vec<_>, _>>()?;
