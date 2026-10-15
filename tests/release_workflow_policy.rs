@@ -134,7 +134,7 @@ fn source_check(workflow_name: &str, job_id: &str, check_id: &str) -> (String, &
         .split_once("\nfn executable(")
         .unwrap()
         .0;
-    assert!(dispatch.contains("let mut result = if let Some(script) = workflow_owned::script(check) {\n        vec![Invocation::new(\"bash\", &[script])]"));
+    assert!(dispatch.contains("let mut result = if let Some(recipe) = native_vega::commands(check) {\n        recipe\n    } else if let Some(script) = workflow_owned::script(check) {\n        vec![Invocation::new(\"bash\", &[script])]"));
     let run_ci = profile
         .split_once("    if mode == \"run-ci\" {\n")
         .unwrap()

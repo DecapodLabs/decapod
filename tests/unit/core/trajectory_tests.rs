@@ -1031,7 +1031,10 @@ fn deliberate_classification_preserves_exact_detail_evidence_and_other_stops() {
     )
     .unwrap();
     assert_eq!(artifact.blockers, ["Human authorization withheld"]);
-    assert_eq!(artifact.proof_blockers, [blocker.clone()]);
+    assert_eq!(
+        artifact.proof_blockers.as_slice(),
+        std::slice::from_ref(&blocker)
+    );
     assert!(artifact.evidence.contains(&blocker.proof_refs[0]));
     assert!(
         serde_json::to_string(&artifact.custody)

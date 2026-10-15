@@ -17,6 +17,7 @@ def decapod_targets():
         "assets/tools/source_ci_native_vega.rs",
         "assets/tools/native_vega_model.rs",
         "assets/tools/native_vega_driver.rs",
+        "assets/tools/native_vega_driver_core.rs",
     ]
     native_proof_compile_data = native_proof_sources + [
         "assets/tools/native_metal_probe.m",

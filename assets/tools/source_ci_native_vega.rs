@@ -23,6 +23,10 @@ pub const SOURCES: &[(&str, &[u8])] = &[
         include_bytes!("native_vega_driver.rs"),
     ),
     (
+        "assets/tools/native_vega_driver_core.rs",
+        include_bytes!("native_vega_driver_core.rs"),
+    ),
+    (
         "assets/tools/native_vega_model.rs",
         include_bytes!("native_vega_model.rs"),
     ),

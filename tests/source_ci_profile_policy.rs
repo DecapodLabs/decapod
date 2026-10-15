@@ -2166,8 +2166,12 @@ fn provider_carrier_rejects_mismatched_mutable_or_nested_executor_inputs_before_
     }
 }
 
-#[path = "../assets/tools/native_vega_driver.rs"]
-mod native_vega_driver;
+mod native_vega_driver {
+    use crate::profile::custody::integration_custody as hashing;
+    use crate::profile::native_vega::model;
+
+    include!("../assets/tools/native_vega_driver_core.rs");
+}
 
 #[test]
 fn native_vega_future_inventory_adds_four_checks_without_changing_current_obligations() {
@@ -2414,7 +2418,7 @@ fn native_vega_models_are_pinned_and_never_uploaded_as_bulk_custody() {
             assert!(files.iter().all(|(path, _, _)| !artifact.ends_with(*path)));
         }
     }
-    let helper = include_str!("../assets/tools/native_vega_driver.rs");
+    let helper = include_str!("../assets/tools/native_vega_driver_core.rs");
     assert!(helper.contains("#[serde(deny_unknown_fields)]"));
     assert!(helper.contains("--cache-directory"));
     assert!(!helper.contains("\"--refresh\""));
