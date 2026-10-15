@@ -3433,10 +3433,14 @@ fn reconcile_workspace_containers(
 // `all` recursively enumerates every untracked file. A validation pass only
 // needs to know whether any untracked directory exists, so keep this check
 // bounded by Git's collapsed directory-level status representation.
-const WORKTREE_DIRTY_STATUS_ARGS: &[&str] =
-    &["status", "--porcelain=1", "--untracked-files=normal"];
+const WORKTREE_DIRTY_STATUS_ARGS: &[&str] = &[
+    "status",
+    "--porcelain=1",
+    "--untracked-files=normal",
+    "--ignore-submodules=none",
+];
 
-fn worktree_is_dirty(path: &Path) -> Result<bool, DecapodError> {
+pub(crate) fn worktree_is_dirty(path: &Path) -> Result<bool, DecapodError> {
     let output = Command::new("git")
         .args(["-C", path.to_str().unwrap_or(".")])
         .args(WORKTREE_DIRTY_STATUS_ARGS)

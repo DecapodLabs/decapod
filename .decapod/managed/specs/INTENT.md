@@ -132,6 +132,13 @@ The implementation and its tests must establish that:
 7. Recovery preserves user work and historical evidence, stays bounded, and
    escalates conditions that the supported interface cannot resolve
 
+For container execution, recovery includes retaining failed or interrupted
+workspaces and successful local-only work whose commits were not returned.
+Automatic cleanup of a successful synced workspace protects Git-visible tracked and
+non-ignored untracked changes; ignored successful build outputs remain
+intentionally disposable. A reported retention reason is recovery information,
+not evidence that the command passed.
+
 The concrete proof surfaces are defined in [VALIDATION.md](VALIDATION.md).
 These expectations specify behavior; this document is not a test receipt.
 
@@ -175,7 +182,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2121c701724f32727246b58c5e5c2567f081986d300d6ada2722406420a0e850`
+- Repository signal fingerprint: `b49895de9daa3511b30c3bb686f901fa54530b312936b96a363c4c66496d4161`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (185 files), `tests/` (190 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -161,6 +161,16 @@ Workspace/control subprocesses have a 15-second deadline and image builds a
 600-second deadline, with bounded output and owned-child termination/reaping.
 A timeout does not prove that a task, branch, or container is absent.
 
+`container run` reports `workspace_cleanup` in successful summaries: `removed`,
+`preserved_by_request`, `preserved_unsynced_branch`, `preserved_unexpected_head`,
+or `preserved_dirty_workspace`. Execution failure diagnostics retain their failure status and
+include the retained workspace path; runtime termination retains files after the
+existing invocation-owned container cleanup. `--keep-worktree` is an additional
+retention request, not the only protection against loss. Local-only runs retain
+the clone because their commits have not returned to the host. Git inspection
+errors report `container_workspace_status_unavailable`; foldback errors report
+`container_workspace_foldback_failed` with their underlying diagnostic.
+
 ## Governance and living specifications
 
 `.decapod/governance.json` is the sole tracked governance document. Its plan,
@@ -397,7 +407,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2121c701724f32727246b58c5e5c2567f081986d300d6ada2722406420a0e850`
+- Repository signal fingerprint: `b49895de9daa3511b30c3bb686f901fa54530b312936b96a363c4c66496d4161`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (185 files), `tests/` (190 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
