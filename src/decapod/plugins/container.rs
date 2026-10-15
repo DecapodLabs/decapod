@@ -361,13 +361,16 @@ Agent must clear the disable marker through Decapod self-heal before retrying.",
                     ),
                 }
             };
-            if !keep_worktree {
-                let _ = cleanup_workspace_clone(&workspace.ownership);
-            }
+            // A failed execution may have uncommitted work or a branch that
+            // could not be returned. Keep the original files, including ignored
+            // diagnostics, even when the caller did not request retention.
+            let retention = cleanup_workspace_clone(&workspace.ownership, &workspace.branch, keep_worktree, false, false)
+                .map(|state| format!("workspace {state} at {}", workspace.path.display()))
+                .unwrap_or_else(|error| format!("workspace cleanup refused: {error}"));
             auto_remediable_validation_error(
                 "container_runtime_terminated",
                 format!(
-                    "container runtime terminated before normal completion: {exec_err}\n{sync_msg}"
+                    "container runtime terminated before normal completion: {exec_err}\n{sync_msg}\n{retention}"
                 ),
                 "Agent: address the runtime or sync diagnostic below, then retry the same container command.",
             )
@@ -383,7 +386,13 @@ Agent must clear the disable marker through Decapod self-heal before retrying.",
     let branch_returned_to_host = if local_only {
         false
     } else {
-        sync_workspace_branch_to_host_repo(&repo, &workspace.path, &workspace.branch)?;
+        sync_workspace_branch_to_host_repo(&repo, &workspace.path, &workspace.branch).map_err(|error| {
+            auto_remediable_validation_error(
+                "container_workspace_foldback_failed",
+                format!("{error}; workspace preserved at {}", workspace.path.display()),
+                "Agent: repair branch foldback from the retained workspace; do not discard its files.",
+            )
+        })?;
         true
     };
 
@@ -409,6 +418,14 @@ Agent must clear the disable marker through Decapod self-heal before retrying.",
         )?;
     }
 
+    let cleanup_state = cleanup_workspace_clone(
+        &workspace.ownership,
+        &workspace.branch,
+        keep_worktree,
+        output.status.success(),
+        branch_returned_to_host,
+    )?;
+
     let summary = json!({
         "ts": time::now_epoch_z(),
         "cmd": "container.run",
@@ -428,18 +445,13 @@ Agent must clear the disable marker through Decapod self-heal before retrying.",
         "push": push,
         "pr": pr,
         "keep_worktree": keep_worktree,
+        "workspace_cleanup": cleanup_state,
         "branch_returned_to_host": branch_returned_to_host,
         "exit_code": output.status.code(),
         "elapsed_seconds": elapsed,
         "stdout": String::from_utf8_lossy(&output.stdout),
         "stderr": String::from_utf8_lossy(&output.stderr)
     });
-
-    let cleanup_err = if keep_worktree {
-        None
-    } else {
-        cleanup_workspace_clone(&workspace.ownership).err()
-    };
 
     if !output.status.success() {
         let stdout = String::from_utf8_lossy(&output.stdout);
@@ -448,18 +460,16 @@ Agent must clear the disable marker through Decapod self-heal before retrying.",
         return Err(auto_remediable_validation_error(
             code,
             format!(
-                "Container command failed (exit {:?})\nstdout:\n{}\nstderr:\n{}",
+                "Container command failed (exit {:?})\nstdout:\n{}\nstderr:\n{}\nworkspace {} at {}",
                 output.status.code(),
                 stdout.trim(),
-                stderr.trim()
+                stderr.trim(),
+                cleanup_state,
+                workspace.path.display()
             ),
             next_action,
         ));
     }
-    if let Some(err) = cleanup_err {
-        return Err(err);
-    }
-
     Ok(RunSummary { value: summary })
 }
 
@@ -1495,9 +1505,52 @@ fn create_gh_pr(
 
 fn cleanup_workspace_clone(
     ownership: &crate::core::workspace_lifecycle::OwnedWorkspace,
-) -> Result<(), error::DecapodError> {
+    expected_branch: &str,
+    keep_worktree: bool,
+    execution_succeeded: bool,
+    branch_returned_to_host: bool,
+) -> Result<&'static str, error::DecapodError> {
+    if keep_worktree {
+        return Ok("preserved_by_request");
+    }
+    if !execution_succeeded {
+        return Ok("preserved_failed_execution");
+    }
+    if !branch_returned_to_host {
+        return Ok("preserved_unsynced_branch");
+    }
     ownership.verify()?;
-    fs::remove_dir_all(ownership.path()).map_err(error::DecapodError::IoError)
+    let branch = current_branch(ownership.path()).map_err(|error| {
+        auto_remediable_validation_error(
+            "container_workspace_status_unavailable",
+            format!(
+                "workspace preserved at {}: {error}",
+                ownership.path().display()
+            ),
+            "Agent: restore Git access and inspect the retained workspace before explicit pruning.",
+        )
+    })?;
+    if branch != expected_branch {
+        return Ok("preserved_unexpected_head");
+    }
+    // Ownership authorizes cleanup of this directory, not destruction of work
+    // that Git foldback cannot carry. Reuse the bounded prune safety check.
+    let dirty = workspace::worktree_is_dirty(ownership.path()).map_err(|error| {
+        auto_remediable_validation_error(
+            "container_workspace_status_unavailable",
+            format!(
+                "workspace preserved at {}: {error}",
+                ownership.path().display()
+            ),
+            "Agent: restore Git access and inspect the retained workspace before explicit pruning.",
+        )
+    })?;
+    if dirty {
+        return Ok("preserved_dirty_workspace");
+    }
+    ownership.verify()?;
+    fs::remove_dir_all(ownership.path()).map_err(error::DecapodError::IoError)?;
+    Ok("removed")
 }
 
 #[allow(clippy::too_many_arguments)]

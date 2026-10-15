@@ -118,6 +118,17 @@ engine prove nothing. Unknown resources, active claims and unverifiable ownershi
 remain preserved with diagnostics. Container removal checks ownership labels and
 immutable IDs using the recorded runtime backend.
 
+Automatic container cleanup does not equate directory ownership with permission
+to destroy unfinished work. Failed executions retain all clone files, including
+ignored diagnostics. Successful cleanup requires branch foldback, the expected
+attached HEAD and no Git-visible tracked or non-ignored untracked changes. The shared Git
+status check forces untracked visibility and submodule inspection despite local
+ignore settings. Ignored build outputs remain disposable after a successful,
+otherwise clean run; extra refs, stashes and arbitrary external writers are not
+covered by this narrow worktree check. Index assume-unchanged and skip-worktree
+flags can hide tracked changes from Git status and remain outside its guarantee. No retained file is copied into Git or
+proof merely to establish retention. Review retained work before explicit prune.
+
 Build/test cleanup is restricted to invocation-owned scratch with its original
 filesystem identity. Replaced roots, unconfirmed live process groups, shared
 caches and proof artifacts are outside deletion authority. Process supervision
@@ -260,7 +271,7 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2121c701724f32727246b58c5e5c2567f081986d300d6ada2722406420a0e850`
+- Repository signal fingerprint: `b49895de9daa3511b30c3bb686f901fa54530b312936b96a363c4c66496d4161`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (185 files), `tests/` (190 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -1,7 +1,8 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "943e45757351297a5e4d83af7962b51ad3727b5e",
+    "accepted_commit": "036a2360b03b6d7868598506de1a90abe2b219c4",
+    "release": "v0.114.1",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -260,49 +261,41 @@
     }
   },
   "change": {
-    "id": "change_01M4YS7YJVQN9E3W82GQXAP37H",
-    "base_commit": "943e45757351297a5e4d83af7962b51ad3727b5e",
+    "id": "change_01M4YYHREYFCN4KXVSAC3SXMVR",
+    "base_commit": "036a2360b03b6d7868598506de1a90abe2b219c4",
     "target_base": "origin/master"
   },
   "claims": {
-    "checkpoint-immutable": {
-      "statement": "Checkpoint mutation preserves existing IDs and accepts only exact semantic retries under the document lock",
-      "falsifier": "A conflicting same-ID call succeeds or changes the governance bytes, or an identical retry adds or changes a checkpoint",
-      "status": "supported",
+    "claim:container-work-preservation": {
+      "statement": "Automatic container workspace deletion requires successful command completion, branch foldback, verified ownership and a clean Git worktree; failed, unsynced, dirty or unverifiable work remains available with recovery diagnostics.",
+      "falsifier": "A failed or interrupted command, local-only history, dirty tracked or untracked work, or unreadable Git status is deleted automatically; or eligible clean successful work cannot be removed.",
+      "status": "open",
       "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/actions/runs/38676400782/job/116231008636",
-        "tests/unit/core/governance_document_tests.rs"
+        "tests/unit/plugins/container_tests.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "checkpoint-immutability-01",
-      "summary": "Reject conflicting checkpoint ID reuse and preserve semantic retries with adversarial regressions",
-      "input_digest": "sha256:5f517f99233eceab834b9f0a2ece0aacab1418cd4110f32f094d5e7eed22397f",
+      "id": "container-preservation-1",
+      "summary": "Preserve failed or unsynced container work and gate clean success cleanup; add adversarial Git and timeout regressions",
+      "input_digest": "sha256:ad0cff6723038365a3454a25ddcd574c3fd40fa5604246563523f1033b56642c",
       "proof_refs": [
-        "tests/unit/core/governance_document_tests.rs"
+        "tests/unit/plugins/container_tests.rs"
       ]
     },
     {
-      "id": "checkpoint-immutability-02",
-      "summary": "Reconcile version-only v0.114.0 inventory and strengthen retry preservation assertions",
-      "input_digest": "sha256:959327752d7293ef5b28d96b0961d7a2b2d265671aa7eb13c62fedc7c96e5a36",
+      "id": "container-preservation-2",
+      "summary": "Reconcile complete source inventory after accepted v0.114.1 package-only release",
+      "input_digest": "sha256:daeb01d0a5a145b2b228971d8b1565433e8e58ad251bfcd91238eefe0301c42f",
       "proof_refs": [
-        "tests/unit/core/governance_document_tests.rs"
-      ]
-    },
-    {
-      "id": "checkpoint-immutability-03",
-      "summary": "Renew final-content spec reviews after passing checkpoint regression targets",
-      "input_digest": "sha256:8c8ee43423026d5a739ecba880c123f9f66eff19702ce384007294373efbc071",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/actions/runs/38676400782/job/116231008636"
+        "Cargo.lock",
+        "Cargo.toml"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M4YS7YJVQN9E3W82GQXAP37H": {
+    "intent:change_01M4YYHREYFCN4KXVSAC3SXMVR": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -312,11 +305,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M4YS7YJVQN9E3W82GQXAP37H",
+      "id": "intent:change_01M4YYHREYFCN4KXVSAC3SXMVR",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Reject destructive governance checkpoint ID reuse\n\nPreserve immutable checkpoint history at mutation time; reject conflicting ID reuse without writes and retain exact-request idempotence, with adversarial regressions and full prescribed validation.",
-      "refined_intent": "Reject destructive governance checkpoint ID reuse\n\nPreserve immutable checkpoint history at mutation time; reject conflicting ID reuse without writes and retain exact-request idempotence, with adversarial regressions and full prescribed validation.",
+      "raw_intent": "Preserve container work after failed execution\n\nConfirm and repair destructive cleanup of dirty container workspaces after command failure or timeout, with adversarial regression coverage and living specs.",
+      "refined_intent": "Preserve container work after failed execution\n\nConfirm and repair destructive cleanup of dirty container workspaces after command failure or timeout, with adversarial regression coverage and living specs.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -329,7 +322,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Reject destructive governance checkpoint ID reuse\n\nPreserve immutable checkpoint history at mutation time; reject conflicting ID reuse without writes and retain exact-request idempotence, with adversarial regressions and full prescribed validation.",
+      "intent": "Prevent automatic container workspace cleanup from destroying recoverable work: retain failed or interrupted executions, unsynced local-only histories, and dirty or unverifiable Git workspaces. Preserve existing ownership and runtime cleanup gates; do not add storage or copy ignored data into evidence. Prove the cleanup boundary with real temporary Git repositories and existing core CI.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -339,95 +332,86 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed final existing-lock implementation and adversarial tests; no Git-index isolation guarantee",
-          "reviewed_code_fingerprint": "2121c701724f32727246b58c5e5c2567f081986d300d6ada2722406420a0e850",
-          "spec_material_hash": "6f9677b8412511526871a3e51e7e081a78a21b547f0473f9b9a02a0b3b04ff76"
+          "reason": "Reviewed final cleanup implementation and full spec. Release inventory repair changes only reviewed Cargo package-version pin and does not alter execution coverage or documented boundaries.",
+          "reviewed_code_fingerprint": "b49895de9daa3511b30c3bb686f901fa54530b312936b96a363c4c66496d4161",
+          "spec_material_hash": "9ad701d94d179b91ad17a116ec8b93c3f813ccf577a488af3992f55030f6d3e5"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed final checkpoint rejection, canonical proof-reference comparison, byte-preserving retries and recovery against final implementation and regressions",
-          "reviewed_code_fingerprint": "2121c701724f32727246b58c5e5c2567f081986d300d6ada2722406420a0e850",
-          "spec_material_hash": "301a2aeaa7b06104cd8b633c51f7c9201e32eb299c5ddd579295c689233f7c0a"
+          "reason": "Reviewed final cleanup implementation and full spec. Release inventory repair changes only reviewed Cargo package-version pin and does not alter execution coverage or documented boundaries.",
+          "reviewed_code_fingerprint": "b49895de9daa3511b30c3bb686f901fa54530b312936b96a363c4c66496d4161",
+          "spec_material_hash": "b8d3e3136062425d69b28353a22216356b3b02cf4960c0055da3bfe6b57cb76a"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Final code preserves existing authentication, authorization, advisory locking and historical publication checks; no security boundary change",
-          "reviewed_code_fingerprint": "2121c701724f32727246b58c5e5c2567f081986d300d6ada2722406420a0e850",
-          "spec_material_hash": "2ea32916117ded5ef055b3a5c1e5de60fe12d90aabc6b60818b80f77c5779c6a"
+          "reason": "Reviewed final cleanup implementation and full spec. Release inventory repair changes only reviewed Cargo package-version pin and does not alter execution coverage or documented boundaries.",
+          "reviewed_code_fingerprint": "b49895de9daa3511b30c3bb686f901fa54530b312936b96a363c4c66496d4161",
+          "spec_material_hash": "e8591e02761bb2eab1a632dafbf01523adeff29c3ea8574e9d556aaa435dfbf8"
         }
       ],
       "state": "APPROVED",
-      "stop_conditions": [],
-      "title": "Reject destructive governance checkpoint ID reuse",
+      "stop_conditions": [
+        "Stop for unavailable required provider access or an explicit governance decision gate"
+      ],
+      "title": "Preserve container work after failed execution",
       "todo_ids": [
-        "bugs_01m4ys7ehn6v8f64"
+        "bugs_01m4yyha8q8kxehq"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792035570Z"
+      "updated_at": "1792040369Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Current claimed task and isolated work branch",
+        "Preserve existing lifecycle ownership and Git-native recovery; no new backend or proof bypass"
       ],
-      "artifact_hash": "sha256:e5e5b201ec39542bb0b8e4b87f50f93f51bac57de87705ae0689bbc3f52ed0f9",
+      "artifact_hash": "sha256:1b91f049cfc14889d69e0de0ee9769ffd4cb55facd1237da35b53e0166d74a9d",
       "checks": [
         {
-          "name": "adversarial_regressions",
-          "status": "passed"
+          "name": "container_cleanup_regression",
+          "status": "unavailable"
         },
         {
-          "name": "checkpoint_reuse_source_audit",
-          "status": "passed"
-        },
-        {
-          "name": "diff_whitespace",
-          "status": "passed"
-        },
-        {
-          "name": "full_prescribed_validation",
+          "name": "initial_validation",
           "status": "failed"
-        },
-        {
-          "name": "release_inventory_review",
-          "status": "passed"
         }
       ],
-      "current_phase": "intent",
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M4YS7YJVQN9E3W82GQXAP37H",
+            "intent_id": "intent:change_01M4YYHREYFCN4KXVSAC3SXMVR",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M4YS7YJVQN9E3W82GQXAP37H",
+            "intent_id": "intent:change_01M4YYHREYFCN4KXVSAC3SXMVR",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M4YS7YKB6XJHAX7D6NGGH1YG",
+            "detail": "trajectory:branch_01M4YYHRFFDWVKX1HN27QG182C",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M4YS7YJVQN9E3W82GQXAP37H",
+            "intent_id": "intent:change_01M4YYHREYFCN4KXVSAC3SXMVR",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M4YS7YKB6XJHAX7D6NGGH1YG",
+            "detail": "trajectory:branch_01M4YYHRFFDWVKX1HN27QG182C",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M4YS7YJVQN9E3W82GQXAP37H",
+            "intent_id": "intent:change_01M4YYHREYFCN4KXVSAC3SXMVR",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M4YS7YKB6XJHAX7D6NGGH1YG",
+            "detail": "trajectory:branch_01M4YYHRFFDWVKX1HN27QG182C",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M4YS7YJVQN9E3W82GQXAP37H",
+            "intent_id": "intent:change_01M4YYHREYFCN4KXVSAC3SXMVR",
             "kind": "trajectory_step_recorded",
             "sequence": 6
           }
@@ -436,20 +420,23 @@
         "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M4YS7YKB6XJHAX7D6NGGH1YG": {
+          "branch_01M4YYHRFFDWVKX1HN27QG182C": {
             "evidence_only": true,
-            "id": "branch_01M4YS7YKB6XJHAX7D6NGGH1YG",
-            "intent_id": "intent:change_01M4YS7YJVQN9E3W82GQXAP37H",
+            "id": "branch_01M4YYHRFFDWVKX1HN27QG182C",
+            "intent_id": "intent:change_01M4YYHREYFCN4KXVSAC3SXMVR",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "implementation",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/governance_document.rs",
-                  "tests/unit/core/governance_document_tests.rs"
+                  "src/decapod/plugins/container.rs",
+                  "src/decapod/core/workspace.rs",
+                  "src/decapod/core/workspace_lifecycle.rs",
+                  "tests/unit/plugins/container_tests.rs",
+                  "Static trace: failed checkpoint stops commit, host sync fetches only refs, then unconditional remove_dir_all deletes remaining files"
                 ],
                 "proof_refs": [
-                  "checkpoint_reuse_source_audit"
+                  "container_cleanup_regression"
                 ],
                 "scope": [
                   "root"
@@ -458,37 +445,42 @@
                 "validation_findings": []
               },
               {
-                "action": "trajectory.record",
+                "action": "verification",
+                "command": "decapod validate",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/decapod/core/governance_document.rs",
-                  "tests/unit/core/governance_document_tests.rs",
-                  ".decapod/config.toml",
-                  "Initial validate 35580b21 blocked before provider execution: stale reviewed inventory. Recomputed complete inventory at 830146a1 exactly matches prior pin; 943e4575 differs only in Decapod package version in Cargo.toml and Cargo.lock. Explicitly reviewed new digest preserves all source checks and provider selection. Tests await prescribed validation."
+                  "src/decapod/plugins/container.rs",
+                  "src/decapod/core/workspace.rs",
+                  "tests/unit/plugins/container_tests.rs",
+                  "docs/agent/state-model.md",
+                  ".decapod/managed/specs/INTENT.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "Twelve new regression tests cover preservation and eligible cleanup; not yet executed. Tests use temporary real Git repositories and a bounded shell process, not a live Docker claim."
                 ],
-                "proof_refs": [
-                  "adversarial_regressions",
-                  "full_prescribed_validation",
-                  "release_inventory_review",
-                  "diff_whitespace"
-                ],
+                "proof_refs": [],
                 "scope": [
+                  "container execution cleanup",
                   "root"
                 ],
                 "sequence": 5,
-                "validation_findings": []
+                "validation_findings": [
+                  "Successful clean-run ignored outputs and extra refs/stashes remain outside worktree preservation scope"
+                ]
               },
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:6",
                 "observations": [
-                  "Candidate 5975482c: GitHub core test target and Buildkite core target passed; both governance-artifacts lanes failed STALE_SPEC_REVIEW after final source refinement. Preserve failed provider runs 1645 and 38676400782. Renew exact-content spec reviews and rerun full prescribed validation on a normal repair commit."
+                  ".decapod/config.toml",
+                  "First validate stopped before provider execution: stale reviewed source inventory after accepted v0.114.1. Complete inventory hash at cda95e79 exactly matches old pin; only own package versions in Cargo.toml and Cargo.lock differ. Reviewed release-only change and preserved all workflow/helper coverage."
                 ],
                 "proof_refs": [
-                  "adversarial_regressions",
-                  "full_prescribed_validation"
+                  "initial_validation"
                 ],
                 "scope": [
+                  "container execution cleanup",
                   "root"
                 ],
                 "sequence": 6,
@@ -498,34 +490,48 @@
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "decapod validate"
+      ],
       "destination": "pull request",
       "evidence": [
-        "Candidate 5975482c: GitHub core test target and Buildkite core target passed; both governance-artifacts lanes failed STALE_SPEC_REVIEW after final source refinement. Preserve failed provider runs 1645 and 38676400782. Renew exact-content spec reviews and rerun full prescribed validation on a normal repair commit.",
-        "Initial validate 35580b21 blocked before provider execution: stale reviewed inventory. Recomputed complete inventory at 830146a1 exactly matches prior pin; 943e4575 differs only in Decapod package version in Cargo.toml and Cargo.lock. Explicitly reviewed new digest preserves all source checks and provider selection. Tests await prescribed validation."
+        "First validate stopped before provider execution: stale reviewed source inventory after accepted v0.114.1. Complete inventory hash at cda95e79 exactly matches old pin; only own package versions in Cargo.toml and Cargo.lock differ. Reviewed release-only change and preserved all workflow/helper coverage.",
+        "Static trace: failed checkpoint stops commit, host sync fetches only refs, then unconditional remove_dir_all deletes remaining files",
+        "Twelve new regression tests cover preservation and eligible cleanup; not yet executed. Tests use temporary real Git repositories and a bounded shell process, not a live Docker claim."
       ],
       "inspected_files": [
-        "src/decapod/core/governance_document.rs",
-        "tests/unit/core/governance_document_tests.rs"
+        "src/decapod/core/workspace.rs",
+        "src/decapod/core/workspace_lifecycle.rs",
+        "src/decapod/plugins/container.rs",
+        "tests/unit/plugins/container_tests.rs"
       ],
-      "intent_id": "intent:change_01M4YS7YJVQN9E3W82GQXAP37H",
+      "intent_id": "intent:change_01M4YYHREYFCN4KXVSAC3SXMVR",
       "modified_files": [
         ".decapod/config.toml",
-        "src/decapod/core/governance_document.rs",
-        "tests/unit/core/governance_document_tests.rs"
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTENT.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/SECURITY.md",
+        "docs/agent/state-model.md",
+        "src/decapod/core/workspace.rs",
+        "src/decapod/plugins/container.rs",
+        "tests/unit/plugins/container_tests.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
+        "container execution cleanup",
         "root"
       ],
-      "run_id": "branch_01M4YS7YKB6XJHAX7D6NGGH1YG",
+      "run_id": "branch_01M4YYHRFFDWVKX1HN27QG182C",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m4ys7ehn6v8f64",
+      "task_id": "bugs_01m4yyha8q8kxehq",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Successful clean-run ignored outputs and extra refs/stashes remain outside worktree preservation scope"
+      ]
     }
   },
   "legacy_digests": {
