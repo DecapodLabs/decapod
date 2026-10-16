@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.116.0](https://github.com/DecapodLabs/decapod/compare/v0.115.0...v0.116.0) - 2026-10-15
+
+### Added
+
+- *(validation)* bootstrap opt-in CI-attested policy ([#1448](https://github.com/DecapodLabs/decapod/pull/1448))
+
 ## [0.115.0](https://github.com/DecapodLabs/decapod/compare/v0.114.3...v0.115.0) - 2026-10-15
 
 ### Added
