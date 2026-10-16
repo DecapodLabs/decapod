@@ -132,6 +132,25 @@ fn infer(
     Err("native Apple-arm64 Metal execution is required; no fallback".into())
 }
 #[cfg(all(feature = "vega-native", target_os = "macos", target_arch = "aarch64"))]
+fn tokenize(
+    state: &str,
+    tokenizer: &tokenizers::Tokenizer,
+    bos: Option<u32>,
+) -> Result<vega_prompt::Prompt, String> {
+    // Tokenizer ownership belongs to the native worker. Generic prompt/span
+    // construction and its fail-closed bounds remain in the root library.
+    // No caller-controlled truncation or padding can mutate span alignment.
+    let mut tokenizer = tokenizer.clone();
+    tokenizer.with_truncation(None).map_err(|e| e.to_string())?;
+    tokenizer.with_padding(None);
+    vega_prompt::boolean_prompt(state, vega_prompt::QUESTION, bos, |s| {
+        tokenizer
+            .encode(s, false)
+            .map(|e| e.get_ids().to_vec())
+            .map_err(|e| e.to_string())
+    })
+}
+#[cfg(all(feature = "vega-native", target_os = "macos", target_arch = "aarch64"))]
 fn infer(
     request: &Request,
     proof_path: Option<&Path>,
@@ -175,8 +194,7 @@ fn infer(
             )
         }
     };
-    let prompt =
-        vega_prompt::tokenize(&request.state, &tokenizer, bos).map_err(io::Error::other)?;
+    let prompt = tokenize(&request.state, &tokenizer, bos).map_err(io::Error::other)?;
     let metadata_and_tokenization_ms = stage.elapsed().as_secs_f64() * 1000.0;
     let weights = manifest
         .files

@@ -365,6 +365,14 @@
         "official-controller117-checksum",
         "release-merge-review"
       ]
+    },
+    {
+      "id": "vega117-tokenizer-boundary",
+      "summary": "Keep concrete tokenizer dependency in native worker and obtain ordinary validation report with unmet proof recorded separately",
+      "input_digest": "sha256:5f69b85eb27f9e98c5eb91142b38f42c5fb342b0843113a56b9c56e9dab1d725",
+      "proof_refs": [
+        "/workspace/shared/vega-followup-evidence/validate117-first.log"
+      ]
     }
   ],
   "intents": {
@@ -394,7 +402,7 @@
         "forbidden_paths": []
       },
       "deferred_questions": [
-        "Native execution, independent upstream reference outputs, readiness-domain calibration and measured latency/memory remain unmet acceptance evidence, not undecided architecture or claimed passes."
+        "Mandatory acceptance evidence remains outstanding: actual Apple-arm64 compile/load/Metal probe, independent authenticated pinned-upstream token/span/pooled/engine/calibration parity, readiness-domain calibration, native latency and peak memory, repeated-error cleanup and 4096/4097-token boundaries."
       ],
       "human_questions": [],
       "intent": "Recover issue1445 source on a fresh governed branch from accepted29414e61 after squash-ancestry identity conflict. Reapply exactly the prior vega feature delta: Rust-only post-validation bounded adverse-preserving projection and minimal intent, positive singleton yes with no abstention/OOD, exact source/intent/evidence/config/model/tokenizer/engine/calibration/runtime identities and freshness, accepted-required policy protection, full active Jev removal, explicit pinned external setup/cache/refresh/rollback with backbone reuse, minimal text0.8B F32/4096-token Candle Apple Metal plus Rust F32 engine/F64 calibration. Existing agent publication gate and human merge remain. Preserve prior stacked branch as provenance; no activation source or old governance imported.",
@@ -408,37 +416,37 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed accepted release396f6991 changes and regenerated117 entrypoint/Docker/dependency metadata. Vega semantics and exact-policy/freshness boundaries remain unchanged; separate native worker installation and all unmet native/parity/calibration/performance obligations remain explicit.",
-          "reviewed_code_fingerprint": "49efc76581808c16bb2ad5b6eda26926bf41ce7bb1e822c6cb3c6f4d7d03c75c",
-          "spec_material_hash": "51ad8c57c177ec95cf160b6773e1c17a7beec46aaaa5da4025b72813e7fbbcab"
+          "reason": "Reviewed concrete tokenizer ownership move into native worker, unchanged generic prompt spans and bounds, and supported root/native Cargo plus Bazel metadata regeneration. Exact policy/freshness and private model boundaries unchanged. Required native proofs remain unrun and publication blocked.",
+          "reviewed_code_fingerprint": "4a66f719cb50c4ba87787e276b689d021445f5bd96259a946885526f8120307e",
+          "spec_material_hash": "8afdc558f73f53faf882920248ac01da4ac33ea9c65c0bfab9d21da84985270a"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed accepted release396f6991 changes and regenerated117 entrypoint/Docker/dependency metadata. Vega semantics and exact-policy/freshness boundaries remain unchanged; separate native worker installation and all unmet native/parity/calibration/performance obligations remain explicit.",
-          "reviewed_code_fingerprint": "49efc76581808c16bb2ad5b6eda26926bf41ce7bb1e822c6cb3c6f4d7d03c75c",
+          "reason": "Reviewed concrete tokenizer ownership move into native worker, unchanged generic prompt spans and bounds, and supported root/native Cargo plus Bazel metadata regeneration. Exact policy/freshness and private model boundaries unchanged. Required native proofs remain unrun and publication blocked.",
+          "reviewed_code_fingerprint": "4a66f719cb50c4ba87787e276b689d021445f5bd96259a946885526f8120307e",
           "spec_material_hash": "f453f6322985f2372a1f269d1e1a847aa9d2b3115bcdaee975f640045863dad2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed accepted release396f6991 changes and regenerated117 entrypoint/Docker/dependency metadata. Vega semantics and exact-policy/freshness boundaries remain unchanged; separate native worker installation and all unmet native/parity/calibration/performance obligations remain explicit.",
-          "reviewed_code_fingerprint": "49efc76581808c16bb2ad5b6eda26926bf41ce7bb1e822c6cb3c6f4d7d03c75c",
+          "reason": "Reviewed concrete tokenizer ownership move into native worker, unchanged generic prompt spans and bounds, and supported root/native Cargo plus Bazel metadata regeneration. Exact policy/freshness and private model boundaries unchanged. Required native proofs remain unrun and publication blocked.",
+          "reviewed_code_fingerprint": "4a66f719cb50c4ba87787e276b689d021445f5bd96259a946885526f8120307e",
           "spec_material_hash": "fa33ffad2f3233838711a441d2a4a75113c624d1137f76048e04ddcdd2c81d47"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [
-        "No feature builds/tests/publication until accepted released controller is available; never substitute local candidate authority",
-        "Stop on unavailable native hardware/reference outputs or policy denial; never synthesize parity or latency"
+        "Do not publish or claim feature completion until exact-state ordinary validation and genuine native Metal/parity/domain-calibration/performance obligations pass. Native obligations remain unrun and required.",
+        "Stop on explicit authorization or access denial or unsupported controller contract and preserve the exact blocker."
       ],
-      "title": "Prepare accepted-base Rust vega readiness source",
+      "title": "Validate accepted-base Rust vega readiness",
       "todo_ids": [
         "feat_01m52fnwybfvhfdj"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792168568Z"
+      "updated_at": "1792168959Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -446,11 +454,7 @@
         "Current claimed task and isolated work branch",
         "Old stacked branch agent/vega-followup/feat_01m51r7pzw2pcv9g remains untouched at2aeb3e8272656ba8796e2222f1f9482a005469fb"
       ],
-      "artifact_hash": "sha256:7a8a773fbff32994df1a100991df4295557d6a00f8e781ce7dfd9d4dd8d2c4a1",
-      "blockers": [
-        "Initialization discovery reported MODULE.bazel.lock at1052029 bytes beyond1048576 per-file bound; capture ordinary validation report before focused repair.",
-        "Native Apple-arm64 compile/load/probe, independent upstream parity, readiness-domain calibration and measured native latency/memory remain unmet genuine proof obligations."
-      ],
+      "artifact_hash": "sha256:846081e1677f4578ce41235f7b4479d04950b35d9b1dbd5e6de8f267851d82e1",
       "checks": [
         {
           "name": "dependency-metadata117",
@@ -473,6 +477,14 @@
           "status": "unavailable"
         },
         {
+          "name": "init-source-discovery",
+          "status": "failed"
+        },
+        {
+          "name": "native-acceptance",
+          "status": "unavailable"
+        },
+        {
           "name": "native-metal-parity-calibration-performance",
           "status": "unavailable"
         },
@@ -487,9 +499,13 @@
         {
           "name": "release-merge-review",
           "status": "passed"
+        },
+        {
+          "name": "tokenizer-boundary-metadata",
+          "status": "passed"
         }
       ],
-      "current_phase": "ordinary-validation",
+      "current_phase": "ordinary-controller-validation",
       "custody": {
         "events": [
           {
@@ -517,10 +533,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -569,6 +592,26 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "ordinary-controller-validation",
+                "command": "cargo update --offline --package decapod; cargo update --manifest-path assets/tools/vega-native/Cargo.toml --package decapod; bazel mod deps --lockfile_mode=update",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Official117 first plain validate stopped before provider submission on recorded trajectory blockers. Initialization discovery still observes MODULE.bazel.lock 1052029 bytes above1048576 bound; tokenizer-only adapter removal does not alter default Bazel graph. Preserve failed observation and let ordinary controller establish next actionable report."
+                ],
+                "proof_refs": [
+                  "init-source-discovery",
+                  "tokenizer-boundary-metadata",
+                  "native-acceptance"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": [
+                  "Native acceptance remains unmet mandatory publication evidence in blocked claim, plan proof hooks, deferred evidence, and publication stop condition; not an unresolved architecture decision."
+                ]
               }
             ]
           }
@@ -580,6 +623,7 @@
         "Selectively reapply git diff f38b28ad..f92f19d5 outside .decapod and authored spec prose only; exclude old journal/generated blocks",
         "Verify official v0.117.0 archive with published SHA-256; released executable hash ec7a04aa72c3d78961e78f27a6e2b7fcdfd247a37d0cf4a95043035f509b8f05",
         "cargo update --manifest-path assets/tools/vega-native/Cargo.toml --package decapod (metadata only); bazel mod deps --lockfile_mode=update (metadata only)",
+        "cargo update --offline --package decapod; cargo update --manifest-path assets/tools/vega-native/Cargo.toml --package decapod; bazel mod deps --lockfile_mode=update",
         "decapod init --refresh --proof; compare legacy backup template bodies and preserve backups outside workspace",
         "git diff --cached --check",
         "git diff --cached --quiet f92f19d5 -- . :(exclude).decapod"
@@ -590,6 +634,7 @@
         "Feature source and authored spec semantics exactly equal preserved f92f19d5baa14e79f3e4ab31c27eff5ff7a3dc9d, with no new feature scope. Earlier source contains63 vega/worker test cases and9 new/reworked existing-suite cases; none executed. Prior supported dependency metadata and exact pins retained unchanged.",
         "Fresh workspace created by supported workspace ensure directly from accepted master29414e61bf6aaf7a1b56f68e2a50b722b4d7be2e with new taskfeat_01m52fnwybfvhfdj and newly seeded governance. No activation commit or old governance/projection imported.",
         "Official published controller0.117.0 now governs; prior preparation-only candidate is no longer used. Accepted release changes only changelog and Cargo version/lock. Reviewed generated entrypoint117 fingerprints and Docker release pin; template bodies unchanged, machine projections updated only by supported CLI.",
+        "Official117 first plain validate stopped before provider submission on recorded trajectory blockers. Initialization discovery still observes MODULE.bazel.lock 1052029 bytes above1048576 bound; tokenizer-only adapter removal does not alter default Bazel graph. Preserve failed observation and let ordinary controller establish next actionable report.",
         "Prior history-preserving merge2aeb3e8272656ba8796e2222f1f9482a005469fb was clean but verifier rejected old activation73f5d03b as different PR after squash acceptance. Preserved old branch, yielded old task, and used a fresh accepted-base journal rather than rewriting history or manufacturing acceptance."
       ],
       "inspected_files": [],
@@ -608,7 +653,9 @@
       "shortcut_risk_signals": [],
       "task_id": "feat_01m52fnwybfvhfdj",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Native acceptance remains unmet mandatory publication evidence in blocked claim, plan proof hooks, deferred evidence, and publication stop condition; not an unresolved architecture decision."
+      ]
     }
   },
   "legacy_digests": {

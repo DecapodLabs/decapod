@@ -110,24 +110,6 @@ pub fn boolean_prompt(
     })
 }
 
-#[cfg(feature = "vega-native")]
-pub fn tokenize(
-    state: &str,
-    tokenizer: &tokenizers::Tokenizer,
-    bos: Option<u32>,
-) -> Result<Prompt, String> {
-    // No caller-controlled truncation or padding can mutate span alignment.
-    let mut tokenizer = tokenizer.clone();
-    tokenizer.with_truncation(None).map_err(|e| e.to_string())?;
-    tokenizer.with_padding(None);
-    boolean_prompt(state, QUESTION, bos, |s| {
-        tokenizer
-            .encode(s, false)
-            .map(|e| e.get_ids().to_vec())
-            .map_err(|e| e.to_string())
-    })
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

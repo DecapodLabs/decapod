@@ -17,7 +17,7 @@ default = ["vega-native"]
 vega-native = []
 
 [dependencies]
-decapod = { path = "../../..", default-features = false, features = ["vega-native"] }
+decapod = { path = "../../..", default-features = false }
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 sha2 = "0.10"

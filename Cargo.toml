@@ -96,7 +96,6 @@ chrono = { version = "0.4", features = ["serde"] }
 walkdir = "2.5.0"
 safetensors = "0.7"
 libm = "0.2"
-tokenizers = { version = "0.23.2", default-features = false, features = ["fancy-regex"], optional = true }
 
 [package.metadata.cargo-machete]
 ignored = ["flate2"]
@@ -104,7 +103,6 @@ ignored = ["flate2"]
 [features]
 default = ["supabase-cloud"]
 build-tools = []
-vega-native = ["dep:tokenizers"]
 cloud = []
 # Cloud uses Supabase by default; local SQLite and explicit Neon remain available.
 supabase-cloud = ["dactyl-db/supabase"]

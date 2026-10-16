@@ -500,8 +500,8 @@
           "REPO_MAPPING:rules_rust+,bazel_skylib bazel_skylib+",
           "REPO_MAPPING:rules_rust+,bazel_tools bazel_tools",
           "REPO_MAPPING:rules_rust+,rules_cc rules_cc+",
-          "FILE:@@+cargo_inputs+decapod_cargo_inputs//Cargo.lock 8b1881947701461bec65140ecaa6830a0d5d1706607c032c64c9c2d67dd449d5",
-          "FILE:@@+cargo_inputs+decapod_cargo_inputs//Cargo.toml b4f32e97da96c70cc8d4662deeeaa3d88c9b172a9756ca96587cf62e81b297b3"
+          "FILE:@@+cargo_inputs+decapod_cargo_inputs//Cargo.lock 129b875be39415a841ae3ce3e4e90fd99bbd1b55a8d6802fdc248b1268e880dd",
+          "FILE:@@+cargo_inputs+decapod_cargo_inputs//Cargo.toml 21b4923182c91c0e0eb9202e1c37d54e4b608ab7073ea16689f7990dd26271b3"
         ],
         "generatedRepoSpecs": {
           "crates": {
