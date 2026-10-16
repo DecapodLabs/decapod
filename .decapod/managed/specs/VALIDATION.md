@@ -127,6 +127,12 @@ recipe. Their presence is not passing evidence until normal validation executes
 them. Synthetic stores cannot prove source authenticity or global exclusivity;
 the trust contract requires the operator's authenticated source handoff.
 
+Transfer regressions use synthetic task identities only. Candidate transfer
+commands cannot authorize custody of the real feature task before this controller
+is independently accepted and released. The unchanged accepted source executor
+and complete configured proof graph remain responsible for compiling and testing
+the candidate; refreshing a reviewed inventory declaration supplies no proof.
+
 ## Obligation current-evidence regression proof
 
 `tests/plugins/obligation.rs` covers transitive and diamond completion without

@@ -346,6 +346,14 @@
         "tests/cli_contract_enforcement.rs",
         "tests/unit/core/task_transfer_tests.rs"
       ]
+    },
+    {
+      "id": "task-transfer-inventory",
+      "summary": "Reconcile unchanged accepted proof inventory under released 0.117 controller",
+      "input_digest": "sha256:1c3512851f9253e721964e5b57b709f865a6839af4cc90aeb60141c48780da76",
+      "proof_refs": [
+        "/private/tmp/task-transfer-validate-01.txt"
+      ]
     }
   ],
   "intents": {
@@ -400,9 +408,9 @@
         "Current claimed task and isolated work branch",
         "Only separately owned prerequisite #1452; original #1445 branch preserved"
       ],
-      "artifact_hash": "sha256:eef702fb5ba43cdf2c0b6848c9381b054e97f3ae75c483f706d262e41dd7443c",
+      "artifact_hash": "sha256:142a4cc3e5159b8b1f0cd8a9a97c70b6888360de71628b1b4061e34a5a102724",
       "checks": [],
-      "current_phase": "implementation",
+      "current_phase": "validation-recovery",
       "custody": {
         "events": [
           {
@@ -430,10 +438,17 @@
             "intent_id": "intent:change_01M52WNFQXJBT7M5JQKSVB74GV",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M52WNFTJFDYM89V30KSDGWX5",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M52WNFQXJBT7M5JQKSVB74GV",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52WNFTJFDYM89V30KSDGWX5": {
@@ -481,12 +496,28 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "validation-recovery",
+                "command": "decapod validate",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Plain installed117 validate attempt1 at032cbd54 failed PROOF_PROFILE_RECONCILIATION_REQUIRED before provider submission. Report /private/tmp/task-transfer-validate-01.txt preserved. Reviewed all discovered workflow/helper/build inventory entries by exact Git comparison against accepted origin/master396f: no changed inventory sources. Current supported agent.init inventory is c434f71e; baseline declaration0f2777 is stale under117. Backed up config and explicitly updated only reviewed_sources_digest; check mapping/provider/profile unchanged, no weakened proof or candidate self-transfer.",
+                  "No tests executed; first attempt failed at inventory reconciliation."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
+        "decapod validate",
         "rustfmt --edition 2024 src/decapod/core/task_transfer.rs src/decapod/core/task_journal.rs src/decapod/core/todo.rs tests/unit/core/task_transfer_tests.rs tests/cli_contract_enforcement.rs src/decapod/core/docs_cli.rs"
       ],
       "destination": "pull request",
@@ -494,6 +525,8 @@
         "Authored unit/adversarial and public CLI roundtrip tests; none executed yet. Updated source/generated command contract and material project specs through authored prose plus supported specs.refresh. First complete proof is plain117 validation after checkpoint.",
         "Human explicitly authorized separate supported-transfer prerequisite. Created issue1452, claimed fresh feat_01m52wmkq11e98x6, workspace ensure created from accepted396f after sandbox-only .git write denial was retried with escalation. No container GUI or product/root source edits. Orientation has no Decision Gate.",
         "Implemented bounded standalone yielded-task export/recover/import in existing journal; source export and seal journal atomically before private no-clobber artifact publication. Import retains original source chain as nested provenance and creates explicit local baseline with new revision and unavailable current proof. Uses normal exclusive-claim trust after yield, not active-lease handoff; no global authority or signature guarantee. No candidate transfer on actual1445.",
+        "No tests executed; first attempt failed at inventory reconciliation.",
+        "Plain installed117 validate attempt1 at032cbd54 failed PROOF_PROFILE_RECONCILIATION_REQUIRED before provider submission. Report /private/tmp/task-transfer-validate-01.txt preserved. Reviewed all discovered workflow/helper/build inventory entries by exact Git comparison against accepted origin/master396f: no changed inventory sources. Current supported agent.init inventory is c434f71e; baseline declaration0f2777 is stale under117. Backed up config and explicitly updated only reviewed_sources_digest; check mapping/provider/profile unchanged, no weakened proof or candidate self-transfer.",
         "Transfer trust requires an operator-reviewed digest from authenticated source handoff; local sealing is cooperative and cannot police disconnected clones or a privileged writer. No claim of cryptographic sender authentication or global single-owner enforcement."
       ],
       "inspected_files": [
