@@ -441,6 +441,9 @@ current trajectory or readiness authority.
 model pins and disabled TOML; it does not claim to install the native executable.
 Report serialization failures propagate through the CLI's typed validation error path
 instead of panicking or claiming a successful setup response.
+The generated configuration reference includes the exact vega configuration
+declaration and the complete authored readiness/setup guidance; source-derived
+documentation corrections still require the CI renderer's equality check.
 The worker's bounded `decapod.vega-worker.v1` request/response binds input and
 installation identity. Outcomes preserve [no, yes] probabilities, prediction set,
 abstention, unbound/OOD, physical diagnostics and explicit devices/precision.
@@ -488,7 +491,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `48f1be686f71ac9272f8caaf0acd4e36d5fe8815c018b409ccd6811adb46210e`
+- Repository signal fingerprint: `84bf62ddb8e3f8182363c33afbaca73763a9037c6ae21f731c76ea85249006a0`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (26 files), `docs/` (1 files), `src/` (207 files), `tests/` (191 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

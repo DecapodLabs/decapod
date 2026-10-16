@@ -21,6 +21,9 @@ const MAX_BATCH: usize = 256;
 const MAX_OPTIONS: usize = 256;
 const MEMORY_HEADS: usize = 4;
 
+/// Mixed feature-slot rows followed by mixed option rows, each with d_model columns.
+type MixedSlotsAndOptions = (Vec<Vec<f32>>, Vec<Vec<f32>>);
+
 #[derive(Debug, Error)]
 pub enum VegaError {
     #[error("invalid vega configuration: {0}")]
@@ -821,12 +824,7 @@ impl VegaEngine {
         finite("option features", &input.opts)
     }
 
-    fn mixed(
-        &self,
-        feats: &[f32],
-        opts: &[f32],
-        k: usize,
-    ) -> Result<(Vec<Vec<f32>>, Vec<Vec<f32>>)> {
+    fn mixed(&self, feats: &[f32], opts: &[f32], k: usize) -> Result<MixedSlotsAndOptions> {
         let d = self.config.d_model;
         let lf = self.config.feature_layers.len();
         let lo = self.config.option_layers.len();

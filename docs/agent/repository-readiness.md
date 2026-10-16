@@ -106,6 +106,10 @@ material, intent, proof, configuration and model/runtime pins. Negative singleto
 rejects; ambiguous/missing sets, invalid numerical output and unavailable runtime
 abstain. Upstream confidence and conformal settings are not established
 code-readiness risk guarantees.
+Supported `alpha` values are `"0.1"` and `"0.05"`; `risk` values are `"0.05"`,
+`"0.1"` and `"0.2"`. These select pinned upstream calibration entries, not
+readiness-domain guarantees. `[vega.installation]` binds canonical absolute
+`directory` and `runtime` paths plus `manifest_digest` and `runtime_sha256`.
 
 An already-required accepted-target vega policy cannot be disabled, repinned or
 have its calibration settings changed by the candidate it governs. Validation

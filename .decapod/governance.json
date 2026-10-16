@@ -406,6 +406,15 @@
         "https://github.com/DecapodLabs/decapod/actions/runs/38935477967/job/117089772479",
         "https://github.com/DecapodLabs/decapod/actions/runs/38935478030/job/117090004983"
       ]
+    },
+    {
+      "id": "vega117-docs-clippy-repair",
+      "summary": "Repair measured clippy and canonical configuration documentation drift without a shadow build",
+      "input_digest": "sha256:91c4d6b8d4184fdbb63bc28d955977f17bb22428c1773b524bb3ff6d5773a17c",
+      "proof_refs": [
+        "https://buildkite.com/decapodlabs/decapod/builds/1933",
+        "https://github.com/DecapodLabs/decapod/actions/runs/38936084937/job/117091823692"
+      ]
     }
   ],
   "intents": {
@@ -450,22 +459,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed actual CI repairs: typed setup serialization error, removal of unused worker sha2, precisely justified thiserror exception for included BackboneError, and generator-produced single-edge lock update. Current inventory reviewed; strict proof, native tests and native acceptance remain required.",
-          "reviewed_code_fingerprint": "48f1be686f71ac9272f8caaf0acd4e36d5fe8815c018b409ccd6811adb46210e",
+          "reason": "Reviewed meaningful mixed-slot/option type alias and canonical source-derived configuration documentation correction. Existing command renderer delta already matches; candidate CI regeneration must prove exact documentation equality. No arithmetic, proof requirement, dependency or worker execution scope changed.",
+          "reviewed_code_fingerprint": "84bf62ddb8e3f8182363c33afbaca73763a9037c6ae21f731c76ea85249006a0",
           "spec_material_hash": "9ce01985648d9b229da0a317e8d2eb6decc468984d7eb397bf0eff8eed03ebdb"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed actual CI repairs: typed setup serialization error, removal of unused worker sha2, precisely justified thiserror exception for included BackboneError, and generator-produced single-edge lock update. Current inventory reviewed; strict proof, native tests and native acceptance remain required.",
-          "reviewed_code_fingerprint": "48f1be686f71ac9272f8caaf0acd4e36d5fe8815c018b409ccd6811adb46210e",
-          "spec_material_hash": "c05fe22b9f25693440c2de7995843a0ce4c8cd1e27e24ce2d127223db1394b2b"
+          "reason": "Reviewed meaningful mixed-slot/option type alias and canonical source-derived configuration documentation correction. Existing command renderer delta already matches; candidate CI regeneration must prove exact documentation equality. No arithmetic, proof requirement, dependency or worker execution scope changed.",
+          "reviewed_code_fingerprint": "84bf62ddb8e3f8182363c33afbaca73763a9037c6ae21f731c76ea85249006a0",
+          "spec_material_hash": "802d2748f6f19b25a6bc63c1a8df9036deeb31a52ca9795d985b8b14a4b0a657"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed actual CI repairs: typed setup serialization error, removal of unused worker sha2, precisely justified thiserror exception for included BackboneError, and generator-produced single-edge lock update. Current inventory reviewed; strict proof, native tests and native acceptance remain required.",
-          "reviewed_code_fingerprint": "48f1be686f71ac9272f8caaf0acd4e36d5fe8815c018b409ccd6811adb46210e",
+          "reason": "Reviewed meaningful mixed-slot/option type alias and canonical source-derived configuration documentation correction. Existing command renderer delta already matches; candidate CI regeneration must prove exact documentation equality. No arithmetic, proof requirement, dependency or worker execution scope changed.",
+          "reviewed_code_fingerprint": "84bf62ddb8e3f8182363c33afbaca73763a9037c6ae21f731c76ea85249006a0",
           "spec_material_hash": "fa33ffad2f3233838711a441d2a4a75113c624d1137f76048e04ddcdd2c81d47"
         }
       ],
@@ -480,7 +489,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792169897Z"
+      "updated_at": "1792170482Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -488,8 +497,12 @@
         "Current claimed task and isolated work branch",
         "Old stacked branch agent/vega-followup/feat_01m51r7pzw2pcv9g remains untouched at2aeb3e8272656ba8796e2222f1f9482a005469fb"
       ],
-      "artifact_hash": "sha256:410c463143c18881158f466c8715a5604a92e2ec97e4f7a67aa320171752aaa0",
+      "artifact_hash": "sha256:0636e92437ae0289cc5117a920a6d0ac62c2f20d9be248962473faa185658a54",
       "checks": [
+        {
+          "name": "clippy-source-repair",
+          "status": "passed"
+        },
         {
           "name": "decoder-source-review",
           "status": "passed"
@@ -501,6 +514,10 @@
         {
           "name": "diff-whitespace",
           "status": "passed"
+        },
+        {
+          "name": "docs-source-correction",
+          "status": "partial"
         },
         {
           "name": "exact-authored-spec-reapplication",
@@ -560,6 +577,10 @@
         },
         {
           "name": "source-ci-first-head",
+          "status": "failed"
+        },
+        {
+          "name": "source-ci-repaired-head",
           "status": "failed"
         },
         {
@@ -634,10 +655,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -774,6 +802,23 @@
                 ],
                 "sequence": 10,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "Released117 authoritative run at87a13363 reached provider_terminal_wait then failed Docs Sync Buildkite1933 uuid01a145a6-9e36-4379-8009-3523c0d6e03d; evidence /tmp/decapod-snapshot-HOyW3w. Actual clippy flags mixed return type_complexity: replaced tuple spelling with meaningful MixedSlotsAndOptions alias, no lint suppression. GHA Docs Sync job117091823692 log contains no complete diff; no archive read. Corrected ordinary config-schema source from exact canonical Rust config declaration, readiness_config_contract literal and repository-readiness include, preserving documented alpha/risk/pins. This is source-derived correction, not locally executed candidate generation; CI equality remains pending. command-contracts already matches its only renderer-source change."
+                ],
+                "proof_refs": [
+                  "source-ci-repaired-head",
+                  "clippy-source-repair",
+                  "docs-source-correction"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 11,
+                "validation_findings": []
               }
             ]
           }
@@ -802,7 +847,8 @@
         "Ordinary same-branch push succeeded at08a46639. Plain117 fifth report stops SNAPSHOT_UPLOAD_INCOMPLETE because only local v0.116.0 and v0.117.0 tags were missing. Fetched those existing published tags normally, no force or remote tag mutation; complete tag maps now match and117 peels to accepted396f. Real exact-head CI reports E0277 setup report JSON conversion and cargo-machete unused sha2/thiserror. Repaired explicit DecapodError serialization mapping, removed genuinely unused worker sha2, retained used path-included BackboneError thiserror with precise scanner exception. Worker lock regeneration changes only removed direct sha2 edge. Repaired-head execution remains pending.",
         "Plain117 fourth validation reached GitTransport and exited128 before provider execution. Normal configured-helper ls-remote succeeds and feature remote branch is absent; no credential extraction or settings change. Static review confirmed committed binary16 mantissa already explicitly cast to u32; use u32::from for clarity, preserve normalization and expand signed zero/subnormal/normal/Inf/NaN assertions. No test execution or numerical parity claimed.",
         "Plain117 second validation stopped PROOF_DISCOVERY_BLOCKED on MODULE.bazel.lock1052029 bytes. Moved unchanged SafeTensors decoder/half conversion and fixtures to sole native owner; root retains typed engine/header/GELU tests and checked schema. Supported metadata regeneration now gives1037341 bytes below1048576. Root graph removes only safetensors0.7/hashbrown0.16/foldhash/allocator-api2; native retains pinned SafeTensors0.7 and immutable model/source pins. Cargo reports0 package additions/updates, but reselects existing socket2/getrandom/Windows dependency edges; retain generator output for actual validation rather than hand-edit locks.",
-        "Prior history-preserving merge2aeb3e8272656ba8796e2222f1f9482a005469fb was clean but verifier rejected old activation73f5d03b as different PR after squash acceptance. Preserved old branch, yielded old task, and used a fresh accepted-base journal rather than rewriting history or manufacturing acceptance."
+        "Prior history-preserving merge2aeb3e8272656ba8796e2222f1f9482a005469fb was clean but verifier rejected old activation73f5d03b as different PR after squash acceptance. Preserved old branch, yielded old task, and used a fresh accepted-base journal rather than rewriting history or manufacturing acceptance.",
+        "Released117 authoritative run at87a13363 reached provider_terminal_wait then failed Docs Sync Buildkite1933 uuid01a145a6-9e36-4379-8009-3523c0d6e03d; evidence /tmp/decapod-snapshot-HOyW3w. Actual clippy flags mixed return type_complexity: replaced tuple spelling with meaningful MixedSlotsAndOptions alias, no lint suppression. GHA Docs Sync job117091823692 log contains no complete diff; no archive read. Corrected ordinary config-schema source from exact canonical Rust config declaration, readiness_config_contract literal and repository-readiness include, preserving documented alpha/risk/pins. This is source-derived correction, not locally executed candidate generation; CI equality remains pending. command-contracts already matches its only renderer-source change."
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",

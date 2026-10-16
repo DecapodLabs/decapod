@@ -15,7 +15,11 @@ pub struct DecapodProjectConfig {
     pub tracker: TrackerConfig,
     #[serde(default)]
     pub context: DeclaredContextConfig,
-    #[serde(default)]
+    #[serde(
+        default,
+        skip_serializing_if = "crate::core::vega_readiness::Configuration::is_default"
+    )]
+    pub vega: crate::core::vega_readiness::Configuration,
 }
 ```
 
@@ -133,15 +137,79 @@ bounded by the declared requirements and checks. A subsequent readiness decision
 can evaluate that result; the agent publishes through the applicable gate and
 the human retains merge authority. This principle adds no unimplemented guarantee.
 
-## Optional vega readiness
+## Optional vega post-validation assessment
 
-`[vega]` defaults to `mode = "disabled"`; `mode = "required"` adds the
-post-proof uncertainty-preserving assessment. Supported `alpha` values are
-`"0.1"` and `"0.05"`; `risk` values are `"0.05"`, `"0.1"`, `"0.2"`.
-They select pinned upstream calibration entries, not code-readiness guarantees.
-`[vega.installation]` binds `directory`, `manifest_digest`, `runtime` and
-`runtime_sha256`. Directory/executable paths must be canonical and absolute;
-required mode fails closed on missing, changed or unsupported local artifacts.
-There is no runtime download or selectable provider configuration. See
-[repository readiness](repository-readiness.md#optional-vega-post-validation-assessment)
-for explicit setup and the outstanding native acceptance evidence.
+Vega runs only after the complete deterministic proof profile passes. It cannot
+supply proof, waive checks, alter policy or publish. The agent creates the PR
+through the existing gate; the human merges. Active Jev integration is removed,
+including selectable providers, transport and credential lookup. Historical
+observations remain readable without governing current work.
+
+By default `[vega]` is disabled. Required mode additionally needs a positive
+singleton yes, no abstention or unbound/OOD signal, and unchanged exact validated
+material, intent, proof, configuration and model/runtime pins. Negative singleton
+rejects; ambiguous/missing sets, invalid numerical output and unavailable runtime
+abstain. Upstream confidence and conformal settings are not established
+code-readiness risk guarantees.
+Supported `alpha` values are `"0.1"` and `"0.05"`; `risk` values are `"0.05"`,
+`"0.1"` and `"0.2"`. These select pinned upstream calibration entries, not
+readiness-domain guarantees. `[vega.installation]` binds canonical absolute
+`directory` and `runtime` paths plus `manifest_digest` and `runtime_sha256`.
+
+An already-required accepted-target vega policy cannot be disabled, repinned or
+have its calibration settings changed by the candidate it governs. Validation
+rejects that transition before proof execution with `VEGA_ACCEPTED_POLICY_CHANGED`;
+it needs independent acceptance of the policy change. A disabled accepted target
+retains ordinary behavior and may add an explicit required assessment. Setup
+refresh changes the cache only and never silently rewrites publication policy.
+
+`validation-results.v2` contains actual check outcomes, stage dispositions,
+exclusions, simulated stages, blockers and unresolved trajectory facts, plus
+minimal declared intent and changed paths. Identical semantic observations and
+stage definitions are indexed once. Every check keeps its identity and outcome;
+missing checks remain explicit. Full custody identities bind the complete report
+outside the model prompt. No whole plan, source diff or raw log enters the prompt;
+unrepresented warnings and untested intent remain unknown. The 32 KiB projection
+and 4,096 total-token limits fail closed rather than clipping evidence.
+
+### Explicit installation
+
+`decapod setup vega` installs verified external model data in a private cache.
+`--check-updates` checks bounded official metadata, `--refresh` explicitly selects
+a compatible new revision, `--offline` verifies cached files without networking,
+and `--rollback <manifest-digest>` atomically activates a verified prior install.
+Use `--cache-directory` to select another private cache. Engine/config/calibration,
+backbone, tokenizer and source/license identities have independent immutable pins.
+Unchanged backbone components are reused by content hash. Unsupported architecture,
+quantization, tokenizer or adapter changes fail compatibility checks. A changed
+upstream source revision is surfaced for review, never substituted as runtime code.
+
+Setup prints disabled TOML with the verified installation path and manifest digest.
+It does not pretend to install a native executable. The Rust worker is built from
+`assets/tools/vega-native/Cargo.toml` on Apple-arm64. A source-install command from
+a reviewed release is `cargo install --path assets/tools/vega-native --locked`.
+Repository development builds/tests remain owned by ordinary governed validation.
+Run the worker's `--probe` to require a genuine finite Metal numerical result.
+Then supply its canonical absolute `runtime` path and `runtime_sha256` under
+`[vega.installation]` and explicitly choose `[vega] mode = "required"`.
+Runtime digests use `sha256:<64 lowercase hex>`.
+
+Runtime never follows a floating active pointer, downloads artifacts or selects a
+CPU backbone fallback. The pinned Candle path captures raw blocks 13/19 and pools
+F32 state/question/option/chunk features on Metal. The verified BF16 backbone is
+upcast to F32, increasing weight memory accordingly. Base dynamics run in Rust F32
+on CPU; calibration uses F64 probabilities. This profile has adapters off, no image
+path and fresh recurrent state for every request.
+
+### Honest native evidence
+
+The private bounded `--proof-output` diagnostic contains exact tokens/spans,
+numeric pooled vectors, engine readouts, calibrated outcome, hashes and measured
+stage durations. It explicitly retains parity=unverified. Numeric diagnostics
+allow comparison; they are not independent reference evidence or readiness.
+Real Apple compilation/checkpoint loading/Metal dispatch, independently authenticated
+pinned-upstream numerical comparison, domain calibration and latency/peak-memory
+measurements remain required. Exercise repeated requests, error cleanup and the
+4,096/4,097-token boundary. No arbitrary latency threshold or synthetic native pass
+is supplied. An unavailable Apple executor or reference corpus is an explicit
+acceptance blocker, not a reason to weaken ordinary publication gates.
